@@ -990,10 +990,13 @@ Added on 5 November 2026 from the user's answer to decision 23.
   minutes.
 - **Action:** ask the user, because only the user can set the price of
   the free plan.
-- **Chosen:** D, by the user on 5 November 2026. A free account gets one org, with
-  at most 3 workspaces that exist, not counting archived ones, and 600
-  minutes a month. Its org image refreshes only when the user builds it,
-  and builds count against the minutes.
+- **Chosen:** D, by the user on 5 November 2026. A free account gets one
+  org, with at most 3 workspaces that exist, and 600 minutes a month. Its
+  org image refreshes only when the user builds it, and builds count
+  against the minutes.
+- **Correction on 5 November 2026:** an earlier record of the choice said
+  "not counting archived ones". Only option A said that. Decision 41 asks
+  the user whether archived workspaces count.
 
 ### 26. Choose the billing provider
 
@@ -1506,7 +1509,8 @@ legal page.
 
 ### 38. Decide what a cancelled org keeps
 
-Open. Added on 5 November 2026 from the Milestone 1d mockups.
+Open. Added on 5 November 2026 from the Milestone 1d mockups. The options
+check added D, and the recommendation moved from B to D.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -1518,42 +1522,50 @@ Open. Added on 5 November 2026 from the Milestone 1d mockups.
 - **Impact if no action:** Milestone 15b cannot handle a cancel, and the
   cancel question cannot be drawn.
 - **Root question:** What does an org keep when its paid plan ends and it
-  no longer fits the free plan?
+  no longer fits the free plan? The plan can end by a cancel or by a
+  failed payment.
 - **Options:**
   - **A.** Allow Cancel plan only when the org fits the free plan. It makes
     cancelling harder, and the UK rules expected from January 2027 ask for
     easy cancellation. Effort: Small.
   - **B.** Cancel always works. The org keeps everything, but nothing
     starts and nothing new is created until it fits the free plan or
-    upgrades again. Effort: Medium.
+    upgrades again. Boat can delete the disk of a cloud computer that is
+    stopped for over 14 days, so unpushed work can still be lost.
+    Effort: Medium.
   - **C.** Cancel always works. The app removes the other members and
     archives the oldest workspaces. Unpushed work can block the archive.
     Effort: Medium.
+  - **D.** As B. Before day 14, the app pushes the unpushed work of each
+    waiting workspace to a backup branch on GitHub. Effort: Medium.
 - **Left out:** Deleting the extra workspaces, because it loses work.
 - **Wider fix:** None. One rule covers the whole case.
 - **Related:** Decision 25 sets the free plan. Decision 35 sets the
   cancellation policy.
-- **Recommendation:** B. Cancelling stays easy, nothing is lost, and the
-  limit states already show what waits.
+- **Recommendation:** D. Cancelling stays easy, the limit states already
+  show what waits, and the backup keeps unpushed work after day 14.
 - **Action:** ask the user, because the rule adds behaviour that no
   requirement covers.
 
 ### 39. Decide who owns a removed member's workspaces
 
-Open. Added on 5 November 2026 from the Milestone 1d mockups.
+Open. Added on 5 November 2026 from the Milestone 1d mockups. The options
+check widened the root question and added D, and the recommendation
+moved from A to D.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
 - **Background:** Only an owner removes a member. The agents of a
   workspace use the accounts of its owner, as decision 24 says. The
   mockup's remove question says that the member's workspaces move to the
-  owner who removes the member.
+  owner who removes the member. A member can also leave, or delete their
+  account, and then nobody removes them.
 - **Problem:** No requirement says who owns the workspaces of a member who
   leaves.
 - **Impact if no action:** Milestone 15a can keep workspaces whose agents
   use the accounts of a person who left.
-- **Root question:** Who owns the workspaces of a member who leaves the
-  org?
+- **Root question:** Who owns a workspace when its owner stops being a
+  member: by removal, by leaving, or by deleting their account?
 - **Options:**
   - **A.** They move to the owner who removes the member, as drawn.
     Effort: Small.
@@ -1561,14 +1573,88 @@ Open. Added on 5 November 2026 from the Milestone 1d mockups.
     Effort: Small.
   - **C.** The app archives them, after the check for unpushed work.
     Effort: Medium.
+  - **D.** As A, for a removal. When a member leaves or deletes their
+    account, the workspaces move to the org's earliest owner. The last
+    owner can leave only when another owner exists, or by deleting the
+    org. Effort: Small.
 - **Left out:** Keeping the removed person as the owner, because the
   agents would use the accounts of someone outside the org.
 - **Wider fix:** None.
 - **Related:** Decision 24 gives each workspace its creator's account.
-- **Recommendation:** A. It needs no extra step, and the owner can
-  reassign each workspace later.
+- **Recommendation:** D. It covers every way to stop being a member, and
+  an org always keeps an owner.
 - **Action:** ask the user, because it adds behaviour that no requirement
-  covers.
+  covers, and D rejects the last owner's leave.
+
+### 40. Decide how seat changes are charged mid-period
+
+Open. Added on 5 November 2026 from the options check of the Milestone
+1d agent calls.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** Seats follow the people: each member takes a seat, and
+  a seat starts when the person accepts the invite. The paid plan bills
+  $30 a month for each seat. Stripe Billing prorates a quantity change by
+  default.
+- **Problem:** No requirement says how the app charges a seat that starts
+  or ends in the middle of a billing period.
+- **Impact if no action:** Milestone 15b cannot set Stripe's proration,
+  and an invoice can surprise the owner.
+- **Root question:** How does the bill follow a member who joins or leaves
+  in the middle of a billing period?
+- **Options:**
+  - **A.** Prorate both ways, as Stripe does by default. A new seat costs
+    the rest of the period, and a removed seat gives a credit for the
+    rest. Effort: Small.
+  - **B.** Prorate a new seat. A removed seat ends at the next invoice,
+    without a credit. Effort: Small.
+  - **C.** Change nothing until the next invoice. A new seat is free until
+    then, and a removed seat is charged until then. Effort: Small.
+- **Left out:** A full month for each new seat, because it charges for
+  days before the member joined.
+- **Wider fix:** None.
+- **Related:** Decision 35 sets the refund policy, which must match.
+  Decision 38 covers the end of the plan.
+- **Recommendation:** A. Each org pays only for the days that a seat has a
+  member, and it is Stripe's default.
+- **Action:** ask the user, because it adds billing behaviour that no
+  requirement covers.
+
+### 41. Decide whether archived workspaces count toward the free limit
+
+Open. Added on 5 November 2026 from the options check of the Milestone
+1d agent calls.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** For decision 25, the user chose D, which builds on B:
+  "3 workspaces that exist at once". Only option A left archived
+  workspaces out of the count. The plan's record of the choice added "not
+  counting archived ones" by mistake. Archive, from decision 16, deletes
+  the cloud computer and keeps the history read-only.
+- **Problem:** The mockups offer Archive as the free way past the limit,
+  and say that archived workspaces do not count. The chosen option does
+  not say that.
+- **Impact if no action:** Milestone 15a can count the limit in a way
+  that the user did not choose.
+- **Root question:** Which workspaces count toward the free limit of 3?
+- **Options:**
+  - **A.** Every workspace that exists, archived ones too, as the chosen
+    option reads. The free way past the limit is Delete, which also
+    removes the history. Effort: Small.
+  - **B.** Only workspaces that are not archived. The free way past the
+    limit is Archive, as drawn. An archived workspace has no cloud
+    computer, so it costs nothing. Effort: Small.
+- **Left out:** Counting only the running workspaces, because that is
+  option C of decision 25, which the user did not choose.
+- **Wider fix:** None.
+- **Related:** Decision 25, whose record this corrects. Decision 16
+  defines Archive.
+- **Recommendation:** B. An archived workspace costs nothing, and Archive
+  keeps the history that Delete removes.
+- **Action:** ask the user, because B changes the reading of the option
+  that the user chose for decision 25.
 
 ## Design
 
@@ -1689,14 +1775,19 @@ Agent calls of 5 November 2026:
   request. It reads the final usage after each stop and before each
   delete. The report counts machine time only, so the app also counts
   the saved snapshot days and the builds of each org's image itself.
-- Seats follow the people. Each member takes a seat, an invite adds its
-  seat when the person accepts it, and a removal takes the seat off at
-  the next invoice. The owner buys no separate seat count. Reason: the
-  user priced the paid plan at "$30 per user".
+- Seats follow the people. Each member takes a seat, owners too, and a
+  seat starts when the person accepts the invite. The owner buys no
+  separate seat count. Reason: the user priced the paid plan at "$30 per
+  user". Decision 40 sets how a seat change in the middle of a billing
+  period is charged.
 - At the free workspace and minutes limits, Upgrade to Team is the first
-  action. The free way forward, archiving a workspace or waiting for the
-  next month, is the second. Reason: the user said that a free account
-  "has to upgrade" at these limits.
+  action. The free way forward is the second: at the minutes limit,
+  waiting for the next month, and at the workspace limit, the way that
+  decision 41 sets. Reason: the user said that a free account "has to
+  upgrade" at these limits.
+- Reassigning a workspace stops its cloud computer first. Reason: Boat
+  sets a sandbox's variables only at create and at resume, so the next
+  start must pass the new owner's agent credentials.
 - The billing tab shows the pool in hours of the standard machine. The
   app converts every cost in the pool at the machine price, also
   snapshot days and image builds. Reason: the marketing page uses hours,
