@@ -34,7 +34,7 @@ export function MarketingScreen(props: { viewport: Viewport }) {
           device={mobile ? 'phone' : 'window'}
           picture={heroPicture(viewport)}
           signIn={paths.signIn}
-          text="Claude Code and Codex work on their own branch, in a full clone of your repository. You follow along and review the work from any browser."
+          text="Agents powered by Claude and Codex work on their own branch, in a full clone of your repository. You follow along and review the work from any browser."
           title="Give every coding task its own cloud computer."
           viewport={viewport}
         />

@@ -35,7 +35,7 @@ export function features(viewport: Viewport): Feature[] {
     {
       key: 'agents',
       label: 'Agents',
-      title: 'Claude Code and Codex, on your own accounts.',
+      title: 'Agents powered by Claude and Codex, on your own accounts.',
       text: 'Pick the model and the effort for each message, attach files, and run several sessions side by side in one workspace.',
       picture: agentsPicture(viewport),
       device: 'excerpt',
