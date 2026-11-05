@@ -1,27 +1,24 @@
 import { MockLink } from '@mokly/mokly'
-import { chatTab, toolTabs, type ToolKey } from './tools'
+import { classes } from '../common/classes'
+import { mobileTabs, type MobileTabKey } from './tools'
 import styles from './MobileTabBar.module.css'
 
-const tabs = [chatTab, ...toolTabs]
-
-/** The mobile workspace tabs: chat and each tool. */
-export function MobileTabBar(props: { selected: ToolKey | 'chat' }) {
+/** The workspace tabs of a phone: the chat, the files, and each tool. */
+export function MobileTabBar(props: { selected: MobileTabKey }) {
   return (
     <nav aria-label="Workspace" className={styles.bar}>
-      {tabs.map((tab) => {
+      {mobileTabs.map((tab) => {
         const selected = tab.key === props.selected
         const Icon = tab.icon
         return (
           <MockLink
             aria-current={selected ? 'page' : undefined}
-            className={
-              selected ? `${styles.tab} ${styles.selected}` : styles.tab
-            }
+            className={classes(styles.tab, selected && styles.selected)}
             key={tab.key}
             to={tab.to}
           >
             <span className={styles.icon}>
-              <Icon size={20} />
+              <Icon size={19} strokeWidth={selected ? 2.2 : 1.8} />
             </span>
             {tab.label}
           </MockLink>

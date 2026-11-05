@@ -4,23 +4,32 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   padding: 32px 24px;
   text-align: center;
 }
 
 .icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin-bottom: 4px;
-  border-radius: 50%;
-  background: var(--ui-soft);
+  margin-bottom: 6px;
+  color: var(--ui-faint);
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-strong);
+  line-height: 1.4;
+}
+
+.body {
+  max-width: 300px;
+  margin: 0;
   color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
 }
 
 .action {
-  margin-top: 8px;
+  margin-top: 10px;
 }

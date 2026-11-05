@@ -3,7 +3,7 @@
  * against the default branch for "Changes".
  */
 
-export type ChangeKind = 'added' | 'modified'
+export type ChangeKind = 'added' | 'modified' | 'deleted'
 
 export type TreeEntry = {
   name: string
@@ -82,6 +82,12 @@ export const changedFiles: readonly ChangedFile[] = [
     preview: 'diff',
   },
   {
+    path: 'src/app/checkout/postcodeLookup.ts',
+    change: 'deleted',
+    added: 0,
+    removed: 41,
+  },
+  {
     path: 'tests/checkout/address.test.ts',
     change: 'added',
     added: 52,
@@ -99,6 +105,7 @@ export const changedFiles: readonly ChangedFile[] = [
 export const changeLabels: Readonly<Record<ChangeKind, string>> = {
   added: 'Added',
   modified: 'Modified',
+  deleted: 'Deleted',
 }
 
 /** Splits a path into its folder and its file name. */

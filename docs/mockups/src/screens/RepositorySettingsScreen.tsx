@@ -15,7 +15,9 @@ export const repositorySettingsSchema = {
   type: 'object',
   additionalProperties: false,
   required: ['base'],
-  properties: { base: { enum: ['ready', 'updating', 'failed'] } },
+  properties: {
+    base: { enum: ['ready', 'updating', 'failed'] },
+  },
 } as const
 
 export type RepositorySettingsState = SchemaProps<

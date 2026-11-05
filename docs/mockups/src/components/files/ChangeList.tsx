@@ -1,9 +1,8 @@
 import { MockLink } from '@mokly/mokly'
-import { List, ListItem } from '@firna/ui/list'
-import { Caption } from '@firna/ui/typography'
-import { FileDiff, FilePlus } from 'lucide-react'
-import { changeLabels, splitPath, type ChangedFile } from '../../fixtures/files'
+import { FileDiff } from 'lucide-react'
+import { splitPath, type ChangedFile } from '../../fixtures/files'
 import { EmptyState } from '../common/EmptyState'
+import { ChangeIcon } from './ChangeIcon'
 import { DiffStat } from './DiffStat'
 import { previewPaths } from './previewPaths'
 import styles from './ChangeList.module.css'
@@ -11,29 +10,20 @@ import styles from './ChangeList.module.css'
 function Row(props: { file: ChangedFile }) {
   const { file } = props
   const { folder, name } = splitPath(file.path)
-  const Icon = file.change === 'added' ? FilePlus : FileDiff
-  const item = (
-    <ListItem
-      description={
-        <Caption>
-          {folder ? (
-            <>
-              <span className={styles.folder}>{folder}</span> ·{' '}
-            </>
-          ) : null}
-          {changeLabels[file.change]}
-        </Caption>
-      }
-      leading={<Icon className={styles.icon} size={18} />}
-      size="sm"
-      title={name}
-      trailing={<DiffStat added={file.added} removed={file.removed} />}
-    />
+  const content = (
+    <>
+      <span className={styles.path}>
+        {folder ? <span className={styles.folder}>{folder}/</span> : null}
+        <span className={styles.name}>{name}</span>
+      </span>
+      <DiffStat added={file.added} removed={file.removed} />
+      <ChangeIcon change={file.change} />
+    </>
   )
-  if (!file.preview) return <div className={styles.row}>{item}</div>
+  if (!file.preview) return <div className={styles.row}>{content}</div>
   return (
     <MockLink className={styles.row} to={previewPaths[file.preview]}>
-      {item}
+      {content}
     </MockLink>
   )
 }
@@ -49,23 +39,15 @@ export function ChangeList(props: { files: readonly ChangedFile[] }) {
       />
     )
   }
-  const added = props.files.reduce((sum, file) => sum + file.added, 0)
-  const removed = props.files.reduce((sum, file) => sum + file.removed, 0)
   return (
-    <div className={styles.changes}>
-      <div className={styles.summary}>
-        <Caption>{props.files.length} files changed</Caption>
-        <DiffStat added={added} removed={removed} />
-      </div>
-      <div className={styles.scroll} data-mokly-scroll="changes">
-        <List
-          accessibilityLabel="Changed files"
-          itemKey={(file) => file.path}
-          items={[...props.files]}
-          renderItem={(file) => <Row file={file} />}
-          separators={false}
-        />
-      </div>
+    <div className={styles.scroll} data-mokly-scroll="changes">
+      <ul aria-label="Changed files" className={styles.list}>
+        {props.files.map((file) => (
+          <li key={file.path}>
+            <Row file={file} />
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

@@ -8,16 +8,17 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
+  height: calc(var(--ui-row-height) - 4px);
   padding-right: 8px;
   border-radius: var(--ui-radius-sm);
-  color: var(--ui-ink);
-  font-size: 13px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
   text-decoration: none;
 }
 
 a.row:hover {
   background: var(--ui-soft);
+  color: var(--ui-ink);
 }
 
 .chevron,
@@ -37,21 +38,4 @@ a.row:hover {
   min-width: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.mark {
-  flex-shrink: 0;
-  width: 16px;
-  font-family: var(--ui-font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  text-align: center;
-}
-
-.added {
-  color: var(--ui-primary-deep);
-}
-
-.modified {
-  color: var(--ui-amber-deep);
 }

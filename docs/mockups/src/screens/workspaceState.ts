@@ -17,8 +17,8 @@ export const workspaceStateSchema = {
     'sandbox',
     'conversation',
     'banner',
-    'tool',
     'files',
+    'tool',
     'ports',
     'focus',
   ],
@@ -27,12 +27,13 @@ export const workspaceStateSchema = {
     sandbox: { enum: ['ready', 'starting', 'stopped', 'error'] },
     conversation: { enum: conversationKeys },
     banner: { enum: bannerStates },
-    /** The tool that the desktop panel and the mobile tool tab show. */
-    tool: { enum: toolKeys },
+    /** The files panel: a list, the checks, or a preview of one file. */
     files: { enum: fileViews },
+    /** The tool of the tools panel. */
+    tool: { enum: toolKeys },
     ports: { enum: ['open', 'none'] },
-    /** What the mobile layout shows: the chat, or the tool. */
-    focus: { enum: ['chat', 'tool'] },
+    /** What a phone shows: the chat, the files, or the tool. */
+    focus: { enum: ['chat', 'files', 'tool'] },
   },
 } as const
 
@@ -44,8 +45,8 @@ export const readyWorkspace: WorkspaceState = {
   sandbox: 'ready',
   conversation: 'history',
   banner: 'ready-to-merge',
-  tool: 'files',
   files: 'changes',
+  tool: 'terminal',
   ports: 'open',
   focus: 'chat',
 }

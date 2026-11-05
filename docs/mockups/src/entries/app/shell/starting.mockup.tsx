@@ -8,7 +8,7 @@ import {
 export const sandboxStarting = defineScreen({
   title: 'Sandbox starting',
   description:
-    'Opening a stopped workspace resumes its sandbox. The chat history shows at once, and the tools wait until the sandbox is ready.',
+    'Opening a stopped workspace resumes its sandbox. The chat history shows at once, with the steps of the resume at its end, and the files and tools wait until the sandbox is ready.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, sandbox: 'starting' },

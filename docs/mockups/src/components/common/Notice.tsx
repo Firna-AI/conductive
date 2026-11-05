@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { Caption, Label } from '@firna/ui/typography'
 import styles from './Notice.module.css'
 
-/** A short inline message in a box with a tinted fill. */
+/** A short message in a box with a full border and a tinted fill. */
 export function Notice(props: {
   icon: LucideIcon
   title: string
@@ -12,19 +11,16 @@ export function Notice(props: {
   action?: ReactNode
 }) {
   const Icon = props.icon
-  const className =
-    props.tone === 'danger'
-      ? `${styles.notice} ${styles.danger}`
-      : styles.notice
+  const danger = props.tone === 'danger'
   return (
     <div
-      className={className}
-      role={props.tone === 'danger' ? 'alert' : undefined}
+      className={danger ? `${styles.notice} ${styles.danger}` : styles.notice}
+      role={danger ? 'alert' : undefined}
     >
-      <Icon className={styles.icon} size={18} />
+      <Icon className={styles.icon} size={16} />
       <div className={styles.text}>
-        <Label>{props.title}</Label>
-        {props.body ? <Caption color="secondary">{props.body}</Caption> : null}
+        <span className={styles.title}>{props.title}</span>
+        {props.body ? <span className={styles.body}>{props.body}</span> : null}
       </div>
       {props.action ? (
         <div className={styles.action}>{props.action}</div>

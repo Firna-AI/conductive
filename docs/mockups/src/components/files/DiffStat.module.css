@@ -1,17 +1,18 @@
 .stat {
   display: inline-flex;
   flex-shrink: 0;
-  gap: 6px;
+  gap: 5px;
   font-family: var(--ui-font-mono);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--ui-text-xs);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .added {
-  color: var(--ui-primary-deep);
+  color: var(--ui-success);
 }
 
 .removed {
-  color: var(--ui-rose-deep);
+  color: var(--ui-rose);
 }

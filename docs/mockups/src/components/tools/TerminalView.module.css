@@ -10,22 +10,22 @@
   flex: 1;
   min-height: 0;
   margin: 0;
-  padding: 12px 16px;
+  padding: 10px var(--ui-pad-x);
   overflow: auto;
   color: var(--ui-ink);
   font-family: var(--ui-font-mono);
-  font-size: 12px;
-  line-height: 19px;
+  font-size: var(--ui-text-sm);
+  line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 .line {
-  min-height: 19px;
+  min-height: 1.6em;
 }
 
 .prompt {
-  color: var(--ui-primary-deep);
+  color: var(--ui-term-prompt);
   font-weight: 600;
 }
 
@@ -38,18 +38,18 @@
 }
 
 .success {
-  color: var(--ui-primary-deep);
+  color: var(--ui-success);
 }
 
 .accent {
-  color: var(--ui-amber-deep);
+  color: var(--ui-warning);
   font-weight: 600;
 }
 
 .cursor {
   display: inline-block;
   width: 7px;
-  height: 15px;
+  height: 1.15em;
   vertical-align: text-bottom;
   background: var(--ui-ink);
 }
@@ -57,7 +57,7 @@
 .keys {
   display: flex;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-top: 1px solid var(--ui-border);
-  background: var(--ui-bg);
+  background: var(--ui-bar);
 }

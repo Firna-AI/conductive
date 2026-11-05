@@ -10,7 +10,7 @@ export const tools = defineScreen({
   description:
     'The terminal of the sandbox, here running the dev server while the agent works. On mobile a row of keys adds the keys that a phone keyboard lacks.',
   rationale:
-    'The terminal follows the light or dark scheme of the app, like the rest of the tool panel.',
+    'The tools sit in the lower panel of the right column, under the files, so the user sees the dev server and the changes together. The terminal follows the light or dark scheme of the app.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {

@@ -1,6 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
 import { MockLink } from '@mokly/mokly'
-import { Button } from '@firna/ui/button'
+import { ActionButton } from '../components/common/actions'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
 import { TerminalView } from '../components/tools/TerminalView'
@@ -8,7 +8,6 @@ import { workspaceGroups } from '../components/workspaces/groups'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { repositories } from '../fixtures/repositories'
 import { baseSession, baseSessionPrompt } from '../fixtures/terminal'
-import { noop } from '../noop'
 import { paths } from '../paths'
 
 /** A terminal on the base of a repository, to install software and save. */
@@ -17,14 +16,10 @@ export function InstallSoftwareScreen(props: { viewport: Viewport }) {
   const actions = (
     <>
       <MockLink asChild to={paths.settings}>
-        <Button onPress={noop} tone="secondary">
-          Cancel
-        </Button>
+        <ActionButton>Cancel</ActionButton>
       </MockLink>
       <MockLink asChild to={paths.settings}>
-        <Button onPress={noop} tone="primary">
-          Save to base
-        </Button>
+        <ActionButton tone="primary">Save to base</ActionButton>
       </MockLink>
     </>
   )

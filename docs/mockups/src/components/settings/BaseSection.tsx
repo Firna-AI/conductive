@@ -1,51 +1,37 @@
 import { MockLink } from '@mokly/mokly'
-import { Badge } from '@firna/ui/badge'
-import { Button } from '@firna/ui/button'
 import { Spinner } from '@firna/ui/spinner'
-import { Body, Caption } from '@firna/ui/typography'
-import { Check, Circle, RotateCw, SquareTerminal } from 'lucide-react'
+import { useSharedUiTheme } from '@firna/ui/theme'
+import {
+  Check,
+  Circle,
+  CircleAlert,
+  RotateCw,
+  SquareTerminal,
+} from 'lucide-react'
 import {
   baseUpdateSteps,
   failedUpdateOutput,
   type BaseStatus,
   type Repository,
 } from '../../fixtures/repositories'
-import { noop } from '../../noop'
 import { paths } from '../../paths'
-import { centredBadge } from '../common/badgeStyle'
+import { ActionButton } from '../common/actions'
 import { InlineText } from '../common/InlineText'
-import { MonoBlock, Section } from './Section'
+import { StatusText } from '../common/StatusText'
+import { MonoBlock, Section, SectionText } from './Section'
 import styles from './BaseSection.module.css'
 
-const statusBadges = {
-  ready: (
-    <Badge size="sm" style={centredBadge} tone="primary">
-      Ready
-    </Badge>
-  ),
-  updating: (
-    <Badge dot pulse size="sm" style={centredBadge} tone="warning">
-      Updating
-    </Badge>
-  ),
-  failed: (
-    <Badge size="sm" style={centredBadge} tone="danger">
-      Update failed
-    </Badge>
-  ),
+const statusLabels = {
+  ready: <StatusText label="Ready" tone="success" />,
+  updating: <StatusText busy label="Updating" tone="warning" />,
+  failed: <StatusText icon={CircleAlert} label="Update failed" tone="danger" />,
 } as const
 
 function InstallSoftware(props: { disabled?: boolean }) {
   const button = (
-    <Button
-      disabled={props.disabled}
-      icon={SquareTerminal}
-      onPress={noop}
-      size="sm"
-      tone="secondary"
-    >
+    <ActionButton disabled={props.disabled} icon={SquareTerminal}>
       Install software
-    </Button>
+    </ActionButton>
   )
   if (props.disabled) return button
   return (
@@ -56,6 +42,7 @@ function InstallSoftware(props: { disabled?: boolean }) {
 }
 
 function UpdateSteps() {
+  const theme = useSharedUiTheme()
   return (
     <ol className={styles.steps}>
       {baseUpdateSteps.map((step) => (
@@ -64,14 +51,22 @@ function UpdateSteps() {
             {step.state === 'done' ? (
               <Check className={styles.done} size={16} />
             ) : step.state === 'running' ? (
-              <Spinner accessibilityLabel="In progress" size={14} />
+              <Spinner
+                accessibilityLabel="In progress"
+                color={theme.colors.muted}
+                size={12}
+              />
             ) : (
               <Circle className={styles.waiting} size={14} />
             )}
           </span>
-          <Body color={step.state === 'waiting' ? 'muted' : 'default'}>
+          <span
+            className={
+              step.state === 'waiting' ? styles.waitingText : undefined
+            }
+          >
             {step.label}
-          </Body>
+          </span>
         </li>
       ))}
     </ol>
@@ -91,19 +86,17 @@ export function BaseSection(props: {
         <Section
           actions={
             <>
-              <Button icon={RotateCw} onPress={noop} size="sm" tone="secondary">
-                Update now
-              </Button>
+              <ActionButton icon={RotateCw}>Update now</ActionButton>
               <InstallSoftware />
             </>
           }
           description="New workspaces start from the base. It updates after pushes to main, at most every 30 minutes, and once a day."
-          status={statusBadges.ready}
+          status={statusLabels.ready}
           title="Base"
         >
-          <Body>
+          <SectionText>
             <InlineText text={updated} />
-          </Body>
+          </SectionText>
         </Section>
       )
     case 'updating':
@@ -111,7 +104,7 @@ export function BaseSection(props: {
         <Section
           actions={<InstallSoftware disabled />}
           description="New workspaces start from the previous base until the update finishes."
-          status={statusBadges.updating}
+          status={statusLabels.updating}
           title="Base"
         >
           <UpdateSteps />
@@ -122,21 +115,21 @@ export function BaseSection(props: {
         <Section
           actions={
             <>
-              <Button icon={RotateCw} onPress={noop} size="sm" tone="primary">
+              <ActionButton icon={RotateCw} tone="primary">
                 Try again
-              </Button>
+              </ActionButton>
               <InstallSoftware />
             </>
           }
-          status={statusBadges.failed}
+          status={statusLabels.failed}
           title="Base"
         >
-          <Body>The startup script failed.</Body>
+          <SectionText>The startup script failed.</SectionText>
           <MonoBlock text={failedUpdateOutput} />
-          <Caption>
+          <SectionText muted>
             New workspaces still start from the base saved{' '}
             {repository.baseUpdated}.
-          </Caption>
+          </SectionText>
         </Section>
       )
   }

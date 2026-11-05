@@ -1,9 +1,11 @@
 .steps {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   margin: 2px 0;
   padding: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
   list-style: none;
 }
 
@@ -18,13 +20,17 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 18px;
+  width: 16px;
 }
 
 .done {
-  color: var(--ui-primary);
+  color: var(--ui-success);
 }
 
 .waiting {
   color: var(--ui-border2);
+}
+
+.waitingText {
+  color: var(--ui-muted);
 }

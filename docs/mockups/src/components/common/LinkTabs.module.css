@@ -1,14 +1,43 @@
 .tabs {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-/* A tab keeps its label on one line; the row scrolls instead. */
-.tabs > * {
+.tab {
+  display: inline-flex;
   flex-shrink: 0;
-  width: max-content;
+  align-items: center;
+  gap: 6px;
+  height: calc(var(--ui-control-height) - 2px);
+  padding: 0 10px;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-decoration: none;
+  text-transform: var(--ui-label-case);
+  white-space: nowrap;
+}
+
+.tab:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+.selected,
+.selected:hover {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+}
+
+.count {
+  color: var(--ui-muted);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
 }

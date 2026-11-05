@@ -1,15 +1,15 @@
 import type { Viewport } from '@mokly/mokly'
 import { MockLink } from '@mokly/mokly'
-import { Button } from '@firna/ui/button'
 import { InputFrame, Textarea } from '@firna/ui/input'
 import { RadioCard, RadioCardGroup } from '@firna/ui/radio'
-import { Caption } from '@firna/ui/typography'
 import { Search } from 'lucide-react'
+import { ActionButton } from '../components/common/actions'
 import { ExternalLink } from '../components/common/ExternalLink'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
 import { workspaceGroups } from '../components/workspaces/groups'
 import { Sidebar } from '../components/workspaces/Sidebar'
+import { control } from '../design/metrics'
 import { addableRepositories } from '../fixtures/repositories'
 import { noop } from '../noop'
 import { paths } from '../paths'
@@ -23,13 +23,9 @@ export function AddRepositoryScreen(props: { viewport: Viewport }) {
   const actions = (
     <>
       <MockLink asChild to={paths.shell}>
-        <Button onPress={noop} tone="secondary">
-          Cancel
-        </Button>
+        <ActionButton>Cancel</ActionButton>
       </MockLink>
-      <Button onPress={noop} tone="primary">
-        Add repository
-      </Button>
+      <ActionButton tone="primary">Add repository</ActionButton>
     </>
   )
   const page = (
@@ -45,6 +41,7 @@ export function AddRepositoryScreen(props: { viewport: Viewport }) {
           onChangeText={noop}
           placeholder="Search repositories"
           prefixIcon={Search}
+          size={control.field}
           value=""
         />
         <RadioCardGroup label="Repository">
@@ -58,22 +55,25 @@ export function AddRepositoryScreen(props: { viewport: Viewport }) {
             />
           ))}
         </RadioCardGroup>
-        <Caption>
+        <p className={styles.note}>
           The list shows the repositories that the GitHub App can reach.{' '}
           <ExternalLink href={githubAccessUrl}>Manage access</ExternalLink>
-        </Caption>
+        </p>
         <Textarea
           hint="Optional. Runs when the base updates and each time a sandbox starts."
           label="Startup script"
           numberOfLines={3}
           onChangeText={noop}
           placeholder="npm ci"
+          size={control.field}
           value=""
         />
         {mobile ? null : (
           <div className={styles.actions}>
             {actions}
-            <Caption>Preparing the base takes a few minutes.</Caption>
+            <p className={styles.note}>
+              Preparing the base takes a few minutes.
+            </p>
           </div>
         )}
       </div>

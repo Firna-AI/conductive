@@ -12,7 +12,7 @@ export function ExternalLink(props: { href: string; children: ReactNode }) {
       target="_blank"
     >
       {props.children}
-      <ExternalLinkIcon size={14} />
+      <ExternalLinkIcon size={12} />
     </a>
   )
 }

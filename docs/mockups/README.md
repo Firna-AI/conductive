@@ -2,7 +2,7 @@
 
 The mockups are the visual spec of the app: a browser-only tool where each
 workspace is a cloud sandbox with its own branch, a chat with coding agents,
-files, a terminal, port previews, a live desktop, and a GitHub banner.
+files, a terminal, port previews, a live desktop, and a pull request bar.
 [Mokly](https://www.npmjs.com/package/@mokly/mokly) renders every screen at
 mobile and desktop sizes, in light and dark, from React components that use
 [`@firna/ui`](https://www.npmjs.com/package/@firna/ui).
@@ -30,9 +30,36 @@ Git ignores the build output, `mokly-static/` and
 
 The catalogue shows the desktop view beside the phone, in a frame narrower
 than a laptop screen. The desktop layout narrows with its window: below
-1280 px the sidebar and the chat get narrower, and below 900 px the sidebar
-hides and the workspace list moves to its own page. Use the expand control of
-the frame to see the full desktop layout.
+1280 px the sidebar and the right column get narrower, and below 900 px the
+sidebar hides. The icon rail stays, and its Workspaces item opens the list as
+its own page. A narrow right column hides the detail of the pull request bar
+and the label of its GitHub link. Use the expand control of the frame to see
+the full desktop layout.
+
+## The design
+
+The design is Graphite: dark-first, with near-black surfaces, cool greys, and
+one bright sky accent for what is active, such as the selected rail item, a
+working agent, and the main action. It is dense, with small radii, and its
+labels (tabs, section names, times) use the monospace font in capitals. The
+light scheme uses the same cool greys and a darker accent.
+
+The desktop layout has four columns. An icon rail holds the mark and the app
+actions. The sidebar lists the workspaces of each repository, one line each.
+The chat sits in the centre under a slim header. The right column has the
+pull request bar on top, the All files, Changes, and Checks tabs below it,
+and the Terminal, Preview, and Desktop tabs at the bottom. A phone shows the
+workspace with a compact pull request row at the top and five tabs at the
+bottom.
+
+- The tokens live in `src/design/`: the colours of each scheme in
+  `palette.ts`, and the type, density, sizes, radii, and fonts in
+  `metrics.ts`. The renderer writes them as `--ui-*` CSS variables, and gives
+  `@firna/ui` the same colours through its theme.
+- `ActionButton` and `IconButton` in `src/components/common/actions.tsx` give
+  the Firna button the dense size and a lighter label.
+- A state tints a whole bar or box, and its edges stay neutral. No box has
+  an accent strip on any edge.
 
 ## The catalogue
 
@@ -40,7 +67,7 @@ the frame to see the full desktop layout.
 | ------------------------- | ----------------------------------------------------------------------- |
 | `app`                     | A ready workspace: chat, changed files, and a pull request to merge     |
 | `app/shell`               | The workspace list, first run, and the sandbox starting, stopped, error |
-| `app/banner`              | The GitHub banner: no pull request, checks running or failed, merge     |
+| `app/banner`              | The pull request bar and Checks: none, running, failed, ready, merged   |
 | `app/new-workspace`       | The form, its error, the workspace while it starts, the first turn      |
 | `app/repository-settings` | The base and its updates, install software, and add a repository        |
 | `app/chat`                | Messages and tool calls, a running turn, steer, interrupt, a failure    |
@@ -59,8 +86,9 @@ with child folders shows one canonical screen first.
 | `src/screens/`                      | One React component for each app screen, for both viewports         |
 | `src/components/`                   | Layout and parts that the screens share, where `@firna/ui` has none |
 | `src/fixtures/`                     | The sample repositories, workspaces, chats, files, and output       |
-| `src/render.tsx`                    | The renderer: the Firna theme for the colour scheme, and its CSS    |
-| `src/theme.ts`                      | The Firna theme of each scheme, as CSS variables for the layout     |
+| `src/design/`                       | The design tokens: colours, type, density, sizes, radii, and fonts  |
+| `src/render.tsx`                    | The renderer: the Firna theme and the tokens of the colour scheme   |
+| `src/theme.ts`                      | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`                      | The catalogue paths that screens link to                            |
 | `src/fonts/`                        | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json`           | The Mokly configuration: the root, the renderer, and the schemes    |
@@ -76,8 +104,8 @@ with child folders shows one canonical screen first.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `MockLink`. A Firna control becomes a link
-  through `MockLink asChild`.
-- Layout styles are CSS Modules beside their component. They read the Firna
-  theme through the `--ui-*` variables that the renderer writes.
+  through `MockLink asChild`. Tabs are links, so each view has its own path.
+- Layout styles are CSS Modules beside their component. They read the design
+  tokens through the `--ui-*` variables that the renderer writes.
 - Controls come from `@firna/ui`. A control without a handler renders as
   disabled, so the screens pass `noop` from `src/noop.ts`.

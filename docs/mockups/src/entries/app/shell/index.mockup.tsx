@@ -9,7 +9,7 @@ export const appShell = defineScreen({
   description:
     'The workspace list, grouped by repository, with the state of each sandbox. On mobile it is the home screen. On desktop it is the sidebar, and the main area waits for a choice.',
   rationale:
-    'Each row shows a status dot and a label, so the state never depends on colour alone. Opening a stopped workspace resumes its sandbox.',
+    'Each row is one line: the name, the state, and the time since the last activity. A running agent makes the row bold, a stopped sandbox dims it with a pause mark, and screen readers hear each state. Opening a stopped workspace resumes its sandbox.',
   relatedDocs: [],
   propSchema: workspaceListSchema,
   props: { list: 'workspaces' },

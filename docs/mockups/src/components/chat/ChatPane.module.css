@@ -6,7 +6,10 @@
   min-height: 0;
 }
 
-/* Column-reverse keeps the newest messages in view, as a chat scrolls. */
+/*
+ * Column-reverse keeps the newest messages in view, as a chat scrolls. A
+ * short transcript still starts at the top, through its auto bottom margin.
+ */
 .scroll {
   display: flex;
   flex: 1;
@@ -18,26 +21,26 @@
 .transcript {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--ui-chat-gap);
   width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 24px 24px 16px;
+  max-width: var(--ui-chat-width);
+  margin: 0 auto auto;
+  padding: 24px 28px 14px;
   box-sizing: border-box;
 }
 
 .footer {
   width: 100%;
-  max-width: 760px;
+  max-width: var(--ui-chat-width);
   margin: 0 auto;
-  padding: 0 24px 20px;
+  padding: 0 20px 16px;
   box-sizing: border-box;
 }
 
 .mobile .transcript {
-  padding: 16px 16px 12px;
+  padding: 16px 16px 10px;
 }
 
 .mobile .footer {
-  padding: 0 12px 12px;
+  padding: 0 10px 10px;
 }

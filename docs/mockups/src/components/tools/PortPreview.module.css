@@ -7,16 +7,13 @@
 
 .toolbar {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
-  gap: 4px;
-  min-height: 48px;
-  padding: 0 8px 0 12px;
+  gap: 2px;
+  height: calc(var(--ui-bar-height) - 4px);
+  padding: 0 6px;
   border-bottom: 1px solid var(--ui-border);
   box-sizing: border-box;
-}
-
-.ports {
-  flex-shrink: 0;
 }
 
 .spacer {
@@ -30,7 +27,7 @@
 .frame {
   flex: 1;
   min-height: 0;
-  margin: 12px;
+  margin: 8px;
   overflow: hidden;
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius-lg);
@@ -43,5 +40,5 @@
 }
 
 .port {
-  width: 96px;
+  width: 88px;
 }

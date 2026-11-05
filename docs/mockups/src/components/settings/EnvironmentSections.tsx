@@ -1,10 +1,10 @@
-import { Button } from '@firna/ui/button'
 import { InputFrame } from '@firna/ui/input'
-import { List, ListItem } from '@firna/ui/list'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { control } from '../../design/metrics'
 import { envVars, startupScript } from '../../fixtures/repositories'
 import { noop } from '../../noop'
+import { ActionButton, IconButton } from '../common/actions'
 import { Section } from './Section'
 import styles from './EnvironmentSections.module.css'
 
@@ -13,11 +13,7 @@ export function StartupScriptSection() {
   const theme = useSharedUiTheme()
   return (
     <Section
-      actions={
-        <Button disabled onPress={noop} size="sm" tone="secondary">
-          Save script
-        </Button>
-      }
+      actions={<ActionButton disabled>Save script</ActionButton>}
       description="Runs when the base updates and each time a sandbox starts."
       title="Startup script"
     >
@@ -27,6 +23,7 @@ export function StartupScriptSection() {
         multiline
         numberOfLines={6}
         onChangeText={noop}
+        size={control.field}
         value={startupScript}
       />
     </Section>
@@ -40,48 +37,27 @@ export function StartupScriptSection() {
 export function EnvVarsSection() {
   return (
     <Section
-      actions={
-        <Button icon={Plus} onPress={noop} size="sm" tone="secondary">
-          Add variable
-        </Button>
-      }
+      actions={<ActionButton icon={Plus}>Add variable</ActionButton>}
       description="Available in every sandbox of this repository. Changes apply the next time a sandbox starts."
       title="Environment variables"
     >
-      <div className={styles.list}>
-        <List
-          accessibilityLabel="Environment variables"
-          itemKey={(item) => item.name}
-          items={[...envVars]}
-          renderItem={(item) => (
-            <ListItem
-              description={<span className={styles.value}>••••••••••••</span>}
-              size="sm"
-              title={<span className={styles.name}>{item.name}</span>}
-              trailing={
-                <div className={styles.rowActions}>
-                  <Button
-                    accessibilityLabel={`Change the value of ${item.name}`}
-                    icon={Pencil}
-                    onPress={noop}
-                    shape="square"
-                    size="sm"
-                    tone="plain"
-                  />
-                  <Button
-                    accessibilityLabel={`Delete ${item.name}`}
-                    icon={Trash2}
-                    onPress={noop}
-                    shape="square"
-                    size="sm"
-                    tone="plain"
-                  />
-                </div>
-              }
-            />
-          )}
-        />
-      </div>
+      <ul aria-label="Environment variables" className={styles.list}>
+        {envVars.map((item) => (
+          <li className={styles.row} key={item.name}>
+            <span className={styles.name}>{item.name}</span>
+            <span aria-label="Value set" className={styles.value} role="img">
+              ••••••••
+            </span>
+            <span className={styles.actions}>
+              <IconButton
+                icon={Pencil}
+                label={`Change the value of ${item.name}`}
+              />
+              <IconButton icon={Trash2} label={`Delete ${item.name}`} />
+            </span>
+          </li>
+        ))}
+      </ul>
     </Section>
   )
 }

@@ -30,7 +30,7 @@ export type Workspace = {
   agent: AgentKey
   /** The status in the workspace list when the app opens. */
   status: ActivityStatus
-  /** When the workspace was last active. */
+  /** The time since the last activity, such as `2h`. */
   updated: string
 }
 
@@ -41,7 +41,7 @@ export const checkoutAutocomplete: Workspace = {
   repository: 'storefront',
   agent: 'claude-code',
   status: 'stopped',
-  updated: '2 hours ago',
+  updated: '2h',
 }
 
 /** The workspace that the create flow makes. */
@@ -81,7 +81,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'storefront',
     agent: 'claude-code',
     status: 'stopped',
-    updated: 'yesterday',
+    updated: '1d',
   },
   {
     key: 'webhook-retries',
@@ -90,7 +90,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'billing-service',
     agent: 'claude-code',
     status: 'ready',
-    updated: '5 minutes ago',
+    updated: '5m',
   },
   {
     key: 'invoice-fonts',
@@ -99,7 +99,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'billing-service',
     agent: 'codex',
     status: 'error',
-    updated: '40 minutes ago',
+    updated: '40m',
   },
   {
     key: 'pricing-copy',
@@ -108,6 +108,6 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'marketing-site',
     agent: 'claude-code',
     status: 'stopped',
-    updated: '3 days ago',
+    updated: '3d',
   },
 ]

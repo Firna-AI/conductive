@@ -19,3 +19,12 @@ export const paths = {
   preview: 'app/tools/preview',
   desktop: 'app/tools/desktop',
 } as const
+
+/** The screen that shows the checks of each pull request state. */
+export const checksPaths = {
+  none: 'app/banner',
+  'checks-running': 'app/banner/checks-running',
+  'checks-failed': 'app/banner/checks-failed',
+  'ready-to-merge': 'app/banner/ready-to-merge',
+  merged: 'app/banner/merged',
+} as const

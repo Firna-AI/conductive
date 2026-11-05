@@ -65,3 +65,6 @@ export const baseSession: readonly TerminalLine[] = [
 export const baseSessionPrompt = `${baseLocation} $ `
 
 export const workspaceSessionPrompt = `${workspaceLocation} $ `
+
+/** A new workspace: the terminal waits at its first prompt. */
+export const freshSessionPrompt = 'storefront (cal/saved-carts) $ '

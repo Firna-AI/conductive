@@ -2,13 +2,20 @@
  * Chat transcripts. Text in backticks renders as inline code.
  */
 
+import { changedFiles, type ChangedFile } from './files'
+
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
 export type ToolCallStatus = 'done' | 'running' | 'stopped'
 
 export type ChatItem =
   | { kind: 'user'; id: string; text: string; queued?: boolean }
-  | { kind: 'agent'; id: string; paragraphs: readonly string[] }
+  | {
+      kind: 'agent'
+      id: string
+      paragraphs: readonly string[]
+      bullets?: readonly string[]
+    }
   | {
       kind: 'tool'
       id: string
@@ -20,6 +27,15 @@ export type ChatItem =
   | { kind: 'stopped'; id: string }
   | { kind: 'error'; id: string; text: string }
   | { kind: 'working'; id: string; elapsed: string }
+  | {
+      kind: 'turn-end'
+      id: string
+      duration: string
+      files: readonly ChangedFile[]
+    }
+
+/** One tool call of an agent turn. */
+export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
 
 export const conversationKeys = [
   'history',
@@ -70,6 +86,7 @@ const autocompleteStart: readonly ChatItem[] = [
     '+64',
   ),
   tool('edit-form', 'edit', 'src/app/checkout/AddressForm.tsx', '+38 −6'),
+  tool('remove-lookup', 'run', 'git rm src/app/checkout/postcodeLookup.ts'),
 ]
 
 const autocompleteTests: readonly ChatItem[] = [
@@ -86,11 +103,16 @@ const autocompleteEnd: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'done',
-    paragraphs: [
-      'Done. The address field now suggests places as you type, and choosing one fills the street, city, and postcode. Manual entry still works when there is no match.',
-      'I added unit tests for the hook, ran the checkout end-to-end tests, and opened pull request #482.',
+    paragraphs: ['Done. Checkout now suggests addresses as you type.'],
+    bullets: [
+      'Choosing a suggestion fills the street, city, and postcode.',
+      'Manual entry still works when there is no match.',
+      'Removed the old postcode lookup, which the suggestions replace.',
+      'Unit tests cover `useAddressAutocomplete`, and the checkout end-to-end tests pass.',
+      'Opened pull request #482.',
     ],
   },
+  { kind: 'turn-end', id: 'turn-end', duration: '4m 12s', files: changedFiles },
 ]
 
 const e2eRunning: ChatItem = {
@@ -119,13 +141,13 @@ export const conversations: Readonly<
     ...autocompleteStart,
     ...autocompleteTests,
     e2eRunning,
-    { kind: 'working', id: 'working', elapsed: '2 min 41 s' },
+    { kind: 'working', id: 'working', elapsed: '2m 41s' },
   ],
   steer: [
     ...autocompleteStart,
     ...autocompleteTests,
     e2eRunning,
-    { kind: 'working', id: 'working', elapsed: '2 min 58 s' },
+    { kind: 'working', id: 'working', elapsed: '2m 58s' },
   ],
   interrupted: [
     ...autocompleteStart,
@@ -158,7 +180,7 @@ export const conversations: Readonly<
       target: 'getServerSession',
       status: 'running',
     },
-    { kind: 'working', id: 'working', elapsed: '24 s' },
+    { kind: 'working', id: 'working', elapsed: '24s' },
   ],
 }
 

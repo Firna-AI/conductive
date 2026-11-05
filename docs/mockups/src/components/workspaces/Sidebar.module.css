@@ -1,18 +1,26 @@
 .top {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 18px 16px 12px;
+  flex-shrink: 0;
+  align-items: center;
+  height: var(--ui-bar-height);
+  padding: 0 18px;
+  border-bottom: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-transform: var(--ui-label-case);
 }
 
 .scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 4px 8px 16px;
-}
-
-.bottom {
-  padding: 10px 12px 14px;
-  border-top: 1px solid var(--ui-border);
+  padding: 12px 8px 16px;
 }

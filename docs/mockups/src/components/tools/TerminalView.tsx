@@ -1,6 +1,5 @@
-import { Button } from '@firna/ui/button'
 import type { TerminalLine, TerminalTone } from '../../fixtures/terminal'
-import { noop } from '../../noop'
+import { ActionButton } from '../common/actions'
 import styles from './TerminalView.module.css'
 
 const toneClass: Readonly<Record<TerminalTone, string>> = {
@@ -51,15 +50,9 @@ export function TerminalView(props: {
       {props.extraKeys ? (
         <div className={styles.keys}>
           {extraKeys.map((key) => (
-            <Button
-              accessibilityLabel={key.name}
-              key={key.name}
-              onPress={noop}
-              size="sm"
-              tone="secondary"
-            >
+            <ActionButton accessibilityLabel={key.name} key={key.name}>
               {key.label}
-            </Button>
+            </ActionButton>
           ))}
         </div>
       ) : null}

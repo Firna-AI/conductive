@@ -10,7 +10,7 @@ export const app = defineScreen({
   description:
     'A ready workspace: the finished chat, the changed files, and a pull request that is ready to merge.',
   rationale:
-    'Desktop keeps the chat beside the tool panel, so the user sees the files change while the agent works. A phone has no room for both, so tabs switch between the chat and each tool.',
+    'Desktop keeps the chat beside a right column: the pull request bar on top, the files and checks below it, and the tools at the bottom, so the user sees the files change while the agent works. A phone has no room for both, so tabs switch between the chat, the files, and each tool.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: readyWorkspace,

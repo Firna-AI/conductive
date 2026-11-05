@@ -1,9 +1,10 @@
-.starting {
+.waiting {
   display: flex;
   flex: 1;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 32px 24px;
+  gap: 8px;
+  padding: 24px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
 }

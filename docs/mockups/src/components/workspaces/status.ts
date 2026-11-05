@@ -1,16 +1,19 @@
+import type { LucideIcon } from 'lucide-react'
+import { CircleAlert, CirclePause } from 'lucide-react'
 import type { ActivityStatus } from '../../fixtures/workspaces'
-
-/** A tone that both the Firna badge and status dot accept. */
-export type StatusTone = 'neutral' | 'primary' | 'warning' | 'danger'
+import type { StatusTone } from '../common/StatusText'
 
 export type StatusPresentation = {
   label: string
   tone: StatusTone
-  pulse: boolean
-  /** A dim dot, for a sandbox that does not run. */
+  /** A spinner shows while the sandbox starts or the agent works. */
+  busy: boolean
+  /** The icon of a state that needs one, in the list and the header. */
+  icon?: LucideIcon
+  /** An agent turn runs: the list shows the row in bold. */
+  active: boolean
+  /** The sandbox does not run: the list dims the row. */
   dim: boolean
-  /** Whether a list row also shows when the workspace was last active. */
-  showsTime: boolean
 }
 
 export const activityPresentation: Readonly<
@@ -18,37 +21,39 @@ export const activityPresentation: Readonly<
 > = {
   working: {
     label: 'Working',
-    tone: 'primary',
-    pulse: true,
+    tone: 'active',
+    busy: true,
+    active: true,
     dim: false,
-    showsTime: false,
   },
   ready: {
     label: 'Ready',
-    tone: 'primary',
-    pulse: false,
+    tone: 'success',
+    busy: false,
+    active: false,
     dim: false,
-    showsTime: true,
   },
   starting: {
     label: 'Starting',
     tone: 'warning',
-    pulse: true,
+    busy: true,
+    active: false,
     dim: false,
-    showsTime: false,
   },
   stopped: {
     label: 'Stopped',
-    tone: 'neutral',
-    pulse: false,
+    tone: 'muted',
+    busy: false,
+    icon: CirclePause,
+    active: false,
     dim: true,
-    showsTime: true,
   },
   error: {
     label: "Couldn't start",
     tone: 'danger',
-    pulse: false,
+    busy: false,
+    icon: CircleAlert,
+    active: false,
     dim: false,
-    showsTime: true,
   },
 }

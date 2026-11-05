@@ -8,16 +8,16 @@ import {
 export const files = defineScreen({
   title: 'Files',
   description:
-    'All: every file of the branch as a tree. A letter marks each added or modified file, and a file with a preview opens it.',
+    'All files: every file of the branch as a tree. A small square marks each added or modified file, and a file with a preview opens it.',
   rationale:
-    'All and Changes are links, so each view has its own address. On mobile the Files tab shows the list, and a file opens full screen with a way back.',
+    'All files, Changes, and Checks are links, so each view has its own address. On a phone the Files tab shows the same tabs, and a file opens full screen with a way back.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {
     ...readyWorkspace,
     banner: 'checks-failed',
     files: 'all',
-    focus: 'tool',
+    focus: 'files',
   },
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
@@ -27,7 +27,7 @@ export const files = defineScreen({
       slug: 'changes',
       title: 'Changes',
       description:
-        'The files that the branch changes against the default branch, with the lines that each change adds and removes.',
+        'The files that the branch changes against the default branch: the folder, the name, the lines that each change adds and removes, and a square for added, modified, or deleted.',
       props: { files: 'changes' },
     },
     {

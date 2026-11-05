@@ -1,64 +1,31 @@
 import type { Viewport } from '@mokly/mokly'
 import { ChatPane } from '../components/chat/ChatPane'
-import { FilesPanel } from '../components/files/FilesPanel'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import { DesktopView } from '../components/tools/DesktopView'
-import { PortPreview, PreviewEmpty } from '../components/tools/PortPreview'
-import { TerminalView } from '../components/tools/TerminalView'
-import { GitHubBanner } from '../components/workspace/GitHubBanner'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
-import { SandboxPanel } from '../components/workspace/SandboxNotice'
-import { ToolPanel } from '../components/workspace/ToolPanel'
+import {
+  PullRequestBar,
+  PullRequestRow,
+} from '../components/workspace/PullRequestBar'
+import { ToolsPanel } from '../components/workspace/ToolsPanel'
+import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { workspaceGroups } from '../components/workspaces/groups'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { conversations, steerDraft } from '../fixtures/conversations'
-import { workspaceSession } from '../fixtures/terminal'
 import {
   agentNames,
   openableWorkspaceRecords,
   type ActivityStatus,
 } from '../fixtures/workspaces'
+import { FilesContent, startingLogFor, ToolContent } from './workspaceParts'
 import type { WorkspaceState } from './workspaceState'
 import styles from './WorkspaceScreen.module.css'
 
 const runningConversations = new Set(['running', 'steer', 'first-turn'])
 
-function ToolContent(props: { state: WorkspaceState; viewport: Viewport }) {
-  const { state } = props
-  if (state.sandbox !== 'ready') {
-    return (
-      <SandboxPanel
-        action={props.viewport === 'mobile'}
-        state={state.sandbox}
-      />
-    )
-  }
-  switch (state.tool) {
-    case 'files':
-      return (
-        <FilesPanel
-          edited={state.workspace === 'checkout-autocomplete'}
-          view={state.files}
-        />
-      )
-    case 'terminal':
-      return (
-        <TerminalView
-          extraKeys={props.viewport === 'mobile'}
-          lines={workspaceSession}
-        />
-      )
-    case 'preview':
-      return state.ports === 'open' ? <PortPreview /> : <PreviewEmpty />
-    case 'desktop':
-      return <DesktopView />
-  }
-}
-
 /**
- * An open workspace: its header, the GitHub banner, the chat, and the tools.
- * Desktop shows the chat beside the tool panel; mobile shows one of them
+ * An open workspace: its header, the pull request, the chat, the files, and
+ * the tools. Desktop shows them side by side; a phone shows one at a time,
  * with tabs to switch.
  */
 export function WorkspaceScreen(props: {
@@ -84,45 +51,47 @@ export function WorkspaceScreen(props: {
       }}
       items={conversations[state.conversation]}
       problem={problem}
+      starting={startingLogFor(state)}
       viewport={viewport}
     />
   )
+  const files = <FilesContent state={state} viewport={viewport} />
   const tool = <ToolContent state={state} viewport={viewport} />
-  const header = (
-    <WorkspaceHeader
-      status={status}
-      viewport={viewport}
-      workspace={workspace}
-    />
-  )
-  const banner = (
-    <GitHubBanner
-      state={state.banner}
-      viewport={viewport}
-      workspace={workspace}
-    />
-  )
   if (viewport === 'mobile') {
+    const body = { chat, files, tool }
     return (
       <MobileFrame>
-        {header}
-        {banner}
-        <div className={styles.mobileBody}>
-          {state.focus === 'chat' ? chat : tool}
-        </div>
-        <MobileTabBar selected={state.focus === 'chat' ? 'chat' : state.tool} />
+        <WorkspaceHeader
+          status={status}
+          viewport={viewport}
+          workspace={workspace}
+        />
+        <PullRequestRow state={state.banner} workspace={workspace} />
+        <div className={styles.mobileBody}>{body[state.focus]}</div>
+        <MobileTabBar
+          selected={state.focus === 'tool' ? state.tool : state.focus}
+        />
       </MobileFrame>
     )
   }
   const groups = workspaceGroups({ open: { workspace, status } })
   return (
     <AppFrame sidebar={<Sidebar groups={groups} />}>
-      {header}
-      {banner}
-      <div className={styles.body}>
-        {chat}
-        <ToolPanel tool={state.tool}>{tool}</ToolPanel>
-      </div>
+      <WorkspaceBody
+        chat={chat}
+        files={files}
+        header={
+          <WorkspaceHeader
+            status={status}
+            viewport={viewport}
+            workspace={workspace}
+          />
+        }
+        pullRequest={
+          <PullRequestBar state={state.banner} workspace={workspace} />
+        }
+        tools={<ToolsPanel tool={state.tool}>{tool}</ToolsPanel>}
+      />
     </AppFrame>
   )
 }

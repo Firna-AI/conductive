@@ -8,14 +8,10 @@ import {
   Folder,
   FolderOpen,
 } from 'lucide-react'
-import { changeLabels, type TreeEntry } from '../../fixtures/files'
+import type { TreeEntry } from '../../fixtures/files'
+import { ChangeIcon } from './ChangeIcon'
 import { previewPaths } from './previewPaths'
 import styles from './FileTree.module.css'
-
-const marks = {
-  added: { letter: 'A', className: styles.added },
-  modified: { letter: 'M', className: styles.modified },
-} as const
 
 /** The chevron of a folder, or the space where a file has none. */
 function Disclosure(props: { entry: TreeEntry }) {
@@ -29,7 +25,7 @@ function Disclosure(props: { entry: TreeEntry }) {
 
 function EntryIcon(props: { entry: TreeEntry }) {
   const { entry } = props
-  const icon = { className: styles.icon, size: 15 }
+  const icon = { className: styles.icon, size: 14 }
   if (entry.folder) {
     return entry.open ? <FolderOpen {...icon} /> : <Folder {...icon} />
   }
@@ -45,18 +41,10 @@ function Row(props: { entry: TreeEntry }) {
       <Disclosure entry={entry} />
       <EntryIcon entry={entry} />
       <span className={styles.name}>{entry.name}</span>
-      {entry.change ? (
-        <span
-          aria-label={changeLabels[entry.change]}
-          className={`${styles.mark} ${marks[entry.change].className}`}
-          role="img"
-        >
-          {marks[entry.change].letter}
-        </span>
-      ) : null}
+      {entry.change ? <ChangeIcon change={entry.change} /> : null}
     </>
   )
-  const indent = { paddingLeft: 8 + entry.depth * 16 }
+  const indent = { paddingLeft: 6 + entry.depth * 14 }
   if (!entry.preview) {
     return (
       <div className={styles.row} style={indent}>

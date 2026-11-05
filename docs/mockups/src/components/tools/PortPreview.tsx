@@ -1,45 +1,25 @@
-import { Button } from '@firna/ui/button'
 import { InputFrame } from '@firna/ui/input'
-import type { LucideIcon } from 'lucide-react'
 import { Globe, Plus, RotateCw, X } from 'lucide-react'
+import { control } from '../../design/metrics'
 import { openPort, previewUrl } from '../../fixtures/previews'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
+import { ActionButton, IconButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
 import { ExternalLink } from '../common/ExternalLink'
 import { LinkTabs } from '../common/LinkTabs'
 import { StorefrontPage } from './StorefrontPage'
 import styles from './PortPreview.module.css'
 
-function IconButton(props: { label: string; icon: LucideIcon }) {
-  return (
-    <Button
-      accessibilityLabel={props.label}
-      icon={props.icon}
-      onPress={noop}
-      shape="square"
-      size="sm"
-      tone="plain"
-    />
-  )
-}
-
 /** A web server of the sandbox in a frame, with a link to a new tab. */
 export function PortPreview() {
   const tabs = [
-    {
-      label: `Port ${openPort}`,
-      to: paths.preview,
-      icon: Globe,
-      selected: true,
-    },
+    { label: `Port ${openPort}`, to: paths.preview, selected: true },
   ]
   return (
     <div className={styles.preview}>
       <div className={styles.toolbar}>
-        <span className={styles.ports}>
-          <LinkTabs label="Previews" tabs={tabs} />
-        </span>
+        <LinkTabs label="Previews" tabs={tabs} />
         <IconButton icon={Plus} label="Preview another port" />
         <span className={styles.spacer} />
         <IconButton icon={RotateCw} label="Reload" />
@@ -67,13 +47,11 @@ export function PreviewEmpty() {
               inputMode="numeric"
               onChangeText={noop}
               placeholder="3000"
-              size="sm"
+              size={control.field}
               value=""
             />
           </div>
-          <Button onPress={noop} size="sm" tone="primary">
-            Open preview
-          </Button>
+          <ActionButton tone="primary">Open preview</ActionButton>
         </div>
       }
       body="Open a web server that runs in this sandbox."

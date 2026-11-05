@@ -13,8 +13,9 @@ body {
 
 body {
   margin: 0;
-  background: var(--ui-bg);
+  background: var(--ui-surface);
   color: var(--ui-ink);
   font-family: var(--ui-font-sans);
+  font-size: var(--ui-text-md);
   -webkit-font-smoothing: antialiased;
 }

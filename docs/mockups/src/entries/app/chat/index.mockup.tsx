@@ -8,9 +8,9 @@ import {
 export const chat = defineScreen({
   title: 'Chat',
   description:
-    'A finished turn: the request, the agent replies, and each tool call in a bordered row. The agent opened a pull request, whose checks run.',
+    "A finished turn: the request, the agent's replies, and its tool calls folded into one line each. The turn ends with its duration and the files it changed. The agent opened a pull request, whose checks run.",
   rationale:
-    'Tool calls are compact rows with a full border, not cards with an accent edge. The newest message stays in view at the bottom.',
+    "Tool calls fold into one grey line, so the agent's words carry the turn, and a run with a call in progress shows each call. The newest message stays in view at the bottom.",
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, banner: 'checks-running' },
@@ -22,7 +22,7 @@ export const chat = defineScreen({
       slug: 'running',
       title: 'Running turn',
       description:
-        'The agent works: a tool call runs and the elapsed time shows. Stop sits beside Send, and the composer steers the turn.',
+        'The agent works: the current run of tool calls shows each call, and the elapsed time shows. Stop sits beside Send, and the composer steers the turn.',
       props: { conversation: 'running', banner: 'none' },
     },
     {

@@ -51,8 +51,10 @@ export function workspaceGroups(
     const workspaces = isNew ? [open.workspace, ...listed] : listed
     const rows = workspaces.map((workspace) => {
       const isOpen = open !== undefined && workspace.key === open.workspace.key
+      const busy =
+        isOpen && (open.status === 'working' || open.status === 'starting')
       return {
-        workspace,
+        workspace: busy ? { ...workspace, updated: 'now' } : workspace,
         status: isOpen ? open.status : workspace.status,
         selected: isOpen,
         to: linkFor(workspace.key, isOpen),

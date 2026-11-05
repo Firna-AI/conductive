@@ -1,6 +1,5 @@
-import { Badge } from '@firna/ui/badge'
 import { MousePointer2 } from 'lucide-react'
-import { centredBadge } from '../common/badgeStyle'
+import { StatusText } from '../common/StatusText'
 import { StorefrontPage } from './StorefrontPage'
 import styles from './DesktopView.module.css'
 
@@ -12,9 +11,7 @@ export function DesktopView() {
   return (
     <div className={styles.desktop}>
       <div className={styles.toolbar}>
-        <Badge dot pulse size="sm" style={centredBadge} tone="primary">
-          Live
-        </Badge>
+        <StatusText label="Live" tone="success" />
       </div>
       <div className={styles.stage}>
         <div

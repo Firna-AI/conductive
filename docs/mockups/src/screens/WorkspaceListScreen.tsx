@@ -1,9 +1,9 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { MockLink } from '@mokly/mokly'
-import { Button } from '@firna/ui/button'
-import { H3 } from '@firna/ui/typography'
-import { FolderGit2, PanelLeft, Plus } from 'lucide-react'
+import { FolderGit2, FolderPlus, PanelLeft, Plus } from 'lucide-react'
+import { ActionButton } from '../components/common/actions'
 import { EmptyState } from '../components/common/EmptyState'
+import { Mark } from '../components/common/Mark'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import responsive from '../components/layout/responsive.module.css'
 import {
@@ -12,7 +12,6 @@ import {
 } from '../components/workspaces/groups'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { WorkspaceGroups } from '../components/workspaces/WorkspaceGroups'
-import { noop } from '../noop'
 import { paths } from '../paths'
 import styles from './WorkspaceListScreen.module.css'
 
@@ -20,7 +19,9 @@ export const workspaceListSchema = {
   type: 'object',
   additionalProperties: false,
   required: ['list'],
-  properties: { list: { enum: ['workspaces', 'first-run'] } },
+  properties: {
+    list: { enum: ['workspaces', 'first-run'] },
+  },
 } as const
 
 export type WorkspaceListState = SchemaProps<typeof workspaceListSchema>
@@ -30,9 +31,9 @@ function FirstRun() {
     <EmptyState
       action={
         <MockLink asChild to={paths.addRepository}>
-          <Button icon={Plus} onPress={noop} tone="primary">
+          <ActionButton icon={Plus} tone="primary">
             Add repository
-          </Button>
+          </ActionButton>
         </MockLink>
       }
       body="Each workspace is a sandbox with its own copy of a repository."
@@ -42,30 +43,33 @@ function FirstRun() {
   )
 }
 
-function NewWorkspaceButton(props: { label: string }) {
+/** The header of the list page. The mark shows where no rail shows it. */
+function ListHeader(props: { action: boolean; mark: boolean }) {
   return (
-    <MockLink asChild to={paths.newWorkspace}>
-      <Button icon={Plus} onPress={noop} size="sm" tone="primary">
-        {props.label}
-      </Button>
-    </MockLink>
+    <header className={styles.header}>
+      {props.mark ? <Mark /> : null}
+      <h1 className={styles.title}>Workspaces</h1>
+      {props.action ? (
+        <MockLink asChild to={paths.newWorkspace}>
+          <ActionButton icon={Plus} tone="primary">
+            New
+          </ActionButton>
+        </MockLink>
+      ) : null}
+    </header>
   )
 }
 
 /** The workspace list as a page, with its header and actions. */
-function HomeList(props: { groups: readonly WorkspaceGroup[] }) {
+function HomeList(props: { groups: readonly WorkspaceGroup[]; mark: boolean }) {
   return (
     <>
-      <header className={styles.header}>
-        <H3>Workspaces</H3>
-        <NewWorkspaceButton label="New" />
-      </header>
-      <div className={styles.scroll}>
+      <ListHeader action mark={props.mark} />
+      <div className={styles.scroll} data-mokly-scroll="workspace-page">
         <WorkspaceGroups groups={props.groups} variant="page" />
-        <MockLink asChild to={paths.addRepository}>
-          <Button icon={FolderGit2} onPress={noop} tone="secondary">
-            Add repository
-          </Button>
+        <MockLink className={styles.add} to={paths.addRepository}>
+          <FolderPlus size={15} />
+          Add repository
         </MockLink>
       </div>
     </>
@@ -88,13 +92,11 @@ export function WorkspaceListScreen(props: {
       <MobileFrame>
         {firstRun ? (
           <>
-            <header className={styles.header}>
-              <H3>Workspaces</H3>
-            </header>
+            <ListHeader action={false} mark />
             <FirstRun />
           </>
         ) : (
-          <HomeList groups={groups} />
+          <HomeList groups={groups} mark />
         )}
       </MobileFrame>
     )
@@ -107,13 +109,19 @@ export function WorkspaceListScreen(props: {
         <>
           <div className={`${responsive.wideOnly} ${styles.choose}`}>
             <EmptyState
-              action={<NewWorkspaceButton label="New workspace" />}
+              action={
+                <MockLink asChild to={paths.newWorkspace}>
+                  <ActionButton icon={Plus} tone="primary">
+                    New workspace
+                  </ActionButton>
+                </MockLink>
+              }
               icon={PanelLeft}
               title="Choose a workspace"
             />
           </div>
           <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
-            <HomeList groups={groups} />
+            <HomeList groups={groups} mark={false} />
           </div>
         </>
       )}

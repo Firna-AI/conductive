@@ -1,8 +1,9 @@
 import { Button } from '@firna/ui/button'
 import { InputFrame } from '@firna/ui/input'
-import { Caption } from '@firna/ui/typography'
 import { ArrowUp, Bot, Square } from 'lucide-react'
+import { control } from '../../design/metrics'
 import { noop } from '../../noop'
+import { ActionButton } from '../common/actions'
 import styles from './Composer.module.css'
 
 export type ComposerState = {
@@ -12,7 +13,10 @@ export type ComposerState = {
   draft: string
 }
 
-/** The message box under the chat. While a turn runs it steers the turn. */
+/**
+ * The message box under the chat. It names the agent of the workspace.
+ * While a turn runs, a message steers the turn, and Stop ends it.
+ */
 export function Composer(props: ComposerState) {
   const placeholder = props.running
     ? `Steer ${props.agent} while it works`
@@ -28,36 +32,35 @@ export function Composer(props: ComposerState) {
           numberOfLines={2}
           onChangeText={noop}
           placeholder={placeholder}
+          size={control.field}
           value={props.draft}
           variant="seamless"
         />
         <div className={styles.bar}>
           <span className={styles.agent}>
-            <Bot size={15} />
-            <Caption>{props.agent}</Caption>
+            <Bot size={14} />
+            {props.agent}
           </span>
-          <div className={styles.actions}>
-            {props.running ? (
-              <Button icon={Square} onPress={noop} size="sm" tone="secondary">
-                Stop
-              </Button>
-            ) : null}
-            <Button
-              accessibilityLabel="Send"
-              disabled={props.draft === ''}
-              icon={ArrowUp}
-              onPress={noop}
-              shape="circle"
-              size="sm"
-              tone="primary"
-            />
-          </div>
+          <span className={styles.spacer} />
+          {props.running ? (
+            <ActionButton icon={Square}>Stop</ActionButton>
+          ) : null}
+          <Button
+            accessibilityLabel="Send"
+            boxSize={control.height}
+            disabled={props.draft === ''}
+            icon={ArrowUp}
+            onPress={noop}
+            shape="square"
+            size="sm"
+            tone={props.draft === '' ? 'secondary' : 'primary'}
+          />
         </div>
       </div>
       {props.running && props.draft !== '' ? (
-        <div className={styles.hint}>
-          <Caption>{props.agent} reads this at its next step.</Caption>
-        </div>
+        <span className={styles.hint}>
+          {props.agent} reads this at its next step.
+        </span>
       ) : null}
     </div>
   )

@@ -1,0 +1,17 @@
+.added,
+.modified,
+.deleted {
+  flex-shrink: 0;
+}
+
+.added {
+  color: var(--ui-success);
+}
+
+.modified {
+  color: var(--ui-warning);
+}
+
+.deleted {
+  color: var(--ui-rose);
+}

@@ -1,6 +1,9 @@
 import styles from './DiffStat.module.css'
 
-/** The lines that a change adds and removes, such as "+38 −6". */
+/**
+ * The lines that a change adds and removes, such as "+38 −6". A deleted
+ * file shows only the lines that it removes.
+ */
 export function DiffStat(props: { added: number; removed: number }) {
   return (
     <span
@@ -8,7 +11,9 @@ export function DiffStat(props: { added: number; removed: number }) {
       className={styles.stat}
       role="img"
     >
-      <span className={styles.added}>+{props.added}</span>
+      {props.added > 0 || props.removed === 0 ? (
+        <span className={styles.added}>+{props.added}</span>
+      ) : null}
       {props.removed > 0 ? (
         <span className={styles.removed}>−{props.removed}</span>
       ) : null}

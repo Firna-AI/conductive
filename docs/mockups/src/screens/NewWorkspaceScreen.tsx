@@ -1,15 +1,16 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { MockLink } from '@mokly/mokly'
-import { Button } from '@firna/ui/button'
 import { DropdownSelector } from '@firna/ui/dropdown'
 import { Input, Textarea } from '@firna/ui/input'
 import { SegmentedControl } from '@firna/ui/segmented'
 import { CircleAlert } from 'lucide-react'
+import { ActionButton } from '../components/common/actions'
 import { Notice } from '../components/common/Notice'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
 import { workspaceGroups } from '../components/workspaces/groups'
 import { Sidebar } from '../components/workspaces/Sidebar'
+import { control } from '../design/metrics'
 import { savedCartsMessage } from '../fixtures/conversations'
 import { repositories, repositoryKeys } from '../fixtures/repositories'
 import { agentNames, savedCarts, type AgentKey } from '../fixtures/workspaces'
@@ -21,7 +22,9 @@ export const newWorkspaceSchema = {
   type: 'object',
   additionalProperties: false,
   required: ['result'],
-  properties: { result: { enum: ['form', 'error'] } },
+  properties: {
+    result: { enum: ['form', 'error'] },
+  },
 } as const
 
 export type NewWorkspaceState = SchemaProps<typeof newWorkspaceSchema>
@@ -46,14 +49,12 @@ export function NewWorkspaceScreen(props: {
   const actions = (
     <>
       <MockLink asChild to={paths.shell}>
-        <Button onPress={noop} tone="secondary">
-          Cancel
-        </Button>
+        <ActionButton>Cancel</ActionButton>
       </MockLink>
       <MockLink asChild to={paths.creating}>
-        <Button onPress={noop} tone="primary">
+        <ActionButton tone="primary">
           {failed ? 'Try again' : 'Create workspace'}
-        </Button>
+        </ActionButton>
       </MockLink>
     </>
   )
@@ -79,19 +80,27 @@ export function NewWorkspaceScreen(props: {
           label="Repository"
           onValueChange={noop}
           options={repositoryOptions}
+          size={control.field}
           value={savedCarts.repository}
         />
-        <Input label="Name" onChangeText={noop} value={savedCarts.name} />
+        <Input
+          label="Name"
+          onChangeText={noop}
+          size={control.field}
+          value={savedCarts.name}
+        />
         <Input
           hint={`Created from ${repository.defaultBranch}.`}
           label="Branch"
           onChangeText={noop}
+          size={control.field}
           value={savedCarts.branch}
         />
         <SegmentedControl
           label="Agent"
           onChange={noop}
           options={agentOptions}
+          size={control.field}
           value={savedCarts.agent}
         />
         <Textarea
@@ -99,6 +108,7 @@ export function NewWorkspaceScreen(props: {
           label="First message"
           numberOfLines={4}
           onChangeText={noop}
+          size={control.field}
           value={savedCartsMessage}
         />
         {mobile ? null : <div className={styles.actions}>{actions}</div>}

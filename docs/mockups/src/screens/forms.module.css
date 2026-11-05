@@ -1,13 +1,20 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   max-width: 560px;
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-top: 4px;
+}
+
+.note {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
 }

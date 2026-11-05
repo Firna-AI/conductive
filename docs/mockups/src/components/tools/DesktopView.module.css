@@ -7,10 +7,11 @@
 
 .toolbar {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
-  gap: 8px;
-  min-height: 48px;
-  padding: 0 16px;
+  gap: 10px;
+  height: calc(var(--ui-bar-height) - 4px);
+  padding: 0 var(--ui-pad-x);
   border-bottom: 1px solid var(--ui-border);
   box-sizing: border-box;
 }
@@ -18,11 +19,11 @@
 .stage {
   display: flex;
   flex: 1;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   min-height: 0;
-  padding: 12px;
-  background: var(--ui-bg);
+  padding: 10px;
+  background: var(--ui-sidebar);
 }
 
 /* The desktop stream of the sandbox: always a dark desktop. */
@@ -31,7 +32,7 @@
   width: 100%;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  border-radius: var(--ui-radius-md);
+  border-radius: var(--ui-radius-lg);
   background: linear-gradient(135deg, #2b3a4a 0%, #1d2731 60%, #172029 100%);
   font-family: var(--ui-font-sans);
 }

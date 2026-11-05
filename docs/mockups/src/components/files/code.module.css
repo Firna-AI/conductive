@@ -6,11 +6,11 @@
 
 .code {
   margin: 0;
-  padding: 12px 0;
+  padding: 10px 0;
   color: var(--ui-ink);
   font-family: var(--ui-font-mono);
-  font-size: 12px;
-  line-height: 19px;
+  font-size: var(--ui-text-sm);
+  line-height: 1.6;
 }
 
 .line {
@@ -20,9 +20,9 @@
 
 .number {
   flex-shrink: 0;
-  width: 44px;
+  width: 42px;
   padding-right: 12px;
-  color: var(--ui-placeholder);
+  color: var(--ui-faint);
   text-align: right;
   user-select: none;
   box-sizing: border-box;
@@ -34,46 +34,52 @@
 }
 
 .keyword {
-  color: var(--ui-primary-deep);
-  font-weight: 600;
+  color: var(--ui-code-keyword);
 }
 
 .string {
-  color: var(--ui-amber-deep);
+  color: var(--ui-code-string);
 }
 
 .comment {
-  color: var(--ui-muted);
+  color: var(--ui-code-comment);
   font-style: italic;
 }
 
 .number-token {
-  color: var(--ui-rose-deep);
+  color: var(--ui-code-number);
 }
 
 .type {
-  color: var(--ui-ink2);
-  font-weight: 600;
+  color: var(--ui-code-type);
 }
 
 .added {
-  background: var(--ui-primary-soft);
+  background: var(--ui-diff-added);
 }
 
 .removed {
-  background: var(--ui-rose-soft);
+  background: var(--ui-diff-removed);
 }
 
 .hunk {
-  padding: 4px 16px;
-  background: var(--ui-bg);
+  padding: 3px 16px;
+  background: var(--ui-diff-hunk);
   color: var(--ui-muted);
   white-space: pre;
 }
 
 .sign {
   flex-shrink: 0;
-  width: 18px;
+  width: 16px;
   color: var(--ui-muted);
   text-align: center;
+}
+
+.added .sign {
+  color: var(--ui-success);
+}
+
+.removed .sign {
+  color: var(--ui-rose);
 }
