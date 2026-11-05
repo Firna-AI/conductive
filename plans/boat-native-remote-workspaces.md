@@ -1675,7 +1675,7 @@ Open. Added on 5 November 2026 from the options check of the Milestone
 
 ### 42. Decide who may archive another person's workspace
 
-Open. Added on 5 November 2026 from the Milestone 1d mockups.
+Added on 5 November 2026 from the Milestone 1d mockups.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -1701,10 +1701,13 @@ Open. Added on 5 November 2026 from the Milestone 1d mockups.
   owners can still act on every workspace.
 - **Action:** ask the user, because it adds a permission rule that no
   requirement covers.
+- **Chosen:** B, by the user on 5 November 2026.
 
 ### 43. Decide what happens to a workspace stopped for 14 days
 
-Open. Added on 5 November 2026 from the Milestone 1d mockups.
+Open. Added on 5 November 2026 from the Milestone 1d mockups. The user
+asked the same day whether the app can download the disk or keep a
+snapshot. That added E and F, and the recommendation moved from C to F.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -1725,19 +1728,33 @@ Open. Added on 5 November 2026 from the Milestone 1d mockups.
   - **B.** Near day 14, the app archives the workspace by itself. Unpushed
     work is lost. Effort: Small.
   - **C.** Near day 14, the app pushes unpushed work to a backup branch on
-    GitHub, then archives the workspace. Effort: Medium.
+    GitHub, then archives the workspace. The push can start the
+    repository's CI, and it keeps only committed and uncommitted code.
+    Effort: Medium.
   - **D.** Near day 14, the app starts the cloud computer briefly and stops
     it again, which starts a new 14 days. Each start counts against
     Boat's start limits and uses machine time. Effort: Small.
+  - **E.** Near day 14, the app saves a Boat saved snapshot of the cloud
+    computer, then deletes it. A later start makes a new cloud computer
+    from that snapshot, exactly as it was. Each saved snapshot past the
+    plan's included count costs $0.056 a day, about $1.70 a month, and
+    the org images use the same count. Effort: Small.
+  - **F.** Near day 14, the app downloads the cloud computer's last
+    automatic snapshot, without a start, to the app's own storage on
+    Cloudflare R2, then deletes the cloud computer. Boat gives signed
+    URLs for the snapshot's chunks, which hold the home folder. A later
+    start makes a new cloud computer from the org image and puts the home
+    folder back: the code with all its files, and the agent sessions. R2
+    costs about $0.015 for each GB a month. Effort: Medium.
 - **Left out:** None.
-- **Wider fix:** C. The same backup step also serves option D of decision
-  38.
+- **Wider fix:** F. The same download also serves decision 38, in place
+  of its backup branch.
 - **Previous examples:** Option D of decision 38 proposes the same backup
   branch.
 - **Related:** Decision 16 defines Archive and the expiring mark. Decision
   38, option D, uses the same backup.
-- **Recommendation:** C. No work is lost, the list stays clean, and one
-  backup step serves both cases.
+- **Recommendation:** F. It keeps the whole home folder for a few cents,
+  and the copy sits in the app's own storage, off Boat.
 - **Action:** ask the user, because it adds behaviour that no requirement
   covers.
 
@@ -1825,7 +1842,7 @@ and 1b, and the orchestrator accepted them on 5 November 2026:
 - Users sign in with GitHub. No other sign-in method is offered.
 
 **Plans, billing, and members.** The user decided these on 5 November
-2026, in the answers to decisions 22 to 30:
+2026, in the answers to decisions 22 to 30 and 42:
 
 - Anyone with a GitHub account older than 30 days, with a verified
   email, can sign up.
@@ -1843,6 +1860,8 @@ and 1b, and the orchestrator accepted them on 5 November 2026:
   reassigned. Its agents use that user's own account.
 - Delete org stops every machine and hides the org at once, and deletes
   everything after 7 days unless an owner restores it.
+- Only a workspace's owner and the org's owners can archive the
+  workspace.
 
 Agent calls of 5 November 2026:
 
@@ -2282,6 +2301,9 @@ user decided on 5 November 2026.
       the mockups show.
 - [ ] In the archived phone view, remove the Files, Terminal, Preview,
       and Desktop tabs, because the cloud computer is gone.
+- [ ] Show Archive only to the workspace's owner and the org's owners, as
+      decision 42 says. Hide it in a member's view of another person's
+      workspace.
 - [ ] Run the mockup check. Smoke-test the changed pages.
 
 ## Milestone 2: Documentation and protocol
