@@ -805,7 +805,9 @@ The user asked on 5 November 2026 for a design that looks like Conductor,
 sleek, professional, and polished, with the mockup on the home page of
 `conductor.build` as the reference. Restyle every screen and flow of
 Milestone 1. Keep the screens, the states, the flows, and the features of
-the plan. Do not copy Conductor's name, logo, or brand assets.
+the plan. Do not copy Conductor's name, logo, or brand assets. The user
+then chose the Graphite direction on 5 November 2026. Conductor's layout
+stays the structure, and Graphite sets the look.
 
 - [ ] Restyle the shared look: light neutral surfaces, hairline borders,
       a compact type scale, small radii, and few accent colours, with a
@@ -819,11 +821,17 @@ the plan. Do not copy Conductor's name, logo, or brand assets.
       line counts after a turn, and a composer with an agent and model
       picker.
 - [ ] Restyle the phone layouts to the same look.
-- [ ] Draw five design directions as Mokly variants of three key screens:
-      the workspace, a running turn, and the repository settings. The
-      directions are Conductor, Graphite, Studio, Paper, and Soft. The user
-      asked on 5 November 2026 to review different styles.
-- [ ] Ask the user to choose a direction, and apply it to every screen.
+- [x] Ask the user to choose a design direction. The user asked on
+      5 November 2026 to review five directions: Conductor, Graphite,
+      Studio, Paper, and Soft. The user chose Graphite the same day, from
+      their descriptions, and asked to remove the directions from the
+      catalogue.
+- [ ] Apply Graphite to every screen and flow: dark-first, near-black with
+      cool greys and one bright accent, dense, an icon rail beside the
+      workspace list, and monospace labels, with a matching light scheme.
+      Keep the layout from the Conductor reference.
+- [ ] Remove the design directions, their switching code, and the tokens
+      of the other four directions from the catalogue.
 - [ ] Run the mockup check. Smoke-test the changed pages, and compare them
       with the reference images.
 - [ ] Update the design and the TODOs of this plan for each problem that
