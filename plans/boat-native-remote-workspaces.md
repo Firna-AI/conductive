@@ -1238,6 +1238,114 @@ Added on 5 November 2026 from the mockups of Milestone 1b.
   the agent, the title, and the time, and reopens the session. When a
   turn runs, closing asks first, then stops the turn.
 
+### 32. Name the product
+
+Open. Added on 5 November 2026 from the marketing mockups.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** UX wording.
+- **Background:** The mockups use the working name "Remote Code", from one
+  constant in `docs/mockups/src/brand.ts`. The domain, the GitHub App,
+  the sign-in page, and the Stripe account all show the product name.
+- **Problem:** The product has no name.
+- **Impact if no action:** Milestone 16 cannot register the domain, the
+  GitHub App, or the Stripe account.
+- **Root question:** What name do visitors and users see?
+- **Options:**
+  - **A.** Keep "Remote Code". Effort: Small.
+  - **B.** Choose a name now, and change the constant. Effort: Small.
+  - **C.** Keep the working name until Milestone 16, and choose then.
+    Effort: Small.
+- **Left out:** No name, because sign-in and the domain need one.
+- **Wider fix:** None. One constant already holds the name.
+- **Recommendation:** B. The domain and the GitHub App depend on it.
+- **Action:** ask the user, because only the user can name the product.
+
+### 33. Connect an agent in the first run
+
+Open. Added on 5 November 2026 from the marketing mockups.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** The first run installs the GitHub App, then creates the
+  first org. Decision 24 lets each user paste a Claude token or API keys
+  on the account page.
+- **Problem:** No step connects Claude or Codex, so a new user can send a
+  first task with no agent.
+- **Impact if no action:** The first task fails, and the user must find
+  the account page alone.
+- **Root question:** How does a new user get a working agent before the
+  first task?
+- **Options:**
+  - **A.** Change nothing. The account page has Connect. Effort: Small.
+  - **B.** Add a third first-run step that connects Claude or Codex.
+    Effort: Small.
+  - **C.** Show a notice in the composer when no agent is connected.
+    Effort: Small.
+  - **D.** B and C together. Effort: Small.
+- **Left out:** Signing in inside a cloud computer, which decision 24 left
+  out.
+- **Wider fix:** None.
+- **Recommendation:** D. The first run sets the agent up, and the notice
+  catches a key that is removed later.
+- **Action:** ask the user, because it adds a step and a notice that no
+  requirement covers.
+
+### 34. Set the limits of the paid plan
+
+Open. Added on 5 November 2026 from the marketing mockups.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** The free plan allows one org and 3 workspaces. The paid
+  plan, drawn as "Team", lists its compute pool, the overage price,
+  image refreshes after pushes, invites, and reassignment.
+- **Problem:** No rule sets how many workspaces or running machines a
+  paid org may have, so a visitor can read it as unlimited.
+- **Impact if no action:** Milestone 15a cannot enforce the paid limits,
+  and the site cannot state them.
+- **Root question:** Which limits does a paid org have beyond its
+  compute pool?
+- **Options:**
+  - **A.** No workspace limit. The pool and the overage price bound the
+    cost. Effort: Small.
+  - **B.** A workspace limit for each member, such as 10. Effort: Small.
+  - **C.** A limit on machines that run at once, such as 5 for each
+    member. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None.
+- **Related:** Decision 23 also limits starts a day for every user.
+- **Recommendation:** A. The pool and the overage already bound the cost.
+- **Action:** ask the user, because only the user sets the plans.
+
+### 35. Add the legal pages
+
+Open. Added on 5 November 2026 from the marketing mockups.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** The site offers open sign-up and a paid plan. The footer
+  has no legal links. Stripe expects a business to show its terms and
+  privacy policy. A follow-up item already adds terms that pass on the
+  sandbox provider's rules.
+- **Problem:** The plan has no Privacy or Terms page.
+- **Impact if no action:** Billing in Milestone 15b can wait on legal
+  pages.
+- **Root question:** Which legal pages does the site need before sign-up
+  and payments?
+- **Options:**
+  - **A.** Privacy and Terms pages, linked from the footer and the
+    sign-in page. Effort: Medium.
+  - **B.** As A, plus a refund policy. Effort: Medium.
+  - **C.** Link to pages that the billing provider hosts. Effort: Small.
+- **Left out:** No legal pages, because payments need them.
+- **Wider fix:** None.
+- **Related:** `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`.
+- **Recommendation:** B. Stripe is not the seller under decision 26, so
+  the site needs its own refund terms.
+- **Action:** ask the user, because legal text is new content that no
+  requirement covers.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -1668,21 +1776,26 @@ The user asked on 5 November 2026 for a marketing website like
 Conductor's home page, with similar claims, in the Graphite design, and
 honest to this app's features. Draw it in the Mokly catalogue first.
 
-- [ ] Draw the home page at phone and desktop sizes: a header, a hero
+- [x] Draw the home page at phone and desktop sizes: a header, a hero
       with a real app screen, feature sections, a call to action, and a
       footer.
-- [ ] Claim only what the plan decides. Leave out customer logos,
+- [x] Claim only what the plan decides. Leave out customer logos,
       testimonials, user counts, certifications, a desktop or mobile
       app, an API, and any feature that waits on an open decision.
-- [ ] Draw the pricing section: the free plan and the $30 plan per user
+- [x] Draw the pricing section: the free plan and the $30 plan per user
       with its included compute and its overage, as decision 23 says.
-- [ ] Never name the sandbox provider.
-- [ ] Draw the GitHub sign-in page, and the first run after sign-in,
+- [x] Never name the sandbox provider.
+- [x] Draw the GitHub sign-in page, and the first run after sign-in,
       which installs the GitHub App on the account that owns the user's
       repositories. Sign-up is open, as decision 22 says.
-- [ ] Run the mockup check. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Run the mockup check. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show, including the product name.
+
+Milestone completed after the orchestrator reran the mockup check, the
+lint, and the format check, and looked at the whole page. Evidence:
+`.context/boat-native-remote-workspaces/reports/milestone-1c-ui-implementor.md`
+and `.context/boat-native-remote-workspaces/checks/shots-1c/`.
 
 ## Milestone 1d: Plans, billing, and members
 
@@ -1702,7 +1815,12 @@ user decided on 5 November 2026.
       minutes, and at its daily starts, and a free org that tries to
       invite a member, each with one way forward.
 - [ ] Draw the sign-up refusal for a GitHub account that is too new or
-      has no verified email.
+      has no verified email. Agent call: it names the reason and the fix,
+      such as "Verify your email on GitHub" or the date when the account
+      can sign up, because an error names what failed and how to recover.
+- [ ] Make "Get started" the only first run. Remove the shell first-run
+      state and the not-connected create-org state, and point their
+      links to "Get started". Agent call: two first runs would disagree.
 - [ ] Draw Delete org and the 7-day restore state.
 - [ ] Draw the session history menu under a history icon in the centre
       tab bar, and closing a tab while a turn runs.
