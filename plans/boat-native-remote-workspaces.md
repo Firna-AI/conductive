@@ -5,8 +5,9 @@ Status: Active. On branch `calummoore/conductor-alternative-architecture`, no pu
 Conductor Cloud goes read-only on 13 November 2026 and shuts down on
 20 November 2026. This change builds a browser-only replacement for one
 user first: one Boat sandbox per workspace, chat with coding agents, a
-file list and preview, a terminal, port previews, a GitHub banner, a
-prepared base per repository, and agent tools that create workspaces.
+file list and preview, a terminal, port previews, a GitHub banner, one
+prepared cloud computer image per org, and agent tools that create
+workspaces.
 Nothing runs on the user's computer.
 
 The chosen approach is a Boat-native app. A web app and a Cloudflare
@@ -229,7 +230,7 @@ Added on 5 November 2026 from the options check. The user chose A on
 
 ### 9. Keep only saved software in the org image
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1. Rewritten
+Added on 5 November 2026 from the mockups of Milestone 1. Rewritten
 the same day for org settings: "Install software" now changes the org's
 software image, which every base update of the org starts from.
 
@@ -265,10 +266,14 @@ software image, which every base update of the org starts from.
   cannot restore in place.
 - **Action:** ask the user, because this adds image behaviour that no
   requirement covers.
+- **Closed:** on 5 November 2026, the user's answer to decision 13 made
+  "Install software" a script that the user builds, with no terminal. So
+  there is no Cancel and no session race. Agent call: a build runs on a
+  copy of the image and replaces it only when it succeeds.
 
 ### 10. Choose the repositories of an org
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1. Rewritten
+Added on 5 November 2026 from the mockups of Milestone 1. Rewritten
 the same day for org settings: the org settings have a Repositories
 section.
 
@@ -300,6 +305,9 @@ section.
   the paid starts by every repository that the GitHub App can reach.
 - **Action:** ask the user, because this adds a GitHub read and a base
   step that no requirement covers.
+- **Chosen:** A, by the user on 5 November 2026. A separate Repositories
+  tab chooses the repositories, and every chosen repository is bundled
+  into the org's one image.
 
 ### 11. Stop sandboxes of forgotten tabs
 
@@ -337,7 +345,7 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 
 ### 12. Update a base by hand
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1. Rewritten
+Added on 5 November 2026 from the mockups of Milestone 1. Rewritten
 the same day for org settings.
 
 - **Severity:** Medium. **Effort:** Small.
@@ -368,10 +376,14 @@ the same day for org settings.
   only fetch.
 - **Action:** ask the user, because this adds an update action that no
   requirement covers.
+- **Chosen:** A, by the user on 5 November 2026: the user builds the
+  image with "Build computer", also after a failure. The image replaces
+  the per-repository bases. Agent call: pushes and the daily timer
+  refresh the image by fetching new commits only, as in option D.
 
 ### 13. Choose what prepares an org's cloud computers
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1. Rewritten
+Added on 5 November 2026 from the mockups of Milestone 1. Rewritten
 the same day for org settings, after the user asked whether Software and
 the setup script do the same thing. The first version chose between one
 and two scripts for each repository. Its finding still holds: Boat runs
@@ -446,6 +458,11 @@ app runs the scripts itself as commands and shows their output.
     repository.
 - **Action:** ask the user, because the options change what the user
   configures, and B drops a feature that the user asked for.
+- **Chosen:** F, adapted by the user on 5 November 2026, from
+  Conductor's cloud computer settings. One image per org bundles every
+  chosen repository. "Install software" is a script, not a terminal, and
+  the user builds the image when the script changes. The startup script
+  and the env vars stay. The agent recommended C.
 
 ### 14. Accept messages before the sandbox is ready
 
@@ -930,25 +947,32 @@ the site without signing in, and the app keeps one sign-in boundary.
 
 **Workspaces and sandboxes.**
 
-- Each repository has one base sandbox. A push to the default branch
-  refreshes it at most once in 30 minutes, and a daily timer refreshes it
-  too: resume, fetch, reset to the default branch, run the startup
-  script, save a saved snapshot, and stop. Reason: each resume counts as
-  a Boat start, and the $20 plan allows 200 starts a day.
-- A new workspace starts from the newest good saved snapshot of its base,
-  with labels for the user, the repository, and the workspace. It then
-  creates its branch. Reason: a fork of a running base can copy a
-  half-done refresh.
+- Each org has one cloud computer image, a saved snapshot that bundles
+  every repository that the org chose, as the user decided on 5 November
+  2026. Reason from the user: one snapshot per org, not one per
+  repository, which would get expensive fast.
+- The user builds the image with "Build computer": it runs the install
+  script on a copy of the image, with every chosen repository cloned,
+  and replaces the image only when the build succeeds. A build keeps a
+  history. Agent call: a failed build keeps the last good image.
+- Agent call: a push to the default branch of a chosen repository
+  refreshes the image at most once in 30 minutes, and a daily timer
+  refreshes it too: resume a copy, fetch the new commits of every
+  repository, save, and stop. A refresh does not run the install script.
+  Reason: the first requirement keeps new workspaces to a small fetch,
+  and each resume counts as a Boat start.
+- A new workspace starts from the newest good image, with labels for the
+  user, the repository, and the workspace. It then creates its branch in
+  its repository's folder.
 - Each workspace sandbox has a Boat auto-stop deadline as a safety net.
   The workspace Durable Object extends it while a tab is open or an agent
   turn runs. Reason: a new sandbox stops after one hour by default.
 - Workspace sandboxes use the app's Boat environment, with the user's
   GitHub access and AI logins, as Conductor Cloud does. Reason: one user
   owns every sandbox. Sandboxes for other users will use `noEnv`.
-- "Install software" opens a terminal on the base sandbox. The user
-  installs tools and saves. The startup script and the env vars live in a
-  Boat environment, which applies them at each start. Open decisions 9,
-  13, and 17 replace this bullet.
+- The org settings keep a startup script, which runs in each workspace's
+  cloud computer at each start and resume, and env vars. Open decision 17
+  decides where the env vars live.
 - A sandbox stops after 30 minutes with no open tab and no running agent
   turn. Reason: a Boat stop ends all processes, so it must not cut off
   work. Opening the workspace resumes it, and the app shows a starting
@@ -1091,6 +1115,12 @@ part that waits on an open decision.
 - [ ] Replace "Move to section" with drag and drop, and add "New
       workspace" to the section menu.
 - [ ] Combine the model and effort pickers into one.
+- [ ] Redraw the Sandbox page as the org's cloud computer, as the user
+      asked: the build card with "Build computer" and its history, the
+      install script with the preinstalled tools, the startup script, and
+      the env vars. Move repositories to their own tab, and remove the
+      bases and the install terminal.
+- [ ] Keep the file tab header on one line.
 - [ ] Run the mockup check. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show, and rewrite decisions 9, 10, 12, 13, and 17 for
@@ -1167,7 +1197,9 @@ Depends on: 3
 
 Depends on: 4
 
-- [ ] Create and refresh the base sandbox of a repository.
+- [ ] Build the org image from the install script and the chosen
+      repositories, keep the build history, and refresh the image after
+      pushes.
 - [ ] Create a workspace: fork, labels, branch, and workspace token.
 - [ ] Add the workspace Durable Object: tabs, idle stop, and resume on
       open.
@@ -1186,7 +1218,7 @@ Depends on: 5
 - [ ] Build the app shell, the workspace list, and the sandbox states,
       with the starting card and its steps.
 - [ ] Add a draggable divider between the chat and the right column.
-- [ ] Build the new workspace and the repository settings screens.
+- [ ] Build the new workspace and the org settings screens.
 - [ ] Compare each screen with its mockup.
 
 ## Milestone 7: Chat backend
