@@ -12,9 +12,9 @@ workspaces.
 Nothing runs on the user's computer.
 
 The chosen approach is a Boat-native app. A web app and a Cloudflare
-Worker use Boat's own agents, files, port URLs, desktop stream, saved
-snapshots, environments, and webhooks. There is no daemon of our own in
-the sandbox. This change does not cover a mobile app or a provider
+Worker use Boat's files, port URLs, desktop stream, saved snapshots,
+environments, and webhooks. A small program of ours in each sandbox runs
+the agents through the agent SDKs, as decision 36 says. This change does not cover a mobile app or a provider
 other than Boat. The brainstorm notes and sources are
 in `.context/brainstorm/notes.md`.
 
@@ -54,6 +54,10 @@ this branch.
 - **Recommendation:** C.
 - **Chosen:** A, by the user on 5 November 2026. A is the smallest build
   and needs no daemon. The agent recommended C for streamed updates.
+- **Changed by decision 36 on 5 November 2026:** a small program of ours
+  in each cloud computer runs the agents through the agent SDKs. Boat
+  still provides the sandboxes, files, port URLs, desktop stream, saved
+  snapshots, environments, and webhooks.
 
 ### 2. Choose the sandbox provider
 
@@ -217,6 +221,9 @@ decision opens again with E.
   at a small cost.
 - **Action:** applied as an agent call, with the measurement in
   Milestone 7.
+- **Replaced by decision 36 on 5 November 2026:** the program in each
+  cloud computer pushes the agent events to the Durable Object over a
+  WebSocket. Nothing polls Boat's events.
 
 ### 8. Limit the workspaces that agents create
 
@@ -1386,7 +1393,7 @@ Open. Added on 5 November 2026 from the marketing mockups.
 
 ### 36. Decide whether to run the agents through SDKs
 
-Open. Added on 5 November 2026 from the user's questions about chat sync
+Added on 5 November 2026 from the user's questions about chat sync
 and the agent SDKs. The options check changed the recommendation from the
 own program, now D, to C.
 
@@ -1460,6 +1467,16 @@ own program, now D, to C.
   and one hour of testing shows whether the larger build is needed.
 - **Action:** ask the user, because the fallback in C adds the own program
   that the user chose to avoid in decision 1.
+- **Chosen by the user on 5 November 2026:** D. The user said that Boat's
+  agents are "really expensive", and asked to use the SDKs if possible.
+  The one-hour test of Boat's feed stopped before its first prompt.
+- **Agent calls on 5 November 2026:**
+  - Codex uses the Codex SDK where it gives interrupt and partial text,
+    and the Codex App Server otherwise. Milestone 7 tests it.
+  - The agents keep Boat's computer tools. The Cua Driver MCP server,
+    `computer`, is on every sandbox, and the SDK can load it.
+  - A test of the Claude Agent SDK on a Boat sandbox checks the risks of
+    D before Milestone 7. Its report goes under `.context/`.
 
 ### 37. Use only agent logins that the providers allow
 
@@ -1691,8 +1708,8 @@ otherwise. The user can override any of them.
   holds the Boat key. Reason: the browser must never hold the key.
 - D1 holds repositories, workspaces, and settings. Boat labels alone are
   not enough, because they are fixed after create or fork.
-- One Durable Object per workspace holds the open tabs, the idle timer,
-  the event poll, and the banner state. Its storage keeps the chat
+- One Durable Object per workspace holds the open tabs, the connection
+  of the agent program, the idle timer, and the banner state. Its storage keeps the chat
   history, so a stopped workspace still shows it. It runs with the
   Western Europe location hint, near Boat's machines.
 - A small `SandboxProvider` interface wraps the Boat client. Reason: a
@@ -1952,14 +1969,24 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
 
 **Agents and tools.**
 
-- Chat uses Boat's integrated agents: prompt, steer, interrupt, and
-  conversations. The workspace Durable Object polls Boat's events with
-  the `ETag` header, as decision 7 says. Decision 7 keeps streamed agent
-  CLIs as the fallback.
+- A small Node program in each cloud computer, the agent runner, runs
+  the agents, as decision 36 says. It uses the Claude Agent SDK for
+  Claude, and the Codex SDK or the Codex App Server for Codex.
+- The runner is an always-on systemd service, so it starts again after
+  each resume. It opens one outbound WebSocket to the workspace Durable
+  Object, with the workspace token. It numbers each event and keeps it
+  until the Durable Object confirms it, so a dropped connection loses
+  nothing.
+- The Durable Object stores the events and sends them to the open tabs.
+  It forwards prompts, messages sent during a turn, interrupts, and model
+  and effort changes to the runner.
+- The agent sessions live in the home folder, which Boat keeps across
+  stop, resume, and fork.
 - Agents create workspaces through an MCP server and a CLI in the base
   snapshot. Both call the Worker with the workspace token.
-- Agents use Boat's built-in computer tools for browser work. The app
-  embeds the Boat desktop stream, so the user can watch.
+- Agents use the computer tools of the Cua Driver, the MCP server
+  `computer` on every sandbox, for browser work. The app embeds the Boat
+  desktop stream, so the user can watch.
 
 **GitHub banner.** A GitHub App sends pull request, check, status, and
 push webhooks. The Worker routes each event to the workspace of its
@@ -2265,16 +2292,21 @@ Depends on: 5
 
 Depends on: 5
 
-- [ ] Add prompt, steer, and interrupt endpoints.
-- [ ] Poll Boat events in the workspace Durable Object while a tab is
-      open: every 250 ms during a turn, every few seconds otherwise, and
-      not at all with no tab.
-- [ ] Measure how often Boat's partial events change during a turn.
-      Save the result under `.context/`. Open decision 7 again if they
-      lag.
-- [ ] Map Boat events to our event type, store them, and push them to
+- [ ] Build the agent runner: a small Node program that runs the Claude
+      Agent SDK and Codex, installed as an always-on systemd service in
+      every cloud computer.
+- [ ] Connect the runner to the workspace Durable Object over one
+      outbound WebSocket with the workspace token. Number the events,
+      and resend each one that the Durable Object has not confirmed.
+- [ ] Add prompt, message during a turn, interrupt, and model and effort
+      endpoints. The Durable Object forwards them to the runner.
+- [ ] Test Codex streaming: the Codex SDK where it gives interrupt and
+      partial text, and the Codex App Server otherwise. Save the result
+      under `.context/`.
+- [ ] Map the SDK events to our event type, store them, and push them to
       the open tabs over a WebSocket.
-- [ ] Test the mapping and the poll cursor against recorded events.
+- [ ] Test the mapping against recorded SDK events, and the resend after
+      a dropped connection.
 
 ## Milestone 8: Chat UI
 
