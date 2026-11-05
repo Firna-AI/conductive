@@ -7,8 +7,8 @@
 .composer {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 12px 10px 10px 14px;
+  gap: 8px;
+  padding: 10px 10px 8px;
   border: 1px solid var(--ui-border2);
   border-radius: var(--ui-radius-xl);
   background: var(--ui-composer);
@@ -18,24 +18,13 @@
 .bar {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.agent {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--ui-ink2);
-  font-size: var(--ui-text-sm);
-  font-weight: 500;
-}
-
-.agent svg {
-  color: var(--ui-muted);
+  gap: 4px;
+  min-width: 0;
 }
 
 .spacer {
   flex: 1;
+  min-width: 4px;
 }
 
 .hint {

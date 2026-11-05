@@ -14,6 +14,7 @@
 }
 
 .row {
+  min-height: var(--ui-touch-min);
   padding-right: 12px;
   text-decoration: none;
 }

@@ -8,6 +8,7 @@ const toneClass: Readonly<Record<TerminalTone, string>> = {
   muted: styles.muted,
   success: styles.success,
   accent: styles.accent,
+  error: styles.error,
 }
 
 /** Keys that a phone keyboard lacks, as a row above the keyboard. */
@@ -21,12 +22,14 @@ const extraKeys = [
 
 /**
  * A terminal session. With a prompt, the cursor waits after it; without one,
- * the cursor follows the output of the running command.
+ * the cursor follows the output of the running command. Output that ended,
+ * such as the log of a failed build, has no cursor.
  */
 export function TerminalView(props: {
   lines: readonly TerminalLine[]
   prompt?: string
   extraKeys: boolean
+  cursor?: boolean
 }) {
   return (
     <div className={styles.terminal}>
@@ -40,12 +43,14 @@ export function TerminalView(props: {
             ))}
           </div>
         ))}
-        <div className={styles.line}>
-          {props.prompt ? (
-            <span className={styles.prompt}>{props.prompt}</span>
-          ) : null}
-          <span aria-hidden className={styles.cursor} />
-        </div>
+        {props.cursor === false ? null : (
+          <div className={styles.line}>
+            {props.prompt ? (
+              <span className={styles.prompt}>{props.prompt}</span>
+            ) : null}
+            <span aria-hidden className={styles.cursor} />
+          </div>
+        )}
       </pre>
       {props.extraKeys ? (
         <div className={styles.keys}>

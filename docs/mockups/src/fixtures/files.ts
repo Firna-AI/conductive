@@ -13,8 +13,8 @@ export type TreeEntry = {
   /** A folder whose children show below it. */
   open?: boolean
   change?: ChangeKind
-  /** The preview that opens for this file, when the mockups draw one. */
-  preview?: 'code' | 'markdown' | 'diff'
+  /** The tab that opening this file shows, when the mockups draw one. */
+  preview?: 'code' | 'markdown'
 }
 
 export const fileTree: readonly TreeEntry[] = [
@@ -25,13 +25,7 @@ export const fileTree: readonly TreeEntry[] = [
   { name: 'app', depth: 1, folder: true, open: true },
   { name: 'api', depth: 2, folder: true },
   { name: 'checkout', depth: 2, folder: true, open: true },
-  {
-    name: 'AddressForm.tsx',
-    depth: 3,
-    folder: false,
-    change: 'modified',
-    preview: 'diff',
-  },
+  { name: 'AddressForm.tsx', depth: 3, folder: false, change: 'modified' },
   { name: 'page.tsx', depth: 3, folder: false },
   {
     name: 'useAddressAutocomplete.ts',
@@ -63,7 +57,8 @@ export type ChangedFile = {
   change: ChangeKind
   added: number
   removed: number
-  preview?: 'code' | 'markdown' | 'diff'
+  /** The file has a drawn diff, which opening it from Changes shows. */
+  diff?: boolean
 }
 
 export const changedFiles: readonly ChangedFile[] = [
@@ -72,14 +67,13 @@ export const changedFiles: readonly ChangedFile[] = [
     change: 'added',
     added: 64,
     removed: 0,
-    preview: 'code',
   },
   {
     path: 'src/app/checkout/AddressForm.tsx',
     change: 'modified',
     added: 38,
     removed: 6,
-    preview: 'diff',
+    diff: true,
   },
   {
     path: 'src/app/checkout/postcodeLookup.ts',
@@ -93,13 +87,7 @@ export const changedFiles: readonly ChangedFile[] = [
     added: 52,
     removed: 0,
   },
-  {
-    path: 'README.md',
-    change: 'modified',
-    added: 4,
-    removed: 1,
-    preview: 'markdown',
-  },
+  { path: 'README.md', change: 'modified', added: 4, removed: 1 },
 ]
 
 export const changeLabels: Readonly<Record<ChangeKind, string>> = {

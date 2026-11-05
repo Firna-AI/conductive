@@ -1,5 +1,6 @@
 .column {
   display: flex;
+  position: relative;
   flex-shrink: 0;
   flex-direction: column;
   width: clamp(280px, 34vw, var(--ui-right-width));

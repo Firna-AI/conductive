@@ -1,11 +1,17 @@
 {
   "order": [
     "shell",
+    "sections",
+    "orgs",
+    "account",
     "banner",
     "new-workspace",
-    "repository-settings",
+    "org-settings",
     "chat",
+    "sessions",
+    "composer",
     "files",
-    "tools"
+    "tools",
+    "panels"
   ]
 }

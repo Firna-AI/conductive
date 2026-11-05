@@ -1,6 +1,5 @@
 import { InputFrame } from '@firna/ui/input'
 import { Globe, Plus, RotateCw, X } from 'lucide-react'
-import { control } from '../../design/metrics'
 import { openPort, previewUrl } from '../../fixtures/previews'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
@@ -8,6 +7,7 @@ import { ActionButton, IconButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
 import { ExternalLink } from '../common/ExternalLink'
 import { LinkTabs } from '../common/LinkTabs'
+import { useControlSizes } from '../common/touch'
 import { StorefrontPage } from './StorefrontPage'
 import styles from './PortPreview.module.css'
 
@@ -37,6 +37,7 @@ export function PortPreview() {
 
 /** The preview tab before any port is open. */
 export function PreviewEmpty() {
+  const { field } = useControlSizes()
   return (
     <EmptyState
       action={
@@ -47,7 +48,7 @@ export function PreviewEmpty() {
               inputMode="numeric"
               onChangeText={noop}
               placeholder="3000"
-              size={control.field}
+              size={field}
               value=""
             />
           </div>

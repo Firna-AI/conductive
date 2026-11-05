@@ -31,10 +31,10 @@ Git ignores the build output, `mokly-static/` and
 The catalogue shows the desktop view beside the phone, in a frame narrower
 than a laptop screen. The desktop layout narrows with its window: below
 1280 px the sidebar and the right column get narrower, and below 900 px the
-sidebar hides. The icon rail stays, and its Workspaces item opens the list as
-its own page. A narrow right column hides the detail of the pull request bar
-and the label of its GitHub link. Use the expand control of the frame to see
-the full desktop layout.
+sidebar hides. The org rail stays, and the current org opens its list as its
+own page. A narrow right column hides the detail of the pull request bar and
+the label of its GitHub link. Use the expand control of the frame to see the
+full desktop layout.
 
 ## The design
 
@@ -44,13 +44,19 @@ working agent, and the main action. It is dense, with small radii, and its
 labels (tabs, section names, times) use the monospace font in capitals. The
 light scheme uses the same cool greys and a darker accent.
 
-The desktop layout has four columns. An icon rail holds the mark and the app
-actions. The sidebar lists the workspaces of each repository, one line each.
-The chat sits in the centre under a slim header. The right column has the
-pull request bar on top, the All files, Changes, and Checks tabs below it,
-and the Terminal, Preview, and Desktop tabs at the bottom. A phone shows the
-workspace with a compact pull request row at the top and five tabs at the
-bottom.
+The desktop layout has four columns. The org rail holds the mark, the orgs
+as squares with their initials, Create org, and the account at the bottom.
+The sidebar shows the org name with its Settings link, New workspace, and
+the sections that the user made. Each workspace is one line: a dot-matrix
+status mark, the name, and the time, and it moves to another section by
+drag and drop. The centre column has a slim header that names the
+repository and the branch, then a tab for each agent session and each open
+file or diff, and + for a new session. The right column has the pull
+request bar on top, the All files, Changes, and Checks lists below it, and
+the Terminal, Preview, and Desktop tabs at the bottom. It shows no file
+content. A phone shows an org switcher at the top of the list, and the
+workspace with a compact pull request row, the sessions as tabs above the
+chat, and five tabs at the bottom.
 
 - The tokens live in `src/design/`: the colours of each scheme in
   `palette.ts`, and the type, density, sizes, radii, and fonts in
@@ -58,40 +64,67 @@ bottom.
   `@firna/ui` the same colours through its theme.
 - `ActionButton` and `IconButton` in `src/components/common/actions.tsx` give
   the Firna button the dense size and a lighter label.
+- On a phone every touch target is at least 44 px high. `MobileFrame` gives
+  the Firna controls the touch sizes through `useControlSizes` in
+  `src/components/common/touch.tsx`, and local controls read the
+  `--ui-touch-min` variable, which is 0 on desktop.
+- One `ModelPicker` in `src/components/chat/` sets the model and the effort
+  in every composer, such as "Opus 5.5 High". It names no agent brand.
+- A view runs no script, so a screen draws an open menu in place: `Menu` in
+  `src/components/common/` beside its button, or in a `Sheet` on a phone.
+  Firna's own menu rows are taller than the dense design.
+- `StatusGlyph` in `src/components/workspaces/` draws the state of a
+  workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
+  working and starting move with CSS. A finished turn is a full bright green
+  square, and ready is one bright cell on a faint green grid.
+- No screen names the sandbox provider. Copy says sandbox or cloud computer.
+- On desktop the sidebar and the right column resize from `ResizeHandle` in
+  `src/components/layout/`, a hairline on their inner edge. On hover and
+  during a drag a short grip in the accent colour shows in its middle, so no
+  panel gets an accent edge.
 - A state tints a whole bar or box, and its edges stay neutral. No box has
   an accent strip on any edge.
 
 ## The catalogue
 
-| Path                      | What it shows                                                           |
-| ------------------------- | ----------------------------------------------------------------------- |
-| `app`                     | A ready workspace: chat, changed files, and a pull request to merge     |
-| `app/shell`               | The workspace list, first run, and the sandbox starting, stopped, error |
-| `app/banner`              | The pull request bar and Checks: none, running, failed, ready, merged   |
-| `app/new-workspace`       | The form, its error, the workspace while it starts, the first turn      |
-| `app/repository-settings` | The base and its updates, install software, and add a repository        |
-| `app/chat`                | Messages and tool calls, a running turn, steer, interrupt, a failure    |
-| `app/files`               | All files, Changes, and the Markdown, code, and diff previews           |
-| `app/tools`               | The terminal, a port preview, no preview, and the desktop               |
-| `user-flows`              | Create a workspace, and reopen a stopped workspace                      |
+| Path                | What it shows                                                               |
+| ------------------- | --------------------------------------------------------------------------- |
+| `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge |
+| `app/shell`         | The workspace list, the first run, and the sandbox starting, stopped, error |
+| `app/sections`      | The menu of a section, and a workspace dragged to another section           |
+| `app/orgs`          | The org switcher of a phone, Create org, and a new org without workspaces   |
+| `app/account`       | The GitHub sign-in, the GitHub App, the agents, and the default model       |
+| `app/banner`        | The pull request bar and Checks: none, running, failed, ready, merged       |
+| `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn     |
+| `app/org-settings`  | General and Delete org, then Repositories and Cloud computer as child pages |
+| `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure        |
+| `app/sessions`      | A new, empty agent session beside the other tabs                            |
+| `app/composer`      | Attached files, and the open model and effort picker                        |
+| `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab     |
+| `app/tools`         | The terminal, a port preview, no preview, and the desktop                   |
+| `app/panels`        | The right column, widened by the handle on its inner edge                   |
+| `user-flows`        | Create a workspace, reopen a stopped workspace, and create an org           |
 
 A folder page shows at most five screens, saved states included. A folder
-with child folders shows one canonical screen first.
+with child folders shows only its canonical screen, as `app` and
+`app/org-settings` do. `app/org-settings/cloud-computer` and its building and
+build-failed states moved from `app/repository-settings` and its updating
+and update-failed states, and declare `movedFrom`.
 
 ## Folder layout
 
-| Folder or file                      | Contents                                                            |
-| ----------------------------------- | ------------------------------------------------------------------- |
-| `src/entries/`                      | The Mokly root: entry modules, folder records, and the flows        |
-| `src/screens/`                      | One React component for each app screen, for both viewports         |
-| `src/components/`                   | Layout and parts that the screens share, where `@firna/ui` has none |
-| `src/fixtures/`                     | The sample repositories, workspaces, chats, files, and output       |
-| `src/design/`                       | The design tokens: colours, type, density, sizes, radii, and fonts  |
-| `src/render.tsx`                    | The renderer: the Firna theme and the tokens of the colour scheme   |
-| `src/theme.ts`                      | The Firna theme of each scheme, and the tokens as CSS variables     |
-| `src/paths.ts`                      | The catalogue paths that screens link to                            |
-| `src/fonts/`                        | Inter, which the Firna theme names first, with its licence          |
-| `../../mokly.config.json`           | The Mokly configuration: the root, the renderer, and the schemes    |
+| Folder or file            | Contents                                                            |
+| ------------------------- | ------------------------------------------------------------------- |
+| `src/entries/`            | The Mokly root: entry modules, folder records, and the flows        |
+| `src/screens/`            | One React component for each app screen, for both viewports         |
+| `src/components/`         | Layout and parts that the screens share, where `@firna/ui` has none |
+| `src/fixtures/`           | The sample orgs, sections, workspaces, agents, chats, and files     |
+| `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
+| `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
+| `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
+| `src/paths.ts`            | The catalogue paths that screens link to                            |
+| `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
+| `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 
 ## How a screen is built
 

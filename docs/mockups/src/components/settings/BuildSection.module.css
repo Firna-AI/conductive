@@ -1,0 +1,99 @@
+/* The card has the full outline of the other settings cards. */
+.card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 12px 14px 12px 18px;
+}
+
+.label {
+  color: var(--ui-ink);
+  font-size: var(--ui-text-lg);
+  font-weight: var(--ui-weight-heading);
+}
+
+.when {
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 18px 14px;
+}
+
+.log {
+  display: flex;
+  height: 210px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+}
+
+.history {
+  border-top: 1px solid var(--ui-border);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: max(36px, var(--ui-touch-min));
+  padding: 0 18px 0 14px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  transition: transform 120ms ease;
+}
+
+.history[open] .chevron {
+  transform: rotate(90deg);
+}
+
+.builds {
+  margin: 0;
+  padding: 0 18px 10px 34px;
+  list-style: none;
+}
+
+.build {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 30px;
+}
+
+.build + .build {
+  border-top: 1px solid var(--ui-border);
+}
+
+.build .when {
+  flex: 1;
+  font-size: var(--ui-text-sm);
+}

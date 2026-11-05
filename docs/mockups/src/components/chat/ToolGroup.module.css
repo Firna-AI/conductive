@@ -9,6 +9,7 @@
   gap: 6px;
   margin-left: -4px;
   padding: 2px 6px 2px 4px;
+  min-height: var(--ui-touch-min);
   border-radius: var(--ui-radius-sm);
   cursor: pointer;
   list-style: none;

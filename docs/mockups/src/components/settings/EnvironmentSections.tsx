@@ -1,44 +1,55 @@
+import type { ReactNode } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { control } from '../../design/metrics'
-import { envVars, startupScript } from '../../fixtures/repositories'
+import { envVars } from '../../fixtures/computer'
 import { noop } from '../../noop'
 import { ActionButton, IconButton } from '../common/actions'
+import { useControlSizes } from '../common/touch'
 import { Section } from './Section'
 import styles from './EnvironmentSections.module.css'
 
-/** The script that prepares each sandbox of a repository. */
-export function StartupScriptSection() {
+/**
+ * A script of the org, in a code field, with its save action. `notice`
+ * shows under the field, such as the request to build after a save.
+ */
+export function ScriptSection(props: {
+  title: string
+  description: string
+  script: string
+  notice?: ReactNode
+}) {
   const theme = useSharedUiTheme()
+  const { field } = useControlSizes()
   return (
     <Section
       actions={<ActionButton disabled>Save script</ActionButton>}
-      description="Runs when the base updates and each time a sandbox starts."
-      title="Startup script"
+      description={props.description}
+      title={props.title}
     >
       <InputFrame
-        accessibilityLabel="Startup script"
+        accessibilityLabel={props.title}
         inputStyle={{ fontFamily: theme.fonts.mono, fontSize: 12.5 }}
         multiline
-        numberOfLines={6}
+        numberOfLines={props.script.split('\n').length}
         onChangeText={noop}
-        size={control.field}
-        value={startupScript}
+        size={field}
+        value={props.script}
       />
+      {props.notice}
     </Section>
   )
 }
 
 /**
- * The environment variables of every sandbox of a repository. Values are
+ * The environment variables of the workspaces of the org. Values are
  * write-only: the app shows that a value is set, and can replace it.
  */
-export function EnvVarsSection() {
+export function EnvVarsSection(props: { org: string }) {
   return (
     <Section
       actions={<ActionButton icon={Plus}>Add variable</ActionButton>}
-      description="Available in every sandbox of this repository. Changes apply the next time a sandbox starts."
+      description={`Workspaces of ${props.org} get these each time their cloud computer starts. Builds run without them.`}
       title="Environment variables"
     >
       <ul aria-label="Environment variables" className={styles.list}>

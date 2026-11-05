@@ -70,6 +70,17 @@
   gap: 8px;
 }
 
+.tabs {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  height: var(--ui-bar-height);
+  padding: 0 8px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  box-sizing: border-box;
+}
+
 .body {
   flex: 1;
   min-height: 0;

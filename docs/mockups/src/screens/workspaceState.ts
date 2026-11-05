@@ -1,5 +1,5 @@
 import type { SchemaProps } from '@mokly/mokly'
-import { fileViews } from '../components/files/FilesPanel'
+import { fileLists } from '../components/files/FilesPanel'
 import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversations'
 import { bannerStates } from '../fixtures/pullRequests'
@@ -21,19 +21,31 @@ export const workspaceStateSchema = {
     'tool',
     'ports',
     'focus',
+    'tab',
+    'composer',
+    'resize',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
     sandbox: { enum: ['ready', 'starting', 'stopped', 'error'] },
     conversation: { enum: conversationKeys },
     banner: { enum: bannerStates },
-    /** The files panel: a list, the checks, or a preview of one file. */
-    files: { enum: fileViews },
+    /** The list of the files panel: All files, Changes, or Checks. */
+    files: { enum: fileLists },
     /** The tool of the tools panel. */
     tool: { enum: toolKeys },
     ports: { enum: ['open', 'none'] },
     /** What a phone shows: the chat, the files, or the tool. */
     focus: { enum: ['chat', 'files', 'tool'] },
+    /**
+     * The tab of the centre column: the first session, a new session, or a
+     * file, a Markdown preview, or a diff. A phone shows a file in Files.
+     */
+    tab: { enum: ['session', 'new-session', 'code', 'markdown', 'diff'] },
+    /** The composer: empty, with attached files, or with its picker open. */
+    composer: { enum: ['empty', 'attachments', 'picker'] },
+    /** The user drags the handle of the right column to widen it. */
+    resize: { enum: ['none', 'right'] },
   },
 } as const
 
@@ -49,4 +61,7 @@ export const readyWorkspace: WorkspaceState = {
   tool: 'terminal',
   ports: 'open',
   focus: 'chat',
+  tab: 'session',
+  composer: 'empty',
+  resize: 'none',
 }

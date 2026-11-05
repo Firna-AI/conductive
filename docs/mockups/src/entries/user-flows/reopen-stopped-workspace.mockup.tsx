@@ -10,7 +10,7 @@ export const reopenStoppedWorkspace = defineUseCase({
       screenPath: 'app/shell',
       title: 'Find the workspace',
       description:
-        'Checkout address autocomplete shows as stopped in the workspace list.',
+        'Checkout address autocomplete shows as stopped in the Checkout section.',
     },
     {
       screenPath: 'app/shell/starting',

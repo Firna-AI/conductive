@@ -7,15 +7,16 @@ import {
 export const appShell = defineScreen({
   title: 'App shell',
   description:
-    'The workspace list, grouped by repository, with the state of each sandbox. On mobile it is the home screen. On desktop it is the sidebar, and the main area waits for a choice.',
+    'The workspace list of an org, in the sections that the user made. On mobile it is the home screen, under an org switcher. On desktop it is the sidebar beside the org rail, and the main area waits for a choice.',
   rationale:
-    'Each row is one line: the name, the state, and the time since the last activity. A running agent makes the row bold, a stopped sandbox dims it with a pause mark, and screen readers hear each state. Opening a stopped workspace resumes its sandbox.',
+    'Each row is one line: a small dot-matrix square for the state, the name, and the time since the last activity. Each state has its own shape: a light that circles while the agent works, a full square for output that the user has not read, a centre dot when ready, a filling row while starting, a pause sign when stopped, and a cross when the sandbox did not start. Unread output also makes the name bold. Sections are groups that the user makes, not repositories, so one section can hold workspaces of several repositories. Opening a stopped workspace resumes its sandbox.',
   relatedDocs: [],
   propSchema: workspaceListSchema,
-  props: { list: 'workspaces' },
+  props: { list: 'workspaces', menu: 'none' },
   useCasePaths: [
     'user-flows/create-workspace',
     'user-flows/reopen-stopped-workspace',
+    'user-flows/create-org',
   ],
   render: (props, context) => (
     <WorkspaceListScreen state={props} viewport={context.viewport} />
@@ -25,7 +26,7 @@ export const appShell = defineScreen({
       slug: 'first-run',
       title: 'First run',
       description:
-        'No repository yet. The one action adds a repository, which prepares its base.',
+        'No org yet. The one action creates the first org. The account in the rail stays available.',
       props: { list: 'first-run' },
     },
   ],

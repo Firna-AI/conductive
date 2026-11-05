@@ -1,22 +1,46 @@
 import type { ReactNode } from 'react'
-import { IconRail } from './IconRail'
+import { TouchScreen } from '../common/touch'
+import { acmeRail, OrgRail, type RailState } from './OrgRail'
+import { ResizeHandle, sidebarWidth } from './ResizeHandle'
 import styles from './AppFrame.module.css'
 
 /**
- * The desktop app: the icon rail, the workspace sidebar, and the main area.
- * In a narrow window the sidebar hides, and the rail leads to the list.
+ * The desktop app: the org rail, the sidebar of the org, and the main area.
+ * In a narrow window the sidebar hides, and the org in the rail leads to its
+ * workspace list. A page outside an org, such as the account, has no
+ * sidebar.
  */
-export function AppFrame(props: { sidebar: ReactNode; children: ReactNode }) {
+export function AppFrame(props: {
+  rail?: RailState
+  sidebar?: ReactNode
+  children: ReactNode
+}) {
   return (
     <div className={styles.frame}>
-      <IconRail />
-      <aside className={styles.sidebar}>{props.sidebar}</aside>
+      <OrgRail {...(props.rail ?? acmeRail)} />
+      {props.sidebar ? (
+        <aside className={styles.sidebar}>
+          {props.sidebar}
+          <ResizeHandle
+            edge="right"
+            label="Resize the sidebar"
+            width={sidebarWidth}
+          />
+        </aside>
+      ) : null}
       <main className={styles.main}>{props.children}</main>
     </div>
   )
 }
 
-/** The mobile app: one full-height column. */
+/**
+ * The mobile app: one full-height column. Every control in it takes the
+ * touch sizes, at least 44px high.
+ */
 export function MobileFrame(props: { children: ReactNode }) {
-  return <main className={styles.mobile}>{props.children}</main>
+  return (
+    <TouchScreen>
+      <main className={styles.mobile}>{props.children}</main>
+    </TouchScreen>
+  )
 }

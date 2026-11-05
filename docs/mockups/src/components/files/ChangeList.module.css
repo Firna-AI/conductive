@@ -4,6 +4,26 @@
   overflow-y: auto;
 }
 
+/*
+ * The right padding lines the totals up with the line counts of the rows:
+ * the list and row padding, the change square, and the gap before it.
+ */
+.summary {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  height: calc(var(--ui-row-height) + 6px);
+  padding: 0 39px 0 16px;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.count {
+  flex: 1;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+}
+
 .list {
   margin: 0;
   padding: 6px 8px 16px;
@@ -15,6 +35,7 @@
   align-items: center;
   gap: 10px;
   height: var(--ui-row-height);
+  min-height: var(--ui-touch-min);
   padding: 0 8px;
   border-radius: var(--ui-radius-md);
   color: inherit;
@@ -23,6 +44,11 @@
 
 a.row:hover {
   background: var(--ui-soft);
+}
+
+.open,
+a.open:hover {
+  background: var(--ui-selected);
 }
 
 .path {

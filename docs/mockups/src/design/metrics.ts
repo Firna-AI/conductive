@@ -45,13 +45,34 @@ export const metrics = {
   sidebarWidth: '232px',
   railWidth: '48px',
   rightWidth: '440px',
+  /** The least height of a local control; a phone screen raises it to 44px. */
+  touchMin: '0px',
 } as const
 
-/** The size of the compact Firna controls, in px. */
-export const control = {
+export type ControlSizes = {
+  /** The height of buttons, in px. */
+  height: number
+  labelSize: number
+  labelWeight: 500
+  /** The Firna size of inputs, selectors, and segmented controls. */
+  field: 'sm' | 'lg'
+}
+
+/** The size of the compact Firna controls of the desktop layout. */
+export const control: ControlSizes = {
   height: 26,
   labelSize: 12,
   labelWeight: 500,
-  /** The Firna size of inputs, selectors, and segmented controls. */
   field: 'sm',
-} as const
+}
+
+/** On a phone every control is at least 44px high, so a finger can hit it. */
+export const touchControl: ControlSizes = {
+  height: 44,
+  labelSize: 14,
+  labelWeight: 500,
+  field: 'lg',
+}
+
+/** The least height of a touch target on a phone. */
+export const touchMin = '44px'

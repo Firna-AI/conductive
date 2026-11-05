@@ -1,7 +1,6 @@
 /**
- * The repositories that the user added, and the settings of their bases.
- * A base is the prepared sandbox that new workspaces of a repository start
- * from.
+ * The repositories of an org. The cloud computer of the org holds every
+ * one of them.
  */
 
 export const repositoryKeys = [
@@ -12,17 +11,10 @@ export const repositoryKeys = [
 
 export type RepositoryKey = (typeof repositoryKeys)[number]
 
-export type BaseStatus = 'ready' | 'updating' | 'failed'
-
 export type Repository = {
   key: RepositoryKey
   name: string
   defaultBranch: string
-  base: BaseStatus
-  /** When the newest good base was saved. */
-  baseUpdated: string
-  /** The commit of the default branch in the newest good base. */
-  baseCommit: string
 }
 
 export const repositories: Readonly<Record<RepositoryKey, Repository>> = {
@@ -30,67 +22,72 @@ export const repositories: Readonly<Record<RepositoryKey, Repository>> = {
     key: 'storefront',
     name: 'acme/storefront',
     defaultBranch: 'main',
-    base: 'ready',
-    baseUpdated: '18 minutes ago',
-    baseCommit: '4f2c9a1',
   },
   'billing-service': {
     key: 'billing-service',
     name: 'acme/billing-service',
     defaultBranch: 'main',
-    base: 'updating',
-    baseUpdated: '1 hour ago',
-    baseCommit: 'b81d0e4',
   },
   'marketing-site': {
     key: 'marketing-site',
     name: 'acme/marketing-site',
     defaultBranch: 'main',
-    base: 'ready',
-    baseUpdated: '3 hours ago',
-    baseCommit: '07ac5f2',
   },
 }
 
-export const startupScript = `#!/usr/bin/env bash
-set -euo pipefail
+/** A repository that the shared GitHub App can reach. */
+export type ReachableRepository = {
+  name: string
+  description: string
+  /** The org uses it, so its workspaces can start in it. */
+  used: boolean
+}
 
-npm ci
-npx prisma generate
-npx playwright install chromium`
-
-export type EnvVar = { name: string }
-
-export const envVars: readonly EnvVar[] = [
-  { name: 'DATABASE_URL' },
-  { name: 'PLACES_API_KEY' },
-  { name: 'STRIPE_SECRET_KEY' },
-  { name: 'NEXT_PUBLIC_SITE_URL' },
-]
-
-/** The steps of a base update, in order. */
-export const baseUpdateSteps = [
-  { label: 'Resumed the base', state: 'done' },
-  { label: 'Fetched main at 9c1e2b7', state: 'done' },
-  { label: 'Running the startup script', state: 'running' },
-  { label: 'Saving the base', state: 'waiting' },
-] as const
-
-/** The last lines of the startup script output of a failed update. */
-export const failedUpdateOutput = `npm error code ERESOLVE
-npm error ERESOLVE unable to resolve dependency tree
-npm error peer react@"^18.0.0" from react-day-picker@8.10.1
-npm error Fix the upstream dependency conflict and try again.`
-
-/** Repositories on GitHub that the user can add. */
-export const addableRepositories = [
+/** The repositories that Acme uses, then the others that it can add. */
+export const acmeRepositories: readonly ReachableRepository[] = [
+  { name: 'acme/storefront', description: 'The online shop', used: true },
+  {
+    name: 'acme/billing-service',
+    description: 'Invoices, payments, and webhooks',
+    used: true,
+  },
+  {
+    name: 'acme/marketing-site',
+    description: 'The public website',
+    used: true,
+  },
   {
     name: 'acme/admin-dashboard',
     description: 'Internal tools for orders and refunds',
+    used: false,
   },
-  { name: 'acme/mobile-app', description: 'The iOS and Android shop app' },
+  {
+    name: 'acme/mobile-app',
+    description: 'The iOS and Android shop app',
+    used: false,
+  },
   {
     name: 'acme/data-pipeline',
     description: 'Nightly stock and price imports',
+    used: false,
   },
-] as const
+]
+
+/** The org that the create screen makes, and its repositories. */
+export const newOrg = {
+  name: 'Firna',
+  initials: 'FI',
+  search: 'firna',
+  repositories: [
+    {
+      name: 'firna/components',
+      description: 'Shared React components',
+      used: true,
+    },
+    { name: 'firna/docs', description: 'The documentation site', used: true },
+    { name: 'firna/icons', description: 'The icon set', used: false },
+  ],
+} as const
+
+/** The org that the first run creates. */
+export const firstOrg = { name: 'Acme', initials: 'AC' } as const

@@ -9,6 +9,7 @@
   align-items: center;
   gap: 6px;
   height: calc(var(--ui-row-height) - 4px);
+  min-height: var(--ui-touch-min);
   padding-right: 8px;
   border-radius: var(--ui-radius-sm);
   color: var(--ui-ink2);
@@ -18,6 +19,12 @@
 
 a.row:hover {
   background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+.open,
+a.open:hover {
+  background: var(--ui-selected);
   color: var(--ui-ink);
 }
 

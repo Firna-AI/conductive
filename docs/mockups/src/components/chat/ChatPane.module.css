@@ -29,7 +29,16 @@
   box-sizing: border-box;
 }
 
+.empty {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
 .footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   width: 100%;
   max-width: var(--ui-chat-width);
   margin: 0 auto;

@@ -9,6 +9,7 @@ import {
   FolderOpen,
 } from 'lucide-react'
 import type { TreeEntry } from '../../fixtures/files'
+import { classes } from '../common/classes'
 import { ChangeIcon } from './ChangeIcon'
 import { previewPaths } from './previewPaths'
 import styles from './FileTree.module.css'
@@ -34,7 +35,7 @@ function EntryIcon(props: { entry: TreeEntry }) {
   return <File {...icon} />
 }
 
-function Row(props: { entry: TreeEntry }) {
+function Row(props: { entry: TreeEntry; open: boolean }) {
   const { entry } = props
   const content = (
     <>
@@ -54,7 +55,8 @@ function Row(props: { entry: TreeEntry }) {
   }
   return (
     <MockLink
-      className={styles.row}
+      aria-current={props.open ? 'page' : undefined}
+      className={classes(styles.row, props.open && styles.open)}
       style={indent}
       to={previewPaths[entry.preview]}
     >
@@ -63,13 +65,22 @@ function Row(props: { entry: TreeEntry }) {
   )
 }
 
-/** Every file of the workspace branch, as a tree. */
-export function FileTree(props: { entries: readonly TreeEntry[] }) {
+/**
+ * Every file of the workspace branch, as a tree. A file opens as a tab in
+ * the centre column, and the row of the open file is marked.
+ */
+export function FileTree(props: {
+  entries: readonly TreeEntry[]
+  open?: 'code' | 'markdown'
+}) {
   return (
     <ul aria-label="All files" className={styles.tree}>
       {props.entries.map((entry, index) => (
         <li key={index}>
-          <Row entry={entry} />
+          <Row
+            entry={entry}
+            open={entry.preview !== undefined && entry.preview === props.open}
+          />
         </li>
       ))}
     </ul>

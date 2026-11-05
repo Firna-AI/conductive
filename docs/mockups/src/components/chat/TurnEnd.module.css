@@ -26,6 +26,7 @@
   align-items: center;
   gap: 6px;
   height: 24px;
+  min-height: var(--ui-touch-min);
   padding: 0 8px;
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius-md);

@@ -7,9 +7,9 @@ import {
 export const newWorkspace = defineScreen({
   title: 'New workspace',
   description:
-    'Choose the repository, name the workspace and its branch, pick the agent, and write an optional first message.',
+    'A new workspace is an empty chat: a compact repository picker, and the composer with its files and its model picker. Sending the first message creates the workspace.',
   rationale:
-    'The first message lets the agent start as soon as the sandbox is ready, so the user does not wait on the start. The branch name follows the workspace name until the user edits it.',
+    "The user writes the task and sends it, and the app does the rest. The app names the branch after a city with a random suffix, such as cal/lisbon-7k2q, and the workspace after the city. The agent's first answer gives the workspace a short name from the task. There is no right column yet, because there are no files until the workspace exists.",
   relatedDocs: [],
   propSchema: newWorkspaceSchema,
   props: { result: 'form' },
@@ -22,7 +22,7 @@ export const newWorkspace = defineScreen({
       slug: 'error',
       title: 'Not created',
       description:
-        'The sandbox of the new workspace did not start. The form keeps its values, and the main action becomes Try again.',
+        'The workspace was not created, because its sandbox did not start. The message stays in the composer, and Try again sends it again.',
       props: { result: 'error' },
     },
   ],

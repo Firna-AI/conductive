@@ -9,10 +9,17 @@ export type StartingLog = {
   elapsed: string
 }
 
-/** A new workspace starts from the newest good base of its repository. */
+/**
+ * A new workspace starts from the newest good build of the org's cloud
+ * computer, which holds every repository of the org.
+ */
 export const creatingLog: StartingLog = {
   title: 'Starting the sandbox',
-  steps: ['Starting from the newest base', 'Creating branch cal/saved-carts'],
+  steps: [
+    'Starting from the cloud computer of Acme',
+    'Fetching main of acme/storefront',
+    'Creating branch cal/lisbon-7k2q',
+  ],
   elapsed: '6s',
 }
 

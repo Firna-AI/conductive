@@ -6,6 +6,7 @@
 
 .sidebar {
   display: flex;
+  position: relative;
   flex-shrink: 0;
   flex-direction: column;
   width: var(--ui-sidebar-width);
@@ -35,8 +36,12 @@
   }
 }
 
+/* A phone raises every local touch target to 44px. */
 .mobile {
+  --ui-touch-min: 44px;
+
   display: flex;
+  position: relative;
   flex-direction: column;
   height: 100vh;
   overflow: hidden;

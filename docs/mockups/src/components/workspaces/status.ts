@@ -1,59 +1,24 @@
-import type { LucideIcon } from 'lucide-react'
-import { CircleAlert, CirclePause } from 'lucide-react'
 import type { ActivityStatus } from '../../fixtures/workspaces'
-import type { StatusTone } from '../common/StatusText'
+
+/**
+ * How a row title shows its state: strong for output that the user has not
+ * read, active while an agent works, and dim while the sandbox is stopped.
+ */
+export type RowEmphasis = 'strong' | 'active' | 'normal' | 'dim'
 
 export type StatusPresentation = {
+  /** The state in words: the header shows it, and screen readers hear it. */
   label: string
-  tone: StatusTone
-  /** A spinner shows while the sandbox starts or the agent works. */
-  busy: boolean
-  /** The icon of a state that needs one, in the list and the header. */
-  icon?: LucideIcon
-  /** An agent turn runs: the list shows the row in bold. */
-  active: boolean
-  /** The sandbox does not run: the list dims the row. */
-  dim: boolean
+  emphasis: RowEmphasis
 }
 
 export const activityPresentation: Readonly<
   Record<ActivityStatus, StatusPresentation>
 > = {
-  working: {
-    label: 'Working',
-    tone: 'active',
-    busy: true,
-    active: true,
-    dim: false,
-  },
-  ready: {
-    label: 'Ready',
-    tone: 'success',
-    busy: false,
-    active: false,
-    dim: false,
-  },
-  starting: {
-    label: 'Starting',
-    tone: 'warning',
-    busy: true,
-    active: false,
-    dim: false,
-  },
-  stopped: {
-    label: 'Stopped',
-    tone: 'muted',
-    busy: false,
-    icon: CirclePause,
-    active: false,
-    dim: true,
-  },
-  error: {
-    label: "Couldn't start",
-    tone: 'danger',
-    busy: false,
-    icon: CircleAlert,
-    active: false,
-    dim: false,
-  },
+  working: { label: 'Working', emphasis: 'active' },
+  unread: { label: 'Done, unread', emphasis: 'strong' },
+  ready: { label: 'Ready', emphasis: 'normal' },
+  starting: { label: 'Starting', emphasis: 'normal' },
+  stopped: { label: 'Stopped', emphasis: 'dim' },
+  error: { label: "Couldn't start", emphasis: 'normal' },
 }

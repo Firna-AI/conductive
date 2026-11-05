@@ -9,24 +9,26 @@ export const createWorkspace = defineUseCase({
     {
       screenPath: 'app/shell',
       title: 'Choose New workspace',
-      description: 'The workspace list has New workspace at the top.',
+      description:
+        'New workspace sits at the top of the list, and in the menu of each section.',
     },
     {
       screenPath: 'app/new-workspace',
-      title: 'Fill in the form',
+      title: 'Write the task',
       description:
-        'The user picks the repository and the agent, names the workspace, and writes the first message.',
+        'An empty chat opens. The user picks the repository, writes the first message, and sends it.',
     },
     {
       screenPath: 'app/new-workspace/creating',
       title: 'The workspace opens',
       description:
-        'The workspace opens at once while its sandbox starts. The first message waits for the sandbox.',
+        'The workspace opens at once as Lisbon, on a new branch, and joins General. The first message waits for the sandbox.',
     },
     {
       screenPath: 'app/new-workspace/first-turn',
       title: 'The agent starts',
-      description: 'The sandbox is ready, and the agent works on the message.',
+      description:
+        'The sandbox is ready, and the agent works on the message. Its first answer names the workspace Saved carts.',
     },
   ],
 })

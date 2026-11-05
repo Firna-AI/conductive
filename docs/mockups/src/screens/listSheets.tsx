@@ -1,0 +1,90 @@
+import type { ReactNode } from 'react'
+import { MockLink } from '@mokly/mokly'
+import { Check, Plus } from 'lucide-react'
+import { Menu } from '../components/common/Menu'
+import { Sheet } from '../components/common/Sheet'
+import { orgLinks } from '../components/orgs/orgLinks'
+import { AccountAvatar, OrgTile } from '../components/orgs/OrgTile'
+import { sectionMenu } from '../components/workspaces/menus'
+import { orgList, type OrgKey } from '../fixtures/orgs'
+import { menuSection, sections } from '../fixtures/sections'
+import { paths } from '../paths'
+import styles from './WorkspaceListScreen.module.css'
+
+function SheetRow(props: {
+  to?: string
+  current?: boolean
+  children: ReactNode
+}) {
+  const content = (
+    <>
+      {props.children}
+      {props.current ? (
+        <Check aria-hidden className={styles.check} size={15} />
+      ) : null}
+    </>
+  )
+  if (!props.to) return <div className={styles.sheetRow}>{content}</div>
+  return (
+    <MockLink
+      aria-current={props.current ? 'page' : undefined}
+      className={styles.sheetRow}
+      to={props.to}
+    >
+      {content}
+    </MockLink>
+  )
+}
+
+/**
+ * The org switcher of a phone, which has no rail: every org, a way to
+ * create one, and the account.
+ */
+export function OrgSwitcherSheet(props: { current: OrgKey }) {
+  return (
+    <Sheet title="Orgs">
+      <nav aria-label="Orgs">
+        <ul className={styles.sheetList}>
+          {orgList.map((org) => (
+            <li key={org.key}>
+              <SheetRow
+                current={org.key === props.current}
+                to={orgLinks[org.key]}
+              >
+                <OrgTile
+                  current={org.key === props.current}
+                  org={org}
+                  size={26}
+                />
+                <span className={styles.sheetLabel}>{org.name}</span>
+              </SheetRow>
+            </li>
+          ))}
+          <li>
+            <SheetRow to={paths.createOrg}>
+              <span className={styles.createTile}>
+                <Plus aria-hidden size={15} />
+              </span>
+              <span className={styles.sheetLabel}>Create org</span>
+            </SheetRow>
+          </li>
+        </ul>
+        <hr className={styles.sheetDivider} />
+        <SheetRow to={paths.account}>
+          <AccountAvatar size={26} />
+          <span className={styles.sheetLabel}>Account</span>
+        </SheetRow>
+      </nav>
+    </Sheet>
+  )
+}
+
+/** The menu of a section, as a phone shows it. */
+export function SectionSheet() {
+  const section = sections[menuSection]
+  return (
+    <Sheet title={section.name}>
+      <Menu entries={sectionMenu} label={section.name} placement="sheet" />
+    </Sheet>
+  )
+}

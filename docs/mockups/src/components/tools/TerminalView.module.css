@@ -46,6 +46,10 @@
   font-weight: 600;
 }
 
+.error {
+  color: var(--ui-rose);
+}
+
 .cursor {
   display: inline-block;
   width: 7px;

@@ -2,7 +2,8 @@
  * Terminal sessions. Each line is a list of coloured segments.
  */
 
-export type TerminalTone = 'prompt' | 'plain' | 'muted' | 'success' | 'accent'
+export type TerminalTone =
+  'prompt' | 'plain' | 'muted' | 'success' | 'accent' | 'error'
 
 export type TerminalSegment = { text: string; tone: TerminalTone }
 
@@ -47,24 +48,34 @@ export const workspaceSession: readonly TerminalLine[] = [
   plain(' GET /api/places?q=221b%20baker%20st 200 in 162ms'),
 ]
 
-const baseLocation = 'storefront (main)'
+function error(text: string): TerminalLine {
+  return [{ text, tone: 'error' }]
+}
 
-/** Installing software on the base of a repository. */
-export const baseSession: readonly TerminalLine[] = [
-  prompt(baseLocation, 'sudo apt-get install -y postgresql-client-16'),
-  plain('Reading package lists... Done'),
-  plain('Building dependency tree... Done'),
-  plain('The following NEW packages will be installed:'),
-  plain('  postgresql-client-16 postgresql-client-common'),
-  plain('Setting up postgresql-client-common (262.pgdg24.04+1) ...'),
-  plain('Setting up postgresql-client-16 (16.4-1.pgdg24.04+1) ...'),
-  prompt(baseLocation, 'psql --version'),
-  plain('psql (PostgreSQL) 16.4'),
+/** A build of the cloud computer while it runs: the newest lines. */
+export const buildLog: readonly TerminalLine[] = [
+  muted('Cloning 3 repositories into ~/code'),
+  success(' ✓ acme/storefront at 4f2c9a1'),
+  success(' ✓ acme/billing-service at b81d0e4'),
+  success(' ✓ acme/marketing-site at 07ac5f2'),
+  muted('Running the install script'),
+  prompt('build', 'sudo apt-get install -y postgresql-client-16 redis-server'),
+  plain('Setting up redis-server (5:7.0.15-1build2) ...'),
+  prompt('build', 'cd ~/code/storefront && npm ci && npx prisma generate'),
+  plain('added 1184 packages in 41s'),
 ]
 
-export const baseSessionPrompt = `${baseLocation} $ `
+/** The end of a failed build. */
+export const failedBuildLog: readonly TerminalLine[] = [
+  muted('Running the install script'),
+  prompt('build', 'cd ~/code/storefront && npm ci && npx prisma generate'),
+  error('npm error code ERESOLVE'),
+  error('npm error ERESOLVE unable to resolve dependency tree'),
+  error('npm error peer react@"^18.0.0" from react-day-picker@8.10.1'),
+  muted('The install script stopped with exit code 1.'),
+]
 
 export const workspaceSessionPrompt = `${workspaceLocation} $ `
 
 /** A new workspace: the terminal waits at its first prompt. */
-export const freshSessionPrompt = 'storefront (cal/saved-carts) $ '
+export const freshSessionPrompt = 'storefront (cal/lisbon-7k2q) $ '

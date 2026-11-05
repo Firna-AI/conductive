@@ -1,5 +1,6 @@
 .notice {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: 10px;
   padding: 10px 12px;
@@ -23,9 +24,10 @@
   color: var(--ui-rose);
 }
 
+/* A narrow box moves the action under the text. */
 .text {
   display: flex;
-  flex: 1;
+  flex: 1 1 200px;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
@@ -47,4 +49,5 @@
 .action {
   flex-shrink: 0;
   align-self: center;
+  margin-left: auto;
 }

@@ -16,6 +16,8 @@ type PageProps = {
   viewport: Viewport
   /** The body fills the page edge to edge, as a terminal does. */
   fill?: boolean
+  /** Tabs under the header, such as the parts of a settings page. */
+  tabs?: ReactNode
   children: ReactNode
 }
 
@@ -66,6 +68,7 @@ export function Page(props: PageProps) {
     return (
       <div className={styles.page}>
         <MobileHeader {...props} />
+        {props.tabs ? <div className={styles.tabs}>{props.tabs}</div> : null}
         <div className={props.fill ? styles.fill : styles.mobileBody}>
           {props.children}
         </div>
@@ -78,6 +81,7 @@ export function Page(props: PageProps) {
   return (
     <div className={styles.page}>
       <DesktopHeader {...props} />
+      {props.tabs ? <div className={styles.tabs}>{props.tabs}</div> : null}
       {props.fill ? (
         <div className={styles.fill}>{props.children}</div>
       ) : (

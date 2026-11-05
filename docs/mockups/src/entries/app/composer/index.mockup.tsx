@@ -1,0 +1,29 @@
+import { defineScreen } from '@mokly/mokly'
+import { WorkspaceScreen } from '../../../screens/WorkspaceScreen'
+import {
+  readyWorkspace,
+  workspaceStateSchema,
+} from '../../../screens/workspaceState'
+
+export const composer = defineScreen({
+  title: 'Composer',
+  description:
+    'A message with two attached files. The paperclip uploads files, which show as chips above the text. One picker sets the model and the effort of the next message, such as "Opus 5.5 High".',
+  rationale:
+    'The picker names the model and shows the effort in a muted colour, without the names of the agents, so it stays short. The app offers the Claude and Codex models only for now. Each session has its own picker, as the user chose in decision 19. The sandbox keeps each file, and an image also goes to the model. Every composer uses the same controls, also the one of a new workspace.',
+  relatedDocs: [],
+  propSchema: workspaceStateSchema,
+  props: { ...readyWorkspace, composer: 'attachments' },
+  render: (props, context) => (
+    <WorkspaceScreen state={props} viewport={context.viewport} />
+  ),
+  variants: [
+    {
+      slug: 'picker',
+      title: 'Model and effort',
+      description:
+        'The open picker: the Claude models and the Codex models in two groups, with no brand names, then the effort levels of the chosen model. It marks Opus 5.5 and High.',
+      props: { composer: 'picker' },
+    },
+  ],
+})

@@ -1,13 +1,15 @@
 .row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   height: var(--ui-row-height);
+  min-height: var(--ui-touch-min);
   padding: 0 10px;
   border-radius: var(--ui-radius-md);
   color: var(--ui-ink2);
   font-size: var(--ui-text-md);
   text-decoration: none;
+  box-sizing: border-box;
 }
 
 a.row:hover {
@@ -15,6 +17,7 @@ a.row:hover {
 }
 
 .page {
+  gap: 11px;
   height: calc(var(--ui-row-height) + 14px);
   padding: 0 12px;
   font-size: var(--ui-text-lg);
@@ -23,7 +26,6 @@ a.row:hover {
 .selected,
 a.selected:hover {
   background: var(--ui-selected);
-  color: var(--ui-ink);
 }
 
 .name {
@@ -34,22 +36,18 @@ a.selected:hover {
   white-space: nowrap;
 }
 
-.active {
+.strong {
   color: var(--ui-ink);
   font-weight: var(--ui-weight-strong);
 }
 
+.active,
+.selected {
+  color: var(--ui-ink);
+}
+
 .dim {
   color: var(--ui-muted);
-}
-
-.glyph {
-  flex-shrink: 0;
-  color: var(--ui-faint);
-}
-
-.danger .glyph {
-  color: var(--ui-rose);
 }
 
 .time {
@@ -61,4 +59,17 @@ a.selected:hover {
   font-weight: 400;
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+/* The row under the pointer: a raised card with a full outline. */
+.lifted {
+  border: 1px solid var(--ui-border2);
+  background: var(--ui-composer);
+  box-shadow: 0 8px 22px var(--ui-shadow);
+  cursor: grabbing;
+}
+
+/* Where the row was while the drag lasts. */
+.placeholder {
+  opacity: 0.35;
 }

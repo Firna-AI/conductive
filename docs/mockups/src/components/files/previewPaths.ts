@@ -1,8 +1,7 @@
 import { paths } from '../../paths'
 
-/** The screen that each kind of file preview opens. */
+/** The tab that each kind of file opens in the centre column. */
 export const previewPaths = {
   code: paths.code,
   markdown: paths.markdown,
-  diff: paths.diff,
 } as const

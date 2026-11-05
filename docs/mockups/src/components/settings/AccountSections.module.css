@@ -1,0 +1,73 @@
+.list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 4px 8px 4px 12px;
+  box-sizing: border-box;
+}
+
+.row + .row {
+  border-top: 1px solid var(--ui-border);
+}
+
+.name {
+  flex-shrink: 0;
+  min-width: 64px;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: 500;
+}
+
+.detail {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.defaults {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.defaultsLabel {
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+}
+
+/* The person signed in: a card with the full outline of the others. */
+.signIn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 14px 18px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+}
+
+.signInText {
+  flex: 1;
+  min-width: 160px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+}
+
+.login {
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-strong);
+}

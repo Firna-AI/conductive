@@ -1,22 +1,19 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { MockLink } from '@mokly/mokly'
-import { DropdownSelector } from '@firna/ui/dropdown'
-import { Input, Textarea } from '@firna/ui/input'
-import { SegmentedControl } from '@firna/ui/segmented'
-import { CircleAlert } from 'lucide-react'
+import { ChevronDown, CircleAlert, FolderGit2, Sparkles } from 'lucide-react'
+import { ChatPane } from '../components/chat/ChatPane'
 import { ActionButton } from '../components/common/actions'
 import { Notice } from '../components/common/Notice'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
-import { workspaceGroups } from '../components/workspaces/groups'
+import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import { control } from '../design/metrics'
+import { lastBuild } from '../fixtures/computer'
 import { savedCartsMessage } from '../fixtures/conversations'
-import { repositories, repositoryKeys } from '../fixtures/repositories'
-import { agentNames, savedCarts, type AgentKey } from '../fixtures/workspaces'
-import { noop } from '../noop'
+import { orgs } from '../fixtures/orgs'
+import { repositories } from '../fixtures/repositories'
+import { savedCarts } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import styles from './forms.module.css'
+import styles from './NewWorkspaceScreen.module.css'
 
 export const newWorkspaceSchema = {
   type: 'object',
@@ -29,94 +26,86 @@ export const newWorkspaceSchema = {
 
 export type NewWorkspaceState = SchemaProps<typeof newWorkspaceSchema>
 
-const repositoryOptions = repositoryKeys.map((key) => ({
-  label: repositories[key].name,
-  value: key,
-}))
+const repository = repositories[savedCarts.repository]
 
-const agentOptions: { label: string; value: AgentKey }[] = [
-  { label: agentNames['claude-code'], value: 'claude-code' },
-  { label: agentNames.codex, value: 'codex' },
-]
+/** The start of an empty chat, with the repository of the new workspace. */
+function Start() {
+  return (
+    <div className={styles.start}>
+      <Sparkles aria-hidden className={styles.icon} size={26} />
+      <h2 className={styles.title}>Start a workspace</h2>
+      <p className={styles.body}>
+        Your first message creates it, on a new branch of the repository.
+      </p>
+      <ActionButton
+        accessibilityLabel={`Repository: ${repository.name}`}
+        icon={FolderGit2}
+        menu
+        trailing={
+          <ChevronDown aria-hidden className={styles.chevron} size={13} />
+        }
+      >
+        {repository.name}
+      </ActionButton>
+      <p className={styles.note}>
+        Starts from the cloud computer of {orgs.acme.name}, built{' '}
+        {lastBuild.when}.
+      </p>
+    </div>
+  )
+}
 
-/** The form that creates a workspace, with its optional first message. */
+/**
+ * A new workspace as an empty chat: the repository, and the composer with
+ * its files and its model. The first message creates the workspace, and the
+ * app names it and its branch.
+ */
 export function NewWorkspaceScreen(props: {
   state: NewWorkspaceState
   viewport: Viewport
 }) {
   const failed = props.state.result === 'error'
-  const repository = repositories[savedCarts.repository]
-  const actions = (
-    <>
-      <MockLink asChild to={paths.shell}>
-        <ActionButton>Cancel</ActionButton>
-      </MockLink>
-      <MockLink asChild to={paths.creating}>
-        <ActionButton tone="primary">
-          {failed ? 'Try again' : 'Create workspace'}
-        </ActionButton>
-      </MockLink>
-    </>
-  )
   const mobile = props.viewport === 'mobile'
+  const notice = failed ? (
+    <Notice
+      action={<ActionButton tone="primary">Try again</ActionButton>}
+      body="Its sandbox didn't start. Your message is kept."
+      icon={CircleAlert}
+      title="The workspace wasn't created"
+      tone="danger"
+    />
+  ) : undefined
   const page = (
     <Page
-      actions={mobile ? actions : undefined}
       back={mobile ? { label: 'Workspaces', to: paths.shell } : undefined}
+      fill
+      subtitle={orgs.acme.name}
       title="New workspace"
       viewport={props.viewport}
     >
-      <div className={styles.form}>
-        {failed ? (
-          <Notice
-            body="Its sandbox didn't start. Your details are kept."
-            icon={CircleAlert}
-            title="The workspace wasn't created"
-            tone="danger"
-          />
-        ) : null}
-        <DropdownSelector
-          hint={`Starts from the base updated ${repository.baseUpdated}.`}
-          label="Repository"
-          onValueChange={noop}
-          options={repositoryOptions}
-          size={control.field}
-          value={savedCarts.repository}
-        />
-        <Input
-          label="Name"
-          onChangeText={noop}
-          size={control.field}
-          value={savedCarts.name}
-        />
-        <Input
-          hint={`Created from ${repository.defaultBranch}.`}
-          label="Branch"
-          onChangeText={noop}
-          size={control.field}
-          value={savedCarts.branch}
-        />
-        <SegmentedControl
-          label="Agent"
-          onChange={noop}
-          options={agentOptions}
-          size={control.field}
-          value={savedCarts.agent}
-        />
-        <Textarea
-          hint="Optional. The agent starts on it when the sandbox is ready."
-          label="First message"
-          numberOfLines={4}
-          onChangeText={noop}
-          size={control.field}
-          value={savedCartsMessage}
-        />
-        {mobile ? null : <div className={styles.actions}>{actions}</div>}
-      </div>
+      <ChatPane
+        composer={{
+          attachments: [],
+          choice: savedCarts.choice,
+          draft: savedCartsMessage,
+          placeholder: 'Describe the task',
+          running: false,
+          sendTo: failed ? undefined : paths.creating,
+        }}
+        empty={<Start />}
+        items={[]}
+        notice={notice}
+        viewport={props.viewport}
+      />
     </Page>
   )
   if (mobile) return <MobileFrame>{page}</MobileFrame>
-  return (
-    <AppFrame sidebar={<Sidebar groups={workspaceGroups()} />}>{page}</AppFrame>
+  const sidebar = (
+    <Sidebar
+      current="new-workspace"
+      org={orgs.acme}
+      sections={workspaceSections()}
+    />
   )
+  return <AppFrame sidebar={sidebar}>{page}</AppFrame>
 }

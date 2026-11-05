@@ -1,0 +1,56 @@
+/*
+ * The handle lies over the hairline between two columns. The accent shows
+ * only on a short grip in its middle, so no panel gets an accent edge.
+ */
+.handle {
+  position: absolute;
+  z-index: 15;
+  top: 0;
+  bottom: 0;
+  width: 9px;
+  cursor: col-resize;
+}
+
+.right {
+  right: -5px;
+}
+
+.left {
+  left: -5px;
+}
+
+.line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 4px;
+  width: 1px;
+}
+
+.grip {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: 5px;
+  height: 36px;
+  border-radius: 3px;
+  background: var(--ui-primary);
+  opacity: 0;
+  transform: translateY(-50%);
+}
+
+.handle:hover .line,
+.handle:focus-visible .line,
+.active .line {
+  background: var(--ui-border2);
+}
+
+.handle:hover .grip,
+.handle:focus-visible .grip,
+.active .grip {
+  opacity: 1;
+}
+
+.handle:focus-visible {
+  outline: none;
+}

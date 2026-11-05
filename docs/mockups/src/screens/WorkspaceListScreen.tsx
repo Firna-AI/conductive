@@ -1,130 +1,135 @@
+import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { MockLink } from '@mokly/mokly'
-import { FolderGit2, FolderPlus, PanelLeft, Plus } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import { EmptyState } from '../components/common/EmptyState'
-import { Mark } from '../components/common/Mark'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
 import {
-  workspaceGroups,
-  type WorkspaceGroup,
-} from '../components/workspaces/groups'
+  newOrgSections,
+  workspaceSections,
+  type ListDrag,
+  type ListMenu,
+} from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import { WorkspaceGroups } from '../components/workspaces/WorkspaceGroups'
-import { paths } from '../paths'
+import { orgList, orgs } from '../fixtures/orgs'
+import { menuSection } from '../fixtures/sections'
+import { workspaceDrag } from '../fixtures/workspaces'
+import {
+  ChooseWorkspace,
+  FirstRun,
+  FirstRunHeader,
+  HomeList,
+  NewOrgEmpty,
+} from './listParts'
+import { OrgSwitcherSheet, SectionSheet } from './listSheets'
 import styles from './WorkspaceListScreen.module.css'
 
 export const workspaceListSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['list'],
+  required: ['list', 'menu'],
   properties: {
-    list: { enum: ['workspaces', 'first-run'] },
+    /** The workspaces of Acme, the first run, or a new org without any. */
+    list: { enum: ['workspaces', 'first-run', 'new-org'] },
+    /** The menu of a section, a workspace dragged, or the org switcher. */
+    menu: { enum: ['none', 'section', 'drag', 'orgs'] },
   },
 } as const
 
 export type WorkspaceListState = SchemaProps<typeof workspaceListSchema>
 
-function FirstRun() {
-  return (
-    <EmptyState
-      action={
-        <MockLink asChild to={paths.addRepository}>
-          <ActionButton icon={Plus} tone="primary">
-            Add repository
-          </ActionButton>
-        </MockLink>
-      }
-      body="Each workspace is a sandbox with its own copy of a repository."
-      icon={FolderGit2}
-      title="Add your first repository"
-    />
-  )
+function listMenu(menu: WorkspaceListState['menu']): ListMenu | undefined {
+  return menu === 'section' ? { section: menuSection } : undefined
 }
 
-/** The header of the list page. The mark shows where no rail shows it. */
-function ListHeader(props: { action: boolean; mark: boolean }) {
-  return (
-    <header className={styles.header}>
-      {props.mark ? <Mark /> : null}
-      <h1 className={styles.title}>Workspaces</h1>
-      {props.action ? (
-        <MockLink asChild to={paths.newWorkspace}>
-          <ActionButton icon={Plus} tone="primary">
-            New
-          </ActionButton>
-        </MockLink>
-      ) : null}
-    </header>
-  )
+function listDrag(menu: WorkspaceListState['menu']): ListDrag | undefined {
+  return menu === 'drag' ? workspaceDrag : undefined
 }
 
-/** The workspace list as a page, with its header and actions. */
-function HomeList(props: { groups: readonly WorkspaceGroup[]; mark: boolean }) {
+const sheets: Readonly<Record<WorkspaceListState['menu'], ReactNode>> = {
+  none: null,
+  section: <SectionSheet />,
+  drag: null,
+  orgs: <OrgSwitcherSheet current="acme" />,
+}
+
+function MobileList(props: { state: WorkspaceListState }) {
+  const { list, menu } = props.state
+  if (list === 'first-run') {
+    return (
+      <MobileFrame>
+        <FirstRunHeader />
+        <FirstRun />
+      </MobileFrame>
+    )
+  }
+  const firna = list === 'new-org'
   return (
-    <>
-      <ListHeader action mark={props.mark} />
-      <div className={styles.scroll} data-mokly-scroll="workspace-page">
-        <WorkspaceGroups groups={props.groups} variant="page" />
-        <MockLink className={styles.add} to={paths.addRepository}>
-          <FolderPlus size={15} />
-          Add repository
-        </MockLink>
-      </div>
-    </>
+    <MobileFrame>
+      <HomeList
+        drag={listDrag(menu)}
+        menu={listMenu(menu)}
+        menuStyle="sheet"
+        org={firna ? orgs.firna : orgs.acme}
+        sections={firna ? newOrgSections() : workspaceSections()}
+      />
+      {sheets[menu]}
+    </MobileFrame>
   )
 }
 
 /**
- * The workspace list. On mobile and in a narrow window it is the home
- * screen. On a wide desktop the list is the sidebar, and the main area waits
- * for a choice.
+ * The workspace list of an org, grouped in the sections that the user made.
+ * On a phone and in a narrow window it is the home screen. On a wide
+ * desktop the list is the sidebar, and the main area waits for a choice.
  */
 export function WorkspaceListScreen(props: {
   state: WorkspaceListState
   viewport: Viewport
 }) {
-  const firstRun = props.state.list === 'first-run'
-  const groups = firstRun ? [] : workspaceGroups()
-  if (props.viewport === 'mobile') {
+  const { list, menu } = props.state
+  if (props.viewport === 'mobile') return <MobileList state={props.state} />
+  if (list === 'first-run') {
     return (
-      <MobileFrame>
-        {firstRun ? (
-          <>
-            <ListHeader action={false} mark />
-            <FirstRun />
-          </>
-        ) : (
-          <HomeList groups={groups} mark />
-        )}
-      </MobileFrame>
+      <AppFrame rail={{ orgs: [], firstRun: true }}>
+        <FirstRun />
+      </AppFrame>
     )
   }
+  if (list === 'new-org') {
+    const rail: RailState = { orgs: orgList, current: 'firna' }
+    return (
+      <AppFrame
+        rail={rail}
+        sidebar={<Sidebar org={orgs.firna} sections={newOrgSections()} />}
+      >
+        <NewOrgEmpty />
+      </AppFrame>
+    )
+  }
+  const sections = workspaceSections()
+  const open = listMenu(menu)
+  const drag = listDrag(menu)
+  const rail: RailState =
+    menu === 'orgs' ? { ...acmeRail, hint: 'futex' } : acmeRail
   return (
-    <AppFrame sidebar={<Sidebar groups={groups} />}>
-      {firstRun ? (
-        <FirstRun />
-      ) : (
-        <>
-          <div className={`${responsive.wideOnly} ${styles.choose}`}>
-            <EmptyState
-              action={
-                <MockLink asChild to={paths.newWorkspace}>
-                  <ActionButton icon={Plus} tone="primary">
-                    New workspace
-                  </ActionButton>
-                </MockLink>
-              }
-              icon={PanelLeft}
-              title="Choose a workspace"
-            />
-          </div>
-          <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
-            <HomeList groups={groups} mark={false} />
-          </div>
-        </>
-      )}
+    <AppFrame
+      rail={rail}
+      sidebar={
+        <Sidebar drag={drag} menu={open} org={orgs.acme} sections={sections} />
+      }
+    >
+      <div className={`${responsive.wideOnly} ${styles.choose}`}>
+        <ChooseWorkspace />
+      </div>
+      <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
+        <HomeList
+          drag={drag}
+          menu={open}
+          menuStyle="anchored"
+          org={orgs.acme}
+          sections={sections}
+        />
+      </div>
     </AppFrame>
   )
 }
