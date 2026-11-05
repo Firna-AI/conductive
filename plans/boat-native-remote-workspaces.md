@@ -1504,6 +1504,72 @@ legal page.
   `claude -p`, and bare mode never reads a subscription login. So a later
   Claude Code release can stop the tokens from working.
 
+### 38. Decide what a cancelled org keeps
+
+Open. Added on 5 November 2026 from the Milestone 1d mockups.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** Cancel plan ends the paid plan at the end of the billing
+  period. A paid org can have many members and workspaces. A free org has
+  one member and at most 3 workspaces.
+- **Problem:** No requirement says what happens to the extra members and
+  workspaces when the paid plan ends.
+- **Impact if no action:** Milestone 15b cannot handle a cancel, and the
+  cancel question cannot be drawn.
+- **Root question:** What does an org keep when its paid plan ends and it
+  no longer fits the free plan?
+- **Options:**
+  - **A.** Allow Cancel plan only when the org fits the free plan. It makes
+    cancelling harder, and the UK rules expected from January 2027 ask for
+    easy cancellation. Effort: Small.
+  - **B.** Cancel always works. The org keeps everything, but nothing
+    starts and nothing new is created until it fits the free plan or
+    upgrades again. Effort: Medium.
+  - **C.** Cancel always works. The app removes the other members and
+    archives the oldest workspaces. Unpushed work can block the archive.
+    Effort: Medium.
+- **Left out:** Deleting the extra workspaces, because it loses work.
+- **Wider fix:** None. One rule covers the whole case.
+- **Related:** Decision 25 sets the free plan. Decision 35 sets the
+  cancellation policy.
+- **Recommendation:** B. Cancelling stays easy, nothing is lost, and the
+  limit states already show what waits.
+- **Action:** ask the user, because the rule adds behaviour that no
+  requirement covers.
+
+### 39. Decide who owns a removed member's workspaces
+
+Open. Added on 5 November 2026 from the Milestone 1d mockups.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** Only an owner removes a member. The agents of a
+  workspace use the accounts of its owner, as decision 24 says. The
+  mockup's remove question says that the member's workspaces move to the
+  owner who removes the member.
+- **Problem:** No requirement says who owns the workspaces of a member who
+  leaves.
+- **Impact if no action:** Milestone 15a can keep workspaces whose agents
+  use the accounts of a person who left.
+- **Root question:** Who owns the workspaces of a member who leaves the
+  org?
+- **Options:**
+  - **A.** They move to the owner who removes the member, as drawn.
+    Effort: Small.
+  - **B.** The remove question asks the owner to pick the new owner.
+    Effort: Small.
+  - **C.** The app archives them, after the check for unpushed work.
+    Effort: Medium.
+- **Left out:** Keeping the removed person as the owner, because the
+  agents would use the accounts of someone outside the org.
+- **Wider fix:** None.
+- **Related:** Decision 24 gives each workspace its creator's account.
+- **Recommendation:** A. It needs no extra step, and the owner can
+  reassign each workspace later.
+- **Action:** ask the user, because it adds behaviour that no requirement
+  covers.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -1623,6 +1689,25 @@ Agent calls of 5 November 2026:
   request. It reads the final usage after each stop and before each
   delete. The report counts machine time only, so the app also counts
   the saved snapshot days and the builds of each org's image itself.
+- Seats follow the people. Each member takes a seat, an invite adds its
+  seat when the person accepts it, and a removal takes the seat off at
+  the next invoice. The owner buys no separate seat count. Reason: the
+  user priced the paid plan at "$30 per user".
+- At the free workspace and minutes limits, Upgrade to Team is the first
+  action. The free way forward, archiving a workspace or waiting for the
+  next month, is the second. Reason: the user said that a free account
+  "has to upgrade" at these limits.
+- The billing tab shows the pool in hours of the standard machine. The
+  app converts every cost in the pool at the machine price, also
+  snapshot days and image builds. Reason: the marketing page uses hours,
+  and one machine size makes the conversion exact.
+- A member who is not an owner sees the Members tab and each workspace's
+  owner without actions, and does not see the Billing tab. Reason:
+  members need to know who is in the org, and only owners act on the
+  bill.
+- A person who already owns a free org creates each new org on the paid
+  plan, and Create org hands off to Stripe Checkout. Reason: decision 25
+  gives each free account one org.
 
 **Orgs, sections, and the composer.** The user decided these on
 5 November 2026, in feedback on the Graphite mockups:
@@ -1970,28 +2055,42 @@ Depends on: 1c
 Draw the screens that the billing model and the org members need, as the
 user decided on 5 November 2026.
 
-- [ ] Draw the org billing page in the org settings: the plan, the
+- [x] Draw the org billing page in the org settings: the plan, the
       seats, the usage this month against the included pool, the
       overage so far, and links to upgrade and to manage payment.
-- [ ] Draw the upgrade flow to the paid plan, with the seat count, and
+- [x] Draw the upgrade flow to the paid plan, with the seat count, and
       the hand-off to Stripe Checkout.
-- [ ] Draw the limit states: a free org at 3 workspaces, at its 600
+- [x] Draw the limit states: a free org at 3 workspaces, at its 600
       minutes, and at its daily starts, and a free org that tries to
       invite a member, each with one way forward.
-- [ ] Draw the sign-up refusal for a GitHub account that is too new or
+- [x] Draw the sign-up refusal for a GitHub account that is too new or
       has no verified email. Agent call: it names the reason and the fix,
       such as "Verify your email on GitHub" or the date when the account
       can sign up, because an error names what failed and how to recover.
-- [ ] Make "Get started" the only first run. Remove the shell first-run
+- [x] Make "Get started" the only first run. Remove the shell first-run
       state and the not-connected create-org state, and point their
       links to "Get started". Agent call: two first runs would disagree.
-- [ ] Draw Delete org and the 7-day restore state.
-- [ ] Draw the session history menu under a history icon in the centre
+- [x] Draw Delete org and the 7-day restore state.
+- [x] Draw the session history menu under a history icon in the centre
       tab bar, and closing a tab while a turn runs.
-- [ ] Draw the org members page: invite by GitHub login, the roles, and
+- [x] Draw the org members page: invite by GitHub login, the roles, and
       removing a member.
-- [ ] Draw reassigning a workspace to another member, and show the owner
+- [x] Draw reassigning a workspace to another member, and show the owner
       of each workspace.
+- [x] Run the mockup check. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+- [ ] Redraw the seats to follow the people. Remove Change seats and the
+      seat picker. Show the member count and the price in the billing
+      tab, the upgrade flow, and the members tab.
+- [ ] At the free workspace and minutes limits, show Upgrade to Team
+      first and the free way forward second.
+- [ ] Draw Archive, as decision 16 says: the action on a workspace, the
+      check for unpushed work, and the Archived group.
+- [ ] Draw Create org for a person who already owns a free org: the paid
+      plan and the hand-off to Stripe Checkout.
+- [ ] Draw what a member who is not an owner sees in the org settings and
+      in the owner menu.
 - [ ] Run the mockup check. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show.
