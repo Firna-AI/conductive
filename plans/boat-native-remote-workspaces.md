@@ -629,7 +629,10 @@ attachments.
 - **Action:** asked the user, because the options trade simplicity against
   parallel agents.
 - **Chosen:** C, by the user on 5 November 2026, with an effort level and
-  file uploads. Only Codex and Claude are offered for now.
+  file uploads. Only Codex and Claude are offered for now. Later the same
+  day the user added B: several agent sessions per workspace, on the same
+  branch and cloud computer, shown as closable tabs, as in Conductor. So
+  the answer is B and C together.
 
 ### 20. Show the steps while a sandbox starts
 
@@ -720,6 +723,9 @@ Open. Added on 5 November 2026 from the user's design feedback.
   Every record keeps a user ID, so members can come later.
 - **Wider fix:** None.
 - **Related:** Decisions 5, 9, 10, 12, 13, and 17 depend on the answer.
+- **Later requirement:** on 5 November 2026 the user asked that the
+  sandbox provider stays hidden from the user. B would ask for a Boat key
+  in each org, so it conflicts with that requirement.
 - **Recommendation:** A. The first recommendation was B. B does not split
   billing, its separate agent logins need a second subscription, and each
   new org needs a key from the Boat dashboard. C lets the user create an
@@ -821,6 +827,31 @@ otherwise. The user can override any of them.
   model, and a `reasoningEffort` level on each prompt, and attachments.
 - The Changes tab starts with a summary: the number of changed files and
   the added and removed lines.
+
+The user added these requirements later on 5 November 2026:
+
+- Files, diffs, and agent sessions open as closable tabs in the centre
+  column, as in Conductor. "+" starts a new agent session in the same
+  workspace, on the same branch and cloud computer. The right column keeps
+  the pull request bar, the file lists, and the tool panel.
+- The sandbox provider stays behind the scenes. The app never names Boat,
+  so that it can move to another provider later. The provider key is
+  deployment configuration, not a user setting.
+- A new workspace starts as an empty chat window. The first message
+  creates it. The branch is generated from a city name with a random
+  suffix. The name is generated too.
+- Touch targets on phones are at least 44 px high.
+- Workspaces move between sections by drag and drop. Each section's menu
+  can create a workspace in that section.
+- One picker chooses the model and the effort level, such as "Opus 5.5
+  Max". It does not show the words Claude or Codex.
+- The success status mark is bright green. The ready mark stays muted.
+
+Agent call, 5 November 2026: the branch is `<GitHub login>/<city>-<four
+random characters>`, such as `cal/lisbon-7k2q`, so branches stay grouped
+by user. The workspace name starts as the city name. When the agent's
+first answer arrives, the Worker asks the agent for a title of three to
+five words in a side conversation, and renames the workspace.
 
 **Access and security.** These calls answer the user's question of
 5 November 2026 on secure access to Boat.
@@ -1026,6 +1057,14 @@ part that waits on an open decision.
 - [ ] Add file uploads, the agent choice for Codex and Claude, the model,
       and the effort level to the composer and to the new workspace form.
 - [ ] Add the changes summary to the Changes tab.
+- [ ] Open files, diffs, and agent sessions as closable tabs in the
+      centre column, with "+" for a new session.
+- [ ] Remove every mention of the sandbox provider.
+- [ ] Redraw new workspace as an empty chat window with generated names.
+- [ ] Make phone touch targets at least 44 px high.
+- [ ] Replace "Move to section" with drag and drop, and add "New
+      workspace" to the section menu.
+- [ ] Combine the model and effort pickers into one.
 - [ ] Run the mockup check. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show, and rewrite decisions 9, 10, 12, 13, and 17 for
