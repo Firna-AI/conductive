@@ -234,8 +234,23 @@ otherwise. The user can override any of them.
 
 **Components.**
 
-- The web app is React with Vite, and it uses `futex-ai/ui` components.
-  Reason: the user's shared component library already has the controls.
+- The web app is React with Vite, and it uses `futex-ai/ui` components,
+  published as `@firna/ui`. Reason: the user's shared component library
+  already has the controls. On the web it needs only React and
+  `lucide-react`.
+- The repository is one npm package, laid out as `calummoore/twilight-timer`
+  is: the web app under `src/`, the Worker and its Durable Objects under
+  `worker/`, built by Vite with `@cloudflare/vite-plugin`, and served as
+  Worker static assets. Reason: the user pointed to that repository on
+  5 November 2026 as a working Cloudflare Worker setup. It replaces the
+  three npm workspaces of the first plan.
+- The repository `.npmrc` sets `legacy-peer-deps=true`. Reason: npm 11
+  cannot install `@firna/ui` 4.0.0 on the web without it, because its
+  optional `react-native` peer range is older than the newest
+  `react-native`. The library's own package smoke test uses the same flag.
+- The mockups use `@mokly/mokly` 0.18.0, the newest release, with no
+  runtime patches. `futex-ai/accounting` pins 0.14.0 with three patches
+  for a much larger catalogue.
 - The Worker serves the API, the proxies, and the webhook endpoints. It
   holds the Boat key. Reason: the browser must never hold the key.
 - D1 holds repositories, workspaces, and settings. Boat labels alone are
@@ -360,6 +375,7 @@ each in a mobile and a desktop variant.
 
 - [ ] Set up `@mokly/mokly` under `docs/mockups`, with a build and a
       mockup check command. Follow the setup of `futex-ai/accounting`.
+      Render the screens with `@firna/ui` components.
 - [ ] Draw the app shell with the workspace list, the GitHub banner, and
       the sandbox states: ready, starting, stopped, and error.
 - [ ] Draw the new workspace screen and the repository settings screen:
@@ -393,16 +409,19 @@ State the requirements and the decisions in force for the work below.
 
 Depends on: 2
 
-Create the TypeScript workspace and the complete gate.
+Create the app package and the complete gate, following the setup of
+`calummoore/twilight-timer`.
 
-- [ ] Create npm workspaces: `apps/web`, `apps/worker`, and
-      `packages/protocol` for the shared types.
-- [ ] Add strict TypeScript, ESLint, Prettier, Vitest, and the 300-line
-      file check.
+- [ ] Extend the root package with `src/` for the web app, `worker/` for
+      the Worker, and `src/shared/` for the types that both use.
+- [ ] Add Vite with `@vitejs/plugin-react` and `@cloudflare/vite-plugin`,
+      and serve the app as Worker static assets with the API first.
+- [ ] Add strict TypeScript, Vitest, and the 300-line file check, and
+      extend ESLint and Prettier from the mockups to the app code.
 - [ ] Add one gate command and a GitHub Actions workflow that runs it.
 - [ ] Add the Wrangler configuration with D1 and the Durable Object
       binding. Do not deploy.
-- [ ] Build each package, and run the gate.
+- [ ] Build the package, and run the gate.
 
 ## Milestone 4: Worker core and Boat client
 
