@@ -1379,6 +1379,85 @@ Open. Added on 5 November 2026 from the marketing mockups.
 - **Action:** ask the user, because legal text is new content that no
   requirement covers.
 
+### 36. Run the agents through the agent SDKs
+
+Open. Added on 5 November 2026 from the user's questions about chat sync
+and the agent SDKs.
+
+- **Severity:** High. **Effort:** Large.
+- **Source:** Design. **Category:** Code structure.
+- **Background:** Decision 1 chose Boat's built-in agents. The app polls
+  Boat's event feed and converts its events. The Claude Agent SDK
+  (`@anthropic-ai/claude-agent-sdk`) and the Codex SDK
+  (`@openai/codex-sdk`) run their agents as a subprocess, so they must
+  run inside the cloud computer, in a small program of the app's. The
+  Claude SDK streams typed messages with partial text, accepts messages
+  while a turn runs and queues them for the next turn, and offers
+  interrupt, model and effort changes, and session resume and fork. The
+  Codex SDK streams events and resumes threads.
+- **Problem:** Boat's agents give a polled feed with unknown partial-text
+  behaviour, a Boat-specific event format, and steps of about 0.25 to 1
+  second. The chat then depends on Boat, which the user may leave.
+- **Impact if no action:** The chat can feel slow, and moving off Boat
+  means rewriting the chat.
+- **Root question:** Who runs the agents, and how does their output reach
+  the app?
+- **Options:**
+  - **A.** Keep Boat's built-in agents, polled. Effort: Medium.
+  - **B.** A small program in each cloud computer runs both SDKs and
+    streams their typed events to the workspace Durable Object over one
+    outbound WebSocket. Effort: Large.
+  - **C.** Run the agent command-line tools as Boat background commands,
+    and read Boat's output stream. Effort: Medium.
+  - **D.** A first, with a one-hour test of Boat's feed, and B if the test
+    fails. Effort: Medium.
+- **Left out:** An agent loop in the Worker, because the agents need the
+  files and tools of the cloud computer.
+- **Wider fix:** B. The agent layer then works on any provider.
+- **Related:** Decisions 1, 7, 14, 19, 24, 31, and 37.
+- **Recommendation:** B. It streams for real, keeps steer as queued
+  messages and interrupt, and keeps the chat when the app moves off
+  Boat.
+- **Action:** ask the user, because it changes the answer to decision 1.
+
+### 37. Use only agent logins that the providers allow
+
+Open. Added on 5 November 2026 from the Agent SDK documentation.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Design. **Category:** Security.
+- **Background:** Decision 24 lets a workspace owner use their own agent
+  account, and its agent call allows a Claude subscription token from
+  `claude setup-token`. The Agent SDK documentation says: "Unless
+  previously approved, Anthropic does not allow third party developers
+  to offer claude.ai login or rate limits for their products, including
+  agents built on the Claude Agent SDK." Its branding rules allow
+  "Claude Agent", "Claude", or "Name Powered by Claude", but not "Claude
+  Code" for a partner product.
+- **Problem:** Other users running on their Claude subscription inside
+  this app breaks Anthropic's rule unless Anthropic approves it. The
+  marketing page also says "Claude Code".
+- **Impact if no action:** Anthropic can block the use, and the product
+  breaks its terms.
+- **Root question:** Which agent credentials may users bring, and how
+  does the app name the agents?
+- **Options:**
+  - **A.** API keys only: Anthropic and OpenAI keys. Say "Claude" and
+    "Codex", not "Claude Code". Effort: Small.
+  - **B.** As A, and apply to Anthropic for approval to offer Claude
+    subscription sign-in later. Effort: Small.
+  - **C.** The app pays for model use with its own keys, with limits for
+    each user, priced into the plans. Effort: Medium.
+- **Left out:** Claude subscription tokens without approval, because the
+  rule forbids them.
+- **Wider fix:** None.
+- **Related:** Decisions 24 and 36. The marketing copy change waits for
+  Milestone 1d to finish.
+- **Recommendation:** B. Users can start with API keys at once, and
+  subscriptions can come if Anthropic approves.
+- **Action:** ask the user, because it changes the agent call of
+  decision 24 and the product's terms.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
