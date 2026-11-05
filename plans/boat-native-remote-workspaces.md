@@ -119,7 +119,8 @@ profiles that this needs. Recommendation changed from G to F.
     refuses every other sandbox. Effort: Small.
 - **Left out:** Per-sandbox keys, because minting them needs
   `account.admin` in the Worker.
-- **Wider fix:** G.
+- **Wider fix:** F. It keeps every resource of the app apart from the
+  owner's other Boat work.
 - **Recommendation:** F. The first recommendation was F, then G. With
   other users on the app's account, F keeps their sandboxes, starts, and
   bills apart from the owner's own Boat work. Inside its own Boat
@@ -485,9 +486,11 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
-- **Background:** The mockups accept a first message in the new
-  workspace form and while a sandbox starts. Such a message shows "Sends
-  when the sandbox is ready".
+- **Background:** The mockups accept messages while a sandbox starts, and
+  such a message shows "Sends when the sandbox is ready". On 5 November
+  2026 the user made new workspace an empty chat whose first message
+  creates the workspace, so that first message always arrives before the
+  sandbox is ready.
 - **Problem:** The plan does not say whether the app accepts a message
   before the sandbox is ready.
 - **Impact if no action:** Milestone 7 can refuse these messages, and
@@ -497,12 +500,12 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 - **Options:**
   - **A.** Queue messages in the workspace Durable Object, and send them
     when the sandbox is ready. Effort: Small.
-  - **B.** Disable the composer until the sandbox is ready. Effort:
-    Small.
   - **C.** Added by the options check: as A, and a message sent in a
     stopped workspace resumes it. Effort: Small.
-- **Left out:** A queue in the browser, because a closed tab loses the
-  message.
+- **Left out:**
+  - B, disable the composer until the sandbox is ready: it breaks the
+    user's requirement that the first message creates the workspace.
+  - A queue in the browser, because a closed tab loses the message.
 - **Wider fix:** None.
 - **Recommendation:** A. The user writes the task once, and the agent
   starts at the earliest moment. C removes the drawn Resume bar, which
@@ -518,7 +521,8 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 - **Source:** Implementation. **Category:** Docs or spec.
 - **Background:** Every mockup has a mobile and a desktop layout. A phone
   shows the workspace list, then a workspace with tabs for Chat, Files,
-  Terminal, Preview, and Desktop.
+  Terminal, Preview, and Desktop. On 5 November 2026 the user asked for
+  touch targets of at least 44 px on phones.
 - **Problem:** The plan excludes a mobile app, but it does not say
   whether the web app must work on a phone.
 - **Impact if no action:** The UI milestones can build desktop only, and
@@ -584,8 +588,9 @@ decisions. Rewritten the same day for org settings.
   Boat applies a saved environment change to a sandbox only after an
   upgrade call. Boat can also attach variables to one sandbox at create,
   at fork, and at each resume.
-- **Problem:** The plan keeps env vars in the app's one Boat environment,
-  so every sandbox of every org would get every org's secrets.
+- **Problem:** Every workspace sandbox is now safe for third parties
+  (`noEnv`), so env vars cannot come from a shared Boat environment. The
+  app must give each sandbox its org's values itself.
 - **Impact if no action:** The secrets of one org reach the sandboxes of
   all orgs.
 - **Root question:** Where do the env vars of each org live, and when
@@ -759,10 +764,6 @@ Open. Added on 5 November 2026 from the user's design feedback.
     org owns its workspaces, its sections, its repositories, and its
     cloud computer settings: the install script, the startup script, and
     the env vars. Effort: Medium.
-  - **B.** A full tenant. Each org stores its own Boat key, limited to its
-    own Boat environment, its own GitHub App installation, and its agent
-    logins, besides its workspaces, sections, and sandbox settings.
-    Effort: Medium.
   - **C.** Orgs mirror GitHub. Each org comes from one GitHub App
     installation, and its repositories come from it. The rest is as A.
     Effort: Medium.
@@ -790,11 +791,9 @@ Open. Added on 5 November 2026 from the user's design feedback.
   billing, its separate agent logins need a second subscription, and each
   new org needs a key from the Boat dashboard. C lets the user create an
   org only by installing the GitHub App on another account.
-- **Effect on other decisions:** Under A, decision 5 keeps G. Decision 9
-  needs one software base for the org, which the base of each repository
-  starts from. Decision 10 keeps A, with the script in the org settings.
-  Decision 12 keeps C, but a script save updates every base of the org.
-  Decisions 13 and 17 keep E and D, stored for each org.
+- **Effect on other decisions:** decisions 9, 10, 12, and 13 are
+  answered. Under A, decision 5 keeps F, and decision 17 keeps D, stored
+  for each org.
 - **Action:** ask the user, because the options trade setup steps against
   isolation, and no requirement covers orgs yet.
 
