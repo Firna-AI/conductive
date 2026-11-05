@@ -227,82 +227,79 @@ Added on 5 November 2026 from the options check. The user chose A on
 - **Chosen:** A, by the user on 5 November 2026. The app adds no limit of
   its own, and Boat's plan limits apply.
 
-### 9. Keep only saved software in the base
+### 9. Keep only saved software in the org image
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1.
-
-Changed on 5 November 2026: the user moved every setting from
-repositories to orgs, and repositories have no settings for now. This
-decision now applies to org settings. Its options are rewritten after
-decision 21 settles what an org owns.
+Open. Added on 5 November 2026 from the mockups of Milestone 1. Rewritten
+the same day for org settings: "Install software" now changes the org's
+software image, which every base update of the org starts from.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Docs or spec.
-- **Background:** "Install software" opens a terminal on the base. The
-  mockup offers Cancel and "Save to base".
-- **Problem:** The plan does not say what Cancel does. The base keeps the
-  unsaved installs, and the next automatic update saves them. Nothing
-  stops an automatic update during an install session.
-- **Impact if no action:** Cancelled software can reach every new
-  workspace, and an update can save a half-done install.
-- **Root question:** How does each change to a base, made by the user or
-  by an update, land whole or not at all? The options check wrote this
-  root question, because Cancel and the update race are one problem.
+- **Background:** "Install software" opens a terminal, and the user
+  installs tools, then saves or cancels. Boat cannot restore a sandbox in
+  place. The only way back is a new sandbox from a saved snapshot.
+- **Problem:** The plan does not say what Cancel does, or what happens
+  when two install sessions overlap.
+- **Impact if no action:** Cancelled or half-done installs reach every new
+  base of the org.
+- **Root question:** How does each change to the org image land whole or
+  not at all?
 - **Options:**
-  - **A.** Cancel restores the base from its last good saved snapshot.
-    Automatic updates wait while an install session is open. Effort:
-    Medium.
-  - **B.** Install sessions and updates each work on a fork of the newest
-    good snapshot, one at a time. Save stores the fork, and Cancel
-    deletes it. Effort: Medium.
+  - **A.** Install in the org image itself. Cancel rebuilds it from its
+    last saved snapshot. Effort: Medium.
+  - **B.** Each install session works on a new sandbox from the newest
+    saved image. Save stores it as the new image, and Cancel deletes it.
+    One session runs at a time. Effort: Medium.
+  - **C.** Added by the options check: as B, and keep the previous image,
+    with a "Revert" action after a bad save. Effort: Small.
+- **Note from the options check:** install sessions must not get the org
+  env vars, because a sandbox from a saved snapshot copies the variables
+  of its source.
 - **Left out:**
-  - C, remove Cancel so that leaving the screen saves: it saves half-done
-    installs and keeps the race.
-  - D, from the options check, installs only in the setup script and no
-    base terminal: it drops "Install software", which the task asks for.
-- **Wider fix:** B. Every base change is then one complete step.
-- **Related:** Decisions 12 and 13 change the same base update path.
-- **Recommendation:** B. The first recommendation was A. Boat cannot
-  restore a sandbox in place. The only way back is a new sandbox from a
-  saved snapshot, so A needs the step of B anyway.
-- **Action:** ask the user, because the option adds base behaviour that
-  no requirement covers.
+  - Remove Cancel: leaving the screen would then save half-done installs.
+  - Installs by script only: decision 13, option B, covers that.
+- **Wider fix:** B. Every image change is then one complete step.
+- **Related:** Decision 13. This decision applies only if decision 13 keeps
+  "Install software".
+- **Recommendation:** B. A needs B's new-sandbox step anyway, because Boat
+  cannot restore in place.
+- **Action:** ask the user, because this adds image behaviour that no
+  requirement covers.
 
-### 10. Add a repository to the app
+### 10. Choose the repositories of an org
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1.
-
-Changed on 5 November 2026: the user moved every setting from
-repositories to orgs, and repositories have no settings for now. This
-decision now applies to org settings. Its options are rewritten after
-decision 21 settles what an org owns.
+Open. Added on 5 November 2026 from the mockups of Milestone 1. Rewritten
+the same day for org settings: the org settings have a Repositories
+section.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Docs or spec.
-- **Background:** Each workspace starts from the base of its repository.
-  The plan creates bases, but no screen or endpoint adds a repository.
-  The mockups draw `app/repository-settings/add-repository` and a first
-  run with one action, Add repository.
-- **Problem:** Nothing lets the user add a GitHub repository and prepare
-  its first base.
-- **Impact if no action:** The user cannot start without editing D1 by
-  hand.
-- **Root question:** How does a repository join the app?
+- **Background:** Each workspace starts from the base of its repository,
+  and each base costs paid starts to keep fresh. The GitHub App can reach
+  repositories on several GitHub accounts.
+- **Problem:** The plan does not say which repositories an org uses, or
+  when their bases are made.
+- **Impact if no action:** On first use there is nothing to choose.
+- **Root question:** How does a repository join an org?
 - **Options:**
-  - **A.** Build the drawn screen. The user picks a repository that the
-    GitHub App can reach, with an optional startup script. Milestone 5
-    lists the repositories and prepares the first base. Effort: Medium.
-  - **B.** Add every repository that the GitHub App can reach, each with
-    a base. Effort: Medium.
-  - **C.** Seed repositories in D1 by hand. Effort: Small.
-- **Left out:** None.
-- **Wider fix:** None. This is a missing feature.
-- **Recommendation:** A, with its scripts stored as option E of decision
-  13 says. The user chooses which repositories cost a base. The options
-  check found that Boat's own repository list is no choice here: Boat
-  clones every repository of an environment into every sandbox.
-- **Action:** ask the user, because the option adds a GitHub read and a
-  base step that no requirement covers.
+  - **A.** Org settings, Repositories: the user picks from the
+    repositories that the GitHub App can reach, and the app prepares a
+    base for each one. Effort: Medium.
+  - **B.** Every repository that the GitHub App can reach joins the org,
+    each with a base. Effort: Medium.
+  - **C.** A repository joins when the user first makes a workspace for
+    it, and its base is made then. Effort: Medium.
+- **Left out:** Seeding repositories in the database by hand, because it
+  fails first use.
+- **Wider fix:** None, because this is a missing feature.
+- **Open point from the options check:** under decision 21, option A,
+  two orgs can pick the same repository. Each org then keeps its own base
+  of it, and each push updates both bases.
+- **Recommendation:** A. The user chooses which repositories cost a base,
+  and the first workspace of a repository starts fast. B would multiply
+  the paid starts by every repository that the GitHub App can reach.
+- **Action:** ask the user, because this adds a GitHub read and a base
+  step that no requirement covers.
 
 ### 11. Stop sandboxes of forgotten tabs
 
@@ -338,79 +335,117 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 - **Action:** ask the user, because the option changes when sandboxes
   stop, which the user sees in cost and in the app.
 
-### 12. Update the base by hand
+### 12. Update a base by hand
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1.
-
-Changed on 5 November 2026: the user moved every setting from
-repositories to orgs, and repositories have no settings for now. This
-decision now applies to org settings. Its options are rewritten after
-decision 21 settles what an org owns.
+Open. Added on 5 November 2026 from the mockups of Milestone 1. Rewritten
+the same day for org settings.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
-- **Background:** A push or the daily timer updates the base. The
-  mockups draw "Update now", and "Try again" on a failed update.
-- **Problem:** The plan has no manual update, so a failed update has no
-  recovery until the next push or the next day.
-- **Impact if no action:** New workspaces can keep an old base for a day.
+- **Background:** A push to the default branch or the daily timer updates
+  a repository's base. The mockups draw a refresh button on each base,
+  and "Try again" on a failed update.
+- **Problem:** The plan has no manual update, so after a failure the next
+  update can be a day away. A script change also reaches the bases only
+  at their next update.
+- **Impact if no action:** New workspaces start from an old base.
 - **Root question:** How does the user get a fresh base when they need
   one?
 - **Options:**
-  - **A.** Add a manual update with the drawn "Update now" and "Try
-    again" buttons. Effort: Small.
-  - **B.** Update automatically when the user saves the startup script,
-    with no buttons. Effort: Small.
+  - **A.** A refresh button on each base, and "Try again" after a
+    failure. Effort: Small.
+  - **B.** Update every base of the org when the user saves the startup
+    script or the software. Effort: Small.
   - **C.** A and B together. Effort: Small.
-- **Left out:** None.
+  - **D.** Added by the options check: rebuild a base from the org image
+    only after the image or the script changes. Otherwise start from the
+    last good base and fetch, so pushes stay cheap. Effort: Small.
+- **Left out:** An automatic retry, because a broken script fails again.
 - **Wider fix:** None.
-- **Related:** Decisions 9 and 13 change the same base update path.
-- **Recommendation:** C. The first recommendation was A. With a separate
-  setup script, a saved script otherwise waits up to a day. A save is a
-  user action, so the user still controls each paid start.
-- **Action:** ask the user, because the option adds an update action
-  that no requirement covers.
+- **Related:** Decisions 9 and 13. Each update is a paid start.
+- **Recommendation:** C together with D. A saved change takes effect at
+  once, each paid start still follows an action of the user, and pushes
+  only fetch.
+- **Action:** ask the user, because this adds an update action that no
+  requirement covers.
 
-### 13. Separate base setup from sandbox start
+### 13. Choose what prepares an org's cloud computers
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1.
-
-Changed on 5 November 2026: the user moved every setting from
-repositories to orgs, and repositories have no settings for now. This
-decision now applies to org settings. Its options are rewritten after
-decision 21 settles what an org owns.
+Open. Added on 5 November 2026 from the mockups of Milestone 1. Rewritten
+the same day for org settings, after the user asked whether Software and
+the setup script do the same thing. The first version chose between one
+and two scripts for each repository. Its finding still holds: Boat runs
+every repository setup script of an environment in every sandbox, so the
+app runs the scripts itself as commands and shows their output.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
-- **Background:** A base update runs the startup script, then saves the
-  base. The Boat environment also runs the script at each sandbox start.
-- **Problem:** One script prepares the base and starts each sandbox, so
-  installs such as `npm ci` run again at every start and every resume.
-- **Impact if no action:** Each start and resume waits for a full
-  install.
-- **Root question:** Which repository commands run at which moment, and
-  who runs them? The options check wrote this root question.
+- **Background:** Org settings, Sandbox, has three parts:
+  - Software: tools that the user installs by hand in a terminal, saved
+    once for every base of the org.
+  - Setup script: runs in each repository's base after each update of
+    the default branch, such as `npm ci`.
+  - Start script: runs in each workspace's cloud computer at each start
+    and resume, such as starting Redis.
+- **Problem:** Software and the setup script overlap. Both put things into
+  every base. They differ only in how and when: by hand and kept, or as
+  code that runs again after each update.
+- **Impact if no action:** The user cannot tell where an install belongs,
+  and the app builds and explains three mechanisms.
+- **Root question:** What does each layer hold, and what rebuilds it? The
+  layers are the org's software image, each repository's base, and each
+  start. The options check wrote this root question.
+- **Boat facts from the options check:** Boat starts each sandbox from
+  exactly one snapshot, and it cannot merge two. So org Software reaches
+  a repository base only if each refresh starts from the newest software
+  snapshot, which then installs every dependency again. A snapshot keeps
+  installed packages and enabled system services, and Boat restarts those
+  services after each resume and fork.
 - **Options:**
-  - **A.** Keep one script, and ask the user to keep it fast. Effort:
-    Small.
-  - **B.** Two scripts: a setup script for base updates, and a start
-    script for each sandbox start. Effort: Small.
-  - **C.** Run the script only at base updates. Long-running services
-    become systemd services in the base. Effort: Small.
-  - **D.** Added by the options check: a setup script at base updates,
-    and a run script that the user starts in the app. Effort: Medium.
-  - **E.** Added by the options check: as B, but the Worker runs both
-    scripts from D1 as Boat commands, and the app shows their output.
-    The Boat environment keeps only shared logins. Effort: Small.
-- **Left out:** None.
-- **Wider fix:** E. It also settles where decision 10 stores scripts.
-- **Related:** Decisions 9 and 12 change the same base update path.
-  Decision 17 stores the env vars.
-- **Recommendation:** E. The first recommendation was B. Boat runs every
-  repository setup script of an environment in every sandbox at each
-  start, so per-repository scripts cannot live in one Boat environment.
-- **Action:** ask the user, because the option changes what the user
-  configures for each repository.
+  - **A.** Keep the three parts, and rename them so that the difference
+    shows: "Installed tools" by hand, an "Update script" after each
+    update, and a "Start script" at each start. Effort: Small.
+  - **B.** Two scripts and no terminal: a setup script for tools and
+    dependencies, and a start script. Every install is code and
+    repeatable. It drops "Install software", which the user's first
+    message asked for. Effort: Small.
+  - **C.** "Install software" and one startup script. Each base update
+    starts from the org's newest software image, clones or fetches the
+    repository, and runs the script with a variable that says so, so the
+    saved base has warm dependencies. The script also runs at each start.
+    It must be safe to run twice. Effort: Small.
+  - **D.** "Install software" and one startup script that runs only at
+    each start. Dependencies install at each start, so starts and resumes
+    get slower. Effort: Small.
+  - **E.** Added by the options check: "Install software" and one setup
+    script that runs once, when a workspace is created, as in Conductor.
+    Workspaces start from the org image and clone their repository, so
+    there are no repository bases. Creates wait for the dependency
+    install, and resumes stay fast. Effort: Small.
+  - **F.** Added by the orchestrator: one org image holds the software
+    and a prepared copy of each repository of the org, with its
+    dependencies. The app refreshes the image after pushes, and
+    workspaces start from it. "Install software" changes the same image.
+    Effort: Medium.
+  - **G.** Added by the options check: as F, but dependency folders stay
+    out of the image, and the setup script runs at each create. Effort:
+    Medium.
+- **Left out:** System services in place of a start script, because the
+  user asked for a startup script.
+- **Wider fix:** None.
+- **Related:** Decision 9 applies only to options that keep "Install
+  software". Decision 12 updates the bases. Decision 17 gives the env
+  vars at each start, and base runs get none.
+- **Recommendation:** C. It keeps the user's first model, a snapshot plus
+  a startup script, removes the overlap, and keeps starts fast. The
+  options check agreed after it weighed E, F, and G:
+  - E clones each repository at create, so it fails the user's first
+    requirement of a small fetch for new workspaces.
+  - F and G put every repository of the org into every workspace. They
+    must refresh one at a time, and one broken script blocks every
+    repository.
+- **Action:** ask the user, because the options change what the user
+  configures, and B drops a feature that the user asked for.
 
 ### 14. Accept messages before the sandbox is ready
 
@@ -506,58 +541,43 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 - **Action:** ask the user, because the option adds a workspace action
   that no requirement covers.
 
-### 17. Store the env vars of each repository
+### 17. Store the env vars of each org
 
 Open. Added on 5 November 2026 from the options check of the mockup
-decisions.
-
-Changed on 5 November 2026: the user moved every setting from
-repositories to orgs, and repositories have no settings for now. This
-decision now applies to org settings. Its options are rewritten after
-decision 21 settles what an org owns.
+decisions. Rewritten the same day for org settings.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Security.
-- **Background:** The mockups set env vars for each repository, with
-  write-only values. The design keeps them in the app's one Boat
-  environment. Boat applies a saved environment change to a sandbox only
-  after an upgrade call for that sandbox. Boat can also attach variables
-  to one sandbox at create, at fork, and at each resume.
-- **Problem:** One shared environment gives every sandbox the env vars of
-  every repository.
-- **Impact if no action:** Secrets of one repository reach the sandboxes
-  of all repositories.
-- **Root question:** Where do the env vars of each repository live, and
-  when does a sandbox get them?
+- **Background:** The org settings hold env vars, with write-only values.
+  Boat applies a saved environment change to a sandbox only after an
+  upgrade call. Boat can also attach variables to one sandbox at create,
+  at fork, and at each resume.
+- **Problem:** The plan keeps env vars in the app's one Boat environment,
+  so every sandbox of every org would get every org's secrets.
+- **Impact if no action:** The secrets of one org reach the sandboxes of
+  all orgs.
+- **Root question:** Where do the env vars of each org live, and when
+  does a sandbox get them?
 - **Options:**
-  - **A.** One Boat environment for each repository. Boat stores the
-    values. The Worker key must name each new environment, so each new
-    repository needs a new key from the user. Effort: Medium.
-  - **B.** D1 stores the values, encrypted with a Worker secret. Before
-    the start script runs, the Worker writes them into the sandbox as an
-    env file. A change reaches each sandbox at its next start. Effort:
-    Medium.
-  - **C.** Keep one shared environment, and change the settings screen to
-    one list for all repositories. Effort: Small.
-  - **D.** Added by the options check: D1 stores the values, encrypted as
-    in B. The Worker passes them as per-sandbox variables at create and at
-    each resume. Boat gives them to the agent's commands, with no file. A
-    change reaches each sandbox at its next start, as the mockup says.
-    The base never gets them. Effort: Medium.
-- **Left out:** Values in the saved snapshot, because a snapshot keeps
-  every file, and Boat advises against secrets in snapshots.
-- **Open point:** every option assumes that a base update needs no
-  secret. A private registry token breaks this. The Worker must give such
-  a value to the setup command only, so the saved snapshot does not keep
-  it.
+  - **B.** The app stores the values, encrypted, and writes them as an env
+    file into the sandbox before the startup script runs. Effort: Medium.
+  - **D.** The app stores the values, encrypted, and passes them to Boat
+    as per-sandbox variables at create and at each resume. The bases never
+    get them. Effort: Medium.
+- **Left out:**
+  - A, one Boat environment for each org: under decision 21, option A, it
+    breaks the one shared key, because each new org needs a new key from
+    the Boat dashboard.
+  - One shared list for all orgs, because each org has its own settings.
+  - Secrets in a saved snapshot, because a snapshot keeps every file.
+- **Open point:** a base update runs the startup script without the env
+  vars. A private registry token needs a way to reach that one command.
 - **Wider fix:** None.
-- **Related:** Option E of decision 13 runs the scripts from the Worker,
-  which can write the env file first.
-- **Recommendation:** D. The first recommendation was B. D gives the
-  same isolation and timing with no file step, and it does not depend on
-  decision 13. A new repository needs no new key.
-- **Action:** ask the user, because the options trade who stores the
-  secrets against a manual key step for each repository.
+- **Related:** Decision 21.
+- **Recommendation:** D. Each org's secrets stay in its own sandboxes, a
+  change applies at the next start, and a new org needs no new key. D
+  also keeps the values off install sessions.
+- **Action:** ask the user, because this decides who stores the secrets.
 
 ### 18. Choose the banner states
 
