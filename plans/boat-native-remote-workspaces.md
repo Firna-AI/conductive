@@ -600,6 +600,49 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 - **Action:** ask the user, because the options trade simplicity against
   parallel agents.
 
+### 20. Show the steps while a sandbox starts
+
+Open. Added on 5 November 2026 from the restyle of Milestone 1a.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** The restyled mockups `app/new-workspace/creating` and
+  `app/shell/starting` show a starting card: a title, the start steps,
+  and the time since the start. The steps are, for example, "Starting
+  from the newest base" and "Creating branch cal/saved-carts". A resume
+  shows "Resuming with your files as you left them".
+- **Problem:** The plan says only that the app shows a starting state. No
+  requirement says that the Worker reports steps or times.
+- **Impact if no action:** Milestones 5 and 6 can build a plain spinner,
+  and the app then differs from the mockups.
+- **Root question:** What does the user see until each part of the
+  workspace works? The options check wrote this root question. At Boat's
+  `ready` state, prompts work, but services such as the `ttyd` terminal
+  start only after Boat restores the system files.
+- **Options:**
+  - **A.** Keep the drawn card. The workspace Durable Object records each
+    start step with its time, and pushes it to the open tabs. Effort:
+    Small.
+  - **B.** Show the card and the elapsed time, without steps. Effort:
+    Small.
+  - **C.** Show only the card title and a loader. Effort: Small.
+  - **D.** Added by the options check: as A, plus steps from Boat's start
+    states: "Getting a machine" while no machine is ready yet, and
+    "Applying your settings" while Boat applies the environment. Effort:
+    Small.
+  - **E.** Added by the options check: the card ends when the chat works.
+    The terminal and the preview each show their own wait until they
+    answer. Effort: Small.
+- **Left out:** Boat's raw start output, because users read product
+  steps, not provider output. A failed start still shows the start script
+  output, as the failed base update does.
+- **Wider fix:** None. This is a choice for one screen.
+- **Recommendation:** D, together with E for the tools. The first
+  recommendation was A. Only Boat's state shows a wait for a machine,
+  and each tool then waits only as long as it needs.
+- **Action:** ask the user, because option A adds behaviour at the
+  boundary that no requirement covers.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -618,10 +661,12 @@ otherwise. The user can override any of them.
   5 November 2026 as a working Cloudflare Worker setup. It replaces the
   three npm workspaces of the first plan.
 - Parts that `@firna/ui` lacks live as local app components: link
-  buttons and link tabs, notices, empty states, the file tree, and the
-  terminal frame. Reason: the library has none of them yet. The wider fix
-  adds them to the library, in
-  `plans/follow-ups/firna-ui-link-buttons-notices-empty-states.md`.
+  buttons and link tabs, notices, empty states, the file tree, the
+  terminal frame, dense 26 px button wrappers, dense list rows, and the
+  13 px type scale in token CSS. Reason: the library has none of them
+  yet, and its smallest button is 30 px with 15 px body text. The wider
+  fix adds them to the library, in
+  `plans/follow-ups/firna-ui-missing-parts.md`.
 - The repository `.npmrc` sets `legacy-peer-deps=true`. Reason: npm 11
   cannot install `@firna/ui` 4.0.0 on the web without it, because its
   optional `react-native` peer range is older than the newest
@@ -642,15 +687,23 @@ otherwise. The user can override any of them.
 - Chat events use our own event type, mapped from Boat's events in the
   Worker. Reason: option C of decision 1 stays possible later.
 
-**Mockups.** The UI implementor made these calls in Milestone 1, and the
-orchestrator accepted them on 5 November 2026:
+**Mockups.** The UI implementors made these calls in Milestones 1 and
+1a, and the orchestrator accepted them on 5 November 2026:
 
-- Desktop shows the workspace list, the chat, and a tool panel side by
-  side, so the user sees files change while the agent works. Below
-  1280 px the columns narrow, and below 900 px the list moves to its own
-  page.
-- A phone shows the workspace list, then a workspace with a banner row
-  and five bottom tabs: Chat, Files, Terminal, Preview, and Desktop.
+- The look is Graphite, which the user chose on 5 November 2026:
+  dark-first, near-black with cool greys, one sky accent, dense 26 px
+  rows and controls, 13 px Inter text, and monospace labels, with a
+  matching light scheme. The tokens live in `docs/mockups/src/design/`.
+- Desktop shows an icon rail, the workspace list, the chat, and a right
+  column side by side, so the user sees files change while the agent
+  works. The right column has the pull request bar on top, then the All
+  files, Changes, and Checks tabs, then the Terminal, Preview, and
+  Desktop tabs. Below 900 px the list moves to its own page.
+- A phone shows the workspace list, then a workspace with a compact pull
+  request row that opens Checks, and five bottom tabs: Chat, Files,
+  Terminal, Preview, and Desktop.
+- A selected tab is a filled pill, and the accent marks only what is
+  active, so no box gets a coloured edge.
 - Tabs are links, so each tool and file view has its own address.
 - The user opens a port preview by typing its port. The plan has no port
   discovery.
@@ -809,33 +862,39 @@ the plan. Do not copy Conductor's name, logo, or brand assets. The user
 then chose the Graphite direction on 5 November 2026. Conductor's layout
 stays the structure, and Graphite sets the look.
 
-- [ ] Restyle the shared look: light neutral surfaces, hairline borders,
+- [x] Restyle the shared look: light neutral surfaces, hairline borders,
       a compact type scale, small radii, and few accent colours, with a
       matching dark scheme.
-- [ ] Rework the desktop layout as in the reference: the workspace list
+- [x] Rework the desktop layout as in the reference: the workspace list
       on the left, the chat in the centre, and a right column with the
       pull request bar above the files, changes, and checks tabs, and the
       terminal, preview, and desktop tabs below.
-- [ ] Restyle the chat: user messages in light bubbles on the right,
+- [x] Restyle the chat: user messages in light bubbles on the right,
       plain agent text, collapsed tool-call summaries, file chips with
-      line counts after a turn, and a composer with an agent and model
-      picker.
-- [ ] Restyle the phone layouts to the same look.
+      line counts after a turn, and a composer that names the agent.
+      Decision 19 decides an agent and model picker.
+- [x] Restyle the phone layouts to the same look.
 - [x] Ask the user to choose a design direction. The user asked on
       5 November 2026 to review five directions: Conductor, Graphite,
       Studio, Paper, and Soft. The user chose Graphite the same day, from
       their descriptions, and asked to remove the directions from the
       catalogue.
-- [ ] Apply Graphite to every screen and flow: dark-first, near-black with
+- [x] Apply Graphite to every screen and flow: dark-first, near-black with
       cool greys and one bright accent, dense, an icon rail beside the
       workspace list, and monospace labels, with a matching light scheme.
       Keep the layout from the Conductor reference.
-- [ ] Remove the design directions, their switching code, and the tokens
+- [x] Remove the design directions, their switching code, and the tokens
       of the other four directions from the catalogue.
-- [ ] Run the mockup check. Smoke-test the changed pages, and compare them
+- [x] Run the mockup check. Smoke-test the changed pages, and compare them
       with the reference images.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Milestone completed after the orchestrator reran the mockup check, the
+lint, and the format check, looked for leftovers of the removed
+directions, and looked at key screenshots in dark and light. Evidence:
+`.context/boat-native-remote-workspaces/reports/milestone-1a-ui-implementor.md`
+and `.context/boat-native-remote-workspaces/checks/shots-1a/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -901,7 +960,7 @@ Tags: ui
 Depends on: 5
 
 - [ ] Build the app shell, the workspace list, and the sandbox states.
-- [ ] Add a draggable divider between the chat and the tool panel.
+- [ ] Add a draggable divider between the chat and the right column.
 - [ ] Build the new workspace and the repository settings screens.
 - [ ] Compare each screen with its mockup.
 
@@ -994,7 +1053,8 @@ Tags: ui
 
 Depends on: 6, 13
 
-- [ ] Build the banner for pull request, checks, and merge state.
+- [ ] Build the pull request bar of the right column, the compact pull
+      request row on phones, and the Checks tab.
 - [ ] Compare it with its mockup.
 
 ## Milestone 15: Agent tools
