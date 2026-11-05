@@ -853,6 +853,12 @@ by user. The workspace name starts as the city name. When the agent's
 first answer arrives, the Worker asks the agent for a title of three to
 five words in a side conversation, and renames the workspace.
 
+**Marketing site.** The user asked for it on 5 November 2026. Agent
+call: the marketing site is a few static pages, public at the root of
+the app domain, served from the Worker's static assets. The app moves to
+an `app.` subdomain behind Cloudflare Access. Reason: visitors must see
+the site without signing in, and the app keeps one sign-in boundary.
+
 **Access and security.** These calls answer the user's question of
 5 November 2026 on secure access to Boat.
 
@@ -1070,9 +1076,31 @@ part that waits on an open decision.
       the mockups show, and rewrite decisions 9, 10, 12, 13, and 17 for
       org settings.
 
+## Milestone 1c: Marketing website
+
+Tags: mockup
+
+Depends on: 1b
+
+The user asked on 5 November 2026 for a marketing website like
+Conductor's home page, with similar claims, in the Graphite design, and
+honest to this app's features. Draw it in the Mokly catalogue first.
+
+- [ ] Draw the home page at phone and desktop sizes: a header, a hero
+      with a real app screen, feature sections, a call to action, and a
+      footer.
+- [ ] Claim only what the plan decides. Leave out customer logos,
+      testimonials, user counts, certifications, team features, a
+      desktop or mobile app, an API, pricing, and any feature that waits
+      on an open decision.
+- [ ] Never name the sandbox provider.
+- [ ] Run the mockup check. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show, including the product name.
+
 ## Milestone 2: Documentation and protocol
 
-Depends on: 1, 1a, 1b
+Depends on: 1, 1a, 1b, 1c
 
 State the requirements and the decisions in force for the work below.
 
