@@ -26,6 +26,9 @@ Contract owners. Milestone 2 creates them:
 - `docs/protocol/chat-and-events.md`.
 - `docs/protocol/github-banner.md`.
 - `docs/protocol/agent-tools.md`.
+- `docs/protocol/orgs-plans-and-members.md`. Agent call, 5 November 2026:
+  decisions 21 to 31 and 42 need an owner, and no other doc covers orgs,
+  sections, members, plans, billing, and limits.
 - `README.md`.
 
 ## Decisions
@@ -2352,7 +2355,7 @@ State the requirements and the decisions in force for the work below.
 - [ ] Write `README.md` with the features, the setup, and the key code.
 - [ ] Write `docs/architecture.md` with the components and their
       boundaries.
-- [ ] Write the five protocol docs named under "Contract owners".
+- [ ] Write the six protocol docs named under "Contract owners".
 - [ ] Add the build output to `.gitignore`.
 
 ## Milestone 3: Repository bootstrap
