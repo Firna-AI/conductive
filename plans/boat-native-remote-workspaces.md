@@ -1089,6 +1089,68 @@ Open. Added on 5 November 2026 from the user's answer to decision 11.
 - **Action:** ask the user, because B changes the rule that the user
   chose.
 
+### 30. Decide what Delete org removes
+
+Open. Added on 5 November 2026 from the mockups of Milestone 1b.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** The General tab of the org settings has Delete org. The
+  mockup says that it deletes the org with its workspaces and its cloud
+  computer. Decision 16 checks a single workspace for unpushed work
+  before it deletes it.
+- **Problem:** No requirement says what Delete org removes, or whether it
+  protects work that was never pushed.
+- **Impact if no action:** The app can lose unpushed work in one click.
+- **Root question:** How does the user remove an org without losing work
+  by accident?
+- **Options:**
+  - **A.** Delete the org, its workspaces, their cloud computers, and its
+    image, after the unpushed-work check of decision 16 for each
+    workspace and a confirm that names the org. Effort: Small.
+  - **B.** Allow Delete org only when the org has no workspaces left.
+    Effort: Small.
+  - **C.** Archive the org: hide it, stop its cloud computers, and keep
+    its history. Effort: Medium.
+- **Left out:** A delete with no check, because it fails the goal.
+- **Wider fix:** None. Decision 16 holds the shared check.
+- **Related:** Decision 16, option D.
+- **Recommendation:** A. It matches the drawn screen, and the check
+  covers the loss.
+- **Action:** ask the user, because Delete org adds a delete that no
+  requirement covers.
+
+### 31. Decide what closing a session tab does
+
+Open. Added on 5 November 2026 from the mockups of Milestone 1b.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** The user asked that every centre tab can close. A
+  workspace can hold several agent sessions as tabs.
+- **Problem:** No requirement says what happens to a session when its
+  tab closes, especially while its turn runs.
+- **Impact if no action:** Milestone 8 can delete history, or leave an
+  agent running out of sight and spending money.
+- **Root question:** What happens to an agent session when the user
+  closes its tab?
+- **Options:**
+  - **A.** Closing only hides the tab, and a running turn keeps running.
+    Effort: Small.
+  - **B.** Closing ends the session after a confirm, and deletes its
+    history. Effort: Small.
+  - **C.** Closing stops a running turn after a confirm. The session
+    stays in a list under "+", where it reopens and continues. Effort:
+    Small.
+- **Left out:** Disabling close while a turn runs, because the user asked
+  that every tab can close.
+- **Wider fix:** None.
+- **Related:** Decision 19.
+- **Recommendation:** C. Nothing is lost, and no agent runs where the
+  user cannot see it.
+- **Action:** ask the user, because the options trade cost against
+  history.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -1133,21 +1195,30 @@ otherwise. The user can override any of them.
 - Chat events use our own event type, mapped from Boat's events in the
   Worker. Reason: option C of decision 1 stays possible later.
 
-**Mockups.** The UI implementors made these calls in Milestones 1 and
-1a, and the orchestrator accepted them on 5 November 2026:
+**Mockups.** The UI implementors made these calls in Milestones 1, 1a,
+and 1b, and the orchestrator accepted them on 5 November 2026:
 
 - The look is Graphite, which the user chose on 5 November 2026:
   dark-first, near-black with cool greys, one sky accent, dense 26 px
   rows and controls, 13 px Inter text, and monospace labels, with a
   matching light scheme. The tokens live in `docs/mockups/src/design/`.
-- Desktop shows an icon rail, the workspace list, the chat, and a right
-  column side by side, so the user sees files change while the agent
-  works. The right column has the pull request bar on top, then the All
-  files, Changes, and Checks tabs, then the Terminal, Preview, and
-  Desktop tabs. Below 900 px the list moves to its own page.
-- A phone shows the workspace list, then a workspace with a compact pull
-  request row that opens Checks, and five bottom tabs: Chat, Files,
-  Terminal, Preview, and Desktop.
+- Desktop shows the org rail, the sidebar with the org name and the
+  user's sections, the centre column, and the right column. The centre
+  column has the workspace header, then closable tabs for agent sessions
+  and open files, then the chat or the file page. The right column has
+  the pull request bar, then the All files, Changes, and Checks lists,
+  then the Terminal, Preview, and Desktop tabs. The sidebar and the right
+  column resize from 200 to 360 px and from 320 to 640 px. Below 900 px
+  the list moves to its own page.
+- A phone shows an org switcher and the workspace list, then a workspace
+  with a compact pull request row and five bottom tabs: Chat, Files,
+  Terminal, Preview, and Desktop. Menus open as sheets, sessions are tabs
+  above the chat, and files open as pages of the Files tab.
+- Each workspace row shows a 3 by 3 dot-matrix mark: working, finished
+  with unread output, ready, starting, stopped, or error. Each state has
+  its own shape, so it never depends on colour alone. Bold means unread
+  output.
+- Deleting a section moves its workspaces to General, so nothing is lost.
 - A selected tab is a filled pill, and the accent marks only what is
   active, so no box gets a coloured edge.
 - Tabs are links, so each tool and file view has its own address.
@@ -1155,8 +1226,6 @@ otherwise. The user can override any of them.
   discovery.
 - Environment variable values are write-only, so secrets never reach the
   browser.
-- An update of the base disables Install software, so the two cannot
-  change the base at once.
 - The Inter font ships in the repository with its licence, because the
   `@firna/ui` theme names it first.
 
@@ -1449,37 +1518,43 @@ Redraw the mockups for the user's feedback of 5 November 2026. Draw the
 org settings as the recommendation of decision 21 says, and mark each
 part that waits on an open decision.
 
-- [ ] Turn the icon rail into the org switcher, with a create action, and
+- [x] Turn the icon rail into the org switcher, with a create action, and
       draw the create-org screen.
-- [ ] Show the org name in the sidebar header, with a Settings link.
-- [ ] Replace the repository settings screens with org settings, and
+- [x] Show the org name in the sidebar header, with a Settings link.
+- [x] Replace the repository settings screens with org settings, and
       remove the screens that only repository settings need.
-- [ ] Make sidebar sections user-defined, collapsible, and with a menu
+- [x] Make sidebar sections user-defined, collapsible, and with a menu
       with three dots. Show how a workspace moves between sections.
-- [ ] Put a dot-matrix status mark on the left of each workspace row, and
+- [x] Put a dot-matrix status mark on the left of each workspace row, and
       remove the marks on the right.
-- [ ] Add file uploads, the agent choice for Codex and Claude, the model,
+- [x] Add file uploads, the agent choice for Codex and Claude, the model,
       and the effort level to the composer and to the new workspace form.
-- [ ] Add the changes summary to the Changes tab.
-- [ ] Open files, diffs, and agent sessions as closable tabs in the
+- [x] Add the changes summary to the Changes tab.
+- [x] Open files, diffs, and agent sessions as closable tabs in the
       centre column, with "+" for a new session.
-- [ ] Remove every mention of the sandbox provider.
-- [ ] Redraw new workspace as an empty chat window with generated names.
-- [ ] Make phone touch targets at least 44 px high.
-- [ ] Replace "Move to section" with drag and drop, and add "New
+- [x] Remove every mention of the sandbox provider.
+- [x] Redraw new workspace as an empty chat window with generated names.
+- [x] Make phone touch targets at least 44 px high.
+- [x] Replace "Move to section" with drag and drop, and add "New
       workspace" to the section menu.
-- [ ] Combine the model and effort pickers into one.
-- [ ] Redraw the Sandbox page as the org's cloud computer, as the user
+- [x] Combine the model and effort pickers into one.
+- [x] Redraw the Sandbox page as the org's cloud computer, as the user
       asked: the build card with "Build computer" and its history, the
       install script with the preinstalled tools, the startup script, and
       the env vars. Move repositories to their own tab, and remove the
       bases and the install terminal.
-- [ ] Keep the file tab header on one line.
-- [ ] Show the resize handles of the left panel and the right column.
-- [ ] Run the mockup check. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Keep the file tab header on one line.
+- [x] Show the resize handles of the left panel and the right column.
+- [x] Run the mockup check. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show, and rewrite decisions 9, 10, 12, 13, and 17 for
       org settings.
+
+Milestone completed after the orchestrator reran the mockup check, the
+lint, and the format check, searched for provider and Conductor names,
+and looked at key screenshots. Evidence:
+`.context/boat-native-remote-workspaces/reports/milestone-1b-ui-implementor.md`
+and `.context/boat-native-remote-workspaces/checks/shots-1b/`.
 
 ## Milestone 1c: Marketing website
 
