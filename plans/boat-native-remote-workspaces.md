@@ -135,6 +135,8 @@ G to F, for the shared pool of starts and running sandboxes.
   ciproxy and the owner's other Boat work. H alone costs nothing, but
   shares the pool.
 - **Action:** ask the user, because F costs a Boat seat every month.
+- **Chosen:** F, by the user on 5 November 2026, with the safe environment of H as
+  recommended. The app gets its own Boat organization.
 
 ### 6. Show port previews safely in a frame
 
@@ -251,6 +253,8 @@ also count the workspaces that agents create.
 - **Action:** asked the user, because a limit is new validation.
 - **Chosen:** A, by the user on 5 November 2026. The app adds no limit of
   its own, and Boat's plan limits apply.
+- **Superseded** on 5 November 2026: the user's answer to decision 23 limits every
+  user, and the limits count the workspaces that agents create.
 
 ### 9. Keep only saved software in the org image
 
@@ -335,7 +339,7 @@ section.
 
 ### 11. Stop sandboxes of forgotten tabs
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1.
+Added on 5 November 2026 from the mockups of Milestone 1.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -366,6 +370,10 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
   watching the desktop.
 - **Action:** ask the user, because the option changes when sandboxes
   stop, which the user sees in cost and in the app.
+- **Chosen:** B, changed by the user on 5 November 2026: the cloud computer stops
+  after 30 minutes without a running agent turn, also while a tab is open
+  and active. The tab then shows a button that resumes it. Decision 29
+  asks whether terminal and preview use count as activity.
 
 ### 12. Update a base by hand
 
@@ -490,7 +498,7 @@ app runs the scripts itself as commands and shows their output.
 
 ### 14. Accept messages before the sandbox is ready
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1.
+Added on 5 November 2026 from the mockups of Milestone 1.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -520,10 +528,11 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
   decision 11 keeps.
 - **Action:** ask the user, because the option adds a message queue that
   no requirement covers.
+- **Chosen:** A, by the user on 5 November 2026.
 
 ### 15. Make the web app work on phones
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1.
+Added on 5 November 2026 from the mockups of Milestone 1.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -552,10 +561,11 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
   work. A keeps the finished mockups aligned with the app, and its tool
   screens reuse the desktop components.
 - **Action:** ask the user, because the option widens five milestones.
+- **Chosen:** A, by the user on 5 November 2026. The web app is responsive.
 
 ### 16. Remove finished workspaces from the list
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1.
+Added on 5 November 2026 from the mockups of Milestone 1.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -584,10 +594,11 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
   delete work that was never pushed.
 - **Action:** ask the user, because the option adds a workspace action
   that no requirement covers.
+- **Chosen:** D, by the user on 5 November 2026.
 
 ### 17. Store the env vars of each org
 
-Open. Added on 5 November 2026 from the options check of the mockup
+Added on 5 November 2026 from the options check of the mockup
 decisions. Rewritten the same day for org settings.
 
 - **Severity:** Medium. **Effort:** Medium.
@@ -623,10 +634,11 @@ decisions. Rewritten the same day for org settings.
   change applies at the next start, and a new org needs no new key. D
   also keeps the values off install sessions.
 - **Action:** ask the user, because this decides who stores the secrets.
+- **Chosen:** D, by the user on 5 November 2026.
 
 ### 18. Choose the banner states
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1.
+Added on 5 November 2026 from the mockups of Milestone 1.
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -655,6 +667,7 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
   GitHub write access.
 - **Action:** ask the user, because the option adds banner states that no
   requirement covers.
+- **Chosen:** B, by the user on 5 November 2026.
 
 ### 19. Choose the chats of a workspace
 
@@ -748,7 +761,7 @@ chose A on 5 November 2026.
 
 ### 21. Decide what an org owns
 
-Open. Added on 5 November 2026 from the user's design feedback.
+Added on 5 November 2026 from the user's design feedback.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Design. **Category:** Docs or spec.
@@ -788,9 +801,9 @@ Open. Added on 5 November 2026 from the user's design feedback.
     profiles need `account.admin`, Boat's API cannot add a subscription
     sign-in, and per-sandbox variables already give each org its own
     values.
-  - Members and shared orgs, because nobody asked for them yet. Agent
-    call: each org has one owner, and every record keeps a user ID, so
-    members can come later.
+  - Members and shared orgs were left out first. The user's answer to
+    decision 24 added them later on 5 November 2026: a workspace can be
+    reassigned to another user.
 - **Wider fix:** None.
 - **Related:** Decisions 5, 9, 10, 12, 13, and 17 depend on the answer.
 - **Later requirement:** on 5 November 2026 the user asked that the
@@ -804,10 +817,11 @@ Open. Added on 5 November 2026 from the user's design feedback.
   for each org.
 - **Action:** ask the user, because the options trade setup steps against
   isolation, and no requirement covers orgs yet.
+- **Chosen:** A, by the user on 5 November 2026.
 
 ### 22. Choose who can sign in
 
-Open. Added on 5 November 2026 from the user's sign-in and billing
+Added on 5 November 2026 from the user's sign-in and billing
 decision.
 
 - **Severity:** High. **Effort:** Small.
@@ -840,10 +854,12 @@ decision.
   young, and B can follow when more people ask.
 - **Action:** ask the user, because this sets who can spend the owner's
   money.
+- **Chosen:** C, by the user on 5 November 2026: open sign-up with GitHub, with the
+  limits and plans of decision 23. The agent recommended A.
 
 ### 23. Limit what each user can spend
 
-Open. Added on 5 November 2026 from the user's sign-in and billing
+Added on 5 November 2026 from the user's sign-in and billing
 decision.
 
 - **Severity:** High. **Effort:** Medium.
@@ -879,10 +895,18 @@ decision.
   follow.
 - **Action:** ask the user, because a limit is new validation, and B
   changes the user's answer to decision 8.
+- **Chosen:** B, by the user on 5 November 2026, as part of a billing model:
+  - A free account gets at most 3 workspaces and a number of compute
+    minutes. Decision 25 sets the numbers.
+  - To get more, the user upgrades to a paid plan at $30 per user per
+    month. The plan includes compute worth $15 at Boat's prices, so the
+    app keeps half of the price when a user uses all of it.
+  - Use above the included amount is charged at Boat's prices plus 10%.
+  - The app needs billing. Decisions 26 and 27 decide how.
 
 ### 24. Connect each user's agents
 
-Open. Added on 5 November 2026 from the user's sign-in and billing
+Added on 5 November 2026 from the user's sign-in and billing
 decision.
 
 - **Severity:** High. **Effort:** Medium.
@@ -920,6 +944,150 @@ decision.
   cannot do. D adds Claude subscriptions to A, and Boat stays hidden.
 - **Action:** ask the user, because it decides who pays for model use
   and where secrets live.
+- **Chosen by the user on 5 November 2026:** each workspace belongs to the user who
+  created it, until it is reassigned, and its agents use that user's own
+  account. This rules out C. Agent call: D, as recommended, because it
+  lets a user's Claude subscription serve as their account.
+
+### 25. Set what the free plan includes
+
+Open. Added on 5 November 2026 from the user's answer to decision 23.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** The user decided that a free account gets at most 3
+  workspaces and "x minutes" of compute, then upgrades. A default machine
+  costs the app $0.036 an hour, so 600 free minutes cost about $0.36 for
+  each user each month.
+- **Problem:** The number of minutes is not set. "3 workspaces" can mean
+  3 that exist or 3 that run at once.
+- **Impact if no action:** Milestone 15a cannot enforce the limits, and
+  the pricing section cannot state them.
+- **Root question:** What exactly does a free account get each month?
+- **Options:**
+  - **A.** 3 workspaces that exist at once, not counting archived ones,
+    and 300 minutes a month. Effort: Small.
+  - **B.** 3 workspaces that exist at once, and 600 minutes a month.
+    Effort: Small.
+  - **C.** 3 workspaces that run at once, any number that exist, and 600
+    minutes a month. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None.
+- **Related:** Decisions 23 and 28.
+- **Recommendation:** B. Ten hours lets a new user finish a real task
+  before they decide, at a known cost of about $0.36 each.
+- **Action:** ask the user, because only the user can set the price of
+  the free plan.
+
+### 26. Choose the billing provider
+
+Open. Added on 5 November 2026 from the user's answer to decision 23.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** The app charges $30 per user per month with included
+  compute, and charges overage by use. Payments from many countries bring
+  sales tax and VAT duties.
+- **Problem:** The plan has no billing provider.
+- **Impact if no action:** Milestone 15b cannot start.
+- **Root question:** Who takes the payments, and who handles the tax?
+- **Options:**
+  - **A.** Stripe Billing with metered prices and Stripe Tax. The owner
+    is the seller, and registers for and files the taxes. Effort: Medium.
+  - **B.** A merchant of record, such as Paddle or Polar. It is the
+    seller, and it handles the tax for a higher fee. Effort: Medium.
+- **Left out:** Billing written by hand, because it repeats what the
+  providers already do.
+- **Wider fix:** None.
+- **Related:** Decision 27.
+- **Recommendation:** B. A merchant of record removes the tax work while
+  the product is small. Choose A if lower fees matter more.
+- **Action:** ask the user, because it is a business choice of fees
+  against tax work.
+
+### 27. Decide who pays for an org's workspaces
+
+Open. Added on 5 November 2026 from the user's answers to decisions 23
+and 24.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** The plan costs $30 per user. Each workspace belongs to
+  the user who created it, and its agents use that user's account. Orgs
+  now have members.
+- **Problem:** The plan does not say whether each member pays for their
+  own plan and use, or whether the org pays for its members.
+- **Impact if no action:** The billing model and the members page cannot
+  be designed.
+- **Root question:** Who pays for the plans and the compute of an org's
+  members?
+- **Options:**
+  - **A.** Each user pays for their own plan, and each workspace's
+    compute bills its owner. Effort: Medium.
+  - **B.** The org pays for a seat for each member and for all their
+    compute. Effort: Medium.
+  - **C.** A first, and B later for teams that ask for it. Effort: Medium.
+- **Left out:** None.
+- **Wider fix:** None.
+- **Related:** Decisions 23, 24, and 26.
+- **Recommendation:** C. It matches "uses their account" now, and keeps
+  team billing possible.
+- **Action:** ask the user, because it is a pricing choice.
+
+### 28. Prevent abuse of free accounts
+
+Open. Added on 5 November 2026 from the user's answer to decision 22.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Security.
+- **Background:** Anyone with a GitHub account can sign up and run free
+  cloud computers on the app's Boat organization. Boat's terms make the
+  platform responsible for what its users do. Boat cannot block outbound
+  traffic from a sandbox.
+- **Problem:** A throwaway GitHub account can run spam, scans, or mining
+  from the app's machines.
+- **Impact if no action:** Boat can suspend the app's organization, which
+  stops every user.
+- **Root question:** How does the app keep bad actors off its free
+  machines?
+- **Options:**
+  - **A.** Rely on the free limits only. Effort: Small.
+  - **B.** Also require a GitHub account older than 30 days with a
+    verified email. Effort: Small.
+  - **C.** Also require a payment card for the free plan. Effort: Medium.
+- **Left out:** None.
+- **Wider fix:** None.
+- **Related:** Decisions 22 and 25.
+- **Recommendation:** B. It stops most throwaway accounts with no step
+  for real users.
+- **Action:** ask the user, because B and C add sign-up rules.
+
+### 29. Count terminal and preview use as activity
+
+Open. Added on 5 November 2026 from the user's answer to decision 11.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** The user decided that a cloud computer stops after 30
+  minutes without a running agent turn, also while a tab is open. A stop
+  ends every process, such as a dev server behind a port preview.
+- **Problem:** A user who works in the terminal, or tests a preview, for
+  30 minutes without an agent message loses their machine mid-task.
+- **Impact if no action:** Manual work and previews stop without warning.
+- **Root question:** Which use keeps a cloud computer running?
+- **Options:**
+  - **A.** Only running agent turns, as decided. Effort: Small.
+  - **B.** Also typing in the terminal and requests to a port preview.
+    Effort: Small.
+  - **C.** As A, plus a warning 2 minutes before the stop, with "Keep
+    running". Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None.
+- **Related:** Decision 11.
+- **Recommendation:** B. It keeps the machine for real work, and an open
+  tab alone still stops.
+- **Action:** ask the user, because B changes the rule that the user
+  chose.
 
 ## Design
 
@@ -996,6 +1164,30 @@ otherwise. The user can override any of them.
 
 - Users run on the app's own Boat subscription, not their own.
 - Users sign in with GitHub. No other sign-in method is offered.
+
+**Plans, billing, and members.** The user decided these on 5 November
+2026, in the answers to decisions 22, 23, and 24:
+
+- Anyone with a GitHub account can sign up.
+- A free account gets at most 3 workspaces and a number of compute
+  minutes. Decision 25 sets the numbers and what they count.
+- A paid plan costs $30 per user per month. It includes compute worth
+  $15 at Boat's prices, so the app keeps half of the price when a user
+  uses all of it. More use is charged at Boat's prices plus 10%.
+- The app needs billing. Decision 26 chooses the provider, and decision
+  27 decides who pays for an org's workspaces.
+- Each workspace belongs to the user who created it, until it is
+  reassigned. Its agents use that user's own account.
+
+Agent calls of 5 November 2026:
+
+- Orgs get members, because a workspace can be reassigned to another
+  user. An owner invites members by GitHub login. The roles are owner
+  and member. Only an owner can reassign a workspace or remove a member.
+- The app offers one machine size for now, Boat's default size of
+  4 vCPU and 8 GB. At $0.036 an hour, the $15 of included compute is
+  about 416 hours a month.
+- The app meters compute from Boat's usage report for each sandbox.
 
 **Orgs, sections, and the composer.** The user decided these on
 5 November 2026, in feedback on the Graphite mockups:
@@ -1303,19 +1495,45 @@ honest to this app's features. Draw it in the Mokly catalogue first.
       with a real app screen, feature sections, a call to action, and a
       footer.
 - [ ] Claim only what the plan decides. Leave out customer logos,
-      testimonials, user counts, certifications, team features, a
-      desktop or mobile app, an API, pricing, and any feature that waits
-      on an open decision.
+      testimonials, user counts, certifications, a desktop or mobile
+      app, an API, and any feature that waits on an open decision.
+- [ ] Draw the pricing section: the free plan and the $30 plan per user
+      with its included compute and its overage, as decision 23 says.
 - [ ] Never name the sandbox provider.
-- [ ] Draw the GitHub sign-in page, and the page that a signed-in user
-      without access sees, as decision 22 says.
+- [ ] Draw the GitHub sign-in page, and the first run after sign-in,
+      which installs the GitHub App on the account that owns the user's
+      repositories. Sign-up is open, as decision 22 says.
 - [ ] Run the mockup check. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show, including the product name.
 
+## Milestone 1d: Plans, billing, and members
+
+Tags: mockup
+
+Depends on: 1c
+
+Draw the screens that the billing model and the org members need, as the
+user decided on 5 November 2026.
+
+- [ ] Draw the account billing page: the current plan, the usage this
+      month with its included amount, the overage so far, and links to
+      upgrade and to manage payment.
+- [ ] Draw the upgrade flow to the $30 plan, and the hand-off to the
+      payment page.
+- [ ] Draw the limit states: a free account at 3 workspaces, at its
+      minutes, and at its daily starts, each with one way forward.
+- [ ] Draw the org members page: invite by GitHub login, the roles, and
+      removing a member.
+- [ ] Draw reassigning a workspace to another member, and show the owner
+      of each workspace.
+- [ ] Run the mockup check. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
 ## Milestone 2: Documentation and protocol
 
-Depends on: 1, 1a, 1b, 1c
+Depends on: 1, 1a, 1b, 1c, 1d
 
 State the requirements and the decisions in force for the work below.
 
@@ -1489,9 +1707,47 @@ Depends on: 5
 - [ ] Add the CLI and the MCP server to the base snapshot setup.
 - [ ] Test the token scope and both tools.
 
+## Milestone 15a: Members, plans, and limits backend
+
+Depends on: 5
+
+- [ ] Add org members: invites by GitHub login, the owner and member
+      roles, and removal.
+- [ ] Give each workspace an owner, the user who created it, and let an
+      org owner reassign it.
+- [ ] Use the workspace owner's agent credentials, and record the
+      workspace's compute use against its owner.
+- [ ] Enforce the plan limits of decision 23 before each create and each
+      start: workspaces, minutes, and starts a day.
+- [ ] Test the limits and the reassignment against the fake Boat server.
+
+## Milestone 15b: Billing backend
+
+Depends on: 15a
+
+- [ ] Add the billing provider of decision 26: the free plan, the $30
+      plan per user, the included compute, and the overage at Boat's
+      prices plus 10%.
+- [ ] Meter compute from Boat's usage of each sandbox, and report it to
+      the billing provider.
+- [ ] Handle the billing provider's webhooks: upgrade, payment failure,
+      and cancel.
+- [ ] Test the metering and the webhooks with recorded payloads.
+
+## Milestone 15c: Members and billing UI
+
+Tags: ui
+
+Depends on: 6, 15a, 15b
+
+- [ ] Build the account billing page, the upgrade flow, and the limit
+      states.
+- [ ] Build the org members page and workspace reassignment.
+- [ ] Compare each screen with its mockup.
+
 ## Milestone 16: Deployment and live smoke test
 
-Depends on: 8, 10, 12, 14, 15
+Depends on: 8, 10, 12, 14, 15, 15c
 
 This milestone needs the prerequisites from the user.
 
