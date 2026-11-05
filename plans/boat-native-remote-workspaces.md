@@ -385,7 +385,7 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 - **Left out:** None.
 - **Wider fix:** E. It also settles where decision 10 stores scripts.
 - **Related:** Decisions 9 and 12 change the same base update path.
-  Decision 19 stores the env vars.
+  Decision 17 stores the env vars.
 - **Recommendation:** E. The first recommendation was B. Boat runs every
   repository setup script of an environment in every sandbox at each
   start, so per-repository scripts cannot live in one Boat environment.
@@ -486,76 +486,10 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 - **Action:** ask the user, because the option adds a workspace action
   that no requirement covers.
 
-### 17. Choose the banner states
+### 17. Store the env vars of each repository
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1.
-
-- **Severity:** Low. **Effort:** Small.
-- **Source:** Implementation. **Category:** Docs or spec.
-- **Background:** The mockups draw five banner states: no pull request,
-  checks running, checks failed, ready to merge, and merged. The banner
-  only links to GitHub.
-- **Problem:** Merge conflicts, changes requested, and draft are not
-  drawn. A branch without commits still offers "Create pull request".
-- **Impact if no action:** Milestone 14 must guess the states.
-- **Root question:** Which GitHub states must the banner show, and what
-  may it offer?
-- **Options:**
-  - **A.** Keep the five drawn states and the links. Effort: Small.
-  - **B.** As A, plus conflict, changes requested, draft, and closed
-    without merge. Show the create link only when the branch has commits.
-    The options check added the closed state. Effort: Small.
-  - **C.** As B, plus merge and "ask the agent to fix the checks" in the
-    app. Effort: Medium.
-  - **D.** Added by the options check: as B, plus buttons that send fixed
-    prompts to the agent: fix the checks, resolve the conflict, and
-    address the review. The agent has the user's GitHub access. Effort:
-    Small.
-- **Left out:** None.
-- **Wider fix:** None.
-- **Recommendation:** B. It shows each state that blocks a merge, without
-  GitHub write access.
-- **Action:** ask the user, because the option adds banner states that no
-  requirement covers.
-
-### 18. Choose the chats of a workspace
-
-Open. Added on 5 November 2026 from the mockups of Milestone 1.
-
-- **Severity:** Low. **Effort:** Small.
-- **Source:** Implementation. **Category:** Docs or spec.
-- **Background:** The mockups give each workspace one chat. The user picks
-  its agent, Claude Code or Codex, in the new workspace form.
-- **Problem:** The design names Boat conversations, but no screen lists
-  or switches them, and the plan does not say whether the agent can
-  change.
-- **Impact if no action:** Milestone 8 chooses the chat model without a
-  spec.
-- **Root question:** How does the user change the agent, or start fresh
-  or parallel work, in one workspace? The options check wrote this root
-  question.
-- **Options:**
-  - **A.** One chat with one agent, chosen at create. Effort: Small.
-  - **B.** Several chats as tabs in one workspace, each with its own
-    agent. Effort: Medium.
-  - **C.** Added by the options check: one chat, with an agent and model
-    picker for each message. Boat can change both inside one
-    conversation. Effort: Small.
-  - **D.** Added by the options check: as C, plus a "New chat" action
-    that keeps older chats read-only. Effort: Small.
-- **Left out:** A chat shared across workspaces, because it breaks one
-  sandbox and one branch per task.
-- **Wider fix:** None.
-- **Recommendation:** C. The first recommendation was A. Boat supports C
-  directly, and the user can switch agent when one reaches its usage
-  limit.
-- **Action:** ask the user, because the options trade simplicity against
-  parallel agents.
-
-### 19. Store the env vars of each repository
-
-Open. Added on 5 November 2026 from the options check of decisions 9 to
-18.
+Open. Added on 5 November 2026 from the options check of the mockup
+decisions.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Security.
@@ -599,6 +533,72 @@ Open. Added on 5 November 2026 from the options check of decisions 9 to
   decision 13. A new repository needs no new key.
 - **Action:** ask the user, because the options trade who stores the
   secrets against a manual key step for each repository.
+
+### 18. Choose the banner states
+
+Open. Added on 5 November 2026 from the mockups of Milestone 1.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** The mockups draw five banner states: no pull request,
+  checks running, checks failed, ready to merge, and merged. The banner
+  only links to GitHub.
+- **Problem:** Merge conflicts, changes requested, and draft are not
+  drawn. A branch without commits still offers "Create pull request".
+- **Impact if no action:** Milestone 14 must guess the states.
+- **Root question:** Which GitHub states must the banner show, and what
+  may it offer?
+- **Options:**
+  - **A.** Keep the five drawn states and the links. Effort: Small.
+  - **B.** As A, plus conflict, changes requested, draft, and closed
+    without merge. Show the create link only when the branch has commits.
+    The options check added the closed state. Effort: Small.
+  - **C.** As B, plus merge and "ask the agent to fix the checks" in the
+    app. Effort: Medium.
+  - **D.** Added by the options check: as B, plus buttons that send fixed
+    prompts to the agent: fix the checks, resolve the conflict, and
+    address the review. The agent has the user's GitHub access. Effort:
+    Small.
+- **Left out:** None.
+- **Wider fix:** None.
+- **Recommendation:** B. It shows each state that blocks a merge, without
+  GitHub write access.
+- **Action:** ask the user, because the option adds banner states that no
+  requirement covers.
+
+### 19. Choose the chats of a workspace
+
+Open. Added on 5 November 2026 from the mockups of Milestone 1.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** The mockups give each workspace one chat. The user picks
+  its agent, Claude Code or Codex, in the new workspace form.
+- **Problem:** The design names Boat conversations, but no screen lists
+  or switches them, and the plan does not say whether the agent can
+  change.
+- **Impact if no action:** Milestone 8 chooses the chat model without a
+  spec.
+- **Root question:** How does the user change the agent, or start fresh
+  or parallel work, in one workspace? The options check wrote this root
+  question.
+- **Options:**
+  - **A.** One chat with one agent, chosen at create. Effort: Small.
+  - **B.** Several chats as tabs in one workspace, each with its own
+    agent. Effort: Medium.
+  - **C.** Added by the options check: one chat, with an agent and model
+    picker for each message. Boat can change both inside one
+    conversation. Effort: Small.
+  - **D.** Added by the options check: as C, plus a "New chat" action
+    that keeps older chats read-only. Effort: Small.
+- **Left out:** A chat shared across workspaces, because it breaks one
+  sandbox and one branch per task.
+- **Wider fix:** None.
+- **Recommendation:** C. The first recommendation was A. Boat supports C
+  directly, and the user can switch agent when one reaches its usage
+  limit.
+- **Action:** ask the user, because the options trade simplicity against
+  parallel agents.
 
 ## Design
 
@@ -730,7 +730,7 @@ orchestrator accepted them on 5 November 2026:
 - "Install software" opens a terminal on the base sandbox. The user
   installs tools and saves. The startup script and the env vars live in a
   Boat environment, which applies them at each start. Open decisions 9,
-  13, and 19 replace this bullet.
+  13, and 17 replace this bullet.
 - A sandbox stops after 30 minutes with no open tab and no running agent
   turn. Reason: a Boat stop ends all processes, so it must not cut off
   work. Opening the workspace resumes it, and the app shows a starting
