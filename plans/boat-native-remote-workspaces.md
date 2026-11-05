@@ -4,7 +4,7 @@ Status: Active. On branch `calummoore/conductor-alternative-architecture`, no pu
 
 Conductor Cloud goes read-only on 13 November 2026 and shuts down on
 20 November 2026. This change builds a browser-only replacement. Users
-sign in with GitHub and run on the app's own Boat subscription: one Boat
+sign in with GitHub and bring their own Boat key: one Boat
 sandbox per workspace, chat with coding agents, a
 file list and preview, a terminal, port previews, a GitHub banner, one
 prepared cloud computer image per org, and agent tools that create
@@ -26,9 +26,9 @@ Contract owners. Milestone 2 creates them:
 - `docs/protocol/chat-and-events.md`.
 - `docs/protocol/github-banner.md`.
 - `docs/protocol/agent-tools.md`.
-- `docs/protocol/orgs-plans-and-members.md`. Agent call, 5 November 2026:
-  decisions 21 to 31 and 42 need an owner, and no other doc covers orgs,
-  sections, members, plans, billing, and limits.
+- `docs/protocol/orgs-and-members.md`. Agent call, 5 November 2026:
+  decisions 21, 22, 24, 28 to 31, 42, and 44 to 48 need an owner, and no
+  other doc covers orgs, sections, members, and Boat keys.
 - `README.md`.
 
 ## Decisions
@@ -144,6 +144,9 @@ G to F, for the shared pool of starts and running sandboxes.
 - **Action:** ask the user, because F costs a Boat seat every month.
 - **Chosen:** F, by the user on 5 November 2026, with the safe environment of H as
   recommended. The app gets its own Boat organization.
+- **Changed by decision 44 on 5 November 2026:** each user brings their own
+  Boat key. The app's own Boat organization and its scoped key serve only
+  development and tests.
 
 ### 6. Show port previews safely in a frame
 
@@ -914,6 +917,8 @@ decision.
     app keeps half of the price when a user uses all of it.
   - Use above the included amount is charged at Boat's prices plus 10%.
   - The app needs billing. Decisions 26 and 27 decide how.
+- **Superseded by decision 45 on 5 November 2026:** the product is free,
+  without billing or plan limits.
 
 ### 24. Connect each user's agents
 
@@ -1007,6 +1012,8 @@ Added on 5 November 2026 from the user's answer to decision 23.
 - **Correction on 5 November 2026:** an earlier record of the choice said
   "not counting archived ones". Only option A said that. Decision 41 asks
   the user whether archived workspaces count.
+- **Superseded by decision 45 on 5 November 2026:** the product is free,
+  without billing or plan limits.
 
 ### 26. Choose the billing provider
 
@@ -1047,6 +1054,8 @@ Added on 5 November 2026 from the user's answer to decision 23.
   against tax work.
 - **Chosen:** A, by the user on 5 November 2026: Stripe Billing with Stripe Tax. The
   owner registers for and files the taxes. The agent recommended B.
+- **Superseded by decision 45 on 5 November 2026:** the product is free,
+  without billing or plan limits.
 
 ### 27. Decide who pays for an org's workspaces
 
@@ -1086,6 +1095,8 @@ and 24.
 - **Chosen:** B, by the user on 5 November 2026: the org pays a seat for each member
   and all of the org's compute, including its image. The agent
   recommended D.
+- **Superseded by decision 45 on 5 November 2026:** the product is free,
+  without billing or plan limits.
 
 ### 28. Prevent abuse of free accounts
 
@@ -1130,6 +1141,8 @@ Added on 5 November 2026 from the user's answer to decision 22.
   abuse notices. The user asked on 5 November 2026 to add option D after
   the first release, in
   `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`.
+- **Questioned on 5 November 2026:** decision 48 asks whether this check
+  stays, now that each user brings their own Boat key.
 
 ### 29. Count terminal and preview use as activity
 
@@ -1282,25 +1295,28 @@ Open. Added on 5 November 2026 from the marketing mockups.
 
 ### 33. Connect an agent in the first run
 
-Open. Added on 5 November 2026 from the marketing mockups.
+Open. Added on 5 November 2026 from the marketing mockups. Changed the
+same day by decision 44: the first run also needs a Boat key.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
 - **Background:** The first run installs the GitHub App, then creates the
   first org. Decision 24 lets each user paste a Claude token or API keys
-  on the account page.
+  on the account page. Each new user now also needs a Boat key before a
+  cloud computer can start, as decision 44 says. The mockups draw D as a
+  proposal, for the agent only.
 - **Problem:** No step connects Claude or Codex, so a new user can send a
   first task with no agent.
 - **Impact if no action:** The first task fails, and the user must find
   the account page alone.
-- **Root question:** How does a new user get a working agent before the
-  first task?
+- **Root question:** How does a new user get a working cloud computer and
+  agent before the first task?
 - **Options:**
   - **A.** Change nothing. The account page has Connect. Effort: Small.
-  - **B.** Add a third first-run step that connects Claude or Codex.
-    Effort: Small.
-  - **C.** Show a notice in the composer when no agent is connected.
-    Effort: Small.
+  - **B.** Add first-run steps that connect a Boat key and Claude or
+    Codex. Effort: Small.
+  - **C.** Show a notice in the composer when no Boat key or no agent is
+    connected. Effort: Small.
   - **D.** B and C together. Effort: Small.
 - **Left out:** Signing in inside a cloud computer, which decision 24 left
   out.
@@ -1315,7 +1331,8 @@ Open. Added on 5 November 2026 from the marketing mockups.
 
 ### 34. Set the limits of the paid plan
 
-Open. Added on 5 November 2026 from the marketing mockups.
+Closed on 5 November 2026: decision 45 removed billing and the plan
+limits, so this question no longer applies. Added on 5 November 2026 from the marketing mockups.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -1351,7 +1368,9 @@ Open. Added on 5 November 2026 from the marketing mockups.
 
 ### 35. Add the legal pages
 
-Open. Added on 5 November 2026 from the marketing mockups.
+Open. Added on 5 November 2026 from the marketing mockups. Changed the
+same day by decision 45: the product is free, so B, D, and E no longer
+apply, and F is new.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -1362,9 +1381,9 @@ Open. Added on 5 November 2026 from the marketing mockups.
 - **Problem:** The plan has no Privacy or Terms page.
 - **Impact if no action:** Billing in Milestone 15b can wait on legal
   pages.
-- **Root question:** What must the site show and do before it sells
-  subscriptions? The options check wrote this root question, because
-  some rules need working functions, not only pages.
+- **Root question:** What must the site show before it opens to other
+  people? The app collects GitHub logins and emails, and holds users'
+  keys. EU and UK privacy law requires a privacy notice for such data.
 - **Options:**
   - **A.** Privacy and Terms pages, linked from the footer and the
     sign-in page. Effort: Medium.
@@ -1376,6 +1395,10 @@ Open. Added on 5 November 2026 from the marketing mockups.
   - **E.** Added by the options check: sell paid plans only to
     businesses, with a tax ID at checkout, so the consumer withdrawal and
     subscription rules do not apply. Effort: Small.
+  - **F.** Added on 5 November 2026: no legal pages while only the
+    operator uses the app. Add A before the app opens to other people.
+    Effort: Small.
+  - B, D, and E no longer apply, because decision 45 removed billing.
 - **Rules from the options check:** Stripe checks a seller's site for
   contact details, a refund and dispute policy, a cancellation policy,
   and a privacy policy. Since 19 June 2026, the EU requires an online
@@ -1388,9 +1411,9 @@ Open. Added on 5 November 2026 from the marketing mockups.
     for a business that is the seller.
 - **Wider fix:** None.
 - **Related:** `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`.
-- **Recommendation:** D. The first recommendation was B, which misses
-  items that Stripe checks and the EU withdrawal function. A lawyer
-  should review the texts.
+- **Recommendation:** A. The app collects personal data from its first
+  outside user, and a lawyer should review the texts. The recommendation
+  was D before billing went away.
 - **Action:** ask the user, because legal text is new content that no
   requirement covers.
 
@@ -1546,7 +1569,8 @@ legal page.
 
 ### 38. Decide what a cancelled org keeps
 
-Open. Added on 5 November 2026 from the Milestone 1d mockups. The options
+Closed on 5 November 2026: decision 45 removed billing and the plan
+limits, so this question no longer applies. Added on 5 November 2026 from the Milestone 1d mockups. The options
 check added D, and the recommendation moved from B to D.
 
 - **Severity:** Medium. **Effort:** Medium.
@@ -1618,6 +1642,8 @@ moved from A to D.
   agents would use the accounts of someone outside the org.
 - **Wider fix:** None.
 - **Related:** Decision 24 gives each workspace its creator's account.
+  Decision 46: under its option A, the cloud computers stay in the org's
+  Boat account, so a move changes only the agent login.
 - **Recommendation:** D. It covers every way to stop being a member, and
   an org always keeps an owner.
 - **Action:** ask the user, because it adds behaviour that no requirement
@@ -1625,7 +1651,8 @@ moved from A to D.
 
 ### 40. Decide how seat changes are charged mid-period
 
-Open. Added on 5 November 2026 from the options check of the Milestone
+Closed on 5 November 2026: decision 45 removed billing and the plan
+limits, so this question no longer applies. Added on 5 November 2026 from the options check of the Milestone
 1d agent calls.
 
 - **Severity:** Medium. **Effort:** Small.
@@ -1660,7 +1687,8 @@ Open. Added on 5 November 2026 from the options check of the Milestone
 
 ### 41. Decide whether archived workspaces count toward the free limit
 
-Open. Added on 5 November 2026 from the options check of the Milestone
+Closed on 5 November 2026: decision 45 removed billing and the plan
+limits, so this question no longer applies. Added on 5 November 2026 from the options check of the Milestone
 1d agent calls.
 
 - **Severity:** Medium. **Effort:** Small.
@@ -1725,7 +1753,9 @@ Added on 5 November 2026 from the Milestone 1d mockups.
 
 ### 43. Decide what happens to a workspace stopped for 14 days
 
-Open. Added on 5 November 2026 from the Milestone 1d mockups. The user
+Open. Added on 5 November 2026 from the Milestone 1d mockups. Changed
+the same day by decision 44: with users' own Boat keys, E costs the user
+and not the app, and the recommendation moved from F to E. The user
 asked the same day whether the app can download the disk or keep a
 snapshot. That added E and F, and the recommendation moved from C to F.
 
@@ -1765,18 +1795,166 @@ snapshot. That added E and F, and the recommendation moved from C to F.
     URLs for the snapshot's chunks, which hold the home folder. A later
     start makes a new cloud computer from the org image and puts the home
     folder back: the code with all its files, and the agent sessions. R2
-    costs about $0.015 for each GB a month. Effort: Medium.
+    costs about $0.015 for each GB a month. The app pays for the storage
+    and holds a copy of each user's code. Effort: Medium.
 - **Left out:** None.
-- **Wider fix:** F. The same download also serves decision 38, in place
-  of its backup branch.
+- **Wider fix:** None. Decision 38 no longer applies.
 - **Previous examples:** Option D of decision 38 proposes the same backup
   branch.
 - **Related:** Decision 16 defines Archive and the expiring mark. Decision
   38, option D, uses the same backup.
-- **Recommendation:** F. It keeps the whole home folder for a few cents,
-  and the copy sits in the app's own storage, off Boat.
+- **Recommendation:** E. It keeps each stopped workspace exactly, in the
+  user's own Boat account at the user's cost, and the app holds no copy
+  of the user's code.
 - **Action:** ask the user, because it adds behaviour that no requirement
   covers.
+
+### 44. Let each user bring their own Boat key
+
+Added on 5 November 2026 from the user's message.
+
+- **Chosen by the user on 5 November 2026:** users bring their own Boat
+  key. This reverses the user's earlier call that users run on the app's
+  own Boat subscription.
+- **Effects:**
+  - The app keeps no Boat account for its users. Its own Boat
+    organization and key serve only development and tests.
+  - Each Boat account's own plan limits, wallet, and terms apply to its
+    cloud computers.
+  - Decision 46 decides whose key runs an org's cloud computers.
+    Decision 47 decides where the app names Boat.
+- **Agent calls on 5 November 2026:**
+  - The Worker stores each Boat key encrypted, with an encryption key
+    that is a Worker secret. It uses a Boat key only for the cloud
+    computers that it belongs to, and never sends it to the browser or
+    into a cloud computer. Reason: a Boat key gives access to a whole
+    Boat account.
+  - The key screen asks for a key scoped to one Boat environment, with
+    only the actions that the app uses, and tests the key once when it
+    is saved.
+  - The app does not depend on Boat webhooks, because each user's Boat
+    account would need its own. The agent runner reports when a cloud
+    computer is ready, and the Worker reads sandbox states from Boat's
+    API when it needs them.
+
+### 45. Make the product free, without billing
+
+Added on 5 November 2026 from the user's message.
+
+- **Chosen by the user on 5 November 2026:** remove billing, and make the
+  product free for now. The user's reason: the risk is lower now that
+  each user brings their own Boat key.
+- **Effects:**
+  - No plans, no Stripe, no seats, no compute pool, no overage, and no
+    plan limits on workspaces, minutes, or members.
+  - Decisions 23, 25, 26, and 27 are superseded. Open decisions 34, 38,
+    40, and 41 are closed, because they decided parts of billing.
+  - Decision 35 narrows to what a free service must show.
+  - Milestone 15b is removed. Milestones 15a and 15c lose their billing
+    TODOs. Milestone 1e removes billing from the mockups.
+
+### 46. Decide whose Boat key runs an org's cloud computers
+
+Open. Added on 5 November 2026 from decision 44.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** Each org has one image, a saved snapshot that bundles
+  all its repositories, as decision 13 says. A saved snapshot belongs to
+  one Boat account, and Boat can share it with another account. Each
+  workspace belongs to the user who created it, and its agents use that
+  user's own Claude or Codex login.
+- **Problem:** An org can have several members, and nothing says whose
+  Boat account runs, stores, and pays for its cloud computers.
+- **Impact if no action:** Milestones 4 and 5 cannot decide where the keys
+  live or where the org image is built.
+- **Root question:** Whose Boat account runs an org's cloud computers and
+  holds its image?
+- **Options:**
+  - **A.** One key for each org. An owner pastes it in the org settings.
+    Every workspace of the org runs on that Boat account, which also
+    holds the org image. Effort: Small.
+  - **B.** Each member's own key. Each member's workspaces run on their
+    own Boat account, and the app builds or shares the org image into
+    each account. A workspace that moves to another member must move to
+    another Boat account. Effort: Large.
+  - **C.** As A, and a member can add their own key for the workspaces
+    that they own. Effort: Medium.
+- **Left out:** None.
+- **Wider fix:** None.
+- **Related:** Decision 39 is simpler under A, because the cloud computers
+  stay in the org's Boat account. Decision 33 sets the first-run step
+  that asks for the key.
+- **Recommendation:** A. One Boat account for each org keeps the image,
+  the workspaces, and reassignment in one place, and the org's owners
+  control the cost.
+- **Action:** ask the user, because the user said "users bring their own
+  boat key", and A reads that as one key for each org.
+
+### 47. Decide where the app names Boat
+
+Open. Added on 5 November 2026 from decision 44.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** UX wording.
+- **Background:** The user decided that the app does not name Boat, so
+  that it can move to another provider later. Clues were acceptable.
+  Users now need a Boat account and a Boat key.
+- **Problem:** The app cannot ask for a Boat key without naming Boat.
+  Visitors cannot know before sign-up that they need a Boat account.
+- **Impact if no action:** Users sign up, then find out that they need
+  another paid service.
+- **Root question:** Where does the app tell users that it runs on Boat?
+- **Options:**
+  - **A.** Only on the key screen, with links to Boat's sign-up and key
+    pages. Elsewhere the app keeps "cloud computer". Effort: Small.
+  - **B.** As A, and the marketing site and Get started say that users
+    need their own Boat account. Effort: Small.
+  - **C.** Name Boat everywhere that it helps, such as in errors and
+    limits. Effort: Small.
+- **Left out:** Not naming Boat at all, because a user cannot then make
+  the key.
+- **Wider fix:** None.
+- **Recommendation:** B. Visitors learn the requirement before they sign
+  up, and the rest of the app still says "cloud computer", so a later
+  move stays easy.
+- **Action:** ask the user, because it changes the user's requirement to
+  keep Boat hidden.
+
+### 48. Decide which abuse measures stay
+
+Open. Added on 5 November 2026 from decision 44.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Security.
+- **Background:** Decision 28 requires a GitHub account older than 30 days
+  with a verified email at sign-up. A follow-up item adds terms, an
+  operator action that suspends a user, and an abuse address. Both
+  protected the app's shared Boat organization, which Boat's terms made
+  the app answer for. Now each user's cloud computers run in their own
+  Boat account, under Boat's terms.
+- **Problem:** The main reason for these measures is gone. The app still
+  signs users in, holds their keys, and acts on GitHub for them.
+- **Impact if no action:** The sign-up check refuses new GitHub users for
+  a reason that no longer holds.
+- **Root question:** Which measures does the app keep against misuse, now
+  that each user pays for their own cloud computers?
+- **Options:**
+  - **A.** Keep both: the sign-up check and the follow-up item. Effort:
+    Small.
+  - **B.** Drop both. Effort: Small.
+  - **C.** Drop the sign-up check. Keep the follow-up item's terms,
+    suspend action, and abuse address, for misuse of the app and of
+    GitHub through it. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None.
+- **Related:** Decision 28.
+  `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`. Decision
+  35 sets the legal pages.
+- **Recommendation:** C. The check no longer protects a shared account,
+  but a public app still needs terms and a way to stop misuse.
+- **Action:** ask the user, because it changes decision 28 and a follow-up
+  item that the user asked for.
 
 ## Design
 
@@ -1858,24 +2036,19 @@ and 1b, and the orchestrator accepted them on 5 November 2026:
 
 **Users and sign-in.** The user decided these on 5 November 2026:
 
-- Users run on the app's own Boat subscription, not their own.
+- Users bring their own Boat key, as decision 44 says. This reverses the
+  earlier call that users run on the app's own Boat subscription.
 - Users sign in with GitHub. No other sign-in method is offered.
 
-**Plans, billing, and members.** The user decided these on 5 November
-2026, in the answers to decisions 22 to 30 and 42:
+**Orgs and members.** The user decided these on 5 November 2026, in the
+answers to decisions 22, 24, 28, 30, 42, 44, and 45:
 
+- Users bring their own Boat key, as decision 44 says. Decision 46
+  decides whose key runs an org's cloud computers.
+- The product is free for now, without billing or plan limits, as
+  decision 45 says. Each Boat account's own plan limits apply.
 - Anyone with a GitHub account older than 30 days, with a verified
-  email, can sign up.
-- The org pays. A paid org pays $30 a month for each member's seat, and
-  pays for all of its compute, including its image builds and refreshes.
-- Each seat includes compute worth $15 at Boat's prices, so the app keeps
-  half of the price when the org uses all of it. More use is charged at
-  Boat's prices plus 10%.
-- A free account gets one org with at most 3 workspaces that exist and
-  600 minutes a month. Its image refreshes only when the user builds it,
-  and builds count against the minutes.
-- Billing uses Stripe Billing with Stripe Tax. The owner registers for
-  and files the taxes.
+  email, can sign up. Decision 48 asks whether this check stays.
 - Each workspace belongs to the user who created it, until it is
   reassigned. Its agents use that user's own account.
 - Delete org stops every machine and hides the org at once, and deletes
@@ -1888,41 +2061,16 @@ Agent calls of 5 November 2026:
 - Orgs get members, because a workspace can be reassigned to another
   user. An owner invites members by GitHub login. The roles are owner
   and member. Only an owner can reassign a workspace or remove a member.
-- A free org has one member, its owner. Inviting a member needs the paid
-  plan, because the seat is the paid unit.
-- The included compute of a paid org is a pool: $15 for each seat each
-  month.
-- The app offers one machine size for now, Boat's default size of
-  4 vCPU and 8 GB. At $0.036 an hour, $15 of compute is about 416 hours.
-- The app meters compute from Boat's usage report for each sandbox,
-  which gives seconds and list-price dollars up to the moment of the
-  request. It reads the final usage after each stop and before each
-  delete. The report counts machine time only, so the app also counts
-  the saved snapshot days and the builds of each org's image itself.
-- Seats follow the people. Each member takes a seat, owners too, and a
-  seat starts when the person accepts the invite. The owner buys no
-  separate seat count. Reason: the user priced the paid plan at "$30 per
-  user". Decision 40 sets how a seat change in the middle of a billing
-  period is charged.
-- At the free workspace and minutes limits, Upgrade to Team is the first
-  action. The free way forward is the second: at the minutes limit,
-  waiting for the next month, and at the workspace limit, the way that
-  decision 41 sets. Reason: the user said that a free account "has to
-  upgrade" at these limits.
+- A member who is not an owner sees the Members tab and each workspace's
+  owner without actions.
 - Reassigning a workspace stops its cloud computer first. Reason: Boat
   sets a sandbox's variables only at create and at resume, so the next
   start must pass the new owner's agent credentials.
-- The billing tab shows the pool in hours of the standard machine. The
-  app converts every cost in the pool at the machine price, also
-  snapshot days and image builds. Reason: the marketing page uses hours,
-  and one machine size makes the conversion exact.
-- A member who is not an owner sees the Members tab and each workspace's
-  owner without actions, and does not see the Billing tab. Reason:
-  members need to know who is in the org, and only owners act on the
-  bill.
-- A person who already owns a free org creates each new org on the paid
-  plan, and Create org hands off to Stripe Checkout. Reason: decision 25
-  gives each free account one org.
+- The app offers one machine size for now, Boat's default size of
+  4 vCPU and 8 GB.
+
+Decision 45 removed the plans, the seats, the compute pool, the overage,
+the metering, the upgrade, and the free plan's limits on 5 November 2026.
 
 **Orgs, sections, and the composer.** The user decided these on
 5 November 2026, in feedback on the Graphite mockups:
@@ -1990,9 +2138,10 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   is HttpOnly, Secure, and SameSite=Lax. This replaces Cloudflare Access.
 - Agent call: each request checks that the signed-in user owns the org
   and the workspace that it names. Decision 22 decides who may sign in.
-- The Boat key is a scoped key and a Worker secret. It has only the
-  actions that the app uses, and no `account.admin` action. Its scope
-  follows the answer to decision 5.
+- Each Boat key is the user's own, as decision 44 says. The Worker
+  stores it encrypted, uses it only for the cloud computers that it
+  belongs to, and never sends it to the browser or into a cloud
+  computer.
 - Agent call: a git credential helper in the org image asks the Worker
   for a fresh GitHub token on each git operation, signed with the
   workspace token. Reason: GitHub App user tokens expire after 8 hours,
@@ -2030,7 +2179,8 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   preview app's own cookies inside a frame.
 - The Worker asks Boat for a new desktop URL on each page load. The URL
   works for 10 minutes and carries its token in the fragment.
-- The Worker verifies the signature of each GitHub and Boat webhook.
+- The Worker verifies the signature of each GitHub webhook. The app does
+  not depend on Boat webhooks, as decision 44 says.
 - Each workspace sandbox gets its own workspace token as a sandbox
   variable. Agent tools can only create and list workspaces with it. The
   app sets no limit on the workspaces that agents create, as the user
@@ -2118,12 +2268,10 @@ push webhooks. The Worker routes each event to the workspace of its
 branch. When a tab opens, the Worker reads the current pull request and
 check state from the GitHub API.
 
-**Prerequisites from the user.** A Stripe account with Stripe Tax, and
-the tax registrations that it needs. A Cloudflare account on Workers
-Paid. Two domains on that account: one for the app, and a
-separate registrable domain for port previews. A Boat organization for
-the app on a paid plan, as decision 5 says, with a scoped key and its
-automatic top-up off. A GitHub App with its key and the "Email
+**Prerequisites from the user.** A Cloudflare account on Workers Paid.
+Two domains on that account: one for the app, and a separate registrable
+domain for port previews. A Boat key for development and tests, as
+decision 44 says. A GitHub App with its key and the "Email
 addresses" read permission. Anthropic's Commercial Terms, accepted
 through an Anthropic Console account, because they govern products that
 run Claude Code. Milestone 16 needs all of them. Earlier milestones use
@@ -2344,9 +2492,27 @@ user decided on 5 November 2026.
       workspace.
 - [x] Run the mockup check. Smoke-test the changed pages.
 
+## Milestone 1e: Free product and own Boat keys
+
+Tags: mockup
+
+Depends on: 1d
+
+Change the mockups for decisions 44 and 45.
+
+- [ ] Remove the billing tab, the upgrade flow, the plan limit states,
+      the seats, the Team plan, and the pricing section of the marketing
+      site.
+- [ ] Remove the free plan's limits and the paid Create org.
+- [ ] Draw the Boat key screen and its first-run step, as decisions 33,
+      46, and 47 say.
+- [ ] Run the mockup check. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
 ## Milestone 2: Documentation and protocol
 
-Depends on: 1, 1a, 1b, 1c, 1d
+Depends on: 1, 1a, 1b, 1c, 1d, 1e
 
 State the requirements and the decisions in force for the work below.
 
@@ -2383,8 +2549,10 @@ Depends on: 3
 - [ ] Add GitHub sign-in through the GitHub App, signed session cookies,
       and the user and org records.
 - [ ] Add the Boat client behind `SandboxProvider`, with the fixed route
-      list and typed errors. Its key is limited to the app's own Boat
-      environment.
+      list and typed errors. It uses the Boat key that decision 46
+      assigns.
+- [ ] Store each Boat key encrypted, test it once when it is saved, and
+      never send it to the browser or into a cloud computer.
 - [ ] Add the D1 schema and its migrations for repositories, workspaces,
       and settings.
 - [ ] Add the ownership check and the `Origin` check.
@@ -2402,7 +2570,8 @@ Depends on: 4
       open.
 - [ ] Record each start step with its time in the workspace Durable
       Object, and push it to the open tabs, as decision 20 says.
-- [ ] Receive and verify Boat webhooks, and update the workspace state.
+- [ ] Update the workspace state from the runner's reports, and read the
+      sandbox state from Boat's API when the runner does not report.
 - [ ] Add the daily refresh timer and the 30-minute push limit.
 - [ ] Test the lifecycle against the fake Boat server.
 
@@ -2528,7 +2697,7 @@ Depends on: 5
 - [ ] Add the CLI and the MCP server to the base snapshot setup.
 - [ ] Test the token scope and both tools.
 
-## Milestone 15a: Members, plans, and limits backend
+## Milestone 15a: Members backend
 
 Depends on: 5
 
@@ -2536,37 +2705,21 @@ Depends on: 5
       roles, and removal.
 - [ ] Give each workspace an owner, the user who created it, and let an
       org owner reassign it.
-- [ ] Use the workspace owner's agent credentials, and record the
-      workspace's compute use against its owner.
-- [ ] Enforce the plan limits of decisions 23 and 25 before each create
-      and each start: workspaces, minutes, starts a day, and members of a
-      free org.
-- [ ] Check the GitHub account age and the verified email at sign-up.
-- [ ] Add Delete org with the 7-day restore, and read the final usage
-      and remove the saved snapshots before each delete.
-- [ ] Test the limits and the reassignment against the fake Boat server.
+- [ ] Use the workspace owner's agent credentials.
+- [ ] Check the GitHub account age and the verified email at sign-up,
+      unless decision 48 drops the check.
+- [ ] Add Delete org with the 7-day restore, and remove the saved
+      snapshots before each delete.
+- [ ] Test the reassignment and Delete org against the fake Boat server.
 
-## Milestone 15b: Billing backend
-
-Depends on: 15a
-
-- [ ] Add Stripe Billing with Stripe Tax: the free plan, the paid plan
-      at $30 a seat, the included compute pool of $15 a seat, and the
-      overage at Boat's prices plus 10%, billed to the org.
-- [ ] Meter compute from Boat's usage of each sandbox, and report it to
-      the billing provider.
-- [ ] Handle the billing provider's webhooks: upgrade, payment failure,
-      and cancel.
-- [ ] Test the metering and the webhooks with recorded payloads.
-
-## Milestone 15c: Members and billing UI
+## Milestone 15c: Members UI
 
 Tags: ui
 
-Depends on: 6, 15a, 15b
+Depends on: 6, 15a
 
-- [ ] Build the org billing page, the upgrade flow, the limit states,
-      the sign-up refusal, and Delete org with its restore.
+- [ ] Build the sign-up refusal, unless decision 48 drops the check, and
+      Delete org with its restore.
 - [ ] Build the org members page and workspace reassignment.
 - [ ] Compare each screen with its mockup.
 
