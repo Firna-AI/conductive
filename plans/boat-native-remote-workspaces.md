@@ -1258,6 +1258,10 @@ Open. Added on 5 November 2026 from the marketing mockups.
     Effort: Small.
 - **Left out:** No name, because sign-in and the domain need one.
 - **Wider fix:** None. One constant already holds the name.
+- **Note from the options check:** a GitHub App name must be unique on
+  GitHub, at most 34 characters, and not the name of a GitHub account.
+  Stripe checks that the website matches the registered business. Check
+  the domain, the GitHub App name, and trademarks before choosing.
 - **Recommendation:** B. The domain and the GitHub App depend on it.
 - **Action:** ask the user, because only the user can name the product.
 
@@ -1286,6 +1290,9 @@ Open. Added on 5 November 2026 from the marketing mockups.
 - **Left out:** Signing in inside a cloud computer, which decision 24 left
   out.
 - **Wider fix:** None.
+- **Note from the options check:** `claude setup-token` runs the Claude
+  command-line tool on the user's own computer. A user without it uses an
+  API key instead. The app tests each key once when the user connects it.
 - **Recommendation:** D. The first run sets the agent up, and the notice
   catches a key that is removed later.
 - **Action:** ask the user, because it adds a step and a notice that no
@@ -1304,18 +1311,27 @@ Open. Added on 5 November 2026 from the marketing mockups.
   paid org may have, so a visitor can read it as unlimited.
 - **Impact if no action:** Milestone 15a cannot enforce the paid limits,
   and the site cannot state them.
-- **Root question:** Which limits does a paid org have beyond its
-  compute pool?
+- **Root question:** Which limits stop one paid org from using up the
+  capacity that all users share? The options check wrote this root
+  question, because the pool limits cost, not capacity.
 - **Options:**
   - **A.** No workspace limit. The pool and the overage price bound the
     cost. Effort: Small.
   - **B.** A workspace limit for each member, such as 10. Effort: Small.
   - **C.** A limit on machines that run at once, such as 5 for each
     member. Effort: Small.
+  - **D.** Added by the options check: as C, plus decision 23's start
+    limit for each hour as well as for each day. Effort: Small.
+- **Boat facts from the options check:** the $20 Boat plan gives the
+  whole app 100 machines at once, and 12 starts a minute, 60 an hour,
+  and 200 a day. Each extra Boat seat adds only 20% of these. Starts
+  above a limit cost $0.03 to $0.07 each, up to 6 times the limit, and
+  then fail.
 - **Left out:** None.
 - **Wider fix:** None.
 - **Related:** Decision 23 also limits starts a day for every user.
-- **Recommendation:** A. The pool and the overage already bound the cost.
+- **Recommendation:** D. The first recommendation was A. Under A, one org
+  can use all 60 shared starts of an hour and block every other user.
 - **Action:** ask the user, because only the user sets the plans.
 
 ### 35. Add the legal pages
@@ -1331,18 +1347,35 @@ Open. Added on 5 November 2026 from the marketing mockups.
 - **Problem:** The plan has no Privacy or Terms page.
 - **Impact if no action:** Billing in Milestone 15b can wait on legal
   pages.
-- **Root question:** Which legal pages does the site need before sign-up
-  and payments?
+- **Root question:** What must the site show and do before it sells
+  subscriptions? The options check wrote this root question, because
+  some rules need working functions, not only pages.
 - **Options:**
   - **A.** Privacy and Terms pages, linked from the footer and the
     sign-in page. Effort: Medium.
   - **B.** As A, plus a refund policy. Effort: Medium.
-  - **C.** Link to pages that the billing provider hosts. Effort: Small.
-- **Left out:** No legal pages, because payments need them.
+  - **D.** Added by the options check: as B, plus a cancellation policy,
+    a contact page with the business details, the EU function to
+    withdraw from a contract, and agreement to the terms at checkout.
+    Effort: Medium.
+  - **E.** Added by the options check: sell paid plans only to
+    businesses, with a tax ID at checkout, so the consumer withdrawal and
+    subscription rules do not apply. Effort: Small.
+- **Rules from the options check:** Stripe checks a seller's site for
+  contact details, a refund and dispute policy, a cancellation policy,
+  and a privacy policy. Since 19 June 2026, the EU requires an online
+  "withdraw from contract" function for consumers who have that right.
+  UK rules for consumer subscriptions, with renewal reminders and easy
+  cancellation, are expected from January 2027.
+- **Left out:**
+  - No legal pages, because payments need them.
+  - C, pages that the billing provider hosts: Stripe hosts no legal pages
+    for a business that is the seller.
 - **Wider fix:** None.
 - **Related:** `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`.
-- **Recommendation:** B. Stripe is not the seller under decision 26, so
-  the site needs its own refund terms.
+- **Recommendation:** D. The first recommendation was B, which misses
+  items that Stripe checks and the EU withdrawal function. A lawyer
+  should review the texts.
 - **Action:** ask the user, because legal text is new content that no
   requirement covers.
 
