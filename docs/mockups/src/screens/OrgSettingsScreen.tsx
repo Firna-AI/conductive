@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { BillingTab } from '../components/billing/BillingTab'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
 import { MembersTab } from '../components/members/MembersTab'
@@ -14,35 +13,26 @@ import {
 } from '../components/settings/OrgSections'
 import { RepositoryList } from '../components/settings/RepositoryList'
 import { Section } from '../components/settings/Section'
-import {
-  freeOrgSections,
-  workspaceSections,
-} from '../components/workspaces/sections'
+import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { memberViewer, people, you } from '../fixtures/members'
-import { orgList, orgs, type Org } from '../fixtures/orgs'
+import { orgList, orgs } from '../fixtures/orgs'
 import { acmeRepositories } from '../fixtures/repositories'
 import { paths } from '../paths'
 
 export const orgSettingsSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['tab', 'build', 'members', 'billing', 'dialog', 'viewer'],
+  required: ['tab', 'build', 'dialog', 'viewer'],
   properties: {
-    tab: {
-      enum: ['general', 'repositories', 'computer', 'members', 'billing'],
-    },
+    tab: { enum: ['general', 'repositories', 'computer', 'members'] },
     /** The builds of the cloud computer, which its tab shows. */
     build: { enum: ['ready', 'building', 'failed', 'changed'] },
-    /** The members tab: Acme on Team, or the free org that tries to invite. */
-    members: { enum: ['team', 'free'] },
-    /** The billing tab: Acme on Team, the free org, its upgrade, or after. */
-    billing: { enum: ['team', 'free', 'upgrade', 'upgraded'] },
     /** A dialog over the page: Delete org, or the removal of a member. */
     dialog: { enum: ['none', 'delete-org', 'remove-member'] },
     /**
      * The person signed in: an owner, or a member who is not an owner and
-     * sees no Billing tab and no actions on the members.
+     * sees no actions on the members and no Delete org.
      */
     viewer: { enum: ['owner', 'member'] },
   },
@@ -54,21 +44,14 @@ export type OrgSettingsState = SchemaProps<typeof orgSettingsSchema>
 export const acmeSettings: OrgSettingsState = {
   tab: 'general',
   build: 'ready',
-  members: 'team',
-  billing: 'team',
   dialog: 'none',
   viewer: 'owner',
 }
 
-/** The free org shows on its members and billing tabs. Acme shows else. */
-function orgFor(state: OrgSettingsState): Org {
-  if (state.tab === 'members' && state.members === 'free') return orgs.firna
-  if (state.tab === 'billing' && state.billing !== 'team') return orgs.firna
-  return orgs.acme
-}
+const org = orgs.acme
 
-function TabBody(props: { state: OrgSettingsState; org: Org }) {
-  const { state, org } = props
+function TabBody(props: { state: OrgSettingsState }) {
+  const { state } = props
   const owner = state.viewer === 'owner'
   switch (state.tab) {
     case 'general':
@@ -91,33 +74,23 @@ function TabBody(props: { state: OrgSettingsState; org: Org }) {
       return <ComputerTab build={state.build} org={org.name} />
     case 'members':
       return (
-        <MembersTab
-          canManage={owner}
-          view={state.members}
-          viewer={owner ? you : memberViewer}
-        />
+        <MembersTab canManage={owner} viewer={owner ? you : memberViewer} />
       )
-    case 'billing':
-      return <BillingTab view={state.billing} />
   }
 }
 
 /**
  * The settings of an org: its name and initials, the repositories that it
- * uses, its cloud computer, its members, and its billing. The app-wide
- * connections live in the account. Only an owner changes the members, sees
- * the billing, and deletes the org.
+ * uses, its cloud computer, and its members. The app-wide connections live
+ * in the account. Only an owner changes the members and deletes the org.
  */
 export function OrgSettingsScreen(props: {
   state: OrgSettingsState
   viewport: Viewport
 }) {
   const { state, viewport } = props
-  const org = orgFor(state)
-  const free = org.key === 'firna'
   const owner = state.viewer === 'owner'
   const mobile = viewport === 'mobile'
-  const list = free ? paths.newOrg : paths.shell
   const dialogs: Readonly<Record<OrgSettingsState['dialog'], ReactNode>> = {
     none: null,
     'delete-org': <DeleteOrgDialog viewport={viewport} />,
@@ -125,13 +98,13 @@ export function OrgSettingsScreen(props: {
   }
   const page = (
     <Page
-      back={mobile ? { label: 'Workspaces', to: list } : undefined}
+      back={mobile ? { label: 'Workspaces', to: paths.shell } : undefined}
       subtitle="Org settings"
-      tabs={<SettingsTabs billing={owner} tab={state.tab} wrap={mobile} />}
+      tabs={<SettingsTabs tab={state.tab} wrap={mobile} />}
       title={org.name}
       viewport={viewport}
     >
-      <TabBody org={org} state={state} />
+      <TabBody state={state} />
     </Page>
   )
   if (mobile) {
@@ -146,7 +119,7 @@ export function OrgSettingsScreen(props: {
     <Sidebar
       current="settings"
       org={org}
-      sections={free ? freeOrgSections() : workspaceSections()}
+      sections={workspaceSections()}
       settingsAlert={state.build === 'failed'}
     />
   )

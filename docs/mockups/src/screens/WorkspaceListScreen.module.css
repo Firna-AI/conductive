@@ -10,15 +10,6 @@
   box-sizing: border-box;
 }
 
-.title {
-  flex: 1;
-  margin: 0;
-  color: var(--ui-ink);
-  font-size: var(--ui-text-lg);
-  font-weight: var(--ui-weight-heading);
-  letter-spacing: var(--ui-tracking-heading);
-}
-
 /* The org name opens the org switcher of a phone. */
 .switcher {
   display: flex;
@@ -52,16 +43,6 @@
 .chevron {
   flex-shrink: 0;
   color: var(--ui-muted);
-}
-
-.account {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: var(--ui-touch-min);
-  min-height: var(--ui-touch-min);
-  border-radius: 50%;
-  text-decoration: none;
 }
 
 .scroll {

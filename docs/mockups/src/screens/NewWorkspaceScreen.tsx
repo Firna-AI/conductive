@@ -5,28 +5,22 @@ import { ActionButton } from '../components/common/actions'
 import { Notice } from '../components/common/Notice'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
-import {
-  freeOrgSections,
-  workspaceSections,
-} from '../components/workspaces/sections'
+import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { lastBuild } from '../fixtures/computer'
 import { savedCartsMessage } from '../fixtures/conversations'
-import { orgList, orgs } from '../fixtures/orgs'
+import { orgs } from '../fixtures/orgs'
 import { repositories } from '../fixtures/repositories'
 import { savedCarts } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import { limitKeys, limitOrg, LimitView } from './limitViews'
 import styles from './NewWorkspaceScreen.module.css'
 
 export const newWorkspaceSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['result', 'limit'],
+  required: ['result'],
   properties: {
     result: { enum: ['form', 'error'] },
-    /** A limit that stops the new workspace, in place of the empty chat. */
-    limit: { enum: limitKeys },
   },
 } as const
 
@@ -93,47 +87,34 @@ function NewChat(props: { failed: boolean; viewport: Viewport }) {
 /**
  * A new workspace as an empty chat: the repository, and the composer with
  * its files and its model. The first message creates the workspace, and the
- * app names it and its branch. At a limit, the page gives the one way
- * forward in place of the chat.
+ * app names it and its branch.
  */
 export function NewWorkspaceScreen(props: {
   state: NewWorkspaceState
   viewport: Viewport
 }) {
-  const { limit } = props.state
-  const org = limitOrg(limit)
-  const free = org.key === 'firna'
   const mobile = props.viewport === 'mobile'
-  const list = free ? paths.newOrg : paths.shell
   const page = (
     <Page
-      back={mobile ? { label: 'Workspaces', to: list } : undefined}
+      back={mobile ? { label: 'Workspaces', to: paths.shell } : undefined}
       fill
-      subtitle={org.name}
+      subtitle={orgs.acme.name}
       title="New workspace"
       viewport={props.viewport}
     >
-      {limit === 'none' ? (
-        <NewChat
-          failed={props.state.result === 'error'}
-          viewport={props.viewport}
-        />
-      ) : (
-        <LimitView limit={limit} />
-      )}
+      <NewChat
+        failed={props.state.result === 'error'}
+        viewport={props.viewport}
+      />
     </Page>
   )
   if (mobile) return <MobileFrame>{page}</MobileFrame>
   const sidebar = (
     <Sidebar
       current="new-workspace"
-      org={org}
-      sections={free ? freeOrgSections() : workspaceSections()}
+      org={orgs.acme}
+      sections={workspaceSections()}
     />
   )
-  return (
-    <AppFrame rail={{ orgs: orgList, current: org.key }} sidebar={sidebar}>
-      {page}
-    </AppFrame>
-  )
+  return <AppFrame sidebar={sidebar}>{page}</AppFrame>
 }

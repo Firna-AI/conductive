@@ -10,7 +10,7 @@ export const signUp = defineUseCase({
       screenPath: 'marketing',
       title: 'Start free with GitHub',
       description:
-        'The home page shows the app, its features, and the plans. Both actions lead to the GitHub sign-in.',
+        'The home page shows the app and its features. Both actions lead to the GitHub sign-in.',
     },
     {
       screenPath: 'app/sign-in',

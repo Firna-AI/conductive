@@ -23,7 +23,7 @@ export const orgs: Readonly<Record<OrgKey, Org>> = {
 
 /**
  * Every org of the user, in the order of the rail. Acme Labs joins the
- * list only when Create org has made it, on Team.
+ * list only when Create org has made it.
  */
 export const orgList: readonly Org[] = [orgs.acme, orgs.futex, orgs.firna]
 

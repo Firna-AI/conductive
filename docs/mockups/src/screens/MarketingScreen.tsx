@@ -4,7 +4,6 @@ import { ClosingCall } from '../components/marketing/ClosingCall'
 import { FeatureGrid } from '../components/marketing/FeatureGrid'
 import { FeatureSection } from '../components/marketing/FeatureSection'
 import { Hero } from '../components/marketing/Hero'
-import { Pricing } from '../components/marketing/Pricing'
 import { SiteFooter } from '../components/marketing/SiteFooter'
 import { SiteHeader, type SiteLinks } from '../components/marketing/SiteHeader'
 import { paths } from '../paths'
@@ -20,7 +19,7 @@ const year = 2026
 /**
  * The home page of the marketing site, public at the root of the app
  * domain: the hero with the app, the features with real screens, the
- * smaller features, the plans, and a last call to action. Every picture is
+ * smaller features, and a last call to action. Every picture is
  * a real screen of the catalogue, and none of it links into the app.
  */
 export function MarketingScreen(props: { viewport: Viewport }) {
@@ -53,7 +52,6 @@ export function MarketingScreen(props: { viewport: Viewport }) {
             title="Less to look after."
             viewport={viewport}
           />
-          <Pricing id="pricing" signIn={paths.signIn} viewport={viewport} />
           <ClosingCall
             signIn={paths.signIn}
             text="Sign up with GitHub, connect your repositories, and send the first task."

@@ -31,9 +31,9 @@ const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
 
 /**
  * The account: the GitHub sign-in, and what every org shares. The GitHub
- * App, the agents, and the model of new workspaces. The app pays for the
- * cloud computers, so the page shows no plan and no billing, and the
- * sandbox provider stays out of sight.
+ * App, the agents, and the model of new workspaces. The product is free,
+ * so the page shows no plan and no billing, and the sandbox provider stays
+ * out of sight.
  */
 export function AccountScreen(props: {
   state: AccountState

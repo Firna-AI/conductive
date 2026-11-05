@@ -5,5 +5,5 @@ import { paths } from '../../paths'
 export const orgLinks: Readonly<Partial<Record<OrgKey, string>>> = {
   acme: paths.shell,
   firna: paths.newOrg,
-  labs: paths.newTeamOrg,
+  labs: paths.anotherNewOrg,
 }

@@ -22,13 +22,3 @@
 .link:hover {
   color: var(--ui-ink);
 }
-
-.inline {
-  color: var(--ui-link);
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.inline:hover {
-  text-decoration: underline;
-}

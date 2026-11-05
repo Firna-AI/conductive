@@ -7,7 +7,7 @@ import {
 export const newOrg = defineScreen({
   title: 'New org',
   description:
-    'Firna, the free org that the first run made, before its first workspace. The rail selects it, its sidebar shows the default section, and New workspace starts the first workspace.',
+    'Firna, the org that the first run made, before its first workspace. The rail selects it, its sidebar shows the default section, and New workspace starts the first workspace.',
   relatedDocs: [],
   propSchema: workspaceListSchema,
   props: { list: 'new-org', menu: 'none' },
@@ -17,11 +17,12 @@ export const newOrg = defineScreen({
   ),
   variants: [
     {
-      slug: 'team',
-      title: 'New org on Team',
+      slug: 'another',
+      title: 'Another new org',
       description:
-        'Acme Labs, back from Stripe Checkout: Create org made it on Team, because its owner already owns a free org. The rail adds it and selects it.',
-      props: { list: 'new-team-org' },
+        'Acme Labs, which Create org made beside the orgs of the user. The rail adds it and selects it.',
+      movedFrom: 'app/orgs/empty/team',
+      props: { list: 'another-org' },
       useCasePaths: ['user-flows/create-org'],
     },
   ],

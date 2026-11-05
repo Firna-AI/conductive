@@ -79,10 +79,6 @@ chat, and five tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
-- `UsageMeter` in `src/components/common/` draws use against what a plan
-  includes: a thin fill on a lighter track of the same colour, in the accent,
-  or amber near or over the limit. The words beside it always give the
-  amounts and the state.
 - `AgentMark` in `src/components/chat/` marks the agent of a session with two
   letters on a small tile, CL or CX, because the app draws no brand logo.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
@@ -108,17 +104,16 @@ chat, and five tabs at the bottom.
 
 | Path                | What it shows                                                                |
 | ------------------- | ---------------------------------------------------------------------------- |
-| `marketing`         | The home page of the site: the app, its features, the plans, and sign-up     |
+| `marketing`         | The home page of the site: the app, its features, and sign-up                |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge  |
 | `app/sign-in`       | The GitHub sign-in, Get started as the only first run, and refused sign-ups  |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, and with an error     |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section            |
-| `app/orgs`          | The org switcher of a phone, Create org on Team or free, new orgs, deleted   |
+| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted    |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agents, and the default model        |
 | `app/banner`        | The pull request bar and Checks: none, running, failed, ready, merged        |
 | `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn      |
-| `app/limits`        | New workspace at a limit: 3 workspaces, minutes, starts, and running at once |
-| `app/org-settings`  | General, then Repositories, Cloud computer, Members, Billing, and Delete org |
+| `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members      |
 | `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure         |
 | `app/sessions`      | A new session, the session history, and closing a session while it works     |
 | `app/reassign`      | The owner of a workspace and the menu that reassigns it, and a member's view |
@@ -127,7 +122,7 @@ chat, and five tabs at the bottom.
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab      |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                    |
 | `app/panels`        | The right column, widened by the handle on its inner edge                    |
-| `user-flows`        | Sign up, create a workspace, reopen a stopped one, create an org, upgrade    |
+| `user-flows`        | Sign up, create a workspace, reopen a stopped workspace, and create an org   |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `app`, `app/sign-in`,
@@ -140,7 +135,8 @@ run, so the first run of `app/shell` and the not-connected state of
 opens `app/orgs/new/first`, whose Cancel returns to Get started. The entries
 of `app/orgs/new`, `app/orgs/empty`, and `app/orgs/deleted` moved into their
 own folders and kept their paths, so `app/orgs` shows only its canonical
-screen.
+screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
+paid plan went away, and declares `movedFrom`.
 
 ## Folder layout
 
@@ -149,7 +145,7 @@ screen.
 | `src/entries/`            | The Mokly root: entry modules, folder records, and the flows        |
 | `src/screens/`            | One React component for each app screen, for both viewports         |
 | `src/components/`         | Layout and parts that the screens share, where `@firna/ui` has none |
-| `src/fixtures/`           | The sample orgs, members, plans, workspaces, agents, and chats      |
+| `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files      |
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
@@ -178,38 +174,19 @@ screen.
 - Controls come from `@firna/ui`. A control without a handler renders as
   disabled, so the screens pass `noop` from `src/noop.ts`.
 
-## Plans, billing, and members
+## Orgs and members
 
-The screens draw the billing model that the user set on 5 November 2026.
-The numbers live in `src/fixtures/billing.ts` and `src/fixtures/limits.ts`,
-and the marketing plans read the same numbers.
+The product is free for now, as the user decided on 5 November 2026 in
+decision 45. So the screens show no plans, no billing, no seats, and no
+plan limits.
 
-- An org pays for its plan. On Team the seats follow the people: each
-  member takes a seat at $30 a month, owners too, and an invite adds its
-  seat when the person accepts it. Each seat adds $15 of compute, about 416
-  hours on the standard machine, to the pool of the billing period. Use
-  beyond the pool costs cost plus 10%. Open decision 40 sets how a seat
-  change in the middle of a period is charged, so no screen says it.
-- A free org keeps up to 3 workspaces, gets 600 minutes a month, and has one
-  member, its owner. Each person has 20 starts a day. Open decision 34 is
-  drawn as its recommended option D: a limit of starts each hour too, and 5
-  cloud computers that each member of a paid org runs at once.
-- The billing tab of the org settings shows the plan, the seats as the
-  members, the next invoice, the card, the compute against the pool, and the
-  cost of more use so far. Upgrade hands off to Stripe Checkout, and Manage
-  payment opens the Stripe customer portal. The screens draw only the
-  buttons and a note, not Stripe's pages.
-- A limit replaces the empty chat of a new workspace. At the free workspace
-  and minutes limits, Upgrade to Team comes first, and the free way second:
-  Archive on each workspace, or the date when cloud computers start again.
-  Archive there draws option B of open decision 41. The start limits and the
-  running limit give one way forward. A free org that invites a member
-  upgrades.
-- Only an owner manages the members and the billing, deletes the org, and
+- An owner invites members by their GitHub login. The roles are owner and
+  member. Only an owner manages the members, deletes the org, and
   reassigns a workspace. A member who is not an owner sees the members and
-  each workspace's owner without actions, and no Billing tab. The agents of
-  a workspace use its owner's own accounts, so reassigning stops the cloud
-  computer, which starts again with the new owner's accounts.
+  each workspace's owner without actions.
+- The agents of a workspace use its owner's own accounts, so reassigning
+  stops the cloud computer, which starts again with the new owner's
+  accounts.
 - Archive, from decision 16, deletes the cloud computer and keeps the chat
   read-only in the Archived group at the end of the list. It checks first
   for work that is not committed or not pushed. The pull request bar offers
@@ -217,22 +194,20 @@ and the marketing plans read the same numbers.
   is deleted soon, 14 days after its stop. Only the workspace's owner and
   the org's owners see Archive, from decision 42. An archived workspace has
   no file lists and no tools, so a phone shows only its chat.
-- Each person owns one free org. Create org of a person who already owns
-  one shows Team and hands off to Stripe Checkout.
+- Any user creates orgs. Create org of the first run returns to Get started
+  on Cancel.
 - Delete org asks for the org name. The deleted org stays faded in the rail
   of its owners until the date when everything is deleted, and its page
   offers Restore.
-- Three kinds of org show: Acme on Team, Firna, the free org of the sign-up,
-  and Acme Labs, which Create org makes on Team. The parts live in
-  `src/components/billing/`, `src/components/members/`, and
-  `src/components/limits/`.
+- Three orgs show: Acme, Firna, the first org of the sign-up, and Acme Labs,
+  which Create org makes. The parts live in `src/components/members/`.
 
 ## The marketing site
 
 The home page follows the calm structure of a Conductor-style home page: a
 header, a hero with a short headline, one sentence, and a large picture of
-the app, then one section for each feature, the smaller features, the plans,
-a last call to action, and a footer. Both actions, "Start free with GitHub"
+the app, then one section for each feature, the smaller features, a last
+call to action, and a footer. Both actions, "Start free with GitHub"
 and "Sign in", lead to `app/sign-in`. The parts live in
 `src/components/marketing/`.
 
@@ -251,8 +226,9 @@ and "Sign in", lead to `app/sign-in`. The parts live in
 - Each claim on the page is one that the plan decides. The page shows no
   customer logos, testimonials, user counts, certifications, desktop or
   native mobile app, API, other agents, changelog, or sandbox provider.
-- The plans come from `src/fixtures/plans.ts`. The product name is a working
-  name in `src/brand.ts`, because the user has not chosen one yet.
+- The page shows no plans, because the product is free for now. How the page
+  states the price waits on decision 47. The product name is a working name
+  in `src/brand.ts`, because the user has not chosen one yet.
 - The footer and the sign-in page link to Terms, Privacy, Refunds and
   cancellation, and Contact, from `LegalLinks`. The pages are not drawn yet,
   so the links have no address.

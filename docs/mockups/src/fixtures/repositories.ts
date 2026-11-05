@@ -1,14 +1,12 @@
 /**
- * The repositories of the orgs: Acme's three, then the two of Firna. The
- * cloud computer of an org holds every one of its repositories.
+ * The repositories of an org. The cloud computer of the org holds every
+ * one of them.
  */
 
 export const repositoryKeys = [
   'storefront',
   'billing-service',
   'marketing-site',
-  'components',
-  'docs',
 ] as const
 
 export type RepositoryKey = (typeof repositoryKeys)[number]
@@ -35,12 +33,6 @@ export const repositories: Readonly<Record<RepositoryKey, Repository>> = {
     name: 'acme/marketing-site',
     defaultBranch: 'main',
   },
-  components: {
-    key: 'components',
-    name: 'firna/components',
-    defaultBranch: 'main',
-  },
-  docs: { key: 'docs', name: 'firna/docs', defaultBranch: 'main' },
 }
 
 /** A repository that the shared GitHub App can reach. */
@@ -97,11 +89,8 @@ export const newOrg = {
   ],
 } as const
 
-/**
- * The org that Create org makes for a person who already owns a free org,
- * so it starts on Team, and its repositories.
- */
-export const teamOrg = {
+/** Another org that Create org makes beside the user's orgs. */
+export const anotherOrg = {
   name: 'Acme Labs',
   initials: 'AL',
   search: 'acme',

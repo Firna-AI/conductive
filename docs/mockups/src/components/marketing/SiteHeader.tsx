@@ -25,9 +25,6 @@ export function SiteHeader(props: { links: SiteLinks; viewport: Viewport }) {
               <a className={styles.link} href="#features">
                 Features
               </a>
-              <a className={styles.link} href="#pricing">
-                Pricing
-              </a>
             </>
           )}
           <ScreenLink className={styles.link} to={props.links.signIn}>

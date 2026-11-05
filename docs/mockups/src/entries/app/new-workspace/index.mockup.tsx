@@ -12,7 +12,7 @@ export const newWorkspace = defineScreen({
     "The user writes the task and sends it, and the app does the rest. The app names the branch after a city with a random suffix, such as cal/lisbon-7k2q, and the workspace after the city. The agent's first answer gives the workspace a short name from the task. There is no right column yet, because there are no files until the workspace exists.",
   relatedDocs: [],
   propSchema: newWorkspaceSchema,
-  props: { result: 'form', limit: 'none' },
+  props: { result: 'form' },
   useCasePaths: ['user-flows/create-workspace'],
   render: (props, context) => (
     <NewWorkspaceScreen state={props} viewport={context.viewport} />

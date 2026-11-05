@@ -41,11 +41,6 @@ export function SiteFooter(props: {
               Features
             </a>
           </li>
-          <li>
-            <a className={styles.link} href="#pricing">
-              Pricing
-            </a>
-          </li>
         </Column>
         <Column title="Account">
           <li>

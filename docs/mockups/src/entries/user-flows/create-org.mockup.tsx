@@ -3,7 +3,7 @@ import { defineUseCase } from '@mokly/mokly'
 export const createOrg = defineUseCase({
   title: 'Create an org',
   description:
-    'The user adds an org beside the ones they have, with its own repositories and workspaces. The user already owns a free org, so the new org starts on Team.',
+    'The user adds an org beside the ones they have, with its own repositories and workspaces.',
   relatedDocs: [],
   steps: [
     {
@@ -13,15 +13,15 @@ export const createOrg = defineUseCase({
     },
     {
       screenPath: 'app/orgs/new',
-      title: 'Name it and pay for Team',
+      title: 'Name it and choose repositories',
       description:
-        'The user names the org and adds its repositories. The user already owns a free org, so the new org starts on Team, and Continue to payment opens Stripe Checkout.',
+        'The user names the org and adds the repositories that its workspaces use.',
     },
     {
-      screenPath: 'app/orgs/empty/team',
+      screenPath: 'app/orgs/empty/another',
       title: 'The org opens',
       description:
-        'Back from Stripe Checkout, the rail selects the new org. New workspace starts its first workspace.',
+        'The rail adds and selects the new org. New workspace starts its first workspace.',
     },
   ],
 })

@@ -86,7 +86,7 @@ export const smallerFeatures: readonly FeatureItem[] = [
   {
     icon: Users,
     title: 'Invite your team',
-    text: 'On the Team plan, invite members by their GitHub login, and reassign a workspace to another member.',
+    text: 'Invite members by their GitHub login, and reassign a workspace to another member.',
   },
   {
     icon: ListTree,

@@ -92,14 +92,3 @@
   flex: 1;
   min-width: 0;
 }
-
-.seatsLine {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  margin: 0;
-  color: var(--ui-muted);
-  font-size: var(--ui-text-sm);
-  line-height: 1.5;
-}

@@ -17,7 +17,7 @@ import {
   orgs,
   type Org,
 } from '../fixtures/orgs'
-import { newOrg, teamOrg } from '../fixtures/repositories'
+import { anotherOrg, newOrg } from '../fixtures/repositories'
 import { menuSection } from '../fixtures/sections'
 import { workspaceDrag } from '../fixtures/workspaces'
 import {
@@ -37,10 +37,10 @@ export const workspaceListSchema = {
   required: ['list', 'menu'],
   properties: {
     /**
-     * The workspaces of Acme, a new free org or a new org on Team without
-     * any, or a deleted org.
+     * The workspaces of Acme, the first org of a new user or another new
+     * org, both without workspaces, or a deleted org.
      */
-    list: { enum: ['workspaces', 'new-org', 'new-team-org', 'deleted'] },
+    list: { enum: ['workspaces', 'new-org', 'another-org', 'deleted'] },
     /** The menu of a section, a workspace dragged, or the org switcher. */
     menu: { enum: ['none', 'section', 'drag', 'orgs'] },
   },
@@ -64,8 +64,8 @@ const sheets: Readonly<Record<WorkspaceListState['menu'], ReactNode>> = {
 }
 
 /**
- * The new orgs before their first workspace: the free org of the sign-up,
- * and the org on Team that Create org made after the payment.
+ * The new orgs before their first workspace: the first org of the sign-up,
+ * and another org that Create org made beside the user's orgs.
  */
 const newOrgs: Readonly<
   Partial<
@@ -76,7 +76,7 @@ const newOrgs: Readonly<
   >
 > = {
   'new-org': { org: orgs.firna, rail: orgList, form: newOrg },
-  'new-team-org': { org: orgs.labs, rail: orgListWithLabs, form: teamOrg },
+  'another-org': { org: orgs.labs, rail: orgListWithLabs, form: anotherOrg },
 }
 
 function MobileList(props: { state: WorkspaceListState }) {

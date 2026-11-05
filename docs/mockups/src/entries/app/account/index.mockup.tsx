@@ -6,7 +6,7 @@ export const account = defineScreen({
   description:
     'The GitHub sign-in with Sign out, then what every org shares: the GitHub App and the accounts where it is installed, the Claude and Codex connections, and the model and effort that new workspaces start with. The avatar at the bottom of the rail opens it.',
   rationale:
-    'Users sign in with GitHub only. Each org pays for its own plan, so billing lives in the org settings, and the account shows no plan and no provider. The agents say only Connect or Connected. All orgs share one GitHub App and the agent connections, as the user chose in decision 21.',
+    'Users sign in with GitHub only. The product is free for now, as the user chose in decision 45, so the account shows no plan, and it names no provider. The agents say only Connect or Connected. All orgs share one GitHub App and the agent connections, as the user chose in decision 21.',
   relatedDocs: [],
   propSchema: accountSchema,
   props: { connections: 'connected' },

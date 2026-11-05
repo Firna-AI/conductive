@@ -1,7 +1,7 @@
 /**
  * The people of the orgs. Each person signs in with GitHub, and an owner
  * invites a member by their GitHub login. Only an owner manages the
- * members and the billing of an org, and reassigns its workspaces.
+ * members of an org and reassigns its workspaces.
  */
 
 import { account } from './orgs'
@@ -52,7 +52,7 @@ export type Membership = { person: PersonKey; role: Role }
 /** An invite that waits for its GitHub user to accept it. */
 export type Invite = { login: string; sent: string }
 
-/** The members of Acme, which is on Team, owners first. */
+/** The members of Acme, owners first. */
 export const acmeMembers: readonly Membership[] = [
   { person: 'cal', role: 'owner' },
   { person: 'priya', role: 'member' },
@@ -63,13 +63,5 @@ export const acmeInvites: readonly Invite[] = [
   { login: 'mira-k', sent: '2 days ago' },
 ]
 
-/** A free org has one member, its owner. */
-export const firnaMembers: readonly Membership[] = [
-  { person: 'cal', role: 'owner' },
-]
-
 /** The member whom the remove state removes from Acme. */
 export const removedMember: PersonKey = 'priya'
-
-/** The login that the owner of the free org tries to invite. */
-export const refusedInvite = 'priyaraman'

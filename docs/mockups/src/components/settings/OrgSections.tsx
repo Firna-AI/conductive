@@ -9,24 +9,13 @@ import { useControlSizes } from '../common/touch'
 import { Section } from './Section'
 import styles from './OrgSections.module.css'
 
-export type SettingsTab =
-  'general' | 'repositories' | 'computer' | 'members' | 'billing'
+export type SettingsTab = 'general' | 'repositories' | 'computer' | 'members'
 
 /**
  * The parts of the org settings, as tabs that link to each part. `wrap`
  * puts the tabs on two lines, for a phone, where they do not fit on one.
- * Only an owner sees Billing.
  */
-export function SettingsTabs(props: {
-  tab: SettingsTab
-  wrap?: boolean
-  billing: boolean
-}) {
-  const billing = {
-    label: 'Billing',
-    to: paths.billing,
-    selected: props.tab === 'billing',
-  }
+export function SettingsTabs(props: { tab: SettingsTab; wrap?: boolean }) {
   return (
     <LinkTabs
       label="Org settings"
@@ -51,7 +40,6 @@ export function SettingsTabs(props: {
           to: paths.members,
           selected: props.tab === 'members',
         },
-        ...(props.billing ? [billing] : []),
       ]}
       wrap={props.wrap}
     />
