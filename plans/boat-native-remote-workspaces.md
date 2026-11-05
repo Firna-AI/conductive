@@ -971,11 +971,20 @@ Open. Added on 5 November 2026 from the user's answer to decision 23.
     Effort: Small.
   - **C.** 3 workspaces that run at once, any number that exist, and 600
     minutes a month. Effort: Small.
+  - **D.** Added by the options check: as B, plus one org for each free
+    account, no automatic image refresh, and image builds counted in the
+    free minutes. Effort: Small.
+- **Note from the options check:** the cost of a free account is set
+  mostly by its org's saved snapshot and its starts, not its minutes.
+  The Boat plan includes 10 saved snapshots per $20 seat, and each extra
+  one costs $0.056 a day, about $1.70 a month. Starts come from one pool
+  that every user shares.
 - **Left out:** None.
 - **Wider fix:** None.
 - **Related:** Decisions 23 and 28.
-- **Recommendation:** B. Ten hours lets a new user finish a real task
-  before they decide, at a known cost of about $0.36 each.
+- **Recommendation:** D. The first recommendation was B. D caps the
+  saved snapshots and starts of a free account, which cost more than its
+  minutes.
 - **Action:** ask the user, because only the user can set the price of
   the free plan.
 
@@ -990,18 +999,30 @@ Open. Added on 5 November 2026 from the user's answer to decision 23.
   sales tax and VAT duties.
 - **Problem:** The plan has no billing provider.
 - **Impact if no action:** Milestone 15b cannot start.
-- **Root question:** Who takes the payments, and who handles the tax?
+- **Root question:** Which provider can bill a subscription with included
+  usage and metered overage, and who carries the tax? The options check
+  wrote this root question.
 - **Options:**
   - **A.** Stripe Billing with metered prices and Stripe Tax. The owner
     is the seller, and registers for and files the taxes. Effort: Medium.
   - **B.** A merchant of record, such as Paddle or Polar. It is the
     seller, and it handles the tax for a higher fee. Effort: Medium.
+  - **C.** Added by the options check: Stripe Managed Payments. Stripe is
+    the seller, for 3.5% on top of its normal fees, and only through
+    Stripe Checkout or Payment Links. Its docs do not say whether metered
+    prices work. Effort: Medium.
+- **Fees from the options check:** Stripe Billing with Stripe Tax costs
+  2.9% + 30¢ for US cards, plus 0.7% for Billing and 0.5% for Tax, and the
+  owner files the taxes. Paddle costs 5% + 50¢. Polar costs 5% + 50¢, or
+  3.8% + 40¢ at $20 a month, plus 1.5% for cards from outside the US.
 - **Left out:** Billing written by hand, because it repeats what the
   providers already do.
 - **Wider fix:** None.
 - **Related:** Decision 27.
-- **Recommendation:** B. A merchant of record removes the tax work while
-  the product is small. Choose A if lower fees matter more.
+- **Recommendation:** B, with Polar. It is the seller and handles the
+  tax, and its usage meters and meter credits match the included $15
+  and the overage. Polar calls its usage billing a new feature. Choose A
+  if lower fees matter more than the tax work.
 - **Action:** ask the user, because it is a business choice of fees
   against tax work.
 
@@ -1019,19 +1040,26 @@ and 24.
   own plan and use, or whether the org pays for its members.
 - **Impact if no action:** The billing model and the members page cannot
   be designed.
-- **Root question:** Who pays for the plans and the compute of an org's
-  members?
+- **Root question:** Who pays for each cost of an org: the members'
+  plans, their workspaces, and the org's shared image? The options check
+  wrote this root question, because builds, refreshes, and the saved
+  image belong to no workspace.
 - **Options:**
   - **A.** Each user pays for their own plan, and each workspace's
     compute bills its owner. Effort: Medium.
   - **B.** The org pays for a seat for each member and for all their
     compute. Effort: Medium.
   - **C.** A first, and B later for teams that ask for it. Effort: Medium.
+  - **D.** Added by the options check: as C, and the org owner pays for
+    the org's image: its builds, its refreshes, and its saved snapshot.
+    Effort: Small.
 - **Left out:** None.
 - **Wider fix:** None.
 - **Related:** Decisions 23, 24, and 26.
-- **Recommendation:** C. It matches "uses their account" now, and keeps
-  team billing possible.
+- **Recommendation:** D. The first recommendation was C, under which
+  nobody pays the shared costs. Boat's usage report splits a running
+  stretch at a time boundary, so a reassigned workspace bills each owner
+  for their own part.
 - **Action:** ask the user, because it is a pricing choice.
 
 ### 28. Prevent abuse of free accounts
@@ -1048,18 +1076,27 @@ Open. Added on 5 November 2026 from the user's answer to decision 22.
   from the app's machines.
 - **Impact if no action:** Boat can suspend the app's organization, which
   stops every user.
-- **Root question:** How does the app keep bad actors off its free
-  machines?
+- **Root question:** How does the app keep every user within Boat's
+  rules? The options check wrote this root question, because Boat's terms
+  require the platform to pass on and enforce Boat's rules for all
+  users.
 - **Options:**
   - **A.** Rely on the free limits only. Effort: Small.
   - **B.** Also require a GitHub account older than 30 days with a
     verified email. Effort: Small.
   - **C.** Also require a payment card for the free plan. Effort: Medium.
+  - **D.** Added by the options check: as B, plus terms at sign-up that
+    pass on Boat's rules, an owner action that suspends a user and stops
+    their machines, and an address for abuse reports. Effort: Small.
+- **Note from the options check:** GitHub's `GET /user` gives the account
+  age, and `GET /user/emails` gives the verified state, with the "Email
+  addresses" read permission of the GitHub App. Users have root in their
+  machines, so firewall rules inside a machine do not hold.
 - **Left out:** None.
-- **Wider fix:** None.
+- **Wider fix:** D.
 - **Related:** Decisions 22 and 25.
-- **Recommendation:** B. It stops most throwaway accounts with no step
-  for real users.
+- **Recommendation:** D. The first recommendation was B. Boat's terms
+  require the terms, the enforcement, and answers to abuse notices.
 - **Action:** ask the user, because B and C add sign-up rules.
 
 ### 29. Count terminal and preview use as activity
@@ -1081,11 +1118,17 @@ Open. Added on 5 November 2026 from the user's answer to decision 11.
     Effort: Small.
   - **C.** As A, plus a warning 2 minutes before the stop, with "Keep
     running". Effort: Small.
+  - **D.** Added by the options check: as A, plus a "Keep running" switch
+    that holds the machine for up to 4 hours, paid from the user's
+    minutes. Effort: Small.
+- **Note from the options check:** under B, the app counts requests and
+  keystrokes, not open connections. Otherwise the live-reload connection
+  of a dev server keeps the machine running forever.
 - **Left out:** None.
 - **Wider fix:** None.
 - **Related:** Decision 11.
-- **Recommendation:** B. It keeps the machine for real work, and an open
-  tab alone still stops.
+- **Recommendation:** B. It keeps the machine for real work, an open tab
+  alone still stops, and users now pay for their own time.
 - **Action:** ask the user, because B changes the rule that the user
   chose.
 
@@ -1112,11 +1155,19 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1b.
     Effort: Small.
   - **C.** Archive the org: hide it, stop its cloud computers, and keep
     its history. Effort: Medium.
+  - **D.** Added by the options check: Delete stops every machine at
+    once and hides the org. The app deletes everything after 7 days,
+    unless the owner restores the org, so members can push their work.
+    Effort: Small.
 - **Left out:** A delete with no check, because it fails the goal.
+- **Note from the options check:** every delete must also remove the
+  saved snapshots, which keep costing money, and read the final usage of
+  each sandbox first. An owner can delete a member's unpushed work under
+  A.
 - **Wider fix:** None. Decision 16 holds the shared check.
 - **Related:** Decision 16, option D.
-- **Recommendation:** A. It matches the drawn screen, and the check
-  covers the loss.
+- **Recommendation:** D. The first recommendation was A. D protects the
+  work of every member, and a stopped machine costs no machine time.
 - **Action:** ask the user, because Delete org adds a delete that no
   requirement covers.
 
@@ -1142,8 +1193,16 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1b.
   - **C.** Closing stops a running turn after a confirm. The session
     stays in a list under "+", where it reopens and continues. Effort:
     Small.
+  - **D.** Added by the options check: when the user closes a running
+    session, the app asks whether to stop the turn or let it finish in
+    the background. In both cases the session stays under "+". Effort:
+    Small.
 - **Left out:** Disabling close while a turn runs, because the user asked
   that every tab can close.
+- **Note from the options check:** Boat has no call that deletes a
+  conversation, so B could delete only the app's copy. Boat's interrupt
+  stops the turn of one conversation and keeps its files, and a later
+  prompt resumes it with its memory.
 - **Wider fix:** None.
 - **Related:** Decision 19.
 - **Recommendation:** C. Nothing is lost, and no agent runs where the
@@ -1256,7 +1315,11 @@ Agent calls of 5 November 2026:
 - The app offers one machine size for now, Boat's default size of
   4 vCPU and 8 GB. At $0.036 an hour, the $15 of included compute is
   about 416 hours a month.
-- The app meters compute from Boat's usage report for each sandbox.
+- The app meters compute from Boat's usage report for each sandbox,
+  which gives seconds and list-price dollars up to the moment of the
+  request. It reads the final usage after each stop and before each
+  delete. The report counts machine time only, so the app also counts
+  the saved snapshot days and the builds of each org's image itself.
 
 **Orgs, sections, and the composer.** The user decided these on
 5 November 2026, in feedback on the Graphite mockups:
