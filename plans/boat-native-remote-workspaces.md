@@ -93,9 +93,11 @@ enforces it, so this is no longer a question for the user.
 Reopened on 5 November 2026: users now sign in with GitHub and run on
 the app's Boat subscription. The app must then keep the sandboxes,
 environments, and agent logins of many users apart from each other and
-from the owner's other Boat work, such as ciproxy. A key limited to one
-environment cannot create the per-user environments or credential
-profiles that this needs. Recommendation changed from G to F.
+from the owner's other Boat work, such as ciproxy. The options check
+found that the app needs no per-user environments or credential
+profiles: Boat's platform guide passes each user's credentials as
+per-sandbox variables to `noEnv` sandboxes. Recommendation changed from
+G to F, for the shared pool of starts and running sandboxes.
 
 - **Severity:** High. **Effort:** Small.
 - **Source:** Design.
@@ -107,7 +109,9 @@ profiles that this needs. Recommendation changed from G to F.
 - **Problem:** A bug or a leak of the key exposes every sandbox of the
   account.
 - **Impact if no action:** One Worker bug can reach unrelated sandboxes.
-- **Root question:** How do we limit what the app's Boat key can reach?
+- **Root question:** What keeps the app's users apart from each other,
+  and from the owner's other Boat work? The options check wrote this
+  root question.
 - **Options:**
   - **A.** Keep one account key, and rely on the D1 check. Effort: Small.
   - **F.** Give the app its own Boat organization, whose key sees nothing
@@ -117,15 +121,19 @@ profiles that this needs. Recommendation changed from G to F.
   - **G.** Added by the second options check: put the app's sandboxes in
     their own Boat environment, and limit the Worker key to it. Boat then
     refuses every other sandbox. Effort: Small.
+  - **H.** Added by the options check: as G, and mark the environment
+    safe for third parties, so its sandboxes get none of the owner's
+    secrets, GitHub access, or agent logins. Each user's credentials go
+    to each sandbox as per-sandbox variables. Effort: Small.
 - **Left out:** Per-sandbox keys, because minting them needs
   `account.admin` in the Worker.
 - **Wider fix:** F. It keeps every resource of the app apart from the
   owner's other Boat work.
-- **Recommendation:** F. The first recommendation was F, then G. With
-  other users on the app's account, F keeps their sandboxes, starts, and
-  bills apart from the owner's own Boat work. Inside its own Boat
-  organization, the app's key can manage environments and credential
-  profiles without reaching anything else.
+- **Recommendation:** F, together with the safe environment of H. The
+  first recommendation was F, then G. All users share one pool of starts
+  and running sandboxes, and F keeps that pool and its bill apart from
+  ciproxy and the owner's other Boat work. H alone costs nothing, but
+  shares the pool.
 - **Action:** ask the user, because F costs a Boat seat every month.
 
 ### 6. Show port previews safely in a frame
@@ -767,9 +775,6 @@ Open. Added on 5 November 2026 from the user's design feedback.
   - **C.** Orgs mirror GitHub. Each org comes from one GitHub App
     installation, and its repositories come from it. The rest is as A.
     Effort: Medium.
-  - **D.** Added by the options check: as A, plus the app's own Boat
-    organization. The Worker makes one Boat environment for each org, and
-    names the org's agent logins on it. Effort: Medium.
 - **Boat facts from the options check:** Boat bills one wallet for each
   personal account or Boat organization, and keys have no wallet. So
   separate billing needs one Boat organization for each org, at one plan
@@ -779,6 +784,10 @@ Open. Added on 5 November 2026 from the user's design feedback.
 - **Left out:**
   - B, a full tenant with its own Boat key: users run on the app's Boat
     subscription, as the user decided on 5 November 2026.
+  - D, one Boat environment and agent logins for each org: credential
+    profiles need `account.admin`, Boat's API cannot add a subscription
+    sign-in, and per-sandbox variables already give each org its own
+    values.
   - Members and shared orgs, because nobody asked for them yet. Agent
     call: each org has one owner, and every record keeps a user ID, so
     members can come later.
@@ -787,10 +796,9 @@ Open. Added on 5 November 2026 from the user's design feedback.
 - **Later requirement:** on 5 November 2026 the user asked that the
   sandbox provider stays hidden from the user. B would ask for a Boat key
   in each org, so it conflicts with that requirement.
-- **Recommendation:** A. The first recommendation was B. B does not split
-  billing, its separate agent logins need a second subscription, and each
-  new org needs a key from the Boat dashboard. C lets the user create an
-  org only by installing the GitHub App on another account.
+- **Recommendation:** A. The first recommendation was B, which is now
+  left out. C lets the user create an org only by installing the GitHub
+  App on another account.
 - **Effect on other decisions:** decisions 9, 10, 12, and 13 are
   answered. Under A, decision 5 keeps F, and decision 17 keeps D, stored
   for each org.
@@ -819,7 +827,13 @@ decision.
   - **C.** Open sign-up, with the limits of decision 23. Effort: Medium.
   - **D.** Open sign-up with paid plans that cover the compute. Effort:
     Large.
+  - **E.** Added by the options check: allow the members of chosen GitHub
+    organizations, checked at each sign-in. Effort: Small.
 - **Left out:** Other sign-in methods, because the user chose GitHub only.
+- **Note from the options check:** GitHub App user authorization works as
+  the sign-in. A user token reaches only what both the user and the app
+  can reach, so a user must also install the GitHub App on the account
+  that owns their repositories. Onboarding then has an install step.
 - **Wider fix:** None.
 - **Related:** Decision 23 sets what each user may spend.
 - **Recommendation:** A. The owner controls the cost while the product is
@@ -847,17 +861,24 @@ decision.
 - **Options:**
   - **A.** No limits, because only allowed users sign in. Effort: Small.
   - **B.** The same limits for every user, such as 3 running cloud
-    computers and 100 hours a month. At a limit, a new start waits, and
-    the app says why. Effort: Medium.
+    computers, 100 hours a month, and 20 starts a day. At a limit, a new
+    start waits, and the app says why. The options check added the start
+    limit, because starts are the scarcest shared resource. Effort:
+    Medium.
   - **C.** As B, but the owner sets each user's limits on an admin page.
     Effort: Medium.
 - **Left out:** Paid plans, which decision 22, option D, covers.
-- **Wider fix:** None.
+- **Wider fix:** also turn off Boat's automatic top-up, so spending stops
+  at the plan and the wallet. This also catches Worker bugs.
 - **Related:** Decisions 8 and 22. The limits also count workspaces that
-  agents create.
+  agents create, so B overrides the answer to decision 8.
+- **Boat facts from the options check:** Boat has no dollar limit for a
+  sandbox, a key, or an account, so the app must enforce every limit.
+  Boat reports the cost of each sandbox.
 - **Recommendation:** B. It caps the worst case at a known cost, and C can
   follow.
-- **Action:** ask the user, because a limit is new validation.
+- **Action:** ask the user, because a limit is new validation, and B
+  changes the user's answer to decision 8.
 
 ### 24. Connect each user's agents
 
@@ -879,18 +900,24 @@ decision.
   - **A.** API keys only. The user pastes Anthropic and OpenAI API keys in
     their account settings. The app stores them encrypted, and passes
     them to each of the user's cloud computers. Effort: Small.
-  - **B.** Subscription sign-in. The app keeps one Boat credential profile
-    for each user, and shows the provider's own sign-in page through
-    Boat's API, so Boat stays hidden. It works only if Boat's API offers
-    that sign-in. Effort: Medium.
   - **C.** The app pays for model use through Boat's AI proxy, with limits
     for each user. Effort: Medium.
-- **Left out:** Signing in inside a cloud computer, because the login
-  would be saved into the org image.
+  - **D.** Added by the options check: the user pastes a Claude
+    subscription token, made with `claude setup-token`, or API keys. The
+    app stores them encrypted, and passes them as
+    `CLAUDE_CODE_OAUTH_TOKEN`, `ANTHROPIC_API_KEY`, or `OPENAI_API_KEY` at
+    create and at each resume. Codex needs an OpenAI API key, because Boat
+    documents no variable for a ChatGPT subscription. Effort: Small.
+- **Left out:**
+  - B, a subscription sign-in through Boat's API: Boat's API cannot start
+    a provider sign-in for an end user, and its key call refuses sign-ins
+    with `400 not_an_api_key`.
+  - Signing in inside a cloud computer: the login stays on that
+    workspace's disk, so every new workspace needs a new sign-in.
 - **Wider fix:** None.
 - **Related:** Decisions 5 and 21.
-- **Recommendation:** B if Boat's API supports it, otherwise A. Most users
-  pay for subscriptions, not for API keys.
+- **Recommendation:** D. The first recommendation was B, which Boat
+  cannot do. D adds Claude subscriptions to A, and Boat stays hidden.
 - **Action:** ask the user, because it decides who pays for model use
   and where secrets live.
 
@@ -1019,8 +1046,8 @@ five words in a side conversation, and renames the workspace.
 **Marketing site.** The user asked for it on 5 November 2026. Agent
 call: the marketing site is a few static pages, public at the root of
 the app domain, served from the Worker's static assets. The app moves to
-an `app.` subdomain behind Cloudflare Access. Reason: visitors must see
-the site without signing in, and the app keeps one sign-in boundary.
+an `app.` subdomain with GitHub sign-in. Reason: visitors must see the
+site without signing in, and the app keeps one sign-in boundary.
 
 **Access and security.** These calls answer the user's question of
 5 November 2026 on secure access to Boat.
@@ -1033,8 +1060,12 @@ the site without signing in, and the app keeps one sign-in boundary.
 - Agent call: each request checks that the signed-in user owns the org
   and the workspace that it names. Decision 22 decides who may sign in.
 - The Boat key is a scoped key and a Worker secret. It has only the
-  actions that the app uses, and no `account.admin` action. It is limited
-  to the app's own Boat environment, as decision 5 says.
+  actions that the app uses, and no `account.admin` action. Its scope
+  follows the answer to decision 5.
+- Agent call: a git credential helper in the org image asks the Worker
+  for a fresh GitHub token on each git operation, signed with the
+  workspace token. Reason: GitHub App user tokens expire after 8 hours,
+  and per-sandbox variables change only at a resume.
 - The Worker calls only a fixed list of Boat routes. It has no general
   pass-through. Before each sandbox call, it checks that the sandbox
   belongs to a workspace of the signed-in user in D1.
