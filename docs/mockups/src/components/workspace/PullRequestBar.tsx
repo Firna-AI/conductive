@@ -1,4 +1,3 @@
-import { MockLink } from '@mokly/mokly'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import {
@@ -12,6 +11,7 @@ import { pullRequest, type BannerState } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
 import type { Workspace } from '../../fixtures/workspaces'
 import { checksPaths } from '../../paths'
+import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
 import { classes } from '../common/classes'
 import { prStatus, type PrStatus } from './prStatus'
 import styles from './PullRequestBar.module.css'
@@ -23,11 +23,12 @@ function compareUrl(workspace: Workspace): string {
 
 /** A link to GitHub. A narrow column keeps only its icon. */
 function GitHubLink(props: { href: string; label: string }) {
+  const href = useOutsideHref(props.href)
   return (
     <a
       aria-label={props.label}
       className={styles.action}
-      href={props.href}
+      href={href}
       rel="noreferrer"
       target="_blank"
     >
@@ -94,11 +95,12 @@ export function PullRequestRow(props: {
   workspace: Workspace
 }) {
   const { state } = props
+  const createHref = useOutsideHref(compareUrl(props.workspace))
   if (state === 'none') {
     return (
       <a
         className={styles.row}
-        href={compareUrl(props.workspace)}
+        href={createHref}
         rel="noreferrer"
         target="_blank"
       >
@@ -110,7 +112,7 @@ export function PullRequestRow(props: {
   }
   const status = prStatus(state)
   return (
-    <MockLink
+    <ScreenLink
       className={classes(styles.row, styles[status.tone])}
       to={checksPaths[state]}
     >
@@ -118,6 +120,6 @@ export function PullRequestRow(props: {
       <StateLabel status={status} />
       <span className={styles.spacer} />
       <ChevronRight className={styles.muted} size={15} />
-    </MockLink>
+    </ScreenLink>
   )
 }

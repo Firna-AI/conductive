@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { MockLink } from '@mokly/mokly'
 import type { LucideIcon } from 'lucide-react'
 import {
   FileCode,
@@ -11,6 +10,7 @@ import {
   X,
 } from 'lucide-react'
 import { paths } from '../../paths'
+import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
 import { classes } from '../common/classes'
 import styles from './WorkspaceTabs.module.css'
@@ -37,13 +37,13 @@ function TabLabel(props: { tab: WorkspaceTab; children: ReactNode }) {
   const { tab } = props
   if (!tab.to) return <span className={styles.link}>{props.children}</span>
   return (
-    <MockLink
+    <ScreenLink
       aria-current={tab.selected ? 'page' : undefined}
       className={styles.link}
       to={tab.to}
     >
       {props.children}
-    </MockLink>
+    </ScreenLink>
   )
 }
 
@@ -79,9 +79,9 @@ export function WorkspaceTabs(props: { tabs: readonly WorkspaceTab[] }) {
           <Tab key={tab.key} tab={tab} />
         ))}
       </ul>
-      <MockLink asChild to={paths.sessions}>
+      <ScreenLink asChild to={paths.sessions}>
         <IconButton icon={Plus} label="New session" />
-      </MockLink>
+      </ScreenLink>
     </nav>
   )
 }

@@ -13,7 +13,7 @@ export const createOrg = defineScreen({
   relatedDocs: [],
   propSchema: createOrgSchema,
   props: { connections: 'connected' },
-  useCasePaths: ['user-flows/create-org'],
+  useCasePaths: ['user-flows/create-org', 'user-flows/sign-up'],
   render: (props, context) => (
     <CreateOrgScreen state={props} viewport={context.viewport} />
   ),

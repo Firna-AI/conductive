@@ -1,7 +1,13 @@
+/*
+ * The frame is a size container, so the layout narrows with the frame, not
+ * the window. In the app the frame fills the window; on the marketing site it
+ * fills a picture of the screen.
+ */
 .frame {
   display: flex;
-  height: 100vh;
+  height: var(--ui-screen-height);
   overflow: hidden;
+  container: app-frame / inline-size;
 }
 
 .sidebar {
@@ -24,13 +30,13 @@
   background: var(--ui-surface);
 }
 
-@media (max-width: 1279px) {
+@container app-frame (max-width: 1279px) {
   .sidebar {
     width: calc(var(--ui-sidebar-width) - 24px);
   }
 }
 
-@media (max-width: 899px) {
+@container app-frame (max-width: 899px) {
   .sidebar {
     display: none;
   }
@@ -43,7 +49,7 @@
   display: flex;
   position: relative;
   flex-direction: column;
-  height: 100vh;
+  height: var(--ui-screen-height);
   overflow: hidden;
   background: var(--ui-surface);
 }

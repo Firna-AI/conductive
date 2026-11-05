@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
-import { MockLink } from '@mokly/mokly'
 import { Check, Plus } from 'lucide-react'
 import { Menu } from '../components/common/Menu'
+import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
 import { orgLinks } from '../components/orgs/orgLinks'
 import { AccountAvatar, OrgTile } from '../components/orgs/OrgTile'
@@ -26,13 +26,13 @@ function SheetRow(props: {
   )
   if (!props.to) return <div className={styles.sheetRow}>{content}</div>
   return (
-    <MockLink
+    <ScreenLink
       aria-current={props.current ? 'page' : undefined}
       className={styles.sheetRow}
       to={props.to}
     >
       {content}
-    </MockLink>
+    </ScreenLink>
   )
 }
 

@@ -1,6 +1,6 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { MockLink } from '@mokly/mokly'
 import { Plug } from 'lucide-react'
+import { ScreenLink } from '../components/common/ScreenLink'
 import { ActionButton } from '../components/common/actions'
 import { Notice } from '../components/common/Notice'
 import { MobileFrame } from '../components/layout/AppFrame'
@@ -28,9 +28,9 @@ function ConnectNotice() {
   return (
     <Notice
       action={
-        <MockLink asChild to={paths.accountSetup}>
+        <ScreenLink asChild to={paths.accountSetup}>
           <ActionButton>Open account</ActionButton>
-        </MockLink>
+        </ScreenLink>
       }
       body="Install the GitHub App and connect Claude or Codex in your account. Every org shares them."
       icon={Plug}
@@ -54,13 +54,13 @@ export function CreateOrgScreen(props: {
   const create = <ActionButton tone="primary">Create org</ActionButton>
   const actions = (
     <>
-      <MockLink asChild to={cancelTo}>
+      <ScreenLink asChild to={cancelTo}>
         <ActionButton>Cancel</ActionButton>
-      </MockLink>
+      </ScreenLink>
       {connected ? (
-        <MockLink asChild to={paths.newOrg}>
+        <ScreenLink asChild to={paths.newOrg}>
           {create}
-        </MockLink>
+        </ScreenLink>
       ) : (
         create
       )}

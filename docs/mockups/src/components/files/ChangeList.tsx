@@ -1,7 +1,7 @@
-import { MockLink } from '@mokly/mokly'
 import { FileDiff } from 'lucide-react'
 import { splitPath, type ChangedFile } from '../../fixtures/files'
 import { EmptyState } from '../common/EmptyState'
+import { ScreenLink } from '../common/ScreenLink'
 import { ChangeIcon } from './ChangeIcon'
 import { DiffStat } from './DiffStat'
 import { paths } from '../../paths'
@@ -23,13 +23,13 @@ function Row(props: { file: ChangedFile; open: boolean }) {
   )
   if (!file.diff) return <div className={styles.row}>{content}</div>
   return (
-    <MockLink
+    <ScreenLink
       aria-current={props.open ? 'page' : undefined}
       className={classes(styles.row, props.open && styles.open)}
       to={paths.diff}
     >
       {content}
-    </MockLink>
+    </ScreenLink>
   )
 }
 

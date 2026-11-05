@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { MockLink } from '@mokly/mokly'
 import { Plus } from 'lucide-react'
 import { orgList, type Org, type OrgKey } from '../../fixtures/orgs'
 import { paths } from '../../paths'
+import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { Mark } from '../common/Mark'
@@ -30,7 +30,7 @@ function RailLink(props: {
   children: ReactNode
 }) {
   return (
-    <MockLink
+    <ScreenLink
       aria-current={props.current ? 'page' : undefined}
       aria-label={props.label}
       className={classes(styles.link, props.current && styles.current)}
@@ -38,7 +38,7 @@ function RailLink(props: {
       to={props.to}
     >
       {props.children}
-    </MockLink>
+    </ScreenLink>
   )
 }
 

@@ -1,5 +1,5 @@
-import { MockLink } from '@mokly/mokly'
 import { Building2, ChevronDown, PanelLeft, Plus } from 'lucide-react'
+import { ScreenLink } from '../components/common/ScreenLink'
 import { ActionButton } from '../components/common/actions'
 import a11y from '../components/common/a11y.module.css'
 import { EmptyState } from '../components/common/EmptyState'
@@ -23,11 +23,11 @@ import styles from './WorkspaceListScreen.module.css'
 
 /** The action that starts a new workspace, in an empty main area. */
 const newWorkspaceAction = (
-  <MockLink asChild to={paths.newWorkspace}>
+  <ScreenLink asChild to={paths.newWorkspace}>
     <ActionButton icon={Plus} tone="primary">
       New workspace
     </ActionButton>
-  </MockLink>
+  </ScreenLink>
 )
 
 /**
@@ -37,12 +37,12 @@ const newWorkspaceAction = (
 function ListHeader(props: { org: Org }) {
   return (
     <header className={styles.header}>
-      <MockLink className={styles.switcher} to={paths.orgs}>
+      <ScreenLink className={styles.switcher} to={paths.orgs}>
         <OrgTile current org={props.org} size={24} />
         <span className={a11y.hidden}>Switch org: </span>
         <span className={styles.orgName}>{props.org.name}</span>
         <ChevronDown aria-hidden className={styles.chevron} size={15} />
-      </MockLink>
+      </ScreenLink>
       <SettingsLink />
     </header>
   )
@@ -82,13 +82,13 @@ export function FirstRunHeader() {
     <header className={styles.header}>
       <Mark />
       <h1 className={styles.title}>Get started</h1>
-      <MockLink
+      <ScreenLink
         aria-label="Account"
         className={styles.account}
         to={paths.accountSetup}
       >
         <AccountAvatar size={26} />
-      </MockLink>
+      </ScreenLink>
     </header>
   )
 }
@@ -98,11 +98,11 @@ export function FirstRun() {
   return (
     <EmptyState
       action={
-        <MockLink asChild to={paths.createFirstOrg}>
+        <ScreenLink asChild to={paths.createFirstOrg}>
           <ActionButton icon={Plus} tone="primary">
             Create org
           </ActionButton>
-        </MockLink>
+        </ScreenLink>
       }
       body="An org groups your workspaces with the repositories that they use and their sandbox settings."
       icon={Building2}

@@ -1,4 +1,4 @@
-import { MockLink } from '@mokly/mokly'
+import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../common/classes'
 import { mobileTabs, type MobileTabKey } from './tools'
 import styles from './MobileTabBar.module.css'
@@ -11,7 +11,7 @@ export function MobileTabBar(props: { selected: MobileTabKey }) {
         const selected = tab.key === props.selected
         const Icon = tab.icon
         return (
-          <MockLink
+          <ScreenLink
             aria-current={selected ? 'page' : undefined}
             className={classes(styles.tab, selected && styles.selected)}
             key={tab.key}
@@ -21,7 +21,7 @@ export function MobileTabBar(props: { selected: MobileTabKey }) {
               <Icon size={19} strokeWidth={selected ? 2.2 : 1.8} />
             </span>
             {tab.label}
-          </MockLink>
+          </ScreenLink>
         )
       })}
     </nav>

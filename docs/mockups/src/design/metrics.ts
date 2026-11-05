@@ -47,6 +47,11 @@ export const metrics = {
   rightWidth: '440px',
   /** The least height of a local control; a phone screen raises it to 44px. */
   touchMin: '0px',
+  /**
+   * The height of a screen: the window. A picture of a screen on the
+   * marketing site sets it to the height of its frame.
+   */
+  screenHeight: '100vh',
 } as const
 
 export type ControlSizes = {

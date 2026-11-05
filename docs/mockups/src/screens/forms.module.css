@@ -43,7 +43,7 @@
 .standalone {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: var(--ui-screen-height);
   overflow: hidden;
   background: var(--ui-surface);
 }

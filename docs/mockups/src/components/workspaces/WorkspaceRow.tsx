@@ -1,4 +1,4 @@
-import { MockLink } from '@mokly/mokly'
+import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import type { WorkspaceRow } from './sections'
@@ -38,12 +38,12 @@ export function WorkspaceRowView(props: {
   )
   if (!row.to || props.drag) return <div className={className}>{content}</div>
   return (
-    <MockLink
+    <ScreenLink
       aria-current={row.selected ? 'page' : undefined}
       className={className}
       to={row.to}
     >
       {content}
-    </MockLink>
+    </ScreenLink>
   )
 }

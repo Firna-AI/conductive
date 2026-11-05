@@ -2,7 +2,8 @@
 
 The mockups are the visual spec of the app: a browser-only tool where each
 workspace is a cloud sandbox with its own branch, a chat with coding agents,
-files, a terminal, port previews, a live desktop, and a pull request bar.
+files, a terminal, port previews, a live desktop, and a pull request bar. They
+also draw the marketing site, which shows the app to visitors.
 [Mokly](https://www.npmjs.com/package/@mokly/mokly) renders every screen at
 mobile and desktop sizes, in light and dark, from React components that use
 [`@firna/ui`](https://www.npmjs.com/package/@firna/ui).
@@ -29,9 +30,9 @@ Git ignores the build output, `mokly-static/` and
 `mokly-static/static/mokly-generated/<path>/index.{mobile,desktop}[.dark].html`.
 
 The catalogue shows the desktop view beside the phone, in a frame narrower
-than a laptop screen. The desktop layout narrows with its window: below
-1280 px the sidebar and the right column get narrower, and below 900 px the
-sidebar hides. The org rail stays, and the current org opens its list as its
+than a laptop screen. The desktop layout narrows with its app frame, which
+fills the window: below 1280 px the sidebar and the right column get
+narrower, and below 900 px the sidebar hides. The org rail stays, and the current org opens its list as its
 own page. A narrow right column hides the detail of the pull request bar and
 the label of its GitHub link. Use the expand control of the frame to see the
 full desktop layout.
@@ -84,12 +85,18 @@ chat, and five tabs at the bottom.
   panel gets an accent edge.
 - A state tints a whole bar or box, and its edges stay neutral. No box has
   an accent strip on any edge.
+- The app frame is a size container (`app-frame`), so the layout follows the
+  width of the frame, not of the window. In the app the two are the same. A
+  screen is as high as `--ui-screen-height`, which is the window, or the
+  frame of a picture on the marketing site.
 
 ## The catalogue
 
 | Path                | What it shows                                                               |
 | ------------------- | --------------------------------------------------------------------------- |
+| `marketing`         | The home page of the site: the app, its features, the plans, and sign-up    |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge |
+| `app/sign-in`       | The GitHub sign-in, and the first run: install the GitHub App, create org   |
 | `app/shell`         | The workspace list, the first run, and the sandbox starting, stopped, error |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section           |
 | `app/orgs`          | The org switcher of a phone, Create org, and a new org without workspaces   |
@@ -103,7 +110,7 @@ chat, and five tabs at the bottom.
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab     |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                   |
 | `app/panels`        | The right column, widened by the handle on its inner edge                   |
-| `user-flows`        | Create a workspace, reopen a stopped workspace, and create an org           |
+| `user-flows`        | Sign up, create a workspace, reopen a stopped workspace, and create an org  |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `app` and
@@ -123,6 +130,7 @@ and update-failed states, and declare `movedFrom`.
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`            | The catalogue paths that screens link to                            |
+| `src/brand.ts`            | The working name of the product, "Remote Code"                      |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 
@@ -136,9 +144,39 @@ and update-failed states, and declare `movedFrom`.
   `mockups:serve` offers a control for each part of the state.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
-- Screens link to each other with `MockLink`. A Firna control becomes a link
-  through `MockLink asChild`. Tabs are links, so each view has its own path.
+- Screens link to each other with `ScreenLink` from
+  `src/components/common/`, which renders Mokly's `MockLink`. A Firna control
+  becomes a link through `ScreenLink asChild`. Tabs are links, so each view
+  has its own path. A link to a page outside the app reads its address from
+  `useOutsideHref`.
 - Layout styles are CSS Modules beside their component. They read the design
   tokens through the `--ui-*` variables that the renderer writes.
 - Controls come from `@firna/ui`. A control without a handler renders as
   disabled, so the screens pass `noop` from `src/noop.ts`.
+
+## The marketing site
+
+The home page follows the calm structure of a Conductor-style home page: a
+header, a hero with a short headline, one sentence, and a large picture of
+the app, then one section for each feature, the smaller features, the plans,
+a last call to action, and a footer. Both actions, "Start free with GitHub"
+and "Sign in", lead to `app/sign-in`. The parts live in
+`src/components/marketing/`.
+
+- Every picture is a real screen of the catalogue, not a drawing of one.
+  `ScreenFrame` lays the screen out at its own size, 1440 × 900 on desktop
+  and 390 × 800 on a phone, then scales it and crops it to one part.
+  `src/screens/marketingPictures.tsx` chooses the screen, its state, and the
+  part, in px of the screen. When a layout of the app changes, look at the
+  pictures again.
+- A picture is `inert`, so a visitor cannot focus or press anything in it.
+  It also sets `StillLinks`: a `ScreenLink` in it is plain content, and an
+  outside link has no address. So a picture never links into the catalogue.
+- The hero picture follows the width of the page in steps of
+  `--frame-scale`, because a view runs no script. The other pictures keep
+  one scale.
+- Each claim on the page is one that the plan decides. The page shows no
+  customer logos, testimonials, user counts, certifications, desktop or
+  native mobile app, API, other agents, changelog, or sandbox provider.
+- The plans come from `src/fixtures/plans.ts`. The product name is a working
+  name in `src/brand.ts`, because the user has not chosen one yet.

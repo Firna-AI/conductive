@@ -1,10 +1,10 @@
-import { MockLink } from '@mokly/mokly'
 import { Button } from '@firna/ui/button'
 import { InputFrame } from '@firna/ui/input'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import type { AgentChoice } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
 import { noop } from '../../noop'
+import { ScreenLink } from '../common/ScreenLink'
 import { ActionButton, IconButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
 import { AttachmentChips } from './AttachmentChips'
@@ -79,9 +79,9 @@ export function Composer(props: ComposerState & { lines?: number }) {
             <ActionButton icon={Square}>Stop</ActionButton>
           ) : null}
           {props.sendTo ? (
-            <MockLink asChild to={props.sendTo}>
+            <ScreenLink asChild to={props.sendTo}>
               <SendButton draft={props.draft} />
-            </MockLink>
+            </ScreenLink>
           ) : (
             <SendButton draft={props.draft} />
           )}

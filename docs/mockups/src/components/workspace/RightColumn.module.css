@@ -1,9 +1,10 @@
+/* The width follows the app frame, which is the size container above it. */
 .column {
   display: flex;
   position: relative;
   flex-shrink: 0;
   flex-direction: column;
-  width: clamp(280px, 34vw, var(--ui-right-width));
+  width: clamp(280px, 34cqw, var(--ui-right-width));
   min-height: 0;
   border-left: 1px solid var(--ui-border);
   background: var(--ui-panel);

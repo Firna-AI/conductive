@@ -34,6 +34,8 @@ export type AppColors = {
   termPrompt: string
   /** The colour of the shadow under raised surfaces. */
   shadow: string
+  /** The body of the phone that the marketing site draws around a screen. */
+  device: string
 }
 
 export type Palette = SharedUiColors & AppColors
@@ -90,6 +92,7 @@ export const darkPalette: Palette = {
   diffHunk: '#14171a',
   termPrompt: '#5cc8ff',
   shadow: 'rgba(0, 0, 0, 0.6)',
+  device: '#050607',
 }
 
 /** Graphite in the light scheme: cool greys, with the accent darkened. */
@@ -141,4 +144,5 @@ export const lightPalette: Palette = {
   diffHunk: '#f0f3f6',
   termPrompt: '#0a6fa8',
   shadow: 'rgba(15, 20, 30, 0.1)',
+  device: '#16191d',
 }

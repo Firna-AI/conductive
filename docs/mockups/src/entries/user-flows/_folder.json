@@ -1,4 +1,9 @@
 {
   "title": "User flows",
-  "order": ["create-workspace", "reopen-stopped-workspace", "create-org"]
+  "order": [
+    "sign-up",
+    "create-workspace",
+    "reopen-stopped-workspace",
+    "create-org"
+  ]
 }

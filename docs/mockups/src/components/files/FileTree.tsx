@@ -1,4 +1,3 @@
-import { MockLink } from '@mokly/mokly'
 import {
   ChevronDown,
   ChevronRight,
@@ -9,6 +8,7 @@ import {
   FolderOpen,
 } from 'lucide-react'
 import type { TreeEntry } from '../../fixtures/files'
+import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../common/classes'
 import { ChangeIcon } from './ChangeIcon'
 import { previewPaths } from './previewPaths'
@@ -54,14 +54,14 @@ function Row(props: { entry: TreeEntry; open: boolean }) {
     )
   }
   return (
-    <MockLink
+    <ScreenLink
       aria-current={props.open ? 'page' : undefined}
       className={classes(styles.row, props.open && styles.open)}
       style={indent}
       to={previewPaths[entry.preview]}
     >
       {content}
-    </MockLink>
+    </ScreenLink>
   )
 }
 

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { MockLink } from '@mokly/mokly'
 import { ChevronLeft } from 'lucide-react'
+import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
 import styles from './Page.module.css'
 
@@ -36,10 +36,10 @@ function DesktopHeader(props: PageProps) {
   return (
     <header className={styles.header}>
       {props.back ? (
-        <MockLink className={styles.back} to={props.back.to}>
+        <ScreenLink className={styles.back} to={props.back.to}>
           <ChevronLeft size={15} />
           {props.back.label}
-        </MockLink>
+        </ScreenLink>
       ) : null}
       <Titles {...props} />
       {props.actions ? (
@@ -53,9 +53,9 @@ function MobileHeader(props: PageProps) {
   return (
     <header className={styles.mobileHeader}>
       {props.back ? (
-        <MockLink asChild to={props.back.to}>
+        <ScreenLink asChild to={props.back.to}>
           <IconButton icon={ChevronLeft} label={props.back.label} />
-        </MockLink>
+        </ScreenLink>
       ) : null}
       <Titles {...props} />
     </header>

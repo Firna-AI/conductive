@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { MockLink } from '@mokly/mokly'
 import { SegmentedControl } from '@firna/ui/segmented'
 import type { LucideIcon } from 'lucide-react'
 import {
@@ -19,6 +18,7 @@ import {
 } from '../../fixtures/fileContents'
 import { splitPath } from '../../fixtures/files'
 import { noop } from '../../noop'
+import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
 import type { BackLink } from '../layout/Page'
@@ -93,10 +93,10 @@ export function FilePage(props: { view: FileTabView; back?: BackLink }) {
       <div className={styles.header}>
         <div className={styles.start}>
           {props.back ? (
-            <MockLink className={styles.back} to={props.back.to}>
+            <ScreenLink className={styles.back} to={props.back.to}>
               <ChevronLeft aria-hidden size={15} />
               <span className={styles.backLabel}>{props.back.label}</span>
-            </MockLink>
+            </ScreenLink>
           ) : null}
           <span className={styles.chip}>
             <Icon aria-hidden className={styles.icon} size={13} />

@@ -1,0 +1,106 @@
+.pricing {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  scroll-margin-top: 24px;
+}
+
+.plans {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A plan: a card with a full hairline outline, as every card of the app. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  border: 1px solid var(--ui-border2);
+  border-radius: 12px;
+  background: var(--ui-surface);
+}
+
+.name {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 15px;
+  font-weight: var(--ui-weight-heading);
+}
+
+.price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+}
+
+.amount {
+  color: var(--ui-ink);
+  font-size: 40px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.unit {
+  color: var(--ui-muted);
+  font-size: 14px;
+}
+
+.includes {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  margin: 6px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--ui-border);
+  list-style: none;
+}
+
+.line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--ui-ink2);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.check {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--ui-muted);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 44px;
+  margin-top: 6px;
+}
+
+.note {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 14px;
+  line-height: 44px;
+}
+
+.mobile .plans {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mobile .card {
+  padding: 20px;
+}

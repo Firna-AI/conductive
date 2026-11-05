@@ -1,9 +1,9 @@
 import type { Viewport } from '@mokly/mokly'
-import { MockLink } from '@mokly/mokly'
 import { ChevronLeft, FolderGit2, GitBranch } from 'lucide-react'
 import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
+import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
 import { activityPresentation } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
@@ -34,9 +34,9 @@ export function WorkspaceHeader(props: {
   if (props.viewport === 'mobile') {
     return (
       <header className={styles.mobile}>
-        <MockLink asChild to={paths.shell}>
+        <ScreenLink asChild to={paths.shell}>
           <IconButton icon={ChevronLeft} label="All workspaces" />
-        </MockLink>
+        </ScreenLink>
         <div className={styles.titles}>
           <h1 className={styles.title}>{name}</h1>
           <span className={styles.branch}>

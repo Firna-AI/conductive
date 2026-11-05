@@ -1,5 +1,6 @@
 {
   "order": [
+    "sign-in",
     "shell",
     "sections",
     "orgs",

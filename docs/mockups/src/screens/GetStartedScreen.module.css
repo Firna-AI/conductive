@@ -1,0 +1,20 @@
+.intro {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-lg);
+  line-height: 1.55;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.owner {
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-strong);
+}

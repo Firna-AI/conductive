@@ -1,6 +1,6 @@
-import { MockLink } from '@mokly/mokly'
 import { Plus } from 'lucide-react'
 import { paths } from '../../paths'
+import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import styles from './SidebarLinks.module.css'
@@ -11,7 +11,7 @@ import styles from './SidebarLinks.module.css'
  */
 export function SettingsLink(props: { current?: boolean; alert?: boolean }) {
   return (
-    <MockLink
+    <ScreenLink
       aria-current={props.current ? 'page' : undefined}
       className={classes(styles.settings, props.current && styles.current)}
       to={paths.orgSettings}
@@ -21,7 +21,7 @@ export function SettingsLink(props: { current?: boolean; alert?: boolean }) {
       {props.alert ? (
         <span className={a11y.hidden}>, a build failed</span>
       ) : null}
-    </MockLink>
+    </ScreenLink>
   )
 }
 
@@ -31,7 +31,7 @@ export function NewWorkspaceLink(props: {
   variant: 'sidebar' | 'page'
 }) {
   return (
-    <MockLink
+    <ScreenLink
       aria-current={props.current ? 'page' : undefined}
       className={classes(
         styles.newWorkspace,
@@ -42,6 +42,6 @@ export function NewWorkspaceLink(props: {
     >
       <Plus aria-hidden className={styles.plus} size={14} />
       New workspace
-    </MockLink>
+    </ScreenLink>
   )
 }

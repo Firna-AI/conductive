@@ -1,5 +1,9 @@
 /** The catalogue paths that screens link to. */
 export const paths = {
+  marketing: 'marketing',
+  signIn: 'app/sign-in',
+  getStarted: 'app/sign-in/get-started',
+  getStartedInstalled: 'app/sign-in/get-started/installed',
   app: 'app',
   shell: 'app/shell',
   firstRun: 'app/shell/first-run',

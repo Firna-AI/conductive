@@ -1,4 +1,4 @@
-import { MockLink } from '@mokly/mokly'
+import { ScreenLink } from './ScreenLink'
 import styles from './LinkTabs.module.css'
 
 export type LinkTab = {
@@ -14,7 +14,7 @@ export function LinkTabs(props: { label: string; tabs: readonly LinkTab[] }) {
   return (
     <nav aria-label={props.label} className={styles.tabs}>
       {props.tabs.map((tab) => (
-        <MockLink
+        <ScreenLink
           aria-current={tab.selected ? 'page' : undefined}
           className={
             tab.selected ? `${styles.tab} ${styles.selected}` : styles.tab
@@ -26,7 +26,7 @@ export function LinkTabs(props: { label: string; tabs: readonly LinkTab[] }) {
           {tab.count === undefined ? null : (
             <span className={styles.count}>{tab.count}</span>
           )}
-        </MockLink>
+        </ScreenLink>
       ))}
     </nav>
   )

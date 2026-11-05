@@ -1,6 +1,6 @@
-import { MockLink } from '@mokly/mokly'
 import { FileText } from 'lucide-react'
 import { splitPath, type ChangedFile } from '../../fixtures/files'
+import { ScreenLink } from '../common/ScreenLink'
 import { DiffStat } from '../files/DiffStat'
 import { paths } from '../../paths'
 import styles from './TurnEnd.module.css'
@@ -16,9 +16,9 @@ function FileChip(props: { file: ChangedFile }) {
   )
   if (!file.diff) return <span className={styles.chip}>{content}</span>
   return (
-    <MockLink className={styles.chip} to={paths.diff}>
+    <ScreenLink className={styles.chip} to={paths.diff}>
       {content}
-    </MockLink>
+    </ScreenLink>
   )
 }
 
