@@ -2334,12 +2334,12 @@ user decided on 5 November 2026.
 - [x] Run the mockup check. Smoke-test the changed pages.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
-- [ ] In the archived phone view, remove the Files, Terminal, Preview,
+- [x] In the archived phone view, remove the Files, Terminal, Preview,
       and Desktop tabs, because the cloud computer is gone.
-- [ ] Show Archive only to the workspace's owner and the org's owners, as
+- [x] Show Archive only to the workspace's owner and the org's owners, as
       decision 42 says. Hide it in a member's view of another person's
       workspace.
-- [ ] Run the mockup check. Smoke-test the changed pages.
+- [x] Run the mockup check. Smoke-test the changed pages.
 
 ## Milestone 2: Documentation and protocol
 
