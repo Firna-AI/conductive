@@ -689,8 +689,9 @@ Open. Added on 5 November 2026 from the user's design feedback.
   its sandbox software, its scripts and env vars, or its members.
 - **Impact if no action:** Milestones 4 and 5 cannot design the D1 schema
   or the Boat and GitHub calls.
-- **Root question:** What does each org own, and how does it connect to
-  Boat and GitHub?
+- **Root question:** What must stay apart between two orgs of one user?
+  The options check wrote this root question. The Boat and GitHub setup
+  follows from the answer.
 - **Options:**
   - **A.** A light grouping. All orgs share the app's one Boat key and
     GitHub App. Each org owns its workspaces, its sections, and its
@@ -702,13 +703,28 @@ Open. Added on 5 November 2026 from the user's design feedback.
   - **C.** Orgs mirror GitHub. Each org comes from one GitHub App
     installation, and its repositories come from it. The rest is as A.
     Effort: Medium.
+  - **D.** Added by the options check: as A, plus the app's own Boat
+    organization. The Worker makes one Boat environment for each org, and
+    names the org's agent logins on it. Effort: Medium.
+- **Boat facts from the options check:** Boat bills one wallet for each
+  personal account or Boat organization, and keys have no wallet. So
+  separate billing needs one Boat organization for each org, at one plan
+  seat each. One Claude or ChatGPT sign-in can be in only one credential
+  profile, so separate agent logins need a second subscription. Only the
+  Boat dashboard or an `account.admin` key can create keys.
 - **Left out:** Members and shared orgs, because the plan serves one user.
   Every record keeps a user ID, so members can come later.
 - **Wider fix:** None.
 - **Related:** Decisions 5, 9, 10, 12, 13, and 17 depend on the answer.
-- **Recommendation:** B. Each org keeps its own billing, secrets, and
-  repository access, as "each org has its own settings" asks, and it fits
-  a later product.
+- **Recommendation:** A. The first recommendation was B. B does not split
+  billing, its separate agent logins need a second subscription, and each
+  new org needs a key from the Boat dashboard. C lets the user create an
+  org only by installing the GitHub App on another account.
+- **Effect on other decisions:** Under A, decision 5 keeps G. Decision 9
+  needs one software base for the org, which the base of each repository
+  starts from. Decision 10 keeps A, with the script in the org settings.
+  Decision 12 keeps C, but a script save updates every base of the org.
+  Decisions 13 and 17 keep E and D, stored for each org.
 - **Action:** ask the user, because the options trade setup steps against
   isolation, and no requirement covers orgs yet.
 
