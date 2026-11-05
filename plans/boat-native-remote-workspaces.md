@@ -14,8 +14,8 @@ Nothing runs on the user's computer.
 The chosen approach is a Boat-native app. A web app and a Cloudflare
 Worker use Boat's own agents, files, port URLs, desktop stream, saved
 snapshots, environments, and webhooks. There is no daemon of our own in
-the sandbox. This change does not cover other users, billing, a mobile
-app, or a provider other than Boat. The brainstorm notes and sources are
+the sandbox. This change does not cover a mobile app or a provider
+other than Boat. The brainstorm notes and sources are
 in `.context/brainstorm/notes.md`.
 
 Contract owners. Milestone 2 creates them:
@@ -949,6 +949,8 @@ decision.
   created it, until it is reassigned, and its agents use that user's own
   account. This rules out C. Agent call: D, as recommended, because it
   lets a user's Claude subscription serve as their account.
+- **Confirmed on 5 November 2026:** the user has Anthropic's permission
+  for `claude setup-token` tokens. Decision 37 records the rule.
 
 ### 25. Set what the free plan includes
 
@@ -1379,84 +1381,128 @@ Open. Added on 5 November 2026 from the marketing mockups.
 - **Action:** ask the user, because legal text is new content that no
   requirement covers.
 
-### 36. Run the agents through the agent SDKs
+### 36. Decide whether to run the agents through SDKs
 
 Open. Added on 5 November 2026 from the user's questions about chat sync
-and the agent SDKs.
+and the agent SDKs. The options check changed the recommendation from the
+own program, now D, to C.
 
-- **Severity:** High. **Effort:** Large.
-- **Source:** Design. **Category:** Code structure.
-- **Background:** Decision 1 chose Boat's built-in agents. The app polls
-  Boat's event feed and converts its events. The Claude Agent SDK
-  (`@anthropic-ai/claude-agent-sdk`) and the Codex SDK
-  (`@openai/codex-sdk`) run their agents as a subprocess, so they must
-  run inside the cloud computer, in a small program of the app's. The
-  Claude SDK streams typed messages with partial text, accepts messages
-  while a turn runs and queues them for the next turn, and offers
-  interrupt, model and effort changes, and session resume and fork. The
-  Codex SDK streams events and resumes threads.
-- **Problem:** Boat's agents give a polled feed with unknown partial-text
-  behaviour, a Boat-specific event format, and steps of about 0.25 to 1
-  second. The chat then depends on Boat, which the user may leave.
-- **Impact if no action:** The chat can feel slow, and moving off Boat
-  means rewriting the chat.
-- **Root question:** Who runs the agents, and how does their output reach
-  the app?
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design. **Category:** Performance.
+- **Terms:**
+  - **Claude Agent SDK:** Anthropic's library
+    `@anthropic-ai/claude-agent-sdk`. It runs the Claude Code program as a
+    child process and gives typed events and controls.
+  - **Codex App Server:** a mode of OpenAI's `codex` program that streams
+    events and takes commands as JSON messages.
+- **Background:**
+  - Decision 1 chose Boat's built-in agents. Decision 7 polls their events
+    every 250 ms while a turn runs. The app converts Boat's events into
+    its own event type.
+  - For decision 1, the agent recommended an own program in each cloud
+    computer. The user chose the smallest build, without one.
+  - Boat charges nothing for its agents beyond machine time. Model use
+    bills on the user's own agent account.
+  - Both agent SDKs start the agent programs as child processes. So they
+    must run inside the cloud computer, in a small program of the app.
+  - Boat's agents can steer a running turn. The Claude Agent SDK keeps a
+    message that arrives during a turn for the next turn.
+  - The Codex SDK has no interrupt, no partial text, and no input during a
+    turn. OpenAI points to the Codex App Server for streamed events.
+- **Problem:** Boat's event feed has no push. Its partial-text behaviour
+  is unknown until a test measures it. Polling costs 240 requests a minute
+  for each running turn.
+- **Impact if no action:** The chat can update in visible steps. About 40
+  running turns at once reach Boat's limit of 10,000 requests a minute for
+  each address.
+- **Root question:** How do the agents run, and how does their output
+  reach the chat as it happens?
 - **Options:**
-  - **A.** Keep Boat's built-in agents, polled. Effort: Medium.
-  - **B.** A small program in each cloud computer runs both SDKs and
-    streams their typed events to the workspace Durable Object over one
-    outbound WebSocket. Effort: Large.
-  - **C.** Run the agent command-line tools as Boat background commands,
-    and read Boat's output stream. Effort: Medium.
-  - **D.** A first, with a one-hour test of Boat's feed, and B if the test
-    fails. Effort: Medium.
-- **Left out:** An agent loop in the Worker, because the agents need the
-  files and tools of the cloud computer.
-- **Wider fix:** B. The agent layer then works on any provider.
-- **Related:** Decisions 1, 7, 14, 19, 24, 31, and 37.
-- **Recommendation:** B. It streams for real, keeps steer as queued
-  messages and interrupt, and keeps the chat when the app moves off
-  Boat.
-- **Action:** ask the user, because it changes the answer to decision 1.
+  - **A.** Keep Boat's built-in agents, polled every 250 ms while a turn
+    runs. Boat keeps steer, interrupt, and conversations. Effort: Medium.
+  - **B.** Run `claude` and `codex` in their JSON streaming modes as Boat
+    background commands, and read Boat's live output stream. This needs
+    no own program. A running turn cannot be steered, only stopped.
+    Effort: Medium.
+  - **C.** A, with a one-hour test of Boat's event feed before
+    Milestone 7. If partial text arrives in steps longer than about half
+    a second, apply D. Effort: Medium.
+  - **D.** A small program in each cloud computer runs the Claude Agent
+    SDK and the Codex App Server. It sends their events to the workspace
+    Durable Object over one outbound WebSocket. It numbers the events and
+    keeps each one until the Durable Object confirms it. Boat restarts the
+    program after each resume. A message sent during a turn waits for the
+    next turn. Effort: Large.
+- **Left out:**
+  - An agent loop in the Worker: the agents need the files and the tools
+    of the cloud computer.
+  - Boat's own daemon pattern, which reaches the program through a Boat
+    port address: it ties the program to Boat.
+  - Anthropic's Managed Agents with a self-hosted sandbox: it covers only
+    Claude.
+  - An own program that drives the command-line tools without the SDK
+    packages: the packages run the same tools and add typed events and
+    controls.
+- **Wider fix:** D. The agents then run on any provider that can run a
+  service.
+- **Previous examples:** Conductor's cloud computers run a small Node
+  program. It drives `claude` in its JSON streaming mode and pushes events
+  about every 240 ms.
+- **Related:**
+  - Decision 1: D adds the own program that the user chose to avoid.
+  - Decision 7: C replaces its fallback with D.
+  - Decision 37: the same agent logins work under every option.
+  - The test in C needs a scoped Boat key from the user.
+- **Recommendation:** C. It keeps Boat's real steer and the smaller build,
+  and one hour of testing shows whether the larger build is needed.
+- **Action:** ask the user, because the fallback in C adds the own program
+  that the user chose to avoid in decision 1.
 
 ### 37. Use only agent logins that the providers allow
 
-Open. Added on 5 November 2026 from the Agent SDK documentation.
+Added on 5 November 2026 from the Agent SDK documentation and Anthropic's
+legal page.
 
 - **Severity:** High. **Effort:** Small.
 - **Source:** Design. **Category:** Security.
-- **Background:** Decision 24 lets a workspace owner use their own agent
-  account, and its agent call allows a Claude subscription token from
-  `claude setup-token`. The Agent SDK documentation says: "Unless
-  previously approved, Anthropic does not allow third party developers
-  to offer claude.ai login or rate limits for their products, including
-  agents built on the Claude Agent SDK." Its branding rules allow
-  "Claude Agent", "Claude", or "Name Powered by Claude", but not "Claude
-  Code" for a partner product.
-- **Problem:** Other users running on their Claude subscription inside
-  this app breaks Anthropic's rule unless Anthropic approves it. The
-  marketing page also says "Claude Code".
-- **Impact if no action:** Anthropic can block the use, and the product
-  breaks its terms.
-- **Root question:** Which agent credentials may users bring, and how
-  does the app name the agents?
+- **Background:**
+  - Decision 24 gives each workspace its creator's own agent account. Its
+    agent call stores a Claude subscription token from
+    `claude setup-token`, or API keys, and passes them to each cloud
+    computer.
+  - Anthropic's legal page says that "developers may not collect, store,
+    or intermediate Claude.ai credentials or session tokens".
+  - The Agent SDK overview says: "Unless previously approved, Anthropic
+    does not allow third party developers to offer claude.ai login or
+    rate limits for their products, including agents built on the Claude
+    Agent SDK."
+  - OpenAI lets a hosted, paid app use ChatGPT plans only after a waitlist
+    for "Sign in with ChatGPT".
+- **Problem:** Without Anthropic's approval, the agent call of decision 24
+  breaks Anthropic's rules.
+- **Impact if no action:** Anthropic can block the tokens or the accounts
+  without notice.
+- **Root question:** Which agent logins can each user use, within the
+  providers' rules?
 - **Options:**
-  - **A.** API keys only: Anthropic and OpenAI keys. Say "Claude" and
-    "Codex", not "Claude Code". Effort: Small.
-  - **B.** As A, and apply to Anthropic for approval to offer Claude
-    subscription sign-in later. Effort: Small.
-  - **C.** The app pays for model use with its own keys, with limits for
-    each user, priced into the plans. Effort: Medium.
-- **Left out:** Claude subscription tokens without approval, because the
-  rule forbids them.
-- **Wider fix:** None.
-- **Related:** Decisions 24 and 36. The marketing copy change waits for
-  Milestone 1d to finish.
-- **Recommendation:** B. Users can start with API keys at once, and
-  subscriptions can come if Anthropic approves.
-- **Action:** ask the user, because it changes the agent call of
-  decision 24 and the product's terms.
+  - **A.** API keys only, for every user. Effort: Small.
+  - **B.** A, and ask Anthropic and OpenAI to approve subscription sign-in
+    for every user. Effort: Small.
+  - **C.** B, and the operator's own Claude subscription token for the
+    operator's own workspaces. Effort: Small.
+- **Left out:** The app pays for model use, because decision 24 chose each
+  user's own account.
+- **Wider fix:** None. This is a one-time choice.
+- **Related:** Decisions 24, 33, and 36.
+- **Recommendation:** B.
+- **Chosen by the user on 5 November 2026:** the user has Anthropic's
+  permission to use `claude setup-token` tokens. So the agent call of
+  decision 24 stays: a user pastes a Claude subscription token or API
+  keys. Codex keeps an OpenAI API key, because ChatGPT plans need
+  OpenAI's waitlist.
+- **Risk:** Anthropic plans to make bare mode the default for
+  `claude -p`, and bare mode never reads a subscription login. So a later
+  Claude Code release can stop the tokens from working.
 
 ## Design
 
@@ -1629,6 +1675,10 @@ call: the marketing site is a few static pages, public at the root of
 the app domain, served from the Worker's static assets. The app moves to
 an `app.` subdomain with GitHub sign-in. Reason: visitors must see the
 site without signing in, and the app keeps one sign-in boundary.
+Agent call, 5 November 2026: the copy says "agents powered by Claude and
+Codex", not "Claude Code and Codex". Reason: Anthropic forbids "Claude
+Code" in a product that builds on its Agent SDK, and in the feature names
+of a product that runs Claude Code. The mockups change after Milestone 1d.
 
 **Access and security.** These calls answer the user's question of
 5 November 2026 on secure access to Boat.
@@ -1746,8 +1796,10 @@ Paid. Two domains on that account: one for the app, and a
 separate registrable domain for port previews. A Boat organization for
 the app on a paid plan, as decision 5 says, with a scoped key and its
 automatic top-up off. A GitHub App with its key and the "Email
-addresses" read permission. Milestone 16 needs all of them. Earlier
-milestones use fakes.
+addresses" read permission. Anthropic's Commercial Terms, accepted
+through an Anthropic Console account, because they govern products that
+run Claude Code. Milestone 16 needs all of them. Earlier milestones use
+fakes.
 
 ## Milestone 1: Mockups
 
