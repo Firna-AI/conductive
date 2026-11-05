@@ -819,6 +819,11 @@ the plan. Do not copy Conductor's name, logo, or brand assets.
       line counts after a turn, and a composer with an agent and model
       picker.
 - [ ] Restyle the phone layouts to the same look.
+- [ ] Draw five design directions as Mokly variants of three key screens:
+      the workspace, a running turn, and the repository settings. The
+      directions are Conductor, Graphite, Studio, Paper, and Soft. The user
+      asked on 5 November 2026 to review different styles.
+- [ ] Ask the user to choose a direction, and apply it to every screen.
 - [ ] Run the mockup check. Smoke-test the changed pages, and compare them
       with the reference images.
 - [ ] Update the design and the TODOs of this plan for each problem that
