@@ -633,7 +633,8 @@ attachments.
 
 ### 20. Show the steps while a sandbox starts
 
-Open. Added on 5 November 2026 from the restyle of Milestone 1a.
+Added on 5 November 2026 from the restyle of Milestone 1a. The user
+chose A on 5 November 2026.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -671,8 +672,11 @@ Open. Added on 5 November 2026 from the restyle of Milestone 1a.
 - **Recommendation:** D, together with E for the tools. The first
   recommendation was A. Only Boat's state shows a wait for a machine,
   and each tool then waits only as long as it needs.
-- **Action:** ask the user, because option A adds behaviour at the
+- **Action:** asked the user, because option A adds behaviour at the
   boundary that no requirement covers.
+- **Chosen:** A, by the user on 5 November 2026. The agent recommended D
+  with E. The workspace Durable Object records each start step with its
+  time, and pushes it to the open tabs.
 
 ### 21. Decide what an org owns
 
@@ -1080,6 +1084,8 @@ Depends on: 4
 - [ ] Create a workspace: fork, labels, branch, and workspace token.
 - [ ] Add the workspace Durable Object: tabs, idle stop, and resume on
       open.
+- [ ] Record each start step with its time in the workspace Durable
+      Object, and push it to the open tabs, as decision 20 says.
 - [ ] Receive and verify Boat webhooks, and update the workspace state.
 - [ ] Add the daily refresh timer and the 30-minute push limit.
 - [ ] Test the lifecycle against the fake Boat server.
@@ -1090,7 +1096,8 @@ Tags: ui
 
 Depends on: 5
 
-- [ ] Build the app shell, the workspace list, and the sandbox states.
+- [ ] Build the app shell, the workspace list, and the sandbox states,
+      with the starting card and its steps.
 - [ ] Add a draggable divider between the chat and the right column.
 - [ ] Build the new workspace and the repository settings screens.
 - [ ] Compare each screen with its mockup.
