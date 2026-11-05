@@ -1110,10 +1110,11 @@ Added on 5 November 2026 from the user's answer to decision 22.
 - **Action:** ask the user, because B and C add sign-up rules.
 - **Chosen:** B, by the user on 5 November 2026: sign-up requires a GitHub account
   older than 30 days with a verified email. The agent recommended D.
-- **Risk kept open:** the options check found that Boat's terms require a
+- **Follow-up:** the options check found that Boat's terms require a
   platform to pass on Boat's rules to its users, enforce them, and answer
-  abuse notices. B does not add terms, a suspend action, or an abuse
-  address.
+  abuse notices. The user asked on 5 November 2026 to add option D after
+  the first release, in
+  `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`.
 
 ### 29. Count terminal and preview use as activity
 
