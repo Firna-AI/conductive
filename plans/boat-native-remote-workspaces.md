@@ -1673,6 +1673,74 @@ Open. Added on 5 November 2026 from the options check of the Milestone
 - **Action:** ask the user, because B changes the reading of the option
   that the user chose for decision 25.
 
+### 42. Decide who may archive another person's workspace
+
+Open. Added on 5 November 2026 from the Milestone 1d mockups.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** Archive deletes a workspace's cloud computer, with any
+  unpushed work, after a warning. The mockups show Archive to everyone in
+  the org, on every workspace.
+- **Problem:** No requirement says who may archive a workspace that
+  another person owns.
+- **Impact if no action:** Milestone 15c can let any member delete another
+  member's cloud computer and unpushed work.
+- **Root question:** Who may end a workspace that another person owns?
+- **Options:**
+  - **A.** Everyone in the org, as drawn. Effort: Small.
+  - **B.** Only the workspace's owner and the org's owners. Effort: Small.
+  - **C.** Everyone in the org when everything is pushed. With unpushed
+    work, only the workspace's owner and the org's owners. Effort: Small.
+- **Left out:** Only the org's owners, also for a member's own workspace,
+  because a member then cannot clean up their own work.
+- **Wider fix:** None.
+- **Related:** Decision 39 decides who owns a departed member's
+  workspaces.
+- **Recommendation:** B. Each member keeps control of their own work, and
+  owners can still act on every workspace.
+- **Action:** ask the user, because it adds a permission rule that no
+  requirement covers.
+
+### 43. Decide what happens to a workspace stopped for 14 days
+
+Open. Added on 5 November 2026 from the Milestone 1d mockups.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** Boat can delete the disk of a cloud computer that is
+  stopped for more than 14 days, and a resume then fails. Boat's cleanup
+  does not delete disks yet, but it can start. A resume and a new stop
+  start a new 14 days. Decision 16 marks such workspaces as expiring, and
+  the mockups draw that mark.
+- **Problem:** No requirement says what the app does near day 14. Decision
+  38 covers it only for an org whose paid plan ended.
+- **Impact if no action:** After the disk is gone, the workspace shows its
+  chat, but every start fails, and its unpushed work is lost.
+- **Root question:** What happens to a stopped workspace before Boat can
+  delete its disk?
+- **Options:**
+  - **A.** Only mark it, as decision 16 says. After the disk is gone, a
+    start fails, and the user archives the workspace. Effort: Small.
+  - **B.** Near day 14, the app archives the workspace by itself. Unpushed
+    work is lost. Effort: Small.
+  - **C.** Near day 14, the app pushes unpushed work to a backup branch on
+    GitHub, then archives the workspace. Effort: Medium.
+  - **D.** Near day 14, the app starts the cloud computer briefly and stops
+    it again, which starts a new 14 days. Each start counts against
+    Boat's start limits and uses machine time. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** C. The same backup step also serves option D of decision
+  38.
+- **Previous examples:** Option D of decision 38 proposes the same backup
+  branch.
+- **Related:** Decision 16 defines Archive and the expiring mark. Decision
+  38, option D, uses the same backup.
+- **Recommendation:** C. No work is lost, the list stays clean, and one
+  backup step serves both cases.
+- **Action:** ask the user, because it adds behaviour that no requirement
+  covers.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -2198,20 +2266,23 @@ user decided on 5 November 2026.
 - [x] Run the mockup check. Smoke-test the changed pages.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
-- [ ] Redraw the seats to follow the people. Remove Change seats and the
+- [x] Redraw the seats to follow the people. Remove Change seats and the
       seat picker. Show the member count and the price in the billing
       tab, the upgrade flow, and the members tab.
-- [ ] At the free workspace and minutes limits, show Upgrade to Team
+- [x] At the free workspace and minutes limits, show Upgrade to Team
       first and the free way forward second.
-- [ ] Draw Archive, as decision 16 says: the action on a workspace, the
+- [x] Draw Archive, as decision 16 says: the action on a workspace, the
       check for unpushed work, and the Archived group.
-- [ ] Draw Create org for a person who already owns a free org: the paid
+- [x] Draw Create org for a person who already owns a free org: the paid
       plan and the hand-off to Stripe Checkout.
-- [ ] Draw what a member who is not an owner sees in the org settings and
+- [x] Draw what a member who is not an owner sees in the org settings and
       in the owner menu.
-- [ ] Run the mockup check. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Run the mockup check. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+- [ ] In the archived phone view, remove the Files, Terminal, Preview,
+      and Desktop tabs, because the cloud computer is gone.
+- [ ] Run the mockup check. Smoke-test the changed pages.
 
 ## Milestone 2: Documentation and protocol
 
