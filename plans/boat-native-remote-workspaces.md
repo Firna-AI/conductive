@@ -1477,6 +1477,23 @@ own program, now D, to C.
     `computer`, is on every sandbox, and the SDK can load it.
   - A test of the Claude Agent SDK on a Boat sandbox checks the risks of
     D before Milestone 7. Its report goes under `.context/`.
+  - The runner uses the Claude Code binary that the SDK bundles, pinned
+    to the SDK's version. Reason: the SDK and its binary release
+    together, and a pinned version guards against the bare-mode risk of
+    decision 37. In the test, the first start after a resume took 14.5 s
+    with it and 8.9 s with the system binary, one sample each. Reading
+    the binary took only 0.2 s, so Milestone 7 measures more starts.
+- **Test result, 5 November 2026:** all nine checks passed on a Boat
+  sandbox: the token, streaming, messages during a turn, interrupt, model
+  and effort changes, stop and resume, an outbound WebSocket, and the
+  computer tools. Text deltas came every 20 ms. Codex was not tested,
+  because there was no OpenAI key. The report is
+  `.context/boat-native-remote-workspaces/reports/spike-sdk.md`.
+- **Correction from the test:** the Claude Agent SDK also steers. In a
+  turn with tool calls, the agent reads a new message at its next tool
+  call. In a text-only turn, the message waits for the end of the turn,
+  unless the runner sends it with `priority: "now"`, which stops the turn
+  and answers at once.
 
 ### 37. Use only agent logins that the providers allow
 
@@ -2069,6 +2086,24 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   and effort changes to the runner.
 - The agent sessions live in the home folder, which Boat keeps across
   stop, resume, and fork.
+- The runner reads the per-sandbox variables, such as the agent token,
+  from `/run/ascii-secrets/env.sh` before it starts the SDK. Reason: a
+  systemd service does not get them.
+- The runner starts Claude Code as soon as its service starts, and the
+  chat shows a starting state until the runner reports ready. Reason: the
+  first start after a resume took 6 to 8 s in the test, while Boat
+  restored the disk.
+- The runner combines the text deltas, about 50 a second, before it
+  sends them.
+- A message sent during a turn goes to the agent at once. The agent reads
+  it at its next tool call, or at the end of a text-only turn.
+- The chat shows a thinking state from the thinking token counts, because
+  the agent streams no thinking text.
+- The chat hides the messages that the SDK adds, such as "[Request
+  interrupted by user]", and shows an interrupted turn as stopped, not as
+  an error. It matches each result to its messages through
+  `user_message_uuids`.
+- Each chat session runs one Claude Code process of about 190 MB.
 - Agents create workspaces through an MCP server and a CLI in the base
   snapshot. Both call the Worker with the workspace token.
 - Agents use the computer tools of the Cua Driver, the MCP server
@@ -2396,6 +2431,9 @@ Depends on: 5
 - [ ] Test Codex streaming: the Codex SDK where it gives interrupt and
       partial text, and the Codex App Server otherwise. Save the result
       under `.context/`.
+- [ ] Measure the first agent start after a resume over several runs,
+      with the runner inside and outside the home folder. Keep the faster
+      place.
 - [ ] Map the SDK events to our event type, store them, and push them to
       the open tabs over a WebSocket.
 - [ ] Test the mapping against recorded SDK events, and the resend after
