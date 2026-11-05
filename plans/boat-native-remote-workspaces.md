@@ -795,9 +795,38 @@ and the copy, and looked at key screenshots. Evidence:
 `.context/boat-native-remote-workspaces/reports/milestone-1-ui-implementor.md`
 and `.context/boat-native-remote-workspaces/checks/`.
 
-## Milestone 2: Documentation and protocol
+## Milestone 1a: Conductor-style visual design
+
+Tags: mockup
 
 Depends on: 1
+
+The user asked on 5 November 2026 for a design that looks like Conductor,
+sleek, professional, and polished, with the mockup on the home page of
+`conductor.build` as the reference. Restyle every screen and flow of
+Milestone 1. Keep the screens, the states, the flows, and the features of
+the plan. Do not copy Conductor's name, logo, or brand assets.
+
+- [ ] Restyle the shared look: light neutral surfaces, hairline borders,
+      a compact type scale, small radii, and few accent colours, with a
+      matching dark scheme.
+- [ ] Rework the desktop layout as in the reference: the workspace list
+      on the left, the chat in the centre, and a right column with the
+      pull request bar above the files, changes, and checks tabs, and the
+      terminal, preview, and desktop tabs below.
+- [ ] Restyle the chat: user messages in light bubbles on the right,
+      plain agent text, collapsed tool-call summaries, file chips with
+      line counts after a turn, and a composer with an agent and model
+      picker.
+- [ ] Restyle the phone layouts to the same look.
+- [ ] Run the mockup check. Smoke-test the changed pages, and compare them
+      with the reference images.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: 1, 1a
 
 State the requirements and the decisions in force for the work below.
 
