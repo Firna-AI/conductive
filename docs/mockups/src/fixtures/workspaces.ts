@@ -1,4 +1,5 @@
 import { defaultChoice, type AgentChoice } from './agents'
+import { people, type PersonKey } from './members'
 import type { RepositoryKey } from './repositories'
 import type { SectionKey } from './sections'
 
@@ -31,6 +32,11 @@ export type Workspace = {
   /** The time since the last activity, such as `2h`. */
   updated: string
   /**
+   * The member who created it, until an owner reassigns it. Its agents use
+   * this member's own accounts.
+   */
+  owner: PersonKey
+  /**
    * The name that the app gives a new workspace, a city, until the agent's
    * first answer names it after the task.
    */
@@ -46,6 +52,7 @@ export const checkoutAutocomplete: Workspace = {
   choice: defaultChoice,
   status: 'stopped',
   updated: '2h',
+  owner: 'cal',
 }
 
 /** The workspace that the create flow makes. */
@@ -59,6 +66,7 @@ export const savedCarts: Workspace = {
   choice: defaultChoice,
   status: 'starting',
   updated: 'now',
+  owner: 'cal',
 }
 
 export const openableWorkspaceRecords: Readonly<
@@ -74,13 +82,18 @@ const codex: AgentChoice = {
   effort: 'medium',
 }
 
+type Details = Pick<Workspace, 'repository' | 'section' | 'status' | 'updated'>
+
+/** A workspace of Acme. Its branch starts with the first name of its owner. */
 function workspace(
   key: string,
   name: string,
-  details: Pick<Workspace, 'repository' | 'section' | 'status' | 'updated'>,
+  details: Details & { owner?: PersonKey },
   choice: AgentChoice = defaultChoice,
 ): Workspace {
-  return { key, name, branch: `cal/${key}`, choice, ...details }
+  const owner = details.owner ?? 'cal'
+  const prefix = people[owner].name.split(' ')[0].toLowerCase()
+  return { key, name, branch: `${prefix}/${key}`, choice, ...details, owner }
 }
 
 /** The workspaces of Acme when the app opens, newest first in each section. */
@@ -99,6 +112,7 @@ export const workspaceList: readonly Workspace[] = [
       section: 'general',
       status: 'error',
       updated: '40m',
+      owner: 'priya',
     },
     codex,
   ),
@@ -107,6 +121,7 @@ export const workspaceList: readonly Workspace[] = [
     section: 'general',
     status: 'stopped',
     updated: '3d',
+    owner: 'priya',
   }),
   workspace(
     'fix-cart-flake',
@@ -135,14 +150,15 @@ export const workspaceList: readonly Workspace[] = [
   workspace('next-16', 'Upgrade to Next.js 16', {
     repository: 'storefront',
     section: 'infra',
-    status: 'stopped',
-    updated: '1d',
+    status: 'ready',
+    updated: '20m',
   }),
   workspace('retry-queue', 'Move retries to a queue', {
     repository: 'billing-service',
     section: 'infra',
     status: 'stopped',
     updated: '2d',
+    owner: 'jonas',
   }),
 ]
 

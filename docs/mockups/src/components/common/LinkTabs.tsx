@@ -1,4 +1,5 @@
 import { ScreenLink } from './ScreenLink'
+import { classes } from './classes'
 import styles from './LinkTabs.module.css'
 
 export type LinkTab = {
@@ -9,10 +10,21 @@ export type LinkTab = {
   selected: boolean
 }
 
-/** A row of tabs. Each tab is a link to the screen that shows it. */
-export function LinkTabs(props: { label: string; tabs: readonly LinkTab[] }) {
+/**
+ * A row of tabs. Each tab is a link to the screen that shows it. `wrap`
+ * puts the tabs in three columns on as many lines as they need, so that
+ * every tab shows.
+ */
+export function LinkTabs(props: {
+  label: string
+  tabs: readonly LinkTab[]
+  wrap?: boolean
+}) {
   return (
-    <nav aria-label={props.label} className={styles.tabs}>
+    <nav
+      aria-label={props.label}
+      className={classes(styles.tabs, props.wrap && styles.wrap)}
+    >
       {props.tabs.map((tab) => (
         <ScreenLink
           aria-current={tab.selected ? 'page' : undefined}

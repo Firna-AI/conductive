@@ -1,12 +1,14 @@
 /**
- * The repositories of an org. The cloud computer of the org holds every
- * one of them.
+ * The repositories of the orgs: Acme's three, then the two of Firna. The
+ * cloud computer of an org holds every one of its repositories.
  */
 
 export const repositoryKeys = [
   'storefront',
   'billing-service',
   'marketing-site',
+  'components',
+  'docs',
 ] as const
 
 export type RepositoryKey = (typeof repositoryKeys)[number]
@@ -33,6 +35,12 @@ export const repositories: Readonly<Record<RepositoryKey, Repository>> = {
     name: 'acme/marketing-site',
     defaultBranch: 'main',
   },
+  components: {
+    key: 'components',
+    name: 'firna/components',
+    defaultBranch: 'main',
+  },
+  docs: { key: 'docs', name: 'firna/docs', defaultBranch: 'main' },
 }
 
 /** A repository that the shared GitHub App can reach. */
@@ -88,6 +96,3 @@ export const newOrg = {
     { name: 'firna/icons', description: 'The icon set', used: false },
   ],
 } as const
-
-/** The org that the first run creates. */
-export const firstOrg = { name: 'Acme', initials: 'AC' } as const

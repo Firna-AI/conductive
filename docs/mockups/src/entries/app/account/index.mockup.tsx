@@ -6,7 +6,7 @@ export const account = defineScreen({
   description:
     'The GitHub sign-in with Sign out, then what every org shares: the GitHub App and the accounts where it is installed, the Claude and Codex connections, and the model and effort that new workspaces start with. The avatar at the bottom of the rail opens it.',
   rationale:
-    'Users sign in with GitHub only, and the app pays for every cloud computer, so the page shows no plan, no billing, and no provider. The agents say only Connect or Connected, because how a user connects them is still open. Waits on decision 21, drawn as its recommended option A: all orgs share one GitHub App and the agent connections.',
+    'Users sign in with GitHub only. Each org pays for its own plan, so billing lives in the org settings, and the account shows no plan and no provider. The agents say only Connect or Connected. All orgs share one GitHub App and the agent connections, as the user chose in decision 21.',
   relatedDocs: [],
   propSchema: accountSchema,
   props: { connections: 'connected' },
@@ -18,7 +18,7 @@ export const account = defineScreen({
       slug: 'setup',
       title: 'Not connected yet',
       description:
-        'The first run: the user is signed in with GitHub, but the GitHub App is not installed yet, and neither agent is connected. Create org leads here.',
+        'During the first run: the user is signed in with GitHub, but the GitHub App is not installed yet, and neither agent is connected. The avatar in the rail leads here, and the way back leads to Get started.',
       props: { connections: 'not-connected' },
     },
   ],

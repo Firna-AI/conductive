@@ -36,3 +36,12 @@ export const installations = [
   { account: 'futex', repositories: 4 },
   { account: 'firna', repositories: 3 },
 ] as const
+
+/**
+ * An org that its owner deleted: its cloud computers stopped, and it is
+ * hidden from its members until the date when everything is deleted.
+ */
+export const deletedOrg = {
+  org: 'acme',
+  deletes: '12 November',
+} as const satisfies { org: OrgKey; deletes: string }

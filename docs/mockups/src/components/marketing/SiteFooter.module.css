@@ -72,6 +72,14 @@
   color: var(--ui-ink);
 }
 
+/* The copyright, and the legal pages after it. */
+.bottom {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+}
+
 .legal {
   margin: 0;
   color: var(--ui-muted);
@@ -91,4 +99,9 @@
 
 .mobile .links {
   gap: 0;
+}
+
+.mobile .bottom {
+  align-items: flex-start;
+  gap: 4px;
 }

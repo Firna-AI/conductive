@@ -24,6 +24,7 @@ export const workspaceStateSchema = {
     'tab',
     'composer',
     'resize',
+    'overlay',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -42,10 +43,18 @@ export const workspaceStateSchema = {
      * file, a Markdown preview, or a diff. A phone shows a file in Files.
      */
     tab: { enum: ['session', 'new-session', 'code', 'markdown', 'diff'] },
-    /** The composer: empty, with attached files, or with its picker open. */
-    composer: { enum: ['empty', 'attachments', 'picker'] },
+    /**
+     * The composer: empty, with attached files, with its picker open, or
+     * with a message for an agent that is not connected.
+     */
+    composer: { enum: ['empty', 'attachments', 'picker', 'no-agent'] },
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },
+    /**
+     * What lies open over the workspace: the session history, the question
+     * before a running session closes, or the owner of the workspace.
+     */
+    overlay: { enum: ['none', 'history', 'close-session', 'reassign'] },
   },
 } as const
 
@@ -64,4 +73,5 @@ export const readyWorkspace: WorkspaceState = {
   tab: 'session',
   composer: 'empty',
   resize: 'none',
+  overlay: 'none',
 }

@@ -8,11 +8,12 @@ import styles from './AppFrame.module.css'
  * The desktop app: the org rail, the sidebar of the org, and the main area.
  * In a narrow window the sidebar hides, and the org in the rail leads to its
  * workspace list. A page outside an org, such as the account, has no
- * sidebar.
+ * sidebar. `overlay` lies over the whole frame, such as an open dialog.
  */
 export function AppFrame(props: {
   rail?: RailState
   sidebar?: ReactNode
+  overlay?: ReactNode
   children: ReactNode
 }) {
   return (
@@ -29,6 +30,7 @@ export function AppFrame(props: {
         </aside>
       ) : null}
       <main className={styles.main}>{props.children}</main>
+      {props.overlay}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import type { ComposerState } from '../components/chat/Composer'
 import { attachmentDraft, draftAttachments } from '../fixtures/attachments'
-import { steerDraft } from '../fixtures/conversations'
+import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import type { Workspace } from '../fixtures/workspaces'
 import type { WorkspaceState } from './workspaceState'
 
@@ -16,22 +16,27 @@ export function isRunning(state: WorkspaceState): boolean {
 /**
  * The composer of a workspace state: a steer message while a turn runs, or
  * a message with attached files, with the model picker open when the state
- * asks for it. A new session starts empty.
+ * asks for it. A new session starts empty. A message for an agent that is
+ * not connected waits, and Send is off.
  */
 export function composerFor(
   state: WorkspaceState,
   workspace: Workspace,
 ): ComposerState {
   const fresh = state.tab === 'new-session'
-  const withFiles = !fresh && state.composer !== 'empty'
+  const noAgent = !fresh && state.composer === 'no-agent'
+  const withFiles =
+    !fresh && (state.composer === 'attachments' || state.composer === 'picker')
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (withFiles) draft = attachmentDraft
+  else if (noAgent) draft = followUpDraft
   return {
     choice: workspace.choice,
     running: !fresh && isRunning(state),
     draft,
     attachments: withFiles ? draftAttachments : [],
     picker: state.composer === 'picker',
+    blocked: noAgent,
   }
 }

@@ -187,3 +187,7 @@ export const conversations: Readonly<
 /** The steer message that the user types while a turn runs. */
 export const steerDraft =
   'Also debounce the lookups to 250 ms, so we stay under the rate limit.'
+
+/** The next message that the user writes after the turn ends. */
+export const followUpDraft =
+  'Show a loading state under the address line while the lookup runs.'

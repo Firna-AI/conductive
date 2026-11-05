@@ -3,7 +3,7 @@ import type {
   ScreenPicture,
   ScreenSize,
 } from '../components/marketing/ScreenFrame'
-import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { acmeSettings, OrgSettingsScreen } from './OrgSettingsScreen'
 import { WorkspaceListScreen } from './WorkspaceListScreen'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace, type WorkspaceState } from './workspaceState'
@@ -159,7 +159,7 @@ export function orgPicture(viewport: Viewport): ScreenPicture {
     'The cloud computer of the org: its last build, Build computer, and the history of builds'
   const screen = (
     <OrgSettingsScreen
-      state={{ tab: 'computer', build: 'ready' }}
+      state={{ ...acmeSettings, tab: 'computer' }}
       viewport={viewport}
     />
   )

@@ -1,7 +1,10 @@
 import type { Viewport } from '@mokly/mokly'
-import { MessageSquarePlus } from 'lucide-react'
+import { MessageSquarePlus, Plug } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
+import { ActionButton } from '../components/common/actions'
 import { EmptyState } from '../components/common/EmptyState'
+import { Notice } from '../components/common/Notice'
+import { ScreenLink } from '../components/common/ScreenLink'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
@@ -15,6 +18,7 @@ import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
+import { agents, type AgentChoice } from '../fixtures/agents'
 import { conversations } from '../fixtures/conversations'
 import { orgs } from '../fixtures/orgs'
 import {
@@ -28,12 +32,34 @@ import {
   startingLogFor,
   ToolContent,
 } from './workspaceParts'
+import { paths } from '../paths'
+import { workspaceOverlay } from './workspaceOverlays'
 import type { WorkspaceState } from './workspaceState'
 import { tabsFor, workspaceName } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
 const widenedRight = 560
+
+/**
+ * The notice over the composer when the agent of the chosen model is not
+ * connected, from decision 33, drawn as its recommended option D.
+ */
+function connectNotice(state: WorkspaceState, choice: AgentChoice) {
+  if (state.composer !== 'no-agent') return undefined
+  const agent = agents[choice.agent].name
+  return (
+    <Notice
+      action={
+        <ScreenLink asChild to={paths.account}>
+          <ActionButton icon={Plug}>{`Connect ${agent}`}</ActionButton>
+        </ScreenLink>
+      }
+      icon={Plug}
+      title={`Connect ${agent} to use ${choice.model}`}
+    />
+  )
+}
 
 /**
  * An open workspace: its header, its tabs of sessions and files, the pull
@@ -69,6 +95,7 @@ export function WorkspaceScreen(props: {
         />
       }
       items={fresh ? [] : conversations[state.conversation]}
+      notice={connectNotice(state, workspace.choice)}
       problem={problem}
       starting={startingLogFor(state)}
       viewport={viewport}
@@ -77,11 +104,14 @@ export function WorkspaceScreen(props: {
   const header = (
     <WorkspaceHeader
       name={workspace.name}
+      ownerOpen={state.overlay === 'reassign'}
       status={status}
       viewport={viewport}
       workspace={workspace}
     />
   )
+  const overlay = workspaceOverlay(state, workspace, viewport)
+  const historyOpen = state.overlay === 'history'
   const tabs = tabsFor(state, workspace)
   const files = <FilesContent state={state} viewport={viewport} />
   const tool = <ToolContent state={state} viewport={viewport} />
@@ -90,7 +120,11 @@ export function WorkspaceScreen(props: {
     const body = {
       chat: (
         <>
-          <WorkspaceTabs tabs={sessions} />
+          <WorkspaceTabs
+            historyOpen={historyOpen}
+            tabs={sessions}
+            viewport={viewport}
+          />
           {chat}
         </>
       ),
@@ -105,13 +139,17 @@ export function WorkspaceScreen(props: {
         <MobileTabBar
           selected={state.focus === 'tool' ? state.tool : state.focus}
         />
+        {overlay}
       </MobileFrame>
     )
   }
   const file = openFile(state)
   const sections = workspaceSections({ workspace, status })
   return (
-    <AppFrame sidebar={<Sidebar org={orgs.acme} sections={sections} />}>
+    <AppFrame
+      overlay={overlay}
+      sidebar={<Sidebar org={orgs.acme} sections={sections} />}
+    >
       <WorkspaceBody
         center={file ? <FilePage view={file} /> : chat}
         files={files}
@@ -120,7 +158,13 @@ export function WorkspaceScreen(props: {
           <PullRequestBar state={state.banner} workspace={workspace} />
         }
         rightWidth={state.resize === 'right' ? widenedRight : undefined}
-        tabs={<WorkspaceTabs tabs={tabs} />}
+        tabs={
+          <WorkspaceTabs
+            historyOpen={historyOpen}
+            tabs={tabs}
+            viewport={viewport}
+          />
+        }
         tools={<ToolsPanel tool={state.tool}>{tool}</ToolsPanel>}
       />
     </AppFrame>

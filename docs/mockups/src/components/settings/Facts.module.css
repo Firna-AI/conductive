@@ -1,0 +1,34 @@
+.facts {
+  margin: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+}
+
+.fact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  padding: 6px 12px;
+  box-sizing: border-box;
+}
+
+.fact + .fact {
+  border-top: 1px solid var(--ui-border);
+}
+
+.label {
+  flex-shrink: 0;
+  width: 112px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.value {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,77 @@
+/* The dialog covers the whole app frame, the rail and the sidebar too. */
+.layer {
+  display: flex;
+  position: absolute;
+  z-index: 40;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 8, 0.55);
+}
+
+/* A card with a full hairline outline, as every card of the app. */
+.dialog {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  padding: 20px 20px 16px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-composer);
+  box-shadow: 0 24px 60px -24px var(--ui-shadow);
+  box-sizing: border-box;
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-xl);
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: var(--ui-tracking-heading);
+  line-height: 1.35;
+}
+
+.text {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+  line-height: 1.55;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.sheetBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 12px;
+}
+
+.sheetBody .text {
+  font-size: var(--ui-text-lg);
+}
+
+/* On a phone the actions share the width, each at least 44 px high. */
+.sheetActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.sheetActions > * {
+  flex: 1;
+}

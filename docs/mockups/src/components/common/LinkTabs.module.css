@@ -7,6 +7,16 @@
   scrollbar-width: none;
 }
 
+/*
+ * Every tab shows: the tabs fill a grid of three columns, so a second line
+ * lines up with the first, as on a phone.
+ */
+.wrap {
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  overflow: visible;
+}
+
 .tab {
   display: inline-flex;
   flex-shrink: 0;

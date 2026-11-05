@@ -40,8 +40,14 @@
   right: 0;
 }
 
+/* A wide menu fits long rows, such as the titles of sessions. */
+.wide {
+  width: 340px;
+}
+
 /* In a phone sheet the rows fill the width and are tall enough to touch. */
 .sheet {
+  width: auto;
   padding: 0;
   border: 0;
   background: transparent;
@@ -78,6 +84,20 @@
   color: var(--ui-muted);
 }
 
+.mark {
+  display: flex;
+  flex-shrink: 0;
+}
+
+/* Muted text after the label, such as a time, in the label font. */
+.detail {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
 .label {
   flex: 1;
   overflow: hidden;
@@ -107,6 +127,21 @@
 
 .sheet .group {
   padding: 10px 12px 4px;
+}
+
+.note {
+  max-width: 260px;
+  margin: 0;
+  padding: 4px 8px 6px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.sheet .note {
+  max-width: none;
+  padding: 6px 12px 8px;
 }
 
 .divider {

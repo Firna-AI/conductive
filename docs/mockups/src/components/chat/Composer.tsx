@@ -24,21 +24,23 @@ export type ComposerState = {
   placeholder?: string
   /** The screen that Send leads to, when the mockups draw it. */
   sendTo?: string
+  /** The agent of the chosen model is not connected, so Send is off. */
+  blocked?: boolean
 }
 
-function SendButton(props: { draft: string }) {
+function SendButton(props: { draft: string; blocked?: boolean }) {
   const control = useControlSizes()
-  const empty = props.draft === ''
+  const off = props.draft === '' || props.blocked === true
   return (
     <Button
       accessibilityLabel="Send"
       boxSize={control.height}
-      disabled={empty}
+      disabled={off}
       icon={ArrowUp}
       onPress={noop}
       shape="square"
       size="sm"
-      tone={empty ? 'secondary' : 'primary'}
+      tone={off ? 'secondary' : 'primary'}
     />
   )
 }
@@ -83,7 +85,7 @@ export function Composer(props: ComposerState & { lines?: number }) {
               <SendButton draft={props.draft} />
             </ScreenLink>
           ) : (
-            <SendButton draft={props.draft} />
+            <SendButton blocked={props.blocked} draft={props.draft} />
           )}
         </div>
       </div>

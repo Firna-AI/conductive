@@ -21,13 +21,4 @@ export const appShell = defineScreen({
   render: (props, context) => (
     <WorkspaceListScreen state={props} viewport={context.viewport} />
   ),
-  variants: [
-    {
-      slug: 'first-run',
-      title: 'First run',
-      description:
-        'No org yet. The one action creates the first org. The account in the rail stays available.',
-      props: { list: 'first-run' },
-    },
-  ],
 })

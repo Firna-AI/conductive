@@ -28,13 +28,16 @@ export function OrgTile(props: { org: Org; size: number; current?: boolean }) {
   )
 }
 
-/** The initials of the signed-in person on a disc with a hairline outline. */
-export function AccountAvatar(props: { size: number }) {
+/**
+ * The initials of a person on a disc with a hairline outline. The disc is
+ * decorative: the text beside it, or its control, names the person.
+ */
+export function PersonAvatar(props: { initials: string; size: number }) {
   const theme = useSharedUiTheme()
   return (
     <Avatar
       decorative
-      label={account.initials}
+      label={props.initials}
       size={props.size}
       style={{
         borderColor: theme.colors.border2,
@@ -45,4 +48,9 @@ export function AccountAvatar(props: { size: number }) {
       tone="soft"
     />
   )
+}
+
+/** The initials of the signed-in person. */
+export function AccountAvatar(props: { size: number }) {
+  return <PersonAvatar initials={account.initials} size={props.size} />
 }

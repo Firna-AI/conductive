@@ -1,5 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
 import {
+  acmeSettings,
   OrgSettingsScreen,
   orgSettingsSchema,
 } from '../../../screens/OrgSettingsScreen'
@@ -7,12 +8,12 @@ import {
 export const orgSettings = defineScreen({
   title: 'Org settings',
   description:
-    'The settings of an org, in three tabs: General, Repositories, and Cloud computer. General holds the name, the initials that the rail shows, and Delete org. The Settings link beside the org name opens them.',
+    'The settings of an org, in five tabs: General, Repositories, Cloud computer, Members, and Billing. General holds the name, the initials that the rail shows, and Delete org. The Settings link beside the org name opens them.',
   rationale:
-    'An org owns its workspaces, its sections, its repositories, and its cloud computer. The account holds what every org shares, and repositories have no settings for now. Waits on decision 21, drawn as its recommended option A. What Delete org does with work that is not pushed waits on decision 16.',
+    'An org owns its workspaces, its sections, its repositories, its cloud computer, its members, and its plan. The account holds what every org shares, and repositories have no settings for now, as the user chose in decision 21. Delete org stops every cloud computer and hides the org at once, and deletes everything after 7 days unless an owner restores it, as the user chose in decision 30. Members can push their work in that time.',
   relatedDocs: [],
   propSchema: orgSettingsSchema,
-  props: { tab: 'general', build: 'ready' },
+  props: acmeSettings,
   render: (props, context) => (
     <OrgSettingsScreen state={props} viewport={context.viewport} />
   ),

@@ -25,5 +25,14 @@ export const composer = defineScreen({
         'The open picker: the Claude models and the Codex models in two groups, with no brand names, then the effort levels of the chosen model. It marks Opus 5.5 and High.',
       props: { composer: 'picker' },
     },
+    {
+      slug: 'no-agent',
+      title: 'Agent not connected',
+      description:
+        'Claude is not connected, for example because the user removed its key, so the message for Opus 5.5 waits and Send is off. The notice over the composer leads to the account, where the user connects Claude.',
+      rationale:
+        'Waits on decision 33, drawn as its recommended option D: Get started connects an agent, and this notice catches an agent that is not connected later. Picking a model of a connected agent also lets the message go.',
+      props: { composer: 'no-agent' },
+    },
   ],
 })

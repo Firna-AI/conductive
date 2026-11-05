@@ -3,6 +3,7 @@ import type { Viewport } from '@mokly/mokly'
 import { productName } from '../../brand'
 import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../common/classes'
+import { LegalLinks } from './LegalLinks'
 import type { SiteLinks } from './SiteHeader'
 import { Wordmark } from './Wordmark'
 import styles from './SiteFooter.module.css'
@@ -16,7 +17,10 @@ function Column(props: { title: string; children: ReactNode }) {
   )
 }
 
-/** The foot of the site: the wordmark, the sections, and the sign-in. */
+/**
+ * The foot of the site: the wordmark, the sections, the sign-in, and the
+ * legal pages beside the copyright.
+ */
 export function SiteFooter(props: {
   links: SiteLinks
   tagline: string
@@ -56,10 +60,11 @@ export function SiteFooter(props: {
           </li>
         </Column>
       </div>
-      <div className={styles.inner}>
+      <div className={classes(styles.inner, styles.bottom)}>
         <p className={styles.legal}>
           © {props.year} {productName}
         </p>
+        <LegalLinks />
       </div>
     </footer>
   )

@@ -1,5 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
 import { ChevronLeft, FolderGit2, GitBranch } from 'lucide-react'
+import { people } from '../../fixtures/members'
 import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
@@ -7,6 +8,7 @@ import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
 import { activityPresentation } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
+import { OwnerPicker } from './OwnerPicker'
 import styles from './WorkspaceHeader.module.css'
 
 function State(props: { status: ActivityStatus }) {
@@ -19,8 +21,9 @@ function State(props: { status: ActivityStatus }) {
 }
 
 /**
- * The name, repository, branch, and state of the open workspace. The list
- * groups workspaces by section, so the header names the repository.
+ * The name, repository, branch, owner, and state of the open workspace.
+ * The list groups workspaces by section, so the header names the
+ * repository. The owner opens the menu that reassigns the workspace.
  */
 export function WorkspaceHeader(props: {
   workspace: Workspace
@@ -28,9 +31,12 @@ export function WorkspaceHeader(props: {
   name: string
   status: ActivityStatus
   viewport: Viewport
+  /** The menu of the owner is open. A phone shows it as a sheet. */
+  ownerOpen?: boolean
 }) {
   const { workspace, name } = props
   const repository = repositories[workspace.repository].name
+  const owner = people[workspace.owner]
   if (props.viewport === 'mobile') {
     return (
       <header className={styles.mobile}>
@@ -43,6 +49,7 @@ export function WorkspaceHeader(props: {
             {repository} · {workspace.branch}
           </span>
         </div>
+        <OwnerPicker compact open={props.ownerOpen} owner={owner} />
         <State status={props.status} />
       </header>
     )
@@ -59,6 +66,7 @@ export function WorkspaceHeader(props: {
         <span className={styles.branch}>{workspace.branch}</span>
       </span>
       <span className={styles.spacer} />
+      <OwnerPicker open={props.ownerOpen} owner={owner} />
       <State status={props.status} />
     </header>
   )

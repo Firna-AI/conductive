@@ -74,6 +74,21 @@
   text-overflow: ellipsis;
 }
 
+/*
+ * A phone has no room to keep the current tab whole. Every tab shrinks:
+ * the current one keeps the start of its title, and the others can shrink
+ * to their icon, which stays 44 px wide to touch.
+ */
+.phone .tab {
+  min-width: 44px;
+}
+
+/* The icon, 48 px of the title, and the 44 px rename and close buttons. */
+.phone .selected {
+  flex-shrink: 1;
+  min-width: 168px;
+}
+
 /* Every tab closes: the button shows on the current tab and on hover. */
 .close {
   display: none;
@@ -83,4 +98,11 @@
 .tab:focus-within .close,
 .selected .close {
   display: flex;
+}
+
+/* The clock of the session history, which its menu opens from. */
+.anchor {
+  display: flex;
+  position: relative;
+  flex-shrink: 0;
 }

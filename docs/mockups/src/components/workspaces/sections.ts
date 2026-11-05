@@ -5,6 +5,7 @@ import {
   type Section,
   type SectionKey,
 } from '../../fixtures/sections'
+import { firnaWorkspaces } from '../../fixtures/freeOrg'
 import {
   workspaceList,
   type ActivityStatus,
@@ -79,4 +80,14 @@ export function workspaceSections(open?: OpenWorkspace): SidebarSection[] {
 /** A new org: its default section, with no workspaces yet. */
 export function newOrgSections(): SidebarSection[] {
   return [{ section: sections[defaultSection], rows: [] }]
+}
+
+/** The free org, Firna, with the most workspaces that Free allows. */
+export function freeOrgSections(): SidebarSection[] {
+  const rows = firnaWorkspaces.map((workspace): WorkspaceRow => ({
+    workspace,
+    status: workspace.status,
+    selected: false,
+  }))
+  return [{ section: sections[defaultSection], rows }]
 }

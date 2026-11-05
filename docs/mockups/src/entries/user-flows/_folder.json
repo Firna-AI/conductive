@@ -4,6 +4,7 @@
     "sign-up",
     "create-workspace",
     "reopen-stopped-workspace",
-    "create-org"
+    "create-org",
+    "upgrade"
   ]
 }

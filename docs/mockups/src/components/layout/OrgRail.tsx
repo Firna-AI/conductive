@@ -16,6 +16,8 @@ export type RailState = {
   current?: OrgKey | 'create' | 'account'
   /** The org whose name shows beside it, as on hover. */
   hint?: OrgKey
+  /** An org that its owner deleted, which waits for its restore. */
+  deleted?: OrgKey
   /** No org exists yet, and nothing is connected. */
   firstRun?: boolean
 }
@@ -42,14 +44,28 @@ function RailLink(props: {
   )
 }
 
-function OrgItem(props: { org: Org; current: boolean; hint: boolean }) {
+function OrgItem(props: {
+  org: Org
+  current: boolean
+  hint: boolean
+  deleted: boolean
+}) {
   const { org } = props
-  const to = orgLinks[org.key]
-  const tile = <OrgTile current={props.current} org={org} size={26} />
+  const to = props.deleted ? paths.deletedOrg : orgLinks[org.key]
+  const avatar = <OrgTile current={props.current} org={org} size={26} />
+  const tile = props.deleted ? (
+    <span className={styles.deleted}>{avatar}</span>
+  ) : (
+    avatar
+  )
   return (
     <li className={styles.item}>
       {to ? (
-        <RailLink current={props.current} label={org.name} to={to}>
+        <RailLink
+          current={props.current}
+          label={props.deleted ? `${org.name}, deleted` : org.name}
+          to={to}
+        >
           {tile}
         </RailLink>
       ) : (
@@ -81,6 +97,7 @@ export function OrgRail(props: RailState) {
         {props.orgs.map((org) => (
           <OrgItem
             current={props.current === org.key}
+            deleted={props.deleted === org.key}
             hint={props.hint === org.key}
             key={org.key}
             org={org}
@@ -90,7 +107,7 @@ export function OrgRail(props: RailState) {
           <RailLink
             current={props.current === 'create'}
             label="Create org"
-            to={props.firstRun ? paths.createFirstOrg : paths.createOrg}
+            to={props.firstRun ? paths.getStarted : paths.createOrg}
           >
             <span className={styles.create}>
               <Plus size={15} />

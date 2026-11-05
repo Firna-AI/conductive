@@ -1,0 +1,35 @@
+.track {
+  display: flex;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+}
+
+.fill {
+  border-radius: 3px;
+}
+
+/* Each tone draws its fill on a lighter step of the same colour. */
+.normal {
+  background: var(--ui-primary-soft);
+}
+
+.normal .fill {
+  background: var(--ui-primary);
+}
+
+.warning {
+  background: var(--ui-amber-soft);
+}
+
+.warning .fill {
+  background: var(--ui-amber);
+}
+
+.danger {
+  background: var(--ui-rose-soft);
+}
+
+.danger .fill {
+  background: var(--ui-rose);
+}

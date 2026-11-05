@@ -5,6 +5,7 @@
  */
 .frame {
   display: flex;
+  position: relative;
   height: var(--ui-screen-height);
   overflow: hidden;
   container: app-frame / inline-size;

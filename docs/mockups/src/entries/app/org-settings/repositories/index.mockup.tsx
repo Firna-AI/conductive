@@ -1,5 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
 import {
+  acmeSettings,
   OrgSettingsScreen,
   orgSettingsSchema,
 } from '../../../../screens/OrgSettingsScreen'
@@ -12,7 +13,7 @@ export const repositories = defineScreen({
     'Repositories keep their own tab, as the user asked. Waits on decisions 10 and 21, drawn as their recommended options at org level: the user chooses the repositories of the org, from one GitHub App that every org shares.',
   relatedDocs: [],
   propSchema: orgSettingsSchema,
-  props: { tab: 'repositories', build: 'ready' },
+  props: { ...acmeSettings, tab: 'repositories' },
   render: (props, context) => (
     <OrgSettingsScreen state={props} viewport={context.viewport} />
   ),

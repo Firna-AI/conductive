@@ -9,21 +9,22 @@ export const createOrg = defineScreen({
   description:
     'The name, the initials, and the repositories that the workspaces of the new org use, chosen from those that the GitHub App can reach.',
   rationale:
-    'The page stands alone, without the rail, because the new org has nothing to show yet. Every org shares GitHub and the agents, so the page asks only for what the org owns. Waits on decision 21, drawn as its recommended option A. The cloud computer of the new org holds the chosen repositories.',
+    'The page stands alone, without the rail, because the new org has nothing to show yet. Every org shares GitHub and the agents, so the page asks only for what the org owns, as the user chose in decision 21. The cloud computer of the new org holds the chosen repositories. Get started is the only first run, so a person without the GitHub App installs it there before this page.',
   relatedDocs: [],
   propSchema: createOrgSchema,
-  props: { connections: 'connected' },
-  useCasePaths: ['user-flows/create-org', 'user-flows/sign-up'],
+  props: { first: false },
+  useCasePaths: ['user-flows/create-org'],
   render: (props, context) => (
     <CreateOrgScreen state={props} viewport={context.viewport} />
   ),
   variants: [
     {
-      slug: 'not-connected',
-      title: 'Not connected yet',
+      slug: 'first',
+      title: 'First org',
       description:
-        'The first run: GitHub is not connected yet, so the page cannot list repositories. A notice leads to the account, where the user connects GitHub and signs in to the agents.',
-      props: { connections: 'not-connected' },
+        'The first org of a new user, from the last step of Get started. Cancel returns to Get started, because the user has no org to go back to.',
+      props: { first: true },
+      useCasePaths: ['user-flows/sign-up'],
     },
   ],
 })

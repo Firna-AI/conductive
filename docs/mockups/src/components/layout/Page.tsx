@@ -68,7 +68,9 @@ export function Page(props: PageProps) {
     return (
       <div className={styles.page}>
         <MobileHeader {...props} />
-        {props.tabs ? <div className={styles.tabs}>{props.tabs}</div> : null}
+        {props.tabs ? (
+          <div className={styles.mobileTabs}>{props.tabs}</div>
+        ) : null}
         <div className={props.fill ? styles.fill : styles.mobileBody}>
           {props.children}
         </div>

@@ -1,0 +1,34 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 18px;
+}
+
+.center {
+  justify-content: center;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ui-touch-min);
+  color: var(--ui-muted);
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.link:hover {
+  color: var(--ui-ink);
+}
+
+.inline {
+  color: var(--ui-link);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.inline:hover {
+  text-decoration: underline;
+}

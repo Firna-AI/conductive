@@ -1,10 +1,9 @@
-import { Building2, ChevronDown, PanelLeft, Plus } from 'lucide-react'
+import { ArchiveRestore, ChevronDown, PanelLeft, Plus } from 'lucide-react'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { ActionButton } from '../components/common/actions'
 import a11y from '../components/common/a11y.module.css'
 import { EmptyState } from '../components/common/EmptyState'
-import { Mark } from '../components/common/Mark'
-import { AccountAvatar, OrgTile } from '../components/orgs/OrgTile'
+import { OrgTile } from '../components/orgs/OrgTile'
 import type { MenuStyle } from '../components/workspaces/SectionList'
 import { SectionList } from '../components/workspaces/SectionList'
 import type {
@@ -16,7 +15,7 @@ import {
   NewWorkspaceLink,
   SettingsLink,
 } from '../components/workspaces/SidebarLinks'
-import type { Org } from '../fixtures/orgs'
+import { deletedOrg, orgs, type Org } from '../fixtures/orgs'
 import { newOrg } from '../fixtures/repositories'
 import { paths } from '../paths'
 import styles from './WorkspaceListScreen.module.css'
@@ -32,9 +31,9 @@ const newWorkspaceAction = (
 
 /**
  * The header of the list page on a phone. A phone has no rail, so the org
- * name opens the org switcher.
+ * name opens the org switcher. A deleted org has no settings to open.
  */
-function ListHeader(props: { org: Org }) {
+export function ListHeader(props: { org: Org; settings?: boolean }) {
   return (
     <header className={styles.header}>
       <ScreenLink className={styles.switcher} to={paths.orgs}>
@@ -43,7 +42,7 @@ function ListHeader(props: { org: Org }) {
         <span className={styles.orgName}>{props.org.name}</span>
         <ChevronDown aria-hidden className={styles.chevron} size={15} />
       </ScreenLink>
-      <SettingsLink />
+      {props.settings === false ? null : <SettingsLink />}
     </header>
   )
 }
@@ -73,44 +72,6 @@ export function HomeList(props: {
   )
 }
 
-/**
- * The phone header before the first org: the mark, and the account, where
- * the user connects GitHub and the agents.
- */
-export function FirstRunHeader() {
-  return (
-    <header className={styles.header}>
-      <Mark />
-      <h1 className={styles.title}>Get started</h1>
-      <ScreenLink
-        aria-label="Account"
-        className={styles.account}
-        to={paths.accountSetup}
-      >
-        <AccountAvatar size={26} />
-      </ScreenLink>
-    </header>
-  )
-}
-
-/** The first run: the user creates their first org. */
-export function FirstRun() {
-  return (
-    <EmptyState
-      action={
-        <ScreenLink asChild to={paths.createFirstOrg}>
-          <ActionButton icon={Plus} tone="primary">
-            Create org
-          </ActionButton>
-        </ScreenLink>
-      }
-      body="An org groups your workspaces with the repositories that they use and their sandbox settings."
-      icon={Building2}
-      title="Create your first org"
-    />
-  )
-}
-
 /** The main area of a desktop list: the user picks a workspace. */
 export function ChooseWorkspace() {
   return (
@@ -131,6 +92,29 @@ export function NewOrgEmpty() {
       body={`Workspaces of ${newOrg.name} start in ${used.map((item) => item.name).join(' or ')}.`}
       icon={Plus}
       title={`Start the first workspace in ${newOrg.name}`}
+    />
+  )
+}
+
+/**
+ * The page of an org that its owner deleted. Its cloud computers are
+ * stopped and its members cannot open it. An owner restores it until the
+ * date when everything is deleted.
+ */
+export function DeletedOrg() {
+  const org = orgs[deletedOrg.org]
+  return (
+    <EmptyState
+      action={
+        <ScreenLink asChild to={paths.shell}>
+          <ActionButton icon={ArchiveRestore} tone="primary">
+            {`Restore ${org.name}`}
+          </ActionButton>
+        </ScreenLink>
+      }
+      body={`Its cloud computers are stopped, and its members can't open it. Restore it to bring back its workspaces, chats, and settings.`}
+      icon={ArchiveRestore}
+      title={`${org.name} is deleted on ${deletedOrg.deletes}`}
     />
   )
 }

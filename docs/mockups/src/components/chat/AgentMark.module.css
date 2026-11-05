@@ -1,0 +1,19 @@
+/* A small tile with a full hairline outline, like the org tiles. */
+.mark {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 16px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-raised);
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-label);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  box-sizing: border-box;
+}

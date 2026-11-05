@@ -1,18 +1,12 @@
 import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { Hammer } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import { Notice } from '../components/common/Notice'
+import { BillingTab } from '../components/billing/BillingTab'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
-import {
-  BuildSection,
-  type BuildState,
-} from '../components/settings/BuildSection'
-import {
-  EnvVarsSection,
-  ScriptSection,
-} from '../components/settings/EnvironmentSections'
+import { MembersTab } from '../components/members/MembersTab'
+import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
+import { ComputerTab } from '../components/settings/ComputerTab'
+import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
 import {
   DeleteOrgSection,
   OrgDetailsSection,
@@ -20,124 +14,134 @@ import {
 } from '../components/settings/OrgSections'
 import { RepositoryList } from '../components/settings/RepositoryList'
 import { Section } from '../components/settings/Section'
-import { workspaceSections } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
 import {
-  changedInstallScript,
-  includedSoftware,
-  installScript,
-  startupScript,
-} from '../fixtures/computer'
-import { orgs } from '../fixtures/orgs'
+  freeOrgSections,
+  workspaceSections,
+} from '../components/workspaces/sections'
+import { Sidebar } from '../components/workspaces/Sidebar'
+import { orgList, orgs, type Org } from '../fixtures/orgs'
 import { acmeRepositories } from '../fixtures/repositories'
-import { workspaceList } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import styles from './OrgSettingsScreen.module.css'
 
 export const orgSettingsSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['tab', 'build'],
+  required: ['tab', 'build', 'members', 'billing', 'dialog'],
   properties: {
-    tab: { enum: ['general', 'repositories', 'computer'] },
+    tab: {
+      enum: ['general', 'repositories', 'computer', 'members', 'billing'],
+    },
     /** The builds of the cloud computer, which its tab shows. */
     build: { enum: ['ready', 'building', 'failed', 'changed'] },
+    /** The members tab: Acme on Team, or the free org that tries to invite. */
+    members: { enum: ['team', 'free'] },
+    /** The billing tab: Acme on Team, the free org, its upgrade, or after. */
+    billing: { enum: ['team', 'free', 'upgrade', 'upgraded'] },
+    /** A dialog over the page: Delete org, or the removal of a member. */
+    dialog: { enum: ['none', 'delete-org', 'remove-member'] },
   },
 } as const
 
 export type OrgSettingsState = SchemaProps<typeof orgSettingsSchema>
 
-const org = orgs.acme
+/** The settings of Acme, on its General tab, with no dialog open. */
+export const acmeSettings: OrgSettingsState = {
+  tab: 'general',
+  build: 'ready',
+  members: 'team',
+  billing: 'team',
+  dialog: 'none',
+}
 
-/** The org's cloud computer: its builds, its scripts, and its env vars. */
-function ComputerTab(props: { build: BuildState }) {
-  const changed = props.build === 'changed'
-  return (
-    <>
-      <div className={styles.intro}>
-        <h2 className={styles.title}>Cloud computer</h2>
-        <p className={styles.text}>
-          The shared cloud computer of {org.name}. Every workspace starts from
-          it, with every repository of the org.
-        </p>
-      </div>
-      <BuildSection state={props.build} />
-      <ScriptSection
-        description={`${includedSoftware} The install script runs only when you build the computer.`}
-        notice={
-          changed ? (
-            <Notice
-              action={
-                <ActionButton icon={Hammer} tone="primary">
-                  Build computer
-                </ActionButton>
-              }
-              body="It runs at the next build. Workspaces keep the current build until then."
-              icon={Hammer}
-              title="The install script changed"
-            />
-          ) : undefined
-        }
-        script={changed ? changedInstallScript : installScript}
-        title="Install software"
-      />
-      <ScriptSection
-        description="Runs in the cloud computer of each workspace, at each start and resume."
-        script={startupScript}
-        title="Startup script"
-      />
-      <EnvVarsSection org={org.name} />
-    </>
-  )
+/** The free org shows on its members and billing tabs. Acme shows else. */
+function orgFor(state: OrgSettingsState): Org {
+  if (state.tab === 'members' && state.members === 'free') return orgs.firna
+  if (state.tab === 'billing' && state.billing !== 'team') return orgs.firna
+  return orgs.acme
+}
+
+function TabBody(props: { state: OrgSettingsState; org: Org }) {
+  const { state, org } = props
+  switch (state.tab) {
+    case 'general':
+      return (
+        <>
+          <OrgDetailsSection initials={org.initials} name={org.name} />
+          <DeleteOrgSection name={org.name} />
+        </>
+      )
+    case 'repositories':
+      return (
+        <Section
+          description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. A change takes effect at the next build.`}
+          title="Repositories"
+        >
+          <RepositoryList repositories={acmeRepositories} search="" />
+        </Section>
+      )
+    case 'computer':
+      return <ComputerTab build={state.build} org={org.name} />
+    case 'members':
+      return <MembersTab view={state.members} />
+    case 'billing':
+      return <BillingTab view={state.billing} />
+  }
 }
 
 /**
  * The settings of an org: its name and initials, the repositories that it
- * uses, and its cloud computer. The app-wide connections live in the
- * account.
+ * uses, its cloud computer, its members, and its billing. The app-wide
+ * connections live in the account. Only an owner changes the members and
+ * the billing.
  */
 export function OrgSettingsScreen(props: {
   state: OrgSettingsState
   viewport: Viewport
 }) {
-  const { tab, build } = props.state
-  const tabs: Readonly<Record<OrgSettingsState['tab'], ReactNode>> = {
-    general: (
-      <>
-        <OrgDetailsSection initials={org.initials} name={org.name} />
-        <DeleteOrgSection name={org.name} workspaces={workspaceList.length} />
-      </>
-    ),
-    repositories: (
-      <Section
-        description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. A change takes effect at the next build.`}
-        title="Repositories"
-      >
-        <RepositoryList repositories={acmeRepositories} search="" />
-      </Section>
-    ),
-    computer: <ComputerTab build={build} />,
+  const { state, viewport } = props
+  const org = orgFor(state)
+  const free = org.key === 'firna'
+  const mobile = viewport === 'mobile'
+  const list = free ? paths.newOrg : paths.shell
+  const dialogs: Readonly<Record<OrgSettingsState['dialog'], ReactNode>> = {
+    none: null,
+    'delete-org': <DeleteOrgDialog viewport={viewport} />,
+    'remove-member': <RemoveMemberDialog viewport={viewport} />,
   }
-  const mobile = props.viewport === 'mobile'
   const page = (
     <Page
-      back={mobile ? { label: 'Workspaces', to: paths.shell } : undefined}
+      back={mobile ? { label: 'Workspaces', to: list } : undefined}
       subtitle="Org settings"
-      tabs={<SettingsTabs tab={tab} />}
+      tabs={<SettingsTabs tab={state.tab} wrap={mobile} />}
       title={org.name}
-      viewport={props.viewport}
+      viewport={viewport}
     >
-      {tabs[tab]}
+      <TabBody org={org} state={state} />
     </Page>
   )
-  if (mobile) return <MobileFrame>{page}</MobileFrame>
+  if (mobile) {
+    return (
+      <MobileFrame>
+        {page}
+        {dialogs[state.dialog]}
+      </MobileFrame>
+    )
+  }
   const sidebar = (
     <Sidebar
       current="settings"
       org={org}
-      sections={workspaceSections()}
-      settingsAlert={build === 'failed'}
+      sections={free ? freeOrgSections() : workspaceSections()}
+      settingsAlert={state.build === 'failed'}
     />
   )
-  return <AppFrame sidebar={sidebar}>{page}</AppFrame>
+  return (
+    <AppFrame
+      overlay={dialogs[state.dialog]}
+      rail={{ orgs: orgList, current: org.key }}
+      sidebar={sidebar}
+    >
+      {page}
+    </AppFrame>
+  )
 }

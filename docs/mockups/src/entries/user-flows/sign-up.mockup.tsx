@@ -3,7 +3,7 @@ import { defineUseCase } from '@mokly/mokly'
 export const signUp = defineUseCase({
   title: 'Sign up',
   description:
-    'A visitor of the home page signs up with GitHub, installs the GitHub App, and creates the first org.',
+    'A visitor of the home page signs up with GitHub, installs the GitHub App, connects an agent, and creates the first org.',
   relatedDocs: [],
   steps: [
     {
@@ -26,12 +26,17 @@ export const signUp = defineUseCase({
     },
     {
       screenPath: 'app/sign-in/get-started/installed',
-      title: 'Create the first org',
+      title: 'Connect Claude or Codex',
       description:
-        'Back from GitHub, the install shows as done, and Create org opens the form.',
+        'Back from GitHub, the install shows as done. The new user connects their own Claude or OpenAI account.',
     },
     {
-      screenPath: 'app/orgs/new',
+      screenPath: 'app/sign-in/get-started/connected',
+      title: 'Create the first org',
+      description: 'Claude is connected, and Create org opens the form.',
+    },
+    {
+      screenPath: 'app/orgs/new/first',
       title: 'Name it and choose repositories',
       description:
         'The user names the org and adds the repositories that its workspaces use.',

@@ -1,5 +1,11 @@
+import type { ReactNode } from 'react'
 import { ArrowUpRight, LogOut } from 'lucide-react'
-import { agentKeys, agents, defaultChoice } from '../../fixtures/agents'
+import {
+  agentKeys,
+  agents,
+  defaultChoice,
+  type AgentKey,
+} from '../../fixtures/agents'
 import { account, installations } from '../../fixtures/orgs'
 import { ModelPicker } from '../chat/ModelPicker'
 import { ActionButton } from '../common/actions'
@@ -63,23 +69,43 @@ export function GitHubSection(props: { connected: boolean }) {
 }
 
 /**
- * The agents that every org uses, Claude and Codex. How the user connects
- * one is still open, so the rows say only Connect or Connected.
+ * Claude and Codex, each with Connect, or Connected once the user connected
+ * it. `connect` draws the button of an agent, such as a link to the next
+ * step of the first run.
  */
-export function AgentsSection(props: { connected: boolean }) {
+export function AgentList(props: {
+  connected: readonly AgentKey[]
+  connect?: (agent: AgentKey) => ReactNode
+}) {
   return (
-    <Section description="Every org uses these agents." title="Agents">
-      <ul aria-label="Agents" className={styles.list}>
-        {agentKeys.map((key) => (
+    <ul aria-label="Agents" className={styles.list}>
+      {agentKeys.map((key) => {
+        const done = props.connected.includes(key)
+        const button = props.connect ? (
+          props.connect(key)
+        ) : (
+          <ActionButton>Connect</ActionButton>
+        )
+        return (
           <li className={styles.row} key={key}>
             <span className={styles.name}>{agents[key].name}</span>
-            <span className={styles.detail}>
-              {props.connected ? connected : null}
-            </span>
-            {props.connected ? null : <ActionButton>Connect</ActionButton>}
+            <span className={styles.detail}>{done ? connected : null}</span>
+            {done ? null : button}
           </li>
-        ))}
-      </ul>
+        )
+      })}
+    </ul>
+  )
+}
+
+/**
+ * The agents that every org uses, Claude and Codex. The rows say only
+ * Connect or Connected.
+ */
+export function AgentsSection(props: { connected: readonly AgentKey[] }) {
+  return (
+    <Section description="Every org uses these agents." title="Agents">
+      <AgentList connected={props.connected} />
     </Section>
   )
 }

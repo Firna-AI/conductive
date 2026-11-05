@@ -51,8 +51,9 @@ The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. The centre column has a slim header that names the
-repository and the branch, then a tab for each agent session and each open
-file or diff, and + for a new session. The right column has the pull
+repository, the branch, and the owner of the workspace, then a tab for each
+agent session and each open file or diff, + for a new session, and a clock
+that opens the session history. The right column has the pull
 request bar on top, the All files, Changes, and Checks lists below it, and
 the Terminal, Preview, and Desktop tabs at the bottom. It shows no file
 content. A phone shows an org switcher at the top of the list, and the
@@ -73,7 +74,17 @@ chat, and five tabs at the bottom.
   in every composer, such as "Opus 5.5 High". It names no agent brand.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
   `src/components/common/` beside its button, or in a `Sheet` on a phone.
-  Firna's own menu rows are taller than the dense design.
+  Firna's own menu rows are taller than the dense design. A row can lead with
+  a mark, such as an avatar, and end with a muted detail and an icon.
+- `ConfirmDialog` in `src/components/common/` asks before an action that a
+  user cannot simply undo: a dialog over the dimmed app on desktop, and a
+  sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+- `UsageMeter` in `src/components/common/` draws use against what a plan
+  includes: a thin fill on a lighter track of the same colour, in the accent,
+  or amber near or over the limit. The words beside it always give the
+  amounts and the state.
+- `AgentMark` in `src/components/chat/` marks the agent of a session with two
+  letters on a small tile, CL or CX, because the app draws no brand logo.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green
@@ -89,34 +100,43 @@ chat, and five tabs at the bottom.
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
   frame of a picture on the marketing site.
+- On a phone the org settings put their five tabs in three columns, so every
+  tab shows. The session tabs all shrink, and the current one keeps the start
+  of its title beside its rename and close buttons.
 
 ## The catalogue
 
-| Path                | What it shows                                                               |
-| ------------------- | --------------------------------------------------------------------------- |
-| `marketing`         | The home page of the site: the app, its features, the plans, and sign-up    |
-| `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge |
-| `app/sign-in`       | The GitHub sign-in, and the first run: install the GitHub App, create org   |
-| `app/shell`         | The workspace list, the first run, and the sandbox starting, stopped, error |
-| `app/sections`      | The menu of a section, and a workspace dragged to another section           |
-| `app/orgs`          | The org switcher of a phone, Create org, and a new org without workspaces   |
-| `app/account`       | The GitHub sign-in, the GitHub App, the agents, and the default model       |
-| `app/banner`        | The pull request bar and Checks: none, running, failed, ready, merged       |
-| `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn     |
-| `app/org-settings`  | General and Delete org, then Repositories and Cloud computer as child pages |
-| `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure        |
-| `app/sessions`      | A new, empty agent session beside the other tabs                            |
-| `app/composer`      | Attached files, and the open model and effort picker                        |
-| `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab     |
-| `app/tools`         | The terminal, a port preview, no preview, and the desktop                   |
-| `app/panels`        | The right column, widened by the handle on its inner edge                   |
-| `user-flows`        | Sign up, create a workspace, reopen a stopped workspace, and create an org  |
+| Path                | What it shows                                                                |
+| ------------------- | ---------------------------------------------------------------------------- |
+| `marketing`         | The home page of the site: the app, its features, the plans, and sign-up     |
+| `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge  |
+| `app/sign-in`       | The GitHub sign-in, Get started as the only first run, and refused sign-ups  |
+| `app/shell`         | The workspace list, and the sandbox starting, stopped, and with an error     |
+| `app/sections`      | The menu of a section, and a workspace dragged to another section            |
+| `app/orgs`          | The org switcher of a phone, Create org, the first org, a new org, a deleted |
+| `app/account`       | The GitHub sign-in, the GitHub App, the agents, and the default model        |
+| `app/banner`        | The pull request bar and Checks: none, running, failed, ready, merged        |
+| `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn      |
+| `app/limits`        | New workspace at a limit: 3 workspaces, minutes, starts, and running at once |
+| `app/org-settings`  | General, then Repositories, Cloud computer, Members, Billing, and Delete org |
+| `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure         |
+| `app/sessions`      | A new session, the session history, and closing a session while it works     |
+| `app/reassign`      | The owner of a workspace in its header, with the menu that reassigns it      |
+| `app/composer`      | Attached files, the open model and effort picker, and an agent to connect    |
+| `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab      |
+| `app/tools`         | The terminal, a port preview, no preview, and the desktop                    |
+| `app/panels`        | The right column, widened by the handle on its inner edge                    |
+| `user-flows`        | Sign up, create a workspace, reopen a stopped one, create an org, upgrade    |
 
 A folder page shows at most five screens, saved states included. A folder
-with child folders shows only its canonical screen, as `app` and
-`app/org-settings` do. `app/org-settings/cloud-computer` and its building and
-build-failed states moved from `app/repository-settings` and its updating
-and update-failed states, and declare `movedFrom`.
+with child folders shows only its canonical screen, as `app`, `app/sign-in`,
+and `app/org-settings` do. `app/org-settings/cloud-computer` and its building
+and build-failed states moved from `app/repository-settings` and its updating
+and update-failed states, and declare `movedFrom`. `app/sign-in/get-started`
+moved into its own folder and kept its path. Get started is the only first
+run, so the first run of `app/shell` and the not-connected state of
+`app/orgs/new` are gone, and their links lead to Get started. Its last step
+opens `app/orgs/new/first`, whose Cancel returns to Get started.
 
 ## Folder layout
 
@@ -125,7 +145,7 @@ and update-failed states, and declare `movedFrom`.
 | `src/entries/`            | The Mokly root: entry modules, folder records, and the flows        |
 | `src/screens/`            | One React component for each app screen, for both viewports         |
 | `src/components/`         | Layout and parts that the screens share, where `@firna/ui` has none |
-| `src/fixtures/`           | The sample orgs, sections, workspaces, agents, chats, and files     |
+| `src/fixtures/`           | The sample orgs, members, plans, workspaces, agents, and chats      |
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
@@ -154,6 +174,38 @@ and update-failed states, and declare `movedFrom`.
 - Controls come from `@firna/ui`. A control without a handler renders as
   disabled, so the screens pass `noop` from `src/noop.ts`.
 
+## Plans, billing, and members
+
+The screens draw the billing model that the user set on 5 November 2026.
+The numbers live in `src/fixtures/billing.ts` and `src/fixtures/limits.ts`,
+and the marketing plans read the same numbers.
+
+- An org pays for its plan. Team buys seats at $30 a month each, and each
+  seat adds $15 of compute, about 416 hours on the standard machine, to the
+  pool of the billing period. Use beyond the pool costs cost plus 10%.
+- A free org keeps up to 3 workspaces, gets 600 minutes a month, and has one
+  member, its owner. Each person has 20 starts a day. Open decision 34 is
+  drawn as its recommended option D: a limit of starts each hour too, and 5
+  cloud computers that each member of a paid org runs at once.
+- The billing tab of the org settings shows the plan, the seats, the next
+  invoice, the card, the compute against the pool, and the cost of more use
+  so far. Upgrade hands off to Stripe Checkout, and Manage payment opens the
+  Stripe customer portal. The screens draw only the buttons and a note, not
+  Stripe's pages.
+- Each limit gives one way forward in place of the empty chat of a new
+  workspace: archive a workspace, wait for the next month, wait for the next
+  day or hour, or stop a cloud computer. A free org that invites a member
+  upgrades.
+- Each member and each open invite takes a seat. Only an owner manages the
+  members and the billing, and reassigns a workspace. The agents of a
+  workspace use its owner's own accounts.
+- Delete org asks for the org name. The deleted org stays faded in the rail
+  of its owners until the date when everything is deleted, and its page
+  offers Restore.
+- Two kinds of org show: Acme on Team, and Firna, the free org of the sign-up.
+  The parts live in `src/components/billing/`, `src/components/members/`, and
+  `src/components/limits/`.
+
 ## The marketing site
 
 The home page follows the calm structure of a Conductor-style home page: a
@@ -180,3 +232,6 @@ and "Sign in", lead to `app/sign-in`. The parts live in
   native mobile app, API, other agents, changelog, or sandbox provider.
 - The plans come from `src/fixtures/plans.ts`. The product name is a working
   name in `src/brand.ts`, because the user has not chosen one yet.
+- The footer and the sign-in page link to Terms, Privacy, Refunds and
+  cancellation, and Contact, from `LegalLinks`. The pages are not drawn yet,
+  so the links have no address.

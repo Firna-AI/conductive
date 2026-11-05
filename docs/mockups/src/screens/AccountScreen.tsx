@@ -8,6 +8,7 @@ import {
   GitHubSection,
   SignInSection,
 } from '../components/settings/AccountSections'
+import { agentKeys } from '../fixtures/agents'
 import { account, orgList } from '../fixtures/orgs'
 import { paths } from '../paths'
 
@@ -42,7 +43,7 @@ export function AccountScreen(props: {
   const mobile = props.viewport === 'mobile'
   const back = connected
     ? { label: 'Workspaces', to: paths.shell }
-    : { label: 'Create org', to: paths.createFirstOrg }
+    : { label: 'Get started', to: paths.getStarted }
   const page = (
     <Page
       back={mobile ? back : undefined}
@@ -52,7 +53,7 @@ export function AccountScreen(props: {
     >
       <SignInSection />
       <GitHubSection connected={connected} />
-      <AgentsSection connected={connected} />
+      <AgentsSection connected={connected ? agentKeys : []} />
       <DefaultsSection />
     </Page>
   )

@@ -1,5 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
 import {
+  acmeSettings,
   OrgSettingsScreen,
   orgSettingsSchema,
 } from '../../../../screens/OrgSettingsScreen'
@@ -13,7 +14,7 @@ export const cloudComputer = defineScreen({
   relatedDocs: [],
   movedFrom: 'app/repository-settings',
   propSchema: orgSettingsSchema,
-  props: { tab: 'computer', build: 'ready' },
+  props: { ...acmeSettings, tab: 'computer' },
   render: (props, context) => (
     <OrgSettingsScreen state={props} viewport={context.viewport} />
   ),

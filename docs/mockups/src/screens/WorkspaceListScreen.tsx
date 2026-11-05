@@ -10,14 +10,14 @@ import {
   type ListMenu,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import { orgList, orgs } from '../fixtures/orgs'
+import { deletedOrg, orgList, orgs } from '../fixtures/orgs'
 import { menuSection } from '../fixtures/sections'
 import { workspaceDrag } from '../fixtures/workspaces'
 import {
   ChooseWorkspace,
-  FirstRun,
-  FirstRunHeader,
+  DeletedOrg,
   HomeList,
+  ListHeader,
   NewOrgEmpty,
 } from './listParts'
 import { OrgSwitcherSheet, SectionSheet } from './listSheets'
@@ -28,8 +28,8 @@ export const workspaceListSchema = {
   additionalProperties: false,
   required: ['list', 'menu'],
   properties: {
-    /** The workspaces of Acme, the first run, or a new org without any. */
-    list: { enum: ['workspaces', 'first-run', 'new-org'] },
+    /** The workspaces of Acme, a new org without any, or a deleted org. */
+    list: { enum: ['workspaces', 'new-org', 'deleted'] },
     /** The menu of a section, a workspace dragged, or the org switcher. */
     menu: { enum: ['none', 'section', 'drag', 'orgs'] },
   },
@@ -54,11 +54,11 @@ const sheets: Readonly<Record<WorkspaceListState['menu'], ReactNode>> = {
 
 function MobileList(props: { state: WorkspaceListState }) {
   const { list, menu } = props.state
-  if (list === 'first-run') {
+  if (list === 'deleted') {
     return (
       <MobileFrame>
-        <FirstRunHeader />
-        <FirstRun />
+        <ListHeader org={orgs[deletedOrg.org]} settings={false} />
+        <DeletedOrg />
       </MobileFrame>
     )
   }
@@ -88,10 +88,15 @@ export function WorkspaceListScreen(props: {
 }) {
   const { list, menu } = props.state
   if (props.viewport === 'mobile') return <MobileList state={props.state} />
-  if (list === 'first-run') {
+  if (list === 'deleted') {
+    const rail: RailState = {
+      orgs: orgList,
+      current: deletedOrg.org,
+      deleted: deletedOrg.org,
+    }
     return (
-      <AppFrame rail={{ orgs: [], firstRun: true }}>
-        <FirstRun />
+      <AppFrame rail={rail}>
+        <DeletedOrg />
       </AppFrame>
     )
   }
