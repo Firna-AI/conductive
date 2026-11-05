@@ -3,7 +3,8 @@
 Status: Active. On branch `calummoore/conductor-alternative-architecture`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Conductor Cloud goes read-only on 13 November 2026 and shuts down on
-20 November 2026. This change builds a browser-only replacement. Users
+20 November 2026. This change builds Conducting, a browser-only replacement, at
+`conducting.build`. Users
 sign in with GitHub and bring their own Boat key: one Boat
 sandbox per workspace, chat with coding agents, a
 file list and preview, a terminal, port previews, a GitHub banner, one
@@ -1143,6 +1144,8 @@ Added on 5 November 2026 from the user's answer to decision 22.
   `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`.
 - **Questioned on 5 November 2026:** decision 48 asks whether this check
   stays, now that each user brings their own Boat key.
+- **Superseded by decision 48 on 5 November 2026:** the sign-up check is
+  dropped.
 
 ### 29. Count terminal and preview use as activity
 
@@ -1268,7 +1271,7 @@ Added on 5 November 2026 from the mockups of Milestone 1b.
 
 ### 32. Name the product
 
-Open. Added on 5 November 2026 from the marketing mockups.
+Added on 5 November 2026 from the marketing mockups.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design. **Category:** UX wording.
@@ -1292,10 +1295,14 @@ Open. Added on 5 November 2026 from the marketing mockups.
   the domain, the GitHub App name, and trademarks before choosing.
 - **Recommendation:** B. The domain and the GitHub App depend on it.
 - **Action:** ask the user, because only the user can name the product.
+- **Chosen by the user on 5 November 2026:** the product is "Conducting",
+  on the domain `conducting.build`.
+- **Risk:** the name and the domain are close to Conductor and
+  `conductor.build`. Check trademarks before the app opens to the public.
 
 ### 33. Connect an agent in the first run
 
-Open. Added on 5 November 2026 from the marketing mockups. Changed the
+Added on 5 November 2026 from the marketing mockups. Changed the
 same day by decision 44: the first run also needs a Boat key.
 
 - **Severity:** Medium. **Effort:** Small.
@@ -1328,6 +1335,7 @@ same day by decision 44: the first run also needs a Boat key.
   catches a key that is removed later.
 - **Action:** ask the user, because it adds a step and a notice that no
   requirement covers.
+- **Chosen:** D, by the user on 5 November 2026.
 
 ### 34. Set the limits of the paid plan
 
@@ -1368,7 +1376,7 @@ limits, so this question no longer applies. Added on 5 November 2026 from the ma
 
 ### 35. Add the legal pages
 
-Open. Added on 5 November 2026 from the marketing mockups. Changed the
+Added on 5 November 2026 from the marketing mockups. Changed the
 same day by decision 45: the product is free, so B, D, and E no longer
 apply, and F is new.
 
@@ -1416,6 +1424,7 @@ apply, and F is new.
   was D before billing went away.
 - **Action:** ask the user, because legal text is new content that no
   requirement covers.
+- **Chosen:** A, by the user on 5 November 2026.
 
 ### 36. Decide whether to run the agents through SDKs
 
@@ -1610,7 +1619,7 @@ check added D, and the recommendation moved from B to D.
 
 ### 39. Decide who owns a removed member's workspaces
 
-Open. Added on 5 November 2026 from the Milestone 1d mockups. The options
+Added on 5 November 2026 from the Milestone 1d mockups. The options
 check widened the root question and added D, and the recommendation
 moved from A to D.
 
@@ -1648,6 +1657,15 @@ moved from A to D.
   an org always keeps an owner.
 - **Action:** ask the user, because it adds behaviour that no requirement
   covers, and D rejects the last owner's leave.
+- **Chosen by the user on 5 November 2026:** the workspaces belong to the
+  org, so they stay in the org when a member leaves. All members of the
+  org already see them.
+- **Agent call on 5 November 2026:** a departed member's workspaces move
+  to the owner who removed the member, or to the org's earliest owner
+  when the member left alone. Reason: decision 24 runs a workspace's
+  agents on its owner's own login, which must not stay in use after the
+  person leaves. Decision 55 asks what happens when the last owner
+  leaves.
 
 ### 40. Decide how seat changes are charged mid-period
 
@@ -1753,7 +1771,7 @@ Added on 5 November 2026 from the Milestone 1d mockups.
 
 ### 43. Decide what happens to a workspace stopped for 14 days
 
-Open. Added on 5 November 2026 from the Milestone 1d mockups. Changed
+Added on 5 November 2026 from the Milestone 1d mockups. Changed
 the same day by decision 44: with users' own Boat keys, E costs the user
 and not the app, and the recommendation moved from F to E. The user
 asked the same day whether the app can download the disk or keep a
@@ -1808,6 +1826,8 @@ snapshot. That added E and F, and the recommendation moved from C to F.
   of the user's code.
 - **Action:** ask the user, because it adds behaviour that no requirement
   covers.
+- **Chosen:** D, by the user on 5 November 2026. Each restart uses a start
+  and some minutes of the org's own Boat account.
 
 ### 44. Let each user bring their own Boat key
 
@@ -1855,7 +1875,7 @@ Added on 5 November 2026 from the user's message.
 
 ### 46. Decide whose Boat key runs an org's cloud computers
 
-Open. Added on 5 November 2026 from decision 44.
+Added on 5 November 2026 from decision 44.
 
 - **Severity:** High. **Effort:** Small.
 - **Source:** Design. **Category:** Docs or spec.
@@ -1890,10 +1910,13 @@ Open. Added on 5 November 2026 from decision 44.
   control the cost.
 - **Action:** ask the user, because the user said "users bring their own
   boat key", and A reads that as one key for each org.
+- **Chosen by the user on 5 November 2026:** A. An org owner or an admin
+  adds the org's Boat key. The plan's roles are owner and member, so
+  decision 54 asks whether "admin" is a new role.
 
 ### 47. Decide where the app names Boat
 
-Open. Added on 5 November 2026 from decision 44.
+Added on 5 November 2026 from decision 44.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design. **Category:** UX wording.
@@ -1920,10 +1943,11 @@ Open. Added on 5 November 2026 from decision 44.
   move stays easy.
 - **Action:** ask the user, because it changes the user's requirement to
   keep Boat hidden.
+- **Chosen:** B, by the user on 5 November 2026.
 
 ### 48. Decide which abuse measures stay
 
-Open. Added on 5 November 2026 from decision 44.
+Added on 5 November 2026 from decision 44.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design. **Category:** Security.
@@ -1955,6 +1979,256 @@ Open. Added on 5 November 2026 from decision 44.
   but a public app still needs terms and a way to stop misuse.
 - **Action:** ask the user, because it changes decision 28 and a follow-up
   item that the user asked for.
+- **Chosen:** C, by the user on 5 November 2026. The sign-up check is
+  dropped. The follow-up item on terms, suspension, and abuse reports
+  stays.
+
+### 49. Decide who may run code in another member's workspace
+
+Open. Added on 5 November 2026 from the Milestone 2 docs, item 1.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Security.
+- **Background:** Decision 24 runs each workspace's agents on its owner's
+  own Claude or Codex login. A cloud computer gets those logins at each
+  start, and every process in it can read them. The user said that all
+  members of an org see its workspaces. The mockups let any member open
+  another member's workspace with the composer, the terminal, and the
+  tools. The org's startup script runs in every cloud computer of the
+  org.
+- **Problem:** No decision says what a member may do in a workspace that
+  another member owns, or who may edit the org's scripts. As drawn, a
+  member can drive another member's agents, or read that member's Claude
+  token or API keys from the terminal.
+- **Impact if no action:** One member can spend or copy another member's
+  personal agent login.
+- **Root question:** Within one org, who may run code in a cloud computer
+  that holds another member's logins?
+- **Options:**
+  - **A.** Change nothing. Every member uses every workspace and edits the
+    scripts. The docs say that an org's members can reach each other's
+    logins. Effort: Small.
+  - **B.** Only the workspace owner sends messages and uses the terminal,
+    the previews, and the desktop. Other members see the chat and the
+    files read-only. The scripts stay a path to the logins. Effort:
+    Small.
+  - **C.** As B, and only org owners edit the install script, the startup
+    script, and the env vars. Effort: Medium.
+- **Left out:**
+  - A Worker proxy that adds the logins to each model request, so that no
+    cloud computer holds them: it is a Large build, and no decision
+    covers routing model use through the app.
+  - One image for each member, because decision 13 chose one image for
+    each org.
+- **Wider fix:** C. It closes each path from a member to another member's
+  logins.
+- **Related:** Decision 50 has the same kind of reach for GitHub tokens.
+  Decision 54 can add an admin role that also edits the scripts.
+- **Recommendation:** C. A personal login then serves only its owner and
+  the org owners, who already control the org.
+- **Action:** ask the user, because it adds permission rules that no
+  decision covers, and it changes drawn screens.
+
+### 50. Decide the reach of a cloud computer's GitHub token
+
+Open. Added on 5 November 2026 from the Milestone 2 docs, item 2.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Security.
+- **Background:** A git credential helper in each cloud computer asks the
+  Worker for a fresh GitHub token for each git operation. The plan says
+  that the token is the workspace owner's user token, limited to the
+  org's repositories. GitHub's docs say that a user token of a GitHub App
+  reaches every repository that both the user and the app can reach, and
+  that a refresh takes no repository limit. An installation token can be
+  limited to named repositories and permissions.
+- **Problem:** The Worker cannot give a cloud computer a user token that
+  reaches only the org's repositories.
+- **Impact if no action:** A file in a repository can tell the agent to
+  push. The agent can then push to any repository that its owner and the
+  app share, also outside the org.
+- **Root question:** How does a cloud computer get GitHub access that
+  reaches only the repositories of its org?
+- **Options:**
+  - **A.** Keep user tokens, and drop the limit from the plan. Effort:
+    Small.
+  - **B.** Use installation tokens, limited to the workspace's repository
+    and to the permissions that git needs. Pushes and pull requests then
+    come from the app, not from the user. Commits still name the user as
+    their author. Effort: Medium.
+  - **C.** As B, but limited to every chosen repository of the org.
+    Effort: Medium.
+- **Left out:**
+  - A new user sign-in for each workspace, limited to one repository,
+    because a refresh drops that limit after 8 hours.
+  - A Worker check of the repository in each token request, because the
+    token itself still reaches every shared repository.
+- **Wider fix:** B. GitHub then enforces the limit.
+- **Related:** Decision 49.
+- **Recommendation:** B. GitHub enforces the limit, and each workspace
+  needs only its own repository.
+- **Action:** ask the user, because B changes who shows as the pusher on
+  GitHub, which users see.
+
+### 51. Decide how a session moves to the other agent
+
+Open. Added on 5 November 2026 from the Milestone 2 docs, item 3.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** Decision 19 chose an agent and model picker for each
+  message, because Boat's agents could switch both inside one
+  conversation. Decision 36 moved the agents into the agent runner. A
+  Claude session and a Codex session are separate programs with separate
+  memory. The mockups draw one picker with the models of both agents in
+  every session.
+- **Problem:** No design says what happens when the user picks a model of
+  the other agent in a session.
+- **Impact if no action:** Milestone 7 builds no switch, or a switch after
+  which the new agent knows nothing of the session.
+- **Root question:** How does the user move the work of one session to
+  the other agent?
+- **Options:**
+  - **A.** Each session keeps the agent of its first message. Its picker
+    lists only that agent's models, and "+" starts a session with the
+    other agent. Effort: Small.
+  - **B.** A pick of the other agent's model opens a new session with that
+    agent, and moves the draft there. Effort: Small.
+  - **C.** The runner switches the agent inside the session, and gives the
+    new agent the transcript of the session. Effort: Medium.
+- **Left out:** Change nothing, because neither SDK can switch agents, so
+  the drawn picker has no behaviour.
+- **Wider fix:** None.
+- **Recommendation:** C. It keeps the user's choice in decision 19, which
+  includes a switch when one agent reaches its usage limit.
+- **Action:** ask the user, because A and B change the user's choice in
+  decision 19, and C adds a hand-over that no decision covers.
+
+### 52. Decide what agents can ask of the workspace tools
+
+Open. Added on 5 November 2026 from the Milestone 2 docs, item 5.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** Each cloud computer has an MCP server and a CLI. With the
+  workspace token, an agent can create and list workspaces. Decision 8
+  set no limit on agent-made workspaces. The plan says nothing more about
+  these calls.
+- **Problem:** No requirement says what a create call takes, which org and
+  owner the new workspace gets, or whether its agent starts at once. No
+  requirement says which workspaces a list call returns.
+- **Impact if no action:** Milestone 15 invents the contract, and the user
+  first meets it in a running agent.
+- **Root question:** What can an agent ask for when it creates or lists
+  workspaces, and what does it get back?
+- **Options:**
+  - **A.** A create call takes a repository of the same org and a first
+    message. The new workspace gets the calling workspace's org and
+    owner, the default section, and the owner's default model. Its agent
+    starts on the message at once. A list call returns the name, the
+    branch, and the state of each workspace of that owner in that org.
+    Effort: Small.
+  - **B.** As A, and a create call can also choose the model, the effort,
+    and the section. Effort: Small.
+  - **C.** As A, but a list call returns only the workspaces that the
+    calling workspace created. Effort: Small.
+- **Left out:** A create call that waits for the user's approval, because
+  decision 8 did not choose an approval step.
+- **Wider fix:** None.
+- **Recommendation:** A. An agent can split a task into parallel
+  workspaces, and each new workspace shows in its owner's list.
+- **Action:** ask the user, because the calls add behaviour at a boundary
+  that no requirement covers.
+
+### 53. Decide which name starts a branch
+
+Open. Added on 5 November 2026 from the Milestone 2 docs, item 8.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation. **Category:** Mockup.
+- **Background:** The plan names each branch `<GitHub login>/<city>-<four
+  random characters>`, so that each person's branches stay together. Its
+  example is `cal/lisbon-7k2q`. The mockups use the first name, but the
+  signed-in user's GitHub login is `calummoore`.
+- **Problem:** The plan and the mockups give two rules for the branch
+  prefix.
+- **Impact if no action:** Milestone 5 can copy the drawn rule, and two
+  people with the same first name then share one prefix.
+- **Root question:** Which name starts the branch of a new workspace?
+- **Options:**
+  - **A.** The GitHub login, as the plan says. The plan's example and the
+    mockup samples change, for example to `calummoore/lisbon-7k2q`.
+    Effort: Small.
+  - **B.** The first name in lower case, as drawn. Effort: Small.
+- **Left out:** A prefix that the user sets, because no decision asks for
+  one.
+- **Wider fix:** None.
+- **Recommendation:** A. A GitHub login is unique.
+- **Action:** ask the user, because it decides which side of a mismatch
+  between the mockups and the plan is right.
+
+### 54. Decide whether orgs get an admin role
+
+Open. Added on 5 November 2026 from the answer to decision 46.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** The plan's org roles are owner and member. Owners invite
+  and remove members, reassign workspaces, and delete the org. For
+  decision 46, the user wrote that the "org owner or admin" adds the
+  org's Boat key.
+- **Problem:** The plan has no admin role, so it is not clear who an admin
+  is.
+- **Impact if no action:** Milestone 15a builds roles that differ from what
+  the user means.
+- **Root question:** Which roles does an org have, and who manages its
+  Boat key and settings?
+- **Options:**
+  - **A.** Keep owner and member. "Admin" means owner, and an org can have
+    several owners. Effort: Small.
+  - **B.** Add an admin role. Admins manage the Boat key, the scripts, the
+    env vars, and the members. Only owners delete the org and change the
+    owners. Effort: Small.
+- **Left out:** Every member manages the key, because the key gives access
+  to the org's whole Boat account.
+- **Wider fix:** None.
+- **Related:** Decision 49, option C, limits the scripts to owners.
+  Decision 55.
+- **Recommendation:** A. Several owners already give an org more than one
+  manager, and two roles stay simple.
+- **Action:** ask the user, because the user named a role that the plan
+  does not have.
+
+### 55. Decide what happens when the last owner leaves
+
+Open. Added on 5 November 2026 from the answer to decision 39.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** When a member leaves, their workspaces move to an owner,
+  as decision 39 says. An org needs an owner to manage its Boat key and
+  its members.
+- **Problem:** No rule says what happens when the last owner leaves or
+  deletes their account.
+- **Impact if no action:** An org can be left with no one who can manage
+  it.
+- **Root question:** How does an org always keep someone who can manage
+  it?
+- **Options:**
+  - **A.** The last owner can leave only after they make another member an
+    owner, or by deleting the org. This adds a refusal. Effort: Small.
+  - **B.** When the last owner leaves, the org's earliest member becomes
+    an owner. Effort: Small.
+  - **C.** When the last owner leaves, the app deletes the org, with the
+    7-day restore of decision 30. Effort: Small.
+- **Left out:** An org with no owner, because no one could then manage
+  its key or its members.
+- **Wider fix:** None.
+- **Related:** Decisions 39 and 54.
+- **Recommendation:** A. The person who leaves chooses the next owner,
+  and nobody gets the role by surprise.
+- **Action:** ask the user, because A adds a refusal, and each option adds
+  behaviour that no requirement covers.
 
 ## Design
 
@@ -1997,8 +2271,8 @@ otherwise. The user can override any of them.
   Western Europe location hint, near Boat's machines.
 - A small `SandboxProvider` interface wraps the Boat client. Reason: a
   later change can add another provider or an own daemon.
-- Chat events use our own event type, mapped from Boat's events in the
-  Worker. Reason: option C of decision 1 stays possible later.
+- Chat events use our own event type, mapped from the SDK events by the
+  agent runner. Reason: one event type serves both agents.
 
 **Mockups.** The UI implementors made these calls in Milestones 1, 1a,
 and 1b, and the orchestrator accepted them on 5 November 2026:
@@ -2041,20 +2315,22 @@ and 1b, and the orchestrator accepted them on 5 November 2026:
 - Users sign in with GitHub. No other sign-in method is offered.
 
 **Orgs and members.** The user decided these on 5 November 2026, in the
-answers to decisions 22, 24, 28, 30, 42, 44, and 45:
+answers to decisions 22, 24, 30, 39, 42, and 44 to 48:
 
-- Users bring their own Boat key, as decision 44 says. Decision 46
-  decides whose key runs an org's cloud computers.
+- Each org runs on one Boat key, which an org owner adds, as decisions 44
+  and 46 say. Decision 54 asks whether an admin role can add it too.
 - The product is free for now, without billing or plan limits, as
   decision 45 says. Each Boat account's own plan limits apply.
-- Anyone with a GitHub account older than 30 days, with a verified
-  email, can sign up. Decision 48 asks whether this check stays.
+- Anyone with a GitHub account can sign up, as decisions 22 and 48 say.
 - Each workspace belongs to the user who created it, until it is
   reassigned. Its agents use that user's own account.
 - Delete org stops every machine and hides the org at once, and deletes
   everything after 7 days unless an owner restores it.
 - Only a workspace's owner and the org's owners can archive the
   workspace.
+- When a member leaves, their workspaces stay in the org, as decision 39
+  says. They move to the owner who removed the member, or to the org's
+  earliest owner.
 
 Agent calls of 5 November 2026:
 
@@ -2086,8 +2362,8 @@ the metering, the upgrade, and the free plan's limits on 5 November 2026.
   Conductor's dot-matrix marks, then the title and the time. The marks on
   the right go away.
 - The composer uploads files, chooses the agent, Codex or Claude only for
-  now, and sets the effort level. Boat's prompt API accepts a provider, a
-  model, and a `reasoningEffort` level on each prompt, and attachments.
+  now, and sets the effort level. The agent runner sets the model and the
+  effort for each message, and passes the attachments.
 - The Changes tab starts with a summary: the number of changed files and
   the added and removed lines.
 
@@ -2097,9 +2373,9 @@ The user added these requirements later on 5 November 2026:
   column, as in Conductor. "+" starts a new agent session in the same
   workspace, on the same branch and cloud computer. The right column keeps
   the pull request bar, the file lists, and the tool panel.
-- The sandbox provider stays behind the scenes. The app never names Boat,
-  so that it can move to another provider later. The provider key is
-  deployment configuration, not a user setting.
+- The app names Boat only on the Boat key screen, on the marketing site,
+  and in Get started, as decision 47 says. Everywhere else it says "cloud
+  computer", so that it can move to another provider later.
 - A new workspace starts as an empty chat window. The first message
   creates it. The branch is generated from a city name with a random
   suffix. The name is generated too.
@@ -2123,6 +2399,11 @@ call: the marketing site is a few static pages, public at the root of
 the app domain, served from the Worker's static assets. The app moves to
 an `app.` subdomain with GitHub sign-in. Reason: visitors must see the
 site without signing in, and the app keeps one sign-in boundary.
+Agent call, 5 November 2026: the main action keeps "Start free with
+GitHub", and the site says that users need their own Boat account.
+Reason: the app is free, as decision 45 says, and decision 47 names Boat
+on the site.
+
 Agent call, 5 November 2026: the copy says "agents powered by Claude and
 Codex", not "Claude Code and Codex". Reason: Anthropic forbids "Claude
 Code" in a product that builds on its Agent SDK, and in the feature names
@@ -2153,10 +2434,12 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   WebSocket upgrade. It checks the sign-in, a matching `Origin` header,
   and a JSON body for writes. Reason from the options check: an upgrade
   without an `Origin` check lets preview code open chat sockets.
-- Webhooks and agent tools use a hostname without Access. Their gate
-  checks the webhook signature or the workspace token instead.
-- The proxies forward only an allowlist of headers and cookies. They
-  strip the Access cookie and every `Cf-Access-*` header before Boat.
+- Webhooks and agent tools use a hostname without the sign-in gate.
+  Their gate checks the webhook signature or the workspace token instead.
+  Agent call: the agent runner and the git credential helper call this
+  hostname for machines with the workspace token.
+- The proxies forward only an allowlist of headers and cookies. They never
+  forward the app's session cookie to Boat.
 - The terminal socket runs on the app hostname. The Worker connects it to
   the private `ttyd` port with the Boat `_port_auth` cookie and a
   per-workspace `ttyd` password. Reason: sandbox code can make a port
@@ -2206,21 +2489,22 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   user, the repository, and the workspace. It then creates its branch in
   its repository's folder.
 - Each workspace sandbox has a Boat auto-stop deadline as a safety net.
-  The workspace Durable Object extends it while a tab is open or an agent
-  turn runs. Reason: a new sandbox stops after one hour by default.
-- Agent call: every workspace sandbox is safe for third parties
-  (`noEnv`), because other users now run on the app's Boat account. A
-  sandbox gets only its user's GitHub token, limited to the org's
-  repositories, and its user's agent credentials, as decision 24 says.
-  It never gets the secrets of the Boat account.
+  The workspace Durable Object extends it while the user is active or an
+  agent turn runs, as decisions 11 and 29 say. Reason: a new sandbox stops after one hour by default.
+- Agent call: every workspace sandbox starts with `noEnv`, so that it gets
+  none of the Boat account's secrets. It gets only the GitHub token and
+  the agent credentials of its workspace owner, as decision 24 says.
+  Decision 50 decides the reach of the GitHub token.
 - The org settings keep a startup script, which runs in each workspace's
-  cloud computer at each start and resume, and env vars. Open decision 17
-  decides where the env vars live.
-- A sandbox stops after 30 minutes with no open tab and no running agent
-  turn. Reason: a Boat stop ends all processes, so it must not cut off
+  cloud computer at each start and resume, and env vars. Decision 17 chose
+  where the env vars live.
+- A sandbox stops after 30 minutes with no user activity and no running
+  agent turn, as decisions 11 and 29 say. Reason: a Boat stop ends all processes, so it must not cut off
   work. Opening the workspace resumes it, and the app shows a starting
   state until Boat reports it ready.
-- The terminal is `ttyd` as a systemd service in the base snapshot,
+- Near day 14 of a stop, the app starts the cloud computer briefly and
+  stops it again, so that Boat keeps its disk, as decision 43 says.
+- The terminal is `ttyd` as a systemd service in the org image,
   exposed as a private Boat port. Reason: Boat has no terminal API, and
   enabled services come back after each resume.
 
@@ -2257,6 +2541,10 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   an error. It matches each result to its messages through
   `user_message_uuids`.
 - Each chat session runs one Claude Code process of about 190 MB.
+- Agent call, 5 November 2026: the runner connection carries a protocol
+  version. The Durable Object serves each version that a live image or
+  sandbox can hold, and each image build installs the newest runner.
+  Reason: a stopped sandbox can resume weeks later with an old runner.
 - Agents create workspaces through an MCP server and a CLI in the base
   snapshot. Both call the Worker with the workspace token.
 - Agents use the computer tools of the Cua Driver, the MCP server
@@ -2500,12 +2788,26 @@ Depends on: 1d
 
 Change the mockups for decisions 44 and 45.
 
-- [ ] Remove the billing tab, the upgrade flow, the plan limit states,
+- [x] Remove the billing tab, the upgrade flow, the plan limit states,
       the seats, the Team plan, and the pricing section of the marketing
       site.
-- [ ] Remove the free plan's limits and the paid Create org.
-- [ ] Draw the Boat key screen and its first-run step, as decisions 33,
-      46, and 47 say.
+- [x] Remove the free plan's limits and the paid Create org.
+- [ ] Draw the Boat key screen in the org settings, for org owners, with
+      links to Boat's sign-up and key pages, as decisions 46 and 47 say.
+- [ ] Draw the first-run steps that connect the org's Boat key and the
+      user's agent, and the composer notice for a missing key or agent,
+      as decision 33 says.
+- [ ] Draw the agent Connect form: Claude with a token or a key, Codex
+      with a key, and a connected login with Remove.
+- [ ] Rename the product to Conducting, on `conducting.build`.
+- [ ] Say on the marketing site and in Get started that users need their
+      own Boat account. Keep "Start free with GitHub".
+- [ ] Remove the sign-up refusal, as decision 48 says.
+- [ ] Keep only the Terms and Privacy links, as decision 35 says.
+- [ ] Remove the expiring mark, because decision 43 keeps each stopped
+      disk alive.
+- [ ] Draw the four added banner states of decision 18, and a branch
+      without commits.
 - [ ] Run the mockup check. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show.
@@ -2541,6 +2843,8 @@ Create the app package and the complete gate, following the setup of
 - [ ] Add the Wrangler configuration with D1 and the Durable Object
       binding. Do not deploy.
 - [ ] Build the package, and run the gate.
+- [ ] Add `dist` and `.wrangler` to the global ignores of ESLint, and add
+      `.dev.vars` to `.gitignore` with the Wrangler configuration.
 
 ## Milestone 4: Worker core and Boat client
 
@@ -2574,6 +2878,12 @@ Depends on: 4
       sandbox state from Boat's API when the runner does not report.
 - [ ] Add the daily refresh timer and the 30-minute push limit.
 - [ ] Test the lifecycle against the fake Boat server.
+- [ ] Near day 14 of a stop, start the cloud computer briefly and stop it
+      again, as decision 43 says.
+- [ ] Count user activity as decision 29 says, and stop after 30 minutes
+      without activity or a running agent turn.
+- [ ] Add the git credential helper to the org image, and the Worker's
+      token route behind the workspace token.
 
 ## Milestone 6: App shell and workspaces
 
@@ -2587,6 +2897,10 @@ Depends on: 5
       left panel and one for the right column. Remember the widths.
 - [ ] Build the new workspace and the org settings screens.
 - [ ] Compare each screen with its mockup.
+- [ ] Build sections, Archive with its check and the Archived group, and
+      Get started with its first-run steps.
+- [ ] Build the account page with the stored agent logins, and the org
+      settings with the Boat key screen.
 
 ## Milestone 7: Chat backend
 
@@ -2621,13 +2935,17 @@ Depends on: 6, 7
       steer, and interrupt.
 - [ ] Show the stored history while the sandbox is stopped or starting.
 - [ ] Compare each screen with its mockup.
+- [ ] Build several sessions as tabs, with the session history.
+- [ ] Queue the messages that arrive before the sandbox is ready, and
+      show the workspace title that the agent writes.
 
 ## Milestone 9: Files backend
 
 Depends on: 5
 
 - [ ] List files, and read one file with a size limit.
-- [ ] List changes and diffs from `git status` and `git diff`.
+- [ ] List the changes and diffs against the default branch, as the
+      mockups draw.
 - [ ] Test both against the fake Boat server.
 
 ## Milestone 10: Files UI
@@ -2694,7 +3012,7 @@ Depends on: 6, 13
 Depends on: 5
 
 - [ ] Add the create and list workspace endpoints for workspace tokens.
-- [ ] Add the CLI and the MCP server to the base snapshot setup.
+- [ ] Add the CLI and the MCP server to the org image setup.
 - [ ] Test the token scope and both tools.
 
 ## Milestone 15a: Members backend
@@ -2706,8 +3024,6 @@ Depends on: 5
 - [ ] Give each workspace an owner, the user who created it, and let an
       org owner reassign it.
 - [ ] Use the workspace owner's agent credentials.
-- [ ] Check the GitHub account age and the verified email at sign-up,
-      unless decision 48 drops the check.
 - [ ] Add Delete org with the 7-day restore, and remove the saved
       snapshots before each delete.
 - [ ] Test the reassignment and Delete org against the fake Boat server.
@@ -2718,14 +3034,25 @@ Tags: ui
 
 Depends on: 6, 15a
 
-- [ ] Build the sign-up refusal, unless decision 48 drops the check, and
-      Delete org with its restore.
+- [ ] Build Delete org with its restore.
 - [ ] Build the org members page and workspace reassignment.
 - [ ] Compare each screen with its mockup.
 
+## Milestone 15d: Marketing site
+
+Tags: ui
+
+Depends on: 3
+
+- [ ] Build the marketing site at the root of `conducting.build`, as
+      Milestone 1c draws it.
+- [ ] Write the Terms and Privacy pages, as decision 35 says. A lawyer
+      reviews them before the app opens to other people.
+- [ ] Compare each page with its mockup.
+
 ## Milestone 16: Deployment and live smoke test
 
-Depends on: 8, 10, 12, 14, 15, 15c
+Depends on: 8, 10, 12, 14, 15, 15c, 15d
 
 This milestone needs the prerequisites from the user.
 
