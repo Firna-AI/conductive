@@ -883,6 +883,8 @@ The user added these requirements later on 5 November 2026:
 - One picker chooses the model and the effort level, such as "Opus 5.5
   Max". It does not show the words Claude or Codex.
 - The success status mark is bright green. The ready mark stays muted.
+- The left panel and the right panel are resizable. Agent call: each
+  divider drags, and the app remembers the widths in the browser.
 
 Agent call, 5 November 2026: the branch is `<GitHub login>/<city>-<four
 random characters>`, such as `cal/lisbon-7k2q`, so branches stay grouped
@@ -1121,6 +1123,7 @@ part that waits on an open decision.
       the env vars. Move repositories to their own tab, and remove the
       bases and the install terminal.
 - [ ] Keep the file tab header on one line.
+- [ ] Show the resize handles of the left panel and the right column.
 - [ ] Run the mockup check. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show, and rewrite decisions 9, 10, 12, 13, and 17 for
@@ -1217,7 +1220,8 @@ Depends on: 5
 
 - [ ] Build the app shell, the workspace list, and the sandbox states,
       with the starting card and its steps.
-- [ ] Add a draggable divider between the chat and the right column.
+- [ ] Add draggable dividers on both sides of the chat: one for the
+      left panel and one for the right column. Remember the widths.
 - [ ] Build the new workspace and the org settings screens.
 - [ ] Compare each screen with its mockup.
 
