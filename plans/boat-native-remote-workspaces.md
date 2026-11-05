@@ -231,6 +231,11 @@ Added on 5 November 2026 from the options check. The user chose A on
 
 Open. Added on 5 November 2026 from the mockups of Milestone 1.
 
+Changed on 5 November 2026: the user moved every setting from
+repositories to orgs, and repositories have no settings for now. This
+decision now applies to org settings. Its options are rewritten after
+decision 21 settles what an org owns.
+
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Docs or spec.
 - **Background:** "Install software" opens a terminal on the base. The
@@ -266,6 +271,11 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 ### 10. Add a repository to the app
 
 Open. Added on 5 November 2026 from the mockups of Milestone 1.
+
+Changed on 5 November 2026: the user moved every setting from
+repositories to orgs, and repositories have no settings for now. This
+decision now applies to org settings. Its options are rewritten after
+decision 21 settles what an org owns.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -332,6 +342,11 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 
 Open. Added on 5 November 2026 from the mockups of Milestone 1.
 
+Changed on 5 November 2026: the user moved every setting from
+repositories to orgs, and repositories have no settings for now. This
+decision now applies to org settings. Its options are rewritten after
+decision 21 settles what an org owns.
+
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
 - **Background:** A push or the daily timer updates the base. The
@@ -359,6 +374,11 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 ### 13. Separate base setup from sandbox start
 
 Open. Added on 5 November 2026 from the mockups of Milestone 1.
+
+Changed on 5 November 2026: the user moved every setting from
+repositories to orgs, and repositories have no settings for now. This
+decision now applies to org settings. Its options are rewritten after
+decision 21 settles what an org owns.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -491,6 +511,11 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 Open. Added on 5 November 2026 from the options check of the mockup
 decisions.
 
+Changed on 5 November 2026: the user moved every setting from
+repositories to orgs, and repositories have no settings for now. This
+decision now applies to org settings. Its options are rewritten after
+decision 21 settles what an org owns.
+
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Security.
 - **Background:** The mockups set env vars for each repository, with
@@ -568,7 +593,11 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 
 ### 19. Choose the chats of a workspace
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1.
+Added on 5 November 2026 from the mockups of Milestone 1. The user
+answered it the same day in their composer feedback: the composer chooses
+the agent, Codex or Claude only for now, and the effort level, and it
+uploads files. This chooses option C, with an effort level and
+attachments.
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -597,8 +626,10 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1.
 - **Recommendation:** C. The first recommendation was A. Boat supports C
   directly, and the user can switch agent when one reaches its usage
   limit.
-- **Action:** ask the user, because the options trade simplicity against
+- **Action:** asked the user, because the options trade simplicity against
   parallel agents.
+- **Chosen:** C, by the user on 5 November 2026, with an effort level and
+  file uploads. Only Codex and Claude are offered for now.
 
 ### 20. Show the steps while a sandbox starts
 
@@ -642,6 +673,44 @@ Open. Added on 5 November 2026 from the restyle of Milestone 1a.
   and each tool then waits only as long as it needs.
 - **Action:** ask the user, because option A adds behaviour at the
   boundary that no requirement covers.
+
+### 21. Decide what an org owns
+
+Open. Added on 5 November 2026 from the user's design feedback.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** On 5 November 2026 the user asked for orgs. The icon
+  rail lists the orgs, and the user can create more. Each org has its own
+  settings, and repositories have no settings for now. The sidebar shows
+  the org name with a Settings link.
+- **Problem:** The plan has no org model. It does not say what an org
+  owns: its Boat account or key, its GitHub connection, its agent logins,
+  its sandbox software, its scripts and env vars, or its members.
+- **Impact if no action:** Milestones 4 and 5 cannot design the D1 schema
+  or the Boat and GitHub calls.
+- **Root question:** What does each org own, and how does it connect to
+  Boat and GitHub?
+- **Options:**
+  - **A.** A light grouping. All orgs share the app's one Boat key and
+    GitHub App. Each org owns its workspaces, its sections, and its
+    sandbox settings: software, scripts, and env vars. Effort: Medium.
+  - **B.** A full tenant. Each org stores its own Boat key, limited to its
+    own Boat environment, its own GitHub App installation, and its agent
+    logins, besides its workspaces, sections, and sandbox settings.
+    Effort: Medium.
+  - **C.** Orgs mirror GitHub. Each org comes from one GitHub App
+    installation, and its repositories come from it. The rest is as A.
+    Effort: Medium.
+- **Left out:** Members and shared orgs, because the plan serves one user.
+  Every record keeps a user ID, so members can come later.
+- **Wider fix:** None.
+- **Related:** Decisions 5, 9, 10, 12, 13, and 17 depend on the answer.
+- **Recommendation:** B. Each org keeps its own billing, secrets, and
+  repository access, as "each org has its own settings" asks, and it fits
+  a later product.
+- **Action:** ask the user, because the options trade setup steps against
+  isolation, and no requirement covers orgs yet.
 
 ## Design
 
@@ -713,6 +782,25 @@ otherwise. The user can override any of them.
   change the base at once.
 - The Inter font ships in the repository with its licence, because the
   `@firna/ui` theme names it first.
+
+**Orgs, sections, and the composer.** The user decided these on
+5 November 2026, in feedback on the Graphite mockups:
+
+- The icon rail lists the user's orgs, and the user can create orgs. Each
+  org has its own settings. Repositories have no settings for now.
+- The sidebar header shows the org name, with a Settings link on the
+  right.
+- Sidebar sections are groupings that the user defines. They are not
+  tied to a repository. Each section collapses, and has a menu with three
+  dots.
+- Each workspace row shows a status mark on the left, in the style of
+  Conductor's dot-matrix marks, then the title and the time. The marks on
+  the right go away.
+- The composer uploads files, chooses the agent, Codex or Claude only for
+  now, and sets the effort level. Boat's prompt API accepts a provider, a
+  model, and a `reasoningEffort` level on each prompt, and attachments.
+- The Changes tab starts with a summary: the number of changed files and
+  the added and removed lines.
 
 **Access and security.** These calls answer the user's question of
 5 November 2026 on secure access to Boat.
@@ -896,9 +984,36 @@ directions, and looked at key screenshots in dark and light. Evidence:
 `.context/boat-native-remote-workspaces/reports/milestone-1a-ui-implementor.md`
 and `.context/boat-native-remote-workspaces/checks/shots-1a/`.
 
+## Milestone 1b: Orgs, sections, and the composer
+
+Tags: mockup
+
+Depends on: 1a
+
+Redraw the mockups for the user's feedback of 5 November 2026. Draw the
+org settings as the recommendation of decision 21 says, and mark each
+part that waits on an open decision.
+
+- [ ] Turn the icon rail into the org switcher, with a create action, and
+      draw the create-org screen.
+- [ ] Show the org name in the sidebar header, with a Settings link.
+- [ ] Replace the repository settings screens with org settings, and
+      remove the screens that only repository settings need.
+- [ ] Make sidebar sections user-defined, collapsible, and with a menu
+      with three dots. Show how a workspace moves between sections.
+- [ ] Put a dot-matrix status mark on the left of each workspace row, and
+      remove the marks on the right.
+- [ ] Add file uploads, the agent choice for Codex and Claude, the model,
+      and the effort level to the composer and to the new workspace form.
+- [ ] Add the changes summary to the Changes tab.
+- [ ] Run the mockup check. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show, and rewrite decisions 9, 10, 12, 13, and 17 for
+      org settings.
+
 ## Milestone 2: Documentation and protocol
 
-Depends on: 1, 1a
+Depends on: 1, 1a, 1b
 
 State the requirements and the decisions in force for the work below.
 
