@@ -10,7 +10,14 @@ import {
   type ListMenu,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import { deletedOrg, orgList, orgs } from '../fixtures/orgs'
+import {
+  deletedOrg,
+  orgList,
+  orgListWithLabs,
+  orgs,
+  type Org,
+} from '../fixtures/orgs'
+import { newOrg, teamOrg } from '../fixtures/repositories'
 import { menuSection } from '../fixtures/sections'
 import { workspaceDrag } from '../fixtures/workspaces'
 import {
@@ -19,6 +26,7 @@ import {
   HomeList,
   ListHeader,
   NewOrgEmpty,
+  type NewOrg,
 } from './listParts'
 import { OrgSwitcherSheet, SectionSheet } from './listSheets'
 import styles from './WorkspaceListScreen.module.css'
@@ -28,8 +36,11 @@ export const workspaceListSchema = {
   additionalProperties: false,
   required: ['list', 'menu'],
   properties: {
-    /** The workspaces of Acme, a new org without any, or a deleted org. */
-    list: { enum: ['workspaces', 'new-org', 'deleted'] },
+    /**
+     * The workspaces of Acme, a new free org or a new org on Team without
+     * any, or a deleted org.
+     */
+    list: { enum: ['workspaces', 'new-org', 'new-team-org', 'deleted'] },
     /** The menu of a section, a workspace dragged, or the org switcher. */
     menu: { enum: ['none', 'section', 'drag', 'orgs'] },
   },
@@ -52,6 +63,22 @@ const sheets: Readonly<Record<WorkspaceListState['menu'], ReactNode>> = {
   orgs: <OrgSwitcherSheet current="acme" />,
 }
 
+/**
+ * The new orgs before their first workspace: the free org of the sign-up,
+ * and the org on Team that Create org made after the payment.
+ */
+const newOrgs: Readonly<
+  Partial<
+    Record<
+      WorkspaceListState['list'],
+      { org: Org; rail: readonly Org[]; form: NewOrg }
+    >
+  >
+> = {
+  'new-org': { org: orgs.firna, rail: orgList, form: newOrg },
+  'new-team-org': { org: orgs.labs, rail: orgListWithLabs, form: teamOrg },
+}
+
 function MobileList(props: { state: WorkspaceListState }) {
   const { list, menu } = props.state
   if (list === 'deleted') {
@@ -62,15 +89,15 @@ function MobileList(props: { state: WorkspaceListState }) {
       </MobileFrame>
     )
   }
-  const firna = list === 'new-org'
+  const fresh = newOrgs[list]
   return (
     <MobileFrame>
       <HomeList
         drag={listDrag(menu)}
         menu={listMenu(menu)}
         menuStyle="sheet"
-        org={firna ? orgs.firna : orgs.acme}
-        sections={firna ? newOrgSections() : workspaceSections()}
+        org={fresh ? fresh.org : orgs.acme}
+        sections={fresh ? newOrgSections() : workspaceSections()}
       />
       {sheets[menu]}
     </MobileFrame>
@@ -100,14 +127,15 @@ export function WorkspaceListScreen(props: {
       </AppFrame>
     )
   }
-  if (list === 'new-org') {
-    const rail: RailState = { orgs: orgList, current: 'firna' }
+  const fresh = newOrgs[list]
+  if (fresh) {
+    const rail: RailState = { orgs: fresh.rail, current: fresh.org.key }
     return (
       <AppFrame
         rail={rail}
-        sidebar={<Sidebar org={orgs.firna} sections={newOrgSections()} />}
+        sidebar={<Sidebar org={fresh.org} sections={newOrgSections()} />}
       >
-        <NewOrgEmpty />
+        <NewOrgEmpty org={fresh.form} />
       </AppFrame>
     )
   }

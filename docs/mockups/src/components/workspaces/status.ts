@@ -21,4 +21,5 @@ export const activityPresentation: Readonly<
   starting: { label: 'Starting', emphasis: 'normal' },
   stopped: { label: 'Stopped', emphasis: 'dim' },
   error: { label: "Couldn't start", emphasis: 'normal' },
+  archived: { label: 'Archived', emphasis: 'dim' },
 }

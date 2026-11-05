@@ -34,6 +34,25 @@
   line-height: 1.5;
 }
 
+.action {
+  margin-bottom: 8px;
+}
+
+/* The second way forward: a quiet line under the first. */
+.note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-md);
+}
+
+.noteIcon {
+  flex-shrink: 0;
+  color: var(--ui-faint);
+}
+
 /* The workspaces in a list with a full outline, as the other lists. */
 .list {
   width: 100%;

@@ -1,4 +1,4 @@
-import { ArrowUpRight, Sparkles, Users } from 'lucide-react'
+import { ArrowUpRight, Sparkles } from 'lucide-react'
 import { poolHours, seatPrice, type TeamBilling } from '../../fixtures/billing'
 import { firnaWorkspaces } from '../../fixtures/freeOrg'
 import { freePlan } from '../../fixtures/limits'
@@ -15,27 +15,23 @@ function Price(props: { children: string }) {
 }
 
 /**
- * The Team plan of an org: its seats, the next invoice, and the card.
- * Manage payment opens the Stripe customer portal in a new tab.
+ * The Team plan of an org: its seats, which are its members, the next
+ * invoice, and the card. Manage payment opens the Stripe customer portal
+ * in a new tab.
  */
-export function TeamPlan(props: { billing: TeamBilling; seatsInUse: number }) {
-  const { billing } = props
+export function TeamPlan(props: { billing: TeamBilling; members: number }) {
+  const { billing, members } = props
   return (
     <Section
-      actions={
-        <>
-          <ActionButton icon={Users}>Change seats</ActionButton>
-          <ActionButton icon={ArrowUpRight}>Manage payment</ActionButton>
-        </>
-      }
-      status={<Price>{`$${billing.seats * seatPrice} a month`}</Price>}
+      actions={<ActionButton icon={ArrowUpRight}>Manage payment</ActionButton>}
+      status={<Price>{`$${members * seatPrice} a month`}</Price>}
       title="Team"
     >
       <Facts
         items={[
           {
             label: 'Seats',
-            value: `${billing.seats}, with ${props.seatsInUse} in use`,
+            value: `${members}, one for each member`,
           },
           { label: 'Next invoice', value: billing.nextInvoice },
           { label: 'Payment', value: `Card ending ${billing.card}` },
@@ -61,7 +57,7 @@ export function FreePlan() {
           </ActionButton>
         </ScreenLink>
       }
-      description={`Team is $${seatPrice} a month for each seat, and each seat adds about ${poolHours(1)} hours of compute.`}
+      description={`Team is $${seatPrice} a month for each member, and each member adds about ${poolHours(1)} hours of compute.`}
       status={<Price>$0</Price>}
       title="Free"
     >

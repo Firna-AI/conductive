@@ -34,16 +34,17 @@ function Figure(props: { used: number; included: number; unit: string }) {
 
 /**
  * The compute of a Team org in its billing period, against the pool of its
- * seats, with the cost of the use beyond the pool so far.
+ * seats, one for each member, with the cost of the use beyond the pool so
+ * far.
  */
-export function TeamCompute(props: { billing: TeamBilling }) {
+export function TeamCompute(props: { billing: TeamBilling; members: number }) {
   const { billing } = props
-  const pool = poolHours(billing.seats)
+  const pool = poolHours(props.members)
   const over = Math.max(billing.usedHours - pool, 0)
   const valueText = `${count(billing.usedHours)} of ${count(pool)} hours`
   return (
     <Section
-      description={`This period, ${billing.period.start} to ${billing.period.end}. Each seat adds about ${poolHours(1)} hours on the standard machine, and builds of the cloud computer count too.`}
+      description={`This period, ${billing.period.start} to ${billing.period.end}. Each member adds about ${poolHours(1)} hours on the standard machine, and builds of the cloud computer count too.`}
       status={
         over > 0 ? (
           <StatusText icon={CircleAlert} label="Over the pool" tone="warning" />

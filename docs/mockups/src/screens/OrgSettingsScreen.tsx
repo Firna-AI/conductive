@@ -19,6 +19,7 @@ import {
   workspaceSections,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
+import { memberViewer, people, you } from '../fixtures/members'
 import { orgList, orgs, type Org } from '../fixtures/orgs'
 import { acmeRepositories } from '../fixtures/repositories'
 import { paths } from '../paths'
@@ -26,7 +27,7 @@ import { paths } from '../paths'
 export const orgSettingsSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['tab', 'build', 'members', 'billing', 'dialog'],
+  required: ['tab', 'build', 'members', 'billing', 'dialog', 'viewer'],
   properties: {
     tab: {
       enum: ['general', 'repositories', 'computer', 'members', 'billing'],
@@ -39,6 +40,11 @@ export const orgSettingsSchema = {
     billing: { enum: ['team', 'free', 'upgrade', 'upgraded'] },
     /** A dialog over the page: Delete org, or the removal of a member. */
     dialog: { enum: ['none', 'delete-org', 'remove-member'] },
+    /**
+     * The person signed in: an owner, or a member who is not an owner and
+     * sees no Billing tab and no actions on the members.
+     */
+    viewer: { enum: ['owner', 'member'] },
   },
 } as const
 
@@ -51,6 +57,7 @@ export const acmeSettings: OrgSettingsState = {
   members: 'team',
   billing: 'team',
   dialog: 'none',
+  viewer: 'owner',
 }
 
 /** The free org shows on its members and billing tabs. Acme shows else. */
@@ -62,12 +69,13 @@ function orgFor(state: OrgSettingsState): Org {
 
 function TabBody(props: { state: OrgSettingsState; org: Org }) {
   const { state, org } = props
+  const owner = state.viewer === 'owner'
   switch (state.tab) {
     case 'general':
       return (
         <>
           <OrgDetailsSection initials={org.initials} name={org.name} />
-          <DeleteOrgSection name={org.name} />
+          {owner ? <DeleteOrgSection name={org.name} /> : null}
         </>
       )
     case 'repositories':
@@ -82,7 +90,13 @@ function TabBody(props: { state: OrgSettingsState; org: Org }) {
     case 'computer':
       return <ComputerTab build={state.build} org={org.name} />
     case 'members':
-      return <MembersTab view={state.members} />
+      return (
+        <MembersTab
+          canManage={owner}
+          view={state.members}
+          viewer={owner ? you : memberViewer}
+        />
+      )
     case 'billing':
       return <BillingTab view={state.billing} />
   }
@@ -91,8 +105,8 @@ function TabBody(props: { state: OrgSettingsState; org: Org }) {
 /**
  * The settings of an org: its name and initials, the repositories that it
  * uses, its cloud computer, its members, and its billing. The app-wide
- * connections live in the account. Only an owner changes the members and
- * the billing.
+ * connections live in the account. Only an owner changes the members, sees
+ * the billing, and deletes the org.
  */
 export function OrgSettingsScreen(props: {
   state: OrgSettingsState
@@ -101,6 +115,7 @@ export function OrgSettingsScreen(props: {
   const { state, viewport } = props
   const org = orgFor(state)
   const free = org.key === 'firna'
+  const owner = state.viewer === 'owner'
   const mobile = viewport === 'mobile'
   const list = free ? paths.newOrg : paths.shell
   const dialogs: Readonly<Record<OrgSettingsState['dialog'], ReactNode>> = {
@@ -112,7 +127,7 @@ export function OrgSettingsScreen(props: {
     <Page
       back={mobile ? { label: 'Workspaces', to: list } : undefined}
       subtitle="Org settings"
-      tabs={<SettingsTabs tab={state.tab} wrap={mobile} />}
+      tabs={<SettingsTabs billing={owner} tab={state.tab} wrap={mobile} />}
       title={org.name}
       viewport={viewport}
     >
@@ -138,7 +153,11 @@ export function OrgSettingsScreen(props: {
   return (
     <AppFrame
       overlay={dialogs[state.dialog]}
-      rail={{ orgs: orgList, current: org.key }}
+      rail={{
+        orgs: orgList,
+        current: org.key,
+        person: owner ? undefined : people[memberViewer],
+      }}
       sidebar={sidebar}
     >
       {page}

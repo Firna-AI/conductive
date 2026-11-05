@@ -37,6 +37,9 @@ export const people: Readonly<Record<PersonKey, Person>> = {
 /** The person signed in, who owns both orgs that the mockups draw. */
 export const you: PersonKey = 'cal'
 
+/** The member of Acme who is not an owner, whose view the mockups draw. */
+export const memberViewer: PersonKey = 'priya'
+
 export type Role = 'owner' | 'member'
 
 export const roleLabels: Readonly<Record<Role, string>> = {

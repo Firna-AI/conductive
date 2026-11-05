@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { FilePage } from '../components/files/FilePage'
 import { FilesPanel, type FileTabView } from '../components/files/FilesPanel'
@@ -6,11 +7,18 @@ import { PortPreview, PreviewEmpty } from '../components/tools/PortPreview'
 import { TerminalView } from '../components/tools/TerminalView'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
 import {
+  archivedSections,
+  workspaceSections,
+} from '../components/workspaces/sections'
+import { Sidebar } from '../components/workspaces/Sidebar'
+import {
   creatingLog,
   resumingLog,
   type StartingLog,
 } from '../fixtures/starting'
+import { orgs } from '../fixtures/orgs'
 import { freshSessionPrompt, workspaceSession } from '../fixtures/terminal'
+import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -95,4 +103,26 @@ export function ToolContent(props: {
     case 'desktop':
       return <DesktopView />
   }
+}
+
+/**
+ * The sidebar beside an open workspace, which shows its current status. An
+ * archived workspace sits in the open Archived group.
+ */
+export function workspaceSidebar(
+  workspace: Workspace,
+  status: ActivityStatus,
+): ReactNode {
+  if (status !== 'archived') {
+    const sections = workspaceSections({ workspace, status })
+    return <Sidebar org={orgs.acme} sections={sections} />
+  }
+  const list = archivedSections(workspace)
+  return (
+    <Sidebar
+      archived={list.archived}
+      org={orgs.acme}
+      sections={list.sections}
+    />
+  )
 }

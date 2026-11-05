@@ -2,7 +2,7 @@ import { defineScreen } from '@mokly/mokly'
 import {
   WorkspaceListScreen,
   workspaceListSchema,
-} from '../../../screens/WorkspaceListScreen'
+} from '../../../../screens/WorkspaceListScreen'
 
 export const deletedOrg = defineScreen({
   title: 'Deleted org',

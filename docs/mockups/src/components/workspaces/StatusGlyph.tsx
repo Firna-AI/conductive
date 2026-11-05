@@ -26,6 +26,8 @@ const shapes: Readonly<Record<ActivityStatus, readonly number[]>> = {
   stopped: [0, 3, 6, 2, 5, 8],
   /** A cross. */
   error: [0, 2, 4, 6, 8],
+  /** No cell lit: nothing runs, and nothing can start. */
+  archived: [],
 }
 
 /** One turn of the working ring, and one wave of the starting row, in ms. */

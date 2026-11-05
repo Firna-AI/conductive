@@ -3,7 +3,7 @@ import { defineUseCase } from '@mokly/mokly'
 export const upgrade = defineUseCase({
   title: 'Upgrade to Team',
   description:
-    'The owner of a free org reaches its member limit, chooses the seats of Team on the billing tab, pays on Stripe Checkout, and comes back to the org on Team.',
+    'The owner of a free org reaches its member limit, checks the price of Team on the billing tab, pays on Stripe Checkout, and comes back to the org on Team.',
   relatedDocs: [],
   steps: [
     {
@@ -14,15 +14,15 @@ export const upgrade = defineUseCase({
     },
     {
       screenPath: 'app/org-settings/billing/upgrade',
-      title: 'Choose the seats',
+      title: 'Check the price',
       description:
-        'The owner chooses 3 seats, checks the price and the compute, agrees to the terms, and continues to the payment on Stripe.',
+        'The owner checks the price for the 1 member of the org, the compute, and the tax, agrees to the terms, and continues to the payment on Stripe.',
     },
     {
       screenPath: 'app/org-settings/billing/upgraded',
       title: 'The org is on Team',
       description:
-        'Back from Stripe Checkout, the billing tab shows Team with its seats, and the owner invites the members.',
+        'Back from Stripe Checkout, the billing tab shows Team with 1 seat, and the owner invites the members. Each invite adds a seat when the person accepts it.',
     },
   ],
 })

@@ -1,5 +1,10 @@
 import type { Org } from '../../fixtures/orgs'
-import type { ListDrag, ListMenu, SidebarSection } from './sections'
+import type {
+  ListDrag,
+  ListMenu,
+  SidebarSection,
+  WorkspaceRow,
+} from './sections'
 import { SectionList } from './SectionList'
 import { NewWorkspaceLink, SettingsLink } from './SidebarLinks'
 import styles from './Sidebar.module.css'
@@ -17,6 +22,8 @@ export function Sidebar(props: {
   settingsAlert?: boolean
   menu?: ListMenu
   drag?: ListDrag
+  /** The archived workspaces, which show in an open Archived group. */
+  archived?: readonly WorkspaceRow[]
 }) {
   return (
     <>
@@ -33,6 +40,7 @@ export function Sidebar(props: {
           variant="sidebar"
         />
         <SectionList
+          archived={props.archived}
           drag={props.drag}
           menu={props.menu}
           sections={props.sections}

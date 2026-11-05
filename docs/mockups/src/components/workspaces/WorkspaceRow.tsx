@@ -1,3 +1,4 @@
+import { Hourglass } from 'lucide-react'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
@@ -11,7 +12,8 @@ export type RowDrag = 'lifted' | 'placeholder'
 
 /**
  * One workspace on one line: its state as a small square on the left, its
- * name, and the time since its last activity. A drag lifts the row, and
+ * name, and the time since its last activity. A workspace whose cloud
+ * computer is deleted soon shows an hourglass. A drag lifts the row, and
  * leaves a faint copy where it was.
  */
 export function WorkspaceRowView(props: {
@@ -28,12 +30,26 @@ export function WorkspaceRowView(props: {
     styles[status.emphasis],
     props.drag && styles[props.drag],
   )
+  const { expires } = row.workspace
   const content = (
     <>
       <StatusGlyph status={row.status} />
       <span className={styles.name}>{row.workspace.name}</span>
-      <span className={styles.time}>{row.workspace.updated}</span>
-      <span className={a11y.hidden}>, {status.label}</span>
+      {expires ? (
+        <span
+          className={classes(styles.time, styles.expiring)}
+          title={`Its cloud computer is deleted ${expires}. Open the workspace to keep its files.`}
+        >
+          <Hourglass aria-hidden size={11} />
+          {row.workspace.updated}
+        </span>
+      ) : (
+        <span className={styles.time}>{row.workspace.updated}</span>
+      )}
+      <span className={a11y.hidden}>
+        , {status.label}
+        {expires ? `, expires ${expires}` : null}
+      </span>
     </>
   )
   if (!row.to || props.drag) return <div className={className}>{content}</div>

@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react'
 import { Plus } from 'lucide-react'
-import { orgList, type Org, type OrgKey } from '../../fixtures/orgs'
+import type { Person } from '../../fixtures/members'
+import { account, orgList, type Org, type OrgKey } from '../../fixtures/orgs'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { Mark } from '../common/Mark'
 import { orgLinks } from '../orgs/orgLinks'
-import { AccountAvatar, OrgTile } from '../orgs/OrgTile'
+import { OrgTile, PersonAvatar } from '../orgs/OrgTile'
 import styles from './OrgRail.module.css'
 
 export type RailState = {
@@ -20,6 +21,8 @@ export type RailState = {
   deleted?: OrgKey
   /** No org exists yet, and nothing is connected. */
   firstRun?: boolean
+  /** The person signed in, when it is not the account of the mockups. */
+  person?: Person
 }
 
 /** The rail of the canonical views: every org, with Acme open. */
@@ -120,7 +123,7 @@ export function OrgRail(props: RailState) {
         label="Account"
         to={props.firstRun ? paths.accountSetup : paths.account}
       >
-        <AccountAvatar size={24} />
+        <PersonAvatar initials={(props.person ?? account).initials} size={24} />
       </RailLink>
     </nav>
   )

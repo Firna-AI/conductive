@@ -1,6 +1,6 @@
 import { CircleCheck } from 'lucide-react'
 import { acmeTeam, firnaTeam } from '../../fixtures/billing'
-import { acmeInvites, acmeMembers, firnaMembers } from '../../fixtures/members'
+import { acmeMembers, firnaMembers } from '../../fixtures/members'
 import { orgs } from '../../fixtures/orgs'
 import { Notice } from '../common/Notice'
 import { FreeCompute, TeamCompute } from './ComputeSection'
@@ -20,11 +20,8 @@ export function BillingTab(props: { view: BillingView }) {
     case 'team':
       return (
         <>
-          <TeamPlan
-            billing={acmeTeam}
-            seatsInUse={acmeMembers.length + acmeInvites.length}
-          />
-          <TeamCompute billing={acmeTeam} />
+          <TeamPlan billing={acmeTeam} members={acmeMembers.length} />
+          <TeamCompute billing={acmeTeam} members={acmeMembers.length} />
           <EndPlanSection billing={acmeTeam} />
         </>
       )
@@ -45,8 +42,8 @@ export function BillingTab(props: { view: BillingView }) {
             icon={CircleCheck}
             title={`${orgs.firna.name} is on Team`}
           />
-          <TeamPlan billing={firnaTeam} seatsInUse={firnaMembers.length} />
-          <TeamCompute billing={firnaTeam} />
+          <TeamPlan billing={firnaTeam} members={firnaMembers.length} />
+          <TeamCompute billing={firnaTeam} members={firnaMembers.length} />
           <EndPlanSection billing={firnaTeam} />
         </>
       )

@@ -15,8 +15,18 @@ export type SettingsTab =
 /**
  * The parts of the org settings, as tabs that link to each part. `wrap`
  * puts the tabs on two lines, for a phone, where they do not fit on one.
+ * Only an owner sees Billing.
  */
-export function SettingsTabs(props: { tab: SettingsTab; wrap?: boolean }) {
+export function SettingsTabs(props: {
+  tab: SettingsTab
+  wrap?: boolean
+  billing: boolean
+}) {
+  const billing = {
+    label: 'Billing',
+    to: paths.billing,
+    selected: props.tab === 'billing',
+  }
   return (
     <LinkTabs
       label="Org settings"
@@ -41,11 +51,7 @@ export function SettingsTabs(props: { tab: SettingsTab; wrap?: boolean }) {
           to: paths.members,
           selected: props.tab === 'members',
         },
-        {
-          label: 'Billing',
-          to: paths.billing,
-          selected: props.tab === 'billing',
-        },
+        ...(props.billing ? [billing] : []),
       ]}
       wrap={props.wrap}
     />

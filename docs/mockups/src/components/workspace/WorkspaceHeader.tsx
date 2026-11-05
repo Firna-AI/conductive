@@ -1,5 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
-import { ChevronLeft, FolderGit2, GitBranch } from 'lucide-react'
+import { Archive, ChevronLeft, FolderGit2, GitBranch } from 'lucide-react'
 import { people } from '../../fixtures/members'
 import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
@@ -21,9 +21,10 @@ function State(props: { status: ActivityStatus }) {
 }
 
 /**
- * The name, repository, branch, owner, and state of the open workspace.
- * The list groups workspaces by section, so the header names the
- * repository. The owner opens the menu that reassigns the workspace.
+ * The name, repository, branch, owner, and state of the open workspace,
+ * and Archive. The list groups workspaces by section, so the header names
+ * the repository. For an owner of the org, the owner opens the menu that
+ * reassigns the workspace.
  */
 export function WorkspaceHeader(props: {
   workspace: Workspace
@@ -33,10 +34,26 @@ export function WorkspaceHeader(props: {
   viewport: Viewport
   /** The menu of the owner is open. A phone shows it as a sheet. */
   ownerOpen?: boolean
+  /** The person signed in is an owner of the org, who can reassign. */
+  canReassign: boolean
+  /** The workspace can be archived: it is not archived yet. */
+  archivable: boolean
 }) {
   const { workspace, name } = props
   const repository = repositories[workspace.repository].name
-  const owner = people[workspace.owner]
+  const owner = (
+    <OwnerPicker
+      compact={props.viewport === 'mobile'}
+      open={props.ownerOpen}
+      owner={people[workspace.owner]}
+      readOnly={!props.canReassign}
+    />
+  )
+  const archive = props.archivable ? (
+    <ScreenLink asChild to={paths.archive}>
+      <IconButton icon={Archive} label="Archive workspace" />
+    </ScreenLink>
+  ) : null
   if (props.viewport === 'mobile') {
     return (
       <header className={styles.mobile}>
@@ -49,8 +66,9 @@ export function WorkspaceHeader(props: {
             {repository} · {workspace.branch}
           </span>
         </div>
-        <OwnerPicker compact open={props.ownerOpen} owner={owner} />
+        {owner}
         <State status={props.status} />
+        {archive}
       </header>
     )
   }
@@ -66,8 +84,9 @@ export function WorkspaceHeader(props: {
         <span className={styles.branch}>{workspace.branch}</span>
       </span>
       <span className={styles.spacer} />
-      <OwnerPicker open={props.ownerOpen} owner={owner} />
+      {owner}
       <State status={props.status} />
+      {archive}
     </header>
   )
 }

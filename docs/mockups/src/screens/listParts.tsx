@@ -16,7 +16,6 @@ import {
   SettingsLink,
 } from '../components/workspaces/SidebarLinks'
 import { deletedOrg, orgs, type Org } from '../fixtures/orgs'
-import { newOrg } from '../fixtures/repositories'
 import { paths } from '../paths'
 import styles from './WorkspaceListScreen.module.css'
 
@@ -83,15 +82,22 @@ export function ChooseWorkspace() {
   )
 }
 
+/** A new org and the repositories that it chose. */
+export type NewOrg = {
+  name: string
+  repositories: readonly { name: string; used: boolean }[]
+}
+
 /** The main area of a new org, which has no workspaces yet. */
-export function NewOrgEmpty() {
-  const used = newOrg.repositories.filter((item) => item.used)
+export function NewOrgEmpty(props: { org: NewOrg }) {
+  const { org } = props
+  const used = org.repositories.filter((item) => item.used)
   return (
     <EmptyState
       action={newWorkspaceAction}
-      body={`Workspaces of ${newOrg.name} start in ${used.map((item) => item.name).join(' or ')}.`}
+      body={`Workspaces of ${org.name} start in ${used.map((item) => item.name).join(' or ')}.`}
       icon={Plus}
-      title={`Start the first workspace in ${newOrg.name}`}
+      title={`Start the first workspace in ${org.name}`}
     />
   )
 }

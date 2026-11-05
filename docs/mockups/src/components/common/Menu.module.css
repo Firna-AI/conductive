@@ -139,6 +139,10 @@
   white-space: normal;
 }
 
+.wide .note {
+  max-width: none;
+}
+
 .sheet .note {
   max-width: none;
   padding: 6px 12px 8px;

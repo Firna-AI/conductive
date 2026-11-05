@@ -53,7 +53,7 @@ function TabLabel(props: { tab: WorkspaceTab; children: ReactNode }) {
   )
 }
 
-function Tab(props: { tab: WorkspaceTab }) {
+function Tab(props: { tab: WorkspaceTab; readOnly: boolean }) {
   const { tab } = props
   const Icon = icons[tab.kind]
   return (
@@ -62,7 +62,7 @@ function Tab(props: { tab: WorkspaceTab }) {
         <Icon aria-hidden className={styles.icon} size={13} />
         <span className={styles.title}>{tab.title}</span>
       </TabLabel>
-      {tab.kind === 'session' && tab.selected ? (
+      {tab.kind === 'session' && tab.selected && !props.readOnly ? (
         <IconButton icon={Pencil} label={`Rename ${tab.title}`} quiet />
       ) : null}
       <span className={styles.close}>
@@ -129,7 +129,10 @@ export function WorkspaceTabs(props: {
   tabs: readonly WorkspaceTab[]
   viewport: Viewport
   historyOpen?: boolean
+  /** An archived workspace: no new session, and no rename. */
+  readOnly?: boolean
 }) {
+  const readOnly = props.readOnly ?? false
   const phone = props.viewport === 'mobile'
   return (
     <nav
@@ -138,12 +141,14 @@ export function WorkspaceTabs(props: {
     >
       <ul className={styles.tabs}>
         {props.tabs.map((tab) => (
-          <Tab key={tab.key} tab={tab} />
+          <Tab key={tab.key} readOnly={readOnly} tab={tab} />
         ))}
       </ul>
-      <ScreenLink asChild to={paths.sessions}>
-        <IconButton icon={Plus} label="New session" />
-      </ScreenLink>
+      {readOnly ? null : (
+        <ScreenLink asChild to={paths.sessions}>
+          <IconButton icon={Plus} label="New session" />
+        </ScreenLink>
+      )}
       <HistoryButton anchored={!phone} open={props.historyOpen ?? false} />
     </nav>
   )

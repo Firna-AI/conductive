@@ -152,6 +152,7 @@
   background: var(--ui-bar);
 }
 
+/* Each action starts from its own width and shares the rest, so a long label fits. */
 .footer > * {
-  flex: 1;
+  flex: 1 1 auto;
 }

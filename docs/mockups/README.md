@@ -51,12 +51,12 @@ The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. The centre column has a slim header that names the
-repository, the branch, and the owner of the workspace, then a tab for each
-agent session and each open file or diff, + for a new session, and a clock
-that opens the session history. The right column has the pull
-request bar on top, the All files, Changes, and Checks lists below it, and
-the Terminal, Preview, and Desktop tabs at the bottom. It shows no file
-content. A phone shows an org switcher at the top of the list, and the
+repository, the branch, and the owner of the workspace, and ends with
+Archive. Then come a tab for each agent session and each open file or diff,
++ for a new session, and a clock that opens the session history. The right
+column has the pull request bar on top, the All files, Changes, and Checks
+lists below it, and the Terminal, Preview, and Desktop tabs at the bottom.
+It shows no file content. A phone shows an org switcher at the top of the list, and the
 workspace with a compact pull request row, the sessions as tabs above the
 chat, and five tabs at the bottom.
 
@@ -113,7 +113,7 @@ chat, and five tabs at the bottom.
 | `app/sign-in`       | The GitHub sign-in, Get started as the only first run, and refused sign-ups  |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, and with an error     |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section            |
-| `app/orgs`          | The org switcher of a phone, Create org, the first org, a new org, a deleted |
+| `app/orgs`          | The org switcher of a phone, Create org on Team or free, new orgs, deleted   |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agents, and the default model        |
 | `app/banner`        | The pull request bar and Checks: none, running, failed, ready, merged        |
 | `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn      |
@@ -121,7 +121,8 @@ chat, and five tabs at the bottom.
 | `app/org-settings`  | General, then Repositories, Cloud computer, Members, Billing, and Delete org |
 | `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure         |
 | `app/sessions`      | A new session, the session history, and closing a session while it works     |
-| `app/reassign`      | The owner of a workspace in its header, with the menu that reassigns it      |
+| `app/reassign`      | The owner of a workspace and the menu that reassigns it, and a member's view |
+| `app/archive`       | Archive with its check for unpushed work, and the Archived group             |
 | `app/composer`      | Attached files, the open model and effort picker, and an agent to connect    |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab      |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                    |
@@ -130,13 +131,16 @@ chat, and five tabs at the bottom.
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `app`, `app/sign-in`,
-and `app/org-settings` do. `app/org-settings/cloud-computer` and its building
+`app/orgs`, and `app/org-settings` do. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. `app/sign-in/get-started`
 moved into its own folder and kept its path. Get started is the only first
 run, so the first run of `app/shell` and the not-connected state of
 `app/orgs/new` are gone, and their links lead to Get started. Its last step
-opens `app/orgs/new/first`, whose Cancel returns to Get started.
+opens `app/orgs/new/first`, whose Cancel returns to Get started. The entries
+of `app/orgs/new`, `app/orgs/empty`, and `app/orgs/deleted` moved into their
+own folders and kept their paths, so `app/orgs` shows only its canonical
+screen.
 
 ## Folder layout
 
@@ -180,30 +184,45 @@ The screens draw the billing model that the user set on 5 November 2026.
 The numbers live in `src/fixtures/billing.ts` and `src/fixtures/limits.ts`,
 and the marketing plans read the same numbers.
 
-- An org pays for its plan. Team buys seats at $30 a month each, and each
-  seat adds $15 of compute, about 416 hours on the standard machine, to the
-  pool of the billing period. Use beyond the pool costs cost plus 10%.
+- An org pays for its plan. On Team the seats follow the people: each
+  member takes a seat at $30 a month, owners too, and an invite adds its
+  seat when the person accepts it. Each seat adds $15 of compute, about 416
+  hours on the standard machine, to the pool of the billing period. Use
+  beyond the pool costs cost plus 10%. Open decision 40 sets how a seat
+  change in the middle of a period is charged, so no screen says it.
 - A free org keeps up to 3 workspaces, gets 600 minutes a month, and has one
   member, its owner. Each person has 20 starts a day. Open decision 34 is
   drawn as its recommended option D: a limit of starts each hour too, and 5
   cloud computers that each member of a paid org runs at once.
-- The billing tab of the org settings shows the plan, the seats, the next
-  invoice, the card, the compute against the pool, and the cost of more use
-  so far. Upgrade hands off to Stripe Checkout, and Manage payment opens the
-  Stripe customer portal. The screens draw only the buttons and a note, not
-  Stripe's pages.
-- Each limit gives one way forward in place of the empty chat of a new
-  workspace: archive a workspace, wait for the next month, wait for the next
-  day or hour, or stop a cloud computer. A free org that invites a member
+- The billing tab of the org settings shows the plan, the seats as the
+  members, the next invoice, the card, the compute against the pool, and the
+  cost of more use so far. Upgrade hands off to Stripe Checkout, and Manage
+  payment opens the Stripe customer portal. The screens draw only the
+  buttons and a note, not Stripe's pages.
+- A limit replaces the empty chat of a new workspace. At the free workspace
+  and minutes limits, Upgrade to Team comes first, and the free way second:
+  Archive on each workspace, or the date when cloud computers start again.
+  Archive there draws option B of open decision 41. The start limits and the
+  running limit give one way forward. A free org that invites a member
   upgrades.
-- Each member and each open invite takes a seat. Only an owner manages the
-  members and the billing, and reassigns a workspace. The agents of a
-  workspace use its owner's own accounts.
+- Only an owner manages the members and the billing, deletes the org, and
+  reassigns a workspace. A member who is not an owner sees the members and
+  each workspace's owner without actions, and no Billing tab. The agents of
+  a workspace use its owner's own accounts, so reassigning stops the cloud
+  computer, which starts again with the new owner's accounts.
+- Archive, from decision 16, deletes the cloud computer and keeps the chat
+  read-only in the Archived group at the end of the list. It checks first
+  for work that is not committed or not pushed. The pull request bar offers
+  it after a merge, and an hourglass marks a workspace whose cloud computer
+  is deleted soon, 14 days after its stop.
+- Each person owns one free org. Create org of a person who already owns
+  one shows Team and hands off to Stripe Checkout.
 - Delete org asks for the org name. The deleted org stays faded in the rail
   of its owners until the date when everything is deleted, and its page
   offers Restore.
-- Two kinds of org show: Acme on Team, and Firna, the free org of the sign-up.
-  The parts live in `src/components/billing/`, `src/components/members/`, and
+- Three kinds of org show: Acme on Team, Firna, the free org of the sign-up,
+  and Acme Labs, which Create org makes on Team. The parts live in
+  `src/components/billing/`, `src/components/members/`, and
   `src/components/limits/`.
 
 ## The marketing site

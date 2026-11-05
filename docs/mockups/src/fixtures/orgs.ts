@@ -3,7 +3,7 @@
  * sign-in, the GitHub App, and the agent connections.
  */
 
-export const orgKeys = ['acme', 'futex', 'firna'] as const
+export const orgKeys = ['acme', 'futex', 'firna', 'labs'] as const
 
 export type OrgKey = (typeof orgKeys)[number]
 
@@ -18,10 +18,17 @@ export const orgs: Readonly<Record<OrgKey, Org>> = {
   acme: { key: 'acme', name: 'Acme', initials: 'AC' },
   futex: { key: 'futex', name: 'Futex', initials: 'FX' },
   firna: { key: 'firna', name: 'Firna', initials: 'FI' },
+  labs: { key: 'labs', name: 'Acme Labs', initials: 'AL' },
 }
 
-/** Every org of the user, in the order of the rail. */
-export const orgList: readonly Org[] = orgKeys.map((key) => orgs[key])
+/**
+ * Every org of the user, in the order of the rail. Acme Labs joins the
+ * list only when Create org has made it, on Team.
+ */
+export const orgList: readonly Org[] = [orgs.acme, orgs.futex, orgs.firna]
+
+/** The orgs of the user after Create org made Acme Labs. */
+export const orgListWithLabs: readonly Org[] = [...orgList, orgs.labs]
 
 /** The person signed in to the app, who signs in with GitHub only. */
 export const account = {

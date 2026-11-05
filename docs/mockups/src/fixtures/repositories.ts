@@ -96,3 +96,30 @@ export const newOrg = {
     { name: 'firna/icons', description: 'The icon set', used: false },
   ],
 } as const
+
+/**
+ * The org that Create org makes for a person who already owns a free org,
+ * so it starts on Team, and its repositories.
+ */
+export const teamOrg = {
+  name: 'Acme Labs',
+  initials: 'AL',
+  search: 'acme',
+  repositories: [
+    {
+      name: 'acme/mobile-app',
+      description: 'The iOS and Android shop app',
+      used: true,
+    },
+    {
+      name: 'acme/data-pipeline',
+      description: 'Nightly stock and price imports',
+      used: true,
+    },
+    {
+      name: 'acme/admin-dashboard',
+      description: 'Internal tools for orders and refunds',
+      used: false,
+    },
+  ],
+} as const

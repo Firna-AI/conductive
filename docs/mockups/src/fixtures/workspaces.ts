@@ -6,10 +6,12 @@ import type { SectionKey } from './sections'
 /**
  * What a workspace is doing. `working` means an agent turn runs, and
  * `unread` means a turn ended with output that the user has not seen. Both
- * run on a ready sandbox. The other values are the sandbox states.
+ * run on a ready sandbox. `archived` means that its cloud computer is
+ * deleted and its chat is read-only. The other values are the sandbox
+ * states.
  */
 export type ActivityStatus =
-  'working' | 'unread' | 'ready' | 'starting' | 'stopped' | 'error'
+  'working' | 'unread' | 'ready' | 'starting' | 'stopped' | 'error' | 'archived'
 
 /** The workspaces that a screen can show open. */
 export const openableWorkspaces = [
@@ -36,6 +38,11 @@ export type Workspace = {
    * this member's own accounts.
    */
   owner: PersonKey
+  /**
+   * When the cloud computer of a workspace that stopped long ago is
+   * deleted, such as `tomorrow`, 14 days after the stop.
+   */
+  expires?: string
   /**
    * The name that the app gives a new workspace, a city, until the agent's
    * first answer names it after the task.
@@ -153,13 +160,16 @@ export const workspaceList: readonly Workspace[] = [
     status: 'ready',
     updated: '20m',
   }),
-  workspace('retry-queue', 'Move retries to a queue', {
-    repository: 'billing-service',
-    section: 'infra',
-    status: 'stopped',
-    updated: '2d',
-    owner: 'jonas',
-  }),
+  {
+    ...workspace('retry-queue', 'Move retries to a queue', {
+      repository: 'billing-service',
+      section: 'infra',
+      status: 'stopped',
+      updated: '13d',
+      owner: 'jonas',
+    }),
+    expires: 'tomorrow',
+  },
 ]
 
 /** The workspace that the drag state moves, and where it lands. */

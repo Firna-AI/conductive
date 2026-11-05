@@ -1,6 +1,7 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import {
+  Archive,
   ArrowRight,
   ArrowUpRight,
   ChevronRight,
@@ -10,7 +11,8 @@ import {
 import { pullRequest, type BannerState } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
 import type { Workspace } from '../../fixtures/workspaces'
-import { checksPaths } from '../../paths'
+import { checksPaths, paths } from '../../paths'
+import { ActionButton } from '../common/actions'
 import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
 import { classes } from '../common/classes'
 import { prStatus, type PrStatus } from './prStatus'
@@ -56,10 +58,13 @@ function StateLabel(props: { status: PrStatus }) {
  * The pull request of the workspace branch, at the top of the right column:
  * its number, its checks and merge state, and a link to GitHub. A branch
  * without a pull request shows its target and a link that creates one.
+ * After the merge, the bar offers Archive, as decision 16 says.
  */
 export function PullRequestBar(props: {
   state: BannerState
   workspace: Workspace
+  /** The workspace is not archived yet, so a merge offers Archive. */
+  archivable: boolean
 }) {
   const { state, workspace } = props
   if (state === 'none') {
@@ -84,6 +89,11 @@ export function PullRequestBar(props: {
         <span className={styles.detail}>{status.detail}</span>
       ) : null}
       <span className={styles.spacer} />
+      {state === 'merged' && props.archivable ? (
+        <ScreenLink asChild to={paths.archivePushed}>
+          <ActionButton icon={Archive}>Archive</ActionButton>
+        </ScreenLink>
+      ) : null}
       <GitHubLink href={pullRequest.url} label="Open on GitHub" />
     </div>
   )

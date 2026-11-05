@@ -25,10 +25,12 @@ export const workspaceStateSchema = {
     'composer',
     'resize',
     'overlay',
+    'viewer',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
-    sandbox: { enum: ['ready', 'starting', 'stopped', 'error'] },
+    /** The cloud computer. An archived workspace has none. */
+    sandbox: { enum: ['ready', 'starting', 'stopped', 'error', 'archived'] },
     conversation: { enum: conversationKeys },
     banner: { enum: bannerStates },
     /** The list of the files panel: All files, Changes, or Checks. */
@@ -52,9 +54,21 @@ export const workspaceStateSchema = {
     resize: { enum: ['none', 'right'] },
     /**
      * What lies open over the workspace: the session history, the question
-     * before a running session closes, or the owner of the workspace.
+     * before a running session closes, the owner of the workspace, or the
+     * question of Archive, with work that is not pushed or with none.
      */
-    overlay: { enum: ['none', 'history', 'close-session', 'reassign'] },
+    overlay: {
+      enum: [
+        'none',
+        'history',
+        'close-session',
+        'reassign',
+        'archive-unpushed',
+        'archive-pushed',
+      ],
+    },
+    /** The person signed in: an owner of the org, or a member who is not. */
+    viewer: { enum: ['owner', 'member'] },
   },
 } as const
 
@@ -74,4 +88,5 @@ export const readyWorkspace: WorkspaceState = {
   composer: 'empty',
   resize: 'none',
   overlay: 'none',
+  viewer: 'owner',
 }

@@ -4,6 +4,7 @@ import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { Menu } from '../common/Menu'
+import { ArchivedGroup } from './ArchivedGroup'
 import { sectionMenu } from './menus'
 import type {
   ListDrag,
@@ -99,7 +100,8 @@ function DropTarget(props: {
  * The sections of the org, each a group of workspaces that the user made.
  * A collapsed section shows only its header and its count. A workspace
  * moves to another section by drag and drop. The sidebar uses compact
- * rows; the list page uses taller rows for touch.
+ * rows; the list page uses taller rows for touch. `archived` adds the
+ * Archived group at the end, open.
  */
 export function SectionList(props: {
   sections: readonly SidebarSection[]
@@ -107,6 +109,7 @@ export function SectionList(props: {
   menu?: ListMenu
   menuStyle?: MenuStyle
   drag?: ListDrag
+  archived?: readonly WorkspaceRow[]
 }) {
   const { drag } = props
   const dragged = props.sections
@@ -161,6 +164,9 @@ export function SectionList(props: {
           </section>
         )
       })}
+      {props.archived ? (
+        <ArchivedGroup open rows={props.archived} variant={props.variant} />
+      ) : null}
     </div>
   )
 }

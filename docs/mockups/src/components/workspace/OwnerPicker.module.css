@@ -20,3 +20,14 @@
   flex-shrink: 0;
   color: var(--ui-muted);
 }
+
+/* The owner without the menu, as a member who is not an owner sees it. */
+.plain {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+}

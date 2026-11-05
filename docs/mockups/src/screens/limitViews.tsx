@@ -3,10 +3,17 @@ import {
   CalendarClock,
   CirclePause,
   Hourglass,
+  Sparkles,
   Square,
   Timer,
 } from 'lucide-react'
-import { LimitPanel, WorkspaceActions } from '../components/limits/LimitPanel'
+import { ActionButton } from '../components/common/actions'
+import { ScreenLink } from '../components/common/ScreenLink'
+import {
+  LimitNote,
+  LimitPanel,
+  WorkspaceActions,
+} from '../components/limits/LimitPanel'
 import { firnaMinutes } from '../fixtures/billing'
 import { firnaWorkspaces } from '../fixtures/freeOrg'
 import {
@@ -17,6 +24,7 @@ import {
 } from '../fixtures/limits'
 import { you } from '../fixtures/members'
 import { orgs, type Org } from '../fixtures/orgs'
+import { paths } from '../paths'
 import { workspaceList, type ActivityStatus } from '../fixtures/workspaces'
 
 /**
@@ -52,16 +60,30 @@ const running: ReadonlySet<ActivityStatus> = new Set([
   'ready',
 ])
 
-/** The one way forward of a limit, in place of the empty chat. */
+/** Upgrade to Team, the first way forward at the free plan's limits. */
+const upgrade = (
+  <ScreenLink asChild to={paths.upgrade}>
+    <ActionButton icon={Sparkles} tone="primary">
+      Upgrade to Team
+    </ActionButton>
+  </ScreenLink>
+)
+
+/**
+ * The ways forward of a limit, in place of the empty chat. At the free
+ * workspace and minutes limits Upgrade comes first, and the free way
+ * second. The other limits give one way forward.
+ */
 export function LimitView(props: { limit: Exclude<LimitKey, 'none'> }) {
   const org = limitOrg(props.limit)
   switch (props.limit) {
     case 'workspaces':
       return (
         <LimitPanel
+          action={upgrade}
           body={`${org.name} is on Free, which keeps up to ${freePlan.workspaces} workspaces. Archived workspaces don't count.`}
           icon={Archive}
-          title="Archive a workspace to start a new one"
+          title="Upgrade to Team to start more workspaces"
         >
           <WorkspaceActions
             action="Archive"
@@ -74,10 +96,15 @@ export function LimitView(props: { limit: Exclude<LimitKey, 'none'> }) {
     case 'minutes':
       return (
         <LimitPanel
+          action={upgrade}
           body={`${org.name} used its ${freePlan.minutes} free minutes for ${firnaMinutes.month}.`}
           icon={Hourglass}
-          title={`Cloud computers start again on ${resets.minutes}`}
-        />
+          title="Upgrade to Team to start cloud computers now"
+        >
+          <LimitNote icon={CalendarClock}>
+            Cloud computers start again on {resets.minutes}.
+          </LimitNote>
+        </LimitPanel>
       )
     case 'starts':
       return (

@@ -9,13 +9,15 @@ import styles from './LimitPanel.module.css'
 
 /**
  * A limit that stops a start, in place of the empty chat of a new
- * workspace. The title gives the one way forward, the body names the
- * limit, and `children` holds the action, such as a list of workspaces.
+ * workspace. The title gives the first way forward, and the body names the
+ * limit. `action` is the first way forward when it is a button, such as
+ * Upgrade, and `children` holds the next way, such as a list of workspaces.
  */
 export function LimitPanel(props: {
   icon: LucideIcon
   title: string
   body: string
+  action?: ReactNode
   children?: ReactNode
 }) {
   const Icon = props.icon
@@ -24,8 +26,22 @@ export function LimitPanel(props: {
       <Icon aria-hidden className={styles.icon} size={26} strokeWidth={1.5} />
       <h2 className={styles.title}>{props.title}</h2>
       <p className={styles.body}>{props.body}</p>
+      {props.action ? (
+        <div className={styles.action}>{props.action}</div>
+      ) : null}
       {props.children}
     </section>
+  )
+}
+
+/** The second way forward of a limit, as a line under the first. */
+export function LimitNote(props: { icon: LucideIcon; children: ReactNode }) {
+  const Icon = props.icon
+  return (
+    <p className={styles.note}>
+      <Icon aria-hidden className={styles.noteIcon} size={14} />
+      {props.children}
+    </p>
   )
 }
 

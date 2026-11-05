@@ -6,6 +6,7 @@ import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
+import { ArchiveDialog } from '../components/workspace/ArchiveDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import { historyEntries } from '../components/workspace/WorkspaceTabs'
 import { workspaceSessions } from '../fixtures/sessions'
@@ -58,6 +59,15 @@ export function workspaceOverlay(
       return null
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
+    case 'archive-unpushed':
+    case 'archive-pushed':
+      return (
+        <ArchiveDialog
+          pushed={state.overlay === 'archive-pushed'}
+          viewport={viewport}
+          workspace={workspace}
+        />
+      )
     case 'history':
       return mobile ? (
         <Sheet title="Session history">

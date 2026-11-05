@@ -37,38 +37,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.seats {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.seatsLabel {
-  width: 112px;
-  color: var(--ui-ink2);
-  font-size: var(--ui-text-md);
-  font-weight: 500;
-}
-
-/* The count between its two steps, in a box with a full outline. */
-.stepper {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid var(--ui-control-border);
-  border-radius: var(--ui-radius-md);
-}
-
-.seatCount {
-  min-width: 32px;
-  color: var(--ui-ink);
-  font-size: var(--ui-text-md);
-  font-weight: var(--ui-weight-strong);
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-
 /* A text link among the actions, as tall as a button on a phone. */
 .withdraw {
   display: inline-flex;

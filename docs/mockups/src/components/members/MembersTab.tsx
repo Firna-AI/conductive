@@ -1,12 +1,12 @@
 import { InputFrame } from '@firna/ui/input'
 import { AtSign, Sparkles, UserPlus } from 'lucide-react'
-import { acmeTeam } from '../../fixtures/billing'
 import { firnaWorkspaces } from '../../fixtures/freeOrg'
 import {
   acmeInvites,
   acmeMembers,
   firnaMembers,
   refusedInvite,
+  type PersonKey,
 } from '../../fixtures/members'
 import { workspaceList } from '../../fixtures/workspaces'
 import { noop } from '../../noop'
@@ -39,19 +39,6 @@ function LoginField(props: { value: string }) {
   )
 }
 
-/** On Team, each member and each open invite takes a seat. */
-function SeatsLine() {
-  const used = acmeMembers.length + acmeInvites.length
-  return (
-    <p className={styles.seatsLine}>
-      {acmeTeam.seats - used} of {acmeTeam.seats} seats free.
-      <ScreenLink className={styles.seatsLink} to={paths.billing}>
-        Change seats
-      </ScreenLink>
-    </p>
-  )
-}
-
 /** A free org has one member, so the invite leads to the upgrade. */
 function UpgradeNotice() {
   return (
@@ -70,29 +57,49 @@ function UpgradeNotice() {
   )
 }
 
+/** The invite of an owner: a GitHub login, and what an invite costs. */
+function InviteSection(props: { free: boolean }) {
+  return (
+    <Section
+      description="Invite a person by their GitHub login. They join when they accept."
+      title="Invite a member"
+    >
+      <LoginField value={props.free ? refusedInvite : ''} />
+      {props.free ? (
+        <UpgradeNotice />
+      ) : (
+        <p className={styles.seatsLine}>
+          An invite adds a seat when the person accepts it.
+        </p>
+      )}
+    </Section>
+  )
+}
+
 /**
  * The members of an org: an invite by GitHub login, then each member with
  * their role. Owners manage the members, the billing, and the owners of
- * workspaces.
+ * workspaces. A member who is not an owner sees the members and their
+ * roles, without the invite and without actions.
  */
-export function MembersTab(props: { view: MembersView }) {
+export function MembersTab(props: {
+  view: MembersView
+  viewer: PersonKey
+  canManage: boolean
+}) {
   const free = props.view === 'free'
   return (
     <>
-      <Section
-        description="Invite a person by their GitHub login. They join when they accept."
-        title="Invite a member"
-      >
-        <LoginField value={free ? refusedInvite : ''} />
-        {free ? <UpgradeNotice /> : <SeatsLine />}
-      </Section>
+      {props.canManage ? <InviteSection free={free} /> : null}
       <Section
         description="Owners manage the members, the billing, and who owns each workspace. Members work in the workspaces."
         title="Members"
       >
         <MemberList
-          invites={free ? [] : acmeInvites}
+          canManage={props.canManage}
+          invites={free || !props.canManage ? [] : acmeInvites}
           members={free ? firnaMembers : acmeMembers}
+          viewer={props.viewer}
           workspaces={free ? firnaWorkspaces : workspaceList}
         />
       </Section>

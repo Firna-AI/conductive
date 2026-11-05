@@ -7,6 +7,7 @@ import { Notice } from '../components/common/Notice'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import { acmeRail } from '../components/layout/OrgRail'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
   PullRequestBar,
@@ -16,11 +17,9 @@ import { ToolsPanel } from '../components/workspace/ToolsPanel'
 import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
-import { workspaceSections } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
 import { agents, type AgentChoice } from '../fixtures/agents'
 import { conversations } from '../fixtures/conversations'
-import { orgs } from '../fixtures/orgs'
+import { memberViewer, people } from '../fixtures/members'
 import {
   openableWorkspaceRecords,
   type ActivityStatus,
@@ -31,6 +30,7 @@ import {
   openFile,
   startingLogFor,
   ToolContent,
+  workspaceSidebar,
 } from './workspaceParts'
 import { paths } from '../paths'
 import { workspaceOverlay } from './workspaceOverlays'
@@ -79,8 +79,12 @@ export function WorkspaceScreen(props: {
         ? 'working'
         : 'ready'
       : state.sandbox
+  const archived = state.sandbox === 'archived'
+  const owner = state.viewer === 'owner'
   const problem =
-    state.sandbox === 'stopped' || state.sandbox === 'error'
+    state.sandbox === 'stopped' ||
+    state.sandbox === 'error' ||
+    state.sandbox === 'archived'
       ? state.sandbox
       : undefined
   const fresh = state.tab === 'new-session'
@@ -103,6 +107,8 @@ export function WorkspaceScreen(props: {
   )
   const header = (
     <WorkspaceHeader
+      archivable={!archived}
+      canReassign={owner && !archived}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
       status={status}
@@ -112,7 +118,9 @@ export function WorkspaceScreen(props: {
   )
   const overlay = workspaceOverlay(state, workspace, viewport)
   const historyOpen = state.overlay === 'history'
-  const tabs = tabsFor(state, workspace)
+  const tabs = tabsFor(state, workspace).filter(
+    (tab) => !archived || tab.kind === 'session',
+  )
   const files = <FilesContent state={state} viewport={viewport} />
   const tool = <ToolContent state={state} viewport={viewport} />
   if (viewport === 'mobile') {
@@ -122,6 +130,7 @@ export function WorkspaceScreen(props: {
         <>
           <WorkspaceTabs
             historyOpen={historyOpen}
+            readOnly={archived}
             tabs={sessions}
             viewport={viewport}
           />
@@ -144,23 +153,28 @@ export function WorkspaceScreen(props: {
     )
   }
   const file = openFile(state)
-  const sections = workspaceSections({ workspace, status })
   return (
     <AppFrame
       overlay={overlay}
-      sidebar={<Sidebar org={orgs.acme} sections={sections} />}
+      rail={owner ? undefined : { ...acmeRail, person: people[memberViewer] }}
+      sidebar={workspaceSidebar(workspace, status)}
     >
       <WorkspaceBody
         center={file ? <FilePage view={file} /> : chat}
         files={files}
         header={header}
         pullRequest={
-          <PullRequestBar state={state.banner} workspace={workspace} />
+          <PullRequestBar
+            archivable={!archived}
+            state={state.banner}
+            workspace={workspace}
+          />
         }
         rightWidth={state.resize === 'right' ? widenedRight : undefined}
         tabs={
           <WorkspaceTabs
             historyOpen={historyOpen}
+            readOnly={archived}
             tabs={tabs}
             viewport={viewport}
           />

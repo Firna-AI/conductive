@@ -103,16 +103,3 @@
   font-size: var(--ui-text-sm);
   line-height: 1.5;
 }
-
-.seatsLink {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--ui-touch-min);
-  color: var(--ui-link);
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.seatsLink:hover {
-  text-decoration: underline;
-}
