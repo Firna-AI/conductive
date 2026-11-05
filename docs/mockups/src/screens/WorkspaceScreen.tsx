@@ -19,7 +19,7 @@ import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { agents, type AgentChoice } from '../fixtures/agents'
 import { conversations } from '../fixtures/conversations'
-import { memberViewer, people } from '../fixtures/members'
+import { memberViewer, people, you } from '../fixtures/members'
 import {
   openableWorkspaceRecords,
   type ActivityStatus,
@@ -81,6 +81,9 @@ export function WorkspaceScreen(props: {
       : state.sandbox
   const archived = state.sandbox === 'archived'
   const owner = state.viewer === 'owner'
+  const viewer = owner ? you : memberViewer
+  // Decision 42: the workspace's owner and the org's owners archive it.
+  const archivable = !archived && (owner || workspace.owner === viewer)
   const problem =
     state.sandbox === 'stopped' ||
     state.sandbox === 'error' ||
@@ -107,7 +110,7 @@ export function WorkspaceScreen(props: {
   )
   const header = (
     <WorkspaceHeader
-      archivable={!archived}
+      archivable={archivable}
       canReassign={owner && !archived}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
@@ -144,10 +147,14 @@ export function WorkspaceScreen(props: {
       <MobileFrame>
         {header}
         <PullRequestRow state={state.banner} workspace={workspace} />
-        <div className={styles.mobileBody}>{body[state.focus]}</div>
-        <MobileTabBar
-          selected={state.focus === 'tool' ? state.tool : state.focus}
-        />
+        <div className={styles.mobileBody}>
+          {archived ? body.chat : body[state.focus]}
+        </div>
+        {archived ? null : (
+          <MobileTabBar
+            selected={state.focus === 'tool' ? state.tool : state.focus}
+          />
+        )}
         {overlay}
       </MobileFrame>
     )
@@ -165,7 +172,7 @@ export function WorkspaceScreen(props: {
         header={header}
         pullRequest={
           <PullRequestBar
-            archivable={!archived}
+            archivable={archivable}
             state={state.banner}
             workspace={workspace}
           />
@@ -179,7 +186,11 @@ export function WorkspaceScreen(props: {
             viewport={viewport}
           />
         }
-        tools={<ToolsPanel tool={state.tool}>{tool}</ToolsPanel>}
+        tools={
+          archived ? undefined : (
+            <ToolsPanel tool={state.tool}>{tool}</ToolsPanel>
+          )
+        }
       />
     </AppFrame>
   )

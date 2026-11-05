@@ -13,7 +13,8 @@ export function WorkspaceBody(props: {
   center: ReactNode
   pullRequest: ReactNode
   files: ReactNode
-  tools: ReactNode
+  /** The tools panel. An archived workspace has none. */
+  tools?: ReactNode
   /** The width of the right column while the user drags its handle. */
   rightWidth?: number
 }) {

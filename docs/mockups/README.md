@@ -214,7 +214,9 @@ and the marketing plans read the same numbers.
   read-only in the Archived group at the end of the list. It checks first
   for work that is not committed or not pushed. The pull request bar offers
   it after a merge, and an hourglass marks a workspace whose cloud computer
-  is deleted soon, 14 days after its stop.
+  is deleted soon, 14 days after its stop. Only the workspace's owner and
+  the org's owners see Archive, from decision 42. An archived workspace has
+  no file lists and no tools, so a phone shows only its chat.
 - Each person owns one free org. Create org of a person who already owns
   one shows Team and hands off to Stripe Checkout.
 - Delete org asks for the org name. The deleted org stays faded in the rail

@@ -22,7 +22,7 @@ export const reassign = defineScreen({
       slug: 'member',
       title: 'Seen by a member',
       description:
-        'Priya, a member who is not an owner, opens the workspace of Cal. The header names Cal as the owner, without the menu that reassigns it. The rail shows the avatar of Priya.',
+        'Priya, a member who is not an owner, opens the workspace of Cal. The header names Cal as the owner, without the menu that reassigns it, and without Archive, because only the owner of the workspace and the owners of the org archive it, as decision 42 says. The rail shows the avatar of Priya.',
       props: { overlay: 'none', viewer: 'member' },
     },
   ],

@@ -44,13 +44,17 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
 
 /**
  * The files panel, or the sandbox state in place of the file lists. On a
- * phone, an open file shows as a page of the Files tab.
+ * phone, an open file shows as a page of the Files tab. An archived
+ * workspace has no file lists: its files went with the cloud computer.
  */
 export function FilesContent(props: {
   state: WorkspaceState
   viewport: Viewport
 }) {
   const { state } = props
+  if (state.sandbox === 'archived') {
+    return <SandboxPanel action={false} state="archived" />
+  }
   const open = openFile(state)
   if (props.viewport === 'mobile' && open) {
     const back =
