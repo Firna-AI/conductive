@@ -117,7 +117,8 @@ enforces it, so this is no longer a question for the user.
 
 ### 6. Show port previews safely in a frame
 
-Open. Added on 5 November 2026 from the options check.
+Added on 5 November 2026 from the options check. The user chose F on
+5 November 2026, as recommended.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
@@ -156,8 +157,9 @@ Open. Added on 5 November 2026 from the options check.
   cookie in the frame and keeps preview code off the app's site. Safari
   still blocks the previewed app's own cookies in a frame, so each
   preview also gets an "Open in new tab" link.
-- **Action:** ask the user, because D costs a domain, and E gives up the
-  embedded preview.
+- **Action:** asked the user, because D and F cost a second domain, and
+  E and G give up a full embedded preview.
+- **Chosen:** F, by the user on 5 November 2026.
 
 ### 7. Choose how chat output reaches the app
 
@@ -182,12 +184,12 @@ decision opens again with E.
     Boat commands, and read the attach stream. Each message starts a new
     turn that resumes the session. A running turn cannot be steered, only
     stopped. Effort: Medium.
-- **Left out:** An own daemon, because decision 1 chose no daemon.
-- **Wider fix:** None. This is a one-time choice.
   - **F.** Added by the second options check: A, but polled every
     250 ms while a turn runs. It helps only if Boat's partial events
     update that often. Boat allows 10,000 requests a minute per address.
     Effort: Small.
+- **Left out:** An own daemon, because decision 1 chose no daemon.
+- **Wider fix:** None. This is a one-time choice.
 - **Recommendation:** F. The first recommendation was A. F keeps steer
   at a small cost.
 - **Action:** applied as an agent call, with the measurement in
@@ -195,7 +197,8 @@ decision opens again with E.
 
 ### 8. Limit the workspaces that agents create
 
-Open. Added on 5 November 2026 from the options check.
+Added on 5 November 2026 from the options check. The user chose A on
+5 November 2026. The agent recommended B.
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
@@ -220,7 +223,9 @@ Open. Added on 5 November 2026 from the options check.
 - **Left out:** None.
 - **Wider fix:** D. It also catches bugs in the Worker.
 - **Recommendation:** B. It caps the cost and keeps agents fast.
-- **Action:** ask the user, because a limit is new validation.
+- **Action:** asked the user, because a limit is new validation.
+- **Chosen:** A, by the user on 5 November 2026. The app adds no limit of
+  its own, and Boat's plan limits apply.
 
 ## Design
 
@@ -247,10 +252,10 @@ otherwise. The user can override any of them.
 **Access and security.** These calls answer the user's question of
 5 November 2026 on secure access to Boat.
 
-- Cloudflare Access protects the web app and the API. Decision 6 decides
-  the sign-in of port previews. The Worker verifies the Access token on each request. Reason:
-  it needs no login code for one user. Own GitHub login replaces it when
-  other users join.
+- Cloudflare Access protects the web app and the API. The Worker
+  verifies the Access token on each request. Reason: it needs no login
+  code for one user. Own GitHub login replaces it when other users join.
+  Port previews do not use Access, as decision 6 says.
 - The Boat key is a scoped key and a Worker secret. It has only the
   actions that the app uses, and no `account.admin` action. It is limited
   to the app's own Boat environment, as decision 5 says.
@@ -269,16 +274,29 @@ otherwise. The user can override any of them.
   the private `ttyd` port with the Boat `_port_auth` cookie and a
   per-workspace `ttyd` password. Reason: sandbox code can make a port
   public with `host --public`, and the password still guards it.
-- Port previews go through the Worker, which adds the `_port_auth` cookie
-  on the server side. Decision 6 decides their domain and sign-in.
-  Preview hostnames stay one level deep, such as
-  `<workspace>-<port>.<preview domain>`, because Universal SSL covers one
-  level.
+- Port previews live on a separate registrable domain, as the user chose
+  in decision 6. Each preview gets a random hostname one level under that
+  domain, with at least 128 random bits. The hostname is the credential.
+  Reason: frames then need no cookie, and Universal SSL covers one level.
+- D1 maps each active preview hostname to its workspace and port. The
+  workspace Durable Object revokes the hostname when the workspace stops,
+  when the user closes the preview, and after 24 hours. Reason: a leaked
+  hostname then stops working soon.
+- The preview proxy adds the `_port_auth` cookie on the server side, and
+  it drops any `_port_auth` cookie that the browser sends. It forwards
+  the preview app's own cookies.
+- The preview proxy sets `Referrer-Policy: no-referrer` on each response.
+  Reason: the default policy sends the preview origin, which is the
+  credential, to other sites.
+- Each preview has an "Open in new tab" link. Reason: Safari blocks the
+  preview app's own cookies inside a frame.
 - The Worker asks Boat for a new desktop URL on each page load. The URL
   works for 10 minutes and carries its token in the fragment.
 - The Worker verifies the signature of each GitHub and Boat webhook.
 - Each workspace sandbox gets its own workspace token as a sandbox
-  variable. Agent tools can only create and list workspaces with it.
+  variable. Agent tools can only create and list workspaces with it. The
+  app sets no limit on the workspaces that agents create, as the user
+  chose in decision 8.
 
 **Workspaces and sandboxes.**
 
@@ -325,8 +343,10 @@ branch. When a tab opens, the Worker reads the current pull request and
 check state from the GitHub API.
 
 **Prerequisites from the user.** A Cloudflare account on Workers Paid
-with Access and a domain. A paid Boat plan and a scoped Boat key. A
-GitHub App with its key. Milestone 16 needs all of them. Earlier
+with Access. Two domains on that account: one for the app, and a
+separate registrable domain for port previews. A paid Boat plan, the
+app's own Boat environment, and a Boat key limited to it. A GitHub App
+with its key. Milestone 16 needs all of them. Earlier
 milestones use fakes.
 
 ## Milestone 1: Mockups
@@ -348,7 +368,8 @@ each in a mobile and a desktop variant.
       steer, and interrupt.
 - [ ] Draw the files panel with All and Changes, and the Markdown and
       code preview.
-- [ ] Draw the terminal, the port preview, and the desktop view.
+- [ ] Draw the terminal, the port preview with its "Open in new tab" link,
+      and the desktop view.
 - [ ] Draw two flows: create a workspace, and reopen a stopped workspace.
 - [ ] Run the mockup check. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -468,10 +489,14 @@ Depends on: 5
 - [ ] Add the `ttyd` service with a per-workspace password to the base
       snapshot setup.
 - [ ] Expose private ports, and proxy them with the `_port_auth`
-      cookie, including WebSockets, as the user's answer to decision 6
-      says.
+      cookie, including WebSockets.
+- [ ] Issue random preview hostnames on the preview domain, map them in
+      D1, and revoke them on stop, on close, and after 24 hours.
+- [ ] Set `Referrer-Policy: no-referrer` on each preview response.
 - [ ] Add the desktop URL endpoint.
-- [ ] Test the proxy with a fake upstream.
+- [ ] Test the proxy with a fake upstream: a revoked or unknown hostname
+      gets no answer from the sandbox, and a browser `_port_auth` cookie
+      never reaches it.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 
@@ -479,8 +504,8 @@ Tags: ui
 
 Depends on: 6, 11
 
-- [ ] Build the terminal with xterm.js, the port preview, and the desktop
-      frame.
+- [ ] Build the terminal with xterm.js, the port preview with its "Open
+      in new tab" link, and the desktop frame.
 - [ ] Compare each screen with its mockup.
 
 ## Milestone 13: GitHub banner backend
@@ -507,7 +532,6 @@ Depends on: 6, 13
 Depends on: 5
 
 - [ ] Add the create and list workspace endpoints for workspace tokens.
-- [ ] Apply the user's answer to decision 8.
 - [ ] Add the CLI and the MCP server to the base snapshot setup.
 - [ ] Test the token scope and both tools.
 
