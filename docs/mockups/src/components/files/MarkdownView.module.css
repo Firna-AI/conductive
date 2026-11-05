@@ -1,0 +1,52 @@
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.doc {
+  max-width: 680px;
+  padding: 20px 24px 32px;
+  color: var(--ui-ink);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.doc h1 {
+  margin: 0 0 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ui-border);
+  font-size: 24px;
+  line-height: 30px;
+}
+
+.doc h2 {
+  margin: 22px 0 6px;
+  font-size: 17px;
+  line-height: 24px;
+}
+
+.doc p,
+.doc ol,
+.doc ul {
+  margin: 0 0 10px;
+}
+
+.doc ol,
+.doc ul {
+  padding-left: 22px;
+}
+
+.doc li + li {
+  margin-top: 4px;
+}
+
+.block {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-bg);
+  font-family: var(--ui-font-mono);
+  font-size: 12px;
+  line-height: 19px;
+}

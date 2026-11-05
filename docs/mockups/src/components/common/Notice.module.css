@@ -1,0 +1,37 @@
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-bg);
+}
+
+.danger {
+  border-color: var(--ui-rose-soft);
+  background: var(--ui-rose-soft);
+}
+
+.icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--ui-muted);
+}
+
+.danger .icon {
+  color: var(--ui-rose-deep);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.action {
+  flex-shrink: 0;
+  align-self: center;
+}

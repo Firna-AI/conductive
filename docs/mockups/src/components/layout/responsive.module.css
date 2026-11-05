@@ -1,0 +1,18 @@
+/*
+ * The desktop layout narrows with the window. Below 900px the sidebar hides,
+ * and the workspace list moves into the main area. The rules win over the
+ * display of the element they mark.
+ */
+.narrowOnly {
+  display: none !important;
+}
+
+@media (max-width: 899px) {
+  .narrowOnly {
+    display: flex !important;
+  }
+
+  .wideOnly {
+    display: none !important;
+  }
+}

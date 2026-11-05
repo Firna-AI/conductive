@@ -1,0 +1,14 @@
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* A tab keeps its label on one line; the row scrolls instead. */
+.tabs > * {
+  flex-shrink: 0;
+  width: max-content;
+}

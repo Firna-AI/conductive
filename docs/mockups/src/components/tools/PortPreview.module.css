@@ -1,0 +1,47 @@
+.preview {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 0 8px 0 12px;
+  border-bottom: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+.ports {
+  flex-shrink: 0;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.link {
+  padding: 0 6px;
+}
+
+.frame {
+  flex: 1;
+  min-height: 0;
+  margin: 12px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+}
+
+.open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.port {
+  width: 96px;
+}

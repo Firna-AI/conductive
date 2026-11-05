@@ -1,0 +1,17 @@
+.stat {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 6px;
+  font-family: var(--ui-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.added {
+  color: var(--ui-primary-deep);
+}
+
+.removed {
+  color: var(--ui-rose-deep);
+}

@@ -1,0 +1,48 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+.titles {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--ui-muted);
+}
+
+.branch {
+  overflow: hidden;
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: 12px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile {
+  min-height: 56px;
+  padding: 6px 12px 6px 6px;
+  gap: 6px;
+}

@@ -1,0 +1,8 @@
+.code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--ui-bg2);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: 0.88em;
+}

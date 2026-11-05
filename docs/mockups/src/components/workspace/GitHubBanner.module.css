@@ -1,0 +1,100 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 44px;
+  padding: 6px 20px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bg);
+  box-sizing: border-box;
+}
+
+.pull {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.number {
+  flex-shrink: 0;
+  color: var(--ui-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.title {
+  overflow: hidden;
+  color: var(--ui-ink2);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.branches {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: 12px;
+}
+
+.status {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.detail {
+  color: var(--ui-muted);
+  font-weight: 400;
+}
+
+.muted {
+  color: var(--ui-muted);
+}
+
+.primary {
+  color: var(--ui-primary-deep);
+}
+
+.danger {
+  color: var(--ui-rose-deep);
+}
+
+@media (max-width: 1099px) {
+  .detail {
+    display: none;
+  }
+}
+
+@media (max-width: 899px) {
+  .title {
+    display: none;
+  }
+}
+
+.mobile {
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 16px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.mobile .status {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobileText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

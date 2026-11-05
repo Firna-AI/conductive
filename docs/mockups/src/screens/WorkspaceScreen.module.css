@@ -1,0 +1,19 @@
+.body {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 0.9fr);
+  min-height: 0;
+}
+
+@media (max-width: 1279px) {
+  .body {
+    grid-template-columns: minmax(0, 1fr) minmax(400px, 0.9fr);
+  }
+}
+
+.mobileBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}

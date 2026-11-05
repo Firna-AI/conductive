@@ -1,0 +1,32 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+.scroll {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 12px 24px;
+}
+
+.choose {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.narrowList {
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}

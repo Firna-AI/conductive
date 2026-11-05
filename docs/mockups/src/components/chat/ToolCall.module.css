@@ -1,0 +1,46 @@
+.call {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  box-sizing: border-box;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.verb {
+  flex-shrink: 0;
+  color: var(--ui-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.target {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.done {
+  flex-shrink: 0;
+  color: var(--ui-primary);
+}

@@ -1,0 +1,39 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 10px 10px 14px;
+  border: 1px solid var(--ui-control-border);
+  border-radius: var(--ui-radius-xxl);
+  background: var(--ui-surface);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hint {
+  padding-left: 12px;
+}

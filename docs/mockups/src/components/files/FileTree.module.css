@@ -1,0 +1,57 @@
+.tree {
+  margin: 0;
+  padding: 6px 8px 16px;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding-right: 8px;
+  border-radius: var(--ui-radius-sm);
+  color: var(--ui-ink);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+a.row:hover {
+  background: var(--ui-soft);
+}
+
+.chevron,
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.spacer {
+  flex-shrink: 0;
+  width: 14px;
+}
+
+.name {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mark {
+  flex-shrink: 0;
+  width: 16px;
+  font-family: var(--ui-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.added {
+  color: var(--ui-primary-deep);
+}
+
+.modified {
+  color: var(--ui-amber-deep);
+}

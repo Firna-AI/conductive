@@ -1,0 +1,11 @@
+{
+  "order": [
+    "shell",
+    "banner",
+    "new-workspace",
+    "repository-settings",
+    "chat",
+    "files",
+    "tools"
+  ]
+}

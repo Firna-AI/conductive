@@ -1,1 +1,9 @@
+# Scratch output
 .context/
+
+# Dependencies
+node_modules/
+
+# Mokly build output
+mokly-static/
+.mokly-export-reservations/
