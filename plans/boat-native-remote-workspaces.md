@@ -372,8 +372,9 @@ Added on 5 November 2026 from the mockups of Milestone 1.
   stop, which the user sees in cost and in the app.
 - **Chosen:** B, changed by the user on 5 November 2026: the cloud computer stops
   after 30 minutes without a running agent turn, also while a tab is open
-  and active. The tab then shows a button that resumes it. Decision 29
-  asks whether terminal and preview use count as activity.
+  and active. The tab then shows a button that resumes it. The answer to
+  decision 29 widened this: any user activity on the workspace keeps it
+  running.
 
 ### 12. Update a base by hand
 
@@ -951,7 +952,7 @@ decision.
 
 ### 25. Set what the free plan includes
 
-Open. Added on 5 November 2026 from the user's answer to decision 23.
+Added on 5 November 2026 from the user's answer to decision 23.
 
 - **Severity:** High. **Effort:** Small.
 - **Source:** Design. **Category:** Docs or spec.
@@ -987,10 +988,14 @@ Open. Added on 5 November 2026 from the user's answer to decision 23.
   minutes.
 - **Action:** ask the user, because only the user can set the price of
   the free plan.
+- **Chosen:** D, by the user on 5 November 2026. A free account gets one org, with
+  at most 3 workspaces that exist, not counting archived ones, and 600
+  minutes a month. Its org image refreshes only when the user builds it,
+  and builds count against the minutes.
 
 ### 26. Choose the billing provider
 
-Open. Added on 5 November 2026 from the user's answer to decision 23.
+Added on 5 November 2026 from the user's answer to decision 23.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Design. **Category:** Docs or spec.
@@ -1025,10 +1030,12 @@ Open. Added on 5 November 2026 from the user's answer to decision 23.
   if lower fees matter more than the tax work.
 - **Action:** ask the user, because it is a business choice of fees
   against tax work.
+- **Chosen:** A, by the user on 5 November 2026: Stripe Billing with Stripe Tax. The
+  owner registers for and files the taxes. The agent recommended B.
 
 ### 27. Decide who pays for an org's workspaces
 
-Open. Added on 5 November 2026 from the user's answers to decisions 23
+Added on 5 November 2026 from the user's answers to decisions 23
 and 24.
 
 - **Severity:** Medium. **Effort:** Medium.
@@ -1061,10 +1068,13 @@ and 24.
   stretch at a time boundary, so a reassigned workspace bills each owner
   for their own part.
 - **Action:** ask the user, because it is a pricing choice.
+- **Chosen:** B, by the user on 5 November 2026: the org pays a seat for each member
+  and all of the org's compute, including its image. The agent
+  recommended D.
 
 ### 28. Prevent abuse of free accounts
 
-Open. Added on 5 November 2026 from the user's answer to decision 22.
+Added on 5 November 2026 from the user's answer to decision 22.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design. **Category:** Security.
@@ -1098,10 +1108,16 @@ Open. Added on 5 November 2026 from the user's answer to decision 22.
 - **Recommendation:** D. The first recommendation was B. Boat's terms
   require the terms, the enforcement, and answers to abuse notices.
 - **Action:** ask the user, because B and C add sign-up rules.
+- **Chosen:** B, by the user on 5 November 2026: sign-up requires a GitHub account
+  older than 30 days with a verified email. The agent recommended D.
+- **Risk kept open:** the options check found that Boat's terms require a
+  platform to pass on Boat's rules to its users, enforce them, and answer
+  abuse notices. B does not add terms, a suspend action, or an abuse
+  address.
 
 ### 29. Count terminal and preview use as activity
 
-Open. Added on 5 November 2026 from the user's answer to decision 11.
+Added on 5 November 2026 from the user's answer to decision 11.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design. **Category:** Docs or spec.
@@ -1131,10 +1147,15 @@ Open. Added on 5 November 2026 from the user's answer to decision 11.
   alone still stops, and users now pay for their own time.
 - **Action:** ask the user, because B changes the rule that the user
   chose.
+- **Chosen by the user on 5 November 2026:** any user activity on a workspace keeps
+  its cloud computer running. Agent call: activity is input in the
+  workspace's tabs, such as typing, clicks, and scrolling, terminal
+  input, and requests to a port preview. An open tab alone, or an open
+  connection such as live reload, does not count.
 
 ### 30. Decide what Delete org removes
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1b.
+Added on 5 November 2026 from the mockups of Milestone 1b.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -1170,10 +1191,11 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1b.
   work of every member, and a stopped machine costs no machine time.
 - **Action:** ask the user, because Delete org adds a delete that no
   requirement covers.
+- **Chosen:** D, by the user on 5 November 2026.
 
 ### 31. Decide what closing a session tab does
 
-Open. Added on 5 November 2026 from the mockups of Milestone 1b.
+Added on 5 November 2026 from the mockups of Milestone 1b.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -1209,6 +1231,11 @@ Open. Added on 5 November 2026 from the mockups of Milestone 1b.
   user cannot see it.
 - **Action:** ask the user, because the options trade cost against
   history.
+- **Chosen:** C, by the user on 5 November 2026, with a history list. When no turn
+  runs, closing a session tab moves the session into a history list
+  under a history icon in the tab bar, as in Conductor. Each entry shows
+  the agent, the title, and the time, and reopens the session. When a
+  turn runs, closing asks first, then stops the turn.
 
 ## Design
 
@@ -1294,27 +1321,36 @@ and 1b, and the orchestrator accepted them on 5 November 2026:
 - Users sign in with GitHub. No other sign-in method is offered.
 
 **Plans, billing, and members.** The user decided these on 5 November
-2026, in the answers to decisions 22, 23, and 24:
+2026, in the answers to decisions 22 to 30:
 
-- Anyone with a GitHub account can sign up.
-- A free account gets at most 3 workspaces and a number of compute
-  minutes. Decision 25 sets the numbers and what they count.
-- A paid plan costs $30 per user per month. It includes compute worth
-  $15 at Boat's prices, so the app keeps half of the price when a user
-  uses all of it. More use is charged at Boat's prices plus 10%.
-- The app needs billing. Decision 26 chooses the provider, and decision
-  27 decides who pays for an org's workspaces.
+- Anyone with a GitHub account older than 30 days, with a verified
+  email, can sign up.
+- The org pays. A paid org pays $30 a month for each member's seat, and
+  pays for all of its compute, including its image builds and refreshes.
+- Each seat includes compute worth $15 at Boat's prices, so the app keeps
+  half of the price when the org uses all of it. More use is charged at
+  Boat's prices plus 10%.
+- A free account gets one org with at most 3 workspaces that exist and
+  600 minutes a month. Its image refreshes only when the user builds it,
+  and builds count against the minutes.
+- Billing uses Stripe Billing with Stripe Tax. The owner registers for
+  and files the taxes.
 - Each workspace belongs to the user who created it, until it is
   reassigned. Its agents use that user's own account.
+- Delete org stops every machine and hides the org at once, and deletes
+  everything after 7 days unless an owner restores it.
 
 Agent calls of 5 November 2026:
 
 - Orgs get members, because a workspace can be reassigned to another
   user. An owner invites members by GitHub login. The roles are owner
   and member. Only an owner can reassign a workspace or remove a member.
+- A free org has one member, its owner. Inviting a member needs the paid
+  plan, because the seat is the paid unit.
+- The included compute of a paid org is a pool: $15 for each seat each
+  month.
 - The app offers one machine size for now, Boat's default size of
-  4 vCPU and 8 GB. At $0.036 an hour, the $15 of included compute is
-  about 416 hours a month.
+  4 vCPU and 8 GB. At $0.036 an hour, $15 of compute is about 416 hours.
 - The app meters compute from Boat's usage report for each sandbox,
   which gives seconds and list-price dollars up to the moment of the
   request. It reads the final usage after each stop and before each
@@ -1483,11 +1519,13 @@ push webhooks. The Worker routes each event to the workspace of its
 branch. When a tab opens, the Worker reads the current pull request and
 check state from the GitHub API.
 
-**Prerequisites from the user.** A Cloudflare account on Workers Paid
-with Access. Two domains on that account: one for the app, and a
-separate registrable domain for port previews. A paid Boat plan, the
-app's own Boat environment, and a Boat key limited to it. A GitHub App
-with its key. Milestone 16 needs all of them. Earlier
+**Prerequisites from the user.** A Stripe account with Stripe Tax, and
+the tax registrations that it needs. A Cloudflare account on Workers
+Paid. Two domains on that account: one for the app, and a
+separate registrable domain for port previews. A Boat organization for
+the app on a paid plan, as decision 5 says, with a scoped key and its
+automatic top-up off. A GitHub App with its key and the "Email
+addresses" read permission. Milestone 16 needs all of them. Earlier
 milestones use fakes.
 
 ## Milestone 1: Mockups
@@ -1654,13 +1692,19 @@ Depends on: 1c
 Draw the screens that the billing model and the org members need, as the
 user decided on 5 November 2026.
 
-- [ ] Draw the account billing page: the current plan, the usage this
-      month with its included amount, the overage so far, and links to
-      upgrade and to manage payment.
-- [ ] Draw the upgrade flow to the $30 plan, and the hand-off to the
-      payment page.
-- [ ] Draw the limit states: a free account at 3 workspaces, at its
-      minutes, and at its daily starts, each with one way forward.
+- [ ] Draw the org billing page in the org settings: the plan, the
+      seats, the usage this month against the included pool, the
+      overage so far, and links to upgrade and to manage payment.
+- [ ] Draw the upgrade flow to the paid plan, with the seat count, and
+      the hand-off to Stripe Checkout.
+- [ ] Draw the limit states: a free org at 3 workspaces, at its 600
+      minutes, and at its daily starts, and a free org that tries to
+      invite a member, each with one way forward.
+- [ ] Draw the sign-up refusal for a GitHub account that is too new or
+      has no verified email.
+- [ ] Draw Delete org and the 7-day restore state.
+- [ ] Draw the session history menu under a history icon in the centre
+      tab bar, and closing a tab while a turn runs.
 - [ ] Draw the org members page: invite by GitHub login, the roles, and
       removing a member.
 - [ ] Draw reassigning a workspace to another member, and show the owner
@@ -1855,17 +1899,21 @@ Depends on: 5
       org owner reassign it.
 - [ ] Use the workspace owner's agent credentials, and record the
       workspace's compute use against its owner.
-- [ ] Enforce the plan limits of decision 23 before each create and each
-      start: workspaces, minutes, and starts a day.
+- [ ] Enforce the plan limits of decisions 23 and 25 before each create
+      and each start: workspaces, minutes, starts a day, and members of a
+      free org.
+- [ ] Check the GitHub account age and the verified email at sign-up.
+- [ ] Add Delete org with the 7-day restore, and read the final usage
+      and remove the saved snapshots before each delete.
 - [ ] Test the limits and the reassignment against the fake Boat server.
 
 ## Milestone 15b: Billing backend
 
 Depends on: 15a
 
-- [ ] Add the billing provider of decision 26: the free plan, the $30
-      plan per user, the included compute, and the overage at Boat's
-      prices plus 10%.
+- [ ] Add Stripe Billing with Stripe Tax: the free plan, the paid plan
+      at $30 a seat, the included compute pool of $15 a seat, and the
+      overage at Boat's prices plus 10%, billed to the org.
 - [ ] Meter compute from Boat's usage of each sandbox, and report it to
       the billing provider.
 - [ ] Handle the billing provider's webhooks: upgrade, payment failure,
@@ -1878,8 +1926,8 @@ Tags: ui
 
 Depends on: 6, 15a, 15b
 
-- [ ] Build the account billing page, the upgrade flow, and the limit
-      states.
+- [ ] Build the org billing page, the upgrade flow, the limit states,
+      the sign-up refusal, and Delete org with its restore.
 - [ ] Build the org members page and workspace reassignment.
 - [ ] Compare each screen with its mockup.
 
