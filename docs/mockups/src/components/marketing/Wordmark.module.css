@@ -1,14 +1,6 @@
 .wordmark {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
   min-height: var(--ui-touch-min);
-  color: var(--ui-ink);
   text-decoration: none;
-}
-
-.name {
-  font-size: 15px;
-  font-weight: var(--ui-weight-heading);
-  letter-spacing: -0.01em;
 }

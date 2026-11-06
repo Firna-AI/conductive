@@ -48,6 +48,12 @@ says.
 
 - A request reaches an org, its workspaces, and their sandboxes only for a
   member of that org.
+- An open tab loses its workspace connection within 30 seconds after its
+  user loses access: a removal from the org, a sign-out, or a deleted
+  org (decision 70). The workspace checks the access of its open tabs
+  again at most every 30 seconds, and closes each tab that fails.
+- A runner connection gets no agent login after its workspace token is
+  revoked. The workspace checks the token again before each login.
 - Before each sandbox call, the Worker checks in its records that the
   sandbox belongs to a workspace of that org.
 - The Worker calls only a fixed list of Boat routes. It has no general
@@ -110,8 +116,13 @@ says.
   each git operation. It proves itself with the workspace token.
 - Reason: a GitHub App user token expires after 8 hours, and the secrets
   of a sandbox change only at a resume.
-- Open decision 50 sets which repositories the token reaches, and whether
-  it acts as a person or as the app.
+- The token is a GitHub App user token of the person who sent the current
+  turn, so pushes and pull requests show as that person (decision 50).
+  The helper gets it fresh for each call, and the sandbox never stores
+  it.
+- A user token reaches every repository where that person installed the
+  GitHub App and has access. A limit to the org's repositories was
+  rejected for now, because GitHub cannot set it on a user token.
 
 ## Secrets that users enter
 

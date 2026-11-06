@@ -3,6 +3,8 @@
  */
 
 import { changedFiles, type ChangedFile } from './files'
+import type { MacCommandRequest, MacCommandState } from './mac'
+import { macConversations } from './macConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
@@ -23,6 +25,13 @@ export type ChatItem =
       target: string
       detail?: string
       status: ToolCallStatus
+    }
+  | {
+      /** A command that the agent asks to run on the Mac of the sender. */
+      kind: 'mac-command'
+      id: string
+      request: MacCommandRequest
+      state: MacCommandState
     }
   | { kind: 'stopped'; id: string }
   | { kind: 'error'; id: string; text: string }
@@ -45,6 +54,11 @@ export const conversationKeys = [
   'failed',
   'queued',
   'first-turn',
+  'mac-waiting',
+  'mac-waiting-suite',
+  'mac-denied',
+  'mac-done',
+  'mac-unavailable',
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -133,10 +147,16 @@ const savedCartsAsk = {
   text: savedCartsMessage,
 } as const
 
+const history: readonly ChatItem[] = [
+  ...autocompleteStart,
+  ...autocompleteTests,
+  ...autocompleteEnd,
+]
+
 export const conversations: Readonly<
   Record<ConversationKey, readonly ChatItem[]>
 > = {
-  history: [...autocompleteStart, ...autocompleteTests, ...autocompleteEnd],
+  history,
   running: [
     ...autocompleteStart,
     ...autocompleteTests,
@@ -182,6 +202,7 @@ export const conversations: Readonly<
     },
     { kind: 'working', id: 'working', elapsed: '24s' },
   ],
+  ...macConversations(history),
 }
 
 /** The steer message that the user types while a turn runs. */
