@@ -2230,6 +2230,40 @@ Open. Added on 5 November 2026 from the answer to decision 39.
 - **Action:** ask the user, because A adds a refusal, and each option adds
   behaviour that no requirement covers.
 
+### 56. Decide what happens when an org's Boat key changes account
+
+Open. Added on 5 November 2026 from the Milestone 2 docs.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** An org owner adds the org's one Boat key, as decision 46
+  says. The org image and every cloud computer of the org live in the
+  Boat account of that key. The plan has no way to move a cloud computer
+  to another Boat account.
+- **Problem:** No rule says what happens when an owner replaces the key
+  with a key of another Boat account.
+- **Impact if no action:** The new key cannot reach the old cloud
+  computers or the old image. Every workspace then fails to start, and
+  its unpushed work is out of reach.
+- **Root question:** What happens to an org's cloud computers and image
+  when its Boat key changes to another Boat account?
+- **Options:**
+  - **A.** The app accepts a new key only when it reaches the same Boat
+    account. The key screen says why it refuses a key of another account.
+    It is a new rejection. Effort: Small.
+  - **B.** The app accepts a key of another account after a warning. The
+    old workspaces keep their chat read-only, as archived workspaces do,
+    and the owner builds the image again. Effort: Medium.
+  - **C.** As B, but the app first shares the org image with the new
+    account. Effort: Medium.
+- **Left out:** Change nothing, because every start then fails without a
+  warning.
+- **Wider fix:** None.
+- **Recommendation:** A. Nothing gets stranded, and an owner who wants
+  another Boat account can still create a new org.
+- **Action:** ask the user, because A adds a rejection, and each option
+  adds behaviour that no requirement covers.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -2344,6 +2378,8 @@ Agent calls of 5 November 2026:
   start must pass the new owner's agent credentials.
 - The app offers one machine size for now, Boat's default size of
   4 vCPU and 8 GB.
+- A Boat key that Boat refuses counts as no key, so the composer notice of
+  decision 33 shows.
 
 Decision 45 removed the plans, the seats, the compute pool, the overage,
 the metering, the upgrade, and the free plan's limits on 5 November 2026.
@@ -2417,8 +2453,8 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   user authorization, so one app gives both the identity and the
   repository access. The Worker keeps the session in a signed cookie that
   is HttpOnly, Secure, and SameSite=Lax. This replaces Cloudflare Access.
-- Agent call: each request checks that the signed-in user owns the org
-  and the workspace that it names. Decision 22 decides who may sign in.
+- Agent call: each request checks that the signed-in user is a member of
+  the org that owns the workspace that it names. Decision 22 decides who may sign in.
 - Each Boat key is the user's own, as decision 44 says. The Worker
   stores it encrypted, uses it only for the cloud computers that it
   belongs to, and never sends it to the browser or into a cloud
@@ -2429,7 +2465,7 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   and per-sandbox variables change only at a resume.
 - The Worker calls only a fixed list of Boat routes. It has no general
   pass-through. Before each sandbox call, it checks that the sandbox
-  belongs to a workspace of the signed-in user in D1.
+  belongs to a workspace of an org of the signed-in user in D1.
 - Each hostname has one gate that runs before every route and every
   WebSocket upgrade. It checks the sign-in, a matching `Origin` header,
   and a JSON body for writes. Reason from the options check: an upgrade
@@ -2501,7 +2537,7 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
 - A sandbox stops after 30 minutes with no user activity and no running
   agent turn, as decisions 11 and 29 say. Reason: a Boat stop ends all processes, so it must not cut off
   work. Opening the workspace resumes it, and the app shows a starting
-  state until Boat reports it ready.
+  state until the runner reports ready.
 - Near day 14 of a stop, the app starts the cloud computer briefly and
   stops it again, so that Boat keeps its disk, as decision 43 says.
 - The terminal is `ttyd` as a systemd service in the org image,
@@ -2545,8 +2581,7 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   version. The Durable Object serves each version that a live image or
   sandbox can hold, and each image build installs the newest runner.
   Reason: a stopped sandbox can resume weeks later with an old runner.
-- Agents create workspaces through an MCP server and a CLI in the base
-  snapshot. Both call the Worker with the workspace token.
+- Agents create workspaces through an MCP server and a CLI in the org image. Both call the Worker with the workspace token.
 - Agents use the computer tools of the Cua Driver, the MCP server
   `computer` on every sandbox, for browser work. The app embeds the Boat
   desktop stream, so the user can watch.
@@ -2559,8 +2594,7 @@ check state from the GitHub API.
 **Prerequisites from the user.** A Cloudflare account on Workers Paid.
 Two domains on that account: one for the app, and a separate registrable
 domain for port previews. A Boat key for development and tests, as
-decision 44 says. A GitHub App with its key and the "Email
-addresses" read permission. Anthropic's Commercial Terms, accepted
+decision 44 says. A GitHub App with its key. Anthropic's Commercial Terms, accepted
 through an Anthropic Console account, because they govern products that
 run Claude Code. Milestone 16 needs all of them. Earlier milestones use
 fakes.
@@ -2818,13 +2852,13 @@ Depends on: 1, 1a, 1b, 1c, 1d, 1e
 
 State the requirements and the decisions in force for the work below.
 
-- [ ] Write `AGENTS.md` with the `agents-md` skill, and link `CLAUDE.md`
+- [x] Write `AGENTS.md` with the `agents-md` skill, and link `CLAUDE.md`
       to it.
-- [ ] Write `README.md` with the features, the setup, and the key code.
-- [ ] Write `docs/architecture.md` with the components and their
+- [x] Write `README.md` with the features, the setup, and the key code.
+- [x] Write `docs/architecture.md` with the components and their
       boundaries.
-- [ ] Write the six protocol docs named under "Contract owners".
-- [ ] Add the build output to `.gitignore`.
+- [x] Write the six protocol docs named under "Contract owners".
+- [x] Add the build output to `.gitignore`.
 
 ## Milestone 3: Repository bootstrap
 
@@ -2962,8 +2996,7 @@ Depends on: 6, 9
 
 Depends on: 5
 
-- [ ] Add the `ttyd` service with a per-workspace password to the base
-      snapshot setup.
+- [ ] Add the `ttyd` service with a per-workspace password to the org image setup.
 - [ ] Expose private ports, and proxy them with the `_port_auth`
       cookie, including WebSockets.
 - [ ] Issue random preview hostnames on the preview domain, map them in
