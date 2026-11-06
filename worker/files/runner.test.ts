@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 
 import { recordedFileResponses } from '../../src/test-support/recorded-files'
 import { connectFilesRunner } from './test-support/runner'
@@ -91,6 +91,52 @@ it('enforces the configured byte limit on runner text, binary, and size errors',
     sizeBytes: 73,
     limitBytes: 16,
   })
+  const largeBinary = files.read('large-image.bin', 4_194_304)
+  runner.reply({
+    type: 'file.read.result',
+    requestId: 'request-4',
+    result: {
+      ok: true,
+      file: {
+        path: 'large-image.bin',
+        mediaType: 'application/octet-stream',
+        encoding: 'base64',
+        content: `${'AAAA'.repeat(1_398_101)}AA==`,
+        sizeBytes: 4_194_304,
+      },
+    },
+  })
+  await expect(largeBinary).resolves.toMatchObject({
+    path: 'large-image.bin',
+    encoding: 'base64',
+    sizeBytes: 4_194_304,
+  })
+  const decode = vi.spyOn(globalThis, 'atob')
+  try {
+    const underdeclared = files.read('underdeclared.bin', 3)
+    runner.reply({
+      type: 'file.read.result',
+      requestId: 'request-5',
+      result: {
+        ok: true,
+        file: {
+          path: 'underdeclared.bin',
+          mediaType: 'application/octet-stream',
+          encoding: 'base64',
+          content: 'AAAA'.repeat(100_000),
+          sizeBytes: 1,
+        },
+      },
+    })
+    await expect(underdeclared).rejects.toMatchObject({
+      status: 413,
+      sizeBytes: 300_000,
+      limitBytes: 3,
+    })
+    expect(decode.mock.calls.length).toBe(0)
+  } finally {
+    decode.mockRestore()
+  }
 })
 
 it('rejects pending reads on disconnect and cleans up aborted requests', async () => {

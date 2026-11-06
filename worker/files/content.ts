@@ -3,17 +3,27 @@ import { isRecord } from '../http'
 import { FileTooLargeError, invalidFileResponse } from './errors'
 import { natural } from './parsers'
 
-export function fileBytes(file: FileResponse): Uint8Array<ArrayBuffer> {
+export function fileBytes(
+  file: FileResponse,
+  maxBytes?: number,
+): Uint8Array<ArrayBuffer> {
   if (file.encoding === 'utf-8')
     return Uint8Array.from(new TextEncoder().encode(file.content))
+  if (
+    file.content.length % 4 !== 0 ||
+    !/^[A-Za-z0-9+/]*={0,2}$/.test(file.content)
+  ) {
+    throw invalidFileResponse()
+  }
+  const padding = file.content.endsWith('==')
+    ? 2
+    : file.content.endsWith('=')
+      ? 1
+      : 0
+  const size = (file.content.length / 4) * 3 - padding
+  if (maxBytes !== undefined && size > maxBytes)
+    throw new FileTooLargeError(size, maxBytes)
   try {
-    if (
-      !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(
-        file.content,
-      )
-    ) {
-      throw invalidFileResponse()
-    }
     return Uint8Array.from(atob(file.content), (character) =>
       character.charCodeAt(0),
     )
@@ -47,7 +57,7 @@ export function parseFile(
     encoding: value.encoding,
     content: value.content,
   }
-  const size = fileBytes(file).byteLength
+  const size = fileBytes(file, maxBytes).byteLength
   if (size > maxBytes) throw new FileTooLargeError(size, maxBytes)
   if (size !== file.sizeBytes) throw invalidFileResponse()
   return file
