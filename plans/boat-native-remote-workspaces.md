@@ -2373,7 +2373,7 @@ Added on 6 November 2026 with decision 58.
 
 ### 60. Decide how the Origin check treats browser reads
 
-Open. Added on 6 November 2026 from Milestone 4.
+Added on 6 November 2026 from Milestone 4.
 
 - **Severity:** High. **Effort:** Small.
 - **Source:** Implementation. **Category:** Security.
@@ -2403,6 +2403,38 @@ Open. Added on 6 November 2026 from Milestone 4.
   every write and every socket.
 - **Action:** ask the user, because A changes a requirement of the access
   protocol.
+- **Chosen:** A, by the user on 6 November 2026.
+
+### 61. Decide the backend stack
+
+Added on 6 November 2026 from the user's question: "how hard would it be
+to use a postgres backend/rust api server - would that make the plan
+longer - what could be done to do a minimal version?"
+
+- **Severity:** High. **Effort:** Small, for option E.
+- **Source:** Design. **Category:** Code structure.
+- **Background:** Decision 1 chose a Cloudflare Worker with D1 and
+  Durable Objects. Milestone 4 built sign-in, sessions, keys, the gate,
+  and the Boat client in TypeScript. The live parts, which fit Durable
+  Objects, are not built yet. The user's usual stack is Rust and
+  Postgres.
+- **Options:**
+  - **A.** Keep the TypeScript Worker, D1, and Durable Objects. Effort:
+    Small.
+  - **B.** Keep the Worker and the Durable Objects, and replace D1 with
+    Postgres through Hyperdrive. About 1 day more. Effort: Medium.
+  - **C.** A Rust API server with Postgres, and Durable Objects only for
+    the live connections. About 3 to 5 days more. Effort: Large.
+  - **D.** One Rust server with Postgres for everything, as one container
+    in the EU. About 4 to 6 days more. Effort: Large.
+  - **E.** A now, and a follow-up item to move to Rust and Postgres after
+    the first usable release, behind the contracts of Milestone 4a.
+    Effort: Small now.
+- **Left out:** Rust compiled for Workers, because its tools are thinner
+  and it gives neither a normal Rust server nor the usual Postgres setup.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 6 November 2026. The follow-up item is
+  `plans/follow-ups/move-backend-to-rust-and-postgres.md`.
 
 ## Design
 
@@ -3124,6 +3156,9 @@ as decision 58 says.
       milestone builds without its backend.
 - [ ] Add a fake runner, so that the Durable Object builds without a cloud
       computer.
+- [ ] Apply decision 60 A in the gate: a GET or HEAD read may come without
+      `Origin`, a present `Origin` must match, and every write and socket
+      upgrade needs a matching `Origin`.
 - [ ] Run the complete gate.
 
 ## Milestone 5: Bases and workspace lifecycle

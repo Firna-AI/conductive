@@ -34,8 +34,10 @@ says.
 - Two routes of `app.conducting.build` need no sign-in: the health check,
   and the GitHub sign-in with its callback. The callback checks its
   `state` value instead.
-- Open decision 60 asks how the `Origin` check treats ordinary browser
-  reads, which carry no `Origin` header.
+- A GET or HEAD read may come without an `Origin` header, because
+  browsers send none on a read from the same site. A present `Origin`
+  must match. Every write and every socket upgrade needs a matching
+  `Origin` (decision 60).
 - The hostname for machines serves the GitHub webhooks, the agent tools,
   the agent runner, and the git credential helper. Its gate checks a
   webhook signature or a workspace token in place of the sign-in.
