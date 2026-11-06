@@ -308,6 +308,9 @@ call to action, and a footer. Both actions, "Start free with GitHub"
 and "Sign in", lead to `app/sign-in`. The parts live in
 `src/components/marketing/`.
 
+The site keeps still captures of the workspace screen, the org settings cloud computer tab, and the phone workspace list.
+Changes to those screens require recapture with the [capture steps](../../src/marketing/README.md#pictures).
+
 - Every picture is a real screen of the catalogue, not a drawing of one.
   `ScreenFrame` lays the screen out at its own size, 1440 × 900 on desktop
   and 390 × 800 on a phone, then scales it and crops it to one part.

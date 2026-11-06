@@ -1,0 +1,175 @@
+/* The sections of the home page under the hero, and the last action. */
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 144px;
+  padding: 24px 32px 144px;
+  scroll-margin-top: 16px;
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* A quiet stage with a full hairline outline and a faint dot grid. */
+.stage {
+  --stage-padding-x: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+  padding: 44px var(--stage-padding-x);
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: 14px;
+  background-color: var(--ui-sidebar);
+  background-image: radial-gradient(
+    circle,
+    var(--ui-border) 1px,
+    transparent 1.4px
+  );
+  background-size: 18px 18px;
+  box-sizing: border-box;
+}
+
+/* A picture may reach into the padding of its stage, but no further. */
+.stage > .frame {
+  max-width: calc(100% + 2 * var(--stage-padding-x));
+}
+
+/* A tall picture starts near the top and runs off the bottom edge. */
+.stage-bleed {
+  align-items: flex-start;
+  height: 460px;
+  padding-bottom: 0;
+}
+
+/* A section of smaller features in a grid, under one headline. */
+.grid-section {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px 40px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Each item sits under a neutral hairline, as a row of a table does. */
+.grid-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ui-border);
+}
+
+.grid-icon {
+  margin-bottom: 4px;
+  color: var(--ui-muted);
+}
+
+.grid-title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 15px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.005em;
+  line-height: 1.4;
+}
+
+.grid-text {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.closing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.closing-title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 34px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.028em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.closing-text {
+  max-width: 520px;
+  margin: 0 0 12px;
+  color: var(--ui-muted);
+  font-size: 16px;
+  line-height: 1.6;
+  text-wrap: balance;
+}
+
+@media (max-width: 759.98px) {
+  .sections {
+    gap: 88px;
+    padding: 8px 20px 88px;
+  }
+
+  .feature {
+    gap: 22px;
+  }
+
+  .stage {
+    --stage-padding-x: 12px;
+
+    min-height: 0;
+    padding: 24px var(--stage-padding-x);
+    border-radius: 12px;
+  }
+
+  .stage-bleed {
+    height: 420px;
+    padding-bottom: 0;
+  }
+
+  .grid-section {
+    gap: 28px;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .closing {
+    align-items: stretch;
+  }
+
+  .closing-title {
+    font-size: 26px;
+  }
+
+  .closing-text {
+    font-size: 15px;
+  }
+}
