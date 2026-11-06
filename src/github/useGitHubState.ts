@@ -18,11 +18,10 @@ export function useGitHubState(
     () => new GitHubStore({ orgId, workspaceId }),
     [orgId, workspaceId],
   )
-  useEffect(() => {
-    const disconnect = store.connect({ fetch, subscribe })
-    void store.load()
-    return disconnect
-  }, [store, fetch, subscribe])
+  useEffect(
+    () => store.connect({ fetch, subscribe }),
+    [store, fetch, subscribe],
+  )
   const state = useSyncExternalStore(
     store.listen,
     store.getState,

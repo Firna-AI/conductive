@@ -62,17 +62,46 @@ export function connect(
  */
 export function heldReplies(server: FakeApiServer) {
   const held: (() => void)[] = []
+  const responses: Promise<Response>[] = []
+  const requestListeners = new Set<() => void>()
   const fetch: FetchLike = (input, init) => {
     const answer = server.fetch(input, init)
     const delivered = new Promise<void>((resolve) => {
       held.push(resolve)
     })
-    return delivered.then(() => answer)
+    const response = delivered.then(() => answer)
+    responses.push(response)
+    for (const listener of requestListeners) listener()
+    return response
   }
-  const release = (): void => {
+  const release = async (): Promise<void> => {
+    const released = responses.splice(0)
     for (const deliver of held.splice(0)) deliver()
+    await Promise.all(released)
   }
-  return { fetch, release }
+  const onRequest = (listener: () => void): (() => void) => {
+    requestListeners.add(listener)
+    return () => {
+      requestListeners.delete(listener)
+    }
+  }
+  return { fetch, release, onRequest }
+}
+
+/** A reply either shows its state or starts a read after conflicting history. */
+export function nextReadResult(
+  store: GitHubStore,
+  replies: ReturnType<typeof heldReplies>,
+): Promise<void> {
+  return new Promise((resolve) => {
+    const finish = (): void => {
+      stopState()
+      stopRequest()
+      resolve()
+    }
+    const stopState = store.listen(finish)
+    const stopRequest = replies.onRequest(finish)
+  })
 }
 
 /** The number of reads of the banner route that the server answered. */
@@ -109,18 +138,24 @@ export function nextChange(store: GitHubStore): Promise<void> {
 }
 
 /** A stream whose history comes later than the subscription, as a socket's does. */
-export function lateHistory(store: GitHubStore, fetch: FetchLike) {
+export function lateHistory(
+  store: GitHubStore,
+  fetch: FetchLike,
+  initial: WorkspaceEventEnvelope[] | null = null,
+) {
   let listener: (message: WorkspaceSocketMessage) => void = () => undefined
-  store.connect({
-    fetch,
-    subscribe: (_after, next) => {
-      listener = next
-      return () => undefined
-    },
-  })
-  return (events: WorkspaceEventEnvelope[]) =>
+  const deliver = (events: WorkspaceEventEnvelope[]) =>
     listener({
       type: 'history',
       history: { events, throughEventNumber: events.at(-1)?.eventNumber ?? 0 },
     })
+  store.connect({
+    fetch,
+    subscribe: (_after, next) => {
+      listener = next
+      if (initial) deliver(initial)
+      return () => undefined
+    },
+  })
+  return deliver
 }

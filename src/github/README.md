@@ -74,8 +74,9 @@ The store applies them in this way:
 
 - Events apply in the order of their numbers. The store skips an event of
   another workspace, a repeated event, and an event older than the last one.
-- The first read starts at once, so the views load even when the history
-  never comes.
+- `GitHubStore.connect()` starts the first read and the event subscription.
+  The first read starts even when the history never comes.
+  `useGitHubState` connects the store and subscribes the views.
 - A live GitHub event shows at once, and it cancels a read that runs.
 - A history that comes before a read shows at once. The reply of the read
   then replaces it, because the read returns the current state.
@@ -113,7 +114,10 @@ mounts it, and the production build leaves it out.
 ## Key code
 
 - `useGitHubState.ts`: the hook that gives one workspace its store.
-- `githubStore.ts`: merges loads, the event history, and live events in order.
+- `githubStore.ts`: starts the first read on connection, then merges reads,
+  the event history, and live events in order.
+- `useGitHubState.test.tsx`: mounts a hook probe with the real store and fake
+  API. Only this test file uses happy-dom. The view tests use static markup.
 - `sameState.ts`: compares two GitHub states, without the banner time.
 - `githubClient.ts` and `githubParse.ts`: read the two API replies, and check
   them against the contract.

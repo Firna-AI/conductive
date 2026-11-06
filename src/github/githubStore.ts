@@ -77,10 +77,11 @@ export class GitHubStore {
     }
   }
 
-  /** Reads the event stream until the returned function disconnects. */
+  /** Starts the first API read and the stream until the returned function disconnects. */
   connect(source: GitHubSource): () => void {
     this.source = source
     const unsubscribe = source.subscribe(this.lastEventNumber, this.receive)
+    void this.load()
     return () => {
       unsubscribe()
       if (this.source !== source) return

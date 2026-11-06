@@ -9,6 +9,7 @@ import {
   connect,
   githubEvent,
   heldReplies,
+  nextChange,
   readsOf,
   serveState,
   shown,
@@ -36,7 +37,7 @@ it('shows the newest GitHub event of the history, and each live event after a lo
   const store = new GitHubStore(target)
   connect(store, new FakeApiServer({ banner: 'blocked' }).fetch, events)
   const fromHistory = shown(store)
-  await store.load()
+  await nextChange(store)
   const loaded = shown(store)
 
   events.emit(githubEvent(4, 'merged'))
@@ -91,17 +92,20 @@ it('keeps a live GitHub event that arrives while a read runs, whatever its time'
   const replies = heldReplies(server)
   const store = new GitHubStore(target)
   connect(store, replies.fetch, server.events)
+  const ready = nextChange(store)
+  await replies.release()
+  await ready
   const next = server.events.history().throughEventNumber + 1
   const hourAgo = FAKE_TIME - 3_600_000
 
   const loading = store.load()
   server.events.emit(githubEvent(next, 'merged', { updatedAt: hourAgo }))
-  replies.release()
+  await replies.release()
   await loading
 
   expect({ shown: shown(store), reads: readsOf(server) }).toEqual({
     shown: 'merged',
-    reads: 1,
+    reads: 2,
   })
 })
 
@@ -109,21 +113,29 @@ it('ignores the events of another workspace, and a load that ends after the work
   const server = new FakeApiServer({ banner: 'ready-to-merge' })
   const store = new GitHubStore(target)
   connect(store, server.fetch, server.events)
-  await store.load()
+  await nextChange(store)
   const next = server.events.history().throughEventNumber + 1
   server.events.emit(
     githubEvent(next, 'merged', { workspaceId: 'saved-carts' }),
   )
 
-  const replies = heldReplies(new FakeApiServer({ banner: 'conflict' }))
+  const lateServer = new FakeApiServer({ banner: 'ready-to-merge' })
+  const replies = heldReplies(lateServer)
   const closed = new GitHubStore(target)
   const disconnect = connect(closed, replies.fetch, new FakeWorkspaceEvents([]))
+  const ready = nextChange(closed)
+  await replies.release()
+  await ready
+  serveState(lateServer, 'conflict')
   const late = closed.load()
   disconnect()
-  replies.release()
+  await replies.release()
   await late
 
-  expect([shown(store), shown(closed)]).toEqual(['ready-to-merge', 'loading'])
+  expect([shown(store), shown(closed)]).toEqual([
+    'ready-to-merge',
+    'ready-to-merge',
+  ])
 })
 
 it('ignores a repeated or an older event after a newer one', () => {
@@ -141,10 +153,9 @@ it('ignores a repeated or an older event after a newer one', () => {
 it('shows an error for a failed or a broken reply, loads again on Try again, and keeps a shown state when a reload fails', async () => {
   const server = new FakeApiServer({ banner: 'ready-to-merge' })
   const store = new GitHubStore(target)
-  connect(store, server.fetch, new FakeWorkspaceEvents([]))
-
   server.json('GET', bannerPath, unavailable, 503)
-  await store.load()
+  connect(store, server.fetch, new FakeWorkspaceEvents([]))
+  await nextChange(store)
   const failed = store.getState()
   server.json('GET', bannerPath, toolFixtures('ready-to-merge').banner)
   server.json('GET', checksPath, {

@@ -9,6 +9,7 @@ import {
   heldReplies,
   lateHistory,
   nextChange,
+  nextReadResult,
   readsOf,
   shown,
   target,
@@ -78,15 +79,16 @@ export async function openTab(
 ) {
   const replies = heldReplies(server)
   const store = new GitHubStore(target)
-  const deliverHistory = lateHistory(store, replies.fetch)
-  if (order === 'before') {
-    change()
-    deliverHistory([history])
-  }
-  const firstRead = store.load()
+  if (order === 'before') change()
+  const deliverHistory = lateHistory(
+    store,
+    replies.fetch,
+    order === 'before' ? [history] : null,
+  )
   if (order !== 'before') change()
   if (order === 'during') deliverHistory([history])
-  replies.release()
+  const firstRead = nextReadResult(store, replies)
+  await replies.release()
   await firstRead
   if (order === 'after') deliverHistory([history])
   const reads = readsOf(server)
@@ -94,7 +96,7 @@ export async function openTab(
   if (reads > 1) {
     whileReading = shown(store)
     const changed = nextChange(store)
-    replies.release()
+    await replies.release()
     await changed
   }
   return { shown: shown(store), whileReading, reads }
