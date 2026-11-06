@@ -58,10 +58,10 @@ export class JsonRpc {
     this.port.write(JSON.stringify({ method }))
   }
 
-  close(): void {
+  async close(): Promise<void> {
     this.closed = true
     this.rejectPending()
-    this.port.close()
+    await this.port.close()
   }
 
   private receive(input: Record<string, unknown>): void {
@@ -102,7 +102,6 @@ export class JsonRpc {
 
   private fail(): void {
     if (this.closed) return
-    this.close()
-    this.exited()
+    void this.close().then(this.exited, this.exited)
   }
 }

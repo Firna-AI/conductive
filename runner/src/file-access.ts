@@ -1,6 +1,6 @@
 import { constants } from 'node:fs'
-import { open, realpath } from 'node:fs/promises'
-import { isAbsolute, relative, resolve, sep } from 'node:path'
+import { open, readlink, realpath } from 'node:fs/promises'
+import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 
 import type { FileResponse } from '../../src/shared/files'
 import type { RunnerFileError } from '../../src/shared/runner-files'
@@ -68,7 +68,10 @@ export async function readBytes(
       relative(canonicalRoot, target).split(sep).includes('.git')
     )
       throw unavailable()
-    const file = await open(target, constants.O_RDONLY | constants.O_NOFOLLOW)
+    const file = await open(
+      target,
+      constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK,
+    )
     try {
       const openedPath = await realpath(`/proc/self/fd/${file.fd}`)
       if (
@@ -118,6 +121,24 @@ export async function readBytes(
       })
     throw unavailable()
   }
+}
+
+/** Git stores link text. Its parent must still belong to this repository. */
+export async function readLinkBytes(
+  root: string,
+  path: string,
+): Promise<Buffer> {
+  safePath(path)
+  const canonicalRoot = await realpath(root)
+  const parent = await realpath(dirname(resolve(root, path)))
+  if (
+    !inside(canonicalRoot, parent) ||
+    relative(canonicalRoot, parent).split(sep).includes('.git')
+  )
+    throw unavailable()
+  return readlink(resolve(parent, path.slice(path.lastIndexOf('/') + 1)), {
+    encoding: 'buffer',
+  })
 }
 
 export async function readFileResponse(

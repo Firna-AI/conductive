@@ -1,36 +1,44 @@
 import { execFile } from 'node:child_process'
-import { promisify } from 'node:util'
-
-const execute = promisify(execFile)
+export interface GitRunOptions {
+  input?: Buffer
+  literalPathspecs?: boolean
+}
 
 export class Git {
   readonly root: string
-  constructor(root: string) {
+  private readonly environment: Record<string, string>
+  constructor(root: string, environment: Record<string, string> = {}) {
     this.root = root
+    this.environment = environment
   }
 
-  async run(args: readonly string[], allowDifference = false): Promise<Buffer> {
-    try {
-      const result = await execute('git', ['--literal-pathspecs', ...args], {
-        cwd: this.root,
-        encoding: 'buffer',
-        maxBuffer: 64 * 1024 * 1024,
-        env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' },
-      })
-      return result.stdout
-    } catch (error) {
-      if (
-        allowDifference &&
-        error instanceof Error &&
-        'code' in error &&
-        error.code === 1 &&
-        'stdout' in error &&
-        Buffer.isBuffer(error.stdout)
-      ) {
-        return error.stdout
-      }
-      throw new Error('The repository command failed.', { cause: error })
-    }
+  run(args: readonly string[], options: GitRunOptions = {}): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const child = execFile(
+        'git',
+        [
+          ...(options.literalPathspecs === false
+            ? []
+            : ['--literal-pathspecs']),
+          ...args,
+        ],
+        {
+          cwd: this.root,
+          encoding: 'buffer',
+          maxBuffer: 64 * 1024 * 1024,
+          env: { ...process.env, ...this.environment, GIT_OPTIONAL_LOCKS: '0' },
+        },
+        (error, stdout) => {
+          if (error)
+            reject(
+              new Error('The repository command failed.', { cause: error }),
+            )
+          else resolve(stdout)
+        },
+      )
+      child.stdin?.on('error', () => {})
+      child.stdin?.end(options.input)
+    })
   }
 
   async resolve(branch: string): Promise<string> {

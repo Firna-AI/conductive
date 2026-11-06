@@ -30,6 +30,8 @@ export interface ProviderProcess {
   /** A deferred choice needs a new provider turn at the next safe boundary. */
   model(choice: AgentChoice): Promise<'applied' | 'deferred'>
   interrupt(): Promise<void>
+  /** Ends the visible turn and all provider input still waiting to run. */
+  stop(): Promise<void>
   close(): Promise<void>
 }
 

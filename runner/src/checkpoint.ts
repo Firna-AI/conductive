@@ -1,37 +1,44 @@
 import { createHash } from 'node:crypto'
+import { join, resolve } from 'node:path'
 
 import type { ChangedFile } from '../../src/shared/files'
-import { readBytes } from './file-access'
-import { zeroPaths } from './git'
+import { Git } from './git'
+import { indexEntries } from './git-entries'
+import { updateWorkingIndex, withGitIndex } from './git-index'
 import type { Repository } from './repository'
 
 export type Checkpoint = Map<string, string>
 
 export async function checkpoint(repository: Repository): Promise<Checkpoint> {
-  const paths = zeroPaths(
-    await repository.git.run([
-      'ls-files',
-      '--cached',
-      '--others',
-      '--exclude-standard',
-      '-z',
-    ]),
-  )
-  const entries = await Promise.all(
-    paths.map(async (path): Promise<[string, string] | null> => {
-      try {
-        const content = await readBytes(
-          repository.git.root,
-          path,
-          Number.MAX_SAFE_INTEGER,
-        )
-        return [path, createHash('sha256').update(content).digest('hex')]
-      } catch {
-        return null
+  return gitCheckpoint(repository.git)
+}
+
+async function gitCheckpoint(source: Git): Promise<Checkpoint> {
+  return withGitIndex(source, async (index) => {
+    await updateWorkingIndex(index)
+    const result: Checkpoint = new Map()
+    for (const entry of await indexEntries(index.git)) {
+      let state = `${entry.mode} ${entry.oid} ${entry.stage}`
+      if (entry.mode === '160000') {
+        const child = new Git(join(source.root, entry.path))
+        try {
+          const top = (await child.run(['rev-parse', '--show-toplevel']))
+            .toString()
+            .replace(/\n$/, '')
+          if (resolve(top) === resolve(child.root)) {
+            const files = await gitCheckpoint(child)
+            state += ` ${createHash('sha256')
+              .update(JSON.stringify([...files]))
+              .digest('hex')}`
+          }
+        } catch {
+          /* An uninitialized submodule retains its recorded commit. */
+        }
       }
-    }),
-  )
-  return new Map(entries.filter((entry) => entry !== null))
+      result.set(entry.path, `${result.get(entry.path) ?? ''}${state}\n`)
+    }
+    return result
+  })
 }
 
 export async function changedSince(

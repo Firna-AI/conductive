@@ -7,9 +7,8 @@ import { checkpoint, changedSince } from './checkpoint'
 import { AgentEngine } from './engine'
 import { FileReporter } from './files'
 import { RunnerLink } from './link'
-import { parseEvent } from './stored-events'
+import { OutputSanitizer } from './output-sanitizer'
 import { Repository } from './repository'
-import { redact } from './providers/environment'
 import type { EngineOptions } from './engine-session'
 import type { EventStore } from './state'
 
@@ -34,7 +33,8 @@ export class Runner {
   readonly files: FileReporter
   readonly engine: AgentEngine
   private readonly options: RunnerOptions
-  private readonly secrets = new Set<string>()
+  private readonly sanitizer = new OutputSanitizer()
+  private emitted: Promise<void> = Promise.resolve()
   private readonly commands = new Set<Promise<void>>()
   private stopWatching: (() => void) | null = null
   private stopped = false
@@ -43,8 +43,8 @@ export class Runner {
 
   constructor(options: RunnerOptions) {
     this.options = options
-    this.secrets.add(options.request.workspaceToken)
-    const repository = new Repository(options.cwd)
+    this.sanitizer.add(options.request.workspaceToken)
+    const repository = new Repository(options.cwd, options.warn)
     this.files = new FileReporter(repository, options.defaultBranch, (event) =>
       this.emit(event),
     )
@@ -65,7 +65,7 @@ export class Runner {
         if (!this.stopped) options.disconnected()
       },
       command: (command) => {
-        if ('login' in command) this.secrets.add(command.login.secret)
+        if ('login' in command) this.sanitizer.add(command.login.secret)
         const action =
           command.type === 'file.read' || command.type === 'file.diff'
             ? this.files.request(command).then((response) => {
@@ -110,9 +110,11 @@ export class Runner {
   }
 
   private emit(event: RunnerEvent): Promise<void> {
-    const value: unknown = JSON.parse(
-      redact(JSON.stringify(event), [...this.secrets]),
-    )
-    return this.link.emit(parseEvent(value))
+    const emitted = this.emitted.then(async () => {
+      for (const safe of this.sanitizer.accept(event))
+        await this.link.emit(safe)
+    })
+    this.emitted = emitted
+    return emitted
   }
 }

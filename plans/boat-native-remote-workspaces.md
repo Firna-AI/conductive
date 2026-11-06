@@ -3357,10 +3357,15 @@ Agent calls, 6 November 2026:
 - Let image integration supply the computer MCP URL. No provider endpoint
   is fixed in this milestone.
 - Combine text deltas for 40 ms, so text stays live with fewer events.
+- Use one streaming secret filter before event persistence, so a secret
+  cannot cross stored text events.
+- Close the agent process on user Stop and resume its saved conversation
+  for the next turn, so queued SDK work cannot continue out of sight.
 - Resume the same provider conversation after a sender or deferred model
   change, so each message uses its sender's login and its chosen model.
-- Select turn files by content hashes. Their line counts use the branch
-  comparison against the default branch.
+- Select turn files by Git modes and object IDs from temporary indexes.
+  Git also computes untracked diffs and counts without changing the real
+  index. Turn line counts use the comparison against the default branch.
 - Keep the real resume comparison open. Local binary reads cannot choose
   the faster placement after a Boat resume.
 

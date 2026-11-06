@@ -101,6 +101,12 @@ export function createCodexFactory(
       )
       const threadId = string(object(response.thread).id)
       options.event({ type: 'conversation', id: threadId })
+      const close = async () => {
+        closed = true
+        activeTurn = null
+        userIds = []
+        await rpc.close()
+      }
       return {
         send: async (command) => {
           if (activeTurn) {
@@ -147,14 +153,12 @@ export function createCodexFactory(
               turnId: activeTurn,
             })
         },
-        close: async () => {
-          closed = true
-          rpc.close()
-        },
+        stop: close,
+        close,
       }
     } catch (error) {
       closed = true
-      rpc.close()
+      await rpc.close()
       throw error
     }
   }

@@ -12,6 +12,7 @@ export class FakeProvider implements ProviderProcess {
   readonly messages: ProviderInput[] = []
   readonly choices: AgentChoice[] = []
   interrupts = 0
+  stops = 0
   closed = false
   constructor(options: ProviderOptions) {
     this.options = options
@@ -27,6 +28,10 @@ export class FakeProvider implements ProviderProcess {
     this.interrupts++
   }
   async close() {
+    this.closed = true
+  }
+  async stop() {
+    this.stops++
     this.closed = true
   }
   emit(event: ProviderEvent) {

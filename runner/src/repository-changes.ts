@@ -3,25 +3,19 @@ import type {
   ChangeKind,
   ChangesResponse,
 } from '../../src/shared/files'
-import { readBytes, textContent } from './file-access'
 import { Git, zeroPaths } from './git'
+import {
+  addUntracked,
+  comparison,
+  withGitIndex,
+  type TemporaryIndex,
+} from './git-index'
 
 function kind(status: string): ChangeKind {
   if (status.startsWith('A')) return 'added'
   if (status.startsWith('D')) return 'deleted'
   if (status.startsWith('R')) return 'renamed'
   return 'modified'
-}
-
-function lineCounts(bytes: Buffer): { added: number; removed: number } {
-  const text = textContent(bytes)
-  return {
-    added:
-      text === null || text === ''
-        ? 0
-        : text.split('\n').length - (text.endsWith('\n') ? 1 : 0),
-    removed: 0,
-  }
 }
 
 function stats(bytes: Buffer): Map<string, { added: number; removed: number }> {
@@ -50,31 +44,35 @@ function stats(bytes: Buffer): Map<string, { added: number; removed: number }> {
 export async function branchChanges(
   git: Git,
   branch: string,
+  warn: (message: string) => void = () => {},
 ): Promise<ChangesResponse> {
   const sha = await git.resolve(branch)
-  const [names, counts, status, untracked] = await Promise.all([
-    git.run([
-      'diff',
-      '--no-ext-diff',
-      '--no-textconv',
-      '--name-status',
+  return withGitIndex(
+    git,
+    async (index) => {
+      if (index.unavailable.length)
+        warn('Some repository files cannot be stored by Git.')
+      return changesFromIndex(index, branch, sha)
+    },
+    sha,
+  )
+}
+
+export async function changesFromIndex(
+  index: TemporaryIndex,
+  branch: string,
+  sha: string,
+): Promise<ChangesResponse> {
+  await addUntracked(index)
+  const [names, counts, status] = await Promise.all([
+    comparison(index, sha, '--name-status'),
+    comparison(index, sha, '--numstat'),
+    index.source.run([
+      'status',
+      '--porcelain=v1',
       '-z',
-      '--find-renames',
-      sha,
-      '--',
+      '--untracked-files=all',
     ]),
-    git.run([
-      'diff',
-      '--no-ext-diff',
-      '--no-textconv',
-      '--numstat',
-      '-z',
-      '--find-renames',
-      sha,
-      '--',
-    ]),
-    git.run(['status', '--porcelain=v1', '-z', '--untracked-files=all']),
-    git.run(['ls-files', '--others', '--exclude-standard', '-z']),
   ])
   const dirty = new Set<string>()
   const statuses = zeroPaths(status)
@@ -85,6 +83,7 @@ export async function branchChanges(
       dirty.add(statuses[++i])
   }
   const numbers = stats(counts)
+  const untracked = new Set(index.untracked)
   const records = zeroPaths(names)
   const files: BranchChangedFile[] = []
   for (let i = 0; i < records.length; i++) {
@@ -96,21 +95,13 @@ export async function branchChanges(
     files.push({
       path,
       ...(renamed ? { previousPath: oldPath } : {}),
-      change: kind(status),
+      change:
+        untracked.has(path) && status.startsWith('A')
+          ? 'untracked'
+          : kind(status),
       ...(numbers.get(path) ?? { added: 0, removed: 0 }),
       uncommitted: dirty.has(path) || dirty.has(oldPath),
     })
-  }
-  for (const path of zeroPaths(untracked)) {
-    let counts = { added: 0, removed: 0 }
-    try {
-      counts = lineCounts(
-        await readBytes(git.root, path, Number.MAX_SAFE_INTEGER),
-      )
-    } catch {
-      /* Symlinks stay visible but expose no target bytes. */
-    }
-    files.push({ path, change: 'untracked', ...counts, uncommitted: true })
   }
   files.sort((a, b) => a.path.localeCompare(b.path, 'en'))
   return {

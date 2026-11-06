@@ -67,6 +67,11 @@ export function createClaudeFactory(
         if (!closed) options.event(failureCause(error))
       }
     })()
+    const close = async () => {
+      closed = true
+      input.discard()
+      stream.close()
+    }
     return {
       send: async (command) => {
         const uuid = randomUUID()
@@ -95,11 +100,8 @@ export function createClaudeFactory(
         mapper.stopped = true
         await stream.interrupt()
       },
-      close: async () => {
-        closed = true
-        input.close()
-        stream.close()
-      },
+      stop: close,
+      close,
     }
   }
 }

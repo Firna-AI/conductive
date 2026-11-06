@@ -32,8 +32,10 @@ them.
 - The runner gives the login of a turn only to the agent process of its
   sender. A turn of another sender starts a new agent process on the same
   conversation.
-- The runner replaces the workspace token and each login that it got with
-  `[redacted]` in each event.
+- User Stop closes the agent process and discards unread input. The next
+  turn resumes its saved conversation when one exists.
+- One output filter replaces the workspace token and known logins with
+  `[redacted]`. It holds possible secret prefixes across text events.
 - The runner saves each event in its state file before it sends it. The
   state file holds events and conversation references. It holds no command
   and no login.
@@ -211,6 +213,8 @@ defaults are the current folder and the home folder of the user.
 - `src/config.ts`: the variables and their defaults.
 - `src/runner.ts`: `Runner` joins the connection, the agents, and the file
   reports. It removes known secrets from each event.
+- `src/output-sanitizer.ts`: the shared filter for complete and streamed
+  text before the runner saves an event.
 - `src/link.ts`, `src/state.ts`, and `src/socket.ts`: the hello, welcome,
   confirm, and resend rules, the state file, and the WebSocket connector.
 - `src/commands.ts` and `src/stored-events.ts`: the checks of each
@@ -222,6 +226,8 @@ defaults are the current folder and the home folder of the user.
 - `src/files.ts` and `src/repository.ts`: the file tree, the changes
   against the default branch, and bounded reads inside the repository.
 - `src/checkpoint.ts`: the files that one turn changed.
+- `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary
+  indexes and objects for Git comparisons. The real index stays unchanged.
 - `src/measure.ts` and `src/compare.ts`: the first-start measurement and
   the comparison of its samples.
 - `scripts/` and `service/`: the build, the install script, the Codex

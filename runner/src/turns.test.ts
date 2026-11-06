@@ -37,6 +37,50 @@ it('combines partial text, steers a turn, and reports actual touched files', asy
     messageId: 'answer',
     text: 'Hello [redacted]',
   })
+  provider.emit({
+    type: 'delta',
+    messageId: 'split',
+    text: 'The login is secret-',
+  })
+  await h.runner.idle()
+  provider.emit({
+    type: 'tool',
+    tool: {
+      id: 'split-tool',
+      kind: 'read',
+      target: 'README.md',
+      detail: null,
+      state: 'running',
+    },
+  })
+  await h.runner.idle()
+  const splitTexts = () =>
+    h.endpoint.runnerEvents.flatMap(({ event }) =>
+      event.type === 'assistant.delta' && event.messageId === 'split'
+        ? [event.text]
+        : [],
+    )
+  expect(splitTexts()).toEqual(['The login is '])
+  provider.emit({
+    type: 'delta',
+    messageId: 'split',
+    text: 'alice; token workspace-',
+  })
+  await h.runner.idle()
+  expect(splitTexts()).toEqual(['The login is ', '[redacted]; token '])
+  provider.emit({ type: 'delta', messageId: 'split', text: 'secret.' })
+  await h.runner.idle()
+  expect(splitTexts()).toEqual([
+    'The login is ',
+    '[redacted]; token ',
+    '[redacted].',
+  ])
+  provider.emit({
+    type: 'answer',
+    messageId: 'split',
+    text: 'The login is secret-alice; token workspace-secret.',
+    userMessageIds: ['message-1', 'message-2'],
+  })
   await h.write('README.md', 'after\nsame\n')
   provider.emit({
     type: 'answer',
@@ -71,6 +115,9 @@ it('stops a turn without an error and keeps the session on its original agent', 
   h.endpoint.send(turn())
   await h.runner.idle()
   const provider = h.providers.latest
+  h.endpoint.send({ ...turn('queued'), type: 'message', turnId: 'turn-1' })
+  provider.emit({ type: 'delta', messageId: 'stop-tail', text: 'tail sec' })
+  await h.runner.idle()
   provider.emit({
     type: 'tool',
     tool: {
@@ -88,7 +135,9 @@ it('stops a turn without an error and keeps the session on its original agent', 
     turnId: 'turn-1',
   })
   await h.runner.idle()
-  expect(provider.interrupts).toBe(1)
+  expect(provider.closed).toBe(true)
+  expect(provider.interrupts).toBe(0)
+  expect(provider.stops).toBe(1)
   provider.emit({
     type: 'failed',
     code: 'interrupted',
@@ -102,7 +151,7 @@ it('stops a turn without an error and keeps the session on its original agent', 
     state: 'stopped',
     durationMs: 0,
     files: [],
-    userMessageIds: ['message-1'],
+    userMessageIds: ['message-1', 'message-queued'],
   })
   expect(h.endpoint.runnerEvents.map((event) => event.event)).toContainEqual({
     type: 'tool.updated',
@@ -127,6 +176,32 @@ it('stops a turn without an error and keeps the session on its original agent', 
   h.endpoint.send(turn('3'))
   await h.runner.idle()
   provider.emit({
+    type: 'answer',
+    messageId: 'old-answer',
+    text: 'Old queued work.',
+    userMessageIds: ['message-queued'],
+  })
+  provider.emit({
+    type: 'tool',
+    tool: {
+      id: 'old-tool',
+      kind: 'run',
+      target: 'old command',
+      detail: null,
+      state: 'running',
+    },
+  })
+  await h.runner.idle()
+  expect(JSON.stringify(h.endpoint.events)).not.toContain('Old queued work.')
+  expect(JSON.stringify(h.endpoint.events)).not.toContain('old command')
+  expect(
+    h.endpoint.runnerEvents.flatMap(({ event }) =>
+      event.type === 'assistant.delta' && event.messageId === 'stop-tail'
+        ? [event.text]
+        : [],
+    ),
+  ).toEqual(['tail ', 'sec'])
+  h.providers.latest.emit({
     type: 'failed',
     code: 'agent_failed',
     message: 'Provider failed.',

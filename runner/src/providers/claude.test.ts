@@ -13,12 +13,18 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
   onTestFinished(() => {
     vi.unstubAllEnvs()
   })
-  const sdk = new FakeClaudeQuery()
+  let sdk = new FakeClaudeQuery()
   const runner = new Runner({
     ...h.options,
     providers: {
       ...h.options.providers,
-      claude: createClaudeFactory(sdk.open, () => '/pinned/sdk/claude'),
+      claude: createClaudeFactory(
+        (parameters) => {
+          if (sdk.closed) sdk = new FakeClaudeQuery()
+          return sdk.open(parameters)
+        },
+        () => '/pinned/sdk/claude',
+      ),
     },
   })
   onTestFinished(() => runner.close())
@@ -74,7 +80,7 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
     sessionId: 'session-1',
     turnId: 'turn-1',
     messageId: 'sdk-answer',
-    text: 'Part two',
+    text: 'Part t',
   })
   await sdk.raw({
     type: 'assistant',
@@ -88,6 +94,13 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
           input: { file_path: 'README.md' },
         },
       ],
+    },
+  })
+  await sdk.raw({
+    type: 'assistant',
+    message: {
+      id: 'synthetic',
+      content: [{ type: 'text', text: '[Request interrupted by user]' }],
     },
   })
   await sdk.raw({
@@ -120,19 +133,8 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
   await runner.idle()
   expect(sdk.models.at(-1)).toBe('new-model')
   expect(sdk.efforts.at(-1)).toEqual({ effortLevel: 'max' })
-  expect(sdk.interrupts).toBe(1)
-  await sdk.raw({
-    type: 'assistant',
-    message: {
-      id: 'synthetic',
-      content: [{ type: 'text', text: '[Request interrupted by user]' }],
-    },
-  })
-  await sdk.raw({
-    type: 'result',
-    is_error: true,
-    user_message_uuids: [uuid1, uuid2],
-  })
+  expect(sdk.interrupts).toBe(0)
+  expect(sdk.closed).toBe(true)
   await runner.idle()
   const events = h.endpoint.runnerEvents.map((item) => item.event)
   expect(events).toContainEqual({
@@ -148,6 +150,13 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
     text: 'Part two',
     userMessageIds: ['message-1', 'message-2'],
   })
+  expect(
+    events.flatMap((event) =>
+      event.type === 'assistant.delta' && event.messageId === 'sdk-answer'
+        ? [event.text]
+        : [],
+    ),
+  ).toEqual(['Part t', 'wo'])
   expect(events).toContainEqual({
     type: 'tool.updated',
     sessionId: 'session-1',
@@ -174,6 +183,7 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
   ])
   h.endpoint.send(turn('3'))
   await runner.idle()
+  expect(sdk.parameters?.options?.resume).toBe('sdk-session')
   const thirdUuid = string((await sdk.nextUser()).uuid)
   const fourth = turn('4')
   fourth.message.choice = {

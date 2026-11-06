@@ -5,7 +5,7 @@ export interface ProcessPort {
   write(line: string): void
   onLine(listener: (line: string) => void): void
   onExit(listener: () => void): void
-  close(): void
+  close(): void | Promise<void>
 }
 
 export interface ProcessRequest {
@@ -24,6 +24,12 @@ export const startProcess: StartProcess = (request) => {
     stdio: ['pipe', 'pipe', 'ignore'],
   })
   const lines = createInterface({ input: child.stdout })
+  const completion = new Promise<void>((resolve) => {
+    child.once('exit', () => resolve())
+    child.once('error', () => {
+      if (child.pid === undefined) resolve()
+    })
+  })
   const exits = new Set<() => void>()
   let exited = false
   const exit = () => {
@@ -46,10 +52,12 @@ export const startProcess: StartProcess = (request) => {
       exits.add(listener)
       if (exited) listener()
     },
-    close: () => {
+    close: async () => {
       lines.close()
       child.stdin.end()
       child.kill('SIGTERM')
+      await completion
+      child.stdout.destroy()
     },
   }
 }

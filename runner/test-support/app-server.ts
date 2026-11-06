@@ -10,6 +10,8 @@ export class FakeAppServer implements ProcessPort {
   private line: (line: string) => void = () => {}
   turns = 0
   closed = false
+  closeWait: Promise<void> | null = null
+  onClosing: () => void = () => {}
 
   write(line: string): void {
     const value: unknown = JSON.parse(line)
@@ -33,7 +35,12 @@ export class FakeAppServer implements ProcessPort {
     this.line = listener
   }
   onExit() {}
-  close() {
+  close(): void | Promise<void> {
+    this.onClosing()
+    if (this.closeWait)
+      return this.closeWait.then(() => {
+        this.closed = true
+      })
     this.closed = true
   }
 }

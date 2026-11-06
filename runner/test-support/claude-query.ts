@@ -13,6 +13,7 @@ export class FakeClaudeQuery implements ClaudeQuery {
   readonly models: (string | undefined)[] = []
   readonly efforts: unknown[] = []
   interrupts = 0
+  closed = false
 
   open: ClaudeQueryFactory = (parameters) => {
     this.parameters = parameters
@@ -50,6 +51,7 @@ export class FakeClaudeQuery implements ClaudeQuery {
     this.efforts.push(settings)
   }
   close() {
+    this.closed = true
     this.incoming.close()
   }
 }

@@ -14,6 +14,11 @@ export class InputQueue<T> implements AsyncIterable<T> {
     this.wake?.()
   }
 
+  discard(): void {
+    this.values.length = 0
+    this.close()
+  }
+
   async *[Symbol.asyncIterator](): AsyncGenerator<T> {
     for (;;) {
       const value = this.values.shift()

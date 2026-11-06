@@ -9,8 +9,6 @@ import {
   type EngineOptions,
   type SessionRuntime,
 } from './engine-session'
-import { redact } from './providers/environment'
-import { parseEvent } from './stored-events'
 import { TurnOutput } from './turn-output'
 import { finishTurn } from './engine-finish'
 import { failureCause } from './providers/failure'
@@ -20,7 +18,6 @@ export class AgentEngine {
   private readonly options: EngineOptions
   private readonly sessions = new Map<string, SessionRuntime>()
   private readonly commands = new Set<string>()
-  private readonly secrets = new Set<string>()
   private pending: Promise<void> = Promise.resolve()
 
   constructor(options: EngineOptions) {
@@ -45,11 +42,19 @@ export class AgentEngine {
         if (session?.active?.first.turnId === command.turnId) {
           session.active.stopped = true
           session.active.waiting.length = 0
-          await session.provider?.interrupt()
+          const turn = session.active
+          const provider = session.provider
+          session.generation++
+          session.provider = null
+          await provider?.stop()
+          await this.finish(session, {
+            type: 'result',
+            state: 'stopped',
+            userMessageIds: turn.messageIds,
+          })
         }
         return
       }
-      this.secrets.add(command.login.secret)
       let session = this.sessions.get(command.sessionId)
       const saved = this.options.store.snapshot.sessions.find(
         (item) => item.sessionId === command.sessionId,
@@ -252,12 +257,8 @@ export class AgentEngine {
     return deliverInput(session, command, (event) => this.event(session, event))
   }
 
-  private async emit(event: AgentChatEvent): Promise<void> {
-    const value: unknown = JSON.parse(
-      redact(JSON.stringify(event), [...this.secrets]),
-    )
-    const sanitized = parseEvent(value)
-    if ('sessionId' in sanitized) await this.options.emit(sanitized)
+  private emit(event: AgentChatEvent): Promise<void> {
+    return this.options.emit(event)
   }
 
   private async failCommand(

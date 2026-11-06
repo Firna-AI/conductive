@@ -33,10 +33,3 @@ export function providerEnvironment(
   if (login?.agent === 'codex') env.OPENAI_API_KEY = login.secret
   return env
 }
-
-export function redact(text: string, secrets: readonly string[]): string {
-  let result = text
-  for (const secret of secrets)
-    if (secret) result = result.replaceAll(secret, '[redacted]')
-  return result
-}

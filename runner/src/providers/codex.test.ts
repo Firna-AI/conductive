@@ -103,11 +103,7 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     turnId: 'turn-3',
   })
   await runner.idle()
-  expect(
-    server.writes.find((write) => write.method === 'turn/interrupt'),
-  ).toMatchObject({
-    params: { threadId: 'codex-conversation', turnId: 'codex-turn-2' },
-  })
+  expect(server.closed).toBe(true)
   server.notify('turn/completed', {
     turn: { id: 'codex-turn-2', status: 'interrupted' },
   })
@@ -222,4 +218,42 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     },
   })
   expect(JSON.stringify(await h.storage.read())).not.toContain('secret-bob')
+  const direct = await createCodexFactory(servers.start)({
+    cwd: h.root,
+    home: h.home,
+    computerMcpUrl: h.options.computerMcpUrl,
+    login: turn('close', 'bob', 'codex').login,
+    choice: { agent: 'codex', model: 'test-model', effort: 'high' },
+    conversationId: null,
+    event: () => {},
+  })
+  const closing = servers.latest
+  const order: string[] = []
+  let release: () => void = () => {}
+  const gate = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  closing.closeWait = gate.then(() => {
+    order.push('closed')
+  })
+  let requested: () => void = () => {}
+  const started = new Promise<void>((resolve) => {
+    requested = resolve
+  })
+  closing.onClosing = () => {
+    order.push('requested')
+    requested()
+  }
+  onTestFinished(() => {
+    release()
+    return direct.close()
+  })
+  const stopped = direct.stop().then(() => {
+    order.push('returned')
+  })
+  await started
+  order.push('release')
+  release()
+  await stopped
+  expect(order).toEqual(['requested', 'release', 'closed', 'returned'])
 })
