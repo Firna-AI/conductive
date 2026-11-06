@@ -46,21 +46,31 @@ export function Branches(props: { banner: GitHubBanner }) {
   return (
     <span className={styles.branches}>
       <GitBranch aria-hidden className={styles.muted} size={13} />
-      <span className={styles.branch}>{props.banner.branch}</span>
+      <span className={styles.branch} title={props.banner.branch}>
+        {props.banner.branch}
+      </span>
       <ArrowRight aria-hidden className={styles.muted} size={12} />
-      {props.banner.baseBranch}
+      <span className={styles.target} title={props.banner.baseBranch}>
+        {props.banner.baseBranch}
+      </span>
     </span>
   )
 }
 
-/** The words of a state, after a spinner while checks run, or an icon. */
+/**
+ * The words of a state, after a spinner while checks run, or an icon. A
+ * narrow bar or row cuts the words with an ellipsis, and the page keeps them
+ * whole for screen readers and in the tooltip.
+ */
 export function StateLabel(props: { status: BannerStatus }) {
   const Icon = props.status.icon
   return (
     <span className={styles.state}>
       {props.status.busy ? <MutedSpinner size={12} /> : null}
       {Icon ? <Icon aria-hidden size={14} /> : null}
-      {props.status.text}
+      <span className={styles.stateText} title={props.status.text}>
+        {props.status.text}
+      </span>
     </span>
   )
 }

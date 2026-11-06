@@ -83,14 +83,19 @@ export function PullRequestBar(props: PullRequestBarProps) {
     <div className={classes(styles.bar, styles[status.tone])}>
       <span className={styles.number}>{`#${banner.pullRequest.number}`}</span>
       <StateLabel status={status} />
-      {detail ? <span className={styles.detail}>{detail}</span> : null}
-      <span className={styles.spacer} />
-      {archive ? (
-        <ActionButton icon={Archive} onPress={props.onArchive}>
-          Archive
-        </ActionButton>
+      {detail ? (
+        <span className={styles.detail} title={detail}>
+          {detail}
+        </span>
       ) : null}
-      <GitHubLink href={banner.pullRequest.url} label="Open on GitHub" />
+      <span className={styles.actions}>
+        {archive ? (
+          <ActionButton icon={Archive} onPress={props.onArchive}>
+            Archive
+          </ActionButton>
+        ) : null}
+        <GitHubLink href={banner.pullRequest.url} label="Open on GitHub" />
+      </span>
     </div>
   )
 }

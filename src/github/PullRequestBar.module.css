@@ -59,14 +59,26 @@
   color: var(--ui-amber-deep);
 }
 
+/* The words of a state shrink with an ellipsis. Its icon keeps its size. */
 .state {
   display: inline-flex;
-  flex-shrink: 0;
+  flex: 0 1 auto;
   align-items: center;
   gap: 6px;
+  min-width: 0;
   color: var(--ui-ink);
   font-weight: var(--ui-weight-strong);
   white-space: nowrap;
+}
+
+.state > svg {
+  flex-shrink: 0;
+}
+
+.stateText {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
 }
 
 .success .state {
@@ -81,12 +93,28 @@
   color: var(--ui-amber-deep);
 }
 
+/*
+ * The detail takes only the width that the state leaves. So it gives up its
+ * width before the words of the state do. Its end margin keeps the gap of the
+ * mockup's spacer before the actions.
+ */
 .detail {
+  flex: 1 1 0;
   overflow: hidden;
   min-width: 0;
+  margin-right: 8px;
   color: var(--ui-muted);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The actions of the bar keep their size at its end. */
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 
 .spacer {
@@ -117,6 +145,14 @@
   overflow: hidden;
   min-width: 0;
   color: var(--ui-ink2);
+  text-overflow: ellipsis;
+}
+
+/* A long target shrinks too, and leaves half of the width to the branch. */
+.target {
+  flex-shrink: 0;
+  overflow: hidden;
+  max-width: 50%;
   text-overflow: ellipsis;
 }
 

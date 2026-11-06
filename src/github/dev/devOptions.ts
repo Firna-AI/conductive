@@ -1,4 +1,5 @@
 import type { BannerState } from '../../shared/github'
+import { samples, type Sample } from './devSamples'
 import type { GitHubMode } from './devSource'
 
 export const bannerStates: readonly BannerState[] = [
@@ -22,6 +23,7 @@ export interface DevOptions {
   scheme: (typeof schemes)[number]
   viewer: (typeof viewers)[number]
   github: GitHubMode
+  sample: Sample
 }
 
 function pick<T extends string>(
@@ -40,6 +42,7 @@ export function readOptions(search: string): DevOptions {
     scheme: pick(schemes, query.get('scheme'), 'dark'),
     viewer: pick(viewers, query.get('viewer'), 'owner'),
     github: pick(modes, query.get('github'), 'normal'),
+    sample: pick(samples, query.get('sample'), 'fake'),
   }
 }
 

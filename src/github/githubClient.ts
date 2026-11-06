@@ -54,8 +54,11 @@ async function readJson<T>(
 }
 
 /**
- * Reads the banner and the checks of a workspace from the API. Both must
- * load, so that the bar and the Checks tab show the same moment.
+ * Reads the banner and the checks of a workspace from the API, with two
+ * requests. Both must load before either view shows them. The contract does
+ * not promise that the two replies come from one moment. A GitHub change
+ * between the two reads can give a banner and checks of two moments, and the
+ * next GitHub event corrects that.
  */
 export async function loadGitHubSnapshot(
   fetch: FetchLike,

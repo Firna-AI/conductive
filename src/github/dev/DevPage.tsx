@@ -57,7 +57,7 @@ function Preview(props: {
         <div className={styles.phone}>
           <PullRequestRow checksHref="#phone-checks" github={github} />
           <div className={styles.phoneChecks} id="phone-checks">
-            <ChecksList github={github} touch />
+            <ChecksList github={github} />
           </div>
         </div>
       </section>
@@ -73,8 +73,8 @@ export function DevPage() {
   const [options, setOptions] = useState(() => readOptions(location.search))
   const [note, setNote] = useState('')
   const source = useMemo(
-    () => createDevSource(options.state, options.github),
-    [options.state, options.github],
+    () => createDevSource(options.state, options.github, options.sample),
+    [options.state, options.github, options.sample],
   )
   useEffect(() => {
     history.replaceState(null, '', optionsQuery(options))
@@ -102,7 +102,7 @@ export function DevPage() {
             options={options}
           />
           <Preview
-            key={`${options.state}-${options.github}`}
+            key={`${options.state}-${options.github}-${options.sample}`}
             onArchive={() => setNote('Archive opens the app’s Archive flow.')}
             source={source}
             viewer={viewers[options.viewer]}

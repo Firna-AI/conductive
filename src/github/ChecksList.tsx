@@ -1,6 +1,5 @@
 import { CircleAlert, ListChecks } from 'lucide-react'
 import type { GitHubCheck } from '../shared/github'
-import { ActionButton } from './ActionButton'
 import { MutedSpinner } from './bannerParts'
 import { reviewLabel, type PullRequestBanner } from './bannerStatus'
 import { checkLooks, isFailedCheck, type CheckLook } from './checkStatus'
@@ -12,8 +11,6 @@ import styles from './ChecksList.module.css'
 
 export interface ChecksListProps {
   github: GitHubFeed
-  /** On a phone, Try again takes the 44 px touch size. */
-  touch?: boolean
 }
 
 function summary(
@@ -55,10 +52,11 @@ function CheckRow(props: { check: GitHubCheck }) {
 /**
  * The Checks tab: each check that GitHub reports for the pull request, in
  * GitHub's order, under the title of the pull request. While the branch has
- * no pull request, the tab waits for one.
+ * no pull request, the tab waits for one. A failed load names its error here,
+ * and the bar or the row above holds the one Try again of the screen.
  */
 export function ChecksList(props: ChecksListProps) {
-  const { state, retry } = props.github
+  const { state } = props.github
   if (state.status === 'loading') {
     return (
       <div className={styles.waiting}>
@@ -70,11 +68,6 @@ export function ChecksList(props: ChecksListProps) {
   if (state.status === 'error') {
     return (
       <EmptyState
-        action={
-          <ActionButton onPress={retry} tone="primary" touch={props.touch}>
-            Try again
-          </ActionButton>
-        }
         body={state.message ?? undefined}
         icon={CircleAlert}
         title="Checks did not load"

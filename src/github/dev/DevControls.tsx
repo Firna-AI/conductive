@@ -7,6 +7,7 @@ import {
   viewers,
   type DevOptions,
 } from './devOptions'
+import { samples } from './devSamples'
 import styles from './DevPage.module.css'
 
 function Choice<T extends string>(props: {
@@ -70,6 +71,12 @@ export function DevControls(props: {
         onChange={(github) => onChange({ ...options, github })}
         value={options.github}
         values={modes}
+      />
+      <Choice
+        label="Sample"
+        onChange={(sample) => onChange({ ...options, sample })}
+        value={options.sample}
+        values={samples}
       />
       <Choice
         label="Live event"

@@ -25,7 +25,7 @@ const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe })
 
 // Phone: the row under the workspace header, and the Checks tab.
 <PullRequestRow checksHref={checksHref} github={github} onOpenChecks={openChecks} />
-<ChecksList github={github} touch />
+<ChecksList github={github} />
 ```
 
 - `fetch` is the browser's `fetch`. The parts read the banner and the checks
@@ -44,7 +44,12 @@ const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe })
   check for unpushed work. The bar itself archives nothing.
 - `checksHref` is the app address of the Checks tab, because tabs are links.
   `onOpenChecks` lets the app's router open the tab in place.
-- `touch` gives Try again the 44 px size of a phone.
+- A failed load shows one Try again on each screen: in the bar on desktop,
+  and in the row on a phone. The Checks tab names the error without its own
+  button, so keep the bar or the row on the screen with the Checks tab.
+- A narrow bar or row cuts its words with an ellipsis, and the detail gives
+  up its width first. The actions keep their size, and the page keeps the
+  whole words.
 
 The app shell provides the rest of the design:
 
@@ -57,16 +62,28 @@ The app shell provides the rest of the design:
 
 ## Order of updates
 
+The store compares no times. It rests on these requirements of the protocol:
+
+- A tab gets the stored history first, then the live events, as
+  [Chat and events](../../docs/protocol/chat-and-events.md#events) says.
+- A read returns the current state of the branch, and the Worker pushes each
+  new state to the open tabs, as
+  [GitHub banner](../../docs/protocol/github-banner.md#state-of-a-branch) says.
+
+The store applies them in this way:
+
 - Events apply in the order of their numbers. The store skips an event of
   another workspace, a repeated event, and an event older than the last one.
-- Each GitHub state carries the time of its banner, `banner.updatedAt`.
-  Between an event and a load reply, the newer time wins. The stored history
-  of a socket can arrive before, during, or after a load, so an older history
-  never replaces a newer load.
-- On a tie, a live event that arrives while a load runs wins over the reply
-  of that load. A load reply wins a tie over history.
-- These rules expect the Worker to give each new GitHub state of a branch a
-  later `updatedAt`, and to push it to the open tabs as an event.
+- The first read starts at once, so the views load even when the history
+  never comes.
+- A live GitHub event shows at once, and it cancels a read that runs.
+- A history that comes before a read shows at once. The reply of the read
+  then replaces it, because the read returns the current state.
+- A history that comes during a read, or after its reply shows, has no known
+  order against that reply. When the two show different states, the store
+  keeps what it shows and reads once more. Equal states need no read.
+- Two states are equal when their banners, apart from `updatedAt`, and their
+  checks, in GitHub's order, are equal. The order of keys does not count.
 - Each workspace has its own store. A store that disconnected ignores a reply
   that arrives later.
 - A failed load shows an error with Try again. A state that already shows
@@ -82,6 +99,11 @@ mounts it, and the production build leaves it out.
   `?state=checks-failed&scheme=light&viewer=member&github=error`.
 - `state` is one of the ten banner states. `viewer` is `owner`, `admin`, or
   `member`. `github` is `normal`, `slow`, or `error`.
+- `sample` changes the fake data to other valid data: `every-check` gives
+  one check in each of the nine states, `no-checks` a pull request without
+  checks, `no-create-link` a branch without a create link, and `long-base` a
+  long target branch. `fake`, the default, keeps the data of the fake API.
+  The live events of a sample carry the same data as its replies.
 - Send gives a live `github.updated` event. With `github=error`, "Let GitHub
   answer" makes the next Try again succeed.
 - The local Worker refuses the module requests of each page until
@@ -92,6 +114,7 @@ mounts it, and the production build leaves it out.
 
 - `useGitHubState.ts`: the hook that gives one workspace its store.
 - `githubStore.ts`: merges loads, the event history, and live events in order.
+- `sameState.ts`: compares two GitHub states, without the banner time.
 - `githubClient.ts` and `githubParse.ts`: read the two API replies, and check
   them against the contract.
 - `PullRequestBar.tsx`, `PullRequestRow.tsx`, and `ChecksList.tsx`: the views.

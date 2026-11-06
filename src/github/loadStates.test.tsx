@@ -6,9 +6,10 @@ import { PullRequestBar } from './PullRequestBar'
 import { PullRequestRow } from './PullRequestRow'
 import { buttonsIn, feedOf, render, textOf } from './testing'
 
-function renderViews(github: GitHubFeed): string[] {
-  return [
-    render(
+/** Each screen as the app lays it out: the bar or the row over the Checks tab. */
+function renderScreens(github: GitHubFeed) {
+  const desktop = render(
+    <>
       <PullRequestBar
         github={github}
         now={FAKE_TIME}
@@ -23,34 +24,38 @@ function renderViews(github: GitHubFeed): string[] {
           },
           state: 'ready',
         }}
-      />,
-    ),
-    render(<PullRequestRow checksHref="/checks" github={github} />),
-    render(<ChecksList github={github} touch />),
-  ]
+      />
+      <ChecksList github={github} />
+    </>,
+  )
+  const phone = render(
+    <>
+      <PullRequestRow checksHref="/checks" github={github} />
+      <ChecksList github={github} />
+    </>,
+  )
+  return [desktop, phone].map((html) => ({
+    text: textOf(html),
+    buttons: buttonsIn(html),
+  }))
 }
 
-it('shows loading, then Try again after a failed load, in the bar, the row, and the Checks tab', () => {
-  const loading = renderViews(feedOf({ status: 'loading' }))
-  const failed = renderViews(
+it('shows loading, then one Try again on each screen after a failed load', () => {
+  const loading = renderScreens(feedOf({ status: 'loading' }))
+  const failed = renderScreens(
     feedOf({ status: 'error', message: 'GitHub did not answer.' }),
   )
 
-  expect({
-    loading: loading.map(textOf),
-    failed: failed.map((html) => ({
-      text: textOf(html),
-      buttons: buttonsIn(html),
-    })),
-  }).toEqual({
-    loading: ['Loading from GitHub', 'Loading from GitHub', 'Loading checks'],
-    failed: [
-      { text: 'GitHub state did not load Try again', buttons: ['Try again'] },
-      { text: 'GitHub state did not load Try again', buttons: ['Try again'] },
-      {
-        text: 'Checks did not load GitHub did not answer. Try again',
-        buttons: ['Try again'],
-      },
-    ],
+  const loadingScreen = {
+    text: 'Loading from GitHub Loading checks',
+    buttons: [],
+  }
+  const failedScreen = {
+    text: 'GitHub state did not load Try again Checks did not load GitHub did not answer.',
+    buttons: ['Try again'],
+  }
+  expect({ loading, failed }).toEqual({
+    loading: [loadingScreen, loadingScreen],
+    failed: [failedScreen, failedScreen],
   })
 })

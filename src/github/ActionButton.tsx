@@ -10,7 +10,6 @@ export function ActionButton(props: {
   children: string
   onPress: () => void
   icon?: LucideIcon
-  tone?: 'primary' | 'secondary'
   touch?: boolean
 }) {
   const size = props.touch ? touchControl : control
@@ -26,7 +25,7 @@ export function ActionButton(props: {
       onPress={props.onPress}
       size="sm"
       style={{ height: size.height, paddingHorizontal: 10 }}
-      tone={props.tone ?? 'secondary'}
+      tone="secondary"
     >
       {props.children}
     </Button>
