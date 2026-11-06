@@ -117,7 +117,11 @@ mounts it, and the production build leaves it out.
 - `githubStore.ts`: starts the first read on connection, then merges reads,
   the event history, and live events in order.
 - `useGitHubState.test.tsx`: mounts a hook probe with the real store and fake
-  API. Only this test file uses happy-dom. The view tests use static markup.
+  API in happy-dom. It checks the first read, live events, workspace switches,
+  and retry after a failed first read through an unbound callback.
+- `PullRequestActions.test.tsx`: mounts the bar and row in happy-dom. It
+  clicks the retry, Archive, and Checks actions and checks their callbacks.
+  The other view tests keep their static markup checks in Node.
 - `sameState.ts`: compares two GitHub states, without the banner time.
 - `githubClient.ts` and `githubParse.ts`: read the two API replies, and check
   them against the contract.

@@ -8,9 +8,9 @@ import type { GitHubFeed, GitHubState } from './githubStore'
 
 /*
  * Helpers for the tests of this folder. Product code never imports this
- * module. Vitest runs in Node without a DOM, so the tests read the static
- * markup of a component as a user would read the page: its text, its links,
- * its buttons, and its list items.
+ * module. The static view tests run in Node and read a component's text,
+ * links, buttons, and list items. The hook and action tests opt into
+ * happy-dom and mount the real hook or components.
  */
 
 const entities: Readonly<Record<string, string>> = {

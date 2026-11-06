@@ -8,7 +8,13 @@ import { FakeApiServer } from '../test-support/fake-api'
 import { toolFixtures } from '../test-support/fixtures/tools'
 import type { WorkspaceTarget } from './githubClient'
 import type { GitHubFeed, GitHubSource, GitHubState } from './githubStore'
-import { githubEvent, heldReplies, readsOf, target } from './storeDoubles'
+import {
+  githubEvent,
+  heldReplies,
+  readsOf,
+  serveState,
+  target,
+} from './storeDoubles'
 import { snapshotOf } from './testing'
 import { useGitHubState } from './useGitHubState'
 
@@ -146,4 +152,48 @@ it('uses a new store after a workspace switch and shows loading until its API st
     { status: 'ready', snapshot: snapshotOf('checks-failed') },
   ])
   expect(probe.container.textContent).toBe('checks-failed')
+})
+
+it('retries a failed first read through an unbound feed callback and shows the ready reply', async () => {
+  const server = new FakeApiServer()
+  server.json(
+    'GET',
+    githubPaths.banner(target.orgId, target.workspaceId),
+    {
+      error: { code: 'github_unavailable', message: 'GitHub did not answer.' },
+    },
+    503,
+  )
+  const replies = heldReplies(server)
+  const source: GitHubSource = {
+    fetch: replies.fetch,
+    subscribe: (after, listener) => server.events.subscribe(after, listener),
+  }
+  const probe = mountProbe()
+  probe.render(target, source)
+  await act(async () => {
+    await replies.release()
+  })
+  expect(probe.feed.state).toEqual({
+    status: 'error',
+    message: 'GitHub did not answer.',
+  })
+  expect(probe.container.textContent).toBe('error')
+  expect(readsOf(server)).toBe(1)
+  serveState(server, 'ready-to-merge')
+  const retry = probe.feed.retry
+
+  act(() => {
+    expect(() => retry()).not.toThrow()
+  })
+  await act(async () => {
+    await replies.release()
+  })
+
+  expect(readsOf(server)).toBe(2)
+  expect(probe.feed.state).toEqual({
+    status: 'ready',
+    snapshot: snapshotOf('ready-to-merge'),
+  })
+  expect(probe.container.textContent).toBe('ready-to-merge')
 })
