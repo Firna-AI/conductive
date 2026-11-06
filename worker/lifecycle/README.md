@@ -158,6 +158,8 @@ the step, the output offsets, and the log.
   repositories of the current image again, and saves a snapshot.
 - The org image changes only when the new snapshot is ready. Each job
   deletes its build sandbox at the end, and keeps its history and log.
+- A queued create holds a lease on its source image. Cleanup waits for
+  that lease before it deletes an old snapshot. D1 keeps deferred cleanup.
 
 `createGitHubImageSourceMaterializer` in
 [`image-sources/materialize.ts`](image-sources/materialize.ts) loads the

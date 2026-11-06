@@ -41,8 +41,11 @@ scripts and the units of this folder to `/opt/conducting/staged/`, and then
 it runs this command:
 
 ```sh
-sh /opt/conducting/staged/install.sh '<archive URL>' '<SHA-256 digest>'
+sudo -n sh /opt/conducting/staged/install.sh '<archive URL>' '<SHA-256 digest>'
 ```
+
+Boat runs commands as `user`, with passwordless sudo. The installer needs
+system permissions. Both installed services run as `user`.
 
 `install.sh` does these steps. A failure stops it, and the build fails.
 
