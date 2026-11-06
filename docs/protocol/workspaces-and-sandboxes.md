@@ -58,6 +58,9 @@ says.
 
 - The startup script runs in the sandbox of each workspace at each start
   and at each resume.
+- Only an admin changes the install script, the startup script, the env
+  vars, and the repositories (decision 57). Other members see them
+  read-only.
 - Each sandbox gets the org's env vars at create and at each resume
   (decision 17). A changed value applies at the next start.
 - Builds and refreshes get none of the env vars, and no saved snapshot

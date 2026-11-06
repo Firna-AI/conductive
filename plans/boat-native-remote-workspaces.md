@@ -2297,7 +2297,7 @@ Added on 6 November 2026 from the Milestone 2 docs.
 
 ### 57. Decide who may change an org's shared settings
 
-Open. Added on 6 November 2026 from the Milestone 2a docs.
+Added on 6 November 2026 from the Milestone 2a docs.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Security.
@@ -2327,6 +2327,7 @@ Open. Added on 6 November 2026 from the Milestone 2a docs.
   sandbox and its env vars.
 - **Action:** ask the user, because each option adds a permission rule
   that no decision covers.
+- **Chosen:** B, by the user on 6 November 2026.
 
 ## Design
 
@@ -2441,6 +2442,9 @@ Agent calls of 5 November 2026:
   reassign a workspace or remove a member.
 - A member who is not an admin sees the Members tab and each workspace's
   owner without actions.
+- Only admins change the repositories, the install script, the startup
+  script, and the env vars, as decision 57 says. Members see these tabs
+  read-only.
 - Agent call, 6 November 2026: the agent runner gets the sender's agent
   login over its connection for each turn, and never writes it to disk.
   Reason: Boat sets a sandbox's variables only at create and at resume,
@@ -2942,6 +2946,16 @@ Depends on: 1e
       `calummoore/lisbon-7k2q`, as decision 53 says.
 - [x] Run the mockup check. Smoke-test the changed pages.
 
+## Milestone 1g: Read-only org settings for members
+
+Tags: mockup
+
+Depends on: 1f
+
+- [ ] Draw the Repositories and Cloud computer tabs read-only for a member
+      who is not an admin, as decision 57 says.
+- [ ] Run the mockup check. Smoke-test the changed pages.
+
 ## Milestone 2a: Protocol updates for decisions 49 to 55
 
 Depends on: 2
@@ -3171,6 +3185,8 @@ Depends on: 5
       admin reassign it.
 - [ ] Refuse the last admin's leave until another member is an admin, as
       decision 55 says.
+- [ ] Allow only admins to change the repositories, the scripts, and the
+      env vars, as decision 57 says.
 - [ ] Add Delete org with the 7-day restore, and remove the saved
       snapshots before each delete.
 - [ ] Test the reassignment and Delete org against the fake Boat server.
@@ -3182,6 +3198,8 @@ Tags: ui
 Depends on: 6, 15a
 
 - [ ] Build Delete org with its restore.
+- [ ] Show the Repositories and Cloud computer tabs read-only to members,
+      as decision 57 says.
 - [ ] Build the org members page and workspace reassignment.
 - [ ] Compare each screen with its mockup.
 

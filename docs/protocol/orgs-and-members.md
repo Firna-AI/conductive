@@ -78,6 +78,11 @@ says.
 - An admin invites a person by GitHub login.
 - Only an admin invites and removes members, changes a role, reassigns a
   workspace, adds the Boat key, and deletes the org.
+- Only an admin changes the repositories, the install script, the startup
+  script, and the env vars (decision 57). Other members see them
+  read-only.
+- Changes by every member were rejected, because a changed script reaches
+  every new sandbox of the org and runs during other members' turns.
 - Every member of the org sees all of its workspaces (decision 39).
 - Every member can send messages in every workspace of the org. Each turn
   runs on the login of its sender, as
