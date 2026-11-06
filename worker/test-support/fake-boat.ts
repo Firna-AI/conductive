@@ -11,9 +11,13 @@ export class FakeBoat {
   ])
   failure: { status: number; code: string } | null = null
   responseOverride: Response | null = null
+  /** One-shot factories return fresh bodies without clone/tee buffering. */
+  responseFactories: ((request: Request) => Response)[] = []
 
   fetch: HttpFetch = async (request) => {
     this.requests.push(request.clone())
+    const factory = this.responseFactories.shift()
+    if (factory) return factory(request)
     if (this.responseOverride) return this.responseOverride.clone()
     if (this.failure) {
       return Response.json(

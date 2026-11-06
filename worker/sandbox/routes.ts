@@ -5,7 +5,15 @@ export type BoatRoute =
   | { operation: 'account' | 'create' | 'saveSnapshot' }
   | {
       operation:
-        'get' | 'stop' | 'resume' | 'fork' | 'delete' | 'update' | 'command'
+        | 'get'
+        | 'stop'
+        | 'resume'
+        | 'fork'
+        | 'delete'
+        | 'update'
+        | 'command'
+        | 'host'
+        | 'desktop'
       sandboxId: string
     }
   | {
@@ -15,9 +23,21 @@ export type BoatRoute =
       offsets: CommandOffsets
     }
   | { operation: 'getSnapshot' | 'deleteSnapshot'; name: string }
+  | { operation: 'readFile'; sandboxId: string; path: string; maxBytes: number }
+  | { operation: 'fileInfo'; sandboxId: string; path: string }
 
 export function boatRoute(route: BoatRoute): { method: string; path: string } {
   switch (route.operation) {
+    case 'readFile':
+      return {
+        method: 'GET',
+        path: `/sandboxes/${segment(route.sandboxId)}/files?${new URLSearchParams({ path: route.path, encoding: 'base64' })}`,
+      }
+    case 'fileInfo':
+      return {
+        method: 'GET',
+        path: `/sandboxes/${segment(route.sandboxId)}/files/info?${new URLSearchParams({ path: route.path })}`,
+      }
     case 'account':
       return { method: 'GET', path: '/orgs' }
     case 'create':
@@ -53,6 +73,8 @@ export function boatRoute(route: BoatRoute): { method: string; path: string } {
     case 'stop':
     case 'resume':
     case 'fork':
+    case 'host':
+    case 'desktop':
       return {
         method: 'POST',
         path: `/sandboxes/${segment(route.sandboxId)}/${route.operation}`,

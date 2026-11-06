@@ -1,6 +1,7 @@
 import { DurableObject } from 'cloudflare:workers'
 import type { RunnerEvent } from '../src/shared/runner'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
+import { WorkspaceChat } from './chat/backend'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
 import type { FailedCreationDraft } from './lifecycle/failed-creations'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
@@ -14,17 +15,34 @@ import type {
 } from './lifecycle/workspace-runtime'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
 import { createWorkspaceController } from './lifecycle/workspace-controller'
+import type { WorkspaceController } from './lifecycle/workspace-controller-types'
 import { nativeWorkspacePlatform } from './lifecycle/workspace-platform'
 
 export class Workspace
   extends DurableObject<LifecycleEnvironment>
   implements WorkspaceLifecycleEndpoint
 {
-  private readonly controller = createWorkspaceController(
-    this.env,
-    lifecycleDependencies(),
-    nativeWorkspacePlatform(this.ctx, this.env),
-  )
+  private readonly chat: WorkspaceChat
+  private readonly controller: WorkspaceController
+
+  constructor(context: DurableObjectState, env: LifecycleEnvironment) {
+    super(context, env)
+    this.chat = new WorkspaceChat(context.storage, env, {
+      matchesObject: (workspaceId) =>
+        env.WORKSPACES.idFromName(workspaceId).equals(context.id),
+    })
+    this.controller = createWorkspaceController(env, lifecycleDependencies(), {
+      ...nativeWorkspacePlatform(context, env),
+      publish: (envelope) =>
+        this.chat.appendWorkspaceEvent(
+          envelope.workspaceId,
+          envelope.event,
+          envelope.occurredAt,
+        ),
+      openSocket: (request) => this.chat.fetch(request),
+    })
+  }
+
   async queueLifecycleStart(job: WorkspaceStartJob): Promise<boolean> {
     return this.controller.queueLifecycleStart(job)
   }
@@ -144,7 +162,7 @@ export class Workspace
   }
 
   async fetch(request: Request): Promise<Response> {
-    return this.controller.fetch(request)
+    return this.chat.fetch(request)
   }
 
   async webSocketMessage(): Promise<void> {}
