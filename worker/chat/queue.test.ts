@@ -82,6 +82,11 @@ describe('workspace chat queue', () => {
     expect(await dropped.json()).toMatchObject({
       message: { id: 'socket-drop', state: 'queued' },
     })
+    expect(
+      await fixture.chat.store.read(WORKSPACE_ID, (view) =>
+        view.turn(command.turnId),
+      ),
+    ).toMatchObject({ state: 'running' })
     fixture.transport.dropOutgoing = () => false
     fixture.restart()
     await fixture.connect(runner)

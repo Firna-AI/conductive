@@ -28,9 +28,10 @@ export class MemoryChatStorage implements ChatStorage {
       .filter(
         ([key]) =>
           key.startsWith(options.prefix) &&
-          (options.startAfter === undefined || key > options.startAfter),
+          (options.startAfter === undefined ||
+            compareUtf8(key, options.startAfter) > 0),
       )
-      .sort(([left], [right]) => left.localeCompare(right, 'en'))
+      .sort(([left], [right]) => compareUtf8(left, right))
     return structuredClone(new Map(entries)) as Map<string, T>
   }
 
@@ -44,4 +45,16 @@ export class MemoryChatStorage implements ChatStorage {
     this.writes.push(...transaction.writes)
     return result
   }
+}
+
+const encoder = new TextEncoder()
+
+export function compareUtf8(left: string, right: string): number {
+  const a = encoder.encode(left)
+  const b = encoder.encode(right)
+  for (let index = 0; index < Math.min(a.length, b.length); index++) {
+    const difference = a[index] - b[index]
+    if (difference !== 0) return difference
+  }
+  return a.length - b.length
 }

@@ -49,6 +49,10 @@ run no gate.
 - `closeRunner()` closes the current runner connection, for example when
   the sandbox stops.
 
+A cross-agent model change uses the client's `newSessionId`. A retry uses
+the same session. An unrelated occupied ID is refused. A same-agent change
+ignores this field.
+
 ## Access
 
 The Durable Object runs the gates itself.
@@ -58,6 +62,10 @@ The Durable Object runs the gates itself.
   header, the session cookie, the org membership, and the body of writes.
 - `findChatWorkspace` then reads the workspace from D1. The workspace must
   belong to that org, and the org must not be deleted.
+- Each open tab keeps its authenticated session and membership identity.
+  Every 30 seconds, one D1 query rechecks all open tabs. A failed check
+  closes the tab after sign-out, membership removal, or org deletion.
+- The access timer stops when the last tab closes.
 - An archived workspace still serves its history and its events socket.
   Each write gets `409 workspace_archived`.
 - `connectRunner` accepts only `/runner` on `MACHINE_ORIGIN`, with
@@ -102,6 +110,12 @@ The Durable Object runs the gates itself.
   `resend` from the first missing number. The `welcome` gives the cursor.
 - A message and its command commit together. The Durable Object sends the
   commands in order when the runner is ready.
+- After the login checks, delivery commits the turn state before sending.
+  If sending a newly dispatched turn throws, delivery restores its queued
+  state. `message.sent` follows a successful send.
+- The interrupt route stores and pushes `turn.stop-requested` with the
+  authenticated member's ID before it interrupts the runner. Runner events
+  cannot set that member.
 - A message accepted while the active turn stops waits in another stored
   turn. Its commands go out only after that turn becomes active.
 - After a finished turn, its unanswered messages run before later waiting
@@ -127,6 +141,7 @@ npm run typecheck
   restart `WorkspaceChat` on the same storage.
 - `MemoryChatStorage` keeps the records in memory. Set `failCommit` or
   `beforeCommit` to test a failed or a late commit.
+- Its key order and `startAfter` comparison use UTF-8 bytes, like real storage.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,
   D1, and real WebSockets. `createAdapterRuntime` sets up that runtime.
 - It closes every socket before Miniflare evicts the real object. The
@@ -209,6 +224,8 @@ depends on where the code runs:
   command with a new command ID.
 - Each `turn` and `message` command carries the login of its message's
   sender. When the sender of a turn changes, start the agent again.
+- An interrupt for a turn that the runner does not run still gets
+  `turn.completed` with state `stopped`.
 - A new stream gets commands only after its `runner.ready` event. A stream
   that sent `runner.ready` before gets commands right after the `welcome`.
 
@@ -236,17 +253,21 @@ depends on where the code runs:
 - `backend.ts`: `WorkspaceChat`, its gates, and the open tabs.
 - `http-routes.ts`, `messages.ts`, and `sessions.ts`: the routes, the turns,
   and the session state.
+- `model-changes.ts`: client session IDs, retry records, and ID conflicts.
 - `store.ts`: `ChatStore` and `ChatTransaction`, the records and the event
   numbers.
 - `runner-channel.ts`: the runner connection, the stream cursors, and the
   file commands.
 - `runner-delivery.ts`: the sends of pending commands, with the login
   check.
+- `delivery-state.ts`: dispatch state before sending and queued-state restoration.
 - `runner-input.ts`, `agent-events.ts`, and `other-events.ts`: the checks
   of runner messages.
 - `turn-lifecycle.ts`, `turn-events.ts`, and `continuation.ts`: active and
   waiting turns, terminal events, and unanswered messages.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
+- `browser-tabs.ts` and `browser-access.ts`: open tabs, the scheduled access
+  check, and its batched D1 query.
 - `queries.ts`: the D1 reads of workspaces, tokens, members, and logins.
 - `login-access.ts`: the combined sender and runner-token access check
   before login dispatch.

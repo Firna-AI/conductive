@@ -1,6 +1,6 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type { RunnerCommand } from '../../src/shared/runner'
-import { markSent } from './messages'
+import { DeliveryState } from './delivery-state'
 import { RunnerAccessDenied } from './login-access'
 import type { ChatStore, ChatTransaction } from './store'
 import { storeAgentEvent } from './turn-events'
@@ -8,6 +8,7 @@ import { TurnLifecycle } from './turn-lifecycle'
 import type { ActiveRunner, ChatDependencies, PendingCommand } from './types'
 
 export class RunnerDelivery {
+  private readonly dispatch: DeliveryState
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
   private readonly publish: (events: readonly WorkspaceEventEnvelope[]) => void
@@ -20,6 +21,7 @@ export class RunnerDelivery {
     this.store = store
     this.dependencies = dependencies
     this.publish = publish
+    this.dispatch = new DeliveryState(store, publish)
   }
 
   /** Called inside the store's serial queue, after the request commits. */
@@ -66,27 +68,16 @@ export class RunnerDelivery {
           advanced = true
         continue
       }
+      const beganTurn = await this.dispatch.begin(active.workspace.id, command)
       try {
         active.peer.send(outbound)
       } catch {
         detach()
+        await this.dispatch.unsent(active.workspace.id, command, beganTurn)
         return false
       }
       active.delivered.add(command.commandId)
-      await this.store.change(
-        active.workspace.id,
-        async (transaction) => {
-          if (command.type === 'turn' || command.type === 'message') {
-            const turn = await transaction.turn(command.turnId)
-            if (turn) {
-              if (turn.state === 'queued') turn.state = 'running'
-              await transaction.saveTurn(turn)
-              await markSent(transaction, turn, command.messageId)
-            }
-          }
-        },
-        this.publish,
-      )
+      await this.dispatch.sent(active.workspace.id, command)
     }
     return advanced
   }

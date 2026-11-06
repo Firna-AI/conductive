@@ -10,6 +10,8 @@ import { errorResponse, HttpError, privateResponse } from '../http'
 import { randomToken } from '../security/crypto'
 import { gate, type RequestContext } from '../security/gate'
 import { afterNumber, chatRoute } from './http-routes'
+import { readBrowserAccess, scheduleBrowserCheck } from './browser-access'
+import { BrowserTabs } from './browser-tabs'
 import { findChatWorkspace, tokenWorkspace } from './queries'
 import { loginResolver } from './login-access'
 import { RunnerChannel } from './runner-channel'
@@ -23,7 +25,7 @@ import type {
   WorkspaceRecord,
 } from './types'
 
-interface BrowserAccess {
+export interface BrowserAccess {
   context: RequestContext
   workspace: WorkspaceRecord
   suffix: string
@@ -35,7 +37,7 @@ export class WorkspaceChat {
   private readonly env: AppEnv
   private readonly dependencies: ChatDependencies
   private readonly runner: RunnerChannel
-  private readonly browsers = new Set<BrowserPeer>()
+  private readonly browsers: BrowserTabs
   private workspaceId: string | null = null
 
   constructor(
@@ -46,6 +48,8 @@ export class WorkspaceChat {
     this.env = env
     this.dependencies = {
       now: Date.now,
+      scheduleBrowserCheck,
+      readBrowserAccess: (tabs, now) => readBrowserAccess(env.DB, tabs, now),
       randomId: randomToken,
       resolveAttachments: async (_userId, _workspaceId, ids) => {
         if (ids.length)
@@ -68,6 +72,7 @@ export class WorkspaceChat {
       ),
     }
     this.store = new ChatStore(storage, this.dependencies.now)
+    this.browsers = new BrowserTabs(this.dependencies)
     this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>
       this.publish(events),
     )
@@ -79,7 +84,7 @@ export class WorkspaceChat {
         return await runnerUpgrade(this, request)
       const access = await this.authorizeBrowser(request)
       if (access.suffix === '/events')
-        return await browserUpgrade(this, request, access.workspace)
+        return await browserUpgrade(this, request, access)
       return await this.store.run(async () => {
         const write = request.method !== 'GET' && request.method !== 'HEAD'
         if (write && access.workspace.archivedAt !== null) {
@@ -216,25 +221,25 @@ export class WorkspaceChat {
     const access = await this.authorizeBrowser(request)
     if (access.suffix !== '/events')
       throw new HttpError(404, 'not_found', 'The page is not available.')
-    return this.subscribe(
-      access.workspace.id,
-      afterNumber(new URL(request.url)),
-      peer,
-    )
+    return this.subscribe(access, afterNumber(new URL(request.url)), peer)
   }
 
   subscribe(
-    workspaceId: string,
+    access: BrowserAccess,
     after: number,
     peer: BrowserPeer,
   ): Promise<() => void> {
     return this.store.run(async () => {
-      const history = await this.store.read(workspaceId, (view) =>
+      const history = await this.store.read(access.workspace.id, (view) =>
         view.history(after),
       )
       peer.send({ type: 'history', history })
-      this.browsers.add(peer)
-      return () => this.browsers.delete(peer)
+      return this.browsers.add(peer, {
+        workspaceId: access.workspace.id,
+        orgId: access.workspace.orgId,
+        userId: access.context.user.id,
+        sessionId: access.context.sessionId,
+      })
     })
   }
 
@@ -253,15 +258,6 @@ export class WorkspaceChat {
   }
 
   private publish(events: readonly WorkspaceEventEnvelope[]): void {
-    for (const envelope of events) {
-      for (const peer of this.browsers) {
-        try {
-          peer.send({ type: 'event', envelope })
-        } catch {
-          this.browsers.delete(peer)
-          peer.close()
-        }
-      }
-    }
+    this.browsers.publish(events)
   }
 }

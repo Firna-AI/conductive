@@ -5,7 +5,13 @@ import type {
   WorkspaceEventEnvelope,
 } from '../../src/shared/events'
 import { HttpError } from '../http'
-import type { ChatData, ChatStorage, PendingCommand, StoredTurn } from './types'
+import type {
+  ChatData,
+  ChatStorage,
+  ModelSessionCreation,
+  PendingCommand,
+  StoredTurn,
+} from './types'
 
 const ROOT = 'chat:v1:'
 const META = `${ROOT}meta`
@@ -85,6 +91,15 @@ export class ChatTransaction {
   }
   saveSession(session: Session): Promise<void> {
     return this.data.put(key('session', session.id), session)
+  }
+  modelSessionCreation(id: string): Promise<ModelSessionCreation | undefined> {
+    return this.data.get(key('model-session', id))
+  }
+  saveModelSessionCreation(
+    id: string,
+    creation: ModelSessionCreation,
+  ): Promise<void> {
+    return this.data.put(key('model-session', id), creation)
   }
   saveMessage(message: UserMessage): Promise<void> {
     return this.data.put(key('message', message.id), message)

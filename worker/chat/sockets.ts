@@ -1,9 +1,8 @@
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
 import type { WorkspaceToRunner } from '../../src/shared/runner'
 import { HttpError } from '../http'
-import type { WorkspaceChat } from './backend'
+import type { BrowserAccess, WorkspaceChat } from './backend'
 import { afterNumber } from './http-routes'
-import type { WorkspaceRecord } from './types'
 
 function socketPair(request: Request) {
   if (
@@ -23,7 +22,7 @@ function socketPair(request: Request) {
 export async function browserUpgrade(
   chat: WorkspaceChat,
   request: Request,
-  workspace: WorkspaceRecord,
+  access: BrowserAccess,
 ): Promise<Response> {
   const { client, server } = socketPair(request)
   server.accept()
@@ -34,7 +33,7 @@ export async function browserUpgrade(
   }
   try {
     const unsubscribe = await chat.subscribe(
-      workspace.id,
+      access,
       afterNumber(new URL(request.url)),
       peer,
     )

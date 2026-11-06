@@ -1,26 +1,17 @@
 import type { SendMessageResponse } from '../../src/shared/messages'
-import type {
-  ChangeModelResponse,
-  SessionsResponse,
-} from '../../src/shared/sessions'
+import type { SessionsResponse } from '../../src/shared/sessions'
 import { HttpError, requiredString } from '../http'
 import type { RequestContext } from '../security/gate'
 import {
   choice,
   counter,
-  draft,
   identifier,
   invalidInput,
   sendMessage,
 } from './inputs'
 import { acceptMessage, existingMessage, responseFor } from './messages'
-import {
-  closeSession,
-  createSession,
-  queueModel,
-  sessionFor,
-  stopTurn,
-} from './sessions'
+import { changeModel } from './model-changes'
+import { closeSession, createSession, sessionFor, stopTurn } from './sessions'
 import type { ChatTransaction } from './store'
 import type { ChatDependencies } from './types'
 
@@ -110,13 +101,15 @@ export async function chatRoute(
     return Response.json(reply, { status: 202 })
   }
   if (action === 'interrupt' && request.method === 'POST') {
+    const turnId = identifier(context.body?.turnId)
+    await transaction.emit({
+      type: 'turn.stop-requested',
+      sessionId: session.id,
+      turnId,
+      requestedById: context.user.id,
+    })
     return Response.json(
-      await stopTurn(
-        transaction,
-        session,
-        identifier(context.body?.turnId),
-        dependencies.randomId(),
-      ),
+      await stopTurn(transaction, session, turnId, dependencies.randomId()),
     )
   }
   if (action === 'close' && request.method === 'POST') {
@@ -138,23 +131,15 @@ export async function chatRoute(
     return Response.json({ session })
   }
   if (action === 'model' && request.method === 'PUT') {
-    const next = choice(context.body?.choice)
-    const savedDraft = draft(context.body?.draft)
-    const created = next.agent !== session.choice.agent
-    const changed = created
-      ? await createSession(transaction, next, dependencies.randomId())
-      : session
-    if (!created) {
-      changed.choice = next
-      await transaction.saveSession(changed)
-      await queueModel(transaction, changed, dependencies.randomId())
-      await transaction.emit({ type: 'session.updated', session: changed })
-    }
-    return Response.json({
-      session: changed,
-      created,
-      draft: savedDraft,
-    } satisfies ChangeModelResponse)
+    return Response.json(
+      await changeModel(
+        transaction,
+        session,
+        context.body,
+        context.user.id,
+        dependencies.randomId,
+      ),
+    )
   }
   throw new HttpError(404, 'not_found', 'The page is not available.')
 }

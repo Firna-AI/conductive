@@ -15,7 +15,6 @@ import type {
   RunnerToWorkspace,
   WorkspaceToRunner,
 } from '../../src/shared/runner'
-import { encrypt, hash } from '../security/crypto'
 import {
   TEST_ORIGIN,
   TEST_TIME,
@@ -25,7 +24,8 @@ import { FakeRunner } from '../test-support/fake-runner'
 import { FakeRunnerConnection } from '../test-support/runner-connection'
 import { WorkspaceChat } from './backend'
 import { MemoryChatStorage } from './memory-storage.test-support'
-import { agentLoginContext } from './queries'
+import { seedChatFixture } from './fixture-seed.test-support'
+import { ManualChatClock } from './chat-clock.test-support'
 import type { BrowserPeer, ChatDependencies, RunnerPeer } from './types'
 
 export const CLAUDE: AgentChoice = {
@@ -46,78 +46,15 @@ export async function createChatFixture(
   harness: TestHarness,
   overrides: Partial<ChatDependencies> = {},
 ) {
-  const ownerCookie = await harness.login()
-  const org = await harness.createOrg(ownerCookie)
-  const owner = await harness.env.DB.prepare(
-    'SELECT id FROM users WHERE github_id = 7',
-  ).first<{ id: string }>()
-  if (!owner) throw new Error('The owner is missing.')
-  harness.github.profile = {
-    id: 8,
-    login: 'teammate',
-    name: 'Teammate',
-    avatar_url: null,
-  }
-  const memberCookie = await harness.login()
-  const member = await harness.env.DB.prepare(
-    'SELECT id FROM users WHERE github_id = 8',
-  ).first<{ id: string }>()
-  if (!member) throw new Error('The member is missing.')
-  await harness.env.DB.batch([
-    harness.env.DB.prepare(
-      'INSERT INTO org_members (org_id, user_id, role, joined_at) VALUES (?, ?, ?, ?)',
-    ).bind(org.id, member.id, 'member', TEST_TIME),
-    harness.env.DB.prepare(
-      'INSERT INTO repositories (id, org_id, github_repository_id, full_name, default_branch) VALUES (?, ?, ?, ?, ?)',
-    ).bind('repo', org.id, 10, 'example/repo', 'main'),
-    harness.env.DB.prepare(
-      'INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, name, branch, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    ).bind(
-      WORKSPACE_ID,
-      org.id,
-      'repo',
-      owner.id,
-      'Test',
-      'octocat/test',
-      TEST_TIME,
-      TEST_TIME,
-    ),
-  ])
-  await harness.env.DB.prepare(
-    'INSERT INTO workspace_tokens (workspace_id, token_hash, ciphertext, created_at) VALUES (?, ?, ?, ?)',
-  )
-    .bind(
-      WORKSPACE_ID,
-      await hash(WORKSPACE_TOKEN),
-      'unused-token-ciphertext',
-      TEST_TIME,
-    )
-    .run()
-  for (const user of [owner, member]) {
-    for (const agent of ['claude', 'codex'] as const) {
-      await harness.env.DB.prepare(
-        'INSERT INTO agent_logins (user_id, agent, kind, ciphertext, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-      )
-        .bind(
-          user.id,
-          agent,
-          'api-key',
-          await encrypt(
-            `secret-${user.id}-${agent}`,
-            agentLoginContext(user.id, agent),
-            harness.env.BOAT_KEY_ENCRYPTION_KEY,
-          ),
-          TEST_TIME,
-          TEST_TIME,
-        )
-        .run()
-    }
-  }
+  const { org, owner, member, ownerCookie, memberCookie } =
+    await seedChatFixture(harness, WORKSPACE_ID, WORKSPACE_TOKEN)
   const storage = new MemoryChatStorage()
   const env = { ...harness.env, MACHINE_ORIGIN }
   let sequence = 0
+  const clock = new ManualChatClock(TEST_TIME)
   const dependencies = {
-    now: () => TEST_TIME,
+    now: clock.now,
+    scheduleBrowserCheck: clock.schedule,
     randomId: () => `chat-${String(++sequence).padStart(4, '0')}`,
     ...overrides,
   }
@@ -244,21 +181,33 @@ export async function createChatFixture(
   const tab = async (
     after = 0,
     onSend?: (message: WorkspaceSocketMessage) => void,
+    cookie = ownerCookie,
   ) => {
     const messages: WorkspaceSocketMessage[] = []
+    let closed = 0
     const peer: BrowserPeer = {
       send: (message) => {
         messages.push(structuredClone(message))
         onSend?.(message)
       },
-      close: () => undefined,
+      close: () => {
+        closed++
+      },
     }
     const socketRequest = request(
       workspaceEventsPath(org.id, WORKSPACE_ID, after),
+      undefined,
+      cookie,
     )
     socketRequest.headers.set('Upgrade', 'websocket')
     const close = await chat.openBrowser(socketRequest, peer)
-    return { messages, close }
+    return {
+      messages,
+      close,
+      get closed() {
+        return closed
+      },
+    }
   }
   return {
     org,
@@ -267,6 +216,7 @@ export async function createChatFixture(
     ownerCookie,
     memberCookie,
     storage,
+    clock,
     env,
     fetch,
     request,

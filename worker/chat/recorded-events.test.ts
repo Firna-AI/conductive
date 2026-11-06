@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
-import type { AgentChatEvent } from '../../src/shared/chat-events'
+import type { AgentChatEvent, ChatEvent } from '../../src/shared/chat-events'
+import { sessionPaths } from '../../src/shared/sessions'
 import { recordedChatEvents } from '../../src/test-support/recorded-chat'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
@@ -71,12 +72,26 @@ describe('workspace chat recorded events', () => {
       await fixture.send(session.id, messageId)
       const command = runner.commands.at(-1)
       if (command?.type !== 'turn') throw new Error('Expected a turn.')
-      const expected: AgentChatEvent[] = []
+      const expected: ChatEvent[] = []
       for (const { event } of recordedChatEvents(
         scenario,
         WORKSPACE_ID,
         session.id,
       )) {
+        if (event.type === 'turn.stop-requested') {
+          await fixture.fetch(
+            sessionPaths.interrupt(fixture.org.id, WORKSPACE_ID, session.id),
+            { turnId: command.turnId },
+            fixture.memberCookie,
+          )
+          expected.push({
+            type: 'turn.stop-requested',
+            sessionId: session.id,
+            turnId: command.turnId,
+            requestedById: fixture.member.id,
+          })
+          continue
+        }
         if (!('turnId' in event) || event.type === 'message.sent') continue
         const normalized: AgentChatEvent = { ...event, turnId: command.turnId }
         if (normalized.type === 'turn.started') {

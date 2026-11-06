@@ -27,7 +27,10 @@ describe('workspace chat commands', () => {
   })
 
   it('keeps same-agent model changes and moves the unchanged draft to a new agent session', async () => {
-    const fixture = await createChatFixture(harness)
+    const ids = ['z-session', 'model-command']
+    const fixture = await createChatFixture(harness, {
+      randomId: () => ids.shift() ?? 'later-command',
+    })
     const session = await fixture.createSession()
     const runner = await fixture.connect()
     runner.emit({ type: 'runner.ready' })
@@ -39,7 +42,7 @@ describe('workspace chat commands', () => {
     const nextChoice = { ...CLAUDE, model: 'another-model', effort: 'max' }
     const sameResponse = await fixture.fetch(
       sessionPaths.model(fixture.org.id, WORKSPACE_ID, session.id),
-      { choice: nextChoice, draft },
+      { choice: nextChoice, draft, newSessionId: 'a-session' },
       fixture.ownerCookie,
       'PUT',
     )
@@ -58,16 +61,19 @@ describe('workspace chat commands', () => {
     runner.disconnect()
     await fixture.connect(runner)
     expect(runner.commands[1]).toEqual(changedModel)
+    await fixture.clock.advance(1_000)
     const changedResponse = await fixture.fetch(
       sessionPaths.model(fixture.org.id, WORKSPACE_ID, session.id),
-      { choice: CODEX, draft },
+      { choice: CODEX, draft, newSessionId: 'a-session' },
       fixture.ownerCookie,
       'PUT',
     )
     const changed: ChangeModelResponse = await changedResponse.json()
     expect(changed.created).toBe(true)
+    expect(changed.session.id).toBe('a-session')
     expect(changed.session.id).not.toBe(session.id)
     expect(changed.session.choice).toEqual(CODEX)
+    expect(changed.session.createdAt).toBe(session.createdAt + 1_000)
     expect(changed.draft).toEqual(draft)
     const invalid = await fixture.fetch(
       sessionPaths.messages(fixture.org.id, WORKSPACE_ID, session.id),
@@ -77,6 +83,10 @@ describe('workspace chat commands', () => {
     const sessions: SessionsResponse = await (
       await fixture.fetch(sessionsPath(fixture.org.id, WORKSPACE_ID))
     ).json()
+    expect(sessions.sessions.map((entry) => entry.id)).toEqual([
+      'z-session',
+      'a-session',
+    ])
     expect(sessions.sessions.map((entry) => entry.choice.agent)).toEqual([
       'claude',
       'codex',

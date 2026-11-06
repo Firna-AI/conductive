@@ -1,6 +1,6 @@
-import type { Agent } from '../../src/shared/agents'
+import type { Agent, AgentChoice } from '../../src/shared/agents'
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
-import type { Attachment } from '../../src/shared/messages'
+import type { Attachment, MessageDraft } from '../../src/shared/messages'
 import type {
   RunnerAttachment,
   RunnerChangeModel,
@@ -49,6 +49,13 @@ export interface StoredTurn {
   nextTurnId?: string | null
 }
 
+export interface ModelSessionCreation {
+  sourceSessionId: string
+  requestedById: string
+  choice: AgentChoice
+  draft: MessageDraft
+}
+
 /** Credentials enter only the live command, after this record is read. */
 export type PendingCommand =
   | {
@@ -80,6 +87,18 @@ export interface BrowserPeer {
   close(): void
 }
 
+export interface BrowserIdentity {
+  sessionId: string
+  userId: string
+  orgId: string
+  workspaceId: string
+}
+
+export type ChatScheduler = (
+  work: () => Promise<void>,
+  delayMs: number,
+) => () => void
+
 export interface ResolvedAttachments {
   attachments: readonly Attachment[]
   paths: readonly RunnerAttachment[]
@@ -93,6 +112,11 @@ export type ChatCallbackPublisher = (
 
 export interface ChatDependencies {
   now: () => number
+  scheduleBrowserCheck: ChatScheduler
+  readBrowserAccess: (
+    tabs: readonly BrowserIdentity[],
+    now: number,
+  ) => Promise<readonly number[]>
   randomId: () => string
   resolveLogin: (
     userId: string,
