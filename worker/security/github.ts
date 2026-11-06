@@ -1,6 +1,7 @@
 import type { GitHubIdentity } from '../data/users'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError, isRecord } from '../http'
+import { parseGitHubTokens, type GitHubTokenBundle } from './github-token-data'
 
 const SIGN_IN_FAILED = 'GitHub sign-in failed. Start sign-in again.'
 
@@ -16,7 +17,16 @@ export class GitHubClient {
     verifier: string,
     env: AppEnv,
   ): Promise<GitHubIdentity> {
-    const token = await this.request(
+    return (await this.authorizeWithTokens(code, verifier, env)).profile
+  }
+
+  async authorizeWithTokens(
+    code: string,
+    verifier: string,
+    env: AppEnv,
+    now = Date.now(),
+  ): Promise<{ profile: GitHubIdentity; tokens: GitHubTokenBundle }> {
+    const value = await this.request(
       new Request('https://github.com/login/oauth/access_token', {
         method: 'POST',
         redirect: 'error',
@@ -34,11 +44,8 @@ export class GitHubClient {
         }),
       }),
     )
-    if (
-      !isRecord(token) ||
-      typeof token.access_token !== 'string' ||
-      !token.access_token
-    ) {
+    const tokens = parseGitHubTokens(value, now)
+    if (!tokens) {
       throw new HttpError(502, 'github_sign_in_failed', SIGN_IN_FAILED)
     }
     const profile = await this.request(
@@ -46,7 +53,7 @@ export class GitHubClient {
         redirect: 'error',
         signal: AbortSignal.timeout(30_000),
         headers: {
-          Authorization: `Bearer ${token.access_token}`,
+          Authorization: `Bearer ${tokens.accessToken}`,
           Accept: 'application/vnd.github+json',
           'User-Agent': 'Conducting',
           'X-GitHub-Api-Version': '2022-11-28',
@@ -64,11 +71,14 @@ export class GitHubClient {
       throw new HttpError(502, 'github_sign_in_failed', SIGN_IN_FAILED)
     }
     return {
-      githubId: profile.id,
-      githubLogin: profile.login,
-      displayName: typeof profile.name === 'string' ? profile.name : null,
-      avatarUrl:
-        typeof profile.avatar_url === 'string' ? profile.avatar_url : null,
+      profile: {
+        githubId: profile.id,
+        githubLogin: profile.login,
+        displayName: typeof profile.name === 'string' ? profile.name : null,
+        avatarUrl:
+          typeof profile.avatar_url === 'string' ? profile.avatar_url : null,
+      },
+      tokens,
     }
   }
 

@@ -1,4 +1,5 @@
 import { ProviderError } from './errors'
+import type { CommandOffsets } from './provider'
 
 export type BoatRoute =
   | { operation: 'account' | 'create' | 'saveSnapshot' }
@@ -6,6 +7,12 @@ export type BoatRoute =
       operation:
         'get' | 'stop' | 'resume' | 'fork' | 'delete' | 'update' | 'command'
       sandboxId: string
+    }
+  | {
+      operation: 'commandStatus'
+      sandboxId: string
+      processId: number
+      offsets: CommandOffsets
     }
   | { operation: 'getSnapshot' | 'deleteSnapshot'; name: string }
 
@@ -38,6 +45,11 @@ export function boatRoute(route: BoatRoute): { method: string; path: string } {
         method: 'POST',
         path: `/sandboxes/${segment(route.sandboxId)}/commands`,
       }
+    case 'commandStatus':
+      return {
+        method: 'GET',
+        path: `/sandboxes/${segment(route.sandboxId)}/commands/${integer(route.processId, 1)}?stdoutOffset=${integer(route.offsets.stdoutOffset, 0)}&stderrOffset=${integer(route.offsets.stderrOffset, 0)}`,
+      }
     case 'stop':
     case 'resume':
     case 'fork':
@@ -46,6 +58,12 @@ export function boatRoute(route: BoatRoute): { method: string; path: string } {
         path: `/sandboxes/${segment(route.sandboxId)}/${route.operation}`,
       }
   }
+}
+
+function integer(value: number, minimum: number): string {
+  if (!Number.isSafeInteger(value) || value < minimum)
+    throw new ProviderError('invalid_request', 400)
+  return String(value)
 }
 
 function segment(value: string): string {

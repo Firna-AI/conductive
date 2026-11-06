@@ -11,6 +11,7 @@ import { HttpError } from '../http'
 import { cookie, OAUTH_COOKIE, readCookie, SESSION_COOKIE } from './cookies'
 import { hash, sign, verify } from './crypto'
 import { GitHubClient } from './github'
+import { saveGitHubTokens } from './github-tokens'
 
 const OAUTH_SECONDS = 600
 const SESSION_SECONDS = 7 * 24 * 60 * 60
@@ -79,12 +80,11 @@ export async function finishSignIn(
       'GitHub sign-in was cancelled. Start sign-in again.',
     )
   }
-  const profile = await new GitHubClient(dependencies.fetch).authorize(
-    code,
-    stored.verifier,
-    env,
-  )
+  const { profile, tokens } = await new GitHubClient(
+    dependencies.fetch,
+  ).authorizeWithTokens(code, stored.verifier, env, now)
   const user = await saveUser(env.DB, dependencies.randomToken(), profile, now)
+  await saveGitHubTokens(env, user.id, tokens, now)
   const sessionId = dependencies.randomToken()
   const expiresAt = now + SESSION_SECONDS * 1000
   await saveSession(env.DB, sessionId, user.id, expiresAt, now)

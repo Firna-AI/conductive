@@ -1,0 +1,15 @@
+[Unit]
+Description=Conducting terminal
+After=network-online.target
+
+[Service]
+Type=simple
+User=user
+WorkingDirectory=/home/user
+ExecStart=/opt/conducting/terminal-start.sh
+Restart=on-failure
+RestartSec=2
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target
