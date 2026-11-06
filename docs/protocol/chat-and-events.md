@@ -89,6 +89,12 @@ says.
   turn ends.
 - Stop interrupts the running turn. The chat shows an interrupted turn as
   stopped, not as an error.
+- The chat names the member who pressed Stop: "Priya stopped the agent",
+  or "You stopped the agent" to Priya (decision 72). The workspace
+  records that member when the Stop request arrives. The runner cannot
+  set it, because agent code runs on the same cloud computer.
+- A turn that stops with no Stop request, such as when the cloud
+  computer stops, shows "The agent stopped".
 - The next message after a stop continues the same session.
 - A turn that fails names the cause, and Try again retries the turn.
 - After the first answer of the agent in a new workspace, the app asks the
