@@ -21,7 +21,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [routes.ts](routes.ts) dispatches protected app routes.
 - [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
 - [http/json-body.ts](http/json-body.ts) owns the shared bounded JSON object request policy.
-- [http/bounded-body.ts](http/bounded-body.ts) collects body bytes and cancels on overflow.
+- [http/bounded-body.ts](http/bounded-body.ts) collects bounded body bytes and decodes and parses complete JSON bodies.
 - [sandbox/transport.ts](sandbox/transport.ts) calls the fixed provider routes.
 
 ### Related Docs

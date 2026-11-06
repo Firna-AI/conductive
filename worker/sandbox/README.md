@@ -24,7 +24,7 @@ The transport validates sandbox ID segments and centralizes errors and account p
 
 ## Response byte limits
 
-Every Boat response uses the [shared bounded byte reader](../http/README.md#bounded-byte-collector).
+Every Boat response uses the [shared bounded JSON reader](../http/README.md#bounded-json-reader).
 The following limits are Worker policy chosen by the user.
 They are not published Boat response maxima.
 The Worker counts received bytes and does not trust `Content-Length`.
@@ -99,13 +99,13 @@ The budget is the sum of these values:
 
 The envelope includes the JSON-escaped requested path and the largest safe integer size.
 It also includes the response type, encoding, booleans, and empty content field.
-The file route uses the [shared bounded body reader](../http/README.md).
-The shared reader counts each `Uint8Array.byteLength` before keeping the chunk.
+The transport sends file content through the [shared bounded JSON reader](../http/README.md#bounded-json-reader).
+Its byte collector counts each `Uint8Array.byteLength` before keeping the chunk.
 When the next chunk crosses the budget, it cancels the stream and discards that chunk.
-The file adapter parses JSON only after the shared reader returns the complete body bytes.
+The shared JSON reader decodes and parses only after the complete body fits.
 
 After overflow, the adapter calls `GET /sandboxes/{id}/files/info` with the same path.
-It parses Boat's flat metadata response and returns its file size.
+It checks Boat's flat metadata response and returns its file size.
 It checks the path in both file and metadata responses.
 The metadata request uses the 1 MiB response budget.
 The [primary file reference](https://docs.boat.dev/api/reference/agent/read-sandbox-file)
@@ -131,8 +131,8 @@ The transport tests use counted streams to check exact budgets and early cancell
 - [transport.ts](transport.ts) owns request headers and response handling.
 - [transport-body.test.ts](transport-body.test.ts) checks normal and command byte limits and safe overflow messages.
 - [transport-error-body.test.ts](transport-error-body.test.ts) checks the shared error budget and provider error mapping.
-- [file-response.ts](file-response.ts) calculates the file content budget and parses bounded bytes as JSON.
-- [The shared reader](../http/bounded-body.ts) collects body bytes and cancels on overflow.
+- [file-response.ts](file-response.ts) calculates the file content budget.
+- [The shared readers](../http/bounded-body.ts) collect bounded bytes and decode and parse complete JSON bodies.
 - [file-read.ts](file-read.ts) parses file replies and reads metadata after overflow.
 
 See the [access requirements](../../docs/protocol/access-and-security.md#orgs-and-workspaces)

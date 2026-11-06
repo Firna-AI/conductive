@@ -1,5 +1,5 @@
 import { HttpError, isRecord } from '../http'
-import { BodyBudgetExceeded, readBoundedBody } from './bounded-body'
+import { BodyBudgetExceeded, readBoundedJson } from './bounded-body'
 
 const JSON_BODY_BUDGET = 1_000_000
 
@@ -17,9 +17,7 @@ export async function readJsonObject(
   }
   let value: unknown
   try {
-    if (!request.body) throw new SyntaxError('Missing request body')
-    const bytes = await readBoundedBody(request.body, JSON_BODY_BUDGET)
-    value = JSON.parse(new TextDecoder().decode(bytes))
+    value = await readBoundedJson(request.body, JSON_BODY_BUDGET)
   } catch (error) {
     if (error instanceof BodyBudgetExceeded) {
       throw new HttpError(

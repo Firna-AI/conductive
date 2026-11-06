@@ -1,8 +1,8 @@
 import type { HttpFetch } from '../env'
 import { HttpError, isRecord } from '../http'
-import { BodyBudgetExceeded, readBoundedBody } from '../http/bounded-body'
+import { BodyBudgetExceeded, readBoundedJson } from '../http/bounded-body'
 import { ProviderError, providerError } from './errors'
-import { boundedFileJson, fileResponseBudget } from './file-response'
+import { fileResponseBudget } from './file-response'
 import type { BoatAccount } from './provider'
 import { boatRoute, type BoatRoute } from './routes'
 
@@ -64,21 +64,13 @@ export class BoatTransport {
     }
     let value: unknown
     try {
+      let budget = RESPONSE_BUDGET
       if (response.ok && route.operation === 'readFile') {
-        value = await boundedFileJson(
-          response,
-          fileResponseBudget(route.path, route.maxBytes),
-        )
-      } else {
-        if (!response.body)
-          throw new SyntaxError('Missing provider response body')
-        const budget =
-          response.ok && route.operation === 'command'
-            ? COMMAND_RESPONSE_BUDGET
-            : RESPONSE_BUDGET
-        const bytes = await readBoundedBody(response.body, budget)
-        value = JSON.parse(new TextDecoder().decode(bytes))
+        budget = fileResponseBudget(route.path, route.maxBytes)
+      } else if (response.ok && route.operation === 'command') {
+        budget = COMMAND_RESPONSE_BUDGET
       }
+      value = await readBoundedJson(response.body, budget)
     } catch (error) {
       if (error instanceof BodyBudgetExceeded) {
         if (response.ok && route.operation === 'readFile') throw error

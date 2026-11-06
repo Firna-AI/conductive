@@ -1,7 +1,8 @@
 # HTTP body readers
 
-This area holds the JSON request policy and the reusable byte collector.
+This area holds the JSON request policy, bounded JSON reader, and reusable byte collector.
 Use `readJsonObject` for JSON request bodies.
+Use `readBoundedJson` for JSON bodies with a budget and policy from the caller.
 Use `readBoundedBody` when the caller owns another body policy.
 
 ## JSON request objects
@@ -20,10 +21,10 @@ The normalized media type must be `application/json`.
 The helper owns a fixed budget of 1,000,000 UTF-8 bytes.
 This is 1 MB in decimal units.
 The count includes JSON punctuation and whitespace.
-The helper uses `readBoundedBody` and does not trust `Content-Length`.
+The helper uses `readBoundedJson` and does not trust `Content-Length`.
 A body at the exact limit passes the size check.
 On overflow, the shared reader cancels before it keeps the oversized chunk.
-The helper parses JSON only after the complete body fits.
+The shared JSON reader parses only after the complete body fits.
 The parsed value must be an object.
 
 | Input | HTTP status in `HttpError` | Error code | Message |
@@ -37,6 +38,29 @@ The [request gate](../security/README.md#json-request-bodies) calls this helper 
 Other request handlers can call the same function without copying the policy.
 Each caller owns sign-in, origin, session, and membership checks.
 
+## Bounded JSON reader
+
+`bounded-body.ts` exports this function:
+
+```ts
+readBoundedJson(
+  body: ReadableStream<Uint8Array> | null,
+  budget: number,
+): Promise<unknown>
+```
+
+A missing body throws `SyntaxError` with message `Missing JSON body`.
+The helper calls `readBoundedBody` with the supplied byte budget.
+It decodes the complete accepted bytes as UTF-8 and parses JSON.
+It returns the parsed value as `unknown`.
+Overflow remains `BodyBudgetExceeded`.
+Malformed JSON remains `SyntaxError`.
+Callers keep their budgets, content type checks, object validation, access checks, and error mappings.
+
+The [sandbox transport](../sandbox/README.md#response-byte-limits) uses this function for every Boat response.
+It owns the response budgets and provider error mapping.
+The successful file content route keeps its dynamic base64 budget and size fallback.
+
 ## Bounded byte collector
 
 Call `readBoundedBody(body, budget)` with a body stream and a byte budget.
@@ -47,13 +71,8 @@ It counts the byte length of each chunk before keeping that chunk.
 On overflow, it cancels the stream and throws `BodyBudgetExceeded`.
 It releases the reader lock after success or failure.
 
-The caller chooses the budget, parses the bytes, and maps errors to its response.
-The helper has no route, provider, credential, file, or JSON policy.
-The caller also handles a missing body stream.
-
-The [sandbox transport](../sandbox/README.md#response-byte-limits) uses the collector for every Boat response.
-It owns the response budgets, JSON parsing, and provider error mapping.
-The successful file content route keeps its dynamic base64 budget and size fallback.
+The caller chooses the byte budget and handles a missing stream.
+The byte collector has no route, provider, credential, file, or JSON policy.
 
 ## Development
 
@@ -65,6 +84,6 @@ Run `npm run test -- worker/files worker/sandbox worker/http/bounded-body.test.t
 
 ### Key Code
 
-- [bounded-body.ts](bounded-body.ts) exposes `readBoundedBody` and `BodyBudgetExceeded`.
+- [bounded-body.ts](bounded-body.ts) exposes `readBoundedBody`, `readBoundedJson`, and `BodyBudgetExceeded`.
 - [bounded-body.test.ts](bounded-body.test.ts) checks the exact byte boundary and early cancellation.
 - [json-body.ts](json-body.ts) exports `readJsonObject` and owns the JSON request policy.
