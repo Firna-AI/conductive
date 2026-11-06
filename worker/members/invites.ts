@@ -1,6 +1,11 @@
 import type { OrgMember } from '../../src/shared/members'
 import { HttpError } from '../http'
-import { deleteInvite, insertInvite, takeInvite } from './invite-data'
+import {
+  deleteInvite,
+  insertInvite,
+  listPendingInvites,
+  takeInvite,
+} from './invite-data'
 import { requireMember } from './membership'
 import { requireOrgAdmin } from './permissions'
 
@@ -9,11 +14,18 @@ export async function inviteOrgMember(
   orgId: string,
   actorId: string,
   id: string,
-  githubLogin: string,
+  email: string,
   now: number,
 ) {
   await requireOrgAdmin(db, orgId, actorId)
-  const invite = await insertInvite(db, orgId, actorId, id, githubLogin, now)
+  const invite = await insertInvite(
+    db,
+    orgId,
+    actorId,
+    id,
+    email.toLowerCase(),
+    now,
+  )
   if (!invite)
     throw new HttpError(
       403,
@@ -21,6 +33,11 @@ export async function inviteOrgMember(
       'Ask an org admin to make this change.',
     )
   return invite
+}
+
+/** The future shell calls this with the signed-in user ID from its request gate. */
+export function pendingOrgInvites(db: D1Database, userId: string) {
+  return listPendingInvites(db, userId)
 }
 
 export async function cancelOrgInvite(

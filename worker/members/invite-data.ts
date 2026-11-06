@@ -1,7 +1,7 @@
-import type { OrgInvite } from '../../src/shared/members'
+import type { OrgInvite, PendingOrgInvite } from '../../src/shared/members'
 import { activeAdminPredicate } from './org-data'
 
-const columns = 'id, github_login AS githubLogin, created_at AS createdAt'
+const columns = 'id, email, created_at AS createdAt'
 
 export async function listInvites(db: D1Database, orgId: string) {
   return (
@@ -19,17 +19,17 @@ export async function insertInvite(
   orgId: string,
   actorId: string,
   id: string,
-  githubLogin: string,
+  email: string,
   now: number,
 ) {
   return db
     .prepare(
-      `INSERT INTO org_invites (id, org_id, github_login, invited_by_user_id, created_at)
+      `INSERT INTO org_invites (id, org_id, email, invited_by_user_id, created_at)
      SELECT ?, ?, ?, ?, ? WHERE ${activeAdminPredicate}
-     ON CONFLICT (org_id, github_login) DO UPDATE SET github_login = org_invites.github_login
+     ON CONFLICT (org_id, email) DO UPDATE SET email = org_invites.email
      RETURNING ${columns}`,
     )
-    .bind(id, orgId, githubLogin, actorId, now, orgId, actorId)
+    .bind(id, orgId, email, actorId, now, orgId, actorId)
     .first<OrgInvite>()
 }
 
@@ -54,8 +54,9 @@ export async function takeInvite(
   inviteId: string,
   now: number,
 ) {
-  const identity = `SELECT 1 FROM org_invites i JOIN users u ON u.github_login = i.github_login COLLATE NOCASE
-    JOIN orgs o ON o.id = i.org_id WHERE i.id = ? AND i.org_id = ? AND u.id = ? AND o.deleted_at IS NULL`
+  const identity = `SELECT 1 FROM org_invites i
+    JOIN user_verified_emails e ON e.email = i.email
+    JOIN orgs o ON o.id = i.org_id WHERE i.id = ? AND i.org_id = ? AND e.user_id = ? AND o.deleted_at IS NULL`
   const results = await db.batch([
     db
       .prepare(
@@ -71,4 +72,21 @@ export async function takeInvite(
       .bind(inviteId, orgId, inviteId, orgId, userId),
   ])
   return results[1].meta.changes > 0
+}
+
+export async function listPendingInvites(db: D1Database, userId: string) {
+  return (
+    await db
+      .prepare(
+        `SELECT i.id, i.email, i.created_at AS createdAt, o.id AS orgId, o.name AS orgName
+         FROM org_invites i JOIN orgs o ON o.id = i.org_id
+         WHERE o.deleted_at IS NULL AND EXISTS (
+           SELECT 1 FROM user_verified_emails e WHERE e.user_id = ? AND e.email = i.email
+         ) AND NOT EXISTS (
+           SELECT 1 FROM org_members m WHERE m.org_id = i.org_id AND m.user_id = ?
+         ) ORDER BY i.created_at, i.id`,
+      )
+      .bind(userId, userId)
+      .all<PendingOrgInvite>()
+  ).results
 }

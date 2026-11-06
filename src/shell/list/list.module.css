@@ -1,0 +1,35 @@
+/*
+ * The drag surface of a row. A long press must not open the menu of a
+ * link or select text, and a finger still scrolls the list.
+ */
+.dragSurface {
+  display: block;
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* The row under the pointer while it moves to another section. */
+.lifted {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  transform: rotate(-1.5deg);
+}
+
+/* The field of a new section, under the other sections. */
+.newSection {
+  padding: 0 2px 0 4px;
+}
+
+.choose {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.narrowList {
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}

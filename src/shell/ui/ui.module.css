@@ -1,0 +1,92 @@
+/*
+ * Styles that the interactive parts add to the mockup styles. The mockups
+ * draw rows and menus as plain boxes; the app draws them as buttons, so
+ * these rules remove the default look of a button.
+ */
+
+/* The overlay layer has no box: an overlay covers the whole frame. */
+.overlayHost {
+  display: contents;
+}
+
+/* The content of a frame. A sheet or a dialog makes it inert. */
+.overlayContent {
+  display: contents;
+}
+
+/* A wrapper without a box, such as the one of a button that keeps its focus. */
+.contents {
+  display: contents;
+}
+
+.plainButton {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The menu item that has the keyboard focus looks as one under the pointer. */
+.menuItem:focus {
+  outline: none;
+  background: var(--ui-soft);
+}
+
+.plainButton:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.plainButton:focus-visible,
+.focusable:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: -2px;
+}
+
+/* The anchor of a menu that opens beside its trigger. */
+.anchor {
+  display: flex;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Text for assistive technology only. */
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A sheet and a dialog sit above the app, which no longer takes input. */
+.layer {
+  position: absolute;
+}
+
+/* The scrim of a sheet or a dialog closes it. */
+.scrim {
+  cursor: default;
+}
+
+.error {
+  margin: 0;
+  color: var(--ui-rose);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.center {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}

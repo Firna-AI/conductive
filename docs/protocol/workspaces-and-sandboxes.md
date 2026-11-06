@@ -175,6 +175,9 @@ says.
   a switch to its source. Code shows with line numbers and syntax colours.
 - The header of a file tab can copy and download the file.
 - Reading a file has a size limit.
+- The Markdown preview fills short table rows only up to 65,536 empty
+  cells in one file. Then it shows the rest of the file as text
+  (decision 88).
 - Changes lists the files that the branch changes against the default
   branch. Its summary gives the number of changed files and the lines that
   they add and remove.

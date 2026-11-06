@@ -76,14 +76,10 @@ The Boat API applies its own canonical path checks.
 The fallback gets `SandboxProvider` through `orgSandboxProvider`, with the authorized user's ID.
 The provider owns the fixed routes, headers, account pinning, and encrypted key handling.
 Its `readFile` requests base64 so a binary file keeps its bytes.
-It bounds only the file content response before parsing JSON.
-It uses the [shared bounded body reader](../http/README.md), with the file route's budget.
-On overflow, it cancels the body and reads `files/info` for the exact size.
-The handler returns that size with `file_too_large`.
-The metadata response uses the provider's normal response path.
+The [sandbox response policy](../sandbox/README.md#response-byte-limits) defines the reply budgets and the metadata fallback.
+The handler reports the file size with `file_too_large`.
 The provider checks that both replies name the requested absolute path.
-The [sandbox README](../sandbox/README.md) gives the byte budget and transport entry points.
-It converts valid UTF-8 to text and preserves a leading byte order mark.
+The Boat read adapter converts valid UTF-8 to text and preserves a leading byte order mark.
 It checks the returned size and decoded byte length against the configured limit.
 Provider error messages never reach the browser.
 The [Boat read-file reference](https://docs.boat.dev/api/reference/agent/read-sandbox-file) defines that route.

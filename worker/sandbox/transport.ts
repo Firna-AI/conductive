@@ -1,12 +1,14 @@
 import type { HttpFetch } from '../env'
-import { isRecord } from '../http'
-import { BodyBudgetExceeded } from '../http/bounded-body'
+import { HttpError, isRecord } from '../http'
+import { BodyBudgetExceeded, readBoundedJson } from '../http/bounded-body'
 import { ProviderError, providerError } from './errors'
-import { boundedFileJson, fileResponseBudget } from './file-response'
+import { fileResponseBudget } from './file-response'
 import type { BoatAccount } from './provider'
 import { boatRoute, type BoatRoute } from './routes'
 
 const BOAT_API = 'https://boat.dev/api/v1'
+const RESPONSE_BUDGET = 1_048_576
+const COMMAND_RESPONSE_BUDGET = 18_874_368
 
 export class BoatTransport {
   private readonly key: string
@@ -62,20 +64,25 @@ export class BoatTransport {
     }
     let value: unknown
     try {
-      value =
-        route.operation === 'readFile'
-          ? await boundedFileJson(
-              response,
-              fileResponseBudget(route.path, route.maxBytes),
-            )
-          : await response.json()
+      let budget = RESPONSE_BUDGET
+      if (response.ok && route.operation === 'readFile') {
+        budget = fileResponseBudget(route.path, route.maxBytes)
+      } else if (response.ok && route.operation === 'command') {
+        budget = COMMAND_RESPONSE_BUDGET
+      }
+      value = await readBoundedJson(response.body, budget)
     } catch (error) {
-      if (
-        response.ok &&
-        route.operation === 'readFile' &&
-        error instanceof BodyBudgetExceeded
-      )
-        throw error
+      if (error instanceof BodyBudgetExceeded) {
+        if (response.ok && route.operation === 'readFile') throw error
+        const command = route.operation === 'command'
+        throw new HttpError(
+          502,
+          command ? 'command_output_too_large' : 'sandbox_response_too_large',
+          command
+            ? 'The command output is too large.'
+            : 'The cloud computer response is too large.',
+        )
+      }
       if (!response.ok) throw providerError(response, null)
       throw new ProviderError('invalid_response', 502)
     }

@@ -23,15 +23,19 @@ export interface OrgMember {
 }
 export interface OrgInvite {
   id: string
-  githubLogin: string
+  email: string
   createdAt: Timestamp
+}
+export interface PendingOrgInvite extends OrgInvite {
+  orgId: string
+  orgName: string
 }
 export interface MembersResponse {
   members: readonly OrgMember[]
   invites: readonly OrgInvite[]
 }
 export interface InviteMemberRequest {
-  githubLogin: string
+  email: string
 }
 export interface InviteMemberResponse {
   invite: OrgInvite
