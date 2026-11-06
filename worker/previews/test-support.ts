@@ -1,4 +1,4 @@
-import { storeBoatKey } from '../sandbox/keys'
+import { boatKeyPath } from '../../src/shared/api'
 import { createHarness, TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
 import type { ProxySocket, SocketRuntime } from './types'
 
@@ -234,13 +234,12 @@ export async function createToolsHarness() {
     seed: async () => {
       const session = await core.login()
       const org = await core.createOrg(session)
-      await storeBoatKey(
-        core.env,
-        org.id,
-        'boat-test-key',
-        core.boat.fetch,
-        now,
-      )
+      const keyResponse = await core.request(boatKeyPath(org.id), session, {
+        method: 'PUT',
+        body: JSON.stringify({ key: 'boat-test-key' }),
+      })
+      if (keyResponse.status !== 200)
+        throw new Error(`Key setup returned ${keyResponse.status}`)
       await core.env.DB.batch([
         core.env.DB.prepare(
           `INSERT INTO repositories (id, org_id, github_repository_id, full_name, default_branch)

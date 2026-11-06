@@ -1,0 +1,42 @@
+/*
+ * Resets a button, so that the class of the part that it draws styles it.
+ * The selector has no weight, so the part's own class always wins.
+ */
+:where(.bare) {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+:where(.bare):focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: -2px;
+}
+
+/* A menu row under the keyboard focus takes the fill of the mockup's highlighted row. */
+.row:focus-visible {
+  outline: none;
+  background: var(--ui-soft);
+}
+
+/* Keeps the line breaks that the user typed in a message. */
+.lines {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Text for assistive technology only. */
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
