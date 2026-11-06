@@ -11,8 +11,7 @@ The marketing mockup is the visual spec:
 and the parts in
 [`components/marketing/`](../../docs/mockups/src/components/marketing/).
 The [brand folder](../../docs/brand/README.md) gives the logo files. The
-site uses the lockups and the favicons from it unchanged, in place of the
-older mark of the mockup.
+site uses the lockups and favicons from that folder unchanged.
 
 ## How the Worker serves it
 
@@ -45,22 +44,20 @@ The files are captures of the screen inside each frame of the marketing
 mockup, without the frame, at two device pixels for each CSS pixel. They
 are lossless WebP, so each pixel stays as the mockup draws it. When a
 screen of the app or the marketing mockup changes, capture the pictures
-again:
+again with `npm run marketing:pictures` from the repository root.
 
-1. Run `npm run mockups:build`.
-2. Open `mokly-static/static/mokly-generated/marketing/index.desktop.html`
-   at 1440 px wide, and `index.mobile.html` at 390 px wide. Use the files
-   with `.dark` for the dark scheme.
-3. Capture the screen inside each frame, at a device pixel ratio of 2.
-   Leave out the border of the frame, and snap the edges inward to whole
-   device pixels.
-4. Save each capture as lossless WebP in `pictures/`, as
-   `<picture>-<layout>-<scheme>.webp`. The phone picture is one file for
-   each scheme, `phone-<scheme>.webp`, because both layouts show it.
+The command needs Node 24, the packages from `npm install`, and Chrome
+available as `google-chrome`. It builds the current mockups and serves
+them on a free local port. It captures the desktop page at 1440 px wide
+and the phone page at 390 px wide, in both colour schemes. It freezes
+animations at the same phase on each run. It leaves out each frame and
+snaps the capture edges inward to whole device pixels.
 
-The app screens of the mockups still draw the older mark of the product in
-the org rail, so the pictures show it too. Capture them again when the
-mockups take the new logo.
+The command uses the direct development dependency `sharp` to write
+lossless WebP files in `pictures/`, as `<picture>-<layout>-<scheme>.webp`.
+The phone picture is one file for each scheme, `phone-<scheme>.webp`,
+because both layouts show it. The command stops its server and browser
+and removes its temporary files on success, failure, or interruption.
 
 ## Legal drafts
 
@@ -104,6 +101,12 @@ Sources for the review:
 - `legal.ts`, `terms.ts`, `privacy.ts`: the legal pages and their drafts.
 - `pictures.ts`, `frames.ts`, `picture-files.ts`: the pictures, their
   frames, and their files.
+- [`tools/marketing-pictures/run.ts`](../../tools/marketing-pictures/run.ts):
+  the capture command, its build, and its cleanup.
+- [`capture-pictures.ts`](../../tools/marketing-pictures/capture-pictures.ts),
+  [`cdp.ts`](../../tools/marketing-pictures/cdp.ts), and
+  [`encode-pictures.ts`](../../tools/marketing-pictures/encode-pictures.ts):
+  the screen captures, the Chrome connection, and the lossless encoding.
 - `document.ts`, `styles.ts`, `tokens.ts`, `styles/`: the page document,
   the stylesheet, the design tokens from the mockups, and the CSS.
 - `assets.ts`: the brand files and the font, and the asset paths that the
