@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import type { WorkspaceEvent } from '../shared/events'
 import { terminalPaths, type TerminalResponse } from '../shared/terminal'
+import type { WorkspaceState } from '../shared/workspaces'
+import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import type { ToolResult } from './tool-parts/request'
 import {
   initialReadiness,
@@ -21,14 +24,20 @@ function answer(
   return { type: 'answer', read, result }
 }
 
-function reduce(...actions: TerminalReadinessAction[]) {
+/** The event that reports the workspace in a new state. */
+function updated(state: WorkspaceState): WorkspaceEvent {
+  const { workspace } = workspaceFixtures().detail
+  return { type: 'workspace.updated', workspace: { ...workspace, state } }
+}
+
+function reduce(...actions: (TerminalReadinessAction | WorkspaceEvent)[]) {
   return actions.reduce(readinessReducer, initialReadiness)
 }
 
 describe('terminal readiness', () => {
   it('reads again when the sandbox runs during a read, and keeps the older answer from a wait', () => {
     const state = reduce(
-      { type: 'workspace', state: 'input' },
+      updated('input'),
       answer(1, { state: 'starting', socketPath: null }),
     )
 
@@ -42,9 +51,9 @@ describe('terminal readiness', () => {
   it('keeps a connected terminal when the workspace moves between running states', () => {
     const state = reduce(
       answer(1, ready),
-      { type: 'workspace', state: 'working' },
-      { type: 'workspace', state: 'input' },
-      { type: 'workspace', state: 'unread' },
+      updated('working'),
+      updated('input'),
+      updated('unread'),
     )
 
     expect(state).toEqual({

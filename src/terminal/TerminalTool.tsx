@@ -1,13 +1,10 @@
-import { useEffect, useReducer } from 'react'
+import { useEffect } from 'react'
 import { CircleAlert, CirclePause, Unplug } from 'lucide-react'
 import { ToolButton } from './tool-parts/ToolButtons'
 import { ToolRoot } from './tool-parts/ToolRoot'
 import { ToolMessage, ToolWaiting } from './tool-parts/ToolStates'
-import {
-  useWorkspaceEvents,
-  workspaceKey,
-  type ToolWorkspace,
-} from './tool-parts/workspace'
+import { useToolStore } from './tool-parts/useToolStore'
+import { workspaceKey, type ToolWorkspace } from './tool-parts/workspace'
 import { loadTerminal } from './terminalApi'
 import { initialReadiness, readinessReducer } from './terminalReadiness'
 import { TerminalScreen, type ConnectTerminal } from './TerminalScreen'
@@ -33,9 +30,10 @@ export function TerminalTool(props: TerminalToolProps) {
 
 function TerminalToolBody(props: TerminalToolProps) {
   const { fetch, orgId, workspaceId } = props.workspace
-  const [{ view, read }, dispatch] = useReducer(
+  const [{ view, read }, dispatch] = useToolStore(
     readinessReducer,
     initialReadiness,
+    props.workspace,
   )
 
   useEffect(() => {
@@ -47,15 +45,9 @@ function TerminalToolBody(props: TerminalToolProps) {
       },
     )
     return () => controller.abort()
-  }, [fetch, orgId, workspaceId, read])
+  }, [fetch, orgId, workspaceId, read, dispatch])
 
   const retry = () => dispatch({ type: 'retry' })
-
-  useWorkspaceEvents(props.workspace, (event) => {
-    if (event.type === 'workspace.updated') {
-      dispatch({ type: 'workspace', state: event.workspace.state })
-    }
-  })
 
   let content
   switch (view.state) {

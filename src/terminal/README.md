@@ -56,13 +56,39 @@ change can move the shared parts to the app's shared components.
 - `onActivity` runs for each input of the user: keys, text, paste, and mouse
   reports. It does not run for the replies of xterm.js. The shell can count
   it as activity with the source `terminal`, at the rate that it chooses.
-- `workspace.fetch` is the app's fetch. `workspace.subscribe` delivers the
-  events of the workspace in order. Keep both stable.
+- `workspace.fetch` is the app's fetch. `workspace.subscribe` is required.
+  It delivers the events of the workspace in order. Keep both stable.
 - `touch` selects the phone layout: 44px controls and the key row.
 - The tool needs the Graphite tokens as `--ui-*` variables and the Firna
   theme provider, as the mockup renderer gives them.
 - Keep the tool mounted while another tool shows, if the shell must keep the
   connection. An unmounted tool closes its connection.
+
+## Workspace events
+
+The Terminal and Preview tools read the events of their workspace through
+one tool store, in `tool-parts/`. The Desktop tool reads no events.
+
+- The store is plain TypeScript. It holds the state of one tool and gives
+  each action to the tool's reducer. React reads it with
+  `useSyncExternalStore`, through `useToolStore`.
+- The store subscribes to `workspace.subscribe` when React subscribes to the
+  store, after the render. It stops when React unsubscribes, at unmount.
+  A render starts no subscription.
+- The store passes each event of its own workspace to the reducer, as the
+  `WorkspaceEvent` itself, in the order of the subscription. It drops the
+  events of other workspaces. The tool's own actions, such as a request
+  result, go to the same reducer.
+- A subscription can deliver its stored history at once, inside the
+  subscribe call. The store already listens then, so React hears each change.
+- React's StrictMode subscribes, stops, and subscribes again. The second
+  subscription can deliver the history again, and the reducers accept a
+  repeated event.
+- A new `workspace.subscribe` makes React subscribe again. The store keeps
+  its state, such as the revoked previews, and takes events only from the
+  new subscription.
+- The state stays the same object until an action or an event changes it,
+  so React renders only after a change.
 
 ## Development page
 
@@ -100,7 +126,10 @@ focus reports. These two buttons leave the keyboard on the terminal.
 - `terminalTheme.ts`: the colours and the type of the screen from the tokens.
 - `terminalApi.ts`: reads the terminal state.
 - `tool-parts/request.ts`: JSON requests, response parsers, and errors.
-- `tool-parts/workspace.ts`: the workspace of a tool and its events.
+- `tool-parts/workspace.ts`: the workspace of a tool, its required event
+  subscription, and the filter of its workspace's events.
+- `tool-parts/toolStore.ts`: the tool store, which owns that subscription.
+- `tool-parts/useToolStore.ts`: reads a tool store in React.
 - `tool-parts/ToolRoot.tsx`, `ToolButtons.tsx`, `ToolStates.tsx`: the
   dense and touch controls, and the waiting and message states.
 - `dev/tools.html`: the development page. `dev/devTerminal.ts` holds its

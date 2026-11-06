@@ -17,7 +17,10 @@ as the Preview page. Milestone 15i mounts it and wires it to the backend.
 - Reload loads the frame again. Close sends a DELETE with an empty JSON
   object, and the tab goes when the server confirms it.
 - A `preview.revoked` event of the same workspace removes its preview. A
-  later list does not bring it back.
+  later list does not bring it back, and neither does a new `subscribe`. An
+  event of another workspace changes nothing. The preview reducer takes the
+  event itself, through the
+  [tool store](../terminal/README.md#workspace-events).
 - The frame and the link send no referrer, because the address is the
   credential. The frame may not navigate the app's page.
 - A failed request shows its message and leaves the tool usable.
@@ -37,7 +40,8 @@ as the Preview page. Milestone 15i mounts it and wires it to the backend.
   tab, and `navigate` goes there without a page load. When the address names
   no preview, or one that is gone, the first tab shows.
 - `workspace` and `touch` are the same as for the
-  [terminal](../terminal/README.md#mount-the-tool).
+  [terminal](../terminal/README.md#mount-the-tool). `workspace.subscribe` is
+  required.
 
 ## Key code
 
@@ -45,7 +49,8 @@ as the Preview page. Milestone 15i mounts it and wires it to the backend.
 - `PreviewToolbar.tsx`: the link tabs and the actions of a preview.
 - `PreviewFrame.tsx`: the frame, its sandbox flags, and the new tab link.
 - `PreviewOpenForm.tsx`: the port form.
-- `previewsState.ts`: the list, its revoked previews, and the selection.
+- `previewsState.ts`: the list, its revoked previews, and the selection. Its
+  reducer takes the tool's actions and the revoke events.
 - `previewsApi.ts`: list, open, and close requests.
 
 See [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md#port-previews)

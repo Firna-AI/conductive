@@ -11,7 +11,7 @@ import {
   webUrl,
   type ToolResult,
 } from '../terminal/tool-parts/request'
-import type { ToolWorkspace } from '../terminal/tool-parts/workspace'
+import type { ToolRequests } from '../terminal/tool-parts/workspace'
 
 /** Narrows one preview, or gives null when a field is missing or wrong. */
 export function parsePreview(value: unknown): Preview | null {
@@ -35,7 +35,7 @@ function parseOpened(body: unknown): Preview | null {
 
 /** Reads the open previews of the workspace. */
 export function listPreviews(
-  workspace: ToolWorkspace,
+  workspace: ToolRequests,
   signal: AbortSignal,
 ): Promise<ToolResult<readonly Preview[]>> {
   const path = previewsPath(workspace.orgId, workspace.workspaceId)
@@ -48,7 +48,7 @@ export function listPreviews(
 
 /** Opens a preview of one port of the sandbox. */
 export function openPreview(
-  workspace: ToolWorkspace,
+  workspace: ToolRequests,
   port: number,
 ): Promise<ToolResult<Preview>> {
   const body: OpenPreviewRequest = { port }
@@ -65,7 +65,7 @@ export function openPreview(
  * abort it, so a close that the user started reaches the server.
  */
 export function closePreview(
-  workspace: ToolWorkspace,
+  workspace: ToolRequests,
   previewId: string,
 ): Promise<ToolResult<true>> {
   const body: EmptyRequest = {}

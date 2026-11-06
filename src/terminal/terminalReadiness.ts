@@ -1,3 +1,4 @@
+import type { WorkspaceEvent } from '../shared/events'
 import type { TerminalResponse } from '../shared/terminal'
 import type { WorkspaceState } from '../shared/workspaces'
 import type { ReadyTerminal } from './terminalApi'
@@ -16,7 +17,6 @@ export interface TerminalReadiness {
 
 export type TerminalReadinessAction =
   | { type: 'answer'; read: number; result: ToolResult<TerminalResponse> }
-  | { type: 'workspace'; state: WorkspaceState }
   | { type: 'retry' }
   | { type: 'ended' }
 
@@ -46,9 +46,13 @@ function answered(result: ToolResult<TerminalResponse>): TerminalView {
   return { state: terminal.state }
 }
 
+/**
+ * The tool's own actions, and the events of its workspace. A running sandbox
+ * makes a loading or waiting terminal read its state again.
+ */
 export function readinessReducer(
   state: TerminalReadiness,
-  action: TerminalReadinessAction,
+  action: TerminalReadinessAction | WorkspaceEvent,
 ): TerminalReadiness {
   switch (action.type) {
     case 'answer':
@@ -56,7 +60,7 @@ export function readinessReducer(
       return action.read === state.read
         ? { ...state, view: answered(action.result) }
         : state
-    case 'workspace': {
+    case 'workspace.updated': {
       // While a read runs or the terminal waits, a running sandbox needs a
       // new read. The new read makes the answer of a running read stale.
       const { view } = state
@@ -64,7 +68,8 @@ export function readinessReducer(
         view.state === 'loading' ||
         view.state === 'starting' ||
         view.state === 'stopped'
-      return waiting && running.has(action.state) ? nextRead(state) : state
+      const runs = running.has(action.workspace.state)
+      return waiting && runs ? nextRead(state) : state
     }
     case 'retry':
       return nextRead(state)
@@ -72,5 +77,8 @@ export function readinessReducer(
       return state.view.state === 'ready'
         ? { ...state, view: { ...state.view, ended: true } }
         : state
+    default:
+      // The other events of the workspace leave the terminal as it is.
+      return state
   }
 }

@@ -1,4 +1,3 @@
-import { useEffect, useEffectEvent } from 'react'
 import type {
   WorkspaceEvent,
   WorkspaceEventEnvelope,
@@ -13,37 +12,39 @@ export type SubscribeWorkspaceEvents = (
   listener: (envelope: WorkspaceEventEnvelope) => void,
 ) => () => void
 
-/**
- * What a tool needs from the workspace screen. Keep `fetch` and `subscribe`
- * stable across renders: a new `fetch` loads the data again, and a new
- * `subscribe` subscribes again.
- */
-export interface ToolWorkspace {
+/** What the requests of a tool need: the workspace and the app's fetch. */
+export interface ToolRequests {
   orgId: string
   workspaceId: string
   fetch: ApiFetch
-  subscribe?: SubscribeWorkspaceEvents
+}
+
+/**
+ * What a tool needs from the workspace screen: its requests and the events of
+ * its workspace. Keep `fetch` and `subscribe` stable across renders: a new
+ * `fetch` loads the data again, and a new `subscribe` subscribes again.
+ */
+export interface ToolWorkspace extends ToolRequests {
+  subscribe: SubscribeWorkspaceEvents
 }
 
 /**
  * The React key of a tool's lifetime. Another workspace starts the tool again,
  * so no state, frame, or connection of the old workspace stays.
  */
-export function workspaceKey(workspace: ToolWorkspace): string {
+export function workspaceKey(workspace: ToolRequests): string {
   return JSON.stringify([workspace.orgId, workspace.workspaceId])
 }
 
-/** Calls `onEvent` for each event of this workspace, and for no other. */
-export function useWorkspaceEvents(
-  workspace: ToolWorkspace,
+/**
+ * Subscribes to the events of one workspace. `onEvent` gets each event of
+ * that workspace in the order of its `subscribe`, and no event of another.
+ */
+export function subscribeToWorkspace(
+  workspace: Pick<ToolWorkspace, 'workspaceId' | 'subscribe'>,
   onEvent: (event: WorkspaceEvent) => void,
-): void {
-  const { subscribe, workspaceId } = workspace
-  const handle = useEffectEvent(onEvent)
-  useEffect(() => {
-    if (!subscribe) return undefined
-    return subscribe((envelope) => {
-      if (envelope.workspaceId === workspaceId) handle(envelope.event)
-    })
-  }, [subscribe, workspaceId])
+): () => void {
+  return workspace.subscribe((envelope) => {
+    if (envelope.workspaceId === workspace.workspaceId) onEvent(envelope.event)
+  })
 }

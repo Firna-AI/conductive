@@ -1,3 +1,4 @@
+import type { WorkspaceEvent } from '../shared/events'
 import type { Preview } from '../shared/previews'
 import type { ToolError } from '../terminal/tool-parts/request'
 
@@ -24,7 +25,6 @@ export type PreviewsAction =
   | { type: 'close'; previewId: string }
   | { type: 'closed'; previewId: string }
   | { type: 'close-failed'; previewId: string; error: ToolError }
-  | { type: 'revoked'; previewId: string }
   | { type: 'reload' }
 
 export const initialPreviews: PreviewsState = {
@@ -70,9 +70,13 @@ function remove(state: PreviewsState, previewId: string): PreviewsState {
   }
 }
 
+/**
+ * The tool's own actions, and the events of its workspace. A revoke event
+ * hides its preview for good: a later list does not bring it back.
+ */
 export function previewsReducer(
   state: PreviewsState,
-  action: PreviewsAction,
+  action: PreviewsAction | WorkspaceEvent,
 ): PreviewsState {
   switch (action.type) {
     case 'load':
@@ -103,12 +107,16 @@ export function previewsReducer(
         closing: without(state.closing, action.previewId),
         closeError: { previewId: action.previewId, error: action.error },
       }
-    case 'revoked':
+    case 'preview.revoked':
+      if (state.revoked.has(action.previewId)) return state
       return {
         ...remove(state, action.previewId),
         revoked: new Set(state.revoked).add(action.previewId),
       }
     case 'reload':
       return { ...state, reloads: state.reloads + 1 }
+    default:
+      // The other events of the workspace leave the previews as they are.
+      return state
   }
 }

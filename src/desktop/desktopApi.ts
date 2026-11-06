@@ -5,7 +5,7 @@ import {
   webUrl,
   type ToolResult,
 } from '../terminal/tool-parts/request'
-import type { ToolWorkspace } from '../terminal/tool-parts/workspace'
+import type { ToolRequests } from '../terminal/tool-parts/workspace'
 
 /** Narrows the desktop response. The URL stays as sent, with its fragment. */
 export function parseDesktopResponse(body: unknown): DesktopResponse | null {
@@ -21,7 +21,7 @@ export function parseDesktopResponse(body: unknown): DesktopResponse | null {
  * each load of the tool gets a URL of its own.
  */
 export function loadDesktop(
-  workspace: ToolWorkspace,
+  workspace: ToolRequests,
   signal: AbortSignal,
 ): Promise<ToolResult<DesktopResponse>> {
   return requestJson(

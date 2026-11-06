@@ -1,4 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import { previewsPath } from '../shared/previews'
+import { FakeApiServer } from '../test-support/fake-api'
+import { FAKE_IDS } from '../test-support/fixtures/core'
+import { devSubscribe, emitDevEvent } from '../terminal/dev/devServer'
+import { ToolStore } from '../terminal/tool-parts/toolStore'
+import { listPreviews } from './previewsApi'
 import {
   initialPreviews,
   previewsReducer,
@@ -20,18 +26,67 @@ const second = {
   expiresAt: 1_800_086_400_000,
 }
 
+/** A fake API that lists both previews, as a list read can after a revoke. */
+function serverWithBoth(): FakeApiServer {
+  const server = new FakeApiServer()
+  const path = previewsPath(FAKE_IDS.org, FAKE_IDS.workspace)
+  server.json('GET', path, { previews: [first, second] })
+  return server
+}
+
+/** The tool's list read, as the action that the tool sends with its reply. */
+async function listReply(server: FakeApiServer): Promise<PreviewsAction> {
+  const requests = {
+    orgId: FAKE_IDS.org,
+    workspaceId: FAKE_IDS.workspace,
+    fetch: server.fetch,
+  }
+  const result = await listPreviews(requests, new AbortController().signal)
+  if (!result.ok) throw new Error(`The list failed: ${result.error.message}`)
+  return { type: 'loaded', previews: result.value }
+}
+
 function reduce(...actions: PreviewsAction[]) {
   return actions.reduce(previewsReducer, initialPreviews)
 }
 
 describe('preview list', () => {
-  it('keeps a revoked preview hidden when a later list still has it', () => {
-    const state = reduce(
-      { type: 'revoked', previewId: 'preview-1' },
-      { type: 'loaded', previews: [first, second] },
+  it('keeps a revoked preview hidden after an event of another workspace, a later list, and a new subscription', async () => {
+    const server = serverWithBoth()
+    const store = new ToolStore(
+      previewsReducer,
+      initialPreviews,
+      FAKE_IDS.workspace,
     )
+    const stop = store.listen(() => undefined, devSubscribe(server))
+    store.dispatch(await listReply(server))
 
-    expect(visiblePreviews(state)).toEqual([second])
+    emitDevEvent(server, 'saved-carts', {
+      type: 'preview.revoked',
+      previewId: 'preview-1',
+    })
+    expect(visiblePreviews(store.getSnapshot())).toEqual([first, second])
+
+    emitDevEvent(server, FAKE_IDS.workspace, {
+      type: 'preview.revoked',
+      previewId: 'preview-1',
+    })
+    expect(visiblePreviews(store.getSnapshot())).toEqual([second])
+
+    store.dispatch(await listReply(server))
+    expect(visiblePreviews(store.getSnapshot())).toEqual([second])
+
+    // React subscribes again for a new subscription, after the old one stops.
+    stop()
+    const next = serverWithBoth()
+    const stopNext = store.listen(() => undefined, devSubscribe(next))
+    emitDevEvent(server, FAKE_IDS.workspace, {
+      type: 'preview.revoked',
+      previewId: 'preview-2',
+    })
+    store.dispatch(await listReply(next))
+    stopNext()
+    expect(visiblePreviews(store.getSnapshot())).toEqual([second])
   })
 
   it('shows the first tab when the address names a closed preview', () => {

@@ -1,11 +1,11 @@
-import { useEffect, useReducer, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CircleAlert } from 'lucide-react'
 import type { Preview } from '../shared/previews'
 import { ToolButton } from '../terminal/tool-parts/ToolButtons'
 import { ToolRoot } from '../terminal/tool-parts/ToolRoot'
 import { ToolMessage, ToolWaiting } from '../terminal/tool-parts/ToolStates'
+import { useToolStore } from '../terminal/tool-parts/useToolStore'
 import {
-  useWorkspaceEvents,
   workspaceKey,
   type ToolWorkspace,
 } from '../terminal/tool-parts/workspace'
@@ -52,7 +52,11 @@ export function PreviewTool(props: PreviewToolProps) {
 function PreviewToolBody(props: PreviewToolProps) {
   const { workspace, route } = props
   const { fetch, orgId, workspaceId } = workspace
-  const [state, dispatch] = useReducer(previewsReducer, initialPreviews)
+  const [state, dispatch] = useToolStore(
+    previewsReducer,
+    initialPreviews,
+    workspace,
+  )
   const [attempt, setAttempt] = useState(0)
   /** The form shows after "+", until the address changes. */
   const [adding, setAdding] = useState<{ routeId: string | null } | null>(null)
@@ -84,13 +88,7 @@ function PreviewToolBody(props: PreviewToolProps) {
       },
     )
     return () => controller.abort()
-  }, [fetch, orgId, workspaceId, attempt])
-
-  useWorkspaceEvents(workspace, (event) => {
-    if (event.type === 'preview.revoked') {
-      dispatch({ type: 'revoked', previewId: event.previewId })
-    }
-  })
+  }, [fetch, orgId, workspaceId, attempt, dispatch])
 
   const visible = visiblePreviews(state)
   const formShown = adding !== null && adding.routeId === route.previewId

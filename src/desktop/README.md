@@ -21,7 +21,10 @@ mounts it and wires it to the backend.
 ## Mount the tool
 
 ```tsx
-<DesktopTool touch={phone} workspace={{ orgId, workspaceId, fetch }} />
+<DesktopTool
+  touch={phone}
+  workspace={{ orgId, workspaceId, fetch, subscribe }}
+/>
 ```
 
 `workspace` and `touch` are the same as for the

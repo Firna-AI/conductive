@@ -1,6 +1,6 @@
 import { terminalPaths, type TerminalResponse } from '../shared/terminal'
 import { isRecord, requestJson, type ToolResult } from './tool-parts/request'
-import type { ToolWorkspace } from './tool-parts/workspace'
+import type { ToolRequests } from './tool-parts/workspace'
 
 export type ReadyTerminal = Extract<TerminalResponse, { state: 'ready' }>
 
@@ -17,7 +17,7 @@ export function parseTerminalResponse(body: unknown): TerminalResponse | null {
 
 /** Reads the terminal state of the workspace. */
 export function loadTerminal(
-  workspace: ToolWorkspace,
+  workspace: ToolRequests,
   signal: AbortSignal,
 ): Promise<ToolResult<TerminalResponse>> {
   const { orgId, workspaceId } = workspace
