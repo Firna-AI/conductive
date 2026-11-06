@@ -3,9 +3,11 @@ import { workspacePaths } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
 import { OrgModel } from './org-model'
+import { valueOf } from './store'
 import {
   flushMicrotasks,
   HeldRequests,
+  ManualVisibility,
   RecordingEvents,
   requestLines,
   testServices,
@@ -16,14 +18,27 @@ const org = FAKE_IDS.org
 const id = FAKE_IDS.workspace
 const openPath = workspacePaths.open(org, id)
 
-function setup(server: FakeApiServer) {
+function setup(server: FakeApiServer, visible = new ManualVisibility()) {
   const held = new HeldRequests(server)
   const events = new RecordingEvents()
   const model = new OrgModel(
-    testServices(server, { fetch: held.fetch, events }),
+    testServices(server, { fetch: held.fetch, events, visible }),
     org,
   )
   return { held, events, org: model, workspace: new WorkspaceModel(model, id) }
+}
+
+/** The bodies of the read marks that the server got, in their order. */
+function readMarks(server: FakeApiServer): Promise<unknown[]> {
+  const path = workspacePaths.read(org, id)
+  return Promise.all(
+    server.requests
+      .filter(
+        (request) =>
+          request.method === 'PUT' && new URL(request.url).pathname === path,
+      )
+      .map((request) => request.clone().json()),
+  )
 }
 
 describe('WorkspaceModel', () => {
@@ -201,5 +216,67 @@ describe('WorkspaceModel', () => {
       state: 'ready',
       value: { workspace: { state: 'ready' } },
     })
+  })
+
+  test('a hidden page sends no read mark, and the page that shows again marks the newest event read', async () => {
+    const server = new FakeApiServer({ workspaceState: 'unread' })
+    const visible = new ManualVisibility()
+    const { events, workspace } = setup(server, visible)
+    const seen = async () => ({
+      reads: await readMarks(server),
+      state: valueOf(workspace.detail.get())?.workspace.state,
+    })
+    // An unread workspace opens in a hidden page, such as a background tab.
+    visible.set(false)
+    await workspace.open()
+    events.send({
+      type: 'history',
+      history: { events: [], throughEventNumber: 20 },
+    })
+    await flushMicrotasks()
+    expect(await seen()).toEqual({ reads: [], state: 'unread' })
+    visible.set(true)
+    await flushMicrotasks()
+    expect(await seen()).toEqual({
+      reads: [{ throughEventNumber: 20 }],
+      state: 'ready',
+    })
+    // The page hides again, and the next turn ends with new output.
+    const record = valueOf(workspace.detail.get())?.workspace
+    if (!record) throw new Error('The workspace did not open.')
+    visible.set(false)
+    const envelope = { workspaceId: id, occurredAt: FAKE_TIME }
+    events.send({
+      type: 'event',
+      envelope: {
+        ...envelope,
+        eventNumber: 21,
+        event: {
+          type: 'workspace.updated',
+          workspace: { ...record, state: 'unread' },
+        },
+      },
+    })
+    events.send({
+      type: 'event',
+      envelope: {
+        ...envelope,
+        eventNumber: 22,
+        event: { type: 'workspace.title', name: 'Address autocomplete' },
+      },
+    })
+    await flushMicrotasks()
+    expect(await seen()).toEqual({
+      reads: [{ throughEventNumber: 20 }],
+      state: 'unread',
+    })
+    visible.set(true)
+    await flushMicrotasks()
+    expect(await seen()).toEqual({
+      reads: [{ throughEventNumber: 20 }, { throughEventNumber: 22 }],
+      state: 'ready',
+    })
+    workspace.close()
+    expect(visible.listening).toBe(0)
   })
 })

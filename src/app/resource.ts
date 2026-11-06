@@ -29,7 +29,10 @@ interface Layer<T> {
  *   fields that the answer confirms. A failed write takes back its own
  *   change only, so other writes, changes, and reads stay.
  * - A save is a write whose answer is the whole value. Its answer counts
- *   as an answer from the time that it arrives.
+ *   as an answer from the time that it arrives. The saves of one value go
+ *   out one at a time, each after the answer of the one before, because an
+ *   answer carries no order of its own. A failed save does not stop the
+ *   next one.
  * - A failed read keeps a value that already shows. Only a read that fails
  *   before any answer shows its error.
  */
@@ -41,6 +44,8 @@ export class Resource<T> {
   private count = 0
   private confirmed: Layer<T>[] = []
   private writes: Layer<T>[] = []
+  /** The last save in the queue. It never fails, so the next save can go. */
+  private saving: Promise<unknown> = Promise.resolve()
   private readonly fetch: () => Promise<T>
 
   constructor(fetch: () => Promise<T>) {
@@ -62,11 +67,19 @@ export class Resource<T> {
     if (current()) this.answered(value, startedAt)
   }
 
-  /** Sends a write whose answer is the whole value, and shows the answer. */
-  async save(send: () => Promise<T>): Promise<T> {
-    const value = await send()
-    this.answered(value, ++this.count)
-    return value
+  /**
+   * Sends a write whose answer is the whole value, after every earlier save
+   * of this value has its answer, and shows the answer. A failure rejects
+   * only its own caller.
+   */
+  save(send: () => Promise<T>): Promise<T> {
+    const run = this.saving.then(async () => {
+      const value = await send()
+      this.answered(value, ++this.count)
+      return value
+    })
+    this.saving = run.catch(() => undefined)
+    return run
   }
 
   /**

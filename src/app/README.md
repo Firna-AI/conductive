@@ -80,11 +80,21 @@ the invite, the roles, and the removal there.
 - A save whose answer holds the whole value, such as the Boat key, the
   repositories, or the computer settings, counts as an answer from the time
   that it arrives. A read that started before it changes nothing.
+- The saves of one value go out one at a time. The next save starts after
+  the answer of the one before, because an answer carries no order of its
+  own. A failed save rejects only its own caller, and the next save goes.
+  List writes do not wait for each other.
+- The settings of the cloud computer are one value of the org in
+  `OrgModel`. Every opening of the Cloud computer tab shares them, so a
+  save from a closed tab shows in the reopened tab.
 - The Cloud computer tab follows the builds while it shows. When the newest
   build ends, by any path, the tab reads the settings again, because the
   server changes them at a build, such as `needsBuild`.
-- The read mark of an open workspace follows both the applied state and
-  the number of the newest event, so their order does not count.
+- The read mark of an open workspace follows the applied state, the
+  number of the newest event, and the visibility of the page, so their
+  order does not count. A hidden page sends no read mark. When the page
+  shows again, the mark goes through the newest event that arrived. A page
+  without the focus still shows its output, so the focus does not count.
 
 ## Rules for this code
 
@@ -102,8 +112,9 @@ the invite, the roles, and the removal there.
   generation. An answer that arrives after their screen closed or the user
   cancelled starts no stream, writes no older state, opens no question,
   and schedules no request.
-- Timers and the focus of the page come from `AppServices` (`delay` and
-  `onFocus`), so that no unit test runs a real timer.
+- Timers, the focus, and the visibility of the page come from
+  `AppServices` (`delay`, `onFocus`, and `visible`), so that no unit test
+  runs a real timer or needs a browser page.
 - The shell reuses the design tokens, the pure parts, and the CSS modules of
   the [mockups](../../docs/mockups/README.md). It never imports a mockup
   screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.
@@ -114,9 +125,9 @@ the invite, the roles, and the removal there.
 ## Tests
 
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
-fake API, requests that wait for the test (also two at one path), a manual
-timer with the wait of each pending timer, a manual page focus, and a
-recording event source. `../shell/test-render.tsx` draws a screen with
+fake API, requests or answers that wait for the test (also two at one
+path), a manual timer with the wait of each pending timer, a manual page
+focus and visibility, and a recording event source. `../shell/test-render.tsx` draws a screen with
 every provider through server rendering, after the test loads its data.
 
 ## Key code
@@ -124,7 +135,8 @@ every provider through server rendering, after the test loads its data.
 - `api/client.ts`: the JSON client and `ApiError`. `api/read-*.ts`: the readers.
 - `app-model.ts`: the session, the orgs, the models list, and Get started.
 - `org-model.ts`: the sections, workspaces, repositories, builds, Boat key,
-  and members of one org, with `watch` and the wait of each part.
+  members, and computer settings of one org, with `watch` and the wait of
+  each part.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
   its waiting writes. `refresh.ts`: `Refresher`, the shared reads of a part
   while screens show it.

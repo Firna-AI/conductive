@@ -1,6 +1,11 @@
 import { createApiClient } from './api/client'
 import { browserDelay, socketEventSource } from './events'
-import { windowFocus, windowStorage, type AppServices } from './services'
+import {
+  windowFocus,
+  windowStorage,
+  windowVisibility,
+  type AppServices,
+} from './services'
 
 /** The services of the deployed app: the Worker on the origin of the page. */
 export function createLiveServices(target: Window): AppServices {
@@ -10,6 +15,7 @@ export function createLiveServices(target: Window): AppServices {
     now: () => Date.now(),
     delay: browserDelay,
     onFocus: windowFocus(target),
+    visible: windowVisibility(target),
     storage: windowStorage(target),
     newId: () => target.crypto.randomUUID(),
     leave: (url) => target.location.assign(url),

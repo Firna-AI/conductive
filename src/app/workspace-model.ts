@@ -80,8 +80,9 @@ export class WorkspaceModel {
     if (run !== this.generation) return
     this.detail.set(ready(detail))
     this.org.putWorkspace(detail.workspace)
-    // The read mark follows both inputs, so their order does not count: the
-    // number of an event changes before the event applies.
+    // The read mark follows all its inputs, so their order does not count:
+    // the number of an event changes before the event applies, and a page
+    // that shows again marks the output that arrived while it was hidden.
     const markRead = () => void this.markRead()
     this.stops.push(
       this.stream.subscribe((envelope) => {
@@ -89,6 +90,7 @@ export class WorkspaceModel {
       }),
       this.stream.last.subscribe(markRead),
       this.detail.subscribe(markRead),
+      this.org.services.visible.subscribe(markRead),
     )
     this.stream.start()
   }
@@ -153,13 +155,15 @@ export class WorkspaceModel {
 
   /**
    * Output that the open workspace shows counts as read. It runs when the
-   * applied state or the number of the newest event changes. The answer
-   * changes the state only while the workspace is still unread through the
-   * same event, so an older answer never hides a newer update.
+   * applied state, the number of the newest event, or the visibility of the
+   * page changes. A hidden page shows no output, so it sends no read mark.
+   * The answer changes the state only while the workspace is still unread
+   * through the same event, so an older answer never hides a newer update.
    */
   private async markRead(): Promise<void> {
     const detail = valueOf(this.detail.get())
     const through = this.stream.last.get()
+    if (!this.org.services.visible.get()) return
     if (this.reading || !detail || through === 0) return
     if (detail.workspace.state !== 'unread') return
     const run = this.generation

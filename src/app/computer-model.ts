@@ -15,7 +15,6 @@ import {
 } from './api/read-settings'
 import type { Delay } from './events'
 import { latestBuild, type OrgModel } from './org-model'
-import { Resource } from './resource'
 import { Store, type Loadable, type Readable } from './store'
 
 export type ScriptKind = 'installScript' | 'startupScript'
@@ -52,7 +51,6 @@ export class ComputerModel {
   readonly log = new Store<BuildLog | null>(null)
   private readonly org: OrgModel
   private readonly delay: Delay
-  private readonly saved: Resource<OrgSettings>
   private stopPoll: (() => void) | null = null
   /** `stop` counts one up, so an older request knows that its tab closed. */
   private generation = 0
@@ -63,14 +61,16 @@ export class ComputerModel {
   constructor(org: OrgModel, delay: Delay = org.services.delay) {
     this.org = org
     this.delay = delay
-    this.saved = new Resource(() =>
-      this.api.get(orgSettingsPaths.settings(org.orgId), readSettings),
-    )
-    this.settings = this.saved.store
+    this.settings = org.resources.settings.store
   }
 
   private get api() {
     return this.org.services.api
+  }
+
+  /** The settings of the org, which every opening of the tab shares. */
+  private get saved() {
+    return this.org.resources.settings
   }
 
   /**

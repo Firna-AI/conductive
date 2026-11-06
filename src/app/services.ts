@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react'
 import type { ApiClient } from './api/client'
 import type { Delay, WorkspaceEventSource } from './events'
+import type { Readable } from './store'
 
 /** The storage of the panel widths, such as `localStorage`. */
 export interface KeyValueStorage {
@@ -10,8 +11,9 @@ export interface KeyValueStorage {
 
 /**
  * What the app needs from outside: the API, the event stream, the clock,
- * the timers, the focus of the page, and the browser storage. `main.tsx`
- * gives the real ones, or the fake API in development. Tests give their own.
+ * the timers, the focus and the visibility of the page, and the browser
+ * storage. `main.tsx` gives the real ones, or the fake API in development.
+ * Tests give their own.
  */
 export interface AppServices {
   api: ApiClient
@@ -22,6 +24,11 @@ export interface AppServices {
   delay: Delay
   /** Calls `listener` each time that the user comes back to the page. */
   onFocus: (listener: () => void) => () => void
+  /**
+   * Whether the page shows, so that the user can see its output. A page
+   * without the focus can still show, so this is not the focus.
+   */
+  visible: Readable<boolean>
   /** The time zone of dates. `undefined` uses the browser's own. */
   timeZone?: string
   /** `null` when the browser keeps no storage, as in some private windows. */
@@ -63,5 +70,17 @@ export function windowFocus(target: Window): AppServices['onFocus'] {
       target.removeEventListener('focus', listener)
       target.document.removeEventListener('visibilitychange', shown)
     }
+  }
+}
+
+/** Whether the page of a browser window shows, as its document says. */
+export function windowVisibility(target: Window): Readable<boolean> {
+  const { document } = target
+  return {
+    get: () => document.visibilityState === 'visible',
+    subscribe: (listener) => {
+      document.addEventListener('visibilitychange', listener)
+      return () => document.removeEventListener('visibilitychange', listener)
+    },
   }
 }

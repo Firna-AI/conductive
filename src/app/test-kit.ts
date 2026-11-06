@@ -8,47 +8,72 @@ import type {
   WorkspaceEventSource,
 } from './events'
 import type { AppServices, KeyValueStorage } from './services'
+import type { Readable } from './store'
 
 function requestKey(method: string, path: string): string {
   return `${method} ${new URL(path, FAKE_ORIGIN).pathname}`
 }
 
+/** Where a held request waits: before the server sees it, or after it answers. */
+type HoldPoint = 'request' | 'answer'
+
+interface Hold {
+  point: HoldPoint
+  gate: Promise<void>
+}
+
 /** Requests that wait until the test releases them, to order an answer. */
 export class HeldRequests {
-  private readonly gates = new Map<string, Promise<void>[]>()
+  private readonly holds = new Map<string, Hold[]>()
   private readonly releases = new Map<string, (() => void)[]>()
   readonly fetch: FetchLike
 
   constructor(server: FakeApiServer) {
     this.fetch = async (input, init) => {
-      const gate = this.gates
+      const hold = this.holds
         .get(requestKey(init?.method ?? 'GET', input))
         ?.shift()
-      if (gate) await gate
-      return server.fetch(input, init)
+      if (hold?.point === 'request') await hold.gate
+      const response = await server.fetch(input, init)
+      if (hold?.point === 'answer') await hold.gate
+      return response
     }
   }
 
   /**
-   * The next request with this method and path waits for `release`. Each
-   * call holds one more request, so two requests can wait at one path.
+   * The next request with this method and path waits for `release` before
+   * the server sees it. Each call holds one more request, so two requests
+   * can wait at one path.
    */
   hold(method: string, path: string): void {
-    const key = requestKey(method, path)
-    const gates = this.gates.get(key) ?? []
-    const releases = this.releases.get(key) ?? []
-    gates.push(
-      new Promise((resolve) => {
-        releases.push(() => resolve())
-      }),
-    )
-    this.gates.set(key, gates)
-    this.releases.set(key, releases)
+    this.add(method, path, 'request')
+  }
+
+  /**
+   * The server answers the next request with this method and path at once,
+   * with the reply that it has then. The answer waits for `release`.
+   */
+  holdAnswer(method: string, path: string): void {
+    this.add(method, path, 'answer')
   }
 
   /** Lets the oldest held request with this method and path go on. */
   release(method: string, path: string): void {
     this.releases.get(requestKey(method, path))?.shift()?.()
+  }
+
+  private add(method: string, path: string, point: HoldPoint): void {
+    const key = requestKey(method, path)
+    const holds = this.holds.get(key) ?? []
+    const releases = this.releases.get(key) ?? []
+    holds.push({
+      point,
+      gate: new Promise((resolve) => {
+        releases.push(() => resolve())
+      }),
+    })
+    this.holds.set(key, holds)
+    this.releases.set(key, releases)
   }
 }
 
@@ -100,6 +125,31 @@ export class ManualFocus {
   }
 }
 
+/** Whether the page shows. It starts visible and changes when the test says so. */
+export class ManualVisibility implements Readable<boolean> {
+  private shown = true
+  private readonly listeners = new Set<() => void>()
+
+  readonly get = (): boolean => this.shown
+
+  readonly subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener)
+    return () => {
+      this.listeners.delete(listener)
+    }
+  }
+
+  get listening(): number {
+    return this.listeners.size
+  }
+
+  /** The page hides, or it shows again. */
+  set(shown: boolean): void {
+    this.shown = shown
+    for (const listener of [...this.listeners]) listener()
+  }
+}
+
 /** An event source that records each open and lets the test send messages. */
 export class RecordingEvents implements WorkspaceEventSource {
   readonly opened: StreamTarget[] = []
@@ -139,6 +189,7 @@ export class MemoryStorage implements KeyValueStorage {
 /**
  * Services over a fake API server, with no real network, clock, timer, or
  * storage. A timer runs only through a `ManualDelay` that the test gives.
+ * The page shows, unless the test gives a `ManualVisibility` and hides it.
  */
 export function testServices(
   server: FakeApiServer,
@@ -157,6 +208,7 @@ export function testServices(
     copy: async () => undefined,
     delay: new ManualDelay().delay,
     onFocus: new ManualFocus().onFocus,
+    visible: new ManualVisibility(),
     ...rest,
   }
 }

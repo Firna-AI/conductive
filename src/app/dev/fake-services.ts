@@ -3,7 +3,12 @@ import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { API_PATHS } from '../../shared/api'
 import { createApiClient } from '../api/client'
 import { browserDelay, type WorkspaceEventSource } from '../events'
-import { windowFocus, windowStorage, type AppServices } from '../services'
+import {
+  windowFocus,
+  windowStorage,
+  windowVisibility,
+  type AppServices,
+} from '../services'
 import { accountRoutes } from './account-routes'
 import { createBackend, guardScope } from './backend'
 import { buildRoutes } from './build-routes'
@@ -67,6 +72,7 @@ export function createFakeServices(search: string): AppServices {
     now,
     delay: browserDelay,
     onFocus: windowFocus(window),
+    visible: windowVisibility(window),
     storage: windowStorage(window),
     newId,
     leave: (url) => window.location.assign(url),

@@ -4,6 +4,7 @@ import {
   orgSettingsPaths,
   type BuildsResponse,
   type ImageBuild,
+  type OrgSettings,
   type Repository,
 } from '../shared/org-settings'
 import { sectionsPath, type Section } from '../shared/sections'
@@ -15,7 +16,12 @@ import {
 import { items, record } from './api/parse'
 import { readBoatKey, readSection } from './api/read-core'
 import { readWorkspaces } from './api/read-workspaces'
-import { readBuilds, readMembers, readRepositories } from './api/read-settings'
+import {
+  readBuilds,
+  readMembers,
+  readRepositories,
+  readSettings,
+} from './api/read-settings'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
 import { Refresher, type RefreshWait, type Refreshing } from './refresh'
@@ -73,8 +79,9 @@ function partOf<T, P>(
 
 /**
  * The data of one org: its list of sections and workspaces, its
- * repositories, the builds of its cloud computer, its Boat key status, and
- * its members. A part reads while a screen shows it, as `watch` says.
+ * repositories, the builds and settings of its cloud computer, its Boat key
+ * status, and its members. A part reads while a screen shows it, as
+ * `watch` says. The Cloud computer tab reads the settings itself.
  */
 export class OrgModel {
   readonly orgId: string
@@ -85,6 +92,11 @@ export class OrgModel {
     readonly builds: Resource<BuildsResponse>
     readonly boatKey: Resource<BoatKeyStatus>
     readonly members: Resource<MembersResponse>
+    /**
+     * The settings of the cloud computer. Every opening of the Cloud
+     * computer tab shares them, so a save from a closed tab still shows.
+     */
+    readonly settings: Resource<OrgSettings>
   }
   readonly sections: Readable<Loadable<readonly Section[]>>
   readonly workspaces: Readable<Loadable<readonly Workspace[]>>
@@ -120,6 +132,9 @@ export class OrgModel {
       ),
       members: new Resource<MembersResponse>(() =>
         api.get(membersPath(orgId), readMembers),
+      ),
+      settings: new Resource<OrgSettings>(() =>
+        api.get(orgSettingsPaths.settings(orgId), readSettings),
       ),
     }
     const { list, repositories, builds, boatKey, members } = this.resources
