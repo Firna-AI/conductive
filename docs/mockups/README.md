@@ -92,7 +92,9 @@ chat, and five tabs at the bottom.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green
-  square, and ready is one bright cell on a faint green grid.
+  square, and ready is one bright cell on a faint green grid. A workspace
+  whose agent waits for the user, such as for the approval of a command,
+  shows Needs input: a middle column in the accent colour that pulses.
 - Copy says cloud computer or sandbox. Only the Boat key tab, the marketing
   site, and Get started name Boat, from decision 47.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
@@ -126,7 +128,7 @@ chat, and five tabs at the bottom.
 | `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure          |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the session history, and closing a session while it works      |
-| `app/reassign`      | The owner of a workspace and the menu that reassigns it, and a member's view  |
+| `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
 | `app/composer`      | Attached files, the model and effort picker, and a missing agent or key       |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
@@ -216,6 +218,13 @@ plan limits.
 - Each message runs on the agent login of the person who sends it, from
   decision 49. So a reassign changes no login, and the cloud computer keeps
   running.
+- A stopped turn names the member who pressed Stop, from decision 72,
+  because all members of an org see the same chat. That member sees "You
+  stopped the agent", as `app/chat/interrupted` shows. The other members
+  see the name of that member, such as "Cal stopped the agent" in
+  `app/reassign/member-stop`. When no member pressed Stop, such as when
+  the cloud computer stopped during the turn, the chat says "The agent
+  stopped", as `app/shell/stopped/during-turn` shows.
 - Each branch starts with the GitHub login of the owner of its workspace,
   such as `calummoore/lisbon-7k2q`, from decision 53.
 - Archive, from decision 16, deletes the cloud computer and keeps the chat
@@ -275,13 +284,20 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   draws the window controls and a banner of the Mac app. The account of
   the Mac app keeps the sidebar of the org and adds the This Mac section.
 - An agent can ask to run a command on the Mac of the person who sent the
-  turn. The prompt shows the command, the folder, the reason, the time
-  limit, the workspace, and the sender, with Deny, Allow, Always allow,
-  and Allow all commands for 15 minutes. A notification of macOS opens
-  the prompt when the app is in the background. The 15 minutes show as an
-  amber bar with the time left and Stop.
-- The chat of the web app shows each command as a card: waiting for
-  approval, denied, done with its output, or Mac not available.
+  turn. The request waits as a compact message just above the composer,
+  from `PendingCommand` in `src/components/chat/`: the exact command, the
+  time limit, Deny, and Allow. A longer time limit shows its reason.
+  Details opens the folder, the reason, the workspace, and the sender. The
+  arrow beside Allow opens Always allow and Allow all commands for 15
+  minutes. A view runs no script, so both are native disclosures, and each
+  choice is a link. The header and the workspace list mark the workspace
+  with Needs input, so the request shows from every page. A notification
+  of macOS opens the workspace when the app is in the background. The 15
+  minutes show as an amber bar with the time left and Stop.
+- The web app shows a waiting request without the choices, because only
+  the Mac app can allow a command on the Mac. Once answered, the command
+  shows as a card at its place in the chat: denied, done with its output,
+  or Mac not available.
 
 ## The marketing site
 
@@ -291,6 +307,9 @@ the app, then one section for each feature, the smaller features, a last
 call to action, and a footer. Both actions, "Start free with GitHub"
 and "Sign in", lead to `app/sign-in`. The parts live in
 `src/components/marketing/`.
+
+The site keeps still captures of the workspace screen, the org settings cloud computer tab, and the phone workspace list.
+Changes to those screens require recapture with the [capture steps](../../src/marketing/README.md#pictures).
 
 - Every picture is a real screen of the catalogue, not a drawing of one.
   `ScreenFrame` lays the screen out at its own size, 1440 × 900 on desktop

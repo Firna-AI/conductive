@@ -2,6 +2,7 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, CircleStop, Clock } from 'lucide-react'
 import type { ChatItem } from '../../fixtures/conversations'
+import { people, type PersonKey } from '../../fixtures/members'
 import { ActionButton } from '../common/actions'
 import { InlineText } from '../common/InlineText'
 import { Notice } from '../common/Notice'
@@ -10,9 +11,23 @@ import { ToolGroup } from './ToolGroup'
 import { TurnEnd } from './TurnEnd'
 import styles from './ChatItemView.module.css'
 
-/** One item of a chat transcript. */
-export function ChatItemView(props: { item: ChatItem }) {
-  const { item } = props
+/**
+ * The line of a stopped turn. It names the member who pressed Stop, and
+ * says "You" to that member (decision 72). A turn that stopped with no
+ * Stop, such as when the cloud computer stopped, names no member.
+ */
+function stoppedLine(by: PersonKey | undefined, viewer: PersonKey): string {
+  if (by === undefined) return 'The agent stopped'
+  const who = by === viewer ? 'You' : people[by].name
+  return `${who} stopped the agent`
+}
+
+/**
+ * One item of a chat transcript. `viewer` is the person signed in, who
+ * reads the transcript.
+ */
+export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
+  const { item, viewer } = props
   const theme = useSharedUiTheme()
   switch (item.kind) {
     case 'user':
@@ -58,7 +73,7 @@ export function ChatItemView(props: { item: ChatItem }) {
       return (
         <div className={styles.event}>
           <CircleStop size={13} />
-          You stopped the agent
+          {stoppedLine(item.by, viewer)}
         </div>
       )
     case 'error':

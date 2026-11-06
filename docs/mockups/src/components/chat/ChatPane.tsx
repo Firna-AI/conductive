@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import type { ChatItem } from '../../fixtures/conversations'
+import type { PersonKey } from '../../fixtures/members'
 import type { StartingLog } from '../../fixtures/starting'
 import { classes } from '../common/classes'
 import { SandboxBar, type SandboxProblem } from '../workspace/SandboxNotice'
@@ -8,13 +9,16 @@ import { StartingCard } from '../workspace/StartingCard'
 import { ChatItemView } from './ChatItemView'
 import { Composer, type ComposerState } from './Composer'
 import { groupItems } from './groupItems'
+import { isPendingCommand, PendingCommand } from './PendingCommand'
 import { ToolGroup } from './ToolGroup'
 import styles from './ChatPane.module.css'
 
 /**
  * The chat transcript, with the composer or a sandbox bar under it. While
  * the sandbox starts, its steps show at the end of the transcript. An empty
- * transcript shows `empty` instead.
+ * transcript shows `empty` instead. A command that waits for approval on a
+ * Mac leaves the transcript and stays in view just above the composer.
+ * Once answered, it shows at its place in the transcript.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
@@ -24,9 +28,13 @@ export function ChatPane(props: {
   empty?: ReactNode
   /** A message above the composer, such as a failed create. */
   notice?: ReactNode
+  /** The person signed in. A stopped turn says "You" if they pressed Stop. */
+  viewer: PersonKey
   viewport: Viewport
 }) {
   const empty = props.items.length === 0 && !props.starting
+  const pending = props.items.find(isPendingCommand)
+  const transcript = props.items.filter((item) => !isPendingCommand(item))
   return (
     <section
       aria-label="Chat"
@@ -40,11 +48,15 @@ export function ChatPane(props: {
       ) : (
         <div className={styles.scroll} data-mokly-scroll="chat-transcript">
           <div className={styles.transcript}>
-            {groupItems(props.items).map((entry) =>
+            {groupItems(transcript).map((entry) =>
               entry.kind === 'tools' ? (
                 <ToolGroup calls={entry.calls} key={entry.id} />
               ) : (
-                <ChatItemView item={entry.item} key={entry.item.id} />
+                <ChatItemView
+                  item={entry.item}
+                  key={entry.item.id}
+                  viewer={props.viewer}
+                />
               ),
             )}
             {props.starting ? <StartingCard log={props.starting} /> : null}
@@ -52,6 +64,7 @@ export function ChatPane(props: {
         </div>
       )}
       <div className={styles.footer}>
+        {pending ? <PendingCommand request={pending.request} /> : null}
         {props.notice}
         {props.problem ? (
           <SandboxBar problem={props.problem} />

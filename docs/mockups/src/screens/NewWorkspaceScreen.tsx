@@ -5,10 +5,12 @@ import { ActionButton } from '../components/common/actions'
 import { Notice } from '../components/common/Notice'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
+import { useMacApp } from '../components/mac/MacApp'
 import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { lastBuild } from '../fixtures/computer'
 import { savedCartsMessage } from '../fixtures/conversations'
+import { you } from '../fixtures/members'
 import { orgs } from '../fixtures/orgs'
 import { repositories } from '../fixtures/repositories'
 import { savedCarts } from '../fixtures/workspaces'
@@ -79,6 +81,7 @@ function NewChat(props: { failed: boolean; viewport: Viewport }) {
       empty={<Start />}
       items={[]}
       notice={notice}
+      viewer={you}
       viewport={props.viewport}
     />
   )
@@ -93,6 +96,7 @@ export function NewWorkspaceScreen(props: {
   state: NewWorkspaceState
   viewport: Viewport
 }) {
+  const mac = useMacApp()
   const mobile = props.viewport === 'mobile'
   const page = (
     <Page
@@ -113,7 +117,7 @@ export function NewWorkspaceScreen(props: {
     <Sidebar
       current="new-workspace"
       org={orgs.acme}
-      sections={workspaceSections()}
+      sections={workspaceSections(undefined, mac?.needsInput)}
     />
   )
   return <AppFrame sidebar={sidebar}>{page}</AppFrame>

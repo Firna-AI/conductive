@@ -19,8 +19,16 @@ export const workspacePaths = {
   archive: (orgId: string, id: string) => `${workspacePath(orgId, id)}/archive`,
 } as const
 
+/** `input`: the agent waits for the user, such as for a command approval. */
 export type WorkspaceState =
-  'working' | 'unread' | 'ready' | 'starting' | 'stopped' | 'error' | 'archived'
+  | 'working'
+  | 'input'
+  | 'unread'
+  | 'ready'
+  | 'starting'
+  | 'stopped'
+  | 'error'
+  | 'archived'
 
 export interface Workspace {
   id: string
