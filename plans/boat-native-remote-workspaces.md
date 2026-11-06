@@ -3072,6 +3072,25 @@ review.
 - **Chosen:** C, by the user on 6 November 2026. The preview contract states
   the rule, and Milestone 11a tests it in the backend.
 
+### 87. Show the chat at once on a return to a workspace
+
+Added on 6 November 2026 from the user's question: "Will they be cached?"
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design. **Category:** Performance.
+- **Background:** Each open of a workspace loads its history from the
+  workspace Durable Object. The browser stores only the panel widths.
+- **Options:**
+  - **A.** No cache. Each open loads the newest page again. Effort: Small.
+  - **B.** A cache in memory only. The web app keeps the chat of each
+    workspace that the tab showed. A return shows the chat at once, then
+    loads only the new events. A reload or a new tab starts empty.
+    Effort: Medium.
+  - **C.** B, and a cache on the disk in IndexedDB for each signed-in
+    member. The chat stays on the device. Effort: Large.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 6 November 2026. Milestone 8i builds it.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4052,12 +4071,37 @@ Milestone 8i or 15i wires it to its backend.
 
 Evidence: `.context/boat-native-remote-workspaces/milestone-8-verification.md`.
 
+## Milestone 8j: Runner limits in the chat
+
+Tags: ui
+
+Depends on: 4d, 8
+
+Decision 76 E: the runner caps the detail of a tool and the file list of
+a finished turn, and counts the rest. The workspace stores a marker for
+each runner event that it refuses. Milestone 4d keeps the counts and the
+markers in the chat state, but shows nothing. Added on 6 November 2026
+from round 1 finding 2 of the Milestone 4d review.
+
+- [ ] Draw in the chat mockups how much tool detail and how many files the
+      runner left out, and the line of a refused event, which names what
+      was lost.
+- [ ] Draw where a marker that belongs to no session shows, such as the
+      marker of a refused file event. No rule says where yet, so bring
+      the pictures to the user as a decision before you build it.
+- [ ] Show them in the chat screens.
+- [ ] Compare each screen with its mockup.
+
 ## Milestone 8i: Chat path wiring
 
-Depends on: 5, 6, 7, 7r, 8
+Depends on: 5, 6, 7, 7r, 8, 8j
 
 - [ ] Wire the app shell, the chat screens, the chat backend, and the
       runner together, with a real Boat sandbox.
+- [ ] Keep the chat of each workspace that the tab showed in memory, as
+      decision 87 says. A return to the workspace shows the chat at once,
+      then gets only the events after its last event number. A reload or a
+      new tab starts empty.
 - [ ] Test the chat end to end: create a workspace, send a message, stream
       the answer, stop and resume, and send again.
 
@@ -4193,17 +4237,17 @@ Depends on: 4a
 
 Depends on: 4a
 
-- [ ] Add org members: invites by GitHub login, the admin and member
-      roles, and removal.
-- [ ] Give each workspace an owner, the user who created it, and let an
-      admin reassign it.
-- [ ] Refuse the last admin's leave until another member is an admin, as
-      decision 55 says.
-- [ ] Allow only admins to change the repositories, the scripts, and the
-      env vars, as decision 57 says.
-- [ ] Add Delete org with the 7-day restore, and remove the saved
-      snapshots before each delete.
-- [ ] Test the reassignment and Delete org against the fake Boat server.
+- [x] Add org members: invites by GitHub login, the admin and member
+      roles, and removal. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Give each workspace an owner, the user who created it, and let an
+      admin reassign it. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Refuse the last admin's leave until another member is an admin, as
+      decision 55 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Allow only admins to change the repositories, the scripts, and the
+      env vars, as decision 57 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Add Delete org with the 7-day restore, and remove the saved
+      snapshots before each delete. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Test the reassignment and Delete org against the fake Boat server. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
 
 ## Milestone 15c: Members UI
 
@@ -4244,6 +4288,12 @@ acceptance route.
 Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
 
 - [ ] Wire each feature's screens to its backend inside the app shell.
+- [ ] Connect the lifecycle hooks of the Milestone 15a members backend to
+      the workspace Durable Object and the sandboxes. `deleteWorkspaceState`
+      must delete the chat history of the workspace. Run
+      `cleanupDeletedOrgs` on a Cron Trigger, so that Delete org removes
+      everything of the org after 7 days, as the orgs protocol says.
+      Added on 6 November 2026, because no milestone connected these hooks.
 - [ ] Run the complete gate, and compare each screen with its mockup.
 
 ## Milestone 15d: Marketing site
@@ -4273,26 +4323,33 @@ Build the Mac app as decision 62 says. No other milestone waits for it.
       of the 15-minute window, the app's list of always-allowed commands,
       and the chat's tool states: waiting for approval, denied, done, and
       Mac not available.
-- [ ] Add `desktop/`, an Electron shell for macOS, as Mokly's
+- [x] Add `desktop/`, an Electron shell for macOS, as Mokly's
       `ts/desktop` does. It bundles the built web app and serves it from
-      `conducting-app://desktop`.
+      `conducting-app://desktop`. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 - [ ] Give the window a hidden title bar with the native window buttons
       inset in the app's top bar, drag regions on the top bars, and the
-      reserved space that full screen drops, as decision 62 says.
-- [ ] Let the Worker accept the desktop origin in the `Origin` check, in
+      reserved space that full screen drops, as decision 62 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Let the Worker accept the desktop origin in the `Origin` check, in
       CORS for the API, and for the session cookie. Hand off the GitHub
       sign-in from the browser to the app through the `conducting://`
-      scheme, with one app instance.
-- [ ] Keep the window bounds and the session across launches. Open other
+      scheme, with one app instance. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Keep the window bounds and the session across launches. Open other
       sites in the browser. Deny every permission except a sanitized
       clipboard write. Use no preload and no renderer bridge, and match
-      the web app's content security policy.
-- [ ] Package DMG and ZIP builds for arm64 and x64 with electron-builder,
+      the web app's content security policy. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Package DMG and ZIP builds for arm64 and x64 with electron-builder,
       with an ad-hoc signature for now. Add electron-updater on a GitHub
-      release feed, off in development.
-- [ ] Add Playwright tests of the shell and a packaged launch check to CI.
-- [ ] Write `docs/protocol/desktop-app.md`, and update the README and the
-      architecture doc.
+      release feed, off in development. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Add Playwright tests of the shell and a packaged launch check to CI. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Write `docs/protocol/desktop-app.md`, and update the README and the
+      architecture doc. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Fix the frame navigation and updater review findings, and test the
+      fixes. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Preserve local asset responses without sign-in settings, and verify
+      ad-hoc signatures in PR packages. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Make the local web bootstrap compatible with the shared content
+      policy. Use the React module preamble and accept matching local
+      module origins when `APP_ORIGIN` is missing or empty. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 
 ## Milestone 15f: Mac device commands
 
@@ -4327,6 +4384,10 @@ This milestone needs the prerequisites from the user.
 
 - [ ] Deploy the Worker, D1, and the web app to the user's Cloudflare
       account, with GitHub sign-in.
+- [ ] Create the D1 database with the Western Europe location hint, near
+      the workspace Durable Objects and Boat's machines. Cloudflare fixes
+      the place of the database when it creates it. Added on 6 November
+      2026.
 - [ ] Smoke-test with a real Boat sandbox: create a workspace, chat, open
       a file, use the terminal, open a preview, stop, and resume.
 - [ ] Check that a private Boat port does not answer on the public

@@ -1,0 +1,30 @@
+{
+  "name": "@conducting/desktop",
+  "private": true,
+  "version": "0.1.0-alpha.1",
+  "description": "The Conducting Mac app",
+  "homepage": "https://conducting.build",
+  "author": "Conducting",
+  "type": "module",
+  "main": "dist/app/desktop/src/main.js",
+  "scripts": {
+    "build": "node scripts/build.ts",
+    "icon:build": "node scripts/icon.ts",
+    "start": "electron .",
+    "typecheck": "node ../node_modules/typescript/bin/tsc -p tsconfig.json",
+    "lint": "node ../node_modules/eslint/bin/eslint.js --config ../eslint.config.js src renderer scripts tests *.ts",
+    "format:check": "node ../node_modules/prettier/bin/prettier.cjs --check src renderer scripts tests *.ts *.json *.yml",
+    "test:logic": "node ../node_modules/vitest/vitest.mjs run --config vitest.config.ts",
+    "test:electron": "node scripts/smoke.ts",
+    "package": "node scripts/package.ts",
+    "test:packaged": "node scripts/packaged-smoke.ts"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.9"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "electron": "44.10.2",
+    "electron-builder": "26.15.3"
+  }
+}

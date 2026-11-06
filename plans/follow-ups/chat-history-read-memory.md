@@ -19,7 +19,7 @@
 - **Left out:** None.
 - **Wider fix:** C.
 - **Previous examples:** None found.
-- **Related:** decision 76 E of the plan, which Milestones 4d and 7s apply. Open item 87, a cache of the chat in the browser, assumes these pages.
+- **Related:** decision 76 E of the plan, which Milestones 4d and 7s apply. Decision 87 B, a cache of the chat in the memory of a tab, assumes these pages.
 - **Recommendation:** C.
 - **Design call:** Added on 6 November 2026, when the user asked whether the chat is cached. A page sends each finished answer as its `assistant.completed` event, without its `assistant.delta` text pieces. It sends each finished tool step as its last `tool.updated` state. Reason: these events already hold the whole content, so a page gets smaller and loses nothing. The pages then skip event numbers. So `ChatHistoryResponse` must say that it holds the state through `throughEventNumber`, not each event.
 - **Action:** fix after merge, apply C, because it needs a long-used workspace.
