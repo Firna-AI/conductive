@@ -1,0 +1,50 @@
+# Changed delivery receipts store the check list twice
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-06, from PR #15, branch `conductor/boat-native-remote-workspaces-milestone-13`, a new problem of the check of finding 6.
+- **Location:** `worker/github/workspace-state.ts:10`, the receipt type. `worker/github/workspace-state.ts:66`, the receipt write of a changed delivery. `src/shared/events.ts:38`, the `github.updated` event.
+- **Reason:** the owner deferred this rare case on 6 November 2026, and only a test double stores receipts today.
+
+- **Terms:**
+  - **Banner snapshot:** a `GitHubSnapshot` from `worker/github/contracts.ts`, with `banner`, `checks`, and `headSha`, which the workspace stores under `github:state`.
+  - **Envelope:** a `WorkspaceEventEnvelope` from `src/shared/events.ts`, which holds one numbered event of the common workspace event stream for the open tabs.
+  - **Delivery receipt:** the record that a workspace stores under `github:delivery:` and the delivery ID, so that a repeat of that delivery needs no GitHub read.
+  - **Changed delivery:** a delivery whose fresh banner and checks differ from the stored banner snapshot, with `banner.updatedAt` ignored.
+  - **Check list:** the `checks.checks` array of a banner snapshot, with each check that the reader chose for the pull request, in GitHub's order.
+- **Background:**
+  - `WorkspaceGitHubState.refresh` in `worker/github/workspace-state.ts` reads GitHub for one workspace, and compares the result with the stored banner snapshot.
+  - A changed delivery commits three values in one storage transaction: the snapshot under `github:state`, one `github.updated` envelope, and the receipt `{ snapshot, envelope }`.
+  - The `github.updated` event holds `banner` and `checks`, the same values as the snapshot. So the receipt holds the banner and the check list in `snapshot`, and again in `envelope.event`.
+  - The receipt of an unchanged delivery is `{ snapshot, envelope: null }`, which holds the check list once.
+  - A refresh without a delivery ID stores no receipt, such as a tab read in `worker/github/app-handler.ts` or a scheduled re-read.
+  - A repeat of a delivery finds its receipt, publishes `envelope` again, and returns `snapshot`, as `worker/github/webhook.test.ts` tests.
+  - `handleGitHubWebhook` in `worker/github/webhook.ts` refreshes the matching workspaces one after another, and stops at the first failure. It marks the delivery processed only after every refresh succeeds.
+  - The reader in `worker/github/` follows every page of checks, and nothing caps the length of the check list.
+  - Cloudflare stores at most 2 MB in one Durable Object storage value. The chat store and the files store have the same limit.
+  - V8 structured serialization stores an object that two fields share only once. So the stored receipt doubles only when `envelope.event` is a separate copy, or when a store writes JSON.
+  - `ChatTransaction.emit` in `worker/chat/store.ts` stores a copy of each event, so a port that returns that envelope gives the receipt a separate copy.
+  - Today only `MemoryWorkspace`, a handwritten test double in `worker/github/memory-workspace.ts`, implements the port. It has no size limit, and it is not SQLite storage.
+  - In Node 24, `v8.serialize` gave about 260 bytes for one sample check run with a GitHub Actions link, so about 4,000 such checks make 1 MB.
+  - With 5,000 such checks, the snapshot took 1.32 MB. The receipt took 1.32 MB with one shared event object, 2.66 MB with a copied event, and 2.88 MB as JSON.
+  - The fix costs more once a real store holds receipts in this layout, because a repeat must then read the old layout too.
+- **Problem:**
+  - The receipt of a changed delivery stores the banner and the check list twice.
+  - A list of 1 MB to 2 MB fits in the snapshot and in the event, but two copies of it do not fit in the receipt.
+  - The cause is this layout, not a limit on a GitHub response or an app response.
+- **Impact if no action:** Each changed delivery of that workspace rolls back with HTTP 500, and its open tabs keep the old state until a tab opens. The webhook handler stops at that workspace, so later workspaces of the same delivery miss the update, and each repeat fails again.
+- **Root question:** How does a repeat of a changed delivery get its event and snapshot back, from a receipt that fits whenever the snapshot fits?
+- **Options:**
+  - **A.** Store each part once. The receipt of a changed delivery keeps the snapshot, and only the workspace ID, the number, and the time of its envelope. One helper builds the `github.updated` event from a snapshot, for the commit and for a repeat. The port and the replay stay as they are. The expected receipt in `worker/github/workspace-state.test.ts` changes. A regression test gives `MemoryWorkspace` a value size limit, and stores a check list that fits once but not twice. That test runs on the double, so it does not prove the real store. Effort: Small.
+  - **B.** Store no part of the event. The receipt of a changed delivery keeps only the event number and `headSha`. A repeat reads that envelope from the common event stream, publishes it again, and builds the snapshot from it. The port gets a read of one stored event, which the double and the real store must implement. A repeat then depends on the stream still holding that event. Effort: Medium.
+- **Left out:**
+  - Change nothing. It fails the goal, because each such delivery keeps failing.
+  - Let `envelope.event` share the objects of the snapshot, so that structured serialization stores the list once. It fails the goal, because the chat store copies each event, and a JSON store writes both copies.
+  - Split the receipt into parts below 2 MB. A is better on every point, because it keeps one value and stores less.
+  - Cap the length of the check list. A is better on every point here, because it keeps each check, and `docs/protocol/github-banner.md` says that the Checks tab lists each check. A list too large to store even once is a separate question.
+  - Drop the receipts. It breaks the requirement in `docs/protocol/github-banner.md` that the Worker pushes the new state to every open tab. A repeat after a failed publication would not send the stored event again.
+- **Wider fix:** A. Its receipt type has no field for a second copy, and one helper builds the event for the commit and for a repeat.
+- **Previous examples:** On 6 November 2026 the user chose to cap the runner events. A design call set the cap of one stored runner event at 1 MiB, half of the 2 MB limit. `worker/files/storage.ts` splits the file tree into chunks below the same limit.
+- **Related:** `plans/follow-ups/github-banner-freshness.md`, the same code. Its option C moves the delivery receipts and the event numbers into the chat store, with tests on real SQLite. Apply A before or with that move, so that the move does not copy this layout. Those real-store tests can then repeat this case.
+- **Recommendation:** A. It removes the second copy with a small local change, and each receipt then fits whenever its snapshot fits.
+- **Action:** fix after merge, apply A, because the owner deferred this rare case on 6 November 2026, and only a test double stores receipts today.

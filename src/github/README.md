@@ -122,7 +122,7 @@ mounts it, and the production build leaves it out.
 - `PullRequestActions.test.tsx`: mounts the bar and row in happy-dom. It
   clicks the retry, Archive, and Checks actions and checks their callbacks.
   The other view tests keep their static markup checks in Node.
-- `sameState.ts`: compares two GitHub states, without the banner time.
+- [Shared state comparison](../shared/github-state.ts) compares two GitHub states, without the banner time.
 - `githubClient.ts` and `githubParse.ts`: read the two API replies, and check
   them against the contract.
 - `PullRequestBar.tsx`, `PullRequestRow.tsx`, and `ChecksList.tsx`: the views.
