@@ -1,0 +1,193 @@
+# Workspaces and sandboxes
+
+This doc holds the requirements and the decisions in force for workspaces
+and their sandboxes. It also covers the org image that every sandbox starts
+from, and the tools of a workspace. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says.
+
+## The provider
+
+- Boat runs every sandbox (decision 2).
+- Every sandbox of an org runs on the Boat account of the org's Boat key
+  (decision 46). [Orgs and members](orgs-and-members.md#the-boat-key) says
+  who adds the key.
+- User-facing text names Boat only on the Boat key screen, on the
+  marketing site, and in Get started (decision 47). Everywhere else it
+  says "cloud computer" or "sandbox".
+- Reason: users learn before the sign-up that they need a Boat account,
+  and the rest of the app can move to another provider later.
+- Each workspace has its own sandbox with its own clone of its repository
+  (decision 4). One worktree for each workspace in a shared sandbox was
+  rejected, because each workspace gets its own sandbox.
+- Every sandbox has one machine size for now: Boat's default size, with
+  4 vCPU and 8 GB.
+
+## The org image
+
+- Each org has one org image that holds a prepared copy of every
+  repository that the org chose (decision 13).
+- One image for each repository was rejected, because each image costs
+  its own saved snapshot and starts.
+- The Repositories tab of the org settings chooses the repositories
+  (decision 10). A change of the repositories takes effect at the next
+  build.
+- The install script prepares the image. It is a script, not a terminal
+  session, and it runs only in a build.
+- "Build computer" starts a build. A build runs the install script on a
+  copy of the image, with every chosen repository cloned (decision 12).
+- A build replaces the org image only when it succeeds. A failed build
+  keeps the last good image (decision 9).
+- While a build runs, its log streams on the Cloud computer tab. New
+  workspaces keep starting from the last good image.
+- A failed build shows the end of its log and Try again. The Settings link
+  of the sidebar then shows a mark.
+- After the user saves a changed install script, the tab asks for a build,
+  because the script runs only in a build.
+- The Cloud computer tab lists the builds, each with its time, its result,
+  and its length.
+- A push to the default branch of a chosen repository refreshes the org
+  image, at most once in 30 minutes. A daily timer refreshes it too.
+- A refresh fetches the new commits of every chosen repository. It does
+  not run the install script.
+- Reason: a new workspace then needs only a small fetch. The limit of one
+  refresh in 30 minutes saves starts, because each refresh is a start.
+
+## Startup script and env vars
+
+- The startup script runs in the sandbox of each workspace at each start
+  and at each resume.
+- Each sandbox gets the org's env vars at create and at each resume
+  (decision 17). A changed value applies at the next start.
+- Builds and refreshes get none of the env vars, and no saved snapshot
+  holds them. Reason: a saved snapshot keeps every file.
+- The app gives each sandbox its values itself, because every sandbox
+  starts with no secrets of a Boat environment.
+- [Access and security](access-and-security.md#secrets-that-users-enter)
+  says how the app keeps the values.
+- Open decision 49 sets who may edit the install script, the startup
+  script, and the env vars.
+
+## Create a workspace
+
+- New workspace opens an empty chat with a repository picker. The first
+  message creates the workspace.
+- The app accepts that message before the sandbox is ready, as
+  [Chat and events](chat-and-events.md#messages) says.
+- A new workspace starts from the newest good org image. It then creates
+  its branch in the folder of its repository.
+- The branch name is a prefix, then a city name and four random
+  characters, such as `<prefix>/lisbon-7k2q`. Open decision 53 sets the
+  prefix.
+- The workspace name starts as the city name.
+  [Chat and events](chat-and-events.md#messages) says how the agent's title
+  then renames it.
+- When the sandbox of a new workspace does not start, the workspace is not
+  created. The first message stays in the composer, and Try again sends it
+  again.
+
+## Start steps
+
+- While a sandbox starts, the workspace shows each start step with its
+  time, and the time since the start began (decision 20).
+- The steps reach every open tab of the workspace as they happen.
+- The steps are product steps, not the raw output of the provider.
+- A new workspace shows steps such as the start from the org image, the
+  fetch of the default branch, and the creation of the branch.
+- A resume shows that the files come back as the user left them.
+- The chat history shows at once while a sandbox starts. The files and the
+  tools wait until the sandbox is ready.
+
+## Workspace states
+
+- The workspace list shows one state for each workspace: working, finished
+  with unread output, ready, starting, stopped, or error.
+- Each state has its own mark shape, so no state depends on colour alone.
+  Bold text marks unread output.
+- Archived workspaces sit in the Archived group at the end of the list.
+
+## Stop and resume
+
+- A sandbox stops after 30 minutes without user activity on its workspace
+  and without a running agent turn (decisions 11 and 29).
+- Activity is input in the tabs of the workspace, such as typing, clicks,
+  and scrolling. Terminal input and requests to a port preview are
+  activity too.
+- An open tab alone is not activity. An open connection is not activity
+  either, such as the live reload of a dev server.
+- Reason: a forgotten tab must not keep a sandbox running, and a stop must
+  not cut off real work.
+- A stop ends every process in the sandbox. Its files and its agent
+  sessions stay.
+- Opening a stopped workspace resumes its sandbox.
+- When a sandbox stops while its workspace is open, the tab shows the
+  stopped state with Resume (decision 11).
+- A resume at once when the tab shows again was rejected. Resume avoids a
+  start that the user did not ask for.
+- While the sandbox is stopped, the chat history shows, and the stopped
+  state takes the place of the composer.
+- A start that fails shows the error state with Try again. The chat history
+  stays.
+- Near day 14 of a stop, the app starts the sandbox briefly and stops it
+  again, so that Boat keeps its disk (decision 43).
+- Reason: Boat can delete the disk of a sandbox that is stopped for more
+  than 14 days, and a resume then fails.
+- Each such restart uses a start and some minutes of the org's Boat
+  account.
+- An archive near day 14 was rejected, because it loses unpushed work. A
+  copy of the disk in the app's own storage was rejected, because the app
+  would then hold a copy of each user's code.
+
+## Archive
+
+- Archive deletes the sandbox of a workspace, and keeps its chat read-only
+  in the Archived group (decision 16).
+- Before it archives, the app checks the sandbox for changed files that
+  are not committed and for commits that are not pushed.
+- When the check finds such work, the question lists it. The user can then
+  archive anyway or cancel.
+- Reason: an archive without the check can delete work that was never
+  pushed.
+- The pull request bar offers Archive after the merge, as
+  [GitHub banner](github-banner.md#banner-states) says.
+- An archived workspace has no file lists and no tools. A phone shows only
+  its chat.
+- [Orgs and members](orgs-and-members.md#members-and-roles) says who may
+  archive a workspace.
+
+## Tools of a workspace
+
+### Files and changes
+
+- All files shows every file of the branch as a tree. A small mark shows
+  each added or changed file.
+- A file opens as a tab in the centre column. Markdown shows rendered, with
+  a switch to its source. Code shows with line numbers and syntax colours.
+- The header of a file tab can copy and download the file.
+- Reading a file has a size limit.
+- Changes lists the files that the branch changes against the default
+  branch. Its summary gives the number of changed files and the lines that
+  they add and remove.
+- A changed file opens its diff against the default branch as a tab.
+
+### Terminal
+
+- The Terminal tab opens a shell in the sandbox.
+- On a phone, a row of keys adds the keys that a phone keyboard lacks.
+
+### Port previews
+
+- The user opens a port preview by typing its port. The app does not
+  discover ports.
+- A preview shows in a frame inside the app, with an "Open in new tab"
+  link. Reason: Safari blocks the cookies of the previewed app inside a
+  frame.
+
+### Desktop
+
+- The Desktop tab shows the live desktop of the sandbox, where the agents
+  use a browser. The user watches the agents there.
+
+[Access and security](access-and-security.md) states how the terminal, the
+previews, and the desktop stay safe.
