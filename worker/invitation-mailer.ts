@@ -39,10 +39,7 @@ export function createInvitationMailer(
   fetch: HttpFetch,
 ): InvitationMailer {
   const hostname = new URL(env.APP_ORIGIN).hostname
-  if (
-    !env.RESEND_API_KEY &&
-    ['localhost', '127.0.0.1', '[::1]'].includes(hostname)
-  ) {
+  if (['localhost', '127.0.0.1', '[::1]'].includes(hostname)) {
     return logInvitationMailer()
   }
   return {

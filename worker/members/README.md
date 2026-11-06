@@ -163,7 +163,9 @@ An invitation names an email.
 The invite route sends it through `createInvitationMailer` in `worker/invitation-mailer.ts`.
 `AppDependencies.invitationMailer` replaces that mailer when it is set.
 The mailer posts to Resend with the `RESEND_API_KEY` Worker secret, from `invites@conducting.build`.
-Without that key, it writes each invitation link to the log when `APP_ORIGIN` is local, and fails each send on any other origin.
+With a local `APP_ORIGIN`, such as `http://127.0.0.1:5173`, the mailer always writes each invitation link to the log and sends no email.
+This is also true when the key is set.
+On every other origin, the mailer needs the key and fails each send without it.
 A failed send returns `invite_email_failed` and keeps the invitation, so the admin can invite the same email again.
 The link opens the app origin with the invite ID in its `invite` query parameter.
 

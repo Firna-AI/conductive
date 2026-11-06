@@ -1,11 +1,7 @@
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 
 import type { HttpFetch } from './env'
-import {
-  createInvitationMailer,
-  invitationLink,
-  logInvitationMailer,
-} from './invitation-mailer'
+import { createInvitationMailer, invitationLink } from './invitation-mailer'
 
 const invitation = {
   id: 'invite-1',
@@ -81,10 +77,27 @@ it('reports provider refusal and missing production credentials without logging 
 
 it('logs the invitation destination and app link through the development mailer', async () => {
   const messages: string[] = []
-  await logInvitationMailer((message) => messages.push(message)).send(
-    invitation,
-  )
-  expect(messages).toEqual([
-    'Cal invited mira@example.com to Example org: https://app.conducting.build/?invite=invite-1',
-  ])
+  const requests: Request[] = []
+  const log = vi
+    .spyOn(console, 'info')
+    .mockImplementation((message: string) => {
+      messages.push(message)
+    })
+  const origin = 'http://127.0.0.1:5173'
+  const fetch: HttpFetch = async (request) => {
+    requests.push(request)
+    return Response.json({ id: 'fake-email-1' })
+  }
+  try {
+    await createInvitationMailer(
+      { ...env(origin), RESEND_API_KEY: 'local-resend-secret' },
+      fetch,
+    ).send({ ...invitation, link: invitationLink(origin, invitation.id) })
+    expect(requests).toHaveLength(0)
+    expect(messages).toEqual([
+      'Cal invited mira@example.com to Example org: http://127.0.0.1:5173/?invite=invite-1',
+    ])
+  } finally {
+    log.mockRestore()
+  }
 })
