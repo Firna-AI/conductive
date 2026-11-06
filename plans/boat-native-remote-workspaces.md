@@ -4179,17 +4179,17 @@ Depends on: 4a
 
 Depends on: 4a
 
-- [ ] Add org members: invites by GitHub login, the admin and member
-      roles, and removal.
-- [ ] Give each workspace an owner, the user who created it, and let an
-      admin reassign it.
-- [ ] Refuse the last admin's leave until another member is an admin, as
-      decision 55 says.
-- [ ] Allow only admins to change the repositories, the scripts, and the
-      env vars, as decision 57 says.
-- [ ] Add Delete org with the 7-day restore, and remove the saved
-      snapshots before each delete.
-- [ ] Test the reassignment and Delete org against the fake Boat server.
+- [x] Add org members: invites by GitHub login, the admin and member
+      roles, and removal. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Give each workspace an owner, the user who created it, and let an
+      admin reassign it. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Refuse the last admin's leave until another member is an admin, as
+      decision 55 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Allow only admins to change the repositories, the scripts, and the
+      env vars, as decision 57 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Add Delete org with the 7-day restore, and remove the saved
+      snapshots before each delete. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Test the reassignment and Delete org against the fake Boat server. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
 
 ## Milestone 15c: Members UI
 
