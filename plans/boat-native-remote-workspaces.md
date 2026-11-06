@@ -2302,6 +2302,10 @@ Added on 6 November 2026 from the Milestone 2 docs.
 - **Chosen:** A, by the user on 6 November 2026. The user asked for a
   better way later, probably a move of the old cloud computers:
   `plans/follow-ups/migrate-cloud-computers-to-another-boat-account.md`.
+- **Changed on 6 November 2026:** decision 80 moved every cloud computer
+  back to the app's own Boat account, so no org changes its Boat account,
+  and this decision and its follow-up item no longer apply. The follow-up
+  item is deleted.
 
 ### 57. Decide who may change an org's shared settings
 
@@ -2952,6 +2956,44 @@ Added on 6 November 2026 from the Milestone 6 work.
   - Decision 45 made the product free because each user paid for their
     own Boat account. That reason is gone, so decisions 81 and 82 ask
     again about cost and abuse.
+
+### 81. Decide the cost model now that the app pays for compute
+
+Added on 6 November 2026 from decision 80.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Design. **Category:** Product bug.
+- **Background:** Decision 45 removed billing and all limits, because each
+  user paid for their own Boat account. Under decision 80, the app's own
+  Boat account pays for every cloud computer.
+- **Options:**
+  - **A.** Free with limits for each user. Effort: Medium.
+  - **B.** Bring billing back. Effort: Large.
+  - **C.** Invite-only. Effort: Small.
+  - **D.** Free with no limits. Effort: Small.
+- **Recommendation:** C for the first deployment, then A.
+- **Chosen:** D, by the user on 6 November 2026: "we can add billing
+  later". The product stays free with no limits, and the app's Boat
+  account pays for all use.
+
+### 82. Decide when the abuse controls come
+
+Added on 6 November 2026 from decision 80.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Design. **Category:** Security.
+- **Background:** All users share the app's Boat account again, and Boat's
+  terms make the platform responsible for what its users do.
+- **Options:**
+  - **A.** Terms at sign-up, an operator suspension, and an abuse address,
+    before the first deployment. Effort: Medium.
+  - **B.** Keep them as follow-up items after the merge. Effort: Small now.
+  - **C.** The operator suspension now, the rest before an open sign-up.
+    Effort: Small.
+- **Recommendation:** C.
+- **Chosen:** B, by the user on 6 November 2026: "do as follow ups". The
+  follow-up item `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`
+  holds the three measures.
 
 ## Design
 
@@ -3739,6 +3781,22 @@ this contract.
       stream, the event number, the event type, and the reason.
 - [ ] Update the fakes, the recorded events, and the chat and files
       protocol rules.
+
+## Milestone 4f: The app's own Boat account
+
+Depends on: 5, 6, 15a, 15c
+
+Apply decision 80 before the first deployment.
+
+- [ ] Run every cloud computer with the app's one Boat key, from a Worker
+      secret. Remove the encrypted store of org keys and its routes.
+- [ ] Remove the Boat key tab, the key repair of deleted orgs, and the key
+      steps of Get started, in the screens and the mockups.
+- [ ] Remove the Boat account requirement from the marketing site and
+      Get started, so that the app names Boat to no user.
+- [ ] Update the protocol docs, the architecture doc, and the naming rule
+      of `AGENTS.md`.
+- [ ] Run the complete gate.
 
 ## Milestone 5: Bases and workspace lifecycle
 
