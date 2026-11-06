@@ -37,6 +37,10 @@ The renderer never receives that cookie or verifier.
 The browser keeps its existing session cookie.
 Worker route and CORS integration must be present before sign-in works.
 
+Other web addresses open in the browser.
+The bundled main page opens its app popups in the same window.
+Child frames cannot load the main page or start sign-in.
+
 Window bounds and the Chromium session persist across launches.
 The app has one instance.
 Closing the last window leaves the Mac app in the Dock.
@@ -102,7 +106,8 @@ electron-updater uses the public `Firna-AI/conducting-desktop` GitHub feed.
 The feed is unpublished and off by default.
 Development builds always keep it off.
 A published build can enable it with `CONDUCTING_DESKTOP_UPDATES=enabled`.
-It asks before downloading an update and before restarting.
+It downloads updates automatically and installs them when the app quits.
+It offers Restart now or Later once for each downloaded version.
 
 ### Key code
 

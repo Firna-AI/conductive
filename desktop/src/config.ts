@@ -1,5 +1,7 @@
 import { appContentSecurityPolicy } from '../../worker/security/content-security.ts'
 
+export const DEFAULT_APP_ORIGIN = 'https://app.conducting.build'
+
 export interface BuildConfig {
   appOrigin: string
   updates: 'unpublished' | 'enabled'

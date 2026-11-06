@@ -1,9 +1,11 @@
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { _electron, expect, test } from '@playwright/test'
 import type { ElectronApplication } from '@playwright/test'
 
 import { DESKTOP_ORIGIN } from '../../worker/security/desktop-contract.js'
+import { readConfiguration } from '../src/config.js'
+import { expectFrameIsolation } from './frame-navigation.js'
 
 const desktop = resolve(import.meta.dirname, '..')
 const evidence = resolve(desktop, '../.context/boat-native-remote-workspaces')
@@ -65,27 +67,48 @@ test('the bundled app keeps navigation inside one isolated window and restores i
       .toBe('https://example.com/review')
     expect(electron.windows()).toHaveLength(1)
     await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/history`)
+    const configuration: unknown = JSON.parse(
+      await readFile(resolve(desktop, 'dist/bundle/build-config.json'), 'utf8'),
+    )
+    await expectFrameIsolation(
+      electron,
+      page,
+      readConfiguration(configuration).appOrigin,
+    )
 
     // Read-only host evidence verifies the real protocol and renderer boundary.
-    const host = await electron.evaluate(async ({ app, BrowserWindow }) => {
-      const active = BrowserWindow.getAllWindows()[0]
-      const response = await active.webContents.session.fetch(
-        'conducting-app://desktop/',
-      )
-      const preferences: unknown = Reflect.apply(
-        Reflect.get(active.webContents, 'getLastWebPreferences'),
-        active.webContents,
-        [],
-      )
-      active.setBounds({ x: 20, y: 20, width: 1200, height: 800 })
-      return {
-        packaged: app.isPackaged,
-        path: app.getAppPath(),
-        policy: response.headers.get('Content-Security-Policy'),
-        preferences,
-        electronVersion: process.versions.electron,
-      }
-    })
+    const host = await electron.evaluate(
+      async ({ app, BrowserWindow, screen }) => {
+        const active = BrowserWindow.getAllWindows()[0]
+        const response = await active.webContents.session.fetch(
+          'conducting-app://desktop/',
+        )
+        const preferences: unknown = Reflect.apply(
+          Reflect.get(active.webContents, 'getLastWebPreferences'),
+          active.webContents,
+          [],
+        )
+        const { workArea } = screen.getDisplayMatching(active.getBounds())
+        const bounds = {
+          x: workArea.x + 20,
+          y: workArea.y + 20,
+          width: Math.min(1200, workArea.width - 40),
+          height: Math.min(800, workArea.height - 40),
+        }
+        active.setBounds(bounds)
+        return {
+          packaged: app.isPackaged,
+          name: app.getName(),
+          path: app.getAppPath(),
+          policy: response.headers.get('Content-Security-Policy'),
+          preferences,
+          electronVersion: process.versions.electron,
+          bounds,
+          url: active.webContents.getURL(),
+          childTopNavigation: process.env.CONDUCTING_TEST_TOP_NAVIGATION,
+        }
+      },
+    )
     expect(host.packaged).toBe(Boolean(packaged))
     expect(host.path.endsWith('app.asar')).toBe(Boolean(packaged))
     expect(host.preferences).toMatchObject({
@@ -121,7 +144,7 @@ test('the bundled app keeps navigation inside one isolated window and restores i
       await electron.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0].getNormalBounds(),
       ),
-    ).toEqual({ x: 20, y: 20, width: 1200, height: 800 })
+    ).toEqual(host.bounds)
   } finally {
     await electron?.close()
     await rm(profile, { recursive: true, force: true })

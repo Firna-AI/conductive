@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process'
 import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { readConfiguration } from '../src/config.ts'
+import { DEFAULT_APP_ORIGIN, readConfiguration } from '../src/config.ts'
 
 const desktop = resolve(import.meta.dirname, '..')
 const repository = resolve(desktop, '..')
@@ -10,8 +10,7 @@ const frameSources = (process.env.CONDUCTING_FRAME_SOURCES ?? '')
   .split(/\s+/)
   .filter(Boolean)
 const configuration = readConfiguration({
-  appOrigin:
-    process.env.CONDUCTING_APP_ORIGIN ?? 'https://app.conducting.build',
+  appOrigin: process.env.CONDUCTING_APP_ORIGIN ?? DEFAULT_APP_ORIGIN,
   frameSources,
   // Enabling the feed needs a published public repository and a deliberate build.
   updates:

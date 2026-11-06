@@ -10,7 +10,6 @@ export interface Updater {
   allowPrerelease: boolean
   setFeedURL(feed: typeof UPDATE_FEED): void
   checkForUpdates(): Promise<unknown>
-  downloadUpdate(): Promise<unknown>
   quitAndInstall(): void
   on(
     event: 'update-available' | 'update-downloaded',
@@ -33,40 +32,40 @@ export function startUpdates(dependencies: {
   const { updater } = dependencies
   updater.setFeedURL(UPDATE_FEED)
   updater.allowPrerelease = true
-  updater.autoDownload = false
-  updater.autoInstallOnAppQuit = false
+  updater.autoDownload = true
+  updater.autoInstallOnAppQuit = true
   let checking = false
-  let offered = false
+  let dialogOpen = false
+  const offered = new Set<string>()
   updater.on('error', dependencies.warn)
-  updater.on('update-available', () => {
-    if (offered) return
-    offered = true
-    void dependencies
-      .choose('An update is available.', 'Download')
-      .then(async (accepted) => {
-        if (accepted) await updater.downloadUpdate()
-      })
-      .catch(dependencies.warn)
+  const offer = async ({ version }: { version: string }) => {
+    if (dialogOpen || offered.has(version)) return
+    offered.add(version)
+    dialogOpen = true
+    try {
+      if (await dependencies.choose('The update is ready.', 'Restart now'))
+        updater.quitAndInstall()
+    } catch (error) {
+      dependencies.warn(error)
+    } finally {
+      dialogOpen = false
+    }
+  }
+  updater.on('update-downloaded', (info) => {
+    void offer(info)
   })
-  updater.on('update-downloaded', () => {
-    void dependencies
-      .choose('The update is ready.', 'Restart now')
-      .then((accepted) => {
-        if (accepted) updater.quitAndInstall()
-      })
-      .catch(dependencies.warn)
-  })
-  const check = () => {
+  const check = async () => {
     if (checking) return
     checking = true
-    void updater
-      .checkForUpdates()
-      .catch(dependencies.warn)
-      .finally(() => {
-        checking = false
-      })
+    try {
+      await updater.checkForUpdates()
+    } catch (error) {
+      dependencies.warn(error)
+    } finally {
+      checking = false
+    }
   }
-  check()
+  void check()
   return {
     available: true,
     check,

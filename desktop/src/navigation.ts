@@ -1,5 +1,3 @@
-import type { WebContents } from 'electron'
-
 import {
   DESKTOP_ORIGIN,
   isDesktopAddress,
@@ -9,10 +7,37 @@ export type Navigation =
   | { action: 'allow' | 'drop' | 'sign-in' }
   | { action: 'external' | 'load'; url: string }
 
+export type NavigationSource = 'trusted-main' | 'untrusted'
+
+interface NavigationFrame {
+  readonly url: string
+}
+interface NavigationEvent {
+  url: string
+  frame: NavigationFrame | null
+  initiator?: NavigationFrame | null
+  preventDefault(): void
+}
+export interface NavigationHost {
+  readonly mainFrame: NavigationFrame
+  on(
+    event: 'will-navigate' | 'will-redirect' | 'will-frame-navigate',
+    listener: (event: NavigationEvent) => void,
+  ): unknown
+  on(
+    event: 'will-attach-webview',
+    listener: (event: { preventDefault(): void }) => void,
+  ): unknown
+  setWindowOpenHandler(
+    handler: (details: { url: string }) => { action: 'deny' },
+  ): unknown
+}
+
 /** External HTTP links never replace the trusted bundled main frame. */
 export function navigationTarget(
   address: string,
   appOrigin: string,
+  source: NavigationSource,
   popup = false,
 ): Navigation {
   let url: URL
@@ -22,6 +47,12 @@ export function navigationTarget(
     return { action: 'drop' }
   }
   if (url.username || url.password) return { action: 'drop' }
+  if (
+    (isDesktopAddress(url) || url.origin === appOrigin) &&
+    source !== 'trusted-main'
+  ) {
+    return { action: 'drop' }
+  }
   if (
     (isDesktopAddress(url) || url.origin === appOrigin) &&
     url.pathname === '/api/auth/github'
@@ -42,7 +73,7 @@ export function navigationTarget(
 }
 
 export function installNavigation(
-  contents: WebContents,
+  contents: NavigationHost,
   appOrigin: string,
   dependencies: {
     load(url: string): Promise<unknown>
@@ -51,6 +82,18 @@ export function installNavigation(
     warn(error: unknown): void
   },
 ): void {
+  const source = (
+    initiator: NavigationFrame | null | undefined,
+  ): NavigationSource => {
+    if (!initiator || initiator !== contents.mainFrame) return 'untrusted'
+    try {
+      return isDesktopAddress(new URL(initiator.url))
+        ? 'trusted-main'
+        : 'untrusted'
+    } catch {
+      return 'untrusted'
+    }
+  }
   const apply = (result: Navigation) => {
     if (result.action === 'external')
       void dependencies.external(result.url).catch(dependencies.warn)
@@ -60,28 +103,38 @@ export function installNavigation(
       void dependencies.signIn().catch(dependencies.warn)
   }
   contents.on('will-navigate', (event) => {
-    const result = navigationTarget(event.url, appOrigin)
+    const result = navigationTarget(
+      event.url,
+      appOrigin,
+      source(event.initiator),
+    )
     if (result.action !== 'allow') {
       event.preventDefault()
       apply(result)
     }
   })
   contents.on('will-redirect', (event) => {
-    if (!event.isMainFrame) return
-    const result = navigationTarget(event.url, appOrigin)
+    // Child documents can follow redirects inside their own frame.
+    if (event.frame && event.frame !== contents.mainFrame) return
+    const result = navigationTarget(
+      event.url,
+      appOrigin,
+      source(event.initiator),
+    )
     if (result.action !== 'allow') {
       event.preventDefault()
       apply(result)
     }
   })
   contents.on('will-frame-navigate', (event) => {
-    if (event.isMainFrame) return
+    if (event.frame === contents.mainFrame) return
     // A frame may load its own content, but cannot replace the main document.
     if (event.url.startsWith('conducting:')) event.preventDefault()
   })
   contents.on('will-attach-webview', (event) => event.preventDefault())
   contents.setWindowOpenHandler(({ url }) => {
-    apply(navigationTarget(url, appOrigin, true))
+    // Referrers do not identify a source frame. Native popups are untrusted.
+    apply(navigationTarget(url, appOrigin, 'untrusted', true))
     return { action: 'deny' }
   })
 }

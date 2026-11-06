@@ -30,6 +30,7 @@ import { createWindow } from './window.js'
 // Never print an untrusted URL, callback token, cookie, or provider response.
 const warn = () =>
   process.stderr.write(`${productName}: A desktop operation failed.\n`)
+app.setName(productName)
 registerScheme(protocol)
 const profile = app.commandLine.getSwitchValue('user-data-dir')
 if (profile) app.setPath('userData', resolve(profile))

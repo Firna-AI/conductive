@@ -3578,6 +3578,8 @@ Build the Mac app as decision 62 says. No other milestone waits for it.
 - [ ] Add Playwright tests of the shell and a packaged launch check to CI. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 - [x] Write `docs/protocol/desktop-app.md`, and update the README and the
       architecture doc. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Fix the frame navigation and updater review findings, and test the
+      fixes. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 
 ## Milestone 15f: Mac device commands
 

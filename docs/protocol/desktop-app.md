@@ -167,6 +167,10 @@ them yet.
 - No release is published yet. Until the first release, each build keeps
   the updater off.
 - The updater never runs in development.
+- When the feed is enabled, the Mac app downloads new versions
+  automatically, as Mokly does.
+- Each downloaded version offers Restart now or Later once.
+- The update installs when the app quits, also after Later.
 - A failed update check does not stop the app, and it shows no error.
 - Risk: an update installs in place only into a build with a Developer ID
   signature. A build with an ad-hoc signature cannot update itself.
