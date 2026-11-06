@@ -1,0 +1,92 @@
+import { parseArgs } from 'node:util'
+
+import { WorkspaceToolError, type WorkspaceToolClient } from './client.ts'
+import { createWorkspaceInput, ToolInputError } from './input.ts'
+
+export const CLI_HELP = `Conducting workspace tools
+
+conducting workspaces list
+conducting workspaces create --repository ID --message TEXT
+  [--agent claude|codex --model NAME] [--effort LEVEL] [--section ID]
+conducting mcp
+
+Create starts a workspace in the calling workspace's org, with its owner.
+Omitted options use the owner's model and effort, and the default section.
+List returns every workspace in the org.
+`
+
+export interface ToolOutput {
+  stdout(text: string): void
+  stderr(text: string): void
+}
+
+export async function runWorkspaceCli(
+  args: readonly string[],
+  client: WorkspaceToolClient,
+  output: ToolOutput,
+): Promise<number> {
+  if (args.length === 0 || args.includes('--help')) {
+    output.stdout(CLI_HELP)
+    return 0
+  }
+  try {
+    const { values, positionals } = parseArguments(args)
+    if (positionals[0] !== 'workspaces' || positionals.length !== 2) {
+      throw new ToolInputError('Use workspaces create or workspaces list.')
+    }
+    let result: unknown
+    if (positionals[1] === 'list') {
+      if (Object.values(values).some((value) => value !== undefined)) {
+        throw new ToolInputError('Use workspaces list without options.')
+      }
+      result = await client.list()
+    } else if (positionals[1] === 'create') {
+      const hasModel = values.agent !== undefined || values.model !== undefined
+      result = await client.create(
+        createWorkspaceInput({
+          repositoryId: values.repository,
+          firstMessage: values.message,
+          ...(hasModel && {
+            model: { agent: values.agent, model: values.model },
+          }),
+          effort: values.effort,
+          sectionId: values.section,
+        }),
+      )
+    } else {
+      throw new ToolInputError('Use workspaces create or workspaces list.')
+    }
+    output.stdout(`${JSON.stringify(result)}\n`)
+    return 0
+  } catch (error) {
+    output.stderr(`${toolErrorMessage(error)}\n`)
+    return 1
+  }
+}
+
+function parseArguments(args: readonly string[]) {
+  try {
+    return parseArgs({
+      args: [...args],
+      allowPositionals: true,
+      options: {
+        repository: { type: 'string' },
+        message: { type: 'string' },
+        agent: { type: 'string' },
+        model: { type: 'string' },
+        effort: { type: 'string' },
+        section: { type: 'string' },
+      },
+    })
+  } catch {
+    throw new ToolInputError(
+      'Check the command options. Use --help for details.',
+    )
+  }
+}
+
+export function toolErrorMessage(error: unknown): string {
+  return error instanceof ToolInputError || error instanceof WorkspaceToolError
+    ? error.message
+    : 'The workspace request failed. Try again.'
+}

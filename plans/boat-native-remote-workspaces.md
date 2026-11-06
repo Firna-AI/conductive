@@ -3665,12 +3665,15 @@ Milestone 8i or 15i wires it to its backend.
 
 Depends on: 4a
 
-- [ ] Add the create and list workspace endpoints for workspace tokens,
+- [x] Add the create and list workspace endpoints for workspace tokens,
       as decision 52 says: create takes a repository and a first message,
       and can choose the agent and model, the effort, and the section.
       List returns the org's workspaces.
-- [ ] Add the CLI and the MCP server to the org image setup.
-- [ ] Test the token scope and both tools.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15`.
+- [x] Add the CLI and the MCP server to the org image setup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15`.
+- [x] Test the token scope and both tools.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15`.
 
 ## Milestone 15a: Members backend
 
