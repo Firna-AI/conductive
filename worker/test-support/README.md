@@ -1,8 +1,30 @@
 # Backend and runner fakes
 
-`createHarness` creates a local D1 database and applies every migration in filename order.
+`createHarness` creates a local D1 database.
 It supplies fake GitHub and Boat servers, a fixed clock, sign-in, org creation, and cleanup.
 Backend tests use it without an external account or cloud computer.
+
+Every harness uses `applyMigrations(db)` from [migrations.ts](migrations.ts).
+It applies migrations in filename order with Wrangler's SQL splitter.
+The splitter keeps each trigger body in one statement.
+
+Each members test file creates one harness in `beforeAll` and disposes it in `afterAll`.
+Its `beforeEach` calls `reset` to delete all application rows in a fixed child-first order.
+The reset also restores the clock, token sequence, and fake services.
+Each test creates its own members client and lifecycle hooks.
+Members files set `resetBoatAccounts: true` to restore default fake accounts before each test.
+Other harnesses keep their configured accounts across resets.
+
+`memberFixture` prepares three users, signed sessions, an org, memberships, and settings in one D1 batch.
+Signed sessions use the real signer and the seven-day expiry.
+The `signIn` helper still runs the real OAuth flow when a scenario calls it.
+Scenario requests still use the real request gate.
+
+`FakeBoat.responseFactories` queues one response factory for each request.
+Use a factory to return a fresh streaming body when a test observes cancellation.
+These replies are not cloned or teed.
+Clear unused factories in the test's cleanup hook.
+The harness reset clears factories.
 
 The runner boundary uses plain TypeScript types.
 Tests need no Cloudflare Durable Object or real WebSocket.
@@ -36,20 +58,32 @@ Set `endpoint.confirmEvents = false` to retain unconfirmed events.
 `runner.sendEnvelope` can inject duplicates and gaps.
 The endpoint stores each event once and confirms only contiguous event numbers.
 It requests a resend when a number is missing.
+It joins valid runner file parts before it emits a complete browser file event.
+Pending parts stay on the endpoint across reconnects.
+Set `refuseEvent` to return `too_large`, `invalid`, or `turn_not_active`.
+The endpoint stores one workspace refusal marker and confirms that event number.
+An accepted event remains in `runnerEvents`. A refused event has only its marker.
+These fakes do not implement production byte checks, event validation, or turn state.
 File read and diff results go to `endpoint.fileResponses`, outside chat history.
 
 Use [recorded file events and replies](../../src/test-support/recorded-files.ts)
 for the runner's file reports.
-The samples cover a full tree, file creation, a rename, a removal,
-uncommitted and untracked work, a read, a diff, and a size error.
+`recordedRunnerFileEvents` has four complete reports, with full reports as part 1 of 1.
+It keeps the current file tests' order and ends the tree at revision 2.
+`recordedMultipartRunnerFileEvents` has eight events for the fake endpoint and future part joining.
+It includes two-part trees and changes and consecutive tree deltas at revisions 2 and 3.
+Both samples include file creation, a rename, a removal, and dirty branch work.
+Read replies also cover file content, a diff, and a size error.
 
 ## Key code
 
 - `harness.ts` owns D1 setup and the HTTP test app.
-- `fake-boat.ts` supplies provider replies.
+- `migrations.ts` applies migrations for every test harness.
+- `fake-boat.ts` supplies provider replies and fresh streaming response factories.
 - `fake-github.ts` supplies sign-in replies.
 - `fake-runner.ts` supplies the runner without an agent SDK.
 - `fake-durable-object.ts` supplies the workspace endpoint without Cloudflare.
+- `fake-runner-files.ts` joins valid file report parts for the endpoint.
 - `runner-connection.ts` supplies the in-memory socket.
 
 See [the browser fakes](../../src/test-support/README.md),

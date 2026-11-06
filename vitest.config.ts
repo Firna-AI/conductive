@@ -4,7 +4,11 @@ import { defineConfig } from 'vitest/config'
 // Cloudflare runtime or React plugin.
 export default defineConfig({
   test: {
-    include: ['src/**/*.test.{ts,tsx}', 'worker/**/*.test.ts'],
+    include: [
+      'src/**/*.test.{ts,tsx}',
+      'worker/**/*.test.ts',
+      'desktop/src/**/*.test.ts',
+    ],
     environment: 'node',
   },
 })

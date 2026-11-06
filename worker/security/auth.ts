@@ -8,9 +8,12 @@ import {
 } from '../data/users'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import { saveVerifiedEmails } from '../members/verified-email-data'
 import { cookie, OAUTH_COOKIE, readCookie, SESSION_COOKIE } from './cookies'
 import { hash, sign, verify } from './crypto'
 import { GitHubClient } from './github'
+import { createDesktopHandoff, desktopChallenge } from './desktop-auth'
+import { desktopSessionCookie } from './desktop-contract'
 
 const OAUTH_SECONDS = 600
 const SESSION_SECONDS = 7 * 24 * 60 * 60
@@ -18,13 +21,14 @@ const SESSION_SECONDS = 7 * 24 * 60 * 60
 export async function startSignIn(
   env: AppEnv,
   dependencies: AppDependencies,
+  request?: Request,
 ): Promise<Response> {
   const state = dependencies.randomToken()
   const verifier = dependencies.randomToken()
   const now = dependencies.now()
   const expiresAt = now + OAUTH_SECONDS * 1000
   const token = await sign(
-    { state, verifier, expiresAt },
+    { state, verifier, expiresAt, desktopChallenge: desktopChallenge(request) },
     'github-state',
     env.SESSION_SIGNING_KEY,
   )
@@ -85,6 +89,21 @@ export async function finishSignIn(
     env,
   )
   const user = await saveUser(env.DB, dependencies.randomToken(), profile, now)
+  await saveVerifiedEmails(env.DB, user.id, profile.verifiedEmails)
+  if (typeof stored.desktopChallenge === 'string') {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: await createDesktopHandoff(
+          stored.desktopChallenge,
+          user.id,
+          env,
+          dependencies,
+        ),
+        'Set-Cookie': cookie(OAUTH_COOKIE, '', 0),
+      },
+    })
+  }
   const sessionId = dependencies.randomToken()
   const expiresAt = now + SESSION_SECONDS * 1000
   await saveSession(env.DB, sessionId, user.id, expiresAt, now)
@@ -104,8 +123,8 @@ export async function signOut(
   sessionId: string,
 ): Promise<Response> {
   await deleteSession(env.DB, sessionId)
-  return new Response(null, {
-    status: 204,
-    headers: { 'Set-Cookie': cookie(SESSION_COOKIE, '', 0) },
-  })
+  const headers = new Headers()
+  headers.append('Set-Cookie', cookie(SESSION_COOKIE, '', 0))
+  headers.append('Set-Cookie', desktopSessionCookie('', 0))
+  return new Response(null, { status: 204, headers })
 }

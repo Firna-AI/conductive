@@ -1,15 +1,15 @@
 # A guide for agents
 
-This repository builds Conducting, a browser-only coding tool at
+This repository builds Conducting, a coding tool at
 `conducting.build`. Each workspace is one task with its own branch and its own
 cloud computer, a Boat sandbox, where agents powered by Claude and Codex
-work. The app has a minimal page and the Worker core. The product screens
-are not built yet. The
-requirements live in
+work. The requirements live in
 `docs/architecture.md` and `docs/protocol/`, and the Mokly mockup catalogue
-lives in `docs/mockups/`, in TypeScript and React with `@firna/ui`. The app
-is one npm package. Its React and Vite web app lives under `src/`, and its
-Cloudflare Worker with Durable Objects and D1 lives under `worker/`.
+lives in `docs/mockups/`, in TypeScript and React with `@firna/ui`. The root
+npm package holds the React and Vite web app under `src/` and the Cloudflare
+Worker with Durable Objects and D1 under `worker/`. The Mac app is a separate
+Electron package under `desktop/`. [desktop/README.md](desktop/README.md)
+gives its commands.
 
 This file holds the rules that are specific to this repository. The
 always-on rules and the detailed procedures live in the shared skills from
@@ -69,7 +69,9 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
   TypeScript files over 300 lines, including comments and blank lines.
 - Complete gate: `npm run check`. It checks types, lint, format, file
   length, tests, the app build, and the mockups. It stops at its first
-  failed step. GitHub Actions runs it on pushes and pull requests.
+  failed step. GitHub Actions runs it on pushes and pull requests. Run
+  `npm --prefix desktop ci` once before the gate, as CI does. That command
+  installs the dependencies of the gate's desktop checks.
 - Format: `npm run format`.
 - Mockup check: `npm run mockups:check`. It runs the typecheck, then the
   strict build into `mokly-static/`.
@@ -130,7 +132,6 @@ GitHub Actions runs `npm run check` on each push and pull request, from
 
 ## Status
 
-- This project is not in production. The app has a minimal page. The
-  Worker has GitHub sign-in, org records, and an encrypted Boat key store.
+- This project is not in production.
 - Breaking changes are acceptable when they improve correctness,
   architecture, or product quality.

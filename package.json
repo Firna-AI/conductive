@@ -12,7 +12,7 @@
     "test": "vitest run",
     "db:migrate": "wrangler d1 migrations apply DB --local",
     "file-length:check": "eslint . --rule 'max-lines: [error, 300]'",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm run file-length:check && npm run test && npm run build && npm run mockups:check",
+    "check": "npm run typecheck && npm run desktop:typecheck && npm run lint && npm run desktop:lint && npm run format:check && npm run desktop:format:check && npm run file-length:check && npm run test && npm run build && npm run mockups:check",
     "mockups:build": "mokly build --strict",
     "mockups:serve": "mokly serve",
     "mockups:typecheck": "tsc -p docs/mockups/tsconfig.json",
@@ -20,10 +20,15 @@
     "marketing:pictures": "node tools/marketing-pictures/run.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "desktop:typecheck": "npm --prefix desktop run typecheck",
+    "desktop:lint": "npm --prefix desktop run lint",
+    "desktop:format:check": "npm --prefix desktop run format:check"
   },
   "dependencies": {
     "@firna/ui": "4.0.0",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
     "lucide-react": "^0.577.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
@@ -39,6 +44,7 @@
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.14.0",
+    "happy-dom": "^21.0.4",
     "miniflare": "5.20261101.0-beta",
     "prettier": "^3.9.10",
     "sharp": "^0.35.5",

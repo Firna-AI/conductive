@@ -1,13 +1,21 @@
 import type { AgentChoice } from './agents'
 import type { Timestamp } from './api'
 import type { AgentChatEvent } from './chat-events'
-import type { FileEvent } from './files'
+import type { RunnerFileEvent } from './files'
 import type { UserMessage } from './messages'
 import type { RunnerFileCommand, RunnerFileResponse } from './runner-files'
 import type { WorkspaceStart } from './workspaces'
 
 export const RUNNER_PROTOCOL_VERSION = 1 as const
 export type RunnerProtocolVersion = typeof RUNNER_PROTOCOL_VERSION
+
+/**
+ * Maximum UTF-8 bytes of JSON.stringify(the complete RunnerEventEnvelope).
+ * Count its stream ID, number, timestamp, payload, escapes, and delimiters.
+ * Add no spaces. Exclude WebSocket framing and the workspace storage wrapper.
+ * One MiB leaves room below the storage value limit for that stored wrapper.
+ */
+export const RUNNER_EVENT_MAX_BYTES = 1_048_576
 
 /**
  * The bearer token authenticates the outbound socket on the machine hostname.
@@ -31,9 +39,10 @@ export interface RunnerEventEnvelope {
   event: RunnerEvent
 }
 
+/** Workspace refusal markers never enter this union or the runner outbox. */
 export type RunnerEvent =
   | AgentChatEvent
-  | FileEvent
+  | RunnerFileEvent
   | { type: 'runner.ready' }
   | { type: 'start.updated'; start: WorkspaceStart }
   | { type: 'workspace.title'; name: string }
@@ -41,7 +50,11 @@ export type RunnerEvent =
 export type RunnerToWorkspace =
   RunnerHello | RunnerEventEnvelope | RunnerFileResponse
 
-/** A confirm covers only events that the workspace has stored contiguously. */
+/**
+ * A confirm covers contiguous stored events or their stored refusal markers.
+ * The runner removes either result from its outbox and never retries it.
+ * A confirmed file part includes durable assembly state across reconnects.
+ */
 export interface RunnerConfirm {
   type: 'confirm'
   streamId: string
@@ -54,6 +67,10 @@ export interface RunnerConfirm {
  * A duplicate is confirmed again but is neither stored nor broadcast again.
  * A gap requests resend. It never advances the stored cursor.
  * The workspace gives browser events its own numbers across runner streams.
+ * Refusal reasons are too_large, invalid, and turn_not_active. A refusal
+ * stores one workspace-only marker before confirming and advancing the cursor.
+ * A refused turn.completed or turn.failed still ends its active turn.
+ * A storage or network failure is not a refusal. Close without confirming.
  */
 export interface RunnerWelcome {
   type: 'welcome'

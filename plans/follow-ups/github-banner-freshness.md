@@ -1,0 +1,41 @@
+# The GitHub banner depends on each webhook arriving
+
+- **Severity:** Medium. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-06, from PR #15, branch `conductor/boat-native-remote-workspaces-milestone-13`, the wider fixes F of finding 1 and E of finding 4. Extended on 2026-11-06 with the shared-store option of finding 6 and the owner's four real-store test cases.
+- **Location:** `worker/github/`, and the chat store of the workspace Durable Object in `worker/chat/`.
+- **Reason:** both fixes reach code outside the branch that found them, and the first needs the wiring of Milestone 15i.
+
+- **Terms:**
+  - **Banner snapshot:** the stored state of the pull request bar and the Checks tab of one workspace.
+  - **Delivery receipt:** the stored result of one GitHub webhook delivery for one workspace, which a repeat of that delivery sends again without a new GitHub read.
+  - **`MemoryWorkspace`:** a handwritten test double of the GitHub storage port in `worker/github/memory-workspace.ts`, which keeps its records in a map, not in SQLite.
+  - **Milestone 15i:** the feature wiring milestone of `plans/boat-native-remote-workspaces.md`, which wires each feature's screens to its backend inside the app shell.
+- **Background:**
+  - The GitHub banner backend refreshes a workspace's banner snapshot when a GitHub webhook names a branch or a commit that affects it.
+  - Its fix routes pushes by a model of branches and commits, re-reads a few times while GitHub reports an unknown merge state, and stores only a changed snapshot.
+  - The GitHub state keeps its own event numbers and delivery receipts beside the chat store. Its port stores the snapshot, the event, and the receipt in one transaction, then publishes the event itself.
+  - The chat store in `worker/chat/store.ts` numbers the chat events. `worker/chat/adapter.test.ts` runs it on real SQLite storage in Miniflare, and checks the event numbers after a restart.
+  - `appendWorkspaceEvent` in `worker/chat/backend.ts` stores one event in its own store call. Then it sends that event to the open tabs.
+  - In PR #15, the direct fix for a failed receipt write only extends `MemoryWorkspace` and its tests. The double can fail each write under one key prefix, and it records an event only after its transaction commits.
+  - With that double, a test in `worker/github/workspace-state.test.ts` shows that a failed receipt write rolls back, and that a retry then succeeds. PR #15 does not move the receipts or the event numbers into the chat store.
+- **Problem:**
+  - Each new kind of change, such as a branch protection change or a lost delivery, needs a new field in the model, or the banner stays stale.
+  - The GitHub event numbers and receipts live in their own records, which only a test double checks. The rollback and retry test of PR #15 also runs only on `MemoryWorkspace`, so it does not prove the real SQLite store.
+  - No test puts chat events and GitHub events in one sequence. `appendWorkspaceEvent` stores only the event, and it publishes the event itself, as the GitHub state also does.
+- **Impact if no action:** A banner can stay stale after a change that no webhook names, and a storage defect in the GitHub records can pass the tests.
+- **Root question:** How does each open tab show the current GitHub state whatever changed, with one tested store for its events?
+- **Options:**
+  - **A.** Keep the model of branches and commits, and add each new kind of change when it shows up. Effort: Small each time.
+  - **B.** While a tab is open on a workspace, re-read its banner on a slow timer, and on each tab open. Effort: Medium.
+  - **C.** B, and move the GitHub event numbers and delivery receipts into the chat store, which already has a restart test on real SQLite. Effort: Large. On 6 November 2026 the owner required these tests of C on the real SQLite store, not on a test double:
+    - A rollback case after a failed write. A write that fails in the commit leaves no snapshot, event, event number, or receipt, and publishes nothing. A retry then stores and publishes the event once.
+    - A case with chat events and GitHub events in one sequence. They get consecutive numbers in one stream, and a tab that reads the history gets them in that order.
+    - The stored banner snapshot in the same store call as its event. The delivery receipt stays in that call too, as it does in the port today.
+    - Exactly one publisher for each event. One component sends each committed event to the open tabs, so the chat store and the GitHub state do not both send it.
+- **Left out:** None.
+- **Wider fix:** C.
+- **Previous examples:** In PR #15, the banner stayed stale after a push to a base branch other than the default, and while GitHub reported an unknown merge state. The tests of PR #15 also had no receipt replay after a restart, and no failed receipt write.
+- **Related:** `plans/follow-ups/github-delivery-receipt-size.md`, the same code. It removes the second copy of the check list from the receipt of a changed delivery. Apply it before or with the move of C, so that the move does not copy that layout into the chat store.
+- **Recommendation:** C, after Milestone 15i wires the Durable Object.
+- **Action:** fix after merge, apply C, because it changes the chat store and needs the wiring.

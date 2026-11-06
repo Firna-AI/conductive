@@ -1,9 +1,10 @@
 # Mockups
 
-The mockups are the visual spec of the app: a browser-only tool where each
-workspace is a cloud sandbox with its own branch, a chat with coding agents,
-files, a terminal, port previews, a live desktop, and a pull request bar. They
-also draw the marketing site, which shows the app to visitors.
+The mockups are the visual spec of the app, in the browser and in a Mac app.
+Each workspace is a cloud sandbox with its own branch. It has a chat with
+coding agents, files, a terminal, port previews, a live desktop, and a pull
+request bar. The mockups also draw the marketing site, which shows the app to
+visitors.
 [Mokly](https://www.npmjs.com/package/@mokly/mokly) renders every screen at
 mobile and desktop sizes, in light and dark, from React components that use
 [`@firna/ui`](https://www.npmjs.com/package/@firna/ui).
@@ -204,7 +205,8 @@ The product is free for now, as the user decided on 5 November 2026 in
 decision 45. So the screens show no plans, no billing, no seats, and no
 plan limits.
 
-- An admin invites members by their GitHub login. The roles are admin and
+- An admin invites a person by email, from decision 78. An open invite shows
+  its email, and a member row shows the GitHub login. The roles are admin and
   member, from decision 54. Only an admin manages the members, adds the
   Boat key, deletes the org, and reassigns a workspace. A member who is not
   an admin sees the members and each workspace's owner without actions, and

@@ -1,0 +1,127 @@
+import { useState, type ReactNode } from 'react'
+import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
+import styles from '../../../docs/mockups/src/components/settings/AccountSections.module.css'
+import { AGENTS } from '../../app/api/read-core'
+import { useStore } from '../../app/store'
+import type { AccountResponse, AgentLoginStatus } from '../../shared/account'
+import type { Agent } from '../../shared/agents'
+import { useApp } from '../context'
+import { ActionButton } from '../ui/actions'
+import { useAction } from '../ui/useAction'
+import { AgentConnectForm } from './AgentConnectForm'
+import { agentNames, loginLabels } from './labels'
+
+type ConnectedLogin = Extract<AgentLoginStatus, { connected: true }>
+
+function connectedLogin(
+  account: AccountResponse | null,
+  agent: Agent,
+): ConnectedLogin | null {
+  const login = account?.agentLogins.find((item) => item.agent === agent)
+  return login?.connected ? login : null
+}
+
+function AgentRow(props: {
+  agent: Agent
+  login: ConnectedLogin | null
+  formOpen: boolean
+  removable: boolean
+  disabled: boolean
+  open: () => void
+}) {
+  const app = useApp()
+  const name = agentNames[props.agent]
+  const remove = useAction(
+    () => app.account.removeLogin(props.agent),
+    `${name} wasn't removed.`,
+  )
+  const { login } = props
+  let action: ReactNode = null
+  if (login && props.removable) {
+    action = (
+      <ActionButton
+        accessibilityLabel={`Remove ${name}`}
+        busy={remove.pending}
+        onPress={remove.run}
+        tone="plain"
+      >
+        Remove
+      </ActionButton>
+    )
+  } else if (!login && !props.formOpen) {
+    action = (
+      <ActionButton
+        accessibilityLabel={`Connect ${name}`}
+        disabled={props.disabled}
+        onPress={props.open}
+      >
+        Connect
+      </ActionButton>
+    )
+  }
+  return (
+    <div className={styles.row}>
+      <span className={styles.name}>{name}</span>
+      <span className={styles.detail}>
+        {login ? (
+          <>
+            <StatusText label="Connected" tone="success" />
+            <span className={styles.kind}>{loginLabels[login.kind]}</span>
+          </>
+        ) : null}
+      </span>
+      {action}
+    </div>
+  )
+}
+
+/**
+ * Claude and Codex, each with Connect, or Connected and the kind of its
+ * login. Connect opens the form of the agent under its row, one form at a
+ * time. `initial` opens a form at first. `removable` gives each connected
+ * login its Remove, as on the account. `closable` gives each form its
+ * Cancel. `disabled` turns Connect off, as in a later step of Get started.
+ */
+export function AgentList(props: {
+  initial: Agent | null
+  removable: boolean
+  closable: boolean
+  disabled?: boolean
+  /** Runs after a save, such as the refresh of Get started. */
+  connected?: () => void
+}) {
+  const app = useApp()
+  const account = useStore(app.account.account)
+  const [open, setOpen] = useState<Agent | null>(props.initial)
+  const close = () => setOpen(null)
+  return (
+    <ul aria-label="Agents" className={styles.list}>
+      {AGENTS.map((agent) => {
+        const login = connectedLogin(account, agent)
+        const formOpen = open === agent && login === null
+        return (
+          <li key={agent}>
+            <AgentRow
+              agent={agent}
+              disabled={props.disabled ?? false}
+              formOpen={formOpen}
+              login={login}
+              open={() => setOpen(agent)}
+              removable={props.removable}
+            />
+            {formOpen ? (
+              <AgentConnectForm
+                agent={agent}
+                close={props.closable ? close : undefined}
+                connected={() => {
+                  close()
+                  props.connected?.()
+                }}
+              />
+            ) : null}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}

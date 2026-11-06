@@ -1838,6 +1838,8 @@ Added on 5 November 2026 from the user's message.
 - **Chosen by the user on 5 November 2026:** users bring their own Boat
   key. This reverses the user's earlier call that users run on the app's
   own Boat subscription.
+- **Changed by the user on 6 November 2026:** reversed by decision 80. All
+  cloud computers run in the app's own Boat account again.
 - **Effects:**
   - The app keeps no Boat account for its users. Its own Boat
     organization and key serve only development and tests.
@@ -2300,6 +2302,10 @@ Added on 6 November 2026 from the Milestone 2 docs.
 - **Chosen:** A, by the user on 6 November 2026. The user asked for a
   better way later, probably a move of the old cloud computers:
   `plans/follow-ups/migrate-cloud-computers-to-another-boat-account.md`.
+- **Changed on 6 November 2026:** decision 80 moved every cloud computer
+  back to the app's own Boat account, so no org changes its Boat account,
+  and this decision and its follow-up item no longer apply. The follow-up
+  item is deleted.
 
 ### 57. Decide who may change an org's shared settings
 
@@ -2817,6 +2823,297 @@ options moved to
 Added and answered on 6 November 2026 (A). The user parked the
 Rust work the same day, so the decision with its options moved to
 `plans/follow-ups/move-backend-to-rust-and-postgres.md`.
+
+### 76. Decide what happens to a runner event that the workspace refuses
+
+Added on 6 November 2026 from round 2 finding 3 of the Milestone 7
+review.
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** The workspace stores each runner event before it
+  confirms it, and Cloudflare stores at most 2 MB in one value. A large
+  file tree, tool output, or file list can pass that. The workspace also
+  refuses an invalid event and an event of a turn that is not active. A
+  refused event closed the connection without a confirm, so the runner
+  sent it again after each reconnect, and the stream stopped there.
+- **Options:**
+  - **A.** A size limit and a reply that lets the runner replace a large
+    event. Effort: Medium.
+  - **B.** Store large events in bounded parts. Effort: Medium.
+  - **C.** Store large events in object storage. Effort: Large.
+  - **D.** Store a small marker for each event that the workspace refuses
+    for a fixed reason, and confirm it. Effort: Medium.
+  - **E.** D, and cap the event shapes in the runner contract. Effort:
+    Medium.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 6 November 2026. Milestone 4d changes the
+  contracts, and Milestone 7s changes the workspace.
+- **Agent calls on 6 November 2026,** which the user can override:
+  - One stored runner event holds at most 1 MiB, half of Cloudflare's
+    limit for one value, so the envelope always fits.
+  - A full file tree and a long list of changes go as several numbered
+    parts. A tree delta with many changes goes as several deltas with
+    consecutive revisions.
+  - A tool's detail and the file list at the end of a turn keep a cap and
+    a count of the rest.
+  - The chat shows the marker of a refused event as one line that names
+    what was lost.
+
+### 77. Decide the order of the open session tabs
+
+Added on 6 November 2026 from a finding check of the Milestone 7
+review.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Review. **Category:** Docs or spec.
+- **Options:**
+  - **A.** The order of creation. A new session opens as the last tab.
+    Effort: Small.
+  - **B.** The order of the last activity. Effort: Small.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 6 November 2026. The chat protocol states
+  it.
+
+### 78. Bind each invitation to the person it names
+
+Added on 6 November 2026 from round 2 finding 4 of the Milestone 15a
+review.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Review. **Category:** Security.
+- **Background:** An admin invited a person by GitHub login, and the
+  Worker compared that login with the login stored at the user's last
+  sign-in. A login can be renamed and taken by another account, so a
+  stale stored login let account 400 accept an invitation meant for
+  account 500.
+- **Options:**
+  - **A.** Look up the GitHub ID at invite time, and match on it. Effort:
+    Medium.
+  - **B.** Put the GitHub ID in a signed invitation code. Effort: Medium.
+  - **C.** An admin approves each account before it joins. Effort: Large.
+  - **D.** A, with the lookup behind a members hook. Effort: Medium.
+  - **E.** The admin's browser looks up the account. Effort: Medium.
+  - **F.** Keep the code until the wiring milestone. Effort: Small.
+  - **G.** D, and show the invited account on the invitation. Effort:
+    Medium.
+- **Recommendation:** D, with G later.
+- **Chosen:** by the user on 6 November 2026, a new option: "invites
+  should be sent via email, then we can check that when the user logs in
+  with github". An admin invites a person by email, and the app sends the
+  invitation to that address. The person joins with a GitHub account that
+  has that address as a verified email. Milestone 15g builds it.
+- **Agent calls on 6 November 2026:**
+  - The app reads the verified emails at sign-in with `GET /user/emails`,
+    through the "Email addresses" read permission that decision 28 already
+    needs.
+  - The person still accepts each matching invitation, as today, so a
+    sign-in alone joins no org.
+  - Invitations by GitHub login go away, so one way remains.
+
+### 79. Choose the email service for invitations
+
+Added on 6 November 2026 from decision 78.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Process.
+- **Options:**
+  - **A.** Postmark, as in Mokly Cloud. Effort: Small.
+  - **B.** Resend. Effort: Small.
+  - **C.** Cloudflare's email sending from Workers. Effort: Small.
+- **Recommendation:** A.
+- **Chosen:** B, by the user on 6 November 2026. Milestone 15g sends the
+  invitations through Resend, with `conducting.build` as the sender
+  domain. The Resend API key is a Worker secret.
+
+### 80. Decide what Remove key does to running cloud computers
+
+Added on 6 November 2026 from the Milestone 6 work.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** The Boat key tab had Remove key, and without the key the
+  Worker could not stop the org's cloud computers.
+- **Options:**
+  - **A.** Stop every cloud computer of the org, then delete the key.
+  - **B.** Refuse the removal while a cloud computer runs.
+  - **C.** Delete only the key.
+  - **D.** Drop Remove key.
+- **Recommendation:** A.
+- **Chosen:** by the user on 6 November 2026, a wider change: "I think we
+  go back to using our own account for Boat". This reverses decision 44.
+  All cloud computers run in the app's own Boat account again, so no org
+  has a Boat key, and this question no longer applies.
+- **Agent calls on 6 November 2026,** which the user can override:
+  - The app's Boat key becomes one Worker secret.
+  - The Boat key tab, the encrypted store of org keys, and the key steps
+    of Get started go, because no org has a key.
+  - The marketing site and Get started no longer ask users for a Boat
+    account. The app names Boat to no user, which replaces decision 47.
+  - A new milestone makes the switch after the running milestones merge,
+    and before the first deployment, so that no stored key needs a
+    migration.
+  - Decision 45 made the product free because each user paid for their
+    own Boat account. That reason is gone, so decisions 81 and 82 ask
+    again about cost and abuse.
+
+### 81. Decide the cost model now that the app pays for compute
+
+Added on 6 November 2026 from decision 80.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Design. **Category:** Product bug.
+- **Background:** Decision 45 removed billing and all limits, because each
+  user paid for their own Boat account. Under decision 80, the app's own
+  Boat account pays for every cloud computer.
+- **Options:**
+  - **A.** Free with limits for each user. Effort: Medium.
+  - **B.** Bring billing back. Effort: Large.
+  - **C.** Invite-only. Effort: Small.
+  - **D.** Free with no limits. Effort: Small.
+- **Recommendation:** C for the first deployment, then A.
+- **Chosen:** D, by the user on 6 November 2026: "we can add billing
+  later". The product stays free with no limits, and the app's Boat
+  account pays for all use.
+
+### 82. Decide when the abuse controls come
+
+Added on 6 November 2026 from decision 80.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Design. **Category:** Security.
+- **Background:** All users share the app's Boat account again, and Boat's
+  terms make the platform responsible for what its users do.
+- **Options:**
+  - **A.** Terms at sign-up, an operator suspension, and an abuse address,
+    before the first deployment. Effort: Medium.
+  - **B.** Keep them as follow-up items after the merge. Effort: Small now.
+  - **C.** The operator suspension now, the rest before an open sign-up.
+    Effort: Small.
+- **Recommendation:** C.
+- **Chosen:** B, by the user on 6 November 2026: "do as follow ups". The
+  follow-up item `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`
+  holds the three measures.
+
+### 83. Keep the preview credential away from other sites
+
+Added on 6 November 2026 from a finding check of the Milestone 11 review.
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. **Category:** Security.
+- **Background:** The random hostname of a port preview is its credential.
+  Browsers send `Origin` on cross-site requests and WebSocket connections
+  despite `no-referrer`, so a preview page can leak its hostname to each
+  site that it calls. The redirect rewrite also matches only `https`.
+- **Options:**
+  - **A.** Accept the leak, and match `http` in the redirect rewrite.
+    Effort: Small.
+  - **B.** Move the credential out of the hostname, into a cookie that the
+    preview domain sets. Effort: Medium.
+  - **C.** B, and check Boat's forwarded headers in the live smoke test.
+    Effort: Medium.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. Milestone 11a builds it,
+  and Milestone 16 checks Boat's forwarded headers.
+
+### 84. Decide the size limits of Boat replies
+
+Added on 6 November 2026 from the Milestone 4c work.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Security.
+- **Background:** Decision 65 B gave each Boat route a budget above Boat's
+  documented maximum. Boat publishes no total size for most replies, and a
+  command reply can reach about 96 MiB of escaped JSON.
+- **Options:**
+  - **A.** 1 MiB for account, lifecycle, snapshot, metadata, and error
+    replies, and 18 MiB for command replies. Keep the file budget.
+    Effort: Medium.
+  - **B.** Wait until Boat publishes complete limits. Effort: Large.
+  - **C.** Read command replies as a stream, and keep only the last part
+    of each output stream. Effort: Large.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 6 November 2026. This changes decision 65
+  B: a Boat reply over its budget fails, also when Boat would allow it.
+  Milestone 4c applies it.
+
+### 85. Make the members tests pass the gate every time
+
+Added on 6 November 2026 from the merge of Milestone 15a.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Test.
+- **Background:** Each members test started its own Miniflare and D1
+  database. Alone, a test took about 2 seconds, and one long scenario took
+  5 seconds. On the merged tree, the complete gate failed twice, each time
+  on another members test at about 5.1 seconds.
+- **Options:**
+  - **A.** A 20-second limit for the members tests only. Effort: Small.
+  - **B.** Fewer test files at the same time. Effort: Small.
+  - **C.** One Miniflare and one database for each members test file, with
+    the data reset between tests. Effort: Medium.
+- **Recommendation:** A now, and C as a follow-up item.
+- **Chosen:** C, by the user on 6 November 2026. The Milestone 15a branch
+  makes the change before it merges. The time limit stays at 5 seconds.
+
+### 86. Decide whether a preview ID can come back
+
+Added on 6 November 2026 from round 2 finding 2 of the Milestone 12
+review.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Review. **Category:** Docs or spec.
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **C.** Each open gives a new ID, and the API never gives out a revoked
+    ID again. Effort: Small.
+  - **D.** Hide revoked previews by their address. Effort: Medium.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. The preview contract states
+  the rule, and Milestone 11a tests it in the backend.
+
+### 87. Show the chat at once on a return to a workspace
+
+Added on 6 November 2026 from the user's question: "Will they be cached?"
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design. **Category:** Performance.
+- **Background:** Each open of a workspace loads its history from the
+  workspace Durable Object. The browser stores only the panel widths.
+- **Options:**
+  - **A.** No cache. Each open loads the newest page again. Effort: Small.
+  - **B.** A cache in memory only. The web app keeps the chat of each
+    workspace that the tab showed. A return shows the chat at once, then
+    loads only the new events. A reload or a new tab starts empty.
+    Effort: Medium.
+  - **C.** B, and a cache on the disk in IndexedDB for each signed-in
+    member. The chat stays on the device. Effort: Large.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 6 November 2026. Milestone 8i builds it.
+
+### 88. Keep a small Markdown file from freezing the Files page
+
+Added on 6 November 2026 from round 2 finding 6 of the Milestone 10
+review.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Review. **Category:** Security.
+- **Background:** The Markdown preview fills each short table row with
+  empty cells up to the header's width. The page then builds a grid of
+  columns times rows, so a 1,202-byte file made 40,000 cells, and a 40 KB
+  file froze the page.
+- **Options:**
+  - **B.** Skip the empty cells, with one wide cell for the rest of each
+    row. A partial fix. Effort: Small.
+  - **D.** Count the empty cells of all tables in one file. Past a fixed
+    budget, such as 65,536, end the table and show the rest as text, as
+    cmark-gfm and markdown-it do for one table. Effort: Small.
+  - **F.** Measure the whole parsed file, and show the source when it is
+    far larger than the file. Effort: Medium.
+  - **C.** Render only the visible rows and columns. Effort: Large.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 6 November 2026. Milestone 10 applies it,
+  and the Files rules of the workspaces protocol state the limit.
 
 ## Design
 
@@ -3575,16 +3872,137 @@ Add the `blocked` variant at `app/banner/blocked/blocked`, to keep the existing 
 
 Depends on: 9
 
-Apply decision 65 B. The bounded reader of the Milestone 9 file read is
-the base.
+Apply decision 65 B as changed by decision 84 A. The bounded reader of
+the Milestone 9 file read is the base.
 
-- [ ] Use one bounded body reader in the request gate, with a 1 MB limit
+Agent call, 6 November 2026: replies above the new limits get HTTP 502
+with fixed error text. Reason: the request was valid, but the provider
+reply exceeded the Worker's budget.
+
+- [x] Use one bounded body reader in the request gate, with a 1 MB limit
       for each JSON body. A larger body gets a 413 answer.
-- [ ] Use the same reader in the Boat transport, with a budget for each
-      fixed Boat route above Boat's documented maximum for that route.
-- [ ] Test an oversized body at the gate and at a Boat route, with a
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Share the content type check, bounded read, and JSON object check
+      in one function. Name it in the HTTP README for later callers.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Use the same reader in the Boat transport, with a budget for each
+      fixed Boat route: 1 MiB for account, lifecycle, snapshot, metadata,
+      and error replies, and 18 MiB for command replies. Keep the file
+      budget. A larger reply fails, also when Boat would allow it.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Test each Boat budget with a stream that counts its chunks. An
+      oversized command reply says "The command output is too large."
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Test an oversized body at the gate and at a Boat route, with a
       stream that counts its chunks. State the 1 MB limit in the access
-      protocol.
+      protocol. Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Run the complete gate. Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+
+## Milestone 4d: Runner event limits
+
+Depends on: 4a
+
+Apply decision 76 E to the contracts. Milestone 7r builds the runner to
+this contract.
+
+Scope call on 6 November 2026: the user chose option D for review item 1.
+This branch may update the Worker chat and files readers, tests, and
+fakes. Missing required fields are invalid events. The default file
+samples remain complete single-part reports. Separate samples cover
+multipart reports. Production enforcement stays in Milestone 7s.
+
+Agent calls on 6 November 2026, within decision 76 E:
+
+- Measure the 1 MiB cap on compact UTF-8 JSON of the complete runner event
+  envelope. This includes runner identity fields and leaves room for the
+  workspace storage wrapper.
+- Keep browser file reports complete. Use separate runner parts with a
+  revision, part number, and part count. This preserves browser response
+  shapes and keeps partial reports out of the browser.
+- Cap each runner file-event payload at 256 KiB. Cap each tree delta at
+  512 changes too. The byte cap bounds arbitrary path lengths. The count
+  cap bounds the tree work of one event.
+- Give trees and changes independent revision sequences within one
+  runner stream. Number parts from 1. Keep confirmed parts across
+  reconnects. Use newer full reports to recover missing or refused data.
+  This permits complete reports without partial updates.
+- Cap serialized tool detail at 64 KiB. Count omitted normalized source
+  UTF-8 bytes before JSON escaping. Preserve null detail and whole
+  Unicode code points. This keeps the excerpt and its count clear.
+- Cap turn file summaries at 200 entries and 256 KiB of serialized array
+  data. Count omitted files. This bounds the chat summary while the
+  Changes response keeps the full list.
+- Use workspace-only refusal markers with the three fixed reasons.
+  Include verified turn context or null. Use `unknown` for an invalid
+  event type. This names lost data without copying the refused payload.
+- Keep runner protocol version 1. No runner is live, and Milestone 7r
+  adopts this contract after merge.
+
+Verification evidence: `.context/boat-native-remote-workspaces/checks/milestone-4d-verification.md`.
+
+- [x] Add the byte limit of one stored runner event to the runner
+      contract. Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Send a full file tree and a long list of changes as several
+      numbered parts. Cap the changes of one tree delta.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Give a tool's detail and the file list at the end of a turn a cap
+      and a count of the rest.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Add the chat event that marks a refused runner event, with the
+      stream, the event number, the event type, and the reason.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Update the fakes, the recorded events, and the chat and files
+      protocol rules. Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Apply option D to the current Worker readers and their test inputs.
+      Preserve every existing assertion and keep multipart samples
+      separate from the default single-part reports.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+
+## Milestone 4e: Contracts for the app shell
+
+Depends on: 4a
+
+Give the app shell the contracts and fake replies that its approved
+mockups need. Milestone 6 uses these replies before backend wiring.
+Worker routes stay with the wiring and backend milestones.
+
+Scope update, 6 November 2026: decision 80 returns the app to its own Boat
+account. Drop the Boat key details and removal TODO. No org has a Boat key.
+
+Agent calls, 6 November 2026:
+
+- Keep initials and base image fields optional, so existing records in
+  the Worker and open branches remain valid.
+- Keep `repositoryIds` as GitHub's numeric IDs. The account repository
+  list supplies those IDs before an org exists.
+- Return the base image software with org settings, so both views of the
+  Cloud computer tab can read the checked list.
+
+Merge resolution: `.context/boat-native-remote-workspaces/merge-plan-resolution.diff`.
+
+- [x] Add the org initials and chosen repositories to the create request.
+      Add the repository list that the create screen reads.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
+- [x] Add the base image software list where the Cloud computer tab reads
+      it. Check Boat's docs and record the source and date beside it.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
+- [x] Run the complete gate.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
+
+## Milestone 4f: The app's own Boat account
+
+Depends on: 5, 6, 15a, 15c
+
+Apply decision 80 before the first deployment.
+
+- [ ] Run every cloud computer with the app's one Boat key, from a Worker
+      secret. Remove the encrypted store of org keys and its routes.
+- [ ] Remove the Boat key tab, the key repair of deleted orgs, and the key
+      steps of Get started, in the screens and the mockups.
+- [ ] Remove the Boat account requirement from the marketing site and
+      Get started, so that the app names Boat to no user.
+- [ ] Update the protocol docs, the architecture doc, and the naming rule
+      of `AGENTS.md`.
 - [ ] Run the complete gate.
 
 ## Milestone 5: Bases and workspace lifecycle
@@ -3636,16 +4054,22 @@ Depends on: 4a
 
 It builds against the fake API of Milestone 4a. Milestone 8i wires it.
 
-- [ ] Build the app shell, the workspace list, and the sandbox states,
+- [x] Build the app shell, the workspace list, and the sandbox states,
       with the starting card and its steps.
-- [ ] Add draggable dividers on both sides of the chat: one for the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-6`.
+- [x] Add draggable dividers on both sides of the chat: one for the
       left panel and one for the right column. Remember the widths.
-- [ ] Build the new workspace and the org settings screens.
-- [ ] Compare each screen with its mockup.
-- [ ] Build sections, Archive with its check and the Archived group, and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-6`.
+- [x] Build the new workspace and the org settings screens.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-6`.
+- [x] Compare each screen with its mockup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-6`.
+- [x] Build sections, Archive with its check and the Archived group, and
       Get started with its first-run steps.
-- [ ] Build the account page with the stored agent logins, and the org
-      settings with the Boat key screen.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-6`.
+- [x] Build the account page with the stored agent logins, and the org
+      settings. The Boat key screen is dropped by decision 80.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-6`.
 
 ## Milestone 7r: Agent runner
 
@@ -3734,16 +4158,31 @@ Evidence: `.context/boat-native-remote-workspaces/runner/handoff.md`.
 
 Depends on: 4a
 
-- [ ] Add prompt, message during a turn, interrupt, and model and effort
-      endpoints. The Durable Object forwards them to the runner.
-- [ ] Pass the sender's agent login to the runner for each turn, and start
-      the agent again when the sender changes, as decision 49 says.
-- [ ] Keep each session on one agent. A model of the other agent opens a
-      new session with the draft, as decision 51 says.
-- [ ] Map the SDK events to our event type, store them, and push them to
-      the open tabs over a WebSocket.
-- [ ] Test the mapping against recorded SDK events, and the resend after
-      a dropped connection, with the fake runner of Milestone 4a.
+- [x] Add prompt, message during a turn, interrupt, and model and effort
+      endpoints. The Durable Object forwards them to the runner. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Pass the sender's agent login to the runner for each turn, and start
+      the agent again when the sender changes, as decision 49 says. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Keep each session on one agent. A model of the other agent opens a
+      new session with the draft, as decision 51 says. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Map the SDK events to our event type, store them, and push them to
+      the open tabs over a WebSocket. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Test the mapping against recorded SDK events, and the resend after
+      a dropped connection, with the fake runner of Milestone 4a. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+
+## Milestone 7s: Runner event limits in the workspace
+
+Depends on: 4d, 7, 9
+
+Apply decision 76 E in the workspace Durable Object.
+
+- [ ] Check the byte limit with the other event checks.
+- [ ] Store a marker for each event that the workspace refuses for a
+      fixed reason, confirm it, and move the cursor on. A refused end of
+      turn still ends the turn. A storage or network failure still closes
+      the connection.
+- [ ] Join the parts of a file tree and of a changes list before the
+      files store takes them.
+- [ ] Test each refusal, a tree in parts, and a resend after a refusal.
 
 ## Milestone 8: Chat UI
 
@@ -3754,20 +4193,50 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build the chat with messages, tool calls, the running state,
-      steer, and interrupt.
-- [ ] Show the stored history while the sandbox is stopped or starting.
+- [x] Build the chat with messages, tool calls, the running state,
+      steer, and interrupt. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+- [x] Show the stored history while the sandbox is stopped or starting. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+- [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+- [x] Build several sessions as tabs, with the session history. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+- [x] Queue the messages that arrive before the sandbox is ready, and
+      show the workspace title that the agent writes. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+
+Evidence: `.context/boat-native-remote-workspaces/milestone-8-verification.md`.
+
+## Milestone 8j: Runner limits in the chat
+
+Tags: ui
+
+Depends on: 4d, 8
+
+Decision 76 E: the runner caps the detail of a tool and the file list of
+a finished turn, and counts the rest. The workspace stores a marker for
+each runner event that it refuses. Milestone 4d keeps the counts and the
+markers of each session in the chat state, but shows nothing. It drops a
+marker that belongs to no session. Added on 6 November 2026 from round 1
+finding 2 of the Milestone 4d review.
+
+- [ ] Draw in the chat mockups how much tool detail and how many files the
+      runner left out, and the line of a refused event, which names what
+      was lost.
+- [ ] Draw where a marker that belongs to no session shows, such as the
+      marker of a refused file event. No rule says where yet, so bring
+      the pictures to the user as a decision before you build it. That
+      decision must also choose where the browser keeps such a marker and
+      how a browser tab that opens later reads it.
+- [ ] Show them in the chat screens.
 - [ ] Compare each screen with its mockup.
-- [ ] Build several sessions as tabs, with the session history.
-- [ ] Queue the messages that arrive before the sandbox is ready, and
-      show the workspace title that the agent writes.
 
 ## Milestone 8i: Chat path wiring
 
-Depends on: 5, 6, 7, 7r, 8
+Depends on: 5, 6, 7, 7r, 8, 8j
 
 - [ ] Wire the app shell, the chat screens, the chat backend, and the
       runner together, with a real Boat sandbox.
+- [ ] Keep the chat of each workspace that the tab showed in memory, as
+      decision 87 says. A return to the workspace shows the chat at once,
+      then gets only the events after its last event number. A reload or a
+      new tab starts empty.
 - [ ] Test the chat end to end: create a workspace, send a message, stream
       the answer, stop and resume, and send again.
 - [ ] Measure the first agent start after a resume over several runs,
@@ -3793,13 +4262,13 @@ This milestone needs the prerequisites from the user.
 
 Depends on: 4a
 
-- [ ] Keep the file tree and the changes summary that the runner pushes in
+- [x] Keep the file tree and the changes summary that the runner pushes in
       the workspace Durable Object, and serve them to the Files and
-      Changes tabs, also while the cloud computer sleeps.
-- [ ] Read one file with a size limit, and one diff against the default
+      Changes tabs, also while the cloud computer sleeps. Branch: `conductor/boat-native-remote-workspaces-milestone-9`.
+- [x] Read one file with a size limit, and one diff against the default
       branch, through the runner. Use Boat's file read when the runner is
-      not connected.
-- [ ] Test both against the fake runner and the fake Boat server.
+      not connected. Branch: `conductor/boat-native-remote-workspaces-milestone-9`.
+- [x] Test both against the fake runner and the fake Boat server. Branch: `conductor/boat-native-remote-workspaces-milestone-9`.
 
 ## Milestone 10: Files UI
 
@@ -3810,27 +4279,49 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build the All and Changes lists, the Markdown and code preview,
-      and the diff of a changed file.
-- [ ] Compare each screen with its mockup.
+- [x] Build the All and Changes lists, the Markdown and code preview,
+      and the diff of a changed file. Branch: `conductor/boat-native-remote-workspaces-milestone-10`.
+- [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-10`.
 
 ## Milestone 11: Terminal, previews, and desktop backend
 
 Depends on: 4a
 
-- [ ] Add the `ttyd` service with a per-workspace password to the org image setup.
-- [ ] Expose private ports, and proxy them with the `_port_auth`
+- [x] Add the `ttyd` service with a per-workspace password to the org image setup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Expose private ports, and proxy them with the `_port_auth`
       cookie, including WebSockets.
-- [ ] Issue random preview hostnames on the preview domain, map them in
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Issue random preview hostnames on the preview domain, map them in
       D1, and revoke them on stop, on close, and after 24 hours.
-- [ ] Set `Referrer-Policy: no-referrer` on each preview response.
-- [ ] Add the desktop URL endpoint.
-- [ ] Check whether an open desktop stream ends when its 10-minute URL
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Set `Referrer-Policy: no-referrer` on each preview response.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Add the desktop URL endpoint.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Check whether an open desktop stream ends when its 10-minute URL
       expires. Save the result under `.context/`. If it ends, report a
       mockup gap for a Reconnect state.
-- [ ] Test the proxy with a fake upstream: a revoked or unknown hostname
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Test the proxy with a fake upstream: a revoked or unknown hostname
       gets no answer from the sandbox, and a browser `_port_auth` cookie
       never reaches it.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+
+## Milestone 11a: Preview credential in a cookie
+
+Depends on: 11
+
+Apply decision 83 C.
+
+- [ ] Move the credential of a port preview out of its hostname, into a
+      cookie that the preview domain sets, so that the hostname is no
+      secret.
+- [ ] Match `http` as well as `https` in the redirect rewrite.
+- [ ] Update the port preview rules of the access protocol, and test the
+      cookie, a leaked hostname, and both redirect schemes.
+- [ ] Test that a port opened again after a revoke gets a new preview ID,
+      as decision 86 says.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 
@@ -3841,19 +4332,19 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build the terminal with xterm.js, the port preview with its "Open
-      in new tab" link, and the desktop frame.
-- [ ] Compare each screen with its mockup.
+- [x] Build the terminal with xterm.js, the port preview with its "Open
+      in new tab" link, and the desktop frame. Branch: `conductor/boat-native-remote-workspaces-milestone-12`.
+- [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-12`.
 
 ## Milestone 13: GitHub banner backend
 
 Depends on: 4a
 
-- [ ] Receive and verify GitHub App webhooks.
-- [ ] Route each event to the workspace of its branch, and push it to the
-      open tabs.
-- [ ] Read the current pull request and checks when a tab opens.
-- [ ] Test with recorded webhook payloads.
+- [x] Receive and verify GitHub App webhooks. Branch: `conductor/boat-native-remote-workspaces-milestone-13`.
+- [x] Route each event to the workspace of its branch, and push it to the
+      open tabs. Branch: `conductor/boat-native-remote-workspaces-milestone-13`.
+- [x] Read the current pull request and checks when a tab opens. Branch: `conductor/boat-native-remote-workspaces-milestone-13`.
+- [x] Test with recorded webhook payloads. Branch: `conductor/boat-native-remote-workspaces-milestone-13`.
 
 ## Milestone 14: GitHub banner UI
 
@@ -3864,9 +4355,9 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build the pull request bar of the right column, the compact pull
-      request row on phones, and the Checks tab.
-- [ ] Compare it with its mockup.
+- [x] Build the pull request bar of the right column, the compact pull
+      request row on phones, and the Checks tab. Branch: `conductor/boat-native-remote-workspaces-milestone-14`.
+- [x] Compare it with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-14`.
 
 ## Milestone 15: Agent tools
 
@@ -3886,17 +4377,17 @@ Depends on: 4a
 
 Depends on: 4a
 
-- [ ] Add org members: invites by GitHub login, the admin and member
-      roles, and removal.
-- [ ] Give each workspace an owner, the user who created it, and let an
-      admin reassign it.
-- [ ] Refuse the last admin's leave until another member is an admin, as
-      decision 55 says.
-- [ ] Allow only admins to change the repositories, the scripts, and the
-      env vars, as decision 57 says.
-- [ ] Add Delete org with the 7-day restore, and remove the saved
-      snapshots before each delete.
-- [ ] Test the reassignment and Delete org against the fake Boat server.
+- [x] Add org members: invites by GitHub login, the admin and member
+      roles, and removal. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Give each workspace an owner, the user who created it, and let an
+      admin reassign it. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Refuse the last admin's leave until another member is an admin, as
+      decision 55 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Allow only admins to change the repositories, the scripts, and the
+      env vars, as decision 57 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Add Delete org with the 7-day restore, and remove the saved
+      snapshots before each delete. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
+- [x] Test the reassignment and Delete org against the fake Boat server. Branch: `conductor/boat-native-remote-workspaces-milestone-15a`.
 
 ## Milestone 15c: Members UI
 
@@ -3907,17 +4398,72 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build Delete org with its restore.
-- [ ] Show the Repositories and Cloud computer tabs read-only to members,
-      as decision 57 says.
-- [ ] Build the org members page and workspace reassignment.
-- [ ] Compare each screen with its mockup.
+- [x] Build Delete org with its restore. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
+- [x] Show the Repositories and Cloud computer tabs read-only to members,
+      as decision 57 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
+- [x] Build the org members page and workspace reassignment. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
+- [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
+
+## Milestone 15g: Email invitations
+
+Depends on: 15a, 15c
+
+Apply decision 78. It must merge before Milestone 15i wires the
+acceptance route.
+
+- [x] Change the contracts, the fakes, and the D1 schema so that an
+      invitation names an email in place of a GitHub login. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+- [x] Send each invitation by email through the email service of decision
+      79. In development, a mailer writes the link to the log. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+- [x] At sign-in, read the verified emails of the GitHub account, and show
+      the pending invitations that name one of them. Cancel a departed
+      member's pending invitations. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+- [x] Change the invite form of the members mockups and screens to an
+      email field. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+- [x] Test with a fake GitHub that returns verified emails, and a fake
+      mailer. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+
+Agent calls, 6 November 2026:
+
+- Keep verified emails in a private D1 table. Refresh them before a
+  browser session or a desktop handoff, so neither flow uses stale emails.
+- Keep a failed send pending for retry. Use the invitation ID and the
+  message digest for Resend idempotency, so identical retries keep their key.
+- Link to the app root with the invite ID in `?invite=`. Milestone 15i
+  connects the pending invitation reader and explicit acceptance to the shell.
+- Use the log mailer for loopback app origins and inject it in tests.
+  Other origins need `RESEND_API_KEY`, so a missing key cannot report delivery.
+
+Evidence: `.context/milestone-15g/` holds the delegated reports, test
+proofs, migration proof, and screenshots of both schemes and sizes.
+
+User approval, 6 November 2026, for round 1 finding 2 of the
+[PR #22](https://github.com/Firna-AI/remote-code/pull/22) review: the user
+chose option B. When a person removed an invited email from GitHub and
+signed in, the refresh lost the match that cancels their invitations at
+departure. A removed person could then verify the email again and accept.
+
+- Each invitation keeps a durable match to each user whose verified email
+  it named, at invitation or at sign-in.
+- When a member leaves or an admin removes them, the same batch cancels
+  the matched invitations of that org.
+- Acceptance still needs a current verified email.
+- The same request fixes the pending list. It leaves out the orgs where
+  the user is already a member.
+- The user approved a change in place to the unmerged migration
+  `202611072100_email_invitations.sql`, because nothing is deployed.
 
 ## Milestone 15i: Feature wiring
 
-Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c
+Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
 
 - [ ] Wire each feature's screens to its backend inside the app shell.
+- [ ] Connect the lifecycle hooks of the Milestone 15a members backend to
+      the workspace Durable Object and the sandboxes. `deleteWorkspaceState`
+      must delete the chat history of the workspace. Run
+      `cleanupDeletedOrgs` on a Cron Trigger, so that Delete org removes
+      everything of the org after 7 days, as the orgs protocol says.
+      Added on 6 November 2026, because no milestone connected these hooks.
 - [ ] Run the complete gate, and compare each screen with its mockup.
 
 ## Milestone 15d: Marketing site
@@ -3947,26 +4493,33 @@ Build the Mac app as decision 62 says. No other milestone waits for it.
       of the 15-minute window, the app's list of always-allowed commands,
       and the chat's tool states: waiting for approval, denied, done, and
       Mac not available.
-- [ ] Add `desktop/`, an Electron shell for macOS, as Mokly's
+- [x] Add `desktop/`, an Electron shell for macOS, as Mokly's
       `ts/desktop` does. It bundles the built web app and serves it from
-      `conducting-app://desktop`.
+      `conducting-app://desktop`. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 - [ ] Give the window a hidden title bar with the native window buttons
       inset in the app's top bar, drag regions on the top bars, and the
-      reserved space that full screen drops, as decision 62 says.
-- [ ] Let the Worker accept the desktop origin in the `Origin` check, in
+      reserved space that full screen drops, as decision 62 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Let the Worker accept the desktop origin in the `Origin` check, in
       CORS for the API, and for the session cookie. Hand off the GitHub
       sign-in from the browser to the app through the `conducting://`
-      scheme, with one app instance.
-- [ ] Keep the window bounds and the session across launches. Open other
+      scheme, with one app instance. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Keep the window bounds and the session across launches. Open other
       sites in the browser. Deny every permission except a sanitized
       clipboard write. Use no preload and no renderer bridge, and match
-      the web app's content security policy.
-- [ ] Package DMG and ZIP builds for arm64 and x64 with electron-builder,
+      the web app's content security policy. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Package DMG and ZIP builds for arm64 and x64 with electron-builder,
       with an ad-hoc signature for now. Add electron-updater on a GitHub
-      release feed, off in development.
-- [ ] Add Playwright tests of the shell and a packaged launch check to CI.
-- [ ] Write `docs/protocol/desktop-app.md`, and update the README and the
-      architecture doc.
+      release feed, off in development. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Add Playwright tests of the shell and a packaged launch check to CI. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Write `docs/protocol/desktop-app.md`, and update the README and the
+      architecture doc. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Fix the frame navigation and updater review findings, and test the
+      fixes. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Preserve local asset responses without sign-in settings, and verify
+      ad-hoc signatures in PR packages. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Make the local web bootstrap compatible with the shared content
+      policy. Use the React module preamble and accept matching local
+      module origins when `APP_ORIGIN` is missing or empty. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 
 ## Milestone 15f: Mac device commands
 
@@ -4001,6 +4554,10 @@ This milestone needs the prerequisites from the user.
 
 - [ ] Deploy the Worker, D1, and the web app to the user's Cloudflare
       account, with GitHub sign-in.
+- [ ] Create the D1 database with the Western Europe location hint, near
+      the workspace Durable Objects and Boat's machines. Cloudflare fixes
+      the place of the database when it creates it. Added on 6 November
+      2026.
 - [ ] Smoke-test with a real Boat sandbox: create a workspace, chat, open
       a file, use the terminal, open a preview, stop, and resume.
 - [ ] Check that a private Boat port does not answer on the public
@@ -4008,6 +4565,10 @@ This milestone needs the prerequisites from the user.
 - [ ] In a real workspace, run `conducting workspaces list` and an MCP
       `tools/list` request, so that the installed agent tools start on
       the image's Node.
+- [ ] Kill ttyd once, and check that systemd restarts it with the same
+      password, and that the terminal opens again without a new start.
+- [ ] Check which forwarded headers Boat sends to a preview app, such as
+      `X-Forwarded-Proto`, as decision 83 asks.
 
 ## Milestone 17: Verification, commit, review, and pull request
 

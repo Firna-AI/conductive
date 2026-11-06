@@ -1,0 +1,232 @@
+.bar,
+.row {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  height: var(--ui-bar-height);
+  padding: 0 8px 0 var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  box-sizing: border-box;
+}
+
+/* The row shows only on a phone, where each touch target is 44px or more. */
+.row {
+  min-height: max(44px, var(--ui-touch-min, 0px));
+  padding-right: 12px;
+  text-decoration: none;
+}
+
+/* A state tints the whole bar. Its edges stay neutral. */
+.success {
+  background: var(--ui-success-soft);
+}
+
+.danger {
+  background: var(--ui-rose-soft);
+}
+
+.warning {
+  background: var(--ui-amber-soft);
+}
+
+.number {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-sm);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  font-weight: 500;
+}
+
+.success .number {
+  border-color: var(--ui-success-border);
+  color: var(--ui-success);
+}
+
+.danger .number {
+  border-color: var(--ui-danger-border);
+  color: var(--ui-rose);
+}
+
+.warning .number {
+  border-color: var(--ui-warning-border);
+  color: var(--ui-amber-deep);
+}
+
+/* The words of a state shrink with an ellipsis. Its icon keeps its size. */
+.state {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-strong);
+  white-space: nowrap;
+}
+
+.state > svg {
+  flex-shrink: 0;
+}
+
+.stateText {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+.success .state {
+  color: var(--ui-success);
+}
+
+.danger .state {
+  color: var(--ui-rose);
+}
+
+.warning .state {
+  color: var(--ui-amber-deep);
+}
+
+/*
+ * The detail takes only the width that the state leaves. So it gives up its
+ * width before the words of the state do. Its end margin keeps the gap of the
+ * mockup's spacer before the actions.
+ */
+.detail {
+  flex: 1 1 0;
+  overflow: hidden;
+  min-width: 0;
+  margin-right: 8px;
+  color: var(--ui-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The actions of the bar keep their size at its end. */
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* Why a branch has no link that creates a pull request. */
+.note {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  white-space: nowrap;
+}
+
+.branches {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  white-space: nowrap;
+}
+
+.branch {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-ink2);
+  text-overflow: ellipsis;
+}
+
+/* A long target shrinks too, and leaves half of the width to the branch. */
+.target {
+  flex-shrink: 0;
+  overflow: hidden;
+  max-width: 50%;
+  text-overflow: ellipsis;
+}
+
+.muted {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.action {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  height: calc(var(--ui-control-height) - 4px);
+  padding: 0 8px;
+  border: 1px solid var(--ui-control-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.action:hover {
+  background: var(--ui-soft);
+}
+
+.rowText {
+  flex: 1;
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-strong);
+}
+
+/* The bar and the row while GitHub has not answered. */
+.pending,
+.problem {
+  display: inline-flex;
+  overflow: hidden;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.pending {
+  color: var(--ui-muted);
+}
+
+.problem {
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-strong);
+}
+
+.alert {
+  flex-shrink: 0;
+  color: var(--ui-rose);
+}
+
+.rowNote {
+  flex: 1;
+  color: var(--ui-muted);
+}
+
+/* The right column is a size container: a narrow column drops detail. */
+@container (max-width: 420px) {
+  .detail {
+    display: none;
+  }
+}
+
+@container (max-width: 340px) {
+  .actionLabel {
+    display: none;
+  }
+}

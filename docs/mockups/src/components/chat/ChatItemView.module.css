@@ -36,6 +36,10 @@
   margin: 0;
 }
 
+.agent pre {
+  margin: 0;
+}
+
 .agent ul {
   margin: 0;
   padding-left: 20px;

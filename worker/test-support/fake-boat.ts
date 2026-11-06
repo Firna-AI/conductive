@@ -3,17 +3,24 @@ import type { BoatAccount } from '../sandbox/provider'
 
 export class FakeBoat {
   requests: Request[] = []
-  accounts = new Map<string, BoatAccount>([
-    ['boat-first', { id: 'team-one', type: 'org' }],
-    ['boat-rotated', { id: 'team-one', type: 'org' }],
-    ['boat-other', { id: 'team-two', type: 'org' }],
-    ['boat-personal', { id: 'user-one', type: 'personal' }],
-  ])
+  accounts = defaultAccounts()
   failure: { status: number; code: string } | null = null
   responseOverride: Response | null = null
+  /** One-shot factories return fresh bodies without clone/tee buffering. */
+  responseFactories: ((request: Request) => Response)[] = []
+
+  reset(options: { accounts?: boolean } = {}) {
+    this.requests = []
+    if (options.accounts) this.accounts = defaultAccounts()
+    this.failure = null
+    this.responseOverride = null
+    this.responseFactories = []
+  }
 
   fetch: HttpFetch = async (request) => {
     this.requests.push(request.clone())
+    const factory = this.responseFactories.shift()
+    if (factory) return factory(request)
     if (this.responseOverride) return this.responseOverride.clone()
     if (this.failure) {
       return Response.json(
@@ -64,4 +71,13 @@ export class FakeBoat {
       sandbox: { id: 'bx_one', state: 'ready' },
     })
   }
+}
+
+function defaultAccounts() {
+  return new Map<string, BoatAccount>([
+    ['boat-first', { id: 'team-one', type: 'org' }],
+    ['boat-rotated', { id: 'team-one', type: 'org' }],
+    ['boat-other', { id: 'team-two', type: 'org' }],
+    ['boat-personal', { id: 'user-one', type: 'personal' }],
+  ])
 }

@@ -1,6 +1,15 @@
 import type { HttpFetch } from '../env'
+import { readSandboxFile } from './file-read'
 import { readAccount, readCommand, readSandbox, readSnapshot } from './parsers'
-import type { BoatAccount, SandboxProvider, SandboxStart } from './provider'
+import type {
+  BoatAccount,
+  SandboxProvider,
+  SandboxStart,
+  PrivatePort,
+  PortMode,
+  SandboxDesktop,
+} from './provider'
+import { ProviderError } from './errors'
 import { BoatTransport } from './transport'
 
 export class BoatClient implements SandboxProvider {
@@ -8,6 +17,89 @@ export class BoatClient implements SandboxProvider {
 
   constructor(key: string, fetch: HttpFetch, account: BoatAccount) {
     this.transport = new BoatTransport(key, fetch, account)
+  }
+
+  readFile(sandboxId: string, path: string, maxBytes: number) {
+    return readSandboxFile(this.transport, sandboxId, path, maxBytes)
+  }
+
+  async privatePort(
+    sandboxId: string,
+    port: number,
+    mode: PortMode,
+  ): Promise<PrivatePort> {
+    if (!Number.isInteger(port) || port < 1 || port > 65535)
+      throw new ProviderError('invalid_request', 400)
+    const value = await this.transport.request(
+      { operation: 'host', sandboxId },
+      {
+        port,
+        public: false,
+        localhost: mode === 'localhost',
+      },
+    )
+    if (
+      value.type !== 'port.hosted' ||
+      value.port !== port ||
+      value.access !== 'private' ||
+      value.isProtected !== true ||
+      typeof value.url !== 'string'
+    ) {
+      throw new ProviderError('invalid_response', 502)
+    }
+    let url: URL
+    try {
+      url = new URL(value.url)
+    } catch {
+      throw new ProviderError('invalid_response', 502)
+    }
+    const token = url.searchParams.get('_token')
+    if (
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      url.port ||
+      !new RegExp(`^[a-z0-9-]+-${port}\\.on\\.boat\\.dev$`).test(
+        url.hostname,
+      ) ||
+      url.pathname !== '/' ||
+      url.hash ||
+      url.searchParams.getAll('_token').length !== 1 ||
+      !token ||
+      !/^[\x21\x23-\x2b\x2d-\x3a\x3c-\x5b\x5d-\x7e]+$/.test(token)
+    ) {
+      throw new ProviderError('invalid_response', 502)
+    }
+    return { origin: url.origin, token }
+  }
+
+  async desktop(sandboxId: string): Promise<SandboxDesktop> {
+    const value = await this.transport.request(
+      { operation: 'desktop', sandboxId },
+      {},
+    )
+    if (value.type === 'desktop.provisioning' && value.provisioning === true) {
+      return { kind: 'starting' }
+    }
+    if (value.type !== 'desktop.url' || typeof value.desktopUrl !== 'string')
+      throw new ProviderError('invalid_response', 502)
+    let url: URL
+    try {
+      url = new URL(value.desktopUrl)
+    } catch {
+      throw new ProviderError('invalid_response', 502)
+    }
+    const fragment = new URLSearchParams(url.hash.slice(1))
+    if (
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      url.searchParams.has('_token') ||
+      url.searchParams.has('token') ||
+      !fragment.get('token')
+    )
+      throw new ProviderError('invalid_response', 502)
+    return { kind: 'ready', url: url.href }
   }
 
   static async inspectAccount(

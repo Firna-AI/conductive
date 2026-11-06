@@ -3,6 +3,7 @@ import { boatKeyStatus, readBoatKey, saveBoatKey } from '../data/boat-keys'
 import { findMembership } from '../data/orgs'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
+import { assertCanMaintainOrgKey } from '../members/key-maintenance'
 import { decrypt, encrypt } from '../security/crypto'
 import { BoatClient } from './boat'
 import { ProviderError } from './errors'
@@ -15,10 +16,12 @@ function keyContext(orgId: string, account: BoatAccount): string {
 export async function storeBoatKey(
   env: AppEnv,
   orgId: string,
+  userId: string,
   key: string,
   fetch: HttpFetch,
   now: number,
 ): Promise<BoatKeyStatus> {
+  await assertCanMaintainOrgKey(env.DB, orgId, userId)
   const stored = await readBoatKey(env.DB, orgId)
   const expected: BoatAccount | undefined = stored
     ? { id: stored.accountId, type: stored.accountType }
@@ -49,7 +52,8 @@ export async function storeBoatKey(
     keyContext(orgId, account),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
-  if (!(await saveBoatKey(env.DB, orgId, account, ciphertext, now))) {
+  if (!(await saveBoatKey(env.DB, orgId, userId, account, ciphertext, now))) {
+    await assertCanMaintainOrgKey(env.DB, orgId, userId)
     throw new HttpError(
       409,
       'boat_account_mismatch',
@@ -57,6 +61,27 @@ export async function storeBoatKey(
     )
   }
   return boatKeyStatus(env.DB, orgId)
+}
+
+/** Internal server loader. Callers must authorize the org and its resource first. No plaintext credential leaves it. */
+export async function storedOrgSandboxProvider(
+  env: AppEnv,
+  orgId: string,
+  fetch: HttpFetch,
+  missingKeyMessage = 'Ask an org admin to add its cloud computer key.',
+): Promise<SandboxProvider> {
+  const stored = await readBoatKey(env.DB, orgId)
+  if (!stored) throw new HttpError(409, 'boat_key_required', missingKeyMessage)
+  const account: BoatAccount = {
+    id: stored.accountId,
+    type: stored.accountType,
+  }
+  const key = await decrypt(
+    stored.ciphertext,
+    keyContext(orgId, account),
+    env.BOAT_KEY_ENCRYPTION_KEY,
+  )
+  return new BoatClient(key, fetch, account)
 }
 
 /** The key stays inside the adapter. Callers receive no plaintext credential. */
@@ -69,21 +94,12 @@ export async function orgSandboxProvider(
   if (!(await findMembership(env.DB, orgId, userId))) {
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
   }
-  const stored = await readBoatKey(env.DB, orgId)
-  if (!stored)
-    throw new HttpError(
-      409,
-      'boat_key_required',
-      'Add the org’s Boat key to continue.',
-    )
-  const account: BoatAccount = {
-    id: stored.accountId,
-    type: stored.accountType,
-  }
-  const key = await decrypt(
-    stored.ciphertext,
-    keyContext(orgId, account),
-    env.BOAT_KEY_ENCRYPTION_KEY,
+  return storedOrgSandboxProvider(
+    env,
+    orgId,
+    fetch,
+    'Add the org’s Boat key to continue.',
   )
-  return new BoatClient(key, fetch, account)
 }
+
+export { storedOrgSandboxProvider as authorizedOrgSandboxProvider }

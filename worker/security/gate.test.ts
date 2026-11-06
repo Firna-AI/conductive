@@ -179,8 +179,13 @@ it('accepts only a JSON object for writes before route dispatch', async () => {
     })
     expect(response.status, input.body).toBe(input.status)
   }
-  const valid = await harness.request(API_PATHS.orgs, session, {
+  const valid = await harness.fetch(API_PATHS.orgs, {
     method: 'POST',
+    headers: {
+      Cookie: session,
+      Origin: TEST_ORIGIN,
+      'Content-Type': ' Application/JSON ; charset=UTF-8 ',
+    },
     body: '{"name":"Team"}',
   })
   expect(valid.status).toBe(201)

@@ -1,5 +1,5 @@
 import { InputFrame } from '@firna/ui/input'
-import { AtSign, UserPlus } from 'lucide-react'
+import { Mail, UserPlus } from 'lucide-react'
 import {
   acmeInvites,
   acmeMembers,
@@ -13,20 +13,24 @@ import { Section } from '../settings/Section'
 import { MemberList } from './MemberList'
 import styles from './Members.module.css'
 
-/** The invite of an admin, by GitHub login. */
+/**
+ * The invite of an admin, by email. The person joins with a GitHub account
+ * that has that email verified, when they accept.
+ */
 function InviteSection() {
   const { field } = useControlSizes()
   return (
     <Section
-      description="Invite a person by their GitHub login. They join when they accept."
+      description="Invite a person by an email that is verified on their GitHub account. They join when they accept."
       title="Invite a member"
     >
       <div className={styles.invite}>
         <InputFrame
-          accessibilityLabel="GitHub login"
+          accessibilityLabel="Email"
+          inputMode="email"
           onChangeText={noop}
-          placeholder="GitHub login"
-          prefixIcon={AtSign}
+          placeholder="Email"
+          prefixIcon={Mail}
           size={field}
           value=""
         />
@@ -37,7 +41,7 @@ function InviteSection() {
 }
 
 /**
- * The members of an org: an invite by GitHub login, then each member with
+ * The members of an org: an invite by email, then each member with
  * their role. Admins manage the members and who owns each workspace. A
  * member who is not an admin sees the members and their roles, without
  * the invite and without actions.

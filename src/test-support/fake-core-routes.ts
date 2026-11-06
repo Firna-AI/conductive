@@ -13,6 +13,7 @@ import {
   buildEventsPath,
   buildPath,
   orgSettingsPaths,
+  repositoryPath,
 } from '../shared/org-settings'
 import { deleteOrgPath, leaveOrgPath, restoreOrgPath } from '../shared/orgs'
 import { sectionPath, sectionsPath } from '../shared/sections'
@@ -36,6 +37,7 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
     ACCOUNT_PATHS.githubInstallations,
     data.githubInstallations,
   )
+  routes.json('GET', ACCOUNT_PATHS.githubRepositories, data.githubRepositories)
   routes.json('PUT', ACCOUNT_PATHS.defaultModel, {
     choice: data.account.defaultChoice,
   })
@@ -46,12 +48,7 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   }
   routes.json('GET', GET_STARTED_PATH, data.getStarted)
   routes.json('GET', API_PATHS.orgs, data.orgs)
-  routes.json(
-    'POST',
-    API_PATHS.orgs,
-    { org: { id: 'labs', name: 'Acme Labs', role: 'admin' } },
-    201,
-  )
+  routes.json('POST', API_PATHS.orgs, data.createdOrg, 201)
   routes.json('GET', orgPath(id), { org })
   routes.json('PATCH', orgPath(id), { org })
   routes.json('POST', deleteOrgPath(id), {
@@ -74,7 +71,17 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
     routes.empty('DELETE', sectionPath(id, section.id))
   }
   routes.json('GET', orgSettingsPaths.repositories(id), data.repositories)
-  routes.json('PUT', orgSettingsPaths.repositories(id), data.repositories)
+  for (const repository of data.repositories.repositories) {
+    for (const method of ['PUT', 'DELETE'] as const) {
+      routes.json(method, repositoryPath(id, repository.id), {
+        repositories: data.repositories.repositories.map((item) => ({
+          ...item,
+          selected:
+            item.id === repository.id ? method === 'PUT' : item.selected,
+        })),
+      })
+    }
+  }
   routes.json('GET', orgSettingsPaths.settings(id), data.settings)
   routes.json('PATCH', orgSettingsPaths.settings(id), data.settings)
   routes.json('GET', orgSettingsPaths.builds(id), data.builds)
