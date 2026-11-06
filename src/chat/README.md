@@ -48,7 +48,10 @@ agent runner.
 - The chat sets no CSS position. A dialog or a sheet covers the nearest
   positioned frame: the app frame.
 - `useChatController` gives the controller and its snapshot to an app that
-  composes `SessionTabs` and `SessionChat` in its own layout.
+  composes `SessionTabs` and `SessionChat` in its own layout. Such an app
+  takes the tabs from `tabSessions`, and the session history from
+  `historySessions` with the times of `endedAt`, so an archived workspace
+  navigates without a write.
 
 ## Rules for this code
 
@@ -66,6 +69,14 @@ agent runner.
   content, such as live messages, a sent message, a running turn, or the
   start steps, keeps it and shows a failed load as a notice by the composer,
   with Try again. An empty chat shows the failure in place of the chat.
+- An archived workspace keeps its chat read-only, and the backend refuses
+  its writes. So its tabs change in the browser only. The session history
+  opens the stored history of any session as a tab, and a tab closes with
+  no write. A closed tab shows in the session history again, also the tab
+  of a session that was open at the archive. The session records do not
+  change, so a closed session stays closed. The controller's `select`,
+  `requestClose`, and `reopen` take this path while the workspace is
+  archived, and the server path otherwise.
 - Each draft has an identity. When a model of the other agent moves the draft
   to a new session, its files that still upload and its send in flight
   finish on the draft there.
@@ -154,6 +165,8 @@ on `FakeApiServer` and the recorded events, and render the chat with
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
+- `state/archive-view.ts`: the tabs and the session history of an archived
+  workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot
   that first shows the new session.
 - `state/session-records.ts`: the local versions of the session records and

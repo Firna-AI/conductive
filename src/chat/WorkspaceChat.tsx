@@ -6,6 +6,7 @@ import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import { SessionChat } from './components/SessionChat'
 import { SessionTabs } from './components/SessionTabs'
+import { endedAt, historySessions, tabSessions } from './state/archive-view'
 import { sessionState } from './state/chat-snapshot'
 import { systemClock, useNow, type Clock } from './ui/clock'
 import { useChatController, type ChatConnection } from './useChatController'
@@ -58,7 +59,12 @@ export function WorkspaceChat(props: WorkspaceChatProps) {
     (sessionId: string) => void controller.reopen(sessionId),
     [controller],
   )
-  const history = historyEntries(snapshot.history, now, reopen)
+  const history = historyEntries(
+    historySessions(snapshot),
+    now,
+    reopen,
+    (item) => endedAt(snapshot, item),
+  )
   const { overlay } = snapshot
   const body = (
     <>
@@ -76,7 +82,7 @@ export function WorkspaceChat(props: WorkspaceChatProps) {
         onStartRename={controller.startRename}
         readOnly={snapshot.workspace?.state === 'archived'}
         renaming={overlay.kind === 'rename' ? overlay.sessionId : null}
-        tabs={snapshot.sessions.map((session) => ({
+        tabs={tabSessions(snapshot).map((session) => ({
           id: session.id,
           title: session.title,
           selected: session.id === active,

@@ -15,6 +15,7 @@ import {
   type ChatSnapshot,
   type Overlay,
 } from './chat-snapshot'
+import { closeArchived, isArchived, showArchived } from './archive-view'
 import { applyEnvelopes, viewWriter, type ChatContext } from './context'
 import { hydrate, watchShownSession } from './history'
 import { loadChat } from './load'
@@ -125,21 +126,33 @@ export class ChatController {
     this.store.update((snapshot) => ({ ...snapshot, overlay }))
   }
 
+  /** An archived workspace changes its tabs in the browser only. */
+  private archived(): boolean {
+    return isArchived(this.store.get())
+  }
+
   readonly select = (sessionId: string) =>
-    selectSession(this.context, sessionId)
+    this.archived()
+      ? showArchived(this.context, sessionId)
+      : selectSession(this.context, sessionId)
   readonly newSession = () => newSession(this.context)
   readonly startRename = (sessionId: string) =>
     this.overlay({ kind: 'rename', sessionId })
   readonly rename = (sessionId: string, title: string) =>
     renameSession(this.context, sessionId, title)
-  readonly requestClose = (sessionId: string) =>
-    requestClose(this.context, sessionId)
+  readonly requestClose = async (sessionId: string): Promise<void> => {
+    if (!this.archived()) return requestClose(this.context, sessionId)
+    closeArchived(this.context, sessionId)
+  }
   readonly confirmClose = () => confirmClose(this.context)
   readonly showHistory = (open: boolean) =>
     this.overlay(open ? { kind: 'history' } : { kind: 'none' })
   readonly dismissOverlay = () => this.overlay({ kind: 'none' })
+  /** Reopens a closed session, or shows its history in an archived workspace. */
   readonly reopen = (sessionId: string) =>
-    reopenSession(this.context, sessionId)
+    this.archived()
+      ? showArchived(this.context, sessionId)
+      : reopenSession(this.context, sessionId)
   readonly loadHistory = (sessionId: string) =>
     hydrate(this.context, sessionId, true)
   readonly setDraft = (sessionId: string, text: string) =>

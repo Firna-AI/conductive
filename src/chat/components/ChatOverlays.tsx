@@ -2,7 +2,6 @@ import { RotateCcw, Square } from 'lucide-react'
 import type { Session } from '../../shared/sessions'
 import type { Overlay } from '../state/chat-snapshot'
 import { formatAgo } from '../state/format'
-import { sortHistory } from '../state/sessions'
 import { ActionButton } from '../ui/actions'
 import { Menu, type MenuEntry } from '../ui/Menu'
 import { ConfirmDialog, DialogText, Sheet } from '../ui/overlays'
@@ -11,24 +10,29 @@ import { AgentMark } from './AgentMark'
 /**
  * The sessions whose tabs the user closed, the last closed first: the mark
  * of the agent, the title, and the time since it closed. Each one reopens.
+ * `endedAt` gives the time that a session ended, by default its close.
  */
 export function historyEntries(
   history: readonly Session[],
   now: number,
   onReopen: (sessionId: string) => void,
+  endedAt: (session: Session) => number | null = (session) => session.closedAt,
 ): MenuEntry[] {
   if (history.length === 0) {
     return [{ kind: 'note', text: 'Sessions that you close show here.' }]
   }
-  return sortHistory(history).map((session) => ({
-    kind: 'item',
-    key: session.id,
-    label: session.title,
-    mark: <AgentMark agent={session.choice.agent} />,
-    detail: formatAgo(session.closedAt ?? now, now),
-    trailingIcon: RotateCcw,
-    onSelect: () => onReopen(session.id),
-  }))
+  const ended = (session: Session) => endedAt(session) ?? now
+  return [...history]
+    .sort((left, right) => ended(right) - ended(left))
+    .map((session) => ({
+      kind: 'item',
+      key: session.id,
+      label: session.title,
+      mark: <AgentMark agent={session.choice.agent} />,
+      detail: formatAgo(ended(session), now),
+      trailingIcon: RotateCcw,
+      onSelect: () => onReopen(session.id),
+    }))
 }
 
 /**
