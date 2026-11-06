@@ -4230,6 +4230,12 @@ acceptance route.
 Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
 
 - [ ] Wire each feature's screens to its backend inside the app shell.
+- [ ] Connect the lifecycle hooks of the Milestone 15a members backend to
+      the workspace Durable Object and the sandboxes. `deleteWorkspaceState`
+      must delete the chat history of the workspace. Run
+      `cleanupDeletedOrgs` on a Cron Trigger, so that Delete org removes
+      everything of the org after 7 days, as the orgs protocol says.
+      Added on 6 November 2026, because no milestone connected these hooks.
 - [ ] Run the complete gate, and compare each screen with its mockup.
 
 ## Milestone 15d: Marketing site
