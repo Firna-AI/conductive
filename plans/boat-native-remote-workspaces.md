@@ -1983,51 +1983,62 @@ Added on 5 November 2026 from decision 44.
   dropped. The follow-up item on terms, suspension, and abuse reports
   stays.
 
-### 49. Decide who may run code in another member's workspace
+### 49. Decide whose login runs a teammate's message
 
-Open. Added on 5 November 2026 from the Milestone 2 docs, item 1.
+Open. Added on 5 November 2026 from the Milestone 2 docs, item 1. Changed
+on 6 November 2026 after the user asked how Conductor handles a message
+from a teammate: options D and E are new, and the recommendation moved
+from C to D.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Security.
-- **Background:** Decision 24 runs each workspace's agents on its owner's
-  own Claude or Codex login. A cloud computer gets those logins at each
-  start, and every process in it can read them. The user said that all
-  members of an org see its workspaces. The mockups let any member open
-  another member's workspace with the composer, the terminal, and the
-  tools. The org's startup script runs in every cloud computer of the
-  org.
-- **Problem:** No decision says what a member may do in a workspace that
-  another member owns, or who may edit the org's scripts. As drawn, a
-  member can drive another member's agents, or read that member's Claude
-  token or API keys from the terminal.
+- **Background:**
+  - Decision 24 runs each workspace's agents on its owner's own Claude or
+    Codex login. A cloud computer gets that login at each start, and
+    every process in it can read it.
+  - The user said that all members of an org see its workspaces. The
+    mockups let any member send messages in another member's workspace,
+    and open its terminal.
+  - The org's startup script runs in every cloud computer of the org.
+  - Conductor's docs let teammates write in each other's chats, but do
+    not say whose login a message uses. Conductor's runtime code on this
+    machine makes each new message set its sender as the session's user,
+    and attaches the sender's GitHub token to that message.
+- **Problem:** No rule says whose login runs a teammate's message, or who
+  can reach a login in a shared cloud computer. As planned, a teammate's
+  message runs on the owner's login, and a teammate can read that login
+  from the terminal.
 - **Impact if no action:** One member can spend or copy another member's
   personal agent login.
-- **Root question:** Within one org, who may run code in a cloud computer
-  that holds another member's logins?
+- **Root question:** When a member sends a message in another member's
+  workspace, whose login runs the agent, and who can reach that login?
 - **Options:**
-  - **A.** Change nothing. Every member uses every workspace and edits the
-    scripts. The docs say that an org's members can reach each other's
-    logins. Effort: Small.
+  - **A.** Change nothing. The owner's login runs every turn, and every
+    member uses every workspace and edits the scripts. Effort: Small.
   - **B.** Only the workspace owner sends messages and uses the terminal,
     the previews, and the desktop. Other members see the chat and the
-    files read-only. The scripts stay a path to the logins. Effort:
-    Small.
+    files read-only. Effort: Small.
   - **C.** As B, and only org owners edit the install script, the startup
     script, and the env vars. Effort: Medium.
-- **Left out:**
-  - A Worker proxy that adds the logins to each model request, so that no
-    cloud computer holds them: it is a Large build, and no decision
-    covers routing model use through the app.
-  - One image for each member, because decision 13 chose one image for
-    each org.
-- **Wider fix:** C. It closes each path from a member to another member's
-  logins.
-- **Related:** Decision 50 has the same kind of reach for GitHub tokens.
-  Decision 54 can add an admin role that also edits the scripts.
-- **Recommendation:** C. A personal login then serves only its owner and
-  the org owners, who already control the org.
-- **Action:** ask the user, because it adds permission rules that no
-  decision covers, and it changes drawn screens.
+  - **D.** Each turn runs on the login of the person who sent the message,
+    as Conductor does. When the sender changes, the runner starts the
+    agent again with the sender's login, and the session keeps its
+    history. That turn's git pushes use the sender's GitHub token. A
+    member with a terminal in the same cloud computer can still read the
+    current sender's login while that turn runs. This changes decision
+    24. Effort: Medium.
+  - **E.** As D, but no login enters the cloud computer. An app proxy adds
+    the sender's login to each model request. Effort: Large.
+- **Left out:** One image for each member, because decision 13 chose one
+  image for each org.
+- **Wider fix:** E. It keeps every login off the shared machines.
+- **Related:** Decision 50 sets the GitHub token. Under D, each turn uses
+  its sender's user token, which fits option A of decision 50. Decision
+  54 can add an admin role that also edits the scripts.
+- **Recommendation:** D. Members work together as in Conductor, and each
+  person's turns run on their own login.
+- **Action:** ask the user, because D changes decision 24, and each
+  option adds behaviour that no requirement covers.
 
 ### 50. Decide the reach of a cloud computer's GitHub token
 
