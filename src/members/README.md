@@ -24,18 +24,25 @@ the `*.test.*` files.
 
 The query string chooses the state:
 
-| Option     | Values                                                                                         |
-| ---------- | ---------------------------------------------------------------------------------------------- |
-| `view`     | `members` (default), `general`, `repositories`, `computer`, `boat-key`, `deleted`, `workspace` |
-| `org`      | `acme` (default), `futex`. Futex has other members, which makes stale data easy to find        |
-| `role`     | `admin` (default, Cal), `member` (Priya)                                                       |
-| `viewport` | `desktop` (default), `mobile`                                                                  |
-| `scheme`   | `dark` (default), `light`                                                                      |
-| `computer` | `history` (default), `running`, `failed`, `changed`, `live`                                    |
-| `fail`     | `invite`, `role`, `remove`, `cancel`, `reassign`, `delete`, `restore`, `load`, for Acme        |
-| `delay`    | A delay in ms before each reply, to show the busy states                                       |
-| `once`     | `1`: the failure of `fail` happens only for the first matching request                         |
-| `slow`     | `acme` or `futex`: the replies of that org wait four times the delay                           |
+| Option     | Values                                                                                                     |
+| ---------- | ---------------------------------------------------------------------------------------------------------- |
+| `view`     | `members` (default), `general`, `repositories`, `computer`, `boat-key`, `deleted`, `workspace`, `menu-lab` |
+| `org`      | `acme` (default), `futex`. Futex has other members, which makes stale data easy to find                    |
+| `role`     | `admin` (default, Cal), `member` (Priya)                                                                   |
+| `viewport` | `desktop` (default), `mobile`                                                                              |
+| `scheme`   | `dark` (default), `light`                                                                                  |
+| `computer` | `history` (default), `running`, `failed`, `changed`, `live`                                                |
+| `fail`     | `invite`, `role`, `remove`, `cancel`, `reassign`, `delete`, `restore`, `load`, for Acme                    |
+| `delay`    | A delay in ms before each reply, to show the busy states                                                   |
+| `once`     | `1`: the failure of `fail` happens only for the first matching request                                     |
+| `slow`     | `acme` or `futex`: the replies of that org wait four times the delay                                       |
+| `people`   | The number of Acme's members, up to 40, such as `40` for a long owner menu. `0` (default): the fixtures    |
+| `top`      | For `menu-lab`: the space in px above the owner button, `96` by default                                    |
+
+The `menu-lab` view shows the desktop owner menu on a page that scrolls. Its
+owner button is in a box with `overflow: hidden`. Use it with `people=40` to
+check a long menu in a real browser. A large `top`, such as `760`, puts the
+button low in the window, so the menu opens above it.
 
 The dev page keeps its state in the address. Back and Forward change the
 scope without a reload, so the mounted parts get new props, as in the app
@@ -80,8 +87,12 @@ with the message of the API.
   new owner. The cloud computer keeps running.
 - `onMemberRemoved` tells the shell that the member's workspaces now belong
   to the viewer, so it can load the workspace list again.
-- The menus open below their button. Do not put the button in a box with
-  `overflow: hidden`.
+- On desktop, a menu opens as a popover in the top layer of the page. So a
+  box with `overflow: hidden` around its button does not cut the menu. The
+  menu opens below its button when it fits. Otherwise it opens on the side
+  with more room, and it gets shorter to fit. It follows its button when the
+  page scrolls or the window changes size. In a long menu, only the choices
+  scroll. The heading, an error, and the note stay in view.
 
 ### Live builds
 
@@ -125,12 +136,30 @@ The dev page and the tests use `FakeApiServer` from
 replies and change no later reply. So `dev/devServer.ts` records, before each
 write, the reply that the real API gives for the values of the request: the
 invited login, the new role, and the new owner. A new invite also gets its
-DELETE reply, so that the person can cancel it. `dev/devOrgs.ts` adds the
+DELETE reply, so that the person can cancel it. With `people`, these replies
+use the generated members. So each of them can become the owner, get a new
+role, or be removed. `dev/devOrgs.ts` adds the
 replies of Futex, which the fake does not have. A reload of the page shows
 the fake's first state again. The dev page uses `FAKE_TIME` as its clock.
 `dev/devComputer.ts` adds a build history, a running or failed build, and
 the live scene, where two dev buttons give the mounted `MemberComputerView`
 new props.
+
+## Tests
+
+`npm run test -- src/members` runs the tests of this folder. The
+`*.dom.test.tsx` files mount the components in happy-dom with
+[the mount helper](../test-support/README.md#mounted-tests). They use the
+buttons, the fields, and the keys that a person uses, with the real
+callbacks and `FakeApiServer`. The other test files run in Node.
+
+- happy-dom has no Popover API. So the mounted owner picker tests use the
+  phone sheet, which opens with `showModal()`. Check the desktop popover, its
+  placement, and its scroll in a real browser, with the `menu-lab` view.
+- The spinner of `@firna/ui` runs a continuous animation, which keeps an
+  async `act` from settling in happy-dom. So the mounted tests use a
+  finished or failed build. A running build or a busy choice needs a
+  controlled animation clock or a real browser.
 
 ## Limits
 

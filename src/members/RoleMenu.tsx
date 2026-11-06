@@ -28,6 +28,7 @@ export function RoleMenu(props: {
   const label = roleLabels[member.role]
   return (
     <ChoiceMenu
+      align="end"
       choices={roleChoices}
       group="Role"
       label={`Role of ${name}`}
@@ -37,7 +38,6 @@ export function RoleMenu(props: {
         if (role !== member.role) props.onChange(role)
       }}
       open={open}
-      placement="below-end"
       selected={member.role}
       sheetTitle={name}
       trigger={(trigger) => (

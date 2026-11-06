@@ -5,6 +5,7 @@ import {
   memberPath,
   membersPath,
   workspaceOwnerPath,
+  type OrgMember,
 } from '../../shared/members'
 import { orgSettingsPaths } from '../../shared/org-settings'
 import { deleteOrgPath, restoreOrgPath } from '../../shared/orgs'
@@ -13,6 +14,7 @@ import { FAKE_ORIGIN, FAKE_TIME } from '../../test-support/fixtures/core'
 import type { FetchLike } from '../api/client'
 import { isObject } from '../api/json'
 import { computerReplies, type ComputerScene } from './devComputer'
+import { devPeople } from './devPeople'
 import {
   addFutexRoutes,
   devMembers,
@@ -83,6 +85,8 @@ function failure(kind: DevFailure): Response {
 function replyToWrite(
   server: FakeApiServer,
   org: DevOrgId,
+  /** The members that the dev page shows for the org. */
+  members: readonly OrgMember[],
   request: { method: string; path: string; body: unknown },
 ) {
   const { method, path, body } = request
@@ -98,7 +102,7 @@ function replyToWrite(
     server.json('POST', path, { invite }, 201)
     server.empty('DELETE', invitePath(org, invite.id))
   }
-  for (const member of devMembers(org).members) {
+  for (const member of members) {
     const next = body.role
     if (method === 'PATCH' && path === memberPath(org, member.user.id)) {
       if (next === 'admin' || next === 'member') {
@@ -139,12 +143,24 @@ export function createDevFetch(options: {
   delay: number
   slow: DevOrgId | null
   computer: ComputerScene
+  /** The number of Acme's members, or 0 for the fixtures. */
+  people: number
 }): FetchLike {
   const server = new FakeApiServer({ role: options.role })
   for (const reply of computerReplies(options.computer, 'acme')) {
     server.json('GET', reply.path, reply.body)
   }
   addFutexRoutes(server, options.role, options.computer)
+  const people = options.people > 0 ? devPeople(options.people) : null
+  if (people) {
+    server.json('GET', membersPath('acme'), people)
+    for (const member of people.members) {
+      server.empty('DELETE', memberPath('acme', member.user.id))
+    }
+  }
+  // The writes get their replies from the same members as the reads.
+  const membersOf = (org: DevOrgId) =>
+    org === 'acme' && people ? people.members : devMembers(org).members
   const delay = options.delay || (options.slow ? 250 : 0)
   let pending = 0
   let failed = 0
@@ -168,7 +184,11 @@ export function createDevFetch(options: {
       }
       if (request.method !== 'GET' && org !== null) {
         const body: unknown = await request.json().catch(() => null)
-        replyToWrite(server, org, { method: request.method, path, body })
+        replyToWrite(server, org, membersOf(org), {
+          method: request.method,
+          path,
+          body,
+        })
       }
       return await server.fetch(input, init)
     } finally {

@@ -14,6 +14,7 @@ export const devViews = [
   'members',
   'deleted',
   'workspace',
+  'menu-lab',
 ] as const
 export type DevView = (typeof devViews)[number]
 
@@ -32,6 +33,10 @@ export type DevOptions = {
   /** An org whose replies wait four times as long as the others. */
   slow: DevOrgId | null
   computer: ComputerScene
+  /** The number of Acme's members, such as 40, or 0 for the fixtures. */
+  people: number
+  /** The menu lab's space above its owner button, in px. */
+  top: number
 }
 
 function pick<T extends string>(
@@ -40,6 +45,12 @@ function pick<T extends string>(
   fallback: T,
 ): T {
   return values.find((value) => value === raw) ?? fallback
+}
+
+/** A whole number of 0 or more from the query string, or the fallback. */
+function count(raw: string | null, fallback: number): number {
+  const value = Number(raw ?? fallback)
+  return Number.isInteger(value) && value >= 0 ? value : fallback
 }
 
 export function readDevOptions(params: URLSearchParams): DevOptions {
@@ -59,6 +70,8 @@ export function readDevOptions(params: URLSearchParams): DevOptions {
     delay: Number.isFinite(delay) && delay > 0 ? delay : 0,
     slow: devOrgIds.find((item) => item === params.get('slow')) ?? null,
     computer: pick(computerScenes, params.get('computer'), 'history'),
+    people: count(params.get('people'), 0),
+    top: count(params.get('top'), 96),
   }
 }
 
@@ -76,6 +89,8 @@ export function devHref(options: DevOptions, view: DevView): string {
   if (options.once) params.set('once', '1')
   if (options.delay > 0) params.set('delay', String(options.delay))
   if (options.slow) params.set('slow', options.slow)
+  if (options.people > 0) params.set('people', String(options.people))
+  if (options.view === 'menu-lab') params.set('top', String(options.top))
   return `?${params.toString()}`
 }
 

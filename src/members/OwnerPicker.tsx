@@ -125,6 +125,7 @@ function ScopedOwnerPicker(props: OwnerPickerProps) {
   return (
     <ViewportScope inline viewport={props.viewport}>
       <ChoiceMenu
+        align="end"
         busy={busy}
         choices={list.map((member) => ({
           value: member.user.id,
@@ -140,7 +141,6 @@ function ScopedOwnerPicker(props: OwnerPickerProps) {
         onOpenChange={changeOpen}
         onSelect={(userId) => void select(userId)}
         open={open}
-        placement="below-end"
         selected={workspace.owner.id}
         sheetTitle={workspace.name}
         status={statusText(members)}

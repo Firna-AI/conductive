@@ -63,7 +63,12 @@ function Item<T extends string>(props: {
       onClick={() => {
         if (!props.waiting) props.onSelect(choice.value)
       }}
-      onPointerMove={(event) => event.currentTarget.focus()}
+      onPointerMove={(event) => {
+        // A pointer that rests over a choice must not scroll the list.
+        if (event.currentTarget !== document.activeElement) {
+          event.currentTarget.focus({ preventScroll: true })
+        }
+      }}
       role="menuitemradio"
       tabIndex={-1}
       type="button"

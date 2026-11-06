@@ -17,6 +17,7 @@ import {
   DevWorkspaceFrame,
 } from './DevFrame'
 import { DevLiveComputer } from './DevLiveComputer'
+import { DevMenuLab } from './DevMenuLab'
 import { useDevOptions, type DevOptions } from './devOptions'
 import { devWorkspace, type DevOrgId } from './devOrgs'
 import { createDevFetch } from './devServer'
@@ -115,13 +116,21 @@ function useHeaderWorkspace(org: DevOrgId) {
  */
 export function DevHost() {
   const [options, navigate] = useDevOptions()
-  const { role, failure, once, delay, slow, computer } = options
+  const { role, failure, once, delay, slow, computer, people } = options
   const api = useMemo(
     () =>
       createMembersApi(
-        createDevFetch({ role, failure, once, delay, slow, computer }),
+        createDevFetch({
+          role,
+          failure,
+          once,
+          delay,
+          slow,
+          computer,
+          people,
+        }),
       ),
-    [role, failure, once, delay, slow, computer],
+    [role, failure, once, delay, slow, computer, people],
   )
   const fixtures = coreFixtures(role)
   const active =
@@ -147,6 +156,9 @@ export function DevHost() {
         />
       </DevMainFrame>
     )
+  }
+  if (options.view === 'menu-lab') {
+    return <DevMenuLab api={api} options={options} />
   }
   if (options.view === 'workspace') {
     return (

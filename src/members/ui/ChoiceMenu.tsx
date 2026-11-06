@@ -8,6 +8,7 @@ import {
 import type { ButtonHandle } from './actions'
 import { useViewport } from './controls'
 import { MenuPanel, type MenuChoice } from './MenuPanel'
+import { PopoverSurface, type MenuAlign } from './PopoverSurface'
 import { Sheet } from './Sheet'
 import styles from './ChoiceMenu.module.css'
 
@@ -22,7 +23,8 @@ export type MenuTriggerProps = {
 
 /**
  * A button that opens a menu of choices, one of them marked as current.
- * Desktop opens the menu below the button. A phone opens it as a sheet.
+ * Desktop opens the menu as a popover beside the button: below when it
+ * fits, otherwise on the side with more room. A phone opens it as a sheet.
  * Arrow keys move between the choices, and Escape, Tab, or a press outside
  * closes the menu. The parent owns `open`, so it decides whether a choice
  * closes the menu at once or after its change.
@@ -47,7 +49,8 @@ export function ChoiceMenu<T extends string>(props: {
   onSelect: (value: T) => void
   /** The title of the sheet on a phone. */
   sheetTitle: string
-  placement: 'below-start' | 'below-end'
+  /** Which edge of the desktop menu lines up with the same edge of the button. */
+  align: MenuAlign
   wide?: boolean
   trigger: (trigger: MenuTriggerProps) => ReactNode
 }) {
@@ -109,7 +112,6 @@ export function ChoiceMenu<T extends string>(props: {
       status={props.status}
     />
   )
-  const placement = `${styles.menu} ${styles[props.placement]}`
   return (
     <>
       <span
@@ -123,11 +125,9 @@ export function ChoiceMenu<T extends string>(props: {
           onPress: () => onOpenChange(!open),
         })}
         {open && !mobile ? (
-          <div
-            className={props.wide ? `${placement} ${styles.wide}` : placement}
-          >
+          <PopoverSurface align={props.align} anchor={anchor} wide={props.wide}>
             {panel}
-          </div>
+          </PopoverSurface>
         ) : null}
       </span>
       {open && mobile ? (
