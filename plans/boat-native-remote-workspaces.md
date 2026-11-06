@@ -2441,11 +2441,10 @@ longer - what could be done to do a minimal version?"
 - **Recommendation:** E.
 - **Chosen:** E, by the user on 6 November 2026. The follow-up item is
   `plans/follow-ups/move-backend-to-rust-and-postgres.md`.
-- **Changed by the user on 6 November 2026:** the Rust backend starts now,
-  in parallel, as part of this plan, and it does not block the first merge
-  (decision 71). Decisions 73, 74, and 75 set its shape, its database, and
-  its host. The Rust backend track below holds the work that the
-  follow-up item held.
+- **Changed by the user on 6 November 2026:** the Rust backend started in
+  parallel (decision 71), and decisions 73, 74, and 75 set its shape, its
+  database, and its host. The same day, the user parked it again, outside
+  this plan. The follow-up item holds the work and those decisions.
 
 ### 62. Add a Mac app in parallel
 
@@ -2555,7 +2554,7 @@ runner? can we make it rust not node for the agent runner".
   then changed the answer to D the same day. The runner is a Node program
   now. It moves to option C, a Rust runner with a small Node helper for
   the two SDKs, with the Rust backend move of decision 61, as
-  Milestone R8 of the Rust backend track says.
+  `plans/follow-ups/move-backend-to-rust-and-postgres.md` says.
 
 ### 64. Decide what the banner shows when GitHub blocks a merge
 
@@ -2774,6 +2773,9 @@ each org".
   does not block the first merge. The database for each org becomes part
   of the Rust backend's design. This changes the timing of decision 61 E,
   which moved to Rust only after the first usable release.
+- **Changed by the user on 6 November 2026:** the Rust work is parked and
+  leaves this plan. `plans/follow-ups/move-backend-to-rust-and-postgres.md`
+  holds it, with decisions 73, 74, and 75.
 
 ### 72. Name the member who stopped the agent
 
@@ -2795,53 +2797,22 @@ Added on 6 November 2026 from the Milestone 8 work.
 
 ### 73. Decide the shape of the Rust backend
 
-Added on 6 November 2026 from decision 71.
-
-- **Severity:** High. **Effort:** Large.
-- **Source:** Design. **Category:** Code structure.
-- **Options:**
-  - **A.** One Rust server for everything, with Cloudflare only for DNS
-    and TLS. Effort: Large.
-  - **B.** A Rust API with Postgres, and the Durable Objects kept for the
-    live connections. Effort: Large.
-  - **C.** Mokly Cloud's layout: a thin Cloudflare Worker at the edge for
-    the static app, the marketing site, and the preview domain, and one
-    Rust server behind it for the API, the data, the webhooks, and the
-    live connections. Effort: Large.
-- **Left out:** Rust compiled for Workers, as decision 61 says.
-- **Recommendation:** C.
-- **Chosen:** C, by the user on 6 November 2026.
+Added and answered on 6 November 2026 (C). The user parked the
+Rust work the same day, so the decision with its options moved to
+`plans/follow-ups/move-backend-to-rust-and-postgres.md`.
 
 ### 74. Decide the database for each org in Postgres
 
-Added on 6 November 2026 from decision 71.
-
-- **Severity:** High. **Effort:** Medium.
-- **Source:** Design. **Category:** Code structure.
-- **Options:**
-  - **A.** One schema for each org in one Postgres instance. Effort:
-    Medium.
-  - **B.** One database for each org in one instance. Effort: Medium to
-    Large.
-  - **C.** One Neon project for each org. Effort: Large.
-- **Recommendation:** A.
-- **Chosen:** by the user on 6 November 2026: keep every org in one
-  Postgres database. Each query that reads org records takes the org ID,
-  as the design of the Rust backend track says.
+Added and answered on 6 November 2026: one Postgres database for every
+org. The user parked the Rust work the same day, so the decision with its
+options moved to
+`plans/follow-ups/move-backend-to-rust-and-postgres.md`.
 
 ### 75. Decide where the Rust backend runs
 
-Added on 6 November 2026 from decision 71.
-
-- **Severity:** Medium. **Effort:** Medium.
-- **Source:** Design. **Category:** Process.
-- **Options:**
-  - **A.** GCP as in Mokly Cloud: GKE Autopilot and Cloud SQL Postgres in
-    an EU region, with Terraform and Helm. Effort: Medium.
-  - **B.** GCP Cloud Run and Cloud SQL. Effort: Medium.
-  - **C.** Fly.io in Frankfurt, with a managed Postgres. Effort: Medium.
-- **Recommendation:** A.
-- **Chosen:** A, by the user on 6 November 2026.
+Added and answered on 6 November 2026 (A). The user parked the
+Rust work the same day, so the decision with its options moved to
+`plans/follow-ups/move-backend-to-rust-and-postgres.md`.
 
 ## Design
 
@@ -3985,122 +3956,3 @@ Depends on: every other milestone except 15e and 15f
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this
       plan, and the follow-up items that the change adds.
-
-## Rust backend track
-
-This track builds the Rust backend of decisions 61, 71, 73, 74, and 75
-beside the TypeScript backend. Milestone 17 and the first merge do not
-wait for it. The work that remains at the first merge moves to a new
-plan.
-
-The target, from decision 73 C: a thin Cloudflare Worker at the edge
-serves the static app, the marketing site, and the preview domain, as
-Mokly Cloud's origin router does. One Rust server behind it serves the
-API, the data, the GitHub webhooks, the machine host, and the live
-connections. One Postgres database holds every org (decision 74). It runs
-on GCP: GKE Autopilot and Cloud SQL Postgres in an EU region, with
-Terraform and Helm, and Cloudflare for DNS and TLS (decision 75).
-
-Agent calls on 6 November 2026:
-
-- The Rust server uses axum, tokio, tower-http, diesel, and utoipa, as
-  Mokly Cloud does. Reason: the user's proven stack, and the `rust`,
-  `databases`, and `shared-types` skills.
-- The Cargo workspace sits at the repository root, with its crates under
-  `crates/`, as in Mokly Cloud. The npm package stays as it is.
-- Each query that reads org records takes the org ID, in the Postgres
-  store crate. Reason: one database holds every org, so the store is the
-  one place that keeps the orgs apart.
-- The Rust server serves the contracts of `src/shared/` as they are. Types
-  generated from Rust replace them only at the switch.
-- One server process owns the live connections of each workspace, through
-  a lease row in Postgres. The other processes forward that workspace's
-  sockets to the owner. Reason: the Durable Objects give each workspace
-  one owner today, and the chat order depends on it.
-- The Rust checks run in their own CI job and their own command, not in
-  `npm run check`. Reason: they need Rust and Postgres, which the other
-  workspaces do not need.
-- The Rust agent runner of decision 63 D follows the server core.
-
-### Milestone R1: Rust workspace, Postgres schema, and server core
-
-Depends on: 4a
-
-- [ ] Add the Cargo workspace with the API, domain, store interface,
-      Postgres store, migrations, config, and test-support crates.
-- [ ] Write the Postgres schema for every D1 table in one database, with
-      diesel migrations.
-- [ ] Serve a health route and the OpenAPI document from axum. Add a
-      Postgres test harness with a disposable schema for each test, as
-      Mokly Cloud's `mkc-test-pg` does.
-- [ ] Add the Rust checks to CI and the commands to `AGENTS.md`.
-
-### Milestone R2: Sign-in, orgs, and members in Rust
-
-Depends on: R1
-
-- [ ] Port GitHub sign-in, the signed sessions, and the request gate with
-      its `Origin` rules of decision 60.
-- [ ] Port orgs, members, invitations, roles, Delete org, and Restore, as
-      Milestones 4 and 15a built them.
-- [ ] Test each route against the contracts of `src/shared/`.
-
-### Milestone R3: Boat client and workspace lifecycle in Rust
-
-Depends on: R1
-
-- [ ] Port the Boat client with its fixed routes, the bounded body reads
-      of decision 65, and the encrypted key store.
-- [ ] Port the workspace lifecycle of Milestone 5: create, the start steps,
-      stop, resume, the idle stop, and the image builds.
-
-### Milestone R4: Live connections in Rust
-
-Depends on: R2
-
-- [ ] Give each workspace one owner process for its tabs and its runner
-      connection, through a lease in Postgres.
-- [ ] Store the chat events in Postgres with their numbers and the resend
-      rules, and apply the 30-second access rule of decision 70.
-
-### Milestone R5: Feature backends in Rust
-
-Depends on: R2, R3, R4
-
-- [ ] Port the files backend, the terminal, previews, and desktop backend,
-      the GitHub banner backend, the agent tools, and the desktop sign-in.
-
-### Milestone R6: Edge Worker
-
-Depends on: R2
-
-- [ ] Reduce the Worker to an origin router, as Mokly Cloud's `ts/worker`
-      is: it serves the static app, the marketing site, and the preview
-      domain, and it forwards the API, the sockets, and the machine host
-      to the Rust server.
-
-### Milestone R7: GCP infrastructure
-
-Depends on: R1
-
-This milestone needs the user's GCP project.
-
-- [ ] Add Terraform for GKE Autopilot, Cloud SQL Postgres, and Secret
-      Manager in an EU region, and a Helm chart for the Rust server, as
-      Mokly Cloud's `infra/` does.
-- [ ] Deploy a staging environment, and smoke-test it.
-
-### Milestone R8: Rust agent runner
-
-Depends on: R4
-
-- [ ] Move the runner to Rust, with a small Node helper for the two agent
-      SDKs, as decision 63 D says.
-
-### Milestone R9: The switch
-
-Depends on: R5, R6, R7, R8
-
-- [ ] Generate the TypeScript types from Rust, and replace `src/shared/`.
-- [ ] Move the data from D1 when a deployment holds data, and switch the
-      web app to the Rust backend.
