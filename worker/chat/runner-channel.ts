@@ -2,10 +2,11 @@ import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import { HttpError } from '../http'
+import { RunnerFileReports } from '../files/runner-reports'
 import { RunnerDelivery } from './runner-delivery'
-import { parseRunnerMessage } from './runner-input'
+import { parseRunnerTransport } from './runner-input'
 import type { ChatStore } from './store'
-import { storeAgentEvent } from './turn-events'
+import { storeRunnerReceipt } from './runner-receipt'
 import type {
   ChatDependencies,
   ChatCallbackPublisher,
@@ -75,7 +76,7 @@ export class RunnerChannel {
   }
 
   private async handle(active: ActiveRunner, value: unknown): Promise<void> {
-    const message = parseRunnerMessage(value)
+    const message = parseRunnerTransport(value)
     if (message.type === 'hello') {
       if (active.streamId || message.workspaceId !== active.workspace.id) {
         throw new HttpError(
@@ -86,10 +87,15 @@ export class RunnerChannel {
       }
       const welcome = await this.store.change(
         active.workspace.id,
-        async (transaction) => ({
-          cursor: await transaction.cursor(message.streamId),
-          ready: await transaction.streamReady(message.streamId),
-        }),
+        async (transaction) => {
+          await new RunnerFileReports(transaction.files).beginStream(
+            message.streamId,
+          )
+          return {
+            cursor: await transaction.cursor(message.streamId),
+            ready: await transaction.streamReady(message.streamId),
+          }
+        },
         this.publish,
       )
       active.streamId = message.streamId
@@ -136,23 +142,14 @@ export class RunnerChannel {
         becameReady = false
         const through = await transaction.cursor(message.streamId)
         if (message.eventNumber !== through + 1) return through
-        if (message.event.type === 'runner.ready') {
-          becameReady = true
-          await transaction.saveStreamReady(message.streamId)
-        } else if ('sessionId' in message.event) {
-          await storeAgentEvent(
-            transaction,
-            message.event,
-            message.occurredAt,
-            this.dependencies.randomId,
-          )
-        } else {
-          await transaction.emit(message.event, message.occurredAt)
-        }
-        await transaction.saveCursor(message.streamId, message.eventNumber)
-        stored = transaction.emitted.find(
-          (envelope) => envelope.event.type === message.event.type,
+        const receipt = await storeRunnerReceipt(
+          transaction,
+          message,
+          this.dependencies.randomId,
         )
+        becameReady = receipt.ready
+        stored = receipt.stored
+        await transaction.saveCursor(message.streamId, message.eventNumber)
         return message.eventNumber
       },
       this.publish,

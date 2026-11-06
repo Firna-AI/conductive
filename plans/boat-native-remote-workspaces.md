@@ -4115,14 +4115,34 @@ Depends on: 4d, 7, 9
 
 Apply decision 76 E in the workspace Durable Object.
 
-- [ ] Check the byte limit with the other event checks.
-- [ ] Store a marker for each event that the workspace refuses for a
+Agent calls on 6 November 2026, within decision 76 E:
+
+- Commit file parts, complete file reports, chat events, refusal markers,
+  turn state, and the runner cursor in one transaction. Reason: a confirm
+  must cover every stored effect of the event.
+- Store large complete file events in bounded history chunks. Reason:
+  each browser report stays complete and can exceed one storage value.
+- End a refused active terminal event as failed through the existing
+  turn lifecycle. Reason: the refused result cannot prove success.
+- Check every agent acknowledgement before changing messages or commands.
+  Reason: a refusal must leave no partial message changes.
+- Verify refusal context against stored sessions and turns. Reason:
+  untrusted IDs must not become arbitrary storage keys.
+- Keep the parts of the last complete report for repeat comparison.
+  Reason: an identical repeated part must produce no second report.
+
+Verification evidence: `.context/boat-native-remote-workspaces/7s/verification.md`.
+
+- [x] Check the byte limit with the other event checks.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Store a marker for each event that the workspace refuses for a
       fixed reason, confirm it, and move the cursor on. A refused end of
       turn still ends the turn. A storage or network failure still closes
-      the connection.
-- [ ] Join the parts of a file tree and of a changes list before the
-      files store takes them.
-- [ ] Test each refusal, a tree in parts, and a resend after a refusal.
+      the connection. Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Join the parts of a file tree and of a changes list before the
+      files store takes them. Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Test each refusal, a tree in parts, and a resend after a refusal.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
 
 ## Milestone 8: Chat UI
 

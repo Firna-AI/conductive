@@ -1,7 +1,7 @@
 import type { AgentChatEvent } from '../../src/shared/chat-events'
 import { HttpError } from '../http'
 import { markSent } from './messages'
-import { sameAgent, sessionFor } from './sessions'
+import { sameAgent } from './sessions'
 import type { ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
 
@@ -11,9 +11,27 @@ export async function storeAgentEvent(
   occurredAt: number,
   randomId: () => string,
 ): Promise<void> {
-  const session = await sessionFor(transaction, event.sessionId)
-  const turn = await transaction.turn(event.turnId)
+  await (
+    await prepareAgentEvent(transaction, event, occurredAt, randomId)
+  )()
+}
+
+/** Validate every acknowledgement before any message or command changes. */
+export async function prepareAgentEvent(
+  transaction: ChatTransaction,
+  event: AgentChatEvent,
+  occurredAt: number,
+  randomId: () => string,
+): Promise<() => Promise<void>> {
+  const session = (await transaction.sessions()).find(
+    (session) => session.id === event.sessionId,
+  )
+  const turn =
+    session?.activeTurnId === event.turnId
+      ? await transaction.turn(session.activeTurnId)
+      : undefined
   if (
+    !session ||
     !turn ||
     turn.sessionId !== session.id ||
     session.activeTurnId !== turn.id
@@ -35,7 +53,6 @@ export async function storeAgentEvent(
       )
     }
     acknowledged = event.messageIds
-    if (turn.state !== 'stopping') turn.state = 'running'
   } else if (
     event.type === 'assistant.completed' ||
     event.type === 'turn.completed'
@@ -50,25 +67,41 @@ export async function storeAgentEvent(
       )
     }
   }
-  for (const messageId of acknowledged)
-    await markSent(transaction, turn, messageId)
-  for (const command of await transaction.pending()) {
-    if (
-      (command.type === 'turn' || command.type === 'message') &&
-      command.turnId === turn.id &&
-      acknowledged.includes(command.messageId)
-    ) {
-      await transaction.removeCommand(command.commandId)
+  for (const messageId of acknowledged) {
+    const message = turn.messageIds.includes(messageId)
+      ? await transaction.message(messageId)
+      : undefined
+    if (!message || message.sessionId !== turn.sessionId) {
+      throw new HttpError(
+        400,
+        'runner_message_mismatch',
+        'The message is not available.',
+      )
     }
   }
-  await transaction.emit(event, occurredAt)
-  if (event.type === 'turn.completed' || event.type === 'turn.failed') {
-    const state = event.type === 'turn.failed' ? 'failed' : event.state
-    await new TurnLifecycle(transaction, session).finish(
-      turn,
-      state === 'finished' ? { state, randomId } : { state },
-    )
-  } else {
-    await transaction.saveTurn(turn)
+  return async () => {
+    if (event.type === 'turn.started' && turn.state !== 'stopping')
+      turn.state = 'running'
+    for (const messageId of acknowledged)
+      await markSent(transaction, turn, messageId)
+    for (const command of await transaction.pending()) {
+      if (
+        (command.type === 'turn' || command.type === 'message') &&
+        command.turnId === turn.id &&
+        acknowledged.includes(command.messageId)
+      ) {
+        await transaction.removeCommand(command.commandId)
+      }
+    }
+    await transaction.emit(event, occurredAt)
+    if (event.type === 'turn.completed' || event.type === 'turn.failed') {
+      const state = event.type === 'turn.failed' ? 'failed' : event.state
+      await new TurnLifecycle(transaction, session).finish(
+        turn,
+        state === 'finished' ? { state, randomId } : { state },
+      )
+    } else {
+      await transaction.saveTurn(turn)
+    }
   }
 }

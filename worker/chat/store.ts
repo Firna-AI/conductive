@@ -5,6 +5,13 @@ import type {
   WorkspaceEventEnvelope,
 } from '../../src/shared/events'
 import { HttpError } from '../http'
+import { chatFilesStorage } from './files-storage'
+import {
+  loadHistoryEvent,
+  saveHistoryEvent,
+  type StoredWorkspaceEvent,
+} from './history-storage'
+import type { FilesStorage } from '../files/storage'
 import type {
   ChatData,
   ChatStorage,
@@ -30,12 +37,14 @@ export class ChatTransaction {
   readonly workspaceId: string
   readonly now: number
   readonly emitted: WorkspaceEventEnvelope[] = []
+  readonly files: FilesStorage
   private readonly data: ChatData
   private through: number
   private commandThrough: number
 
   constructor(data: ChatData, metadata: ChatMetadata, now: number) {
     this.data = data
+    this.files = chatFilesStorage(data)
     this.workspaceId = metadata.workspaceId
     this.through = metadata.through
     this.commandThrough = metadata.commandThrough
@@ -58,6 +67,13 @@ export class ChatTransaction {
     return [
       ...(
         await this.data.list<Session>({ prefix: `${ROOT}session:` })
+      ).values(),
+    ]
+  }
+  async turns(): Promise<StoredTurn[]> {
+    return [
+      ...(
+        await this.data.list<StoredTurn>({ prefix: `${ROOT}turn:` })
       ).values(),
     ]
   }
@@ -134,14 +150,16 @@ export class ChatTransaction {
 
   async history(after: number) {
     return {
-      events: [
-        ...(
-          await this.data.list<WorkspaceEventEnvelope>({
-            prefix: `${ROOT}event:`,
-            startAfter: eventKey(after),
-          })
-        ).values(),
-      ],
+      events: await Promise.all(
+        [
+          ...(
+            await this.data.list<StoredWorkspaceEvent>({
+              prefix: `${ROOT}event:`,
+              startAfter: eventKey(after),
+            })
+          ).values(),
+        ].map((stored) => loadHistoryEvent(this.data, stored)),
+      ),
       throughEventNumber: this.through,
     }
   }
@@ -153,7 +171,7 @@ export class ChatTransaction {
       occurredAt,
       event: structuredClone(event),
     }
-    await this.data.put(eventKey(envelope.eventNumber), envelope)
+    await saveHistoryEvent(this.data, eventKey(envelope.eventNumber), envelope)
     this.emitted.push(envelope)
   }
 
