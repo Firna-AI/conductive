@@ -1,0 +1,31 @@
+# Product programs in org images use an unpinned Node
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-06, from PR #2, branch `conductor/boat-native-remote-workspaces-milestone-15`, finding 3. Raised to the user as item 69.
+- **Location:** `worker/tools/image.ts`, the launcher of the workspace tools. The agent runner install of Milestone 7r has no code yet.
+- **Reason:** the pinned runtime adds about 120 MB to each org image and a version to maintain, and the user carries both costs.
+
+- **Terms:**
+  - **Org image:** the saved snapshot from which each cloud computer of an org starts. It is Boat's base image plus the org's own install script.
+  - **Workspace tools:** the `conducting` CLI and its MCP server in each cloud computer, which let agents create and list workspaces.
+  - **Agent runner:** the Node program in each cloud computer that runs the agents and talks to the workspace Durable Object.
+- **Background:**
+  - The workspace tools are TypeScript files that Node 24 runs directly. Node 20 cannot run them.
+  - The agent runner is a Node program too, as decision 63 says.
+  - Boat's base image includes Node 24. The org's install script then runs with `sudo` rights, as decision 13 allows.
+  - The tools' launcher looks for `node` only in `/usr/local/bin`, `/usr/bin`, and `/bin`. It ignores the caller's `PATH` and drops `NODE_OPTIONS`. So version managers and agent shells cannot change the Node of the tools.
+- **Problem:** An org install script can replace the system Node, for example with Node 20. Then the tools, and later the runner, run on a Node that the product never tested.
+- **Impact if no action:** In that org, the tools fail at start, and the runner can fail. Agents then cannot work until the org changes its script.
+- **Root question:** How do the product's programs in each org image always run on the runtime that they were tested with, whatever the org's script selects?
+- **Options:**
+  - **A.** Keep the system Node with the fixed-folder lookup. The org settings and the docs say that the install script must not replace Node 24. Effort: Small.
+  - **B.** Build the tools into one JavaScript file that Node 18 and later can run. The runner is JavaScript too. A script that installs another Node 18 or later then breaks neither. A script that removes Node still breaks both. Effort: Medium.
+  - **C.** Install a Node that the product owns. The image build downloads one pinned Node 24 release, checks its SHA-256 against a constant in the code, and extracts it to a folder named for its version under `/opt/conducting/runtime/`. The tools and the runner run on it by its absolute path. Each org image grows by about 120 MB. Someone must update the version and the checksum at each Node security release. Effort: Medium.
+  - **D.** Check the Node version at the end of each image build, and fail the build when it is not Node 24. The org keeps its last good image, as decision 9 says. This adds a new build failure. Effort: Small.
+- **Left out:** hosting the MCP server in the runner or in the Worker, because it covers only the MCP server, and agents still run the CLI from their shells.
+- **Wider fix:** C. One Node that the product owns serves every product program in the image, whatever the org's script, the agent's shell, or the base image selects.
+- **Previous examples:** finding 3 of PR #2, where the launcher ran the first `node` on `PATH`.
+- **Related:** Milestone 7r installs the agent runner as a service, and no line says which Node it runs on.
+- **Recommendation:** C. Only C keeps the tools and the runner on the tested Node when an org script replaces it, and 120 MB is small beside a full org image.
+- **Action:** ask the user, because C adds about 120 MB to every org image and a pinned version to maintain, and the user carries both costs.
