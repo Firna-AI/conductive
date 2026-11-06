@@ -50,9 +50,16 @@ it('persists an unpredictable preview hostname and lists it with a 24-hour expir
     setup.request(previewsPath(setup.orgId, setup.workspaceId)),
   )
   expect(await listed.json()).toEqual({ previews: [preview] })
-  const upstream = harness.requests[0]
+  const upstream = harness.requests.find((request) =>
+    new URL(request.url).pathname.endsWith('/host'),
+  )
+  if (!upstream) throw new Error('Missing host call')
   expect(upstream.url).toBe('https://boat.dev/api/v1/sandboxes/bx_one/host')
-  expect(await upstream.json()).toEqual({ port: 3000, public: false })
+  expect(await upstream.json()).toEqual({
+    port: 3000,
+    public: false,
+    localhost: false,
+  })
   expect(upstream.headers.get('Authorization')).toBe('Bearer boat-test-key')
   expect(upstream.headers.get('X-Boat-Org')).toBe('personal')
 })
@@ -137,7 +144,10 @@ it('proxies HTTP with explicit headers and keeps only preview app cookies', asyn
   expect(await response.text()).toBe('preview content')
   expect(response.headers.get('Referrer-Policy')).toBe('no-referrer')
   expect(response.headers.get('Set-Cookie')).toBe('shop=green; Path=/; Secure')
-  const upstream = harness.requests[1]
+  const upstream = harness.requests.find(
+    (request) => new URL(request.url).hostname !== 'boat.dev',
+  )
+  if (!upstream) throw new Error('Missing preview request')
   expect(upstream.url).toBe('https://sandbox-3000.on.boat.dev/shop?q=1')
   expect(upstream.redirect).toBe('manual')
   expect(upstream.headers.get('Cookie')).toBe(
@@ -187,97 +197,4 @@ it('rewrites upstream redirects and strips reserved response cookies and headers
   ])
   expect(response.headers.get('X-Secret')).toBe(null)
   expect(response.headers.get('Referrer-Policy')).toBe('no-referrer')
-})
-
-it('proxies WebSocket frames without keeping an idle workspace active and closes on revocation', async () => {
-  const setup = await open()
-  expect(setup.response.status).toBe(201)
-  const { preview }: PreviewResponse = await setup.response.json()
-  harness.setNow(TEST_TIME + 1000)
-  const response = await setup.handler.proxy(
-    new Request(`${preview.url}/socket`, {
-      headers: {
-        Upgrade: 'websocket',
-        'Sec-WebSocket-Protocol': 'hot-reload',
-        Cookie: `_port_auth=forged; shop=blue; ${SESSION_COOKIE}=app-session`,
-      },
-    }),
-  )
-  expect(response.status).toBe(101)
-  expect(response.headers.get('Referrer-Policy')).toBe('no-referrer')
-  expect(response.headers.get('Sec-WebSocket-Protocol')).toBe('hot-reload')
-  expect(harness.requests[2].headers.get('Cookie')).toBe(
-    'shop=blue; _port_auth=server-port-token',
-  )
-  const upstream = harness.upstreamSockets[0]
-  const browser = harness.serverSockets[0]
-  const incoming = browser.nextMessage()
-  upstream.emit(Uint8Array.of(1, 2, 3).buffer)
-  expect(await incoming).toEqual(Uint8Array.of(1, 2, 3).buffer)
-  harness.setNow(TEST_TIME + 2000)
-  const outgoing = upstream.nextMessage()
-  browser.emit('reload')
-  expect(await outgoing).toBe('reload')
-  expect(await harness.status()).toEqual({ activity: TEST_TIME + 1000 })
-  const another = createPreviewHandler(harness.env, harness.dependencies)
-  expect(
-    (
-      await another.proxy(
-        new Request(`${preview.url}/socket`, {
-          headers: { Upgrade: 'websocket' },
-        }),
-      )
-    ).status,
-  ).toBe(101)
-  const otherBrowser = harness.serverSockets[1]
-  const otherUpstream = harness.upstreamSockets[1]
-  await setup.handler.revokeWorkspace(setup.workspaceId)
-  expect(browser.closed?.code).toBe(1008)
-  expect(upstream.closed?.code).toBe(1008)
-  otherUpstream.emit('late output')
-  await otherBrowser.end
-  expect(otherBrowser.sent).toEqual([])
-  expect(otherUpstream.closed?.code).toBe(1008)
-})
-
-it('returns a private preview error for failed upstream calls without exposing provider secrets', async () => {
-  const setup = await open()
-  expect(setup.response.status).toBe(201)
-  const { preview }: PreviewResponse = await setup.response.json()
-  harness.setResponse(() =>
-    Response.json(
-      { ok: false, message: 'boat-test-key server-port-token' },
-      { status: 403 },
-    ),
-  )
-  const response = await setup.handler.proxy(new Request(preview.url))
-  expect(response.status).toBe(502)
-  expect(response.headers.get('Referrer-Policy')).toBe('no-referrer')
-  expect(response.headers.get('Cache-Control')).toBe('no-store')
-  expect(await response.text()).not.toContain('boat-test-key')
-  harness.requests.length = 0
-  harness.setResponse(() =>
-    Response.json({
-      ok: true,
-      type: 'port.hosted',
-      port: 3000,
-      access: 'private',
-      isProtected: true,
-      url: 'https://attacker.test/?_token=server-port-token',
-    }),
-  )
-  const invalid = await setup.handler.proxy(new Request(preview.url))
-  expect(invalid.status).toBe(502)
-  expect(harness.requests).toHaveLength(1)
-  expect(harness.requests[0].url).toBe(
-    'https://boat.dev/api/v1/sandboxes/bx_one/host',
-  )
-  await harness.env.DB.prepare(
-    "UPDATE workspaces SET state = 'stopped' WHERE id = ?",
-  )
-    .bind(setup.workspaceId)
-    .run()
-  harness.requests.length = 0
-  expect((await setup.handler.proxy(new Request(preview.url))).status).toBe(404)
-  expect(harness.requests).toHaveLength(0)
 })

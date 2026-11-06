@@ -10,6 +10,7 @@ export class TestSocket implements ProxySocket {
   private endings: (() => void)[] = []
   private receive: ((data: string | ArrayBuffer) => void) | null = null
   private ended: (() => void) | null = null
+  private observers: (() => void)[] = []
   readonly end = new Promise<void>((resolve) => {
     this.ended = resolve
   })
@@ -22,6 +23,17 @@ export class TestSocket implements ProxySocket {
     this.sent.push(data)
     this.receive?.(data)
     this.receive = null
+    for (const observer of this.observers) observer()
+  }
+
+  whenSent(count: number): Promise<void> {
+    return new Promise((resolve) => {
+      const observe = () => {
+        if (this.sent.length >= count) resolve()
+      }
+      this.observers.push(observe)
+      observe()
+    })
   }
 
   nextMessage() {
@@ -70,6 +82,8 @@ export async function createToolsHarness() {
   })
   let now = TEST_TIME
   let desktopSequence = 0
+  let terminalSequence = 0
+  const passwords = new Map<string, string>()
   const requests: Request[] = []
   const serverSockets: TestSocket[] = []
   const upstreamSockets: TestSocket[] = []
@@ -115,6 +129,34 @@ export async function createToolsHarness() {
             desktopUrl: `https://sandbox-desktop.on.boat.dev/stream.html?hostId=host&appId=app#token=desktop-${++desktopSequence}`,
           })
         }
+        if (url.pathname.endsWith('/commands')) {
+          const body: { command: string } = await request.clone().json()
+          if (body.command.includes('ss -H -ltn')) {
+            return Response.json({
+              ok: true,
+              type: 'command.finished',
+              exitCode: 0,
+              stdout: 'LISTEN 0 128 0.0.0.0:3000 0.0.0.0:*\n',
+              stderr: '',
+              timedOut: false,
+            })
+          }
+          if (body.command.includes('cat /run/conducting-terminal/password')) {
+            let password = passwords.get(url.pathname)
+            if (!password) {
+              password = String(++terminalSequence).padStart(64, 'a')
+              passwords.set(url.pathname, password)
+            }
+            return Response.json({
+              ok: true,
+              type: 'command.finished',
+              exitCode: 0,
+              stdout: password + '\n',
+              stderr: '',
+              timedOut: false,
+            })
+          }
+        }
         return core.boat.fetch(request)
       }
       if (request.headers.get('Upgrade') === 'websocket') {
@@ -158,6 +200,8 @@ export async function createToolsHarness() {
       response = null
       dependencies.fetch = fetch
       desktopSequence = 0
+      terminalSequence = 0
+      passwords.clear()
     },
     seed: async () => {
       const session = await core.login()

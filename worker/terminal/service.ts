@@ -4,7 +4,8 @@ import { WorkspaceTools } from '../previews/provider'
 import type { ToolDependencies } from '../previews/types'
 import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
-import { terminalPassword } from './credentials'
+import { cacheTerminalPassword } from './credentials'
+import { privilegedCommand } from './privileged'
 
 export const TERMINAL_PORT = 7681
 
@@ -18,14 +19,33 @@ set -eu
 exec /usr/bin/ttyd --interface 0.0.0.0 --port 7681 --writable --credential "conducting:$(cat /run/conducting-terminal/password)" /bin/bash -l
 CONDUCTING_TERMINAL
 chmod 755 /usr/local/lib/conducting/terminal
+cat > /usr/local/lib/conducting/terminal-password <<'CONDUCTING_PASSWORD'
+#!/bin/sh
+set -eu
+umask 077
+install -d -m 700 -o user -g user /run/conducting-terminal
+if ! grep -Eq '^[a-f0-9]{64}$' /run/conducting-terminal/password 2>/dev/null; then
+od -An -N32 -tx1 /dev/urandom | tr -d ' \\n' > /run/conducting-terminal/password
+fi
+chown user:user /run/conducting-terminal/password
+chmod 600 /run/conducting-terminal/password
+CONDUCTING_PASSWORD
+chmod 755 /usr/local/lib/conducting/terminal-password
 cat > /etc/systemd/system/conducting-terminal.service <<'CONDUCTING_SERVICE'
 [Unit]
 Description=Conducting terminal
 After=network.target
-ConditionPathExists=/run/conducting-terminal/password
+ConditionPathExists=/run/conducting-terminal/enabled
 
 [Service]
 Type=simple
+User=user
+Group=user
+WorkingDirectory=/home/user
+RuntimeDirectory=conducting-terminal
+RuntimeDirectoryMode=0700
+RuntimeDirectoryPreserve=yes
+ExecStartPre=+/usr/local/lib/conducting/terminal-password
 ExecStart=/usr/local/lib/conducting/terminal
 Restart=on-failure
 RestartSec=1
@@ -41,7 +61,10 @@ export async function installTerminalService(
   provider: Pick<SandboxProvider, 'runCommand'>,
   sandboxId: string,
 ): Promise<void> {
-  const result = await provider.runCommand(sandboxId, installScript)
+  const result = await provider.runCommand(
+    sandboxId,
+    privilegedCommand(installScript),
+  )
   if (result.exitCode !== 0 || result.timedOut)
     throw new ProviderError('unavailable', 502)
 }
@@ -59,16 +82,17 @@ export async function startWorkspaceTerminal(
     target,
     dependencies.fetch,
   )
-  const password = await terminalPassword(env, workspaceId, dependencies.now())
-  if (!password || !/^[A-Za-z0-9_-]+$/.test(password))
-    throw new ProviderError('invalid_response', 502)
   const command = `set -eu
-install -d -m 700 /run/conducting-terminal
-umask 077
-printf '%s' '${password}' > /run/conducting-terminal/password
-systemctl restart conducting-terminal.service
-systemctl is-active --quiet conducting-terminal.service`
-  const result = await provider.command(command)
+install -d -m 700 -o user -g user /run/conducting-terminal
+touch /run/conducting-terminal/enabled
+systemctl start conducting-terminal.service
+systemctl is-active --quiet conducting-terminal.service
+cat /run/conducting-terminal/password`
+  const result = await provider.command(privilegedCommand(command))
   if (result.exitCode !== 0 || result.timedOut)
     throw new ProviderError('unavailable', 502)
+  const password = result.stdout.trim()
+  if (!/^[a-f0-9]{64}$/.test(password))
+    throw new ProviderError('invalid_response', 502)
+  await cacheTerminalPassword(env, target, password, dependencies.now())
 }

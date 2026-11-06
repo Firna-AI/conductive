@@ -1,11 +1,14 @@
 import type { Preview } from '../../src/shared/previews'
 import type { WorkspaceTarget } from './types'
+import type { PortMode } from './provider'
 
 export interface PreviewRecord extends WorkspaceTarget {
   id: string
   hostname: string
   port: number
   expiresAt: number
+  listenerMode?: PortMode | null
+  listenerSandboxId?: string | null
 }
 
 export function publicPreview(row: PreviewRecord): Preview {
@@ -26,8 +29,8 @@ export async function insertPreview(
 ): Promise<boolean> {
   const result = await db
     .prepare(
-      `INSERT INTO preview_hostnames (id, hostname, org_id, workspace_id, port, created_at, expires_at)
-     SELECT ?, ?, w.org_id, w.id, ?, ?, ? FROM workspaces w
+      `INSERT INTO preview_hostnames (id, hostname, org_id, workspace_id, port, created_at, expires_at, listener_mode, listener_sandbox_id)
+     SELECT ?, ?, w.org_id, w.id, ?, ?, ?, ?, w.sandbox_id FROM workspaces w
      JOIN orgs o ON o.id = w.org_id JOIN org_members m ON m.org_id = o.id
      WHERE w.id = ? AND w.org_id = ? AND w.sandbox_id = ? AND w.archived_at IS NULL
      AND w.state IN ('ready', 'working', 'unread') AND o.deleted_at IS NULL AND m.user_id = ?`,
@@ -38,6 +41,7 @@ export async function insertPreview(
       row.port,
       now,
       row.expiresAt,
+      row.listenerMode ?? null,
       target.workspaceId,
       target.orgId,
       target.sandboxId,
@@ -71,7 +75,8 @@ export function activePreview(
   return db
     .prepare(
       `SELECT p.id, p.hostname, p.org_id AS orgId, p.workspace_id AS workspaceId,
-     p.port, p.expires_at AS expiresAt, w.sandbox_id AS sandboxId, w.state
+     p.port, p.expires_at AS expiresAt, p.listener_mode AS listenerMode,
+     p.listener_sandbox_id AS listenerSandboxId, w.sandbox_id AS sandboxId, w.state
      FROM preview_hostnames p JOIN workspaces w ON w.id = p.workspace_id AND w.org_id = p.org_id
      JOIN orgs o ON o.id = p.org_id
      WHERE p.hostname = ? AND p.revoked_at IS NULL AND p.expires_at > ?
@@ -80,6 +85,28 @@ export function activePreview(
     )
     .bind(hostname, now)
     .first<PreviewRecord>()
+}
+
+export async function savePreviewMode(
+  db: D1Database,
+  target: WorkspaceTarget,
+  port: number,
+  mode: PortMode,
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE preview_hostnames SET listener_mode = ?, listener_sandbox_id = ? WHERE workspace_id = ? AND org_id = ? AND port = ?
+     AND revoked_at IS NULL AND EXISTS (SELECT 1 FROM workspaces w WHERE w.id = workspace_id AND w.sandbox_id = ?)`,
+    )
+    .bind(
+      mode,
+      target.sandboxId,
+      target.workspaceId,
+      target.orgId,
+      port,
+      target.sandboxId,
+    )
+    .run()
 }
 
 export async function revokePreview(

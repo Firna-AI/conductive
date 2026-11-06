@@ -11,6 +11,7 @@ import {
 import { portRequest } from '../previews/headers'
 import { WorkspaceTools } from '../previews/provider'
 import { bridgeSocket } from '../previews/socket'
+import { AuthorizationBatch } from '../previews/authorization'
 import type { ToolDependencies } from '../previews/types'
 import { ProviderError } from '../sandbox/errors'
 import { terminalPassword } from './credentials'
@@ -50,7 +51,11 @@ export function createTerminalHandler(
             )
           }
         }
-        const password = await terminalPassword(env, target.workspaceId)
+        const password = await terminalPassword(
+          env,
+          target.workspaceId,
+          target.sandboxId,
+        )
         if (tail === null) {
           const stopped = ['stopped', 'error'].includes(target.state)
           const ready =
@@ -82,7 +87,7 @@ export function createTerminalHandler(
           dependencies.fetch,
           context.user.id,
         )
-        const port = await provider.privatePort(TERMINAL_PORT)
+        const port = await provider.privatePort(TERMINAL_PORT, 'network')
         await verifyTarget(env, target, context.user.id)
         const auth = btoa(`conducting:${password}`)
         let upstream: Response
@@ -93,13 +98,16 @@ export function createTerminalHandler(
         }
         if (upstream.headers.get('Sec-WebSocket-Protocol') !== 'tty')
           throw new ProviderError('invalid_response', 502)
+        const authorization = new AuthorizationBatch(() =>
+          verifyTarget(env, target, context.user.id),
+        )
         return bridgeSocket(upstream, dependencies, {
           headers: new Headers({
             'Sec-WebSocket-Protocol': 'tty',
             'Cache-Control': 'no-store',
             'Referrer-Policy': 'no-referrer',
           }),
-          authorize: () => verifyTarget(env, target, context.user.id),
+          authorize: () => authorization.check(),
           fromBrowser: terminalFrames(auth, () =>
             recordActivity(env, dependencies, target.workspaceId, 'terminal'),
           ),

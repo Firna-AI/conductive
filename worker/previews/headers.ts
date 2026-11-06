@@ -76,6 +76,7 @@ export function portRequest(
   request: Request,
   port: PrivatePort,
   terminalAuth?: string,
+  stream?: { body: ReadableStream<Uint8Array> | null; signal: AbortSignal },
 ): Request {
   const url = portUrl(request, port, terminalAuth !== undefined)
   const headers = terminalAuth
@@ -100,7 +101,12 @@ export function portRequest(
     method: request.method,
     headers,
     redirect: 'manual' as const,
-    body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
+    body: ['GET', 'HEAD'].includes(request.method)
+      ? undefined
+      : stream
+        ? stream.body
+        : request.body,
+    signal: stream?.signal,
     duplex: 'half' as const,
   }
   return new Request(url, init)

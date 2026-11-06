@@ -1,33 +1,40 @@
 import type { AppEnv } from '../env'
-import { decrypt, encrypt, randomToken } from '../security/crypto'
+import { decrypt, encrypt } from '../security/crypto'
+import { readTerminalCredential, saveTerminalCredential } from './store'
+import type { WorkspaceTarget } from '../previews/types'
+import { HttpError } from '../http'
 
 function context(workspaceId: string): string {
   return JSON.stringify(['terminal-password', workspaceId])
 }
 
-/** A saved image never gets this password. The sandbox receives it in /run only. */
+/** Only the service's locally generated password enters this encrypted cache. */
+export async function cacheTerminalPassword(
+  env: AppEnv,
+  target: WorkspaceTarget,
+  password: string,
+  now: number,
+): Promise<void> {
+  const ciphertext = await encrypt(
+    password,
+    context(target.workspaceId),
+    env.BOAT_KEY_ENCRYPTION_KEY,
+  )
+  if (!(await saveTerminalCredential(env.DB, target, ciphertext, now))) {
+    throw new HttpError(
+      404,
+      'workspace_not_found',
+      'The workspace is not available.',
+    )
+  }
+}
+
 export async function terminalPassword(
   env: AppEnv,
   workspaceId: string,
-  now?: number,
+  sandboxId: string | null,
 ): Promise<string | null> {
-  if (now !== undefined) {
-    const ciphertext = await encrypt(
-      randomToken(),
-      context(workspaceId),
-      env.BOAT_KEY_ENCRYPTION_KEY,
-    )
-    await env.DB.prepare(
-      'INSERT INTO terminal_credentials (workspace_id, ciphertext, updated_at) VALUES (?, ?, ?) ON CONFLICT (workspace_id) DO NOTHING',
-    )
-      .bind(workspaceId, ciphertext, now)
-      .run()
-  }
-  const row = await env.DB.prepare(
-    'SELECT ciphertext FROM terminal_credentials WHERE workspace_id = ?',
-  )
-    .bind(workspaceId)
-    .first<{ ciphertext: string }>()
+  const row = await readTerminalCredential(env.DB, workspaceId, sandboxId)
   return row
     ? decrypt(row.ciphertext, context(workspaceId), env.BOAT_KEY_ENCRYPTION_KEY)
     : null

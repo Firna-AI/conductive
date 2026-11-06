@@ -31,11 +31,15 @@ it('installs an enabled ttyd service without an image password and starts with a
     'build-sandbox',
   )
   expect(commands).toHaveLength(1)
+  expect(commands[0].startsWith("sudo -n -- /bin/sh -c '")).toBe(true)
   expect(commands[0]).toContain('systemctl enable conducting-terminal.service')
   expect(commands[0]).toContain(
-    'ConditionPathExists=/run/conducting-terminal/password',
+    'ExecStartPre=+/usr/local/lib/conducting/terminal-password',
   )
   expect(commands[0]).toContain('--writable')
+  expect(commands[0]).toContain('User=user')
+  expect(commands[0]).toContain('WorkingDirectory=/home/user')
+  expect(commands[0]).toContain('--interface 0.0.0.0')
   expect(commands[0]).toContain('--credential')
   await startWorkspaceTerminal(
     harness.env,
@@ -52,7 +56,7 @@ it('installs an enabled ttyd service without an image password and starts with a
   const command: { command: string } = await harness.requests[0].json()
   expect(command.command).toContain('/run/conducting-terminal/password')
   expect(command.command).toContain(
-    'systemctl restart conducting-terminal.service',
+    'systemctl start conducting-terminal.service',
   )
   expect(command.command).not.toContain('/etc/conducting')
   expect(commands[0]).not.toContain(row?.ciphertext)
@@ -71,7 +75,8 @@ it('installs an enabled ttyd service without an image password and starts with a
     harness.dependencies,
   )
   const otherCommand: { command: string } = await harness.requests[1].json()
-  expect(otherCommand.command).not.toBe(command.command)
+  expect(otherCommand.command).toBe(command.command)
+  expect(harness.requests[1].url).not.toBe(harness.requests[0].url)
   expect(
     await harness.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM terminal_credentials',

@@ -13,6 +13,8 @@ export interface PrivatePort {
   token: string
 }
 
+export type PortMode = 'localhost' | 'network'
+
 /** The only extra provider routes are host and desktop. Commands use BoatClient. */
 export class WorkspaceTools {
   private readonly env: AppEnv
@@ -64,10 +66,14 @@ export class WorkspaceTools {
     return new WorkspaceTools(env, target, fetch, key, account, userId)
   }
 
-  async privatePort(port: number): Promise<PrivatePort> {
+  async privatePort(port: number, mode: PortMode): Promise<PrivatePort> {
     if (!Number.isInteger(port) || port < 1 || port > 65535)
       throw new ProviderError('invalid_request', 400)
-    const value = await this.request('host', { port, public: false })
+    const value = await this.request('host', {
+      port,
+      public: false,
+      localhost: mode === 'localhost',
+    })
     if (
       value.type !== 'port.hosted' ||
       value.port !== port ||

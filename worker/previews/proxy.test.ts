@@ -43,9 +43,14 @@ it('blocks the old sandbox port when ownership changes during the provider host 
     }
     return response
   }
-  const response = await setup.handler.proxy(new Request(setup.preview.url))
+  const response = await setup.handler.proxy(
+    new Request(setup.preview.url, {
+      headers: { 'Sec-Fetch-Dest': 'document' },
+    }),
+  )
   expect(response.status).toBe(404)
   expect(harness.requests.map((request) => request.url)).toEqual([
+    'https://boat.dev/api/v1/sandboxes/bx_one/commands',
     'https://boat.dev/api/v1/sandboxes/bx_one/host',
   ])
 })

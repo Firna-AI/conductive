@@ -2,66 +2,44 @@ import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
 import { recordActivity, toolError } from './access'
+import type { PreviewConnection } from './connection'
 import { portRequest, portResponseHeaders } from './headers'
-import { WorkspaceTools } from './provider'
+import { PrivatePorts } from './ports'
+import { PreviewRegistry } from './registry'
 import { bridgeSocket } from './socket'
-import { activePreview, type PreviewRecord } from './store'
+import { activePreview } from './store'
 import type { ToolDependencies } from './types'
 
-interface LivePreview {
-  workspaceId: string
-  previewId: string
-  expiresAt: number
-  close: () => void
-}
-
 export class PreviewProxy {
-  private readonly live = new Set<LivePreview>()
   private readonly env: AppEnv
   private readonly dependencies: ToolDependencies
+  private readonly ports: PrivatePorts
+  private readonly registry: PreviewRegistry
 
-  constructor(env: AppEnv, dependencies: ToolDependencies) {
+  constructor(
+    env: AppEnv,
+    dependencies: ToolDependencies,
+    ports: PrivatePorts,
+  ) {
     this.env = env
     this.dependencies = dependencies
+    this.ports = ports
+    this.registry = new PreviewRegistry(env, dependencies)
   }
 
-  closePreview(id: string): void {
-    for (const socket of this.live) if (socket.previewId === id) socket.close()
+  closePreview(workspaceId: string, id: string): void {
+    this.registry.closePreview(workspaceId, id)
   }
-
   closeWorkspace(workspaceId: string): void {
-    for (const socket of this.live)
-      if (socket.workspaceId === workspaceId) socket.close()
+    this.registry.closeWorkspace(workspaceId)
+    this.ports.invalidateWorkspace(workspaceId)
   }
-
   expire(): void {
-    for (const socket of this.live)
-      if (socket.expiresAt <= this.dependencies.now()) socket.close()
-  }
-
-  private async authorize(
-    hostname: string,
-    expected?: PreviewRecord,
-  ): Promise<PreviewRecord> {
-    const row = await activePreview(
-      this.env.DB,
-      hostname,
-      this.dependencies.now(),
-    )
-    if (
-      !row ||
-      (expected &&
-        (row.id !== expected.id || row.sandboxId !== expected.sandboxId))
-    )
-      throw new HttpError(
-        404,
-        'preview_not_found',
-        'The preview is not available.',
-      )
-    return row
+    this.registry.expire()
   }
 
   async fetch(request: Request): Promise<Response> {
+    let connection: PreviewConnection | null = null
     try {
       const url = new URL(request.url)
       const suffix = this.env.PREVIEW_DOMAIN
@@ -81,26 +59,43 @@ export class PreviewProxy {
           'The preview is not available.',
         )
       }
-      const row = await this.authorize(url.hostname)
-      const provider = await WorkspaceTools.forWorkspace(
-        this.env,
-        row,
-        this.dependencies.fetch,
+      const row = await activePreview(
+        this.env.DB,
+        url.hostname,
+        this.dependencies.now(),
       )
-      const port = await provider.privatePort(row.port)
+      if (!row)
+        throw new HttpError(
+          404,
+          'preview_not_found',
+          'The preview is not available.',
+        )
+      const scope = this.registry.get(row)
+      connection = scope.connect()
+      const destination = request.headers.get('Sec-Fetch-Dest')
+      const refresh = destination === 'document' || destination === 'iframe'
+      const port = await this.ports.get(row, refresh)
       await recordActivity(
         this.env,
         this.dependencies,
         row.workspaceId,
         'preview',
       )
-      await this.authorize(url.hostname, row)
+      await scope.authorize()
       let upstream: Response
       try {
-        upstream = await this.dependencies.fetch(portRequest(request, port))
+        const outgoing = portRequest(request, port, undefined, {
+          body: connection.wrap(request.body),
+          signal: connection.signal,
+        })
+        upstream = await this.dependencies.fetch(outgoing)
       } catch {
+        this.ports.invalidate(row, row.port)
         throw new ProviderError('unavailable', 503)
       }
+      if ([401, 403].includes(upstream.status))
+        this.ports.invalidate(row, row.port)
+      await scope.authorize()
       const headers = portResponseHeaders(upstream, request, port)
       if (request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {
         const protocol = upstream.headers.get('Sec-WebSocket-Protocol')
@@ -112,31 +107,23 @@ export class PreviewProxy {
             throw new ProviderError('invalid_response', 502)
           headers.set('Sec-WebSocket-Protocol', protocol)
         }
-        let live: LivePreview | null = null
         const bridge = bridgeSocket(upstream, this.dependencies, {
           headers,
-          authorize: async () => {
-            await this.authorize(url.hostname, row)
-          },
-          onClose: () => {
-            if (live) this.live.delete(live)
-          },
+          authorize: scope.authorize,
+          onClose: () => connection?.close(),
         })
-        live = {
-          workspaceId: row.workspaceId,
-          previewId: row.id,
-          expiresAt: row.expiresAt,
-          close: bridge.close,
-        }
-        this.live.add(live)
+        connection.watch(bridge.close)
         return bridge.response
       }
-      return new Response(upstream.body, {
+      const response = new Response(connection.wrap(upstream.body), {
         status: upstream.status,
         statusText: upstream.statusText,
         headers,
       })
+      connection.finishHeaders()
+      return response
     } catch (error) {
+      connection?.close()
       return toolError(error)
     }
   }

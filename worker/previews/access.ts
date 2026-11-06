@@ -1,10 +1,10 @@
 import { API_PATHS } from '../../src/shared/api'
-import { findMembership } from '../data/orgs'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { ProviderError } from '../sandbox/errors'
 import { gate } from '../security/gate'
 import type { ToolDependencies, WorkspaceTarget } from './types'
+import { readWorkspaceTarget, writeWorkspaceActivity } from './workspace-store'
 
 export async function workspaceTarget(
   env: AppEnv,
@@ -12,20 +12,7 @@ export async function workspaceTarget(
   workspaceId: string,
   userId?: string,
 ): Promise<WorkspaceTarget> {
-  if (userId && !(await findMembership(env.DB, orgId, userId))) {
-    throw new HttpError(
-      404,
-      'workspace_not_found',
-      'The workspace is not available.',
-    )
-  }
-  const row = await env.DB.prepare(
-    `SELECT w.org_id AS orgId, w.id AS workspaceId, w.sandbox_id AS sandboxId, w.state
-     FROM workspaces w JOIN orgs o ON o.id = w.org_id
-     WHERE w.org_id = ? AND w.id = ? AND w.archived_at IS NULL AND o.deleted_at IS NULL`,
-  )
-    .bind(orgId, workspaceId)
-    .first<WorkspaceTarget>()
+  const row = await readWorkspaceTarget(env.DB, orgId, workspaceId, userId)
   if (!row)
     throw new HttpError(
       404,
@@ -107,12 +94,7 @@ export async function recordActivity(
   workspaceId: string,
   source: 'terminal' | 'preview',
 ): Promise<void> {
-  await env.DB.prepare(
-    `UPDATE workspaces SET last_activity_at = MAX(COALESCE(last_activity_at, 0), ?)
-     WHERE id = ? AND archived_at IS NULL`,
-  )
-    .bind(dependencies.now(), workspaceId)
-    .run()
+  await writeWorkspaceActivity(env.DB, workspaceId, dependencies.now())
   await dependencies.onActivity?.(workspaceId, source)
 }
 

@@ -5,7 +5,7 @@ import type {
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
 import { requireRunning, toolError, toolRequest } from './access'
-import { WorkspaceTools } from './provider'
+import { PrivatePorts } from './ports'
 import { PreviewProxy } from './proxy'
 import {
   expirePreviews,
@@ -43,7 +43,8 @@ export function createPreviewHandler(
   env: AppEnv,
   dependencies: ToolDependencies,
 ) {
-  const proxy = new PreviewProxy(env, dependencies)
+  const ports = new PrivatePorts(env, dependencies)
+  const proxy = new PreviewProxy(env, dependencies, ports)
   return {
     fetch: async (request: Request): Promise<Response> => {
       try {
@@ -77,13 +78,7 @@ export function createPreviewHandler(
             )
           }
           const domain = previewDomain(env)
-          const provider = await WorkspaceTools.forWorkspace(
-            env,
-            target,
-            dependencies.fetch,
-            context.user.id,
-          )
-          await provider.privatePort(port)
+          const descriptor = await ports.open(target, port, context.user.id)
           const label = Array.from(
             crypto.getRandomValues(new Uint8Array(16)),
             (byte) => byte.toString(16).padStart(2, '0'),
@@ -94,6 +89,7 @@ export function createPreviewHandler(
             hostname: `${label}.${domain}`,
             port,
             expiresAt: now + 86_400_000,
+            listenerMode: descriptor.mode,
           }
           if (
             !(await insertPreview(env.DB, target, row, context.user.id, now))
@@ -113,7 +109,7 @@ export function createPreviewHandler(
         }
         if (request.method === 'DELETE' && tail) {
           await revokePreview(env.DB, target, tail, now)
-          proxy.closePreview(tail)
+          proxy.closePreview(target.workspaceId, tail)
           return privateResponse(new Response(null, { status: 204 }))
         }
         throw new HttpError(404, 'not_found', 'The page is not available.')

@@ -12,13 +12,22 @@ Tests can inject `dependencies.sockets` at that boundary.
 Call `installTerminalService(provider, sandboxId)` during each org image
 build. The image lifecycle owner must first authorize that org's build sandbox.
 It installs ttyd and enables its systemd service. It puts no password
-in the image. The service waits for a password under `/run`.
+in the image. One quoted privileged-command helper owns the root commands.
+The service requires a nonsecret enable marker under `/run`.
+An image build or refresh has no marker and creates no terminal password.
+The unit runs ttyd and its shell as `user`, in `/home/user`.
 
 Call `startWorkspaceTerminal(env, orgId, workspaceId, dependencies)` after
 the lifecycle owner stores the sandbox ID. Call it at create and each
-resume, before the owner marks the workspace ready. It stores a unique
-encrypted password in D1. It writes the password only to
-`/run/conducting-terminal/password` in the sandbox and starts the service.
+resume, before the owner marks the workspace ready. It enables and starts
+the service. The synchronous `ExecStartPre` step creates a random password
+locally under `/run`. It keeps an existing valid password on service restarts.
+`RuntimeDirectoryPreserve=yes` keeps that password through an automatic restart.
+The hook reads the current password from `/run/conducting-terminal/password`
+through the trusted command response. It caches the password encrypted in D1.
+The cache update checks that the workspace still owns the same sandbox.
+The app supplies no extra terminal secret at start. The workspace token
+keeps its existing scope and does not authenticate terminal access.
 `/run` must stay temporary memory storage in the org image.
 Do not run this start hook on an image build or a refresh.
 
@@ -30,7 +39,9 @@ The initial handshake, window changes, output, and idle sockets do not count.
 
 - [handler.ts](handler.ts) exports `createTerminalHandler`.
 - [service.ts](service.ts) exports the image and start hooks and `TERMINAL_PORT`.
-- [credentials.ts](credentials.ts) stores the workspace password encrypted.
+- [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
+- [store.ts](store.ts) binds each cached password to its current sandbox.
+- [privileged.ts](privileged.ts) quotes installation and service control commands.
 - [protocol.ts](protocol.ts) adds server authentication to ttyd's first JSON message.
 - [The tools adapter](../previews/provider.ts) exposes the private port.
 

@@ -43,20 +43,39 @@ export function bridgeSocket(
     destination: ProxySocket,
     browser: boolean,
   ) => {
-    let queue = Promise.resolve()
-    source.addEventListener('message', (event) => {
-      queue = queue
-        .then(async () => {
-          if (closed) return
+    let pending: (string | ArrayBuffer)[] = []
+    let running = false
+    const drain = async () => {
+      try {
+        while (pending.length && !closed) {
+          const batch = pending
+          pending = []
           await options.authorize()
-          const data =
-            browser && options.fromBrowser
-              ? await options.fromBrowser(event.data)
-              : event.data
+          const output: (string | ArrayBuffer)[] = []
+          for (const data of batch)
+            output.push(
+              browser && options.fromBrowser
+                ? await options.fromBrowser(data)
+                : data,
+            )
           if (browser && options.fromBrowser) await options.authorize()
-          if (!closed) destination.send(data)
+          if (!closed) for (const data of output) destination.send(data)
+        }
+      } catch {
+        close()
+      } finally {
+        running = false
+      }
+    }
+    source.addEventListener('message', (event) => {
+      if (closed) return
+      pending.push(event.data)
+      if (!running) {
+        running = true
+        queueMicrotask(() => {
+          void drain()
         })
-        .catch(() => close())
+      }
     })
     source.addEventListener('close', () => close(1000))
     source.addEventListener('error', () => close(1011))
