@@ -8,6 +8,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { membersGate } from './gate'
+import { membersSeed } from './fixture-data.test-support'
 import { maintainDisksForTests } from './maintenance-test-support'
 import { workspaceCreator } from './ownership'
 import { membersRoute, type MembersHooks } from './route'
@@ -89,18 +90,10 @@ export async function signIn(
 }
 
 export async function memberFixture(harness: TestHarness) {
-  const admin = await signIn(harness, 10, 'admin')
-  const org = await harness.createOrg(admin.session, 'Members org')
-  const member = await signIn(harness, 11, 'member')
-  const other = await signIn(harness, 12, 'other')
-  await harness.env.DB.batch(
-    [member, other].map(({ user }) =>
-      harness.env.DB.prepare(
-        "INSERT INTO org_members (org_id, user_id, role, joined_at) VALUES (?, ?, 'member', ?)",
-      ).bind(org.id, user.id, TEST_TIME + 10),
-    ),
-  )
-  return { admin, member, other, org }
+  const seed = await membersSeed(harness)
+  await harness.env.DB.batch(seed.statements)
+  harness.github.profile = seed.profile
+  return seed.fixture
 }
 
 export async function seedWorkspace(

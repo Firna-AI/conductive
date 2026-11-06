@@ -1,7 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises'
-
 import { Miniflare } from 'miniflare'
-import { unstable_splitSqlQuery } from 'wrangler'
 
 import { API_PATHS, type Org } from '../../src/shared/api'
 import { createApp } from '../application'
@@ -9,11 +6,14 @@ import type { AppEnv } from '../env'
 import { OAUTH_COOKIE, SESSION_COOKIE } from '../security/cookies'
 import { FakeBoat } from './fake-boat'
 import { FakeGitHub } from './fake-github'
+import { applyMigrations } from './migrations'
 
 export const TEST_ORIGIN = 'https://app.conducting.test'
 export const TEST_TIME = 1_800_000_000_000
 
-export async function createHarness() {
+export async function createHarness(
+  options: { resetBoatAccounts?: boolean } = {},
+) {
   const runtime = new Miniflare({
     enableDevRegistry: false,
     telemetry: { enabled: false },
@@ -39,16 +39,7 @@ export async function createHarness() {
     ],
   })
   const db = await runtime.getD1Database('DB')
-  const directory = `${import.meta.dirname}/../../migrations`
-  const migrations = (await readdir(directory))
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-  for (const name of migrations) {
-    const sql = await readFile(`${directory}/${name}`, 'utf8')
-    await db.batch(
-      unstable_splitSqlQuery(sql).map((query) => db.prepare(query)),
-    )
-  }
+  await applyMigrations(db)
   const env: AppEnv = {
     DB: db,
     APP_ORIGIN: TEST_ORIGIN,
@@ -129,6 +120,9 @@ export async function createHarness() {
           'github_connections',
           'github_installations',
           'org_invites',
+          'org_deletion_resources',
+          'org_deletion_workspaces',
+          'org_deletions',
           'user_preferences',
           'agent_logins',
           'preview_hostnames',
@@ -151,18 +145,8 @@ export async function createHarness() {
           'oauth_states',
         ].map((table) => db.prepare(`DELETE FROM ${table}`)),
       )
-      github.requests = []
-      github.profile = {
-        id: 7,
-        login: 'octocat',
-        name: 'Octocat',
-        avatar_url: null,
-      }
-      github.tokenStatus = 200
-      github.profileStatus = 200
-      boat.requests = []
-      boat.failure = null
-      boat.responseOverride = null
+      github.reset()
+      boat.reset({ accounts: options.resetBoatAccounts ?? false })
       now = TEST_TIME
       sequence = 0
     },

@@ -15,7 +15,7 @@ import { testPause } from './test-pause'
 
 let harness: TestHarness
 beforeAll(async () => {
-  harness = await createHarness()
+  harness = await createHarness({ resetBoatAccounts: true })
 })
 beforeEach(async () => {
   await harness.reset()

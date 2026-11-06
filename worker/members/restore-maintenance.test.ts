@@ -20,7 +20,7 @@ import { write } from './members-test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
-  harness = await createHarness()
+  harness = await createHarness({ resetBoatAccounts: true })
 })
 beforeEach(async () => {
   await harness.reset()
