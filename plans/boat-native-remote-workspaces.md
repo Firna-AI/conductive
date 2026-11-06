@@ -4057,9 +4057,30 @@ Milestone 8i or 15i wires it to its backend.
 
 Evidence: `.context/boat-native-remote-workspaces/milestone-8-verification.md`.
 
+## Milestone 8j: Runner limits in the chat
+
+Tags: ui
+
+Depends on: 4d, 8
+
+Decision 76 E: the runner caps the detail of a tool and the file list of
+a finished turn, and counts the rest. The workspace stores a marker for
+each runner event that it refuses. Milestone 4d keeps the counts and the
+markers in the chat state, but shows nothing. Added on 6 November 2026
+from round 1 finding 2 of the Milestone 4d review.
+
+- [ ] Draw in the chat mockups how much tool detail and how many files the
+      runner left out, and the line of a refused event, which names what
+      was lost.
+- [ ] Draw where a marker that belongs to no session shows, such as the
+      marker of a refused file event. No rule says where yet, so bring
+      the pictures to the user as a decision before you build it.
+- [ ] Show them in the chat screens.
+- [ ] Compare each screen with its mockup.
+
 ## Milestone 8i: Chat path wiring
 
-Depends on: 5, 6, 7, 7r, 8
+Depends on: 5, 6, 7, 7r, 8, 8j
 
 - [ ] Wire the app shell, the chat screens, the chat backend, and the
       runner together, with a real Boat sandbox.
