@@ -3692,6 +3692,27 @@ this contract.
 - [ ] Update the fakes, the recorded events, and the chat and files
       protocol rules.
 
+## Milestone 4e: Contracts for the app shell
+
+Depends on: 4a
+
+Give the app shell the contracts and fake replies that its approved
+mockups need. Milestone 6 uses these replies before backend wiring.
+Worker routes stay with the wiring and backend milestones.
+
+- [ ] Add the org initials and chosen repositories to the create request.
+      Add the repository list that the create screen reads.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
+- [ ] Add the key's environment, the member who added it, and its time to
+      the Boat key status. Add the key removal contract and fake reply.
+      Leave the effect on running cloud computers to decision 80.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
+- [ ] Add the base image software list where the Cloud computer tab reads
+      it. Check Boat's docs and record the source and date beside it.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
+- [ ] Run the complete gate.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
+
 ## Milestone 5: Bases and workspace lifecycle
 
 Depends on: 4a
