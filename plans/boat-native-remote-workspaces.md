@@ -2371,6 +2371,39 @@ Added on 6 November 2026 with decision 58.
 - **Agent call on 6 November 2026:** the orchestrator reviews and merges
   the chat path first: Milestones 5, 6, 7, 7r, 8, and 8i.
 
+### 60. Decide how the Origin check treats browser reads
+
+Open. Added on 6 November 2026 from Milestone 4.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Implementation. **Category:** Security.
+- **Location:** `worker/security/gate.ts`.
+- **Background:** The gate of the app hostname checks a matching `Origin`
+  header on every request. The reason is that an upgrade without that
+  check lets preview code open chat sockets. Browsers send no `Origin`
+  header on an ordinary read from the same site. They always send it on
+  a WebSocket upgrade.
+- **Problem:** The gate refuses every ordinary browser read.
+- **Impact if no action:** The web app cannot read its own data, which
+  blocks the screens from Milestone 6 on.
+- **Root question:** How do ordinary browser reads pass the gate, while
+  writes and sockets stay protected?
+- **Options:**
+  - **A.** Allow a missing `Origin` header on GET and HEAD reads, and
+    check it when it is there. Writes and socket upgrades still need a
+    matching `Origin`. Effort: Small.
+  - **B.** The web app reads with JSON POST requests, so every request
+    carries `Origin`. This changes the API methods. Effort: Medium.
+  - **C.** Serve the API on another hostname with credentialed CORS.
+    Effort: Medium.
+- **Left out:** Keeping the check as it is, because it blocks every
+  browser read.
+- **Wider fix:** A. One gate covers every route by its method.
+- **Recommendation:** A. Reads change nothing, and the check still guards
+  every write and every socket.
+- **Action:** ask the user, because A changes a requirement of the access
+  protocol.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -2503,6 +2536,16 @@ Agent calls of 5 November 2026:
   provider renames both together.
 - Get started has four steps: the GitHub App, the first org, the org's
   Boat key, and Claude or Codex. Reason: the key belongs to the org.
+- Agent call, 6 November 2026, from Milestone 4: the Boat key needs the
+  actions `account.read`, `sandbox.create`, `sandbox.read`,
+  `sandbox.update`, `sandbox.stop`, `sandbox.resume`, `sandbox.fork`,
+  `sandbox.delete`, `exec`, `snapshot.read`, and `snapshot.write`. Later
+  milestones add `file.read`, `host`, and `desktop`. Boat's `ci` preset
+  deletes only the sandboxes that its own key created, so the key screen
+  asks for custom actions in place of the preset.
+- Agent call, 6 November 2026: the health check and the GitHub sign-in
+  with its callback need no sign-in. The callback checks its `state`
+  value instead.
 
 Decision 45 removed the plans, the seats, the compute pool, the overage,
 the metering, the upgrade, and the free plan's limits on 5 November 2026.
@@ -3046,20 +3089,20 @@ Create the app package and the complete gate, following the setup of
 
 Depends on: 3
 
-- [ ] Add GitHub sign-in through the GitHub App, signed session cookies,
+- [x] Add GitHub sign-in through the GitHub App, signed session cookies,
       and the user and org records.
-- [ ] Add the Boat client behind `SandboxProvider`, with the fixed route
+- [x] Add the Boat client behind `SandboxProvider`, with the fixed route
       list and typed errors. It uses the Boat key that decision 46
       assigns.
-- [ ] Store each Boat key encrypted, test it once when it is saved, and
+- [x] Store each Boat key encrypted, test it once when it is saved, and
       never send it to the browser or into a cloud computer.
-- [ ] Refuse a new Boat key of another Boat account, as decision 56 says.
-- [ ] Confirm which Boat key actions the app needs, and match the key
+- [x] Refuse a new Boat key of another Boat account, as decision 56 says.
+- [x] Confirm which Boat key actions the app needs, and match the key
       screen's text about the key preset.
-- [ ] Add the D1 schema and its migrations for repositories, workspaces,
+- [x] Add the D1 schema and its migrations for repositories, workspaces,
       and settings.
-- [ ] Add the membership check and the `Origin` check.
-- [ ] Test the client and the checks against a fake Boat server.
+- [x] Add the membership check and the `Origin` check.
+- [x] Test the client and the checks against a fake Boat server.
 
 ## Milestone 4a: Contracts
 

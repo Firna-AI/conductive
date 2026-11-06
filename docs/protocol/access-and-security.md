@@ -31,6 +31,11 @@ says.
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
+- Two routes of `app.conducting.build` need no sign-in: the health check,
+  and the GitHub sign-in with its callback. The callback checks its
+  `state` value instead.
+- Open decision 60 asks how the `Origin` check treats ordinary browser
+  reads, which carry no `Origin` header.
 - The hostname for machines serves the GitHub webhooks, the agent tools,
   the agent runner, and the git credential helper. Its gate checks a
   webhook signature or a workspace token in place of the sign-in.
