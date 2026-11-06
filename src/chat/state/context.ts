@@ -5,6 +5,12 @@ import type { StreamEnvelope } from '../api/read-workspace'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
 import {
+  applyMoves,
+  claimMoves,
+  saveMovedView,
+  type PendingMove,
+} from './model-moves'
+import {
   asSessionEvent,
   sessionOf,
   SessionLog,
@@ -31,6 +37,8 @@ export interface ChatContext {
   readonly versions: Map<RecordKey, number>
   /** The number of the latest model pick of each session. */
   readonly picks: Map<string, number>
+  /** The model changes whose new session has not shown yet, by its ID. */
+  readonly moves: Map<string, PendingMove>
   readonly newId: () => string
   /** A new identity for a draft that a session starts after its draft moved. */
   readonly newDraftId: () => string
@@ -113,7 +121,8 @@ const changesWorkspace = (event: StreamEnvelope['event']) =>
  * session, and records of the workspace, its start, and its sessions. A
  * record from the stream starts a new version of its session, and an event
  * of the workspace or its start a new version of the workspace record, so an
- * older reply no longer applies.
+ * older reply no longer applies. The first record of a session that a model
+ * change opens moves the draft in the same snapshot.
  */
 export function applyEnvelopes(
   context: ChatContext,
@@ -132,6 +141,7 @@ export function applyEnvelopes(
   )
   const records = lastRecords(envelopes)
   for (const id of records.keys()) beginChange(context, id)
+  const moves = claimMoves(context, records.values())
   if (envelopes.some(({ event }) => changesWorkspace(event))) {
     beginChange(context, WORKSPACE_RECORD)
   }
@@ -147,11 +157,13 @@ export function applyEnvelopes(
       }
     }
     for (const record of records.values()) next = placeSession(next, record)
+    next = applyMoves(next, moves)
     for (const [id] of changed) {
       next = withTranscript(next, id, logOf(context, id).transcript)
     }
     return next
   })
+  saveMovedView(context, moves)
 }
 
 /** Saves the view one request at a time. A newer view replaces one that waits. */

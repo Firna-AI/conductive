@@ -8,6 +8,7 @@ import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { InlineText } from '../../../docs/mockups/src/components/common/InlineText'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
+import type { MemberSummary } from '../api/read-responses'
 import { formatDuration } from '../state/format'
 import type {
   RunningTurn,
@@ -72,6 +73,24 @@ function WorkingRow(props: { turn: RunningTurn; now: number }) {
   )
 }
 
+/** The person who reads the chat, and the members whom it can name. */
+export interface ChatReaders {
+  viewerId: string | null
+  members: readonly MemberSummary[]
+}
+
+/**
+ * The line of a stopped turn (decision 72): "You" to the member who pressed
+ * Stop, and that member's name to the others. A stop without a request, or
+ * by a member whom the chat cannot name, names nobody.
+ */
+function stoppedLine(by: string | null, readers: ChatReaders): string {
+  if (by !== null && by === readers.viewerId) return 'You stopped the agent'
+  const member = readers.members.find((item) => item.id === by)
+  if (!member) return 'The agent stopped'
+  return `${member.displayName ?? member.githubLogin} stopped the agent`
+}
+
 interface ItemActions {
   /** Try again shows on a failed turn that is the last part of the chat. */
   canRetry: boolean
@@ -80,7 +99,11 @@ interface ItemActions {
   onOpenDiff?: (path: string) => void
 }
 
-function ItemView(props: { item: TranscriptItem; actions: ItemActions }) {
+function ItemView(props: {
+  item: TranscriptItem
+  actions: ItemActions
+  readers: ChatReaders
+}) {
   const { item, actions } = props
   switch (item.kind) {
     case 'user':
@@ -101,7 +124,7 @@ function ItemView(props: { item: TranscriptItem; actions: ItemActions }) {
       return (
         <div className={styles.event}>
           <CircleStop size={13} />
-          You stopped the agent
+          {stoppedLine(item.by, props.readers)}
         </div>
       )
     case 'failed':
@@ -134,6 +157,7 @@ function ItemView(props: { item: TranscriptItem; actions: ItemActions }) {
  */
 export function TranscriptView(props: {
   transcript: Transcript
+  readers: ChatReaders
   pending: readonly UserMessage[]
   now: number
   readOnly: boolean
@@ -160,6 +184,7 @@ export function TranscriptView(props: {
             }}
             item={entry.item}
             key={entry.item.id}
+            readers={props.readers}
           />
         ),
       )}

@@ -46,6 +46,11 @@ export class DevAgent {
     return this.turns.get(sessionId)?.turnId ?? null
   }
 
+  /** The sessions whose scripted turn runs. */
+  runningSessions(): string[] {
+    return [...this.turns.keys()]
+  }
+
   start(sessionId: string, messages: readonly UserMessage[]): string {
     this.count += 1
     const turnId = `dev-turn-${this.count}`

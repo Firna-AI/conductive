@@ -1,9 +1,54 @@
+import type { AgentChoice } from '../../shared/agents'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
+import type { ChangeModelResponse, Session } from '../../shared/sessions'
 import { FakeApiServer, type FakeApiOptions } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import type { FetchLike } from '../api/client'
+import { record, text } from '../api/json'
+import { readDraft } from '../api/read-chat'
 import type { StreamTimers } from '../stream/workspace-stream'
 import { ChatController } from './controller'
+
+/** The record of a new session of the workspace, as the backend writes it. */
+export function newSessionRecord(
+  sessionId: string,
+  choice: AgentChoice,
+  closedAt: number | null = null,
+): Session {
+  return {
+    id: sessionId,
+    workspaceId: FAKE_IDS.workspace,
+    title: 'New session',
+    choice,
+    createdAt: FAKE_TIME,
+    closedAt,
+    activeTurnId: null,
+  }
+}
+
+/**
+ * Answers each model change as the backend does when it opens a session: the
+ * new session takes the ID that the client chose, and the draft keeps the
+ * files that `keeps` accepts. Other requests get the fake's recorded reply.
+ */
+export function opensSession(
+  choice: AgentChoice,
+  keeps: (attachmentId: string) => boolean = () => true,
+) {
+  return async (request: Request): Promise<Response | null> => {
+    if (request.method !== 'PUT' || !request.url.endsWith('/model')) {
+      return null
+    }
+    const body = record(await request.json())
+    const draft = readDraft(body.draft)
+    const reply: ChangeModelResponse = {
+      session: newSessionRecord(text(body.newSessionId), choice),
+      created: true,
+      draft: { ...draft, attachmentIds: draft.attachmentIds.filter(keeps) },
+    }
+    return Response.json(reply)
+  }
+}
 
 /** Timers that run only when a test says so. */
 export function manualTimers(): StreamTimers & { runAll(): void } {
@@ -33,6 +78,11 @@ export function chatFor(
     workspaceId?: string
     /** Picks the requests that wait until the test lets them go. */
     hold?: (request: Request) => boolean
+    /**
+     * Answers a request from its body, as a stateful backend does. A null
+     * answer keeps the fake's recorded reply. The fake records each request.
+     */
+    answer?: (request: Request) => Promise<Response | null>
   } = {},
 ) {
   const server = new FakeApiServer(options)
@@ -45,7 +95,8 @@ export function chatFor(
     if (options.hold?.(request)) {
       await new Promise<void>((resolve) => held.push(resolve))
     }
-    return server.fetch(input, init)
+    const recorded = await server.fetch(input, init)
+    return (await options.answer?.(request)) ?? recorded
   }
   const after: number[] = []
   const timers = manualTimers()
@@ -140,7 +191,7 @@ export function shown(controller: ChatController, sessionId: string): string[] {
       case 'turn-end':
         return `end: ${item.durationMs}`
       case 'stopped':
-        return 'stopped'
+        return `stopped by ${item.by ?? 'nobody'}`
       case 'failed':
         return `failed: ${item.error.message}`
     }

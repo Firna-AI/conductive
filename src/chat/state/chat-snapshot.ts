@@ -4,7 +4,11 @@ import type { Attachment, UserMessage } from '../../shared/messages'
 import type { Session } from '../../shared/sessions'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { Workspace, WorkspaceStart } from '../../shared/workspaces'
-import type { AccountSummary, OrgSummary } from '../api/read-responses'
+import type {
+  AccountSummary,
+  MemberSummary,
+  OrgSummary,
+} from '../api/read-responses'
 import { emptyTranscript, type Transcript } from './transcript'
 
 /**
@@ -60,6 +64,8 @@ export interface ChatSnapshot {
   org: OrgSummary | null
   boatKey: Pick<BoatKeyStatus, 'configured'> | null
   account: AccountSummary | null
+  /** The members of the org, which name the member who stopped a turn. */
+  members: readonly MemberSummary[]
   models: readonly AgentModel[]
   /** Open sessions, in the order of their tabs. */
   sessions: readonly Session[]
@@ -100,6 +106,7 @@ export const initialSnapshot: ChatSnapshot = {
   org: null,
   boatKey: null,
   account: null,
+  members: [],
   models: [],
   sessions: [],
   history: [],

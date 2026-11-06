@@ -36,6 +36,7 @@ export async function loadChat(context: ChatContext): Promise<void> {
     orNull(api.account()),
     orNull(api.org()),
     orNull(api.boatKey()),
+    orNull(api.members()),
   ])
   let first: SessionsResponse
   try {
@@ -44,7 +45,7 @@ export async function loadChat(context: ChatContext): Promise<void> {
     fail(error)
     return
   }
-  const [view, models, account, org, boatKey] = await extras
+  const [view, models, account, org, boatKey, members] = await extras
   if (!context.live()) return
   const active = pickActive(orderSessions(first.sessions, view), view)
   store.update((snapshot) => ({
@@ -52,6 +53,7 @@ export async function loadChat(context: ChatContext): Promise<void> {
     view,
     models: models ?? [],
     account,
+    members: members ?? [],
     org,
     boatKey,
     activeSessionId: active,

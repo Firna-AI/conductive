@@ -16,7 +16,13 @@ export type TranscriptItem =
       durationMs: number
       files: readonly ChangedFile[]
     }
-  | { kind: 'stopped'; id: string; turnId: string }
+  | {
+      kind: 'stopped'
+      id: string
+      turnId: string
+      /** The member who pressed Stop, or null for a stop without a request. */
+      by: string | null
+    }
   | {
       kind: 'failed'
       id: string
@@ -36,9 +42,18 @@ export interface RunningTurn {
 export interface Transcript {
   items: readonly TranscriptItem[]
   turn: RunningTurn | null
+  /**
+   * The member who first pressed Stop, for each turn that has not ended. The
+   * request alone ends nothing: the turn runs until it ends as stopped.
+   */
+  stopRequests: Readonly<Record<string, string>>
 }
 
-export const emptyTranscript: Transcript = { items: [], turn: null }
+export const emptyTranscript: Transcript = {
+  items: [],
+  turn: null,
+  stopRequests: {},
+}
 
 /**
  * Applies one chat event of a session to its transcript. The chat shows only
@@ -70,6 +85,17 @@ export function foldEvent(
       return {
         ...transcript,
         items: markSent(transcript.items, [event.messageId]),
+      }
+    case 'turn.stop-requested':
+      if (Object.hasOwn(transcript.stopRequests, event.turnId)) {
+        return transcript
+      }
+      return {
+        ...transcript,
+        stopRequests: {
+          ...transcript.stopRequests,
+          [event.turnId]: event.requestedById,
+        },
       }
     default:
       return foldTurn(transcript, event, occurredAt)

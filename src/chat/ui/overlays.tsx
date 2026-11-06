@@ -37,7 +37,7 @@ export function Sheet(props: {
       >
         <span aria-hidden className={sheetStyles.handle} />
         <h2 className={sheetStyles.title}>{props.title}</h2>
-        {props.children}
+        <div className={sheetStyles.body}>{props.children}</div>
       </section>
     </div>
   )

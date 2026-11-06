@@ -1,6 +1,6 @@
 import type { AgentLoginStatus } from '../../shared/account'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
-import type { BoatKeyStatus, Org, OrgRole } from '../../shared/api'
+import type { BoatKeyStatus, Org, OrgRole, User } from '../../shared/api'
 import type { Attachment, SendMessageResponse } from '../../shared/messages'
 import type {
   ChangeModelResponse,
@@ -24,9 +24,14 @@ import {
 export type AgentLogin = Pick<AgentLoginStatus, 'agent' | 'connected'>
 
 export interface AccountSummary {
+  /** The signed-in user, who reads the chat. */
+  user: Pick<User, 'id'>
   defaultChoice: AgentChoice
   agentLogins: readonly AgentLogin[]
 }
+
+/** A member of the org, with what the chat needs to name them. */
+export type MemberSummary = Pick<User, 'id' | 'githubLogin' | 'displayName'>
 
 export type OrgSummary = Pick<Org, 'name' | 'role'>
 
@@ -82,12 +87,24 @@ export function readModels(value: unknown): readonly AgentModel[] {
 export function readAccount(value: unknown): AccountSummary {
   const source = record(value, 'account')
   return {
+    user: { id: text(record(source.user, 'user').id) },
     defaultChoice: readChoice(source.defaultChoice),
     agentLogins: list((item): AgentLogin => {
       const login = record(item, 'agent login')
       return { agent: readAgent(login.agent), connected: flag(login.connected) }
     })(source.agentLogins),
   }
+}
+
+export function readMembers(value: unknown): readonly MemberSummary[] {
+  return list((item): MemberSummary => {
+    const user = record(record(item, 'member').user, 'user')
+    return {
+      id: text(user.id),
+      githubLogin: text(user.githubLogin),
+      displayName: nullable(text)(user.displayName),
+    }
+  })(record(value, 'members').members)
 }
 
 export function readOrg(value: unknown): OrgSummary {

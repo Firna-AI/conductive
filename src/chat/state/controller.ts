@@ -101,6 +101,7 @@ export class ChatController {
       loading: new Map(),
       versions: new Map(),
       picks: new Map(),
+      moves: new Map(),
       newId: this.options.newId ?? (() => crypto.randomUUID()),
       newDraftId: () => {
         drafts += 1

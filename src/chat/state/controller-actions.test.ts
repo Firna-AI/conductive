@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { AgentChoice } from '../../shared/agents'
-import { chatHistoryPath } from '../../shared/events'
 import { filePaths } from '../../shared/files'
 import { retryMessagePath, sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
-import { chatFor, shown } from './test-kit'
+import { record, text } from '../api/json'
+import { chatFor, opensSession, shown } from './test-kit'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -94,7 +94,7 @@ describe('ChatController actions', () => {
       files: [],
       userMessageIds: ['sdk-added'],
     })
-    expect(shown(chat.controller, id)).toEqual([...before, 'stopped'])
+    expect(shown(chat.controller, id)).toEqual([...before, 'stopped by nobody'])
   })
 
   it('shows a stopped turn as stopped, and the next message continues the same session', async () => {
@@ -102,7 +102,7 @@ describe('ChatController actions', () => {
     await chat.controller.start()
     expect(shown(chat.controller, id).slice(-2)).toEqual([
       'tool: npm test stopped',
-      'stopped',
+      'stopped by cal',
     ])
     chat.controller.setDraft(id, 'Run only the unit tests.')
     await chat.controller.send(id)
@@ -122,42 +122,27 @@ describe('ChatController actions', () => {
   })
 
   it('moves the draft, with edits made during the request, to the session that another agent opens', async () => {
-    const chat = chatFor({
-      conversation: 'history',
-      hold: (request) => request.method === 'PUT',
-    })
-    await chat.controller.start()
     const codex: AgentChoice = {
       agent: 'codex',
       model: 'GPT-6.1 Sol',
       effort: 'medium',
     }
-    const created = {
-      id: 'codex',
-      workspaceId: ws,
-      title: 'New session',
-      choice: codex,
-      createdAt: FAKE_TIME,
-      closedAt: null,
-      activeTurnId: null,
-    }
-    chat.server.json('PUT', model, {
-      session: created,
-      created: true,
-      draft: { text: 'Check the postcode rules', attachmentIds: [] },
+    const chat = chatFor({
+      conversation: 'history',
+      hold: (request) => request.method === 'PUT',
+      answer: opensSession(codex),
     })
-    chat.server.json('GET', chatHistoryPath(org, ws, 'codex'), {
-      events: [],
-      throughEventNumber: 0,
-    })
+    await chat.controller.start()
     chat.controller.setDraft(id, 'Check the postcode rules')
     const picking = chat.controller.chooseModel(id, codex)
     chat.controller.setDraft(id, 'Check the postcode rules for the UK')
     chat.held.splice(0, 1)[0]()
     await picking
+    const [body] = await chat.bodies('PUT', model)
+    const created = text(record(body).newSessionId)
     const snapshot = chat.controller.getSnapshot()
-    expect(snapshot.activeSessionId).toBe('codex')
-    expect(snapshot.sessionStates.codex.draft.text).toBe(
+    expect(snapshot.activeSessionId).toBe(created)
+    expect(snapshot.sessionStates[created].draft.text).toBe(
       'Check the postcode rules for the UK',
     )
     expect(snapshot.sessionStates[id].draft.text).toBe('')

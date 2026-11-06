@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { AgentChoice } from '../../shared/agents'
-import { chatHistoryPath } from '../../shared/events'
 import { filePaths } from '../../shared/files'
 import { sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
-import { chatFor } from './test-kit'
+import { record, text } from '../api/json'
+import { chatFor, opensSession } from './test-kit'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -21,29 +21,21 @@ const isUpload = (request: Request) =>
 const isSend = (request: Request) =>
   request.method === 'POST' && request.url.endsWith('/messages')
 
-/** A chat whose next pick of a Codex model opens the session `codex`. */
+/** A chat whose next pick of a Codex model opens a session, as the backend does. */
 async function chatWithCodex(hold: (request: Request) => boolean) {
-  const chat = chatFor({ conversation: 'history', hold })
+  const chat = chatFor({
+    conversation: 'history',
+    hold,
+    answer: opensSession(codex),
+  })
   await chat.controller.start()
-  const created = {
-    id: 'codex',
-    workspaceId: ws,
-    title: 'New session',
-    choice: codex,
-    createdAt: FAKE_TIME,
-    closedAt: null,
-    activeTurnId: null,
-  }
-  chat.server.json('PUT', sessionPaths.model(org, ws, id), {
-    session: created,
-    created: true,
-    draft: { text: 'See the screenshot.', attachmentIds: [] },
-  })
-  chat.server.json('GET', chatHistoryPath(org, ws, 'codex'), {
-    events: [],
-    throughEventNumber: 0,
-  })
   return chat
+}
+
+/** The ID that the request of the Codex pick chose for its new session. */
+async function opened(chat: ReturnType<typeof chatFor>): Promise<string> {
+  const [body] = await chat.bodies('PUT', sessionPaths.model(org, ws, id))
+  return text(record(body).newSessionId)
 }
 
 describe('a draft that moves to another session', () => {
@@ -53,13 +45,14 @@ describe('a draft that moves to another session', () => {
     const uploading = chat.controller.attachFiles(id, [file()])
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
     await chat.controller.chooseModel(id, codex)
-    expect(chat.controller.getSnapshot().activeSessionId).toBe('codex')
-    await chat.controller.send('codex')
-    const messages = sessionPaths.messages(org, ws, 'codex')
+    const created = await opened(chat)
+    expect(chat.controller.getSnapshot().activeSessionId).toBe(created)
+    await chat.controller.send(created)
+    const messages = sessionPaths.messages(org, ws, created)
     expect(chat.requests('POST', messages)).toHaveLength(0)
     chat.held.splice(0, 1)[0]()
     await uploading
-    expect(chat.draftOf('codex')?.attachments.map((item) => item.id)).toEqual([
+    expect(chat.draftOf(created)?.attachments.map((item) => item.id)).toEqual([
       'attachment-1',
     ])
     expect(chat.draftOf(id)?.attachments).toEqual([])
@@ -68,8 +61,8 @@ describe('a draft that moves to another session', () => {
       messages,
       {
         message: {
-          id: 'client-1',
-          sessionId: 'codex',
+          id: 'client-2',
+          sessionId: created,
           sender: {
             id: 'cal',
             githubLogin: 'calummoore',
@@ -86,7 +79,7 @@ describe('a draft that moves to another session', () => {
       },
       202,
     )
-    await chat.controller.send('codex')
+    await chat.controller.send(created)
     expect(await chat.bodies('POST', messages)).toMatchObject([
       { attachmentIds: ['attachment-1'] },
     ])
@@ -98,6 +91,7 @@ describe('a draft that moves to another session', () => {
     const uploading = chat.controller.attachFiles(id, [file()])
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
     await chat.controller.chooseModel(id, codex)
+    const created = await opened(chat)
     chat.server.json(
       'POST',
       filePaths.attachments(org, ws),
@@ -107,7 +101,7 @@ describe('a draft that moves to another session', () => {
     chat.held.splice(0, 1)[0]()
     await uploading
     expect(chat.controller.getSnapshot().notice).toEqual({
-      sessionId: 'codex',
+      sessionId: created,
       title: "The file didn't attach",
       message: 'The file is too large.',
     })
@@ -119,10 +113,11 @@ describe('a draft that moves to another session', () => {
     const sending = chat.controller.send(id)
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
     await chat.controller.chooseModel(id, codex)
-    expect(chat.draftOf('codex')?.text).toBe('See the screenshot.')
+    const created = await opened(chat)
+    expect(chat.draftOf(created)?.text).toBe('See the screenshot.')
     chat.held.splice(0, 1)[0]()
     await sending
-    expect(chat.draftOf('codex')?.text).toBe('')
+    expect(chat.draftOf(created)?.text).toBe('')
     expect(chat.draftOf(id)?.text).toBe('')
   })
 

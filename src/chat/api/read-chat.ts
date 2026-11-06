@@ -211,6 +211,12 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
         retryMessageId: text(source.retryMessageId),
         durationMs: count(source.durationMs),
       }
+    case 'turn.stop-requested':
+      return {
+        ...turn,
+        type: source.type,
+        requestedById: text(source.requestedById),
+      }
   }
   throw new UnreadableResponse('type')
 }

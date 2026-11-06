@@ -31,6 +31,10 @@ agent runner.
   `workspaceEventsPath` after the event number. It gives each message to
   `listener.message`, the stored history first, and calls `listener.closed()`
   when the connection drops. The chat checks each message as `unknown`.
+- The chat reads the signed-in user from the account route and the members
+  of the org from the members route. A stopped turn then says "You stopped
+  the agent" to the member who pressed Stop, and names that member to the
+  others. When the members do not load, it names nobody but the reader.
 - `onWorkspaceChange` gets the workspace record after each change: its state,
   and the title that the agent writes through `workspace.title` and
   `workspace.updated` events. The header and the list of the app show it.
@@ -65,6 +69,14 @@ agent runner.
 - Each draft has an identity. When a model of the other agent moves the draft
   to a new session, its files that still upload and its send in flight
   finish on the draft there.
+- The chat chooses the ID of that new session, so the draft moves in the
+  same snapshot that first shows the session, from the stream or from the
+  reply. A later record or reply never moves a draft again, so a tab that
+  the user types in keeps its text. The reply then removes the sent files
+  that the backend did not keep from the draft that moved, wherever it is.
+- A Stop request records the member who pressed Stop, and ends nothing. The
+  turn ends when its end says stopped. A stop with no request names nobody:
+  "The agent stopped".
 - Session records and the workspace record carry no order from the server,
   so the chat counts a local version for each session and one for the
   workspace record with its start steps. A newer action or stream event wins
@@ -81,7 +93,8 @@ agent runner.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
   stateful fakes live in `dev/` and in test files only.
 - The parts reuse the mockup CSS modules and the mockup parts that are pure,
-  so the app and the mockups look the same. A mockup part that imports
+  so the app and the mockups look the same. The shared CSS also limits a
+  long menu or sheet, which then scrolls. A mockup part that imports
   fixture data or has no handlers has an interactive version here.
 - User-facing text follows the
   [names in the product](../../docs/protocol/chat-and-events.md#names-in-the-product):
@@ -118,7 +131,10 @@ in a 1440 px window. The buttons of the page make the sandbox ready, stop it,
 fail its start, write the title, drop the connection, resend the last event,
 and send two parts out of order. Writes of the page change the fake's state:
 new sessions, rename, close, reopen, messages, steer, Stop, Try again, model
-changes, uploads, Resume, and the view.
+changes, uploads, Resume, and the view. A model change opens its session
+under the ID that the chat chose. Stop and the close of a running tab
+record the member of the `role` option as the one who pressed Stop. Stop
+the sandbox ends a running turn with no Stop request.
 
 ## Tests
 
@@ -138,6 +154,8 @@ on `FakeApiServer` and the recorded events, and render the chat with
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
+- `state/model-moves.ts`: the draft move of a model change, in the snapshot
+  that first shows the new session.
 - `state/session-records.ts`: the local versions of the session records and
   of the workspace record.
 - `components/SessionStatus.tsx`: the empty views and the history status of

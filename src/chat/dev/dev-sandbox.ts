@@ -95,7 +95,47 @@ export function makeReady(backend: DevBackend): void {
   })
 }
 
+/** Ends the running turn of a session as stopped: the scripted or the recorded one. */
+function endTurn(backend: DevBackend, sessionId: string): void {
+  const recorded = backend.recordedTurns.get(sessionId)
+  backend.agent.interrupt(sessionId)
+  if (!recorded) return
+  backend.recordedTurns.delete(sessionId)
+  backend.stream.emit({
+    sessionId,
+    turnId: recorded,
+    type: 'turn.completed',
+    state: 'stopped',
+    durationMs: 161_000,
+    files: [],
+    userMessageIds: [],
+  })
+}
+
+/**
+ * Stop, or the close of a tab whose turn runs: the workspace records the
+ * member who asked, then the turn ends as stopped.
+ */
+export function requestStop(backend: DevBackend, sessionId: string): void {
+  const turnId =
+    backend.agent.running(sessionId) ?? backend.recordedTurns.get(sessionId)
+  if (!turnId) return
+  backend.stream.emit({
+    type: 'turn.stop-requested',
+    sessionId,
+    turnId,
+    requestedById: backend.viewerId,
+  })
+  endTurn(backend, sessionId)
+}
+
+/** The sandbox stops: each running turn ends as stopped, with no Stop request. */
 export function stopSandbox(backend: DevBackend): void {
+  const running = [
+    ...backend.agent.runningSessions(),
+    ...backend.recordedTurns.keys(),
+  ]
+  for (const sessionId of new Set(running)) endTurn(backend, sessionId)
   setState(backend, 'stopped')
 }
 

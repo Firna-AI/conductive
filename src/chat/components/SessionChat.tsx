@@ -122,6 +122,10 @@ export function SessionChat(props: SessionChatProps) {
         onOpenDiff={props.onOpenDiff}
         onRetry={(messageId) => id && void controller.retry(id, messageId)}
         pending={state.pending}
+        readers={{
+          viewerId: snapshot.account?.user.id ?? null,
+          members: snapshot.members,
+        }}
         readOnly={workspace?.state === 'archived'}
         retrying={state.retrying}
         transcript={state.transcript}

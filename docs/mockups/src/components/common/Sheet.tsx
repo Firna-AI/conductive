@@ -12,7 +12,7 @@ export function Sheet(props: { title: string; children: ReactNode }) {
       <section aria-label={props.title} className={styles.sheet} role="dialog">
         <span aria-hidden className={styles.handle} />
         <h2 className={styles.title}>{props.title}</h2>
-        {props.children}
+        <div className={styles.body}>{props.children}</div>
       </section>
     </div>
   )

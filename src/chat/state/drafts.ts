@@ -68,30 +68,38 @@ export function afterSend(draft: Draft, request: SendMessageRequest): Draft {
 /**
  * Moves the draft of one session to another, with its identity, its uploads
  * in flight, and its send in flight. The draft is as it is now, so text and
- * files that the user added during the move stay. A file that went with the
- * request moves only when the server kept it. The old session starts a new
- * draft.
+ * files that the user added during the change move too. The old session
+ * starts a new draft.
  */
 export function moveDraft(
   snapshot: ChatSnapshot,
-  move: {
-    from: string
-    to: string
-    sent: MessageDraft
-    kept: MessageDraft
-    freshId: string
-  },
+  move: { from: string; to: string; freshId: string },
 ): ChatSnapshot {
   const current = sessionState(snapshot, move.from).draft
-  const attachments = current.attachments.filter(
-    (item) =>
-      !move.sent.attachmentIds.includes(item.id) ||
-      move.kept.attachmentIds.includes(item.id),
-  )
-  const moved: Draft = { ...current, attachments, sendId: null }
   const emptied = withSession(snapshot, move.from, (state) => ({
     ...state,
     draft: blankDraft(move.freshId),
   }))
-  return withSession(emptied, move.to, (state) => ({ ...state, draft: moved }))
+  return withSession(emptied, move.to, (state) => ({
+    ...state,
+    draft: { ...current, sendId: null },
+  }))
+}
+
+/**
+ * The draft without the files that went with a request and that the backend
+ * did not keep. A file that the user added after the request stays.
+ */
+export function keepFiles(
+  draft: Draft,
+  sent: MessageDraft,
+  kept: MessageDraft,
+): Draft {
+  const attachments = draft.attachments.filter(
+    (item) =>
+      !sent.attachmentIds.includes(item.id) ||
+      kept.attachmentIds.includes(item.id),
+  )
+  if (attachments.length === draft.attachments.length) return draft
+  return { ...draft, attachments, sendId: null }
 }

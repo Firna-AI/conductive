@@ -62,6 +62,24 @@ function ending(transcript: Transcript, turnId: string): RunningTurn | null {
     : null
 }
 
+/** The member who first pressed Stop in a turn, or null. */
+function stopperOf(transcript: Transcript, turnId: string): string | null {
+  const { stopRequests } = transcript
+  return Object.hasOwn(stopRequests, turnId) ? stopRequests[turnId] : null
+}
+
+/** The Stop requests without the one of a turn that ended. */
+function settleStops(
+  transcript: Transcript,
+  turnId: string,
+): Transcript['stopRequests'] {
+  const { stopRequests } = transcript
+  if (!Object.hasOwn(stopRequests, turnId)) return stopRequests
+  return Object.fromEntries(
+    Object.entries(stopRequests).filter(([id]) => id !== turnId),
+  )
+}
+
 function writeAgent(
   items: readonly TranscriptItem[],
   event: Extract<
@@ -84,7 +102,8 @@ function writeAgent(
 
 /**
  * Applies one event of an agent turn: its start, thinking, text, tool calls,
- * and its end as finished, stopped, or failed.
+ * and its end as finished, stopped, or failed. A stopped end names the
+ * member who first pressed Stop in the turn, if one did.
  */
 export function foldTurn(
   transcript: Transcript,
@@ -105,14 +124,15 @@ export function foldTurn(
   switch (event.type) {
     case 'turn.started':
       return {
+        ...transcript,
         items: markSent(items, event.messageIds),
         turn: { ...working, startedAt: event.startedAt, choice: event.choice },
       }
     case 'turn.thinking':
-      return { items, turn: { ...turn, thinking: true } }
+      return { ...transcript, turn: { ...turn, thinking: true } }
     case 'assistant.delta':
     case 'assistant.completed':
-      return { items: writeAgent(items, event), turn: working }
+      return { ...transcript, items: writeAgent(items, event), turn: working }
     case 'tool.updated': {
       const id = `tool:${event.turnId}:${event.tool.id}`
       const index = items.findIndex((item) => item.id === id)
@@ -123,6 +143,7 @@ export function foldTurn(
         tool: event.tool,
       }
       return {
+        ...transcript,
         items: index < 0 ? [...items, item] : replaceAt(items, index, item),
         turn: working,
       }
@@ -139,6 +160,7 @@ export function foldTurn(
             kind: 'stopped',
             id: `stopped:${event.turnId}`,
             turnId: event.turnId,
+            by: stopperOf(transcript, event.turnId),
           }
         : {
             kind: 'turn-end',
@@ -150,6 +172,7 @@ export function foldTurn(
       return {
         items: [...ended.filter((item) => item.id !== end.id), end],
         turn: ending(transcript, event.turnId),
+        stopRequests: settleStops(transcript, event.turnId),
       }
     }
     case 'turn.failed': {
@@ -164,6 +187,7 @@ export function foldTurn(
       return {
         items: [...ended.filter((item) => item.id !== failed.id), failed],
         turn: ending(transcript, event.turnId),
+        stopRequests: settleStops(transcript, event.turnId),
       }
     }
   }

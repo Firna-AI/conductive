@@ -7,7 +7,7 @@ import { workspacePaths } from '../../shared/workspaces'
 import { list, record, text } from '../api/json'
 import { readAttachment, readChoice } from '../api/read-chat'
 import type { DevBackend } from './dev-backend'
-import { resume } from './dev-sandbox'
+import { requestStop, resume } from './dev-sandbox'
 import { place } from './dev-sessions'
 
 const reply = (body: unknown, status = 200) => Response.json(body, { status })
@@ -17,11 +17,15 @@ async function bodyOf(request: Request): Promise<Record<string, unknown>> {
   return record(value)
 }
 
-function newSession(backend: DevBackend, choice: Session['choice']): Session {
+function newSession(
+  backend: DevBackend,
+  choice: Session['choice'],
+  id?: string,
+): Session {
   backend.count += 1
   const { orgId, workspaceId } = backend.target
   const session: Session = {
-    id: `dev-session-${backend.count}`,
+    id: id ?? `dev-session-${backend.count}`,
     workspaceId,
     title: 'New session',
     choice,
@@ -97,7 +101,7 @@ async function sessionWrite(
   }
   if (method === 'POST' && action === 'close') {
     if ((await bodyOf(request)).stopRunningTurn === true)
-      stop(backend, session.id)
+      requestStop(backend, session.id)
     const closed = {
       ...session,
       closedAt: backend.clock.now(),
@@ -114,7 +118,7 @@ async function sessionWrite(
   if (method === 'POST' && action === 'messages')
     return send(backend, session, request)
   if (method === 'POST' && action === 'interrupt' && running) {
-    stop(backend, session.id)
+    requestStop(backend, session.id)
     return reply({ turnId: running, state: 'stopping' })
   }
   if (method === 'POST' && action === 'retry' && messageId) {
@@ -136,30 +140,17 @@ async function sessionWrite(
         draft: body.draft,
       })
     }
+    const id = text(body.newSessionId)
+    const known = [...backend.open, ...backend.closed].find(
+      (item) => item.id === id,
+    )
     return reply({
-      session: newSession(backend, choice),
+      session: known ?? newSession(backend, choice, id),
       created: true,
       draft: body.draft,
     })
   }
   return null
-}
-
-/** Stop ends the scripted turn, or the recorded one, as stopped. */
-function stop(backend: DevBackend, sessionId: string): void {
-  const recorded = backend.recordedTurns.get(sessionId)
-  backend.agent.interrupt(sessionId)
-  if (!recorded) return
-  backend.recordedTurns.delete(sessionId)
-  backend.stream.emit({
-    sessionId,
-    turnId: recorded,
-    type: 'turn.completed',
-    state: 'stopped',
-    durationMs: 161_000,
-    files: [],
-    userMessageIds: [],
-  })
 }
 
 /**

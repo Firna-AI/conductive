@@ -40,6 +40,8 @@ export class DevBackend {
   readonly server: FakeApiServer
   readonly clock: Clock
   readonly messages = new Map<string, UserMessage>()
+  /** The member who reads the page, who presses Stop in it. */
+  readonly viewerId: string
   /** The recorded turn that runs in a session, which Stop and steer reach. */
   readonly recordedTurns = new Map<string, string>()
   workspace: Workspace
@@ -54,6 +56,7 @@ export class DevBackend {
 
   private constructor(parts: {
     target: WorkspaceTarget
+    viewerId: string
     server: FakeApiServer
     clock: Clock
     stream: DevStream
@@ -63,6 +66,7 @@ export class DevBackend {
     closed: Session[]
   }) {
     this.target = parts.target
+    this.viewerId = parts.viewerId
     this.server = parts.server
     this.clock = parts.clock
     this.stream = parts.stream
@@ -112,6 +116,7 @@ export class DevBackend {
     }
     const backend = new DevBackend({
       target,
+      viewerId: coreFixtures(options.role).account.user.id,
       server,
       clock,
       stream: new DevStream(
