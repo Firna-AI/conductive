@@ -65,11 +65,21 @@ agent runner.
   These new counts are non-negative safe integers. Missing counts make an event unreadable.
 - Tool transcript items keep `tool.omittedDetailBytes`.
   `Transcript.turnCompletions` keeps each completion event by turn ID, including stopped completions and `omittedFileCount`.
-- `Transcript.refusedEvents` keeps each session's refusal markers outside rendered items.
+- A tool call shows the size of output that the runner left out, such as "1.2 MB left out".
+  A folded run of calls shows the total of its calls' current counts, so a finished run still names it.
+- A finished turn ends its file list with the files that the runner left out, such as "47 more files".
+  A stopped line adds the count of its stopped completion: "You stopped the agent · 5 changed files not listed".
+  The counts come from `turnCompletions`. A zero count shows nothing.
+- `Transcript.refusedEvents` keeps each session's refusal markers.
+  Each marker also becomes one `lost` item at its place among the events, which shows one line.
+  The line names the lost data and the reason in plain words, and never the stream, number, or event type.
   Nullable turn context stays intact. Markers without a session stay outside per-session logs.
-  The chat state keeps no marker without a session yet.
-- Ordered history folding preserves these fields across completion and failure events.
-  Their visible presentation remains work for Milestone 8j.
+  The chat state keeps no marker without a session, because their place is an open decision.
+- A refused `turn.completed` or `turn.failed` ends the turn that its marker names.
+  Its running calls show as stopped, its Stop request clears, and no time, files, or Try again appear.
+  A marker of a turn that was not running, or without a turn, ends nothing.
+  Try again stays on a failed turn that a later line follows.
+- Ordered history folding preserves these fields and lines across completion and failure events.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
   stream. One load runs at a time for each session, and a failed load waits
@@ -136,7 +146,7 @@ The address chooses the state. The first value of each option is the default:
 
 | Option | Values |
 | --- | --- |
-| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn` |
+| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `loss` (left-out output and files, lost events, and a lost turn end) |
 | `workspace` | `existing`, `new` (Lisbon, which starts) |
 | `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
 | `role` | `admin`, `member` |
@@ -171,6 +181,8 @@ on `FakeApiServer` and the recorded events, and render the chat with
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
 - `state/session-log.ts`: the event log of each session.
+- `state/refused-events.ts`: how a refusal marker becomes a line, and how a
+  refused end ends its turn.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
@@ -180,6 +192,9 @@ on `FakeApiServer` and the recorded events, and render the chat with
   that first shows the new session.
 - `state/session-records.ts`: the local versions of the session records and
   of the workspace record.
+- `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
+  part of the chat, with the left-out counts and the plain words of a lost
+  event from the mockups' `lostCopy.ts`.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
@@ -188,7 +203,8 @@ on `FakeApiServer` and the recorded events, and render the chat with
   route builders, and the readers of their responses.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
-- `dev/`: the development page, its fake writes, and its scripted agent.
+- `dev/`: the development page, its fake writes, its scripted agent, and the
+  `loss` scenario in `dev/dev-loss.ts`.
 
 ### Related docs
 

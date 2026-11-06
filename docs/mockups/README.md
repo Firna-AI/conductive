@@ -104,6 +104,17 @@ chat, and five tabs at the bottom.
   panel gets an accent edge.
 - A state tints a whole bar or box, and its edges stay neutral. No box has
   an accent strip on any edge.
+- Data that the chat does not have shows in plain words, from decision 76.
+  `lostCopy.ts` in `src/components/chat/` holds the words. A tool call whose
+  output the runner shortened shows the size that it left out, such as
+  "1.2 MB left out", and its folded group shows the total. A turn with more
+  than 200 files ends its list with plain text, such as "47 more files". A
+  stopped turn shows no file list, so its line ends with the count, such as
+  "You stopped the agent · 5 changed files not listed".
+  `LostLine` draws a refused runner event as one centred, muted line at its
+  place, which names the lost data and why, such as "A tool update was lost
+  because it was too large". It never shows the lost data, and a phone wraps
+  it into balanced lines.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
@@ -126,7 +137,7 @@ chat, and five tabs at the bottom.
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn       |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, Boat key, Members |
-| `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure          |
+| `app/chat`          | A finished turn, then running turns, lost data, and lost updates              |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the session history, and closing a session while it works      |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -140,7 +151,7 @@ chat, and five tabs at the bottom.
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `app`, `app/sign-in`,
-`app/orgs`, `app/org-settings`, and `app/banner` do. `app/org-settings/cloud-computer` and its building
+`app/orgs`, `app/org-settings`, `app/banner`, and `app/chat` do. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. `app/sign-in/get-started`
 moved into its own folder and kept its path. Get started is the only first
@@ -162,6 +173,19 @@ changes, a draft, and a pull request closed without a merge. A conflict and
 requested changes tint the bar amber. `app/banner/no-commits` has a branch
 without commits, whose bar offers no Create pull request, as in
 `app/new-workspace/creating` and `first-turn`.
+
+`app/chat` shows a finished turn. Its child pages: `app/chat/turns` has the
+running turn, steer, interrupt, and a failure, which moved from
+`app/chat/running`, `steer`, `interrupted`, and `failed` and declare
+`movedFrom`. `app/chat/lost-data` draws the data that the chat does not
+have, from decision 76: tool output and turn files that the runner left out,
+and the lines of runner events that the workspace refused.
+`app/chat/lost-updates` draws three places for a refused update
+that belongs to no session, such as a file update: under the file lists,
+under the header, and each update beside its data, with file reports under
+the file lists and the rest under the header. The user chooses one, and the
+app builds none of them before that decision. The `lostUpdate` state of the
+workspace screen draws all three.
 
 ## Folder layout
 
@@ -222,7 +246,7 @@ plan limits.
   running.
 - A stopped turn names the member who pressed Stop, from decision 72,
   because all members of an org see the same chat. That member sees "You
-  stopped the agent", as `app/chat/interrupted` shows. The other members
+  stopped the agent", as `app/chat/turns/interrupted` shows. The other members
   see the name of that member, such as "Cal stopped the agent" in
   `app/reassign/member-stop`. When no member pressed Stop, such as when
   the cloud computer stopped during the turn, the chat says "The agent

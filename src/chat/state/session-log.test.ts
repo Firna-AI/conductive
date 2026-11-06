@@ -6,6 +6,10 @@ import type {
 import { readStoredEvents, type StreamEnvelope } from '../api/read-workspace'
 import { chatEventsOf, SessionLog } from './session-log'
 
+/** The chat line of a refusal marker, at its place in the transcript. */
+const lineOf = (event: RunnerEventRefused) =>
+  expect.objectContaining({ kind: 'lost', marker: event })
+
 const turn = { sessionId: 'session-1', turnId: 'turn-1' }
 const marker: RunnerEventRefused = {
   ...turn,
@@ -38,7 +42,7 @@ it('keeps refusal markers and completion counts when older session history refol
   log.merge(chatEventsOf(turn.sessionId, [refused]))
   expect(log.transcript).toMatchObject({
     refusedEvents: [marker],
-    items: [],
+    items: [lineOf(marker)],
     turn: null,
   })
 
@@ -102,6 +106,10 @@ it('keeps refusal markers and completion counts when older session history refol
     turn: null,
     stopRequests: {},
   })
+  const refolded = visible.map((item) =>
+    item.kind === 'stopped' ? { ...item, by: 'member-1' } : item,
+  )
+  expect(visible.at(-1)).toEqual(lineOf(newerMarker))
   expect(log.transcript.items).toEqual([
     {
       kind: 'tool',
@@ -109,9 +117,9 @@ it('keeps refusal markers and completion counts when older session history refol
       turnId: 'turn-1',
       tool: { ...tool.tool, state: 'done' },
     },
-    ...visible.map((item) =>
-      item.kind === 'stopped' ? { ...item, by: 'member-1' } : item,
-    ),
+    ...refolded.slice(0, -1),
+    lineOf(olderMarker),
+    ...refolded.slice(-1),
   ])
   expect(log.merge(chatEventsOf(turn.sessionId, [refused, ...later]))).toBe(
     false,
@@ -123,7 +131,7 @@ it('keeps refusal markers and completion counts when older session history refol
   ])
 })
 
-it('routes refusal markers only to their named session without adding visible items', () => {
+it('routes refusal markers only to their named session, as one line each', () => {
   const other = { ...marker, sessionId: 'session-2', turnId: null }
   const workspace = { ...marker, sessionId: null, turnId: null }
   const { envelopes } = readStoredEvents({
@@ -136,12 +144,12 @@ it('routes refusal markers only to their named session without adding visible it
   second.merge(chatEventsOf('session-2', envelopes))
   expect(first.transcript).toMatchObject({
     refusedEvents: [marker],
-    items: [],
+    items: [lineOf(marker)],
     turn: null,
   })
   expect(second.transcript).toMatchObject({
     refusedEvents: [other],
-    items: [],
+    items: [lineOf(other)],
     turn: null,
   })
   expect(chatEventsOf('session-3', envelopes)).toEqual([])

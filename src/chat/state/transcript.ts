@@ -7,6 +7,7 @@ import type {
 } from '../../shared/chat-events'
 import type { ChangedFile } from '../../shared/files'
 import type { UserMessage } from '../../shared/messages'
+import { foldRefused } from './refused-events'
 import { foldTurn, markSent, replaceAt, userKey } from './turn-events'
 
 /** One part of a chat transcript, in the order that the chat shows it. */
@@ -35,6 +36,12 @@ export type TranscriptItem =
       error: { code: string; message: string }
       retryMessageId: string
     }
+  | {
+      /** A runner event that the workspace refused, at its place in the chat. */
+      kind: 'lost'
+      id: string
+      marker: RunnerEventRefused
+    }
 
 export interface RunningTurn {
   turnId: string
@@ -51,7 +58,7 @@ export interface Transcript {
   turnCompletions: Readonly<
     Record<string, Extract<AgentChatEvent, { type: 'turn.completed' }>>
   >
-  /** Session markers stay separate from rendered items until their UI exists. */
+  /** Every refusal marker of the session. Each one also shows as a `lost` item. */
   refusedEvents: readonly RunnerEventRefused[]
   /**
    * The member who first pressed Stop, for each turn that has not ended. The
@@ -83,10 +90,7 @@ export function foldEvent(
       return transcript
     case 'runner.event-refused':
       if (event.sessionId === null) return transcript
-      return {
-        ...transcript,
-        refusedEvents: [...transcript.refusedEvents, event],
-      }
+      return foldRefused(transcript, event)
     case 'message.accepted': {
       const item: TranscriptItem = {
         kind: 'user',

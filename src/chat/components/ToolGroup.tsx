@@ -13,7 +13,14 @@ import {
   Wrench,
 } from 'lucide-react'
 import type { ToolCall } from '../../shared/chat-events'
+import { LeftOut } from '../../../docs/mockups/src/components/chat/LeftOut'
+import {
+  leftOutOfCall,
+  leftOutOfRun,
+} from '../../../docs/mockups/src/components/chat/lostCopy'
 import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
+import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { formatBytes } from '../state/format'
 
 const tools: Readonly<
   Record<ToolCall['kind'], { icon: LucideIcon; done: string; running: string }>
@@ -48,6 +55,9 @@ function CallLine(props: { call: ToolCall }) {
       {call.detail ? (
         <span className={styles.detail}>{call.detail}</span>
       ) : null}
+      {call.omittedDetailBytes > 0 ? (
+        <LeftOut text={leftOutOfCall(formatBytes(call.omittedDetailBytes))} />
+      ) : null}
       {call.state === 'running' ? (
         <Spinner color={theme.colors.muted} size={12} />
       ) : null}
@@ -59,7 +69,9 @@ function CallLine(props: { call: ToolCall }) {
 /**
  * A run of consecutive tool calls as one line that folds them. A finished
  * run stays folded, and a run with a call in progress or not done shows each
- * call. Once the user opens or folds it, it keeps that choice.
+ * call. Once the user opens or folds it, it keeps that choice. When the
+ * runner left out output of a call, the folded line gives the total of the
+ * calls' current counts, and each call gives its own.
  */
 export function ToolGroup(props: { calls: readonly ToolCall[] }) {
   const { calls } = props
@@ -68,6 +80,10 @@ export function ToolGroup(props: { calls: readonly ToolCall[] }) {
   const open = chosen ?? live
   const kinds = [...new Set(calls.map((call) => call.kind))]
   const count = `${calls.length} tool ${calls.length === 1 ? 'call' : 'calls'}`
+  const leftOut = calls.reduce(
+    (total, call) => total + call.omittedDetailBytes,
+    0,
+  )
   return (
     <details
       className={styles.group}
@@ -78,7 +94,7 @@ export function ToolGroup(props: { calls: readonly ToolCall[] }) {
       }}
       open={open}
     >
-      <summary className={styles.summary}>
+      <summary className={classes(styles.summary, leftOut > 0 && styles.wraps)}>
         <ChevronRight className={styles.chevron} size={14} />
         {count}
         <span aria-hidden className={styles.kinds}>
@@ -87,6 +103,9 @@ export function ToolGroup(props: { calls: readonly ToolCall[] }) {
             return <Icon key={kind} size={13} />
           })}
         </span>
+        {leftOut > 0 ? (
+          <LeftOut text={leftOutOfRun(formatBytes(leftOut))} />
+        ) : null}
       </summary>
       <ul className={styles.calls}>
         {calls.map((call) => (

@@ -4156,16 +4156,77 @@ markers of each session in the chat state, but shows nothing. It drops a
 marker that belongs to no session. Added on 6 November 2026 from round 1
 finding 2 of the Milestone 4d review.
 
-- [ ] Draw in the chat mockups how much tool detail and how many files the
+- [x] Draw in the chat mockups how much tool detail and how many files the
       runner left out, and the line of a refused event, which names what
-      was lost.
-- [ ] Draw where a marker that belongs to no session shows, such as the
+      was lost. Branch: `conductor/boat-native-remote-workspaces-milestone-8j`.
+- [x] Draw where a marker that belongs to no session shows, such as the
       marker of a refused file event. No rule says where yet, so bring
       the pictures to the user as a decision before you build it. That
       decision must also choose where the browser keeps such a marker and
       how a browser tab that opens later reads it.
-- [ ] Show them in the chat screens.
-- [ ] Compare each screen with its mockup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8j`.
+- [x] Show the omitted tool detail, omitted turn files, and session refusal
+      lines in the chat screens.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8j`.
+- [x] Compare the per-session screens with their mockups at desktop and
+      phone sizes, in dark and light.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8j`.
+- [ ] Build the chosen place, browser memory, and later-tab replay for
+      markers without a session after the user answers the pending choice.
+      This needs app shell, Files, and protocol ownership outside this branch.
+- [ ] Compare the chosen no-session display with its mockup after that work.
+
+Evidence: `.context/boat-native-remote-workspaces/8j-mockups-report.md` and
+`.context/boat-native-remote-workspaces/8j-options-check.md`.
+Per-session checks: `.context/boat-native-remote-workspaces/8j-app-report.md`.
+
+Design calls on 6 November 2026:
+
+- Keep the omitted detail count visible when tool calls are folded.
+  Use the current count of each tool update, not the sum of its updates.
+- Show the omitted file count as plain text after the listed files.
+  The chat has no action that opens Changes yet.
+- Reuse one pure loss-line component in the mockups and the app.
+  Keep the event type and reason out of product copy.
+- Fold each session marker into the transcript at its event position.
+  Keep Try again on the last failed turn when a marker follows it.
+- A refused end stops only the turn that its marker names.
+  Mark its unfinished tools as stopped, because the lost payload gives no result.
+  The wider session-record fix stays in `plans/follow-ups/chat-refused-turn-end.md`.
+- Keep the member name on a stopped line and add its omitted file count.
+  A zero count leaves that line unchanged.
+
+Added on 6 November 2026. No option is chosen or built.
+
+### Pending choice: markers without a session
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** docs or spec.
+- **Location:** `plans/boat-native-remote-workspaces.md`, Milestone 8j; `docs/mockups/src/entries/app/chat/lost-updates/index.mockup.tsx`.
+- **Terms:**
+  - **Marker:** A stored notice that names data lost when the workspace refuses an event from the agent runner.
+  - **Session:** One chat tab in a workspace.
+  - **App shell:** The browser code that holds the workspace header, Files panel, and chat.
+- **Background:** Conducting shows one workspace with several chats and one Files panel. A refused file update can have no session. The server stores its marker in the workspace event history. The chat currently drops that marker.
+- **Problem:** The protocol calls each marker a chat line. It gives no place or browser memory owner when no session exists.
+- **Impact if no action:** A file list can miss an update without telling the user. A new tab also misses older markers.
+- **Root question:** Where should each tab show markers without a session, and when should the notices end?
+- **Options:**
+  - **A.** Show every marker under the Files lists. The Files store keeps the notices in memory. Its existing stream replays workspace events from zero for each new tab. New complete file, title, and start reports clear matching notices. Other notices stay in Files. Phone users must open Files. Effort: Medium.
+  - **B.** Show every marker below the workspace header, with Dismiss. The app shell keeps the notices in memory. Its existing stream replays from zero for each new tab. Complete file reports, newer titles, and newer start steps clear their corresponding notices. Other notices stay until Dismiss.
+
+    Dismiss stays in this tab across workspace returns. A reload or new tab shows any unresolved notice again. The bars use space above every view. Effort: Medium.
+  - **D.** Show file losses beside Files and other losses below the header. The Files store keeps one notice for each affected file list. A newer complete report clears that notice. The app shell keeps the other notices with B's recovery and Dismiss rules.
+
+    Each new tab replays both existing streams from zero. This uses two places and two memory owners. Phone users must open Files to see file losses. Effort: Medium.
+- **Left out:** C, every open chat: no notice shows when no session is open. A second fallback place would repeat B or D. E, server notice state: it needs Worker and shared-contract changes outside the user's explicit scope. The current streams already restore notices without those changes. Keep the current silence: it fails the requested loss notice. Browser disk storage: it breaks decision 87 B.
+- **Wider fix:** D. File notices stay with their source, and the header covers every other marker kind.
+- **Previous examples:** Decision 76 E and Milestone 4d store session markers. The chat starts its stream after the active session history cursor. The shell and Files streams already replay from zero. Only the chat's cursor would miss old workspace markers.
+- **Recommendation:** D. Each notice shows beside the data that it concerns. The options check changed the first recommendation from B.
+- **Action:** ask the user, because the task explicitly reserves the placement and browser state choice for the user.
+
+Shared requirements come from decision 76 E, decision 87 B, and the task. The server stores each refusal marker. Browser state stays in memory. A later tab restores notices from the server. All choices need a protocol update and app integration outside this branch's owned files. No choice has been applied.
 
 ## Milestone 8i: Chat path wiring
 

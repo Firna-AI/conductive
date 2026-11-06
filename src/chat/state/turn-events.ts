@@ -80,6 +80,25 @@ function settleStops(
   )
 }
 
+/**
+ * Ends a turn whose end event the workspace refused. A call of the turn that
+ * still runs shows as stopped, because the end did not say that it finished.
+ * The chat keeps no Stop request of the turn, and no longer shows it as
+ * running. Another running turn stays. No time, file, or retry data comes
+ * back, because it was lost with the event.
+ */
+export function endLostTurn(
+  transcript: Transcript,
+  turnId: string,
+): Transcript {
+  return {
+    ...transcript,
+    items: settleTools(transcript.items, turnId, 'stopped'),
+    turn: ending(transcript, turnId),
+    stopRequests: settleStops(transcript, turnId),
+  }
+}
+
 function writeAgent(
   items: readonly TranscriptItem[],
   event: Extract<

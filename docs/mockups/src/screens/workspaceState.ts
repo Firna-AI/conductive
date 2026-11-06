@@ -26,6 +26,7 @@ export const workspaceStateSchema = {
     'resize',
     'overlay',
     'viewer',
+    'lostUpdate',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -72,6 +73,13 @@ export const workspaceStateSchema = {
     },
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
+    /**
+     * Where an update that belongs to no session shows after the workspace
+     * refused it: nowhere, under the file lists, under the header, or each
+     * one beside its data: file reports under the file lists, and the rest
+     * under the header.
+     */
+    lostUpdate: { enum: ['none', 'files', 'header', 'contextual'] },
   },
 } as const
 
@@ -92,6 +100,7 @@ export const readyWorkspace: WorkspaceState = {
   resize: 'none',
   overlay: 'none',
   viewer: 'admin',
+  lostUpdate: 'none',
 }
 
 /**
