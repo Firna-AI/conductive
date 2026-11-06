@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** Yes.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-06, from PR #13, branch `conductor/boat-native-remote-workspaces-milestone-8`, findings 2 and 5 and two new problems of their checks.
+- **Added:** 2026-11-06, from PR #13, branch `conductor/boat-native-remote-workspaces-milestone-8`, findings 2 and 5 and two new problems of their checks, and from PR #16, finding 1, wider fix C.
 - **Location:** `src/chat/state/context.ts:141` and `:149`, and the session edit and reopen paths of the chat state.
 - **Reason:** each case needs delayed events or overlapping failed requests, so the fix rule defers it.
 
@@ -15,6 +15,8 @@
   - A delayed close event after a quick reopen selects the neighbour session again.
   - A stream record that the server wrote before a pending rename or model change hides that change for a moment.
   - An older workspace event after a Resume reply shows the stopped state and Resume again until the newer event arrives.
+  - In the app shell, a delayed Resume reply can overwrite a newer workspace state. PR #16, finding 1, fixed the common case directly, and its wider fix C, event numbers on workspace replies, is this item's option C.
+  - A failed model change reply deletes the pending draft move before a later stream record can confirm the new session, so the draft stays in the old session, and a retry makes another session. PR #13, round 2 finding 8. Its check recommends one rule for each write that has a client ID: keep the pending change until the server confirms or refuses it.
 - **Impact if no action:** In rare timing, the chat shows a rejected value, the wrong session, or a stale state for a moment.
 - **Root question:** How does the chat know whether a stream record is older than a change that it already applied?
 - **Options:**

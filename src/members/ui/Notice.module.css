@@ -1,0 +1,53 @@
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-raised);
+}
+
+.danger {
+  border-color: var(--ui-danger-border);
+  background: var(--ui-rose-soft);
+}
+
+.icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--ui-muted);
+}
+
+.danger .icon {
+  color: var(--ui-rose);
+}
+
+/* A narrow box moves the action under the text. */
+.text {
+  display: flex;
+  flex: 1 1 200px;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-strong);
+  line-height: 1.4;
+}
+
+.body {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.action {
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: auto;
+}

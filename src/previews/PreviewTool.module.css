@@ -1,0 +1,20 @@
+.frame {
+  flex: 1;
+  min-height: 0;
+  margin: 8px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+}
+
+/* A failed close tints the whole bar under the toolbar. */
+.error {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 6px var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-rose-soft);
+  color: var(--ui-rose);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}

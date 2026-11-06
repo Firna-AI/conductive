@@ -33,9 +33,64 @@ Options select the org role, workspace state, conversation, and GitHub banner st
 Replace a reply to draw a missing login, a missing key, a first run, or a deleted org.
 Preview and desktop URLs are recorded placeholders. Tests can replace them with local fixture URLs.
 
+## Mounted tests
+
+`mount.ts` mounts React components in a DOM test and acts as a person does. Use it only in tests, because it imports Vitest.
+`dom-queries.ts` finds elements by their role and accessible name, by their `aria-label`, or by their text.
+The global test environment stays Node.
+Start each DOM test file with the line `// @vitest-environment happy-dom`.
+Give the file the test timeout `MOUNTED_TEST_TIMEOUT`, 15 seconds, with `vi.setConfig`.
+It is a hang guard that is longer than the deadline of `waitFor`, so a failed wait shows its own error first.
+
+```tsx
+// @vitest-environment happy-dom
+import { vi } from 'vitest'
+import { byRole, queryByRole } from '../test-support/dom-queries'
+import { mount, MOUNTED_TEST_TIMEOUT, press, waitFor } from '../test-support/mount'
+
+vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
+
+const view = await mount(<OwnerPicker {...props} />)
+await press(byRole('button', 'Owner: Cal'))
+await waitFor(() => queryByRole('menuitemradio', 'Priya Raman'), 'the choice of Priya Raman')
+await view.rerender(<OwnerPicker {...props} workspace={next} />)
+```
+
+- `mount(element)` renders the element inside `act` into a new container on `document.body`.
+  It returns `container`, `rerender(element)`, and `unmount()`. Each mounted tree unmounts after its test.
+- `press(element)` clicks the element. `typeText(field, text)` types into an input or a text area, so React sees the change.
+  `pressKey(key)` sends a keydown and a keyup to the focused element. Each runs inside `act`.
+  Each fails with a named error when a person cannot use the target. `pressKey` checks the focused element.
+- `byRole(role, name)` gives the one element with the role and exactly the accessible name.
+  It fails when it finds none or more than one. `queryByRole` gives null for none. `queryAllByRole` gives all.
+- `byLabel(label)` and `queryByLabel(label)` match an exact `aria-label`. `accessibleName(element)` gives the name.
+- `byText(text)` and `queryByText(text)` give the innermost element whose spoken text is exactly `text`.
+- `byDialog(name)` gives the one `<dialog>` with the name. Each finder takes an optional root.
+- The finders skip an element that is not shown, and every `aria-hidden` subtree.
+  `isShown(element)` is the check: `checkVisibility()` is true, and no ancestor has `hidden`.
+- `isOperable(element)` says whether a person can use the element now: it is shown, it is not inert,
+  and it is inside the open dialog whenever a dialog is open. `whyInoperable(element)` gives the reason.
+- `requestDialogClose(dialog)` sends a close request as a browser does for Escape: a `cancel` event, then a close
+  unless a listener prevents it. With `{ cancelable: false }`, the dialog closes whatever the listeners do,
+  as a browser can close it after a second Escape.
+- `holdAnimationFrames()` holds the animation frames until the test ends, so a callback of `requestAnimationFrame` never runs.
+- `waitFor(find, what)` gives the first value of `find` that is not null, undefined, or false.
+  Between tries, the event loop takes one turn inside `act`. After 10 seconds it fails with `what` in the error.
+  It needs real timers.
+- `deferred()` gives a promise with its `resolve` and `reject`. Use it to hold a fake reply until the test lets it go.
+
+happy-dom 21 has `showModal()` for `<dialog>`, but it only sets `open`. Its `close()` fires `close` at once.
+It sends no close requests, such as for Escape, and it has no Popover API. Check a popover in a real browser.
+Its `checkVisibility()` does not hide the content of an element with `hidden`, so `isShown` checks it.
+The spinner of `@firna/ui` runs a continuous animation, which keeps an async `act` from settling in happy-dom.
+A test that shows a busy state calls `holdAnimationFrames()`, so the real spinner stays on its first frame.
+Replies, timers, and `waitFor` go on.
+
 ## Key code
 
 - `fake-api.ts` handles requests and records them.
+- `mount.ts` mounts React components in DOM tests, acts as a person does, and waits for a state.
+- `dom-queries.ts` finds shown elements in DOM tests, and says whether a person can use them.
 - `fake-core-routes.ts` records account, org, settings, section, and member replies.
 - `fake-workspace-routes.ts` records workspace, session, message, and view replies.
 - `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies.
@@ -45,6 +100,7 @@ Preview and desktop URLs are recorded placeholders. Tests can replace them with 
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, and failure.
 - `recorded-files.ts` supplies full trees, file updates, branch summaries, reads, diffs, and a size error.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
+- `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
 - `fixtures/workspaces.ts` maps workspace and session samples.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples.
 

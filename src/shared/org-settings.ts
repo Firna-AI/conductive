@@ -1,4 +1,5 @@
 import { orgPath, type Timestamp } from './api'
+import type { BaseImage } from './base-image'
 
 export const orgSettingsPaths = {
   repositories: (orgId: string) => `${orgPath(orgId)}/repositories`,
@@ -33,6 +34,8 @@ export interface SetRepositoriesRequest {
 export type SetRepositoriesResponse = RepositoriesResponse
 
 export interface OrgSettings {
+  /** Software included before the install script. Older replies may omit it. */
+  baseImage?: BaseImage
   installScript: string
   startupScript: string
   /** A stored value never goes back to the browser. */

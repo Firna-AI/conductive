@@ -4,7 +4,15 @@ export type BoatRoute =
   | { operation: 'account' | 'create' | 'saveSnapshot' }
   | {
       operation:
-        'get' | 'stop' | 'resume' | 'fork' | 'delete' | 'update' | 'command'
+        | 'get'
+        | 'stop'
+        | 'resume'
+        | 'fork'
+        | 'delete'
+        | 'update'
+        | 'command'
+        | 'host'
+        | 'desktop'
       sandboxId: string
     }
   | { operation: 'getSnapshot' | 'deleteSnapshot'; name: string }
@@ -53,6 +61,8 @@ export function boatRoute(route: BoatRoute): { method: string; path: string } {
     case 'stop':
     case 'resume':
     case 'fork':
+    case 'host':
+    case 'desktop':
       return {
         method: 'POST',
         path: `/sandboxes/${segment(route.sandboxId)}/${route.operation}`,

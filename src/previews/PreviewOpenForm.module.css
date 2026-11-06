@@ -1,0 +1,24 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.port {
+  width: 88px;
+}
+
+.error {
+  max-width: 300px;
+  margin: 0;
+  color: var(--ui-rose);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
