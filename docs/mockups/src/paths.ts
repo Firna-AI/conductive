@@ -65,4 +65,5 @@ export const checksPaths = {
   'changes-requested': 'app/banner/blocked/changes-requested',
   draft: 'app/banner/blocked/draft',
   closed: 'app/banner/blocked/closed',
+  blocked: 'app/banner/blocked/blocked',
 } as const

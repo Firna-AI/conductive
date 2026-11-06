@@ -4,9 +4,10 @@
  */
 
 /**
- * The states of the pull request bar (decision 18). `none` is a branch
- * without a pull request, and `no-commits` is one without a commit, which
- * has nothing to open a pull request with.
+ * The states of the pull request bar (decisions 18 and 64). `none` is a
+ * branch without a pull request, and `no-commits` is one without a commit,
+ * which has nothing to open a pull request with. `blocked` is a pull
+ * request that GitHub blocks for a reason that no other state names.
  */
 export const bannerStates = [
   'none',
@@ -19,6 +20,7 @@ export const bannerStates = [
   'changes-requested',
   'draft',
   'closed',
+  'blocked',
 ] as const
 
 export type BannerState = (typeof bannerStates)[number]
@@ -80,6 +82,7 @@ export const checksByState: Readonly<Record<BannerState, readonly Check[]>> = {
   'changes-requested': allPassed,
   draft: allPassed,
   closed: allPassed,
+  blocked: allPassed,
 }
 
 /** The review state that GitHub reports, when the pull request has one. */
@@ -95,6 +98,8 @@ export const reviewByState: Readonly<Record<BannerState, string | undefined>> =
     'changes-requested': 'Changes requested',
     draft: undefined,
     closed: undefined,
+    /** A missing approval is the common reason that GitHub blocks a merge. */
+    blocked: 'Pending',
   }
 
 export const mergedInto = { branch: 'main', when: '2h ago' }

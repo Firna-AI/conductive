@@ -10,6 +10,10 @@ export type MacAppState = {
   mode: WindowMode
   /** A bar at the top of the main area, such as the 15-minute window. */
   banner?: ReactNode
+  /** The other ways to allow a waiting command are drawn open. */
+  choicesOpen?: boolean
+  /** The workspace whose agent waits for the user, which the list marks. */
+  needsInput?: string
 }
 
 const MacAppContext = createContext<MacAppState | undefined>(undefined)

@@ -35,25 +35,50 @@ const states: Readonly<Record<MacCommandState, StatePresentation>> = {
   },
 }
 
-/** The line under the command that says what happens next, by state. */
-const notes: Readonly<Record<MacCommandState, string | undefined>> = {
-  waiting: `The Mac app asks ${sender} to allow it.`,
+/**
+ * The line under the command that says what happened, by state. A waiting
+ * request has none, because the chat pins it above the composer.
+ */
+const notes: Readonly<Partial<Record<MacCommandState, string>>> = {
   denied: `${sender} denied it in the Mac app.`,
-  done: undefined,
   unavailable: 'The Mac is asleep, or the Mac app is closed.',
+}
+
+/** The exact command, after a muted shell prompt. Long commands wrap. */
+export function CommandLine(props: { command: string }) {
+  return (
+    <code className={styles.command}>
+      <span aria-hidden className={styles.prompt}>
+        ${' '}
+      </span>
+      {props.command}
+    </code>
+  )
+}
+
+/** The state of a command on the Mac, as a glyph and a word. */
+export function CommandStatus(props: { state: MacCommandState }) {
+  const presentation = states[props.state]
+  return (
+    <StatusText
+      busy={presentation.busy}
+      icon={presentation.icon}
+      label={presentation.label}
+      tone={presentation.tone}
+    />
+  )
 }
 
 /**
  * A command that the agent asked to run on the Mac of the person who sent
- * the turn (decision 62): the Mac, the state, the command, its folder and
- * time limit, and the output once it ran.
+ * the turn (decision 62), at its place in the chat: the Mac, the state, the
+ * command, its folder and time limit, and the output once it ran.
  */
 export function MacCommand(props: {
   request: MacCommandRequest
   state: MacCommandState
 }) {
   const { request, state } = props
-  const presentation = states[state]
   const note = notes[state]
   return (
     <section aria-label={`Command on ${thisMac.name}`} className={styles.card}>
@@ -61,19 +86,9 @@ export function MacCommand(props: {
         <Laptop aria-hidden className={styles.icon} size={14} />
         <span className={styles.mac}>{thisMac.name}</span>
         <span className={styles.spacer} />
-        <StatusText
-          busy={presentation.busy}
-          icon={presentation.icon}
-          label={presentation.label}
-          tone={presentation.tone}
-        />
+        <CommandStatus state={state} />
       </div>
-      <code className={styles.command}>
-        <span aria-hidden className={styles.prompt}>
-          ${' '}
-        </span>
-        {request.command}
-      </code>
+      <CommandLine command={request.command} />
       <span className={styles.meta}>
         in <code className={styles.path}>{request.folder}</code> · up to{' '}
         {request.limit}

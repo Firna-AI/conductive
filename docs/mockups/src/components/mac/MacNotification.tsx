@@ -7,7 +7,7 @@ import styles from './MacNotification.module.css'
 
 /**
  * The notification of macOS while the Mac app is in the background. It
- * opens the prompt of the command.
+ * opens the workspace, where the command waits just above the composer.
  */
 export function MacNotification(props: { request: MacCommandRequest }) {
   return (
