@@ -1,0 +1,43 @@
+# File and save errors strand turns and readiness
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-06, from PR #12, branch `conductor/boat-native-remote-workspaces-milestone-7r`, two new problems of the round 2 check of finding 6, and the lifecycle note of that review.
+- **Location:** the turn start in `AgentEngine.command` in `runner/src/engine.ts`, `finishTurn` in `runner/src/engine-finish.ts:37`, the `connected` callback in `runner/src/runner.ts:60`, and `RunnerLink.enqueue` in `runner/src/link.ts:83`.
+- **Reason:** on 6 November 2026 the owner told the branch that built the runner to record this note without a fix.
+
+- **Terms:**
+  - **Runner:** the agent runner, the Node program in `runner/` that runs the agents in a cloud computer and reports to the workspace.
+  - **Workspace:** the Durable Object of one workspace. It owns the sessions, the turns, and the waiting input, and it stores the runner events.
+  - **Checkpoint:** the record of the repository files at the start of a turn. `checkpoint` and `changedSince` in `runner/src/checkpoint.ts` make it and compare it.
+  - **File read:** a Git command or a file system call of the runner, such as a checkpoint or a scan of the file tree.
+  - **Save:** a write of the runner state file through `EventStore` in `runner/src/state.ts`. The runner saves each event and each new session record before it sends anything.
+- **Background:**
+  - A `turn` command starts a turn. The engine records the command ID, saves a new session record, takes a checkpoint, saves and sends `turn.started`, and then starts the agent.
+  - The engine ignores a command whose ID it has recorded. So the same command, sent again after a reconnect, does nothing.
+  - At the end of a turn, `finishTurn` reads the changed files with `changedSince`, and then emits `turn.completed`. Stop ends a running turn through the same step.
+  - After each connect, the `connected` callback scans the file tree, emits `files.snapshot`, and then emits `runner.ready`. The workspace sends commands to a new stream only after `runner.ready`.
+  - Since 6 November 2026, the runner answers an interrupt for a turn that it does not run with `turn.completed` state `stopped`.
+  - The chat protocol says that a turn that fails names the cause, and that Try again retries the turn. The files protocol says that the runner sends the full file tree when it connects.
+- **Problem:** A rejected file read or a rejected save stops the step where it happens, and no other code ends that step.
+  - At a turn start, the runner emits no `turn.started` and no `turn.failed`. The only trace is the local warning "The agent command could not finish."
+  - At a turn end, the runner emits no `turn.completed` and keeps the turn active. Stop runs the same step, so Stop cannot end the turn while the read fails.
+  - After a connect, the runner sends no `runner.ready`. `RunnerLink.enqueue` writes "The runner connection could not process a message." and closes the connection. `runner/src/main.ts:16` then connects again each second.
+  - A probe in the review of the runner branch showed these three effects with one cause, a tracked directory that became a file. Commit `5a22dd5` fixed that cause. Each other rejected file read or save still has the same effects.
+- **Impact if no action:** A turn can stay running in the chat with no agent behind it. Stop ends a turn whose start failed, but not a turn whose end fails. After a failed scan, a new stream gets no commands, and the chat stays in its starting state.
+- **Root question:** When one file read or one save fails, how does the runner still end the turn and report that it is ready?
+- **Options:**
+  - **A.** Exit the runner process after such an error, so that systemd starts it again from its saved state. Each running turn and agent process is lost, and a lasting error repeats the restart. Effort: Small.
+  - **B.** End each step with the events that exist now. A failed start emits `turn.failed` with a cause. A failed end emits `turn.completed` with an empty file list. A failed scan still sends `runner.ready`, and a later scan sends the tree. The empty list hides the files that the turn changed. Effort: Medium.
+  - **C.** As B, but a failed end emits `turn.failed`. The chat then shows a failure for work that the agent finished. The workspace does not continue the unanswered messages of a failed turn. Effort: Medium.
+  - **D.** As B, and add a mark to the shared runner contract for a file list or a tree that the runner cannot read. The chat can then say so. This changes `src/shared/runner.ts`, the fakes, and the chat and files protocol docs. Effort: Medium.
+- **Left out:**
+  - Change nothing: it fails the goal, because a turn stays running with no agent.
+  - Retry the failed step only: a lasting error still strands the step. Each option can add a retry before its end.
+- **Wider fix:** D. Every step gets an end, and the chat shows no wrong file list.
+- **Previous examples:** the directory replacement case above, fixed for that cause only in `5a22dd5`.
+- **Related:**
+  - `plans/follow-ups/runner-rejected-write-chains.md`, same code for a failed save. That item makes later saves work again after one failed save. This item decides what the failed step reports. A failed save can end its step only after that item is fixed.
+  - `plans/follow-ups/runner-shutdown-turn-end.md`, the same symptom from another cause: a turn that stays active in the workspace.
+- **Recommendation:** D. It ends every step and keeps the chat output true.
+- **Action:** ask the user, because D changes the shared runner contract, and no requirement says what the runner reports after a failed file read.

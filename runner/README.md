@@ -33,6 +33,13 @@ them.
   conversation.
 - User Stop closes the agent process and discards unread input. The next
   turn resumes its saved conversation when one exists.
+- The workspace Durable Object owns the turn IDs and the waiting input.
+  Only a `turn` command starts a turn, and the runner creates no turn ID.
+- A `message` command reaches only the running turn that it names. For an
+  idle session or another turn, the runner writes a warning and sends no
+  event.
+- An interrupt for a turn that the runner does not run still gets
+  `turn.completed` with state `stopped`.
 - One output filter replaces the workspace token and known logins with
   `[redacted]`. It holds possible secret prefixes across text events.
 - The runner saves each event in its state file before it sends it. The

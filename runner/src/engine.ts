@@ -52,7 +52,24 @@ export class AgentEngine {
             state: 'stopped',
             userMessageIds: turn.messageIds,
           })
-        }
+        } else
+          await this.emit({
+            type: 'turn.completed',
+            sessionId: command.sessionId,
+            turnId: command.turnId,
+            state: 'stopped',
+            durationMs: 0,
+            files: [],
+            userMessageIds: [],
+          })
+        return
+      }
+      if (
+        command.type === 'message' &&
+        this.sessions.get(command.sessionId)?.active?.first.turnId !==
+          command.turnId
+      ) {
+        this.options.warn('The message targets a turn that is not running.')
         return
       }
       let session = this.sessions.get(command.sessionId)
@@ -85,10 +102,7 @@ export class AgentEngine {
         await rememberSession(this.options.store, session)
       }
       if (session.active) {
-        if (
-          command.type === 'turn' ||
-          command.turnId !== session.active.first.turnId
-        ) {
+        if (command.type === 'turn') {
           await this.failCommand(
             command,
             'turn_running',

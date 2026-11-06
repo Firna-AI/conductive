@@ -3662,13 +3662,15 @@ Depends on: 4a
 - [x] Test Codex streaming: the Codex SDK where it gives interrupt and
       partial text, and the Codex App Server otherwise. Save the result
       under `.context/`. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
-- [ ] Measure the first agent start after a resume over several runs,
-      with the runner inside and outside the home folder. Keep the faster
-      place. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
 - [x] Watch the repository, and push the file tree and the changes summary
       against the default branch over the connection. Read one file or one
       diff on request. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
 - [x] Test the runner against the fake Durable Object of Milestone 4a. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Match the turn ownership of the chat backend. Only a `turn` command
+      starts a turn, and the runner creates no turn ID. A `message`
+      command for an idle session or for another turn gets a local
+      warning and no event. An interrupt for a turn that the runner does
+      not run gets `turn.completed` with state `stopped`. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
 - [ ] Adopt decision 76 after the owner confirms that Milestone 4d has
       merged. Split and cap outbound events with the new shared contract.
       Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
@@ -3700,7 +3702,31 @@ Agent calls, 6 November 2026:
   Git also computes untracked diffs and counts without changing the real
   index. Turn line counts use the comparison against the default branch.
 - Keep the real resume comparison open. Local binary reads cannot choose
-  the faster placement after a Boat resume.
+  the faster placement after a Boat resume. On 6 November 2026 the owner
+  moved its TODO to Milestone 8i, which has a real sandbox.
+
+Owner instructions, 6 November 2026:
+
+- Review finding 5, late messages restart ended turns: apply option D,
+  the runner half. The merged chat backend already owns the turn IDs and
+  the waiting input.
+  - Only a `turn` command starts a turn. The runner creates no turn ID.
+  - A `message` command for an idle session or for another turn gets
+    only a local warning. The runner emits no event for the ended turn.
+  - An interrupt for a turn that the runner does not run still gets
+    `turn.completed` with state `stopped`.
+  - The backend continues unanswered messages only after a `finished`
+    turn, never after a `stopped` or a `failed` turn.
+- Move the first-start measurement TODO to Milestone 8i, because it needs
+  a real sandbox and real logins. Keep all measurement tools in `runner/`.
+- Record four open notes of the review checks as follow-up items. Do not
+  fix them in this branch:
+  - `plans/follow-ups/runner-file-and-save-errors.md`
+  - `plans/follow-ups/runner-shutdown-turn-end.md`
+  - `plans/follow-ups/idle-agent-login-lifetime.md`
+  - `plans/follow-ups/runner-rejected-write-chains.md`
+- Keep the decision 76 TODO unchecked until the owner confirms that
+  Milestone 4d has merged. The pull request stays a draft.
 
 Evidence: `.context/boat-native-remote-workspaces/runner/handoff.md`.
 
@@ -3744,6 +3770,11 @@ Depends on: 5, 6, 7, 7r, 8
       runner together, with a real Boat sandbox.
 - [ ] Test the chat end to end: create a workspace, send a message, stream
       the answer, stop and resume, and send again.
+- [ ] Measure the first agent start after a resume over several runs,
+      with the runner inside and outside the home folder. Keep the faster
+      place.
+      Moved from Milestone 7r on 6 November 2026, because it needs a real sandbox and real logins.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
 
 ## Milestone 16a: First deployment
 
