@@ -5,13 +5,19 @@ interface Disposable {
   dispose(): void
 }
 
-/** The part of an xterm.js terminal that a session uses. */
+/**
+ * The screen of a session, such as an xterm.js terminal. It splits the data
+ * that it sends by its source.
+ */
 export interface TerminalScreen {
   readonly cols: number
   readonly rows: number
   readonly modes: { readonly applicationCursorKeysMode: boolean }
   write(data: string): void
-  onData(listener: (data: string) => void): Disposable
+  /** The user's own input: keys, text, composition, paste, and mouse. */
+  onUserInput(listener: (data: string) => void): Disposable
+  /** Data that the screen sends by itself, such as a cursor report. */
+  onReply(listener: (data: string) => void): Disposable
   onResize(listener: (size: { cols: number; rows: number }) => void): Disposable
   focus(): void
 }
@@ -27,8 +33,9 @@ export interface TerminalSessionEvents {
 
 /**
  * Connects a terminal screen to a decoded terminal transport. Output goes to
- * the screen. Typed input, the keys of the key row, and each new size go to
- * the transport. A held Ctrl key applies to the next key only.
+ * the screen. The user's input, the keys of the key row, the screen's own
+ * replies, and each new size go to the transport. A held Ctrl key applies to
+ * the next key of the user only.
  */
 export class TerminalSession {
   private readonly screen: TerminalScreen
@@ -58,14 +65,19 @@ export class TerminalSession {
         this.events.onClosed()
       }),
     )
-    const input = screen.onData((data) =>
+    const input = screen.onUserInput((data) =>
       this.send(this.control ? withControl(data) : data),
     )
+    // A reply is not the user's key: it keeps a held Ctrl and is no activity.
+    const reply = screen.onReply((data) => {
+      if (!this.ended) transport.write(data)
+    })
     const resize = screen.onResize(({ cols, rows }) => {
       if (!this.ended) transport.resize(cols, rows)
     })
     this.cleanups.push(
       () => input.dispose(),
+      () => reply.dispose(),
       () => resize.dispose(),
     )
     transport.resize(screen.cols, screen.rows)

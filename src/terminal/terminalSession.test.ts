@@ -3,29 +3,39 @@ import { FakeTerminal } from '../test-support/fake-terminal'
 import { fakeTerminalOutput } from '../test-support/fixtures/tools'
 import { TerminalSession, type TerminalScreen } from './terminalSession'
 
-/** Stands in for xterm.js: records output, and plays typing and resizes. */
+/** Stands in for xterm.js: records output, and plays input and resizes. */
 class FakeScreen implements TerminalScreen {
   cols = 80
   rows = 24
   modes = { applicationCursorKeysMode: false }
   readonly output: string[] = []
   focusCount = 0
-  private readonly dataListeners = new Set<(data: string) => void>()
+  private readonly inputListeners = new Set<(data: string) => void>()
+  private readonly replyListeners = new Set<(data: string) => void>()
   private readonly resizeListeners = new Set<
     (size: { cols: number; rows: number }) => void
   >()
 
   get listenerCount(): number {
-    return this.dataListeners.size + this.resizeListeners.size
+    return (
+      this.inputListeners.size +
+      this.replyListeners.size +
+      this.resizeListeners.size
+    )
   }
 
   write(data: string): void {
     this.output.push(data)
   }
 
-  onData(listener: (data: string) => void) {
-    this.dataListeners.add(listener)
-    return { dispose: () => this.dataListeners.delete(listener) }
+  onUserInput(listener: (data: string) => void) {
+    this.inputListeners.add(listener)
+    return { dispose: () => this.inputListeners.delete(listener) }
+  }
+
+  onReply(listener: (data: string) => void) {
+    this.replyListeners.add(listener)
+    return { dispose: () => this.replyListeners.delete(listener) }
   }
 
   onResize(listener: (size: { cols: number; rows: number }) => void) {
@@ -38,7 +48,11 @@ class FakeScreen implements TerminalScreen {
   }
 
   type(data: string): void {
-    for (const listener of this.dataListeners) listener(data)
+    for (const listener of this.inputListeners) listener(data)
+  }
+
+  reply(data: string): void {
+    for (const listener of this.replyListeners) listener(data)
   }
 
   resizeTo(cols: number, rows: number): void {
@@ -89,6 +103,19 @@ describe('TerminalSession', () => {
     expect(screen.focusCount).toBe(1)
   })
 
+  it('sends replies of the screen without the held Ctrl or an activity report', () => {
+    const { screen, transport, events, session } = startSession()
+
+    session.toggleControl()
+    screen.reply('\x1b[12;5R')
+    screen.reply('\x1b[I')
+    screen.type('c')
+
+    expect(transport.inputs).toEqual(['\x1b[12;5R', '\x1b[I', '\x03'])
+    expect(events.onControlChange.mock.calls).toEqual([[true], [false]])
+    expect(events.onInput).toHaveBeenCalledTimes(1)
+  })
+
   it('sends the keys of the key row in the cursor key mode of the program', () => {
     const { screen, transport, session } = startSession()
 
@@ -115,6 +142,7 @@ describe('TerminalSession', () => {
 
     transport.close()
     screen.type('ls\r')
+    screen.reply('\x1b[0n')
     screen.resizeTo(100, 20)
 
     expect(events.onClosed).toHaveBeenCalledTimes(1)

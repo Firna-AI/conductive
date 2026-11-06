@@ -2,6 +2,8 @@ import { terminalPaths, type TerminalResponse } from '../shared/terminal'
 import { isRecord, requestJson, type ToolResult } from './tool-parts/request'
 import type { ToolWorkspace } from './tool-parts/workspace'
 
+export type ReadyTerminal = Extract<TerminalResponse, { state: 'ready' }>
+
 /** Narrows the terminal response, or gives null for any other body. */
 export function parseTerminalResponse(body: unknown): TerminalResponse | null {
   if (!isRecord(body)) return null

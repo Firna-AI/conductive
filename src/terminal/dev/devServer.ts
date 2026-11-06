@@ -4,18 +4,18 @@ import type { Preview } from '../../shared/previews'
 import { previewsPath } from '../../shared/previews'
 import { terminalPaths } from '../../shared/terminal'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FakeTerminal } from '../../test-support/fake-terminal'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { isRecord, type ApiFetch } from '../tool-parts/request'
 import type { SubscribeWorkspaceEvents } from '../tool-parts/workspace'
+import type { DevHold } from './devTerminal'
 
 export const devTools = ['terminal', 'preview', 'desktop'] as const
 export type DevTool = (typeof devTools)[number]
 
 /** The states that the development page can draw for each tool. */
 export const devStates: Readonly<Record<DevTool, readonly string[]>> = {
-  terminal: ['ready', 'starting', 'stopped', 'error', 'malformed'],
+  terminal: ['ready', 'starting', 'stopped', 'error', 'malformed', 'late'],
   preview: ['open', 'none', 'error'],
   desktop: ['ready', 'error'],
 }
@@ -60,8 +60,12 @@ export function createDevServer(tool: DevTool, state: string): FakeApiServer {
     expiresAt: FAKE_TIME + 600_000,
   })
   const terminal = terminalPaths.connection(org, id)
-  if (tool === 'terminal' && (state === 'starting' || state === 'stopped')) {
+  const waiting = state === 'starting' || state === 'stopped'
+  if (tool === 'terminal' && waiting) {
     server.json('GET', terminal, { state, socketPath: null })
+  }
+  if (tool === 'terminal' && state === 'late') {
+    server.json('GET', terminal, { state: 'starting', socketPath: null })
   }
   if (tool === 'terminal' && state === 'error') {
     server.json('GET', terminal, failure, 503)
@@ -92,13 +96,16 @@ function requestedPort(body: string): number | null {
 
 /**
  * The fake API's fetch, with a log. It records a reply for each preview write
- * first, so that any port opens and any preview closes.
+ * first, so that any port opens and any preview closes. `hold` can keep a
+ * terminal read from its answer.
  */
 export function devFetch(
   server: FakeApiServer,
   log: (request: DevRequest) => void,
+  hold: DevHold,
 ): ApiFetch {
   const previews = previewsPath(FAKE_IDS.org, FAKE_IDS.workspace)
+  const terminal = terminalPaths.connection(FAKE_IDS.org, FAKE_IDS.workspace)
   return async (path, init) => {
     const method = init?.method ?? 'GET'
     const body = typeof init?.body === 'string' ? init.body : ''
@@ -110,6 +117,8 @@ export function devFetch(
       server.empty('DELETE', path)
     }
     const response = await server.fetch(path, init)
+    const held = method === 'GET' && path === terminal ? hold.wait() : null
+    if (held) await held
     log({ method, path, body, status: response.status })
     return response
   }
@@ -143,34 +152,5 @@ export function sandboxReadyEvent(): WorkspaceEvent {
   return {
     type: 'workspace.updated',
     workspace: workspaceFixtures().detail.workspace,
-  }
-}
-
-/**
- * The fake terminal, with typed input echoed back as a shell would. It
- * reports each input and size to the development page.
- */
-export class EchoTerminal extends FakeTerminal {
-  private readonly report: (entry: string) => void
-
-  constructor(report: (entry: string) => void) {
-    super()
-    this.report = report
-  }
-
-  write(input: string): void {
-    super.write(input)
-    this.report(`input ${JSON.stringify(input)}`)
-    this.emit(input.replaceAll('\r', '\r\n').replaceAll('\x7f', '\b \b'))
-  }
-
-  resize(columns: number, rows: number): void {
-    super.resize(columns, rows)
-    this.report(`size ${columns} x ${rows}`)
-  }
-
-  close(): void {
-    super.close()
-    this.report('close')
   }
 }

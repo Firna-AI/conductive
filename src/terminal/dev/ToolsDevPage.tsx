@@ -14,9 +14,9 @@ import {
   devFetch,
   devSubscribe,
   devTools,
-  EchoTerminal,
   type DevRequest,
 } from './devServer'
+import { DevHold, EchoTerminal } from './devTerminal'
 import { devHref, go, useDevParams } from './devParams'
 import { mockupSessionOutput } from './mockupSession'
 import styles from './ToolsDevPage.module.css'
@@ -38,20 +38,25 @@ export function ToolsDevPage() {
   const [terminalLog, setTerminalLog] = useState<readonly string[]>([])
   const [activity, setActivity] = useState(0)
   const terminals = useRef<EchoTerminal[]>([])
-  const server = useMemo(
-    () => createDevServer(params.tool, params.state),
+  const { server, hold } = useMemo(
+    () => ({
+      server: createDevServer(params.tool, params.state),
+      hold: new DevHold(params.state === 'late'),
+    }),
     [params.tool, params.state],
   )
   const workspace = useMemo<ToolWorkspace>(
     () => ({
       orgId: FAKE_IDS.org,
       workspaceId: params.workspace,
-      fetch: devFetch(server, (request) =>
-        setRequests((list) => lastOf(list, request)),
+      fetch: devFetch(
+        server,
+        (request) => setRequests((list) => lastOf(list, request)),
+        hold,
       ),
       subscribe: devSubscribe(server),
     }),
-    [server, params.workspace],
+    [server, hold, params.workspace],
   )
   const connect = useCallback<ConnectTerminal>(() => {
     const terminal = new EchoTerminal((entry) =>
@@ -92,7 +97,11 @@ export function ToolsDevPage() {
       <SharedUiThemeProvider theme={theme}>
         <div className={styles.page}>
           <DevControls
+            hold={hold}
             onDisconnect={() => terminals.current.at(-1)?.close()}
+            onTerminalOutput={(output) =>
+              terminals.current.at(-1)?.emit(output)
+            }
             params={params}
             server={server}
           />

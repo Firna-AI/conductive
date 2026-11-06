@@ -14,8 +14,10 @@ change can move the shared parts to the app's shared components.
 
 - The tool reads the terminal state of the workspace. It connects only in
   the `ready` state.
-- A starting or stopped sandbox shows its state. The tool reads the state
-  again when a `workspace.updated` event says that the sandbox runs.
+- A starting or stopped sandbox shows its state. When a `workspace.updated`
+  event says that the sandbox runs, a waiting tool reads the state again. A
+  tool whose read still runs starts a new read too. An answer to an older
+  read can't bring back a wait.
 - A failed or malformed answer shows an error with Try again.
 - The screen uses the Graphite tokens: the surface, the ink, the monospace
   font at 12px, lines 1.6 times the font size apart, and the status colours
@@ -23,7 +25,12 @@ change can move the shared parts to the app's shared components.
 - The screen fits its box, and sends its size at the start and at each
   change.
 - On a phone, a key row adds Esc, Tab, Ctrl, Up, and Down. The keys keep the
-  keyboard focus on the terminal. Ctrl applies to the next key only.
+  keyboard focus on the terminal. Ctrl applies to the user's next key only.
+- xterm.js answers some requests of programs by itself, such as a cursor
+  report, and it reports focus changes when a program asks for them. These
+  replies reach the shell, but they keep a held Ctrl and count as no
+  activity. The screen marks them where xterm.js makes them, so a key with
+  the same bytes, such as Shift+F3, stays the user's key.
 - When the connection ends, the screen keeps its output, takes no more
   input or size, and offers Reconnect.
 - Another workspace starts the tool again, so no input reaches the old one.
@@ -44,9 +51,11 @@ change can move the shared parts to the app's shared components.
   the `TerminalTransport` of the
   [shared contracts](../shared/README.md). Keep the function stable. A
   transport that closes, or a `connect` that throws, shows Disconnected with
-  Reconnect.
-- `onActivity` runs for each key that the user sends. The shell can count it
-  as activity with the source `terminal`, at the rate that it chooses.
+  Reconnect. The transport takes text only, so the tool does not send the
+  mouse reports that xterm.js sends as binary data, in the old X10 format.
+- `onActivity` runs for each input of the user: keys, text, paste, and mouse
+  reports. It does not run for the replies of xterm.js. The shell can count
+  it as activity with the source `terminal`, at the rate that it chooses.
 - `workspace.fetch` is the app's fetch. `workspace.subscribe` delivers the
   events of the workspace in order. Keep both stable.
 - `touch` selects the phone layout: 44px controls and the key row.
@@ -71,14 +80,21 @@ The address holds the settings: `tool` (`terminal`, `preview`, `desktop`),
 `state`, `layout` (`panel`, `phone`), `scheme` (`dark`, `light`), `workspace`,
 and `preview`. The panel layout has the 440 × 389 size of the tools in the
 right column. The phone layout has the 390 × 636 size of a tool page on a
-phone. The buttons send fake events: revoke a preview, start the sandbox,
-end the terminal connection, and change the workspace. The page lists each
-request and each call of the terminal transport.
+phone. The page lists each request and each call of the terminal transport.
+
+The buttons send fake events: revoke a preview, start the sandbox, end the
+terminal connection, and change the workspace. In the `late` state, the
+terminal reads that start before the sandbox runs wait for Answer held
+reads. Two buttons make the shell ask for the cursor position and turn on
+focus reports. These two buttons leave the keyboard on the terminal.
 
 ## Key code
 
 - `TerminalTool.tsx`: the tool and its states.
+- `terminalReadiness.ts`: the states of the tool, its reads, and its events.
 - `TerminalScreen.tsx`: the xterm.js screen, its fit, and the key row.
+- `xtermScreen.ts`: splits the data of xterm.js into the user's input and
+  its own replies.
 - `terminalSession.ts`: connects the screen to a `TerminalTransport`.
 - `terminalKeys.ts`: the bytes of the key row and of Ctrl with a key.
 - `terminalTheme.ts`: the colours and the type of the screen from the tokens.
@@ -87,7 +103,8 @@ request and each call of the terminal transport.
 - `tool-parts/workspace.ts`: the workspace of a tool and its events.
 - `tool-parts/ToolRoot.tsx`, `ToolButtons.tsx`, `ToolStates.tsx`: the
   dense and touch controls, and the waiting and message states.
-- `dev/tools.html`: the development page.
+- `dev/tools.html`: the development page. `dev/devTerminal.ts` holds its
+  echo terminal and its held reads.
 
 See [the previews](../previews/README.md), [the desktop](../desktop/README.md),
 [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md#terminal),

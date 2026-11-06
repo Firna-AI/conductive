@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, type MouseEvent } from 'react'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { toolFixtures } from '../../test-support/fixtures/tools'
@@ -10,9 +10,15 @@ import {
   sandboxReadyEvent,
 } from './devServer'
 import { devHref, go, type DevParams } from './devParams'
+import type { DevHold } from './devTerminal'
 import styles from './ToolsDevPage.module.css'
 
 const otherWorkspace = 'saved-carts'
+
+/** A button that sends terminal output leaves the keyboard on the terminal. */
+function keepTerminalFocus(event: MouseEvent) {
+  event.preventDefault()
+}
 
 function Choice(props: {
   label: string
@@ -44,9 +50,12 @@ function Choice(props: {
 export function DevControls(props: {
   params: DevParams
   server: FakeApiServer
+  hold: DevHold
   onDisconnect: () => void
+  /** Sends output of the shell to the last terminal, as a program would. */
+  onTerminalOutput: (output: string) => void
 }) {
-  const { params, server } = props
+  const { params, server, hold } = props
   const change = (key: keyof DevParams, value: string | null) =>
     go(devHref(params, { [key]: value }))
   const revoke = (workspaceId: string) =>
@@ -57,6 +66,7 @@ export function DevControls(props: {
   const startSandbox = () => {
     const terminal = terminalPaths.connection(FAKE_IDS.org, FAKE_IDS.workspace)
     server.json('GET', terminal, toolFixtures().terminal)
+    hold.disarm()
     emitDevEvent(server, params.workspace, sandboxReadyEvent())
   }
   return (
@@ -94,8 +104,25 @@ export function DevControls(props: {
       <button onClick={startSandbox} type="button">
         Start the sandbox
       </button>
+      <button onClick={() => hold.answer()} type="button">
+        Answer held reads
+      </button>
       <button onClick={props.onDisconnect} type="button">
         Disconnect terminal
+      </button>
+      <button
+        onClick={() => props.onTerminalOutput('\x1b[6n')}
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Ask for the cursor
+      </button>
+      <button
+        onClick={() => props.onTerminalOutput('\x1b[?1004h')}
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Turn on focus reports
       </button>
       <button
         onClick={() =>

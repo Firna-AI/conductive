@@ -4,15 +4,15 @@ import type { MouseEvent } from 'react'
 import { FitAddon } from '@xterm/addon-fit'
 import { Terminal } from '@xterm/xterm'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import type { TerminalResponse, TerminalTransport } from '../shared/terminal'
+import type { TerminalTransport } from '../shared/terminal'
 import { ToolButton } from './tool-parts/ToolButtons'
 import { useTouch } from './tool-parts/ToolRoot'
+import type { ReadyTerminal } from './terminalApi'
 import type { ExtraKey } from './terminalKeys'
 import { TerminalSession } from './terminalSession'
 import { cssTokens, terminalFont, terminalTheme } from './terminalTheme'
+import { XtermScreen } from './xtermScreen'
 import styles from './TerminalScreen.module.css'
-
-export type ReadyTerminal = Extract<TerminalResponse, { state: 'ready' }>
 
 /**
  * Opens the decoded transport of a ready terminal, such as the ttyd socket at
@@ -87,7 +87,8 @@ export function TerminalScreen(props: {
     xterm.loadAddon(fit)
     xterm.open(host)
     fitVisible(host, fit)
-    const session = new TerminalSession(xterm, transport, {
+    const screen = new XtermScreen(xterm)
+    const session = new TerminalSession(screen, transport, {
       onClosed: () => onClosed(),
       onControlChange: setControl,
       onInput: () => onInput(),
@@ -100,6 +101,7 @@ export function TerminalScreen(props: {
     return () => {
       observer.disconnect()
       session.dispose()
+      screen.dispose()
       xterm.dispose()
       xtermRef.current = null
       sessionRef.current = null
@@ -109,8 +111,9 @@ export function TerminalScreen(props: {
   useEffect(() => {
     const host = hostRef.current
     const xterm = xtermRef.current
-    if (host && xterm)
+    if (host && xterm) {
       xterm.options.theme = terminalTheme(cssTokens(host), scheme)
+    }
   }, [scheme])
 
   useEffect(() => {
