@@ -6,6 +6,7 @@ import runnerStart from '../../image/runner-start.sh?raw'
 import { HttpError, isRecord } from '../http'
 import { terminalInstallCommand } from '../terminal/service'
 import { shellQuote, writeFileCommand } from './commands'
+import { savedScriptCommand } from './saved-script'
 
 export interface ImageSoftwareArtifact {
   url: string
@@ -70,18 +71,29 @@ export function installImageSoftware(artifact: ImageSoftwareArtifact): string {
   ].join('\n')
 }
 
-export function workspaceStartupCommand(script: string): string {
+export function workspaceStartupCommand(
+  script: string,
+  mode: 'workspace' | 'retention' = 'workspace',
+): string {
+  const path =
+    mode === 'retention'
+      ? '/run/conducting/retention-startup.sh'
+      : '/run/conducting/startup.sh'
   return [
     'set -eu',
     'umask 077',
     'sudo -n install -d -m 700 -o user -g user /run/conducting',
-    writeFileCommand('/run/conducting/startup.sh', script),
-    'set -a',
-    '. /run/ascii-secrets/env.sh',
-    'set +a',
-    'cd "$CONDUCTING_REPOSITORY_DIR"',
-    'sh /run/conducting/startup.sh',
-    'touch /run/conducting/workspace-ready',
-    'sudo -n systemctl restart conducting-runner.service',
+    savedScriptCommand(path, script, [
+      'set -a',
+      '. /run/ascii-secrets/env.sh',
+      'set +a',
+      'cd "$CONDUCTING_REPOSITORY_DIR"',
+    ]),
+    ...(mode === 'workspace'
+      ? [
+          'touch /run/conducting/workspace-ready',
+          'sudo -n systemctl restart conducting-runner.service',
+        ]
+      : []),
   ].join('\n')
 }

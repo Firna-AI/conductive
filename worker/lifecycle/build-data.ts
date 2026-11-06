@@ -9,6 +9,7 @@ import type { CommandStatus } from '../sandbox/provider'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import type { SelectedRepository } from './settings-data'
 import { readBuildSnapshot } from './build-log-reader'
+import { buildLogStatements } from './build-log-statements'
 
 export type BuildPhase =
   | 'create'
@@ -94,6 +95,7 @@ export async function insertBuild(
     software: ImageSoftwareArtifact
     previousImageName: string | null
     now: number
+    nextImageRefreshAt?: number
   },
 ): Promise<void> {
   await db.batch([
@@ -124,6 +126,15 @@ export async function insertBuild(
         JSON.stringify(input.software),
         input.previousImageName,
       ),
+    ...(input.nextImageRefreshAt === undefined
+      ? []
+      : [
+          db
+            .prepare(
+              'UPDATE settings SET next_image_refresh_at = ? WHERE org_id = ?',
+            )
+            .bind(input.nextImageRefreshAt, input.orgId),
+        ]),
   ])
 }
 
@@ -163,20 +174,6 @@ export async function assignBuildSnapshot(
     .run()
 }
 
-function appendLog(
-  db: D1Database,
-  buildId: string,
-  text: string,
-  now: number,
-): D1PreparedStatement {
-  return db
-    .prepare(
-      `INSERT INTO image_build_logs (build_id, event_number, occurred_at, text)
-     SELECT ?, COALESCE(MAX(event_number), 0) + 1, ?, ? FROM image_build_logs WHERE build_id = ?`,
-    )
-    .bind(buildId, now, text, buildId)
-}
-
 export async function saveBuildOutput(
   db: D1Database,
   buildId: string,
@@ -186,7 +183,7 @@ export async function saveBuildOutput(
   await db.batch([
     ...[status.stdout, status.stderr]
       .filter(Boolean)
-      .map((text) => appendLog(db, buildId, text, now)),
+      .flatMap((text) => buildLogStatements(db, buildId, text, now)),
     db
       .prepare(
         'UPDATE image_build_jobs SET stdout_offset = ?, stderr_offset = ? WHERE build_id = ?',
@@ -201,7 +198,7 @@ export async function writeBuildLog(
   text: string,
   now: number,
 ): Promise<void> {
-  await appendLog(db, buildId, text, now).run()
+  await db.batch(buildLogStatements(db, buildId, text, now))
 }
 
 export async function failBuild(
@@ -216,7 +213,7 @@ export async function failBuild(
         "UPDATE image_builds SET state = 'failed', completed_at = ?, error = ? WHERE id = ? AND state = 'running'",
       )
       .bind(now, message, buildId),
-    appendLog(db, buildId, message, now),
+    ...buildLogStatements(db, buildId, message, now),
   ])
 }
 

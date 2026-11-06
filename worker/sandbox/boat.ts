@@ -231,7 +231,7 @@ export class BoatClient implements SandboxProvider {
   ): Promise<StartedCommand> {
     return readStartedCommand(
       await this.transport.request(
-        { operation: 'command', sandboxId },
+        { operation: 'startCommand', sandboxId },
         { command, detached: true },
       ),
     )

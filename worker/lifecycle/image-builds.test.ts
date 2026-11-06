@@ -12,6 +12,7 @@ import { readImageSettings } from './settings-data'
 import { leasedImage } from './image-leases'
 import { finishImageBuild as finish } from './image-test-support'
 import { storeBoatKey } from '../sandbox/keys'
+import { refreshImagesForPush } from './image-timers'
 
 const backendFixture = setupBackendTests()
 
@@ -153,7 +154,18 @@ it('streams build output before completion and keeps the good image after a fail
       kind: 'build',
       software: SOFTWARE,
     })
+    expect(
+      await refreshImagesForPush(images, {
+        githubRepositoryId: 1,
+        ref: 'refs/heads/main',
+        software: SOFTWARE,
+      }),
+    ).toEqual([])
     await finish(fixture, missingKey)
+    expect(fixture.scheduled.at(-1)).toMatchObject({
+      buildId: null,
+      nextAt: TEST_TIME + 50,
+    })
     expect(
       (await readBuild(runtime.env.DB, org.id, missingKey)).build,
     ).toMatchObject({

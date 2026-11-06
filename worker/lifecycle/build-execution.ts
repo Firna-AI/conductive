@@ -7,10 +7,10 @@ import {
   type BuildJob,
   type BuildPhase,
 } from './build-data'
-import { writeFileCommand } from './commands'
+import { savedScriptCommand } from './saved-script'
 import { installImageSoftware } from './image-software'
-import { readImageSettings } from './settings-data'
 import { imageIsLeased } from './image-leases'
+import { scheduleIdleImage } from './image-schedule'
 import type { ImageRuntime } from './image-builds'
 import { deleteSandboxIfPresent, deleteSnapshotIfPresent } from './cleanup'
 
@@ -26,7 +26,7 @@ export async function advanceBuildCommand(
     if (job.phase === 'software')
       command = installImageSoftware(jobSoftware(job))
     else
-      command = `set -eu\n${writeFileCommand('/tmp/conducting-install.sh', job.installScript)}\nsh /tmp/conducting-install.sh\nrm -f /tmp/conducting-install.sh`
+      command = `set -eu\n${savedScriptCommand('/tmp/conducting-install.sh', job.installScript)}\nrm -f /tmp/conducting-install.sh`
     await writeBuildLog(
       runtime.env.DB,
       job.buildId,
@@ -90,20 +90,7 @@ export async function cleanupBuild(
     await deleteSnapshotIfPresent(provider, job.previousImageName)
   }
   await updateBuildJob(runtime.env.DB, job.buildId, 'done')
-  const settings = await readImageSettings(runtime.env.DB, job.orgId)
-  const pendingAt =
-    settings.pendingPushRefreshAt === null
-      ? Infinity
-      : Math.max(
-          settings.pendingPushRefreshAt,
-          (settings.lastPushRefreshAt ?? -Infinity) + 1_800_000,
-        )
-  await runtime.scheduler.schedule(
-    job.orgId,
-    jobSoftware(job),
-    Math.min(runtime.dependencies.now() + 86_400_000, pendingAt),
-    null,
-  )
+  await scheduleIdleImage(runtime, job.orgId, jobSoftware(job))
   return true
 }
 

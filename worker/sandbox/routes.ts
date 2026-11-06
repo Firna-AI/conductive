@@ -12,6 +12,7 @@ export type BoatRoute =
         | 'delete'
         | 'update'
         | 'command'
+        | 'startCommand'
         | 'host'
         | 'desktop'
       sandboxId: string
@@ -61,6 +62,7 @@ export function boatRoute(route: BoatRoute): { method: string; path: string } {
         path: `/sandboxes/${segment(route.sandboxId)}`,
       }
     case 'command':
+    case 'startCommand':
       return {
         method: 'POST',
         path: `/sandboxes/${segment(route.sandboxId)}/commands`,

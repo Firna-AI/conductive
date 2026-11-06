@@ -168,18 +168,18 @@ workspace event history, with chat and lifecycle events.
 ### Builds and refreshes
 
 `startImageBuild` in [`image-builds.ts`](image-builds.ts) records a build or
-a refresh for an org admin, and returns its ID. While a job runs, a new
-request gets the ID of that job and schedules it again. The image
-coordinator advances a job by one step on each alarm. The software and
-install commands run detached, so the log grows while they run. D1 keeps
-the step, the output offsets, and the log.
+refresh for an org admin and returns its ID. A request during a job gets
+its ID and schedules it again. Each alarm advances the job one step.
+Software and install commands run detached and stream their output.
+D1 stores the step, output offsets, and log. Each row holds at most
+256 KiB of UTF-8 text, split between complete characters.
 
 - A build sandbox starts from the current org image, or as a new default
   sandbox for the first build. It gets no org env vars and no workspace
   token.
 - A build loads the chosen repositories, installs the image software, runs
-  the install script, and saves a snapshot. A refresh only loads the
-  repositories of the current image again, and saves a snapshot.
+  the install script with Bash, and saves a snapshot. A refresh only loads
+  the repositories of the current image again, and saves a snapshot.
 - The org image changes only when the new snapshot is ready. Each job
   deletes its build sandbox at the end, and keeps its history and log.
 - A creation claim captures a published image and its repository's default
@@ -207,6 +207,7 @@ acts on a push to the default branch, at most once in 30 minutes for each
 org. A push during a running job waits for a later refresh. Only the
 verified GitHub webhook receiver may call it, and that receiver does not
 exist yet. The image coordinator starts the daily refresh by itself.
+A daily refresh sets the saved daily deadline 24 hours after its start.
 
 ## Settings
 
@@ -274,8 +275,8 @@ command that still holds the production home path.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
 - [`image-sources/materialize.ts`](image-sources/materialize.ts):
   `createGitHubImageSourceMaterializer`.
-- [`image-software.ts`](image-software.ts): the runner archive check, the
-  install command, and the startup command.
+- [`image-software.ts`](image-software.ts): the runner archive check and
+  install/start commands. [`savedScriptCommand`](saved-script.ts) runs Bash.
 - [`commands.ts`](commands.ts): `repositoryDirectory`, the repository folder
   in a sandbox.
 - [`tokens.ts`](tokens.ts): the encrypted workspace token and

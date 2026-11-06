@@ -5,11 +5,14 @@ import {
   startImageBuild,
   type ImageRuntime,
 } from './image-builds'
-import { pendingImageCleanup } from './image-maintenance-data'
+import {
+  IMAGE_POLL_MS,
+  IMAGE_PUSH_MS,
+  readImageSchedule,
+} from './image-schedule'
 import { firstOrgAdmin, readImageSettings } from './settings-data'
 
-export const IMAGE_POLL_MS = 1_000
-export const IMAGE_DAY_MS = 86_400_000
+export { IMAGE_DAY_MS, IMAGE_POLL_MS } from './image-schedule'
 
 /** Only the verified GitHub webhook dispatcher calls this entry point. */
 export async function refreshImagesForPush(
@@ -38,7 +41,7 @@ export async function refreshImagesForPush(
     const settings = await readImageSettings(runtime.env.DB, repository.orgId)
     if (
       settings.lastPushRefreshAt !== null &&
-      settings.lastPushRefreshAt > runtime.dependencies.now() - 1_800_000
+      settings.lastPushRefreshAt > runtime.dependencies.now() - IMAGE_PUSH_MS
     )
       continue
     if (await runningBuild(runtime.env.DB, repository.orgId)) {
@@ -57,7 +60,7 @@ export async function refreshImagesForPush(
       .bind(
         runtime.dependencies.now(),
         repository.orgId,
-        runtime.dependencies.now() - 1_800_000,
+        runtime.dependencies.now() - IMAGE_PUSH_MS,
       )
       .run()
     if (!claim.meta.changes) continue
@@ -86,40 +89,35 @@ export async function runImageAlarm(
   state: ImageCoordinatorState,
 ): Promise<void> {
   if (!(await firstOrgAdmin(runtime.env.DB, state.orgId))) return
-  const active =
-    state.buildId ??
-    (await runningBuild(runtime.env.DB, state.orgId)) ??
-    (await pendingImageCleanup(runtime.env.DB, state.orgId))
-  if (active) {
-    const done = await advanceImageBuild(runtime, state.orgId, active)
+  const next = await readImageSchedule(
+    runtime.env.DB,
+    state.orgId,
+    runtime.dependencies.now(),
+    state,
+  )
+  if (next.buildId !== null) {
+    const done = await advanceImageBuild(runtime, state.orgId, next.buildId)
     if (!done)
       await runtime.scheduler.schedule(
         state.orgId,
         state.software,
         runtime.dependencies.now() + IMAGE_POLL_MS,
-        active,
+        next.buildId,
       )
     return
   }
-  const settings = await readImageSettings(runtime.env.DB, state.orgId)
-  const pendingAt =
-    settings.pendingPushRefreshAt === null
-      ? Infinity
-      : Math.max(
-          settings.pendingPushRefreshAt,
-          (settings.lastPushRefreshAt ?? -Infinity) + 1_800_000,
-        )
-  const nextAt = Math.min(
-    settings.nextImageRefreshAt ?? state.nextAt,
-    pendingAt,
-  )
-  if (nextAt > runtime.dependencies.now()) {
-    await runtime.scheduler.schedule(state.orgId, state.software, nextAt, null)
+  if (next.nextAt > runtime.dependencies.now()) {
+    await runtime.scheduler.schedule(
+      state.orgId,
+      state.software,
+      next.nextAt,
+      null,
+    )
     return
   }
   const admin = await firstOrgAdmin(runtime.env.DB, state.orgId)
-  if (!admin || !settings.imageName) return
-  if (pendingAt <= runtime.dependencies.now()) {
+  if (!admin || !next.imageName) return
+  if (next.pendingAt <= runtime.dependencies.now()) {
     await runtime.env.DB.prepare(
       'UPDATE settings SET pending_push_refresh_at = NULL, last_push_refresh_at = ? WHERE org_id = ?',
     )
@@ -131,5 +129,6 @@ export async function runImageAlarm(
     userId: admin.userId,
     kind: 'refresh',
     software: state.software,
+    dailyRefresh: next.dailyAt <= runtime.dependencies.now(),
   })
 }

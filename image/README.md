@@ -93,7 +93,8 @@ of `workspaceStartupCommand`:
 
 1. It writes the org's startup script to `/run/conducting/startup.sh`, with
    mode 600.
-2. It runs the script in the repository folder, with the variables.
+2. It runs the script with Bash in the repository folder, with the
+   variables.
 3. When the script succeeds, it writes the marker
    `/run/conducting/workspace-ready`, and restarts the runner service.
 
@@ -111,8 +112,10 @@ cases:
 So a build sandbox and a disk retention restart start no runner. The
 terminal backend needs its own marker under `/run`, which only its
 workspace start hook creates. Builds and disk retention restarts do not
-call that hook and start no terminal. A disk retention restart runs the
-startup script, but it writes no ready marker.
+call that hook and start no terminal. A disk retention restart runs
+`workspaceStartupCommand` in its `retention` mode. That mode runs the
+startup script, but it writes no ready marker and does not restart the
+runner service.
 
 Otherwise, `runner-start.sh` runs `runner/main.mjs` with the archive's
 Node, in the repository folder. The runner unit restarts its service after
@@ -160,8 +163,12 @@ The Worker's route is not wired to the machine hostname yet, as the
 ## Development
 
 Run the credential helper test with
-`npm run test -- worker/lifecycle/git-credential-helper.test.ts`. It runs
-the helper as a child process and checks the outgoing credential request.
+`npm run test -- worker/lifecycle/git-credential-helper.test.ts`. It
+installs copies of the shipped launcher and helper, with a saved variables
+file, in a temporary folder under `.context/`. It maps only
+`/opt/conducting` and `/run/ascii-secrets` to that folder, and it refuses
+a launcher that uses any other absolute path. It runs the launcher with
+`/bin/sh`, and checks the outgoing credential request and its turn ID.
 
 - The Worker imports each file with Vite's `?raw` suffix. When you add a
   file here, also add it to `installImageSoftware` and to `install.sh`.
@@ -182,7 +189,10 @@ the helper as a child process and checks the outgoing credential request.
   credential helper.
 - [`image-software.ts`](../worker/lifecycle/image-software.ts): stages these
   files for a build, adds the terminal install command, and makes the
-  workspace startup command.
+  startup command for a workspace start or a disk retention restart.
+- [`saved-script.ts`](../worker/lifecycle/saved-script.ts):
+  `savedScriptCommand`, which writes the org's install or startup script to
+  a file and runs it with Bash.
 
 ### Related Docs
 

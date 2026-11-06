@@ -35,6 +35,7 @@ says.
   build.
 - The install script prepares the image. It is a script, not a terminal
   session, and it runs only in a build.
+- Bash runs the install script.
 - The Cloud computer tab lists the operating system and software that the
   base image includes before the install script runs.
 - "Build computer" starts a build. A build runs the install script on a
@@ -60,6 +61,7 @@ says.
 
 - The startup script runs in the sandbox of each workspace at each start
   and at each resume.
+- Bash runs the startup script.
 - Only an admin changes the install script, the startup script, the env
   vars, and the repositories (decision 57). Other members see them
   read-only.

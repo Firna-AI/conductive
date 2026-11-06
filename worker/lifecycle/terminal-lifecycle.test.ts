@@ -48,7 +48,7 @@ it('starts and caches the terminal after startup at create and resume while rete
     })
     expect(boat.commandRequests.at(-2)).toMatchObject({
       detached: true,
-      command: expect.stringContaining('sh /run/conducting/startup.sh'),
+      command: expect.stringContaining("bash '/run/conducting/startup.sh'"),
     })
   }
   for (let step = 0; step < 16; step++) {

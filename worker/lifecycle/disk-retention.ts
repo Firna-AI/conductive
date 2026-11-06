@@ -2,7 +2,8 @@ import { providerState, type ProviderState } from './provider-state'
 import type { SandboxProvider } from '../sandbox/provider'
 import { WorkspaceStartError } from './workspace-start'
 import { DISK_KEEPALIVE_MS } from './durable-types'
-import { repositoryDirectory, writeFileCommand } from './commands'
+import { repositoryDirectory } from './commands'
+import { workspaceStartupCommand } from './image-software'
 import { readImageSettings, workspaceEnvironment } from './settings-data'
 import { readWorkspaceToken } from './tokens'
 import { readRetention, setRetention, clearRetention } from './retention-data'
@@ -80,20 +81,7 @@ export async function keepWorkspaceDisk(
     try {
       const result = await provider.runCommand(
         sandboxId,
-        [
-          'set -eu',
-          'umask 077',
-          'sudo -n install -d -m 700 -o user -g user /run/conducting',
-          writeFileCommand(
-            '/run/conducting/retention-startup.sh',
-            settings.startupScript,
-          ),
-          'set -a',
-          '. /run/ascii-secrets/env.sh',
-          'set +a',
-          'cd "$CONDUCTING_REPOSITORY_DIR"',
-          'sh /run/conducting/retention-startup.sh',
-        ].join('\n'),
+        workspaceStartupCommand(settings.startupScript, 'retention'),
       )
       if (result.exitCode !== 0 || result.timedOut)
         error = 'The startup script failed during disk retention.'

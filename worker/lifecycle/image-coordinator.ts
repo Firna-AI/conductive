@@ -6,8 +6,7 @@ import { createGitHubImageSourceMaterializer } from './image-sources/materialize
 import { readImageSoftware } from './image-software'
 import { runImageAlarm, type ImageCoordinatorState } from './image-timers'
 import type { ImageRuntime } from './image-builds'
-import { runningBuild } from './build-data'
-import { pendingImageCleanup } from './image-maintenance-data'
+import { readImageSchedule } from './image-schedule'
 
 const KEY = 'org-image:coordinator'
 
@@ -45,14 +44,13 @@ export class ImageCoordinator {
         'coordinator_conflict',
         'The cloud computer request could not start. Try again.',
       )
-    const active = await runningBuild(this.env.DB, state.orgId)
-    if (active && active !== state.buildId)
-      state = { ...state, buildId: active, nextAt: this.dependencies.now() }
-    if (!active && state.buildId === null) {
-      const cleanup = await pendingImageCleanup(this.env.DB, state.orgId)
-      if (cleanup)
-        state = { ...state, buildId: cleanup, nextAt: this.dependencies.now() }
-    }
+    const next = await readImageSchedule(
+      this.env.DB,
+      state.orgId,
+      this.dependencies.now(),
+      state,
+    )
+    state = { ...state, buildId: next.buildId, nextAt: next.nextAt }
     await this.storage.put('image', KEY, {
       ...state,
       software: readImageSoftware(state.software),

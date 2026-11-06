@@ -20,6 +20,7 @@ import {
 } from './build-data'
 import { advanceBuildCommand, cleanupBuild } from './build-execution'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
+import { IMAGE_DAY_MS, scheduleIdleImage } from './image-schedule'
 import {
   firstOrgAdmin,
   readImageSettings,
@@ -60,6 +61,7 @@ export async function startImageBuild(
     userId: string
     kind: ImageBuild['kind']
     software: ImageSoftwareArtifact
+    dailyRefresh?: boolean
   },
 ): Promise<string> {
   const { env, dependencies } = runtime
@@ -92,6 +94,7 @@ export async function startImageBuild(
         )
       : await selectedRepositories(env.DB, input.orgId)
   const id = dependencies.randomToken()
+  const now = dependencies.now()
   try {
     await insertBuild(env.DB, {
       id,
@@ -107,7 +110,11 @@ export async function startImageBuild(
       repositories,
       software,
       previousImageName: settings.imageName,
-      now: dependencies.now(),
+      now,
+      nextImageRefreshAt:
+        input.kind === 'refresh' && input.dailyRefresh
+          ? now + IMAGE_DAY_MS
+          : undefined,
     })
   } catch (error) {
     const current = await runningBuild(env.DB, input.orgId)
@@ -232,12 +239,7 @@ export async function advanceImageBuild(
     if (!provider) {
       if (job.sandboxId) return false
       await updateBuildJob(env.DB, buildId, 'done')
-      await runtime.scheduler.schedule(
-        orgId,
-        jobSoftware(job),
-        dependencies.now() + 86_400_000,
-        null,
-      )
+      await scheduleIdleImage(runtime, orgId, jobSoftware(job))
       return true
     }
     return await cleanupBuild(
