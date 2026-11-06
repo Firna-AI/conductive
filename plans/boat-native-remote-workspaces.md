@@ -2931,16 +2931,16 @@ Tags: mockup
 
 Depends on: 1e
 
-- [ ] Rename the org role "owner" to "admin" in every screen, as decision
+- [x] Rename the org role "owner" to "admin" in every screen, as decision
       54 says. Keep "owner" for the person who owns a workspace.
-- [ ] Change the reassign menu notes for decision 49: each message runs on
+- [x] Change the reassign menu notes for decision 49: each message runs on
       the login of the person who sends it, and reassigning does not stop
       the cloud computer.
-- [ ] Mark the other agent's models in the picker as opening a new
+- [x] Mark the other agent's models in the picker as opening a new
       session, as decision 51 says.
-- [ ] Change the branch samples to the GitHub login, such as
+- [x] Change the branch samples to the GitHub login, such as
       `calummoore/lisbon-7k2q`, as decision 53 says.
-- [ ] Run the mockup check. Smoke-test the changed pages.
+- [x] Run the mockup check. Smoke-test the changed pages.
 
 ## Milestone 2a: Protocol updates for decisions 49 to 55
 
