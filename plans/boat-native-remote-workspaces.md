@@ -4307,6 +4307,22 @@ Agent calls, 6 November 2026:
 Evidence: `.context/milestone-15g/` holds the delegated reports, test
 proofs, migration proof, and screenshots of both schemes and sizes.
 
+User approval, 6 November 2026, for round 1 finding 2 of the
+[PR #22](https://github.com/Firna-AI/remote-code/pull/22) review: the user
+chose option B. When a person removed an invited email from GitHub and
+signed in, the refresh lost the match that cancels their invitations at
+departure. A removed person could then verify the email again and accept.
+
+- Each invitation keeps a durable match to each user whose verified email
+  it named, at invitation or at sign-in.
+- When a member leaves or an admin removes them, the same batch cancels
+  the matched invitations of that org.
+- Acceptance still needs a current verified email.
+- The same request fixes the pending list. It leaves out the orgs where
+  the user is already a member.
+- The user approved a change in place to the unmerged migration
+  `202611072100_email_invitations.sql`, because nothing is deployed.
+
 ## Milestone 15i: Feature wiring
 
 Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g

@@ -173,12 +173,21 @@ Each sign-in calls `saveVerifiedEmails`.
 It replaces the user's stored emails with the verified emails from GitHub's `GET /user/emails`.
 A failed read fails the sign-in.
 Emails match without case. An unverified email matches no invitation.
+The private `org_invite_users` table keeps a durable match of each invitation to each user whose verified email it named.
+An insert trigger on `org_invites` records a match for each user with a stored verified email that the new invitation names.
+An insert trigger on `user_verified_emails` records a match for each invitation that names an email that a sign-in stores.
+A later sign-in without that email keeps the match.
+Only the deletion of its invitation or its user removes a match.
 Invitation acceptance and the pending invitation list have no browser route in the fixed contracts.
-Call `pendingOrgInvites` with the signed-in user's ID to list the invitations of active orgs that name one of their verified emails.
+Call `pendingOrgInvites` with the signed-in user's ID to list their pending invitations.
+The list holds the invitations of active orgs that name one of the user's current verified emails.
+It leaves out the invitations of orgs where the user is already a member.
 Call `acceptOrgInvite` after an explicit acceptance by a signed-in user.
-It accepts only an invitation that names one of that user's stored verified emails.
+It accepts only an invitation that names one of that user's current verified emails.
+A durable match alone does not permit acceptance.
 Sign-in alone does not accept an invitation.
-A membership-delete trigger cancels the org's pending invitations that name one of the departing user's verified emails.
+A membership-delete trigger cancels each invitation of the membership's org that has a durable match to the departing user.
+It runs in the same statement as the membership delete, so the removal and the cancellation apply together.
 
 Call `workspaceCreator` when the lifecycle creates a workspace.
 Store its ID in `owner_user_id` in the creation transaction.

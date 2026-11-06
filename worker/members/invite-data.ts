@@ -82,9 +82,11 @@ export async function listPendingInvites(db: D1Database, userId: string) {
          FROM org_invites i JOIN orgs o ON o.id = i.org_id
          WHERE o.deleted_at IS NULL AND EXISTS (
            SELECT 1 FROM user_verified_emails e WHERE e.user_id = ? AND e.email = i.email
+         ) AND NOT EXISTS (
+           SELECT 1 FROM org_members m WHERE m.org_id = i.org_id AND m.user_id = ?
          ) ORDER BY i.created_at, i.id`,
       )
-      .bind(userId)
+      .bind(userId, userId)
       .all<PendingOrgInvite>()
   ).results
 }

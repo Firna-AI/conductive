@@ -132,3 +132,27 @@ it('reports failed email delivery and retries the same invitation with org and a
     },
   ])
 })
+
+it('hides invitations to joined orgs and keeps invitations to other pending orgs', async () => {
+  const { org, admin, member } = await memberFixture(harness)
+  const client = membersClient(harness)
+  const invite = async (orgId: string) => {
+    const response = await client.request(
+      invitesPath(orgId),
+      admin.session,
+      write({ email: 'MEMBER@example.com' }),
+    )
+    expect(response.status).toBe(201)
+    const value: InviteMemberResponse = await response.json()
+    return value.invite
+  }
+  const joined = await invite(org.id)
+  const otherOrg = await harness.createOrg(admin.session, 'Pending org')
+  const pending = await invite(otherOrg.id)
+  expect(await pendingOrgInvites(harness.env.DB, member.user.id)).toEqual([
+    { ...pending, orgId: otherOrg.id, orgName: 'Pending org' },
+  ])
+  expect(
+    (await listMembers(harness.env.DB, org.id, admin.user.id)).invites,
+  ).toEqual([joined])
+})
