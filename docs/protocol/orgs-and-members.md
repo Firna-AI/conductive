@@ -75,7 +75,13 @@ says.
   can have several admins.
 - A separate owner role above the admins was rejected, because several
   admins already give an org more than one manager.
-- An admin invites a person by GitHub login.
+- An admin invites a person by email, and the app sends the invitation to
+  that address (decision 78).
+- The person joins with a GitHub account that has that address as a
+  verified email. The app reads the verified emails at sign-in, and the
+  person accepts each matching invitation.
+- Reason: a GitHub login can be renamed and taken by another account. A
+  verified email proves the inbox.
 - Only an admin invites and removes members, changes a role, reassigns a
   workspace, adds the Boat key, and deletes the org.
 - Only an admin changes the repositories, the install script, the startup

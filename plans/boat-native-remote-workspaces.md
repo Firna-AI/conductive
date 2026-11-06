@@ -2441,6 +2441,10 @@ longer - what could be done to do a minimal version?"
 - **Recommendation:** E.
 - **Chosen:** E, by the user on 6 November 2026. The follow-up item is
   `plans/follow-ups/move-backend-to-rust-and-postgres.md`.
+- **Changed by the user on 6 November 2026:** the Rust backend started in
+  parallel (decision 71), and decisions 73, 74, and 75 set its shape, its
+  database, and its host. The same day, the user parked it again, outside
+  this plan. The follow-up item holds the work and those decisions.
 
 ### 62. Add a Mac app in parallel
 
@@ -2692,6 +2696,214 @@ workspace asking for help/approval/prompt".
   - The contract value is `input` in `WorkspaceState`. Milestone 15f sets
     it while a Mac command request waits. Each later feature that waits
     for the user sets it too.
+
+### 69. Pin the Node of the product's programs in each org image
+
+Added on 6 November 2026 from finding 3 of the Milestone 15 review.
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** The workspace tools are TypeScript files that Node 24
+  runs directly, and the agent runner is a Node program too. Boat's base
+  image has Node 24, but the org's install script runs with `sudo` and
+  can replace it. The launcher of the tools already ignores the shell's
+  search path and `NODE_OPTIONS`.
+- **Problem:** An org script that replaces the system Node breaks the
+  tools, and later the runner.
+- **Options:**
+  - **A.** Keep the system Node, and tell orgs not to replace Node 24.
+    Effort: Small.
+  - **B.** Build the tools into JavaScript that Node 18 and later runs.
+    Effort: Medium.
+  - **C.** Install a private Node that only the product's programs use.
+    Effort: Medium.
+  - **D.** Fail the image build when the Node is not Node 24. Effort:
+    Small.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. Each org image gets one
+  pinned Node 24 release in its own folder, and the tools and the runner
+  start it by its full path. The org's own Node stays for the org's code.
+  Milestone 5a builds it.
+
+### 70. Decide how soon an open tab loses access
+
+Added on 6 November 2026 from finding 1 of the Milestone 7 review.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Review. **Category:** Security.
+- **Background:** The Worker checks the session and the membership when a
+  tab opens its event socket. After that, the workspace Durable Object
+  sends each new event to the tab.
+- **Problem:** A removed member, a signed-out tab, or a tab of a deleted
+  org kept getting new chat events.
+- **Options:**
+  - **A.** Close each socket after 5 minutes. Effort: Small.
+  - **B.** Check the access of all open tabs again at most every 30
+    seconds, with one D1 read, and close each tab that fails. Effort:
+    Medium.
+  - **C.** Check access before each event. Effort: Medium.
+  - **D.** B, plus a close at once on removal and Delete org. Effort:
+    Medium.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 6 November 2026. The access protocol
+  states the 30-second rule. Milestone 7 applies it in its second fix
+  round. The runner side already checks the workspace token before each
+  agent login.
+
+### 71. Give each org its own database
+
+Added on 6 November 2026 from the user's request: "not each workspace -
+each org".
+
+- **Severity:** High. **Effort:** Large.
+- **Source:** Design. **Category:** Code structure.
+- **Background:** One D1 database holds the records of all orgs. Each
+  workspace has its own Durable Object for its chat.
+- **Options:**
+  - **A.** One Durable Object for each org, for the org's records, built
+    before the first deployment. Effort: Large.
+  - **B.** Keep one D1 now, and give each org its own database with the
+    move to Rust and Postgres. Effort: Small now.
+  - **C.** Keep D1 as the record, with a read copy of the members in a
+    Durable Object for each org. Effort: Medium.
+- **Recommendation:** A.
+- **Chosen:** by the user on 6 November 2026: keep the planned storage for
+  now, one D1 database and one Durable Object for each workspace. In
+  parallel, the Rust backend starts now, as part of this plan, and it
+  does not block the first merge. The database for each org becomes part
+  of the Rust backend's design. This changes the timing of decision 61 E,
+  which moved to Rust only after the first usable release.
+- **Changed by the user on 6 November 2026:** the Rust work is parked and
+  leaves this plan. `plans/follow-ups/move-backend-to-rust-and-postgres.md`
+  holds it, with decisions 73, 74, and 75.
+
+### 72. Name the member who stopped the agent
+
+Added on 6 November 2026 from the Milestone 8 work.
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Implementation. **Category:** UX wording.
+- **Background:** All members of an org see the same chat history. The
+  mockup said "You stopped the agent", but the stop event did not record
+  who pressed Stop.
+- **Options:**
+  - **A.** Keep "You stopped the agent". Effort: Small.
+  - **B.** Use a neutral message. Effort: Small.
+  - **C.** Record who pressed Stop, and name that member. Effort: Medium.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. A stopped turn records
+  the member who pressed Stop. The chat shows "Priya stopped the agent",
+  or "You stopped the agent" to Priya.
+- **Agent call on 6 November 2026:** a turn that stops with no Stop
+  request, such as when the cloud computer stops, shows "The agent
+  stopped". Reason: such a stop has no member to name. The user can
+  override this text.
+
+### 73. Decide the shape of the Rust backend
+
+Added and answered on 6 November 2026 (C). The user parked the
+Rust work the same day, so the decision with its options moved to
+`plans/follow-ups/move-backend-to-rust-and-postgres.md`.
+
+### 74. Decide the database for each org in Postgres
+
+Added and answered on 6 November 2026: one Postgres database for every
+org. The user parked the Rust work the same day, so the decision with its
+options moved to
+`plans/follow-ups/move-backend-to-rust-and-postgres.md`.
+
+### 75. Decide where the Rust backend runs
+
+Added and answered on 6 November 2026 (A). The user parked the
+Rust work the same day, so the decision with its options moved to
+`plans/follow-ups/move-backend-to-rust-and-postgres.md`.
+
+### 76. Decide what happens to a runner event that the workspace refuses
+
+Added on 6 November 2026 from round 2 finding 3 of the Milestone 7
+review.
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** The workspace stores each runner event before it
+  confirms it, and Cloudflare stores at most 2 MB in one value. A large
+  file tree, tool output, or file list can pass that. The workspace also
+  refuses an invalid event and an event of a turn that is not active. A
+  refused event closed the connection without a confirm, so the runner
+  sent it again after each reconnect, and the stream stopped there.
+- **Options:**
+  - **A.** A size limit and a reply that lets the runner replace a large
+    event. Effort: Medium.
+  - **B.** Store large events in bounded parts. Effort: Medium.
+  - **C.** Store large events in object storage. Effort: Large.
+  - **D.** Store a small marker for each event that the workspace refuses
+    for a fixed reason, and confirm it. Effort: Medium.
+  - **E.** D, and cap the event shapes in the runner contract. Effort:
+    Medium.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 6 November 2026. Milestone 4d changes the
+  contracts, and Milestone 7s changes the workspace.
+- **Agent calls on 6 November 2026,** which the user can override:
+  - One stored runner event holds at most 1 MiB, half of Cloudflare's
+    limit for one value, so the envelope always fits.
+  - A full file tree and a long list of changes go as several numbered
+    parts. A tree delta with many changes goes as several deltas with
+    consecutive revisions.
+  - A tool's detail and the file list at the end of a turn keep a cap and
+    a count of the rest.
+  - The chat shows the marker of a refused event as one line that names
+    what was lost.
+
+### 77. Decide the order of the open session tabs
+
+Added on 6 November 2026 from a finding check of the Milestone 7
+review.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Review. **Category:** Docs or spec.
+- **Options:**
+  - **A.** The order of creation. A new session opens as the last tab.
+    Effort: Small.
+  - **B.** The order of the last activity. Effort: Small.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 6 November 2026. The chat protocol states
+  it.
+
+### 78. Bind each invitation to the person it names
+
+Added on 6 November 2026 from round 2 finding 4 of the Milestone 15a
+review.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Review. **Category:** Security.
+- **Background:** An admin invited a person by GitHub login, and the
+  Worker compared that login with the login stored at the user's last
+  sign-in. A login can be renamed and taken by another account, so a
+  stale stored login let account 400 accept an invitation meant for
+  account 500.
+- **Options:**
+  - **A.** Look up the GitHub ID at invite time, and match on it. Effort:
+    Medium.
+  - **B.** Put the GitHub ID in a signed invitation code. Effort: Medium.
+  - **C.** An admin approves each account before it joins. Effort: Large.
+  - **D.** A, with the lookup behind a members hook. Effort: Medium.
+  - **E.** The admin's browser looks up the account. Effort: Medium.
+  - **F.** Keep the code until the wiring milestone. Effort: Small.
+  - **G.** D, and show the invited account on the invitation. Effort:
+    Medium.
+- **Recommendation:** D, with G later.
+- **Chosen:** by the user on 6 November 2026, a new option: "invites
+  should be sent via email, then we can check that when the user logs in
+  with github". An admin invites a person by email, and the app sends the
+  invitation to that address. The person joins with a GitHub account that
+  has that address as a verified email. Milestone 15g builds it.
+- **Agent calls on 6 November 2026:**
+  - The app reads the verified emails at sign-in with `GET /user/emails`,
+    through the "Email addresses" read permission that decision 28 already
+    needs.
+  - The person still accepts each matching invitation, as today, so a
+    sign-in alone joins no org.
+  - Invitations by GitHub login go away, so one way remains.
 
 ## Design
 
@@ -3462,6 +3674,24 @@ the base.
       protocol.
 - [ ] Run the complete gate.
 
+## Milestone 4d: Runner event limits
+
+Depends on: 4a
+
+Apply decision 76 E to the contracts. Milestone 7r builds the runner to
+this contract.
+
+- [ ] Add the byte limit of one stored runner event to the runner
+      contract.
+- [ ] Send a full file tree and a long list of changes as several
+      numbered parts. Cap the changes of one tree delta.
+- [ ] Give a tool's detail and the file list at the end of a turn a cap
+      and a count of the rest.
+- [ ] Add the chat event that marks a refused runner event, with the
+      stream, the event number, the event type, and the reason.
+- [ ] Update the fakes, the recorded events, and the chat and files
+      protocol rules.
+
 ## Milestone 5: Bases and workspace lifecycle
 
 Depends on: 4a
@@ -3485,6 +3715,23 @@ Depends on: 4a
 - [ ] Add the git credential helper to the org image, and the Worker's
       token route behind the workspace token. The route returns a fresh
       GitHub user token of the current turn's sender, as decision 50 says.
+
+## Milestone 5a: Pinned Node runtime
+
+Depends on: 5, 7r
+
+Apply decision 69 C.
+
+- [ ] In each org image build, download one pinned Node 24 release, check
+      its SHA-256 against a constant in the code, and extract it to a
+      folder named for its version under `/opt/conducting/runtime/`. Skip
+      the download when that release is already there.
+- [ ] Start the workspace tools and the agent runner with that Node by its
+      full path. The root folder of the tools installer also prefixes the
+      runtime path.
+- [ ] Test with a stand-in runtime under the root folder and a failing
+      `node` first on the search path. Say in the README how to update the
+      version and the checksum.
 
 ## Milestone 6: App shell and workspaces
 
@@ -3542,6 +3789,21 @@ Depends on: 4a
       the open tabs over a WebSocket.
 - [ ] Test the mapping against recorded SDK events, and the resend after
       a dropped connection, with the fake runner of Milestone 4a.
+
+## Milestone 7s: Runner event limits in the workspace
+
+Depends on: 4d, 7, 9
+
+Apply decision 76 E in the workspace Durable Object.
+
+- [ ] Check the byte limit with the other event checks.
+- [ ] Store a marker for each event that the workspace refuses for a
+      fixed reason, confirm it, and move the cursor on. A refused end of
+      turn still ends the turn. A storage or network failure still closes
+      the connection.
+- [ ] Join the parts of a file tree and of a changes list before the
+      files store takes them.
+- [ ] Test each refusal, a tree in parts, and a resend after a refusal.
 
 ## Milestone 8: Chat UI
 
@@ -3706,9 +3968,28 @@ Milestone 8i or 15i wires it to its backend.
 - [ ] Build the org members page and workspace reassignment.
 - [ ] Compare each screen with its mockup.
 
+## Milestone 15g: Email invitations
+
+Depends on: 15a, 15c
+
+Apply decision 78. It must merge before Milestone 15i wires the
+acceptance route.
+
+- [ ] Change the contracts, the fakes, and the D1 schema so that an
+      invitation names an email in place of a GitHub login.
+- [ ] Send each invitation by email through the email service of decision
+      79. In development, a mailer writes the link to the log.
+- [ ] At sign-in, read the verified emails of the GitHub account, and show
+      the pending invitations that name one of them. Cancel a departed
+      member's pending invitations.
+- [ ] Change the invite form of the members mockups and screens to an
+      email field.
+- [ ] Test with a fake GitHub that returns verified emails, and a fake
+      mailer.
+
 ## Milestone 15i: Feature wiring
 
-Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c
+Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
 
 - [ ] Wire each feature's screens to its backend inside the app shell.
 - [ ] Run the complete gate, and compare each screen with its mockup.
@@ -3719,11 +4000,11 @@ Tags: ui
 
 Depends on: 4a
 
-- [ ] Build the marketing site at the root of `conducting.build`, as
-      Milestone 1c draws it.
-- [ ] Write the Terms and Privacy pages, as decision 35 says. A lawyer
-      reviews them before the app opens to other people.
-- [ ] Compare each page with its mockup.
+- [x] Build the marketing site at the root of `conducting.build`, as
+      Milestone 1c draws it. Branch: `conductor/boat-native-remote-workspaces-milestone-15d`.
+- [x] Write the Terms and Privacy pages, as decision 35 says. A lawyer
+      reviews them before the app opens to other people. Branch: `conductor/boat-native-remote-workspaces-milestone-15d`.
+- [x] Compare each page with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-15d`.
 
 ## Milestone 15e: Mac app
 
