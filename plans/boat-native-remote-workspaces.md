@@ -3549,11 +3549,11 @@ Depends on: 4a
 
 Build the Mac app as decision 62 says. No other milestone waits for it.
 
-- [ ] Draw the Mac app window in the mockups first: the native window
+- [x] Draw the Mac app window in the mockups first: the native window
       buttons inset at the top left of the left panel, with the sidebar
       toggle and the back and forward buttons beside them, in a normal
       window and in full screen.
-- [ ] Draw the device commands in the mockups first: the permission
+- [x] Draw the device commands in the mockups first: the permission
       prompt with its four choices, the macOS notification, the countdown
       of the 15-minute window, the app's list of always-allowed commands,
       and the chat's tool states: waiting for approval, denied, done, and
