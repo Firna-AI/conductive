@@ -98,7 +98,7 @@ The address chooses the state. The first value of each option is the default:
 | --- | --- |
 | `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn` |
 | `workspace` | `existing`, `new` (Lisbon, which starts) |
-| `state` | `ready`, `working`, `unread`, `starting`, `stopped`, `error`, `archived` |
+| `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
 | `role` | `admin`, `member` |
 | `key`, `login` | `on`, `off` |
 | `replay` | `stored`, `live` (the recorded chat arrives event by event) |

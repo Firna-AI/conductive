@@ -12,6 +12,7 @@ import styles from './DevPage.module.css'
 
 const stateLabels: Readonly<Record<WorkspaceState, string>> = {
   working: 'Working',
+  input: 'Needs input',
   unread: 'Done, unread',
   ready: 'Ready',
   starting: 'Starting',

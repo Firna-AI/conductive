@@ -41,7 +41,9 @@ const attachments = new Map<string, Attachment>()
 
 async function send(backend: DevBackend, session: Session, request: Request) {
   const body = await bodyOf(request)
-  const ready = ['ready', 'working', 'unread'].includes(backend.workspace.state)
+  const ready = ['ready', 'working', 'input', 'unread'].includes(
+    backend.workspace.state,
+  )
   const message: UserMessage = {
     id: text(body.id),
     sessionId: session.id,

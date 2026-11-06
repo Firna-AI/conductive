@@ -30,6 +30,7 @@ export const choices = {
   state: [
     'ready',
     'working',
+    'input',
     'unread',
     'starting',
     'stopped',

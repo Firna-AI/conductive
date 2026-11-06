@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { boatKeyPath } from '../../shared/api'
+import { sessionPaths } from '../../shared/sessions'
 import type { FakeApiOptions, FakeApiServer } from '../../test-support/fake-api'
 import {
   coreFixtures,
@@ -54,13 +55,26 @@ async function renderChat(
 }
 
 describe('SessionChat', () => {
-  it('keeps the stored chat while the sandbox is stopped, with Resume in place of the composer', async () => {
+  it('keeps the stored chat in each sandbox state: Resume while stopped, and the composer while the workspace needs input', async () => {
     const { markup, text } = await renderChat({ workspaceState: 'stopped' })
     expect(text()).toContain('The checkout form now suggests addresses.')
     expect(text()).toContain(
       'Sandbox stopped Your files and chat are saved. Resume',
     )
     expect(markup()).not.toContain('placeholder="Message the agent"')
+    const input = await renderChat({ workspaceState: 'input' })
+    expect(input.text()).toContain('The checkout form now suggests addresses.')
+    expect(input.markup()).toContain('placeholder="Message the agent"')
+    input.chat.controller.setDraft(FAKE_IDS.session, 'Use the saved address.')
+    await input.chat.controller.send(FAKE_IDS.session)
+    const messages = sessionPaths.messages(
+      FAKE_IDS.org,
+      FAKE_IDS.workspace,
+      FAKE_IDS.session,
+    )
+    expect(await input.chat.bodies('POST', messages)).toMatchObject([
+      { text: 'Use the saved address.' },
+    ])
   })
 
   it('shows the start steps after the stored chat, and a message that waits for the sandbox', async () => {

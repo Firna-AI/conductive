@@ -40,6 +40,7 @@ export type StreamMessage =
 
 const readState = oneOf<WorkspaceState>({
   working: true,
+  input: true,
   unread: true,
   ready: true,
   starting: true,
