@@ -9,11 +9,13 @@ export function imageTestProcess(
   executable: string,
   args: readonly string[],
   input = '',
+  environment: Readonly<Record<string, string | undefined>> = {},
 ): Promise<CommandResult> {
   return new Promise((resolve) => {
     const child = spawn(executable, [...args], {
       env: {
         PATH: [dirname(process.execPath), '/usr/bin', '/bin'].join(delimiter),
+        ...environment,
       },
     })
     let stdout = ''
@@ -35,6 +37,10 @@ export function imageTestProcess(
     child.once('close', (exitCode) => {
       resolve({ exitCode, stdout, stderr, timedOut: false })
     })
-    child.stdin.end(input)
+    if (input.length > 0) {
+      child.stdin.end(input)
+    } else {
+      child.stdin.end()
+    }
   })
 }

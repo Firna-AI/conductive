@@ -62,15 +62,22 @@ The Worker rejects stale turn context.
 
 ## Image assets
 
-The image build environment calls `loadWorkspaceToolSources` from [image-assets.ts](image-assets.ts).
-It passes the source assets to `installWorkspaceTools` from [the installer](../worker/tools/image.ts).
-The loader reads only the source files in [image-manifest.ts](image-manifest.ts).
-It reads no environment values or secret files.
+The [Worker asset module](../worker/tools/image-assets.ts) exports `WORKSPACE_TOOL_SOURCES`.
+Vite embeds the allowed sources as text through static `?raw` imports.
+The asset module uses the source contract in [image-manifest.ts](image-manifest.ts).
+It needs no filesystem at runtime and reads no environment values or secret files.
+The image builder passes these assets to `installWorkspaceTools` from [the installer](../worker/tools/image.ts).
 
 The installer places the sources under `/opt/conducting/agent-tools`.
 It installs `/usr/local/bin/conducting` as an executable launcher.
 The launcher reads `/run/ascii-secrets/env.sh` at runtime when that file exists.
-It then starts the CLI or MCP server with Node.
+It then removes `NODE_OPTIONS` from the environment.
+It selects the first executable Node file in `/usr/local/bin`, `/usr/bin`, and `/bin`, in that order.
+It ignores the caller's `PATH` when it selects Node.
+It reports an error when those folders contain no executable Node file.
+The installation root prefixes these Node paths, the program path, and the secrets path.
+The image must already have Node 24 in one of these system folders.
+The installer adds no Node runtime.
 No workspace token, agent login, or org environment value enters the image assets.
 
 The image builder and the runner do not exist yet.

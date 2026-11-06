@@ -17,15 +17,15 @@ it('drops unknown response fields and rejects malformed workspace data', async (
           id: 'one',
           name: 'Lisbon',
           branch: 'user/lisbon-ab12',
-          state: 'ready',
+          state: 'input',
           ciphertext: 'encrypted-secret',
         },
       ],
     }),
   )
-  expect(await client.list()).toEqual({
+  await expect(client.list()).resolves.toEqual({
     workspaces: [
-      { id: 'one', name: 'Lisbon', branch: 'user/lisbon-ab12', state: 'ready' },
+      { id: 'one', name: 'Lisbon', branch: 'user/lisbon-ab12', state: 'input' },
     ],
   })
   const malformed = createWorkspaceToolClient(configuration, async () =>

@@ -9,6 +9,7 @@ import { choice, record, text, ToolInputError } from './input.ts'
 export function workspaceState(value: unknown): WorkspaceState {
   switch (value) {
     case 'working':
+    case 'input':
     case 'unread':
     case 'ready':
     case 'starting':

@@ -19,13 +19,18 @@ afterAll(async () => {
 })
 
 it('lists every workspace of the authenticated org, including other owners and archives', async () => {
+  await fixture.db
+    .prepare(
+      "UPDATE workspaces SET state = 'input' WHERE id = 'teammate-workspace'",
+    )
+    .run()
   const response = await fixture.request(
     {},
     `${TOOL_TEST_ORIGIN}${MACHINE_PATHS.workspaces}?orgId=org-b`,
   )
 
   expect(response.status).toBe(200)
-  expect(await response.json()).toEqual({
+  const expected = {
     workspaces: [
       {
         id: 'calling-workspace',
@@ -37,7 +42,7 @@ it('lists every workspace of the authenticated org, including other owners and a
         id: 'teammate-workspace',
         name: 'Paris',
         branch: 'teammate-login/paris-cd34',
-        state: 'ready',
+        state: 'input',
       },
       {
         id: 'archived-workspace',
@@ -46,7 +51,9 @@ it('lists every workspace of the authenticated org, including other owners and a
         state: 'archived',
       },
     ],
-  })
+  }
+  expect(await response.json()).toEqual(expected)
+  await expect(fixture.client.list()).resolves.toEqual(expected)
   expect(response.headers.get('Cache-Control')).toBe('no-store')
   expect(response.headers.get('Referrer-Policy')).toBe('no-referrer')
   expect(fixture.services.callingTurn).not.toHaveBeenCalled()

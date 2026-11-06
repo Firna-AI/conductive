@@ -47,7 +47,9 @@ It must not leave a new workspace when the sandbox cannot start.
 ## Image installer
 
 `installWorkspaceTools` takes source assets and an authorized image command callback.
-The build environment obtains the source assets from [the loader](../../tools/image-assets.ts).
+The [asset module](image-assets.ts) exports `WORKSPACE_TOOL_SOURCES`.
+Static Vite `?raw` imports embed the allowed sources in the Worker bundle.
+The asset module has no runtime filesystem dependency.
 The callback can bind `SandboxProvider.runCommand` to the image-build sandbox.
 The installer returns only after the command succeeds.
 A failed or timed-out command throws a fixed error.
@@ -63,7 +65,11 @@ The default root gives the production paths in [Image assets](../../tools/README
 
 The installer writes only program source and the launcher.
 It writes no credentials into the image.
-The image must already have Node 24.
+The image must already have Node 24 in `/usr/local/bin`, `/usr/bin`, or `/bin`.
+The launcher checks these folders in that order, under the installation root.
+It chooses executable files and never uses `PATH` to choose Node.
+It removes `NODE_OPTIONS` after it reads the rooted secrets file and before it starts Node.
+The installer adds no Node runtime.
 `WORKSPACE_TOOLS_MCP` supplies the executable and arguments for agent registration.
 The runner supplies credentials and active turn context at runtime.
 
@@ -78,7 +84,7 @@ Production use requires this composition work:
 4. Implement `callingTurn` through the calling workspace Durable Object.
 5. Implement `createWorkspace` through the normal workspace lifecycle and chat queue.
 6. Supply the account service's default model policy when saved preferences are absent.
-7. Call the installer during each image build, before the image snapshot is saved.
+7. Pass `WORKSPACE_TOOL_SOURCES` to the installer during each image build, before the image snapshot is saved.
 8. Add `WORKSPACE_TOOLS_MCP` to both agents' MCP configuration.
 9. Launch a new workspace MCP process for each active turn with that turn's `turnId`.
 10. Stop that MCP process when its turn ends.
@@ -106,4 +112,5 @@ These services have no production implementation yet.
 - [store.ts](store.ts) queries scoped D1 records.
 - [services.ts](services.ts) defines the lifecycle and active-turn integration boundary.
 - [image.ts](image.ts) installs the CLI and MCP source into the image.
+- [image-assets.ts](image-assets.ts) embeds the allowed sources as Worker-safe text assets.
 - [Sandbox tools](../../tools/README.md) describe the commands and runtime environment.
