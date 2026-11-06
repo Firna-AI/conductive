@@ -2045,7 +2045,7 @@ from C to D.
 
 ### 50. Decide the reach of a cloud computer's GitHub token
 
-Open. Added on 5 November 2026 from the Milestone 2 docs, item 2.
+Added on 5 November 2026 from the Milestone 2 docs, item 2.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Security.
@@ -2083,6 +2083,12 @@ Open. Added on 5 November 2026 from the Milestone 2 docs, item 2.
   needs only its own repository.
 - **Action:** ask the user, because B changes who shows as the pusher on
   GitHub, which users see.
+- **Changed on 6 November 2026:** the recommendation moved from B to A,
+  because decision 49 D runs each turn as its sender.
+- **Chosen:** A, by the user on 6 November 2026. Each turn's git calls use
+  the sender's own GitHub user token, fetched fresh for each call, as
+  Conductor does. The plan drops its claim of a limit to the org's
+  repositories.
 
 ### 51. Decide how a session moves to the other agent
 
@@ -2511,6 +2517,11 @@ parallel and not delay things".
   - The command runs with the user's own permissions, with an output
     limit. When the Mac sleeps, or the app is closed, the tool tells the
     agent that the Mac is not available.
+- **Changed by the user on 6 November 2026:** the command approval is a
+  compact message in the chat, with the command and action buttons.
+  Keep the pending request visible above the composer. The time limit
+  can use a small secondary label. Put the other request facts in details.
+  The request no longer uses a modal dialog.
 
 ### 63. Decide the language of the agent runner
 
@@ -2540,6 +2551,98 @@ runner? can we make it rust not node for the agent runner".
   now. It moves to option C, a Rust runner with a small Node helper for
   the two SDKs, with the Rust backend move of decision 61, as
   `plans/follow-ups/move-backend-to-rust-and-postgres.md` says.
+
+### 64. Decide what the banner shows when GitHub blocks a merge
+
+Added on 6 November 2026 from the Milestone 13 work.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** Decision 18 chose nine banner states: no pull request,
+  checks running, checks failed, ready to merge, merged, merge conflict,
+  changes requested, draft, and closed without a merge. GitHub can also
+  block a merge with no conflict and no failed check, for example when an
+  approval is missing or the branch is behind its base. The shared types
+  could not express these cases.
+- **Problem:** No banner state fits a pull request that GitHub blocks for
+  another reason.
+- **Impact if no action:** The banner shows an error or a stale state,
+  and the user cannot see why the merge is blocked.
+- **Root question:** What does the banner show when GitHub blocks a merge
+  for a reason that the nine states do not cover?
+- **Options:**
+  - **A.** Show "Ready to merge" once the checks pass. GitHub's merge
+    button can then still refuse. Effort: Small.
+  - **B.** Add one state, "Blocked", which links to the pull request on
+    GitHub. Effort: Medium.
+  - **C.** Add two states: "Blocked" for missing approvals and other
+    rules, and "Out of date" for a branch behind its base, with "Update
+    branch". Effort: Medium.
+  - **D.** Show the full list of GitHub's blockers in the bar. Effort:
+    Large.
+- **Left out:** Keeping the error or the old state, because it hides the
+  blocker.
+- **Wider fix:** B. One general state also covers GitHub rules that come
+  later.
+- **Recommendation:** C.
+- **Chosen:** B, by the user on 6 November 2026. The bar shows "Blocked"
+  when GitHub blocks the merge and no other state applies. Its action
+  opens the pull request on GitHub. Milestone 4b adds the state to the
+  contracts, the fakes, and the mockups.
+
+### 67. Decide the content security policy of both apps
+
+Added on 6 November 2026 from the Milestone 15e work.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** Decision 62 copies Mokly's Mac app, whose content
+  security policy equals the web app's. The Conducting web app sends no
+  content security policy today. The Milestone 15e branch prepared one
+  policy for both apps. It allows only the app's own scripts and styles,
+  its own API and sockets, GitHub avatars, and the frames that the app
+  names, such as port previews. It blocks inline scripts, plugins, and
+  framing of the app by other sites.
+- **Problem:** The two policies can be equal only if the web app starts
+  to send this policy, which adds a new restriction to the web app.
+- **Impact if no action:** The two apps use different policies, and the
+  web app has no second defence against an injected script.
+- **Root question:** Which content security policy do the web app and
+  the Mac app use?
+- **Options:**
+  - **A.** Send the prepared policy from both apps now. Each later screen
+    adds its frame and connection sources. Effort: Small.
+  - **B.** Send the policy only from the Mac app for now. The web app
+    gets it later. Effort: Small.
+  - **C.** Send no policy from either app. Effort: Small.
+- **Left out:** Loading the policy from the server at run time, because
+  it adds a network dependency and does not settle the choice.
+- **Wider fix:** A.
+- **Recommendation:** A. The app has few screens now, so the policy costs
+  least to add now.
+- **Action:** ask the user, because each option changes a requirement.
+
+### 68. Show when a workspace waits for the user
+
+Added on 6 November 2026 from the user's request: "we can add some kind
+of indicator to the workspace" and "maybe a blue indicator is the
+workspace asking for help/approval/prompt".
+
+- **Chosen:** by the user on 6 November 2026. A workspace gets one more
+  state, needs input. It shows while the agent waits for the user, such
+  as for help, an approval, or an answer. It is not only for Mac
+  commands.
+- **Agent calls on 6 November 2026:**
+  - The mark is blue, like Working, with a different shape: a filled
+    middle column that pulses, where Working draws a ring. So the two
+    states never depend on colour alone. The pulse stops when the system
+    asks for reduced motion.
+  - The workspace header and its row in the list show it, in the web app
+    and in the Mac app. On any other page of the Mac app, the row of the
+    waiting workspace shows it, and a click opens the request.
+  - The contract value is `input` in `WorkspaceState`. Milestone 15f sets
+    it while a Mac command request waits. Each later feature that waits
+    for the user sets it too.
 
 ## Design
 
@@ -2834,7 +2937,8 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
 - Agent call: every workspace sandbox starts with `noEnv`, so that it gets
   none of the Boat account's secrets. It gets no agent login at start.
   The runner gets the sender's login for each turn, as decision 49 says.
-  Decision 50 decides the GitHub token.
+  Git uses the sender's GitHub user token for each call, as decision 50
+  says.
 - The org settings keep a startup script, which runs in each workspace's
   cloud computer at each start and resume, and env vars. Decision 17 chose
   where the env vars live.
@@ -3279,6 +3383,20 @@ as decision 58 says.
       upgrade needs a matching `Origin`.
 - [x] Run the complete gate.
 
+## Milestone 4b: Blocked banner state
+
+Depends on: 4a
+
+Add the Blocked state of decision 64. Milestones 13 and 14 build on it.
+
+Agent call, 6 November 2026: use the Ban icon and the existing amber tone.
+Add the `blocked` variant at `app/banner/blocked/blocked`, to keep the existing paths.
+
+- [x] Add the Blocked state to the banner type in `src/shared/github.ts`,
+      to the fake API, and to the banner mockups, at desktop and phone
+      sizes. Branch: `conductor/boat-native-remote-workspaces-milestone-4b`.
+- [x] Run the complete gate. Branch: `conductor/boat-native-remote-workspaces-milestone-4b`.
+
 ## Milestone 5: Bases and workspace lifecycle
 
 Depends on: 4a
@@ -3300,8 +3418,8 @@ Depends on: 4a
 - [ ] Count user activity as decision 29 says, and stop after 30 minutes
       without activity or a running agent turn.
 - [ ] Add the git credential helper to the org image, and the Worker's
-      token route behind the workspace token. The token's reach waits for
-      decision 50.
+      token route behind the workspace token. The route returns a fresh
+      GitHub user token of the current turn's sender, as decision 50 says.
 
 ## Milestone 6: App shell and workspaces
 
@@ -3544,11 +3662,11 @@ Depends on: 4a
 
 Build the Mac app as decision 62 says. No other milestone waits for it.
 
-- [ ] Draw the Mac app window in the mockups first: the native window
+- [x] Draw the Mac app window in the mockups first: the native window
       buttons inset at the top left of the left panel, with the sidebar
       toggle and the back and forward buttons beside them, in a normal
       window and in full screen.
-- [ ] Draw the device commands in the mockups first: the permission
+- [x] Draw the device commands in the mockups first: the permission
       prompt with its four choices, the macOS notification, the countdown
       of the 15-minute window, the app's list of always-allowed commands,
       and the chat's tool states: waiting for approval, denied, done, and
@@ -3596,6 +3714,8 @@ milestone waits for it.
 - [ ] Test the prompt choices, the time limits, and the offline answer.
       Update `docs/protocol/desktop-app.md` and
       `docs/protocol/agent-tools.md`.
+- [ ] Set the workspace state to needs input while a command request
+      waits, and back when the user answers it, as decision 68 says.
 
 ## Milestone 16: Deployment and live smoke test
 

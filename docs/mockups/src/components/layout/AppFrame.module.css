@@ -22,6 +22,20 @@
   background: var(--ui-sidebar);
 }
 
+/* The left panel of the Mac app: the window controls over the rail and the sidebar. */
+.left {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.leftBody {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
 .main {
   display: flex;
   flex: 1;

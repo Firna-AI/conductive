@@ -1,0 +1,75 @@
+/* A card with a full hairline outline, as the other cards of the chat. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 22px;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.mac {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.command {
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.prompt {
+  color: var(--ui-muted);
+}
+
+.meta,
+.note {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.path {
+  font-family: var(--ui-font-mono);
+  overflow-wrap: anywhere;
+}
+
+/* The output that went back to the agent, in a tinted block. */
+.output {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-raised);
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,38 @@
+/*
+ * The logo of Conducting, from the masters in `docs/brand/`. The files are
+ * the one source: these rules only scale them, and never redraw them.
+ */
+
+/*
+ * The tile of the app icon, where the logo stands alone. The tile fills
+ * the box, so the canvas of the icon falls outside it, and the rounded
+ * corners clip its shadow.
+ */
+.tile {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 22.5%;
+  background: url('../../../../brand/conducting-icon.svg') center / 124.27%
+    no-repeat;
+}
+
+/* The macOS app icon with its canvas and shadow, as macOS shows it. */
+.appIcon {
+  display: inline-block;
+  flex-shrink: 0;
+  background: url('../../../../brand/conducting-icon.svg') center / contain
+    no-repeat;
+}
+
+/* The tile and the name: dark text in the light scheme, light text in the dark. */
+.lockup {
+  display: inline-block;
+  flex-shrink: 0;
+  aspect-ratio: 690.36 / 127.32;
+  background: url('../../../../brand/conducting-lockup-light.svg') center /
+    contain no-repeat;
+}
+
+:global(html[style*='dark']) .lockup {
+  background-image: url('../../../../brand/conducting-lockup-dark.svg');
+}
