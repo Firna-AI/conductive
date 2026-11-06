@@ -15,6 +15,7 @@ export interface OpenPreviewRequest {
   port: number
 }
 export interface Preview {
+  /** New for each open. The API never gives out a revoked ID again. */
   id: string
   port: number
   /** An opaque credential on a separate registrable domain. */

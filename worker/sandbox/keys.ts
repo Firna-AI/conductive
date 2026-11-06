@@ -69,13 +69,23 @@ export async function orgSandboxProvider(
   if (!(await findMembership(env.DB, orgId, userId))) {
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
   }
+  return authorizedOrgSandboxProvider(
+    env,
+    orgId,
+    fetch,
+    'Add the org’s Boat key to continue.',
+  )
+}
+
+/** Trusted callers first authorize the workspace and org. This factory exposes no key. */
+export async function authorizedOrgSandboxProvider(
+  env: AppEnv,
+  orgId: string,
+  fetch: HttpFetch,
+  missingKeyMessage = 'Ask an org admin to add its cloud computer key.',
+): Promise<SandboxProvider> {
   const stored = await readBoatKey(env.DB, orgId)
-  if (!stored)
-    throw new HttpError(
-      409,
-      'boat_key_required',
-      'Add the org’s Boat key to continue.',
-    )
+  if (!stored) throw new HttpError(409, 'boat_key_required', missingKeyMessage)
   const account: BoatAccount = {
     id: stored.accountId,
     type: stored.accountType,
