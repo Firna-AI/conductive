@@ -74,6 +74,9 @@ It releases the reader lock after success or failure.
 The caller chooses the byte budget and handles a missing stream.
 The byte collector has no route, provider, credential, file, or JSON policy.
 
+The [GitHub](../github/README.md) webhook and transport call it with their own budgets.
+The desktop sign-in exchange in [security](../security/README.md) calls it too.
+
 ## Development
 
 Run `npm run test -- worker/http/bounded-body.test.ts` from the repository root with Node 24.
