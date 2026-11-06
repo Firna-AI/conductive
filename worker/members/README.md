@@ -26,9 +26,12 @@ It must also include `activeAdminPredicate` in its D1 mutation.
 Bind the org ID and actor ID for that predicate.
 This keeps a concurrent role change or deletion from permitting a stale write.
 
-The key owner instead uses `assertCanMaintainOrgKey` and
+The key store uses `assertCanMaintainOrgKey` and
 `orgKeyMaintenancePredicate` from `key-maintenance.ts`.
-Bind the org ID and actor ID on its atomic encrypted-key write.
+Its insert-select checks the current admin in the same statement as the account guard.
+That one authorization condition covers the first save and every upsert.
+The core route passes the actual sender's user ID to the store.
+After a refused atomic save, the store checks permission again before reporting an account mismatch.
 This permission includes current admins of deleted orgs.
 Other deleted-org settings stay blocked.
 An active org's members can still read key status for the composer.
@@ -116,6 +119,7 @@ Invitation acceptance has no browser route in the fixed contracts.
 Call `acceptOrgInvite` after an explicit acceptance by a signed-in user.
 It verifies the invite ID against that user's current stored GitHub login.
 Sign-in alone does not accept an invitation.
+A membership-delete trigger invalidates that user's pending invites for the org, with a case-insensitive GitHub login match.
 
 Call `workspaceCreator` when the lifecycle creates a workspace.
 Store its ID in `owner_user_id` in the creation transaction.
@@ -132,6 +136,7 @@ The guard permits the final admin's account deletion only after org deletion.
 
 Run `npm run test -- worker/members` from the repository root with Node 24.
 The tests use local D1, the real request gate, and the existing fake Boat server.
+The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact.
 
 ### Key Code
 

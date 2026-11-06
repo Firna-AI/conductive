@@ -1,6 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises'
 
 import { Miniflare } from 'miniflare'
+import { unstable_splitSqlQuery } from 'wrangler'
 
 import { API_PATHS, type Org } from '../../src/shared/api'
 import { createApp } from '../application'
@@ -45,11 +46,7 @@ export async function createHarness() {
   for (const name of migrations) {
     const sql = await readFile(`${directory}/${name}`, 'utf8')
     await db.batch(
-      sql
-        .split(';')
-        .map((query) => query.trim())
-        .filter(Boolean)
-        .map((query) => db.prepare(query)),
+      unstable_splitSqlQuery(sql).map((query) => db.prepare(query)),
     )
   }
   const env: AppEnv = {

@@ -1,3 +1,4 @@
+import type { WorkspaceState } from '../../src/shared/workspaces'
 import { errorResponse } from '../http'
 import { route } from '../routes'
 import {
@@ -65,7 +66,7 @@ export function readDisk(harness: TestHarness, id = 'workspace-one') {
     .first<{
       stoppedAt: number
       nextKeepaliveAt: number | null
-      state: string
+      state: WorkspaceState
     }>()
 }
 

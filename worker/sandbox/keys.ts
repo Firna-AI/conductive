@@ -3,6 +3,7 @@ import { boatKeyStatus, readBoatKey, saveBoatKey } from '../data/boat-keys'
 import { findMembership } from '../data/orgs'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
+import { assertCanMaintainOrgKey } from '../members/key-maintenance'
 import { decrypt, encrypt } from '../security/crypto'
 import { BoatClient } from './boat'
 import { ProviderError } from './errors'
@@ -15,10 +16,12 @@ function keyContext(orgId: string, account: BoatAccount): string {
 export async function storeBoatKey(
   env: AppEnv,
   orgId: string,
+  userId: string,
   key: string,
   fetch: HttpFetch,
   now: number,
 ): Promise<BoatKeyStatus> {
+  await assertCanMaintainOrgKey(env.DB, orgId, userId)
   const stored = await readBoatKey(env.DB, orgId)
   const expected: BoatAccount | undefined = stored
     ? { id: stored.accountId, type: stored.accountType }
@@ -49,7 +52,8 @@ export async function storeBoatKey(
     keyContext(orgId, account),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
-  if (!(await saveBoatKey(env.DB, orgId, account, ciphertext, now))) {
+  if (!(await saveBoatKey(env.DB, orgId, userId, account, ciphertext, now))) {
+    await assertCanMaintainOrgKey(env.DB, orgId, userId)
     throw new HttpError(
       409,
       'boat_account_mismatch',
