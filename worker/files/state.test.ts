@@ -95,7 +95,7 @@ it('stores repository trees and changes larger than one Durable Object value', a
   const state = new FilesState(runtime.storage('large-projection'))
   await state.beginConnection('large')
   const entries: FileEntry[] = Array.from({ length: 20_000 }, (_, index) => ({
-    path: `src/${'nested-directory/'.repeat(5)}file-${index}.ts`,
+    path: `src/${'nested-directory/'.repeat(8)}file-${index}.ts`,
     name: `file-${index}.ts`,
     kind: 'file',
     change: 'modified',

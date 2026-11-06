@@ -2,9 +2,11 @@ import { Miniflare } from 'miniflare'
 
 import { isRecord } from '../../http'
 import type { FilesStorage } from '../storage'
+import { storageWorkerBundle } from './storage-bundle'
 
 /** The adapter stores each projection in actual SQLite Durable Object storage. */
 export async function createFilesStorage() {
+  const contents = await storageWorkerBundle()
   const runtime = new Miniflare({
     enableDevRegistry: false,
     telemetry: { enabled: false },
@@ -29,46 +31,7 @@ export async function createFilesStorage() {
             modules: {
               'index.js': {
                 type: 'esm',
-                contents: `
-                import { DurableObject } from 'cloudflare:workers'
-                export class StoredFiles extends DurableObject {
-                  async fetch(request) {
-                    const url = new URL(request.url)
-                    const key = url.searchParams.get('key')
-                    if (url.searchParams.has('inspect')) {
-                      const entries = await this.ctx.storage.list({ prefix: 'files:state:v1' })
-                      const sizes = [...entries.values()].filter(value => typeof value === 'string')
-                        .map(value => new TextEncoder().encode(value).byteLength)
-                      return Response.json({ chunks: sizes.length, maxBytes: Math.max(0, ...sizes), totalBytes: sizes.reduce((sum, size) => sum + size, 0) })
-                    }
-                    if (request.method === 'POST') {
-                      const { keys } = await request.json()
-                      const values = new Map()
-                      for (let index = 0; index < keys.length; index += 64) {
-                        const chunk = await this.ctx.storage.get(keys.slice(index, index + 64))
-                        for (const [key, value] of chunk) values.set(key, value)
-                      }
-                      return Response.json([...values])
-                    }
-                    if (request.method === 'PUT') {
-                      const { updates, removals } = await request.json()
-                      await this.ctx.storage.transaction(async (transaction) => {
-                        for (const [key, value] of Object.entries(updates)) await transaction.put(key, value)
-                        for (const key of removals) await transaction.delete(key)
-                      })
-                      return new Response(null, { status: 204 })
-                    }
-                    const value = await this.ctx.storage.get(key)
-                    return Response.json(value === undefined ? {} : { value })
-                  }
-                }
-                export default {
-                  fetch(request, env) {
-                    const name = new URL(request.url).searchParams.get('name')
-                    return env.FILES.get(env.FILES.idFromName(name)).fetch(request)
-                  }
-                }
-              `,
+                contents,
               },
             },
           },
