@@ -1,0 +1,4 @@
+{
+  "title": "Mac app",
+  "order": ["window", "commands", "this-mac"]
+}
