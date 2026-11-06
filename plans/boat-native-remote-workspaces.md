@@ -2436,6 +2436,41 @@ longer - what could be done to do a minimal version?"
 - **Chosen:** E, by the user on 6 November 2026. The follow-up item is
   `plans/follow-ups/move-backend-to-rust-and-postgres.md`.
 
+### 62. Add a Mac app in parallel
+
+Added on 6 November 2026 from the user's message: "can we add a parallel
+milestone to do a mac app - see how we did it in mokly - must be in
+parallel and not delay things".
+
+- **Chosen by the user on 6 November 2026:** a Mac app, built the way
+  Mokly built its desktop app, in a milestone that runs in parallel and
+  delays no other milestone. It changes the first requirement that the
+  product has no desktop app. The agents still run only in the cloud.
+- **How Mokly does it:** `mokly-ai/mokly-cloud`, folder `ts/desktop`, read
+  on 6 November 2026. It is a small Electron shell for macOS and Linux.
+  - It bundles the web app's static build and serves it from its own
+    origin, `mokly-app://desktop`. It uses the same API, and the API
+    accepts that origin.
+  - Sign-in finishes in the browser and hands off to the app through the
+    `mokly://` scheme, with one app instance.
+  - It keeps the window bounds and the session. It has no preload and no
+    renderer bridge, and it denies every permission except a sanitized
+    clipboard write. Its content security policy equals the web app's.
+  - electron-builder packages DMG and ZIP builds for arm64 and x64.
+    electron-updater reads pre-releases from the public repository
+    `mokly-ai/mokly-desktop`. Release tags sign and notarize on macOS.
+  - Playwright tests the shell and the packaged app in CI.
+- **Agent calls on 6 November 2026:**
+  - macOS only for now, arm64 and x64. Linux can follow, because Mokly's
+    setup already covers it.
+  - The shell lives in `desktop/` with its own package, so that it shares
+    no files with the other milestones except the Worker's origin rules.
+  - Until the user has an Apple Developer account, builds have an ad-hoc
+    signature. This repository is private, so a release feed needs a
+    public repository, such as `Firna-AI/conducting-desktop`.
+  - Milestone 17 does not wait for Milestone 15e. If 15e has not merged
+    by then, it stays a follow-up branch.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -2797,7 +2832,9 @@ check state from the GitHub API.
 **Prerequisites from the user.** A Cloudflare account on Workers Paid.
 Two domains on that account: one for the app, and a separate registrable
 domain for port previews. A Boat key for development and tests, as
-decision 44 says. A GitHub App with its key. Anthropic's Commercial Terms, accepted
+decision 44 says. For signed public Mac builds, later: an Apple Developer
+ID with a notarization key, and a public repository for the release feed,
+as decision 62 says. A GitHub App with its key. Anthropic's Commercial Terms, accepted
 through an Anthropic Console account, because they govern products that
 run Claude Code. Milestone 16 needs all of them. Earlier milestones use
 fakes.
@@ -3412,6 +3449,30 @@ Depends on: 4a
       reviews them before the app opens to other people.
 - [ ] Compare each page with its mockup.
 
+## Milestone 15e: Mac app
+
+Depends on: 4a
+
+Build the Mac app as decision 62 says. No other milestone waits for it.
+
+- [ ] Add `desktop/`, an Electron shell for macOS, as Mokly's
+      `ts/desktop` does. It bundles the built web app and serves it from
+      `conducting-app://desktop`.
+- [ ] Let the Worker accept the desktop origin in the `Origin` check, in
+      CORS for the API, and for the session cookie. Hand off the GitHub
+      sign-in from the browser to the app through the `conducting://`
+      scheme, with one app instance.
+- [ ] Keep the window bounds and the session across launches. Open other
+      sites in the browser. Deny every permission except a sanitized
+      clipboard write. Use no preload and no renderer bridge, and match
+      the web app's content security policy.
+- [ ] Package DMG and ZIP builds for arm64 and x64 with electron-builder,
+      with an ad-hoc signature for now. Add electron-updater on a GitHub
+      release feed, off in development.
+- [ ] Add Playwright tests of the shell and a packaged launch check to CI.
+- [ ] Write `docs/protocol/desktop-app.md`, and update the README and the
+      architecture doc.
+
 ## Milestone 16: Deployment and live smoke test
 
 Depends on: 15i, 15d, 16a
@@ -3427,7 +3488,7 @@ This milestone needs the prerequisites from the user.
 
 ## Milestone 17: Verification, commit, review, and pull request
 
-Depends on: every other milestone
+Depends on: every other milestone except 15e
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
