@@ -3,7 +3,7 @@
   flex-shrink: 0;
   align-items: center;
   gap: 10px;
-  height: calc(var(--ui-bar-height) - 4px);
+  min-height: calc(var(--ui-bar-height) - 4px);
   padding: 0 var(--ui-pad-x);
   border-bottom: 1px solid var(--ui-border);
   box-sizing: border-box;

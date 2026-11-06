@@ -1,10 +1,10 @@
-/* The row keeps the mockup height. On a phone the 44px targets overflow it. */
+/* The row keeps the mockup minimum and contains the phone's 44px targets. */
 .toolbar {
   display: flex;
   flex-shrink: 0;
   align-items: center;
   gap: 2px;
-  height: calc(var(--ui-bar-height) - 4px);
+  min-height: calc(var(--ui-bar-height) - 4px);
   padding: 0 6px;
   border-bottom: 1px solid var(--ui-border);
   box-sizing: border-box;
