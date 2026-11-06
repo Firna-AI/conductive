@@ -3578,6 +3578,9 @@ This milestone needs the prerequisites from the user.
 - [ ] Deploy the chat path to the user's Cloudflare account, with GitHub
       sign-in, so that the user can work in Conducting.
 - [ ] Smoke-test it with a real Boat sandbox.
+- [ ] Check that chat survives a restart: send a message before the
+      runner connects, deploy again, then check the history, the event
+      numbers, and the delivery of the waiting message.
 
 ## Milestone 9: Files backend
 
@@ -3792,6 +3795,9 @@ This milestone needs the prerequisites from the user.
       a file, use the terminal, open a preview, stop, and resume.
 - [ ] Check that a private Boat port does not answer on the public
       address of the sandbox without its token.
+- [ ] In a real workspace, run `conducting workspaces list` and an MCP
+      `tools/list` request, so that the installed agent tools start on
+      the image's Node.
 
 ## Milestone 17: Verification, commit, review, and pull request
 
