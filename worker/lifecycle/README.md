@@ -92,7 +92,7 @@ The handler returns a fresh GitHub App user token of the sender, from
 It stores no token. A user without a stored GitHub token must sign in again.
 
 The route is not reachable until the root wiring adds it. Until then, the
-branch step of a create cannot fetch a private repository.
+fetch step of a create cannot fetch a private repository.
 
 ### Workspace Durable Object
 
@@ -137,9 +137,10 @@ upgrade request without changes, because the object runs the browser gate
 itself. The socket sends the stored history first, then each new event.
 
 `WorkspaceEventJournal` in [`durable-journal.ts`](durable-journal.ts) keeps
-private lifecycle replay state. The production `Workspace` sends its
-`workspace.updated` and `start.updated` events to `WorkspaceChat`. Chat
-stores and numbers the public stream, with chat and lifecycle events.
+ordered lifecycle publication and suppresses unchanged updates. The
+production `Workspace` must send each `workspace.updated` and
+`start.updated` event to `WorkspaceChat`. Chat stores and numbers the only
+workspace event history, with chat and lifecycle events.
 
 ### Builds and refreshes
 
@@ -221,8 +222,6 @@ object holds the lifecycle state, the turn records, and the events.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`.
-- [`workspace-sockets.ts`](workspace-sockets.ts): the workspace event
-  socket.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`.

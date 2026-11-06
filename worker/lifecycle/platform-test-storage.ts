@@ -33,7 +33,6 @@ export class MemoryWorkspaceStorage implements WorkspaceStorage {
     result: new Map(),
     publication: new Map(),
     turns: new Map(),
-    event: new Map(),
     image: new Map(),
     draft: new Map(),
     number: new Map(),

@@ -31,16 +31,17 @@ export class Workspace
       matchesObject: (workspaceId) =>
         env.WORKSPACES.idFromName(workspaceId).equals(context.id),
     })
-    this.controller = createWorkspaceController(env, lifecycleDependencies(), {
-      ...nativeWorkspacePlatform(context, env),
-      publish: (envelope) =>
+    this.controller = createWorkspaceController(
+      env,
+      lifecycleDependencies(),
+      nativeWorkspacePlatform(context, (envelope) =>
         this.chat.appendWorkspaceEvent(
           envelope.workspaceId,
           envelope.event,
           envelope.occurredAt,
         ),
-      openSocket: (request) => this.chat.fetch(request),
-    })
+      ),
+    )
   }
 
   async queueLifecycleStart(job: WorkspaceStartJob): Promise<boolean> {
@@ -163,15 +164,5 @@ export class Workspace
 
   async fetch(request: Request): Promise<Response> {
     return this.chat.fetch(request)
-  }
-
-  async webSocketMessage(): Promise<void> {}
-
-  async webSocketClose(
-    socket: WebSocket,
-    code: number,
-    reason: string,
-  ): Promise<void> {
-    socket.close(code, reason)
   }
 }

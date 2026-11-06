@@ -183,9 +183,6 @@ export function createWorkspaceController(
         lifecycle: lifecycle,
       })
     },
-    async fetch(request: Request): Promise<Response> {
-      return platform.openSocket(request, lifecycle, journal)
-    },
   }
   const starts: WorkspaceStartCoordinator = new WorkspaceStartCoordinator(
     env,

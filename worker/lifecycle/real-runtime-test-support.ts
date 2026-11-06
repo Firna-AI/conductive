@@ -1,12 +1,20 @@
 import { readFile, readdir, mkdir, mkdtemp } from 'node:fs/promises'
 
-import { Miniflare, Response as RuntimeResponse } from 'miniflare'
+import {
+  Miniflare,
+  Response as RuntimeResponse,
+  type WebSocket,
+} from 'miniflare'
 import { build } from 'vite'
 
+import { workspaceEventsPath } from '../../src/shared/events'
+import { closeSockets, SocketInbox } from '../chat/adapter-sockets.test-support'
 import type { AppEnv } from '../env'
 import { LifecycleBoat } from './lifecycle-boat-test-support'
 import type { WorkspaceRuntimeFixture } from './workspace-runtime-test-worker'
 import { storeBoatKey } from '../sandbox/keys'
+import { SESSION_COOKIE } from '../security/cookies'
+import { sign } from '../security/crypto'
 
 export async function runtimeBundle(): Promise<string> {
   const output = await build({
@@ -38,6 +46,7 @@ export async function realRuntimeFixture(bundle: string) {
   await mkdir(root, { recursive: true })
   const directory = await mkdtemp(`${root}/case-`)
   const boat = new LifecycleBoat()
+  const sockets = new Set<WebSocket>()
   const requests: string[] = []
   let redirects = false
   const text = (value: string) => ({ type: 'text' as const, value })
@@ -138,6 +147,9 @@ export async function realRuntimeFixture(bundle: string) {
       "INSERT INTO users (id, github_id, github_login, created_at, updated_at) VALUES ('runtime-user', 11, 'octocat', 0, 0)",
     ),
     database.prepare(
+      "INSERT INTO sessions (id, user_id, expires_at) VALUES ('runtime-browser-session', 'runtime-user', 4000000000000)",
+    ),
+    database.prepare(
       "INSERT INTO orgs (id, name, creator_user_id, created_at) VALUES ('runtime-org', 'Runtime org', 'runtime-user', 0)",
     ),
     database.prepare(
@@ -151,6 +163,15 @@ export async function realRuntimeFixture(bundle: string) {
     ),
   ])
   await storeBoatKey(env, 'runtime-org', 'boat-first', boat.fetch, Date.now())
+  const sessionToken = await sign(
+    { sessionId: 'runtime-browser-session', expiresAt: 4_000_000_000_000 },
+    'session',
+    env.SESSION_SIGNING_KEY,
+  )
+  const closeBrowsers = async () => {
+    await closeSockets(...sockets)
+    sockets.clear()
+  }
   return {
     boat,
     requests,
@@ -158,16 +179,39 @@ export async function realRuntimeFixture(bundle: string) {
     actor: (id: string) => bindings.WORKSPACES.getByName(id),
     fetch: (path: string) =>
       runtime.dispatchFetch(`https://runtime.test${path}`),
+    openEvents: async (id: string, after = 0) => {
+      const response = await runtime.dispatchFetch(
+        `${env.APP_ORIGIN}${workspaceEventsPath('runtime-org', id, after)}`,
+        {
+          headers: {
+            Origin: env.APP_ORIGIN,
+            Cookie: `${SESSION_COOKIE}=${sessionToken}`,
+            Upgrade: 'websocket',
+          },
+        },
+      )
+      const socket = response.webSocket
+      if (!socket)
+        throw new Error(`No browser socket. Status: ${response.status}`)
+      const inbox = new SocketInbox(socket)
+      sockets.add(socket)
+      socket.accept()
+      return { response, inbox }
+    },
     refuseRedirects: () => {
       redirects = true
       requests.length = 0
     },
     restart: async () => {
+      await closeBrowsers()
       await runtime.dispose()
       runtime = create()
       bindings = await runtime.getBindings<RuntimeBindings>()
       env.DB = bindings.DB
     },
-    dispose: () => runtime.dispose(),
+    dispose: async () => {
+      await closeBrowsers()
+      await runtime.dispose()
+    },
   }
 }

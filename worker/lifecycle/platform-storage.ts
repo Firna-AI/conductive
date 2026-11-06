@@ -1,4 +1,3 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type { DurableLifecycleState } from './durable-types'
 import type { FailedCreationDraft } from './failed-creations'
 import type { ImageCoordinatorState } from './image-timers'
@@ -15,7 +14,6 @@ export interface WorkspaceValues {
   result: WorkspaceStartResult
   publication: CreationPublication
   turns: PendingTurn[]
-  event: WorkspaceEventEnvelope
   image: ImageCoordinatorState
   draft: FailedCreationDraft
   number: number

@@ -1,38 +1,30 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
-import type { AppEnv } from '../env'
-import type { DurableLifecycle } from './durable'
-import type { WorkspaceEventJournal } from './durable-journal'
+import type { WorkspaceEvent } from '../../src/shared/events'
 import {
   nativeWorkspaceStorage,
   type WorkspaceStorage,
 } from './platform-storage'
-import {
-  broadcastWorkspaceEvent,
-  handleWorkspaceSocket,
-} from './workspace-sockets'
+
+export interface WorkspaceEventPublication {
+  workspaceId: string
+  event: WorkspaceEvent
+  occurredAt: number
+}
 
 export interface WorkspacePlatform {
   storage: WorkspaceStorage
   blockConcurrencyWhile<T>(operation: () => Promise<T>): Promise<T>
   waitUntil(promise: Promise<unknown>): void
-  publish(event: WorkspaceEventEnvelope): Promise<void>
-  openSocket(
-    request: Request,
-    lifecycle: DurableLifecycle,
-    journal: WorkspaceEventJournal,
-  ): Promise<Response>
+  publish(event: WorkspaceEventPublication): Promise<void>
 }
 
 export function nativeWorkspacePlatform(
   ctx: DurableObjectState,
-  env: AppEnv,
+  publish: WorkspacePlatform['publish'],
 ): WorkspacePlatform {
   return {
     storage: nativeWorkspaceStorage(ctx.storage),
     blockConcurrencyWhile: (operation) => ctx.blockConcurrencyWhile(operation),
     waitUntil: (promise) => ctx.waitUntil(promise),
-    publish: (event) => broadcastWorkspaceEvent(env, ctx, event),
-    openSocket: (request, lifecycle, journal) =>
-      handleWorkspaceSocket(request, env, ctx, lifecycle, journal),
+    publish,
   }
 }

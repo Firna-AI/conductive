@@ -1,115 +1,54 @@
 import type { WorkspaceStorage } from './platform-storage'
-import type {
-  ChatHistoryResponse,
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
+import type { WorkspacePlatform } from './workspace-platform'
 
-const COUNTER = 'workspace:events:counter'
-const PREFIX = 'workspace:events:record:'
+const LAST_PUBLISHED = 'lifecycle:last-published'
 
-/** Keeps lifecycle replay state. WorkspaceChat assigns the public event numbers. */
+/** Publishes lifecycle changes in order. WorkspaceChat owns the only event history. */
 export class WorkspaceEventJournal {
   private readonly storage: WorkspaceStorage
-  private readonly broadcast: (event: WorkspaceEventEnvelope) => Promise<void>
+  private readonly publish: WorkspacePlatform['publish']
   private pending: Promise<unknown> = Promise.resolve()
 
   constructor(
     storage: WorkspaceStorage,
-    broadcast: (event: WorkspaceEventEnvelope) => Promise<void>,
+    publish: WorkspacePlatform['publish'],
   ) {
     this.storage = storage
-    this.broadcast = broadcast
+    this.publish = publish
   }
 
-  append(
-    workspaceId: string,
-    event: WorkspaceEvent,
-    occurredAt: number,
-  ): Promise<WorkspaceEventEnvelope> {
-    const next = this.pending.then(async () => {
-      const envelope = await this.storage.transaction(async (transaction) => {
-        const eventNumber =
-          ((await transaction.get('number', COUNTER)) ?? 0) + 1
-        const envelope: WorkspaceEventEnvelope = {
-          workspaceId,
-          eventNumber,
-          occurredAt,
-          event,
-        }
-        await transaction.put('number', COUNTER, eventNumber)
-        await transaction.put(
-          'event',
-          `${PREFIX}${String(eventNumber).padStart(16, '0')}`,
-          envelope,
-        )
-        return envelope
+  publishLifecycle(response: WorkspaceResponse, now: number): Promise<void> {
+    return this.serial(async () => {
+      const signature = JSON.stringify({
+        state: response.workspace.state,
+        start: response.start,
+        error: response.error,
       })
-      await this.broadcast(envelope)
-      return envelope
-    })
-    this.pending = next.catch(() => undefined)
-    return next
-  }
-
-  async publishLifecycle(
-    response: WorkspaceResponse,
-    now: number,
-  ): Promise<void> {
-    const signature = JSON.stringify({
-      state: response.workspace.state,
-      start: response.start,
-      error: response.error,
-    })
-    if (
-      (await this.storage.get('text', 'lifecycle:last-published')) === signature
-    )
-      return
-    await this.append(
-      response.workspace.id,
-      { type: 'workspace.updated', workspace: response.workspace },
-      now,
-    )
-    if (response.start)
-      await this.append(
-        response.workspace.id,
-        { type: 'start.updated', start: response.start },
-        now,
-      )
-    await this.storage.put('text', 'lifecycle:last-published', signature)
-  }
-
-  async after(eventNumber: number): Promise<ChatHistoryResponse> {
-    const events: WorkspaceEventEnvelope[] = []
-    let startAfter = `${PREFIX}${String(eventNumber).padStart(16, '0')}`
-    while (true) {
-      const stored = await this.storage.list('event', {
-        prefix: PREFIX,
-        startAfter,
-        limit: 1_000,
+      if ((await this.storage.get('text', LAST_PUBLISHED)) === signature) return
+      await this.publish({
+        workspaceId: response.workspace.id,
+        event: { type: 'workspace.updated', workspace: response.workspace },
+        occurredAt: now,
       })
-      events.push(...stored.values())
-      if (stored.size < 1_000) break
-      startAfter = [...stored.keys()].at(-1) ?? startAfter
-    }
-    const throughEventNumber = (await this.storage.get('number', COUNTER)) ?? 0
-    return { events, throughEventNumber }
-  }
-
-  async clearFailedCreate(): Promise<void> {
-    const stored = await this.storage.list('event', { prefix: PREFIX })
-    await this.storage.delete([...stored.keys()])
-    await this.storage.delete([COUNTER, 'lifecycle:last-published'])
-  }
-
-  subscribe(
-    after: number,
-    install: (history: ChatHistoryResponse) => void,
-  ): Promise<void> {
-    const next = this.pending.then(async () => {
-      install(await this.after(after))
+      if (response.start)
+        await this.publish({
+          workspaceId: response.workspace.id,
+          event: { type: 'start.updated', start: response.start },
+          occurredAt: now,
+        })
+      await this.storage.put('text', LAST_PUBLISHED, signature)
     })
+  }
+
+  clearFailedCreate(): Promise<void> {
+    return this.serial(async () => {
+      await this.storage.delete(LAST_PUBLISHED)
+    })
+  }
+
+  private serial(operation: () => Promise<void>): Promise<void> {
+    const next = this.pending.then(operation)
     this.pending = next.catch(() => undefined)
     return next
   }

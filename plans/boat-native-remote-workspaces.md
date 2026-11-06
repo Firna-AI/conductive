@@ -3910,14 +3910,14 @@ Apply decision 80 before the first deployment.
 
 Depends on: 4a
 
-- [x] Build the org image from the install script and the chosen
+- [ ] Build the org image from the install script and the chosen
       repositories, keep the build history, and refresh the image after
       pushes. Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
-- [x] Create a workspace: fork, labels, branch, and workspace token.
+- [ ] Create a workspace: fork, labels, branch, and workspace token.
       Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
 - [x] Add the workspace Durable Object: tabs, idle stop, and resume on
       open. Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
-- [x] Record each start step with its time in the workspace Durable
+- [ ] Record each start step with its time in the workspace Durable
       Object, and push it to the open tabs, as decision 20 says.
       Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
 - [x] Update the workspace state from the runner's reports, and read the

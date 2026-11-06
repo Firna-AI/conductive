@@ -1,9 +1,11 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type { AppEnv, AppDependencies } from '../env'
 import type { WorkspaceController } from './workspace-controller-types'
 import { createWorkspaceController } from './workspace-controller'
 import { MemoryWorkspaceStorage } from './platform-test-storage'
-import type { WorkspacePlatform } from './workspace-platform'
+import type {
+  WorkspaceEventPublication,
+  WorkspacePlatform,
+} from './workspace-platform'
 
 export function backendPlatform(
   env: AppEnv,
@@ -11,7 +13,7 @@ export function backendPlatform(
   changed: () => void,
 ) {
   const storage = new MemoryWorkspaceStorage()
-  const events: WorkspaceEventEnvelope[] = []
+  const events: WorkspaceEventPublication[] = []
   const platform: WorkspacePlatform = {
     storage,
     blockConcurrencyWhile: (operation) => operation(),
@@ -20,9 +22,6 @@ export function backendPlatform(
     },
     publish: async (event) => {
       events.push(structuredClone(event))
-    },
-    openSocket: async () => {
-      throw new Error('This fixture has no socket transport')
     },
   }
   let controller: WorkspaceController = createWorkspaceController(

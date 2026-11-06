@@ -4,6 +4,11 @@ import { FIRST_MESSAGE } from './durable-test-support'
 import { realRuntimeFixture, runtimeBundle } from './real-runtime-test-support'
 import { registerCreationAttempt } from './creation-attempt-data'
 import type { WorkspaceStartJob } from './start-types'
+import {
+  hasStartStep,
+  liveEvents,
+  publicHistory,
+} from './runtime-events-test-support'
 
 let bundle: string
 let fixture: Awaited<ReturnType<typeof realRuntimeFixture>>
@@ -101,9 +106,39 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     stdoutOffset: 4,
     stderrOffset: 0,
   })
+  const [browser] = await Promise.all([
+    fixture.openEvents(id),
+    caller.lifecycleStep('during', 'During connection', 'completed'),
+  ])
+  expect(browser.response.status).toBe(101)
+  const opening = publicHistory(await browser.inbox.next())
+  expect(
+    opening.events.some((event) => hasStartStep(event, 'fetch', 'running')),
+  ).toBe(true)
+  await caller.lifecycleStep('last', 'After connection', 'completed')
+  const captured = await fixture.openEvents(id)
+  const beforeRestart = publicHistory(await captured.inbox.next())
+  const openingLive = await liveEvents(
+    browser.inbox,
+    opening.throughEventNumber,
+    beforeRestart.throughEventNumber,
+  )
+  expect([...opening.events, ...openingLive]).toEqual(beforeRestart.events)
+  expect(
+    beforeRestart.events.slice(0, 3).map((event) => event.eventNumber),
+  ).toEqual([1, 2, 3])
+  expect(beforeRestart.events.map((event) => event.eventNumber)).toEqual(
+    Array.from(
+      { length: beforeRestart.throughEventNumber },
+      (_, index) => index + 1,
+    ),
+  )
   const statusCount = fixture.boat.statusRequests.length
   await fixture.restart()
   await abandoned
+  const resumedBrowser = await fixture.openEvents(id)
+  const resumedHistory = publicHistory(await resumedBrowser.inbox.next())
+  expect(resumedHistory).toEqual(beforeRestart)
   fixture.boat.commandOutput = 'part-restored'
   fixture.boat.commandRunning = false
   const restored = fixture.actor(id)
@@ -123,16 +158,20 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     pendingFirstMessage: FIRST_MESSAGE,
   })
   await restored.tick()
-  const before = await restored.history()
+  const completedBrowser = await fixture.openEvents(id)
+  const before = publicHistory(await completedBrowser.inbox.next())
   expect(
-    before.events.some(
-      ({ event }) =>
-        event.type === 'start.updated' &&
-        event.start.steps.some(
-          (step) => step.id === 'fetch' && step.state === 'completed',
-        ),
-    ),
+    before.events.some((event) => hasStartStep(event, 'fetch', 'completed')),
   ).toBe(true)
+  const completedLive = await liveEvents(
+    resumedBrowser.inbox,
+    resumedHistory.throughEventNumber,
+    before.throughEventNumber,
+  )
+  expect([...resumedHistory.events, ...completedLive]).toEqual(before.events)
+  await restored.lifecyclePrepared()
+  const unchangedBrowser = await fixture.openEvents(id)
+  expect(publicHistory(await unchangedBrowser.inbox.next())).toEqual(before)
   await restored.becomeIdle()
   expect(await restored.readLifecycle()).toMatchObject({
     state: 'stopped',
@@ -140,7 +179,18 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   })
   expect(fixture.boat.stopIds).toEqual(['bx_1'])
   expect(fixture.boat.deletedIds).toEqual([])
-  const after = await restored.history()
+  const stoppedLive = await liveEvents(
+    resumedBrowser.inbox,
+    before.throughEventNumber,
+    before.throughEventNumber + 2,
+  )
+  expect(stoppedLive).toMatchObject([
+    { event: { type: 'workspace.updated', workspace: { state: 'stopped' } } },
+    { event: { type: 'start.updated' } },
+  ])
+  const stoppedBrowser = await fixture.openEvents(id)
+  const after = publicHistory(await stoppedBrowser.inbox.next())
   expect(after.events.slice(0, before.events.length)).toEqual(before.events)
   expect(after.throughEventNumber).toBe(before.throughEventNumber + 2)
+  expect(after.events).toEqual([...before.events, ...stoppedLive])
 }, 20_000)

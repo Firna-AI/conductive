@@ -9,8 +9,6 @@ import { HttpError } from '../http'
 import type { LifecycleEnvironment } from './runtime'
 import type { WorkspaceStartJob } from './start-types'
 import { START_JOB_KEY } from './start-storage'
-import { nativeWorkspaceStorage } from './platform-storage'
-import { WorkspaceEventJournal } from './durable-journal'
 import { IDLE_MS } from './durable-types'
 
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
@@ -30,16 +28,18 @@ export class WorkspaceRuntimeFixture extends Workspace {
     })
     await this.alarm()
   }
-  history() {
-    return new WorkspaceEventJournal(
-      nativeWorkspaceStorage(this.ctx.storage),
-      async () => {},
-    ).after(0)
-  }
 }
 
 export default {
   async fetch(request: Request, env: LifecycleEnvironment): Promise<Response> {
+    const path = new URL(request.url).pathname
+    const events = path.match(
+      /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/events$/,
+    )
+    if (events)
+      return env.WORKSPACES.getByName(decodeURIComponent(events[1])).fetch(
+        request,
+      )
     const send = (request: Request) => fetch(request)
     try {
       switch (new URL(request.url).pathname) {
