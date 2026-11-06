@@ -12,7 +12,7 @@ import {
 import type { ToolCallItem, ToolKind } from '../../fixtures/conversations'
 import { classes } from '../common/classes'
 import { LeftOut } from './LeftOut'
-import { formatSize, leftOutOfCall, leftOutOfRun } from './lostCopy'
+import { leftOutOfCall, leftOutOfRun } from './lostCopy'
 import styles from './ToolGroup.module.css'
 
 const tools: Readonly<
@@ -41,7 +41,7 @@ function CallLine(props: { call: ToolCallItem }) {
         <span className={styles.detail}>{call.detail}</span>
       ) : null}
       {call.omittedDetailBytes ? (
-        <LeftOut text={leftOutOfCall(formatSize(call.omittedDetailBytes))} />
+        <LeftOut text={leftOutOfCall(call.omittedDetailBytes)} />
       ) : null}
       {call.status === 'running' ? (
         <Spinner color={theme.colors.muted} size={12} />
@@ -79,9 +79,7 @@ export function ToolGroup(props: { calls: readonly ToolCallItem[] }) {
             return <Icon key={kind} size={13} />
           })}
         </span>
-        {leftOut > 0 ? (
-          <LeftOut text={leftOutOfRun(formatSize(leftOut))} />
-        ) : null}
+        {leftOut > 0 ? <LeftOut text={leftOutOfRun(leftOut)} /> : null}
       </summary>
       <ul className={styles.calls}>
         {calls.map((call) => (

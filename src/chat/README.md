@@ -70,15 +70,17 @@ agent runner.
 - A finished turn ends its file list with the files that the runner left out, such as "47 more files".
   A stopped line adds the count of its stopped completion: "You stopped the agent · 5 changed files not listed".
   The counts come from `turnCompletions`. A zero count shows nothing.
-- `Transcript.refusedEvents` keeps each session's refusal markers.
-  Each marker also becomes one `lost` item at its place among the events, which shows one line.
+- Each refusal marker of a session becomes one `lost` item at its place among the events, which shows one line.
+  The transcript keeps the marker only in that item. A repeat of the same marker replaces its item.
   The line names the lost data and the reason in plain words, and never the stream, number, or event type.
   Nullable turn context stays intact. Markers without a session stay outside per-session logs.
   The chat state keeps no marker without a session, because their place is an open decision.
 - A refused `turn.completed` or `turn.failed` ends the turn that its marker names.
   Its running calls show as stopped, its Stop request clears, and no time, files, or Try again appear.
   A marker of a turn that was not running, or without a turn, ends nothing.
-  Try again stays on a failed turn that a later line follows.
+- `Transcript.newestTurnId` names the newest turn, from its accepted turn events and from a refused end that names a turn.
+  Try again shows only on the failed item of that turn, when no turn runs.
+  A later line of a lost event keeps it. A newer turn takes it away, also when the end of that turn was lost.
 - Ordered history folding preserves these fields and lines across completion and failure events.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
@@ -126,6 +128,10 @@ agent runner.
   so the app and the mockups look the same. The shared CSS also limits a
   long menu or sheet, which then scrolls. A mockup part that imports
   fixture data or has no handlers has an interactive version here.
+- Sizes, such as "12 KB" or "1.2 MB", come from `formatSize` in the mockups'
+  `src/components/chat/sizes.ts`. The attached files, the left-out output,
+  the mockups, and the composer of a new workspace share it. The chat keeps
+  no size formatter of its own.
 - User-facing text follows the
   [names in the product](../../docs/protocol/chat-and-events.md#names-in-the-product):
   no "Claude Code", and no provider name.

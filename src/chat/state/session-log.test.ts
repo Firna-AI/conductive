@@ -5,10 +5,17 @@ import type {
 } from '../../shared/chat-events'
 import { readStoredEvents, type StreamEnvelope } from '../api/read-workspace'
 import { chatEventsOf, SessionLog } from './session-log'
+import type { Transcript } from './transcript'
 
 /** The chat line of a refusal marker, at its place in the transcript. */
 const lineOf = (event: RunnerEventRefused) =>
   expect.objectContaining({ kind: 'lost', marker: event })
+
+/** The refusal markers that the lines of a transcript hold, in their order. */
+const markersOf = (transcript: Transcript) =>
+  transcript.items.flatMap((item) =>
+    item.kind === 'lost' ? [item.marker] : [],
+  )
 
 const turn = { sessionId: 'session-1', turnId: 'turn-1' }
 const marker: RunnerEventRefused = {
@@ -40,8 +47,8 @@ it('keeps refusal markers and completion counts when older session history refol
   const log = new SessionLog()
   const refused = envelope(2, marker)
   log.merge(chatEventsOf(turn.sessionId, [refused]))
+  expect(markersOf(log.transcript)).toEqual([marker])
   expect(log.transcript).toMatchObject({
-    refusedEvents: [marker],
     items: [lineOf(marker)],
     turn: null,
   })
@@ -100,8 +107,8 @@ it('keeps refusal markers and completion counts when older session history refol
       ...later,
     ]),
   )
+  expect(markersOf(log.transcript)).toEqual([marker, olderMarker, newerMarker])
   expect(log.transcript).toMatchObject({
-    refusedEvents: [marker, olderMarker, newerMarker],
     turnCompletions: { 'turn-1': completed, 'turn-2': stopped },
     turn: null,
     stopRequests: {},
@@ -124,11 +131,7 @@ it('keeps refusal markers and completion counts when older session history refol
   expect(log.merge(chatEventsOf(turn.sessionId, [refused, ...later]))).toBe(
     false,
   )
-  expect(log.transcript.refusedEvents).toEqual([
-    marker,
-    olderMarker,
-    newerMarker,
-  ])
+  expect(markersOf(log.transcript)).toEqual([marker, olderMarker, newerMarker])
 })
 
 it('routes refusal markers only to their named session, as one line each', () => {
@@ -142,13 +145,13 @@ it('routes refusal markers only to their named session, as one line each', () =>
   const second = new SessionLog()
   first.merge(chatEventsOf('session-1', envelopes))
   second.merge(chatEventsOf('session-2', envelopes))
+  expect(markersOf(first.transcript)).toEqual([marker])
   expect(first.transcript).toMatchObject({
-    refusedEvents: [marker],
     items: [lineOf(marker)],
     turn: null,
   })
+  expect(markersOf(second.transcript)).toEqual([other])
   expect(second.transcript).toMatchObject({
-    refusedEvents: [other],
     items: [lineOf(other)],
     turn: null,
   })

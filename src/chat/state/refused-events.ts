@@ -14,9 +14,9 @@ export function endsTurn(event: RunnerEventRefused): boolean {
 /**
  * Applies a refusal marker of a session (decision 76). The marker shows once,
  * as a line at its place among the other events. A refused end of a running
- * turn still ends the turn that the marker names. A marker without a turn,
- * or of a turn that was not running, ends nothing, because the chat cannot
- * tell which turn ended.
+ * turn still ends the turn that the marker names, which is then the newest
+ * turn. A marker without a turn, or of a turn that was not running, ends
+ * nothing, because the chat cannot tell which turn ended.
  */
 export function foldRefused(
   transcript: Transcript,
@@ -24,7 +24,10 @@ export function foldRefused(
 ): Transcript {
   const ended =
     endsTurn(event) && event.turnId !== null
-      ? endLostTurn(transcript, event.turnId)
+      ? {
+          ...endLostTurn(transcript, event.turnId),
+          newestTurnId: event.turnId,
+        }
       : transcript
   const item: TranscriptItem = {
     kind: 'lost',
@@ -36,6 +39,5 @@ export function foldRefused(
     ...ended,
     items:
       index < 0 ? [...ended.items, item] : replaceAt(ended.items, index, item),
-    refusedEvents: [...transcript.refusedEvents, event],
   }
 }

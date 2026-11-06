@@ -4,7 +4,8 @@ import type {
   RunnerEventRefused,
   ToolCall,
 } from '../../shared/chat-events'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { renderChat, textOf } from './render-kit'
 
 const turn = { sessionId: FAKE_IDS.session, turnId: 'turn-1' }
@@ -201,6 +202,41 @@ describe('runner events that the workspace refused', () => {
     chat.emit(refused(30, 'tool.updated', 'turn_not_active'))
     expect(text()).toMatch(
       /Try again A tool update was lost because its turn was not running/,
+    )
+  })
+
+  it('takes Try again from a failed turn when a newer turn loses its end', async () => {
+    const { chat, text } = await renderChat({ conversation: 'running' })
+    const { message } = workspaceFixtures()
+    const queued = {
+      ...message,
+      id: 'ask-2',
+      text: 'Then add tests for the form.',
+      state: 'queued' as const,
+    }
+    chat.emit({ type: 'message.accepted', message: queued })
+    chat.emit({
+      ...turn,
+      type: 'turn.failed',
+      error: { code: 'agent_unavailable', message: 'The agent is busy.' },
+      retryMessageId: message.id,
+      durationMs: 1_000,
+    })
+    expect(text()).toContain('Try again')
+
+    chat.emit({
+      ...turn,
+      turnId: 'turn-2',
+      type: 'turn.started',
+      senderId: message.sender.id,
+      choice: message.choice,
+      startedAt: FAKE_TIME,
+      messageIds: [queued.id],
+    })
+    chat.emit(refused(40, 'turn.completed', 'invalid', { turnId: 'turn-2' }))
+    expect(text()).not.toContain('Try again')
+    expect(text()).toContain(
+      'The agent is busy. The summary of this turn was lost because it could not be read',
     )
   })
 })

@@ -4247,7 +4247,8 @@ Design calls on 6 November 2026:
 - Reuse one pure loss-line component in the mockups and the app.
   Keep the event type and reason out of product copy.
 - Fold each session marker into the transcript at its event position.
-  Keep Try again on the last failed turn when a marker follows it.
+  Keep Try again on the failed item of the newest turn when a marker follows it.
+  A newer turn takes Try again away, also when the end of that turn was lost.
 - A refused end stops only the turn that its marker names.
   Mark its unfinished tools as stopped, because the lost payload gives no result.
   The wider session-record fix stays in `plans/follow-ups/chat-refused-turn-end.md`.

@@ -61,8 +61,16 @@ export function TranscriptView(props: {
   children?: ReactNode
 }) {
   const { transcript } = props
-  // The line of a lost event keeps Try again on the failed turn above it.
+  // Try again shows on the failed item of the newest turn, when no turn runs
+  // and nothing but lines of lost events follows it.
   const last = transcript.items.findLast((item) => item.kind !== 'lost')
+  const retryable =
+    !props.readOnly &&
+    !transcript.turn &&
+    last?.kind === 'failed' &&
+    last.turnId === transcript.newestTurnId
+      ? last
+      : null
   return (
     <>
       {groupEntries(transcript.items).map((entry) =>
@@ -71,8 +79,7 @@ export function TranscriptView(props: {
         ) : (
           <ItemView
             actions={{
-              canRetry:
-                !props.readOnly && !transcript.turn && entry.item === last,
+              canRetry: entry.item === retryable,
               retrying: props.retrying,
               onRetry: props.onRetry,
               onOpenDiff: props.onOpenDiff,

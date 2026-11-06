@@ -5,6 +5,8 @@
  * data in product terms, and never show the refused data itself.
  */
 
+import { formatSize } from './sizes'
+
 /** The data that a refused event carried, in the words of the chat. */
 export type LostWhat =
   | 'turn-start'
@@ -54,26 +56,19 @@ export function lostText(what: LostWhat, reason: LostReason): string {
   return `${subjects[what]} was lost because ${causes[reason]}`
 }
 
-/** A size as the chat shows file sizes, such as "12 KB" or "1.2 MB". */
-export function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
 /** The files of a turn past the ones that the chat lists: "47 more files". */
 export function moreFiles(count: number): string {
   return `${count} more ${count === 1 ? 'file' : 'files'}`
 }
 
 /** The output that the runner left out of one tool call: "1.2 MB left out". */
-export function leftOutOfCall(size: string): string {
-  return `${size} left out`
+export function leftOutOfCall(bytes: number): string {
+  return `${formatSize(bytes)} left out`
 }
 
 /** The output left out of a run of tool calls: "1.2 MB of output left out". */
-export function leftOutOfRun(size: string): string {
-  return `${size} of output left out`
+export function leftOutOfRun(bytes: number): string {
+  return `${formatSize(bytes)} of output left out`
 }
 
 /**

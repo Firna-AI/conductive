@@ -54,12 +54,15 @@ export interface RunningTurn {
 export interface Transcript {
   items: readonly TranscriptItem[]
   turn: RunningTurn | null
+  /**
+   * The newest turn of the session, from its accepted turn events and from a
+   * refused end that names a turn. Try again shows only on its failed item.
+   */
+  newestTurnId: string | null
   /** Complete terminal data, including omitted files, without new rendering. */
   turnCompletions: Readonly<
     Record<string, Extract<AgentChatEvent, { type: 'turn.completed' }>>
   >
-  /** Every refusal marker of the session. Each one also shows as a `lost` item. */
-  refusedEvents: readonly RunnerEventRefused[]
   /**
    * The member who first pressed Stop, for each turn that has not ended. The
    * request alone ends nothing: the turn runs until it ends as stopped.
@@ -70,8 +73,8 @@ export interface Transcript {
 export const emptyTranscript: Transcript = {
   items: [],
   turn: null,
+  newestTurnId: null,
   turnCompletions: {},
-  refusedEvents: [],
   stopRequests: {},
 }
 
@@ -121,6 +124,9 @@ export function foldEvent(
         },
       }
     default:
-      return foldTurn(transcript, event, occurredAt)
+      return {
+        ...foldTurn(transcript, event, occurredAt),
+        newestTurnId: event.turnId,
+      }
   }
 }

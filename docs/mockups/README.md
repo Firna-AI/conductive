@@ -104,12 +104,16 @@ chat, and five tabs at the bottom.
   panel gets an accent edge.
 - A state tints a whole bar or box, and its edges stay neutral. No box has
   an accent strip on any edge.
+- `sizes.ts` in `src/components/chat/` holds the one size formatter.
+  The mockups, chat, and composer of a new workspace share it.
+  The attachment fixtures hold byte counts.
+  The formatter shows sizes such as "12 KB" and "1.2 MB".
 - Data that the chat does not have shows in plain words, from decision 76.
   `lostCopy.ts` in `src/components/chat/` holds the words. A tool call whose
-  output the runner shortened shows the size that it left out, such as
-  "1.2 MB left out", and its folded group shows the total. A turn with more
-  than 200 files ends its list with plain text, such as "47 more files". A
-  stopped turn shows no file list, so its line ends with the count, such as
+  output the runner shortened shows the size that it left out, such as "1.2 MB left out", and
+  its folded group shows the total. A turn with more than 200 files ends its
+  list with plain text, such as "47 more files". A stopped turn shows no
+  file list, so its line ends with the count, such as
   "You stopped the agent · 5 changed files not listed".
   `LostLine` draws a refused runner event as one centred, muted line at its
   place, which names the lost data and why, such as "A tool update was lost

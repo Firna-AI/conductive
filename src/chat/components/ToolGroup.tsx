@@ -20,7 +20,6 @@ import {
 } from '../../../docs/mockups/src/components/chat/lostCopy'
 import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { formatBytes } from '../state/format'
 
 const tools: Readonly<
   Record<ToolCall['kind'], { icon: LucideIcon; done: string; running: string }>
@@ -56,7 +55,7 @@ function CallLine(props: { call: ToolCall }) {
         <span className={styles.detail}>{call.detail}</span>
       ) : null}
       {call.omittedDetailBytes > 0 ? (
-        <LeftOut text={leftOutOfCall(formatBytes(call.omittedDetailBytes))} />
+        <LeftOut text={leftOutOfCall(call.omittedDetailBytes)} />
       ) : null}
       {call.state === 'running' ? (
         <Spinner color={theme.colors.muted} size={12} />
@@ -103,9 +102,7 @@ export function ToolGroup(props: { calls: readonly ToolCall[] }) {
             return <Icon key={kind} size={13} />
           })}
         </span>
-        {leftOut > 0 ? (
-          <LeftOut text={leftOutOfRun(formatBytes(leftOut))} />
-        ) : null}
+        {leftOut > 0 ? <LeftOut text={leftOutOfRun(leftOut)} /> : null}
       </summary>
       <ul className={styles.calls}>
         {calls.map((call) => (
