@@ -2590,6 +2590,52 @@ Added on 6 November 2026 from the Milestone 13 work.
   opens the pull request on GitHub. Milestone 4b adds the state to the
   contracts, the fakes, and the mockups.
 
+### 65. Limit the size of each body that the Worker reads
+
+Added on 6 November 2026 from a finding check of the Milestone 9 review.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Review. **Category:** Security.
+- **Background:** The request gate reads the whole JSON body of each
+  signed-in write, with no byte limit. Cloudflare accepts request bodies
+  up to 100 MB on the Free and Pro plans. The Boat transport reads each
+  Boat answer in full, and a command answer can hold up to 8 MiB of
+  output for each stream. An isolate has 128 MB of memory.
+- **Problem:** One large body can fill the memory of an isolate.
+- **Impact if no action:** A signed-in user can crash an isolate on
+  purpose, which stops the requests of other users on it.
+- **Root question:** How does the Worker keep each body that it reads to
+  a safe size?
+- **Options:**
+  - **A.** A byte limit in the request gate only, for example 1 MB, with
+    a 413 answer. Effort: Small.
+  - **B.** One bounded body reader. The request gate uses it with a 1 MB
+    limit. The Boat transport uses it with a budget for each fixed Boat
+    route, above Boat's documented maximum for that route. Effort:
+    Medium.
+  - **C.** A Cloudflare rule that refuses request bodies over 1 MB before
+    the Worker runs. Effort: Small.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 6 November 2026. Milestone 4c builds it on
+  the bounded reader of the Milestone 9 file read.
+
+### 66. Put the README rule where agents read it
+
+Added on 6 November 2026 from finding 2 of the Milestone 15 review.
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Review. **Category:** Process.
+- **Background:** The `plans` skill says that a README holds no plan
+  reference. Agents read the `documentation` skill when they edit a
+  README, and that skill does not state the rule. So READMEs got status
+  lines that went stale.
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Add the rule to the `documentation` skill. Effort: Medium.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 6 November 2026, in a workspace of
+  `futex-ai/skills`. This repository changes nothing for it.
+
 ### 67. Decide the content security policy of both apps
 
 Added on 6 November 2026 from the Milestone 15e work.
@@ -2621,6 +2667,9 @@ Added on 6 November 2026 from the Milestone 15e work.
 - **Recommendation:** A. The app has few screens now, so the policy costs
   least to add now.
 - **Action:** ask the user, because each option changes a requirement.
+- **Chosen:** A, by the user on 6 November 2026. Both apps send the
+  prepared policy. Milestone 15e applies it to the web app and states it
+  in the access protocol.
 
 ### 68. Show when a workspace waits for the user
 
@@ -3396,6 +3445,22 @@ Add the `blocked` variant at `app/banner/blocked/blocked`, to keep the existing 
       to the fake API, and to the banner mockups, at desktop and phone
       sizes. Branch: `conductor/boat-native-remote-workspaces-milestone-4b`.
 - [x] Run the complete gate. Branch: `conductor/boat-native-remote-workspaces-milestone-4b`.
+
+## Milestone 4c: Bounded body reads
+
+Depends on: 9
+
+Apply decision 65 B. The bounded reader of the Milestone 9 file read is
+the base.
+
+- [ ] Use one bounded body reader in the request gate, with a 1 MB limit
+      for each JSON body. A larger body gets a 413 answer.
+- [ ] Use the same reader in the Boat transport, with a budget for each
+      fixed Boat route above Boat's documented maximum for that route.
+- [ ] Test an oversized body at the gate and at a Boat route, with a
+      stream that counts its chunks. State the 1 MB limit in the access
+      protocol.
+- [ ] Run the complete gate.
 
 ## Milestone 5: Bases and workspace lifecycle
 
