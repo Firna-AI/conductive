@@ -4200,11 +4200,11 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build Delete org with its restore.
-- [ ] Show the Repositories and Cloud computer tabs read-only to members,
-      as decision 57 says.
-- [ ] Build the org members page and workspace reassignment.
-- [ ] Compare each screen with its mockup.
+- [x] Build Delete org with its restore. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
+- [x] Show the Repositories and Cloud computer tabs read-only to members,
+      as decision 57 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
+- [x] Build the org members page and workspace reassignment. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
+- [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
 
 ## Milestone 15g: Email invitations
 
