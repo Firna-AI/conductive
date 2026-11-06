@@ -29,5 +29,3 @@ export interface AgentWorkspaceSummary {
 export interface AgentListWorkspacesResponse {
   workspaces: readonly AgentWorkspaceSummary[]
 }
-
-// The git credential payload waits for decision 50. No token reach is fixed here.
