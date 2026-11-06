@@ -2232,7 +2232,7 @@ Open. Added on 5 November 2026 from the answer to decision 39.
 
 ### 56. Decide what happens when an org's Boat key changes account
 
-Open. Added on 5 November 2026 from the Milestone 2 docs.
+Added on 6 November 2026 from the Milestone 2 docs.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -2263,6 +2263,9 @@ Open. Added on 5 November 2026 from the Milestone 2 docs.
   another Boat account can still create a new org.
 - **Action:** ask the user, because A adds a rejection, and each option
   adds behaviour that no requirement covers.
+- **Chosen:** A, by the user on 6 November 2026. The user asked for a
+  better way later, probably a move of the old cloud computers:
+  `plans/follow-ups/migrate-cloud-computers-to-another-boat-account.md`.
 
 ## Design
 

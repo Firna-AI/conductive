@@ -29,6 +29,9 @@ says.
   Open decision 54 asks whether an admin role can add it too.
 - The Boat key screen names Boat, and links to Boat's sign-up page and to
   its key page (decision 47).
+- A new key must reach the same Boat account as the old key. The key
+  screen refuses a key of another Boat account, and says why (decision
+  56).
 - A Boat key for each member was rejected. A workspace that moves to
   another member would then have to move to another Boat account.
 - [Access and security](access-and-security.md#boat-keys) states how the
