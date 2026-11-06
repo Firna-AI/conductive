@@ -1,0 +1,117 @@
+import { errorResponse, HttpError, privateResponse } from '../http'
+import type { GitHubRefreshWorkspace } from './contracts'
+import {
+  completeDelivery,
+  isProcessed,
+  recordDelivery,
+  repositoryWorkspaces,
+} from './data'
+import { webhookRoute } from './webhook-routing'
+
+export const GITHUB_WEBHOOK_PATH = '/api/github/webhooks'
+
+export interface GitHubWebhookEnv {
+  DB: D1Database
+  MACHINE_ORIGIN: string
+  GITHUB_WEBHOOK_SECRET: string
+}
+
+export interface GitHubWebhookDependencies {
+  now: () => number
+  refresh: GitHubRefreshWorkspace
+}
+
+async function authenticatedBody(
+  request: Request,
+  secret: string,
+): Promise<ArrayBuffer> {
+  const signature = request.headers.get('X-Hub-Signature-256')
+  if (!secret)
+    throw new HttpError(
+      503,
+      'github_unavailable',
+      'GitHub is not available. Try again.',
+    )
+  const body = await request.arrayBuffer()
+  let valid = false
+  if (signature && /^sha256=[\da-f]{64}$/i.test(signature)) {
+    const bytes = Uint8Array.from(
+      signature.slice(7).match(/../g) ?? [],
+      (hex) => Number.parseInt(hex, 16),
+    )
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify'],
+    )
+    valid = await crypto.subtle.verify('HMAC', key, bytes, body)
+  }
+  if (!valid)
+    throw new HttpError(
+      403,
+      'github_signature_invalid',
+      'The GitHub signature is not valid.',
+    )
+  return body
+}
+
+/** Machine endpoint. Verify the raw bytes before JSON parsing or D1 access. */
+export async function handleGitHubWebhook(
+  request: Request,
+  env: GitHubWebhookEnv,
+  dependencies: GitHubWebhookDependencies,
+): Promise<Response> {
+  try {
+    const url = new URL(request.url)
+    if (
+      url.origin !== env.MACHINE_ORIGIN ||
+      url.pathname !== GITHUB_WEBHOOK_PATH ||
+      request.method !== 'POST' ||
+      request.headers.has('Upgrade')
+    ) {
+      throw new HttpError(404, 'not_found', 'The page is not available.')
+    }
+    const body = await authenticatedBody(request, env.GITHUB_WEBHOOK_SECRET)
+    let value: unknown
+    try {
+      value = JSON.parse(new TextDecoder().decode(body))
+    } catch {
+      throw new HttpError(400, 'invalid_json', 'The request is not valid JSON.')
+    }
+    const event = request.headers.get('X-GitHub-Event')
+    const deliveryId = request.headers.get('X-GitHub-Delivery')
+    if (!event || !deliveryId) {
+      throw new HttpError(
+        400,
+        'github_webhook_invalid',
+        'The GitHub webhook is not valid.',
+      )
+    }
+    const route = webhookRoute(event, value)
+    if (route === null || (await isProcessed(env.DB, deliveryId)))
+      return new Response(null, { status: 204 })
+    const workspaces = await repositoryWorkspaces(
+      env.DB,
+      route.repositoryId,
+      route.installationId,
+    )
+    await recordDelivery(env.DB, deliveryId, dependencies.now())
+    for (const workspace of workspaces) {
+      const matches =
+        route.branch === undefined ||
+        route.branch === workspace.branch ||
+        (route.push && route.branch === workspace.defaultBranch)
+      if (!matches) continue
+      await dependencies.refresh(workspace, {
+        deliveryId,
+        headSha: route.headSha,
+      })
+    }
+    await completeDelivery(env.DB, deliveryId, dependencies.now())
+    return new Response(null, { status: 204 })
+  } catch (error) {
+    return privateResponse(errorResponse(error))
+  }
+}
