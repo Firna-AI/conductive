@@ -18,18 +18,27 @@ function text(html: string): string {
     .trim()
 }
 
-it('shows the size and the limit that the backend sends, with Download', () => {
-  const html = renderToStaticMarkup(
-    <ReadError
-      error={{ kind: 'too-large', sizeBytes: 3_407_872, limitBytes: 1_048_576 }}
-      onDownload={noop}
-      onRetry={noop}
-      subject="file"
-    />,
-  )
-  expect(text(html)).toBe(
-    'Download this file to read it Files up to 1 MB open here. This one has 3.3 MB. Download',
-  )
+it('shows the size and the limit that the backend sends, and the terminal in place of Download', () => {
+  const cases = [
+    ['file', 'Open this file in the terminal'],
+    ['diff', 'See this diff in the terminal'],
+  ] as const
+  for (const [subject, title] of cases) {
+    const html = renderToStaticMarkup(
+      <ReadError
+        error={{
+          kind: 'too-large',
+          sizeBytes: 3_407_872,
+          limitBytes: 1_048_576,
+        }}
+        onRetry={noop}
+        subject={subject}
+      />,
+    )
+    expect(text(html), subject).toBe(
+      `${title} Files up to 1 MB open here. This one has 3.3 MB.`,
+    )
+  }
 })
 
 it('offers Try again when a read fails', () => {
@@ -76,7 +85,11 @@ it('starts Markdown rendered and shows its source as text with line numbers', ()
     ),
   } as const
   const decoded = fileText(readme)
-  expect(decoded).toEqual({ kind: 'text', text: '# Café\n\nThe *shop*.\n' })
+  expect(decoded).toEqual({
+    kind: 'text',
+    text: '# Café\n\nThe *shop*.\n',
+    viewText: '# Café\n\nThe *shop*.\n',
+  })
   const preview = renderToStaticMarkup(
     <FileContent
       markdownParser={parseMarkdown}

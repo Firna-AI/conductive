@@ -1,5 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@firna/ui/button'
+import type { FilesNavigation, FilesTarget } from '../navigation'
+import { FilesLink } from './FilesLink'
 import { useControlSizes } from './layout'
 import styles from './actions.module.css'
 
@@ -32,6 +34,32 @@ export function ActionButton(props: {
     >
       {props.children}
     </Button>
+  )
+}
+
+/**
+ * A link with the look of a secondary `ActionButton`, for an action that
+ * opens another tab or list. On a phone it is 44 px high.
+ */
+export function ActionLink(props: {
+  children: string
+  to: FilesTarget
+  navigation: FilesNavigation
+}) {
+  const control = useControlSizes()
+  return (
+    <FilesLink
+      className={styles.link}
+      navigation={props.navigation}
+      style={{
+        height: control.height,
+        fontSize: control.labelSize,
+        fontWeight: control.labelWeight,
+      }}
+      to={props.to}
+    >
+      {props.children}
+    </FilesLink>
   )
 }
 

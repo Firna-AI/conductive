@@ -5,7 +5,7 @@ import { recordedRunnerFileEvents } from '../../test-support/recorded-files'
 import type { WorkspaceFiles } from '../model/files-store'
 import type { FilesTab } from '../navigation'
 import { splitPath } from '../navigation'
-import { devTextFiles, registerDiff, registerText } from './dev-fixtures'
+import { devTextFiles, registerDiff, registerFile } from './dev-fixtures'
 
 /** Sends one file event as the next live event of the workspace. */
 function emit(server: FakeApiServer, event: FileEvent): void {
@@ -36,7 +36,7 @@ export async function editOpenTab(
 ): Promise<void> {
   const line = `Edit ${edit} from the development page.`
   const base = devTextFiles.get(tab.path) ?? ''
-  registerText(server, tab.path, `${base}${line}\n`)
+  registerFile(server, tab.path, new TextEncoder().encode(`${base}${line}\n`))
   const old = await files.client.readDiff(tab.path)
   if (old.ok) {
     const diff: DiffResponse = {

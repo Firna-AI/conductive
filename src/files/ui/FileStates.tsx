@@ -17,12 +17,13 @@ export function LoadingFile() {
 /**
  * What a file page or a diff page shows when its read failed. A Markdown
  * preview shows the `failed` state when no worker can parse its text.
+ * The download route reads a file with the same limit, so a file over the
+ * limit gets the terminal as its way to open, not Download.
  */
 export function ReadError(props: {
   error: Exclude<FilesError, { kind: 'aborted' }>
   subject: 'file' | 'diff'
   onRetry: () => void
-  onDownload?: () => void
 }) {
   const { error } = props
   switch (error.kind) {
@@ -31,14 +32,13 @@ export function ReadError(props: {
     case 'too-large':
       return (
         <EmptyState
-          action={
-            props.onDownload ? (
-              <ActionButton onPress={props.onDownload}>Download</ActionButton>
-            ) : undefined
-          }
           body={`Files up to ${formatBytes(error.limitBytes)} open here. This one has ${formatBytes(error.sizeBytes)}.`}
           icon={FileWarning}
-          title="Download this file to read it"
+          title={
+            props.subject === 'file'
+              ? 'Open this file in the terminal'
+              : 'See this diff in the terminal'
+          }
         />
       )
     case 'failed':

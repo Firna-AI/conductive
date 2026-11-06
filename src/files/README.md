@@ -90,11 +90,13 @@ least 44 px. On a phone, a file page and a diff page link back to All
 files or Changes.
 
 Copy and Download take `targets`. The default, `browserTargets`, copies
-the original text with the clipboard of the browser. Its Download links to
-the download route of the client, `downloadHref(path)`, so the browser
-reads the route with the session cookie and streams the file to disk. The
-development page and the tests inject `fetchedDownload`, which reads the
-route through the injected fetch and saves the file from memory, because
+the original text with the clipboard of the browser, with each byte order
+mark of the file. The view and the line count leave out one leading mark.
+Its Download reads the download route of the client, `downloadHref(path)`,
+with the fetch of the browser and the session cookie. It saves the file
+from memory only when the route sends it. When the route refuses the file,
+the header shows that the download didn't start. The development page and
+the tests inject `fetchedDownload` with the fetch of the fake API, because
 the fake API serves no route that the browser can read. Pass the same
 `targets` object on each render, because a new object starts new Copy and
 Download states.
@@ -119,8 +121,11 @@ the same, and the browser lays the run out in linear time. Text with
 spaces stays one text node. The part length is a rendering detail, not a
 read limit.
 
-The screens set no limits of their own. A file over the read limit shows
-the size and the limit that the backend sends, with Download.
+The screens set no limits of their own. A file or a diff over the read
+limit shows the size and the limit that the backend sends, and the
+terminal as the way to open it. The download route reads a file with the
+same limit, so a file page offers Download only after a read that fits.
+A binary diff links to its file tab in place of Download.
 
 ## Development
 
@@ -144,18 +149,22 @@ state of the page:
 | `controls` | `off` hides the development controls                         |
 
 For example, `?list=changes&tab=diff:src/app/checkout/AddressForm.tsx`
-draws the diff of the mockups. `public/hero.png` is binary,
-`public/catalog.json` is over the sample read limit, and
+draws the diff of the mockups. `public/hero.png` is binary, with a binary
+diff at `?tab=diff:public/hero.png`. `public/catalog.json` is over the
+sample read limit, and
 `src/app/checkout/page.tsx` fails to read. `?tab=file:preview:README.md`
-parses its Markdown in the module worker, as the app does. Download saves
-the reply of the fake API, through `dev/dev-targets.ts`. The controls play
+parses its Markdown in the module worker, as the app does. The fixtures
+serve each file on its content and download routes with one sample limit,
+as the Worker does. Download saves the reply of the fake API, through
+`dev/dev-targets.ts`. The controls play
 the recorded updates, edit the open file, and switch the layout, the
 theme, and the data. The product build does not include the page.
 
 Run the tests with `npm run test -- src/files`. The `*.mounted.test.tsx`
 files mount the screens in happy-dom, with `mount-test-kit.ts`, as the
-GitHub banner tests do. The other screen tests keep their static markup
-checks in Node.
+GitHub banner tests do. The kit also starts a store, presses a control,
+and answers the Markdown worker with `parseMarkdown`. The other screen
+tests keep their static markup checks in Node.
 
 ## Key code
 
@@ -171,8 +180,9 @@ checks in Node.
 - `api/files-client.ts`: `createFilesClient`, the file routes, with their
   errors as `FilesError`, and the download address of a path.
 - `page/file-actions.ts`: Copy and Download, with `browserTargets`.
-  `page/fetched-download.ts` is the download of the development page and
-  the tests.
+  `page/fetched-download.ts` is the download that reads the route and
+  saves the file from memory, with the fetch of the browser or of the
+  fake API.
 - `api/parse-tree.ts`, `api/parse-changes.ts`, and `api/parse-events.ts`:
   the parsers of the route bodies and the stream messages.
 - `navigation.ts`: `FilesTarget`, `FilesNavigation`, and the tab types of

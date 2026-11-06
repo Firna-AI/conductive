@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 
-import { act, StrictMode } from 'react'
+import { StrictMode } from 'react'
 import { expect, it, vi } from 'vitest'
-import { mountRoot } from '../mount-test-kit'
-import { parseMarkdown, type MarkdownDocument } from './markdown-document'
+import { fakeWorkers, mountRoot, press } from '../mount-test-kit'
+import { parseMarkdown } from './markdown-document'
 import { MarkdownView } from './MarkdownView'
 
 /** The task boxes of a rendered document, in document order. */
@@ -20,59 +20,6 @@ function headings(container: HTMLElement): string[] {
 /** The title of the error that the preview announces, or null. */
 function errorTitle(container: HTMLElement): string | null {
   return container.querySelector('[role="alert"] h2')?.textContent ?? null
-}
-
-function pressTryAgain(container: HTMLElement): void {
-  const button = [...container.querySelectorAll('button')].find(
-    (element) => element.textContent?.trim() === 'Try again',
-  )
-  if (!button) throw new Error('The Try again button is missing.')
-  act(() => button.click())
-}
-
-/**
- * Module workers that the test answers by hand, in place of the browser's.
- * Each one records the texts that the view posts to it.
- */
-function fakeWorkers() {
-  const made: FakeWorker[] = []
-  class FakeWorker {
-    readonly options: WorkerOptions | undefined
-    readonly posted: unknown[] = []
-    ended = false
-    onmessage: ((event: MessageEvent) => void) | null = null
-    onerror: ((event: Event) => void) | null = null
-    onmessageerror: ((event: MessageEvent) => void) | null = null
-
-    constructor(_url: URL, options?: WorkerOptions) {
-      this.options = options
-      made.push(this)
-    }
-
-    postMessage(data: unknown): void {
-      this.posted.push(data)
-    }
-
-    terminate(): void {
-      this.ended = true
-    }
-
-    /** Delivers a reply, also one that was on its way when the view moved on. */
-    answer(document: MarkdownDocument): void {
-      act(() =>
-        this.onmessage?.(new MessageEvent('message', { data: document })),
-      )
-    }
-
-    fail(): void {
-      act(() => this.onerror?.(new Event('error')))
-    }
-  }
-  vi.stubGlobal('Worker', FakeWorker)
-  return {
-    made,
-    live: () => made.filter((worker) => !worker.ended),
-  }
 }
 
 it('shows the current state of each task box after the text changes, also in a reused box', () => {
@@ -116,7 +63,7 @@ it('parses each text in its own module worker, and ends each worker that the vie
   const [first] = workers.live()
   expect(workers.live()).toHaveLength(1)
   expect(first.posted).toEqual(['# First'])
-  first.answer(parseMarkdown('# First'))
+  first.answer()
   expect(headings(view.container)).toEqual(['First'])
   expect(workers.live()).toHaveLength(0)
 
@@ -129,11 +76,11 @@ it('parses each text in its own module worker, and ends each worker that the vie
   // A newer text ends the parse of the older one, and its reply never shows.
   show('# Third')
   expect(second.ended).toBe(true)
-  second.answer(parseMarkdown('# Second'))
+  second.answer()
   expect(headings(view.container)).toEqual(['First'])
   const [third] = workers.live()
   expect(third.posted).toEqual(['# Third'])
-  third.answer(parseMarkdown('# Third'))
+  third.answer()
   expect(headings(view.container)).toEqual(['Third'])
 
   show('# Fourth')
@@ -151,10 +98,10 @@ it('shows the file error with Try again when no worker can parse the text, and T
   workers.made[0].fail()
   expect(errorTitle(failed.container)).toBe("This file didn't open")
   expect(workers.live()).toHaveLength(0)
-  pressTryAgain(failed.container)
+  press(failed.container, 'button', 'Try again')
   expect(failed.container.textContent).toBe('Opening the file')
   expect(workers.made.map((worker) => worker.posted)).toEqual([[text], [text]])
-  workers.made[1].answer(parseMarkdown(text))
+  workers.made[1].answer()
   expect(headings(failed.container)).toEqual(['Notes'])
   expect(errorTitle(failed.container)).toBeNull()
   failed.unmount()
@@ -165,8 +112,8 @@ it('shows the file error with Try again when no worker can parse the text, and T
   none.render(<MarkdownView text={text} />)
   expect(errorTitle(none.container)).toBe("This file didn't open")
   const started = fakeWorkers()
-  pressTryAgain(none.container)
+  press(none.container, 'button', 'Try again')
   expect(started.made.map((worker) => worker.posted)).toEqual([[text]])
-  started.made[0].answer(parseMarkdown(text))
+  started.made[0].answer()
   expect(headings(none.container)).toEqual(['Notes'])
 })

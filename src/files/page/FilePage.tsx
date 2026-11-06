@@ -31,6 +31,10 @@ function lineCount(lines: number): string {
  * of the Files tab on a phone, with a way back to All files. Markdown
  * shows rendered, with a switch to its source. Other text shows with line
  * numbers. The page reads the file again when an event changes it.
+ *
+ * The view and the line count use the view text. Copy takes the original
+ * text, with each byte order mark. Download reads the file with the same
+ * limit as the page, so the page offers it only after a read that fits.
  */
 export function FilePage(props: {
   files: WorkspaceFiles
@@ -47,18 +51,10 @@ export function FilePage(props: {
   const text = state?.status === 'ready' ? fileText(state.value) : null
   const shownAsCode =
     text?.kind === 'text' && !(markdown && tab.mode === 'preview')
-  const missing = state?.status === 'failed' && state.error.kind === 'not-found'
-  const download = missing ? undefined : actions.download
+  const download = state?.status === 'ready' ? actions.download : undefined
   let body: ReactNode = <LoadingFile />
   if (state?.status === 'failed' && state.error.kind !== 'aborted') {
-    body = (
-      <ReadError
-        error={state.error}
-        onDownload={download}
-        onRetry={retry}
-        subject="file"
-      />
-    )
+    body = <ReadError error={state.error} onRetry={retry} subject="file" />
   } else if (text) {
     body = (
       <FileContent
@@ -80,7 +76,7 @@ export function FilePage(props: {
         downloading={actions.downloading}
         meta={
           shownAsCode && text.kind === 'text'
-            ? lineCount(splitLines(text.text).length)
+            ? lineCount(splitLines(text.viewText).length)
             : undefined
         }
         navigation={navigation}

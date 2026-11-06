@@ -26,7 +26,7 @@ const statusText: Readonly<Record<Exclude<ActionStatus, null>, string>> = {
 /**
  * The header of a file or diff page: the way back on a phone, the path,
  * Download, the line count or the changed lines, Copy, and the view switch.
- * An action without a handler is disabled.
+ * Download shows only with a handler. Copy without a handler is disabled.
  */
 export function PageHeader(props: {
   path: string
@@ -68,12 +68,14 @@ export function PageHeader(props: {
           {folder ? <span className={styles.folder}>{folder}/</span> : null}
           <span className={styles.name}>{name}</span>
         </span>
-        <IconButton
-          busy={props.downloading}
-          icon={Download}
-          label={`Download ${name}`}
-          onPress={props.onDownload}
-        />
+        {props.onDownload ? (
+          <IconButton
+            busy={props.downloading}
+            icon={Download}
+            label={`Download ${name}`}
+            onPress={props.onDownload}
+          />
+        ) : null}
       </div>
       <div className={styles.end}>
         <span className={failed ? styles.failed : a11y.hidden} role="status">

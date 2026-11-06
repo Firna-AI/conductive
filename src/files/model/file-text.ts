@@ -1,7 +1,9 @@
 import type { FileResponse } from '../../shared/files'
+import { decodeUtf8 } from '../../shared/utf8'
 
 /** The text of a file, or a mark that the file is not text. */
-export type FileText = { kind: 'text'; text: string } | { kind: 'binary' }
+export type FileText =
+  { kind: 'text'; text: string; viewText: string } | { kind: 'binary' }
 
 function decodeBase64(content: string): Uint8Array | null {
   try {
@@ -12,21 +14,25 @@ function decodeBase64(content: string): Uint8Array | null {
 }
 
 /**
- * The original text of a file. A file is binary when its bytes are not
- * UTF-8, or when it holds a NUL character, as git decides.
+ * Keep the original text and remove one leading BOM from the view text.
+ * A file is binary when its bytes are not UTF-8, or when it holds a NUL
+ * character, as git decides.
  */
 export function fileText(file: FileResponse): FileText {
   let text = file.content
   if (file.encoding === 'base64') {
     const bytes = decodeBase64(file.content)
     if (!bytes) return { kind: 'binary' }
-    try {
-      text = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
-    } catch {
-      return { kind: 'binary' }
-    }
+    const decoded = decodeUtf8(bytes)
+    if (decoded === null) return { kind: 'binary' }
+    text = decoded
   }
-  return text.includes('\u0000') ? { kind: 'binary' } : { kind: 'text', text }
+  if (text.includes('\u0000')) return { kind: 'binary' }
+  return {
+    kind: 'text',
+    text,
+    viewText: text.startsWith('\uFEFF') ? text.slice(1) : text,
+  }
 }
 
 /** The lines of a text. A final line break does not start another line. */

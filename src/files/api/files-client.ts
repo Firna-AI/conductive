@@ -34,8 +34,8 @@ export interface FilesClient {
     signal?: AbortSignal,
   ): Promise<FilesResult<DiffResponse>>
   /**
-   * The address of the download route of one file. The browser reads it
-   * with the session cookie, and streams the file to disk.
+   * The address of the download route of one file. Download reads it with
+   * the session cookie, and saves the file only when the route sends it.
    */
   downloadHref(path: string): string
 }

@@ -1,5 +1,5 @@
 import type { FilesClient } from '../api/files-client'
-import { splitPath } from '../navigation'
+import { fetchedDownload, saveFromMemory } from './fetched-download'
 
 /** The browser parts that Copy and Download use. Tests inject their own. */
 export interface FileActionTargets {
@@ -9,24 +9,21 @@ export interface FileActionTargets {
 }
 
 /**
- * The clipboard and the download of the browser. Download links to the
- * download route, so the browser reads it with the session cookie and
- * streams the file to disk. The route names the file.
+ * The clipboard and the download of the browser. Download reads the
+ * download route with the fetch of the browser and the session cookie. It
+ * saves the file only when the route sends it, so a refused download shows
+ * that it didn't start.
  */
 export const browserTargets: FileActionTargets = {
   async writeText(text) {
     if (!navigator.clipboard) throw new Error('The clipboard is not available.')
     await navigator.clipboard.writeText(text)
   },
-  async download(client, path) {
-    const link = document.createElement('a')
-    link.href = client.downloadHref(path)
-    link.download = splitPath(path).name
-    document.body.append(link)
-    link.click()
-    link.remove()
-    return true
-  },
+  // The fetch of the page at the time of the download.
+  download: fetchedDownload(
+    (input, init) => fetch(input, init),
+    saveFromMemory,
+  ),
 }
 
 /** Copies the original text of a file. True when the clipboard took it. */

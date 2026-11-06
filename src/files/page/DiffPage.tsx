@@ -11,7 +11,7 @@ import {
   type FilesNavigation,
 } from '../navigation'
 import { useFilesSnapshot } from '../panel/FilesPanel'
-import { ActionButton } from '../ui/actions'
+import { ActionLink } from '../ui/actions'
 import { DiffStat } from '../ui/DiffStat'
 import { EmptyState, Loading } from '../ui/EmptyState'
 import { ReadError } from '../ui/FileStates'
@@ -30,6 +30,10 @@ const readDiff = (client: FilesClient, path: string, signal: AbortSignal) =>
  * of the centre column on desktop, and a page of the Files tab on a phone,
  * with a way back to Changes. It reads the diff again when the changes or
  * the file change.
+ *
+ * A diff over the read limit offers no Download. A binary diff links to
+ * the file tab in place of Download, and the file tab offers Download
+ * when the file fits the limit.
  */
 export function DiffPage(props: {
   files: WorkspaceFiles
@@ -45,31 +49,31 @@ export function DiffPage(props: {
   const actions = useFileActions(files.client, tab.path, props.targets)
   const diff = state?.status === 'ready' ? state.value : null
   const rows = useMemo(() => (diff ? parsePatch(diff.patch) : []), [diff])
-  const missing = state?.status === 'failed' && state.error.kind === 'not-found'
+  const failed = state?.status === 'failed' ? state.error.kind : null
   const deleted =
     changed?.change === 'deleted' ||
     (diff !== null && diff.newContent === null && !diff.binary)
-  const download = missing || deleted ? undefined : actions.download
+  const download =
+    failed === 'not-found' || failed === 'too-large' || deleted || diff?.binary
+      ? undefined
+      : actions.download
   const newText = diff && !diff.binary ? diff.newContent : null
   let body: ReactNode = <Loading label="Opening the diff" />
   if (state?.status === 'failed' && state.error.kind !== 'aborted') {
-    body = (
-      <ReadError
-        error={state.error}
-        onDownload={download}
-        onRetry={retry}
-        subject="diff"
-      />
-    )
+    body = <ReadError error={state.error} onRetry={retry} subject="diff" />
   } else if (diff?.binary) {
     body = (
       <EmptyState
         action={
-          download ? (
-            <ActionButton onPress={download}>Download</ActionButton>
-          ) : undefined
+          deleted ? undefined : (
+            <ActionLink
+              navigation={props.navigation}
+              to={{ kind: 'file', path: tab.path, mode: 'preview' }}
+            >
+              Open the file
+            </ActionLink>
+          )
         }
-        body={download ? 'Download it to see the new version.' : undefined}
         icon={FileBox}
         title="This binary file changed"
       />

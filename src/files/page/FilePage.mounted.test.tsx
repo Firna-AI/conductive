@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { act, useLayoutEffect, type ReactNode } from 'react'
-import { expect, it, onTestFinished } from 'vitest'
+import { expect, it } from 'vitest'
 import {
   filePaths,
   type ChangesResponse,
@@ -10,10 +10,16 @@ import {
 } from '../../shared/files'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
-import { filesFor, testNavigation } from '../files-test-kit'
-import type { WorkspaceFiles } from '../model/files-store'
-import { heldFetch, mountRoot } from '../mount-test-kit'
+import { testNavigation } from '../files-test-kit'
+import {
+  heldFetch,
+  mountRoot,
+  press,
+  shownRows,
+  startedFiles,
+} from '../mount-test-kit'
 import { DiffPage } from './DiffPage'
+import type { FileActionTargets } from './file-actions'
 import { FilePage } from './FilePage'
 
 const org = FAKE_IDS.org
@@ -27,40 +33,6 @@ function textFile(path: string, content: string): FileResponse {
     content,
     sizeBytes: new TextEncoder().encode(content).byteLength,
   }
-}
-
-/**
- * A started store that has read the tree and the changes routes. Its
- * stream starts after the recorded events, so the routes give both lists.
- */
-async function startedFiles(
-  server: FakeApiServer,
-  held: ReturnType<typeof heldFetch>,
-): Promise<WorkspaceFiles> {
-  const files = filesFor(
-    server,
-    (after, listener) =>
-      server.events.subscribe(
-        Math.max(after, server.events.history().throughEventNumber),
-        listener,
-      ),
-    held.fetch,
-  )
-  files.start()
-  onTestFinished(() => files.stop())
-  await act(async () => {
-    await held.release()
-  })
-  return files
-}
-
-/** The rows of the code or the diff on screen, as the texts of their cells. */
-function shownRows(container: HTMLElement): string[][] {
-  return [...container.querySelectorAll('pre > div')].map((row) =>
-    row.children.length === 0
-      ? [row.textContent ?? '']
-      : [...row.children].map((cell) => cell.textContent ?? ''),
-  )
 }
 
 /** Calls `onCommit` after each commit of its own render, before effects run. */
@@ -205,4 +177,49 @@ it('shows no line of the old path after the tab moves to another file, also befo
   })
 
   expect(shownRows(view.container)).toEqual([['1', 'export const b = 2']])
+})
+
+it('copies the leading byte order mark of a base64 file, and leaves it out of the lines on screen', async () => {
+  const server = new FakeApiServer()
+  const path = 'src/notes.ts'
+  // The bytes EF BB BF are the UTF-8 byte order mark, U+FEFF.
+  const bytes = [0xef, 0xbb, 0xbf, ...new TextEncoder().encode('const a = 1\n')]
+  const file: FileResponse = {
+    path,
+    mediaType: 'application/octet-stream',
+    encoding: 'base64',
+    content: btoa(String.fromCharCode(...bytes)),
+    sizeBytes: bytes.length,
+  }
+  server.json('GET', filePaths.content(org, id, path), file)
+  const copied: string[] = []
+  const targets: FileActionTargets = {
+    writeText: async (text) => {
+      copied.push(text)
+    },
+    download: async () => true,
+  }
+  const held = heldFetch(server)
+  const files = await startedFiles(server, held)
+  const view = mountRoot()
+  view.render(
+    <FilePage
+      files={files}
+      layout="desktop"
+      navigation={testNavigation()}
+      tab={{ kind: 'file', path, mode: 'preview' }}
+      targets={targets}
+    />,
+  )
+  await act(async () => {
+    await held.release()
+  })
+  expect(shownRows(view.container)).toEqual([['1', 'const a = 1']])
+  expect(view.container.textContent).toContain('1 line')
+
+  press(view.container, 'button', 'Copy the text of notes.ts')
+  // The header shows the result of Copy after the clipboard answers.
+  await act(async () => {})
+
+  expect(copied).toEqual(['\uFEFFconst a = 1\n'])
 })

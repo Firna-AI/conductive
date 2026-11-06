@@ -8,7 +8,10 @@ import { isMarkdown } from '../panel/file-icons'
 import { ActionButton } from '../ui/actions'
 import { EmptyState } from '../ui/EmptyState'
 
-/** The content of a file page: rendered Markdown, or text with line numbers. */
+/**
+ * The content of a file page: rendered Markdown, or text with line numbers.
+ * Both show the view text, without a leading byte order mark.
+ */
 export function FileContent(props: {
   path: string
   text: FileText
@@ -35,10 +38,10 @@ export function FileContent(props: {
       />
     )
   }
-  if (text.text === '')
+  if (text.viewText === '')
     return <EmptyState icon={File} title="This file is empty" />
   if (isMarkdown(props.path) && props.mode === 'preview') {
-    return <MarkdownView parser={props.markdownParser} text={text.text} />
+    return <MarkdownView parser={props.markdownParser} text={text.viewText} />
   }
-  return <CodeView name={splitPath(props.path).name} text={text.text} />
+  return <CodeView name={splitPath(props.path).name} text={text.viewText} />
 }
