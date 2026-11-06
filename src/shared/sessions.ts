@@ -65,6 +65,11 @@ export interface CloseSessionRequest {
 export interface ChangeModelRequest {
   choice: AgentChoice
   draft: MessageDraft
+  /**
+   * The ID of the new session when the change opens one. The client chooses it,
+   * so that a retry refers to the same session and the draft can move at once.
+   */
+  newSessionId: string
 }
 export interface ChangeModelResponse extends SessionResponse {
   created: boolean

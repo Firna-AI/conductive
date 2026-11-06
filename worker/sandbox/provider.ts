@@ -45,8 +45,24 @@ export interface CommandResult {
   timedOut: boolean
 }
 
+export interface SandboxFile {
+  path: string
+  sizeBytes: number
+  encoding: 'utf-8' | 'base64'
+  content: string
+}
+
+export type SandboxFileRead =
+  | { kind: 'file'; file: SandboxFile }
+  | { kind: 'too_large'; sizeBytes: number; limitBytes: number }
+
 /** Internal server interface. Callers must authorize the org and its resource first. */
 export interface SandboxProvider {
+  readFile(
+    sandboxId: string,
+    path: string,
+    maxBytes: number,
+  ): Promise<SandboxFileRead>
   create(input: SandboxStart): Promise<Sandbox>
   get(sandboxId: string): Promise<Sandbox>
   stop(sandboxId: string): Promise<Sandbox>

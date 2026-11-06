@@ -128,7 +128,7 @@ chat, and five tabs at the bottom.
 | `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure          |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the session history, and closing a session while it works      |
-| `app/reassign`      | The owner of a workspace and the menu that reassigns it, and a member's view  |
+| `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
 | `app/composer`      | Attached files, the model and effort picker, and a missing agent or key       |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
@@ -218,6 +218,13 @@ plan limits.
 - Each message runs on the agent login of the person who sends it, from
   decision 49. So a reassign changes no login, and the cloud computer keeps
   running.
+- A stopped turn names the member who pressed Stop, from decision 72,
+  because all members of an org see the same chat. That member sees "You
+  stopped the agent", as `app/chat/interrupted` shows. The other members
+  see the name of that member, such as "Cal stopped the agent" in
+  `app/reassign/member-stop`. When no member pressed Stop, such as when
+  the cloud computer stopped during the turn, the chat says "The agent
+  stopped", as `app/shell/stopped/during-turn` shows.
 - Each branch starts with the GitHub login of the owner of its workspace,
   such as `calummoore/lisbon-7k2q`, from decision 53.
 - Archive, from decision 16, deletes the cloud computer and keeps the chat
@@ -300,6 +307,9 @@ the app, then one section for each feature, the smaller features, a last
 call to action, and a footer. Both actions, "Start free with GitHub"
 and "Sign in", lead to `app/sign-in`. The parts live in
 `src/components/marketing/`.
+
+The site keeps still captures of the workspace screen, the org settings cloud computer tab, and the phone workspace list.
+Changes to those screens require recapture with the [capture steps](../../src/marketing/README.md#pictures).
 
 - Every picture is a real screen of the catalogue, not a drawing of one.
   `ScreenFrame` lays the screen out at its own size, 1440 × 900 on desktop
