@@ -2383,6 +2383,11 @@ Agent calls of 5 November 2026:
   4 vCPU and 8 GB.
 - A Boat key that Boat refuses counts as no key, so the composer notice of
   decision 33 shows.
+- Only owners see the Boat key tab of the org settings. Its label names
+  Boat, because it leads to the key screen, and a move to another
+  provider renames both together.
+- Get started has four steps: the GitHub App, the first org, the org's
+  Boat key, and Claude or Codex. Reason: the key belongs to the org.
 
 Decision 45 removed the plans, the seats, the compute pool, the overage,
 the metering, the upgrade, and the free plan's limits on 5 November 2026.
@@ -2829,24 +2834,24 @@ Change the mockups for decisions 44 and 45.
       the seats, the Team plan, and the pricing section of the marketing
       site.
 - [x] Remove the free plan's limits and the paid Create org.
-- [ ] Draw the Boat key screen in the org settings, for org owners, with
+- [x] Draw the Boat key screen in the org settings, for org owners, with
       links to Boat's sign-up and key pages, as decisions 46 and 47 say.
-- [ ] Draw the first-run steps that connect the org's Boat key and the
+- [x] Draw the first-run steps that connect the org's Boat key and the
       user's agent, and the composer notice for a missing key or agent,
       as decision 33 says.
-- [ ] Draw the agent Connect form: Claude with a token or a key, Codex
+- [x] Draw the agent Connect form: Claude with a token or a key, Codex
       with a key, and a connected login with Remove.
-- [ ] Rename the product to Conducting, on `conducting.build`.
-- [ ] Say on the marketing site and in Get started that users need their
+- [x] Rename the product to Conducting, on `conducting.build`.
+- [x] Say on the marketing site and in Get started that users need their
       own Boat account. Keep "Start free with GitHub".
-- [ ] Remove the sign-up refusal, as decision 48 says.
-- [ ] Keep only the Terms and Privacy links, as decision 35 says.
-- [ ] Remove the expiring mark, because decision 43 keeps each stopped
+- [x] Remove the sign-up refusal, as decision 48 says.
+- [x] Keep only the Terms and Privacy links, as decision 35 says.
+- [x] Remove the expiring mark, because decision 43 keeps each stopped
       disk alive.
-- [ ] Draw the four added banner states of decision 18, and a branch
+- [x] Draw the four added banner states of decision 18, and a branch
       without commits.
-- [ ] Run the mockup check. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Run the mockup check. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -2894,6 +2899,8 @@ Depends on: 3
       assigns.
 - [ ] Store each Boat key encrypted, test it once when it is saved, and
       never send it to the browser or into a cloud computer.
+- [ ] Confirm which Boat key actions the app needs, and match the key
+      screen's text about the key preset.
 - [ ] Add the D1 schema and its migrations for repositories, workspaces,
       and settings.
 - [ ] Add the ownership check and the `Origin` check.

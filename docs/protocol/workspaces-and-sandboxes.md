@@ -13,8 +13,8 @@ says.
 - Every sandbox of an org runs on the Boat account of the org's Boat key
   (decision 46). [Orgs and members](orgs-and-members.md#the-boat-key) says
   who adds the key.
-- User-facing text names Boat only on the Boat key screen, on the
-  marketing site, and in Get started (decision 47). Everywhere else it
+- User-facing text names Boat only on the Boat key screen and its tab, on
+  the marketing site, and in Get started (decision 47). Everywhere else it
   says "cloud computer" or "sandbox".
 - Reason: users learn before the sign-up that they need a Boat account,
   and the rest of the app can move to another provider later.
