@@ -2486,6 +2486,32 @@ parallel and not delay things".
     script, from the window controls area that Electron exposes to CSS,
     or else from a marker in the page address.
 
+### 63. Decide the language of the agent runner
+
+Added on 6 November 2026 from the user's question: "what is the agent
+runner? can we make it rust not node for the agent runner".
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design. **Category:** Code structure.
+- **Background:** The Claude Agent SDK exists only for TypeScript and
+  Python. It starts the Claude Code program and speaks a JSON stream
+  protocol with it, which Anthropic does not publish as a stable API. The
+  Codex App Server takes JSON messages from any language. Conductor's
+  own runner is a Node program.
+- **Options:**
+  - **A.** Node, with both SDKs directly. Effort: Medium.
+  - **B.** Rust only, speaking the Claude Code stream protocol itself and
+    driving the Codex App Server. About 2 days more. Effort: Large.
+  - **C.** A Rust runner with a small Node helper that runs only the two
+    SDKs. About 1 day more. Effort: Large.
+  - **D.** A now, and C with the Rust backend move of decision 61.
+    Effort: Small now.
+- **Left out:** Python and its SDK, because it is neither the user's usual
+  stack nor faster to build.
+- **Recommendation:** D.
+- **Chosen:** A, by the user on 6 November 2026. The runner stays in Node,
+  with no planned move to Rust.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
