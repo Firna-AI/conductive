@@ -2295,6 +2295,39 @@ Added on 6 November 2026 from the Milestone 2 docs.
   better way later, probably a move of the old cloud computers:
   `plans/follow-ups/migrate-cloud-computers-to-another-boat-account.md`.
 
+### 57. Decide who may change an org's shared settings
+
+Open. Added on 6 November 2026 from the Milestone 2a docs.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Security.
+- **Background:** The install script builds the org image that every new
+  workspace starts from. The startup script and the env vars reach every
+  sandbox of the org. Decision 49 runs each turn on its sender's login,
+  so other members' logins pass through every sandbox. Only admins see
+  the Boat key tab.
+- **Problem:** No decision says whether a member who is not an admin may
+  change the repositories, the install script, the startup script, or
+  the env vars.
+- **Impact if no action:** Milestone 6 copies the drawn screens, so every
+  member can change what runs in every new sandbox. A changed script can
+  then read the logins of other members' turns in every new workspace.
+- **Root question:** Who may change the settings that every sandbox of an
+  org gets?
+- **Options:**
+  - **A.** Every member, as drawn. The docs then state it. Effort: Small.
+  - **B.** Only admins. Members see these tabs read-only. It needs a new
+    mockup state. Effort: Small.
+- **Left out:** A review step for each change, because no decision asks
+  for one, and it adds a new flow.
+- **Wider fix:** B.
+- **Recommendation:** B. A member can reach one sandbox from its
+  terminal, but a script change reaches every new workspace of the org.
+  The docs agent recommended A, because members can already reach each
+  sandbox and its env vars.
+- **Action:** ask the user, because each option adds a permission rule
+  that no decision covers.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -2601,13 +2634,17 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   and effort changes to the runner.
 - The agent sessions live in the home folder, which Boat keeps across
   stop, resume, and fork.
-- The runner reads the per-sandbox variables, such as the agent token,
-  from `/run/ascii-secrets/env.sh` before it starts the SDK. Reason: a
+- The runner reads the per-sandbox variables, such as the workspace
+  token, from `/run/ascii-secrets/env.sh` before it starts the SDK. Reason: a
   systemd service does not get them.
-- The runner starts Claude Code as soon as its service starts, and the
-  chat shows a starting state until the runner reports ready. Reason: the
-  first start after a resume took 6 to 8 s in the test, while Boat
-  restored the disk.
+- The runner reads the files of the Claude Code program as soon as its
+  service starts, without a login, and the chat shows a starting state
+  until the runner reports ready. The first turn then starts the agent
+  with the sender's login, as decision 49 says. Reason: the first start
+  after a resume took 6 to 8 s in the test, while Boat restored the disk.
+- Agent call, 6 November 2026: the first turn of a workspace that an
+  agent creates runs on the login of the person who sent the calling
+  turn, as decision 49's rule gives.
 - The runner combines the text deltas, about 50 a second, before it
   sends them.
 - A message sent during a turn goes to the agent at once. The agent reads
@@ -2909,7 +2946,7 @@ Depends on: 1e
 
 Depends on: 2
 
-- [ ] Update `docs/protocol/` and `docs/architecture.md` for decisions 49,
+- [x] Update `docs/protocol/` and `docs/architecture.md` for decisions 49,
       51, 52, 53, 54, and 55, and remove their open-decision lines.
 
 ## Milestone 2: Documentation and protocol
