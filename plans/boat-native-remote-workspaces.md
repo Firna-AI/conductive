@@ -2995,6 +2995,48 @@ Added on 6 November 2026 from decision 80.
   follow-up item `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`
   holds the three measures.
 
+### 83. Keep the preview credential away from other sites
+
+Added on 6 November 2026 from a finding check of the Milestone 11 review.
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. **Category:** Security.
+- **Background:** The random hostname of a port preview is its credential.
+  Browsers send `Origin` on cross-site requests and WebSocket connections
+  despite `no-referrer`, so a preview page can leak its hostname to each
+  site that it calls. The redirect rewrite also matches only `https`.
+- **Options:**
+  - **A.** Accept the leak, and match `http` in the redirect rewrite.
+    Effort: Small.
+  - **B.** Move the credential out of the hostname, into a cookie that the
+    preview domain sets. Effort: Medium.
+  - **C.** B, and check Boat's forwarded headers in the live smoke test.
+    Effort: Medium.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. Milestone 11a builds it,
+  and Milestone 16 checks Boat's forwarded headers.
+
+### 84. Decide the size limits of Boat replies
+
+Added on 6 November 2026 from the Milestone 4c work.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Security.
+- **Background:** Decision 65 B gave each Boat route a budget above Boat's
+  documented maximum. Boat publishes no total size for most replies, and a
+  command reply can reach about 96 MiB of escaped JSON.
+- **Options:**
+  - **A.** 1 MiB for account, lifecycle, snapshot, metadata, and error
+    replies, and 18 MiB for command replies. Keep the file budget.
+    Effort: Medium.
+  - **B.** Wait until Boat publishes complete limits. Effort: Large.
+  - **C.** Read command replies as a stream, and keep only the last part
+    of each output stream. Effort: Large.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 6 November 2026. This changes decision 65
+  B: a Boat reply over its budget fails, also when Boat would allow it.
+  Milestone 4c applies it.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4024,6 +4066,19 @@ Depends on: 4a
       gets no answer from the sandbox, and a browser `_port_auth` cookie
       never reaches it.
 
+## Milestone 11a: Preview credential in a cookie
+
+Depends on: 11
+
+Apply decision 83 C.
+
+- [ ] Move the credential of a port preview out of its hostname, into a
+      cookie that the preview domain sets, so that the hostname is no
+      secret.
+- [ ] Match `http` as well as `https` in the redirect rewrite.
+- [ ] Update the port preview rules of the access protocol, and test the
+      cookie, a leaked hostname, and both redirect schemes.
+
 ## Milestone 12: Terminal, previews, and desktop UI
 
 Tags: ui
@@ -4221,6 +4276,8 @@ This milestone needs the prerequisites from the user.
       the image's Node.
 - [ ] Kill ttyd once, and check that systemd restarts it with the same
       password, and that the terminal opens again without a new start.
+- [ ] Check which forwarded headers Boat sends to a preview app, such as
+      `X-Forwarded-Proto`, as decision 83 asks.
 
 ## Milestone 17: Verification, commit, review, and pull request
 
