@@ -3425,19 +3425,26 @@ Milestone 8i or 15i wires it to its backend.
 
 Depends on: 4a
 
-- [ ] Add the `ttyd` service with a per-workspace password to the org image setup.
-- [ ] Expose private ports, and proxy them with the `_port_auth`
+- [x] Add the `ttyd` service with a per-workspace password to the org image setup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Expose private ports, and proxy them with the `_port_auth`
       cookie, including WebSockets.
-- [ ] Issue random preview hostnames on the preview domain, map them in
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Issue random preview hostnames on the preview domain, map them in
       D1, and revoke them on stop, on close, and after 24 hours.
-- [ ] Set `Referrer-Policy: no-referrer` on each preview response.
-- [ ] Add the desktop URL endpoint.
-- [ ] Check whether an open desktop stream ends when its 10-minute URL
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Set `Referrer-Policy: no-referrer` on each preview response.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Add the desktop URL endpoint.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Check whether an open desktop stream ends when its 10-minute URL
       expires. Save the result under `.context/`. If it ends, report a
       mockup gap for a Reconnect state.
-- [ ] Test the proxy with a fake upstream: a revoked or unknown hostname
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Test the proxy with a fake upstream: a revoked or unknown hostname
       gets no answer from the sandbox, and a browser `_port_auth` cookie
       never reaches it.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 
