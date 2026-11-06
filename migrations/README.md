@@ -11,7 +11,10 @@ It keeps existing rows and gives each existing org its General section.
 Chat history, sessions, runner event cursors, start steps, and banner state
 belong to workspace Durable Object storage. They have no D1 tables.
 Stored secrets use ciphertext columns. The browser reads only metadata.
-The git credential helper's token reach remains undecided.
+The git credential helper uses the GitHub user token of the turn's sender, as
+[GitHub tokens](../docs/protocol/access-and-security.md#github-tokens) says.
+The older comment on `github_connections` in `202611060100_contracts.sql`
+stays, because a merged migration does not change.
 
 ## Reserved ranges
 

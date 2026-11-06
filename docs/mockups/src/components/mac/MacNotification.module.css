@@ -16,18 +16,6 @@
   text-decoration: none;
 }
 
-.appIcon {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: var(--ui-primary);
-  color: var(--ui-on-solid);
-}
-
 .text {
   display: flex;
   flex: 1;

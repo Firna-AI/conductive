@@ -31,11 +31,6 @@
   box-sizing: border-box;
 }
 
-/* A wide dialog, for questions with more than two answers. */
-.wide {
-  max-width: 600px;
-}
-
 .title {
   margin: 0;
   color: var(--ui-ink);

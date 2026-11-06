@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import {
+  Ban,
   CircleCheck,
   CircleX,
   GitMerge,
@@ -104,6 +105,14 @@ export function prStatus(state: PullRequestState): PrStatus {
         text: 'Closed without a merge',
         detail: closedWhen,
         tone: 'neutral',
+      }
+    case 'blocked':
+      // GitHub names the reason on the pull request, so the bar names none.
+      return {
+        ...still,
+        icon: Ban,
+        text: 'Blocked',
+        tone: 'warning',
       }
   }
 }
