@@ -1,4 +1,5 @@
 import type { HttpFetch } from '../env'
+import { readSandboxFile } from './file-read'
 import { readAccount, readCommand, readSandbox, readSnapshot } from './parsers'
 import type { BoatAccount, SandboxProvider, SandboxStart } from './provider'
 import { BoatTransport } from './transport'
@@ -8,6 +9,10 @@ export class BoatClient implements SandboxProvider {
 
   constructor(key: string, fetch: HttpFetch, account: BoatAccount) {
     this.transport = new BoatTransport(key, fetch, account)
+  }
+
+  readFile(sandboxId: string, path: string, maxBytes: number) {
+    return readSandboxFile(this.transport, sandboxId, path, maxBytes)
   }
 
   static async inspectAccount(

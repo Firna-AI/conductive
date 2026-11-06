@@ -1,0 +1,109 @@
+/* The development page only. The product components carry their own styles. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100vh;
+  padding: 16px 24px;
+  box-sizing: border-box;
+  background: var(--ui-bg);
+  color: var(--ui-ink);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--ui-text-sm);
+}
+
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-muted);
+}
+
+.controls select,
+.controls button {
+  height: var(--ui-control-height);
+  padding: 0 8px;
+  border: 1px solid var(--ui-control-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+}
+
+.note {
+  color: var(--ui-muted);
+}
+
+.frames {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.frameLabel {
+  margin: 0 0 6px;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-label);
+  letter-spacing: var(--ui-tracking-label);
+  text-transform: uppercase;
+}
+
+/* As the right column of the app: a size container, 440px wide. */
+.column {
+  display: flex;
+  flex-direction: column;
+  width: 440px;
+  height: 520px;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-panel);
+  container-type: inline-size;
+}
+
+.tabs {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  height: var(--ui-bar-height);
+  padding: 0 8px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  box-sizing: border-box;
+}
+
+.tab {
+  padding: 3px 8px;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  letter-spacing: var(--ui-tracking-label);
+  text-transform: uppercase;
+}
+
+/* As a phone: 390px wide, with the touch sizes of the mockups. */
+.phone {
+  --ui-touch-min: 44px;
+
+  display: flex;
+  flex-direction: column;
+  width: 390px;
+  height: 640px;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+}
+
+.phoneChecks {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}

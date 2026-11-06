@@ -62,3 +62,10 @@ export type ChatEvent =
       turnId: string
     }
   | { type: 'session.updated'; session: Session }
+  | {
+      /** The workspace records it when a member presses Stop, never the runner. */
+      type: 'turn.stop-requested'
+      sessionId: string
+      turnId: string
+      requestedById: string
+    }
