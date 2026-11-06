@@ -62,8 +62,9 @@ describes the structure that the [protocol docs](#protocol-docs) require.
   the org settings. It follows the phone and the desktop layouts of the
   [mockups](mockups/README.md) (decision 15).
 - Tabs are links, so each tool and each file view has its own address.
-- The browser keeps only the panel widths. All other state comes from the
-  Worker.
+- The browser stores only the panel widths. All other state comes from
+  the Worker. A tab keeps the chats that it showed in memory, as
+  [Chat and events](protocol/chat-and-events.md#events) says.
 
 ### Worker
 

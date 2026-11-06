@@ -3072,6 +3072,25 @@ review.
 - **Chosen:** C, by the user on 6 November 2026. The preview contract states
   the rule, and Milestone 11a tests it in the backend.
 
+### 87. Show the chat at once on a return to a workspace
+
+Added on 6 November 2026 from the user's question: "Will they be cached?"
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design. **Category:** Performance.
+- **Background:** Each open of a workspace loads its history from the
+  workspace Durable Object. The browser stores only the panel widths.
+- **Options:**
+  - **A.** No cache. Each open loads the newest page again. Effort: Small.
+  - **B.** A cache in memory only. The web app keeps the chat of each
+    workspace that the tab showed. A return shows the chat at once, then
+    loads only the new events. A reload or a new tab starts empty.
+    Effort: Medium.
+  - **C.** B, and a cache on the disk in IndexedDB for each signed-in
+    member. The chat stays on the device. Effort: Large.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 6 November 2026. Milestone 8i builds it.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4044,6 +4063,10 @@ Depends on: 5, 6, 7, 7r, 8
 
 - [ ] Wire the app shell, the chat screens, the chat backend, and the
       runner together, with a real Boat sandbox.
+- [ ] Keep the chat of each workspace that the tab showed in memory, as
+      decision 87 says. A return to the workspace shows the chat at once,
+      then gets only the events after its last event number. A reload or a
+      new tab starts empty.
 - [ ] Test the chat end to end: create a workspace, send a message, stream
       the answer, stop and resume, and send again.
 
