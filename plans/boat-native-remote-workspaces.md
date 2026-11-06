@@ -3326,24 +3326,45 @@ It builds against the fake API of Milestone 4a. Milestone 8i wires it.
 
 Depends on: 4a
 
-- [ ] Build the agent runner: a small Node program that runs the Claude
+- [x] Build the agent runner: a small Node program that runs the Claude
       Agent SDK and Codex, installed as an always-on systemd service in
-      every cloud computer.
-- [ ] Connect the runner to the workspace Durable Object over one
+      every cloud computer. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Connect the runner to the workspace Durable Object over one
       outbound WebSocket with the workspace token. Number the events,
-      and resend each one that the Durable Object has not confirmed.
-- [ ] Start each turn with the sender's agent login from the connection,
-      and warm Claude Code without a login when the service starts.
-- [ ] Test Codex streaming: the Codex SDK where it gives interrupt and
+      and resend each one that the Durable Object has not confirmed. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Start each turn with the sender's agent login from the connection,
+      and warm Claude Code without a login when the service starts. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Test Codex streaming: the Codex SDK where it gives interrupt and
       partial text, and the Codex App Server otherwise. Save the result
-      under `.context/`.
+      under `.context/`. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
 - [ ] Measure the first agent start after a resume over several runs,
       with the runner inside and outside the home folder. Keep the faster
-      place.
-- [ ] Watch the repository, and push the file tree and the changes summary
+      place. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Watch the repository, and push the file tree and the changes summary
       against the default branch over the connection. Read one file or one
-      diff on request.
-- [ ] Test the runner against the fake Durable Object of Milestone 4a.
+      diff on request. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Test the runner against the fake Durable Object of Milestone 4a. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+
+Agent calls, 6 November 2026:
+
+- Keep the runner package and its lockfile under `runner/`, so this
+  milestone changes no shared package configuration.
+- Write bundles under the existing ignored `dist/runner/`, so generated
+  code stays outside the source file-length check.
+- Use Codex App Server. The installed SDK can abort, but the local fake
+  API probe shows no partial assistant text from it.
+- Keep the outbox in an atomic JSON file. One runner owns its stream.
+- Let image integration supply the computer MCP URL. No provider endpoint
+  is fixed in this milestone.
+- Combine text deltas for 40 ms, so text stays live with fewer events.
+- Resume the same provider conversation after a sender or deferred model
+  change, so each message uses its sender's login and its chosen model.
+- Select turn files by content hashes. Their line counts use the branch
+  comparison against the default branch.
+- Keep the real resume comparison open. Local binary reads cannot choose
+  the faster placement after a Boat resume.
+
+Evidence: `.context/boat-native-remote-workspaces/runner/handoff.md`.
 
 ## Milestone 7: Chat backend
 
