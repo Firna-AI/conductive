@@ -54,7 +54,11 @@ it('maps pull request blockers and terminal states into the shared banner', asyn
       checks: [{ ...passedRun, conclusion: 'STARTUP_FAILURE' }],
       state: 'checks-failed',
     },
-    { patch: {}, checks: [passedRun], state: 'ready-to-merge' },
+    {
+      patch: { mergeStateStatus: 'CLEAN' },
+      checks: [passedRun],
+      state: 'ready-to-merge',
+    },
     {
       patch: { state: 'MERGED', mergedAt: '2026-11-06T12:00:00Z' },
       checks: [],
@@ -67,7 +71,7 @@ it('maps pull request blockers and terminal states into the shared banner', asyn
     },
   ]
   for (const sample of cases) {
-    api.pull = { ...original, ...sample.patch }
+    api.pull = { ...original, mergeStateStatus: 'BLOCKED', ...sample.patch }
     api.checkPages = { '': page(sample.checks) }
     const snapshot = await read()
     expect(snapshot.banner, sample.state).toMatchObject({
@@ -200,14 +204,28 @@ it('paginates lookup, checks, and reviews while preserving GitHub order and dura
   ])
 })
 
-it('keeps known blocked and unknown merge states out of ready-to-merge', async () => {
-  for (const state of ['BEHIND', 'BLOCKED', 'UNSTABLE', 'UNKNOWN']) {
+it('shows known merge blockers and retries unresolved merge states', async () => {
+  for (const state of ['BEHIND', 'BLOCKED']) {
+    api.pull.mergeStateStatus = state
+    await expect(read(), state).resolves.toMatchObject({
+      banner: { state: 'blocked', review: 'approved' },
+      checks: { state: 'available' },
+      headSha: HEAD_SHA,
+    })
+  }
+  for (const state of ['UNSTABLE', 'UNKNOWN']) {
     api.pull.mergeStateStatus = state
     await expect(read(), state).rejects.toMatchObject({
       status: 503,
       code: 'github_pending',
     })
   }
+  api.pull.mergeStateStatus = 'CLEAN'
+  api.pull.mergeable = 'UNKNOWN'
+  await expect(read()).rejects.toMatchObject({
+    status: 503,
+    code: 'github_pending',
+  })
 })
 
 it('refuses mismatched repositories, changed heads, and malformed upstream replies', async () => {

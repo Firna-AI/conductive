@@ -116,6 +116,8 @@ export function pullBanner(
   ) {
     return { ...common, state: 'checks-running' }
   }
+  if (pull.mergeState === 'BEHIND' || pull.mergeState === 'BLOCKED')
+    return { ...common, state: 'blocked' }
   if (
     pull.mergeable !== 'MERGEABLE' ||
     !['CLEAN', 'HAS_HOOKS'].includes(pull.mergeState)

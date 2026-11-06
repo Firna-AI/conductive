@@ -56,9 +56,14 @@ it('authenticates the exact raw bytes before parsing or accessing storage', asyn
   ).toBe(400)
 })
 
-it('routes recorded branch events by repository and installation and excludes foreign forks', async () => {
+it('routes recorded branch events while workspaces need input and excludes foreign repositories and installations', async () => {
   const { orgId, workspace } = await harness.seed()
   await harness.seed('other/changes', 'workspace-2', orgId)
+  await harness.env.DB.prepare(
+    "UPDATE workspaces SET state = 'input' WHERE org_id = ?",
+  )
+    .bind(orgId)
+    .run()
   for (const [index, payload] of [
     { ...recordedPush, repository: { id: 999 } },
     { ...recordedPush, installation: { id: 999 } },

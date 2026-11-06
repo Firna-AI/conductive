@@ -16,8 +16,15 @@ afterAll(async () => {
   await harness.base.dispose()
 })
 
-it('reads current banner and checks on tab open through the signed-in gate', async () => {
+it('reads current banner and checks on tab open while the workspace needs input', async () => {
   const { orgId, session } = await harness.seed()
+  await harness.env.DB.prepare(
+    "UPDATE workspaces SET state = 'input' WHERE id = ?",
+  )
+    .bind('workspace-1')
+    .run()
+  harness.api.pull.mergeStateStatus = 'BLOCKED'
+  harness.api.pull.reviewDecision = 'REVIEW_REQUIRED'
   const banner = await harness.read(
     githubPaths.banner(orgId, 'workspace-1'),
     session,
@@ -25,7 +32,7 @@ it('reads current banner and checks on tab open through the signed-in gate', asy
   expect(banner.status).toBe(200)
   expect(banner.headers.get('Cache-Control')).toBe('no-store')
   expect(await banner.json()).toMatchObject({
-    banner: { branch: 'changes', state: 'ready-to-merge' },
+    banner: { branch: 'changes', state: 'blocked', review: 'pending' },
   })
   harness.api.checkPages = {
     '': page([{ ...passedRun, status: 'IN_PROGRESS', conclusion: null }]),

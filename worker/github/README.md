@@ -92,11 +92,19 @@ Check runs use their completed and started times for duration.
 Commit status contexts supply no run start time, so their duration remains null.
 All links point to GitHub.
 
-The current shared banner has no state for an unresolved merge condition.
-The reader returns `github_pending` with HTTP 503 for BEHIND, BLOCKED, UNSTABLE, or UNKNOWN after known blockers.
-It keeps the previous stored state when it cannot confirm merge readiness.
-The app can retry the read.
-This limitation needs contract review before final integration.
+The reader maps BEHIND and BLOCKED to the shared `blocked` banner.
+Terminal, draft, conflict, review, and check states take priority over `blocked`.
+The banner keeps the pull request's GitHub link and the existing shared fields.
+It adds no blocker reasons or GitHub write action.
+An unresolved merge condition still returns `github_pending` with HTTP 503.
+UNKNOWN mergeability or merge state remains retryable when no earlier state applies.
+UNSTABLE remains retryable if the read checks show no failed, running, or queued check.
+It keeps the previous stored state until a read can confirm the current state.
+The app can retry that read.
+
+Workspace state does not limit a GitHub read or webhook refresh.
+The workspace queries read repository and access bindings without selecting or filtering workspace state.
+This includes a workspace in `input` while its agent waits for the user.
 
 ## Verification
 
