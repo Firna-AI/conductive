@@ -20,6 +20,14 @@ For example, use `server.events.subscribe(0, onMessage)`.
 The first message contains stored history. Later `emit` calls send live events.
 Use the last event number instead of zero to exercise a reconnect.
 
+The `omitted-data` conversation has a Unicode tool excerpt and a capped turn file list.
+Both records include positive omission counts.
+The `refused-events` conversation has one marker for each permanent refusal reason.
+The marker can have no turn context when the event is invalid.
+Browser file recordings contain complete reports.
+Runner file recordings split trees and changes into two numbered parts.
+The split uses small samples so callers can exercise joining without large fixtures.
+
 Writes return recorded replies. They do not change backend state.
 Set the next reply with `server.json(method, path, body, status)`.
 Use `server.empty` for a 204 response.
@@ -42,8 +50,8 @@ Preview and desktop URLs are recorded placeholders. Tests can replace them with 
 - `fake-api-routes.ts` defines the reply registration interface.
 - `fake-events.ts` supplies history and live event messages.
 - `fake-terminal.ts` supplies decoded terminal output and records input and resize calls.
-- `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, and failure.
-- `recorded-files.ts` supplies full trees, file updates, branch summaries, reads, diffs, and a size error.
+- `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.
+- `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
 - `fixtures/workspaces.ts` maps workspace and session samples.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples.

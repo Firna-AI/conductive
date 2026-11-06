@@ -117,6 +117,8 @@ says.
 - While a turn runs, the chat shows the time since the turn started, and
   Stop sits beside Send.
 - A finished turn ends with its duration and the files that it changed.
+- A tool detail and a turn file list give a count of data that their limits omit.
+- A refused runner event shows one chat line that names the lost data.
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One
@@ -148,6 +150,44 @@ says.
 - The runner numbers each event, and keeps it until the Durable Object
   confirms it.
 - A dropped connection loses no event. A resent event shows once.
+- A complete numbered runner event envelope holds at most 1 MiB, or
+  1,048,576 bytes, of compact UTF-8 JSON (decision 76).
+- The limit measures `JSON.stringify` of the complete runner event envelope.
+  It includes the stream ID, event number, timestamp, payload, escapes, and delimiters.
+- The limit excludes WebSocket framing and the workspace storage wrapper.
+  Reason: the remaining storage value budget holds that wrapper.
+- Each tool detail holds at most 64 KiB, or 65,536 bytes, of serialized UTF-8 JSON.
+  The count includes its surrounding quotes and JSON escapes.
+- The runner keeps the longest detail prefix that fits that limit.
+  It replaces lone UTF-16 surrogates with U+FFFD before it counts or truncates text.
+- A prefix never splits a Unicode code point.
+  The omitted detail count measures source UTF-8 bytes before JSON escaping.
+- The count applies to the complete source detail of that tool update.
+  It does not add the counts of previous updates.
+- A null detail stays null and has an omitted count of zero.
+  A complete detail also has an omitted count of zero.
+- A detail has no inserted omission notice. Its count carries that information.
+- An end-of-turn file list keeps a prefix of at most 200 unique-path entries.
+  Its serialized UTF-8 JSON array also holds at most 256 KiB, or 262,144 bytes.
+- That byte count includes brackets, commas, and escapes.
+  Each entry stays whole. The omitted file count equals the full count minus the kept count.
+- Both omission counts are non-negative safe integers.
+  Reason: bounded excerpts keep tool output and turn summaries within the event budget.
+- A permanent refusal has one of three reasons: too large, invalid, or turn not active.
+  The workspace stores one small refusal marker before it confirms that runner event.
+- The marker names the runner stream, runner event number, event type, and reason.
+  An invalid discriminator uses `unknown` as its type.
+- A marker includes verified session and turn IDs, or null when no verified context exists.
+  It never copies the refused payload.
+- The marker belongs only to workspace chat events. The runner cannot send it.
+- A confirmed marker advances the runner cursor and removes that event from its outbox.
+  A duplicate produces no second marker and no second chat line.
+- A refused end-of-turn event still ends its active turn.
+  The marker shows that the terminal data was lost.
+- A storage or network failure closes the connection without a confirmation.
+  It remains retryable. It never becomes a permanent refusal.
+- Permanent refusals store a marker and advance the stream (decision 76).
+  Reason: one bad event must not stop all later events.
 - The Durable Object forwards each message, each message during a turn,
   each interrupt, and each change of the model or the effort to the runner.
 - Each turn also brings the login of its sender, as

@@ -36,12 +36,18 @@ Set `endpoint.confirmEvents = false` to retain unconfirmed events.
 `runner.sendEnvelope` can inject duplicates and gaps.
 The endpoint stores each event once and confirms only contiguous event numbers.
 It requests a resend when a number is missing.
+It joins valid runner file parts before it emits a complete browser file event.
+Pending parts stay on the endpoint across reconnects.
+Set `refuseEvent` to return `too_large`, `invalid`, or `turn_not_active`.
+The endpoint stores one workspace refusal marker and confirms that event number.
+An accepted event remains in `runnerEvents`. A refused event has only its marker.
+These fakes do not implement production byte checks, event validation, or turn state.
 File read and diff results go to `endpoint.fileResponses`, outside chat history.
 
 Use [recorded file events and replies](../../src/test-support/recorded-files.ts)
 for the runner's file reports.
-The samples cover a full tree, file creation, a rename, a removal,
-uncommitted and untracked work, a read, a diff, and a size error.
+The samples cover multipart trees and changes, consecutive deltas, file creation,
+a rename, a removal, uncommitted and untracked work, a read, a diff, and a size error.
 
 ## Key code
 
@@ -50,6 +56,7 @@ uncommitted and untracked work, a read, a diff, and a size error.
 - `fake-github.ts` supplies sign-in replies.
 - `fake-runner.ts` supplies the runner without an agent SDK.
 - `fake-durable-object.ts` supplies the workspace endpoint without Cloudflare.
+- `fake-runner-files.ts` joins valid file report parts for the endpoint.
 - `runner-connection.ts` supplies the in-memory socket.
 
 See [the browser fakes](../../src/test-support/README.md),

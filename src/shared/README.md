@@ -11,6 +11,10 @@ Each area owns its paths and payloads. Import from that area directly.
 
 `runner.ts` defines the versioned handshake, commands, numbered events,
 confirmations, and resend rules. Its comments state the delivery contract.
+`RUNNER_EVENT_MAX_BYTES` limits the complete serialized runner event envelope.
+The 1 MiB limit leaves room for the workspace storage wrapper.
+The workspace stores a refusal marker before it confirms a permanent refusal.
+Storage and network failures remain unconfirmed.
 `runner-transport.ts` defines the injectable socket boundary.
 Runner commands carry each message sender's login. Browser response types do not.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
@@ -19,12 +23,24 @@ An uploaded attachment reaches the runner as a path, after the backend puts it t
 A full tree contains paths relative to the repository root.
 A move names its old path and its new entry.
 A directory move includes updates for its descendants.
-Tree revisions increase within a runner connection.
-Each connection starts with a full tree.
+`FileEvent` contains complete browser reports.
+`RunnerFileEvent` sends full reports as numbered parts of one revision.
+Each part has a 256 KiB event payload budget.
+Tree deltas have the same byte budget and at most 512 changes.
+Tree and changes revisions have independent sequences within each runner stream.
+A new stream starts with full reports. A reconnect keeps its revisions and parts.
+The workspace joins all parts before it publishes a full browser report.
 Branch changes include committed, staged, unstaged, and untracked work.
 `runner-files.ts` defines file read and diff commands and their matching results.
 The backend sets the read limit. The sample limit in the fixtures is not product policy.
 Read and diff results do not enter the stored chat event stream.
+
+`chat-events.ts` caps serialized tool detail at 64 KiB.
+Its omission count measures normalized source UTF-8 bytes before JSON escaping.
+Turn summaries keep at most 200 files and 256 KiB of serialized file-list data.
+They count omitted files. The complete Changes response has no summary cap.
+`runner.event-refused` belongs only to workspace chat events.
+It identifies the lost runner event without copying its data.
 
 `events.ts` defines the browser stream. Its event numbers span all sessions
 and runner connections of one workspace. A reconnect uses the last stored number.

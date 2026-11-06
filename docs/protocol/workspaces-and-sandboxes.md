@@ -177,9 +177,44 @@ says.
   branch. Its summary gives the number of changed files and the lines that
   they add and remove.
 - A changed file opens its diff against the default branch as a tab.
-- The agent runner watches the repository and reports both lists. It sends
-  the full file tree when it connects, then only the changes. The changes
-  count uncommitted and untracked work too.
+- The agent runner watches the repository and reports both lists.
+  Each new runner stream starts with a full file tree.
+- Later tree updates use deltas or a newer full recovery report.
+  Branch changes count uncommitted and untracked work too.
+- Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
+  This includes the event type, metadata, escapes, and delimiters. It excludes the runner envelope.
+- The complete runner envelope also meets the
+  [runner event limit](chat-and-events.md#the-agent-runner).
+  Reason: paths have no fixed byte length, so an item count cannot bound an event.
+- Full trees and branch changes lists use numbered parts of one revision (decision 76).
+  Every path and entry stays whole. Each path appears once in the complete report.
+- Tree reports and branch changes reports have independent revision sequences within one runner stream.
+  A new stream starts both at revision 1 with full reports.
+- Each part gives its revision, part number, and total part count as positive safe integers.
+  Part numbers start at 1 and end at the fixed total part count.
+- The runner sends parts in order from one consistent captured state.
+  It does not interleave revisions of one report kind, including tree deltas.
+- A single-part or empty report uses part number 1 and total part count 1.
+  Each changes part repeats the full report's base branch and summary.
+- The summary counts the complete list, rather than one part.
+  The workspace joins entries in part order and uses the full report atomically.
+- A report becomes complete only after every part is stored.
+  The workspace keeps the last complete report while parts are pending.
+- Parts never join across streams, report kinds, or revisions.
+  A conflicting repeated part is invalid. An identical repeated part never counts twice.
+- A resend keeps its stream, runner event number, and payload.
+  A reconnect keeps pending parts. Confirmation of a part includes its durable assembly state.
+- A refused part, a newer full report, or a new stream discards the incomplete report.
+  The last complete report stays available.
+- A new full report has a newer revision than the last applied report of its kind.
+  It can skip unapplied revisions to recover missing or refused data.
+- Each tree delta holds at most 512 changes and meets the same 256 KiB event budget.
+  A large update uses several deltas, each with the next consecutive tree revision.
+- Reason: the count cap also bounds the tree work of each event.
+- A delta applies only after its previous tree revision is complete.
+  The runner increases the branch changes revision by 1 for each new full changes report.
+- A browser file event and a browser file response contain complete reports.
+  They never expose a runner part as a full tree or changes list.
 - The runner reads one file or one diff on request. When the runner is not
   connected, a file read falls back to Boat's file read.
 - The Durable Object keeps the last tree and the last changes, so both tabs

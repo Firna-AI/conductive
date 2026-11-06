@@ -1,5 +1,9 @@
 import type { WorkspaceEventEnvelope } from '../shared/events'
-import type { ChangesResponse, FileEvent } from '../shared/files'
+import type {
+  ChangesResponse,
+  FileEvent,
+  RunnerFileEvent,
+} from '../shared/files'
 import type {
   RunnerFileCommand,
   RunnerFileResponse,
@@ -39,8 +43,8 @@ const changed: ChangesResponse = {
   summary: { files: 7, added: 161, removed: 50 },
 }
 
-/** Full tree on connection, then file creation, move, and removal. */
-export const recordedRunnerFileEvents: readonly FileEvent[] = [
+/** Browser events contain the joined tree and changes reports. */
+const browserFileEvents: readonly FileEvent[] = [
   { type: 'files.snapshot', tree: data.files },
   { type: 'changes.updated', changes: data.changes },
   {
@@ -76,18 +80,57 @@ export const recordedRunnerFileEvents: readonly FileEvent[] = [
             change: 'renamed',
           },
         },
-        { operation: 'remove', path: '.env.example' },
       ],
+    },
+  },
+  {
+    type: 'files.changed',
+    delta: {
+      revision: 3,
+      changes: [{ operation: 'remove', path: '.env.example' }],
     },
   },
   { type: 'changes.updated', changes: changed },
 ]
 
+/** Numbered parts, then bounded deltas with consecutive tree revisions. */
+export const recordedRunnerFileEvents: readonly RunnerFileEvent[] =
+  browserFileEvents.flatMap((event): readonly RunnerFileEvent[] => {
+    if (event.type === 'files.changed') return [event]
+    if (event.type === 'files.snapshot') {
+      return [0, 1].map((index) => ({
+        type: 'files.snapshot',
+        tree: {
+          ...event.tree,
+          entries:
+            index === 0
+              ? event.tree.entries.slice(0, 4)
+              : event.tree.entries.slice(4),
+          partNumber: index + 1,
+          partCount: 2,
+        },
+      }))
+    }
+    return [0, 1].map((index) => ({
+      type: 'changes.updated',
+      changes: {
+        ...event.changes,
+        files:
+          index === 0
+            ? event.changes.files.slice(0, 2)
+            : event.changes.files.slice(2),
+        revision: event.changes === changed ? 2 : 1,
+        partNumber: index + 1,
+        partCount: 2,
+      },
+    }))
+  })
+
 export function recordedFileEvents(
   workspaceId: string = FAKE_IDS.workspace,
   firstEventNumber = 1,
 ): readonly WorkspaceEventEnvelope[] {
-  return recordedRunnerFileEvents.map((event, index) => ({
+  return browserFileEvents.map((event, index) => ({
     workspaceId,
     eventNumber: firstEventNumber + index,
     occurredAt: FAKE_TIME + index * 1_000,
