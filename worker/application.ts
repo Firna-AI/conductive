@@ -54,7 +54,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             response.headers.set(
               'Content-Security-Policy',
               appContentSecurityPolicy(
-                env.APP_ORIGIN,
+                env.APP_ORIGIN || new URL(request.url).origin,
                 env.PREVIEW_DOMAIN ? [`https://*.${env.PREVIEW_DOMAIN}`] : [],
               ),
             )

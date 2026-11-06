@@ -107,6 +107,10 @@ The build copies the [1024px PNG master](../docs/brand/conducting-icon-1024.png)
 electron-builder makes DMG and ZIP packages for both Mac architectures.
 It uses an ad-hoc signature.
 It does not notarize or publish.
+PR builds force this same ad-hoc signing mode without certificate credentials.
+The package command verifies both app bundles with `codesign --verify --deep --strict`.
+It also requires `Signature=adhoc` in the signature display.
+CI logs and `.context/boat-native-remote-workspaces/desktop-signatures.json` keep the signature evidence.
 Generated bundles, icons, packages, and test output stay ignored.
 All generated files live under `dist/`.
 Compiled app code lives in `dist/app/`.

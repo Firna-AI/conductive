@@ -3748,7 +3748,7 @@ Build the Mac app as decision 62 says. No other milestone waits for it.
       sites in the browser. Deny every permission except a sanitized
       clipboard write. Use no preload and no renderer bridge, and match
       the web app's content security policy. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
-- [ ] Package DMG and ZIP builds for arm64 and x64 with electron-builder,
+- [x] Package DMG and ZIP builds for arm64 and x64 with electron-builder,
       with an ad-hoc signature for now. Add electron-updater on a GitHub
       release feed, off in development. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 - [x] Add Playwright tests of the shell and a packaged launch check to CI. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
@@ -3756,6 +3756,11 @@ Build the Mac app as decision 62 says. No other milestone waits for it.
       architecture doc. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 - [x] Fix the frame navigation and updater review findings, and test the
       fixes. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Preserve local asset responses without sign-in settings, and verify
+      ad-hoc signatures in PR packages. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [ ] Make the local web bootstrap compatible with the shared content
+      policy. This waits for the web app owner to update Vite's React
+      bootstrap and the existing local module origin handling. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 
 ## Milestone 15f: Mac device commands
 

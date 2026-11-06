@@ -225,33 +225,43 @@ it('serves desktop preflights and API errors without admitting foreign origins o
 
 it('serves web assets with the policy from the actual desktop configuration consumer', async () => {
   const previewDomain = 'conducting-previews.test'
-  const requests: string[] = []
-  const env = {
-    ...harness.env,
-    PREVIEW_DOMAIN: previewDomain,
-    ASSETS: {
-      fetch: async (request: Request) => {
-        requests.push(request.url)
-        return new Response('<main>Conducting</main>', {
-          headers: { 'Content-Type': 'text/html' },
-        })
+  for (const binding of ['configured', 'missing', 'empty'] as const) {
+    const requestOrigin =
+      binding === 'configured'
+        ? harness.env.APP_ORIGIN
+        : 'http://127.0.0.1:5173'
+    const requests: string[] = []
+    const env = {
+      ...harness.env,
+      APP_ORIGIN: binding === 'configured' ? harness.env.APP_ORIGIN : '',
+      PREVIEW_DOMAIN: previewDomain,
+      ASSETS: {
+        fetch: async (request: Request) => {
+          requests.push(request.url)
+          return new Response('<main>Conducting</main>', {
+            headers: { 'Content-Type': 'text/html' },
+          })
+        },
       },
-    },
+    }
+    if (binding === 'missing') Reflect.deleteProperty(env, 'APP_ORIGIN')
+    const response = await createApp().fetch(
+      new Request(`${requestOrigin}/app`),
+      env,
+    )
+    expect(response.status, binding).toBe(200)
+    expect(await response.text(), binding).toBe('<main>Conducting</main>')
+    expect(response.headers.get('Content-Type'), binding).toBe('text/html')
+    expect(requests, binding).toEqual([`${requestOrigin}/app`])
+    const desktopPolicy = contentSecurityPolicy(
+      readConfiguration({
+        appOrigin: requestOrigin,
+        frameSources: [`https://*.${previewDomain}`],
+      }),
+    )
+    expect(desktopPolicy, binding).not.toBe('')
+    expect(response.headers.get('Content-Security-Policy'), binding).toBe(
+      desktopPolicy,
+    )
   }
-  const response = await createApp().fetch(
-    new Request(`${env.APP_ORIGIN}/app`),
-    env,
-  )
-  expect(response.status).toBe(200)
-  expect(await response.text()).toBe('<main>Conducting</main>')
-  expect(response.headers.get('Content-Type')).toBe('text/html')
-  expect(requests).toEqual([`${env.APP_ORIGIN}/app`])
-  const desktopPolicy = contentSecurityPolicy(
-    readConfiguration({
-      appOrigin: env.APP_ORIGIN,
-      frameSources: [`https://*.${previewDomain}`],
-    }),
-  )
-  expect(desktopPolicy).not.toBe('')
-  expect(response.headers.get('Content-Security-Policy')).toBe(desktopPolicy)
 })
