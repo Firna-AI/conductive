@@ -26,6 +26,9 @@ describe('workspace chat security', () => {
 
   it('uses the app gate, org membership, and stored workspace identity', async () => {
     const fixture = await createChatFixture(harness)
+    await harness.env.DB.prepare('UPDATE workspaces SET state = ? WHERE id = ?')
+      .bind('input', WORKSPACE_ID)
+      .run()
     const path = sessionsPath(fixture.org.id, WORKSPACE_ID)
     const noSession = fixture.request(path)
     noSession.headers.delete('Cookie')

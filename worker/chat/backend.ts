@@ -10,12 +10,8 @@ import { errorResponse, HttpError, privateResponse } from '../http'
 import { randomToken } from '../security/crypto'
 import { gate, type RequestContext } from '../security/gate'
 import { afterNumber, chatRoute } from './http-routes'
-import {
-  findChatWorkspace,
-  readAgentLogin,
-  senderIsMember,
-  tokenWorkspace,
-} from './queries'
+import { findChatWorkspace, tokenWorkspace } from './queries'
+import { loginResolver } from './login-access'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore } from './store'
 import { browserUpgrade, runnerUpgrade } from './sockets'
@@ -48,9 +44,6 @@ export class WorkspaceChat {
     overrides: Partial<ChatDependencies> = {},
   ) {
     this.env = env
-    const resolver =
-      overrides.resolveLogin ??
-      ((userId, agent) => readAgentLogin(env, userId, agent))
     this.dependencies = {
       now: Date.now,
       randomId: randomToken,
@@ -68,14 +61,11 @@ export class WorkspaceChat {
       runnerReady: async () => undefined,
       matchesObject: () => true,
       ...overrides,
-      resolveLogin: async (userId, agent) => {
-        if (
-          !this.workspaceId ||
-          !(await senderIsMember(env.DB, this.workspaceId, userId))
-        )
-          return null
-        return resolver(userId, agent)
-      },
+      resolveLogin: loginResolver(
+        env,
+        () => this.workspaceId,
+        overrides.resolveLogin,
+      ),
     }
     this.store = new ChatStore(storage, this.dependencies.now)
     this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>

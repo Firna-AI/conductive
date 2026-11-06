@@ -126,9 +126,11 @@ export async function createChatFixture(
   const transport: {
     dropIncoming: (message: RunnerToWorkspace) => boolean
     dropOutgoing: (message: WorkspaceToRunner) => boolean
+    closedConnections: number
   } = {
     dropIncoming: () => false,
     dropOutgoing: () => false,
+    closedConnections: 0,
   }
   const request = (
     path: string,
@@ -177,7 +179,10 @@ export async function createChatFixture(
           },
           close: () => connection.close(),
         }
-        connection.onClose(() => chat.disconnectRunner(peer))
+        connection.onClose(() => {
+          transport.closedConnections++
+          chat.disconnectRunner(peer)
+        })
         await chat.connectRunner(
           new Request(connectionRequest.url, {
             headers: {

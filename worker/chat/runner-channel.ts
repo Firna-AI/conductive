@@ -11,7 +11,7 @@ import type {
   ChatCallbackPublisher,
   ActiveRunner,
   RunnerPeer,
-  WorkspaceRecord,
+  RunnerWorkspaceRecord,
 } from './types'
 
 export class RunnerChannel {
@@ -32,7 +32,7 @@ export class RunnerChannel {
     this.delivery = new RunnerDelivery(store, dependencies, publish)
   }
 
-  open(workspace: WorkspaceRecord, peer: RunnerPeer): Promise<void> {
+  open(workspace: RunnerWorkspaceRecord, peer: RunnerPeer): Promise<void> {
     return this.store.run(async () => {
       await this.store.read(workspace.id, async () => undefined)
       this.current?.peer.close()

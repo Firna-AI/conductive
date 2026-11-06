@@ -74,6 +74,9 @@ The Durable Object runs the gates itself.
 - `resolveLogin` first checks that the sender is still a member and that
   the workspace is not archived. Then it reads the login. An override
   replaces only the read.
+- Before dispatch, the same D1 read also checks the token hash of the live
+  runner connection. A revoked or replaced token closes that connection
+  without sending a login. The command stays queued.
 - The Durable Object reads the login when it accepts a message. It reads
   it again for each `turn` and `message` command that it sends. Its
   storage never holds a login.
@@ -126,6 +129,9 @@ npm run typecheck
   `beforeCommit` to test a failed or a late commit.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,
   D1, and real WebSockets. `createAdapterRuntime` sets up that runtime.
+- It closes every socket before Miniflare evicts the real object. The
+  restarted object keeps its SQLite history, queued message, and runner
+  cursor. The test checks delivery and continued event numbers after restart.
 
 ## Seams for other milestones
 
@@ -242,6 +248,8 @@ depends on where the code runs:
   waiting turns, terminal events, and unanswered messages.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `queries.ts`: the D1 reads of workspaces, tokens, members, and logins.
+- `login-access.ts`: the combined sender and runner-token access check
+  before login dispatch.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
   and the peer types.
 

@@ -33,6 +33,11 @@ export interface WorkspaceRecord {
   archivedAt: number | null
 }
 
+export interface RunnerWorkspaceRecord extends WorkspaceRecord {
+  /** Hash of the credential that authenticated this connection. */
+  tokenHash: string
+}
+
 export interface StoredTurn {
   id: string
   sessionId: string
@@ -64,7 +69,7 @@ export interface RunnerPeer {
 
 export interface ActiveRunner {
   peer: RunnerPeer
-  workspace: WorkspaceRecord
+  workspace: RunnerWorkspaceRecord
   streamId: string | null
   ready: boolean
   delivered: Set<string>
@@ -89,7 +94,11 @@ export type ChatCallbackPublisher = (
 export interface ChatDependencies {
   now: () => number
   randomId: () => string
-  resolveLogin: (userId: string, agent: Agent) => Promise<RunnerLogin | null>
+  resolveLogin: (
+    userId: string,
+    agent: Agent,
+    runnerTokenHash?: string,
+  ) => Promise<RunnerLogin | null>
   resolveAttachments: (
     userId: string,
     workspaceId: string,

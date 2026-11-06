@@ -1,6 +1,7 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type { RunnerCommand } from '../../src/shared/runner'
 import { markSent } from './messages'
+import { RunnerAccessDenied } from './login-access'
 import type { ChatStore, ChatTransaction } from './store'
 import { storeAgentEvent } from './turn-events'
 import { TurnLifecycle } from './turn-lifecycle'
@@ -48,7 +49,14 @@ export class RunnerDelivery {
         view.command(command.commandId),
       )
       if (!current) continue
-      const outbound = await this.command(active, command)
+      let outbound: RunnerCommand | null
+      try {
+        outbound = await this.command(active, command)
+      } catch (error) {
+        if (!(error instanceof RunnerAccessDenied)) throw error
+        detach()
+        return false
+      }
       if (!outbound) {
         if (
           !(await this.store.read(active.workspace.id, (view) =>
@@ -106,6 +114,7 @@ export class RunnerDelivery {
     const login = await this.dependencies.resolveLogin(
       message.sender.id,
       message.choice.agent,
+      active.workspace.tokenHash,
     )
     if (!login || login.agent !== message.choice.agent) {
       await this.failLogin(active.workspace.id, command)

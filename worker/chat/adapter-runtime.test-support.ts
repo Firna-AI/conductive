@@ -166,29 +166,3 @@ export async function createAdapterRuntime() {
   }
   return { runtime, headers }
 }
-
-export class SocketInbox {
-  private readonly values: unknown[] = []
-  private readonly readers: ((value: unknown) => void)[] = []
-
-  constructor(socket: {
-    addEventListener(
-      type: 'message',
-      listener: (event: { data: unknown }) => void,
-    ): void
-  }) {
-    socket.addEventListener('message', (event) => {
-      if (typeof event.data !== 'string')
-        throw new Error('Expected a text socket message.')
-      const value: unknown = JSON.parse(event.data)
-      const reader = this.readers.shift()
-      if (reader) reader(value)
-      else this.values.push(value)
-    })
-  }
-
-  next(): Promise<unknown> {
-    if (this.values.length) return Promise.resolve(this.values.shift())
-    return new Promise((resolve) => this.readers.push(resolve))
-  }
-}

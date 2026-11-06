@@ -3,10 +3,9 @@ import { expect, it } from 'vitest'
 import { chatHistoryPath, workspaceEventsPath } from '../../src/shared/events'
 import { sessionsPath, sessionPaths } from '../../src/shared/sessions'
 import { TEST_ORIGIN } from '../test-support/harness'
-import {
-  createAdapterRuntime,
-  SocketInbox,
-} from './adapter-runtime.test-support'
+import { createAdapterRuntime } from './adapter-runtime.test-support'
+import { closeSockets, SocketInbox } from './adapter-sockets.test-support'
+import { verifyAdapterRestart } from './adapter-restart.test-support'
 import {
   CLAUDE,
   MACHINE_ORIGIN,
@@ -14,6 +13,7 @@ import {
   WORKSPACE_TOKEN,
 } from './harness.test-support'
 import { record, string } from './inputs'
+import { array } from './agent-events'
 
 it('serves the actual Durable Object with SQLite storage and authenticated WebSockets', async () => {
   const { runtime, headers } = await createAdapterRuntime()
@@ -131,8 +131,61 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
         event: { type: 'assistant.delta', text: 'Stored in SQLite' },
       },
     })
-    runner.close(1000)
-    browser.close(1000)
+    runner.send(
+      JSON.stringify({
+        type: 'event',
+        streamId: 'adapter-stream',
+        eventNumber: 3,
+        occurredAt: 3,
+        event: {
+          type: 'turn.completed',
+          sessionId,
+          turnId: string(turn.turnId),
+          state: 'finished',
+          durationMs: 10,
+          files: [],
+          userMessageIds: ['ask'],
+        },
+      }),
+    )
+    expect(await runnerInbox.next()).toEqual({
+      type: 'confirm',
+      streamId: 'adapter-stream',
+      throughEventNumber: 3,
+    })
+    expect(await browserInbox.next()).toMatchObject({
+      type: 'event',
+      envelope: {
+        eventNumber: 6,
+        event: { type: 'turn.completed', state: 'finished' },
+      },
+    })
+    expect(await browserInbox.next()).toMatchObject({
+      type: 'event',
+      envelope: {
+        eventNumber: 7,
+        event: { type: 'session.updated', session: { activeTurnId: null } },
+      },
+    })
+    await closeSockets(runner, browser)
+    const queued = await runtime.dispatchFetch(
+      `${TEST_ORIGIN}${sessionPaths.messages('org', WORKSPACE_ID, sessionId)}`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          id: 'offline-ask',
+          choice: CLAUDE,
+          text: 'Keep this queued through eviction',
+          attachmentIds: [],
+        }),
+      },
+    )
+    expect(queued.status).toBe(202)
+    expect(await queued.json()).toMatchObject({
+      message: { id: 'offline-ask', state: 'queued' },
+      turnId: null,
+    })
     const history = await runtime.dispatchFetch(
       `${TEST_ORIGIN}${chatHistoryPath('org', WORKSPACE_ID, sessionId)}`,
       { headers },
@@ -140,7 +193,7 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
     expect(history.status).toBe(200)
     const body: unknown = await history.json()
     expect(body).toMatchObject({
-      throughEventNumber: 5,
+      throughEventNumber: 9,
       events: expect.arrayContaining([
         expect.objectContaining({
           eventNumber: 5,
@@ -148,7 +201,17 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
         }),
       ]),
     })
+    expect(
+      array(record(body).events, record).map(({ eventNumber }) => eventNumber),
+    ).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
     expect(JSON.stringify(body)).not.toContain('adapter-secret')
+    await verifyAdapterRestart(
+      runtime,
+      headers,
+      sessionId,
+      body,
+      string(turn.turnId),
+    )
   } finally {
     await runtime.dispose()
   }
