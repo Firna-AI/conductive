@@ -1,0 +1,125 @@
+/*
+ * The pages of text: the terms, the privacy notice, and the page for an
+ * unknown address. They use the type of the home page.
+ */
+.text-page {
+  padding: 72px 32px 112px;
+}
+
+.text-article {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.text-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.text-title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 40px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.text-lead {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* The draft notice tints the whole box. No edge of the box has its own colour. */
+.draft-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border: 1px solid var(--ui-warning-border);
+  border-radius: var(--ui-radius-xxl);
+  background: var(--ui-amber-soft);
+}
+
+.draft-notice-title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 15px;
+  font-weight: var(--ui-weight-heading);
+}
+
+.draft-notice-text {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.legal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.legal-heading {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 20px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+
+.legal-section p,
+.legal-section li {
+  color: var(--ui-ink2);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.legal-section p {
+  margin: 0;
+}
+
+.legal-section ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* A fact that waits for the operator or the lawyer. */
+.draft-field {
+  padding: 1px 5px;
+  border: 1px solid var(--ui-warning-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-amber-soft);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: 0.86em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+@media (max-width: 759.98px) {
+  .text-page {
+    padding: 40px 20px 72px;
+  }
+
+  .text-article {
+    gap: 32px;
+  }
+
+  .text-title {
+    font-size: 30px;
+  }
+}

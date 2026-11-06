@@ -1,0 +1,101 @@
+/*
+ * A still picture of a real screen of the app. The frame clips the picture
+ * to its corners. pictures.ts sets the size of each picture, and the scale
+ * of each phone.
+ */
+.frame {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--ui-surface);
+}
+
+.frame picture,
+.frame img {
+  display: block;
+}
+
+.frame img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* A large window, such as the screen of the hero. */
+.frame-window {
+  border: 1px solid var(--ui-border2);
+  border-radius: 12px;
+  box-shadow: 0 40px 90px -40px var(--ui-shadow);
+}
+
+/* A quiet excerpt of a screen, such as one panel. */
+.frame-excerpt {
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xxl);
+  box-shadow: 0 18px 44px -22px var(--ui-shadow);
+}
+
+/* A phone: a dark body with a hairline outline, so it shows in both schemes. */
+.frame-phone {
+  display: inline-flex;
+  padding: calc(11px * var(--phone-scale));
+  border-radius: calc(54px * var(--phone-scale));
+  background: var(--ui-device);
+  box-shadow:
+    0 0 0 1px var(--ui-border2),
+    0 40px 80px -36px var(--ui-shadow);
+}
+
+.phone-screen {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: calc(43px * var(--phone-scale));
+  background: var(--ui-bar);
+}
+
+.phone-band {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  height: calc(44px * var(--phone-scale));
+}
+
+.phone-notch {
+  width: calc(104px * var(--phone-scale));
+  height: calc(30px * var(--phone-scale));
+  border-radius: 999px;
+  background: var(--ui-device);
+}
+
+/* A frame that is a phone only in the phone layout, such as the hero. */
+@media (max-width: 759.98px) {
+  .frame-mobile-phone {
+    display: inline-flex;
+    padding: calc(11px * var(--phone-scale));
+    border: 0;
+    border-radius: calc(54px * var(--phone-scale));
+    background: var(--ui-device);
+    box-shadow:
+      0 0 0 1px var(--ui-border2),
+      0 40px 80px -36px var(--ui-shadow);
+  }
+
+  .frame .for-desktop {
+    display: none;
+  }
+}
+
+@media (min-width: 760px) {
+  .frame-mobile-phone .phone-screen {
+    border-radius: 0;
+  }
+
+  .frame-mobile-phone .phone-band {
+    display: none;
+  }
+
+  .frame .for-mobile {
+    display: none;
+  }
+}
