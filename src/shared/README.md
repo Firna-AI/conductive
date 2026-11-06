@@ -52,6 +52,10 @@ The git credential payload is not defined yet.
 
 ## Key code
 
+- [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
+- [Account contracts](account.ts) include the repository list available before an org exists.
+- [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
+- [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.
 - [Runner fakes](../../worker/test-support/README.md) use these message types.
 - [Migrations](../../migrations/README.md) define the D1 tables and reserved ranges.

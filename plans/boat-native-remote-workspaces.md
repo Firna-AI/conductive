@@ -1838,6 +1838,8 @@ Added on 5 November 2026 from the user's message.
 - **Chosen by the user on 5 November 2026:** users bring their own Boat
   key. This reverses the user's earlier call that users run on the app's
   own Boat subscription.
+- **Changed by the user on 6 November 2026:** reversed by decision 80. All
+  cloud computers run in the app's own Boat account again.
 - **Effects:**
   - The app keeps no Boat account for its users. Its own Boat
     organization and key serve only development and tests.
@@ -2300,6 +2302,10 @@ Added on 6 November 2026 from the Milestone 2 docs.
 - **Chosen:** A, by the user on 6 November 2026. The user asked for a
   better way later, probably a move of the old cloud computers:
   `plans/follow-ups/migrate-cloud-computers-to-another-boat-account.md`.
+- **Changed on 6 November 2026:** decision 80 moved every cloud computer
+  back to the app's own Boat account, so no org changes its Boat account,
+  and this decision and its follow-up item no longer apply. The follow-up
+  item is deleted.
 
 ### 57. Decide who may change an org's shared settings
 
@@ -2904,6 +2910,132 @@ review.
   - The person still accepts each matching invitation, as today, so a
     sign-in alone joins no org.
   - Invitations by GitHub login go away, so one way remains.
+
+### 79. Choose the email service for invitations
+
+Added on 6 November 2026 from decision 78.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Process.
+- **Options:**
+  - **A.** Postmark, as in Mokly Cloud. Effort: Small.
+  - **B.** Resend. Effort: Small.
+  - **C.** Cloudflare's email sending from Workers. Effort: Small.
+- **Recommendation:** A.
+- **Chosen:** B, by the user on 6 November 2026. Milestone 15g sends the
+  invitations through Resend, with `conducting.build` as the sender
+  domain. The Resend API key is a Worker secret.
+
+### 80. Decide what Remove key does to running cloud computers
+
+Added on 6 November 2026 from the Milestone 6 work.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** The Boat key tab had Remove key, and without the key the
+  Worker could not stop the org's cloud computers.
+- **Options:**
+  - **A.** Stop every cloud computer of the org, then delete the key.
+  - **B.** Refuse the removal while a cloud computer runs.
+  - **C.** Delete only the key.
+  - **D.** Drop Remove key.
+- **Recommendation:** A.
+- **Chosen:** by the user on 6 November 2026, a wider change: "I think we
+  go back to using our own account for Boat". This reverses decision 44.
+  All cloud computers run in the app's own Boat account again, so no org
+  has a Boat key, and this question no longer applies.
+- **Agent calls on 6 November 2026,** which the user can override:
+  - The app's Boat key becomes one Worker secret.
+  - The Boat key tab, the encrypted store of org keys, and the key steps
+    of Get started go, because no org has a key.
+  - The marketing site and Get started no longer ask users for a Boat
+    account. The app names Boat to no user, which replaces decision 47.
+  - A new milestone makes the switch after the running milestones merge,
+    and before the first deployment, so that no stored key needs a
+    migration.
+  - Decision 45 made the product free because each user paid for their
+    own Boat account. That reason is gone, so decisions 81 and 82 ask
+    again about cost and abuse.
+
+### 81. Decide the cost model now that the app pays for compute
+
+Added on 6 November 2026 from decision 80.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Design. **Category:** Product bug.
+- **Background:** Decision 45 removed billing and all limits, because each
+  user paid for their own Boat account. Under decision 80, the app's own
+  Boat account pays for every cloud computer.
+- **Options:**
+  - **A.** Free with limits for each user. Effort: Medium.
+  - **B.** Bring billing back. Effort: Large.
+  - **C.** Invite-only. Effort: Small.
+  - **D.** Free with no limits. Effort: Small.
+- **Recommendation:** C for the first deployment, then A.
+- **Chosen:** D, by the user on 6 November 2026: "we can add billing
+  later". The product stays free with no limits, and the app's Boat
+  account pays for all use.
+
+### 82. Decide when the abuse controls come
+
+Added on 6 November 2026 from decision 80.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Design. **Category:** Security.
+- **Background:** All users share the app's Boat account again, and Boat's
+  terms make the platform responsible for what its users do.
+- **Options:**
+  - **A.** Terms at sign-up, an operator suspension, and an abuse address,
+    before the first deployment. Effort: Medium.
+  - **B.** Keep them as follow-up items after the merge. Effort: Small now.
+  - **C.** The operator suspension now, the rest before an open sign-up.
+    Effort: Small.
+- **Recommendation:** C.
+- **Chosen:** B, by the user on 6 November 2026: "do as follow ups". The
+  follow-up item `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`
+  holds the three measures.
+
+### 83. Keep the preview credential away from other sites
+
+Added on 6 November 2026 from a finding check of the Milestone 11 review.
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. **Category:** Security.
+- **Background:** The random hostname of a port preview is its credential.
+  Browsers send `Origin` on cross-site requests and WebSocket connections
+  despite `no-referrer`, so a preview page can leak its hostname to each
+  site that it calls. The redirect rewrite also matches only `https`.
+- **Options:**
+  - **A.** Accept the leak, and match `http` in the redirect rewrite.
+    Effort: Small.
+  - **B.** Move the credential out of the hostname, into a cookie that the
+    preview domain sets. Effort: Medium.
+  - **C.** B, and check Boat's forwarded headers in the live smoke test.
+    Effort: Medium.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. Milestone 11a builds it,
+  and Milestone 16 checks Boat's forwarded headers.
+
+### 84. Decide the size limits of Boat replies
+
+Added on 6 November 2026 from the Milestone 4c work.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Security.
+- **Background:** Decision 65 B gave each Boat route a budget above Boat's
+  documented maximum. Boat publishes no total size for most replies, and a
+  command reply can reach about 96 MiB of escaped JSON.
+- **Options:**
+  - **A.** 1 MiB for account, lifecycle, snapshot, metadata, and error
+    replies, and 18 MiB for command replies. Keep the file budget.
+    Effort: Medium.
+  - **B.** Wait until Boat publishes complete limits. Effort: Large.
+  - **C.** Read command replies as a stream, and keep only the last part
+    of each output stream. Effort: Large.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 6 November 2026. This changes decision 65
+  B: a Boat reply over its budget fails, also when Boat would allow it.
+  Milestone 4c applies it.
 
 ## Design
 
@@ -3728,6 +3860,53 @@ Verification evidence: `.context/boat-native-remote-workspaces/checks/milestone-
 - [x] Update the fakes, the recorded events, and the chat and files
       protocol rules. Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
 
+## Milestone 4e: Contracts for the app shell
+
+Depends on: 4a
+
+Give the app shell the contracts and fake replies that its approved
+mockups need. Milestone 6 uses these replies before backend wiring.
+Worker routes stay with the wiring and backend milestones.
+
+Scope update, 6 November 2026: decision 80 returns the app to its own Boat
+account. Drop the Boat key details and removal TODO. No org has a Boat key.
+
+Agent calls, 6 November 2026:
+
+- Keep initials and base image fields optional, so existing records in
+  the Worker and open branches remain valid.
+- Keep `repositoryIds` as GitHub's numeric IDs. The account repository
+  list supplies those IDs before an org exists.
+- Return the base image software with org settings, so both views of the
+  Cloud computer tab can read the checked list.
+
+Merge resolution: `.context/boat-native-remote-workspaces/merge-plan-resolution.diff`.
+
+- [x] Add the org initials and chosen repositories to the create request.
+      Add the repository list that the create screen reads.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
+- [x] Add the base image software list where the Cloud computer tab reads
+      it. Check Boat's docs and record the source and date beside it.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
+- [x] Run the complete gate.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
+
+## Milestone 4f: The app's own Boat account
+
+Depends on: 5, 6, 15a, 15c
+
+Apply decision 80 before the first deployment.
+
+- [ ] Run every cloud computer with the app's one Boat key, from a Worker
+      secret. Remove the encrypted store of org keys and its routes.
+- [ ] Remove the Boat key tab, the key repair of deleted orgs, and the key
+      steps of Get started, in the screens and the mockups.
+- [ ] Remove the Boat account requirement from the marketing site and
+      Get started, so that the app names Boat to no user.
+- [ ] Update the protocol docs, the architecture doc, and the naming rule
+      of `AGENTS.md`.
+- [ ] Run the complete gate.
+
 ## Milestone 5: Bases and workspace lifecycle
 
 Depends on: 4a
@@ -3815,16 +3994,16 @@ Depends on: 4a
 
 Depends on: 4a
 
-- [ ] Add prompt, message during a turn, interrupt, and model and effort
-      endpoints. The Durable Object forwards them to the runner.
-- [ ] Pass the sender's agent login to the runner for each turn, and start
-      the agent again when the sender changes, as decision 49 says.
-- [ ] Keep each session on one agent. A model of the other agent opens a
-      new session with the draft, as decision 51 says.
-- [ ] Map the SDK events to our event type, store them, and push them to
-      the open tabs over a WebSocket.
-- [ ] Test the mapping against recorded SDK events, and the resend after
-      a dropped connection, with the fake runner of Milestone 4a.
+- [x] Add prompt, message during a turn, interrupt, and model and effort
+      endpoints. The Durable Object forwards them to the runner. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Pass the sender's agent login to the runner for each turn, and start
+      the agent again when the sender changes, as decision 49 says. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Keep each session on one agent. A model of the other agent opens a
+      new session with the draft, as decision 51 says. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Map the SDK events to our event type, store them, and push them to
+      the open tabs over a WebSocket. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Test the mapping against recorded SDK events, and the resend after
+      a dropped connection, with the fake runner of Milestone 4a. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
 
 ## Milestone 7s: Runner event limits in the workspace
 
@@ -3884,13 +4063,13 @@ This milestone needs the prerequisites from the user.
 
 Depends on: 4a
 
-- [ ] Keep the file tree and the changes summary that the runner pushes in
+- [x] Keep the file tree and the changes summary that the runner pushes in
       the workspace Durable Object, and serve them to the Files and
-      Changes tabs, also while the cloud computer sleeps.
-- [ ] Read one file with a size limit, and one diff against the default
+      Changes tabs, also while the cloud computer sleeps. Branch: `conductor/boat-native-remote-workspaces-milestone-9`.
+- [x] Read one file with a size limit, and one diff against the default
       branch, through the runner. Use Boat's file read when the runner is
-      not connected.
-- [ ] Test both against the fake runner and the fake Boat server.
+      not connected. Branch: `conductor/boat-native-remote-workspaces-milestone-9`.
+- [x] Test both against the fake runner and the fake Boat server. Branch: `conductor/boat-native-remote-workspaces-milestone-9`.
 
 ## Milestone 10: Files UI
 
@@ -3922,6 +4101,19 @@ Depends on: 4a
 - [ ] Test the proxy with a fake upstream: a revoked or unknown hostname
       gets no answer from the sandbox, and a browser `_port_auth` cookie
       never reaches it.
+
+## Milestone 11a: Preview credential in a cookie
+
+Depends on: 11
+
+Apply decision 83 C.
+
+- [ ] Move the credential of a port preview out of its hostname, into a
+      cookie that the preview domain sets, so that the hostname is no
+      secret.
+- [ ] Match `http` as well as `https` in the redirect rewrite.
+- [ ] Update the port preview rules of the access protocol, and test the
+      cookie, a leaked hostname, and both redirect schemes.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 
@@ -3955,9 +4147,9 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build the pull request bar of the right column, the compact pull
-      request row on phones, and the Checks tab.
-- [ ] Compare it with its mockup.
+- [x] Build the pull request bar of the right column, the compact pull
+      request row on phones, and the Checks tab. Branch: `conductor/boat-native-remote-workspaces-milestone-14`.
+- [x] Compare it with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-14`.
 
 ## Milestone 15: Agent tools
 
@@ -4118,6 +4310,10 @@ This milestone needs the prerequisites from the user.
 - [ ] In a real workspace, run `conducting workspaces list` and an MCP
       `tools/list` request, so that the installed agent tools start on
       the image's Node.
+- [ ] Kill ttyd once, and check that systemd restarts it with the same
+      password, and that the terminal opens again without a new start.
+- [ ] Check which forwarded headers Boat sends to a preview app, such as
+      `X-Forwarded-Proto`, as decision 83 asks.
 
 ## Milestone 17: Verification, commit, review, and pull request
 

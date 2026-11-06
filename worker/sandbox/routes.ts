@@ -8,9 +8,21 @@ export type BoatRoute =
       sandboxId: string
     }
   | { operation: 'getSnapshot' | 'deleteSnapshot'; name: string }
+  | { operation: 'readFile'; sandboxId: string; path: string; maxBytes: number }
+  | { operation: 'fileInfo'; sandboxId: string; path: string }
 
 export function boatRoute(route: BoatRoute): { method: string; path: string } {
   switch (route.operation) {
+    case 'readFile':
+      return {
+        method: 'GET',
+        path: `/sandboxes/${segment(route.sandboxId)}/files?${new URLSearchParams({ path: route.path, encoding: 'base64' })}`,
+      }
+    case 'fileInfo':
+      return {
+        method: 'GET',
+        path: `/sandboxes/${segment(route.sandboxId)}/files/info?${new URLSearchParams({ path: route.path })}`,
+      }
     case 'account':
       return { method: 'GET', path: '/orgs' }
     case 'create':

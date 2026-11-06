@@ -4,6 +4,12 @@
 It supplies fake GitHub and Boat servers, a fixed clock, sign-in, org creation, and cleanup.
 Backend tests use it without an external account or cloud computer.
 
+`FakeBoat.responseFactories` queues one response factory for each request.
+Use a factory to return a fresh streaming body when a test observes cancellation.
+These replies are not cloned or teed.
+Clear unused factories in the test's cleanup hook.
+The harness reset keeps its existing behavior.
+
 The runner boundary uses plain TypeScript types.
 Tests need no Cloudflare Durable Object or real WebSocket.
 
@@ -52,7 +58,7 @@ a rename, a removal, uncommitted and untracked work, a read, a diff, and a size 
 ## Key code
 
 - `harness.ts` owns D1 setup and the HTTP test app.
-- `fake-boat.ts` supplies provider replies.
+- `fake-boat.ts` supplies provider replies and fresh streaming response factories.
 - `fake-github.ts` supplies sign-in replies.
 - `fake-runner.ts` supplies the runner without an agent SDK.
 - `fake-durable-object.ts` supplies the workspace endpoint without Cloudflare.

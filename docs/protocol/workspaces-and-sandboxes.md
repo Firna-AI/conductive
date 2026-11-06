@@ -35,6 +35,8 @@ says.
   build.
 - The install script prepares the image. It is a script, not a terminal
   session, and it runs only in a build.
+- The Cloud computer tab lists the operating system and software that the
+  base image includes before the install script runs.
 - "Build computer" starts a build. A build runs the install script on a
   copy of the image, with every chosen repository cloned (decision 12).
 - A build replaces the org image only when it succeeds. A failed build

@@ -36,6 +36,7 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
     ACCOUNT_PATHS.githubInstallations,
     data.githubInstallations,
   )
+  routes.json('GET', ACCOUNT_PATHS.githubRepositories, data.githubRepositories)
   routes.json('PUT', ACCOUNT_PATHS.defaultModel, {
     choice: data.account.defaultChoice,
   })
@@ -46,12 +47,7 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   }
   routes.json('GET', GET_STARTED_PATH, data.getStarted)
   routes.json('GET', API_PATHS.orgs, data.orgs)
-  routes.json(
-    'POST',
-    API_PATHS.orgs,
-    { org: { id: 'labs', name: 'Acme Labs', role: 'admin' } },
-    201,
-  )
+  routes.json('POST', API_PATHS.orgs, data.createdOrg, 201)
   routes.json('GET', orgPath(id), { org })
   routes.json('PATCH', orgPath(id), { org })
   routes.json('POST', deleteOrgPath(id), {

@@ -1,0 +1,94 @@
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px var(--ui-pad-x) 8px;
+}
+
+.title {
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-strong);
+  line-height: 1.4;
+}
+
+.summary {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.list {
+  margin: 0;
+  padding: 0 8px 16px;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--ui-row-height);
+  padding: 0 8px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+}
+
+/* The colour of a check icon. The icon shape and the words carry the state too. */
+.success,
+.danger,
+.warning,
+.muted {
+  flex-shrink: 0;
+}
+
+.success {
+  color: var(--ui-success);
+}
+
+.danger {
+  color: var(--ui-rose);
+}
+
+.warning {
+  color: var(--ui-warning);
+}
+
+.muted {
+  color: var(--ui-muted);
+}
+
+.name {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.state {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The tab while GitHub has not answered yet. */
+.waiting {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
