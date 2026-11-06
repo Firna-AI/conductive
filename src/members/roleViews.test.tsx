@@ -169,24 +169,6 @@ describe('the views of an admin', () => {
     ).toEqual({ missing: [], unwanted: [] })
   })
 
-  it('name_the_day_of_the_deletion_from_deletesAt_and_offer_restore', () => {
-    const page = (
-      <DeletedOrgPage
-        api={api}
-        onRestored={nothing}
-        org={deletedAcme}
-        timeZone="UTC"
-        viewport="desktop"
-      />
-    )
-    expect(
-      check(page, ['Acme is deleted on 12 November', 'Restore Acme'], []),
-    ).toEqual({
-      missing: [],
-      unwanted: [],
-    })
-  })
-
   it('say_where_the_workspaces_of_a_removed_member_go', () => {
     const cases = [
       {

@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useRef,
   type KeyboardEvent,
@@ -8,6 +9,7 @@ import {
 import type { ButtonHandle } from './actions'
 import { useViewport } from './controls'
 import { MenuPanel, type MenuChoice } from './MenuPanel'
+import { requestClose } from './modal'
 import { PopoverSurface, type MenuAlign } from './PopoverSurface'
 import { Sheet } from './Sheet'
 import styles from './ChoiceMenu.module.css'
@@ -25,9 +27,11 @@ export type MenuTriggerProps = {
  * A button that opens a menu of choices, one of them marked as current.
  * Desktop opens the menu as a popover beside the button: below when it
  * fits, otherwise on the side with more room. A phone opens it as a sheet.
- * Arrow keys move between the choices, and Escape, Tab, or a press outside
- * closes the menu. The parent owns `open`, so it decides whether a choice
- * closes the menu at once or after its change.
+ * Arrow keys move between the choices. Escape, Tab, a press outside, a
+ * press on the button, and the dismissal of the sheet close the menu,
+ * except while a change runs: then the menu refuses each of them and stays
+ * open, so the change's error shows in it. The parent owns `open`, so it
+ * decides whether a choice closes the menu at once or after its change.
  */
 export function ChoiceMenu<T extends string>(props: {
   /** The name of the menu, for a screen reader. */
@@ -40,7 +44,7 @@ export function ChoiceMenu<T extends string>(props: {
   note?: string
   /** A line in the danger colour under the choices, such as a failed change. */
   error?: string
-  /** The choice whose change runs now. The other choices wait. */
+  /** The choice whose change runs now. The other choices wait, and the menu stays open. */
   busy?: T | null
   /** Shows in place of the choices, such as while they load. */
   status?: string
@@ -56,21 +60,28 @@ export function ChoiceMenu<T extends string>(props: {
 }) {
   const { open, onOpenChange } = props
   const mobile = useViewport() === 'mobile'
+  const busy = props.busy !== undefined && props.busy !== null
   const anchor = useRef<HTMLSpanElement>(null)
   const trigger = useRef<ButtonHandle>(null)
   const wasOpen = useRef(false)
+  // Every request to close the desktop menu goes through here. The phone
+  // sheet applies the same rule.
+  const askToClose = useCallback(
+    () => requestClose(busy, () => onOpenChange(false)),
+    [busy, onOpenChange],
+  )
 
   useEffect(() => {
     if (!open || mobile) return
     function onPointerDown(event: PointerEvent) {
       const target = event.target
       if (target instanceof Node && anchor.current?.contains(target)) return
-      onOpenChange(false)
+      askToClose()
     }
     document.addEventListener('pointerdown', onPointerDown, true)
     return () =>
       document.removeEventListener('pointerdown', onPointerDown, true)
-  }, [open, mobile, onOpenChange])
+  }, [open, mobile, askToClose])
 
   // A choice that closes the menu gives the focus back to the button.
   useEffect(() => {
@@ -93,9 +104,9 @@ export function ChoiceMenu<T extends string>(props: {
       onOpenChange(true)
     } else if (open && event.key === 'Escape') {
       event.preventDefault()
-      onOpenChange(false)
+      askToClose()
     } else if (open && event.key === 'Tab') {
-      onOpenChange(false)
+      askToClose()
     }
   }
 
@@ -122,7 +133,10 @@ export function ChoiceMenu<T extends string>(props: {
         {props.trigger({
           buttonRef: trigger,
           expanded: open,
-          onPress: () => onOpenChange(!open),
+          onPress: () => {
+            if (open) askToClose()
+            else onOpenChange(true)
+          },
         })}
         {open && !mobile ? (
           <PopoverSurface align={props.align} anchor={anchor} wide={props.wide}>
@@ -131,7 +145,11 @@ export function ChoiceMenu<T extends string>(props: {
         ) : null}
       </span>
       {open && mobile ? (
-        <Sheet onDismiss={() => onOpenChange(false)} title={props.sheetTitle}>
+        <Sheet
+          busy={busy}
+          onDismiss={() => onOpenChange(false)}
+          title={props.sheetTitle}
+        >
           <div className={styles.sheet}>{panel}</div>
         </Sheet>
       ) : null}

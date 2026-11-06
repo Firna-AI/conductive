@@ -10,7 +10,8 @@ import { Notice } from './ui/Notice'
 /**
  * An admin confirms Delete org by typing the name of the org. The dialog
  * says what happens at once, and the date when everything is deleted.
- * Delete org stays disabled until the typed name matches.
+ * Delete org stays disabled until the typed name matches. While the
+ * deletion runs, the question stays open.
  */
 export function DeleteOrgDialog(props: {
   orgName: string
@@ -31,20 +32,18 @@ export function DeleteOrgDialog(props: {
   }
   return (
     <ConfirmDialog
-      actions={
-        <>
-          <ActionButton onPress={props.onCancel}>Cancel</ActionButton>
-          <ActionButton
-            busy={props.busy}
-            disabled={!matches}
-            icon={Trash2}
-            onPress={confirm}
-            tone="danger"
-          >
-            Delete org
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={props.busy}
+          disabled={!matches}
+          icon={Trash2}
+          onPress={confirm}
+          tone="danger"
+        >
+          Delete org
+        </ActionButton>
       }
+      busy={props.busy}
       onCancel={props.onCancel}
       title={`Delete ${props.orgName}?`}
     >

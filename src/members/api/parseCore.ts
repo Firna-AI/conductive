@@ -97,6 +97,8 @@ export function parseOrg(value: unknown): OrgSummary {
     name: text(source, 'name'),
     role: oneOf(source, 'role', roles),
   }
+  // Older replies omit the initials, so the org keeps them only when given.
+  if (typeof source.initials === 'string') org.initials = source.initials
   if (source.deletion === undefined || source.deletion === null) return org
   const deletion = nested(source, 'deletion')
   return {

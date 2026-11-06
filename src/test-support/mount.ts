@@ -1,6 +1,7 @@
 import { act, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach } from 'vitest'
+import { accessibleName, whyInoperable } from './dom-queries'
 
 // React runs `act` without warnings only when this flag is set.
 Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true)
@@ -15,9 +16,11 @@ export type Mounted = {
 }
 
 const mounted = new Set<Mounted>()
+const restores: (() => void)[] = []
 
 afterEach(async () => {
   for (const view of [...mounted]) await view.unmount()
+  for (const restore of restores.splice(0)) restore()
 })
 
 /**
@@ -99,9 +102,19 @@ export async function waitFor<T>(
   }
 }
 
+/** Fails with a named error when a person cannot use the element now. */
+function mustOperate(element: Element, action: string): void {
+  const why = whyInoperable(element)
+  if (why === null) return
+  const name = accessibleName(element)
+  const role = element.getAttribute('role') ?? element.tagName.toLowerCase()
+  throw new Error(`Cannot ${action} the ${role} "${name}": ${why}`)
+}
+
 /** Presses a control as a pointer user does: a DOM click, inside `act`. */
 export async function press(element: Element): Promise<void> {
   if (!(element instanceof HTMLElement)) throw new Error('No control to press')
+  mustOperate(element, 'press')
   await act(async () => element.click())
 }
 
@@ -119,6 +132,7 @@ export async function typeText(field: Element, text: string): Promise<void> {
   if (!(field instanceof HTMLElement) || !setValue) {
     throw new Error('No text field to type into')
   }
+  mustOperate(field, 'type into')
   await act(async () => {
     field.focus()
     setValue.call(field, text)
@@ -130,6 +144,7 @@ export async function typeText(field: Element, text: string): Promise<void> {
 export async function pressKey(key: string): Promise<void> {
   const target = document.activeElement
   if (!target) throw new Error('No element has the focus')
+  mustOperate(target, `press ${key} on`)
   await act(async () => {
     for (const type of ['keydown', 'keyup']) {
       const event = new KeyboardEvent(type, {
@@ -140,4 +155,51 @@ export async function pressKey(key: string): Promise<void> {
       target.dispatchEvent(event)
     }
   })
+}
+
+/**
+ * Sends a close request to an open dialog, as a browser does when a person
+ * presses Escape: a `cancel` event, then a close unless a listener prevents
+ * it. Without a press since the last request, such as for a second Escape,
+ * a browser sends a `cancel` that no listener can prevent, so the dialog
+ * closes. Pass `cancelable: false` for that. happy-dom sends no close
+ * requests of its own.
+ */
+export async function requestDialogClose(
+  dialog: HTMLDialogElement,
+  options: { cancelable: boolean } = { cancelable: true },
+): Promise<void> {
+  if (!dialog.open) throw new Error('The dialog is not open')
+  await act(async () => {
+    const cancel = new Event('cancel', { cancelable: options.cancelable })
+    dialog.dispatchEvent(cancel)
+    if (!cancel.defaultPrevented) dialog.close()
+  })
+}
+
+/**
+ * Holds the animation frames of the page until the test ends: a callback
+ * of `requestAnimationFrame` never runs. An endless animation, such as the
+ * spinner of `@firna/ui`, then stays on its first frame and does not keep
+ * `act` from settling. Timers, replies, and `waitFor` go on.
+ */
+export function holdAnimationFrames(): void {
+  let frames = 0
+  const standIns = {
+    // The frame never comes, so its callback never runs.
+    requestAnimationFrame: () => ++frames,
+    cancelAnimationFrame: () => undefined,
+  }
+  for (const [name, value] of Object.entries(standIns)) {
+    const saved = Object.getOwnPropertyDescriptor(globalThis, name)
+    Object.defineProperty(globalThis, name, {
+      configurable: true,
+      writable: true,
+      value,
+    })
+    restores.push(() => {
+      if (saved) Object.defineProperty(globalThis, name, saved)
+      else Reflect.deleteProperty(globalThis, name)
+    })
+  }
 }

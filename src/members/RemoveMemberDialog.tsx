@@ -15,8 +15,9 @@ function movedWorkspaces(first: string, owned: number): string {
 /**
  * An admin confirms that a member leaves the org. The member's workspaces
  * move to the admin who removes them, so no workspace is left without an
- * owner (decision 39). A failed removal shows its reason, and the admin can
- * press Remove member again.
+ * owner (decision 39). While the removal runs, the question stays open. A
+ * failed removal shows its reason, and the admin can press Remove member
+ * again.
  */
 export function RemoveMemberDialog(props: {
   member: OrgMember
@@ -33,18 +34,12 @@ export function RemoveMemberDialog(props: {
   const first = firstName(user)
   return (
     <ConfirmDialog
-      actions={
-        <>
-          <ActionButton onPress={props.onCancel}>Cancel</ActionButton>
-          <ActionButton
-            busy={props.busy}
-            onPress={props.onConfirm}
-            tone="danger"
-          >
-            Remove member
-          </ActionButton>
-        </>
+      action={
+        <ActionButton busy={props.busy} onPress={props.onConfirm} tone="danger">
+          Remove member
+        </ActionButton>
       }
+      busy={props.busy}
       onCancel={props.onCancel}
       title={`Remove ${name} from ${props.orgName}?`}
     >

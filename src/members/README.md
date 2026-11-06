@@ -81,8 +81,9 @@ with the message of the API.
   times of the builds, and the date in the Delete org question.
 - `onDeleted` gets the org with `deletion.deletesAt`. The shell keeps the
   org faded in the rail of its admins and opens `DeletedOrgPage`.
-- `onRestored` gets the active org. The shell shows it as an active org
-  again. Its workspaces start only when they open.
+- `onRestored` gets the active org of the API's answer, with its `initials`
+  when the answer has them. The shell shows it as an active org again. Its
+  workspaces start only when they open.
 - `onReassigned` gets the workspace of the API's answer. The header shows its
   new owner. The cloud computer keeps running.
 - `onMemberRemoved` tells the shell that the member's workspaces now belong
@@ -93,6 +94,11 @@ with the message of the API.
   with more room, and it gets shorter to fit. It follows its button when the
   page scrolls or the window changes size. In a long menu, only the choices
   scroll. The heading, an error, and the note stay in view.
+- While a change runs, its question or menu stays open. Cancel, Escape, Tab,
+  a press outside, on the dimmed page, or on the menu's button, and a close
+  by the browser change nothing. A failed change shows its error in the open
+  question or menu. After a change that worked, the component closes it and
+  calls its callback.
 
 ### Live builds
 
@@ -156,10 +162,19 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 - happy-dom has no Popover API. So the mounted owner picker tests use the
   phone sheet, which opens with `showModal()`. Check the desktop popover, its
   placement, and its scroll in a real browser, with the `menu-lab` view.
-- The spinner of `@firna/ui` runs a continuous animation, which keeps an
-  async `act` from settling in happy-dom. So the mounted tests use a
-  finished or failed build. A running build or a busy choice needs a
-  controlled animation clock or a real browser.
+- The finders skip content that is not shown, such as the content of a
+  closed dialog. A press needs a control that a person can use. So a test
+  fails when a question or a sheet does not open.
+- A busy test holds its reply with `deferred()` and the animation frames
+  with `holdAnimationFrames()`. The spinner of `@firna/ui` runs a continuous
+  animation, which otherwise keeps an async `act` from settling in
+  happy-dom. With the frames held, the real spinner stays on its first
+  frame.
+- happy-dom sends no close requests of its own. `closeRequests.ts` lists
+  each way to ask a question or a sheet to close, as a browser sends it.
+- Check a busy desktop menu in a real browser, because happy-dom cannot open
+  it. On the dev page, `delay` holds each reply and `fail` with `once=1`
+  makes the first change fail.
 
 ## Limits
 

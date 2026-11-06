@@ -10,7 +10,9 @@ import {
 import type { Workspace } from '../shared/workspaces'
 import {
   accessibleName,
+  byDialog,
   byRole,
+  isShown,
   queryByRole,
 } from '../test-support/dom-queries'
 import { FakeApiServer } from '../test-support/fake-api'
@@ -18,12 +20,14 @@ import { coreFixtures, FAKE_IDS } from '../test-support/fixtures/core'
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import {
   deferred,
+  holdAnimationFrames,
   mount,
   MOUNTED_TEST_TIMEOUT,
   press,
   waitFor,
 } from '../test-support/mount'
 import { createMembersApi, type FetchLike, type MembersApi } from './api/client'
+import { closeRequests } from './closeRequests'
 import { OwnerPicker } from './OwnerPicker'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -33,11 +37,11 @@ const workspace = workspaceFixtures().detail.workspace
 const [cal, priya] = coreFixtures().members.members.map((member) => member.user)
 const keep = () => undefined
 
+/** The names of the choices that a person sees. */
 function choiceNames(): string[] {
-  return Array.from(
-    document.querySelectorAll('[role="menuitemradio"]'),
-    accessibleName,
-  )
+  return Array.from(document.querySelectorAll('[role="menuitemradio"]'))
+    .filter(isShown)
+    .map(accessibleName)
 }
 
 describe('OwnerPicker on a phone', () => {
@@ -137,5 +141,65 @@ describe('OwnerPicker on a phone', () => {
       'Futex members',
     )
     expect(choiceNames()).toEqual(['Cal', 'Priya Raman', 'Ana Lima'])
+  })
+
+  it('keeps_the_sheet_open_while_the_change_runs_and_shows_its_failure', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const reply = deferred()
+    const held: FetchLike = async (input, init) => {
+      if (init?.method === 'PUT') await reply.promise
+      return server.fetch(input, init)
+    }
+    const reports: Workspace[] = []
+    await mount(
+      <OwnerPicker
+        api={createMembersApi(held)}
+        canReassign
+        onReassigned={(next) => reports.push(next)}
+        viewport="mobile"
+        workspace={workspace}
+      />,
+    )
+    await press(byRole('button', 'Owner: Cal'))
+    await press(
+      await waitFor(
+        () => queryByRole('menuitemradio', 'Priya Raman'),
+        'the choice of Priya Raman',
+      ),
+    )
+    const sheet = byDialog(workspace.name)
+    const choice = byRole('menuitemradio', 'Priya Raman', sheet)
+    expect(choice.getAttribute('aria-busy')).toBe('true')
+    byRole('progressbar', 'Loading', choice)
+    for (const request of closeRequests(sheet, { cancelButton: false })) {
+      await request.send()
+      expect({ how: request.how, open: sheet.open }).toEqual({
+        how: request.how,
+        open: true,
+      })
+    }
+    const failure = {
+      code: 'internal_error',
+      message: 'The request failed. Try again.',
+    }
+    server.json(
+      'PUT',
+      workspaceOwnerPath(org, workspace.id),
+      { error: failure },
+      500,
+    )
+    reply.resolve()
+    await waitFor(
+      () =>
+        queryByRole(
+          'alert',
+          'The owner did not change. The request failed. Try again.',
+          sheet,
+        ),
+      'the failure in the open sheet',
+    )
+    expect(sheet.open).toBe(true)
+    expect(reports).toEqual([])
   })
 })
