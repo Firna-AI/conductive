@@ -1,0 +1,145 @@
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.doc {
+  max-width: 640px;
+  padding: 18px var(--ui-pad-x) 32px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+  line-height: var(--ui-leading-chat);
+  overflow-wrap: anywhere;
+}
+
+.doc h1 {
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ui-border);
+  color: var(--ui-ink);
+  font-size: var(--ui-text-xl);
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: var(--ui-tracking-heading);
+  line-height: 1.25;
+}
+
+.doc h2,
+.doc h3,
+.doc h4,
+.doc h5,
+.doc h6 {
+  margin: 20px 0 6px;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-lg);
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: var(--ui-tracking-heading);
+  line-height: 1.35;
+}
+
+.doc h3,
+.doc h4,
+.doc h5,
+.doc h6 {
+  font-size: var(--ui-text-md);
+}
+
+.doc p,
+.doc ol,
+.doc ul,
+.doc blockquote,
+.tableScroll {
+  margin: 0 0 10px;
+}
+
+.doc ol,
+.doc ul {
+  padding-left: 20px;
+}
+
+.doc li + li {
+  margin-top: 3px;
+}
+
+.doc li > ol,
+.doc li > ul {
+  margin: 3px 0 0;
+}
+
+.doc blockquote {
+  padding: 0 0 0 12px;
+  border-left: 2px solid var(--ui-border2);
+  color: var(--ui-muted);
+}
+
+.doc hr {
+  margin: 16px 0;
+  border: 0;
+  border-top: 1px solid var(--ui-border);
+}
+
+.doc a {
+  color: var(--ui-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.doc strong {
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-strong);
+}
+
+.task {
+  list-style: none;
+}
+
+.task input {
+  margin: 0 6px 0 -18px;
+  vertical-align: -1px;
+}
+
+.block {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  line-height: 1.6;
+  overflow-wrap: normal;
+}
+
+.code {
+  padding: 1px 5px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: 0.86em;
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.tableScroll table {
+  border-collapse: collapse;
+  font-size: var(--ui-text-sm);
+}
+
+.tableScroll th,
+.tableScroll td {
+  padding: 5px 10px;
+  border: 1px solid var(--ui-border);
+  text-align: left;
+}
+
+.tableScroll th {
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-strong);
+}
