@@ -3,12 +3,13 @@ import { createHarness, TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
 import type { ProxySocket, SocketRuntime } from './types'
 
 export class TestSocket implements ProxySocket {
+  binaryType: 'blob' | 'arraybuffer' = 'blob'
   accepted = false
   sent: (string | ArrayBuffer)[] = []
   closed: { code?: number; reason?: string } | null = null
-  private messages: ((event: { data: string | ArrayBuffer }) => void)[] = []
-  private endings: (() => void)[] = []
-  private receive: ((data: string | ArrayBuffer) => void) | null = null
+  private messages: ((event: unknown) => void)[] = []
+  private endings: ((event: unknown) => void)[] = []
+  private receive: ((data: string | ArrayBuffer | null) => void) | null = null
   private ended: (() => void) | null = null
   private observers: (() => void)[] = []
   readonly end = new Promise<void>((resolve) => {
@@ -37,7 +38,11 @@ export class TestSocket implements ProxySocket {
   }
 
   nextMessage() {
-    return new Promise<string | ArrayBuffer>((resolve) => {
+    return new Promise<string | ArrayBuffer | null>((resolve) => {
+      if (this.closed) {
+        resolve(null)
+        return
+      }
       this.receive = resolve
     })
   }
@@ -45,20 +50,27 @@ export class TestSocket implements ProxySocket {
   close(code?: number, reason?: string) {
     if (this.closed) return
     this.closed = { code, reason }
+    this.receive?.(null)
+    this.receive = null
     this.ended?.()
-    for (const listener of this.endings) listener()
+    for (const listener of this.endings)
+      listener({ code: code ?? 1005, reason: reason ?? '' })
   }
 
   addEventListener(
     type: 'message' | 'close' | 'error',
-    listener: ((event: { data: string | ArrayBuffer }) => void) | (() => void),
+    listener: (event: unknown) => void,
   ) {
     if (type === 'message') this.messages.push(listener)
-    else this.endings.push(() => listener({ data: '' }))
+    else if (type === 'close') this.endings.push(listener)
   }
 
   emit(data: string | ArrayBuffer) {
-    for (const listener of this.messages) listener({ data })
+    const delivered =
+      typeof data !== 'string' && this.binaryType === 'blob'
+        ? new Blob([data])
+        : data
+    for (const listener of this.messages) listener({ data: delivered })
   }
 }
 

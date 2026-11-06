@@ -59,7 +59,7 @@ export function createTerminalHandler(
         if (tail === null) {
           const stopped = ['stopped', 'error'].includes(target.state)
           const ready =
-            ['ready', 'working', 'unread'].includes(target.state) &&
+            ['ready', 'working', 'unread', 'input'].includes(target.state) &&
             target.sandboxId &&
             password
           const response: TerminalResponse = ready

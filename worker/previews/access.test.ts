@@ -3,8 +3,10 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import { desktopPath } from '../../src/shared/desktop'
 import { previewsPath } from '../../src/shared/previews'
 import { terminalPaths } from '../../src/shared/terminal'
+import type { PreviewResponse } from '../../src/shared/previews'
 import { createDesktopHandler } from '../desktop/handler'
 import { createTerminalHandler } from '../terminal/handler'
+import { startWorkspaceTerminal } from '../terminal/service'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { createPreviewHandler } from './handler'
 import { createToolsHarness, type ToolsHarness } from './test-support'
@@ -111,4 +113,56 @@ it('checks current membership and workspace ownership before each tool upstream 
   )
   expect(denied.status).toBe(404)
   expect(harness.requests).toHaveLength(0)
+})
+
+it('keeps the terminal, port preview, and desktop available while a workspace needs input', async () => {
+  const seed = await harness.seed()
+  await startWorkspaceTerminal(
+    harness.env,
+    seed.orgId,
+    seed.workspaceId,
+    harness.dependencies,
+  )
+  await harness.env.DB.prepare(
+    "UPDATE workspaces SET state = 'input' WHERE id = ?",
+  )
+    .bind(seed.workspaceId)
+    .run()
+  const terminal = createTerminalHandler(harness.env, harness.dependencies)
+  const status = await terminal.fetch(
+    seed.request(terminalPaths.connection(seed.orgId, seed.workspaceId)),
+  )
+  expect(await status.json()).toEqual({
+    state: 'ready',
+    protocol: 'tty',
+    socketPath: terminalPaths.socket(seed.orgId, seed.workspaceId),
+  })
+  const preview = createPreviewHandler(harness.env, harness.dependencies)
+  const opened = await preview.fetch(
+    seed.request(previewsPath(seed.orgId, seed.workspaceId), {
+      method: 'POST',
+      body: '{"port":3000}',
+    }),
+  )
+  expect(opened.status).toBe(201)
+  const body: PreviewResponse = await opened.json()
+  const page = await preview.proxy(new Request(body.preview.url))
+  expect(page.status).toBe(200)
+  expect(await page.text()).toBe('preview content')
+  const desktop = createDesktopHandler(harness.env, harness.dependencies)
+  expect(
+    (
+      await desktop.fetch(
+        seed.request(desktopPath(seed.orgId, seed.workspaceId)),
+      )
+    ).status,
+  ).toBe(200)
+  const socket = await terminal.fetch(
+    seed.request(terminalPaths.socket(seed.orgId, seed.workspaceId), {
+      headers: { Upgrade: 'websocket', 'Sec-WebSocket-Protocol': 'tty' },
+    }),
+  )
+  expect(socket.status).toBe(101)
+  harness.serverSockets[0].close(1000, 'finished')
+  await harness.upstreamSockets[0].end
 })

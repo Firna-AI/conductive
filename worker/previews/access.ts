@@ -25,7 +25,7 @@ export async function workspaceTarget(
 export function requireRunning(target: WorkspaceTarget): void {
   if (
     !target.sandboxId ||
-    !['ready', 'working', 'unread'].includes(target.state)
+    !['ready', 'working', 'unread', 'input'].includes(target.state)
   ) {
     throw new HttpError(
       409,

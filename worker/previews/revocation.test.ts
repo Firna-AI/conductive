@@ -105,7 +105,7 @@ it('cancels local HTTP streams on preview close, workspace revocation, and expir
       await setup.handler.expire()
     }
     expect(source.cancelled, action).toBe(true)
-    expect(await reader?.read()).toEqual({ done: true, value: undefined })
+    await expect(reader?.read()).rejects.toMatchObject({ name: 'AbortError' })
   }
 })
 
@@ -126,33 +126,48 @@ it('blocks HTTP response data revoked by another handler after the stream opened
   await other.revokeWorkspace(setup.workspaceId)
   const after = reader?.read()
   source.send('sensitive-after-close')
-  expect(await after).toEqual({ done: true, value: undefined })
+  await expect(after).rejects.toMatchObject({ name: 'AbortError' })
   expect(source.cancelled).toBe(true)
 })
 
-it('blocks streamed request data after another handler revokes the preview', async () => {
+it('rejects streamed uploads after workspace revocation or stop', async () => {
   const setup = await openPreview(harness)
-  const source = bodySource()
-  const attached = barrier<ReadableStreamDefaultReader<Uint8Array>>()
-  const base = harness.dependencies.fetch
-  harness.dependencies.fetch = async (request) => {
-    if (new URL(request.url).hostname === 'boat.dev') return base(request)
-    const reader = request.body?.getReader()
-    if (!reader) throw new Error('Missing request body')
-    attached.resolve(reader)
-    return new Response('ok')
+  for (const action of ['revoke', 'stop']) {
+    const opened = await setup.handler.fetch(
+      setup.request(previewsPath(setup.orgId, setup.workspaceId), {
+        method: 'POST',
+        body: '{"port":3000}',
+      }),
+    )
+    const { preview }: PreviewResponse = await opened.json()
+    const source = bodySource()
+    const attached = barrier<ReadableStreamDefaultReader<Uint8Array>>()
+    const base = harness.dependencies.fetch
+    harness.dependencies.fetch = async (request) => {
+      if (new URL(request.url).hostname === 'boat.dev') return base(request)
+      const reader = request.body?.getReader()
+      if (!reader) throw new Error('Missing request body')
+      attached.resolve(reader)
+      return new Response('ok')
+    }
+    const init = { method: 'POST', body: source.stream, duplex: 'half' }
+    const pending = setup.handler.proxy(new Request(preview.url, init))
+    const reader = await attached.promise
+    const before = reader.read()
+    source.send('before')
+    expect(new TextDecoder().decode((await before).value)).toBe('before')
+    await pending
+    const other = createPreviewHandler(harness.env, harness.dependencies)
+    if (action === 'revoke') await other.revokeWorkspace(setup.workspaceId)
+    else
+      await harness.env.DB.prepare(
+        "UPDATE workspaces SET state = 'stopped' WHERE id = ?",
+      )
+        .bind(setup.workspaceId)
+        .run()
+    const after = reader.read()
+    source.send('sensitive-after-close')
+    await expect(after).rejects.toMatchObject({ name: 'AbortError' })
+    expect(source.cancelled).toBe(true)
   }
-  const init = { method: 'POST', body: source.stream, duplex: 'half' }
-  const pending = setup.handler.proxy(new Request(setup.preview.url, init))
-  const reader = await attached.promise
-  const before = reader.read()
-  source.send('before')
-  expect(new TextDecoder().decode((await before).value)).toBe('before')
-  await pending
-  const other = createPreviewHandler(harness.env, harness.dependencies)
-  await other.revokeWorkspace(setup.workspaceId)
-  const after = reader.read()
-  source.send('sensitive-after-close')
-  expect(await after).toEqual({ done: true, value: undefined })
-  expect(source.cancelled).toBe(true)
 })

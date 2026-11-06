@@ -2,14 +2,14 @@ import type { WorkspaceState } from '../../src/shared/workspaces'
 import type { HttpFetch } from '../env'
 
 export interface ProxySocket {
+  binaryType: 'blob' | 'arraybuffer'
   accept(): void
   send(data: string | ArrayBuffer): void
   close(code?: number, reason?: string): void
   addEventListener(
-    type: 'message',
-    listener: (event: { data: string | ArrayBuffer }) => void,
+    type: 'message' | 'close' | 'error',
+    listener: (event: unknown) => void,
   ): void
-  addEventListener(type: 'close' | 'error', listener: () => void): void
 }
 
 export interface SocketRuntime {

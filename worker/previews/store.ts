@@ -33,7 +33,7 @@ export async function insertPreview(
      SELECT ?, ?, w.org_id, w.id, ?, ?, ?, ?, w.sandbox_id FROM workspaces w
      JOIN orgs o ON o.id = w.org_id JOIN org_members m ON m.org_id = o.id
      WHERE w.id = ? AND w.org_id = ? AND w.sandbox_id = ? AND w.archived_at IS NULL
-     AND w.state IN ('ready', 'working', 'unread') AND o.deleted_at IS NULL AND m.user_id = ?`,
+     AND w.state IN ('ready', 'working', 'unread', 'input') AND o.deleted_at IS NULL AND m.user_id = ?`,
     )
     .bind(
       row.id,
@@ -81,7 +81,7 @@ export function activePreview(
      JOIN orgs o ON o.id = p.org_id
      WHERE p.hostname = ? AND p.revoked_at IS NULL AND p.expires_at > ?
      AND w.archived_at IS NULL AND w.sandbox_id IS NOT NULL
-     AND w.state IN ('ready', 'working', 'unread') AND o.deleted_at IS NULL`,
+     AND w.state IN ('ready', 'working', 'unread', 'input') AND o.deleted_at IS NULL`,
     )
     .bind(hostname, now)
     .first<PreviewRecord>()

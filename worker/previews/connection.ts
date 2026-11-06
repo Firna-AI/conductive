@@ -65,7 +65,9 @@ export class PreviewConnection {
     }
     const cancel = () => {
       if (finished) return
-      controller?.close()
+      controller?.error(
+        new DOMException('The preview connection closed.', 'AbortError'),
+      )
       void reader.cancel().catch(() => {})
       finish()
     }

@@ -61,7 +61,7 @@ specific to the preview hostname. The proxy follows no upstream redirect.
 - [store.ts](store.ts) and [workspace-store.ts](workspace-store.ts) hold the D1 queries.
 - [provider.ts](provider.ts) exports the typed `WorkspaceTools` adapter.
 - [headers.ts](headers.ts) builds private upstream requests and safe responses.
-- [socket.ts](socket.ts) preserves socket frame order across authorization checks.
+- [socket.ts](socket.ts) selects binary frames and drains queued data before forwarding a normal close with its code and reason.
 - [types.ts](types.ts) defines the fetch, activity, and socket boundaries.
 
 The adapter adds only the fixed `host` and `desktop` provider routes.
