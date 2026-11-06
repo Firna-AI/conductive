@@ -108,3 +108,69 @@ it('shows quotes nested deeper than the limit as text, without a stack overflow'
   expect(html).toContain('&gt;&gt;&gt;')
   expect(html).toContain(' deep</p>')
 })
+
+/** The header cells, body rows, and body cells of each rendered table. */
+function tableSizes(html: string) {
+  return html
+    .split('<table>')
+    .slice(1)
+    .map((table) => {
+      const head = table.slice(0, table.indexOf('</thead>'))
+      const body = table.slice(
+        table.indexOf('<tbody>'),
+        table.indexOf('</tbody>'),
+      )
+      return {
+        head: head.match(/<th[ >]/g)?.length ?? 0,
+        rows: body.match(/<tr>/g)?.length ?? 0,
+        cells: body.match(/<td[ >]/g)?.length ?? 0,
+      }
+    })
+}
+
+/** A render without its class names, which the CSS modules hash. */
+function bare(html: string): string {
+  return html.replace(/ class="[^"]*"/g, '')
+}
+
+/**
+ * 1,202 bytes: 200 header cells, then 200 rows of one empty cell. Each row
+ * gets 199 empty cells, so the table adds 39,800.
+ */
+const sparseTable = `${'a|'.repeat(200)}\n${'-|'.repeat(200)}\n${'|\n'.repeat(200)}`
+
+it('fills the short rows of all tables of one file, also in a list and a quote, up to 65,536 empty cells, then shows the rest of the file as text', () => {
+  // The second copy is in a quote in the first item of a list.
+  const inItem = sparseTable
+    .trimEnd()
+    .split('\n')
+    .map((line, index) => `${index === 0 ? '- ' : '  '}> ${line}`)
+    .join('\n')
+  const html = render(`${sparseTable}\n${inItem}\n- after\n`)
+  // 25,736 empty cells remain for the quoted table: 129 rows of 199.
+  expect(tableSizes(html)).toEqual([
+    { head: 200, rows: 200, cells: 40_000 },
+    { head: 200, rows: 129, cells: 25_800 },
+  ])
+  // The tail starts at the 130th row, and holds the later item.
+  expect(html.match(/<li>/g)).toHaveLength(1)
+  expect(bare(html)).toContain(
+    `</ul><p>${'  &gt; |\n'.repeat(71)}- after</p></article>`,
+  )
+})
+
+it('allows exactly 65,536 empty cells in one file, then shows the rest of the file as text, with no Markdown', () => {
+  // Each row of one cell under 1,025 header cells adds 1,024 empty cells.
+  const wide = `${'a|'.repeat(1_025)}\n${'-|'.repeat(1_025)}\n${'|\n'.repeat(65)}`
+  const later = '| x | y |\n| - | - |\n| 1 | 2 |\n'
+  const html = render(`${wide}\n${later}\n# After **this**\n`)
+  expect(tableSizes(html)).toEqual([{ head: 1_025, rows: 64, cells: 65_600 }])
+  expect(html).not.toContain('<h1>')
+  expect(bare(html)).toContain(
+    '</table></div><p>|\n\n| x | y |\n| - | - |\n| 1 | 2 |\n\n# After **this**</p></article>',
+  )
+  // Each file starts with the whole count.
+  expect(tableSizes(render(`${later}| 3 |\n`))).toEqual([
+    { head: 2, rows: 2, cells: 4 },
+  ])
+})

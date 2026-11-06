@@ -112,6 +112,11 @@
   overflow-wrap: normal;
 }
 
+/* The rest of a file as typed, after a table passed its cell budget. */
+.literal {
+  white-space: pre-wrap;
+}
+
 .code {
   padding: 1px 5px;
   border: 1px solid var(--ui-border);

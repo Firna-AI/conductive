@@ -7,7 +7,7 @@ import {
   openingFence,
 } from './markdown-lines'
 import { listMarker, parseList } from './markdown-lists'
-import { parseTable, tableStarts } from './markdown-tables'
+import { parseTable, TableBudget, tableStarts } from './markdown-tables'
 import { takeDefinitions } from './markdown-text'
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
@@ -31,6 +31,8 @@ export type MdBlock<Inline = string> =
     }
   | { kind: 'rule' }
   | { kind: 'table'; align: CellAlign[]; head: Inline[]; rows: Inline[][] }
+  /** The rest of the file as typed, after a row passed the table budget. */
+  | { kind: 'literal'; text: string }
 
 export interface MdListItem<Inline = string> {
   /** A task item is done or not done. Null for other items. */
@@ -82,24 +84,44 @@ const maxDepth = 16
 class BlockParser {
   readonly definitions = new Map<string, string>()
   private depth = 0
+  /** The empty table cells of the file, shared by quotes and lists. */
+  private readonly tables = new TableBudget()
+  /** The line of the file where the lines of the current parse start. */
+  private origin = 0
+  private tailLine: number | null = null
 
-  /** Parses the content of a quote or a list item, one level deeper. */
-  nested = (lines: readonly string[]): MdBlock[] => {
+  /**
+   * The line of the file where the text tail starts, or null. A row that
+   * passes the table budget starts it, and the parse stops there.
+   */
+  get tail(): number | null {
+    return this.tailLine
+  }
+
+  /**
+   * Parses the content of a quote or a list item, one level deeper. Each
+   * line of the content comes from one line of the parent, from `start`.
+   */
+  nested = (lines: readonly string[], start: number): MdBlock[] => {
+    if (this.tailLine !== null) return []
     if (this.depth + 1 >= maxDepth) {
       return [{ kind: 'paragraph', text: lines.join('\n').trim() }]
     }
+    const origin = this.origin
     this.depth += 1
+    this.origin = origin + start
     try {
       return this.parse(lines)
     } finally {
       this.depth -= 1
+      this.origin = origin
     }
   }
 
   parse = (lines: readonly string[]): MdBlock[] => {
     const blocks: MdBlock[] = []
     let index = 0
-    while (index < lines.length) {
+    while (index < lines.length && this.tailLine === null) {
       const line = lines[index]
       if (isBlank(line)) {
         index += 1
@@ -140,13 +162,20 @@ class BlockParser {
     if (quoteLine.test(line)) return this.quote(lines, index, blocks)
     const marker = listMarker(line)
     if (marker) {
-      const list = parseList(lines, index, marker, startsBlock, this.nested)
+      let kept = 0
+      const list = parseList(lines, index, marker, startsBlock, (item, at) => {
+        if (this.tailLine === null) kept += 1
+        return this.nested(item, at)
+      })
+      // The items after the start of the tail are in the tail.
+      if (list.block.kind === 'list') list.block.items.splice(kept)
       blocks.push(list.block)
       return list.next
     }
     if (tableStarts(lines, index)) {
-      const table = parseTable(lines, index)
+      const table = parseTable(lines, index, this.tables)
       blocks.push(table.block)
+      if (!this.tables.open) this.tailLine = this.origin + table.next
       return table.next
     }
     return this.paragraph(lines, index, blocks)
@@ -179,7 +208,7 @@ class BlockParser {
         inner.push(text)
       } else break
     }
-    blocks.push({ kind: 'quote', blocks: this.nested(inner) })
+    blocks.push({ kind: 'quote', blocks: this.nested(inner, index) })
     return next
   }
 
@@ -214,10 +243,16 @@ class BlockParser {
 /**
  * Parses Markdown into blocks, and collects the link reference
  * definitions of the whole file. The parser never runs or keeps HTML.
+ * After a row that passes the table budget, the rest of the file is one
+ * literal block, as typed.
  */
 export function parseBlocks(source: string): MarkdownBlocks {
-  const lines = source.split(/\r\n|\n|\r/).map(expandTabs)
+  const lines = source.split(/\r\n|\n|\r/)
   const parser = new BlockParser()
-  const blocks = parser.parse(lines)
+  const blocks = parser.parse(lines.map(expandTabs))
+  if (parser.tail !== null) {
+    const text = lines.slice(parser.tail).join('\n').trimEnd()
+    blocks.push({ kind: 'literal', text })
+  }
   return { blocks, definitions: parser.definitions }
 }

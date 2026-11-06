@@ -44,6 +44,35 @@ function delimiterRow(line: string): CellAlign[] | null {
   return align
 }
 
+/** The empty cells that the tables of one file may add to fill short rows. */
+const maxAddedCells = 65_536
+
+/**
+ * The empty cells that the tables of one file may still add. Every table
+ * of the file takes from it, also in a quote or a list. A row that would
+ * pass it ends its table, and the rest of the file shows as text. So the
+ * cells of a file stay in proportion to its size.
+ */
+export class TableBudget {
+  private left = maxAddedCells
+  private ended = false
+
+  /** True until a row would pass the budget. */
+  get open(): boolean {
+    return !this.ended
+  }
+
+  /** Takes the empty cells of one row. False when they would pass it. */
+  take(cells: number): boolean {
+    if (cells > this.left) {
+      this.ended = true
+      return false
+    }
+    this.left -= cells
+    return true
+  }
+}
+
 /** A header row with a pipe, then a delimiter row with as many cells. */
 export function tableStarts(lines: readonly string[], index: number): boolean {
   const head = lines[index]
@@ -53,10 +82,15 @@ export function tableStarts(lines: readonly string[], index: number): boolean {
   return align !== null && align.length === cellsOf(head).length
 }
 
-/** Reads a table up to the first blank line or line without a pipe. */
+/**
+ * Reads a table up to the first blank line, line without a pipe, or row
+ * whose empty cells would pass the budget of the file. A short row gets
+ * empty cells up to the width of the header.
+ */
 export function parseTable(
   lines: readonly string[],
   index: number,
+  budget: TableBudget,
 ): { block: MdBlock; next: number } {
   const head = cellsOf(lines[index])
   const align = delimiterRow(lines[index + 1]) ?? head.map(() => null)
@@ -66,6 +100,8 @@ export function parseTable(
     const line = lines[next]
     if (isBlank(line) || !line.includes('|')) break
     const cells = cellsOf(line)
+    // Check the empty cells before the row is built.
+    if (!budget.take(Math.max(0, head.length - cells.length))) break
     rows.push(head.map((_, column) => cells[column] ?? ''))
   }
   return { block: { kind: 'table', align, head, rows }, next }

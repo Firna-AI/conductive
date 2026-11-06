@@ -32,6 +32,7 @@ function inlineBlock(
     case 'paragraph':
       return { kind: 'paragraph', text: inline(block.text) }
     case 'code':
+    case 'literal':
     case 'rule':
       return block
     case 'quote':

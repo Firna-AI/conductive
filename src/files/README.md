@@ -121,11 +121,18 @@ the same, and the browser lays the run out in linear time. Text with
 spaces stays one text node. The part length is a rendering detail, not a
 read limit.
 
-The screens set no limits of their own. A file or a diff over the read
-limit shows the size and the limit that the backend sends, and the
-terminal as the way to open it. The download route reads a file with the
-same limit, so a file page offers Download only after a read that fits.
-A binary diff links to its file tab in place of Download.
+A table row with fewer cells than its header gets empty cells. All tables
+of one file, also in quotes and lists, add at most 65,536 empty cells.
+The row that would pass that count ends its table. From that row on, the
+rest of the file shows as text, as typed: with its line breaks, and with
+no Markdown. Each file starts with the whole count, so its cells stay in
+proportion to its size.
+
+A file or a diff over the read limit shows the size and the limit that
+the backend sends, and the terminal as the way to open it. The download
+route reads a file with the same limit, so a file page offers Download
+only after a read that fits. A binary diff links to its file tab in place
+of Download.
 
 ## Development
 

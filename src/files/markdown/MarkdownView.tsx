@@ -5,6 +5,7 @@ import { inlineNodes } from './inline-render'
 import type { MdBlock, MdListItem } from './markdown-blocks'
 import type { MarkdownDocument, MarkdownParser } from './markdown-document'
 import type { MdInline } from './markdown-inline'
+import { textChunks } from './text-chunks'
 import { parseInWorker, type WorkerParse } from './worker-parse'
 import styles from './MarkdownView.module.css'
 
@@ -56,6 +57,9 @@ function Block(props: { block: ParsedBlock }) {
       )
     case 'code':
       return <pre className={styles.block}>{block.text}</pre>
+    case 'literal':
+      // Text as typed, with its line breaks, and no Markdown inside.
+      return <p className={styles.literal}>{textChunks(block.text)}</p>
     case 'quote':
       return (
         <blockquote>

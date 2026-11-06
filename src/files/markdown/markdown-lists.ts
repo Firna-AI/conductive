@@ -35,7 +35,11 @@ function taskOf(lines: string[]): { checked: boolean | null; lines: string[] } {
   return { checked: match[1] !== ' ', lines: [first, ...lines.slice(1)] }
 }
 
-type ParseBlocks = (lines: readonly string[]) => MdBlock[]
+/**
+ * Parses the lines of one item. Each line of the item comes from one line
+ * of the list, and `start` is the index of the line with its marker.
+ */
+type ParseBlocks = (lines: readonly string[], start: number) => MdBlock[]
 
 /**
  * Reads the items of one list from `start`. An item holds the lines that
@@ -54,6 +58,7 @@ export function parseList(
     const marker = isRule(lines[index]) ? null : listMarker(lines[index])
     if (!marker || marker.ordered !== first.ordered) break
     if (marker.delimiter !== first.delimiter) break
+    const itemStart = index
     const body = [marker.content]
     index += 1
     while (index < lines.length) {
@@ -72,7 +77,8 @@ export function parseList(
     }
     while (body.length > 1 && body[body.length - 1] === '') body.pop()
     const task = taskOf(body)
-    items.push({ checked: task.checked, blocks: parseBlocks(task.lines) })
+    const blocks = parseBlocks(task.lines, itemStart)
+    items.push({ checked: task.checked, blocks })
   }
   const block: MdBlock = {
     kind: 'list',
