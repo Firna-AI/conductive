@@ -2,6 +2,7 @@ import { API_PATHS, type Org, type User } from '../../src/shared/api'
 import type { Workspace } from '../../src/shared/workspaces'
 import type { AppDependencies } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
+import type { InvitationEmail } from '../invitation-mailer'
 import {
   TEST_ORIGIN,
   TEST_TIME,
@@ -18,10 +19,16 @@ export function membersClient(harness: TestHarness) {
   let sequence = 0
   const removedWorkspaceState: string[] = []
   const suspendedOrgs: { orgId: string; workspaceIds: readonly string[] }[] = []
+  const invitationEmails: InvitationEmail[] = []
   const dependencies: AppDependencies = {
     fetch: harness.boat.fetch,
     now: () => now,
     randomToken: () => `members-${++sequence}`,
+    invitationMailer: {
+      async send(invitation) {
+        invitationEmails.push(invitation)
+      },
+    },
   }
   const hooks: MembersHooks = {
     maintainDeletedOrg: maintainDisksForTests,
@@ -65,6 +72,7 @@ export function membersClient(harness: TestHarness) {
     hooks,
     removedWorkspaceState,
     suspendedOrgs,
+    invitationEmails,
     setTime(value: number) {
       now = value
       harness.setTime(value)
@@ -76,6 +84,9 @@ export async function signIn(
   harness: TestHarness,
   githubId: number,
   login: string,
+  emails: readonly { email: string; verified: boolean }[] = [
+    { email: `${login.toLowerCase()}@example.com`, verified: true },
+  ],
 ) {
   harness.github.profile = {
     id: githubId,
@@ -83,6 +94,7 @@ export async function signIn(
     name: login,
     avatar_url: null,
   }
+  harness.github.emails = emails
   const session = await harness.login()
   const response = await harness.request(API_PATHS.session, session)
   const value: { user: User } = await response.json()

@@ -43,7 +43,7 @@ it('completes a verifier-bound GitHub desktop session and signs out without chan
     DESKTOP_SESSION_COOKIE,
   )
   expect(callback.headers.get('Set-Cookie')).not.toContain(`${SESSION_COOKIE}=`)
-  expect(harness.github.requests).toHaveLength(2)
+  expect(harness.github.requests).toHaveLength(3)
   expect(
     await harness.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM sessions',

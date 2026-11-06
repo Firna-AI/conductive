@@ -5,7 +5,8 @@ import {
   memberPath,
   membersPath,
   workspaceOwnerPath,
-  type OrgMember,
+  type MembersResponse,
+  type OrgInvite,
 } from '../../shared/members'
 import { orgSettingsPaths } from '../../shared/org-settings'
 import { deleteOrgPath, restoreOrgPath } from '../../shared/orgs'
@@ -62,11 +63,10 @@ function fails(failure: DevFailure, method: string, path: string): boolean {
 
 function failure(kind: DevFailure): Response {
   if (kind === 'invite') {
-    const message =
-      'No GitHub account has this login. Check the login, then try again.'
+    const message = 'The invitation email could not be sent. Try again.'
     return Response.json(
-      { error: { code: 'github_user_missing', message } },
-      { status: 404 },
+      { error: { code: 'invite_email_failed', message } },
+      { status: 502 },
     )
   }
   const message = 'The request failed. Try again.'
@@ -74,6 +74,17 @@ function failure(kind: DevFailure): Response {
     { error: { code: 'internal_error', message } },
     { status: 500 },
   )
+}
+
+/**
+ * The invite that the API answers with for an email. The API keeps one
+ * invite for each email of an org, without regard to case, and stores the
+ * email in lower case. So the email of an open invite gets that invite.
+ */
+function inviteFor(invites: readonly OrgInvite[], typed: string): OrgInvite {
+  const email = typed.trim().toLowerCase()
+  const open = invites.find((invite) => invite.email.toLowerCase() === email)
+  return open ?? { id: `invite-${email}`, email, createdAt: FAKE_TIME }
 }
 
 /**
@@ -85,24 +96,19 @@ function failure(kind: DevFailure): Response {
 function replyToWrite(
   server: FakeApiServer,
   org: DevOrgId,
-  /** The members that the dev page shows for the org. */
-  members: readonly OrgMember[],
+  /** The members and the invites that the dev page shows for the org. */
+  data: MembersResponse,
   request: { method: string; path: string; body: unknown },
 ) {
   const { method, path, body } = request
   if (!isObject(body)) return
   if (method === 'POST' && path === invitesPath(org)) {
-    if (typeof body.githubLogin !== 'string') return
-    const login = body.githubLogin
-    const invite = {
-      id: `invite-${login}`,
-      githubLogin: login,
-      createdAt: FAKE_TIME,
-    }
+    if (typeof body.email !== 'string') return
+    const invite = inviteFor(data.invites, body.email)
     server.json('POST', path, { invite }, 201)
     server.empty('DELETE', invitePath(org, invite.id))
   }
-  for (const member of members) {
+  for (const member of data.members) {
     const next = body.role
     if (method === 'PATCH' && path === memberPath(org, member.user.id)) {
       if (next === 'admin' || next === 'member') {
@@ -160,7 +166,7 @@ export function createDevFetch(options: {
   }
   // The writes get their replies from the same members as the reads.
   const membersOf = (org: DevOrgId) =>
-    org === 'acme' && people ? people.members : devMembers(org).members
+    org === 'acme' && people ? people : devMembers(org)
   const delay = options.delay || (options.slow ? 250 : 0)
   let pending = 0
   let failed = 0

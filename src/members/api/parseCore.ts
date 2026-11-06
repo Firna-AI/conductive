@@ -77,7 +77,7 @@ export function parseInvite(value: unknown): OrgInvite {
   const source = object(value, 'invite')
   return {
     id: text(source, 'id'),
-    githubLogin: text(source, 'githubLogin'),
+    email: text(source, 'email'),
     createdAt: count(source, 'createdAt'),
   }
 }
