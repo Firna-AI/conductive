@@ -11,4 +11,15 @@ export const thisMac = defineScreen({
   propSchema: macAppSchema,
   props: { window: 'window', page: 'account', command: 'none' },
   render: (props) => <MacAppScreen state={props} />,
+  variants: [
+    {
+      slug: 'needs-input',
+      title: 'A workspace needs input',
+      description:
+        'An agent asks to run a command on this Mac while the app shows This Mac. The workspace list marks Checkout address autocomplete with Needs input: a blue column that pulses. Its row opens the workspace, where the request waits above the composer.',
+      rationale:
+        'The request no longer opens a dialog over every page, so the user asked for a blue mark on the workspace that asks for help, an approval, or an answer (decision 62).',
+      props: { command: 'prompt' },
+    },
+  ],
 })

@@ -10,9 +10,9 @@ const flow = ['user-flows/mac-command']
 export const macCommandsInChat = defineScreen({
   title: 'Commands on a Mac',
   description:
-    'In the chat of the web app, the agent asked to run a command on the Mac of Cal, who sent the message. The card names the Mac, shows the command, its folder, and its time limit, and waits for approval in the Mac app.',
+    'In the chat of the web app, the agent asked to run a command on the Mac of Cal, who sent the message. The request waits as a compact message just above the composer: the command, the Mac, the time limit, and Details. It shows the state only, because Cal answers in the Mac app. The header and the workspace list show Needs input.',
   rationale:
-    'The request goes to the Mac of the person who sent the turn, as decision 62 says, so the card names that Mac. Every member who opens the workspace sees the state of the command.',
+    'The request goes to the Mac of the person who sent the turn, as decision 62 says, so the message names that Mac. Every member who opens the workspace sees the state of the command. Only the Mac app can allow a command on the Mac, so a browser shows no choices.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, conversation: 'mac-waiting' },
@@ -32,7 +32,7 @@ export const macCommandsInChat = defineScreen({
       slug: 'done',
       title: 'Done',
       description:
-        'The command ran on the Mac. The card shows the time that it took and its output, which went back to the agent.',
+        'The command ran on the Mac. Its card at its place in the chat shows the time that it took and its output, which went back to the agent.',
       props: { conversation: 'mac-done' },
       useCasePaths: flow,
     },

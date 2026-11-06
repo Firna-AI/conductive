@@ -17,8 +17,10 @@ export function MacScreen(props: {
   active?: boolean
   /** A bar of the Mac app at the top of the main area. */
   banner?: ReactNode
-  /** A layer over the window, such as a dialog of the app. */
-  overlay?: ReactNode
+  /** The other ways to allow a waiting command are drawn open. */
+  choicesOpen?: boolean
+  /** The workspace whose agent waits for the user, which the list marks. */
+  needsInput?: string
   /** A layer over the whole screen, such as a notification of macOS. */
   notification?: ReactNode
   children: ReactNode
@@ -29,10 +31,14 @@ export function MacScreen(props: {
       <div className={styles.stage}>
         <div className={classes(styles.screen, window && styles.desktop)}>
           <div className={window ? styles.window : styles.fullScreen}>
-            <MacApp banner={props.banner} mode={props.mode}>
+            <MacApp
+              banner={props.banner}
+              choicesOpen={props.choicesOpen}
+              mode={props.mode}
+              needsInput={props.needsInput}
+            >
               {props.children}
             </MacApp>
-            {props.overlay}
             {window ? <WindowButtons active={props.active ?? true} /> : null}
           </div>
           {props.notification}

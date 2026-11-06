@@ -2517,6 +2517,11 @@ parallel and not delay things".
   - The command runs with the user's own permissions, with an output
     limit. When the Mac sleeps, or the app is closed, the tool tells the
     agent that the Mac is not available.
+- **Changed by the user on 6 November 2026:** the command approval is a
+  compact message in the chat, with the command and action buttons.
+  Keep the pending request visible above the composer. The time limit
+  can use a small secondary label. Put the other request facts in details.
+  The request no longer uses a modal dialog.
 
 ### 63. Decide the language of the agent runner
 
@@ -2584,6 +2589,60 @@ Added on 6 November 2026 from the Milestone 13 work.
   when GitHub blocks the merge and no other state applies. Its action
   opens the pull request on GitHub. Milestone 4b adds the state to the
   contracts, the fakes, and the mockups.
+
+### 67. Decide the content security policy of both apps
+
+Added on 6 November 2026 from the Milestone 15e work.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** Decision 62 copies Mokly's Mac app, whose content
+  security policy equals the web app's. The Conducting web app sends no
+  content security policy today. The Milestone 15e branch prepared one
+  policy for both apps. It allows only the app's own scripts and styles,
+  its own API and sockets, GitHub avatars, and the frames that the app
+  names, such as port previews. It blocks inline scripts, plugins, and
+  framing of the app by other sites.
+- **Problem:** The two policies can be equal only if the web app starts
+  to send this policy, which adds a new restriction to the web app.
+- **Impact if no action:** The two apps use different policies, and the
+  web app has no second defence against an injected script.
+- **Root question:** Which content security policy do the web app and
+  the Mac app use?
+- **Options:**
+  - **A.** Send the prepared policy from both apps now. Each later screen
+    adds its frame and connection sources. Effort: Small.
+  - **B.** Send the policy only from the Mac app for now. The web app
+    gets it later. Effort: Small.
+  - **C.** Send no policy from either app. Effort: Small.
+- **Left out:** Loading the policy from the server at run time, because
+  it adds a network dependency and does not settle the choice.
+- **Wider fix:** A.
+- **Recommendation:** A. The app has few screens now, so the policy costs
+  least to add now.
+- **Action:** ask the user, because each option changes a requirement.
+
+### 68. Show when a workspace waits for the user
+
+Added on 6 November 2026 from the user's request: "we can add some kind
+of indicator to the workspace" and "maybe a blue indicator is the
+workspace asking for help/approval/prompt".
+
+- **Chosen:** by the user on 6 November 2026. A workspace gets one more
+  state, needs input. It shows while the agent waits for the user, such
+  as for help, an approval, or an answer. It is not only for Mac
+  commands.
+- **Agent calls on 6 November 2026:**
+  - The mark is blue, like Working, with a different shape: a filled
+    middle column that pulses, where Working draws a ring. So the two
+    states never depend on colour alone. The pulse stops when the system
+    asks for reduced motion.
+  - The workspace header and its row in the list show it, in the web app
+    and in the Mac app. On any other page of the Mac app, the row of the
+    waiting workspace shows it, and a click opens the request.
+  - The contract value is `input` in `WorkspaceState`. Milestone 15f sets
+    it while a Mac command request waits. Each later feature that waits
+    for the user sets it too.
 
 ## Design
 
@@ -3650,6 +3709,8 @@ milestone waits for it.
 - [ ] Test the prompt choices, the time limits, and the offline answer.
       Update `docs/protocol/desktop-app.md` and
       `docs/protocol/agent-tools.md`.
+- [ ] Set the workspace state to needs input while a command request
+      waits, and back when the user answers it, as decision 68 says.
 
 ## Milestone 16: Deployment and live smoke test
 

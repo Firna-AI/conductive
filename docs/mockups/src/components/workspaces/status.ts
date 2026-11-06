@@ -16,6 +16,7 @@ export const activityPresentation: Readonly<
   Record<ActivityStatus, StatusPresentation>
 > = {
   working: { label: 'Working', emphasis: 'active' },
+  input: { label: 'Needs input', emphasis: 'active' },
   unread: { label: 'Done, unread', emphasis: 'strong' },
   ready: { label: 'Ready', emphasis: 'normal' },
   starting: { label: 'Starting', emphasis: 'normal' },
