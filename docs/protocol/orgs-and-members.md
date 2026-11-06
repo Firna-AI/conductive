@@ -17,6 +17,10 @@ says.
 - Orgs that mirror GitHub accounts were rejected, because a new org would
   then need the GitHub App on another GitHub account.
 - The org rail lists the orgs of the user, and the user can create orgs.
+- Create org accepts a name, custom initials, and chosen repositories.
+- Before the org exists, the create screen lists repositories that the
+  signed-in user and the shared GitHub App can both reach.
+- The org rail and General settings show the saved initials.
 - The product is free (decision 45). It has no plans, no billing, and no
   limits of its own on workspaces, minutes, or members.
 - The plan limits of the org's Boat account apply to its sandboxes.
@@ -75,13 +79,20 @@ says.
   can have several admins.
 - A separate owner role above the admins was rejected, because several
   admins already give an org more than one manager.
-- An admin invites a person by GitHub login.
+- An admin invites a person by email, and the app sends the invitation to
+  that address (decision 78).
+- The person joins with a GitHub account that has that address as a
+  verified email. The app reads the verified emails at sign-in, and the
+  person accepts each matching invitation.
+- Reason: a GitHub login can be renamed and taken by another account. A
+  verified email proves the inbox.
 - Only an admin invites and removes members, changes a role, reassigns a
   workspace, adds the Boat key, and deletes the org.
 - Only an admin changes the repositories, the install script, the startup
   script, and the env vars (decision 57). Other members see them
   read-only.
-- Only an admin renames the org. Other members see the name read-only.
+- Only an admin changes the org's name and initials. Other members see
+  them read-only.
 - Changes by every member were rejected, because a changed script reaches
   every new sandbox of the org and runs during other members' turns.
 - Every member of the org sees all of its workspaces (decision 39).
