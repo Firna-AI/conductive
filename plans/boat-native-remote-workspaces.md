@@ -4319,6 +4319,10 @@ This milestone needs the prerequisites from the user.
 
 - [ ] Deploy the Worker, D1, and the web app to the user's Cloudflare
       account, with GitHub sign-in.
+- [ ] Create the D1 database with the Western Europe location hint, near
+      the workspace Durable Objects and Boat's machines. Cloudflare fixes
+      the place of the database when it creates it. Added on 6 November
+      2026.
 - [ ] Smoke-test with a real Boat sandbox: create a workspace, chat, open
       a file, use the terminal, open a preview, stop, and resume.
 - [ ] Check that a private Boat port does not answer on the public
