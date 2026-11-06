@@ -2045,7 +2045,7 @@ from C to D.
 
 ### 50. Decide the reach of a cloud computer's GitHub token
 
-Open. Added on 5 November 2026 from the Milestone 2 docs, item 2.
+Added on 5 November 2026 from the Milestone 2 docs, item 2.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Security.
@@ -2083,6 +2083,12 @@ Open. Added on 5 November 2026 from the Milestone 2 docs, item 2.
   needs only its own repository.
 - **Action:** ask the user, because B changes who shows as the pusher on
   GitHub, which users see.
+- **Changed on 6 November 2026:** the recommendation moved from B to A,
+  because decision 49 D runs each turn as its sender.
+- **Chosen:** A, by the user on 6 November 2026. Each turn's git calls use
+  the sender's own GitHub user token, fetched fresh for each call, as
+  Conductor does. The plan drops its claim of a limit to the org's
+  repositories.
 
 ### 51. Decide how a session moves to the other agent
 
@@ -2834,7 +2840,8 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
 - Agent call: every workspace sandbox starts with `noEnv`, so that it gets
   none of the Boat account's secrets. It gets no agent login at start.
   The runner gets the sender's login for each turn, as decision 49 says.
-  Decision 50 decides the GitHub token.
+  Git uses the sender's GitHub user token for each call, as decision 50
+  says.
 - The org settings keep a startup script, which runs in each workspace's
   cloud computer at each start and resume, and env vars. Decision 17 chose
   where the env vars live.
@@ -3300,8 +3307,8 @@ Depends on: 4a
 - [ ] Count user activity as decision 29 says, and stop after 30 minutes
       without activity or a running agent turn.
 - [ ] Add the git credential helper to the org image, and the Worker's
-      token route behind the workspace token. The token's reach waits for
-      decision 50.
+      token route behind the workspace token. The route returns a fresh
+      GitHub user token of the current turn's sender, as decision 50 says.
 
 ## Milestone 6: App shell and workspaces
 
@@ -3542,11 +3549,11 @@ Depends on: 4a
 
 Build the Mac app as decision 62 says. No other milestone waits for it.
 
-- [ ] Draw the Mac app window in the mockups first: the native window
+- [x] Draw the Mac app window in the mockups first: the native window
       buttons inset at the top left of the left panel, with the sidebar
       toggle and the back and forward buttons beside them, in a normal
       window and in full screen.
-- [ ] Draw the device commands in the mockups first: the permission
+- [x] Draw the device commands in the mockups first: the permission
       prompt with its four choices, the macOS notification, the countdown
       of the 15-minute window, the app's list of always-allowed commands,
       and the chat's tool states: waiting for approval, denied, done, and
