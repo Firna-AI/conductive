@@ -3905,16 +3905,58 @@ Depends on: 4a
 Apply decision 76 E to the contracts. Milestone 7r builds the runner to
 this contract.
 
-- [ ] Add the byte limit of one stored runner event to the runner
-      contract.
-- [ ] Send a full file tree and a long list of changes as several
+Scope call on 6 November 2026: the user chose option D for review item 1.
+This branch may update the Worker chat and files readers, tests, and
+fakes. Missing required fields are invalid events. The default file
+samples remain complete single-part reports. Separate samples cover
+multipart reports. Production enforcement stays in Milestone 7s.
+
+Agent calls on 6 November 2026, within decision 76 E:
+
+- Measure the 1 MiB cap on compact UTF-8 JSON of the complete runner event
+  envelope. This includes runner identity fields and leaves room for the
+  workspace storage wrapper.
+- Keep browser file reports complete. Use separate runner parts with a
+  revision, part number, and part count. This preserves browser response
+  shapes and keeps partial reports out of the browser.
+- Cap each runner file-event payload at 256 KiB. Cap each tree delta at
+  512 changes too. The byte cap bounds arbitrary path lengths. The count
+  cap bounds the tree work of one event.
+- Give trees and changes independent revision sequences within one
+  runner stream. Number parts from 1. Keep confirmed parts across
+  reconnects. Use newer full reports to recover missing or refused data.
+  This permits complete reports without partial updates.
+- Cap serialized tool detail at 64 KiB. Count omitted normalized source
+  UTF-8 bytes before JSON escaping. Preserve null detail and whole
+  Unicode code points. This keeps the excerpt and its count clear.
+- Cap turn file summaries at 200 entries and 256 KiB of serialized array
+  data. Count omitted files. This bounds the chat summary while the
+  Changes response keeps the full list.
+- Use workspace-only refusal markers with the three fixed reasons.
+  Include verified turn context or null. Use `unknown` for an invalid
+  event type. This names lost data without copying the refused payload.
+- Keep runner protocol version 1. No runner is live, and Milestone 7r
+  adopts this contract after merge.
+
+Verification evidence: `.context/boat-native-remote-workspaces/checks/milestone-4d-verification.md`.
+
+- [x] Add the byte limit of one stored runner event to the runner
+      contract. Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Send a full file tree and a long list of changes as several
       numbered parts. Cap the changes of one tree delta.
-- [ ] Give a tool's detail and the file list at the end of a turn a cap
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Give a tool's detail and the file list at the end of a turn a cap
       and a count of the rest.
-- [ ] Add the chat event that marks a refused runner event, with the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Add the chat event that marks a refused runner event, with the
       stream, the event number, the event type, and the reason.
-- [ ] Update the fakes, the recorded events, and the chat and files
-      protocol rules.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Update the fakes, the recorded events, and the chat and files
+      protocol rules. Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Apply option D to the current Worker readers and their test inputs.
+      Preserve every existing assertion and keep multipart samples
+      separate from the default single-part reports.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
 
 ## Milestone 4e: Contracts for the app shell
 
@@ -4110,15 +4152,18 @@ Depends on: 4d, 8
 Decision 76 E: the runner caps the detail of a tool and the file list of
 a finished turn, and counts the rest. The workspace stores a marker for
 each runner event that it refuses. Milestone 4d keeps the counts and the
-markers in the chat state, but shows nothing. Added on 6 November 2026
-from round 1 finding 2 of the Milestone 4d review.
+markers of each session in the chat state, but shows nothing. It drops a
+marker that belongs to no session. Added on 6 November 2026 from round 1
+finding 2 of the Milestone 4d review.
 
 - [ ] Draw in the chat mockups how much tool detail and how many files the
       runner left out, and the line of a refused event, which names what
       was lost.
 - [ ] Draw where a marker that belongs to no session shows, such as the
       marker of a refused file event. No rule says where yet, so bring
-      the pictures to the user as a decision before you build it.
+      the pictures to the user as a decision before you build it. That
+      decision must also choose where the browser keeps such a marker and
+      how a browser tab that opens later reads it.
 - [ ] Show them in the chat screens.
 - [ ] Compare each screen with its mockup.
 

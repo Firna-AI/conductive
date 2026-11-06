@@ -66,7 +66,12 @@ describe('workspace chat recorded events', () => {
     expect(
       await fixture.chat.store.read(WORKSPACE_ID, (view) => view.pending()),
     ).toEqual([])
-    for (const scenario of ['history', 'interrupted', 'failed'] as const) {
+    for (const scenario of [
+      'history',
+      'interrupted',
+      'failed',
+      'omitted-data',
+    ] as const) {
       const session = await fixture.createSession()
       const messageId = `ask-${scenario}`
       await fixture.send(session.id, messageId)
@@ -92,7 +97,12 @@ describe('workspace chat recorded events', () => {
           })
           continue
         }
-        if (!('turnId' in event) || event.type === 'message.sent') continue
+        if (
+          !('turnId' in event) ||
+          event.type === 'message.sent' ||
+          event.type === 'runner.event-refused'
+        )
+          continue
         const normalized: AgentChatEvent = { ...event, turnId: command.turnId }
         if (normalized.type === 'turn.started') {
           normalized.senderId = fixture.owner.id

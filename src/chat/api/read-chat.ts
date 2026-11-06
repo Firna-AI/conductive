@@ -1,5 +1,9 @@
 import type { Agent, AgentChoice, Effort } from '../../shared/agents'
-import type { ChatEvent, ToolCall } from '../../shared/chat-events'
+import type {
+  ChatEvent,
+  RunnerEventRefused,
+  ToolCall,
+} from '../../shared/chat-events'
 import type { ChangedFile, ChangeKind } from '../../shared/files'
 import type {
   Attachment,
@@ -50,6 +54,30 @@ const readToolState = oneOf<ToolCall['state']>({
   stopped: true,
   failed: true,
 })
+const readRunnerEventType = oneOf<RunnerEventRefused['runnerEventType']>({
+  'turn.started': true,
+  'turn.thinking': true,
+  'assistant.delta': true,
+  'assistant.completed': true,
+  'tool.updated': true,
+  'turn.completed': true,
+  'turn.failed': true,
+  'files.snapshot': true,
+  'files.changed': true,
+  'changes.updated': true,
+  'runner.ready': true,
+  'start.updated': true,
+  'workspace.title': true,
+  unknown: true,
+})
+
+/** The new count fields require whole, non-negative, safe integer values. */
+function safeCount(value: unknown): number {
+  const result = count(value)
+  if (!Number.isSafeInteger(result) || result < 0)
+    throw new UnreadableResponse('count')
+  return result
+}
 
 export function readChoice(value: unknown): AgentChoice {
   const source = record(value, 'choice')
@@ -125,6 +153,7 @@ function readTool(value: unknown): ToolCall {
     kind: readToolKind(source.kind),
     target: text(source.target),
     detail: nullable(text)(source.detail),
+    omittedDetailBytes: safeCount(source.omittedDetailBytes),
     state: readToolState(source.state),
   }
 }
@@ -160,6 +189,24 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
       }
     case 'session.updated':
       return { type: source.type, session: readSession(source.session) }
+    case 'runner.event-refused': {
+      const runnerEventNumber = safeCount(source.runnerEventNumber)
+      if (runnerEventNumber === 0)
+        throw new UnreadableResponse('runner event number')
+      return {
+        type: source.type,
+        streamId: text(source.streamId),
+        runnerEventNumber,
+        runnerEventType: readRunnerEventType(source.runnerEventType),
+        reason: oneOf<RunnerEventRefused['reason']>({
+          too_large: true,
+          invalid: true,
+          turn_not_active: true,
+        })(source.reason),
+        sessionId: nullable(text)(source.sessionId),
+        turnId: nullable(text)(source.turnId),
+      }
+    }
   }
   const turn = {
     sessionId: text(source.sessionId),
@@ -201,6 +248,7 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
         state: oneOf({ finished: true, stopped: true })(source.state),
         durationMs: count(source.durationMs),
         files: list(readChangedFile)(source.files),
+        omittedFileCount: safeCount(source.omittedFileCount),
         userMessageIds: list(text)(source.userMessageIds),
       }
     case 'turn.failed':

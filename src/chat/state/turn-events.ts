@@ -170,9 +170,14 @@ export function foldTurn(
             files: event.files,
           }
       return {
+        ...transcript,
         items: [...ended.filter((item) => item.id !== end.id), end],
         turn: ending(transcript, event.turnId),
         stopRequests: settleStops(transcript, event.turnId),
+        turnCompletions: {
+          ...transcript.turnCompletions,
+          [event.turnId]: event,
+        },
       }
     }
     case 'turn.failed': {
@@ -185,6 +190,7 @@ export function foldTurn(
       }
       const ended = settleTools(items, event.turnId, 'stopped')
       return {
+        ...transcript,
         items: [...ended.filter((item) => item.id !== failed.id), failed],
         turn: ending(transcript, event.turnId),
         stopRequests: settleStops(transcript, event.turnId),

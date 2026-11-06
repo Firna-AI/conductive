@@ -2,6 +2,7 @@ import type { AgentChatEvent, ToolCall } from '../../src/shared/chat-events'
 import type { ChangedFile, ChangeKind } from '../../src/shared/files'
 import {
   choice,
+  counter,
   identifier,
   invalidInput,
   number,
@@ -66,6 +67,7 @@ function tool(value: unknown): ToolCall {
     kind,
     target: string(input.target),
     detail: input.detail === null ? null : string(input.detail),
+    omittedDetailBytes: counter(input.omittedDetailBytes),
     state,
   }
 }
@@ -115,6 +117,7 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
         state: input.state,
         durationMs: number(input.durationMs),
         files: array(input.files, changedFile),
+        omittedFileCount: counter(input.omittedFileCount),
         userMessageIds: strings(input.userMessageIds),
       }
     }
