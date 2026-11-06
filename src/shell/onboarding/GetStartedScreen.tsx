@@ -13,7 +13,6 @@ import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { AgentStep } from './AgentStep'
 import { InstallStep } from './InstallStep'
-import { KeyStep } from './KeyStep'
 import { OrgStep } from './OrgStep'
 
 /** The way into the first org, once every step is done. */
@@ -36,8 +35,8 @@ function Finish(props: { org: OrgSummary }) {
 }
 
 /**
- * The four steps in their fixed order (decision 33). Only the next step
- * has its action or its open form. A done step shows its result.
+ * The three steps in their fixed order. Only the next step has its action
+ * or its open form. A done step shows its result.
  */
 function Steps(props: { response: GetStartedResponse }) {
   const app = useApp()
@@ -54,9 +53,6 @@ function Steps(props: { response: GetStartedResponse }) {
           <OrgStep org={org} state={stepState(response, 'org')} />
         </li>
         <li>
-          <KeyStep org={org} state={stepState(response, 'boat-key')} />
-        </li>
-        <li>
           <AgentStep state={stepState(response, 'agent-login')} />
         </li>
       </ol>
@@ -67,9 +63,8 @@ function Steps(props: { response: GetStartedResponse }) {
 
 /**
  * The only first run, after the GitHub sign-in: the user installs the
- * GitHub App, creates the first org, adds its Boat key, and connects
- * Claude or Codex. The steps come from the API, and each done step loads
- * them again.
+ * GitHub App, creates the first org, and connects Claude or Codex. The
+ * steps come from the API, and each done step loads them again.
  */
 export function GetStartedScreen(props: { user: User }) {
   const app = useApp()
@@ -77,7 +72,7 @@ export function GetStartedScreen(props: { user: User }) {
   return (
     <Page subtitle={`@${props.user.githubLogin}`} title="Get started">
       <p className={styles.intro}>
-        Welcome, {personName(props.user)}. Four steps before your first
+        Welcome, {personName(props.user)}. Three steps before your first
         workspace.
       </p>
       {response ? <Steps response={response} /> : null}

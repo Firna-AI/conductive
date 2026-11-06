@@ -43,16 +43,6 @@ export function createBackend(
   }
 }
 
-/** A sandbox action of an org with no Boat key fails, as the Worker's does. */
-export function requireBoatKey(org: OrgState): void {
-  if (org.boatKey.configured) return
-  throw new RouteError(
-    409,
-    'boat_key_required',
-    'Add the org’s Boat key to continue.',
-  )
-}
-
 export function requireOrg(state: DevState, orgId: string): OrgState {
   const org = state.orgs.find((item) => item.org.id === orgId)
   if (!org) {

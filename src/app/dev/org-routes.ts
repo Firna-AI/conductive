@@ -7,7 +7,7 @@ import {
   type OrgsResponse,
   type OrgSummary,
 } from '../../shared/orgs'
-import { record } from '../api/parse'
+import { record, text, type JsonObject } from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
 import {
   ID,
@@ -33,10 +33,17 @@ function orgReply(org: OrgSummary, status = 200): Response {
   return json({ org } satisfies OrgResponse, status)
 }
 
+/** The org of a create or a rename, with the initials when the request has them. */
+function withInitials(org: OrgSummary, fields: JsonObject): OrgSummary {
+  const initials = optional(fields, 'initials', text)
+  return initials === undefined ? org : { ...org, initials }
+}
+
 /**
- * Create org. The new org has its own state, as `freshOrg` says. When
- * the request names repositories, the org chooses them. When the user has
- * no org yet, the new org becomes the org of Get started.
+ * Create org. The new org has its own state, as `freshOrg` says: the
+ * repositories of the account catalogue, with the GitHub IDs of the
+ * request added. When the user has no org yet, the new org becomes the
+ * org of Get started.
  */
 function createOrg(backend: DevBackend, body: unknown): Response {
   const { state } = backend
@@ -48,14 +55,11 @@ function createOrg(backend: DevBackend, body: unknown): Response {
     state.orgs.map((item) => item.org.id),
   )
   const org = freshOrg(
-    { id, name, role: 'admin' },
+    withInitials({ id, name, role: 'admin' }, fields),
     state.account.user,
     backend.now(),
+    chosen,
   )
-  org.repositories = org.repositories.map((repository) => ({
-    ...repository,
-    selected: chosen.includes(repository.githubId),
-  }))
   state.orgs = [...state.orgs, org]
   if (state.getStarted.orgId === null) {
     state.getStarted = { ...state.getStarted, orgId: id }
@@ -64,8 +68,13 @@ function createOrg(backend: DevBackend, body: unknown): Response {
   return orgReply(org.org, 201)
 }
 
+/** Rename. A request without initials keeps the saved ones. */
 function renameOrg(org: OrgState, body: unknown): Response {
-  org.org = { ...org.org, name: requiredText(record(body), 'name') }
+  const fields = record(body)
+  org.org = withInitials(
+    { ...org.org, name: requiredText(fields, 'name') },
+    fields,
+  )
   return orgReply(org.org)
 }
 
@@ -78,9 +87,11 @@ function deleteOrg(backend: DevBackend, org: OrgState): Response {
   return orgReply(org.org)
 }
 
+/** Restore brings the org back as it was, with its initials. */
 function restoreOrg(org: OrgState): Response {
-  const { id, name, role } = org.org
-  org.org = { id, name, role }
+  const { id, name, role, initials } = org.org
+  org.org =
+    initials === undefined ? { id, name, role } : { id, name, role, initials }
   return orgReply(org.org)
 }
 

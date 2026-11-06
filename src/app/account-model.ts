@@ -4,12 +4,18 @@ import {
   type AccountResponse,
   type AgentLoginStatus,
   type GitHubInstallationsResponse,
+  type GitHubRepositoriesResponse,
   type SaveAgentLoginRequest,
 } from '../shared/account'
 import type { Agent, AgentChoice } from '../shared/agents'
 import { API_PATHS } from '../shared/api'
 import { ignore, nested, record } from './api/parse'
-import { readChoice, readInstallations, readLogin } from './api/read-core'
+import {
+  readChoice,
+  readGitHubRepositories,
+  readInstallations,
+  readLogin,
+} from './api/read-core'
 import type { AppModel } from './app-model'
 import type { AppServices } from './services'
 import { load, loading, Store, type Loadable } from './store'
@@ -22,6 +28,10 @@ import { load, loading, Store, type Loadable } from './store'
 export class AccountModel {
   readonly account = new Store<AccountResponse | null>(null)
   readonly installations = new Store<Loadable<GitHubInstallationsResponse>>(
+    loading,
+  )
+  /** The repositories that Create org offers, before the org exists. */
+  readonly repositories = new Store<Loadable<GitHubRepositoriesResponse>>(
     loading,
   )
   private readonly services: AppServices
@@ -37,6 +47,15 @@ export class AccountModel {
       this.services.api.get(
         ACCOUNT_PATHS.githubInstallations,
         readInstallations,
+      ),
+    )
+  }
+
+  loadRepositories(): Promise<void> {
+    return load(this.repositories, () =>
+      this.services.api.get(
+        ACCOUNT_PATHS.githubRepositories,
+        readGitHubRepositories,
       ),
     )
   }

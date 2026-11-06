@@ -1,5 +1,6 @@
 import type { AccountResponse } from '../../shared/account'
-import type { BoatKeyStatus, User } from '../../shared/api'
+import type { User } from '../../shared/api'
+import { BASE_IMAGE } from '../../shared/base-image'
 import type { MembersResponse } from '../../shared/members'
 import type { Attachment } from '../../shared/messages'
 import type {
@@ -36,7 +37,6 @@ export interface OrgState {
   /** Each build with its log, the newest first. */
   builds: readonly BuildResponse[]
   currentImageBuildId: string | null
-  boatKey: BoatKeyStatus
   members: MembersResponse
 }
 
@@ -55,12 +55,39 @@ export interface DevState {
 }
 
 /**
- * A new org: the default section, no workspaces, the repositories that the
- * GitHub App reaches with none chosen, empty scripts, no builds, no Boat
- * key, and the user as its only member.
+ * The repositories of a new org: every repository of the account catalogue,
+ * which the person and the GitHub App both reach, with the chosen GitHub
+ * IDs added.
  */
-export function freshOrg(org: OrgSummary, user: User, now: number): OrgState {
-  const { sectionList, repositories } = coreFixtures()
+function catalogueOf(
+  orgId: string,
+  chosen: readonly number[],
+): readonly Repository[] {
+  const taken: string[] = []
+  return coreFixtures().githubRepositories.repositories.map((repository) => {
+    const id = uniqueId(repository.fullName.split('/').at(-1) ?? 'repo', taken)
+    taken.push(id)
+    return {
+      ...repository,
+      id,
+      orgId,
+      selected: chosen.includes(repository.githubId),
+    }
+  })
+}
+
+/**
+ * A new org: the default section, no workspaces, the repositories of the
+ * catalogue with the chosen ones added, empty scripts with the base image,
+ * no builds, and the user as its only member.
+ */
+export function freshOrg(
+  org: OrgSummary,
+  user: User,
+  now: number,
+  chosen: readonly number[] = [],
+): OrgState {
+  const { sectionList } = coreFixtures()
   const general =
     sectionList.sections.find((section) => section.isDefault) ??
     sectionList.sections[0]
@@ -71,12 +98,9 @@ export function freshOrg(org: OrgSummary, user: User, now: number): OrgState {
     starts: new Map(),
     created: new Set(),
     running: new Map(),
-    repositories: repositories.repositories.map((repository) => ({
-      ...repository,
-      orgId: org.id,
-      selected: false,
-    })),
+    repositories: catalogueOf(org.id, chosen),
     settings: {
+      baseImage: BASE_IMAGE,
       installScript: '',
       startupScript: '',
       envVars: [],
@@ -85,7 +109,6 @@ export function freshOrg(org: OrgSummary, user: User, now: number): OrgState {
     },
     builds: [],
     currentImageBuildId: null,
-    boatKey: { configured: false },
     members: {
       members: [{ user, role: org.role, joinedAt: now }],
       invites: [],

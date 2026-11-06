@@ -3,6 +3,8 @@ import type {
   AgentLoginStatus,
   GitHubInstallation,
   GitHubInstallationsResponse,
+  GitHubRepositoriesResponse,
+  GitHubRepository,
 } from '../../shared/account'
 import type {
   Agent,
@@ -10,7 +12,7 @@ import type {
   AgentModel,
   Effort,
 } from '../../shared/agents'
-import type { BoatKeyStatus, OrgRole, User } from '../../shared/api'
+import type { OrgRole, User } from '../../shared/api'
 import type { MessageSender } from '../../shared/messages'
 import type {
   GetStartedResponse,
@@ -40,6 +42,11 @@ export const EFFORTS = [
   'max',
 ] as const satisfies readonly Effort[]
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
+/**
+ * The step names that a reply of Get started can hold. An older reply also
+ * lists `boat-key`, which decision 80 made obsolete: the app reads it, and
+ * shows and waits for only the steps of `getStartedOrder`.
+ */
 export const GET_STARTED_STEPS = [
   'github-app',
   'org',
@@ -77,10 +84,12 @@ export function readOrg(value: unknown): OrgSummary {
       deletesAt: count(fields, 'deletesAt'),
     }
   })
+  const initials = maybeText(org, 'initials')
   const summary: OrgSummary = {
     id: text(org, 'id'),
     name: text(org, 'name'),
     role: choice(org, 'role', ROLES),
+    ...(initials === null ? {} : { initials }),
   }
   return deletion ? { ...summary, deletion } : summary
 }
@@ -166,6 +175,25 @@ export function readInstallations(value: unknown): GitHubInstallationsResponse {
   }
 }
 
+function readGitHubRepository(value: unknown): GitHubRepository {
+  const repository = record(value, 'repository')
+  return {
+    githubId: count(repository, 'githubId'),
+    fullName: text(repository, 'fullName'),
+    description: text(repository, 'description'),
+    defaultBranch: text(repository, 'defaultBranch'),
+    installationId: count(repository, 'installationId'),
+  }
+}
+
+/** The repositories that the person and the GitHub App both reach. */
+export function readGitHubRepositories(
+  value: unknown,
+): GitHubRepositoriesResponse {
+  const body = record(value, 'repositories')
+  return { repositories: items(body, 'repositories', readGitHubRepository) }
+}
+
 export function readGetStarted(value: unknown): GetStartedResponse {
   const body = record(value, 'get started')
   return {
@@ -178,14 +206,4 @@ export function readGetStarted(value: unknown): GetStartedResponse {
       }
     }),
   }
-}
-
-export function readBoatKey(value: unknown): BoatKeyStatus {
-  const key = record(value, 'Boat key')
-  if (!flag(key, 'configured')) return { configured: false }
-  const lastFour = maybeText(key, 'lastFour')
-  const updatedAt = count(key, 'updatedAt')
-  return lastFour === null
-    ? { configured: true, updatedAt }
-    : { configured: true, updatedAt, lastFour }
 }

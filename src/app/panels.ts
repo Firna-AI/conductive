@@ -19,14 +19,18 @@ const storageKeys: Readonly<Record<Panel, string>> = {
   right: 'conducting.right-width',
 }
 
-/** A width in the range of its panel, in whole px. */
-export function clampWidth(panel: Panel, value: number): number {
-  const range = panelRanges[panel]
-  return Math.min(range.max, Math.max(range.min, Math.round(value)))
-}
-
 /** `null` means that the user has not chosen a width, so the layout's own applies. */
 export type PanelState = Readonly<Record<Panel, number | null>>
+
+/** A move of the edge of a panel: by some px, or to one end of its range. */
+export type PanelMove = { by: number } | { to: 'min' | 'max' }
+
+/** One drag of the edge of a panel. `by` is the change of the width. */
+export interface PanelDrag {
+  move(by: number): void
+  /** Ends the drag at its last move. A second call changes nothing. */
+  end(): void
+}
 
 function readWidth(storage: KeyValueStorage | null, panel: Panel) {
   let stored: string | null
@@ -36,7 +40,11 @@ function readWidth(storage: KeyValueStorage | null, panel: Panel) {
     return null
   }
   if (stored === null || !/^\d+$/.test(stored)) return null
-  return clampWidth(panel, Number(stored))
+  const width = Number(stored)
+  if (width === 0) return null
+  // A width under the range comes from a panel that the layout showed
+  // narrower than its range, where the user chose it. It comes back as it is.
+  return Math.min(panelRanges[panel].max, width)
 }
 
 /**
@@ -61,11 +69,62 @@ export class PanelWidths {
     return this.widths.get()[panel] ?? panelRanges[panel].value
   }
 
-  /** Sets a width. A drag saves only its last width, as `save: false` says. */
-  set(panel: Panel, value: number, options: { save?: boolean } = {}): void {
-    const width = clampWidth(panel, value)
+  /**
+   * The width after a move from `from`, the width that the panel shows. The
+   * width stays in a range that holds `from`: the range of the panel,
+   * widened to `from` when the layout shows the panel outside it. So a
+   * shrink never widens a panel, and Home and End go to the ends of that
+   * range. The keys and the drag all use this one rule.
+   */
+  next(panel: Panel, from: number, move: PanelMove): number {
+    const range = panelRanges[panel]
+    const shown = Math.round(from)
+    const low = Math.min(range.min, shown)
+    const high = Math.max(range.max, shown)
+    const target =
+      'by' in move ? shown + move.by : move.to === 'min' ? low : high
+    return Math.min(high, Math.max(low, Math.round(target)))
+  }
+
+  /** One step of the keys. A step that ends at `from` changes and stores nothing. */
+  step(panel: Panel, from: number, move: PanelMove): void {
+    const width = this.next(panel, from, move)
+    if (width !== Math.round(from)) this.keep(panel, width)
+  }
+
+  /**
+   * One drag from `from`. Each move shows its width at once, and the end
+   * stores the last one. A drag that ends where it started gets back the
+   * width from before the drag, and stores nothing.
+   */
+  drag(panel: Panel, from: number): PanelDrag {
+    const before = this.widths.get()[panel]
+    let last: number | null = null
+    let ended = false
+    return {
+      move: (by) => {
+        if (ended) return
+        const width = this.next(panel, from, { by })
+        last = width === Math.round(from) ? null : width
+        this.put(panel, last ?? before)
+      },
+      end: () => {
+        if (ended) return
+        ended = true
+        if (last === null) this.put(panel, before)
+        else this.keep(panel, last)
+      },
+    }
+  }
+
+  private put(panel: Panel, width: number | null): void {
+    if (this.widths.get()[panel] === width) return
     this.widths.change((current) => ({ ...current, [panel]: width }))
-    if (options.save === false) return
+  }
+
+  /** Shows a width, and keeps it in the browser for the next page load. */
+  private keep(panel: Panel, width: number): void {
+    this.put(panel, width)
     try {
       this.storage?.setItem(storageKeys[panel], String(width))
     } catch {

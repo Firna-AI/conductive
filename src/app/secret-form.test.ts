@@ -1,51 +1,58 @@
 import { describe, expect, test } from 'vitest'
-import { boatKeyPath } from '../shared/api'
+import { agentLoginPath } from '../shared/account'
 import { FakeApiServer } from '../test-support/fake-api'
-import { FAKE_IDS } from '../test-support/fixtures/core'
-import { OrgModel } from './org-model'
+import { AppModel } from './app-model'
 import { SecretForm } from './secret-form'
-import { saveBoatKey } from './settings-actions'
 import { testServices } from './test-kit'
 
-const path = boatKeyPath(FAKE_IDS.org)
+const path = agentLoginPath('codex')
 
 describe('SecretForm', () => {
   test('a saved secret leaves the field empty, and a refused one stays for a fix', async () => {
     const server = new FakeApiServer()
-    const org = new OrgModel(testServices(server), FAKE_IDS.org)
+    const app = new AppModel(testServices(server))
+    await app.start()
+    const sent = server.requests.length
     const form = new SecretForm()
-    expect(await form.submit((key) => saveBoatKey(org, key))).toBe(false)
+    const save = (secret: string) =>
+      app.account.saveLogin({ agent: 'codex', kind: 'api-key', secret })
+    expect(await form.submit(save)).toBe(false)
     expect(form.state.get().missing).toBe(true)
-    expect(server.requests).toHaveLength(0)
+    expect(server.requests).toHaveLength(sent)
     server.json(
       'PUT',
       path,
       {
         error: {
-          code: 'boat_account_mismatch',
-          message: 'This key uses another Boat account.',
+          code: 'login_refused',
+          message: 'OpenAI refused this key.',
         },
       },
-      409,
+      400,
     )
-    form.set('boat_sk_other_account')
-    expect(await form.submit((key) => saveBoatKey(org, key))).toBe(false)
-    expect(form.value.get()).toBe('boat_sk_other_account')
-    expect(form.state.get().error?.code).toBe('boat_account_mismatch')
+    form.set('sk-refused')
+    expect(await form.submit(save)).toBe(false)
+    expect(form.value.get()).toBe('sk-refused')
+    expect(form.state.get().error?.code).toBe('login_refused')
     server.json('PUT', path, {
-      configured: true,
+      agent: 'codex',
+      connected: true,
+      kind: 'api-key',
       updatedAt: 1,
-      lastFour: 'Qx2a',
     })
-    form.set('boat_sk_same_account_Qx2a')
-    expect(await form.submit((key) => saveBoatKey(org, key))).toBe(true)
+    form.set('sk-accepted')
+    expect(await form.submit(save)).toBe(true)
     expect(await server.requests.at(-1)?.json()).toEqual({
-      key: 'boat_sk_same_account_Qx2a',
+      agent: 'codex',
+      kind: 'api-key',
+      secret: 'sk-accepted',
     })
     expect(form.value.get()).toBe('')
-    expect(org.boatKey.get()).toEqual({
-      state: 'ready',
-      value: { configured: true, updatedAt: 1, lastFour: 'Qx2a' },
+    expect(app.account.login('codex')).toEqual({
+      agent: 'codex',
+      connected: true,
+      kind: 'api-key',
+      updatedAt: 1,
     })
   })
 

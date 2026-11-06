@@ -13,6 +13,7 @@ import { BuildButton } from './BuildParts'
 import { EnvVarsSection } from './EnvVarsSection'
 import { Loaded } from './LoadState'
 import { ScriptSection } from './ScriptSection'
+import { softwareSentence } from './software'
 
 /**
  * The Cloud computer tab as the model holds it: the builds, the scripts,
@@ -77,11 +78,14 @@ export function ComputerSettings(props: {
             <ScriptSection
               admin={admin}
               computer={computer}
-              description={
+              description={[
+                softwareSentence(value.baseImage),
                 admin
                   ? 'The install script runs only when you build the computer.'
-                  : 'The install script runs only at a build of the computer.'
-              }
+                  : 'The install script runs only at a build of the computer.',
+              ]
+                .filter((sentence) => sentence !== null)
+                .join(' ')}
               kind="installScript"
               notice={value.needsBuild ? changed : undefined}
               script={value.installScript}

@@ -37,7 +37,7 @@ export interface AppServices {
   newId: () => string
   /** Opens a page that the Worker or another site serves, such as sign-in. */
   leave: (url: string) => void
-  /** Copies text, such as the actions of a Boat key. */
+  /** Copies text, such as a command to paste elsewhere. */
   copy: (text: string) => Promise<void>
 }
 

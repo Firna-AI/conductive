@@ -17,9 +17,10 @@ as features, as [Composition](#composition) says.
   [Get started steps](../../README.md#get-started) say.
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
-  example `?role=member`, `?workspace=starting`, `?firstRun=boat-key`,
-  `?boatKey=none`, `?login=none`, or `?deleted=1`. `dev/options.ts` lists
-  them.
+  example `?role=member`, `?workspace=starting`, `?firstRun=org`,
+  `?login=none`, or `?deleted=1`. `dev/options.ts` lists them. A new org
+  of the dev fake gets every repository of the account's list, and keeps
+  its custom initials through rename, delete, and restore.
 - The production build uses `live-services.ts`: the Worker on the origin of
   the page, and its event socket.
 
@@ -64,8 +65,8 @@ the invite, the roles, and the removal there.
   that leaves stops the timer. Screens that show a part share its reads.
 - The timer is short while a row works, needs input, or starts, or while a
   build runs. Otherwise it is slow, so that changes from other tabs and
-  other people show. Repositories, the Boat key, and the members read at
-  entry and at focus only. The waits are choices of the app, not product
+  other people show. Repositories and the members read at entry and at
+  focus only. The waits are choices of the app, not product
   limits.
 - Each part is a `Resource`. A screen sees the answer of the newest read,
   then the changes that the server confirmed after that read started, such
@@ -77,13 +78,18 @@ the invite, the roles, and the removal there.
   answer sets the section of the workspace, not its state. A workspace
   record from an event, an open, or Archive keeps the place of its row,
   because only a read of the list and a move change the place.
-- A save whose answer holds the whole value, such as the Boat key, the
-  repositories, or the computer settings, counts as an answer from the time
-  that it arrives. A read that started before it changes nothing.
+- A save can answer with the whole value, such as the repositories or
+  computer settings. Its answer counts from its arrival. A read that
+  started before it changes nothing.
 - The saves of one value go out one at a time. The next save starts after
   the answer of the one before, because an answer carries no order of its
   own. A failed save rejects only its own caller, and the next save goes.
   List writes do not wait for each other.
+- A repository save adds or removes that repository only. It keeps the
+  choices from other saves and other clients. The save queue keeps an add
+  before a later remove of the same repository.
+- A Resume reply keeps each newer field change that arrived while its
+  request ran. A reply after close changes no workspace state.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.
@@ -95,6 +101,32 @@ the invite, the roles, and the removal there.
   order does not count. A hidden page sends no read mark. When the page
   shows again, the mark goes through the newest event that arrived. A page
   without the focus still shows its output, so the focus does not count.
+
+## Screens
+
+- The app runs every cloud computer on its own Boat account, so no org has
+  a Boat key (decision 80). The app has no key screen, tab, notice, or Get
+  started step.
+- Get started has three steps: the GitHub App, the first org, and Claude or
+  Codex. An older reply that still lists the key step does not hold the
+  first run open.
+- Create org asks for the name and the initials, and lists the
+  repositories that the person and the GitHub App both reach, from
+  `AccountModel.repositories`, before the org exists. The create sends the
+  GitHub IDs of the chosen ones.
+- The rail, the org switcher, and General show the saved initials of an
+  org. An org without them shows the initials of its name.
+- The Cloud computer tab names the software of the base image from the
+  settings reply. An older reply without it names no software.
+- A step of a panel, by a key or a drag, starts from the width that the
+  panel shows. It stays in a range that holds that width, so a shrink
+  never widens a panel that the layout shows narrower than its range. A
+  step that ends at its start width stores nothing.
+- A sheet or a dialog makes the rest of its frame inert through
+  `OverlayHost`. It keeps Tab and Shift+Tab inside, also from the layer
+  itself and from a text field. When it closes, the frame is active again
+  before the focus goes back to the trigger. A desktop menu leaves the
+  frame active.
 
 ## Rules for this code
 
@@ -127,16 +159,22 @@ the invite, the roles, and the removal there.
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
 fake API, requests or answers that wait for the test (also two at one
 path), a manual timer with the wait of each pending timer, a manual page
-focus and visibility, and a recording event source. `../shell/test-render.tsx` draws a screen with
-every provider through server rendering, after the test loads its data.
+focus and visibility, and a recording event source.
+`../shell/test-render.tsx` draws a screen with every provider through
+server rendering, after the test loads its data. A test that needs focus
+and keys opts into happy-dom with `// @vitest-environment happy-dom`, and
+mounts the screen with `../shell/test-mount.tsx`.
 
 ## Key code
 
 - `api/client.ts`: the JSON client and `ApiError`. `api/read-*.ts`: the readers.
 - `app-model.ts`: the session, the orgs, the models list, and Get started.
-- `org-model.ts`: the sections, workspaces, repositories, builds, Boat key,
-  members, and computer settings of one org, with `watch` and the wait of
-  each part.
+- `org-model.ts`: the sections, workspaces, repositories, builds, members,
+  and computer settings of one org, with `watch` and the wait of each part.
+- `account-model.ts`: the agent logins, the default model, the GitHub App
+  installations, and the repositories that Create org offers.
+- `panels.ts`: `PanelWidths`, the widths of the panels, and `next`, the
+  one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
   its waiting writes. `refresh.ts`: `Refresher`, the shared reads of a part
   while screens show it.
@@ -148,3 +186,7 @@ every provider through server rendering, after the test loads its data.
 - `events.ts`: the ordered event stream and the event socket.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
+- `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
+  `useDismiss`, the layer of sheets and dialogs.
+- `../shell/orgs/`: Create org and the name and initials fields.
+  `../shell/settings/RepositorySearch.tsx`: the searchable repository list.

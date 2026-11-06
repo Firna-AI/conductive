@@ -4,7 +4,7 @@ import { Check } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
 import menu from '../../../docs/mockups/src/components/common/Menu.module.css'
-import { useDismiss, useFocusReturn } from './Overlay'
+import { useDismiss, useLayerFocus } from './Overlay'
 import { Sheet } from './Sheet'
 import { useViewport } from './viewport'
 import ui from './ui.module.css'
@@ -97,7 +97,8 @@ export function MenuList(props: {
   wide?: boolean
 }) {
   const list = useRef<HTMLDivElement>(null)
-  useFocusReturn(list)
+  // A menu in a sheet leaves the focus to the sheet, which is modal.
+  useLayerFocus(list, { modal: false, enabled: props.placement !== 'sheet' })
   return (
     <div
       aria-label={props.label}

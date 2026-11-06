@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AppModel } from '../app/app-model'
 import { memoryNavigation, NavigationContext } from '../app/navigation'
@@ -21,6 +21,31 @@ export async function startedApp(
   return app
 }
 
+export interface ScreenOptions {
+  viewport?: Viewport
+  href?: string
+}
+
+/** Every provider of the app, around a screen of a test. */
+export function AppProviders(
+  props: ScreenOptions & { app: AppModel; children: ReactNode },
+) {
+  const { app } = props
+  return (
+    <ServicesContext.Provider value={app.services}>
+      <AppModelContext.Provider value={app}>
+        <NavigationContext.Provider value={memoryNavigation(props.href ?? '/')}>
+          <PanelContext.Provider value={new PanelWidths(app.services.storage)}>
+            <ViewportProvider viewport={props.viewport ?? 'desktop'}>
+              <ThemeRoot scheme="dark">{props.children}</ThemeRoot>
+            </ViewportProvider>
+          </PanelContext.Provider>
+        </NavigationContext.Provider>
+      </AppModelContext.Provider>
+    </ServicesContext.Provider>
+  )
+}
+
 /**
  * Draws a screen as HTML, with every provider of the app. Server rendering
  * runs no effects, so a test loads the data that the screen shows first.
@@ -28,22 +53,12 @@ export async function startedApp(
 export function renderScreen(
   app: AppModel,
   screen: ReactElement,
-  options: { viewport?: Viewport; href?: string } = {},
+  options: ScreenOptions = {},
 ): string {
   return renderToStaticMarkup(
-    <ServicesContext.Provider value={app.services}>
-      <AppModelContext.Provider value={app}>
-        <NavigationContext.Provider
-          value={memoryNavigation(options.href ?? '/')}
-        >
-          <PanelContext.Provider value={new PanelWidths(app.services.storage)}>
-            <ViewportProvider viewport={options.viewport ?? 'desktop'}>
-              <ThemeRoot scheme="dark">{screen}</ThemeRoot>
-            </ViewportProvider>
-          </PanelContext.Provider>
-        </NavigationContext.Provider>
-      </AppModelContext.Provider>
-    </ServicesContext.Provider>,
+    <AppProviders app={app} {...options}>
+      {screen}
+    </AppProviders>,
   )
 }
 

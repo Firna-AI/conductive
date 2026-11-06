@@ -9,6 +9,11 @@
   display: contents;
 }
 
+/* The content of a frame. A sheet or a dialog makes it inert. */
+.overlayContent {
+  display: contents;
+}
+
 .plainButton {
   width: 100%;
   margin: 0;

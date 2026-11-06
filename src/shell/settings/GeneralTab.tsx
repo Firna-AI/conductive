@@ -1,31 +1,42 @@
 import { useState } from 'react'
-import { Input } from '@firna/ui/input'
 import { Trash2 } from 'lucide-react'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp } from '../context'
+import {
+  orgNameFields,
+  OrgNameFields,
+  type OrgNameDraft,
+} from '../orgs/OrgNameFields'
 import { ActionButton } from '../ui/actions'
+import { tileInitials } from '../ui/Avatars'
 import { useAction } from '../ui/useAction'
 import { DeleteOrgDialog, deletionDays } from './DeleteOrgDialog'
 
 /**
- * The name of the org, which an admin changes. Save waits until the name
- * changes, and a name of spaces only does not count.
+ * The name and the initials of the org, which an admin changes. Save waits
+ * for a change, and a name of spaces only does not count. Empty initials
+ * keep the saved ones.
  */
 function NameSection(props: { org: OrgSummary }) {
+  const { org } = props
   const app = useApp()
-  const { field } = useControlSizes()
-  const [name, setName] = useState(props.org.name)
+  const [draft, setDraft] = useState<OrgNameDraft>({
+    name: org.name,
+    initials: org.initials ?? '',
+  })
   const rename = useAction(
-    (next: string) => app.renameOrg(props.org.id, next),
-    'The name was not saved',
+    () => app.renameOrg(org.id, orgNameFields(draft)),
+    'The org was not saved',
   )
-  const next = name.trim()
-  const changed = next !== '' && next !== props.org.name
+  const next = orgNameFields(draft)
+  const changed =
+    next.name !== '' &&
+    (next.name !== org.name ||
+      (next.initials !== undefined && next.initials !== org.initials))
   const save = () => {
-    if (changed) rename.run(next)
+    if (changed) rename.run()
   }
   return (
     <Section
@@ -36,12 +47,11 @@ function NameSection(props: { org: OrgSummary }) {
       }
       title="Org"
     >
-      <Input
-        label="Name"
-        onChangeText={setName}
-        onSubmitEditing={save}
-        size={field}
-        value={name}
+      <OrgNameFields
+        change={setDraft}
+        disabled={rename.pending}
+        draft={draft}
+        submit={save}
       />
     </Section>
   )
@@ -77,23 +87,28 @@ function DeleteSection(props: { org: OrgSummary }) {
 }
 
 /**
- * The General tab. An admin renames and deletes the org. A member sees the
- * name without a field, because only an admin changes it (decision 57).
- * The org has no initials of its own: the rail takes them from the name.
+ * The General tab. An admin renames the org, sets its initials, and
+ * deletes it. A member sees the name and the initials without fields,
+ * because only an admin changes them (decision 57).
  */
 export function GeneralTab(props: { org: OrgSummary }) {
   const { org } = props
   if (org.role !== 'admin') {
     return (
       <Section description="Only an admin can change it." title="Org">
-        <DetailList rows={[{ term: 'Name', value: org.name }]} />
+        <DetailList
+          rows={[
+            { term: 'Name', value: org.name },
+            { term: 'Initials', value: tileInitials(org) },
+          ]}
+        />
       </Section>
     )
   }
   return (
     <>
-      {/* A new name, saved here or elsewhere, starts a new draft. */}
-      <NameSection key={org.name} org={org} />
+      {/* A new name or initials, saved here or elsewhere, start a new draft. */}
+      <NameSection key={`${org.name} ${org.initials ?? ''}`} org={org} />
       <DeleteSection org={org} />
     </>
   )

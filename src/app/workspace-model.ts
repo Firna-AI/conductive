@@ -9,10 +9,10 @@ import { readWorkspaceResponse } from './api/read-workspaces'
 import { ArchiveModel } from './archive-model'
 import { WorkspaceStream, type Delay } from './events'
 import type { OrgModel } from './org-model'
+import type { Change } from './resource'
 import {
   asApiError,
   loading,
-  patch,
   ready,
   Store,
   valueOf,
@@ -33,6 +33,8 @@ export class WorkspaceModel {
   /** Each open and each close counts one up, so an old open knows it is obsolete. */
   private generation = 0
   private reading = false
+  /** Newer field changes to replay over each pending Resume answer. */
+  private readonly resuming = new Set<Change<WorkspaceResponse>[]>()
 
   constructor(org: OrgModel, workspaceId: string, delay?: Delay) {
     this.org = org
@@ -43,8 +45,7 @@ export class WorkspaceModel {
       delay ?? org.services.delay,
     )
     this.archive = new ArchiveModel(org, workspaceId, (detail) => {
-      this.detail.set(ready(detail))
-      this.org.putWorkspace(detail.workspace)
+      this.setDetail(detail)
     })
   }
 
@@ -78,8 +79,7 @@ export class WorkspaceModel {
       return
     }
     if (run !== this.generation) return
-    this.detail.set(ready(detail))
-    this.org.putWorkspace(detail.workspace)
+    this.setDetail(detail)
     // The read mark follows all its inputs, so their order does not count:
     // the number of an event changes before the event applies, and a page
     // that shows again marks the output that arrived while it was hidden.
@@ -98,13 +98,14 @@ export class WorkspaceModel {
   /** Stops the stream. An open that still runs can no longer start it. */
   close(): void {
     this.generation += 1
+    this.resuming.clear()
     this.archive.cancel()
     this.stream.stop()
     for (const stop of this.stops.splice(0)) stop()
   }
 
   private apply(event: ShellEvent): void {
-    patch(this.detail, (detail) => {
+    const change: Change<WorkspaceResponse> = (detail) => {
       switch (event.type) {
         case 'workspace.updated':
           return { ...detail, workspace: event.workspace }
@@ -116,21 +117,38 @@ export class WorkspaceModel {
             workspace: { ...detail.workspace, name: event.name },
           }
       }
-    })
+    }
     const detail = valueOf(this.detail.get())
-    if (detail) this.org.putWorkspace(detail.workspace)
+    if (detail) this.setDetail(change(detail), change)
+  }
+
+  private setDetail(
+    detail: WorkspaceResponse,
+    change: Change<WorkspaceResponse> = () => detail,
+  ): void {
+    for (const changes of this.resuming) changes.push(change)
+    this.detail.set(ready(detail))
+    this.org.putWorkspace(detail.workspace)
   }
 
   /** Resume of a stopped sandbox, and Try again after a start that failed. */
   async resume(): Promise<void> {
-    const detail = await this.api.send(
-      'POST',
-      workspacePaths.resume(this.org.orgId, this.workspaceId),
-      {},
-      readWorkspaceResponse,
-    )
-    this.detail.set(ready(detail))
-    this.org.putWorkspace(detail.workspace)
+    const run = this.generation
+    const changes: Change<WorkspaceResponse>[] = []
+    this.resuming.add(changes)
+    let detail: WorkspaceResponse
+    try {
+      detail = await this.api.send(
+        'POST',
+        workspacePaths.resume(this.org.orgId, this.workspaceId),
+        {},
+        readWorkspaceResponse,
+      )
+    } finally {
+      this.resuming.delete(changes)
+    }
+    if (run !== this.generation) return
+    this.setDetail(changes.reduce((value, change) => change(value), detail))
   }
 
   /** Counts input in the workspace, at most once a minute. */

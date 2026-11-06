@@ -7,7 +7,8 @@ import {
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import { AGENTS, GET_STARTED_STEPS } from '../api/read-core'
+import { AGENTS } from '../api/read-core'
+import { getStartedOrder } from '../get-started'
 import type { DevOptions } from './options'
 import {
   freshOrg,
@@ -22,8 +23,8 @@ type CoreFixtures = ReturnType<typeof coreFixtures>
 const DELETE_AFTER = 604_800_000
 
 /**
- * Acme with the recorded sections, workspaces, settings, build, Boat key,
- * and members. A starting workspace has the recorded resume step, and a
+ * Acme with the recorded sections, workspaces, settings, build, and
+ * members. A starting workspace has the recorded resume step, and a
  * workspace in the error state has the recorded start error.
  */
 function acme(
@@ -45,7 +46,6 @@ function acme(
     deletedAt: FAKE_TIME,
     deletesAt: FAKE_TIME + DELETE_AFTER,
   }
-  const noKey = options.noBoatKey || options.firstRun === 'boat-key'
   return {
     org: options.deleted ? { ...summary, deletion } : summary,
     sections: core.sectionList.sections,
@@ -57,15 +57,15 @@ function acme(
     settings: core.settings.settings,
     builds: [core.build],
     currentImageBuildId: core.builds.currentImageBuildId,
-    boatKey: noKey ? { configured: false } : core.boatKey,
     members: core.members,
   }
 }
 
 /**
  * The state when the app opens. Get started is done before `firstRun`, and
- * not done from it on. The other recorded orgs start as new orgs with a
- * Boat key, because the recorded server has no replies for them.
+ * not done from it on. Its steps are the three of the app, without the key
+ * step that decision 80 removed. The other recorded orgs start as new
+ * orgs, because the recorded server has no replies for them.
  */
 export function seedState(options: DevOptions): DevState {
   const core = coreFixtures(options.server.role)
@@ -75,12 +75,12 @@ export function seedState(options: DevOptions): DevState {
   const noLogin = options.noAgentLogin || firstRun !== null
   const done =
     firstRun === null
-      ? GET_STARTED_STEPS.length
-      : GET_STARTED_STEPS.indexOf(firstRun)
+      ? getStartedOrder.length
+      : getStartedOrder.indexOf(firstRun)
   const orgs = core.orgs.orgs.map((org) =>
     org.id === FAKE_IDS.org
       ? acme(org, core, options)
-      : { ...freshOrg(org, user, FAKE_TIME), boatKey: core.boatKey },
+      : freshOrg(org, user, FAKE_TIME),
   )
   return {
     account: {
@@ -91,7 +91,7 @@ export function seedState(options: DevOptions): DevState {
     },
     getStarted: {
       orgId: noOrg ? null : FAKE_IDS.org,
-      steps: GET_STARTED_STEPS.map((step, index) => ({
+      steps: getStartedOrder.map((step, index) => ({
         step,
         complete: index < done,
       })),

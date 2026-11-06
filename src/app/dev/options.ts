@@ -3,8 +3,8 @@ import type { BannerState } from '../../shared/github'
 import type { GetStartedStep } from '../../shared/onboarding'
 import type { FakeApiOptions } from '../../test-support/fake-api'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
-import { GET_STARTED_STEPS } from '../api/read-core'
 import { WORKSPACE_STATES } from '../api/read-workspaces'
+import { getStartedOrder } from '../get-started'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
@@ -41,11 +41,9 @@ const BANNERS = [
  * - `workspace=<state>`: the state of `checkout-autocomplete`.
  * - `conversation=<scenario>`: its recorded chat, such as `running`.
  * - `banner=<state>`: its GitHub banner, such as `merged`.
- * - `firstRun=github-app|org|boat-key|agent-login`: Get started is not
- *   done from that step on. With `github-app` or `org`, the user has no
- *   org until Create org runs. With `boat-key`, Acme has no Boat key. In
- *   each first run, no agent login is connected.
- * - `boatKey=none`: Acme has no Boat key.
+ * - `firstRun=github-app|org|agent-login`: Get started is not done from
+ *   that step on. With `github-app` or `org`, the user has no org until
+ *   Create org runs. In each first run, no agent login is connected.
  * - `login=none`: no agent login is connected.
  * - `deleted=1`: Acme is deleted, as its admins see it.
  * - `signedOut=1`: the Worker refuses the session, so the sign-in shows.
@@ -57,7 +55,6 @@ export interface DevOptions {
   server: FakeApiOptions
   /** The first step of Get started that is not done, or `null`. */
   firstRun: GetStartedStep | null
-  noBoatKey: boolean
   noAgentLogin: boolean
   deleted: boolean
   signedOut: boolean
@@ -84,8 +81,7 @@ export function readDevOptions(search: string): DevOptions {
       conversation: pick(params, 'conversation', CONVERSATIONS),
       banner: pick(params, 'banner', BANNERS),
     },
-    firstRun: pick(params, 'firstRun', GET_STARTED_STEPS) ?? null,
-    noBoatKey: params.get('boatKey') === 'none',
+    firstRun: pick(params, 'firstRun', getStartedOrder) ?? null,
     noAgentLogin: params.get('login') === 'none',
     deleted: params.get('deleted') === '1',
     signedOut: params.get('signedOut') === '1',

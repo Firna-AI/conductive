@@ -8,7 +8,11 @@ import {
   type ImageBuild,
 } from '../../shared/org-settings'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import {
+  coreFixtures,
+  FAKE_IDS,
+  FAKE_TIME,
+} from '../../test-support/fixtures/core'
 import { renderScreen, startedApp, textOf } from '../test-render'
 import { ComputerSettings } from './ComputerTab'
 import { OrgSettingsScreen } from './OrgSettingsScreen'
@@ -34,7 +38,26 @@ function tabLabels(html: string): string[] {
 }
 
 describe('OrgSettingsScreen', () => {
-  test('a member sees no Boat key tab, and General, Repositories, and Cloud computer without edit controls', async () => {
+  test('an admin gets the tabs General, Repositories, Cloud computer, and Members, and fields for the name and the initials', async () => {
+    const { app, org, user } = await signedIn(new FakeApiServer())
+    const html = renderScreen(
+      app,
+      <OrgSettingsScreen org={org} tab="general" user={user} />,
+    )
+    expect(tabLabels(html)).toEqual([
+      'General',
+      'Repositories',
+      'Cloud computer',
+      'Members',
+    ])
+    expect(
+      [...html.matchAll(/<input[^>]*value="([^"]*)"/g)].map(
+        ([, value]) => value,
+      ),
+    ).toEqual(['Acme', 'AC'])
+  })
+
+  test('a member sees General, Repositories, and Cloud computer without edit controls', async () => {
     const { app, org, user, model } = await signedIn(
       new FakeApiServer({ role: 'member' }),
     )
@@ -46,7 +69,6 @@ describe('OrgSettingsScreen', () => {
       renderScreen(app, <OrgSettingsScreen org={org} tab={tab} user={user} />)
     const pages = {
       general: screen('general'),
-      'boat-key address': screen('boat-key'),
       repositories: screen('repositories'),
       'cloud computer': renderScreen(
         app,
@@ -63,8 +85,8 @@ describe('OrgSettingsScreen', () => {
       'Cloud computer',
       'Members',
     ])
-    expect(textOf(pages['boat-key address'])).toContain(
-      'Org Only an admin can change it. Name Acme',
+    expect(textOf(pages.general)).toContain(
+      'Org Only an admin can change it. Name Acme Initials AC',
     )
     const repositories = textOf(pages.repositories)
     expect(repositories).toContain(
@@ -74,6 +96,34 @@ describe('OrgSettingsScreen', () => {
     expect(textOf(pages['cloud computer'])).toContain(
       'Startup script Runs in the cloud computer of each workspace, at each start and resume. #!/usr/bin/env bash set -euo pipefail redis-server --daemonize yes',
     )
+    expect(textOf(pages['cloud computer'])).toContain(
+      'Install software Cloud computers run Ubuntu 24.04 and include Node.js 24, npm, pnpm, Bun, Python 3.12, uv, Go, Rust, Java, GCC, Clang, Docker, git, and gh. The install script runs only at a build of the computer.',
+    )
+  })
+
+  test('an older settings reply without the base image names no software', async () => {
+    const server = new FakeApiServer()
+    const { installScript, startupScript, envVars, updatedAt, needsBuild } =
+      coreFixtures().settings.settings
+    server.json('GET', orgSettingsPaths.settings(FAKE_IDS.org), {
+      settings: {
+        installScript,
+        startupScript,
+        envVars,
+        updatedAt,
+        needsBuild,
+      },
+    })
+    const { app, org, model } = await signedIn(server)
+    const computer = new ComputerModel(model, new ManualDelay().delay)
+    await computer.load()
+    const text = textOf(
+      renderScreen(app, <ComputerSettings computer={computer} org={org} />),
+    )
+    expect(text).toContain(
+      'Install software The install script runs only when you build the computer.',
+    )
+    expect(text).not.toContain('Cloud computers run')
   })
 
   test('a failed newest build shows the end of its log, Try again, and the good build that workspaces still start from', async () => {

@@ -20,7 +20,7 @@ export interface SecretOptions {
 const idle: SecretState = { saving: false, error: null, missing: false }
 
 /**
- * The field of a secret, such as a Boat key, an agent login, or an env var
+ * The field of a secret, such as an agent login or an env var
  * value. The secret leaves the browser in one write, and the field is empty
  * again after the save. A refused secret stays in the field, so the user
  * can fix it.

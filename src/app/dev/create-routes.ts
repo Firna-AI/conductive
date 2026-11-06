@@ -14,7 +14,7 @@ import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { choice, maybeText, nested, record, text, texts } from '../api/parse'
 import { readChoice } from '../api/read-core'
 import { defaultSection } from '../sections'
-import { requireBoatKey, requireOrg, type DevBackend } from './backend'
+import { requireOrg, type DevBackend } from './backend'
 import { ID, json, requiredText, RouteError, type Route } from './router'
 import { createPlan, runStart } from './start-steps'
 import { slugify, type OrgState } from './state'
@@ -94,7 +94,6 @@ function createWorkspace(
   org: OrgState,
   body: unknown,
 ): Response {
-  requireBoatKey(org)
   const fields = record(body)
   const first = readFirstMessage(fields.firstMessage)
   const repositoryId = requiredText(fields, 'repositoryId')

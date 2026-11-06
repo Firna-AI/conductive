@@ -34,7 +34,7 @@ function OrgSwitcherSheet(props: {
               >
                 <OrgTile
                   current={org.id === props.current}
-                  name={org.name}
+                  org={org}
                   size={26}
                 />
                 <span className={styles.sheetLabel}>
@@ -92,7 +92,7 @@ export function ListHeader(props: {
         onClick={() => setOpen(true)}
         type="button"
       >
-        <OrgTile current name={props.org.name} size={24} />
+        <OrgTile current org={props.org} size={24} />
         <span className={ui.hidden}>Switch org: </span>
         <span className={styles.orgName}>{props.org.name}</span>
         <ChevronDown aria-hidden className={styles.chevron} size={15} />

@@ -1,4 +1,3 @@
-import { boatKeyPath, type BoatKeyStatus } from '../shared/api'
 import { membersPath, type MembersResponse } from '../shared/members'
 import {
   orgSettingsPaths,
@@ -14,7 +13,7 @@ import {
   type WorkspaceState,
 } from '../shared/workspaces'
 import { items, record } from './api/parse'
-import { readBoatKey, readSection } from './api/read-core'
+import { readSection } from './api/read-core'
 import { readWorkspaces } from './api/read-workspaces'
 import {
   readBuilds,
@@ -29,7 +28,7 @@ import { Resource } from './resource'
 import type { AppServices } from './services'
 import { ready, Store, valueOf, type Loadable, type Readable } from './store'
 
-export type OrgPart = 'list' | 'repositories' | 'builds' | 'boatKey' | 'members'
+export type OrgPart = 'list' | 'repositories' | 'builds' | 'members'
 
 /**
  * How soon a shown part reads again. These are choices of the app, not
@@ -54,7 +53,7 @@ const buildsWait: RefreshWait<BuildsResponse> = (builds) =>
     ? activeWait
     : idleWait
 
-/** Repositories, the Boat key, and members read at entry and focus only. */
+/** Repositories and members read at entry and focus only. */
 const onEntry: RefreshWait<unknown> = () => null
 
 /** One part of a loaded value, which changes only when that part changes. */
@@ -79,8 +78,8 @@ function partOf<T, P>(
 
 /**
  * The data of one org: its list of sections and workspaces, its
- * repositories, the builds and settings of its cloud computer, its Boat key
- * status, and its members. A part reads while a screen shows it, as
+ * repositories, the builds and settings of its cloud computer, and its
+ * members. A part reads while a screen shows it, as
  * `watch` says. The Cloud computer tab reads the settings itself.
  */
 export class OrgModel {
@@ -90,7 +89,6 @@ export class OrgModel {
     readonly list: Resource<ListData>
     readonly repositories: Resource<readonly Repository[]>
     readonly builds: Resource<BuildsResponse>
-    readonly boatKey: Resource<BoatKeyStatus>
     readonly members: Resource<MembersResponse>
     /**
      * The settings of the cloud computer. Every opening of the Cloud
@@ -102,7 +100,6 @@ export class OrgModel {
   readonly workspaces: Readable<Loadable<readonly Workspace[]>>
   readonly repositories: Readable<Loadable<readonly Repository[]>>
   readonly builds: Readable<Loadable<BuildsResponse>>
-  readonly boatKey: Readable<Loadable<BoatKeyStatus>>
   readonly members: Readable<Loadable<MembersResponse>>
   private readonly parts: Readonly<Record<OrgPart, Refreshing>>
   private readonly drafts = new Map<string, NewWorkspaceModel>()
@@ -127,9 +124,6 @@ export class OrgModel {
       builds: new Resource<BuildsResponse>(() =>
         api.get(orgSettingsPaths.builds(orgId), readBuilds),
       ),
-      boatKey: new Resource<BoatKeyStatus>(() =>
-        api.get(boatKeyPath(orgId), readBoatKey),
-      ),
       members: new Resource<MembersResponse>(() =>
         api.get(membersPath(orgId), readMembers),
       ),
@@ -137,18 +131,16 @@ export class OrgModel {
         api.get(orgSettingsPaths.settings(orgId), readSettings),
       ),
     }
-    const { list, repositories, builds, boatKey, members } = this.resources
+    const { list, repositories, builds, members } = this.resources
     this.sections = partOf(list.store, (value) => value.sections)
     this.workspaces = partOf(list.store, (value) => value.workspaces)
     this.repositories = repositories.store
     this.builds = builds.store
-    this.boatKey = boatKey.store
     this.members = members.store
     this.parts = {
       list: new Refresher(list, listWait, services),
       repositories: new Refresher(repositories, onEntry, services),
       builds: new Refresher(builds, buildsWait, services),
-      boatKey: new Refresher(boatKey, onEntry, services),
       members: new Refresher(members, onEntry, services),
     }
   }

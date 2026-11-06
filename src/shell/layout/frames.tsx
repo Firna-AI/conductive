@@ -35,8 +35,8 @@ export function AppFrame(props: {
             <ResizeHandle
               edge="right"
               label="Resize the sidebar"
-              measure={() => sidebar.current?.clientWidth ?? 0}
               panel="sidebar"
+              panelRef={sidebar}
             />
           </aside>
         ) : null}

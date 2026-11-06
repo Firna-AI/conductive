@@ -2,7 +2,13 @@ import { ACCOUNT_PATHS } from '../shared/account'
 import { MODELS_PATH, type AgentModel } from '../shared/agents'
 import { API_PATHS, orgPath, type User } from '../shared/api'
 import { GET_STARTED_PATH, type GetStartedResponse } from '../shared/onboarding'
-import { deleteOrgPath, restoreOrgPath, type OrgSummary } from '../shared/orgs'
+import {
+  deleteOrgPath,
+  restoreOrgPath,
+  type CreateOrgRequest,
+  type OrgSummary,
+  type RenameOrgRequest,
+} from '../shared/orgs'
 import { ApiError } from './api/client'
 import { items, nested, record } from './api/parse'
 import {
@@ -105,23 +111,28 @@ export class AppModel {
     )
   }
 
-  async createOrg(name: string): Promise<OrgSummary> {
+  /**
+   * Creates an org with its name, its custom initials, and the GitHub IDs
+   * of the repositories that it chose from the account's list.
+   */
+  async createOrg(request: CreateOrgRequest): Promise<OrgSummary> {
     const org = await this.services.api.send(
       'POST',
       API_PATHS.orgs,
-      { name },
+      request,
       readOrgResponse,
     )
     this.putOrg(org)
     return org
   }
 
-  async renameOrg(orgId: string, name: string): Promise<void> {
+  /** Saves the name and the initials of an org. */
+  async renameOrg(orgId: string, request: RenameOrgRequest): Promise<void> {
     this.putOrg(
       await this.services.api.send(
         'PATCH',
         orgPath(orgId),
-        { name },
+        request,
         readOrgResponse,
       ),
     )

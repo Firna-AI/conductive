@@ -1,3 +1,4 @@
+import type { BaseImage } from '../../shared/base-image'
 import type { OrgInvite, OrgMember } from '../../shared/members'
 import type {
   BuildLogEvent,
@@ -13,10 +14,12 @@ import {
   flag,
   items,
   maybeCount,
+  maybeNested,
   maybeText,
   nested,
   record,
   text,
+  texts,
 } from './parse'
 import { readUser } from './read-core'
 
@@ -38,9 +41,20 @@ export function readRepositories(value: unknown): Repository[] {
   return items(record(value, 'repositories'), 'repositories', readRepository)
 }
 
+function readBaseImage(value: unknown): BaseImage {
+  const image = record(value, 'baseImage')
+  return {
+    operatingSystem: text(image, 'operatingSystem'),
+    software: texts(image, 'software'),
+  }
+}
+
+/** The settings of the cloud computer. An older reply has no base image. */
 export function readSettings(value: unknown): OrgSettings {
   const settings = record(record(value, 'settings').settings, 'settings')
+  const baseImage = maybeNested(settings, 'baseImage', readBaseImage)
   return {
+    ...(baseImage ? { baseImage } : {}),
     installScript: text(settings, 'installScript'),
     startupScript: text(settings, 'startupScript'),
     envVars: items(settings, 'envVars', (item) => ({

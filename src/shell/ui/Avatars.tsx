@@ -2,6 +2,12 @@ import { Avatar } from '@firna/ui/avatar'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { orgInitials, personInitials } from '../../app/people'
 import type { MessageSender } from '../../shared/messages'
+import type { OrgSummary } from '../../shared/orgs'
+
+/** The initials that the rail shows: the saved ones, else from the name. */
+export function tileInitials(org: Pick<OrgSummary, 'name' | 'initials'>) {
+  return org.initials ?? orgInitials(org.name)
+}
 
 /**
  * The initials of an org on a rounded square with a hairline outline. The
@@ -9,7 +15,7 @@ import type { MessageSender } from '../../shared/messages'
  * square is decorative: its link names the org.
  */
 export function OrgTile(props: {
-  name: string
+  org: Pick<OrgSummary, 'name' | 'initials'>
   size: number
   current?: boolean
 }) {
@@ -18,7 +24,7 @@ export function OrgTile(props: {
   return (
     <Avatar
       decorative
-      label={orgInitials(props.name)}
+      label={tileInitials(props.org)}
       shape="square"
       size={props.size}
       style={{

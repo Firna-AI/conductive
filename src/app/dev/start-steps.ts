@@ -1,11 +1,6 @@
 import type { Repository } from '../../shared/org-settings'
 import type { StartStep, WorkspaceStart } from '../../shared/workspaces'
-import {
-  changeWorkspace,
-  requireBoatKey,
-  requireWorkspace,
-  type DevBackend,
-} from './backend'
+import { changeWorkspace, requireWorkspace, type DevBackend } from './backend'
 import type { OrgState } from './state'
 
 /** The time from the start of one step to the start of the next one. */
@@ -124,7 +119,6 @@ export function resumeWorkspace(
   if (current.state !== 'stopped' && current.state !== 'error' && !stuck) {
     return
   }
-  requireBoatKey(org)
   runStart(backend, org, workspaceId, 'resume', resumePlan)
   changeWorkspace(backend, org, {
     ...current,

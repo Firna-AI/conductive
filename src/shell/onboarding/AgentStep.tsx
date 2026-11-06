@@ -24,7 +24,7 @@ export function AgentStep(props: { state: StepState }) {
       status={
         props.state === 'done' ? <DoneStatus label="Connected" /> : undefined
       }
-      title="4. Connect Claude or Codex"
+      title="3. Connect Claude or Codex"
     >
       <AgentList
         closable={!next}

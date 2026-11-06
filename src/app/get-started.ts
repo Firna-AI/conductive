@@ -1,14 +1,18 @@
 import type { GetStartedResponse, GetStartedStep } from '../shared/onboarding'
-import { GET_STARTED_STEPS } from './api/read-core'
 
 export type StepState = 'done' | 'next' | 'later'
 
 /**
- * The four steps of Get started in their fixed order (decision 33): the
- * GitHub App, the first org, its Boat key, then Claude or Codex. The key
- * belongs to the org, so the org comes first.
+ * The three steps of Get started in their fixed order: the GitHub App, the
+ * first org, then Claude or Codex. The app runs every cloud computer on its
+ * own Boat account, so Get started asks for no key (decision 80). A reply
+ * that still lists the key step does not hold the first run open.
  */
-export const getStartedOrder: readonly GetStartedStep[] = GET_STARTED_STEPS
+export const getStartedOrder: readonly GetStartedStep[] = [
+  'github-app',
+  'org',
+  'agent-login',
+]
 
 function complete(response: GetStartedResponse, step: GetStartedStep) {
   return response.steps.some((item) => item.step === step && item.complete)

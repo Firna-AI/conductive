@@ -41,8 +41,8 @@ export function RightColumn(props: {
       <ResizeHandle
         edge="left"
         label="Resize the right column"
-        measure={() => aside.current?.clientWidth ?? 0}
         panel="right"
+        panelRef={aside}
       />
       {props.pullRequest}
       <div className={column.files}>{props.files}</div>

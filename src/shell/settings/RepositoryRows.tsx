@@ -4,9 +4,12 @@ import { EmptyState } from '../../../docs/mockups/src/components/common/EmptySta
 import styles from '../../../docs/mockups/src/components/settings/RepositoryList.module.css'
 import type { Repository } from '../../shared/org-settings'
 
+/** What a row shows of a repository of the org or of the GitHub catalogue. */
+export type ListedRepository = Pick<Repository, 'fullName' | 'description'>
+
 /** One repository: its full name and its description, then its actions. */
 export function RepositoryRow(props: {
-  repository: Repository
+  repository: ListedRepository
   children?: ReactNode
 }) {
   const { repository } = props

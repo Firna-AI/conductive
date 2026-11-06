@@ -56,7 +56,7 @@ export function OrgRail(props: {
         {props.orgs.map((org) => {
           const current = org.id === currentOrg
           const label = org.deletion ? `${org.name}, deleted` : org.name
-          const tile = <OrgTile current={current} name={org.name} size={26} />
+          const tile = <OrgTile current={current} org={org} size={26} />
           return (
             <li className={classes(styles.item, layout.railItem)} key={org.id}>
               <RailLink current={current} label={label} to={routes.org(org.id)}>

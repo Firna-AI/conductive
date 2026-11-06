@@ -87,12 +87,8 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
           workspaceId={route.workspaceId}
         />
       )
-    case 'settings': {
-      // Only an admin sees the Boat key tab, so a member gets General.
-      const tab =
-        route.tab === 'boat-key' && org.role !== 'admin' ? 'general' : route.tab
-      return <OrgSettingsScreen org={org} tab={tab} user={user} />
-    }
+    case 'settings':
+      return <OrgSettingsScreen org={org} tab={route.tab} user={user} />
   }
 }
 

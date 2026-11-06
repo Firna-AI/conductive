@@ -7,7 +7,7 @@ import {
   type BuildsResponse,
   type ImageBuild,
 } from '../../shared/org-settings'
-import { requireBoatKey, requireOrg, type DevBackend } from './backend'
+import { requireOrg, type DevBackend } from './backend'
 import { ID, json, RouteError, type Params, type Route } from './router'
 import { uniqueId, type OrgState } from './state'
 
@@ -120,7 +120,6 @@ function runBuild(
  * second start gets the build that runs.
  */
 function startBuild(backend: DevBackend, org: OrgState): BuildResponse {
-  requireBoatKey(org)
   const busy = org.builds.find((item) => item.build.state === 'running')
   if (busy) return busy
   const script = org.settings.installScript

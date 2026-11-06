@@ -113,14 +113,11 @@ export function NewWorkspaceScreen(props: {
   const draft = useStore(model.draft)
   const create = useStore(model.create)
   const phone = useViewport() === 'phone'
-  useEffect(
-    () => orgModel.watch('repositories', 'builds', 'boatKey', 'list'),
-    [orgModel],
-  )
+  useEffect(() => orgModel.watch('repositories', 'builds', 'list'), [orgModel])
   const chosen = (repositories ?? []).filter((item) => item.selected)
   const repositoryId = draft.repositoryId ?? chosen[0]?.id
   const choice = draft.choice ?? account?.defaultChoice
-  const notice = useBlockingNotice(org, choice, models)
+  const notice = useBlockingNotice(choice, models)
   const send = async () => {
     if (!repositoryId || !choice) return
     const created = await model.send({ repositoryId, choice })

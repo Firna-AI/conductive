@@ -10,6 +10,7 @@ export const ID = {
   org: ':org',
   workspace: ':workspace',
   section: ':section',
+  repository: ':repository',
   build: ':build',
 } as const
 

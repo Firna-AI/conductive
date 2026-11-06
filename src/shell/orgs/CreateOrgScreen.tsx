@@ -1,35 +1,48 @@
-import { useState } from 'react'
-import { Input } from '@firna/ui/input'
+import { useEffect, useState } from 'react'
 import { useToast } from '@firna/ui/toast'
 import { TriangleAlert } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/screens/forms.module.css'
 import { routes } from '../../app/router'
-import { asApiError } from '../../app/store'
+import { asApiError, useStore } from '../../app/store'
 import { useApp } from '../context'
 import { Page } from '../layout/Page'
+import { Loaded } from '../settings/LoadState'
+import { ChoiceActions, RepositorySearch } from '../settings/RepositorySearch'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
+import {
+  orgNameFields,
+  OrgNameFields,
+  type OrgNameDraft,
+} from './OrgNameFields'
 
 /**
- * Creates an org by its name. The org chooses its repositories in its
- * settings after the create, because no route lists them before the org
- * exists. The first org of Get started goes back to Get started; another
- * org opens. On a phone the actions sit in the footer.
+ * Creates an org: its name, its initials, and the repositories that its
+ * workspaces use. Before the org exists, the list holds the repositories
+ * that the person and the shared GitHub App both reach. The first org of
+ * Get started goes back to Get started, and another org opens. On a phone
+ * the actions sit in the footer.
  */
 export function CreateOrgScreen(props: { first: boolean }) {
   const app = useApp()
   const go = useGo()
   const { toast } = useToast()
-  const { field } = useControlSizes()
   const phone = useViewport() === 'phone'
-  const [name, setName] = useState('')
+  const catalogue = useStore(app.account.repositories)
+  const [draft, setDraft] = useState<OrgNameDraft>({ name: '', initials: '' })
+  const [chosen, setChosen] = useState<readonly number[]>([])
+  useEffect(() => {
+    void app.account.loadRepositories()
+  }, [app])
   const cancelTo = props.first ? routes.getStarted() : routes.home()
   const create = useAction(async () => {
-    const org = await app.createOrg(name.trim())
+    const org = await app.createOrg({
+      ...orgNameFields(draft),
+      repositoryIds: chosen,
+    })
     if (!props.first) {
       go(routes.org(org.id))
       return
@@ -44,10 +57,16 @@ export function CreateOrgScreen(props: { first: boolean }) {
     })
     go(routes.getStarted())
   })
-  const named = name.trim() !== ''
+  const named = draft.name.trim() !== ''
   const submit = () => {
-    if (named) create.run()
+    if (named && !create.pending) create.run()
   }
+  const choose = (githubId: number, selected: boolean) =>
+    setChosen((current) =>
+      selected
+        ? [...current.filter((id) => id !== githubId), githubId]
+        : current.filter((id) => id !== githubId),
+    )
   const actions = (
     <>
       <ActionButton disabled={create.pending} onPress={() => go(cancelTo)}>
@@ -70,23 +89,41 @@ export function CreateOrgScreen(props: { first: boolean }) {
       title="Create an org"
     >
       <div className={styles.form}>
-        <Input
-          editable={!create.pending}
-          label="Name"
-          onChangeText={(text) => {
-            setName(text)
+        <OrgNameFields
+          change={(next) => {
+            setDraft(next)
             create.reset()
           }}
-          onSubmitEditing={submit}
-          size={field}
-          value={name}
+          disabled={create.pending}
+          draft={draft}
+          submit={submit}
         />
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Repositories</span>
           <span className={styles.fieldHint}>
-            After you create the org, choose its repositories in the org
-            settings.
+            The cloud computer of the org holds these repositories, and its
+            workspaces start in them.
           </span>
+          <Loaded
+            failure="The repositories didn't load"
+            retry={() => app.account.loadRepositories()}
+            value={catalogue}
+          >
+            {(value) => (
+              <RepositorySearch
+                actions={(repository) => (
+                  <ChoiceActions
+                    disabled={create.pending}
+                    name={repository.fullName}
+                    press={(selected) => choose(repository.githubId, selected)}
+                    selected={chosen.includes(repository.githubId)}
+                  />
+                )}
+                keyOf={(repository) => repository.githubId}
+                repositories={value.repositories}
+              />
+            )}
+          </Loaded>
         </div>
         {create.error ? (
           <Notice

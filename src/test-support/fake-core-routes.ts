@@ -13,6 +13,7 @@ import {
   buildEventsPath,
   buildPath,
   orgSettingsPaths,
+  repositoryPath,
 } from '../shared/org-settings'
 import { deleteOrgPath, leaveOrgPath, restoreOrgPath } from '../shared/orgs'
 import { sectionPath, sectionsPath } from '../shared/sections'
@@ -70,7 +71,17 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
     routes.empty('DELETE', sectionPath(id, section.id))
   }
   routes.json('GET', orgSettingsPaths.repositories(id), data.repositories)
-  routes.json('PUT', orgSettingsPaths.repositories(id), data.repositories)
+  for (const repository of data.repositories.repositories) {
+    for (const method of ['PUT', 'DELETE'] as const) {
+      routes.json(method, repositoryPath(id, repository.id), {
+        repositories: data.repositories.repositories.map((item) => ({
+          ...item,
+          selected:
+            item.id === repository.id ? method === 'PUT' : item.selected,
+        })),
+      })
+    }
+  }
   routes.json('GET', orgSettingsPaths.settings(id), data.settings)
   routes.json('PATCH', orgSettingsPaths.settings(id), data.settings)
   routes.json('GET', orgSettingsPaths.builds(id), data.builds)

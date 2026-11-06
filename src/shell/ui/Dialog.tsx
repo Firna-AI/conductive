@@ -1,7 +1,7 @@
 import { useRef, type ReactNode } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
-import { Overlay, useDismiss, useFocusReturn } from './Overlay'
+import { Overlay, useDismiss, useLayerFocus } from './Overlay'
 import { Sheet, trapTab } from './Sheet'
 import { useViewport } from './viewport'
 
@@ -48,13 +48,13 @@ function DialogBox(props: {
 }) {
   const dialog = useRef<HTMLElement>(null)
   useDismiss(true, dialog, props.close)
-  useFocusReturn(dialog)
+  useLayerFocus(dialog, { modal: true })
   return (
     <section
       aria-label={props.title}
       aria-modal
       className={classes(styles.dialog, props.wide && styles.wide)}
-      onKeyDown={trapTab}
+      onKeyDownCapture={trapTab}
       ref={dialog}
       role="dialog"
       tabIndex={-1}
