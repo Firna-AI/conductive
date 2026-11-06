@@ -4188,6 +4188,8 @@ This milestone needs the prerequisites from the user.
 - [ ] In a real workspace, run `conducting workspaces list` and an MCP
       `tools/list` request, so that the installed agent tools start on
       the image's Node.
+- [ ] Kill ttyd once, and check that systemd restarts it with the same
+      password, and that the terminal opens again without a new start.
 
 ## Milestone 17: Verification, commit, review, and pull request
 
