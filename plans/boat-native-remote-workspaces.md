@@ -1838,6 +1838,8 @@ Added on 5 November 2026 from the user's message.
 - **Chosen by the user on 5 November 2026:** users bring their own Boat
   key. This reverses the user's earlier call that users run on the app's
   own Boat subscription.
+- **Changed by the user on 6 November 2026:** reversed by decision 80. All
+  cloud computers run in the app's own Boat account again.
 - **Effects:**
   - The app keeps no Boat account for its users. Its own Boat
     organization and key serve only development and tests.
@@ -2300,6 +2302,10 @@ Added on 6 November 2026 from the Milestone 2 docs.
 - **Chosen:** A, by the user on 6 November 2026. The user asked for a
   better way later, probably a move of the old cloud computers:
   `plans/follow-ups/migrate-cloud-computers-to-another-boat-account.md`.
+- **Changed on 6 November 2026:** decision 80 moved every cloud computer
+  back to the app's own Boat account, so no org changes its Boat account,
+  and this decision and its follow-up item no longer apply. The follow-up
+  item is deleted.
 
 ### 57. Decide who may change an org's shared settings
 
@@ -2904,6 +2910,90 @@ review.
   - The person still accepts each matching invitation, as today, so a
     sign-in alone joins no org.
   - Invitations by GitHub login go away, so one way remains.
+
+### 79. Choose the email service for invitations
+
+Added on 6 November 2026 from decision 78.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Process.
+- **Options:**
+  - **A.** Postmark, as in Mokly Cloud. Effort: Small.
+  - **B.** Resend. Effort: Small.
+  - **C.** Cloudflare's email sending from Workers. Effort: Small.
+- **Recommendation:** A.
+- **Chosen:** B, by the user on 6 November 2026. Milestone 15g sends the
+  invitations through Resend, with `conducting.build` as the sender
+  domain. The Resend API key is a Worker secret.
+
+### 80. Decide what Remove key does to running cloud computers
+
+Added on 6 November 2026 from the Milestone 6 work.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** The Boat key tab had Remove key, and without the key the
+  Worker could not stop the org's cloud computers.
+- **Options:**
+  - **A.** Stop every cloud computer of the org, then delete the key.
+  - **B.** Refuse the removal while a cloud computer runs.
+  - **C.** Delete only the key.
+  - **D.** Drop Remove key.
+- **Recommendation:** A.
+- **Chosen:** by the user on 6 November 2026, a wider change: "I think we
+  go back to using our own account for Boat". This reverses decision 44.
+  All cloud computers run in the app's own Boat account again, so no org
+  has a Boat key, and this question no longer applies.
+- **Agent calls on 6 November 2026,** which the user can override:
+  - The app's Boat key becomes one Worker secret.
+  - The Boat key tab, the encrypted store of org keys, and the key steps
+    of Get started go, because no org has a key.
+  - The marketing site and Get started no longer ask users for a Boat
+    account. The app names Boat to no user, which replaces decision 47.
+  - A new milestone makes the switch after the running milestones merge,
+    and before the first deployment, so that no stored key needs a
+    migration.
+  - Decision 45 made the product free because each user paid for their
+    own Boat account. That reason is gone, so decisions 81 and 82 ask
+    again about cost and abuse.
+
+### 81. Decide the cost model now that the app pays for compute
+
+Added on 6 November 2026 from decision 80.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Design. **Category:** Product bug.
+- **Background:** Decision 45 removed billing and all limits, because each
+  user paid for their own Boat account. Under decision 80, the app's own
+  Boat account pays for every cloud computer.
+- **Options:**
+  - **A.** Free with limits for each user. Effort: Medium.
+  - **B.** Bring billing back. Effort: Large.
+  - **C.** Invite-only. Effort: Small.
+  - **D.** Free with no limits. Effort: Small.
+- **Recommendation:** C for the first deployment, then A.
+- **Chosen:** D, by the user on 6 November 2026: "we can add billing
+  later". The product stays free with no limits, and the app's Boat
+  account pays for all use.
+
+### 82. Decide when the abuse controls come
+
+Added on 6 November 2026 from decision 80.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Design. **Category:** Security.
+- **Background:** All users share the app's Boat account again, and Boat's
+  terms make the platform responsible for what its users do.
+- **Options:**
+  - **A.** Terms at sign-up, an operator suspension, and an abuse address,
+    before the first deployment. Effort: Medium.
+  - **B.** Keep them as follow-up items after the merge. Effort: Small now.
+  - **C.** The operator suspension now, the rest before an open sign-up.
+    Effort: Small.
+- **Recommendation:** C.
+- **Chosen:** B, by the user on 6 November 2026: "do as follow ups". The
+  follow-up item `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`
+  holds the three measures.
 
 ## Design
 
@@ -3713,6 +3803,22 @@ Worker routes stay with the wiring and backend milestones.
 - [ ] Run the complete gate.
       Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
 
+## Milestone 4f: The app's own Boat account
+
+Depends on: 5, 6, 15a, 15c
+
+Apply decision 80 before the first deployment.
+
+- [ ] Run every cloud computer with the app's one Boat key, from a Worker
+      secret. Remove the encrypted store of org keys and its routes.
+- [ ] Remove the Boat key tab, the key repair of deleted orgs, and the key
+      steps of Get started, in the screens and the mockups.
+- [ ] Remove the Boat account requirement from the marketing site and
+      Get started, so that the app names Boat to no user.
+- [ ] Update the protocol docs, the architecture doc, and the naming rule
+      of `AGENTS.md`.
+- [ ] Run the complete gate.
+
 ## Milestone 5: Bases and workspace lifecycle
 
 Depends on: 4a
@@ -3800,16 +3906,16 @@ Depends on: 4a
 
 Depends on: 4a
 
-- [ ] Add prompt, message during a turn, interrupt, and model and effort
-      endpoints. The Durable Object forwards them to the runner.
-- [ ] Pass the sender's agent login to the runner for each turn, and start
-      the agent again when the sender changes, as decision 49 says.
-- [ ] Keep each session on one agent. A model of the other agent opens a
-      new session with the draft, as decision 51 says.
-- [ ] Map the SDK events to our event type, store them, and push them to
-      the open tabs over a WebSocket.
-- [ ] Test the mapping against recorded SDK events, and the resend after
-      a dropped connection, with the fake runner of Milestone 4a.
+- [x] Add prompt, message during a turn, interrupt, and model and effort
+      endpoints. The Durable Object forwards them to the runner. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Pass the sender's agent login to the runner for each turn, and start
+      the agent again when the sender changes, as decision 49 says. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Keep each session on one agent. A model of the other agent opens a
+      new session with the draft, as decision 51 says. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Map the SDK events to our event type, store them, and push them to
+      the open tabs over a WebSocket. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Test the mapping against recorded SDK events, and the resend after
+      a dropped connection, with the fake runner of Milestone 4a. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
 
 ## Milestone 7s: Runner event limits in the workspace
 
