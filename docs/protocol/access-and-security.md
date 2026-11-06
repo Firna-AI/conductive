@@ -185,6 +185,8 @@ says.
   rejected, because the browser history keeps the URL.
 - The authorizer accepts a grant only in a form POST with the app's
   `Origin`. It never serves sandbox content.
+- Authorizer form bodies have a size limit of 1,000,000 bytes under decision 65.
+  The authorizer cancels an oversized body and returns 404.
 - Reason: a service worker of a previewed app can read a form that the
   browser posts to the origin of that preview. A handoff on the preview
   hostname was rejected for that reason.

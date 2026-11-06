@@ -4134,6 +4134,9 @@ Agent design calls on 6 November 2026:
 - Apply the required cookie check to browser preflights too. Browsers send no
   cookie on them, and default fetches between preview origins also omit it.
   A same-origin proxy in the previewed app's dev server keeps API calls working.
+- Apply decision 65 B to authorizer forms with the shared bounded reader.
+  Keep its client body budget of 1 MB, or 1,000,000 bytes.
+  Return the existing 404 on overflow to keep one invalid-handoff response policy.
 
 - [x] Move the credential of a port preview out of its hostname, into a
       cookie that the preview domain sets, so that the hostname is no
@@ -4146,6 +4149,13 @@ Agent design calls on 6 November 2026:
       Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
 - [x] Test that a port opened again after a revoke gets a new preview ID,
       as decision 86 says.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
+- [x] Bound the authorizer form with the shared reader, and test early
+      cancellation and invalid body streams, as decision 65 B requires.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
+- [ ] Align the preview handoff with the newer Mac app session and
+      navigation contracts. Confirm ownership before changing the shared
+      gate or Mac app code outside this workspace's scope.
       Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
 
 Verification evidence: `.context/boat-native-remote-workspaces/verification.md`.

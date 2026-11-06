@@ -42,6 +42,11 @@ same 404. It sets `__Secure-conducting-preview-<preview ID>` with
 Its `Max-Age` is the remaining preview life. It then sends a 303 to
 `https://<hostname>/`. The `__Host-` prefix would forbid the `Domain` attribute.
 
+The authorizer uses the [bounded body reader](../http/README.md) before parsing
+the form. Decision 65 gives client bodies a limit of 1,000,000 bytes.
+It counts stream bytes and cancels on overflow. Missing, failed, and oversized
+bodies get the same 404 as an invalid grant.
+
 The `authorize` hostname never serves sandbox content. So no service worker of
 a previewed app can see a grant.
 

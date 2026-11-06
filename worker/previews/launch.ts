@@ -1,5 +1,6 @@
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
+import { readBoundedBody } from '../http/bounded-body'
 import { randomToken } from '../security/crypto'
 import { launchGrant, launchGranted, previewCookie } from './credentials'
 import { activePreview, type PreviewRecord } from './store'
@@ -40,11 +41,13 @@ export async function previewHandoff(
   now: number,
 ): Promise<Response> {
   const contentType = request.headers.get('Content-Type')?.split(';')[0].trim()
+  const body = request.body
   if (
     request.method !== 'POST' ||
     request.headers.has('Upgrade') ||
     request.headers.get('Origin') !== env.APP_ORIGIN ||
-    contentType !== 'application/x-www-form-urlencoded'
+    contentType !== 'application/x-www-form-urlencoded' ||
+    !body
   ) {
     throw new HttpError(
       404,
@@ -52,7 +55,17 @@ export async function previewHandoff(
       'The preview is not available.',
     )
   }
-  const form = new URLSearchParams(await request.text())
+  let form: URLSearchParams
+  try {
+    const bytes = await readBoundedBody(body, 1_000_000)
+    form = new URLSearchParams(new TextDecoder().decode(bytes))
+  } catch {
+    throw new HttpError(
+      404,
+      'preview_not_found',
+      'The preview is not available.',
+    )
+  }
   const hostnames = form.getAll('hostname')
   const suffix = `.${env.PREVIEW_DOMAIN?.toLowerCase()}`
   const hostname = hostnames[0] ?? ''
