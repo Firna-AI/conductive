@@ -73,7 +73,7 @@ The launcher reads `/run/ascii-secrets/env.sh` at runtime when that file exists.
 It then starts the CLI or MCP server with Node.
 No workspace token, agent login, or org environment value enters the image assets.
 
-The image builder and runner do not exist on this branch yet.
+The image builder and the runner do not exist yet.
 The [Worker README](../worker/tools/README.md#production-composition) lists the required composition work.
 
 ## Development

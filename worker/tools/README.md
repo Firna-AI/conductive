@@ -53,6 +53,14 @@ The installer returns only after the command succeeds.
 A failed or timed-out command throws a fixed error.
 The builder must stop the build before it saves a snapshot when installation fails.
 
+The installer also accepts an optional root folder.
+The root folder defaults to `/`.
+Each path that the installer writes starts with the root folder.
+The launcher's program and secrets paths also start with the root folder.
+A test can pass a temporary folder.
+Image builds must use the default root.
+The default root gives the production paths in [Image assets](../../tools/README.md#image-assets).
+
 The installer writes only program source and the launcher.
 It writes no credentials into the image.
 The image must already have Node 24.
@@ -61,8 +69,8 @@ The runner supplies credentials and active turn context at runtime.
 
 ## Production composition
 
-These callable boundaries support Milestone 15i wiring.
-This branch does not connect them to production services.
+Production code does not use the handler, the installer, or `WORKSPACE_TOOLS_MCP` yet.
+Production use requires this composition work:
 
 1. In `worker/application.ts`, route the machine workspace path to this handler before the machine surface stub.
 2. Supply `MACHINE_ORIGIN` and `DB` from `AppEnv`.
@@ -81,14 +89,15 @@ The MCP process cannot keep one fixed turn ID across turns or concurrent session
 The active-turn resolver must reject stale IDs.
 
 No git credential endpoint is implemented here.
-Decision 50 about GitHub token reach remains open.
+[GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens) states its rule.
 
 ## Checks
 
 Run `npm run test -- worker/tools` from the repository root.
 The handler tests use the existing real local D1 harness.
 The CLI and MCP tests call `runToolProcess` and reach this handler.
-The lifecycle and active-turn boundaries are injected because their production implementations belong to later milestones.
+The tests inject the lifecycle and active-turn services.
+These services have no production implementation yet.
 
 ## Key code
 
