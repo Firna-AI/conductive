@@ -3254,6 +3254,31 @@ Added on 6 November 2026 from PR #20 round 1 finding 5.
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 6 November 2026. Milestone 11a applies it.
 
+### 96. Recover from a lost workspace update
+
+Added on 6 November 2026 from item 1 of Milestone 8j.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** The updates that belong to no chat session are the file
+  list, the changed-files list, the start steps, and the workspace name. A
+  later full update of the same kind replaces each of them.
+- **Options:**
+  - **A.** A notice in the Files panel only. Effort: Medium.
+  - **B.** A notice below the workspace header. Effort: Medium.
+  - **D.** A notice beside the affected data. Effort: Medium.
+  - **E.** After a lost update, the workspace asks the runner for a fresh
+    full report of that kind, and the browser shows nothing. A notice
+    shows beside the data, as in D, only when the fresh report is lost
+    too. Effort: Medium.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 6 November 2026, from the question "some
+  updates are basically replaced by a later update right, like the file
+  list, it doesn't matter so long as we have the latest one?". Milestone
+  7s adds the runner command and the failed repair to the contracts and
+  the workspace, Milestone 7t answers the command in the runner, and
+  Milestone 8l shows the notice of a failed repair.
+
 ### 97. Retry only the newest turn
 
 Added on 6 November 2026 from the check of PR #24 round 1 finding 2.
@@ -4357,6 +4382,22 @@ Apply decision 76 E in the workspace Durable Object.
 - [ ] Join the parts of a file tree and of a changes list before the
       files store takes them.
 - [ ] Test each refusal, a tree in parts, and a resend after a refusal.
+- [ ] Apply decision 96 E: add a runner command that asks for a fresh full
+      report of the file list, the changes list, the start steps, or the
+      workspace name. Send it once after the workspace refuses such an
+      update. When the fresh report is refused too, store the marker as a
+      failed repair. State both rules in the protocol.
+
+## Milestone 7t: Fresh reports from the runner
+
+Depends on: 7r, 7s
+
+Apply the runner half of decision 96 E.
+
+- [ ] Answer the fresh-report command of Milestone 7s with a full report
+      of the asked kind: the file list and the changes list in numbered
+      parts, the start steps, or the last workspace name.
+- [ ] Test each kind, and a command during a running turn.
 
 ## Milestone 8: Chat UI
 
@@ -4393,11 +4434,10 @@ finding 2 of the Milestone 4d review.
 - [ ] Draw in the chat mockups how much tool detail and how many files the
       runner left out, and the line of a refused event, which names what
       was lost.
-- [ ] Draw where a marker that belongs to no session shows, such as the
-      marker of a refused file event. No rule says where yet, so bring
-      the pictures to the user as a decision before you build it. That
-      decision must also choose where the browser keeps such a marker and
-      how a browser tab that opens later reads it.
+- [x] Draw where a marker that belongs to no session shows, and bring the
+      pictures to the user. The user chose decision 96 E: the workspace
+      repairs such a loss, and Milestone 8l shows a notice only for a
+      failed repair. Branch: `conductor/boat-native-remote-workspaces-milestone-8j`.
 - [ ] Show them in the chat screens.
 - [ ] Compare each screen with its mockup.
 
@@ -4414,6 +4454,22 @@ Apply decision 97 D.
       Try again only on the failed item that the record names.
 - [ ] Test an old Try again in a second tab, and update the chat protocol.
 - [ ] Delete `plans/follow-ups/chat-retry-newest-turn.md`.
+
+## Milestone 8l: Notices of a failed repair
+
+Tags: ui
+
+Depends on: 7s, 8j
+
+Apply the browser half of decision 96 E.
+
+- [ ] Show a notice beside the affected data only for a failed repair: in
+      the Files panel for the file list and the changes list, and below
+      the workspace header for the start steps and the workspace name. A
+      newer complete report clears it.
+- [ ] Keep the notices in the memory of the tab. A tab that opens later
+      reads them from the stored history.
+- [ ] Compare each screen with its mockup.
 
 ## Milestone 8i: Chat path wiring
 
