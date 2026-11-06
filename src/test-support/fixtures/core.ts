@@ -13,7 +13,7 @@ import {
   people,
 } from '../../../docs/mockups/src/fixtures/members'
 import { installations, orgList } from '../../../docs/mockups/src/fixtures/orgs'
-import { acmeRepositories } from '../../../docs/mockups/src/fixtures/repositories'
+import { anotherOrg } from '../../../docs/mockups/src/fixtures/repositories'
 import { sections } from '../../../docs/mockups/src/fixtures/sections'
 import type {
   AccountResponse,
@@ -21,16 +21,17 @@ import type {
 } from '../../shared/account'
 import type { ModelsResponse } from '../../shared/agents'
 import type { BoatKeyStatus, OrgRole, User } from '../../shared/api'
+import { BASE_IMAGE } from '../../shared/base-image'
 import type { MembersResponse } from '../../shared/members'
 import type { GetStartedResponse } from '../../shared/onboarding'
 import type {
   BuildResponse,
   BuildsResponse,
   OrgSettingsResponse,
-  RepositoriesResponse,
 } from '../../shared/org-settings'
-import type { OrgsResponse } from '../../shared/orgs'
+import type { CreateOrgResponse, OrgsResponse } from '../../shared/orgs'
 import type { SectionsResponse } from '../../shared/sections'
+import { repositoryFixtures } from './repositories'
 
 export const FAKE_ORIGIN = 'https://app.conducting.test'
 export const FAKE_TIME = 1_800_000_000_000
@@ -78,20 +79,22 @@ export function coreFixtures(role: OrgRole = 'admin') {
     ),
   }
   const orgs: OrgsResponse = {
-    orgs: orgList.map((org) => ({ id: org.key, name: org.name, role })),
-  }
-  const repositories: RepositoriesResponse = {
-    repositories: acmeRepositories.map((repo, index) => ({
-      id: repo.name.split('/')[1],
-      orgId: FAKE_IDS.org,
-      githubId: index + 1,
-      fullName: repo.name,
-      description: repo.description,
-      defaultBranch: 'main',
-      installationId: 1,
-      selected: repo.used,
+    orgs: orgList.map((org) => ({
+      id: org.key,
+      name: org.name,
+      initials: org.initials,
+      role,
     })),
   }
+  const createdOrg: CreateOrgResponse = {
+    org: {
+      id: 'labs',
+      name: anotherOrg.name,
+      initials: anotherOrg.initials,
+      role: 'admin',
+    },
+  }
+  const { githubRepositories, repositories } = repositoryFixtures(FAKE_IDS.org)
   const sectionList: SectionsResponse = {
     sections: Object.values(sections).map((section, position) => ({
       id: section.key,
@@ -116,6 +119,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
   }
   const settings: OrgSettingsResponse = {
     settings: {
+      baseImage: BASE_IMAGE,
       installScript,
       startupScript,
       envVars,
@@ -173,6 +177,8 @@ export function coreFixtures(role: OrgRole = 'admin') {
     account,
     models,
     orgs,
+    createdOrg,
+    githubRepositories,
     repositories,
     sectionList,
     members,

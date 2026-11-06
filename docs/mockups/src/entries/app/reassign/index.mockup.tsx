@@ -25,5 +25,19 @@ export const reassign = defineScreen({
         'Priya, a member who is not an admin, opens the workspace of Cal. The header names Cal as the owner, without the menu that reassigns it, and without Archive, because only the owner of the workspace and the admins of the org archive it, as decision 42 says. The rail shows the avatar of Priya.',
       props: { overlay: 'none', viewer: 'member' },
     },
+    {
+      slug: 'member-stop',
+      title: 'Stop seen by a member',
+      description:
+        'Priya, a member who is not an admin, opens the workspace of Cal after Cal stopped the agent. The chat names the member who pressed Stop, so Priya sees "Cal stopped the agent". Cal sees "You stopped the agent", as the Interrupted state of the chat shows.',
+      rationale:
+        'The user chose option C of decision 72 on 6 November 2026: a stopped turn records the member who pressed Stop, and the chat names that member. All members of an org see the same chat, so a fixed "You" would be wrong for the other members.',
+      props: {
+        overlay: 'none',
+        viewer: 'member',
+        conversation: 'interrupted',
+        banner: 'none',
+      },
+    },
   ],
 })
