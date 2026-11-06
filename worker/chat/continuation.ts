@@ -1,14 +1,12 @@
-import type { Session } from '../../src/shared/sessions'
 import type { ChatTransaction } from './store'
 import type { StoredTurn } from './types'
 
 /** A text-only turn can finish before it answers messages sent during it. */
 export async function continueUnanswered(
   transaction: ChatTransaction,
-  session: Session,
   previous: StoredTurn,
   randomId: () => string,
-): Promise<void> {
+): Promise<StoredTurn | undefined> {
   let next: StoredTurn | undefined
   for (const command of await transaction.pending()) {
     if (
@@ -21,13 +19,12 @@ export async function continueUnanswered(
     if (!next) {
       next = {
         id: randomId(),
-        sessionId: session.id,
+        sessionId: previous.sessionId,
         senderId: message.sender.id,
         messageIds: [],
         state: 'queued',
         closeAfterStop: false,
       }
-      session.activeTurnId = next.id
     }
     const type = next.messageIds.length === 0 ? 'turn' : 'message'
     next.messageIds.push(message.id)
@@ -40,4 +37,5 @@ export async function continueUnanswered(
     })
   }
   if (next) await transaction.saveTurn(next)
+  return next
 }

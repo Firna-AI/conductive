@@ -7,6 +7,7 @@ import type {
 import { HttpError } from '../http'
 import { queueModel, sameAgent, sessionFor } from './sessions'
 import type { ChatTransaction } from './store'
+import { TurnLifecycle } from './turn-lifecycle'
 import type { ResolvedAttachments, StoredTurn } from './types'
 
 export async function existingMessage(
@@ -85,21 +86,11 @@ export async function acceptMessage(
     session.choice.effort !== input.choice.effort
   session.choice = input.choice
   if (changed) await queueModel(transaction, session, randomId())
-  let turn = session.activeTurnId
-    ? await transaction.turn(session.activeTurnId)
-    : undefined
-  const type = turn ? 'message' : 'turn'
-  if (!turn) {
-    turn = {
-      id: randomId(),
-      sessionId,
-      senderId: user.id,
-      messageIds: [],
-      state: 'queued',
-      closeAfterStop: false,
-    }
-    session.activeTurnId = turn.id
-  }
+  const turn = await new TurnLifecycle(transaction, session).select(
+    user.id,
+    randomId,
+  )
+  const type = turn.messageIds.length === 0 ? 'turn' : 'message'
   turn.messageIds.push(message.id)
   await transaction.saveTurn(turn)
   await transaction.saveMessageTurn(message.id, turn.id)

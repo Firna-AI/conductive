@@ -3,6 +3,7 @@ import type { RunnerCommand } from '../../src/shared/runner'
 import { markSent } from './messages'
 import type { ChatStore, ChatTransaction } from './store'
 import { storeAgentEvent } from './turn-events'
+import { TurnLifecycle } from './turn-lifecycle'
 import type { ActiveRunner, ChatDependencies, PendingCommand } from './types'
 
 export class RunnerDelivery {
@@ -27,6 +28,17 @@ export class RunnerDelivery {
     detach: () => void,
   ): Promise<void> {
     if (!active.ready) return
+    while (await this.flushPending(active, isCurrent, detach)) {
+      if (!isCurrent()) return
+    }
+  }
+
+  private async flushPending(
+    active: ActiveRunner,
+    isCurrent: () => boolean,
+    detach: () => void,
+  ): Promise<boolean> {
+    let advanced = false
     const pending = await this.store.read(active.workspace.id, (view) =>
       view.pending(),
     )
@@ -37,12 +49,20 @@ export class RunnerDelivery {
       )
       if (!current) continue
       const outbound = await this.command(active, command)
-      if (!outbound) continue
+      if (!outbound) {
+        if (
+          !(await this.store.read(active.workspace.id, (view) =>
+            view.command(command.commandId),
+          ))
+        )
+          advanced = true
+        continue
+      }
       try {
         active.peer.send(outbound)
       } catch {
         detach()
-        return
+        return false
       }
       active.delivered.add(command.commandId)
       await this.store.change(
@@ -60,13 +80,25 @@ export class RunnerDelivery {
         this.publish,
       )
     }
+    return advanced
   }
 
   private async command(
     active: ActiveRunner,
     command: PendingCommand,
   ): Promise<RunnerCommand | null> {
-    if (command.type === 'interrupt' || command.type === 'model') return command
+    if (command.type === 'model') return command
+    const canDispatch = await this.store.read(
+      active.workspace.id,
+      async (view) => {
+        const session = await view.session(command.sessionId)
+        return session
+          ? new TurnLifecycle(view, session).canDispatch(command)
+          : false
+      },
+    )
+    if (!canDispatch) return null
+    if (command.type === 'interrupt') return command
     const message = await this.store.read(active.workspace.id, (view) =>
       view.message(command.messageId),
     )

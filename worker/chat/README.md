@@ -24,7 +24,7 @@ Object class. Its `fetch` gives each request to `WorkspaceChat.fetch` in
 | `GET` sessions | `sessionsPath` | Lists the open sessions and the session history |
 | `POST` sessions | `sessionsPath` | Creates a session |
 | `PATCH` session | `sessionPath` | Renames a session |
-| `POST` messages | `sessionPaths.messages` | Accepts a message. During a turn, the message joins that turn |
+| `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn |
 | `POST` retry | `retryMessagePath` | Sends the message of a failed turn again |
 | `POST` interrupt | `sessionPaths.interrupt` | Stops a turn |
 | `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session |
@@ -99,6 +99,10 @@ The Durable Object runs the gates itself.
   `resend` from the first missing number. The `welcome` gives the cursor.
 - A message and its command commit together. The Durable Object sends the
   commands in order when the runner is ready.
+- A message accepted while the active turn stops waits in another stored
+  turn. Its commands go out only after that turn becomes active.
+- After a finished turn, its unanswered messages run before later waiting
+  work. Closing a session records its waiting turns as stopped in history.
 - A command stays pending until the Durable Object removes it. A new runner
   connection gets each pending command again, with the same command ID.
 - An agent event that lists a message ID removes the command of that
@@ -234,8 +238,8 @@ depends on where the code runs:
   check.
 - `runner-input.ts`, `agent-events.ts`, and `other-events.ts`: the checks
   of runner messages.
-- `turn-events.ts` and `continuation.ts`: the turn state from agent events,
-  and the move of unanswered messages.
+- `turn-lifecycle.ts`, `turn-events.ts`, and `continuation.ts`: active and
+  waiting turns, terminal events, and unanswered messages.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `queries.ts`: the D1 reads of workspaces, tokens, members, and logins.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,

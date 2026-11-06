@@ -40,6 +40,8 @@ export interface StoredTurn {
   messageIds: string[]
   state: 'queued' | 'running' | 'stopping' | 'finished' | 'stopped' | 'failed'
   closeAfterStop: boolean
+  /** Internal waiting work. Older records have no successor. */
+  nextTurnId?: string | null
 }
 
 /** Credentials enter only the live command, after this record is read. */
