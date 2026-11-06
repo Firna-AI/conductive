@@ -2830,6 +2830,16 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   an error. It matches each result to its messages through
   `user_message_uuids`.
 - Each chat session runs one Claude Code process of about 190 MB.
+- Agent call, 6 November 2026, from the user's question about file
+  lists: the agent runner also reports the workspace's files. It watches
+  the repository and pushes the file tree and the changes summary against
+  the default branch, with uncommitted and untracked work, over its
+  connection. It sends one full list when it connects, then only the
+  changes. It reads one file or one diff on request. The Durable Object
+  keeps the last state, so the tabs update live and still show the last
+  state while the cloud computer sleeps. Reason: Boat's API can run
+  `git` and read files, but only while the machine runs, one request at a
+  time, and with no live updates.
 - Agent call, 5 November 2026: the runner connection carries a protocol
   version. The Durable Object serves each version that a live image or
   sandbox can hold, and each image build installs the newest runner.
@@ -3199,7 +3209,8 @@ as decision 58 says.
       feature milestone, in `src/shared/`.
 - [ ] Define the message types between the agent runner and the workspace
       Durable Object: the protocol version, the event numbers, and the
-      confirm and resend rules.
+      confirm and resend rules. Include the file tree, the changes
+      summary, and file and diff reads.
 - [ ] Write the D1 tables that every feature milestone needs. Give each
       later milestone its own range of migration numbers.
 - [ ] Define the Worker's host routing: the marketing site at the root
@@ -3274,6 +3285,9 @@ Depends on: 4a
 - [ ] Measure the first agent start after a resume over several runs,
       with the runner inside and outside the home folder. Keep the faster
       place.
+- [ ] Watch the repository, and push the file tree and the changes summary
+      against the default branch over the connection. Read one file or one
+      diff on request.
 - [ ] Test the runner against the fake Durable Object of Milestone 4a.
 
 ## Milestone 7: Chat backend
@@ -3331,10 +3345,13 @@ This milestone needs the prerequisites from the user.
 
 Depends on: 4a
 
-- [ ] List files, and read one file with a size limit.
-- [ ] List the changes and diffs against the default branch, as the
-      mockups draw.
-- [ ] Test both against the fake Boat server.
+- [ ] Keep the file tree and the changes summary that the runner pushes in
+      the workspace Durable Object, and serve them to the Files and
+      Changes tabs, also while the cloud computer sleeps.
+- [ ] Read one file with a size limit, and one diff against the default
+      branch, through the runner. Use Boat's file read when the runner is
+      not connected.
+- [ ] Test both against the fake runner and the fake Boat server.
 
 ## Milestone 10: Files UI
 
