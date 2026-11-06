@@ -3115,6 +3115,64 @@ review.
 - **Chosen:** D, by the user on 6 November 2026. Milestone 10 applies it,
   and the Files rules of the workspaces protocol state the limit.
 
+### 89. Start work in an empty repository
+
+Added on 6 November 2026 from finding 5 of the Milestone 5 work.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** A workspace branch starts from the default branch. A new
+  GitHub repository with no commits has no default branch, so the start
+  failed.
+- **Options:**
+  - **A.** An unborn workspace branch in the cloud computer. Effort: Small.
+  - **B.** A, through one shared branch helper. Effort: Small.
+  - **C.** A first commit in the cloud computer only. Effort: Small.
+  - **E.** Refuse the start until the repository has a commit. Effort:
+    Small.
+  - **D.** Push an empty first commit to the default branch with the
+    sender's GitHub token. Effort: Medium.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 6 November 2026. Milestone 5 applies it.
+
+### 91. Show the live start steps of a new workspace
+
+Added on 6 November 2026 from finding 7 of the Milestone 5 work.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** The create request answered only after the cloud
+  computer started, so the browser could not follow the start steps.
+- **Options:**
+  - **D.** Answer when the workspace is stored. A later failure goes out
+    as a workspace event, which returns the message to the composer.
+    Effort: Medium.
+  - **C.** Stream the progress through the create request. Effort: Large.
+  - **E.** Keep a failed create as a workspace in an error state. Effort:
+    Large.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 6 November 2026. Milestone 5 applies it.
+
+### 94. Decide where the repositories live in a cloud computer
+
+Added on 6 November 2026 from the check of round 2 finding 17 of the
+Milestone 5 review.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** The mockups and their sample install script put each
+  repository at `~/code/<name>`. The build used internal folders, and the
+  scripts got no path.
+- **Options:**
+  - **B.** Keep the internal folders, with one variable for each
+    repository. Effort: Small.
+  - **A.** Each repository at `~/code/<name>`. Effort: Small.
+  - **C.** A, a variable with each repository's folder, and the startup
+    script and the terminal of a workspace start in its repository's
+    folder, as Conductor does. Effort: Small.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. Milestone 5 applies it.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
