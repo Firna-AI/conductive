@@ -64,6 +64,12 @@ chat, and five tabs at the bottom.
   `palette.ts`, and the type, density, sizes, radii, and fonts in
   `metrics.ts`. The renderer writes them as `--ui-*` CSS variables, and gives
   `@firna/ui` the same colours through its theme.
+- The logo comes from the masters in `docs/brand/`, which
+  `src/components/brand/Logo.module.css` reads and only scales. The tile
+  of the app icon stands alone at the top of the org rail. The lockup,
+  with dark or light text for the scheme, names the product on the
+  marketing site and the sign-in page. The macOS app icon shows in the
+  notifications of the Mac app.
 - `ActionButton` and `IconButton` in `src/components/common/actions.tsx` give
   the Firna button the dense size and a lighter label.
 - On a phone every touch target is at least 44 px high. `MobileFrame` gives
@@ -118,6 +124,7 @@ chat, and five tabs at the bottom.
 | `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn       |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, Boat key, Members |
 | `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure          |
+| `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the session history, and closing a session while it works      |
 | `app/reassign`      | The owner of a workspace and the menu that reassigns it, and a member's view  |
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
@@ -125,7 +132,8 @@ chat, and five tabs at the bottom.
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge                     |
-| `user-flows`        | Sign up, create a workspace, reopen a stopped workspace, and create an org    |
+| `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |
+| `user-flows`        | Sign up, create a workspace, reopen it, create an org, run a Mac command      |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `app`, `app/sign-in`,
@@ -249,6 +257,31 @@ plan limits.
 - The composer shows a notice when the agent of the chosen model is not
   connected, or when the org has no key. The key notice says "cloud
   computers" and names no provider. Only an admin gets its Add key.
+
+## The Mac app
+
+The Mac app is the web app in a window of macOS, from decision 62. Its
+screens live under `mac-app`, and their parts in `src/components/mac/`.
+
+- `MacScreen` lays the screen of a Mac out at 1440 × 900 and scales it to
+  the view in steps of `--mac-scale`, because a view runs no script. The
+  app has no phone layout, so a phone view shows the same screen, smaller.
+- The window has no title bar. The red, yellow, and green window buttons
+  sit inset at the top left of the left panel, above every layer of the
+  app, as macOS draws them. `WindowControls` keeps their space, then shows
+  the sidebar toggle, and back and forward at the right. In full screen
+  the buttons are gone, and the toggle takes their space.
+- `MacApp` marks the screens inside it as the Mac app, so that `AppFrame`
+  draws the window controls and a banner of the Mac app. The account of
+  the Mac app keeps the sidebar of the org and adds the This Mac section.
+- An agent can ask to run a command on the Mac of the person who sent the
+  turn. The prompt shows the command, the folder, the reason, the time
+  limit, the workspace, and the sender, with Deny, Allow, Always allow,
+  and Allow all commands for 15 minutes. A notification of macOS opens
+  the prompt when the app is in the background. The 15 minutes show as an
+  amber bar with the time left and Stop.
+- The chat of the web app shows each command as a card: waiting for
+  approval, denied, done with its output, or Mac not available.
 
 ## The marketing site
 

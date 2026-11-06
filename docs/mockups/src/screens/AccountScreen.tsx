@@ -2,6 +2,7 @@ import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import type { RailState } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
+import { useMacApp } from '../components/mac/MacApp'
 import {
   AgentsSection,
   DefaultsSection,
@@ -9,13 +10,16 @@ import {
   SignInSection,
   type OpenAgentForm,
 } from '../components/settings/AccountSections'
+import { ThisMacSection } from '../components/settings/ThisMacSection'
+import { workspaceSections } from '../components/workspaces/sections'
+import { Sidebar } from '../components/workspaces/Sidebar'
 import { agentKeys, type AgentKey } from '../fixtures/agents'
 import {
   accountLogins,
   type AgentLogins,
   type LoginKind,
 } from '../fixtures/logins'
-import { account, orgList } from '../fixtures/orgs'
+import { account, orgList, orgs } from '../fixtures/orgs'
 import { paths } from '../paths'
 
 export const accountSchema = {
@@ -55,13 +59,14 @@ function loginsFor(state: AccountState): AgentLogins {
  * The account: the GitHub sign-in, and what every org shares. The GitHub
  * App, the agents, and the model of new workspaces. The product is free,
  * so the page shows no plan and no billing, and the sandbox provider stays
- * out of sight.
+ * out of sight. The Mac app adds the This Mac section.
  */
 export function AccountScreen(props: {
   state: AccountState
   viewport: Viewport
 }) {
   const { form } = props.state
+  const mac = useMacApp()
   const connected = props.state.connections === 'connected'
   const openForm: OpenAgentForm | undefined =
     form === 'none'
@@ -79,13 +84,20 @@ export function AccountScreen(props: {
       viewport={props.viewport}
     >
       <SignInSection />
+      {mac ? <ThisMacSection /> : null}
       <GitHubSection connected={connected} />
       <AgentsSection form={openForm} logins={loginsFor(props.state)} />
       <DefaultsSection />
     </Page>
   )
   if (mobile) return <MobileFrame>{page}</MobileFrame>
+  // The Mac app keeps the sidebar of the org beside the account.
+  const sidebar = mac ? (
+    <Sidebar org={orgs.acme} sections={workspaceSections()} />
+  ) : undefined
   return (
-    <AppFrame rail={connected ? connectedRail : firstRunRail}>{page}</AppFrame>
+    <AppFrame rail={connected ? connectedRail : firstRunRail} sidebar={sidebar}>
+      {page}
+    </AppFrame>
   )
 }

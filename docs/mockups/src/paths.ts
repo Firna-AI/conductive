@@ -47,6 +47,10 @@ export const paths = {
   terminal: 'app/tools',
   preview: 'app/tools/preview',
   desktop: 'app/tools/desktop',
+  macPrompt: 'mac-app/commands',
+  macAllowAll: 'mac-app/commands/allow-all',
+  macDenied: 'app/mac-commands/denied',
+  macDone: 'app/mac-commands/done',
 } as const
 
 /** The screen that shows the checks of each pull request state. */

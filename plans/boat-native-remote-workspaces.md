@@ -2045,7 +2045,7 @@ from C to D.
 
 ### 50. Decide the reach of a cloud computer's GitHub token
 
-Open. Added on 5 November 2026 from the Milestone 2 docs, item 2.
+Added on 5 November 2026 from the Milestone 2 docs, item 2.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Security.
@@ -2083,6 +2083,12 @@ Open. Added on 5 November 2026 from the Milestone 2 docs, item 2.
   needs only its own repository.
 - **Action:** ask the user, because B changes who shows as the pusher on
   GitHub, which users see.
+- **Changed on 6 November 2026:** the recommendation moved from B to A,
+  because decision 49 D runs each turn as its sender.
+- **Chosen:** A, by the user on 6 November 2026. Each turn's git calls use
+  the sender's own GitHub user token, fetched fresh for each call, as
+  Conductor does. The plan drops its claim of a limit to the org's
+  repositories.
 
 ### 51. Decide how a session moves to the other agent
 
@@ -2541,6 +2547,44 @@ runner? can we make it rust not node for the agent runner".
   the two SDKs, with the Rust backend move of decision 61, as
   `plans/follow-ups/move-backend-to-rust-and-postgres.md` says.
 
+### 64. Decide what the banner shows when GitHub blocks a merge
+
+Added on 6 November 2026 from the Milestone 13 work.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Background:** Decision 18 chose nine banner states: no pull request,
+  checks running, checks failed, ready to merge, merged, merge conflict,
+  changes requested, draft, and closed without a merge. GitHub can also
+  block a merge with no conflict and no failed check, for example when an
+  approval is missing or the branch is behind its base. The shared types
+  could not express these cases.
+- **Problem:** No banner state fits a pull request that GitHub blocks for
+  another reason.
+- **Impact if no action:** The banner shows an error or a stale state,
+  and the user cannot see why the merge is blocked.
+- **Root question:** What does the banner show when GitHub blocks a merge
+  for a reason that the nine states do not cover?
+- **Options:**
+  - **A.** Show "Ready to merge" once the checks pass. GitHub's merge
+    button can then still refuse. Effort: Small.
+  - **B.** Add one state, "Blocked", which links to the pull request on
+    GitHub. Effort: Medium.
+  - **C.** Add two states: "Blocked" for missing approvals and other
+    rules, and "Out of date" for a branch behind its base, with "Update
+    branch". Effort: Medium.
+  - **D.** Show the full list of GitHub's blockers in the bar. Effort:
+    Large.
+- **Left out:** Keeping the error or the old state, because it hides the
+  blocker.
+- **Wider fix:** B. One general state also covers GitHub rules that come
+  later.
+- **Recommendation:** C.
+- **Chosen:** B, by the user on 6 November 2026. The bar shows "Blocked"
+  when GitHub blocks the merge and no other state applies. Its action
+  opens the pull request on GitHub. Milestone 4b adds the state to the
+  contracts, the fakes, and the mockups.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -2834,7 +2878,8 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
 - Agent call: every workspace sandbox starts with `noEnv`, so that it gets
   none of the Boat account's secrets. It gets no agent login at start.
   The runner gets the sender's login for each turn, as decision 49 says.
-  Decision 50 decides the GitHub token.
+  Git uses the sender's GitHub user token for each call, as decision 50
+  says.
 - The org settings keep a startup script, which runs in each workspace's
   cloud computer at each start and resume, and env vars. Decision 17 chose
   where the env vars live.
@@ -3279,6 +3324,17 @@ as decision 58 says.
       upgrade needs a matching `Origin`.
 - [x] Run the complete gate.
 
+## Milestone 4b: Blocked banner state
+
+Depends on: 4a
+
+Add the Blocked state of decision 64. Milestones 13 and 14 build on it.
+
+- [ ] Add the Blocked state to the banner type in `src/shared/github.ts`,
+      to the fake API, and to the banner mockups, at desktop and phone
+      sizes.
+- [ ] Run the complete gate.
+
 ## Milestone 5: Bases and workspace lifecycle
 
 Depends on: 4a
@@ -3300,8 +3356,8 @@ Depends on: 4a
 - [ ] Count user activity as decision 29 says, and stop after 30 minutes
       without activity or a running agent turn.
 - [ ] Add the git credential helper to the org image, and the Worker's
-      token route behind the workspace token. The token's reach waits for
-      decision 50.
+      token route behind the workspace token. The route returns a fresh
+      GitHub user token of the current turn's sender, as decision 50 says.
 
 ## Milestone 6: App shell and workspaces
 
@@ -3545,11 +3601,11 @@ Depends on: 4a
 
 Build the Mac app as decision 62 says. No other milestone waits for it.
 
-- [ ] Draw the Mac app window in the mockups first: the native window
+- [x] Draw the Mac app window in the mockups first: the native window
       buttons inset at the top left of the left panel, with the sidebar
       toggle and the back and forward buttons beside them, in a normal
       window and in full screen.
-- [ ] Draw the device commands in the mockups first: the permission
+- [x] Draw the device commands in the mockups first: the permission
       prompt with its four choices, the macOS notification, the countdown
       of the 15-minute window, the app's list of always-allowed commands,
       and the chat's tool states: waiting for approval, denied, done, and
