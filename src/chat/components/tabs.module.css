@@ -1,0 +1,18 @@
+/* The field that renames the current session, in the size of its title. */
+.rename {
+  width: 168px;
+  min-width: 0;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.rename:focus {
+  border-color: var(--ui-primary);
+}

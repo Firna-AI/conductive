@@ -1,0 +1,12 @@
+.root {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* A phone raises every local touch target of the tool to 44px. */
+.touch {
+  --ui-touch-min: 44px;
+}

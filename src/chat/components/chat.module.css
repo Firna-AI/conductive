@@ -1,0 +1,21 @@
+/* Product additions to the mockup styles of the chat. */
+
+/* A file chip that opens its diff: the hover of the mockup's link chip. */
+.chipButton:hover {
+  border-color: var(--ui-border2);
+  background: var(--ui-soft);
+}
+
+/* The files of a sent message, under its bubble. */
+.sentFiles {
+  justify-content: flex-end;
+}
+
+.sentFiles li {
+  padding-right: 8px;
+}
+
+/* A hidden file input that the paperclip opens. */
+.fileInput {
+  display: none;
+}

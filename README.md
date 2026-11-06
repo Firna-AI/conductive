@@ -1,9 +1,10 @@
 # Conducting
 
-Conducting is a browser-only coding tool at `conducting.build`. Each
-workspace is one task with its own branch and its own cloud computer, where
-agents powered by Claude and Codex work. Nothing runs on the user's
-computer. It replaces Conductor Cloud, which shuts down on 20 November 2026.
+Conducting is a coding tool at `conducting.build`, in the browser and in a
+Mac app. Each workspace is one task with its own branch and its own cloud
+computer, where agents powered by Claude and Codex work. The agents run
+only in the cloud. It replaces Conductor Cloud, which shuts down on
+20 November 2026.
 
 ## Status
 
@@ -16,6 +17,8 @@ and an encrypted Boat key store. Today the repository holds:
   at phone and desktop sizes
 - the app package, with tests against fake GitHub and Boat servers and
   local D1 storage, and the complete gate, which GitHub Actions runs
+- the Mac app shell in `desktop/`, which is not complete yet, as
+  [Mac app](#mac-app) says
 
 The app has no deployment yet.
 
@@ -39,6 +42,7 @@ These features are planned. The protocol docs state each one.
 - Agents can create and list workspaces.
 - Orgs with members, sections, reassignment, Archive, and Delete org.
 - The web app works on phones and on desktops.
+- A Mac app for macOS, with the native window buttons in its own top bar.
 
 ## What a user needs
 
@@ -55,7 +59,8 @@ catalogue. The product screens are not built yet.
 1. Install Node 24, as `.nvmrc` says. The
    [mockups README](docs/mockups/README.md#commands) lists the Node
    versions that Mokly refuses.
-2. Run `npm install`. The `.npmrc` file sets `legacy-peer-deps`, which
+2. Run `npm install`. Then run `npm --prefix desktop ci` for the Mac shell's
+   check dependencies. The `.npmrc` file sets `legacy-peer-deps`, which
    `@firna/ui` needs.
 3. Run `npm run db:migrate` to create the local D1 tables.
 4. Run `npm run dev`, and open `http://127.0.0.1:5173`.
@@ -102,8 +107,27 @@ under `.wrangler/`, which Git also ignores.
 | `npm run format:check`      | Check formatting with Prettier                                 |
 | `npm run format`            | Format the files with Prettier                                 |
 
-GitHub Actions uses `.nvmrc`, installs with `npm ci`, and runs
-`npm run check` on pushes and pull requests. It does not deploy.
+GitHub Actions uses `.nvmrc`, installs with `npm ci` and
+`npm --prefix desktop ci`, and then runs `npm run check` on pushes and pull
+requests. It does not deploy.
+
+## Mac app
+
+The Mac app is an Electron shell for macOS, on Apple silicon and Intel
+Macs. It bundles the built web app, shows it in its own window, and calls
+the same Worker. The agents still run only in the cloud. The shell is not
+complete yet:
+
+- It shows the minimal page of the web app. The top bars and the sidebar of
+  the product are not built yet, so the window does not match the mockups
+  yet.
+- The Worker routes the browser-to-app GitHub sign-in handoff. The Mac
+  workflow builds and tests desktop changes on Apple silicon and Intel.
+- Builds have an ad-hoc signature, because no Apple Developer ID exists
+  yet. No release is published, so the updater stays off.
+
+[Mac app](docs/protocol/desktop-app.md) states the requirements.
+[desktop/README.md](desktop/README.md) gives the commands.
 
 ## Key code
 
@@ -116,13 +140,17 @@ GitHub Actions uses `.nvmrc`, installs with `npm ci`, and runs
 - `mokly.config.json`: the Mokly configuration.
 
 - `worker/app.ts`: the Worker's HTTP entry point.
-- `worker/security/`: GitHub sign-in, signed sessions, and the request gate.
+- `worker/security/`: GitHub sign-in, signed sessions, the request gate,
+  the Mac app's sign-in handoff and origin rules, and the shared content
+  security policy of the web app and the Mac app.
 - `worker/data/`: D1 queries for users, orgs, sessions, and encrypted keys.
 - `worker/sandbox/`: the typed Boat adapter and the encrypted key store.
 - `src/shared/`: the browser API contracts, route paths, and runner message types.
 - `src/test-support/`: the fake API, recorded chat and file events, and terminal fake.
 - `worker/test-support/`: local D1, fake GitHub and Boat servers, and runner fakes.
 - `migrations/`: the D1 schema migrations.
+- `desktop/`: the Mac app, an Electron package of its own. Its
+  [README](desktop/README.md) gives its key code.
 
 The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
 
@@ -137,5 +165,6 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [GitHub banner](docs/protocol/github-banner.md)
   - [Agent tools](docs/protocol/agent-tools.md)
   - [Orgs and members](docs/protocol/orgs-and-members.md)
+  - [Mac app](docs/protocol/desktop-app.md)
 - [Mockups](docs/mockups/README.md): the design and the catalogue.
 - [AGENTS.md](AGENTS.md): the rules for agents in this repository.

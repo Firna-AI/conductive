@@ -56,8 +56,22 @@ export type SandboxFileRead =
   | { kind: 'file'; file: SandboxFile }
   | { kind: 'too_large'; sizeBytes: number; limitBytes: number }
 
+export type PortMode = 'localhost' | 'network'
+export interface PrivatePort {
+  origin: string
+  token: string
+}
+export type SandboxDesktop =
+  { kind: 'ready'; url: string } | { kind: 'starting' }
+
 /** Internal server interface. Callers must authorize the org and its resource first. */
 export interface SandboxProvider {
+  privatePort(
+    sandboxId: string,
+    port: number,
+    mode: PortMode,
+  ): Promise<PrivatePort>
+  desktop(sandboxId: string): Promise<SandboxDesktop>
   readFile(
     sandboxId: string,
     path: string,

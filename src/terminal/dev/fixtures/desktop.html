@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Desktop</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #2b3a4a 0%, #1d2731 60%, #172029);
+        font-family:
+          Inter,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+      }
+      .bar {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.35em 0.8em;
+        background: rgba(0, 0, 0, 0.55);
+        color: #e5e7eb;
+        font-size: 9px;
+      }
+      .window {
+        position: absolute;
+        inset: 12% 6% 6% 6%;
+        overflow: hidden;
+        border-radius: 6px;
+        background: #ffffff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      }
+      .title {
+        padding: 5px 8px;
+        background: #e8eaed;
+        color: #3c4043;
+        font-size: 9px;
+      }
+      .address {
+        padding: 3px 10px;
+        border-bottom: 1px solid #e5e7eb;
+        color: #5f6368;
+        font-size: 9px;
+      }
+      .page {
+        padding: 10px;
+        color: #111827;
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar"><span>Activities</span><span id="token"></span></div>
+    <div class="window">
+      <div class="title">Checkout · Acme</div>
+      <div class="address">localhost:3000/checkout</div>
+      <div class="page">
+        <strong>Checkout</strong>
+        <p id="referrer"></p>
+      </div>
+    </div>
+    <script>
+      const token = location.hash ? 'Token in fragment' : 'No token'
+      document.getElementById('token').textContent = token
+      document.getElementById('referrer').textContent =
+        `Referrer: ${document.referrer || 'none'}`
+    </script>
+  </body>
+</html>
