@@ -2,6 +2,7 @@ import { readBoatKey } from '../data/boat-keys'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
 import { BoatClient } from '../sandbox/boat'
+import { ProviderError } from '../sandbox/errors'
 import { decrypt } from '../security/crypto'
 import { authorizedCleanup } from './deletion-data'
 
@@ -20,7 +21,7 @@ export async function deletedOrgProvider(
     throw new HttpError(
       409,
       'boat_key_required',
-      'The cloud computer key is missing. Ask an org admin to add it.',
+      'Replace the cloud computer key to continue.',
     )
   const account = { id: stored.accountId, type: stored.accountType }
   const key = await decrypt(
@@ -29,4 +30,13 @@ export async function deletedOrgProvider(
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
   return new BoatClient(key, fetch, account)
+}
+
+export async function ignoreAlreadyRemoved(action: () => Promise<unknown>) {
+  try {
+    await action()
+  } catch (error) {
+    if (!(error instanceof ProviderError) || error.kind !== 'not_found')
+      throw error
+  }
 }

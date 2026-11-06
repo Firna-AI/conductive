@@ -78,9 +78,9 @@ export async function renewCleanupLease(
 ) {
   const result = await db
     .prepare(
-      'UPDATE org_deletions SET lease_until = ? WHERE org_id = ? AND lease_token = ?',
+      'UPDATE org_deletions SET lease_until = ? WHERE org_id = ? AND lease_token = ? AND lease_until > ?',
     )
-    .bind(now + LEASE_MS, orgId, token)
+    .bind(now + LEASE_MS, orgId, token, now)
     .run()
   return result.meta.changes > 0
 }
@@ -175,7 +175,9 @@ export async function markResourceStopped(
     db
       .prepare(
         `UPDATE workspaces SET state = CASE WHEN archived_at IS NULL THEN 'stopped' ELSE state END,
-       stopped_at = ?, next_disk_keepalive_at = NULL, updated_at = ? WHERE org_id = ? AND sandbox_id = ?`,
+       stopped_at = CASE WHEN state = 'stopped' AND stopped_at IS NOT NULL THEN stopped_at ELSE ? END,
+       next_disk_keepalive_at = CASE WHEN state = 'stopped' THEN next_disk_keepalive_at ELSE NULL END,
+       updated_at = ? WHERE org_id = ? AND sandbox_id = ?`,
       )
       .bind(now, now, orgId, id),
     db
@@ -216,28 +218,4 @@ export async function markPurgeStarted(
     .bind(now, orgId, token, orgId, now)
     .run()
   return result.meta.changes > 0
-}
-
-export async function restoreOrgRecords(
-  db: D1Database,
-  orgId: string,
-  actorId: string,
-  token: string,
-  now: number,
-) {
-  const result = await db.batch([
-    db
-      .prepare(
-        `UPDATE orgs SET deleted_at = NULL, purge_after = NULL WHERE id = ? AND purge_after > ?
-       AND EXISTS (SELECT 1 FROM org_deletions WHERE org_id = ? AND lease_token = ? AND purge_started_at IS NULL)
-       AND EXISTS (SELECT 1 FROM org_members WHERE org_id = ? AND user_id = ? AND role = 'admin')`,
-      )
-      .bind(orgId, now, orgId, token, orgId, actorId),
-    db
-      .prepare(
-        'DELETE FROM org_deletions WHERE org_id = ? AND EXISTS (SELECT 1 FROM orgs WHERE id = ? AND deleted_at IS NULL)',
-      )
-      .bind(orgId, orgId),
-  ])
-  return result[0].meta.changes > 0
 }

@@ -11,7 +11,8 @@ Run `membersGate` before feature dispatch on the app hostname.
 It calls the existing gate for sign-in, hostname, Origin, and JSON checks.
 It then reads current membership from D1.
 It permits a deleted org only for its admins on its detail, Delete retry,
-and Restore paths. It also checks admin permission on shared-settings writes.
+Restore, and existing key GET/PUT paths.
+It also checks admin permission on shared-settings writes.
 Use `membersRoute` before the current core dispatcher.
 An unmatched route returns `null` for the next handler.
 Keep the existing private response headers and error handler around dispatch.
@@ -25,7 +26,17 @@ It must also include `activeAdminPredicate` in its D1 mutation.
 Bind the org ID and actor ID for that predicate.
 This keeps a concurrent role change or deletion from permitting a stale write.
 
-Supply all three `MembersHooks` callbacks:
+The key owner instead uses `assertCanMaintainOrgKey` and
+`orgKeyMaintenancePredicate` from `key-maintenance.ts`.
+Bind the org ID and actor ID on its atomic encrypted-key write.
+This permission includes current admins of deleted orgs.
+Other deleted-org settings stay blocked.
+An active org's members can still read key status for the composer.
+The existing key store keeps encryption and same-account protection.
+A provider authentication refusal under a cleanup lease returns
+`boat_key_required` and asks the current admin to replace the cloud computer key.
+
+Supply all five `MembersHooks` callbacks:
 
 - `readWorkspace` returns the lifecycle backend's current `Workspace` record.
   It must authorize the viewer. All current org members can read all workspaces.
@@ -34,20 +45,54 @@ Supply all three `MembersHooks` callbacks:
   It must drain pending workspace starts and image builds.
   It must retain their sandbox IDs and snapshot names in D1.
   It must close existing browser and runner access.
-  It must disable idle, refresh, and disk keepalive timers.
+  It must disable normal idle, refresh, and disk keepalive timers.
   It must handle builds even when the workspace list is empty.
   It must finish before it returns. Repeated calls must be safe.
-  A later explicit workspace open can restore access after an active-org check.
+  Members then owns the deleted-org maintenance schedule through the next hook.
+- `maintainDeletedOrg` gets the real deletion dates and each retained workspace
+  disk's real stop date and next keepalive date.
+  It plans the normal decision-43 deadline through `retention.schedule`.
+  It keeps an existing deadline unchanged.
+  A newly stopped disk must receive a deadline.
+  In `retention` mode, it performs only due restarts through `retention.restart`.
+  It then schedules the new stop's next keepalive.
+  In `restore` mode, it only plans dates. It must start no sandbox.
+  Build sandboxes and archived workspaces do not enter this hook.
+  The lifecycle keeps its restart policy here, including its margin before day 14.
+  It must await every capability call before it returns.
+  A hook failure keeps the org pending for retry.
+- `restoreOrgMaintenance` receives the Restore request ID, requesting admin,
+  original deletion deadline, and current disk schedules.
+  It returns disk and org-refresh timers to the active lifecycle.
+  It must arm these timers before it returns.
+  The timers must check active org state and current disk/settings records before running.
+  It must keep normal access closed and start no sandbox during the handoff.
+  Replace older timer plans for the same org.
+  Repeated calls for the same request ID must be safe.
+  An unopened workspace must get maintenance after activation.
 - `deleteWorkspaceState` removes all workspace Durable Object state and any
   other external workspace data. Repeated calls must be safe.
 
-Delete records the deletion date and revokes previews before it calls a hook
-or the provider. A failed suspension or stop keeps that state for retry.
-Restore finishes outstanding stops and clears the deletion marker.
+Delete records the deletion date and revokes previews before any hook or provider call.
+It preserves an already-stopped disk's stop and keepalive dates.
+A failed suspension, stop, or maintenance call keeps recovery state for retry.
+Restore saves a durable intent bound to its current admin and original deadline.
+It finishes stops, plans disk dates, and completes the maintenance handoff.
+Retries by the same admin keep the same intent ID.
+Only then does it clear the deletion marker and recovery journal.
+A failed handoff leaves ordinary access closed.
+Scheduled cleanup retries that handoff while the request remains valid.
+A newer Delete retry cancels the intent.
+An invalid admin or an expired window cannot activate a pending Restore.
 Restore makes no provider resume call. Old preview hostnames stay revoked.
 
-Schedule `cleanupDeletedOrgs` with `suspendOrg` and `deleteWorkspaceState`.
-It retries stops during the restore window.
+Schedule `cleanupDeletedOrgs` with all hooks except `readWorkspace`.
+It retries stops and controlled retention during the restore window.
+Retention continues before each pending Restore handoff attempt.
+Choose a cleanup interval plus retry budget smaller than the lifecycle's
+margin between its keepalive date and the disk's 14-day expiry.
+For a one-hour margin, both together must take less than one hour.
+The test policy uses that margin. Production uses the lifecycle's own policy.
 After seven days, it removes all recorded org-image and build snapshots
 before any sandbox deletion. It then removes workspace state and D1 rows.
 The resource journal keeps completed steps after a failure.
@@ -55,6 +100,17 @@ The result names purged orgs and orgs that need another attempt.
 D1 ownership and encrypted keys stay until every external cleanup succeeds.
 A cleanup lease separates Restore from cleanup calls.
 An expired lease permits a later attempt after a worker stops.
+
+The maintenance capability accepts only workspace IDs from its callback.
+It checks the current lease before every operation.
+A restart must be due at its stored keepalive date.
+It resumes with `noEnv` and empty env vars, then stops the sandbox.
+It supplies no workspace token, agent login, or org secret.
+Keep runner, preview, user startup, and agent access suspended in retention mode.
+Before the resume, Members journals a pending stop for crash recovery.
+Only an acknowledged resume followed by a stop creates a new real stop date.
+A failed or uncertain resume keeps the older conservative date.
+The capability expires when its callback ends or its lease expires.
 
 Invitation acceptance has no browser route in the fixed contracts.
 Call `acceptOrgInvite` after an explicit acceptance by a signed-in user.
@@ -84,7 +140,12 @@ The tests use local D1, the real request gate, and the existing fake Boat server
 - `membership.ts` manages roles, removal, leave, and the last-admin rule.
 - `invites.ts` manages pending invitations and explicit acceptance.
 - `ownership.ts` supplies creation ownership and workspace reassignment.
-- `deletion.ts` implements Delete, Restore, suspension, and provider stops.
+- `deletion.ts` implements Delete, suspension, and provider stops.
+- `maintenance.ts` supplies scoped retention capabilities and validates schedules.
+- `maintenance-contract.ts` defines the required lifecycle maintenance callbacks.
+- `restore.ts` implements the retryable Restore handoff.
+- `cleanup-lease.ts` scopes cleanup work and maps refused-key errors.
+- `key-maintenance.ts` supplies deleted-org key repair permission.
 - `cleanup.ts` implements scheduled provider and data cleanup.
 - `account.ts` exposes the last-admin account-deletion guard.
 - `*-data.ts` owns the D1 queries and the guarded mutation predicates.

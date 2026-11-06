@@ -8,6 +8,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { membersGate } from './gate'
+import { maintainDisksForTests } from './maintenance-test-support'
 import { workspaceCreator } from './ownership'
 import { membersRoute, type MembersHooks } from './route'
 
@@ -22,6 +23,8 @@ export function membersClient(harness: TestHarness) {
     randomToken: () => `members-${++sequence}`,
   }
   const hooks: MembersHooks = {
+    maintainDeletedOrg: maintainDisksForTests,
+    restoreOrgMaintenance: async () => {},
     readWorkspace: (orgId, id) => readWorkspace(harness, orgId, id),
     suspendOrg: async (orgId, workspaceIds) => {
       suspendedOrgs.push({ orgId, workspaceIds })

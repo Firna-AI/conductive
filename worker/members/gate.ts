@@ -4,9 +4,10 @@ import { deleteOrgPath, restoreOrgPath } from '../../src/shared/orgs'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { gate, type RequestContext } from '../security/gate'
+import { assertCanMaintainOrgKey } from './key-maintenance'
 import { assertCanChangeSharedSettings, requireOrgMember } from './permissions'
 
-/** Extends the core gate only for an admin's deleted-org detail, restore, and delete retry. */
+/** Extends the core gate for an admin's deleted-org recovery and key maintenance. */
 export async function membersGate(
   request: Request,
   env: AppEnv,
@@ -28,20 +29,26 @@ export async function membersGate(
     env,
     now,
   )
+  const keyMaintenance =
+    path === boatKeyPath(orgId) && ['GET', 'PUT'].includes(request.method)
   const allowDeleted =
+    keyMaintenance ||
     (path === orgPath(orgId) && request.method === 'GET') ||
     (path === restoreOrgPath(orgId) && request.method === 'POST') ||
     (path === deleteOrgPath(orgId) && request.method === 'POST')
-  context.org = await requireOrgMember(
+  const org = await requireOrgMember(
     env.DB,
     orgId,
     context.user.id,
     allowDeleted,
   )
+  context.org = org
+  if (keyMaintenance && (request.method === 'PUT' || org.deletion)) {
+    await assertCanMaintainOrgKey(env.DB, orgId, context.user.id)
+  }
   const writesSharedSettings =
     !['GET', 'HEAD', 'OPTIONS'].includes(request.method) &&
     [
-      boatKeyPath(orgId),
       orgSettingsPaths.repositories(orgId),
       orgSettingsPaths.settings(orgId),
       orgSettingsPaths.builds(orgId),

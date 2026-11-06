@@ -1,28 +1,26 @@
 import type { AppDependencies, AppEnv } from '../env'
-import { deletedOrgProvider } from './cleanup-provider'
-import {
-  ignoreAlreadyRemoved,
-  keepCleanupLease,
-  stopDeletedOrg,
-  withCleanupLease,
-} from './deletion'
+import { keepCleanupLease, withCleanupLease } from './cleanup-lease'
+import { deletedOrgProvider, ignoreAlreadyRemoved } from './cleanup-provider'
+import { stopDeletedOrg } from './deletion'
 import {
   cleanupResources,
   deletedOrgs,
   markPurgeStarted,
   markResourceRemoved,
 } from './deletion-data'
+import { maintainDeletedOrg } from './maintenance'
 import {
   markWorkspaceStateDeleted,
   pendingWorkspaceStates,
   purgeOrgRecords,
 } from './purge-data'
+import { finishPendingRestore } from './restore'
 import type { MembersHooks } from './route'
 
 export async function cleanupDeletedOrgs(
   env: AppEnv,
   dependencies: AppDependencies,
-  hooks: Pick<MembersHooks, 'suspendOrg' | 'deleteWorkspaceState'>,
+  hooks: Omit<MembersHooks, 'readWorkspace'>,
 ): Promise<{ purged: string[]; pending: string[] }> {
   const result: { purged: string[]; pending: string[] } = {
     purged: [],
@@ -43,7 +41,11 @@ export async function cleanupDeletedOrgs(
             dependencies,
             hooks,
           )
-          if (dependencies.now() < org.deletesAt) return
+          if (dependencies.now() < org.deletesAt) {
+            await maintainDeletedOrg(env, org.id, token, dependencies, hooks)
+            await finishPendingRestore(env, org.id, token, dependencies, hooks)
+            return
+          }
           if (
             !(await markPurgeStarted(env.DB, org.id, token, dependencies.now()))
           )

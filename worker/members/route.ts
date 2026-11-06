@@ -15,20 +15,22 @@ import type { Workspace } from '../../src/shared/workspaces'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError, requiredString } from '../http'
 import type { RequestContext } from '../security/gate'
-import { deleteOrg, restoreOrg } from './deletion'
+import { deleteOrg } from './deletion'
 import { cancelOrgInvite, inviteOrgMember } from './invites'
+import type { OrgMaintenanceHooks } from './maintenance-contract'
 import { changeMemberRole, listMembers, removeOrgMember } from './membership'
 import { renameOrg, visibleOrgs } from './org-data'
 import { reassignWorkspace } from './ownership'
 import { requireOrgAdmin, requireOrgMember } from './permissions'
+import { restoreOrg } from './restore'
 
-export interface MembersHooks {
+export interface MembersHooks extends OrgMaintenanceHooks {
   readWorkspace(
     orgId: string,
     workspaceId: string,
     userId: string,
   ): Promise<Workspace>
-  /** Drain starts/builds and close org connections. Keep timers disabled until an explicit active-org open. */
+  /** Drain starts/builds and close access. Deleted maintenance owns disk retention until the Restore handoff. */
   suspendOrg(orgId: string, workspaceIds: readonly string[]): Promise<void>
   /** Idempotently remove all Durable Object state and external data for this workspace. */
   deleteWorkspaceState(orgId: string, workspaceId: string): Promise<void>
