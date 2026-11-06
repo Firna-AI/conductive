@@ -1,0 +1,202 @@
+/*
+ * The document, the buttons, and the shared text of the site. The values
+ * follow the marketing mockup in docs/mockups/src/components/marketing/ and
+ * the Firna button that it uses. The phone layout starts below 760px, as
+ * `phoneMedia` in pictures.ts says.
+ */
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+  font-size: var(--ui-text-md);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The main content grows, so the footer of a short page stays at the bottom. */
+.site {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+}
+
+.main {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 2px;
+}
+
+/* The Firna button, as a link: the secondary look, and the primary tone. */
+.button {
+  display: flex;
+  position: relative;
+  flex-direction: row;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 20px;
+  border: 1px solid var(--ui-control-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 18px;
+  text-decoration: none;
+  box-sizing: border-box;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.button:hover {
+  background: var(--ui-soft);
+}
+
+.button:active {
+  background: var(--ui-bg2);
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ui-primary) 35%, transparent);
+}
+
+.button-md {
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.button-primary {
+  border-color: var(--ui-primary);
+  background: var(--ui-primary);
+  color: var(--ui-on-solid);
+}
+
+.button-primary:hover {
+  border-color: var(--ui-primary-deep);
+  background: var(--ui-primary-deep);
+}
+
+.button-primary:active {
+  background: var(--ui-primary-deep);
+  opacity: 0.88;
+}
+
+.button-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  color: var(--ui-on-solid);
+}
+
+/* The actions of a section: in a row, or under each other on a phone. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* The line under the main action about the Boat account. */
+.boat-note {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.text-link {
+  color: var(--ui-ink2);
+  text-decoration: underline;
+  text-decoration-color: var(--ui-border2);
+  text-underline-offset: 3px;
+}
+
+.text-link:hover {
+  color: var(--ui-ink);
+  text-decoration-color: currentColor;
+}
+
+/* The start of a section: a label in capitals, a headline, and a sentence. */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.intro-label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: var(--ui-label-case);
+}
+
+.intro-title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 30px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.022em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.intro-text {
+  max-width: 640px;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 16px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* A phone raises every touch target of the page to 44px. */
+@media (max-width: 759.98px) {
+  .site {
+    --ui-touch-min: 44px;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions .button {
+    align-self: stretch;
+    width: 100%;
+  }
+
+  .intro-title {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+
+  .intro-text {
+    font-size: 15px;
+  }
+}
