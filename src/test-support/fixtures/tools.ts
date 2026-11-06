@@ -87,10 +87,13 @@ export function toolFixtures(bannerState: BannerState = 'ready-to-merge') {
         : {
             state: bannerState,
             pullRequest,
+            // A missing approval is the common reason that GitHub blocks a merge.
             review:
               bannerState === 'changes-requested'
                 ? 'changes-requested'
-                : 'approved',
+                : bannerState === 'blocked'
+                  ? 'pending'
+                  : 'approved',
             changesRequestedBy:
               bannerState === 'changes-requested' ? ['priyaraman'] : [],
             mergedAt: bannerState === 'merged' ? FAKE_TIME : null,

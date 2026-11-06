@@ -64,6 +64,12 @@ chat, and five tabs at the bottom.
   `palette.ts`, and the type, density, sizes, radii, and fonts in
   `metrics.ts`. The renderer writes them as `--ui-*` CSS variables, and gives
   `@firna/ui` the same colours through its theme.
+- The logo comes from the masters in `docs/brand/`, which
+  `src/components/brand/Logo.module.css` reads and only scales. The tile
+  of the app icon stands alone at the top of the org rail. The lockup,
+  with dark or light text for the scheme, names the product on the
+  marketing site and the sign-in page. The macOS app icon shows in the
+  notifications of the Mac app.
 - `ActionButton` and `IconButton` in `src/components/common/actions.tsx` give
   the Firna button the dense size and a lighter label.
 - On a phone every touch target is at least 44 px high. `MobileFrame` gives
@@ -86,7 +92,9 @@ chat, and five tabs at the bottom.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green
-  square, and ready is one bright cell on a faint green grid.
+  square, and ready is one bright cell on a faint green grid. A workspace
+  whose agent waits for the user, such as for the approval of a command,
+  shows Needs input: a middle column in the accent colour that pulses.
 - Copy says cloud computer or sandbox. Only the Boat key tab, the marketing
   site, and Get started name Boat, from decision 47.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
@@ -118,14 +126,16 @@ chat, and five tabs at the bottom.
 | `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn       |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, Boat key, Members |
 | `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure          |
+| `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the session history, and closing a session while it works      |
-| `app/reassign`      | The owner of a workspace and the menu that reassigns it, and a member's view  |
+| `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
 | `app/composer`      | Attached files, the model and effort picker, and a missing agent or key       |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge                     |
-| `user-flows`        | Sign up, create a workspace, reopen a stopped workspace, and create an org    |
+| `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |
+| `user-flows`        | Sign up, create a workspace, reopen it, create an org, run a Mac command      |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `app`, `app/sign-in`,
@@ -208,6 +218,13 @@ plan limits.
 - Each message runs on the agent login of the person who sends it, from
   decision 49. So a reassign changes no login, and the cloud computer keeps
   running.
+- A stopped turn names the member who pressed Stop, from decision 72,
+  because all members of an org see the same chat. That member sees "You
+  stopped the agent", as `app/chat/interrupted` shows. The other members
+  see the name of that member, such as "Cal stopped the agent" in
+  `app/reassign/member-stop`. When no member pressed Stop, such as when
+  the cloud computer stopped during the turn, the chat says "The agent
+  stopped", as `app/shell/stopped/during-turn` shows.
 - Each branch starts with the GitHub login of the owner of its workspace,
   such as `calummoore/lisbon-7k2q`, from decision 53.
 - Archive, from decision 16, deletes the cloud computer and keeps the chat
@@ -250,6 +267,38 @@ plan limits.
   connected, or when the org has no key. The key notice says "cloud
   computers" and names no provider. Only an admin gets its Add key.
 
+## The Mac app
+
+The Mac app is the web app in a window of macOS, from decision 62. Its
+screens live under `mac-app`, and their parts in `src/components/mac/`.
+
+- `MacScreen` lays the screen of a Mac out at 1440 × 900 and scales it to
+  the view in steps of `--mac-scale`, because a view runs no script. The
+  app has no phone layout, so a phone view shows the same screen, smaller.
+- The window has no title bar. The red, yellow, and green window buttons
+  sit inset at the top left of the left panel, above every layer of the
+  app, as macOS draws them. `WindowControls` keeps their space, then shows
+  the sidebar toggle, and back and forward at the right. In full screen
+  the buttons are gone, and the toggle takes their space.
+- `MacApp` marks the screens inside it as the Mac app, so that `AppFrame`
+  draws the window controls and a banner of the Mac app. The account of
+  the Mac app keeps the sidebar of the org and adds the This Mac section.
+- An agent can ask to run a command on the Mac of the person who sent the
+  turn. The request waits as a compact message just above the composer,
+  from `PendingCommand` in `src/components/chat/`: the exact command, the
+  time limit, Deny, and Allow. A longer time limit shows its reason.
+  Details opens the folder, the reason, the workspace, and the sender. The
+  arrow beside Allow opens Always allow and Allow all commands for 15
+  minutes. A view runs no script, so both are native disclosures, and each
+  choice is a link. The header and the workspace list mark the workspace
+  with Needs input, so the request shows from every page. A notification
+  of macOS opens the workspace when the app is in the background. The 15
+  minutes show as an amber bar with the time left and Stop.
+- The web app shows a waiting request without the choices, because only
+  the Mac app can allow a command on the Mac. Once answered, the command
+  shows as a card at its place in the chat: denied, done with its output,
+  or Mac not available.
+
 ## The marketing site
 
 The home page follows the calm structure of a Conductor-style home page: a
@@ -258,6 +307,9 @@ the app, then one section for each feature, the smaller features, a last
 call to action, and a footer. Both actions, "Start free with GitHub"
 and "Sign in", lead to `app/sign-in`. The parts live in
 `src/components/marketing/`.
+
+The site keeps still captures of the workspace screen, the org settings cloud computer tab, and the phone workspace list.
+Changes to those screens require recapture with the [capture steps](../../src/marketing/README.md#pictures).
 
 - Every picture is a real screen of the catalogue, not a drawing of one.
   `ScreenFrame` lays the screen out at its own size, 1440 × 900 on desktop

@@ -17,6 +17,7 @@
     "mockups:serve": "mokly serve",
     "mockups:typecheck": "tsc -p docs/mockups/tsconfig.json",
     "mockups:check": "npm run mockups:typecheck && npm run mockups:build",
+    "marketing:pictures": "node tools/marketing-pictures/run.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
@@ -40,6 +41,7 @@
     "globals": "^17.14.0",
     "miniflare": "5.20261101.0-beta",
     "prettier": "^3.9.10",
+    "sharp": "^0.35.5",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.1",
     "vite": "^8.3.6",

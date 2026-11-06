@@ -3,6 +3,9 @@
  */
 
 import { changedFiles, type ChangedFile } from './files'
+import type { MacCommandRequest, MacCommandState } from './mac'
+import { macConversations } from './macConversations'
+import type { PersonKey } from './members'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
@@ -24,7 +27,23 @@ export type ChatItem =
       detail?: string
       status: ToolCallStatus
     }
-  | { kind: 'stopped'; id: string }
+  | {
+      /** A command that the agent asks to run on the Mac of the sender. */
+      kind: 'mac-command'
+      id: string
+      request: MacCommandRequest
+      state: MacCommandState
+    }
+  | {
+      /**
+       * A stopped turn. All members see the same chat, so the item records
+       * `by`, the member who pressed Stop (decision 72). A turn that stopped
+       * with no Stop, such as when the cloud computer stopped, has no `by`.
+       */
+      kind: 'stopped'
+      id: string
+      by?: PersonKey
+    }
   | { kind: 'error'; id: string; text: string }
   | { kind: 'working'; id: string; elapsed: string }
   | {
@@ -42,9 +61,15 @@ export const conversationKeys = [
   'running',
   'steer',
   'interrupted',
+  'sandbox-stopped',
   'failed',
   'queued',
   'first-turn',
+  'mac-waiting',
+  'mac-waiting-suite',
+  'mac-denied',
+  'mac-done',
+  'mac-unavailable',
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -133,10 +158,23 @@ const savedCartsAsk = {
   text: savedCartsMessage,
 } as const
 
+const history: readonly ChatItem[] = [
+  ...autocompleteStart,
+  ...autocompleteTests,
+  ...autocompleteEnd,
+]
+
+/** The turn up to its end-to-end run, which a stop cut off. */
+const cutOffTurn: readonly ChatItem[] = [
+  ...autocompleteStart,
+  ...autocompleteTests,
+  { ...e2eRunning, status: 'stopped' },
+]
+
 export const conversations: Readonly<
   Record<ConversationKey, readonly ChatItem[]>
 > = {
-  history: [...autocompleteStart, ...autocompleteTests, ...autocompleteEnd],
+  history,
   running: [
     ...autocompleteStart,
     ...autocompleteTests,
@@ -149,12 +187,9 @@ export const conversations: Readonly<
     e2eRunning,
     { kind: 'working', id: 'working', elapsed: '2m 58s' },
   ],
-  interrupted: [
-    ...autocompleteStart,
-    ...autocompleteTests,
-    { ...e2eRunning, status: 'stopped' },
-    { kind: 'stopped', id: 'stopped' },
-  ],
+  interrupted: [...cutOffTurn, { kind: 'stopped', id: 'stopped', by: 'cal' }],
+  /** The cloud computer stopped during the turn, and no member pressed Stop. */
+  'sandbox-stopped': [...cutOffTurn, { kind: 'stopped', id: 'stopped' }],
   failed: [
     ...autocompleteStart,
     {
@@ -182,6 +217,7 @@ export const conversations: Readonly<
     },
     { kind: 'working', id: 'working', elapsed: '24s' },
   ],
+  ...macConversations(history),
 }
 
 /** The steer message that the user types while a turn runs. */

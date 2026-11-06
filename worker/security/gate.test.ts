@@ -115,13 +115,13 @@ it('routes site, app, and machine hosts before dispatch', async () => {
     MACHINE_ORIGIN: 'https://machines.conducting.test',
     PREVIEW_DOMAIN: 'conducting-previews.test',
   }
+  const site = await app.fetch(
+    new Request('https://conducting.test/api/session'),
+    env,
+  )
+  expect(site.status).toBe(404)
+  expect(site.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
   for (const input of [
-    {
-      host: 'https://conducting.test',
-      path: '/api/session',
-      status: 501,
-      surface: 'marketing',
-    },
     { host: TEST_ORIGIN, path: '/', status: 501, surface: 'app' },
     {
       host: 'https://machines.conducting.test',

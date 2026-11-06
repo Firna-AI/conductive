@@ -1,7 +1,7 @@
 import { API_PATHS } from '../src/shared/api'
 import { HEALTH_PATH, type HealthResponse } from '../src/shared/health'
 import type { AppDependencies, AppEnv } from './env'
-import { hostStub, hostSurface } from './hosts'
+import { hostStub, hostSurface, marketingResponse } from './hosts'
 import { errorResponse, HttpError, privateResponse } from './http'
 import { route } from './routes'
 import { finishSignIn, startSignIn } from './security/auth'
@@ -32,6 +32,9 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             'The app is not available. Try again.',
           )
         const surface = hostSurface(request, env)
+        if (surface === 'marketing') {
+          return await marketingResponse(request, env, dependencies.now())
+        }
         if (surface === 'app') {
           checkOrigin(request, env)
           if (!path.startsWith('/api/') && env.ASSETS) {
