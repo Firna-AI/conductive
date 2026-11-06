@@ -1,4 +1,4 @@
-import type { Preview } from '../../src/shared/previews'
+import { previewPath, type Preview } from '../../src/shared/previews'
 import type { WorkspaceTarget } from './types'
 import type { PortMode } from '../sandbox/provider'
 
@@ -11,11 +11,12 @@ export interface PreviewRecord extends WorkspaceTarget {
   listenerSandboxId?: string | null
 }
 
-export function publicPreview(row: PreviewRecord): Preview {
+export function publicPreview(row: PreviewRecord, appOrigin: string): Preview {
   return {
     id: row.id,
     port: row.port,
-    url: `https://${row.hostname}`,
+    url: new URL(previewPath(row.orgId, row.workspaceId, row.id), appOrigin)
+      .href,
     expiresAt: row.expiresAt,
   }
 }
@@ -55,6 +56,7 @@ export async function listPreviews(
   db: D1Database,
   target: WorkspaceTarget,
   now: number,
+  appOrigin: string,
 ): Promise<Preview[]> {
   const { results } = await db
     .prepare(
@@ -64,7 +66,23 @@ export async function listPreviews(
     )
     .bind(target.orgId, target.workspaceId, now)
     .all<PreviewRecord>()
-  return results.map(publicPreview)
+  return results.map((row) => publicPreview({ ...target, ...row }, appOrigin))
+}
+
+export async function previewForLaunch(
+  db: D1Database,
+  target: WorkspaceTarget,
+  id: string,
+  now: number,
+): Promise<PreviewRecord | null> {
+  const row = await db
+    .prepare(
+      `SELECT id, hostname, port, expires_at AS expiresAt FROM preview_hostnames
+     WHERE org_id = ? AND workspace_id = ? AND id = ? AND revoked_at IS NULL AND expires_at > ?`,
+    )
+    .bind(target.orgId, target.workspaceId, id, now)
+    .first<PreviewRecord>()
+  return row ? { ...target, ...row } : null
 }
 
 export function activePreview(

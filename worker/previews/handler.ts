@@ -5,6 +5,7 @@ import type {
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
 import { requireRunning, toolError, toolRequest } from './access'
+import { previewLaunchPage } from './launch'
 import { PrivatePorts } from './ports'
 import { PreviewProxy } from './proxy'
 import {
@@ -12,6 +13,7 @@ import {
   insertPreview,
   listPreviews,
   previewExpiry,
+  previewForLaunch,
   publicPreview,
   revokePreview,
   revokeWorkspacePreviews,
@@ -58,9 +60,20 @@ export function createPreviewHandler(
         if (request.method === 'GET' && tail === null) {
           return privateResponse(
             Response.json({
-              previews: await listPreviews(env.DB, target, now),
+              previews: await listPreviews(env.DB, target, now, env.APP_ORIGIN),
             } satisfies PreviewsResponse),
           )
+        }
+        if (request.method === 'GET' && tail) {
+          requireRunning(target)
+          const row = await previewForLaunch(env.DB, target, tail, now)
+          if (!row)
+            throw new HttpError(
+              404,
+              'preview_not_found',
+              'The preview is not available.',
+            )
+          return previewLaunchPage(env, row, now)
         }
         if (request.method === 'POST' && tail === null) {
           requireRunning(target)
@@ -102,7 +115,9 @@ export function createPreviewHandler(
           }
           return privateResponse(
             Response.json(
-              { preview: publicPreview(row) } satisfies PreviewResponse,
+              {
+                preview: publicPreview(row, env.APP_ORIGIN),
+              } satisfies PreviewResponse,
               { status: 201 },
             ),
           )

@@ -162,18 +162,56 @@ says.
 
 - Previews live on a separate registrable domain (decision 6).
 - Each preview gets a random hostname one level under that domain, with at
-  least 128 random bits. The hostname is the credential, so a frame needs
-  no cookie.
-- The Durable Object of the workspace revokes the hostname when the sandbox
-  stops, when the user closes the preview, and after 24 hours. Reason: a
-  leaked hostname then stops working soon.
+  least 128 random bits. The hostname gives each preview its own origin.
+  It is not a credential.
+- A request to a preview hostname reaches the sandbox only with the valid
+  credential cookie of that preview (decision 83).
+- Reason: browsers send the preview origin in the `Origin` header of
+  cross-site requests and sockets, also under `no-referrer`. A hostname as
+  the credential was rejected, because a preview page then leaks it to
+  each site that it calls.
+- The API gives each preview a launch address on the app's hostname. The
+  address holds no secret, because each load needs the sign-in and access
+  to the workspace.
+- Each load of the launch address, in a frame or in a tab, gets a new
+  grant. A form on the launch page posts the grant to the authorizer, a
+  fixed hostname on the preview domain. The authorizer sets the credential
+  cookie, then sends the browser to the preview hostname.
+- A grant works for 60 seconds at most, and only for its own preview. It
+  is not one-use, so it can work more than once in that time. Reason: it
+  needs no stored state, and it goes only from the launch page to the
+  authorizer.
+- A grant never goes into a URL or to a sandbox. A grant in a URL was
+  rejected, because the browser history keeps the URL.
+- The authorizer accepts a grant only in a form POST with the app's
+  `Origin`. It never serves sandbox content.
+- Reason: a service worker of a previewed app can read a form that the
+  browser posts to the origin of that preview. A handoff on the preview
+  hostname was rejected for that reason.
+- The launch page sends only the app's origin as its referrer. Reason:
+  under `no-referrer`, the form sends `Origin: null`, and the authorizer
+  refuses it.
+- The credential cookie is HttpOnly, Secure, SameSite=None, and
+  Partitioned. It expires no later than its preview.
+- Reason: a frame under the app is a third-party context, where browsers
+  can block a cookie that is not partitioned. A partitioned cookie works
+  there, but only under the top-level site that set it. So a frame and a
+  tab each get their own cookie, and another site that frames a preview
+  gets none.
+- The Durable Object of the workspace revokes the preview when the sandbox
+  stops, when the user closes the preview, and after 24 hours. Reason: the
+  cookies and the grants of a revoked preview stop working at once.
 - A revoked or an unknown hostname gets no answer from any sandbox.
 - The preview proxy adds Boat's `_port_auth` cookie on the server side. It
   drops any `_port_auth` cookie that the browser sends.
-- The preview proxy forwards the cookies of the previewed app.
-- Each preview response carries `Referrer-Policy: no-referrer`. Reason: the
-  default policy sends the preview origin, which is the credential, to
-  other sites.
+- The preview proxy forwards the cookies of the previewed app. It never
+  sends a credential cookie to a sandbox. It drops each credential cookie
+  that a sandbox response sets.
+- A redirect to the private address of the port, with `http` or `https`,
+  reaches the browser as a redirect to the preview hostname. Reason: only
+  the proxy can open the private address.
+- Each response on the preview domain carries `Referrer-Policy:
+  no-referrer`. Reason: other sites have no need for the preview address.
 - These approaches were rejected:
   - previews behind Cloudflare Access, because Access cannot sign in
     inside a frame

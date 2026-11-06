@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { previewsPath, type PreviewResponse } from '../../src/shared/previews'
 import { createToolsHarness, type ToolsHarness } from './test-support'
+import { launchPreview } from './launch-test-support'
 import { openPreview } from './stream-test-support'
 
 let harness: ToolsHarness
@@ -45,10 +46,20 @@ it('preserves a loopback server relay and shares its descriptor across preview h
     }),
   )
   const second: PreviewResponse = await another.json()
+  const secondBrowser = await launchPreview(
+    setup.handler,
+    setup.request,
+    second.preview.url,
+  )
   const before = { commands, hosts: modes.length }
-  for (const url of [setup.preview.url, second.preview.url]) {
+  for (const browser of [
+    { previewUrl: setup.previewUrl, request: setup.previewRequest },
+    secondBrowser,
+  ]) {
     for (const path of ['/src/main.ts', '/src/component.ts']) {
-      const response = await setup.handler.proxy(new Request(url + path))
+      const response = await setup.handler.proxy(
+        browser.request(browser.previewUrl + path),
+      )
       expect(await response.text()).toBe('preview content')
     }
   }
@@ -59,7 +70,9 @@ it('preserves a loopback server relay and shares its descriptor across preview h
     ).all(),
   ).toMatchObject({ results: [{ mode: 'localhost' }] })
   const document = await setup.handler.proxy(
-    new Request(setup.preview.url, { headers: { 'Sec-Fetch-Dest': 'iframe' } }),
+    setup.previewRequest(setup.previewUrl, {
+      headers: { 'Sec-Fetch-Dest': 'iframe' },
+    }),
   )
   expect(await document.text()).toBe('preview content')
   expect({ commands, hosts: modes.length }).toEqual({
@@ -81,13 +94,13 @@ it('invalidates a rejected descriptor without replaying a write and refreshes a 
     return base(request)
   }
   const refused = await setup.handler.proxy(
-    new Request(setup.preview.url, { method: 'POST', body: 'cart=2' }),
+    setup.previewRequest(setup.previewUrl, { method: 'POST', body: 'cart=2' }),
   )
   expect(refused.status).toBe(403)
   expect(writes).toBe(1)
   harness.requests.length = 0
   const next = await setup.handler.proxy(
-    new Request(setup.preview.url + '/module.js'),
+    setup.previewRequest(setup.previewUrl + '/module.js'),
   )
   expect(await next.text()).toBe('preview content')
   expect(
@@ -102,7 +115,7 @@ it('invalidates a rejected descriptor without replaying a write and refreshes a 
     .run()
   harness.requests.length = 0
   const moved = await setup.handler.proxy(
-    new Request(setup.preview.url + '/other.js'),
+    setup.previewRequest(setup.previewUrl + '/other.js'),
   )
   expect(await moved.text()).toBe('preview content')
   const host = harness.requests.find((request) =>

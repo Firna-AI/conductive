@@ -1,5 +1,6 @@
 import { OAUTH_COOKIE, SESSION_COOKIE } from '../security/cookies'
 import type { PrivatePort } from '../sandbox/provider'
+import { PREVIEW_COOKIE_PREFIX } from './credentials'
 import { portUrl, previewLocation, upstreamOrigin } from './origins'
 
 const requestHeaders = [
@@ -48,6 +49,7 @@ function appCookie(value: string): string | null {
   return equal > 0 &&
     /^[!#$%&'*+\-.^_`|~0-9a-zA-Z]+$/.test(name) &&
     !reservedCookies.has(name.toLowerCase()) &&
+    !name.toLowerCase().startsWith(PREVIEW_COOKIE_PREFIX.toLowerCase()) &&
     ![...pair].some((character) => {
       const code = character.charCodeAt(0)
       return code < 32 || code === 127

@@ -31,6 +31,9 @@ and runner connections of one workspace. A reconnect uses the last stored number
 The history response gives the point after which live events continue.
 
 The machine and preview hostnames remain deployment settings.
+`Preview.url` is the absolute launch address of a preview on the app origin.
+It holds no secret. The browser loads it as it is, in the frame and in a new tab.
+[Port previews](../../docs/protocol/access-and-security.md#port-previews) states its access rules.
 Each open of a port preview gets a new preview ID, and the API never gives out
 a revoked ID again (decision 86). The Preview tool hides revoked previews by their ID.
 The git credential payload is not defined yet.

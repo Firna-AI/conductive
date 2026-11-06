@@ -4116,14 +4116,36 @@ Depends on: 11
 
 Apply decision 83 C.
 
-- [ ] Move the credential of a port preview out of its hostname, into a
+Agent design calls on 6 November 2026:
+
+- Keep `Preview.url` as the single navigation URL. It now opens an
+  authenticated app launcher, so frames and native links each get a fresh grant.
+- POST a stateless, encrypted grant with a 60-second life in a form body.
+  It works across Worker instances without a migration. It is briefly replayable.
+- Use a trusted `authorize.<preview-domain>` host for the handoff.
+  A preview app's service worker can intercept a grant sent to its own hostname.
+- Set one `__Secure-conducting-preview-<ID>` cookie per preview, with
+  `Domain=<preview-domain>; Path=/; Secure; HttpOnly; SameSite=None; Partitioned`.
+  Bind its encrypted value to the preview hostname and ID. Its life ends with the preview.
+  The frame and new tab each launch in their own cookie partition.
+- Give only the trusted app launcher `Referrer-Policy: origin`, so the form sends the app Origin.
+  Allow the authorizer and the exact preview origin in CSP `form-action`, because Chrome checks the redirect too.
+  The authorizer and every sandbox preview response keep `no-referrer`.
+
+- [x] Move the credential of a port preview out of its hostname, into a
       cookie that the preview domain sets, so that the hostname is no
       secret.
-- [ ] Match `http` as well as `https` in the redirect rewrite.
-- [ ] Update the port preview rules of the access protocol, and test the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
+- [x] Match `http` as well as `https` in the redirect rewrite.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
+- [x] Update the port preview rules of the access protocol, and test the
       cookie, a leaked hostname, and both redirect schemes.
-- [ ] Test that a port opened again after a revoke gets a new preview ID,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
+- [x] Test that a port opened again after a revoke gets a new preview ID,
       as decision 86 says.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
+
+Verification evidence: `.context/boat-native-remote-workspaces/verification.md`.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 

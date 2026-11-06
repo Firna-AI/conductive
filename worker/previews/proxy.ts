@@ -3,7 +3,9 @@ import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
 import { recordActivity, toolError } from './access'
 import type { PreviewConnection } from './connection'
+import { previewAuthorized } from './credentials'
 import { portRequest, portResponseHeaders } from './headers'
+import { previewHandoff, previewHandoffUrl } from './launch'
 import { PrivatePorts } from './ports'
 import { PreviewRegistry } from './registry'
 import { bridgeSocket } from './socket'
@@ -46,6 +48,8 @@ export class PreviewProxy {
         ? `.${this.env.PREVIEW_DOMAIN.toLowerCase()}`
         : ''
       const label = suffix ? url.hostname.slice(0, -suffix.length) : ''
+      if (url.href === previewHandoffUrl(this.env))
+        return await previewHandoff(request, this.env, this.dependencies.now())
       if (
         url.protocol !== 'https:' ||
         url.port ||
@@ -65,6 +69,19 @@ export class PreviewProxy {
         this.dependencies.now(),
       )
       if (!row)
+        throw new HttpError(
+          404,
+          'preview_not_found',
+          'The preview is not available.',
+        )
+      if (
+        !(await previewAuthorized(
+          request,
+          this.env,
+          row,
+          this.dependencies.now(),
+        ))
+      )
         throw new HttpError(
           404,
           'preview_not_found',
