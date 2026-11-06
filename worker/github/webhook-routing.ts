@@ -4,7 +4,6 @@ export interface WebhookRoute {
   repositoryId: number
   installationId: number
   branch?: string
-  headSha?: string
   push: boolean
 }
 
@@ -76,11 +75,10 @@ export function webhookRoute(
     return { ...common, branch: string(head.ref) }
   }
   const check = event === 'check_run' ? value.check_run : value.check_suite
-  const headSha =
-    event === 'status'
-      ? string(value.sha)
-      : isRecord(check)
-        ? string(check.head_sha)
-        : invalid()
-  return { ...common, headSha }
+  // Validate the commit field. A status can refer to a test merge commit.
+  // The workspace always reads its current display state for these events.
+  if (event === 'status') string(value.sha)
+  else if (isRecord(check)) string(check.head_sha)
+  else invalid()
+  return common
 }

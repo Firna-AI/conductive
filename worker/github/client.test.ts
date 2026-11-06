@@ -4,7 +4,8 @@ import { FakeGitHub } from '../test-support/fake-github'
 import { TEST_TIME } from '../test-support/harness'
 import { GitHubReader } from './client'
 import type { GitHubWorkspace } from './contracts'
-import { HEAD_SHA, page, passedRun, RepositoryGitHub } from './fake-repository'
+import { HEAD_SHA, passedRun, repositoryPull } from './fake-pull'
+import { RepositoryGitHub } from './fake-repository'
 
 const workspace: GitHubWorkspace = {
   id: 'workspace-1',
@@ -31,7 +32,7 @@ const read = () =>
   ).read()
 
 it('maps pull request blockers and terminal states into the shared banner', async () => {
-  const original = structuredClone(api.pull)
+  const original = structuredClone(api.pulls[2])
   const cases = [
     { patch: { isDraft: true }, checks: [passedRun], state: 'draft' },
     {
@@ -71,8 +72,8 @@ it('maps pull request blockers and terminal states into the shared banner', asyn
     },
   ]
   for (const sample of cases) {
-    api.pull = { ...original, mergeStateStatus: 'BLOCKED', ...sample.patch }
-    api.checkPages = { '': page(sample.checks) }
+    api.pulls[2] = { ...original, mergeStateStatus: 'BLOCKED', ...sample.patch }
+    api.pulls[2].checks = sample.checks
     const snapshot = await read()
     expect(snapshot.banner, sample.state).toMatchObject({
       branch: 'changes',
@@ -86,7 +87,7 @@ it('maps pull request blockers and terminal states into the shared banner', asyn
 })
 
 it('offers the create link only for branch commits and waits for a pull request', async () => {
-  api.lookupPages = { 'open:': page([]), 'closed:': page([]) }
+  api.pulls = {}
   for (const sample of [
     { ahead: 0, state: 'no-commits', url: null },
     {
@@ -95,7 +96,7 @@ it('offers the create link only for branch commits and waits for a pull request'
       url: 'https://github.com/Codertocat/Hello-World/compare/main...changes?expand=1',
     },
   ]) {
-    api.ahead = sample.ahead
+    api.comparisons.set('refs/heads/main', new Map([[HEAD_SHA, sample.ahead]]))
     expect(await read()).toEqual({
       banner: {
         state: sample.state,
@@ -112,7 +113,7 @@ it('offers the create link only for branch commits and waits for a pull request'
       true,
     )
   }
-  api.headSha = null
+  api.branches.delete('refs/heads/changes')
   api.requests = []
   expect((await read()).banner).toMatchObject({
     state: 'no-commits',
@@ -122,54 +123,34 @@ it('offers the create link only for branch commits and waits for a pull request'
 })
 
 it('paginates lookup, checks, and reviews while preserving GitHub order and durations', async () => {
-  api.lookupPages = {
-    'open:': page(
-      [
-        {
-          number: 88,
-          headRefName: 'changes',
-          headRepository: { databaseId: 999 },
-        },
-      ],
-      'pull-next',
-    ),
-    'open:pull-next': page([
-      {
-        number: 2,
-        headRefName: 'changes',
-        headRepository: { databaseId: 186853002 },
-      },
-    ]),
-  }
-  api.pull.reviewDecision = 'CHANGES_REQUESTED'
-  api.checkPages = {
-    '': page([passedRun], 'check-next'),
-    'check-next': page([
-      {
-        __typename: 'StatusContext',
-        id: 'status-a',
-        context: 'A external CI',
-        state: 'SUCCESS',
-        createdAt: '2026-11-06T11:01:12Z',
-      },
-      {
-        ...passedRun,
-        id: 'run-b',
-        name: 'B test',
-        status: 'IN_PROGRESS',
-        conclusion: null,
-      },
-    ]),
-  }
-  api.reviewPages = {
-    '': page(
-      [{ state: 'APPROVED', author: { login: 'alice' } }],
-      'review-next',
-    ),
-    'review-next': page([
-      { state: 'CHANGES_REQUESTED', author: { login: 'bob' } },
-    ]),
-  }
+  api.pageSize = 1
+  api.pulls[88] = repositoryPull({
+    number: 88,
+    createdAt: 88,
+    headRepository: { databaseId: 999 },
+  })
+  api.pulls[2].reviewDecision = 'CHANGES_REQUESTED'
+  api.pulls[2].checks = [
+    passedRun,
+    {
+      __typename: 'StatusContext',
+      id: 'status-a',
+      context: 'A external CI',
+      state: 'SUCCESS',
+      createdAt: '2026-11-06T11:01:12Z',
+    },
+    {
+      ...passedRun,
+      id: 'run-b',
+      name: 'B test',
+      status: 'IN_PROGRESS',
+      conclusion: null,
+    },
+  ]
+  api.pulls[2].reviews = [
+    { state: 'APPROVED', author: { login: 'alice' } },
+    { state: 'CHANGES_REQUESTED', author: { login: 'bob' } },
+  ]
   const snapshot = await read()
   expect(snapshot.banner).toMatchObject({
     state: 'changes-requested',
@@ -209,7 +190,7 @@ it('paginates lookup, checks, and reviews while preserving GitHub order and dura
 
 it('shows known merge blockers and retries unresolved merge states', async () => {
   for (const state of ['BEHIND', 'BLOCKED']) {
-    api.pull.mergeStateStatus = state
+    api.pulls[2].mergeStateStatus = state
     await expect(read(), state).resolves.toMatchObject({
       banner: { state: 'blocked', review: 'approved' },
       checks: { state: 'available' },
@@ -217,14 +198,14 @@ it('shows known merge blockers and retries unresolved merge states', async () =>
     })
   }
   for (const state of ['UNSTABLE', 'UNKNOWN']) {
-    api.pull.mergeStateStatus = state
+    api.pulls[2].mergeStateStatus = state
     await expect(read(), state).rejects.toMatchObject({
       status: 503,
       code: 'github_pending',
     })
   }
-  api.pull.mergeStateStatus = 'CLEAN'
-  api.pull.mergeable = 'UNKNOWN'
+  api.pulls[2].mergeStateStatus = 'CLEAN'
+  api.pulls[2].mergeable = 'UNKNOWN'
   await expect(read()).rejects.toMatchObject({
     status: 503,
     code: 'github_pending',
@@ -239,20 +220,13 @@ it('refuses mismatched repositories, changed heads, and malformed upstream repli
   })
   api.repositoryId = 186853002
   api.onRequest = async (operation) => {
-    if (operation === 'BannerChecks') api.pull.headRefOid = 'new-head'
+    if (operation === 'BannerChecks') api.pulls[2].headRefOid = 'new-head'
   }
   await expect(read()).rejects.toMatchObject({
     status: 502,
     code: 'github_unavailable',
   })
-  api.lookupPages = { 'open:': page([]), 'closed:': page([]) }
-  api.onRequest = async (operation) => {
-    if (operation === 'BannerCompare') api.headSha = 'changed-comparison-head'
-  }
-  await expect(read()).rejects.toMatchObject({
-    status: 502,
-    code: 'github_unavailable',
-  })
+  api.pulls = {}
   api.onRequest = null
   api.failure = Response.json({
     data: { repository: { databaseId: 186853002, pullRequests: [] } },

@@ -2,6 +2,7 @@ import type { GitHubBanner, GitHubCheck } from '../../src/shared/github'
 import { parsePull, pullBanner, type GitHubPull } from './banner'
 import { parseCheck } from './checks'
 import type {
+  GitHubBranchDependencies,
   GitHubReadDependencies,
   GitHubSnapshot,
   GitHubWorkspace,
@@ -45,16 +46,18 @@ export class GitHubReader {
     return repository
   }
 
-  async read(): Promise<GitHubSnapshot> {
-    const lookup = await this.lookup()
-    if (lookup.number === null) {
+  async read(branches?: GitHubBranchDependencies): Promise<GitHubSnapshot> {
+    const lookup = branches ?? (await this.dependenciesForBranch())
+    if (lookup.pullNumber === null) {
       return this.withoutPull(
         lookup.headSha,
         lookup.fullName,
         lookup.baseBranch,
       )
     }
-    const repository = await this.repository(PULL, { number: lookup.number })
+    const repository = await this.repository(PULL, {
+      number: lookup.pullNumber,
+    })
     const pull = parsePull(repository.pullRequest, this.workspace)
     const checks = await this.checks(pull)
     const reviewers = await this.reviewers(pull.number)
@@ -71,7 +74,7 @@ export class GitHubReader {
     }
   }
 
-  private async lookup() {
+  async dependenciesForBranch(): Promise<GitHubBranchDependencies> {
     let headSha: string | null = null
     let fullName = this.workspace.fullName
     let baseBranch = this.workspace.defaultBranch
@@ -103,17 +106,24 @@ export class GitHubReader {
             text(pull.headRefName) === this.workspace.branch
           ) {
             return {
-              number: integer(pull.number),
+              pullNumber: integer(pull.number),
+              headBranch: this.workspace.branch,
               headSha,
               fullName,
-              baseBranch,
+              baseBranch: text(pull.baseRefName),
             }
           }
         }
         after = nextPage(connection.pageInfo, after)
       } while (after !== null)
     }
-    return { number: null, headSha, fullName, baseBranch }
+    return {
+      pullNumber: null,
+      headBranch: this.workspace.branch,
+      headSha,
+      fullName,
+      baseBranch,
+    }
   }
 
   private async withoutPull(
@@ -128,8 +138,6 @@ export class GitHubReader {
         headRef: headSha,
       })
       const comparison = object(object(repository.ref).compare)
-      if (text(object(comparison.headTarget).oid) !== headSha)
-        throw githubFailure()
       ahead = integer(comparison.aheadBy)
     }
     const repositoryUrl = `https://github.com/${fullName.split('/').map(encodeURIComponent).join('/')}`

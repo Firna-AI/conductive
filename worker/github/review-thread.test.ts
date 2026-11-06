@@ -16,7 +16,7 @@ afterAll(async () => {
 
 it('stores and publishes fresh banner state when recorded review threads change', async () => {
   const { workspace } = await harness.seed()
-  harness.api.pull.mergeStateStatus = 'BLOCKED'
+  harness.api.pulls[2].mergeStateStatus = 'BLOCKED'
   expect(
     (await harness.webhook('pull_request', recordedPullRequest, 'initial'))
       .status,
@@ -46,7 +46,7 @@ it('stores and publishes fresh banner state when recorded review threads change'
     { action: 'resolved', mergeState: 'CLEAN', banner: 'ready-to-merge' },
     { action: 'unresolved', mergeState: 'BLOCKED', banner: 'blocked' },
   ]) {
-    harness.api.pull.mergeStateStatus = sample.mergeState
+    harness.api.pulls[2].mergeStateStatus = sample.mergeState
     expect(
       (
         await harness.webhook(

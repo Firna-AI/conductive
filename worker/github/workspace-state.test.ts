@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 
 import type { GitHubSnapshot } from './contracts'
-import { MemoryWorkspace } from './test-harness'
+import { MemoryWorkspace } from './memory-workspace'
 
 const snapshot: GitHubSnapshot = {
   banner: {
@@ -71,10 +71,8 @@ it('serializes refresh reads so a slow older operation cannot replace newer stat
   release.resolve()
   await Promise.all([first, second])
   expect(order).toEqual(['first-start', 'first-end', 'second'])
-  expect(memory.values.get('github:state')).toEqual(newer)
-  expect(memory.published.map((envelope) => envelope.eventNumber)).toEqual([
-    1, 2,
-  ])
+  expect(memory.values.get('github:state')).toEqual(snapshot)
+  expect(memory.published.map((envelope) => envelope.eventNumber)).toEqual([1])
 })
 
 it('keeps state and events unchanged when access is revoked before the commit', async () => {
@@ -92,4 +90,30 @@ it('keeps state and events unchanged when access is revoked before the commit', 
   await expect(pending).rejects.toThrow('Access revoked')
   expect(memory.values.size).toBe(0)
   expect(memory.published).toEqual([])
+})
+
+it('keeps an unchanged display snapshot without storing or publishing a fresh read', async () => {
+  const memory = new MemoryWorkspace('workspace-1')
+  await memory.state.refresh(async () => snapshot, authorize)
+  const fresh = {
+    banner: {
+      pullRequest: null,
+      createPullRequestUrl: null,
+      updatedAt: 2,
+      baseBranch: 'main',
+      branch: 'changes',
+      state: 'no-commits',
+    } satisfies GitHubSnapshot['banner'],
+    checks: {
+      checks: [],
+      state: 'waiting-for-pull-request',
+    } satisfies GitHubSnapshot['checks'],
+    headSha: 'new-head-with-the-same-display',
+  }
+  expect(await memory.state.refresh(async () => fresh, authorize)).toEqual(
+    fresh,
+  )
+  expect(memory.values.get('github:state')).toEqual(snapshot)
+  expect(memory.events.map((envelope) => envelope.eventNumber)).toEqual([1])
+  expect(memory.published).toEqual(memory.events)
 })

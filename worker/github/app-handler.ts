@@ -7,6 +7,7 @@ import { errorResponse, HttpError, privateResponse } from '../http'
 import { gate } from '../security/gate'
 import type { GitHubRefreshWorkspace } from './contracts'
 import { activeWorkspace } from './data'
+import { githubFailure } from './parsers'
 
 export interface GitHubAppDependencies {
   now: () => number
@@ -58,6 +59,7 @@ export async function handleGitHubRead(
     const snapshot = await dependencies.refresh(workspace, {
       userId: context.user.id,
     })
+    if (snapshot === null) throw githubFailure()
     const checks = match[2] === '/checks'
     const body = checks
       ? (snapshot.checks satisfies GitHubChecksResponse)

@@ -1,18 +1,15 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
-import { HttpError } from '../http'
-import { GitHubReader } from './client'
 import type {
-  GitHubReadDependencies,
   GitHubRefresh,
+  GitHubRefreshRequest,
   GitHubSnapshot,
   GitHubStatePort,
-  GitHubWorkspace,
 } from './contracts'
-import { activeWorkspace } from './data'
+import { sameDisplay } from './display'
 
 interface DeliveryReceipt {
   snapshot: GitHubSnapshot
-  envelope: WorkspaceEventEnvelope
+  envelope: WorkspaceEventEnvelope | null
 }
 
 /** Keep one instance per workspace DO. Reads and commits share its queue. */
@@ -25,10 +22,10 @@ export class WorkspaceGitHubState {
   }
 
   refresh(
-    read: () => Promise<GitHubSnapshot>,
+    read: () => Promise<GitHubSnapshot | null>,
     authorize: () => Promise<void>,
     signal: GitHubRefresh = {},
-  ): Promise<GitHubSnapshot> {
+  ): Promise<GitHubSnapshot | null> {
     const result = this.pending.then(async () => {
       await authorize()
       const key =
@@ -43,14 +40,22 @@ export class WorkspaceGitHubState {
             )
       if (receipt) {
         await authorize()
-        await this.port.publish(receipt.envelope)
+        if (receipt.envelope !== null) await this.port.publish(receipt.envelope)
         return receipt.snapshot
       }
       const snapshot = await read()
       await authorize()
-      if (signal.headSha !== undefined && signal.headSha !== snapshot.headSha)
-        return snapshot
+      if (snapshot === null) return null
       const envelope = await this.port.transaction(async (transaction) => {
+        const stored = await transaction.get<GitHubSnapshot>('github:state')
+        if (stored && sameDisplay(stored, snapshot)) {
+          if (key !== null)
+            await transaction.put(key, {
+              snapshot,
+              envelope: null,
+            } satisfies DeliveryReceipt)
+          return null
+        }
         await transaction.put('github:state', snapshot)
         const envelope = await this.port.appendEvent(transaction, {
           type: 'github.updated',
@@ -64,61 +69,17 @@ export class WorkspaceGitHubState {
           } satisfies DeliveryReceipt)
         return envelope
       })
-      await this.port.publish(envelope)
+      if (envelope !== null) await this.port.publish(envelope)
       return snapshot
     })
     this.pending = result.catch(() => undefined)
     return result
   }
-}
 
-/** Call inside the workspace DO. It rechecks access before reads and commits. */
-export async function refreshWorkspace(
-  db: D1Database,
-  workspace: GitHubWorkspace,
-  signal: GitHubRefresh,
-  state: WorkspaceGitHubState,
-  dependencies: GitHubReadDependencies,
-): Promise<GitHubSnapshot> {
-  const authorize = async () => {
-    const current = await activeWorkspace(
-      db,
-      workspace.id,
-      workspace.orgId,
-      signal.userId,
-    )
-    if (
-      !current ||
-      current.repositoryId !== workspace.repositoryId ||
-      current.installationId !== workspace.installationId ||
-      current.branch !== workspace.branch
-    ) {
-      throw new HttpError(
-        404,
-        'workspace_not_found',
-        'The workspace is not available.',
-      )
-    }
+  scheduleRefresh(
+    request: GitHubRefreshRequest,
+    delayMs: number,
+  ): Promise<void> {
+    return this.port.scheduleRefresh(request, delayMs)
   }
-  return state.refresh(
-    async () => {
-      const token = await dependencies.token(workspace)
-      await authorize()
-      const reads = {
-        ...dependencies,
-        fetch: async (request: Request) => {
-          await authorize()
-          return dependencies.fetch(request)
-        },
-      }
-      try {
-        return await new GitHubReader(reads, workspace, token).read()
-      } catch (error) {
-        await authorize()
-        throw error
-      }
-    },
-    authorize,
-    signal,
-  )
 }

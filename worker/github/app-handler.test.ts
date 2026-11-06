@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { githubPaths } from '../../src/shared/github'
 import { TEST_ORIGIN } from '../test-support/harness'
-import { page, passedRun } from './fake-repository'
+import { passedRun } from './fake-pull'
 import { createGitHubHarness, type GitHubTestHarness } from './test-harness'
 
 let harness: GitHubTestHarness
@@ -23,8 +23,8 @@ it('reads current banner and checks on tab open while the workspace needs input'
   )
     .bind('workspace-1')
     .run()
-  harness.api.pull.mergeStateStatus = 'BLOCKED'
-  harness.api.pull.reviewDecision = 'REVIEW_REQUIRED'
+  harness.api.pulls[2].mergeStateStatus = 'BLOCKED'
+  harness.api.pulls[2].reviewDecision = 'REVIEW_REQUIRED'
   const banner = await harness.read(
     githubPaths.banner(orgId, 'workspace-1'),
     session,
@@ -34,9 +34,9 @@ it('reads current banner and checks on tab open while the workspace needs input'
   expect(await banner.json()).toMatchObject({
     banner: { branch: 'changes', state: 'blocked', review: 'pending' },
   })
-  harness.api.checkPages = {
-    '': page([{ ...passedRun, status: 'IN_PROGRESS', conclusion: null }]),
-  }
+  harness.api.pulls[2].checks = [
+    { ...passedRun, status: 'IN_PROGRESS', conclusion: null },
+  ]
   const checksPath = githubPaths
     .checks(orgId, 'workspace-1')
     .replace('workspace-1', '%77orkspace-1')
@@ -53,7 +53,7 @@ it('reads current banner and checks on tab open while the workspace needs input'
     harness
       .memory('workspace-1')
       .events.map((envelope) => envelope.eventNumber),
-  ).toEqual([1, 2, 3])
+  ).toEqual([1, 2])
   expect(
     harness.api.requests.every(
       (request) =>

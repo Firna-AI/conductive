@@ -15,13 +15,15 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 - [handleGitHubRead](app-handler.ts) accepts GET and HEAD for both `githubPaths` routes.
   It runs the existing app gate and checks the workspace's org before a read.
   It returns the shared banner or checks response, with private response headers.
-- [refreshWorkspace](workspace-state.ts) runs inside the target workspace Durable Object.
+- [refreshWorkspace](refresh.ts) runs inside the target workspace Durable Object.
   It checks active org, installation, repository, branch, and optional user access before reading.
   It repeats the access check before storage and publication.
 - [WorkspaceGitHubState](workspace-state.ts) serializes reads and commits within one workspace.
   Its port stores the snapshot, a common workspace stream event, and a delivery receipt in one transaction.
   It publishes the committed envelope to every open tab.
-  A retry republishes that same envelope and keeps its event number.
+  A failed delivery retry republishes that same envelope and keeps its event number.
+  A fresh read with unchanged banner and checks stores no snapshot and publishes no event.
+  The comparison ignores `banner.updatedAt` and object-key order.
 - [installationTokenProvider](credentials.ts) signs the app JWT and gets an installation token for one repository.
   Its permissions allow repository content, pull request, check, and commit status reads only.
   The token stays on the server.
@@ -50,6 +52,8 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
    Write the event and advance that common cursor inside the supplied transaction.
    Do not create a separate GitHub event sequence.
    Implement `publish` with the existing workspace tab broadcaster.
+   Implement `scheduleRefresh` by storing its plain request data and setting a Durable Object alarm.
+   The alarm calls the same internal refresh operation with that request.
 6. Have the Durable Object's internal refresh operation call `refreshWorkspace`.
    Pass D1, its workspace binding, the refresh signal, its state instance, and the read dependencies.
    Construct `installationTokenProvider` in the server's credential boundary.
@@ -72,10 +76,19 @@ It sends no function or token over the Durable Object boundary.
 Neither public HTTP handler accepts a caller-supplied workspace token or installation token.
 
 The production consumer can persist the workspace binding and refresh signal before a read.
-The signal keeps the delivery ID, head SHA, and user ID when present.
+The signal keeps the delivery ID, pushed branch, retry attempt, and user ID when present.
 The consumer can schedule Durable Object alarm retries for failed reads or publication.
 A retry must keep these inputs so delivery receipts and access checks still apply.
 A failed refresh must remain a failure until the current read and publication succeed.
+
+Scheduled fresh reads omit the delivery ID and pushed branch.
+They retain the user ID for access checks and advance the retry attempt.
+They cannot return the original delivery receipt instead of reading GitHub.
+The implementation schedules at most three later reads, each after 1,000 milliseconds.
+A base-branch push schedules the first later read even when the first read still reports a known state.
+A `github_pending` read schedules another attempt while that bound permits it.
+A known scheduled result ends the retry chain.
+An exhausted chain keeps the last stored state and returns `github_pending`.
 
 ## Body budgets
 
@@ -97,15 +110,23 @@ Each webhook triggers a fresh read instead of applying old payload state.
 Resolving or unresolving a review thread refreshes its pull request branch.
 Repository and installation IDs must match active local records.
 A foreign fork's same-named branch cannot update a workspace in the base repository.
-A default branch push refreshes all workspaces of that repository.
-SHA-only events read current workspace heads without relying on the payload's pull request list.
-An old SHA produces no stored update.
+Push routing sends the active repository workspaces to their coordinators as candidates.
+Each coordinator reads the current head branch, head commit, pull request, and base branch.
+It refreshes only when the pushed branch is that head or base.
+The base comes from the pull request, or the repository default when no pull request exists.
+An unrelated push returns `null` and stores no snapshot or event.
+SHA-only events read current workspace state without relying on the payload's pull request list.
+The event commit can be a test merge commit instead of the branch tip.
+A changed banner or check publishes one fresh event.
+A later identical read publishes none.
+Retrying an already committed delivery republishes its stored envelope without another GitHub read.
+An unchanged delivery receipt has no envelope to publish.
 The handler marks a delivery processed only after all workspace refreshes succeed.
 Failed reads and broadcasts remain retryable.
 
 Pull request lookup prefers an open request for the exact repository and branch.
 It then considers merged and closed requests, in GitHub's newest-created order.
-Without a pull request, a GraphQL comparison reads only the commit count and repository and head identity fields.
+Without a pull request, a GraphQL comparison uses the explicit head commit and reads the commit count and repository identity.
 It selects no file patches.
 The reader follows every lookup, review, and check connection page.
 The combined GitHub check rollup supplies check runs and status contexts in returned order.
@@ -121,7 +142,7 @@ An unresolved merge condition still returns `github_pending` with HTTP 503.
 UNKNOWN mergeability or merge state remains retryable when no earlier state applies.
 UNSTABLE remains retryable if the read checks show no failed, running, or queued check.
 It keeps the previous stored state until a read can confirm the current state.
-The app can retry that read.
+The bounded scheduled reads retry that state without a browser request.
 
 Workspace state does not limit a GitHub read or webhook refresh.
 The workspace queries read repository and access bindings without selecting or filtering workspace state.
@@ -131,9 +152,20 @@ This includes a workspace in `input` while its agent waits for the user.
 
 Run `npm run test -- worker/github` from the repository root with Node 24.
 The app and webhook tests use the existing sign-in fake and real local D1 harness.
-[RepositoryGitHub](fake-repository.ts) adds repository replies without changing that fake.
-[MemoryWorkspace](test-harness.ts) is a unit-test port double.
+[RepositoryGitHub](fake-repository.ts) adds a small repository model without changing that fake.
+Fixtures set `branches` by qualified ref and `comparisons` by base ref and head commit.
+They set `pulls` by number with its head repository, head name, base, checks, and reviews.
+[repositoryPull](fake-pull.ts) supplies a complete pull request fixture.
+Every response follows the query's repository, ref, head, state, number, and cursor variables.
+Lookup filters by head name and orders requests by their creation time.
+Set `pageSize` to exercise lookup, check, and review pagination.
+An unknown ref or comparison returns `null`.
+An unknown pull request number returns a GraphQL error.
+[MemoryWorkspace](memory-workspace.ts) is a unit-test port double.
 It does not replace the production Durable Object storage adapter.
+Its `restart()` replaces the coordinator over the same stored records.
+Its `scheduled` queue captures plain requests and delays.
+[GitHubTestHarness.runScheduled](test-harness.ts) runs one captured request without a timer or sleep.
 
 [Recorded routing fields](recorded-webhooks.ts) come from the MIT-licensed
 [Octokit webhook examples](https://github.com/octokit/webhooks/tree/main/payload-examples/api.github.com).
@@ -158,6 +190,7 @@ API references:
 - [webhook.ts](webhook.ts) verifies deliveries and starts workspace refreshes.
 - [app-handler.ts](app-handler.ts) serves protected banner and checks reads.
 - [workspace-state.ts](workspace-state.ts) coordinates storage and publication.
+- [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
 - [client.ts](client.ts) reads current GitHub state and follows pagination.
 - [credentials.ts](credentials.ts) gets server-only installation read tokens.
 - [body.ts](body.ts) bounds raw webhook and GitHub API body reads.

@@ -24,21 +24,36 @@ export interface GitHubSnapshot {
   headSha: string | null
 }
 
+/** The current branch, comparison base, and commit used by one read. */
+export interface GitHubBranchDependencies {
+  headBranch: string
+  headSha: string | null
+  baseBranch: string
+  fullName: string
+  pullNumber: number | null
+}
+
 export interface GitHubRefresh {
   deliveryId?: string
-  headSha?: string
   userId?: string
+  pushBranch?: string
+  retryAttempt?: number
+}
+
+export interface GitHubRefreshRequest {
+  workspace: GitHubWorkspace
+  signal: GitHubRefresh
 }
 
 export type GitHubTokenProvider = (
   workspace: GitHubWorkspace,
 ) => Promise<string>
 
-/** Run this callback inside the target workspace DO, using refreshWorkspace. */
+/** Run inside the workspace DO. An unrelated push returns null. */
 export type GitHubRefreshWorkspace = (
   workspace: GitHubWorkspace,
   signal: GitHubRefresh,
-) => Promise<GitHubSnapshot>
+) => Promise<GitHubSnapshot | null>
 
 export interface GitHubReadDependencies {
   fetch: HttpFetch
@@ -64,4 +79,6 @@ export interface GitHubStatePort {
   ): Promise<WorkspaceEventEnvelope>
   /** Broadcast the committed envelope to every open tab. */
   publish(envelope: WorkspaceEventEnvelope): Promise<void>
+  /** Persist plain request data for a fresh read after the given delay. */
+  scheduleRefresh(request: GitHubRefreshRequest, delayMs: number): Promise<void>
 }

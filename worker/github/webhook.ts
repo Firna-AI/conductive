@@ -111,13 +111,13 @@ export async function handleGitHubWebhook(
     await recordDelivery(env.DB, deliveryId, dependencies.now())
     for (const workspace of workspaces) {
       const matches =
+        route.push ||
         route.branch === undefined ||
-        route.branch === workspace.branch ||
-        (route.push && route.branch === workspace.defaultBranch)
+        route.branch === workspace.branch
       if (!matches) continue
       await dependencies.refresh(workspace, {
         deliveryId,
-        headSha: route.headSha,
+        ...(route.push ? { pushBranch: route.branch } : {}),
       })
     }
     await completeDelivery(env.DB, deliveryId, dependencies.now())

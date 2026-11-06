@@ -36,8 +36,8 @@ it.each([
   'publishes blocked for $blocker after a signed recorded webhook',
   async (sample) => {
     const { workspace } = await harness.seed()
-    harness.api.pull.mergeStateStatus = sample.mergeState
-    harness.api.pull.reviewDecision = sample.reviewDecision
+    harness.api.pulls[2].mergeStateStatus = sample.mergeState
+    harness.api.pulls[2].reviewDecision = sample.reviewDecision
 
     const response = await harness.webhook(
       sample.event,

@@ -1,6 +1,5 @@
 import { createHmac } from 'node:crypto'
 
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type { AppEnv } from '../env'
 import {
   createHarness,
@@ -9,66 +8,15 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { handleGitHubRead } from './app-handler'
-import type {
-  GitHubRefresh,
-  GitHubStatePort,
-  GitHubWorkspace,
-} from './contracts'
+import type { GitHubRefresh, GitHubWorkspace } from './contracts'
 import { activeWorkspace } from './data'
 import { RepositoryGitHub } from './fake-repository'
 import { GITHUB_WEBHOOK_PATH, handleGitHubWebhook } from './webhook'
-import { refreshWorkspace, WorkspaceGitHubState } from './workspace-state'
+import { refreshWorkspace } from './refresh'
+import { MemoryWorkspace } from './memory-workspace'
 
 export const MACHINE_ORIGIN = 'https://machines.conducting.test'
 export const WEBHOOK_SECRET = 'test-only-webhook-secret'
-
-export class MemoryWorkspace {
-  values = new Map<string, unknown>()
-  events: WorkspaceEventEnvelope[] = []
-  published: WorkspaceEventEnvelope[] = []
-  failPublish = false
-  readonly state: WorkspaceGitHubState
-
-  constructor(workspaceId: string) {
-    const port: GitHubStatePort = {
-      transaction: async (action) => {
-        const pending = new Map(this.values)
-        const transaction = {
-          get: async <T>(key: string) =>
-            structuredClone(pending.get(key)) as T | undefined,
-          put: async <T>(key: string, value: T) => {
-            pending.set(key, structuredClone(value))
-          },
-        }
-        const result = await action(transaction)
-        this.values = pending
-        return result
-      },
-      appendEvent: async (transaction, event) => {
-        const cursor =
-          (await transaction.get<number>('workspace:event-number')) ?? 0
-        const envelope = {
-          workspaceId,
-          eventNumber: cursor + 1,
-          occurredAt: TEST_TIME,
-          event,
-        }
-        await transaction.put('workspace:event-number', envelope.eventNumber)
-        await transaction.put(
-          `workspace:event:${envelope.eventNumber}`,
-          envelope,
-        )
-        this.events.push(envelope)
-        return envelope
-      },
-      publish: async (envelope) => {
-        if (this.failPublish) throw new Error('Test broadcast failed')
-        this.published.push(envelope)
-      },
-    }
-    this.state = new WorkspaceGitHubState(port)
-  }
-}
 
 export class GitHubTestHarness {
   readonly base: TestHarness
@@ -145,6 +93,12 @@ export class GitHubTestHarness {
         fetch: (request) => this.api.fetch(request),
       },
     )
+
+  runScheduled(workspaceId: string) {
+    const scheduled = this.memory(workspaceId).scheduled.shift()
+    if (!scheduled) throw new Error('No scheduled GitHub refresh')
+    return this.refresh(scheduled.request.workspace, scheduled.request.signal)
+  }
 
   read(path: string, session = '', init: RequestInit = {}) {
     const headers = new Headers(init.headers)

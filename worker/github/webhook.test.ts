@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { TEST_ORIGIN } from '../test-support/harness'
-import { HEAD_SHA, page } from './fake-repository'
+import { HEAD_SHA } from './fake-pull'
 import {
   recordedCheckRun,
   recordedCheckSuite,
@@ -99,7 +99,7 @@ it('routes recorded branch events while workspaces need input and excludes forei
       )
     ).status,
   ).toBe(204)
-  expect(harness.memory(workspace.id).events).toHaveLength(2)
+  expect(harness.memory(workspace.id).events).toHaveLength(1)
   expect(harness.memory('workspace-2').events).toHaveLength(1)
   await harness.env.DB.prepare('UPDATE orgs SET deleted_at = 1 WHERE id = ?')
     .bind(orgId)
@@ -109,15 +109,23 @@ it('routes recorded branch events while workspaces need input and excludes forei
     (await harness.webhook('push', recordedPush, 'deleted-org')).status,
   ).toBe(204)
   expect(harness.api.requests).toHaveLength(requests)
-  expect(harness.memory(workspace.id).events).toHaveLength(2)
+  expect(harness.memory(workspace.id).events).toHaveLength(1)
 })
 
-it('routes SHA-only check and status events without pull request hints and ignores stale heads', async () => {
+it('routes SHA-only events without pull request hints and publishes only changed display state', async () => {
   const { workspace } = await harness.seed()
+  expect(
+    (await harness.webhook('pull_request', recordedPullRequest, 'initial'))
+      .status,
+  ).toBe(204)
+  harness.api.pulls[2].mergeStateStatus = 'BLOCKED'
   expect(
     (await harness.webhook('status', recordedStatus, 'old-status')).status,
   ).toBe(204)
-  expect(harness.memory(workspace.id).events).toEqual([])
+  expect(harness.memory(workspace.id).events).toMatchObject([
+    { eventNumber: 1, event: { banner: { state: 'ready-to-merge' } } },
+    { eventNumber: 2, event: { banner: { state: 'blocked' } } },
+  ])
   for (const [index, sample] of [
     { event: 'check_run', body: recordedCheckRun },
     { event: 'check_suite', body: recordedCheckSuite },
@@ -129,20 +137,20 @@ it('routes SHA-only check and status events without pull request hints and ignor
   }
   expect(
     harness.memory(workspace.id).events.map((envelope) => envelope.eventNumber),
-  ).toEqual([1, 2, 3])
+  ).toEqual([1, 2])
   expect(
     harness
       .memory(workspace.id)
       .published.map((envelope) => envelope.event.type),
-  ).toEqual(['github.updated', 'github.updated', 'github.updated'])
+  ).toEqual(['github.updated', 'github.updated'])
 })
 
 it('refreshes current review decisions after submission and dismissal webhooks', async () => {
   const { workspace } = await harness.seed()
-  harness.api.pull.reviewDecision = 'CHANGES_REQUESTED'
-  harness.api.reviewPages = {
-    '': page([{ state: 'CHANGES_REQUESTED', author: { login: 'reviewer' } }]),
-  }
+  harness.api.pulls[2].reviewDecision = 'CHANGES_REQUESTED'
+  harness.api.pulls[2].reviews = [
+    { state: 'CHANGES_REQUESTED', author: { login: 'reviewer' } },
+  ]
   expect(
     (
       await harness.webhook(
@@ -152,10 +160,10 @@ it('refreshes current review decisions after submission and dismissal webhooks',
       )
     ).status,
   ).toBe(204)
-  harness.api.pull.reviewDecision = 'APPROVED'
-  harness.api.reviewPages = {
-    '': page([{ state: 'DISMISSED', author: { login: 'reviewer' } }]),
-  }
+  harness.api.pulls[2].reviewDecision = 'APPROVED'
+  harness.api.pulls[2].reviews = [
+    { state: 'DISMISSED', author: { login: 'reviewer' } },
+  ]
   expect(
     (
       await harness.webhook(
@@ -200,6 +208,7 @@ it('retries failed deliveries and publishes one stored event for concurrent dupl
   expect(await processed()).toBe(null)
   expect(harness.memory(workspace.id).events).toHaveLength(1)
   const reads = harness.api.requests.length
+  harness.memory(workspace.id).restart()
   harness.memory(workspace.id).failPublish = false
   const retries = await Promise.all([
     harness.webhook('push', recordedPush),
@@ -212,6 +221,10 @@ it('retries failed deliveries and publishes one stored event for concurrent dupl
       .memory(workspace.id)
       .published.map((envelope) => envelope.eventNumber),
   ).toEqual([1, 1])
+  expect(harness.memory(workspace.id).published).toEqual([
+    harness.memory(workspace.id).values.get('workspace:event:1'),
+    harness.memory(workspace.id).values.get('workspace:event:1'),
+  ])
   expect(harness.api.requests).toHaveLength(reads)
   expect(await processed()).toBe(1800000000000)
   expect((await harness.webhook('push', recordedPush)).status).toBe(204)

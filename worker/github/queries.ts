@@ -17,7 +17,7 @@ export const LOOKUP = `query BannerLookup($owner: String!, $name: String!,
     ref(qualifiedName: $ref) { target { oid } }
     pullRequests(first: 100, after: $after, headRefName: $head, states: $states,
       orderBy: {field: CREATED_AT, direction: DESC}) {
-      nodes { number headRefName headRepository { databaseId } }
+      nodes { number headRefName headRepository { databaseId } baseRefName }
       ${PAGE}
     }
   }
