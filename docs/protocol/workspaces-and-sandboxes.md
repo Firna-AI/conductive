@@ -105,8 +105,11 @@ says.
 
 ## Workspace states
 
-- The workspace list shows one state for each workspace: working, finished
-  with unread output, ready, starting, stopped, or error.
+- The workspace list shows one state for each workspace: working, needs
+  input, finished with unread output, ready, starting, stopped, or error.
+- Needs input shows while the agent waits for the user, such as for help,
+  an approval, or an answer (decision 68). The workspace header and its
+  row in the list show it, in the web app and in the Mac app.
 - Each state has its own mark shape, so no state depends on colour alone.
   Bold text marks unread output.
 - Archived workspaces sit in the Archived group at the end of the list.

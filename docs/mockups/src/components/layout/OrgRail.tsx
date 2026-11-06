@@ -6,7 +6,7 @@ import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
-import { Mark } from '../common/Mark'
+import { LogoTile } from '../brand/Logo'
 import { orgLinks } from '../orgs/orgLinks'
 import { OrgTile, PersonAvatar } from '../orgs/OrgTile'
 import styles from './OrgRail.module.css'
@@ -87,14 +87,14 @@ function OrgItem(props: {
 }
 
 /**
- * The narrow rail beside the sidebar: the orgs of the user, a way to create
- * another, and the account at the bottom.
+ * The narrow rail beside the sidebar: the logo, the orgs of the user, a
+ * way to create another, and the account at the bottom.
  */
 export function OrgRail(props: RailState) {
   return (
     <nav aria-label="Orgs" className={styles.rail}>
       <span className={styles.mark}>
-        <Mark />
+        <LogoTile size={24} />
       </span>
       <ul className={styles.orgs}>
         {props.orgs.map((org) => (
