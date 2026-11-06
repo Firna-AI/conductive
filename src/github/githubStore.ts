@@ -2,6 +2,7 @@ import type {
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
 } from '../shared/events'
+import { sameGitHubState } from '../shared/github-state'
 import {
   GitHubLoadError,
   loadGitHubSnapshot,
@@ -9,7 +10,6 @@ import {
   type GitHubSnapshot,
   type WorkspaceTarget,
 } from './githubClient'
-import { sameGitHubState } from './sameState'
 
 /**
  * The event stream of one workspace. The first message holds the stored
