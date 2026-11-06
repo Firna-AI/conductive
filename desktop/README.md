@@ -35,7 +35,7 @@ The `conducting://` callback carries an expiring, one-use handoff.
 The main process holds its verifier and installs a separate desktop session cookie.
 The renderer never receives that cookie or verifier.
 The browser keeps its existing session cookie.
-Worker route and CORS integration must be present before sign-in works.
+The Worker accepts desktop exchanges and credentials from the desktop origin.
 
 Other web addresses open in the browser.
 The bundled main page opens its app popups in the same window.
@@ -78,9 +78,22 @@ The shell test runs under Xvfb on Linux.
 It also runs on macOS.
 Linux is a test host, not a release target.
 The `test:logic` command uses the repository's Vitest runner with the desktop configuration.
-The current root test configuration excludes `desktop/src`.
-The proposed root integration patch includes those tests in the root gate.
+The root gate includes these unit tests once.
+It also runs desktop typecheck, lint, and formatting checks.
+It does not build, launch, or package Electron.
 Playwright runs the real Electron window test.
+
+Mac CI runs the source and packaged tests on Apple silicon and Intel runners.
+It builds DMG and ZIP files with publishing disabled.
+Mac jobs run on pushes and pull requests only when changed files match these paths:
+
+- `desktop/**`
+- `worker/security/desktop-*`
+- `src/**`
+- `.github/workflows/desktop-ci.yml`
+
+The orchestrator chose these filters because private Mac runner minutes cost about ten times Linux minutes.
+The Linux gate installs desktop dependencies without downloading the Electron binary.
 
 On a Mac, run these commands after the build:
 

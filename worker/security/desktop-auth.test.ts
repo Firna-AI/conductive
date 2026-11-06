@@ -1,87 +1,44 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import {
+  contentSecurityPolicy,
+  readConfiguration,
+} from '../../desktop/src/config'
 import { API_PATHS } from '../../src/shared/api'
-import type { AppDependencies } from '../env'
-import { HttpError } from '../http'
+import { HEALTH_PATH } from '../../src/shared/health'
+import { createApp } from '../application'
 import {
   createHarness,
   responseCookie,
-  TEST_ORIGIN,
   TEST_TIME,
   type TestHarness,
 } from '../test-support/harness'
-import { finishSignIn, startSignIn } from './auth'
-import { OAUTH_COOKIE } from './cookies'
-import { hash } from './crypto'
-import { finishDesktopSignIn } from './desktop-auth'
+import { SESSION_COOKIE } from './cookies'
 import {
   DESKTOP_EXCHANGE_PATH,
   DESKTOP_ORIGIN,
   DESKTOP_SESSION_COOKIE,
 } from './desktop-contract'
-import { gate } from './gate'
+import {
+  desktopHandoff,
+  desktopRequest,
+  exchangeHandoff,
+} from './desktop-http.test-support'
 
 let harness: TestHarness
-let dependencies: AppDependencies
-let now: number
 beforeAll(async () => {
   harness = await createHarness()
 })
 beforeEach(async () => {
   await harness.reset()
-  now = TEST_TIME
-  let sequence = 0
-  dependencies = {
-    now: () => now,
-    randomToken: () => `desktop-${++sequence}`.padEnd(43, 'x'),
-    fetch: (request) => harness.github.fetch(request),
-  }
 })
 afterAll(async () => {
   await harness.dispose()
 })
 
-async function handoff(verifier: string): Promise<Response> {
-  const request = new Request(
-    `${TEST_ORIGIN}${API_PATHS.githubSignIn}?desktop_challenge=${await hash(verifier)}`,
-  )
-  const start = await startSignIn(harness.env, dependencies, request)
-  const state = new URL(start.headers.get('Location') ?? '').searchParams.get(
-    'state',
-  )
-  return finishSignIn(
-    new Request(
-      `${TEST_ORIGIN}${API_PATHS.githubCallback}?state=${state}&code=good-code`,
-      {
-        headers: { Cookie: responseCookie(start, OAUTH_COOKIE) },
-      },
-    ),
-    harness.env,
-    dependencies,
-  )
-}
-
-function exchange(
-  callback: Response,
-  verifier: string,
-  origin = DESKTOP_ORIGIN,
-): Promise<Response> {
-  const address = new URL(callback.headers.get('Location') ?? '')
-  const token = new URLSearchParams(address.hash.slice(1)).get('token')
-  return finishDesktopSignIn(
-    new Request(TEST_ORIGIN + DESKTOP_EXCHANGE_PATH, {
-      method: 'POST',
-      headers: { Origin: origin, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, verifier }),
-    }),
-    harness.env,
-    dependencies,
-  )
-}
-
-it('binds desktop sign-in to the initiating app and creates a separate persistent session', async () => {
+it('completes a verifier-bound GitHub desktop session and signs out without changing the browser session', async () => {
   const verifier = 'v'.repeat(43)
-  const callback = await handoff(verifier)
+  const callback = await desktopHandoff(harness, verifier)
   expect(callback.status).toBe(302)
   expect(callback.headers.get('Location')).toMatch(
     /^conducting:\/\/auth\/github\/callback#token=/,
@@ -89,55 +46,212 @@ it('binds desktop sign-in to the initiating app and creates a separate persisten
   expect(callback.headers.get('Set-Cookie')).not.toContain(
     DESKTOP_SESSION_COOKIE,
   )
+  expect(callback.headers.get('Set-Cookie')).not.toContain(`${SESSION_COOKIE}=`)
+  expect(harness.github.requests).toHaveLength(2)
   expect(
     await harness.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM sessions',
     ).first('count'),
   ).toBe(0)
-  await expect(exchange(callback, 'w'.repeat(43))).rejects.toMatchObject({
-    status: 400,
-    code: 'invalid_desktop_handoff',
+  const wrong = await exchangeHandoff(harness, callback, 'w'.repeat(43))
+  expect(wrong.status).toBe(400)
+  expect(await wrong.json()).toMatchObject({
+    error: { code: 'invalid_desktop_handoff' },
   })
-  await expect(
-    exchange(callback, verifier, 'https://untrusted.test'),
-  ).rejects.toMatchObject({ status: 403 })
-  const completed = await exchange(callback, verifier)
+  const foreign = await exchangeHandoff(
+    harness,
+    callback,
+    verifier,
+    'https://untrusted.test',
+  )
+  expect(foreign.status).toBe(403)
+  expect(foreign.headers.get('Access-Control-Allow-Origin')).toBeNull()
+  const completed = await exchangeHandoff(harness, callback, verifier)
   expect(completed.status).toBe(204)
   expect(completed.headers.get('Set-Cookie')).toContain(
     'HttpOnly; Secure; SameSite=None; Max-Age=604800',
   )
-  const session = responseCookie(completed, DESKTOP_SESSION_COOKIE)
-  const context = await gate(
-    new Request(`${TEST_ORIGIN}${API_PATHS.session}`, {
-      headers: { Origin: DESKTOP_ORIGIN, Cookie: session },
-    }),
-    harness.env,
-    now,
+  expect(completed.headers.get('Access-Control-Allow-Origin')).toBe(
+    DESKTOP_ORIGIN,
   )
-  expect(context.user.githubLogin).toBe('octocat')
-  await expect(exchange(callback, verifier)).rejects.toMatchObject({
-    status: 400,
-    code: 'invalid_desktop_handoff',
+  const session = responseCookie(completed, DESKTOP_SESSION_COOKIE)
+  const current = await desktopRequest(harness, API_PATHS.session, session)
+  expect(current.status).toBe(200)
+  expect(current.headers.get('Access-Control-Allow-Credentials')).toBe('true')
+  expect(await current.json()).toMatchObject({
+    user: { githubLogin: 'octocat' },
   })
-  await expect(
-    gate(
-      new Request(`${TEST_ORIGIN}${API_PATHS.session}`, {
-        headers: { Origin: TEST_ORIGIN, Cookie: session },
-      }),
-      harness.env,
-      now,
-    ),
-  ).rejects.toMatchObject({ status: 401 })
+  const replay = await exchangeHandoff(harness, callback, verifier)
+  expect(replay.status).toBe(400)
+  expect(await replay.json()).toMatchObject({
+    error: { code: 'invalid_desktop_handoff' },
+  })
+  expect((await harness.request(API_PATHS.session, session)).status).toBe(401)
+  const browserSession = await harness.login()
+  expect(
+    (await desktopRequest(harness, API_PATHS.session, browserSession)).status,
+  ).toBe(401)
+  const missing = await desktopRequest(harness, '/api/unknown', session)
+  expect(missing.status).toBe(404)
+  expect(missing.headers.get('Access-Control-Allow-Origin')).toBe(
+    DESKTOP_ORIGIN,
+  )
+  const signOut = await desktopRequest(harness, API_PATHS.signOut, session, {
+    method: 'POST',
+    body: '{}',
+  })
+  expect(signOut.status).toBe(204)
+  expect(signOut.headers.get('Set-Cookie')).toContain(
+    `${DESKTOP_SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0`,
+  )
+  expect(
+    (await desktopRequest(harness, API_PATHS.session, session)).status,
+  ).toBe(401)
+  expect(
+    (await harness.request(API_PATHS.session, browserSession)).status,
+  ).toBe(200)
 })
 
-it('expires a desktop handoff without creating a session', async () => {
+it('expires a desktop handoff before the public exchange can create a session', async () => {
   const verifier = 'v'.repeat(43)
-  const callback = await handoff(verifier)
-  now = TEST_TIME + 60_000
-  await expect(exchange(callback, verifier)).rejects.toBeInstanceOf(HttpError)
+  const callback = await desktopHandoff(harness, verifier)
+  harness.setTime(TEST_TIME + 60_000)
+  const response = await exchangeHandoff(harness, callback, verifier)
+  expect(response.status).toBe(400)
+  expect(await response.json()).toMatchObject({
+    error: { code: 'invalid_desktop_handoff' },
+  })
   expect(
     await harness.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM sessions',
     ).first('count'),
   ).toBe(0)
+})
+
+it('serves desktop preflights and API errors without admitting foreign origins or other hosts', async () => {
+  const headers = {
+    Origin: DESKTOP_ORIGIN,
+    'Access-Control-Request-Method': 'POST',
+    'Access-Control-Request-Headers': 'Content-Type',
+  }
+  const preflight = await harness.fetch(DESKTOP_EXCHANGE_PATH, {
+    method: 'OPTIONS',
+    headers,
+  })
+  expect(preflight.status).toBe(204)
+  expect(preflight.headers.get('Access-Control-Allow-Origin')).toBe(
+    DESKTOP_ORIGIN,
+  )
+  expect(preflight.headers.get('Access-Control-Allow-Credentials')).toBe('true')
+  expect(preflight.headers.get('Access-Control-Allow-Methods')).toBe('POST')
+  expect(preflight.headers.get('Access-Control-Allow-Headers')).toBe(
+    'Content-Type',
+  )
+  expect(preflight.headers.get('Vary')).toBe('Origin')
+  expect(preflight.headers.get('Set-Cookie')).toBeNull()
+  const refused = await harness.fetch(DESKTOP_EXCHANGE_PATH, {
+    method: 'OPTIONS',
+    headers: { ...headers, 'Access-Control-Request-Headers': 'Authorization' },
+  })
+  expect(refused.status).toBe(403)
+  expect(await refused.json()).toEqual({
+    error: { code: 'origin_forbidden', message: 'Open the app to continue.' },
+  })
+  expect(refused.headers.get('Access-Control-Allow-Origin')).toBe(
+    DESKTOP_ORIGIN,
+  )
+  expect(refused.headers.get('Access-Control-Allow-Methods')).toBeNull()
+  const unsigned = await desktopRequest(harness, API_PATHS.session)
+  expect(unsigned.status).toBe(401)
+  expect(unsigned.headers.get('Access-Control-Allow-Origin')).toBe(
+    DESKTOP_ORIGIN,
+  )
+  expect(unsigned.headers.get('Cache-Control')).toBe('no-store')
+  const health = await desktopRequest(harness, HEALTH_PATH)
+  expect(health.status).toBe(200)
+  expect(health.headers.get('Access-Control-Allow-Origin')).toBe(DESKTOP_ORIGIN)
+  const upgrade = await desktopRequest(harness, API_PATHS.session, '', {
+    headers: { Upgrade: 'websocket' },
+  })
+  expect(upgrade.status).toBe(401)
+  const upgradedPreflight = await harness.fetch(DESKTOP_EXCHANGE_PATH, {
+    method: 'OPTIONS',
+    headers: { ...headers, Upgrade: 'websocket' },
+  })
+  expect(upgradedPreflight.status).toBe(401)
+  for (const origin of ['conducting-app://other', 'null']) {
+    const response = await harness.fetch(API_PATHS.session, {
+      headers: { Origin: origin },
+    })
+    expect(response.status, origin).toBe(403)
+    expect(
+      response.headers.get('Access-Control-Allow-Origin'),
+      origin,
+    ).toBeNull()
+  }
+  const app = createApp()
+  const env = {
+    ...harness.env,
+    MACHINE_ORIGIN: 'https://machines.conducting.test',
+    PREVIEW_DOMAIN: 'conducting-previews.test',
+  }
+  for (const input of [
+    { host: 'https://machines.conducting.test', status: 501 },
+    { host: 'https://unknown.conducting-previews.test', status: 404 },
+    { host: 'https://untrusted.test', status: 403 },
+  ]) {
+    const response = await app.fetch(
+      new Request(input.host + DESKTOP_EXCHANGE_PATH, {
+        method: 'OPTIONS',
+        headers,
+      }),
+      env,
+    )
+    expect(response.status, input.host).toBe(input.status)
+    expect(
+      response.headers.get('Access-Control-Allow-Origin'),
+      input.host,
+    ).toBeNull()
+    expect(
+      response.headers.get('Access-Control-Allow-Credentials'),
+      input.host,
+    ).toBeNull()
+    expect(
+      response.headers.get('Access-Control-Allow-Methods'),
+      input.host,
+    ).toBeNull()
+  }
+})
+
+it('serves web assets with the policy from the actual desktop configuration consumer', async () => {
+  const previewDomain = 'conducting-previews.test'
+  const requests: string[] = []
+  const env = {
+    ...harness.env,
+    PREVIEW_DOMAIN: previewDomain,
+    ASSETS: {
+      fetch: async (request: Request) => {
+        requests.push(request.url)
+        return new Response('<main>Conducting</main>', {
+          headers: { 'Content-Type': 'text/html' },
+        })
+      },
+    },
+  }
+  const response = await createApp().fetch(
+    new Request(`${env.APP_ORIGIN}/app`),
+    env,
+  )
+  expect(response.status).toBe(200)
+  expect(await response.text()).toBe('<main>Conducting</main>')
+  expect(response.headers.get('Content-Type')).toBe('text/html')
+  expect(requests).toEqual([`${env.APP_ORIGIN}/app`])
+  const desktopPolicy = contentSecurityPolicy(
+    readConfiguration({
+      appOrigin: env.APP_ORIGIN,
+      frameSources: [`https://*.${previewDomain}`],
+    }),
+  )
+  expect(desktopPolicy).not.toBe('')
+  expect(response.headers.get('Content-Security-Policy')).toBe(desktopPolicy)
 })

@@ -3740,18 +3740,18 @@ Build the Mac app as decision 62 says. No other milestone waits for it.
 - [ ] Give the window a hidden title bar with the native window buttons
       inset in the app's top bar, drag regions on the top bars, and the
       reserved space that full screen drops, as decision 62 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
-- [ ] Let the Worker accept the desktop origin in the `Origin` check, in
+- [x] Let the Worker accept the desktop origin in the `Origin` check, in
       CORS for the API, and for the session cookie. Hand off the GitHub
       sign-in from the browser to the app through the `conducting://`
       scheme, with one app instance. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
-- [ ] Keep the window bounds and the session across launches. Open other
+- [x] Keep the window bounds and the session across launches. Open other
       sites in the browser. Deny every permission except a sanitized
       clipboard write. Use no preload and no renderer bridge, and match
       the web app's content security policy. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 - [ ] Package DMG and ZIP builds for arm64 and x64 with electron-builder,
       with an ad-hoc signature for now. Add electron-updater on a GitHub
       release feed, off in development. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
-- [ ] Add Playwright tests of the shell and a packaged launch check to CI. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Add Playwright tests of the shell and a packaged launch check to CI. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 - [x] Write `docs/protocol/desktop-app.md`, and update the README and the
       architecture doc. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 - [x] Fix the frame navigation and updater review findings, and test the

@@ -59,7 +59,8 @@ catalogue. The product screens are not built yet.
 1. Install Node 24, as `.nvmrc` says. The
    [mockups README](docs/mockups/README.md#commands) lists the Node
    versions that Mokly refuses.
-2. Run `npm install`. The `.npmrc` file sets `legacy-peer-deps`, which
+2. Run `npm install`. Then run `npm --prefix desktop ci` for the Mac shell's
+   check dependencies. The `.npmrc` file sets `legacy-peer-deps`, which
    `@firna/ui` needs.
 3. Run `npm run db:migrate` to create the local D1 tables.
 4. Run `npm run dev`, and open `http://127.0.0.1:5173`.
@@ -119,8 +120,8 @@ complete yet:
 - It shows the minimal page of the web app. The top bars and the sidebar of
   the product are not built yet, so the window does not match the mockups
   yet.
-- The Worker does not route the GitHub sign-in of the Mac app yet. GitHub
-  Actions does not build or test the Mac app yet.
+- The Worker routes the browser-to-app GitHub sign-in handoff. The Mac
+  workflow builds and tests desktop changes on Apple silicon and Intel.
 - Builds have an ad-hoc signature, because no Apple Developer ID exists
   yet. No release is published, so the updater stays off.
 
@@ -139,8 +140,8 @@ complete yet:
 
 - `worker/app.ts`: the Worker's HTTP entry point.
 - `worker/security/`: GitHub sign-in, signed sessions, the request gate,
-  the Mac app's sign-in handoff and origin rules, and a prepared content
-  security policy for both apps. The Worker does not send that policy yet.
+  the Mac app's sign-in handoff and origin rules, and the shared content
+  security policy of the web app and the Mac app.
 - `worker/data/`: D1 queries for users, orgs, sessions, and encrypted keys.
 - `worker/sandbox/`: the typed Boat adapter and the encrypted key store.
 - `src/shared/`: the browser API contracts, route paths, and runner message types.
