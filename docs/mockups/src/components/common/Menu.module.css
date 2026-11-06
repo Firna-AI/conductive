@@ -13,11 +13,19 @@
   text-align: left;
 }
 
+/* A long menu beside its trigger scrolls, so its rows stay on the screen. */
 .below-start,
 .below-end,
 .above-start,
 .above-end {
   position: absolute;
+  max-height: 70dvh;
+  overflow-y: auto;
+}
+
+/* The rows keep their height in a menu that scrolls. */
+.menu > * {
+  flex-shrink: 0;
 }
 
 .below-start,
