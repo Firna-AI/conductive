@@ -31,8 +31,15 @@ export interface Org {
 }
 
 export type BoatKeyStatus =
-  { configured: false } | { configured: true; updatedAt: number }
+  | { configured: false }
+  | { configured: true; updatedAt: number; lastFour?: string }
 
 export interface ApiErrorBody {
   error: { code: string; message: string }
 }
+
+/** Wire dates are Unix milliseconds. IDs and model names are opaque strings. */
+export type Timestamp = number
+
+/** Writes with no fields still send an empty JSON object through the app gate. */
+export type EmptyRequest = Record<string, never>

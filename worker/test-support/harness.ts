@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 
 import { Miniflare } from 'miniflare'
 
@@ -38,17 +38,20 @@ export async function createHarness() {
     ],
   })
   const db = await runtime.getD1Database('DB')
-  const sql = await readFile(
-    `${import.meta.dirname}/../../migrations/202611060000_worker_core.sql`,
-    'utf8',
-  )
-  await db.batch(
-    sql
-      .split(';')
-      .map((query) => query.trim())
-      .filter(Boolean)
-      .map((query) => db.prepare(query)),
-  )
+  const directory = `${import.meta.dirname}/../../migrations`
+  const migrations = (await readdir(directory))
+    .filter((name) => name.endsWith('.sql'))
+    .sort()
+  for (const name of migrations) {
+    const sql = await readFile(`${directory}/${name}`, 'utf8')
+    await db.batch(
+      sql
+        .split(';')
+        .map((query) => query.trim())
+        .filter(Boolean)
+        .map((query) => db.prepare(query)),
+    )
+  }
   const env: AppEnv = {
     DB: db,
     APP_ORIGIN: TEST_ORIGIN,
@@ -125,10 +128,25 @@ export async function createHarness() {
     reset: async () => {
       await db.batch(
         [
+          'github_webhook_deliveries',
+          'github_connections',
+          'github_installations',
+          'org_invites',
+          'user_preferences',
+          'agent_logins',
+          'preview_hostnames',
+          'workspace_views',
+          'workspace_read_states',
+          'terminal_credentials',
+          'workspace_tokens',
+          'section_preferences',
           'workspaces',
+          'sections',
           'repositories',
           'boat_keys',
           'settings',
+          'image_build_logs',
+          'image_builds',
           'org_members',
           'orgs',
           'sessions',

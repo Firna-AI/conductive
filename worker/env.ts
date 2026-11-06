@@ -1,6 +1,10 @@
 export interface AppEnv {
   DB: D1Database
   APP_ORIGIN: string
+  MARKETING_ORIGIN?: string
+  MACHINE_ORIGIN?: string
+  PREVIEW_DOMAIN?: string
+  ASSETS?: { fetch(request: Request): Promise<Response> }
   GITHUB_CLIENT_ID: string
   GITHUB_CLIENT_SECRET: string
   SESSION_SIGNING_KEY: string

@@ -1,0 +1,159 @@
+import type { ChatEvent, ToolCall } from '../shared/chat-events'
+import type { WorkspaceEventEnvelope } from '../shared/events'
+import { FAKE_IDS, FAKE_TIME } from './fixtures/core'
+import { workspaceFixtures } from './fixtures/workspaces'
+
+export type RecordedChatScenario =
+  | 'history'
+  | 'running'
+  | 'steer'
+  | 'interrupted'
+  | 'failed'
+  | 'queued'
+  | 'first-turn'
+
+const { message } = workspaceFixtures()
+const turn = { sessionId: FAKE_IDS.session, turnId: 'turn-1' }
+const accepted: ChatEvent = { type: 'message.accepted', message }
+const started: ChatEvent = {
+  ...turn,
+  type: 'turn.started',
+  senderId: message.sender.id,
+  choice: message.choice,
+  startedAt: FAKE_TIME,
+  messageIds: [message.id],
+}
+const tool: ToolCall = {
+  id: 'read-form',
+  kind: 'read',
+  target: 'src/app/checkout/AddressForm.tsx',
+  detail: null,
+  state: 'done',
+}
+const beginning: readonly ChatEvent[] = [
+  accepted,
+  started,
+  { ...turn, type: 'turn.thinking' },
+  {
+    ...turn,
+    type: 'assistant.delta',
+    messageId: 'answer-1',
+    text: 'I will check ',
+  },
+  {
+    ...turn,
+    type: 'assistant.delta',
+    messageId: 'answer-1',
+    text: 'the checkout form.',
+  },
+  { ...turn, type: 'tool.updated', tool: { ...tool, state: 'running' } },
+  { ...turn, type: 'tool.updated', tool },
+]
+const completed: readonly ChatEvent[] = [
+  {
+    ...turn,
+    type: 'assistant.completed',
+    messageId: 'answer-1',
+    text: 'The checkout form now suggests addresses. Manual entry still works.',
+    userMessageIds: [message.id],
+  },
+  {
+    ...turn,
+    type: 'turn.completed',
+    state: 'finished',
+    durationMs: 252_000,
+    userMessageIds: [message.id],
+    files: [{ path: tool.target, change: 'modified', added: 38, removed: 6 }],
+  },
+]
+
+const records: Readonly<Record<RecordedChatScenario, readonly ChatEvent[]>> = {
+  history: [...beginning, ...completed],
+  running: beginning,
+  steer: [
+    ...beginning,
+    {
+      type: 'message.accepted',
+      message: {
+        ...message,
+        id: 'steer-1',
+        text: 'Also debounce the lookups to 250 ms.',
+      },
+    },
+    { ...turn, type: 'message.sent', messageId: 'steer-1' },
+    {
+      ...turn,
+      type: 'assistant.completed',
+      messageId: 'answer-1',
+      text: 'The form now suggests addresses and waits 250 ms between lookups.',
+      userMessageIds: [message.id, 'steer-1'],
+    },
+    {
+      ...turn,
+      type: 'turn.completed',
+      state: 'finished',
+      durationMs: 270_000,
+      files: [],
+      userMessageIds: [message.id, 'steer-1'],
+    },
+  ],
+  interrupted: [
+    ...beginning,
+    {
+      ...turn,
+      type: 'tool.updated',
+      tool: {
+        ...tool,
+        id: 'unit',
+        kind: 'run',
+        target: 'npm test',
+        state: 'stopped',
+      },
+    },
+    {
+      ...turn,
+      type: 'turn.completed',
+      state: 'stopped',
+      durationMs: 161_000,
+      files: [],
+      userMessageIds: [message.id],
+    },
+  ],
+  failed: [
+    accepted,
+    started,
+    {
+      ...turn,
+      type: 'turn.failed',
+      error: {
+        code: 'agent_unavailable',
+        message: 'The agent is busy. Try again.',
+      },
+      retryMessageId: message.id,
+      durationMs: 1_000,
+    },
+  ],
+  queued: [
+    { type: 'message.accepted', message: { ...message, state: 'queued' } },
+  ],
+  'first-turn': beginning.slice(0, 6),
+}
+
+/** Recorded product events. They contain no provider events or credentials. */
+export function recordedChatEvents(
+  scenario: RecordedChatScenario = 'history',
+  workspaceId: string = FAKE_IDS.workspace,
+  sessionId: string = FAKE_IDS.session,
+): readonly WorkspaceEventEnvelope[] {
+  return records[scenario].map((record, index) => {
+    const event = structuredClone(record)
+    if ('sessionId' in event) event.sessionId = sessionId
+    if (event.type === 'message.accepted') event.message.sessionId = sessionId
+    return {
+      workspaceId,
+      eventNumber: index + 1,
+      occurredAt: FAKE_TIME + index * 1_000,
+      event,
+    }
+  })
+}

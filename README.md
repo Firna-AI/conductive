@@ -119,7 +119,9 @@ GitHub Actions uses `.nvmrc`, installs with `npm ci`, and runs
 - `worker/security/`: GitHub sign-in, signed sessions, and the request gate.
 - `worker/data/`: D1 queries for users, orgs, sessions, and encrypted keys.
 - `worker/sandbox/`: the typed Boat adapter and the encrypted key store.
-- `src/shared/api.ts`: the API paths and response types that the app shares.
+- `src/shared/`: the browser API contracts, route paths, and runner message types.
+- `src/test-support/`: the fake API, recorded chat and file events, and terminal fake.
+- `worker/test-support/`: local D1, fake GitHub and Boat servers, and runner fakes.
 - `migrations/`: the D1 schema migrations.
 
 The web app lives under `src/`, and the Cloudflare Worker under `worker/`.

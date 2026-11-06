@@ -1,12 +1,13 @@
 import { API_PATHS } from '../src/shared/api'
 import { HEALTH_PATH, type HealthResponse } from '../src/shared/health'
 import type { AppDependencies, AppEnv } from './env'
+import { hostStub, hostSurface } from './hosts'
 import { errorResponse, HttpError, privateResponse } from './http'
 import { route } from './routes'
 import { finishSignIn, startSignIn } from './security/auth'
 import { cookie, OAUTH_COOKIE } from './security/cookies'
 import { randomToken } from './security/crypto'
-import { checkHost, checkOrigin, gate } from './security/gate'
+import { checkOrigin, gate } from './security/gate'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -18,25 +19,34 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
   return {
     async fetch(request: Request, env?: AppEnv): Promise<Response> {
       const path = new URL(request.url).pathname
-      // Health remains public. GitHub navigations use browser-bound state instead of a session.
-      if (path === HEALTH_PATH && request.method === 'GET') {
-        return privateResponse(
-          Response.json({ status: 'ok' } satisfies HealthResponse),
-        )
-      }
+      const upgrade = request.headers.has('Upgrade')
+      const health =
+        path === HEALTH_PATH && request.method === 'GET' && !upgrade
       try {
+        // A binding-free health call also supports the bootstrap smoke check.
+        if (!env && health) return healthResponse()
         if (!env)
           throw new HttpError(
             503,
             'service_unavailable',
             'The app is not available. Try again.',
           )
-        checkHost(request, env)
+        const surface = hostSurface(request, env)
+        if (surface === 'app') {
+          checkOrigin(request, env)
+          if (!path.startsWith('/api/') && env.ASSETS) {
+            return env.ASSETS.fetch(request)
+          }
+        }
+        if (surface !== 'app' || !path.startsWith('/api/')) {
+          return privateResponse(hostStub(surface))
+        }
+        if (health) return healthResponse()
         if (
           request.method === 'GET' &&
+          !upgrade &&
           (path === API_PATHS.githubSignIn || path === API_PATHS.githubCallback)
         ) {
-          checkOrigin(request, env, true)
           return privateResponse(
             await (path === API_PATHS.githubSignIn
               ? startSignIn(env, dependencies)
@@ -54,4 +64,10 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       }
     },
   }
+}
+
+function healthResponse(): Response {
+  return privateResponse(
+    Response.json({ status: 'ok' } satisfies HealthResponse),
+  )
 }

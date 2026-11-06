@@ -19,13 +19,11 @@ export function checkHost(request: Request, env: AppEnv): void {
   }
 }
 
-export function checkOrigin(
-  request: Request,
-  env: AppEnv,
-  navigation = false,
-): void {
+export function checkOrigin(request: Request, env: AppEnv): void {
   const origin = request.headers.get('Origin')
-  if (origin !== env.APP_ORIGIN && !(navigation && origin === null)) {
+  const read = request.method === 'GET' || request.method === 'HEAD'
+  const upgrade = request.headers.has('Upgrade')
+  if (origin !== env.APP_ORIGIN && !(read && !upgrade && origin === null)) {
     throw new HttpError(403, 'origin_forbidden', 'Open the app to continue.')
   }
 }

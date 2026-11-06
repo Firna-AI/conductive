@@ -174,6 +174,15 @@ says.
   branch. Its summary gives the number of changed files and the lines that
   they add and remove.
 - A changed file opens its diff against the default branch as a tab.
+- The agent runner watches the repository and reports both lists. It sends
+  the full file tree when it connects, then only the changes. The changes
+  count uncommitted and untracked work too.
+- The runner reads one file or one diff on request. When the runner is not
+  connected, a file read falls back to Boat's file read.
+- The Durable Object keeps the last tree and the last changes, so both tabs
+  still show them while the sandbox sleeps.
+- Reason: Boat's API can run `git` and read files only while the sandbox
+  runs, one request at a time, and with no live updates.
 
 ### Terminal
 

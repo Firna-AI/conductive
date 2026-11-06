@@ -145,3 +145,7 @@ says.
 - Each turn also brings the login of its sender, as
   [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox)
   says.
+- The runner also reports the file tree and the changes of its workspace,
+  and reads files and diffs on request, as
+  [Files and changes](workspaces-and-sandboxes.md#files-and-changes) says.
+  File results are not part of the chat history.
