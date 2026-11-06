@@ -1,4 +1,4 @@
-import { orgPath, type Timestamp } from './api'
+import { orgPath, type EmptyRequest, type Timestamp } from './api'
 import type { BaseImage } from './base-image'
 
 export const orgSettingsPaths = {
@@ -7,6 +7,10 @@ export const orgSettingsPaths = {
   builds: (orgId: string) => `${orgPath(orgId)}/builds`,
   refresh: (orgId: string) => `${orgPath(orgId)}/image/refresh`,
 } as const
+
+export function repositoryPath(orgId: string, repositoryId: string): string {
+  return `${orgSettingsPaths.repositories(orgId)}/${encodeURIComponent(repositoryId)}`
+}
 
 export function buildPath(orgId: string, buildId: string): string {
   return `${orgSettingsPaths.builds(orgId)}/${encodeURIComponent(buildId)}`
@@ -28,10 +32,11 @@ export interface Repository {
 export interface RepositoriesResponse {
   repositories: readonly Repository[]
 }
-export interface SetRepositoriesRequest {
-  githubRepositoryIds: readonly number[]
-}
-export type SetRepositoriesResponse = RepositoriesResponse
+/** PUT adds one repository. DELETE removes it. Each answer lists the current choices. */
+export type AddRepositoryRequest = EmptyRequest
+export type RemoveRepositoryRequest = EmptyRequest
+export type AddRepositoryResponse = RepositoriesResponse
+export type RemoveRepositoryResponse = RepositoriesResponse
 
 export interface OrgSettings {
   /** Software included before the install script. Older replies may omit it. */

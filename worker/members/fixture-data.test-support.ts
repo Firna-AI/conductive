@@ -84,6 +84,11 @@ async function signedIdentity(
         ),
       db
         .prepare(
+          'INSERT INTO user_verified_emails (user_id, email) VALUES (?, ?)',
+        )
+        .bind(user.id, `${githubLogin}@example.com`),
+      db
+        .prepare(
           'INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)',
         )
         .bind(sessionId, user.id, expiresAt),

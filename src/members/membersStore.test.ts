@@ -77,18 +77,18 @@ describe('createMembersStore', () => {
     expect(ready(store).pending).toEqual([])
   })
 
-  it('invites_by_github_login_without_the_at_sign_and_lists_the_answer', async () => {
+  it('invites_by_email_without_the_spaces_at_its_ends_and_lists_the_answer', async () => {
     const server = new FakeApiServer()
-    const invite = { id: 'invite-9', githubLogin: 'octocat', createdAt: 5 }
+    const invite = { id: 'invite-9', email: 'ana@example.com', createdAt: 5 }
     server.json('POST', invitesPath(org), { invite }, 201)
     const { store } = await loadedStore(server)
-    expect(await store.invite(' @octocat ')).toBe(true)
+    expect(await store.invite(' ana@example.com ')).toBe(true)
     expect(await server.requests.at(-1)?.json()).toEqual({
-      githubLogin: 'octocat',
+      email: 'ana@example.com',
     })
-    expect(ready(store).data.invites.map((item) => item.githubLogin)).toEqual([
-      'mira-k',
-      'octocat',
+    expect(ready(store).data.invites.map((item) => item.email)).toEqual([
+      'mira@example.com',
+      'ana@example.com',
     ])
   })
 

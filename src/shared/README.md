@@ -8,6 +8,8 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 Each area owns its paths and payloads. Import from that area directly.
 `api.ts` keeps the existing sign-in and org paths and common records.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
+`repositoryPath` names one repository of an org. PUT adds it and DELETE
+removes it. Each request sends `EmptyRequest` and returns the current list.
 
 `runner.ts` defines the versioned handshake, commands, numbered events,
 confirmations, and resend rules. Its comments state the delivery contract.
@@ -39,6 +41,7 @@ The git credential payload is not defined yet.
 ## Key code
 
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
+- [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.

@@ -8,8 +8,7 @@ only in the cloud. It replaces Conductor Cloud, which shuts down on
 
 ## Status
 
-The web app has a minimal page. The Worker has GitHub sign-in, org records,
-and an encrypted Boat key store. Today the repository holds:
+Today the repository holds:
 
 - the [architecture doc](docs/architecture.md) and the protocol docs, which
   state the requirements
@@ -53,8 +52,8 @@ These features are planned. The protocol docs state each one.
 
 ## Get started
 
-The package includes a minimal React app, the Worker core, and the mockup
-catalogue. The product screens are not built yet.
+The [Run it](src/app/README.md#run-it) section of the web app README says
+how the app runs in development and in the production build.
 
 1. Install Node 24, as `.nvmrc` says. The
    [mockups README](docs/mockups/README.md#commands) lists the Node
@@ -145,6 +144,14 @@ complete yet:
   security policy of the web app and the Mac app.
 - `worker/data/`: D1 queries for users, orgs, sessions, and encrypted keys.
 - `worker/sandbox/`: the typed Boat adapter and the encrypted key store.
+- `src/app/`: the data of the web app, such as the typed API client, the
+  models that the screens read, the router, and the event stream. Its
+  [README](src/app/README.md) gives the rules and the key code of the
+  web app.
+- `src/shell/`: the screens of the app shell, such as the workspace list,
+  the workspace screen, Get started, and the settings. The
+  [web app README](src/app/README.md) also gives their rules and their
+  key code.
 - `src/shared/`: the browser API contracts, route paths, and runner message types.
 - `src/test-support/`: the fake API, recorded chat and file events, and terminal fake.
 - `worker/test-support/`: local D1, fake GitHub and Boat servers, and runner fakes.

@@ -1,9 +1,14 @@
+import { productName } from '../../docs/mockups/src/brand'
 import type { GitHubIdentity } from '../data/users'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError, isRecord } from '../http'
 import { parseGitHubTokens, type GitHubTokenBundle } from './github-token-data'
 
 const SIGN_IN_FAILED = 'GitHub sign-in failed. Start sign-in again.'
+
+interface AuthorizedGitHubIdentity extends GitHubIdentity {
+  verifiedEmails: readonly string[]
+}
 
 export class GitHubClient {
   private readonly fetch: HttpFetch
@@ -16,7 +21,7 @@ export class GitHubClient {
     code: string,
     verifier: string,
     env: AppEnv,
-  ): Promise<GitHubIdentity> {
+  ): Promise<AuthorizedGitHubIdentity> {
     return (await this.authorizeWithTokens(code, verifier, env)).profile
   }
 
@@ -25,7 +30,7 @@ export class GitHubClient {
     verifier: string,
     env: AppEnv,
     now = Date.now(),
-  ): Promise<{ profile: GitHubIdentity; tokens: GitHubTokenBundle }> {
+  ): Promise<{ profile: AuthorizedGitHubIdentity; tokens: GitHubTokenBundle }> {
     const value = await this.request(
       new Request('https://github.com/login/oauth/access_token', {
         method: 'POST',
@@ -55,7 +60,7 @@ export class GitHubClient {
         headers: {
           Authorization: `Bearer ${tokens.accessToken}`,
           Accept: 'application/vnd.github+json',
-          'User-Agent': 'Conducting',
+          'User-Agent': productName,
           'X-GitHub-Api-Version': '2022-11-28',
         },
       }),
@@ -77,18 +82,73 @@ export class GitHubClient {
         displayName: typeof profile.name === 'string' ? profile.name : null,
         avatarUrl:
           typeof profile.avatar_url === 'string' ? profile.avatar_url : null,
+        verifiedEmails: await this.verifiedEmails(tokens.accessToken),
       },
       tokens,
     }
   }
 
+  private async verifiedEmails(
+    accessToken: string,
+  ): Promise<readonly string[]> {
+    const emails = new Set<string>()
+    let next = true
+    for (let page = 1; next; page++) {
+      const response = await this.response(
+        new Request(
+          `https://api.github.com/user/emails?per_page=100&page=${page}`,
+          {
+            redirect: 'manual',
+            signal: AbortSignal.timeout(30_000),
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              Accept: 'application/vnd.github+json',
+              'User-Agent': productName,
+              'X-GitHub-Api-Version': '2022-11-28',
+            },
+          },
+        ),
+      )
+      const values = await this.json(response)
+      if (!Array.isArray(values)) throw signInFailed()
+      for (const value of values) {
+        if (
+          !isRecord(value) ||
+          typeof value.email !== 'string' ||
+          !value.email ||
+          typeof value.verified !== 'boolean'
+        )
+          throw signInFailed()
+        if (value.verified) emails.add(value.email.toLowerCase())
+      }
+      next = /\brel="next"/.test(response.headers.get('Link') ?? '')
+    }
+    return [...emails]
+  }
+
   private async request(request: Request): Promise<unknown> {
+    return this.json(await this.response(request))
+  }
+
+  private async response(request: Request): Promise<Response> {
     try {
       const response = await this.fetch(request)
       if (!response.ok) throw new Error('GitHub refused the request')
-      return await response.json()
+      return response
     } catch {
-      throw new HttpError(502, 'github_sign_in_failed', SIGN_IN_FAILED)
+      throw signInFailed()
     }
   }
+
+  private async json(response: Response): Promise<unknown> {
+    try {
+      return await response.json()
+    } catch {
+      throw signInFailed()
+    }
+  }
+}
+
+function signInFailed() {
+  return new HttpError(502, 'github_sign_in_failed', SIGN_IN_FAILED)
 }

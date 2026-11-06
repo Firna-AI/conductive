@@ -34,7 +34,7 @@ const members: OrgMember[] = [
   { user: jonas, role: 'member', joinedAt: 0 },
 ]
 const invites: OrgInvite[] = [
-  { id: 'invite-1', githubLogin: 'mira-k', createdAt: 0 },
+  { id: 'invite-1', email: 'mira@example.com', createdAt: 0 },
 ]
 const acme: OrgSummary = { id: 'acme', name: 'Acme', role: 'admin' }
 const deletedAcme: OrgSummary = {
@@ -82,7 +82,7 @@ const adminActions = [
   'Remove',
   'Restore',
   'Delete org',
-  'mira-k',
+  'mira@example.com',
 ]
 
 describe('the views of a member who is not an admin', () => {
@@ -162,7 +162,7 @@ describe('the views of an admin', () => {
           'aria-label="Role of Jonas Weber: Member"',
           'aria-label="Remove Priya Raman"',
           'aria-label="Remove Jonas Weber"',
-          'aria-label="Cancel the invite to @mira-k"',
+          'aria-label="Cancel the invite to mira@example.com"',
         ],
         ['Role of Cal', 'Remove Cal'],
       ),

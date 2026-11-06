@@ -37,7 +37,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('keeps invites pending until the named GitHub user accepts and lets only admins cancel', async () => {
+it('keeps email invites pending until a verified recipient accepts and lets only admins cancel', async () => {
   const { org, admin, member, other } = await memberFixture(harness)
   const client = membersClient(harness)
   const invited = await signIn(harness, 13, 'Teammate')
@@ -46,21 +46,21 @@ it('keeps invites pending until the named GitHub user accepts and lets only admi
       await client.request(
         invitesPath(org.id),
         member.session,
-        write({ githubLogin: 'Teammate' }),
+        write({ email: 'Teammate@example.com' }),
       )
     ).status,
   ).toBe(403)
   const response = await client.request(
     invitesPath(org.id),
     admin.session,
-    write({ githubLogin: 'teammate' }),
+    write({ email: 'teammate@example.com' }),
   )
   expect(response.status).toBe(201)
   const { invite }: InviteMemberResponse = await response.json()
   const again = await client.request(
     invitesPath(org.id),
     admin.session,
-    write({ githubLogin: 'TEAMMATE' }),
+    write({ email: 'TEAMMATE@example.com' }),
   )
   expect(await again.json()).toEqual({ invite })
   expect((await client.request(orgPath(org.id), invited.session)).status).toBe(
@@ -98,7 +98,7 @@ it('keeps invites pending until the named GitHub user accepts and lets only admi
     await client.request(
       invitesPath(org.id),
       admin.session,
-      write({ githubLogin: 'future' }),
+      write({ email: 'future@example.com' }),
     )
   ).json()
   expect(

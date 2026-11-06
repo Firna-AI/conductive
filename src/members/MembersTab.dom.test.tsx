@@ -1,7 +1,12 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
 import type { Org } from '../shared/api'
-import { memberPath, type OrgMember } from '../shared/members'
+import {
+  invitesPath,
+  memberPath,
+  type InviteMemberResponse,
+  type OrgMember,
+} from '../shared/members'
 import {
   byDialog,
   byRole,
@@ -21,6 +26,8 @@ import {
   mount,
   MOUNTED_TEST_TIMEOUT,
   press,
+  pressKey,
+  typeText,
   waitFor,
 } from '../test-support/mount'
 import { createMembersApi, type FetchLike } from './api/client'
@@ -43,6 +50,20 @@ function tab(fetch: FetchLike, removed: OrgMember[]) {
       viewport="desktop"
     />
   )
+}
+
+/** The email field of the invite, as a person finds it. */
+function emailField(): HTMLInputElement {
+  const field = byRole('textbox', 'Email')
+  if (!(field instanceof HTMLInputElement)) {
+    throw new Error('The email field is not an input')
+  }
+  return field
+}
+
+/** The answer of the API to a new invite. */
+function inviteReply(email: string): InviteMemberResponse {
+  return { invite: { id: `invite-${email}`, email, createdAt: FAKE_TIME } }
 }
 
 /** Opens the question about Priya and presses Remove member. */
@@ -116,5 +137,72 @@ describe('MembersTab of an admin', () => {
     expect({ open: dialog.open, removed }).toEqual({ open: true, removed: [] })
     await press(byRole('button', 'Cancel', dialog))
     expect(dialog.open).toBe(false)
+  })
+
+  it('sends_one_invite_at_a_time_and_clears_the_field_only_when_its_email_went_out', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const reply = deferred()
+    const sent: unknown[] = []
+    const held: FetchLike = async (input, init) => {
+      if (init?.method === 'POST' && typeof init.body === 'string') {
+        sent.push(JSON.parse(init.body))
+        await reply.promise
+      }
+      return server.fetch(input, init)
+    }
+    await mount(tab(held, []))
+    const list = await waitFor(
+      () => queryByRole('list', 'Members'),
+      'the list of members',
+    )
+    const field = emailField()
+    expect(field.type).toBe('email')
+    await typeText(field, 'ana@example.com')
+    await press(byRole('button', 'Invite'))
+    expect(byRole('button', 'Invite').getAttribute('aria-busy')).toBe('true')
+    // The field stays open for the next email, which waits for the first.
+    await typeText(field, 'ben@example.com')
+    await pressKey('Enter')
+    await press(byRole('button', 'Invite'))
+    expect(sent).toEqual([{ email: 'ana@example.com' }])
+    const path = invitesPath(org.id)
+    server.json('POST', path, inviteReply('ana@example.com'), 201)
+    reply.resolve()
+    await waitFor(
+      () => queryByText('ana@example.com', list),
+      'the invite to ana@example.com in the list',
+    )
+    expect(field.value).toBe('ben@example.com')
+    const failure = {
+      code: 'internal_error',
+      message: 'The request failed. Try again.',
+    }
+    server.json('POST', path, { error: failure }, 500)
+    await press(byRole('button', 'Invite'))
+    await waitFor(
+      () => queryByText('The invite to ben@example.com failed'),
+      'the failure of the invite to ben@example.com',
+    )
+    expect(field.value).toBe('ben@example.com')
+    server.json('POST', path, inviteReply('ben@example.com'), 201)
+    await press(byRole('button', 'Invite'))
+    await waitFor(
+      () => queryByText('ben@example.com', list),
+      'the invite to ben@example.com in the list',
+    )
+    expect({
+      field: field.value,
+      failure: queryByText('The invite to ben@example.com failed'),
+      sent,
+    }).toEqual({
+      field: '',
+      failure: null,
+      sent: [
+        { email: 'ana@example.com' },
+        { email: 'ben@example.com' },
+        { email: 'ben@example.com' },
+      ],
+    })
   })
 })

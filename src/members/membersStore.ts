@@ -36,7 +36,7 @@ export type MembersStore = {
   subscribe(listener: () => void): () => void
   load(): Promise<void>
   /** Resolves to true when the invite went out. */
-  invite(githubLogin: string): Promise<boolean>
+  invite(email: string): Promise<boolean>
   cancelInvite(inviteId: string): Promise<boolean>
   changeRole(userId: string, role: OrgRole): Promise<boolean>
   /** Resolves to true when the member left the org. */
@@ -57,9 +57,13 @@ export function runsAction(
   return pending.some((key) => key.startsWith(`${action}:`))
 }
 
-/** A GitHub login as the API takes it: no spaces and no leading "@". */
-export function normalizeLogin(value: string): string {
-  return value.trim().replace(/^@/, '').trim()
+/**
+ * An email as the API takes it: without the spaces at its ends. The API
+ * compares the emails of invites without case, so the app sends the case
+ * as typed.
+ */
+export function normalizeEmail(value: string): string {
+  return value.trim()
 }
 
 /**
@@ -169,13 +173,13 @@ export function createMembersStore(
           set({ status: 'failed', message: errorMessage(error) })
       }
     },
-    async invite(githubLogin) {
-      const login = normalizeLogin(githubLogin)
-      if (!login) return false
+    async invite(typed) {
+      const email = normalizeEmail(typed)
+      if (!email) return false
       return run(
         'invite',
-        login,
-        () => api.invite(orgId, { githubLogin: login }),
+        email,
+        () => api.invite(orgId, { email }),
         (data, invite) => ({
           ...data,
           invites: [

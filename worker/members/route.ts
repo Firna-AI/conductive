@@ -14,6 +14,7 @@ import {
 import type { Workspace } from '../../src/shared/workspaces'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError, requiredString } from '../http'
+import { createInvitationMailer, invitationLink } from '../invitation-mailer'
 import type { RequestContext } from '../security/gate'
 import { deleteOrg } from './deletion'
 import { cancelOrgInvite, inviteOrgMember } from './invites'
@@ -104,9 +105,19 @@ export async function membersRoute(
       orgId,
       actorId,
       dependencies.randomToken(),
-      requiredString(body?.githubLogin),
+      requiredString(body?.email),
       dependencies.now(),
     )
+    const mailer =
+      dependencies.invitationMailer ??
+      createInvitationMailer(env, dependencies.fetch)
+    await mailer.send({
+      id: invite.id,
+      email: invite.email,
+      orgName: context.org.name,
+      invitedBy: context.user.displayName ?? context.user.githubLogin,
+      link: invitationLink(env.APP_ORIGIN, invite.id),
+    })
     return Response.json({ invite }, { status: 201 })
   }
   const inviteId = childId(path, invitesPath(orgId))

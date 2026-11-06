@@ -1,0 +1,19 @@
+/* The name of an org shows beside its tile while the pointer or focus is on it. */
+.railHint {
+  display: none;
+}
+
+.railItem:hover .railHint,
+.railItem:focus-within .railHint {
+  display: block;
+}
+
+/* A page that stands alone on desktop, without the rail and the sidebar. */
+.standalone {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  height: var(--ui-screen-height);
+  overflow: hidden;
+  background: var(--ui-surface);
+}

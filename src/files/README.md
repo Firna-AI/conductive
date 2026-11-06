@@ -1,0 +1,211 @@
+# Files screens
+
+The Files screens show the files of a workspace branch. All files is a
+tree of every file. Changes lists the files that the branch changes
+against the base branch, under the totals of the change. A file opens as a
+page with rendered Markdown or text with line numbers and syntax colours.
+A changed file opens its unified diff. The requirements are in
+[Files and changes](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes).
+The visual spec is the `app/files` page of the
+[mockup catalogue](../../docs/mockups/README.md).
+
+The screens render data from the Worker only. They build against the fake
+API of [the browser fakes](../test-support/README.md) until the shell wires
+them, in Milestone 15i of the plan.
+
+## Integration
+
+The shell creates one `WorkspaceFiles` store for each open workspace. It
+injects the fetch of the app and the subscription of its workspace event
+socket:
+
+```ts
+const files = new WorkspaceFiles({
+  client: createFilesClient({ fetch, orgId, workspaceId }),
+  subscribe: (afterEventNumber, listener) =>
+    socket.subscribe(afterEventNumber, listener),
+})
+files.start() // when the workspace mounts
+files.stop() // when it unmounts
+```
+
+The first message of the subscription holds the stored history, and the
+store reads each message from `unknown`. The store reads the tree and the
+changes routes, then applies the file events of the stream in event order.
+It skips an event that it already has. After a gap in the event numbers,
+it subscribes again from its last event number. After a gap in the tree
+revisions, it reads the tree route again.
+
+The stored history and the live events change the open pages in the same
+way. An event names the paths whose file or diff it may change, and the
+open page of such a path reads again. Some events cannot name their paths:
+
+- a new full tree
+- a tree update that waits for a tree, or that the tree already holds
+- a change list without an earlier one
+
+After such an event, each open page reads its file or diff again. The
+store collects the changes of one message: a whole history, or one live
+event. Then it applies them once.
+
+The shell owns the workspace view on the Worker: the open tabs, the
+active tab, and the list. It passes them to the screens, with a
+`FilesNavigation`:
+
+- `href(target)` gives the address of a list, a file tab, or a diff tab.
+- `navigate(target)` handles a plain click. The shell updates the view
+  and its address. A click with a modifier key opens the address in a new
+  browser tab.
+
+The screens:
+
+- `FilesPanel` shows the All files, Changes, and Checks tabs and lists,
+  for the right column on desktop and the Files tab on a phone. The
+  `checks` prop takes the Checks list of the GitHub banner screens. The
+  `placeholder` prop replaces All files and Changes, for example with a
+  sandbox state.
+- `FilePage` shows one file tab. Markdown starts rendered, and its view
+  switch navigates to the same tab with the other mode.
+- `DiffPage` shows the diff of one changed file.
+- `FileTabItem` is the closable tab of a file or a diff, as a list item
+  for the tab row of the centre column on desktop. `onClose` asks the shell
+  to close the tab.
+
+A module worker parses the Markdown of a preview: its blocks, its inline
+content, and its link references. Vite bundles the worker, so the shell
+injects nothing for it. The worker loads from the origin of the app, so a
+Content-Security-Policy of the app must allow `worker-src 'self'`. Until
+the first parse arrives, the preview shows that the file opens. A new
+version of the file keeps the last rendered version on screen until its
+own parse arrives.
+
+When no worker can start or parse, the preview shows that the file didn't
+open, with Try again, as a failed read does. Try again parses the text in
+a new worker. A static render, as in a test, cannot wait for a worker. It
+passes `parseMarkdown` as `markdownParser` of `FileContent`, or as
+`parser` of `MarkdownView`, and the parse runs on the calling thread.
+
+Each screen takes `layout`: `desktop`, or `phone` with touch targets of at
+least 44 px. On a phone, a file page and a diff page link back to All
+files or Changes.
+
+Copy and Download take `targets`. The default, `browserTargets`, copies
+the original text with the clipboard of the browser, with each byte order
+mark of the file. The view and the line count leave out one leading mark.
+Its Download reads the download route of the client, `downloadHref(path)`,
+with the fetch of the browser and the session cookie. It saves the file
+from memory only when the route sends it. When the route refuses the file,
+the header shows that the download didn't start. The development page and
+the tests inject `fetchedDownload` with the fetch of the fake API, because
+the fake API serves no route that the browser can read. Pass the same
+`targets` object on each render, because a new object starts new Copy and
+Download states.
+
+The shell supplies the design tokens as `--ui-*` CSS variables and the
+`@firna/ui` theme provider, as `docs/mockups/src/theme.ts` builds them.
+
+## Safety
+
+File content, Markdown, paths, and diffs are untrusted. The screens show
+them as React text only. The Markdown renderer builds React elements from
+its own parse: HTML in a file shows as text, images show their alt text,
+and only absolute `http`, `https`, and `mailto` links become links. A link
+opens in a new tab with `noopener noreferrer`. Quotes and lists nest at
+most 16 levels deep, and deeper content shows as text. The parse runs in
+the worker, off the thread of the page, so a long or crafted file cannot
+stop the page.
+
+A run of more than 256 characters without a space renders as adjacent
+text nodes that end between whole graphemes. The text and its lines stay
+the same, and the browser lays the run out in linear time. Text with
+spaces stays one text node. The part length is a rendering detail, not a
+read limit.
+
+A table row with fewer cells than its header gets empty cells. All tables
+of one file, also in quotes and lists, add at most 65,536 empty cells.
+The row that would pass that count ends its table. From that row on, the
+rest of the file shows as text, as typed: with its line breaks, and with
+no Markdown. Each file starts with the whole count, so its cells stay in
+proportion to its size.
+
+A file or a diff over the read limit shows the size and the limit that
+the backend sends, and the terminal as the way to open it. The download
+route reads a file with the same limit, so a file page offers Download
+only after a read that fits. A binary diff links to its file tab in place
+of Download.
+
+## Development
+
+The development page runs the screens against `FakeApiServer`, with the
+mockup samples. From the repository root:
+
+```sh
+npm exec vite -- --config src/files/dev/vite.config.ts
+```
+
+Then open `http://127.0.0.1:5173/src/files/dev.html`. The address holds the
+state of the page:
+
+| Parameter  | Values                                                        |
+| ---------- | ------------------------------------------------------------- |
+| `layout`   | `desktop`, or `phone`                                         |
+| `theme`    | `dark`, or `light`                                            |
+| `list`     | `all`, `changes`, or `checks`                                 |
+| `tab`      | `file:preview:<path>`, `file:source:<path>`, or `diff:<path>` |
+| `scenario` | `mockup`, the mockup data, or `live`, which replays the updates |
+| `controls` | `off` hides the development controls                         |
+
+For example, `?list=changes&tab=diff:src/app/checkout/AddressForm.tsx`
+draws the diff of the mockups. `public/hero.png` is binary, with a binary
+diff at `?tab=diff:public/hero.png`. `public/catalog.json` is over the
+sample read limit, and
+`src/app/checkout/page.tsx` fails to read. `?tab=file:preview:README.md`
+parses its Markdown in the module worker, as the app does. The fixtures
+serve each file on its content and download routes with one sample limit,
+as the Worker does. Download saves the reply of the fake API, through
+`dev/dev-targets.ts`. The controls play
+the recorded updates, edit the open file, and switch the layout, the
+theme, and the data. The product build does not include the page.
+
+Run the tests with `npm run test -- src/files`. The `*.mounted.test.tsx`
+files mount the screens in happy-dom, with `mount-test-kit.ts`, as the
+GitHub banner tests do. The kit also starts a store, presses a control,
+and answers the Markdown worker with `parseMarkdown`. The other screen
+tests keep their static markup checks in Node.
+
+## Key code
+
+- `model/files-store.ts`: `WorkspaceFiles`, the live tree and changes of a
+  workspace, and `versionOf`, which grows when an event may change the
+  file or the diff of a path.
+- `model/files-sync.ts`: the merge rules of the routes and the stream.
+- `model/files-invalidation.ts`: `FilesInvalidation`, the changed paths and
+  the events without named paths of one message, applied to the versions
+  once.
+- `model/resource-loader.ts` and `model/follow-path.ts`: the read of one
+  file or diff, which drops stale replies and reads again after an event.
+- `api/files-client.ts`: `createFilesClient`, the file routes, with their
+  errors as `FilesError`, and the download address of a path.
+- `page/file-actions.ts`: Copy and Download, with `browserTargets`.
+  `page/fetched-download.ts` is the download that reads the route and
+  saves the file from memory, with the fetch of the browser or of the
+  fake API.
+- `api/parse-tree.ts`, `api/parse-changes.ts`, and `api/parse-events.ts`:
+  the parsers of the route bodies and the stream messages.
+- `navigation.ts`: `FilesTarget`, `FilesNavigation`, and the tab types of
+  the workspace view.
+- `panel/FilesPanel.tsx`, `page/FilePage.tsx`, `page/DiffPage.tsx`, and
+  `tabs/FileTabItem.tsx`: the screens.
+- `markdown/markdown-document.ts`: `parseMarkdown`, the whole parse of a
+  file: its blocks, then the inline content of each block.
+- `markdown/markdown-worker.ts` and `markdown/worker-parse.ts`: the module
+  worker that runs the parse, and its start from the view, which ends it.
+- `markdown/MarkdownView.tsx`: the safe renderer of a parsed document.
+  `parser` replaces the worker for a static render.
+- `code/`: the syntax colours and the code view.
+- `diff/`: the unified diff parser and view.
+- `dev/`: the development page, its Vite config, its fixtures, and its
+  Copy and Download targets.
+
+See [the shared contracts](../shared/README.md) for the file routes, the
+events, and the workspace view.

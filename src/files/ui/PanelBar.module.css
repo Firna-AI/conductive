@@ -1,0 +1,15 @@
+.bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  height: var(--ui-bar-height);
+  padding: 0 8px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  box-sizing: border-box;
+}
+
+.spacer {
+  flex: 1;
+}

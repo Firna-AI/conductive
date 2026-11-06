@@ -8,6 +8,7 @@ import {
 } from '../data/users'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import { saveVerifiedEmails } from '../members/verified-email-data'
 import { cookie, OAUTH_COOKIE, readCookie, SESSION_COOKIE } from './cookies'
 import { hash, sign, verify } from './crypto'
 import { GitHubClient } from './github'
@@ -88,6 +89,7 @@ export async function finishSignIn(
   ).authorizeWithTokens(code, stored.verifier, env, now)
   const user = await saveUser(env.DB, dependencies.randomToken(), profile, now)
   await saveGitHubTokens(env, user.id, tokens, now)
+  await saveVerifiedEmails(env.DB, user.id, profile.verifiedEmails)
   if (typeof stored.desktopChallenge === 'string') {
     return new Response(null, {
       status: 302,

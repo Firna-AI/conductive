@@ -49,7 +49,7 @@ function failureTitle(data: MembersData, failure: MembersFailure): string {
   }
   const invite = data.invites.find((item) => item.id === failure.target)
   return invite
-    ? `The invite to @${invite.githubLogin} is still open`
+    ? `The invite to ${invite.email} is still open`
     : 'The invite is still open'
 }
 
@@ -106,15 +106,15 @@ export type MembersTabProps = {
 }
 
 /**
- * The Members tab of the org settings. An admin invites a person by GitHub
- * login, changes the role of another member, removes another member, and
- * cancels an invite. A member who is not an admin sees the members, their
- * roles, and their workspaces, without those actions. Mount it in the page
- * column of the org settings, which spaces its two sections.
+ * The Members tab of the org settings. An admin invites a person by email,
+ * changes the role of another member, removes another member, and cancels
+ * an invite. A member who is not an admin sees the members, their roles,
+ * and their workspaces, without those actions. Mount it in the page column
+ * of the org settings, which spaces its two sections.
  *
  * The tab keys its state to the org, the viewer's role, and the viewer. When
  * one of them changes, it loads the members again, and an open question,
- * a typed login, and an error go. Old answers then call no callback.
+ * a typed email, and an error go. Old answers then call no callback.
  */
 export function MembersTab(props: MembersTabProps) {
   const { org, viewerId } = props

@@ -2,7 +2,8 @@ import { API_PATHS, type Org, type User } from '../../src/shared/api'
 import { findMembership } from '../data/orgs'
 import { sessionUser } from '../data/users'
 import type { AppEnv } from '../env'
-import { HttpError, isRecord } from '../http'
+import { HttpError } from '../http'
+import { readJsonObject } from '../http/json-body'
 import { readCookie, SESSION_COOKIE } from './cookies'
 import { verify } from './crypto'
 import { DESKTOP_ORIGIN, DESKTOP_SESSION_COOKIE } from './desktop-contract'
@@ -75,26 +76,8 @@ export async function gate(
     if (!org)
       throw new HttpError(404, 'org_not_found', 'The org is not available.')
   }
-  let body: Record<string, unknown> | null = null
-  if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
-    const contentType = request.headers
-      .get('Content-Type')
-      ?.split(';')[0]
-      .trim()
-      .toLowerCase()
-    if (contentType !== 'application/json') {
-      throw new HttpError(415, 'json_required', 'Send the request as JSON.')
-    }
-    let value: unknown
-    try {
-      value = await request.json()
-    } catch {
-      throw new HttpError(400, 'invalid_json', 'The request is not valid JSON.')
-    }
-    if (!isRecord(value)) {
-      throw new HttpError(400, 'invalid_json', 'Send a JSON object.')
-    }
-    body = value
-  }
+  const body = ['GET', 'HEAD', 'OPTIONS'].includes(request.method)
+    ? null
+    : await readJsonObject(request)
   return { user, sessionId, org, body }
 }

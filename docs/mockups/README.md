@@ -205,7 +205,8 @@ The product is free for now, as the user decided on 5 November 2026 in
 decision 45. So the screens show no plans, no billing, no seats, and no
 plan limits.
 
-- An admin invites members by their GitHub login. The roles are admin and
+- An admin invites a person by email, from decision 78. An open invite shows
+  its email, and a member row shows the GitHub login. The roles are admin and
   member, from decision 54. Only an admin manages the members, adds the
   Boat key, deletes the org, and reassigns a workspace. A member who is not
   an admin sees the members and each workspace's owner without actions, and
