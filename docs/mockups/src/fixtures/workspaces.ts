@@ -5,13 +5,21 @@ import type { SectionKey } from './sections'
 
 /**
  * What a workspace is doing. `working` means an agent turn runs, and
- * `unread` means a turn ended with output that the user has not seen. Both
- * run on a ready sandbox. `archived` means that its cloud computer is
- * deleted and its chat is read-only. The other values are the sandbox
- * states.
+ * `unread` means a turn ended with output that the user has not seen.
+ * `input` means that the turn waits for the user, such as for the
+ * approval of a command on a Mac. All three run on a ready sandbox.
+ * `archived` means that its cloud computer is deleted and its chat is
+ * read-only. The other values are the sandbox states.
  */
 export type ActivityStatus =
-  'working' | 'unread' | 'ready' | 'starting' | 'stopped' | 'error' | 'archived'
+  | 'working'
+  | 'input'
+  | 'unread'
+  | 'ready'
+  | 'starting'
+  | 'stopped'
+  | 'error'
+  | 'archived'
 
 /** The workspaces that a screen can show open. */
 export const openableWorkspaces = [

@@ -1,19 +1,14 @@
-import { productName } from '../../brand'
-import { Mark } from '../common/Mark'
+import { Lockup } from '../brand/Logo'
 import { ScreenLink } from '../common/ScreenLink'
 import styles from './Wordmark.module.css'
 
 /**
- * The mark and the name of the product. With `to` it links to that
- * page, such as the home page of the site.
+ * The lockup of the product: the tile and the name, in the version of the
+ * colour scheme. With `to` it links to that page, such as the home page of
+ * the site.
  */
 export function Wordmark(props: { to?: string }) {
-  const content = (
-    <>
-      <Mark />
-      <span className={styles.name}>{productName}</span>
-    </>
-  )
+  const content = <Lockup height={30} />
   if (!props.to) return <span className={styles.wordmark}>{content}</span>
   return (
     <ScreenLink className={styles.wordmark} to={props.to}>

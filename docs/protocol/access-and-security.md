@@ -110,8 +110,13 @@ says.
   each git operation. It proves itself with the workspace token.
 - Reason: a GitHub App user token expires after 8 hours, and the secrets
   of a sandbox change only at a resume.
-- Open decision 50 sets which repositories the token reaches, and whether
-  it acts as a person or as the app.
+- The token is a GitHub App user token of the person who sent the current
+  turn, so pushes and pull requests show as that person (decision 50).
+  The helper gets it fresh for each call, and the sandbox never stores
+  it.
+- A user token reaches every repository where that person installed the
+  GitHub App and has access. A limit to the org's repositories was
+  rejected for now, because GitHub cannot set it on a user token.
 
 ## Secrets that users enter
 

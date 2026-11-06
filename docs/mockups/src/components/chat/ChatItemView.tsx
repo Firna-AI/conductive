@@ -5,6 +5,7 @@ import type { ChatItem } from '../../fixtures/conversations'
 import { ActionButton } from '../common/actions'
 import { InlineText } from '../common/InlineText'
 import { Notice } from '../common/Notice'
+import { MacCommand } from './MacCommand'
 import { ToolGroup } from './ToolGroup'
 import { TurnEnd } from './TurnEnd'
 import styles from './ChatItemView.module.css'
@@ -49,6 +50,8 @@ export function ChatItemView(props: { item: ChatItem }) {
       )
     case 'tool':
       return <ToolGroup calls={[item]} />
+    case 'mac-command':
+      return <MacCommand request={item.request} state={item.state} />
     case 'turn-end':
       return <TurnEnd duration={item.duration} files={item.files} />
     case 'stopped':
