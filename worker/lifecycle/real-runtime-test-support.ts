@@ -1,4 +1,4 @@
-import { readFile, readdir, mkdir, mkdtemp } from 'node:fs/promises'
+import { mkdir, mkdtemp } from 'node:fs/promises'
 
 import {
   Miniflare,
@@ -15,6 +15,7 @@ import type { WorkspaceRuntimeFixture } from './workspace-runtime-test-worker'
 import { storeBoatKey } from '../sandbox/keys'
 import { SESSION_COOKIE } from '../security/cookies'
 import { sign } from '../security/crypto'
+import { applyMigrations } from '../test-support/migrations'
 
 export async function runtimeBundle(): Promise<string> {
   const output = await build({
@@ -120,19 +121,7 @@ export async function realRuntimeFixture(bundle: string) {
   let runtime = create()
   let bindings = await runtime.getBindings<RuntimeBindings>()
   const database = bindings.DB
-  const migrationDirectory = `${import.meta.dirname}/../../migrations`
-  for (const name of (await readdir(migrationDirectory))
-    .filter((name) => name.endsWith('.sql'))
-    .sort()) {
-    const source = await readFile(`${migrationDirectory}/${name}`, 'utf8')
-    await database.batch(
-      source
-        .split(';')
-        .map((sql) => sql.trim())
-        .filter(Boolean)
-        .map((sql) => database.prepare(sql)),
-    )
-  }
+  await applyMigrations(database)
   const env: AppEnv = {
     DB: database,
     APP_ORIGIN: 'https://app.conducting.test',
@@ -162,7 +151,14 @@ export async function realRuntimeFixture(bundle: string) {
       "INSERT INTO settings (org_id, org_image_name, updated_at) VALUES ('runtime-org', 'base-runtime-image', 0)",
     ),
   ])
-  await storeBoatKey(env, 'runtime-org', 'boat-first', boat.fetch, Date.now())
+  await storeBoatKey(
+    env,
+    'runtime-org',
+    'runtime-user',
+    'boat-first',
+    boat.fetch,
+    Date.now(),
+  )
   const sessionToken = await sign(
     { sessionId: 'runtime-browser-session', expiresAt: 4_000_000_000_000 },
     'session',

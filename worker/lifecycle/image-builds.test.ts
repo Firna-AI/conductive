@@ -164,6 +164,7 @@ it('streams build output before completion and keeps the good image after a fail
     await storeBoatKey(
       runtime.env,
       org.id,
+      user.id,
       'boat-first',
       boat.fetch,
       runtime.dependencies.now(),
