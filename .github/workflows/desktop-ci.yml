@@ -1,7 +1,11 @@
 name: Desktop
 
+# Pull requests run Apple silicon only. Pushes to main and
+# the primary branch, and release tags, also run Intel.
 on:
   push:
+    branches: [main, calummoore/conductor-alternative-architecture]
+    tags: ['v*']
     paths:
       - 'desktop/**'
       - 'worker/security/desktop-*'
@@ -23,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [macos-15, macos-15-intel]
+        runner: ${{ github.event_name == 'pull_request' && fromJSON('["macos-15"]') || fromJSON('["macos-15", "macos-15-intel"]') }}
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v7
