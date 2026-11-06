@@ -3755,14 +3755,19 @@ Depends on: 9
 Apply decision 65 B. The bounded reader of the Milestone 9 file read is
 the base.
 
-- [ ] Use one bounded body reader in the request gate, with a 1 MB limit
+- [x] Use one bounded body reader in the request gate, with a 1 MB limit
       for each JSON body. A larger body gets a 413 answer.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Share the content type check, bounded read, and JSON object check
+      in one function. Name it in the HTTP README for later callers.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
 - [ ] Use the same reader in the Boat transport, with a budget for each
       fixed Boat route above Boat's documented maximum for that route.
-- [ ] Test an oversized body at the gate and at a Boat route, with a
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Test an oversized body at the gate and at a Boat route, with a
       stream that counts its chunks. State the 1 MB limit in the access
-      protocol.
-- [ ] Run the complete gate.
+      protocol. Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Run the complete gate. Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
 
 ## Milestone 4d: Runner event limits
 

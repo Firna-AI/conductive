@@ -31,6 +31,8 @@ says.
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
+- Each JSON body at the app gate can contain at most 1 MB, or 1,000,000
+  UTF-8 bytes. A larger body gets HTTP 413 (decision 65).
 - Two routes of `app.conducting.build` need no sign-in: the health check,
   and the GitHub sign-in with its callback. The callback checks its
   `state` value instead.

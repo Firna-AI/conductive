@@ -1,0 +1,31 @@
+# Worker backend
+
+This Cloudflare Worker serves the browser API for Conducting.
+It checks sign-in and org access before it dispatches protected app requests.
+Durable Objects hold workspace state, and D1 holds shared records.
+The [security area](security/README.md) owns the app request gate and its JSON body limit.
+The [sandbox area](sandbox/README.md) owns the Boat adapter and encrypted org keys.
+
+## Development
+
+Run commands from the repository root with Node 24.
+Run `npm run dev` to serve the app and local Worker.
+Run `npm run typecheck` to generate Worker types and check the package.
+Run `npm run test -- worker/security worker/http` to check the request gate and bounded reader.
+The [test support area](test-support/README.md) supplies local D1 and fake providers.
+
+### Key Code
+
+- [app.ts](app.ts) exports the Worker HTTP handler.
+- [application.ts](application.ts) selects the host surface and applies the request gate.
+- [routes.ts](routes.ts) dispatches protected app routes.
+- [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
+- [http/json-body.ts](http/json-body.ts) owns the shared bounded JSON object request policy.
+- [http/bounded-body.ts](http/bounded-body.ts) collects body bytes and cancels on overflow.
+- [sandbox/transport.ts](sandbox/transport.ts) calls the fixed provider routes.
+
+### Related Docs
+
+- [Architecture](../docs/architecture.md)
+- [Access and security](../docs/protocol/access-and-security.md)
+- [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md)
