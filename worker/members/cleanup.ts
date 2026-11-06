@@ -1,5 +1,9 @@
 import type { AppDependencies, AppEnv } from '../env'
-import { keepCleanupLease, withCleanupLease } from './cleanup-lease'
+import {
+  cleanupBusy,
+  keepCleanupLease,
+  withCleanupLease,
+} from './cleanup-lease'
 import { deletedOrgProvider, ignoreAlreadyRemoved } from './cleanup-provider'
 import { stopDeletedOrg } from './deletion'
 import {
@@ -9,6 +13,7 @@ import {
   markResourceRemoved,
 } from './deletion-data'
 import { maintainDeletedOrg } from './maintenance'
+import { runLifecycleHook } from './lifecycle-runner'
 import {
   markWorkspaceStateDeleted,
   pendingWorkspaceStates,
@@ -82,14 +87,25 @@ export async function cleanupDeletedOrgs(
             org.id,
           )) {
             await keepCleanupLease(env, org.id, token, dependencies)
-            await hooks.deleteWorkspaceState(org.id, workspace.id)
-            await keepCleanupLease(env, org.id, token, dependencies)
-            await markWorkspaceStateDeleted(
-              env.DB,
+            const completed = await runLifecycleHook(
+              env,
               org.id,
-              workspace.id,
-              dependencies.now(),
+              token,
+              dependencies,
+              (ownership) =>
+                hooks.deleteWorkspaceState(org.id, workspace.id, ownership),
             )
+            if (
+              !(await markWorkspaceStateDeleted(
+                env.DB,
+                org.id,
+                workspace.id,
+                token,
+                completed.generation,
+                dependencies.now(),
+              ))
+            )
+              throw cleanupBusy()
           }
           if (!(await purgeOrgRecords(env.DB, org.id, token)))
             throw new Error('Org purge claim was lost')

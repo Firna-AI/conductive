@@ -1,3 +1,5 @@
+import type { LifecycleOwnership } from './lifecycle-contract'
+
 export interface WorkspaceDisk {
   workspaceId: string
   sandboxId: string
@@ -16,6 +18,7 @@ export interface DeletedOrgRetention {
 }
 
 export interface DeletedOrgMaintenance {
+  ownership: LifecycleOwnership
   orgId: string
   deletedAt: number
   deletesAt: number
@@ -27,6 +30,7 @@ export interface DeletedOrgMaintenance {
 }
 
 export interface RestoreOrgMaintenance {
+  ownership: LifecycleOwnership
   orgId: string
   requestId: string
   requestedByUserId: string
@@ -34,12 +38,14 @@ export interface RestoreOrgMaintenance {
   deletedAt: number
   deletesAt: number
   now: number
+  /** Every workspace receiver needs the Restore generation, including archived or sandbox-free workspaces. */
+  workspaceIds: readonly string[]
   workspaces: readonly WorkspaceDisk[]
 }
 
 export interface OrgMaintenanceHooks {
-  /** Plan decision-43 deadlines and perform only due retention. Await all calls. Keep normal access and agent work suspended. */
+  /** Fence every lifecycle write with ownership.generation. Renew cooperatively while making progress. */
   maintainDeletedOrg(input: DeletedOrgMaintenance): Promise<void>
-  /** Replace the org's timer plan idempotently. Check active org/current records before timers run. Start no sandbox here. */
+  /** Install this generation and timer plan atomically before activation. Reject older concurrent writes. Start no sandbox. */
   restoreOrgMaintenance(input: RestoreOrgMaintenance): Promise<void>
 }

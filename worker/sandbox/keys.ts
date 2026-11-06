@@ -63,23 +63,15 @@ export async function storeBoatKey(
   return boatKeyStatus(env.DB, orgId)
 }
 
-/** The key stays inside the adapter. Callers receive no plaintext credential. */
-export async function orgSandboxProvider(
+/** Internal server loader. Callers must authorize the org and its resource first. No plaintext credential leaves it. */
+export async function storedOrgSandboxProvider(
   env: AppEnv,
-  userId: string,
   orgId: string,
   fetch: HttpFetch,
+  missingKeyMessage: string,
 ): Promise<SandboxProvider> {
-  if (!(await findMembership(env.DB, orgId, userId))) {
-    throw new HttpError(404, 'org_not_found', 'The org is not available.')
-  }
   const stored = await readBoatKey(env.DB, orgId)
-  if (!stored)
-    throw new HttpError(
-      409,
-      'boat_key_required',
-      'Add the org’s Boat key to continue.',
-    )
+  if (!stored) throw new HttpError(409, 'boat_key_required', missingKeyMessage)
   const account: BoatAccount = {
     id: stored.accountId,
     type: stored.accountType,
@@ -90,4 +82,22 @@ export async function orgSandboxProvider(
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
   return new BoatClient(key, fetch, account)
+}
+
+/** The key stays inside the adapter. Callers receive no plaintext credential. */
+export async function orgSandboxProvider(
+  env: AppEnv,
+  userId: string,
+  orgId: string,
+  fetch: HttpFetch,
+): Promise<SandboxProvider> {
+  if (!(await findMembership(env.DB, orgId, userId))) {
+    throw new HttpError(404, 'org_not_found', 'The org is not available.')
+  }
+  return storedOrgSandboxProvider(
+    env,
+    orgId,
+    fetch,
+    'Add the org’s Boat key to continue.',
+  )
 }

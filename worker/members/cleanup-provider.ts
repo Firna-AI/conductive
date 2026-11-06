@@ -1,9 +1,8 @@
-import { readBoatKey } from '../data/boat-keys'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
-import { BoatClient } from '../sandbox/boat'
 import { ProviderError } from '../sandbox/errors'
-import { decrypt } from '../security/crypto'
+import { storedOrgSandboxProvider } from '../sandbox/keys'
+import type { SandboxProvider } from '../sandbox/provider'
 import { authorizedCleanup } from './deletion-data'
 
 /** Only deletion workers use this boundary. Active-org sandbox calls use sandbox/keys. */
@@ -12,24 +11,16 @@ export async function deletedOrgProvider(
   orgId: string,
   leaseToken: string,
   fetch: HttpFetch,
-) {
+): Promise<SandboxProvider> {
   const authorized = await authorizedCleanup(env.DB, orgId, leaseToken)
   if (!authorized)
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
-  const stored = await readBoatKey(env.DB, orgId)
-  if (!stored)
-    throw new HttpError(
-      409,
-      'boat_key_required',
-      'Replace the cloud computer key to continue.',
-    )
-  const account = { id: stored.accountId, type: stored.accountType }
-  const key = await decrypt(
-    stored.ciphertext,
-    JSON.stringify(['boat-key', orgId, account.type, account.id]),
-    env.BOAT_KEY_ENCRYPTION_KEY,
+  return storedOrgSandboxProvider(
+    env,
+    orgId,
+    fetch,
+    'Replace the cloud computer key to continue.',
   )
-  return new BoatClient(key, fetch, account)
 }
 
 export async function ignoreAlreadyRemoved(action: () => Promise<unknown>) {

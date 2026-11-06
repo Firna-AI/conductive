@@ -1,6 +1,10 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import { keepCleanupLease, withCleanupLease } from './cleanup-lease'
+import {
+  cleanupBusy,
+  keepCleanupLease,
+  withCleanupLease,
+} from './cleanup-lease'
 import { deletedOrgProvider, ignoreAlreadyRemoved } from './cleanup-provider'
 import {
   cleanupResources,
@@ -10,6 +14,7 @@ import {
   recordSuspendedResources,
 } from './deletion-data'
 import { maintainDeletedOrg } from './maintenance'
+import { runLifecycleHook } from './lifecycle-runner'
 import { requireOrgAdmin } from './permissions'
 import { cancelRestoreRequest } from './restore-data'
 import type { MembersHooks } from './route'
@@ -55,9 +60,24 @@ export async function stopDeletedOrg(
   hooks: Pick<MembersHooks, 'suspendOrg'>,
 ) {
   if (!suspended) {
-    await hooks.suspendOrg(orgId, await orgWorkspaceIds(env.DB, orgId))
-    await keepCleanupLease(env, orgId, token, dependencies)
-    await recordSuspendedResources(env.DB, orgId, token, dependencies.now())
+    const workspaceIds = await orgWorkspaceIds(env.DB, orgId)
+    const completed = await runLifecycleHook(
+      env,
+      orgId,
+      token,
+      dependencies,
+      (ownership) => hooks.suspendOrg(orgId, workspaceIds, ownership),
+    )
+    if (
+      !(await recordSuspendedResources(
+        env.DB,
+        orgId,
+        token,
+        completed.generation,
+        dependencies.now(),
+      ))
+    )
+      throw cleanupBusy()
   }
   const resources = (await cleanupResources(env.DB, orgId)).filter(
     (resource) =>

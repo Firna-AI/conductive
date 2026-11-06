@@ -79,17 +79,29 @@ export async function restoreOrgRecords(
   actorId: string,
   token: string,
   requestId: string,
+  generation: number,
   now: number,
 ) {
   const result = await db.batch([
     db
       .prepare(
-        `UPDATE orgs SET deleted_at = NULL, purge_after = NULL WHERE id = ? AND purge_after > ?
-       AND EXISTS (SELECT 1 FROM org_deletions WHERE org_id = ? AND lease_token = ? AND purge_started_at IS NULL
+        `UPDATE orgs SET deleted_at = NULL, purge_after = NULL WHERE id = ? AND purge_after > ? AND lifecycle_generation = ?
+       AND EXISTS (SELECT 1 FROM org_deletions WHERE org_id = ? AND lease_token = ? AND lease_until > ? AND purge_started_at IS NULL
          AND restore_request_id = ? AND restore_requested_by_user_id = ?)
        AND EXISTS (SELECT 1 FROM org_members WHERE org_id = ? AND user_id = ? AND role = 'admin')`,
       )
-      .bind(orgId, now, orgId, token, requestId, actorId, orgId, actorId),
+      .bind(
+        orgId,
+        now,
+        generation,
+        orgId,
+        token,
+        now,
+        requestId,
+        actorId,
+        orgId,
+        actorId,
+      ),
     db
       .prepare(
         'DELETE FROM org_deletions WHERE org_id = ? AND EXISTS (SELECT 1 FROM orgs WHERE id = ? AND deleted_at IS NULL)',

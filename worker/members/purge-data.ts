@@ -1,3 +1,5 @@
+import { lifecycleWritePredicate } from './lifecycle-data'
+
 /** The caller holds a cleanup lease and has removed all provider and Durable Object resources. */
 export async function purgeOrgRecords(
   db: D1Database,
@@ -44,12 +46,15 @@ export async function markWorkspaceStateDeleted(
   db: D1Database,
   orgId: string,
   workspaceId: string,
+  token: string,
+  generation: number,
   now: number,
 ) {
-  await db
+  const result = await db
     .prepare(
-      'UPDATE org_deletion_workspaces SET state_deleted_at = ? WHERE org_id = ? AND workspace_id = ?',
+      `UPDATE org_deletion_workspaces SET state_deleted_at = ? WHERE org_id = ? AND workspace_id = ? AND ${lifecycleWritePredicate}`,
     )
-    .bind(now, orgId, workspaceId)
+    .bind(now, orgId, workspaceId, orgId, token, now, generation)
     .run()
+  return result.meta.changes > 0
 }

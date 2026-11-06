@@ -38,6 +38,47 @@ An active org's members can still read key status for the composer.
 The existing key store keeps encryption and same-account protection.
 A provider authentication refusal under a cleanup lease returns
 `boat_key_required` and asks the current admin to replace the cloud computer key.
+Both authorized provider paths use `storedOrgSandboxProvider` in `worker/sandbox/keys.ts`.
+Each caller first authorizes its org and resource.
+The loader returns `SandboxProvider` and keeps the encryption context and plaintext key private.
+Each caller supplies its own missing-key text.
+
+## Lifecycle ownership
+
+`runLifecycleHook` runs every lifecycle mutation callback.
+It covers `suspendOrg`, `maintainDeletedOrg`, `restoreOrgMaintenance`, and `deleteWorkspaceState`.
+`readWorkspace` remains a normal read.
+Each call gets a new generation from `orgs.lifecycle_generation` under a valid cleanup lease.
+The increment and lease condition share one atomic SQL statement.
+The counter survives Restore and later Delete cycles.
+Lease tokens and generations stay internal.
+
+Each hook receives `LifecycleOwnership` with its org ID, generation, and `renew` capability.
+Send the org and generation to lifecycle receivers. Keep the renewal capability in the server adapter.
+The receiver must install the incoming generation atomically before it starts slow work.
+It must reject an older generation at every actual lifecycle write.
+Read the latest receiver fence and apply each change in one storage transaction.
+`applyLifecycleMutation` supplies the synchronous fence check and mutation step inside that transaction.
+Persist the fence and the changed payload together.
+After an await, read the fence again inside the next write transaction.
+A prior lease check or a cached fence cannot authorize a later write.
+The helper rejects a generation from another org.
+Concurrent calls must be safe, including a late call whose lease has expired.
+
+Restore must install its generation in every org, build, and workspace receiver before its callback returns.
+Its input includes every workspace ID, including archived and sandbox-free workspaces.
+Install the generation even when no timer or payload needs changing.
+Only then can Members activate the org with a guarded SQL write for that same generation.
+A late older suspension must therefore fail at its receiver write.
+Payload deletion must preserve its rejection of stale calls while older calls can still arrive.
+
+A hook calls `ownership.renew()` as it makes progress.
+Renewal requires the current generation, current lease token, and an unexpired lease.
+There is no timer, interval, or background heartbeat for a hung hook.
+The capability closes when its callback returns or loses ownership.
+Retention capabilities use that same call ownership.
+Their D1 writes and lifecycle checkpoints also check the generation atomically.
+Cooperative renewal changes no Restore deadline.
 
 Supply all five `MembersHooks` callbacks:
 
@@ -50,10 +91,11 @@ Supply all five `MembersHooks` callbacks:
   It must close existing browser and runner access.
   It must disable normal idle, refresh, and disk keepalive timers.
   It must handle builds even when the workspace list is empty.
-  It must finish before it returns. Repeated calls must be safe.
+  It must finish before it returns. Concurrent and repeated writes must honor their generation.
   Members then owns the deleted-org maintenance schedule through the next hook.
 - `maintainDeletedOrg` gets the real deletion dates and each retained workspace
   disk's real stop date and next keepalive date.
+  Its input carries the call ownership and renewal capability.
   It plans the normal decision-43 deadline through `retention.schedule`.
   It keeps an existing deadline unchanged.
   A newly stopped disk must receive a deadline.
@@ -66,15 +108,17 @@ Supply all five `MembersHooks` callbacks:
   A hook failure keeps the org pending for retry.
 - `restoreOrgMaintenance` receives the Restore request ID, requesting admin,
   original deletion deadline, and current disk schedules.
+  It also receives the call ownership and the complete workspace ID list.
   It returns disk and org-refresh timers to the active lifecycle.
   It must arm these timers before it returns.
   The timers must check active org state and current disk/settings records before running.
   It must keep normal access closed and start no sandbox during the handoff.
   Replace older timer plans for the same org.
-  Repeated calls for the same request ID must be safe.
+  Concurrent calls must reject older generations, even when request IDs match.
   An unopened workspace must get maintenance after activation.
 - `deleteWorkspaceState` removes all workspace Durable Object state and any
-  other external workspace data. Repeated calls must be safe.
+  other external workspace data under its call generation.
+  Its receiver must reject stale concurrent removals and writes.
 
 Delete records the deletion date and revokes previews before any hook or provider call.
 It preserves an already-stopped disk's stop and keepalive dates.
@@ -146,8 +190,12 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - `invites.ts` manages pending invitations and explicit acceptance.
 - `ownership.ts` supplies creation ownership and workspace reassignment.
 - `deletion.ts` implements Delete, suspension, and provider stops.
-- `maintenance.ts` supplies scoped retention capabilities and validates schedules.
+- `maintenance.ts` runs lifecycle maintenance and validates schedules.
+- `retention.ts` supplies the scoped retention capabilities.
 - `maintenance-contract.ts` defines the required lifecycle maintenance callbacks.
+- `lifecycle-runner.ts` runs all lifecycle callbacks with a generation and cooperative renewal.
+- `lifecycle-contract.ts` defines ownership and the receiver's atomic mutation helper.
+- `lifecycle-data.ts` allocates generations and guards lifecycle writes and renewal.
 - `restore.ts` implements the retryable Restore handoff.
 - `cleanup-lease.ts` scopes cleanup work and maps refused-key errors.
 - `key-maintenance.ts` supplies deleted-org key repair permission.

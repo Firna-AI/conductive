@@ -1,7 +1,7 @@
 import { activeAdminPredicate } from './org-data'
+import { CLEANUP_LEASE_MS, lifecycleWritePredicate } from './lifecycle-data'
 
 export const RESTORE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
-const LEASE_MS = 5 * 60 * 1000
 
 export function authorizedCleanup(
   db: D1Database,
@@ -66,7 +66,7 @@ export function acquireCleanupLease(
      WHERE org_id = ? AND (lease_token IS NULL OR lease_until <= ?)
      RETURNING suspended_at AS suspendedAt, purge_started_at AS purgeStartedAt`,
     )
-    .bind(token, now + LEASE_MS, orgId, now)
+    .bind(token, now + CLEANUP_LEASE_MS, orgId, now)
     .first<{ suspendedAt: number | null; purgeStartedAt: number | null }>()
 }
 
@@ -80,7 +80,7 @@ export async function renewCleanupLease(
     .prepare(
       'UPDATE org_deletions SET lease_until = ? WHERE org_id = ? AND lease_token = ? AND lease_until > ?',
     )
-    .bind(now + LEASE_MS, orgId, token, now)
+    .bind(now + CLEANUP_LEASE_MS, orgId, token, now)
     .run()
   return result.meta.changes > 0
 }
@@ -111,34 +111,38 @@ export async function recordSuspendedResources(
   db: D1Database,
   orgId: string,
   token: string,
+  generation: number,
   now: number,
 ) {
-  await db.batch([
+  const ownership = [orgId, token, now, generation]
+  const result = await db.batch([
     db
       .prepare(
-        'INSERT OR IGNORE INTO org_deletion_workspaces (org_id, workspace_id) SELECT org_id, id FROM workspaces WHERE org_id = ?',
+        `INSERT OR IGNORE INTO org_deletion_workspaces (org_id, workspace_id) SELECT org_id, id
+         FROM workspaces WHERE org_id = ? AND ${lifecycleWritePredicate}`,
       )
-      .bind(orgId),
+      .bind(orgId, ...ownership),
     db
       .prepare(
         `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id, sort_order)
-       SELECT org_id, 'sandbox', sandbox_id, 0 FROM workspaces WHERE org_id = ? AND sandbox_id IS NOT NULL
-       UNION ALL SELECT org_id, 'sandbox', sandbox_id, 1 FROM image_builds WHERE org_id = ? AND sandbox_id IS NOT NULL`,
+       SELECT org_id, 'sandbox', sandbox_id, 0 FROM workspaces WHERE org_id = ? AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}
+       UNION ALL SELECT org_id, 'sandbox', sandbox_id, 1 FROM image_builds WHERE org_id = ? AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}`,
       )
-      .bind(orgId, orgId),
+      .bind(orgId, ...ownership, orgId, ...ownership),
     db
       .prepare(
         `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id)
-       SELECT org_id, 'snapshot', org_image_name FROM settings WHERE org_id = ? AND org_image_name IS NOT NULL
-       UNION ALL SELECT org_id, 'snapshot', snapshot_name FROM image_builds WHERE org_id = ? AND snapshot_name IS NOT NULL`,
+       SELECT org_id, 'snapshot', org_image_name FROM settings WHERE org_id = ? AND org_image_name IS NOT NULL AND ${lifecycleWritePredicate}
+       UNION ALL SELECT org_id, 'snapshot', snapshot_name FROM image_builds WHERE org_id = ? AND snapshot_name IS NOT NULL AND ${lifecycleWritePredicate}`,
       )
-      .bind(orgId, orgId),
+      .bind(orgId, ...ownership, orgId, ...ownership),
     db
       .prepare(
-        'UPDATE org_deletions SET suspended_at = ? WHERE org_id = ? AND lease_token = ?',
+        `UPDATE org_deletions SET suspended_at = ? WHERE org_id = ? AND ${lifecycleWritePredicate}`,
       )
-      .bind(now, orgId, token),
+      .bind(now, orgId, ...ownership),
   ])
+  return result[3].meta.changes > 0
 }
 
 export interface CleanupResource {
@@ -165,28 +169,34 @@ export async function markResourceStopped(
   orgId: string,
   id: string,
   now: number,
+  ownership?: { token: string; generation: number },
 ) {
-  await db.batch([
+  const guard = ownership ? ` AND ${lifecycleWritePredicate}` : ''
+  const bindings = ownership
+    ? [orgId, ownership.token, now, ownership.generation]
+    : []
+  const result = await db.batch([
     db
       .prepare(
-        "UPDATE org_deletion_resources SET stopped_at = ? WHERE org_id = ? AND kind = 'sandbox' AND resource_id = ?",
+        `UPDATE org_deletion_resources SET stopped_at = ? WHERE org_id = ? AND kind = 'sandbox' AND resource_id = ?${guard}`,
       )
-      .bind(now, orgId, id),
+      .bind(now, orgId, id, ...bindings),
     db
       .prepare(
         `UPDATE workspaces SET state = CASE WHEN archived_at IS NULL THEN 'stopped' ELSE state END,
        stopped_at = CASE WHEN state = 'stopped' AND stopped_at IS NOT NULL THEN stopped_at ELSE ? END,
        next_disk_keepalive_at = CASE WHEN state = 'stopped' THEN next_disk_keepalive_at ELSE NULL END,
-       updated_at = ? WHERE org_id = ? AND sandbox_id = ?`,
+       updated_at = ? WHERE org_id = ? AND sandbox_id = ?${guard}`,
       )
-      .bind(now, now, orgId, id),
+      .bind(now, now, orgId, id, ...bindings),
     db
       .prepare(
         `UPDATE image_builds SET state = 'failed', completed_at = ?, error = 'The org was deleted.'
-       WHERE org_id = ? AND sandbox_id = ? AND state = 'running'`,
+       WHERE org_id = ? AND sandbox_id = ? AND state = 'running'${guard}`,
       )
-      .bind(now, orgId, id),
+      .bind(now, orgId, id, ...bindings),
   ])
+  return result[0].meta.changes > 0
 }
 
 export async function markResourceRemoved(

@@ -17,6 +17,7 @@ import { HttpError, requiredString } from '../http'
 import type { RequestContext } from '../security/gate'
 import { deleteOrg } from './deletion'
 import { cancelOrgInvite, inviteOrgMember } from './invites'
+import type { LifecycleOwnership } from './lifecycle-contract'
 import type { OrgMaintenanceHooks } from './maintenance-contract'
 import { changeMemberRole, listMembers, removeOrgMember } from './membership'
 import { renameOrg, visibleOrgs } from './org-data'
@@ -30,10 +31,18 @@ export interface MembersHooks extends OrgMaintenanceHooks {
     workspaceId: string,
     userId: string,
   ): Promise<Workspace>
-  /** Drain starts/builds and close access. Deleted maintenance owns disk retention until the Restore handoff. */
-  suspendOrg(orgId: string, workspaceIds: readonly string[]): Promise<void>
-  /** Idempotently remove all Durable Object state and external data for this workspace. */
-  deleteWorkspaceState(orgId: string, workspaceId: string): Promise<void>
+  /** Fence every lifecycle write with ownership.generation. Concurrent calls must reject older generations. */
+  suspendOrg(
+    orgId: string,
+    workspaceIds: readonly string[],
+    ownership: LifecycleOwnership,
+  ): Promise<void>
+  /** Atomically fence payload removal. Preserve rejection of stale concurrent lifecycle writes. */
+  deleteWorkspaceState(
+    orgId: string,
+    workspaceId: string,
+    ownership: LifecycleOwnership,
+  ): Promise<void>
 }
 
 export async function membersRoute(

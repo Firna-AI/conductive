@@ -28,9 +28,9 @@ it('hides a deleted org from members and restores stopped workspaces without a p
   const { org, admin, member, client } = await deletionFixture(harness)
   const callsBeforeSuspension: number[] = []
   const suspendOrg = client.hooks.suspendOrg
-  client.hooks.suspendOrg = async (orgId, workspaceIds) => {
+  client.hooks.suspendOrg = async (orgId, workspaceIds, ownership) => {
     callsBeforeSuspension.push(harness.boat.requests.length)
-    await suspendOrg(orgId, workspaceIds)
+    await suspendOrg(orgId, workspaceIds, ownership)
   }
   const path = deleteOrgPath(org.id)
   expect(

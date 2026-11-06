@@ -1,4 +1,5 @@
 import type { WorkspaceDisk } from './maintenance-contract'
+import { lifecycleWritePredicate } from './lifecycle-data'
 
 export async function deletedOrgDates(db: D1Database, orgId: string) {
   return db
@@ -33,13 +34,16 @@ export async function scheduleDisk(
   token: string,
   workspaceId: string,
   nextKeepaliveAt: number,
+  generation: number,
+  now: number,
 ) {
   const result = await db
     .prepare(
       `UPDATE workspaces SET next_disk_keepalive_at = ? WHERE org_id = ? AND id = ? AND archived_at IS NULL
      AND state = 'stopped' AND stopped_at < ?
      AND (next_disk_keepalive_at IS NULL OR next_disk_keepalive_at = ?)
-     AND EXISTS (SELECT 1 FROM org_deletions WHERE org_id = ? AND lease_token = ? AND purge_started_at IS NULL)`,
+     AND EXISTS (SELECT 1 FROM org_deletions WHERE org_id = ? AND purge_started_at IS NULL)
+     AND ${lifecycleWritePredicate}`,
     )
     .bind(
       nextKeepaliveAt,
@@ -48,7 +52,10 @@ export async function scheduleDisk(
       nextKeepaliveAt,
       nextKeepaliveAt,
       orgId,
+      orgId,
       token,
+      now,
+      generation,
     )
     .run()
   return result.meta.changes > 0
@@ -59,25 +66,32 @@ export async function beginDiskRestart(
   orgId: string,
   token: string,
   sandboxId: string,
+  generation: number,
+  now: number,
 ) {
-  await db
+  const result = await db
     .prepare(
       `UPDATE org_deletion_resources SET stopped_at = NULL WHERE org_id = ? AND resource_id = ? AND kind = 'sandbox'
-     AND EXISTS (SELECT 1 FROM org_deletions WHERE org_id = ? AND lease_token = ?)`,
+     AND ${lifecycleWritePredicate}`,
     )
-    .bind(orgId, sandboxId, orgId, token)
+    .bind(orgId, sandboxId, orgId, token, now, generation)
     .run()
+  return result.meta.changes > 0
 }
 
 export async function markDiskResumed(
   db: D1Database,
   orgId: string,
   workspaceId: string,
+  token: string,
+  generation: number,
+  now: number,
 ) {
-  await db
+  const result = await db
     .prepare(
-      "UPDATE workspaces SET state = 'starting' WHERE org_id = ? AND id = ?",
+      `UPDATE workspaces SET state = 'starting' WHERE org_id = ? AND id = ? AND ${lifecycleWritePredicate}`,
     )
-    .bind(orgId, workspaceId)
+    .bind(orgId, workspaceId, orgId, token, now, generation)
     .run()
+  return result.meta.changes > 0
 }

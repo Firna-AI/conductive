@@ -2,6 +2,8 @@ import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { keepCleanupLease, withCleanupLease } from './cleanup-lease'
 import { stopDeletedOrg } from './deletion'
+import { orgWorkspaceIds } from './deletion-data'
+import { runLifecycleHook } from './lifecycle-runner'
 import { maintainDeletedOrg } from './maintenance'
 import { deletedOrgDates, workspaceDisks } from './maintenance-data'
 import { requireOrgAdmin } from './permissions'
@@ -62,13 +64,24 @@ export async function finishPendingRestore(
   await maintainDeletedOrg(env, orgId, token, dependencies, hooks, 'restore')
   const dates = await deletedOrgDates(env.DB, orgId)
   if (!dates) throw restoreExpired()
-  await hooks.restoreOrgMaintenance({
+  const workspaces = await workspaceDisks(env.DB, orgId)
+  const workspaceIds = await orgWorkspaceIds(env.DB, orgId)
+  const installed = await runLifecycleHook(
+    env,
     orgId,
-    ...request,
-    ...dates,
-    now: dependencies.now(),
-    workspaces: await workspaceDisks(env.DB, orgId),
-  })
+    token,
+    dependencies,
+    (ownership) =>
+      hooks.restoreOrgMaintenance({
+        ownership,
+        orgId,
+        ...request,
+        ...dates,
+        now: dependencies.now(),
+        workspaceIds,
+        workspaces,
+      }),
+  )
   await keepCleanupLease(env, orgId, token, dependencies)
   if (
     !(await restoreOrgRecords(
@@ -77,6 +90,7 @@ export async function finishPendingRestore(
       request.requestedByUserId,
       token,
       request.requestId,
+      installed.generation,
       dependencies.now(),
     ))
   )
