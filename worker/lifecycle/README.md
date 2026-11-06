@@ -136,10 +136,10 @@ The `fetch` of the class opens the workspace event socket at
 upgrade request without changes, because the object runs the browser gate
 itself. The socket sends the stored history first, then each new event.
 
-`WorkspaceEventJournal` in [`durable-journal.ts`](durable-journal.ts)
-numbers all events of a workspace with one counter. This folder adds the
-`workspace.updated` and `start.updated` events. The chat backend adds its
-events with `append` on the same journal.
+`WorkspaceEventJournal` in [`durable-journal.ts`](durable-journal.ts) keeps
+private lifecycle replay state. The production `Workspace` sends its
+`workspace.updated` and `start.updated` events to `WorkspaceChat`. Chat
+stores and numbers the public stream, with chat and lifecycle events.
 
 ### Builds and refreshes
 

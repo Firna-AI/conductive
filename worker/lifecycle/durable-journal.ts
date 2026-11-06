@@ -9,7 +9,7 @@ import type { WorkspaceResponse } from '../../src/shared/workspaces'
 const COUNTER = 'workspace:events:counter'
 const PREFIX = 'workspace:events:record:'
 
-/** Milestone 7 appends chat events here, using the same counter and journal. */
+/** Keeps lifecycle replay state. WorkspaceChat assigns the public event numbers. */
 export class WorkspaceEventJournal {
   private readonly storage: WorkspaceStorage
   private readonly broadcast: (event: WorkspaceEventEnvelope) => Promise<void>
