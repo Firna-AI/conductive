@@ -2509,8 +2509,11 @@ runner? can we make it rust not node for the agent runner".
 - **Left out:** Python and its SDK, because it is neither the user's usual
   stack nor faster to build.
 - **Recommendation:** D.
-- **Chosen:** A, by the user on 6 November 2026. The runner stays in Node,
-  with no planned move to Rust.
+- **Chosen:** D, by the user on 6 November 2026. The user first chose A,
+  then changed the answer to D the same day. The runner is a Node program
+  now. It moves to option C, a Rust runner with a small Node helper for
+  the two SDKs, with the Rust backend move of decision 61, as
+  `plans/follow-ups/move-backend-to-rust-and-postgres.md` says.
 
 ## Design
 

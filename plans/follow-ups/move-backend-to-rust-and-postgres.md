@@ -4,7 +4,7 @@
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-06, from `calummoore/conductor-alternative-architecture`, plan decision 61, option E.
 - **Location:** `worker/`, `migrations/`, and `wrangler.jsonc`.
-- **Reason:** The user chose on 6 November 2026 to ship the first usable release on the Cloudflare stack, and to move to Rust and Postgres after it.
+- **Reason:** The user chose on 6 November 2026 to ship the first usable release on the Cloudflare stack, and to move to Rust and Postgres after it. The same day, plan decision 63 D added the agent runner to this move.
 
 - **Terms:**
   - **Durable Object:** a small stateful Cloudflare server. The app runs one for each workspace, for the live chat and the agent runner's connection.
@@ -24,5 +24,6 @@
 - **Left out:** Rust compiled for Workers, because its tools are thinner and it gives neither a normal Rust server nor the usual Postgres setup.
 - **Wider fix:** D.
 - **Previous examples:** The `rust`, `databases`, and `shared-types` skills.
-- **Recommendation:** D. One Rust server keeps one backend to run, and the contracts of Milestone 4a fix its boundaries with the web app and the runner.
+- **The agent runner:** with the backend, move the runner on each cloud computer to Rust, as option C of plan decision 63 says. The Rust runner handles the connection, the numbered events and their resends, the file watching, and git. A small Node helper runs only the Claude Agent SDK and the Codex SDK, because those exist only in TypeScript and Python. The two talk over JSON lines.
+- **Recommendation:** D, with the runner as above. One Rust server keeps one backend to run, and the contracts of Milestone 4a fix its boundaries with the web app and the runner.
 - **Action:** fix after merge, apply D, because the user chose on 6 November 2026 to move after the first usable release.
