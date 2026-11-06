@@ -3827,16 +3827,16 @@ Depends on: 4a
 
 Depends on: 4a
 
-- [ ] Add prompt, message during a turn, interrupt, and model and effort
-      endpoints. The Durable Object forwards them to the runner.
-- [ ] Pass the sender's agent login to the runner for each turn, and start
-      the agent again when the sender changes, as decision 49 says.
-- [ ] Keep each session on one agent. A model of the other agent opens a
-      new session with the draft, as decision 51 says.
-- [ ] Map the SDK events to our event type, store them, and push them to
-      the open tabs over a WebSocket.
-- [ ] Test the mapping against recorded SDK events, and the resend after
-      a dropped connection, with the fake runner of Milestone 4a.
+- [x] Add prompt, message during a turn, interrupt, and model and effort
+      endpoints. The Durable Object forwards them to the runner. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Pass the sender's agent login to the runner for each turn, and start
+      the agent again when the sender changes, as decision 49 says. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Keep each session on one agent. A model of the other agent opens a
+      new session with the draft, as decision 51 says. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Map the SDK events to our event type, store them, and push them to
+      the open tabs over a WebSocket. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
+- [x] Test the mapping against recorded SDK events, and the resend after
+      a dropped connection, with the fake runner of Milestone 4a. Branch: `conductor/boat-native-remote-workspaces-milestone-7`.
 
 ## Milestone 7s: Runner event limits in the workspace
 
