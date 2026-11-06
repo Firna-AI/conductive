@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import type { ChatItem } from '../../fixtures/conversations'
+import type { PersonKey } from '../../fixtures/members'
 import type { StartingLog } from '../../fixtures/starting'
 import { classes } from '../common/classes'
 import { SandboxBar, type SandboxProblem } from '../workspace/SandboxNotice'
@@ -27,6 +28,8 @@ export function ChatPane(props: {
   empty?: ReactNode
   /** A message above the composer, such as a failed create. */
   notice?: ReactNode
+  /** The person signed in. A stopped turn says "You" if they pressed Stop. */
+  viewer: PersonKey
   viewport: Viewport
 }) {
   const empty = props.items.length === 0 && !props.starting
@@ -49,7 +52,11 @@ export function ChatPane(props: {
               entry.kind === 'tools' ? (
                 <ToolGroup calls={entry.calls} key={entry.id} />
               ) : (
-                <ChatItemView item={entry.item} key={entry.item.id} />
+                <ChatItemView
+                  item={entry.item}
+                  key={entry.item.id}
+                  viewer={props.viewer}
+                />
               ),
             )}
             {props.starting ? <StartingCard log={props.starting} /> : null}

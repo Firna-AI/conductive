@@ -1,0 +1,201 @@
+import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+
+import { terminalPaths } from '../../src/shared/terminal'
+import { createToolsHarness, type ToolsHarness } from '../previews/test-support'
+import { decrypt } from '../security/crypto'
+import { TEST_TIME } from '../test-support/harness'
+import { createTerminalHandler } from './handler'
+import { installTerminalService, startWorkspaceTerminal } from './service'
+
+let harness: ToolsHarness
+beforeAll(async () => {
+  harness = await createToolsHarness()
+})
+beforeEach(async () => {
+  await harness.resetTools()
+})
+afterAll(async () => {
+  await harness.dispose()
+})
+
+it('installs an enabled ttyd service without an image password and starts with a workspace secret in run storage', async () => {
+  const seed = await harness.seed()
+  const commands: string[] = []
+  await installTerminalService(
+    {
+      runCommand: async (_id, command) => {
+        commands.push(command)
+        return { exitCode: 0, stdout: '', stderr: '', timedOut: false }
+      },
+    },
+    'build-sandbox',
+  )
+  expect(commands).toHaveLength(1)
+  expect(commands[0].startsWith("sudo -n -- /bin/sh -c '")).toBe(true)
+  expect(commands[0]).toContain('systemctl enable conducting-terminal.service')
+  expect(commands[0]).toContain(
+    'ExecStartPre=+/usr/local/lib/conducting/terminal-password',
+  )
+  expect(commands[0]).toContain('--writable')
+  expect(commands[0]).toContain('User=user')
+  expect(commands[0]).toContain('WorkingDirectory=/home/user')
+  expect(commands[0]).toContain('--interface 0.0.0.0')
+  expect(commands[0]).toContain('--credential')
+  await startWorkspaceTerminal(
+    harness.env,
+    seed.orgId,
+    seed.workspaceId,
+    harness.dependencies,
+  )
+  const row = await harness.env.DB.prepare(
+    'SELECT ciphertext FROM terminal_credentials WHERE workspace_id = ?',
+  )
+    .bind(seed.workspaceId)
+    .first<{ ciphertext: string }>()
+  expect(row?.ciphertext.startsWith('v1.')).toBe(true)
+  const command: { command: string } = await harness.requests[0].json()
+  expect(command.command).not.toContain('/run/conducting-terminal/password')
+  expect(new URL(harness.requests[1].url).searchParams.get('path')).toBe(
+    '/run/conducting-terminal/password',
+  )
+  expect(command.command).toContain(
+    'systemctl start conducting-terminal.service',
+  )
+  expect(command.command).not.toContain('/etc/conducting')
+  expect(commands[0]).not.toContain(row?.ciphertext)
+  await harness.env.DB.prepare(
+    `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, name, branch,
+     sandbox_id, state, created_at, updated_at)
+     SELECT 'workspace-two', org_id, repository_id, owner_user_id, 'Other', 'octocat/other',
+     'bx_two', 'starting', created_at, updated_at FROM workspaces WHERE id = ?`,
+  )
+    .bind(seed.workspaceId)
+    .run()
+  await startWorkspaceTerminal(
+    harness.env,
+    seed.orgId,
+    'workspace-two',
+    harness.dependencies,
+  )
+  const otherCommand: { command: string } = await harness.requests[2].json()
+  expect(otherCommand.command).toBe(command.command)
+  expect(harness.requests[2].url).not.toBe(harness.requests[0].url)
+  expect(
+    await harness.env.DB.prepare(
+      'SELECT COUNT(*) AS count FROM terminal_credentials',
+    ).first<number>('count'),
+  ).toBe(2)
+})
+
+it('returns ready, starting, and stopped terminal states without exposing a password', async () => {
+  const seed = await harness.seed()
+  await startWorkspaceTerminal(
+    harness.env,
+    seed.orgId,
+    seed.workspaceId,
+    harness.dependencies,
+  )
+  const handler = createTerminalHandler(harness.env, harness.dependencies)
+  const path = terminalPaths.connection(seed.orgId, seed.workspaceId)
+  const ready = await handler.fetch(seed.request(path))
+  expect(ready.status).toBe(200)
+  expect(await ready.json()).toEqual({
+    state: 'ready',
+    protocol: 'tty',
+    socketPath: terminalPaths.socket(seed.orgId, seed.workspaceId),
+  })
+  for (const state of ['starting', 'stopped']) {
+    await harness.env.DB.prepare('UPDATE workspaces SET state = ? WHERE id = ?')
+      .bind(state, seed.workspaceId)
+      .run()
+    const response = await handler.fetch(seed.request(path))
+    expect(await response.json()).toEqual({ state, socketPath: null })
+  }
+  expect(harness.requests).toHaveLength(2)
+})
+
+it('authenticates the ttyd handshake on the server and counts only terminal input as activity', async () => {
+  const seed = await harness.seed()
+  await startWorkspaceTerminal(
+    harness.env,
+    seed.orgId,
+    seed.workspaceId,
+    harness.dependencies,
+  )
+  const handler = createTerminalHandler(harness.env, harness.dependencies)
+  const request = seed.request(
+    terminalPaths.socket(seed.orgId, seed.workspaceId),
+    {
+      headers: {
+        Upgrade: 'websocket',
+        'Sec-WebSocket-Protocol': 'tty',
+        Cookie: 'ignored',
+      },
+    },
+  )
+  harness.setNow(TEST_TIME + 1000)
+  const response = await handler.fetch(request)
+  expect(response.status).toBe(101)
+  expect(response.headers.get('Sec-WebSocket-Protocol')).toBe('tty')
+  expect(response.headers.get('Authorization')).toBe(null)
+  const upstreamRequest = harness.requests[3]
+  expect(upstreamRequest.url).toBe('https://sandbox-7681.on.boat.dev/ws')
+  expect(upstreamRequest.headers.get('Cookie')).toBe(
+    '_port_auth=server-port-token',
+  )
+  const stored = await harness.env.DB.prepare(
+    'SELECT ciphertext FROM terminal_credentials WHERE workspace_id = ?',
+  )
+    .bind(seed.workspaceId)
+    .first<{ ciphertext: string }>()
+  const password = await decrypt(
+    stored?.ciphertext ?? '',
+    JSON.stringify(['terminal-password', seed.workspaceId]),
+    harness.env.BOAT_KEY_ENCRYPTION_KEY,
+  )
+  expect(upstreamRequest.headers.get('Authorization')).toBe(
+    `Basic ${btoa(`conducting:${password}`)}`,
+  )
+  const upstream = harness.upstreamSockets[0]
+  const browser = harness.serverSockets[0]
+  const handshake = upstream.nextMessage()
+  browser.emit(
+    new TextEncoder()
+      .encode('{"columns":80,"rows":24,"AuthToken":"forged"}')
+      .slice().buffer,
+  )
+  const authenticated = await handshake
+  expect(typeof authenticated).toBe('string')
+  expect(JSON.parse(String(authenticated))).toEqual({
+    columns: 80,
+    rows: 24,
+    AuthToken: btoa(`conducting:${password}`),
+  })
+  expect(await harness.status()).toEqual({ activity: TEST_TIME })
+  const output = browser.nextMessage()
+  upstream.emit(Uint8Array.of(48, 111, 107).buffer)
+  expect(await output).toEqual(Uint8Array.of(48, 111, 107).buffer)
+  const resize = upstream.nextMessage()
+  browser.emit('1{"columns":100,"rows":30}')
+  expect(await resize).toBe('1{"columns":100,"rows":30}')
+  expect(await harness.status()).toEqual({ activity: TEST_TIME })
+  const input = upstream.nextMessage()
+  browser.emit(Uint8Array.of(48, 108, 115, 13).buffer)
+  expect(await input).toEqual(Uint8Array.of(48, 108, 115, 13).buffer)
+  expect(await harness.status()).toEqual({ activity: TEST_TIME + 1000 })
+  browser.close(1000, 'closed')
+  await upstream.end
+  expect(upstream.closed?.code).toBe(1000)
+})
+
+it('rejects a ttyd socket without the tty protocol before contacting the sandbox', async () => {
+  const seed = await harness.seed()
+  const handler = createTerminalHandler(harness.env, harness.dependencies)
+  const response = await handler.fetch(
+    seed.request(terminalPaths.socket(seed.orgId, seed.workspaceId), {
+      headers: { Upgrade: 'websocket' },
+    }),
+  )
+  expect(response.status).toBe(400)
+  expect(harness.requests).toHaveLength(0)
+})

@@ -68,7 +68,7 @@ export async function storedOrgSandboxProvider(
   env: AppEnv,
   orgId: string,
   fetch: HttpFetch,
-  missingKeyMessage: string,
+  missingKeyMessage = 'Ask an org admin to add its cloud computer key.',
 ): Promise<SandboxProvider> {
   const stored = await readBoatKey(env.DB, orgId)
   if (!stored) throw new HttpError(409, 'boat_key_required', missingKeyMessage)
@@ -101,3 +101,5 @@ export async function orgSandboxProvider(
     'Add the org’s Boat key to continue.',
   )
 }
+
+export { storedOrgSandboxProvider as authorizedOrgSandboxProvider }

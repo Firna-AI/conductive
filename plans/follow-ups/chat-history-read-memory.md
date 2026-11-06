@@ -19,6 +19,6 @@
 - **Left out:** None.
 - **Wider fix:** C.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/runner-event-refusals.md`.
+- **Related:** decision 76 E of the plan, which Milestones 4d and 7s apply.
 - **Recommendation:** C.
 - **Action:** fix after merge, apply C, because it needs a long-used workspace.

@@ -45,6 +45,7 @@ Preview and desktop URLs are recorded placeholders. Tests can replace them with 
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, and failure.
 - `recorded-files.ts` supplies full trees, file updates, branch summaries, reads, diffs, and a size error.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
+- `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
 - `fixtures/workspaces.ts` maps workspace and session samples.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples.
 

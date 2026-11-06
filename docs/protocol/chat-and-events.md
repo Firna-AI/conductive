@@ -47,6 +47,8 @@ says.
 - A workspace holds one or more sessions. Each session is a closable tab in
   the centre column, beside the open files and diffs (decision 19).
 - "+" starts a new session on the same branch and in the same sandbox.
+- The open session tabs show in the order of creation. A new session
+  opens as the last tab (decision 77).
 - The user can rename a session.
 - Each session has its own model picker.
 - Closing the tab of a session without a running turn moves the session to
