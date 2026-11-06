@@ -1,4 +1,5 @@
 import { productDomain } from '../docs/mockups/src/brand'
+import { siteResponse } from '../src/marketing/routes'
 import type { AppEnv } from './env'
 import { HttpError } from './http'
 
@@ -33,4 +34,20 @@ export function hostStub(surface: HostSurface): Response {
     )
   }
   return Response.json({ surface, status: 'not-implemented' }, { status: 501 })
+}
+
+/**
+ * The marketing site at the root domain. It reads only the origin of the
+ * app, where its sign-in links lead, and the static assets.
+ */
+export function marketingResponse(
+  request: Request,
+  env: Pick<AppEnv, 'APP_ORIGIN' | 'ASSETS'>,
+  now: number,
+): Promise<Response> {
+  return siteResponse(
+    request,
+    { appOrigin: env.APP_ORIGIN, assets: env.ASSETS },
+    now,
+  )
 }

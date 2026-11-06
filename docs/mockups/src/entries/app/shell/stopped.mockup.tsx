@@ -16,4 +16,15 @@ export const sandboxStopped = defineScreen({
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),
+  variants: [
+    {
+      slug: 'during-turn',
+      title: 'Stopped during a turn',
+      description:
+        'The sandbox stopped while the agent worked, so the turn ended without a Stop from a member. The running tool call shows as stopped, and the chat says "The agent stopped". Resume starts the sandbox again.',
+      rationale:
+        'The user chose option C of decision 72: the chat names the member who pressed Stop. Here no member pressed Stop, so the line names no member, as the chat protocol says.',
+      props: { conversation: 'sandbox-stopped', banner: 'none' },
+    },
+  ],
 })

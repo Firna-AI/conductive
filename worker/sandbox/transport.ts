@@ -1,6 +1,8 @@
 import type { HttpFetch } from '../env'
 import { isRecord } from '../http'
+import { BodyBudgetExceeded } from '../http/bounded-body'
 import { ProviderError, providerError } from './errors'
+import { boundedFileJson, fileResponseBudget } from './file-response'
 import type { BoatAccount } from './provider'
 import { boatRoute, type BoatRoute } from './routes'
 
@@ -47,7 +49,11 @@ export class BoatTransport {
           body: body === undefined ? undefined : JSON.stringify(body),
           redirect: 'error',
           signal: AbortSignal.timeout(
-            route.operation === 'command' ? 610_000 : 30_000,
+            route.operation === 'command'
+              ? 610_000
+              : route.operation === 'readFile'
+                ? 65_000
+                : 30_000,
           ),
         }),
       )
@@ -56,8 +62,20 @@ export class BoatTransport {
     }
     let value: unknown
     try {
-      value = await response.json()
-    } catch {
+      value =
+        route.operation === 'readFile'
+          ? await boundedFileJson(
+              response,
+              fileResponseBudget(route.path, route.maxBytes),
+            )
+          : await response.json()
+    } catch (error) {
+      if (
+        response.ok &&
+        route.operation === 'readFile' &&
+        error instanceof BodyBudgetExceeded
+      )
+        throw error
       if (!response.ok) throw providerError(response, null)
       throw new ProviderError('invalid_response', 502)
     }

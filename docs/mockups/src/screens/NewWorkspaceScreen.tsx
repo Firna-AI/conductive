@@ -10,6 +10,7 @@ import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { lastBuild } from '../fixtures/computer'
 import { savedCartsMessage } from '../fixtures/conversations'
+import { you } from '../fixtures/members'
 import { orgs } from '../fixtures/orgs'
 import { repositories } from '../fixtures/repositories'
 import { savedCarts } from '../fixtures/workspaces'
@@ -80,6 +81,7 @@ function NewChat(props: { failed: boolean; viewport: Viewport }) {
       empty={<Start />}
       items={[]}
       notice={notice}
+      viewer={you}
       viewport={props.viewport}
     />
   )
