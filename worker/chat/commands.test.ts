@@ -126,6 +126,7 @@ describe('workspace chat commands', () => {
       state: 'stopped',
       durationMs: 20,
       files: [],
+      omittedFileCount: 0,
       userMessageIds: ['message-1'],
     })
     await fixture.drain()

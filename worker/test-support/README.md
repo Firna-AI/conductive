@@ -52,8 +52,12 @@ File read and diff results go to `endpoint.fileResponses`, outside chat history.
 
 Use [recorded file events and replies](../../src/test-support/recorded-files.ts)
 for the runner's file reports.
-The samples cover multipart trees and changes, consecutive deltas, file creation,
-a rename, a removal, uncommitted and untracked work, a read, a diff, and a size error.
+`recordedRunnerFileEvents` has four complete reports, with full reports as part 1 of 1.
+It keeps the current file tests' order and ends the tree at revision 2.
+`recordedMultipartRunnerFileEvents` has eight events for the fake endpoint and future part joining.
+It includes two-part trees and changes and consecutive tree deltas at revisions 2 and 3.
+Both samples include file creation, a rename, a removal, and dirty branch work.
+Read replies also cover file content, a diff, and a size error.
 
 ## Key code
 

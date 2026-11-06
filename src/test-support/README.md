@@ -25,8 +25,11 @@ Both records include positive omission counts.
 The `refused-events` conversation has one marker for each permanent refusal reason.
 The marker can have no turn context when the event is invalid.
 Browser file recordings contain complete reports.
-Runner file recordings split trees and changes into two numbered parts.
-The split uses small samples so callers can exercise joining without large fixtures.
+`recordedRunnerFileEvents` keeps four complete runner reports for current file readers.
+Each full report is explicitly part 1 of 1. Its tree ends at revision 2.
+`recordedMultipartRunnerFileEvents` supplies eight events for part-joining checks.
+It splits trees and changes into two parts and uses tree delta revisions 2 and 3.
+The small samples exercise joining without large fixtures.
 
 Writes return recorded replies. They do not change backend state.
 Set the next reply with `server.json(method, path, body, status)`.

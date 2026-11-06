@@ -144,6 +144,7 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
           state: 'finished',
           durationMs: 10,
           files: [],
+          omittedFileCount: 0,
           userMessageIds: ['ask'],
         },
       }),

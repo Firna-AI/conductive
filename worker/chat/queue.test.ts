@@ -135,6 +135,7 @@ describe('workspace chat queue', () => {
       state: 'finished',
       durationMs: 10,
       files: [],
+      omittedFileCount: 0,
       userMessageIds: ['message-1', 'steer'],
     })
     await fixture.drain()

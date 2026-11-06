@@ -3813,9 +3813,11 @@ Depends on: 4a
 Apply decision 76 E to the contracts. Milestone 7r builds the runner to
 this contract.
 
-Integration with the current primary branch needs Worker chat reader
-changes outside this workspace's scope. Completion waits for the user's
-scope decision. The five contract tasks below are implemented.
+Scope call on 6 November 2026: the user chose option D for review item 1.
+This branch may update the Worker chat and files readers, tests, and
+fakes. Missing required fields are invalid events. The default file
+samples remain complete single-part reports. Separate samples cover
+multipart reports. Production enforcement stays in Milestone 7s.
 
 Agent calls on 6 November 2026, within decision 76 E:
 
@@ -3859,6 +3861,10 @@ Verification evidence: `.context/boat-native-remote-workspaces/checks/milestone-
       Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
 - [x] Update the fakes, the recorded events, and the chat and files
       protocol rules. Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Apply option D to the current Worker readers and their test inputs.
+      Preserve every existing assertion and keep multipart samples
+      separate from the default single-part reports.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
 
 ## Milestone 4e: Contracts for the app shell
 

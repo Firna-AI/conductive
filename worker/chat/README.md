@@ -211,6 +211,13 @@ depends on where the code runs:
 
 - The Durable Object stores agent events as the runner sends them. It
   copies only the known fields, and it refuses an unknown event type.
+- It requires and preserves tool-detail and turn-file omission counts.
+  These counts are non-negative safe integers.
+- It requires and preserves file-report part numbers, part counts, and changes revisions.
+  These new fields are positive safe integers. A single-part report keeps whole-report behavior.
+- `runner.event-refused` is workspace-only. The runner parser refuses it.
+- Byte checks, stored refusal markers, refusal confirmation, and part joining
+  remain work for Milestone 7s.
 - So the runner maps the SDK events, removes the text that an SDK adds,
   and maps each result to `userMessageIds`.
 - `turn.started` names the sender of the turn and its message IDs. Each

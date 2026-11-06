@@ -80,23 +80,48 @@ const browserFileEvents: readonly FileEvent[] = [
             change: 'renamed',
           },
         },
+        { operation: 'remove', path: '.env.example' },
       ],
-    },
-  },
-  {
-    type: 'files.changed',
-    delta: {
-      revision: 3,
-      changes: [{ operation: 'remove', path: '.env.example' }],
     },
   },
   { type: 'changes.updated', changes: changed },
 ]
 
-/** Numbered parts, then bounded deltas with consecutive tree revisions. */
+/** Complete reports for readers that do not yet join runner parts. */
 export const recordedRunnerFileEvents: readonly RunnerFileEvent[] =
-  browserFileEvents.flatMap((event): readonly RunnerFileEvent[] => {
-    if (event.type === 'files.changed') return [event]
+  browserFileEvents.map((event): RunnerFileEvent => {
+    if (event.type === 'files.changed') return event
+    if (event.type === 'files.snapshot')
+      return {
+        type: event.type,
+        tree: { ...event.tree, partNumber: 1, partCount: 1 },
+      }
+    return {
+      type: event.type,
+      changes: {
+        ...event.changes,
+        revision: event.changes === changed ? 2 : 1,
+        partNumber: 1,
+        partCount: 1,
+      },
+    }
+  })
+
+/** Multipart reports for the fake endpoint and future workspace joining. */
+export const recordedMultipartRunnerFileEvents: readonly RunnerFileEvent[] =
+  recordedRunnerFileEvents.flatMap((event): readonly RunnerFileEvent[] => {
+    if (event.type === 'files.changed') {
+      return [0, 1].map((index) => ({
+        type: 'files.changed',
+        delta: {
+          revision: event.delta.revision + index,
+          changes:
+            index === 0
+              ? event.delta.changes.slice(0, 3)
+              : event.delta.changes.slice(3),
+        },
+      }))
+    }
     if (event.type === 'files.snapshot') {
       return [0, 1].map((index) => ({
         type: 'files.snapshot',
@@ -119,7 +144,6 @@ export const recordedRunnerFileEvents: readonly RunnerFileEvent[] =
           index === 0
             ? event.changes.files.slice(0, 2)
             : event.changes.files.slice(2),
-        revision: event.changes === changed ? 2 : 1,
         partNumber: index + 1,
         partCount: 2,
       },
