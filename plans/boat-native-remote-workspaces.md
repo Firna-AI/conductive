@@ -2886,17 +2886,17 @@ Depends on: 2
 Create the app package and the complete gate, following the setup of
 `calummoore/twilight-timer`.
 
-- [ ] Extend the root package with `src/` for the web app, `worker/` for
+- [x] Extend the root package with `src/` for the web app, `worker/` for
       the Worker, and `src/shared/` for the types that both use.
-- [ ] Add Vite with `@vitejs/plugin-react` and `@cloudflare/vite-plugin`,
+- [x] Add Vite with `@vitejs/plugin-react` and `@cloudflare/vite-plugin`,
       and serve the app as Worker static assets with the API first.
-- [ ] Add strict TypeScript, Vitest, and the 300-line file check, and
+- [x] Add strict TypeScript, Vitest, and the 300-line file check, and
       extend ESLint and Prettier from the mockups to the app code.
-- [ ] Add one gate command and a GitHub Actions workflow that runs it.
-- [ ] Add the Wrangler configuration with D1 and the Durable Object
+- [x] Add one gate command and a GitHub Actions workflow that runs it.
+- [x] Add the Wrangler configuration with D1 and the Durable Object
       binding. Do not deploy.
-- [ ] Build the package, and run the gate.
-- [ ] Add `dist` and `.wrangler` to the global ignores of ESLint, and add
+- [x] Build the package, and run the gate.
+- [x] Add `dist` and `.wrangler` to the global ignores of ESLint, and add
       `.dev.vars` to `.gitignore` with the Wrangler configuration.
 
 ## Milestone 4: Worker core and Boat client
