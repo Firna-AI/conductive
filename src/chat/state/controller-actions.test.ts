@@ -1,0 +1,217 @@
+import { describe, expect, it, vi } from 'vitest'
+import type { AgentChoice } from '../../shared/agents'
+import { chatHistoryPath } from '../../shared/events'
+import { filePaths } from '../../shared/files'
+import { retryMessagePath, sessionPaths } from '../../shared/sessions'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { chatFor, shown } from './test-kit'
+
+const org = FAKE_IDS.org
+const ws = FAKE_IDS.workspace
+const id = FAKE_IDS.session
+const messages = sessionPaths.messages(org, ws, id)
+const model = sessionPaths.model(org, ws, id)
+const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+
+describe('ChatController actions', () => {
+  it('accepts a message before the sandbox is ready, and shows it as queued until it is sent', async () => {
+    const chat = chatFor({
+      workspaceState: 'starting',
+      conversation: 'history',
+    })
+    await chat.controller.start()
+    chat.controller.setDraft(id, 'Also add tests.')
+    const queued = {
+      id: 'client-1',
+      sessionId: id,
+      sender: {
+        id: 'cal',
+        githubLogin: 'calummoore',
+        displayName: 'Cal',
+        avatarUrl: null,
+      },
+      text: 'Also add tests.',
+      attachments: [],
+      choice: opus,
+      createdAt: FAKE_TIME,
+      state: 'queued' as const,
+    }
+    chat.server.json('POST', messages, { message: queued, turnId: null }, 202)
+    await chat.controller.send(id)
+    expect(await chat.bodies('POST', messages)).toEqual([
+      {
+        id: 'client-1',
+        text: 'Also add tests.',
+        attachmentIds: [],
+        choice: opus,
+      },
+    ])
+    const state = () => chat.controller.getSnapshot().sessionStates[id]
+    expect(state().pending.map((message) => message.state)).toEqual(['queued'])
+    expect(state().draft.text).toBe('')
+    chat.emit({ type: 'message.accepted', message: queued })
+    expect(state().pending).toEqual([])
+    chat.emit({
+      type: 'message.sent',
+      sessionId: id,
+      messageId: 'client-1',
+      turnId: 'turn-2',
+    })
+    const last = state().transcript.items.at(-1)
+    expect(last?.kind === 'user' ? last.message.state : null).toBe('sent')
+  })
+
+  it('shows an answer with every message that it answers, also one sent during the turn', async () => {
+    const chat = chatFor({ conversation: 'steer' })
+    await chat.controller.start()
+    expect(shown(chat.controller, id)).toEqual([
+      'user: Add address autocomplete to the checkout form. Keep the manual fields as a fallback.',
+      'tool: src/app/checkout/AddressForm.tsx done',
+      'user: Also debounce the lookups to 250 ms.',
+      'agent: The form now suggests addresses and waits 250 ms between lookups.',
+      'end: 270000',
+    ])
+  })
+
+  it('shows no message for an ID that no person sent, such as one that the agent SDK added', async () => {
+    const chat = chatFor({ conversation: 'history' })
+    await chat.controller.start()
+    const before = shown(chat.controller, id)
+    const turn = { sessionId: id, turnId: 'turn-2' }
+    chat.emit({
+      ...turn,
+      type: 'turn.started',
+      senderId: 'cal',
+      choice: opus,
+      startedAt: FAKE_TIME,
+      messageIds: ['sdk-added'],
+    })
+    chat.emit({
+      ...turn,
+      type: 'turn.completed',
+      state: 'stopped',
+      durationMs: 1_000,
+      files: [],
+      userMessageIds: ['sdk-added'],
+    })
+    expect(shown(chat.controller, id)).toEqual([...before, 'stopped'])
+  })
+
+  it('shows a stopped turn as stopped, and the next message continues the same session', async () => {
+    const chat = chatFor({ conversation: 'interrupted' })
+    await chat.controller.start()
+    expect(shown(chat.controller, id).slice(-2)).toEqual([
+      'tool: npm test stopped',
+      'stopped',
+    ])
+    chat.controller.setDraft(id, 'Run only the unit tests.')
+    await chat.controller.send(id)
+    expect(chat.requests('POST', messages)).toHaveLength(1)
+  })
+
+  it('names the cause of a failed turn, and Try again posts the retry of its message', async () => {
+    const chat = chatFor({ conversation: 'failed' })
+    await chat.controller.start()
+    expect(shown(chat.controller, id).at(-1)).toBe(
+      'failed: The agent is busy. Try again.',
+    )
+    await chat.controller.retry(id, 'ask')
+    expect(
+      chat.requests('POST', retryMessagePath(org, ws, id, 'ask')),
+    ).toHaveLength(1)
+  })
+
+  it('moves the draft, with edits made during the request, to the session that another agent opens', async () => {
+    const chat = chatFor({
+      conversation: 'history',
+      hold: (request) => request.method === 'PUT',
+    })
+    await chat.controller.start()
+    const codex: AgentChoice = {
+      agent: 'codex',
+      model: 'GPT-6.1 Sol',
+      effort: 'medium',
+    }
+    const created = {
+      id: 'codex',
+      workspaceId: ws,
+      title: 'New session',
+      choice: codex,
+      createdAt: FAKE_TIME,
+      closedAt: null,
+      activeTurnId: null,
+    }
+    chat.server.json('PUT', model, {
+      session: created,
+      created: true,
+      draft: { text: 'Check the postcode rules', attachmentIds: [] },
+    })
+    chat.server.json('GET', chatHistoryPath(org, ws, 'codex'), {
+      events: [],
+      throughEventNumber: 0,
+    })
+    chat.controller.setDraft(id, 'Check the postcode rules')
+    const picking = chat.controller.chooseModel(id, codex)
+    chat.controller.setDraft(id, 'Check the postcode rules for the UK')
+    chat.held.splice(0, 1)[0]()
+    await picking
+    const snapshot = chat.controller.getSnapshot()
+    expect(snapshot.activeSessionId).toBe('codex')
+    expect(snapshot.sessionStates.codex.draft.text).toBe(
+      'Check the postcode rules for the UK',
+    )
+    expect(snapshot.sessionStates[id].draft.text).toBe('')
+  })
+
+  it('keeps the later of two model picks when their answers arrive in reverse order', async () => {
+    const chat = chatFor({
+      conversation: 'history',
+      hold: (request) => request.method === 'PUT',
+    })
+    await chat.controller.start()
+    const [session] = chat.controller.getSnapshot().sessions
+    const sonnet: AgentChoice = { ...opus, model: 'Sonnet 5.5' }
+    const fable: AgentChoice = { ...opus, model: 'Fable 5.1' }
+    const answer = (choice: AgentChoice) =>
+      chat.server.json('PUT', model, {
+        session: { ...session, choice },
+        created: false,
+        draft: { text: '', attachmentIds: [] },
+      })
+    const first = chat.controller.chooseModel(id, sonnet)
+    const second = chat.controller.chooseModel(id, fable)
+    answer(fable)
+    chat.held.splice(1, 1)[0]()
+    await second
+    answer(sonnet)
+    chat.held.splice(0, 1)[0]()
+    await first
+    expect(chat.controller.getSnapshot().sessions[0].choice).toEqual(fable)
+  })
+
+  it('waits for a file that uploads before it sends, so the message carries the file', async () => {
+    const chat = chatFor({
+      conversation: 'history',
+      hold: (request) =>
+        request.method === 'POST' && request.url.endsWith('/attachments'),
+    })
+    await chat.controller.start()
+    chat.controller.setDraft(id, 'The suggestions cover the postcode.')
+    const uploading = chat.controller.attachFiles(id, [
+      new File(['png'], 'overlap.png', { type: 'image/png' }),
+    ])
+    await vi.waitFor(() => expect(chat.held).toHaveLength(1), {
+      timeout: 10_000,
+    })
+    await chat.controller.send(id)
+    expect(chat.requests('POST', messages)).toHaveLength(0)
+    chat.held.splice(0, 1)[0]()
+    await uploading
+    await chat.controller.send(id)
+    const [sent] = await chat.bodies('POST', messages)
+    expect(sent).toMatchObject({ attachmentIds: ['attachment-1'] })
+    expect(chat.requests('POST', filePaths.attachments(org, ws))).toHaveLength(
+      1,
+    )
+  })
+})

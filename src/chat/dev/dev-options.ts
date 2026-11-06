@@ -1,0 +1,94 @@
+import type { OrgRole } from '../../shared/api'
+import type { WorkspaceState } from '../../shared/workspaces'
+import type { RecordedChatScenario } from '../../test-support/recorded-chat'
+
+/** The state that the development page draws, read from its address. */
+export interface DevOptions {
+  scenario: RecordedChatScenario
+  workspace: 'existing' | 'new'
+  state: WorkspaceState
+  role: OrgRole
+  key: boolean
+  login: boolean
+  replay: 'stored' | 'live'
+  viewport: 'desktop' | 'mobile'
+  scheme: 'dark' | 'light'
+  clock: 'running' | 'frozen'
+}
+
+export const choices = {
+  scenario: [
+    'history',
+    'running',
+    'steer',
+    'interrupted',
+    'failed',
+    'queued',
+    'first-turn',
+  ],
+  workspace: ['existing', 'new'],
+  state: [
+    'ready',
+    'working',
+    'unread',
+    'starting',
+    'stopped',
+    'error',
+    'archived',
+  ],
+  role: ['admin', 'member'],
+  key: ['on', 'off'],
+  login: ['on', 'off'],
+  replay: ['stored', 'live'],
+  viewport: ['desktop', 'mobile'],
+  scheme: ['dark', 'light'],
+  clock: ['running', 'frozen'],
+} as const satisfies Record<keyof DevOptions, readonly string[]>
+
+/** The options in the order that the page lists them. */
+export const optionNames = [
+  'scenario',
+  'workspace',
+  'state',
+  'role',
+  'key',
+  'login',
+  'replay',
+  'viewport',
+  'scheme',
+  'clock',
+] as const satisfies readonly (keyof DevOptions)[]
+
+function pick<T extends string>(
+  options: readonly T[],
+  value: string | null,
+): T {
+  return options.find((option) => option === value) ?? options[0]
+}
+
+export function readOptions(search: string): DevOptions {
+  const params = new URLSearchParams(search)
+  const get = (name: keyof DevOptions) => params.get(name)
+  return {
+    scenario: pick(choices.scenario, get('scenario')),
+    workspace: pick(choices.workspace, get('workspace')),
+    state: pick(choices.state, get('state')),
+    role: pick(choices.role, get('role')),
+    key: pick(choices.key, get('key')) === 'on',
+    login: pick(choices.login, get('login')) === 'on',
+    replay: pick(choices.replay, get('replay')),
+    viewport: pick(choices.viewport, get('viewport')),
+    scheme: pick(choices.scheme, get('scheme')),
+    clock: pick(choices.clock, get('clock')),
+  }
+}
+
+/** The value of each option as its address shows it. */
+export function optionValue(
+  options: DevOptions,
+  name: keyof DevOptions,
+): string {
+  const value = options[name]
+  if (typeof value === 'boolean') return value ? 'on' : 'off'
+  return value
+}

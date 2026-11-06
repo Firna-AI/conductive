@@ -1,0 +1,167 @@
+import type { ChatEvent } from '../../shared/chat-events'
+import type { WorkspaceEvent } from '../../shared/events'
+import type {
+  StartStep,
+  Workspace,
+  WorkspaceResponse,
+  WorkspaceStart,
+  WorkspaceState,
+} from '../../shared/workspaces'
+import { count, isRecord, list, nullable, oneOf, record, text } from './json'
+import { readChatEvent, readChoice, readSender } from './read-chat'
+
+/**
+ * The workspace events that the chat reads. The stream also carries file,
+ * GitHub, and preview events. Those only move the stream cursor on.
+ */
+export type ChatStreamEvent =
+  | ChatEvent
+  | Extract<
+      WorkspaceEvent,
+      { type: 'workspace.updated' | 'workspace.title' | 'start.updated' }
+    >
+
+/** An envelope of the workspace stream. `event` is null for other events. */
+export interface StreamEnvelope {
+  workspaceId: string
+  eventNumber: number
+  occurredAt: number
+  event: ChatStreamEvent | null
+}
+
+export interface StoredEvents {
+  envelopes: readonly StreamEnvelope[]
+  throughEventNumber: number
+}
+
+export type StreamMessage =
+  | { type: 'history'; history: StoredEvents }
+  | { type: 'event'; envelope: StreamEnvelope }
+
+const readState = oneOf<WorkspaceState>({
+  working: true,
+  unread: true,
+  ready: true,
+  starting: true,
+  stopped: true,
+  error: true,
+  archived: true,
+})
+
+export function readWorkspace(value: unknown): Workspace {
+  const source = record(value, 'workspace')
+  return {
+    id: text(source.id),
+    orgId: text(source.orgId),
+    repositoryId: text(source.repositoryId),
+    sectionId: text(source.sectionId),
+    owner: readSender(source.owner),
+    name: text(source.name),
+    branch: text(source.branch),
+    choice: readChoice(source.choice),
+    state: readState(source.state),
+    createdAt: count(source.createdAt),
+    updatedAt: count(source.updatedAt),
+    archivedAt: nullable(count)(source.archivedAt),
+  }
+}
+
+function readStep(value: unknown): StartStep {
+  const source = record(value, 'step')
+  return {
+    id: text(source.id),
+    label: text(source.label),
+    state: oneOf<StartStep['state']>({
+      running: true,
+      completed: true,
+      failed: true,
+    })(source.state),
+    startedAt: count(source.startedAt),
+    completedAt: nullable(count)(source.completedAt),
+  }
+}
+
+export function readStart(value: unknown): WorkspaceStart {
+  const source = record(value, 'start')
+  return {
+    kind: oneOf<WorkspaceStart['kind']>({ create: true, resume: true })(
+      source.kind,
+    ),
+    startedAt: count(source.startedAt),
+    steps: list(readStep)(source.steps),
+  }
+}
+
+export function readWorkspaceResponse(value: unknown): WorkspaceResponse {
+  const source = record(value, 'workspace response')
+  return {
+    workspace: readWorkspace(source.workspace),
+    start: nullable(readStart)(source.start),
+    error: nullable((error) => {
+      const fields = record(error, 'error')
+      return {
+        code: text(fields.code),
+        message: text(fields.message),
+        log: nullable(text)(fields.log),
+      }
+    })(source.error),
+  }
+}
+
+function readEvent(value: unknown): ChatStreamEvent | null {
+  if (!isRecord(value)) return null
+  switch (value.type) {
+    case 'workspace.updated':
+      return { type: value.type, workspace: readWorkspace(value.workspace) }
+    case 'workspace.title':
+      return { type: value.type, name: text(value.name) }
+    case 'start.updated':
+      return { type: value.type, start: readStart(value.start) }
+    default:
+      return readChatEvent(value)
+  }
+}
+
+/**
+ * Reads one envelope. An event that this app does not read, or cannot read,
+ * keeps its number, so the cursor still moves past it.
+ */
+export function readEnvelope(value: unknown): StreamEnvelope {
+  const source = record(value, 'envelope')
+  let event: ChatStreamEvent | null
+  try {
+    event = readEvent(source.event)
+  } catch {
+    event = null
+  }
+  return {
+    workspaceId: text(source.workspaceId),
+    eventNumber: count(source.eventNumber),
+    occurredAt: count(source.occurredAt),
+    event,
+  }
+}
+
+export function readStoredEvents(value: unknown): StoredEvents {
+  const source = record(value, 'history')
+  return {
+    envelopes: list(readEnvelope)(source.events),
+    throughEventNumber: count(source.throughEventNumber),
+  }
+}
+
+/** Reads one message of the workspace stream, or null when it is unreadable. */
+export function readStreamMessage(value: unknown): StreamMessage | null {
+  try {
+    const source = record(value, 'message')
+    if (source.type === 'history') {
+      return { type: 'history', history: readStoredEvents(source.history) }
+    }
+    if (source.type === 'event') {
+      return { type: 'event', envelope: readEnvelope(source.envelope) }
+    }
+    return null
+  } catch {
+    return null
+  }
+}

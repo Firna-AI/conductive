@@ -3369,13 +3369,15 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build the chat with messages, tool calls, the running state,
-      steer, and interrupt.
-- [ ] Show the stored history while the sandbox is stopped or starting.
-- [ ] Compare each screen with its mockup.
-- [ ] Build several sessions as tabs, with the session history.
-- [ ] Queue the messages that arrive before the sandbox is ready, and
-      show the workspace title that the agent writes.
+- [x] Build the chat with messages, tool calls, the running state,
+      steer, and interrupt. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+- [x] Show the stored history while the sandbox is stopped or starting. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+- [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+- [x] Build several sessions as tabs, with the session history. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+- [x] Queue the messages that arrive before the sandbox is ready, and
+      show the workspace title that the agent writes. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+
+Evidence: `.context/boat-native-remote-workspaces/milestone-8-verification.md`.
 
 ## Milestone 8i: Chat path wiring
 
