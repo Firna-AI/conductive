@@ -5,6 +5,13 @@ import { runToolProcess } from '../../tools/main'
 import { MCP_PROTOCOL_VERSION } from '../../tools/mcp'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import {
+  MCP_INITIALIZE as initialize,
+  MCP_INITIALIZED as initialized,
+  mcpRepliesById,
+  mcpRequest as rpc,
+  mcpToolCall as call,
+} from './mcp-test-support'
+import {
   inputLines,
   toolFixture,
   toolOutput,
@@ -26,25 +33,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
-const initialize = JSON.stringify({
-  jsonrpc: '2.0',
-  id: 'init',
-  method: 'initialize',
-  params: {
-    protocolVersion: '2099-01-01',
-    capabilities: {},
-    clientInfo: { name: 'test-agent', version: '1' },
-  },
-})
-const initialized = JSON.stringify({
-  jsonrpc: '2.0',
-  method: 'notifications/initialized',
-})
-const rpc = (id: number, method: string, params?: unknown) =>
-  JSON.stringify({ jsonrpc: '2.0', id, method, params })
-const call = (id: number, name: string, args?: unknown) =>
-  rpc(id, 'tools/call', { name, arguments: args })
 
 it('serves MCP discovery, create, and list over JSON lines with the calling turn and negotiated version', async () => {
   const output = toolOutput()
@@ -75,15 +63,16 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
 
   expect(status).toBe(0)
   expect(output.stderr).toEqual([])
-  expect(output.stdout.map((line): unknown => JSON.parse(line))).toMatchObject([
-    {
+  expect(output.stdout).toHaveLength(4)
+  expect(mcpRepliesById(output.stdout)).toMatchObject({
+    init: {
       id: 'init',
       result: {
         protocolVersion: MCP_PROTOCOL_VERSION,
         capabilities: { tools: {} },
       },
     },
-    {
+    1: {
       id: 1,
       result: {
         tools: [
@@ -95,7 +84,7 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
         ],
       },
     },
-    {
+    2: {
       id: 2,
       result: {
         isError: false,
@@ -109,7 +98,7 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
         },
       },
     },
-    {
+    3: {
       id: 3,
       result: {
         isError: false,
@@ -122,7 +111,7 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
         },
       },
     },
-  ])
+  })
   expect(fixture.requests).toHaveLength(2)
   for (const request of fixture.requests) {
     expect(request.headers.get(TOOL_TURN_HEADER)).toBe(TOOL_TEST_TURN)
@@ -165,14 +154,15 @@ it('separates MCP parse, protocol, and tool failures while ignoring notification
 
   expect(status).toBe(0)
   expect(output.stderr).toEqual([])
-  expect(output.stdout.map((line): unknown => JSON.parse(line))).toMatchObject([
-    { id: null, error: { code: -32700 } },
-    { id: 1, error: { code: -32600 } },
-    { id: 'init', result: { protocolVersion: MCP_PROTOCOL_VERSION } },
-    { id: 2, error: { code: -32601 } },
-    { id: 3, error: { code: -32602 } },
-    { id: 4, error: { code: -32602 } },
-    {
+  expect(output.stdout).toHaveLength(9)
+  expect(mcpRepliesById(output.stdout)).toMatchObject({
+    null: { id: null, error: { code: -32700 } },
+    1: { id: 1, error: { code: -32600 } },
+    init: { id: 'init', result: { protocolVersion: MCP_PROTOCOL_VERSION } },
+    2: { id: 2, error: { code: -32601 } },
+    3: { id: 3, error: { code: -32602 } },
+    4: { id: 4, error: { code: -32602 } },
+    5: {
       id: 5,
       result: {
         isError: true,
@@ -181,7 +171,7 @@ it('separates MCP parse, protocol, and tool failures while ignoring notification
         ],
       },
     },
-    {
+    6: {
       id: 6,
       result: {
         isError: true,
@@ -193,7 +183,7 @@ it('separates MCP parse, protocol, and tool failures while ignoring notification
         ],
       },
     },
-    { id: 7, error: { code: -32602 } },
-  ])
+    7: { id: 7, error: { code: -32602 } },
+  })
   expect(fixture.services.createWorkspace).not.toHaveBeenCalled()
 })

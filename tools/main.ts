@@ -27,11 +27,36 @@ export async function runToolProcess(
       return runWorkspaceCli(args, client, output)
     }
     const server = createWorkspaceMcp(client)
-    for await (const line of input) {
-      const response = await server.line(line)
-      if (response) output.stdout(`${JSON.stringify(response)}\n`)
+    const pending = new Set<Promise<void>>()
+    let failed = false
+    try {
+      for await (const line of input) {
+        // Each call starts in input order, so initialization stays ordered.
+        const task: Promise<void> = server
+          .line(line)
+          .then((response) => {
+            if (response) output.stdout(`${JSON.stringify(response)}\n`)
+          })
+          .then(
+            () => {
+              pending.delete(task)
+            },
+            (error: unknown) => {
+              pending.delete(task)
+              failed = true
+              try {
+                output.stderr(`${toolErrorMessage(error)}\n`)
+              } catch {
+                // A failed error stream still produces a failing exit status.
+              }
+            },
+          )
+        pending.add(task)
+      }
+    } finally {
+      await Promise.all(pending)
     }
-    return 0
+    return failed ? 1 : 0
   } catch (error) {
     output.stderr(`${toolErrorMessage(error)}\n`)
     return 1
