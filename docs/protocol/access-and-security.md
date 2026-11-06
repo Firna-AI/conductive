@@ -71,6 +71,12 @@ Later screens add the frame and connection sources that they need.
 
 - A request reaches an org, its workspaces, and their sandboxes only for a
   member of that org.
+- An open tab loses its workspace connection within 30 seconds after its
+  user loses access: a removal from the org, a sign-out, or a deleted
+  org (decision 70). The workspace checks the access of its open tabs
+  again at most every 30 seconds, and closes each tab that fails.
+- A runner connection gets no agent login after its workspace token is
+  revoked. The workspace checks the token again before each login.
 - Before each sandbox call, the Worker checks in its records that the
   sandbox belongs to a workspace of that org.
 - The Worker calls only a fixed list of Boat routes. It has no general

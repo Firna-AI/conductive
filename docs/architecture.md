@@ -49,7 +49,8 @@ describes the structure that the [protocol docs](#protocol-docs) require.
 
 - A few static pages at the root of `conducting.build`, with the Terms and
   Privacy pages. Visitors see them without a sign-in.
-- The Worker serves them as static assets.
+- [The marketing site README](../src/marketing/README.md) describes how the
+  Worker serves them.
 - The main action is "Start free with GitHub". The site says that users
   need their own Boat account (decision 47).
 

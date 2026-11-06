@@ -88,6 +88,7 @@ export function WorkspaceScreen(props: {
       notice={composerNotice(state, workspace.choice)}
       problem={problem}
       starting={startingLogFor(state)}
+      viewer={viewer}
       viewport={viewport}
     />
   )
