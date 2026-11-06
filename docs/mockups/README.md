@@ -64,6 +64,12 @@ chat, and five tabs at the bottom.
   `palette.ts`, and the type, density, sizes, radii, and fonts in
   `metrics.ts`. The renderer writes them as `--ui-*` CSS variables, and gives
   `@firna/ui` the same colours through its theme.
+- The logo comes from the masters in `docs/brand/`, which
+  `src/components/brand/Logo.module.css` reads and only scales. The tile
+  of the app icon stands alone at the top of the org rail. The lockup,
+  with dark or light text for the scheme, names the product on the
+  marketing site and the sign-in page. The macOS app icon shows in the
+  notifications of the Mac app.
 - `ActionButton` and `IconButton` in `src/components/common/actions.tsx` give
   the Firna button the dense size and a lighter label.
 - On a phone every touch target is at least 44 px high. `MobileFrame` gives
