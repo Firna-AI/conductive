@@ -3135,6 +3135,32 @@ Added on 6 November 2026 from finding 5 of the Milestone 5 work.
 - **Recommendation:** D.
 - **Chosen:** D, by the user on 6 November 2026. Milestone 5 applies it.
 
+### 90. Copy a large repository into an org image build
+
+Added on 6 November 2026 from finding 6 of the Milestone 5 work.
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** The Worker downloaded each repository and sent it into
+  the build's cloud computer in 64 KiB parts, one Boat command each, in
+  one background job, so that no GitHub token entered the org image. A
+  1 GiB repository needed 16,384 commands.
+- **Options:**
+  - **D.** Larger Boat uploads, one repository per job. Effort: Medium.
+  - **B.** A Git proxy in the Worker for builds. Effort: Medium.
+  - **E.** The build clones straight from GitHub with a short-lived token.
+    Effort: Medium.
+  - **A.** Store the copy's progress across jobs. Effort: Large.
+  - **C.** Move the copy into Cloudflare Workflows. Effort: Large.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 6 November 2026, from the question "can we
+  not just delete the token after the git clone?". Each clone uses its
+  own installation token, limited to that one repository and to reading.
+  The token exists only in the clone command's environment, and Git
+  writes it nowhere. The Worker revokes it right after the clone, before
+  any repository code runs. Milestone 5 applies it, and the access
+  protocol states it.
+
 ### 91. Show the live start steps of a new workspace
 
 Added on 6 November 2026 from finding 7 of the Milestone 5 work.
