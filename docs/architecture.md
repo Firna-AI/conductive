@@ -1,9 +1,9 @@
 # Architecture
 
-Conducting is a browser-only coding tool at `conducting.build`. Each
-workspace is one task with its own branch and its own cloud computer, a
-Boat sandbox. Agents powered by Claude and Codex work in the sandbox, and
-the user follows them in the browser. Nothing runs on the user's computer.
+Conducting is a coding tool at `conducting.build`. Each workspace is one
+task with its own branch and its own cloud computer, a Boat sandbox.
+Agents powered by Claude and Codex work only in the sandbox. The user
+follows them in the browser or in the Mac app, which shows the web app.
 This doc describes the components, their responsibilities, and the
 boundaries between them. The app has no product features yet, so the doc
 describes the structure that the [protocol docs](#protocol-docs) require.
@@ -63,6 +63,10 @@ describes the structure that the [protocol docs](#protocol-docs) require.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser keeps only the panel widths. All other state comes from the
   Worker.
+
+### Mac app
+
+- An Electron shell for macOS, as [Mac app](protocol/desktop-app.md) says.
 
 ### Worker
 
@@ -205,7 +209,7 @@ hostname and of the preview domain are not chosen yet.
 | Chat history and banner state                            | The workspace Durable Object             |
 | The repository, the files, and the agent sessions        | The home folder of the sandbox           |
 | The prepared repositories and the installed software     | The org image, in the org's Boat account |
-| Panel widths                                             | The browser                              |
+| Panel widths                                             | The browser, or the Mac app              |
 
 ## Trust boundaries
 
@@ -243,3 +247,4 @@ the merge.
   sandbox.
 - [Orgs and members](protocol/orgs-and-members.md): orgs, Boat keys,
   sections, roles, and the end of an org.
+- [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.

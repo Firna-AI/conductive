@@ -5,6 +5,8 @@ import type { AppEnv } from '../env'
 import { HttpError, isRecord } from '../http'
 import { readCookie, SESSION_COOKIE } from './cookies'
 import { verify } from './crypto'
+import { DESKTOP_ORIGIN, DESKTOP_SESSION_COOKIE } from './desktop-contract'
+import { trustedOrigin } from './desktop-origin'
 
 export interface RequestContext {
   user: User
@@ -23,7 +25,7 @@ export function checkOrigin(request: Request, env: AppEnv): void {
   const origin = request.headers.get('Origin')
   const read = request.method === 'GET' || request.method === 'HEAD'
   const upgrade = request.headers.has('Upgrade')
-  if (origin !== env.APP_ORIGIN && !(read && !upgrade && origin === null)) {
+  if (!trustedOrigin(origin, env) && !(read && !upgrade && origin === null)) {
     throw new HttpError(403, 'origin_forbidden', 'Open the app to continue.')
   }
 }
@@ -35,7 +37,12 @@ export async function gate(
 ): Promise<RequestContext> {
   checkHost(request, env)
   checkOrigin(request, env)
-  const token = readCookie(request, SESSION_COOKIE)
+  const token = readCookie(
+    request,
+    request.headers.get('Origin') === DESKTOP_ORIGIN
+      ? DESKTOP_SESSION_COOKIE
+      : SESSION_COOKIE,
+  )
   const session = token
     ? await verify(token, 'session', env.SESSION_SIGNING_KEY, now)
     : null
