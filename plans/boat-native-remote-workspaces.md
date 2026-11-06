@@ -2485,6 +2485,32 @@ parallel and not delay things".
     full screen, where macOS hides them. It learns this without a preload
     script, from the window controls area that Electron exposes to CSS,
     or else from a marker in the page address.
+- **Added by the user on 6 November 2026:** the Mac app registers the Mac
+  as a device on which the remote side can run commands, while the Mac is
+  awake. Each command needs the user's permission, with the choices to
+  allow the command once, to always allow it, or to allow all commands
+  for 15 minutes. The mockups come first. Like the Mac app, this work
+  blocks no other milestone.
+- **Agent calls on 6 November 2026, for device commands:**
+  - An agent asks through a "run a command on the Mac" tool. The request
+    goes to the Mac of the person who sent the turn, as decision 49 runs
+    the turn on its sender's login. Conductor's own tool runs commands on
+    the Mac that created the workspace.
+  - The request names the command, the folder, the reason, and a time
+    limit: 60 seconds by default and 120 at most. A longer limit, up to
+    30 minutes, needs a reason that the prompt shows, as Conductor's tool
+    does.
+  - The prompt shows the command, the folder, the reason, the workspace,
+    and the sender. Its choices are Deny, Allow, Always allow, and Allow
+    all commands for 15 minutes. When the app is in the background, a
+    macOS notification opens the prompt.
+  - "Always allow" covers the exact command text on that Mac. "Allow all
+    commands for 15 minutes" covers one workspace on that Mac, and shows
+    a countdown with Stop. The app's settings list the always-allowed
+    commands, each with Remove.
+  - The command runs with the user's own permissions, with an output
+    limit. When the Mac sleeps, or the app is closed, the tool tells the
+    agent that the Mac is not available.
 
 ### 63. Decide the language of the agent runner
 
@@ -3520,6 +3546,11 @@ Build the Mac app as decision 62 says. No other milestone waits for it.
       buttons inset at the top left of the left panel, with the sidebar
       toggle and the back and forward buttons beside them, in a normal
       window and in full screen.
+- [ ] Draw the device commands in the mockups first: the permission
+      prompt with its four choices, the macOS notification, the countdown
+      of the 15-minute window, the app's list of always-allowed commands,
+      and the chat's tool states: waiting for approval, denied, done, and
+      Mac not available.
 - [ ] Add `desktop/`, an Electron shell for macOS, as Mokly's
       `ts/desktop` does. It bundles the built web app and serves it from
       `conducting-app://desktop`.
@@ -3541,6 +3572,29 @@ Build the Mac app as decision 62 says. No other milestone waits for it.
 - [ ] Write `docs/protocol/desktop-app.md`, and update the README and the
       architecture doc.
 
+## Milestone 15f: Mac device commands
+
+Depends on: 15, 15e
+
+Let agents run commands on the user's Mac, as decision 62 says. No other
+milestone waits for it.
+
+- [ ] Register the Mac as a device of the signed-in user while the app
+      runs and the Mac is awake, over one connection to the Worker.
+- [ ] Add the "run a command on the Mac" agent tool. Route each request to
+      the Mac of the person who sent the turn, and answer "not available"
+      when that Mac is not connected.
+- [ ] Show the permission prompt with Deny, Allow, Always allow, and Allow
+      all commands for 15 minutes, and a macOS notification when the app
+      is in the background.
+- [ ] Run the command with its time limit and an output limit, and return
+      the output to the agent.
+- [ ] Keep the always-allowed commands and the 15-minute window on the
+      Mac, with Remove and Stop.
+- [ ] Test the prompt choices, the time limits, and the offline answer.
+      Update `docs/protocol/desktop-app.md` and
+      `docs/protocol/agent-tools.md`.
+
 ## Milestone 16: Deployment and live smoke test
 
 Depends on: 15i, 15d, 16a
@@ -3556,7 +3610,7 @@ This milestone needs the prerequisites from the user.
 
 ## Milestone 17: Verification, commit, review, and pull request
 
-Depends on: every other milestone except 15e
+Depends on: every other milestone except 15e and 15f
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
