@@ -3260,24 +3260,24 @@ Depends on: 4
 Fix the interfaces that let the later milestones build at the same time,
 as decision 58 says.
 
-- [ ] Define the API types between the web app and the Worker for every
+- [x] Define the API types between the web app and the Worker for every
       feature milestone, in `src/shared/`.
-- [ ] Define the message types between the agent runner and the workspace
+- [x] Define the message types between the agent runner and the workspace
       Durable Object: the protocol version, the event numbers, and the
       confirm and resend rules. Include the file tree, the changes
       summary, and file and diff reads.
-- [ ] Write the D1 tables that every feature milestone needs. Give each
+- [x] Write the D1 tables that every feature milestone needs. Give each
       later milestone its own range of migration numbers.
-- [ ] Define the Worker's host routing: the marketing site at the root
+- [x] Define the Worker's host routing: the marketing site at the root
       domain, the app at `app.`, and the hostname for machines.
-- [ ] Add a fake API server and recorded chat events, so that each screen
+- [x] Add a fake API server and recorded chat events, so that each screen
       milestone builds without its backend.
-- [ ] Add a fake runner, so that the Durable Object builds without a cloud
+- [x] Add a fake runner, so that the Durable Object builds without a cloud
       computer.
-- [ ] Apply decision 60 A in the gate: a GET or HEAD read may come without
+- [x] Apply decision 60 A in the gate: a GET or HEAD read may come without
       `Origin`, a present `Origin` must match, and every write and socket
       upgrade needs a matching `Origin`.
-- [ ] Run the complete gate.
+- [x] Run the complete gate.
 
 ## Milestone 5: Bases and workspace lifecycle
 
