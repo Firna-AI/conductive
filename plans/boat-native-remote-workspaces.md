@@ -2818,6 +2818,93 @@ Added and answered on 6 November 2026 (A). The user parked the
 Rust work the same day, so the decision with its options moved to
 `plans/follow-ups/move-backend-to-rust-and-postgres.md`.
 
+### 76. Decide what happens to a runner event that the workspace refuses
+
+Added on 6 November 2026 from round 2 finding 3 of the Milestone 7
+review.
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** The workspace stores each runner event before it
+  confirms it, and Cloudflare stores at most 2 MB in one value. A large
+  file tree, tool output, or file list can pass that. The workspace also
+  refuses an invalid event and an event of a turn that is not active. A
+  refused event closed the connection without a confirm, so the runner
+  sent it again after each reconnect, and the stream stopped there.
+- **Options:**
+  - **A.** A size limit and a reply that lets the runner replace a large
+    event. Effort: Medium.
+  - **B.** Store large events in bounded parts. Effort: Medium.
+  - **C.** Store large events in object storage. Effort: Large.
+  - **D.** Store a small marker for each event that the workspace refuses
+    for a fixed reason, and confirm it. Effort: Medium.
+  - **E.** D, and cap the event shapes in the runner contract. Effort:
+    Medium.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 6 November 2026. Milestone 4d changes the
+  contracts, and Milestone 7s changes the workspace.
+- **Agent calls on 6 November 2026,** which the user can override:
+  - One stored runner event holds at most 1 MiB, half of Cloudflare's
+    limit for one value, so the envelope always fits.
+  - A full file tree and a long list of changes go as several numbered
+    parts. A tree delta with many changes goes as several deltas with
+    consecutive revisions.
+  - A tool's detail and the file list at the end of a turn keep a cap and
+    a count of the rest.
+  - The chat shows the marker of a refused event as one line that names
+    what was lost.
+
+### 77. Decide the order of the open session tabs
+
+Added on 6 November 2026 from a finding check of the Milestone 7
+review.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Review. **Category:** Docs or spec.
+- **Options:**
+  - **A.** The order of creation. A new session opens as the last tab.
+    Effort: Small.
+  - **B.** The order of the last activity. Effort: Small.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 6 November 2026. The chat protocol states
+  it.
+
+### 78. Bind each invitation to the person it names
+
+Added on 6 November 2026 from round 2 finding 4 of the Milestone 15a
+review.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Review. **Category:** Security.
+- **Background:** An admin invited a person by GitHub login, and the
+  Worker compared that login with the login stored at the user's last
+  sign-in. A login can be renamed and taken by another account, so a
+  stale stored login let account 400 accept an invitation meant for
+  account 500.
+- **Options:**
+  - **A.** Look up the GitHub ID at invite time, and match on it. Effort:
+    Medium.
+  - **B.** Put the GitHub ID in a signed invitation code. Effort: Medium.
+  - **C.** An admin approves each account before it joins. Effort: Large.
+  - **D.** A, with the lookup behind a members hook. Effort: Medium.
+  - **E.** The admin's browser looks up the account. Effort: Medium.
+  - **F.** Keep the code until the wiring milestone. Effort: Small.
+  - **G.** D, and show the invited account on the invitation. Effort:
+    Medium.
+- **Recommendation:** D, with G later.
+- **Chosen:** by the user on 6 November 2026, a new option: "invites
+  should be sent via email, then we can check that when the user logs in
+  with github". An admin invites a person by email, and the app sends the
+  invitation to that address. The person joins with a GitHub account that
+  has that address as a verified email. Milestone 15g builds it.
+- **Agent calls on 6 November 2026:**
+  - The app reads the verified emails at sign-in with `GET /user/emails`,
+    through the "Email addresses" read permission that decision 28 already
+    needs.
+  - The person still accepts each matching invitation, as today, so a
+    sign-in alone joins no org.
+  - Invitations by GitHub login go away, so one way remains.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -3587,6 +3674,24 @@ the base.
       protocol.
 - [ ] Run the complete gate.
 
+## Milestone 4d: Runner event limits
+
+Depends on: 4a
+
+Apply decision 76 E to the contracts. Milestone 7r builds the runner to
+this contract.
+
+- [ ] Add the byte limit of one stored runner event to the runner
+      contract.
+- [ ] Send a full file tree and a long list of changes as several
+      numbered parts. Cap the changes of one tree delta.
+- [ ] Give a tool's detail and the file list at the end of a turn a cap
+      and a count of the rest.
+- [ ] Add the chat event that marks a refused runner event, with the
+      stream, the event number, the event type, and the reason.
+- [ ] Update the fakes, the recorded events, and the chat and files
+      protocol rules.
+
 ## Milestone 5: Bases and workspace lifecycle
 
 Depends on: 4a
@@ -3684,6 +3789,21 @@ Depends on: 4a
       the open tabs over a WebSocket.
 - [ ] Test the mapping against recorded SDK events, and the resend after
       a dropped connection, with the fake runner of Milestone 4a.
+
+## Milestone 7s: Runner event limits in the workspace
+
+Depends on: 4d, 7, 9
+
+Apply decision 76 E in the workspace Durable Object.
+
+- [ ] Check the byte limit with the other event checks.
+- [ ] Store a marker for each event that the workspace refuses for a
+      fixed reason, confirm it, and move the cursor on. A refused end of
+      turn still ends the turn. A storage or network failure still closes
+      the connection.
+- [ ] Join the parts of a file tree and of a changes list before the
+      files store takes them.
+- [ ] Test each refusal, a tree in parts, and a resend after a refusal.
 
 ## Milestone 8: Chat UI
 
@@ -3848,9 +3968,28 @@ Milestone 8i or 15i wires it to its backend.
 - [ ] Build the org members page and workspace reassignment.
 - [ ] Compare each screen with its mockup.
 
+## Milestone 15g: Email invitations
+
+Depends on: 15a, 15c
+
+Apply decision 78. It must merge before Milestone 15i wires the
+acceptance route.
+
+- [ ] Change the contracts, the fakes, and the D1 schema so that an
+      invitation names an email in place of a GitHub login.
+- [ ] Send each invitation by email through the email service of decision
+      79. In development, a mailer writes the link to the log.
+- [ ] At sign-in, read the verified emails of the GitHub account, and show
+      the pending invitations that name one of them. Cancel a departed
+      member's pending invitations.
+- [ ] Change the invite form of the members mockups and screens to an
+      email field.
+- [ ] Test with a fake GitHub that returns verified emails, and a fake
+      mailer.
+
 ## Milestone 15i: Feature wiring
 
-Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c
+Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
 
 - [ ] Wire each feature's screens to its backend inside the app shell.
 - [ ] Run the complete gate, and compare each screen with its mockup.
