@@ -6,6 +6,7 @@ export const ACCOUNT_PATHS = {
   defaultModel: '/api/account/default-model',
   agentLogins: '/api/account/agent-logins',
   githubInstallations: '/api/account/github-installations',
+  githubRepositories: '/api/account/github-repositories',
   deleteAccount: '/api/account/delete',
 } as const
 
@@ -40,6 +41,16 @@ export interface GitHubInstallation {
   settingsUrl: string
 }
 
+/** A repository that the signed-in user and the GitHub App can both reach. */
+export interface GitHubRepository {
+  /** GitHub's numeric ID. An org does not need to exist yet. */
+  githubId: number
+  fullName: string
+  description: string
+  defaultBranch: string
+  installationId: number
+}
+
 export interface AccountResponse {
   user: User
   defaultChoice: AgentChoice
@@ -62,6 +73,9 @@ export type SetDefaultModelResponse = SetDefaultModelRequest
 export interface GitHubInstallationsResponse {
   installations: readonly GitHubInstallation[]
   installUrl: string
+}
+export interface GitHubRepositoriesResponse {
+  repositories: readonly GitHubRepository[]
 }
 
 export interface DeleteAccountResponse {
