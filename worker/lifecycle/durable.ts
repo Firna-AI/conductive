@@ -5,6 +5,7 @@ import {
 } from './durable-start'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
+import { reconciledLifecycle } from './durable-reconciliation'
 import {
   DISK_KEEPALIVE_MS,
   IDLE_MS,
@@ -140,18 +141,22 @@ export class DurableLifecycle {
   activity(): Promise<void> {
     return this.update(async (state) => {
       if (state.state === 'stopped' || state.state === 'archived') return state
-      await this.hooks.extendDeadline()
-      return { ...state, lastActivityAt: this.now() }
+      return reconciledLifecycle(
+        { ...state, lastActivityAt: this.now() },
+        await this.hooks.extendDeadline(),
+        this.now(),
+      )
     })
   }
 
   turn(sessionId: string, running: boolean): Promise<void> {
     return this.update(async (state) => {
       if (state.state === 'stopped' || state.state === 'archived') return state
+      const remote = await this.hooks.extendDeadline()
+      if (remote) return reconciledLifecycle(state, remote, this.now())
       const sessions = new Set(state.runningSessions)
       if (running) sessions.add(sessionId)
       else sessions.delete(sessionId)
-      await this.hooks.extendDeadline()
       return {
         ...state,
         runningSessions: [...sessions],
@@ -165,14 +170,7 @@ export class DurableLifecycle {
     return this.update((state) =>
       state.state === 'stopped'
         ? state
-        : {
-            ...state,
-            state: 'stopped',
-            runningSessions: [],
-            runnerConnected: false,
-            stoppedAt: this.now(),
-            nextDiskKeepaliveAt: this.now() + DISK_KEEPALIVE_MS,
-          },
+        : reconciledLifecycle(state, 'stopped', this.now()),
     )
   }
 
@@ -199,31 +197,17 @@ export class DurableLifecycle {
     return this.serial(async () => {
       let state = await this.read()
       if (!state || state.state === 'archived') return
+      let stopPending = false
       if (
         !state.runnerConnected &&
         state.state !== 'stopped' &&
         this.hooks.reconcile
       ) {
-        const remote = await this.hooks.reconcile()
-        if (remote === 'stopped')
-          state = {
-            ...state,
-            state: 'stopped',
-            runningSessions: [],
-            stoppedAt: this.now(),
-            nextDiskKeepaliveAt: this.now() + DISK_KEEPALIVE_MS,
-          }
-        if (remote === 'error')
-          state = {
-            ...state,
-            state: 'error',
-            runningSessions: [],
-            error: {
-              code: 'sandbox_failed',
-              message: 'The cloud computer stopped with an error. Try again.',
-              log: null,
-            },
-          }
+        state = reconciledLifecycle(
+          state,
+          await this.hooks.reconcile(),
+          this.now(),
+        )
       }
       if (state.state === 'stopped') {
         if (
@@ -241,18 +225,25 @@ export class DurableLifecycle {
           }
         }
       } else if (state.runningSessions.length) {
-        await this.hooks.extendDeadline()
-      } else if (state.lastActivityAt + IDLE_MS <= this.now()) {
-        await this.hooks.stop()
-        state = {
-          ...state,
-          state: 'stopped',
-          runnerConnected: false,
-          stoppedAt: this.now(),
-          nextDiskKeepaliveAt: this.now() + DISK_KEEPALIVE_MS,
-        }
+        state = reconciledLifecycle(
+          state,
+          await this.hooks.extendDeadline(),
+          this.now(),
+        )
+      } else if (
+        state.state !== 'error' &&
+        state.lastActivityAt + IDLE_MS <= this.now()
+      ) {
+        const result = await this.hooks.stop()
+        stopPending = result === 'pending'
+        state = reconciledLifecycle(
+          state,
+          result === 'pending' ? undefined : (result ?? 'stopped'),
+          this.now(),
+        )
       }
       await this.write(state)
+      if (stopPending) await this.storage.setAlarm(this.now() + 30_000)
     })
   }
 
@@ -272,9 +263,11 @@ export class DurableLifecycle {
     const alarm =
       state.state === 'stopped'
         ? state.nextDiskKeepaliveAt
-        : state.runningSessions.length
-          ? this.now() + TURN_HEARTBEAT_MS
-          : state.lastActivityAt + IDLE_MS
+        : state.state === 'error'
+          ? this.now() + 5_000
+          : state.runningSessions.length
+            ? this.now() + TURN_HEARTBEAT_MS
+            : state.lastActivityAt + IDLE_MS
     if (alarm === null || state.state === 'archived')
       await this.storage.deleteAlarm()
     else {

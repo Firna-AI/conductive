@@ -2,7 +2,7 @@ import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { FIRST_MESSAGE } from './durable-test-support'
 import { realRuntimeFixture, runtimeBundle } from './real-runtime-test-support'
-import { registerCreationAttempt } from './creation-attempt-data'
+import { claimCreation } from './creation-claims'
 import type { WorkspaceStartJob } from './start-types'
 import {
   hasStartStep,
@@ -83,13 +83,15 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
       createdAt: Date.now(),
     },
   }
-  await registerCreationAttempt(fixture.env.DB, {
-    id,
-    orgId: job.orgId,
-    senderUserId: user.id,
-    messageId: FIRST_MESSAGE.id,
-    now: Date.now(),
-  })
+  await claimCreation(
+    fixture.env.DB,
+    {
+      orgId: job.orgId,
+      senderUserId: user.id,
+      messageId: FIRST_MESSAGE.id,
+    },
+    job,
+  )
   fixture.boat.commandOutput = 'part'
   fixture.boat.commandRunning = true
   const caller = fixture.actor(id)
@@ -152,7 +154,13 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     stderrOffset: 0,
   })
   expect(fixture.boat.starts).toHaveLength(1)
-  expect(fixture.boat.commands).toHaveLength(3)
+  expect(fixture.boat.commands).toHaveLength(4)
+  expect(fixture.boat.commandRequests.at(-1)).toMatchObject({
+    detached: false,
+    command: expect.stringContaining(
+      'systemctl start conducting-terminal.service',
+    ),
+  })
   expect(await restored.readLifecycle()).toMatchObject({
     startupPrepared: true,
     pendingFirstMessage: FIRST_MESSAGE,

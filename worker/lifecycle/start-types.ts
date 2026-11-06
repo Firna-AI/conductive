@@ -1,5 +1,6 @@
 import type { User } from '../../src/shared/api'
 import type { SendMessageRequest } from '../../src/shared/messages'
+import type { MaskedStartLog } from './masked-start-log'
 
 export interface WorkspaceStartJob {
   workspaceId: string
@@ -34,9 +35,9 @@ export interface WorkspaceCreation {
   createdAt: number
 }
 
-export type WorkspaceStartResult =
+export type WorkspaceStartResult<Log = MaskedStartLog> =
   | { ok: true }
-  | { ok: false; error: { code: string; message: string; log: string | null } }
+  | { ok: false; error: { code: string; message: string; log: Log | null } }
 
 export interface CreationPublication {
   workspaceId: string

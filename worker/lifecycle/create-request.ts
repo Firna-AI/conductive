@@ -1,10 +1,9 @@
 import type { User } from '../../src/shared/api'
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
-import { HttpError } from '../http'
 import { hash } from '../security/crypto'
 import { requireOrgMember } from './access'
 import { lifecycleProvider } from './lifecycle-provider'
-import { readImageSettings, selectedRepositories } from './settings-data'
+import { readCreationImage } from './published-image-data'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import type { WorkspaceStartJob } from './start-types'
 
@@ -33,22 +32,8 @@ export async function prepareCreationRequest(
 ): Promise<WorkspaceStartJob> {
   const { env, dependencies } = runtime
   await requireOrgMember(env.DB, orgId, user.id)
-  const repository = (await selectedRepositories(env.DB, orgId)).find(
-    (entry) => entry.id === input.repositoryId,
-  )
-  if (!repository)
-    throw new HttpError(
-      404,
-      'repository_not_found',
-      'The repository is not available.',
-    )
-  const settings = await readImageSettings(env.DB, orgId)
-  if (!settings.imageName)
-    throw new HttpError(
-      409,
-      'image_required',
-      'Ask an org admin to build the cloud computer image first.',
-    )
+  const image = await readCreationImage(env.DB, orgId, input.repositoryId)
+  const { repository } = image
   await lifecycleProvider(env, user.id, orgId, dependencies.fetch)
   const id = reservedId ?? dependencies.randomToken()
   const sessionId = dependencies.randomToken()
@@ -66,9 +51,9 @@ export async function prepareCreationRequest(
     workspaceId: id,
     orgId,
     kind: 'create',
-    imageName: settings.imageName,
-    startupScript: settings.startupScript,
-    environmentCiphertext: settings.envVarsCiphertext,
+    imageName: image.imageName,
+    startupScript: image.startupScript,
+    environmentCiphertext: image.environmentCiphertext,
     defaultBranch: repository.defaultBranch,
     turnId,
     attempt: `workspace-${id}-${dependencies.randomToken()}`,

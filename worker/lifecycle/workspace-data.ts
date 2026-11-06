@@ -152,11 +152,6 @@ export async function insertWorkspace(
         input.message.choice.effort,
         input.message.id,
       ),
-    db
-      .prepare(
-        'INSERT INTO image_leases (workspace_id, org_id, snapshot_name) SELECT ?, org_id, org_image_name FROM settings WHERE org_id = ? AND org_image_name IS NOT NULL',
-      )
-      .bind(input.id, input.orgId),
   ])
   return leasedImage(db, input.orgId, input.id)
 }

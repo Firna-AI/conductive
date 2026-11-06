@@ -1,5 +1,4 @@
 import type {
-  BuildLogEvent,
   BuildResponse,
   BuildsResponse,
   ImageBuild,
@@ -9,6 +8,7 @@ import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type { CommandStatus } from '../sandbox/provider'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import type { SelectedRepository } from './settings-data'
+import { readBuildSnapshot } from './build-log-reader'
 
 export type BuildPhase =
   | 'create'
@@ -267,21 +267,7 @@ export async function readBuild(
   orgId: string,
   buildId: string,
 ): Promise<BuildResponse> {
-  const build = await db
-    .prepare(
-      `SELECT ${buildColumns} FROM image_builds WHERE org_id = ? AND id = ?`,
-    )
-    .bind(orgId, buildId)
-    .first<ImageBuild>()
-  if (!build)
-    throw new HttpError(404, 'build_not_found', 'The build is not available.')
-  const { results } = await db
-    .prepare(
-      'SELECT event_number AS eventNumber, occurred_at AS occurredAt, text FROM image_build_logs WHERE build_id = ? ORDER BY event_number',
-    )
-    .bind(buildId)
-    .all<BuildLogEvent>()
-  return { build, log: results }
+  return readBuildSnapshot(db, orgId, buildId)
 }
 
 export function jobSoftware(job: BuildJob): ImageSoftwareArtifact {

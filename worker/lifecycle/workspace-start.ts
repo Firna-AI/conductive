@@ -1,8 +1,9 @@
 import { HttpError } from '../http'
+import type { MaskedStartLog } from './masked-start-log'
 
 export class WorkspaceStartError extends HttpError {
-  readonly log: string | null
-  constructor(log: string | null) {
+  readonly log: MaskedStartLog | null
+  constructor(log: MaskedStartLog | null) {
     super(
       502,
       'workspace_start_failed',
@@ -10,16 +11,4 @@ export class WorkspaceStartError extends HttpError {
     )
     this.log = log
   }
-}
-
-export function redactStartupLog(
-  value: string,
-  secrets: readonly string[],
-): string {
-  let result = value
-  for (const secret of [...secrets]
-    .filter(Boolean)
-    .sort((a, b) => b.length - a.length))
-    result = result.replaceAll(secret, '[hidden]')
-  return result
 }

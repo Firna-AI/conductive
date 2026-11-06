@@ -1,7 +1,14 @@
 import type { AppEnv } from '../env'
 import { encrypt, decrypt } from '../security/crypto'
 import { isRecord } from '../http'
-import { redactStartupLog } from './workspace-start'
+import { MaskedStartLog } from './masked-start-log'
+
+/** Internal RPC carries only ciphertext, never a masked class instance. */
+export interface EncryptedStartLog {
+  context: string
+  chunks: string[]
+  secretsCiphertext: string | undefined
+}
 
 export function startLogContext(workspaceId: string, attempt: string): string {
   return JSON.stringify(['workspace-start-log', workspaceId, attempt])
@@ -20,8 +27,8 @@ export async function releasedStartLog(
   context: string,
   chunks: readonly string[],
   secretsCiphertext: string | undefined,
-): Promise<string> {
-  if (!secretsCiphertext) return ''
+): Promise<MaskedStartLog> {
+  if (!secretsCiphertext) return MaskedStartLog.mask('', [])
   const value: unknown = JSON.parse(
     await decrypt(secretsCiphertext, context, env.BOAT_KEY_ENCRYPTION_KEY),
   )
@@ -46,8 +53,5 @@ export async function releasedStartLog(
     if (value.stream === 'stdout') stdout.push(value.text)
     else stderr.push(value.text)
   }
-  return (
-    redactStartupLog(stdout.join(''), secrets) +
-    redactStartupLog(stderr.join(''), secrets)
-  )
+  return MaskedStartLog.mask(stdout.join('') + stderr.join(''), secrets)
 }

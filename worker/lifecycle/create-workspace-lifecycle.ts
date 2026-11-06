@@ -46,10 +46,11 @@ export function createWorkspaceLifecycle(
         )
       },
       stop: async () => {
-        await stopWorkspaceSandbox(
+        const result = await stopWorkspaceSandbox(
           await workspaceActionContext(env, dependencies, lifecycle),
         )
-        await turns.clear()
+        if (result !== 'pending') await turns.clear()
+        return result
       },
       keepalive: async () => {
         return keepWorkspaceDisk(
@@ -57,9 +58,11 @@ export function createWorkspaceLifecycle(
         )
       },
       extendDeadline: async () => {
-        await extendWorkspaceDeadline(
+        const result = await extendWorkspaceDeadline(
           await workspaceActionContext(env, dependencies, lifecycle),
         )
+        if (result) await turns.clear()
+        return result
       },
       reconcile: async () => {
         const state = await lifecycle.read()

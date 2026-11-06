@@ -1,0 +1,49 @@
+import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
+import type { ImageSoftwareArtifact } from './image-software'
+import type { SelectedRepository } from './settings-data'
+
+/** Fixtures use a complete published record, as production image publication does. */
+export async function seedPublishedImage(
+  db: D1Database,
+  input: {
+    orgId: string
+    buildId: string
+    imageName: string
+    repositories: readonly SelectedRepository[]
+    software: ImageSoftwareArtifact
+    now: number
+  },
+): Promise<void> {
+  await db.batch([
+    db
+      .prepare(
+        `INSERT INTO image_builds
+       (id, org_id, kind, state, snapshot_name, settings_revision, runner_protocol_version, started_at, completed_at)
+       VALUES (?, ?, 'build', 'succeeded', ?, 1, ?, ?, ?)`,
+      )
+      .bind(
+        input.buildId,
+        input.orgId,
+        input.imageName,
+        RUNNER_PROTOCOL_VERSION,
+        input.now,
+        input.now,
+      ),
+    db
+      .prepare(
+        `INSERT INTO image_build_jobs
+       (build_id, phase, install_script, repositories_json, software_json)
+       VALUES (?, 'done', '', ?, ?)`,
+      )
+      .bind(
+        input.buildId,
+        JSON.stringify(input.repositories),
+        JSON.stringify(input.software),
+      ),
+    db
+      .prepare(
+        'UPDATE settings SET org_image_name = ?, image_build_id = ? WHERE org_id = ?',
+      )
+      .bind(input.imageName, input.buildId, input.orgId),
+  ])
+}

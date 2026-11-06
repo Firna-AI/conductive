@@ -2,7 +2,7 @@ import type { AppEnv, AppDependencies } from '../env'
 import { HttpError } from '../http'
 import { requireOrgMember } from './access'
 import { insertWorkspace, workspaceExists } from './workspace-data'
-import { leasedImage } from './image-leases'
+import { leasedCreationImage } from './image-leases'
 import { ensureWorkspaceToken } from './tokens'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { WorkspaceStartJob } from './start-types'
@@ -22,6 +22,13 @@ export async function prepareWorkspaceRecords(
     )
   await requireOrgMember(env.DB, job.orgId, creation.user.id)
   await requireOrgMember(env.DB, job.orgId, creation.sender.id)
+  const image = await leasedCreationImage(
+    env.DB,
+    job.orgId,
+    job.workspaceId,
+    creation.repositoryId,
+  )
+  job.defaultBranch = image.defaultBranch
   if (!(await workspaceExists(env.DB, job.orgId, job.workspaceId))) {
     await insertWorkspace(env.DB, {
       id: job.workspaceId,
@@ -38,7 +45,6 @@ export async function prepareWorkspaceRecords(
       now: creation.createdAt,
     })
   }
-  const imageName = await leasedImage(env.DB, job.orgId, job.workspaceId)
   await ensureWorkspaceToken(
     env,
     job.workspaceId,
@@ -56,5 +62,5 @@ export async function prepareWorkspaceRecords(
     },
   })
   await endpoint.beginLifecycleStart('create')
-  return imageName
+  return image.imageName
 }

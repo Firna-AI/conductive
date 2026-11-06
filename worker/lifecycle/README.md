@@ -54,8 +54,10 @@ const response = await handleLifecycleRequest(request, context, runtime, {
 })
 ```
 
-- A create needs a published org image. A repeat of the same first message
-  ID from the same sender returns the same workspace.
+- A create needs a published org image and a repository that its build
+  loaded. A change to the chosen repositories takes effect after the next
+  successful build. A repeat of the same first message ID from the same
+  sender returns the same workspace.
 - A create or a resume queues its start with `queueLifecycleStart`, and
   waits with `waitLifecycleStart`. The workspace object runs the start, so
   a closed browser does not cancel it.
@@ -66,11 +68,16 @@ const response = await handleLifecycleRequest(request, context, runtime, {
 - Open and resume restart only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
+- After the startup script succeeds at create and each resume, the start
+  calls the start hook of the [terminal backend](../terminal/README.md).
+  The hook starts the terminal and caches its encrypted password before
+  the workspace becomes ready. Builds and disk retention restarts skip it.
 - Activity from the `input`, `terminal`, and `preview` sources resets the
   idle time.
 - The build log is a stream of server-sent events. It continues after the
   `Last-Event-ID` header or the `after` value, and it ends with a `build`
-  event when the job ends.
+  event when the job ends. One D1 batch reads the build state and its log,
+  so the stream sends all log events before the final `build` event.
 
 `createWorkspace` in [`workspaces.ts`](workspaces.ts) also takes an optional
 trusted `sender` as its last argument. The agent tools need it for a
@@ -82,10 +89,11 @@ turn and the branch step use the sender.
 `handleGitCredential` in [`machine.ts`](machine.ts) serves
 `MACHINE_PATHS.gitCredential` on the machine hostname. The
 [git credential helper](../../image/README.md#git-credentials) sends the
-workspace token and the ID of the current turn. The workspace object maps
-that turn to its sender. Only trusted turn records give a sender: the first
-turn of a create, and each turn that the chat backend registers. A stop
-clears them.
+workspace token as a bearer token, and the current turn ID in the
+`X-Conducting-Turn-Id` header. The handler reads no request body and needs
+no content type. The workspace object maps that turn to its sender. Only
+trusted turn records give a sender: the first turn of a create, and each
+turn that the chat backend registers. A stop clears them.
 
 The handler returns a fresh GitHub App user token of the sender, from
 `freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).
@@ -117,19 +125,34 @@ chat backend and the runner ingestion, and no code calls them yet:
 - `acknowledgeLifecycleFirstMessage` clears the first message that the
   object keeps from the create.
 
-The `alarm` of the class serves both roles. For a workspace object, it:
+The `alarm` of the class serves both roles. For an image coordinator, it
+advances the running build or refresh by one step, or starts the daily
+refresh. For a workspace object, it:
 
 - runs the queued start of a create or a resume, one phase at a time
 - stops the sandbox after 30 minutes without activity or a running turn
-- extends the Boat auto-stop deadline while a turn runs
+- extends the Boat auto-stop deadline while a turn runs, and applies the
+  state in that reply even when the saved runner flag says connected
 - reads the sandbox state from Boat while the runner is not connected
 - runs the disk retention restart 13 days after each confirmed stop
 - retries the sandbox delete of a failed create
 
-The object stores the env values of a start encrypted, and hides them in
-each start log that it returns. For an image coordinator, the alarm
-advances the running build or refresh by one step, or starts the daily
-refresh.
+The deadline and stop actions use the sandbox state in each Boat reply.
+When Boat refuses an action, they read the sandbox state once. The
+[Boat update reference](https://docs.boat.dev/api/reference/sandboxes/update-sandbox)
+does not promise a refusal for an archived sandbox, so the code handles a
+reply and a refusal. A confirmed stop or a Boat `error` state clears all
+running sessions and turn records. A Boat `error` state sets the workspace
+error state, with no resume and no delete. A stop reply that still shows an
+active sandbox keeps the workspace state and schedules another alarm.
+
+The object encrypts the env values and output chunks of a start. To release
+a log, it joins all stdout parts, then all stderr parts, and masks the
+joined text with the saved env values. So a value that crosses the stdout
+and stderr boundary stays hidden. Only `MaskedStartLog.mask` can create a
+`MaskedStartLog`, because the constructor is private. Internal RPC carries
+only encrypted log data, and the caller decrypts and masks it again.
+Browser responses keep the plain string log of the shared contract.
 
 The `fetch` of the class opens the workspace event socket at
 `workspaceEventsPath` of `src/shared/events.ts`. Forward the browser's
@@ -159,8 +182,12 @@ the step, the output offsets, and the log.
   repositories of the current image again, and saves a snapshot.
 - The org image changes only when the new snapshot is ready. Each job
   deletes its build sandbox at the end, and keeps its history and log.
-- A queued create holds a lease on its source image. Cleanup waits for
-  that lease before it deletes an old snapshot. D1 keeps deferred cleanup.
+- A creation claim captures a published image and its repository's default
+  branch. One D1 transaction stores its start plan, env vars, and startup
+  script, and leases the snapshot, before the workspace row exists.
+- Cleanup waits for a lease before it deletes an old snapshot. D1 keeps
+  deferred cleanup. A ready sandbox, a workspace delete, or a claim that
+  leaves the pending state releases the lease.
 
 `createGitHubImageSourceMaterializer` in
 [`image-sources/materialize.ts`](image-sources/materialize.ts) loads the
@@ -205,6 +232,11 @@ this folder, where the tests can reach it.
 D1 holds the workspace, token, build, and log records. The storage of each
 object holds the lifecycle state, the turn records, and the events.
 
+`image-sources/local-materialize.test.ts` runs the production source loader
+with local Git, `/bin/sh`, and fake GitHub requests. Its provider maps the
+sandbox home to a temporary folder under `.context/`. It refuses each
+command that still holds the production home path.
+
 ### Key Code
 
 - [`browser.ts`](browser.ts): `handleLifecycleRequest`, the browser routes.
@@ -212,19 +244,31 @@ object holds the lifecycle state, the turn records, and the events.
   route.
 - [`workspaces.ts`](workspaces.ts): `createWorkspace`, which records a
   workspace and queues its start.
+- [`creation-claims.ts`](creation-claims.ts): `claimCreation`, which records
+  the claim, its start plan, and its image lease in one D1 batch. Its
+  statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
+  [`published-image-data.ts`](published-image-data.ts) reads the published image.
 - [`workspace-resume.ts`](workspace-resume.ts): `openWorkspace` and
   `resumeWorkspace`.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
   phases, process IDs, output offsets, and results.
+- [`start-logs.ts`](start-logs.ts): `releasedStartLog`, which masks the
+  decrypted log as a [`MaskedStartLog`](masked-start-log.ts).
+- [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
+  transport, and `workspaceLifecycleEndpoint`, which masks each received log.
 - [`failed-creations.ts`](failed-creations.ts): the hidden drafts of failed
   creates, and `failedCreationForSender`.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
+- [`workspace-actions.ts`](workspace-actions.ts): the stop, deadline, and
+  state read actions on the sandbox.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`.
+- [`build-log-reader.ts`](build-log-reader.ts): `readBuildSnapshot`, which
+  reads the build state and its log in one D1 batch.
 - [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
   `runImageAlarm`.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.

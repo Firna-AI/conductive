@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import { TOOL_TURN_HEADER } from '../../tools/context'
 import { saveGitHubTokens } from '../security/github-tokens'
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
@@ -10,6 +11,59 @@ import { readWorkspaceToken } from './tokens'
 import { createWorkspace } from './workspaces'
 
 const backendFixture = setupBackendTests()
+
+it('returns the trusted sender token without reading a large request body', async () => {
+  const fixture = await backendFixture()
+  try {
+    const { runtime, org, user } = fixture
+    const created = await fixture.run(() =>
+      createWorkspace(runtime, org.id, user, {
+        repositoryId: fixture.repositoryId,
+        firstMessage: FIRST_MESSAGE,
+      }),
+    )
+    const actor = fixture.actors.get(created.workspace.id)?.endpoint()
+    if (!actor) throw new Error('Missing production controller')
+    await actor.reportRunnerLifecycle({ type: 'runner.ready' })
+    await saveGitHubTokens(
+      runtime.env,
+      user.id,
+      {
+        accessToken: 'trusted-sender-token',
+        expiresAt: null,
+        refreshToken: null,
+        refreshExpiresAt: null,
+      },
+      TEST_TIME,
+    )
+    const token = await readWorkspaceToken(runtime.env, created.workspace.id)
+    const request = new Request(
+      `${runtime.env.MACHINE_ORIGIN}${MACHINE_PATHS.gitCredential}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          [TOOL_TURN_HEADER]: created.first.turnId,
+        },
+        body: 'x'.repeat(2 * 1024 * 1024),
+      },
+    )
+    const result = await handleGitCredential(request, runtime).then(
+      async (response) => ({
+        status: response.status,
+        body: await response.json(),
+      }),
+      (error: unknown) => error,
+    )
+    expect(result).toEqual({
+      status: 200,
+      body: { token: 'trusted-sender-token' },
+    })
+    expect(request.bodyUsed).toBe(false)
+  } finally {
+    await fixture.dispose()
+  }
+})
 
 it('gets the trusted turn sender token afresh for concurrent sessions and rejects arbitrary identities', async () => {
   const fixture = await backendFixture()
@@ -70,9 +124,9 @@ it('gets the trusted turn sender token afresh for concurrent sessions and reject
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            [TOOL_TURN_HEADER]: turnId,
           },
-          body: JSON.stringify({ turnId, ...extra }),
+          body: JSON.stringify(extra),
         },
       )
     const [first, second] = await Promise.all([

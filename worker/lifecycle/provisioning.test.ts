@@ -64,7 +64,13 @@ it('recovers an accepted create after its caller closes and the actor restarts',
     )
     expect(reopened.workspace.id).toBe(id)
     expect(fixture.boat.starts).toHaveLength(1)
-    expect(fixture.boat.commands).toHaveLength(3)
+    expect(fixture.boat.commands).toHaveLength(4)
+    expect(fixture.boat.commandRequests.at(-1)).toMatchObject({
+      detached: false,
+      command: expect.stringContaining(
+        'systemctl start conducting-terminal.service',
+      ),
+    })
     expect(await fixture.runtime.workspace(id).readLifecycle()).toMatchObject({
       state: 'starting',
       startupPrepared: true,

@@ -1,5 +1,29 @@
 import { HttpError } from '../http'
 
+export async function leasedCreationImage(
+  db: D1Database,
+  orgId: string,
+  workspaceId: string,
+  repositoryId: string,
+): Promise<{ imageName: string; defaultBranch: string }> {
+  const row = await db
+    .prepare(
+      `SELECT l.snapshot_name AS imageName, p.default_branch AS defaultBranch
+       FROM image_leases l JOIN workspace_creation_plans p
+         ON p.workspace_id = l.workspace_id AND p.image_name = l.snapshot_name
+       WHERE l.org_id = ? AND l.workspace_id = ? AND p.repository_id = ?`,
+    )
+    .bind(orgId, workspaceId, repositoryId)
+    .first<{ imageName: string; defaultBranch: string }>()
+  if (!row)
+    throw new HttpError(
+      409,
+      'image_required',
+      'Ask an org admin to build the cloud computer image first.',
+    )
+  return row
+}
+
 export async function leasedImage(
   db: D1Database,
   orgId: string,

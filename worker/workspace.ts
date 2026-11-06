@@ -14,13 +14,19 @@ import type {
   WorkspaceLifecycleEndpoint,
 } from './lifecycle/workspace-runtime'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
+import { nativeWorkspaceStorage } from './lifecycle/platform-storage'
+import { readEncryptedStartLog } from './lifecycle/start-storage'
+import {
+  startResultForTransport,
+  type WorkspaceLifecycleTransport,
+} from './lifecycle/workspace-transport'
 import { createWorkspaceController } from './lifecycle/workspace-controller'
 import type { WorkspaceController } from './lifecycle/workspace-controller-types'
 import { nativeWorkspacePlatform } from './lifecycle/workspace-platform'
 
 export class Workspace
   extends DurableObject<LifecycleEnvironment>
-  implements WorkspaceLifecycleEndpoint
+  implements WorkspaceLifecycleTransport
 {
   private readonly chat: WorkspaceChat
   private readonly controller: WorkspaceController
@@ -48,18 +54,27 @@ export class Workspace
     return this.controller.queueLifecycleStart(job)
   }
 
-  waitLifecycleStart() {
-    return this.controller.waitLifecycleStart()
+  async waitLifecycleStart() {
+    return startResultForTransport(
+      await this.controller.waitLifecycleStart(),
+      () => this.readLifecycleStartLog(),
+    )
   }
-  waitCreationLifecycle() {
-    return this.controller.waitCreationLifecycle()
+  async waitCreationLifecycle() {
+    return startResultForTransport(
+      await this.controller.waitCreationLifecycle(),
+      () => this.readLifecycleStartLog(),
+    )
   }
-  readCreationLifecycleResult() {
-    return this.controller.readCreationLifecycleResult()
+  async readCreationLifecycleResult() {
+    const result = await this.controller.readCreationLifecycleResult()
+    return result
+      ? startResultForTransport(result, () => this.readLifecycleStartLog())
+      : undefined
   }
 
   readLifecycleStartLog() {
-    return this.controller.readLifecycleStartLog()
+    return readEncryptedStartLog(nativeWorkspaceStorage(this.ctx.storage))
   }
 
   async retainLifecycleFailedCreation(

@@ -28,7 +28,8 @@ export async function workspaceResponse(
           ...state.error,
           log:
             state.error.log ??
-            ((await runtime.workspace(workspaceId).readLifecycleStartLog()) ||
+            ((await runtime.workspace(workspaceId).readLifecycleStartLog())
+              .text ||
               null),
         }
       : null,

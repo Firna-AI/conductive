@@ -174,7 +174,7 @@ it('resumes the same disk and retries a failed startup on its already running ma
       ),
     ).rejects.toMatchObject({
       code: 'workspace_start_failed',
-      log: 'failed [hidden]',
+      log: { text: 'failed [hidden]' },
     })
     expect(boat.resumeIds).toEqual(['bx_1'])
     expect(

@@ -4,7 +4,9 @@ import {
   encryptedStartText,
   releasedStartLog,
   startLogContext,
+  type EncryptedStartLog,
 } from './start-logs'
+import type { MaskedStartLog } from './masked-start-log'
 import type { StartJobStorage } from './start-types'
 
 export const START_JOB_KEY = 'lifecycle:start-job'
@@ -19,7 +21,14 @@ const LOG = START_LOG_PREFIX
 export async function readStartLog(
   storage: WorkspaceStorage,
   env: Pick<AppEnv, 'BOAT_KEY_ENCRYPTION_KEY'>,
-): Promise<string> {
+): Promise<MaskedStartLog> {
+  const log = await readEncryptedStartLog(storage)
+  return releasedStartLog(env, log.context, log.chunks, log.secretsCiphertext)
+}
+
+export async function readEncryptedStartLog(
+  storage: WorkspaceStorage,
+): Promise<EncryptedStartLog> {
   const chunks: string[] = []
   let after = LOG
   while (true) {
@@ -30,12 +39,12 @@ export async function readStartLog(
     })
     chunks.push(...entries.values())
     if (entries.size < 1_000)
-      return releasedStartLog(
-        env,
-        (await storage.get('text', 'lifecycle:start-log-context')) ?? '',
+      return {
+        context:
+          (await storage.get('text', 'lifecycle:start-log-context')) ?? '',
         chunks,
-        await storage.get('text', 'lifecycle:start-secrets'),
-      )
+        secretsCiphertext: await storage.get('text', 'lifecycle:start-secrets'),
+      }
     after = [...entries.keys()].at(-1) ?? after
   }
 }
@@ -47,15 +56,12 @@ export function durableStartStorage(
 ): StartJobStorage {
   async function storedResult(key: string) {
     const result = await storage.get('result', key)
-    return result && !result.ok
-      ? {
-          ...result,
-          error: {
-            ...result.error,
-            log: (await readStartLog(storage, env)) || null,
-          },
-        }
-      : result
+    if (!result || result.ok) return result
+    const log = await readStartLog(storage, env)
+    return {
+      ...result,
+      error: { ...result.error, log: log.text ? log : null },
+    }
   }
   return {
     job: () => storage.get('job', JOB),
@@ -115,9 +121,12 @@ export function durableStartStorage(
       await storage.transaction(async (transaction) => {
         const current = await transaction.get('job', JOB)
         if (!current || (current.cancelled && result.ok)) return
-        await transaction.put('result', RESULT, result)
+        const stored = result.ok
+          ? result
+          : { ...result, error: { ...result.error, log: null } }
+        await transaction.put('result', RESULT, stored)
         if (current.kind === 'create') {
-          await transaction.put('result', CREATE_RESULT, result)
+          await transaction.put('result', CREATE_RESULT, stored)
           await transaction.put('publication', PUBLICATION, {
             workspaceId: current.workspaceId,
             state: result.ok ? 'succeeded' : 'failed',

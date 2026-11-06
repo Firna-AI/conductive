@@ -33,9 +33,12 @@ export interface DurableLifecycleState {
 
 export interface LifecycleHooks {
   changed(state: DurableLifecycleState): void | Promise<void>
-  stop(): Promise<void>
+  stop(): Promise<LifecycleStopResult | void>
   keepalive(): Promise<boolean | void>
-  extendDeadline(): Promise<void>
-  reconcile?(): Promise<'stopped' | 'error' | undefined>
+  extendDeadline(): Promise<LifecycleReconciliation | void>
+  reconcile?(): Promise<LifecycleReconciliation>
   startPending?(): Promise<boolean>
 }
+
+export type LifecycleReconciliation = 'stopped' | 'error' | undefined
+export type LifecycleStopResult = 'stopped' | 'error' | 'pending'

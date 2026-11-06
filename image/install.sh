@@ -18,18 +18,12 @@ chmod -R a+rX "$fresh_software"
 rm -rf /opt/conducting/software
 mv "$fresh_software" /opt/conducting/software
 
-if ! command -v ttyd >/dev/null 2>&1; then
-  apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y ttyd
-fi
 install -m 755 /opt/conducting/staged/runner-start.sh /opt/conducting/runner-start.sh
-install -m 755 /opt/conducting/staged/terminal-start.sh /opt/conducting/terminal-start.sh
 install -m 755 /opt/conducting/staged/git-credential-helper.sh /usr/local/bin/conducting-git-credential
 install -m 644 /opt/conducting/staged/git-credential-helper.mjs /opt/conducting/git-credential-helper.mjs
 install -m 644 /opt/conducting/staged/conducting-runner.service /etc/systemd/system/conducting-runner.service
-install -m 644 /opt/conducting/staged/conducting-terminal.service /etc/systemd/system/conducting-terminal.service
 git config --system --replace-all credential.helper /usr/local/bin/conducting-git-credential
 git config --system credential.useHttpPath true
 systemctl daemon-reload
-systemctl enable conducting-runner.service conducting-terminal.service
+systemctl enable conducting-runner.service
 # Builds contain no workspace settings. Services start only in a workspace.

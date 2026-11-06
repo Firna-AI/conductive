@@ -7,12 +7,12 @@ import type { AppDependencies, AppEnv } from '../env'
 import { prepareWorkspaceRecords } from './start-records'
 import { publishCreationResult } from './creation-publication'
 import { HttpError } from '../http'
+import { startWorkspaceTerminal } from '../terminal/service'
 import { lifecycleProvider } from './lifecycle-provider'
 import type { SandboxProvider } from '../sandbox/provider'
 import { readWorkspace } from './workspace-data'
 import { finishFailedStart } from './start-failure'
-import { repositoryDirectory, shellQuote } from './commands'
-import { workspaceStartupCommand } from './image-software'
+import { workspacePhaseCommand } from './start-command'
 import { firstOrgAdmin, workspaceEnvironment } from './settings-data'
 import { readWorkspaceToken } from './tokens'
 import { WorkspaceStartError } from './workspace-start'
@@ -188,12 +188,10 @@ export class WorkspaceStartCoordinator {
           stepLabel(job.phase),
           'running',
         )
-        const directory = shellQuote(repositoryDirectory(row.repositoryId))
-        const command =
-          job.phase === 'startup'
-            ? workspaceStartupCommand(job.startupScript)
-            : `set -eu\nexport CONDUCTING_TURN_ID=${shellQuote(job.turnId)}\ncd ${directory}\n${job.phase === 'fetch' ? `git fetch origin ${shellQuote(job.defaultBranch)}` : `git checkout -b ${shellQuote(row.branch)} FETCH_HEAD`}`
-        const started = await provider.startCommand(row.sandboxId, command)
+        const started = await provider.startCommand(
+          row.sandboxId,
+          workspacePhaseCommand(row, job),
+        )
         await this.storage.update({ ...job, processId: started.processId })
         return false
       }
@@ -206,6 +204,13 @@ export class WorkspaceStartCoordinator {
       if (status.more || status.running) return false
       if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut)
         throw new WorkspaceStartError(null)
+      if (job.phase === 'startup')
+        await startWorkspaceTerminal(
+          this.env,
+          job.orgId,
+          job.workspaceId,
+          this.dependencies,
+        )
       await this.endpoint.lifecycleStep(
         job.phase,
         stepLabel(job.phase),

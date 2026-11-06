@@ -18,6 +18,7 @@ import type { WorkspaceStartJob, WorkspaceStartResult } from './start-types'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import type { ImageRuntime, PrepareImageSources } from './image-builds'
 import type { ImageCoordinatorState } from './image-timers'
+import { seedPublishedImage } from './published-image-test-support'
 
 export const SOFTWARE = {
   url: 'https://software.conducting.test/runner.tar.gz',
@@ -45,11 +46,21 @@ export async function backendFixture(sharedHarness?: TestHarness) {
   )
     .bind(repositoryId, org.id, 'example/repository', 'main')
     .run()
-  await harness.env.DB.prepare(
-    'UPDATE settings SET org_image_name = ? WHERE org_id = ?',
-  )
-    .bind('last-good-image', org.id)
-    .run()
+  await seedPublishedImage(harness.env.DB, {
+    orgId: org.id,
+    buildId: 'published-image',
+    imageName: 'last-good-image',
+    repositories: [
+      {
+        id: repositoryId,
+        orgId: org.id,
+        fullName: 'example/repository',
+        defaultBranch: 'main',
+      },
+    ],
+    software: SOFTWARE,
+    now: TEST_TIME - 1,
+  })
   let now = TEST_TIME
   let sequence = 0
   const actors = new Map<string, ReturnType<typeof backendPlatform>>()

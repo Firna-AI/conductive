@@ -4,6 +4,7 @@ import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
 import type { AppDependencies, AppEnv } from '../env'
 import type { DurableLifecycleState } from './durable-types'
 import type { FailedCreationDraft } from './failed-creations'
+import type { MaskedStartLog } from './masked-start-log'
 import type { WorkspaceStartJob, WorkspaceStartResult } from './start-types'
 
 export interface PendingTurn {
@@ -43,7 +44,7 @@ export interface WorkspaceLifecycleEndpoint {
   waitLifecycleStart(): Promise<WorkspaceStartResult>
   waitCreationLifecycle(): Promise<WorkspaceStartResult>
   readCreationLifecycleResult(): Promise<WorkspaceStartResult | undefined>
-  readLifecycleStartLog(): Promise<string>
+  readLifecycleStartLog(): Promise<MaskedStartLog>
   retainLifecycleFailedCreation(
     error: FailedCreationDraft['error'],
     fallback?: Omit<FailedCreationDraft, 'error'>,

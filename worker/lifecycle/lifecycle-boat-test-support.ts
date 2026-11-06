@@ -7,6 +7,15 @@ import { FakeBoat } from '../test-support/fake-boat'
 export class LifecycleBoat {
   readonly server = new FakeBoat()
   readonly commands: string[] = []
+  readonly commandRequests: {
+    sandboxId: string
+    command: string
+    detached: boolean
+  }[] = []
+  readonly fileReads: string[] = []
+  readonly sandboxReads: string[] = []
+  readonly deadlineIds: string[] = []
+  terminalPassword = 'b'.repeat(64)
   readonly starts: Record<string, unknown>[] = []
   readonly states = new Map<string, SandboxState>()
   readonly resumeIds: string[] = []
@@ -21,9 +30,12 @@ export class LifecycleBoat {
   synchronousOutput = 'done\n'
   deleteFailures = 0
   failStop = false
+  stopReplyState: SandboxState = 'archived'
+  failDeadline = false
   lostCreateReplies = 0
   afterLostCreate?: () => Promise<void>
   beforeSandboxRead?: (sandboxId: string) => Promise<void>
+  beforeCommand?: (command: string, detached: boolean) => Promise<void>
   readonly deletedSnapshots: string[] = []
   readonly statusRequests: {
     processId: number
@@ -92,7 +104,7 @@ export class LifecycleBoat {
             { status: 503 },
           )
         else {
-          this.states.set(sandboxId, 'archived')
+          this.states.set(sandboxId, this.stopReplyState)
           response = this.sandbox(sandboxId)
         }
       } else if (operation === 'commands') {
@@ -100,6 +112,12 @@ export class LifecycleBoat {
         if (!isRecord(body) || typeof body.command !== 'string')
           throw new Error('Invalid test command')
         this.commands.push(body.command)
+        this.commandRequests.push({
+          sandboxId,
+          command: body.command,
+          detached: body.detached === true,
+        })
+        await this.beforeCommand?.(body.command, body.detached === true)
         response =
           body.detached === true
             ? Response.json({
@@ -116,6 +134,19 @@ export class LifecycleBoat {
                 stderr: '',
                 timedOut: false,
               })
+      } else if (operation === 'files' && request.method === 'GET') {
+        const path = url.searchParams.get('path')
+        if (!path) throw new Error('Missing test file path')
+        this.fileReads.push(path)
+        response = Response.json({
+          ok: true,
+          type: 'file.read',
+          success: true,
+          path,
+          size: this.terminalPassword.length,
+          encoding: 'base64',
+          content: btoa(this.terminalPassword),
+        })
       } else if (operation?.startsWith('commands/')) {
         await this.beforeStatus?.()
         const processId = Number(operation.slice('commands/'.length))
@@ -146,8 +177,15 @@ export class LifecycleBoat {
           more: nextOffset < text.length,
         })
       } else {
-        if (request.method === 'GET') await this.beforeSandboxRead?.(sandboxId)
-        response = this.sandbox(sandboxId)
+        if (request.method === 'GET') {
+          this.sandboxReads.push(sandboxId)
+          await this.beforeSandboxRead?.(sandboxId)
+        }
+        if (request.method === 'PATCH') this.deadlineIds.push(sandboxId)
+        response =
+          request.method === 'PATCH' && this.failDeadline
+            ? Response.json({ ok: false, code: 'unavailable' }, { status: 503 })
+            : this.sandbox(sandboxId)
       }
     }
     this.server.responseOverride = response

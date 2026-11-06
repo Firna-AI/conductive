@@ -5,6 +5,11 @@ import { lifecycleProvider } from './lifecycle-provider'
 import { readWorkspace, revokeWorkspacePreviews } from './workspace-data'
 import { firstOrgAdmin } from './settings-data'
 import type { DurableLifecycle } from './durable'
+import type {
+  LifecycleReconciliation,
+  LifecycleStopResult,
+} from './durable-types'
+import type { Sandbox, SandboxProvider } from '../sandbox/provider'
 
 export interface WorkspaceActionContext {
   env: AppEnv
@@ -59,28 +64,55 @@ export async function actionResources(context: WorkspaceActionContext) {
 
 export async function stopWorkspaceSandbox(
   context: WorkspaceActionContext,
-): Promise<void> {
+): Promise<LifecycleStopResult> {
   const { provider, sandboxId } = await actionResources(context)
-  await provider.stop(sandboxId)
-  await revokeWorkspacePreviews(
-    context.env.DB,
-    context.workspaceId,
-    context.dependencies.now(),
+  const sandbox = await replyOrCurrentState(provider, sandboxId, () =>
+    provider.stop(sandboxId),
   )
+  const status = await reconcileReply(context, sandbox)
+  if (status) return status
+  return 'pending'
 }
 
 export async function extendWorkspaceDeadline(
   context: WorkspaceActionContext,
-): Promise<void> {
+): Promise<LifecycleReconciliation> {
   const { provider, sandboxId } = await actionResources(context)
-  await provider.setAutoStop(sandboxId, 1_800)
+  return reconcileReply(
+    context,
+    await replyOrCurrentState(provider, sandboxId, () =>
+      provider.setAutoStop(sandboxId, 1_800),
+    ),
+  )
 }
 
 export async function reconcileWorkspaceSandbox(
   context: WorkspaceActionContext,
-): Promise<'stopped' | 'error' | undefined> {
+): Promise<LifecycleReconciliation> {
   const { provider, sandboxId } = await actionResources(context)
-  const sandbox = await provider.get(sandboxId)
+  return reconcileReply(context, await provider.get(sandboxId))
+}
+
+/** A refused control operation can mean the computer already stopped. Read once. */
+async function replyOrCurrentState(
+  provider: SandboxProvider,
+  sandboxId: string,
+  operation: () => Promise<Sandbox>,
+): Promise<Sandbox> {
+  try {
+    return await operation()
+  } catch (error) {
+    const sandbox = await provider.get(sandboxId)
+    const status = providerState(sandbox.state)
+    if (status === 'stopped' || status === 'error') return sandbox
+    throw error
+  }
+}
+
+async function reconcileReply(
+  context: WorkspaceActionContext,
+  sandbox: Sandbox,
+): Promise<LifecycleReconciliation> {
   const status = providerState(sandbox.state)
   if (status === 'stopped') {
     await revokeWorkspacePreviews(

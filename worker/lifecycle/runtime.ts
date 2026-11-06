@@ -4,6 +4,7 @@ import type { Workspace } from '../workspace'
 import type { ImageRuntime } from './image-builds'
 import { createGitHubImageSourceMaterializer } from './image-sources/materialize'
 import type { WorkspaceRuntime } from './workspace-runtime'
+import { workspaceLifecycleEndpoint } from './workspace-transport'
 
 export interface LifecycleEnvironment extends AppEnv {
   WORKSPACES: DurableObjectNamespace<Workspace>
@@ -21,7 +22,11 @@ export function workspaceRuntime(
   return {
     env,
     dependencies,
-    workspace: (id) => env.WORKSPACES.getByName(id, { locationHint: 'weur' }),
+    workspace: (id) =>
+      workspaceLifecycleEndpoint(
+        env.WORKSPACES.getByName(id, { locationHint: 'weur' }),
+        env,
+      ),
   }
 }
 

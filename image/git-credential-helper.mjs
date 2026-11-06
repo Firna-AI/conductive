@@ -34,9 +34,8 @@ try {
     signal: AbortSignal.timeout(30_000),
     headers: {
       Authorization: `Bearer ${WORKSPACE_TOKEN}`,
-      'Content-Type': 'application/json',
+      'X-Conducting-Turn-Id': CONDUCTING_TURN_ID,
     },
-    body: JSON.stringify({ turnId: CONDUCTING_TURN_ID }),
   })
   if (!response.ok) throw new Error('Credential request failed')
   const value = await response.json()

@@ -2,6 +2,13 @@ import type { AgentChoice } from '../../src/shared/agents'
 import type { User } from '../../src/shared/api'
 import type { WorkspaceStartJob } from './start-types'
 import { HttpError } from '../http'
+import { leaseStatement, planStatement } from './creation-plan-statements'
+import {
+  imageAdmissionError,
+  publishedImageSource,
+  publishedRepositorySource,
+  type ImageAdmissionFailure,
+} from './published-image-data'
 
 export interface CreationClaim {
   id: string
@@ -45,58 +52,39 @@ export async function claimCreation(
   const creation = job.creation
   if (!creation) throw new Error('Missing creation plan')
   const values = [key.orgId, key.senderUserId, key.messageId]
-  const results = await db.batch<CreationClaim>([
+  const results = await db.batch<
+    CreationClaim | { id: string; state: ImageAdmissionFailure }
+  >([
     db
       .prepare(
         `INSERT OR IGNORE INTO workspace_creation_attempts
       (workspace_id, org_id, sender_user_id, first_message_id, created_at)
-      SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (${completed})`,
+      SELECT ?, ?, ?, ?, ? ${publishedRepositorySource}
+      AND NOT EXISTS (${completed})`,
       )
-      .bind(job.workspaceId, ...values, creation.createdAt, ...values),
+      .bind(
+        job.workspaceId,
+        ...values,
+        creation.createdAt,
+        job.orgId,
+        creation.repositoryId,
+        ...values,
+      ),
     planStatement(db, job),
+    leaseStatement(db, job.workspaceId),
     db
-      .prepare(`${pending} UNION ALL ${completed} LIMIT 1`)
-      .bind(...values, ...values),
+      .prepare(
+        `${pending} UNION ALL ${completed}
+        UNION ALL SELECT '' AS id, CASE WHEN EXISTS (
+          SELECT 1 ${publishedImageSource} WHERE s.org_id = ?
+        ) THEN 'repository_not_found' ELSE 'image_required' END AS state LIMIT 1`,
+      )
+      .bind(...values, ...values, job.orgId),
   ])
-  const claim = results[2].results[0]
+  const claim = results[3].results[0]
   if (!claim) throw new Error('The creation claim could not be recorded')
-  return claim
-}
-
-function planStatement(
-  db: D1Database,
-  job: WorkspaceStartJob,
-): D1PreparedStatement {
-  const creation = job.creation
-  if (!creation) throw new Error('Missing creation plan')
-  return db
-    .prepare(
-      `INSERT OR IGNORE INTO workspace_creation_plans
-    (workspace_id, repository_id, owner_user_id, section_id, session_id, turn_id, city, branch,
-     start_attempt, startup_script, environment_ciphertext, image_name, default_branch, agent, model, effort, attachment_ids_json)
-    SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-    WHERE EXISTS (SELECT 1 FROM workspace_creation_attempts WHERE workspace_id = ? AND state = 'pending')`,
-    )
-    .bind(
-      job.workspaceId,
-      creation.repositoryId,
-      creation.user.id,
-      creation.sectionId ?? null,
-      creation.sessionId,
-      job.turnId,
-      creation.city,
-      creation.branch,
-      job.attempt,
-      job.startupScript,
-      job.environmentCiphertext,
-      job.imageName,
-      job.defaultBranch,
-      creation.request.choice.agent,
-      creation.request.choice.model,
-      creation.request.choice.effort,
-      JSON.stringify(creation.request.attachmentIds),
-      job.workspaceId,
-    )
+  if (claim.state === 'pending' || claim.state === 'succeeded') return claim
+  throw imageAdmissionError(claim.state)
 }
 
 interface PlanRow {
@@ -198,5 +186,15 @@ export async function repairCreationPlan(
   db: D1Database,
   job: WorkspaceStartJob,
 ): Promise<void> {
-  await planStatement(db, job).run()
+  const creation = job.creation
+  if (!creation) throw new Error('Missing creation plan')
+  await claimCreation(
+    db,
+    {
+      orgId: job.orgId,
+      senderUserId: creation.sender.id,
+      messageId: creation.request.id,
+    },
+    job,
+  )
 }

@@ -3,9 +3,8 @@ import credentialStart from '../../image/git-credential-helper.sh?raw'
 import installScript from '../../image/install.sh?raw'
 import runnerService from '../../image/conducting-runner.service?raw'
 import runnerStart from '../../image/runner-start.sh?raw'
-import terminalService from '../../image/conducting-terminal.service?raw'
-import terminalStart from '../../image/terminal-start.sh?raw'
 import { HttpError, isRecord } from '../http'
+import { terminalInstallCommand } from '../terminal/service'
 import { shellQuote, writeFileCommand } from './commands'
 
 export interface ImageSoftwareArtifact {
@@ -56,11 +55,9 @@ export function installImageSoftware(artifact: ImageSoftwareArtifact): string {
   const files: Readonly<Record<string, string>> = {
     'install.sh': installScript,
     'runner-start.sh': runnerStart,
-    'terminal-start.sh': terminalStart,
     'git-credential-helper.sh': credentialStart,
     'git-credential-helper.mjs': credentialScript,
     'conducting-runner.service': runnerService,
-    'conducting-terminal.service': terminalService,
   }
   return [
     'set -eu',
@@ -69,6 +66,7 @@ export function installImageSoftware(artifact: ImageSoftwareArtifact): string {
       writeFileCommand(`/opt/conducting/staged/${name}`, text, '644'),
     ),
     `sudo -n sh /opt/conducting/staged/install.sh ${shellQuote(artifact.url)} ${shellQuote(artifact.sha256)}`,
+    terminalInstallCommand(),
   ].join('\n')
 }
 
@@ -84,6 +82,6 @@ export function workspaceStartupCommand(script: string): string {
     'cd "$CONDUCTING_REPOSITORY_DIR"',
     'sh /run/conducting/startup.sh',
     'touch /run/conducting/workspace-ready',
-    'sudo -n systemctl restart conducting-terminal.service conducting-runner.service',
+    'sudo -n systemctl restart conducting-runner.service',
   ].join('\n')
 }

@@ -16,6 +16,7 @@ import { storeBoatKey } from '../sandbox/keys'
 import { SESSION_COOKIE } from '../security/cookies'
 import { sign } from '../security/crypto'
 import { applyMigrations } from '../test-support/migrations'
+import { seedPublishedImage } from './published-image-test-support'
 
 export async function runtimeBundle(): Promise<string> {
   const output = await build({
@@ -43,7 +44,7 @@ interface RuntimeBindings {
 }
 
 export async function realRuntimeFixture(bundle: string) {
-  const root = `${import.meta.dirname}/../../.context/boat-native-remote-workspaces/milestone-5/review-fixes/runtime`
+  const root = `${import.meta.dirname}/../../.context/boat-native-remote-workspaces/milestone-5/orchestrator-round-1/terminal-state/runtime`
   await mkdir(root, { recursive: true })
   const directory = await mkdtemp(`${root}/case-`)
   const boat = new LifecycleBoat()
@@ -151,6 +152,24 @@ export async function realRuntimeFixture(bundle: string) {
       "INSERT INTO settings (org_id, org_image_name, updated_at) VALUES ('runtime-org', 'base-runtime-image', 0)",
     ),
   ])
+  await seedPublishedImage(database, {
+    orgId: 'runtime-org',
+    buildId: 'base-runtime-build',
+    imageName: 'base-runtime-image',
+    repositories: [
+      {
+        id: 'runtime-repo',
+        orgId: 'runtime-org',
+        fullName: 'example/runtime',
+        defaultBranch: 'main',
+      },
+    ],
+    software: {
+      url: 'https://software.conducting.test/runner.tar.gz',
+      sha256: 'a'.repeat(64),
+    },
+    now: Date.now(),
+  })
   await storeBoatKey(
     env,
     'runtime-org',

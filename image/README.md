@@ -3,19 +3,23 @@
 This folder holds the app's own sandbox software. Each image build installs
 it into the org image before it runs the org's install script. The org
 image is the saved snapshot that every new sandbox of an org starts from.
-In a workspace sandbox, this software starts the agent runner and the
-terminal. It also gives git a fresh GitHub token for each operation. The
-agent tools are not in this folder yet.
+In a workspace sandbox, this software starts the agent runner. It also
+gives git a fresh GitHub token for each operation. The agent tools are not
+in this folder yet.
 
 ## Responsibilities
 
 - Install the runner archive after a check of its SHA-256 digest.
-- Install `ttyd` when the image does not have it.
-- Install and enable two systemd services: the agent runner and the
-  terminal.
+- Install and enable the agent runner's systemd service.
 - Make the git credential helper the system credential helper of git.
-- Start no runner and no terminal in a build sandbox. The services run them
-  only in a workspace sandbox.
+- Start no runner in a build sandbox. The service runs it only in a
+  workspace sandbox.
+
+The [terminal backend](../worker/terminal/README.md) owns ttyd, its service,
+its launcher, and its local password. The software step of each image build
+runs that area's `terminalInstallCommand()` after `install.sh`. The build log
+shows the output of both. The terminal installer enables its service and
+starts nothing.
 
 ## The runner archive
 
@@ -37,15 +41,15 @@ the unpacked archive.
 ## Install
 
 The software step of a build calls `installImageSoftware`. It writes the
-scripts and the units of this folder to `/opt/conducting/staged/`, and then
-it runs this command:
+scripts and the runner unit of this folder to `/opt/conducting/staged/`, and
+then it runs this command:
 
 ```sh
 sudo -n sh /opt/conducting/staged/install.sh '<archive URL>' '<SHA-256 digest>'
 ```
 
 Boat runs commands as `user`, with passwordless sudo. The installer needs
-system permissions. Both installed services run as `user`.
+system permissions. The installed runner service runs as `user`.
 
 `install.sh` does these steps. A failure stops it, and the build fails.
 
@@ -55,12 +59,11 @@ system permissions. Both installed services run as `user`.
    the Node version to the build log.
 3. It replaces `/opt/conducting/software` with the new folder, so no file
    of an older archive stays.
-4. It installs `ttyd` with `apt-get` when the image does not have it.
-5. It installs the start scripts, the git credential helper, and the two
-   systemd units.
-6. It makes `conducting-git-credential` the system credential helper of
+4. It installs the runner start script, the git credential helper, and the
+   runner's systemd unit.
+5. It makes `conducting-git-credential` the system credential helper of
    git, and sets `credential.useHttpPath`.
-7. It enables both services. It does not start them.
+6. It enables the runner service. It does not start it.
 
 A refresh skips this step. So a change in this folder reaches the new
 workspaces of an org only after its next build. A workspace that exists
@@ -80,8 +83,9 @@ each resume, together with the org's env vars:
 | `CONDUCTING_TURN_ID` | Empty. The runner sets it for each agent process. |
 | `CONDUCTING_DISK_KEEPALIVE` | `1` in a disk retention restart, and `0` otherwise. |
 
-Each script reads the variables from `/run/ascii-secrets/env.sh`, where
-Boat puts them. A systemd service does not get them in another way.
+The runner and the terminal launcher read the variables from
+`/run/ascii-secrets/env.sh`, where Boat puts them. A systemd service does
+not get them in another way.
 
 At a create, the Worker first fetches the default branch and creates the
 workspace branch. At each create and each resume, it then runs the command
@@ -91,24 +95,29 @@ of `workspaceStartupCommand`:
    mode 600.
 2. It runs the script in the repository folder, with the variables.
 3. When the script succeeds, it writes the marker
-   `/run/conducting/workspace-ready`, and restarts both services.
+   `/run/conducting/workspace-ready`, and restarts the runner service.
 
-Each start script exits with success, and starts nothing, in these cases:
+After that command succeeds, the Worker calls the terminal backend's start
+hook. That hook starts the terminal service. It caches the locally generated
+password in encrypted form before the workspace becomes ready.
+
+The runner start script exits with success, and starts nothing, in these
+cases:
 
 - `CONDUCTING_DISK_KEEPALIVE` is `1`.
-- `WORKSPACE_TOKEN` is empty. The runner also needs
-  `CONDUCTING_WORKSPACE_ID`.
+- `WORKSPACE_TOKEN` or `CONDUCTING_WORKSPACE_ID` is empty.
 - The marker `/run/conducting/workspace-ready` does not exist.
 
-So a build sandbox and a disk retention restart start no runner and no
-terminal. A disk retention restart runs the startup script, but it writes
-no marker.
+So a build sandbox and a disk retention restart start no runner. The
+terminal backend needs its own marker under `/run`, which only its
+workspace start hook creates. Builds and disk retention restarts do not
+call that hook and start no terminal. A disk retention restart runs the
+startup script, but it writes no ready marker.
 
 Otherwise, `runner-start.sh` runs `runner/main.mjs` with the archive's
-Node, in the repository folder. `terminal-start.sh` runs `ttyd` on port
-7681, with the user `conducting` and a random password. It keeps the
-password in `/run/conducting/terminal-password`, and writes that file when
-it does not exist. Both units restart their service after a failure.
+Node, in the repository folder. The runner unit restarts its service after
+a failure. The terminal backend describes its launcher, password, and
+automatic restart in its [README](../worker/terminal/README.md).
 
 ## Git credentials
 
@@ -119,9 +128,10 @@ caller's `CONDUCTING_TURN_ID`, loads the sandbox variables, and runs
 
 - The helper answers only a `get` request for `https` on `github.com`. It
   ignores every other request.
-- It posts the turn ID to the git credential route at
-  `CONDUCTING_MACHINE_ORIGIN`, with the workspace token as a bearer token.
-  It refuses redirects, and it stops after 30 seconds.
+- It posts to the git credential route at `CONDUCTING_MACHINE_ORIGIN`,
+  with the workspace token as a bearer token. It sends the turn ID in the
+  `X-Conducting-Turn-Id` header. It sends no request body. It refuses
+  redirects, and it stops after 30 seconds.
 - It gives git the token as the password of the user `x-access-token`.
 - The Worker returns a fresh GitHub user token of the sender of that turn.
   The helper saves nothing, so each git operation asks again.
@@ -136,16 +146,22 @@ The Worker's route is not wired to the machine hostname yet, as the
 - A build sandbox starts with no org env vars and no workspace token. So no
   saved snapshot holds a secret of a workspace.
 - The archive URL can hold no user name, no password, and no query.
-- The workspace object keeps the env values of a start only in encrypted
-  form. Before it returns a start log, it hides each of those values, also
-  when a value spans two output parts.
-- The terminal password stays in `/run/conducting/`, with mode 600.
+- The workspace object keeps the env values and output chunks of a start
+  only in encrypted form. Before it returns a start log, it masks the
+  complete joined stdout and stderr with the saved env values. This hides
+  a value across chunks and across the stdout and stderr boundary.
+- The terminal password stays in `/run/conducting-terminal/password`, with
+  mode 600. The terminal backend checks that it has 64 lowercase
+  hexadecimal characters.
+  The readiness command writes no password to output or command history.
 - The helper never writes a token or the Worker's response to its error
   output.
 
 ## Development
 
-These files have no tests of their own yet.
+Run the credential helper test with
+`npm run test -- worker/lifecycle/git-credential-helper.test.ts`. It runs
+the helper as a child process and checks the outgoing credential request.
 
 - The Worker imports each file with Vite's `?raw` suffix. When you add a
   file here, also add it to `installImageSoftware` and to `install.sh`.
@@ -154,19 +170,19 @@ These files have no tests of their own yet.
 
 ### Key Code
 
-- [`install.sh`](install.sh): installs the archive, `ttyd`, the services,
-  and the helper. Its arguments are the archive URL and the digest.
+- [`install.sh`](install.sh): installs the runner archive, its service,
+  and the git helper. Its arguments are the archive URL and the digest.
 - [`runner-start.sh`](runner-start.sh) and
   [`conducting-runner.service`](conducting-runner.service): start the agent
   runner.
-- [`terminal-start.sh`](terminal-start.sh) and
-  [`conducting-terminal.service`](conducting-terminal.service): start
-  `ttyd` with its password.
+- [The terminal backend](../worker/terminal/service.ts): owns the terminal
+  install command, its service, and its workspace start hook.
 - [`git-credential-helper.sh`](git-credential-helper.sh) and
   [`git-credential-helper.mjs`](git-credential-helper.mjs): the git
   credential helper.
 - [`image-software.ts`](../worker/lifecycle/image-software.ts): stages these
-  files for a build, and makes the workspace startup command.
+  files for a build, adds the terminal install command, and makes the
+  workspace startup command.
 
 ### Related Docs
 

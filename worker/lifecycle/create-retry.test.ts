@@ -41,6 +41,11 @@ it('reserves one actor for simultaneous creates before any workspace row exists'
       'SELECT COUNT(*) AS count FROM workspaces',
     ).first('count'),
   ).toBe(0)
+  expect(
+    await runtime.env.DB.prepare(
+      'SELECT COUNT(*) AS count FROM image_leases',
+    ).first('count'),
+  ).toBe(1)
   const actor = fixture.starts.get(id)
   if (!actor) throw new Error('Missing reserved actor')
   for (let step = 0; step < 15 && (await actor.job()); step++)
@@ -49,6 +54,11 @@ it('reserves one actor for simultaneous creates before any workspace row exists'
   expect(created.workspace.id).toBe(id)
   expect(repeated.workspace.id).toBe(id)
   expect(fixture.boat.starts).toHaveLength(1)
+  expect(
+    await runtime.env.DB.prepare(
+      'SELECT COUNT(*) AS count FROM image_leases',
+    ).first('count'),
+  ).toBe(0)
 })
 
 it('joins concurrent pending creates and returns their real failure without accepting a message', async () => {
