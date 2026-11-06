@@ -1,5 +1,5 @@
 import { errorResponse, HttpError, privateResponse } from '../http'
-import { readGitHubBody } from './body'
+import { BodyBudgetExceeded, readBoundedBody } from '../http/bounded-body'
 import type { GitHubRefreshWorkspace } from './contracts'
 import {
   completeDelivery,
@@ -10,6 +10,7 @@ import {
 import { webhookRoute } from './webhook-routing'
 
 export const GITHUB_WEBHOOK_PATH = '/api/github/webhooks'
+const BODY_BUDGET = 26 * 1024 * 1024
 
 export interface GitHubWebhookEnv {
   DB: D1Database
@@ -39,15 +40,21 @@ async function authenticatedBody(
       'github_signature_invalid',
       'The GitHub signature is not valid.',
     )
-  const body = await readGitHubBody(
-    request.body,
-    () =>
-      new HttpError(
+  let body: Uint8Array<ArrayBuffer>
+  try {
+    body =
+      request.body === null
+        ? new Uint8Array(0)
+        : await readBoundedBody(request.body, BODY_BUDGET)
+  } catch (error) {
+    if (error instanceof BodyBudgetExceeded)
+      throw new HttpError(
         413,
         'github_webhook_too_large',
         'The GitHub webhook is too large.',
-      ),
-  )
+      )
+    throw error
+  }
   const bytes = Uint8Array.from(signature.slice(7).match(/../g) ?? [], (hex) =>
     Number.parseInt(hex, 16),
   )

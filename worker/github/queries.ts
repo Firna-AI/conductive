@@ -1,5 +1,18 @@
 const PAGE = 'pageInfo { hasNextPage endCursor }'
 
+function rollup(after: string): string {
+  return `statusCheckRollup {
+    contexts(first: 100, after: ${after}) {
+      nodes {
+        __typename
+        ... on CheckRun { id name status conclusion permalink startedAt completedAt }
+        ... on StatusContext { id context state createdAt }
+      }
+      ${PAGE}
+    }
+  }`
+}
+
 export const COMPARE = `query BannerCompare($owner: String!, $name: String!,
   $baseRef: String!, $headRef: String!) {
   repository(owner: $owner, name: $name) {
@@ -48,20 +61,15 @@ export const REVIEWS = `query BannerReviews($owner: String!, $name: String!,
 }`
 
 export const CHECKS = `query BannerChecks($owner: String!, $name: String!,
-  $number: Int!, $after: String) {
+  $number: Int!, $after: String, $mergeAfter: String) {
   repository(owner: $owner, name: $name) {
     databaseId
     pullRequest(number: $number) {
       headRefOid
-      statusCheckRollup {
-        contexts(first: 100, after: $after) {
-          nodes {
-            __typename
-            ... on CheckRun { id name status conclusion permalink startedAt completedAt }
-            ... on StatusContext { id context state createdAt }
-          }
-          ${PAGE}
-        }
+      ${rollup('$after')}
+      potentialMergeCommit {
+        oid
+        ${rollup('$mergeAfter')}
       }
     }
   }

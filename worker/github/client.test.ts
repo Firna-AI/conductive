@@ -1,35 +1,16 @@
 import { beforeEach, expect, it } from 'vitest'
 
-import { FakeGitHub } from '../test-support/fake-github'
 import { TEST_TIME } from '../test-support/harness'
-import { GitHubReader } from './client'
-import type { GitHubWorkspace } from './contracts'
 import { HEAD_SHA, passedRun, repositoryPull } from './fake-pull'
-import { RepositoryGitHub } from './fake-repository'
+import { createReaderHarness } from './reader-test-harness'
 
-const workspace: GitHubWorkspace = {
-  id: 'workspace-1',
-  orgId: 'org-1',
-  branch: 'changes',
-  repositoryId: 186853002,
-  fullName: 'Codertocat/Hello-World',
-  defaultBranch: 'main',
-  installationId: 1,
-}
-let api: RepositoryGitHub
+let api: ReturnType<typeof createReaderHarness>['api']
+let read: ReturnType<typeof createReaderHarness>['read']
 beforeEach(() => {
-  api = new RepositoryGitHub(new FakeGitHub())
+  const harness = createReaderHarness()
+  api = harness.api
+  read = harness.read
 })
-const read = () =>
-  new GitHubReader(
-    {
-      fetch: (request) => api.fetch(request),
-      now: () => TEST_TIME,
-      token: async () => 'server-read-token',
-    },
-    workspace,
-    'server-read-token',
-  ).read()
 
 it('maps pull request blockers and terminal states into the shared banner', async () => {
   const original = structuredClone(api.pulls[2])
@@ -73,7 +54,7 @@ it('maps pull request blockers and terminal states into the shared banner', asyn
   ]
   for (const sample of cases) {
     api.pulls[2] = { ...original, mergeStateStatus: 'BLOCKED', ...sample.patch }
-    api.pulls[2].checks = sample.checks
+    api.checks.set(HEAD_SHA, sample.checks)
     const snapshot = await read()
     expect(snapshot.banner, sample.state).toMatchObject({
       branch: 'changes',
@@ -130,7 +111,8 @@ it('paginates lookup, checks, and reviews while preserving GitHub order and dura
     headRepository: { databaseId: 999 },
   })
   api.pulls[2].reviewDecision = 'CHANGES_REQUESTED'
-  api.pulls[2].checks = [
+  api.pulls[2].potentialMergeCommit = { oid: 'merge-commit' }
+  api.checks.set('merge-commit', [
     passedRun,
     {
       __typename: 'StatusContext',
@@ -146,7 +128,7 @@ it('paginates lookup, checks, and reviews while preserving GitHub order and dura
       status: 'IN_PROGRESS',
       conclusion: null,
     },
-  ]
+  ])
   api.pulls[2].reviews = [
     { state: 'APPROVED', author: { login: 'alice' } },
     { state: 'CHANGES_REQUESTED', author: { login: 'bob' } },
@@ -186,6 +168,54 @@ it('paginates lookup, checks, and reviews while preserving GitHub order and dura
       durationMs: null,
     },
   ])
+})
+
+it('uses merge checks when present and otherwise uses head checks for both outputs', async () => {
+  const failedHead = { ...passedRun, id: 'failed-head', conclusion: 'FAILURE' }
+  const failedMerge = { ...passedRun, id: 'merge-run', conclusion: 'FAILURE' }
+  const passedMerge = { ...passedRun, id: 'merge-run' }
+  for (const sample of [
+    {
+      head: passedRun,
+      merge: [failedMerge],
+      state: 'checks-failed',
+      id: 'merge-run',
+      check: 'failed',
+    },
+    {
+      head: failedHead,
+      merge: [passedMerge],
+      state: 'ready-to-merge',
+      id: 'merge-run',
+      check: 'passed',
+    },
+    {
+      head: failedHead,
+      merge: null,
+      state: 'checks-failed',
+      id: 'failed-head',
+      check: 'failed',
+    },
+    {
+      head: passedRun,
+      merge: [],
+      state: 'ready-to-merge',
+      id: 'run-z',
+      check: 'passed',
+    },
+  ]) {
+    api.checks.set(HEAD_SHA, [sample.head])
+    api.checks.set('merge-commit', sample.merge ?? [])
+    api.pulls[2].potentialMergeCommit =
+      sample.merge === null ? null : { oid: 'merge-commit' }
+    const snapshot = await read()
+    expect(snapshot.banner.state, sample.id).toBe(sample.state)
+    expect(snapshot.checks, sample.id).toMatchObject({
+      state: 'available',
+      checks: [{ id: sample.id, state: sample.check }],
+    })
+    expect(snapshot.checks.checks).toHaveLength(1)
+  }
 })
 
 it('shows known merge blockers and retries unresolved merge states', async () => {

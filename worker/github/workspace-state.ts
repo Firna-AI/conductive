@@ -1,11 +1,11 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import { sameGitHubState } from '../../src/shared/github-state'
 import type {
   GitHubRefresh,
   GitHubRefreshRequest,
   GitHubSnapshot,
   GitHubStatePort,
 } from './contracts'
-import { sameDisplay } from './display'
 
 interface DeliveryReceipt {
   snapshot: GitHubSnapshot
@@ -48,7 +48,7 @@ export class WorkspaceGitHubState {
       if (snapshot === null) return null
       const envelope = await this.port.transaction(async (transaction) => {
         const stored = await transaction.get<GitHubSnapshot>('github:state')
-        if (stored && sameDisplay(stored, snapshot)) {
+        if (stored && sameGitHubState(stored, snapshot)) {
           if (key !== null)
             await transaction.put(key, {
               snapshot,

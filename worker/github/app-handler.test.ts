@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { githubPaths } from '../../src/shared/github'
 import { TEST_ORIGIN } from '../test-support/harness'
-import { passedRun } from './fake-pull'
+import { HEAD_SHA, passedRun } from './fake-pull'
 import { createGitHubHarness, type GitHubTestHarness } from './test-harness'
 
 let harness: GitHubTestHarness
@@ -34,9 +34,9 @@ it('reads current banner and checks on tab open while the workspace needs input'
   expect(await banner.json()).toMatchObject({
     banner: { branch: 'changes', state: 'blocked', review: 'pending' },
   })
-  harness.api.pulls[2].checks = [
+  harness.api.checks.set(HEAD_SHA, [
     { ...passedRun, status: 'IN_PROGRESS', conclusion: null },
-  ]
+  ])
   const checksPath = githubPaths
     .checks(orgId, 'workspace-1')
     .replace('workspace-1', '%77orkspace-1')

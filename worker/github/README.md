@@ -130,6 +130,10 @@ Without a pull request, a GraphQL comparison uses the explicit head commit and r
 It selects no file patches.
 The reader follows every lookup, review, and check connection page.
 The combined GitHub check rollup supplies check runs and status contexts in returned order.
+The reader chooses the test merge commit's rollup when it has at least one check run or status context.
+Otherwise, it chooses the head commit's rollup.
+The banner and Checks response use that same chosen list.
+Each chosen rollup page must keep the captured head and test merge commit IDs.
 Check runs use their completed and started times for duration.
 Commit status contexts supply no run start time, so their duration remains null.
 All links point to GitHub.
@@ -150,19 +154,27 @@ This includes a workspace in `input` while its agent waits for the user.
 
 ## Verification
 
-Run `npm run test -- worker/github` from the repository root with Node 24.
+Run `npm run test -- worker/github src/github/githubStore.test.ts` from the repository root with Node 24.
 The app and webhook tests use the existing sign-in fake and real local D1 harness.
 [RepositoryGitHub](fake-repository.ts) adds a small repository model without changing that fake.
 Fixtures set `branches` by qualified ref and `comparisons` by base ref and head commit.
-They set `pulls` by number with its head repository, head name, base, checks, and reviews.
+They set `pulls` by number with its head repository, head name, base, test merge commit, and reviews.
+They set `checks` by commit ID for head and test merge rollups.
 [repositoryPull](fake-pull.ts) supplies a complete pull request fixture.
 Every response follows the query's repository, ref, head, state, number, and cursor variables.
 Lookup filters by head name and orders requests by their creation time.
 Set `pageSize` to exercise lookup, check, and review pagination.
 An unknown ref or comparison returns `null`.
 An unknown pull request number returns a GraphQL error.
+An unknown commit rollup returns `null`.
+The reader tests cover merge checks, head fallback, page order, and commit changes during paging.
 [MemoryWorkspace](memory-workspace.ts) is a unit-test port double.
 It does not replace the production Durable Object storage adapter.
+Its `failWritePrefix` injects a storage failure for matching keys.
+Its event list includes only committed events.
+The receipt-write test proves rollback with no stored state, event, receipt, or publication.
+Retry reads the snapshot once more and stores and publishes one event numbered 1.
+This test does not prove the shared production store's transaction behavior.
 Its `restart()` replaces the coordinator over the same stored records.
 Its `scheduled` queue captures plain requests and delays.
 [GitHubTestHarness.runScheduled](test-harness.ts) runs one captured request without a timer or sleep.
@@ -192,5 +204,6 @@ API references:
 - [workspace-state.ts](workspace-state.ts) coordinates storage and publication.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
 - [client.ts](client.ts) reads current GitHub state and follows pagination.
+- [check-rollup.ts](check-rollup.ts) selects and pages one commit's checks while checking commit IDs.
+- [Shared state comparison](../../src/shared/github-state.ts) compares the backend and browser displays without banner time.
 - [credentials.ts](credentials.ts) gets server-only installation read tokens.
-- [body.ts](body.ts) bounds raw webhook and GitHub API body reads.

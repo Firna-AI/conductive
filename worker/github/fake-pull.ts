@@ -29,7 +29,7 @@ export interface RepositoryPull {
   closedAt: string | null
   reviewDecision: string | null
   createdAt: number
-  checks: unknown[]
+  potentialMergeCommit: { oid: string } | null
   reviews: unknown[]
 }
 
@@ -52,7 +52,7 @@ export function repositoryPull(
     closedAt: null,
     reviewDecision: 'APPROVED',
     createdAt: 2,
-    checks: [passedRun],
+    potentialMergeCommit: null,
     reviews: [],
     ...fields,
   }

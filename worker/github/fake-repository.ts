@@ -1,7 +1,12 @@
 import type { HttpFetch } from '../env'
 import { isRecord } from '../http'
 import type { FakeGitHub } from '../test-support/fake-github'
-import { HEAD_SHA, repositoryPull, type RepositoryPull } from './fake-pull'
+import {
+  HEAD_SHA,
+  passedRun,
+  repositoryPull,
+  type RepositoryPull,
+} from './fake-pull'
 
 export class RepositoryGitHub {
   requests: Request[] = []
@@ -14,6 +19,7 @@ export class RepositoryGitHub {
   ])
   comparisons = new Map([['refs/heads/main', new Map([[HEAD_SHA, 1]])]])
   pulls: Record<number, RepositoryPull> = { 2: repositoryPull() }
+  checks = new Map<string, unknown[]>([[HEAD_SHA, [passedRun]]])
   pageSize = 100
   failure: Response | null = null
   onRequest: ((operation: string) => Promise<void>) | null = null
@@ -33,6 +39,11 @@ export class RepositoryGitHub {
         endCursor: end < items.length ? String(end) : null,
       },
     }
+  }
+
+  private rollup(sha: string, after: unknown) {
+    const checks = this.checks.get(sha)
+    return checks === undefined ? null : { contexts: this.page(checks, after) }
   }
 
   fetch: HttpFetch = async (request) => {
@@ -111,8 +122,13 @@ export class RepositoryGitHub {
         case 'BannerChecks':
           repository.pullRequest = {
             headRefOid: pull.headRefOid,
-            statusCheckRollup: {
-              contexts: this.page(pull.checks, variables.after),
+            statusCheckRollup: this.rollup(pull.headRefOid, variables.after),
+            potentialMergeCommit: pull.potentialMergeCommit && {
+              oid: pull.potentialMergeCommit.oid,
+              statusCheckRollup: this.rollup(
+                pull.potentialMergeCommit.oid,
+                variables.mergeAfter,
+              ),
             },
           }
           break

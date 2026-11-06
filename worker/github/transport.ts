@@ -1,8 +1,9 @@
 import type { HttpFetch } from '../env'
-import { readGitHubBody } from './body'
+import { readBoundedBody } from '../http/bounded-body'
 import { githubFailure, object } from './parsers'
 
 export const GITHUB_API_VERSION = '2026-03-10'
+const BODY_BUDGET = 26 * 1024 * 1024
 
 export function githubRequest(
   path: string,
@@ -33,7 +34,10 @@ export async function githubJson(
       void response.body?.cancel().catch(() => undefined)
       throw githubFailure()
     }
-    const body = await readGitHubBody(response.body, githubFailure)
+    const body =
+      response.body === null
+        ? new Uint8Array(0)
+        : await readBoundedBody(response.body, BODY_BUDGET)
     return JSON.parse(new TextDecoder().decode(body))
   } catch {
     throw githubFailure()

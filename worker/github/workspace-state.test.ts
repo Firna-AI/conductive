@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 
 import type { GitHubSnapshot } from './contracts'
 import { MemoryWorkspace } from './memory-workspace'
@@ -25,7 +25,7 @@ function deferred() {
   return { promise, resolve }
 }
 
-it('stores banner state and a receipt with the shared workspace event sequence before broadcast', async () => {
+it('stores banner state, an event, and a receipt before broadcast through the unit-test port', async () => {
   const memory = new MemoryWorkspace('workspace-1')
   memory.values.set('workspace:event-number', 7)
   const state = await memory.state.refresh(async () => snapshot, authorize, {
@@ -48,6 +48,48 @@ it('stores banner state and a receipt with the shared workspace event sequence b
     envelope: memory.events[0],
   })
   expect(memory.published).toEqual(memory.events)
+})
+
+it('rolls back a receipt-write failure and retries with one new read and event', async () => {
+  const memory = new MemoryWorkspace('workspace-1')
+  const read = vi.fn(async () => snapshot)
+  memory.failWritePrefix = 'github:delivery:'
+  await expect(
+    memory.state.refresh(read, authorize, { deliveryId: 'd-1' }),
+  ).rejects.toThrow('Test storage write failed')
+  expect(read).toHaveBeenCalledTimes(1)
+  expect(memory.values.get('github:state')).toBeUndefined()
+  expect(memory.values.get('workspace:event:1')).toBeUndefined()
+  expect(memory.values.get('workspace:event-number')).toBeUndefined()
+  expect(memory.values.get('github:delivery:d-1')).toBeUndefined()
+  expect(memory.values.size).toBe(0)
+  expect(memory.events).toEqual([])
+  expect(memory.published).toEqual([])
+
+  memory.failWritePrefix = null
+  expect(
+    await memory.state.refresh(read, authorize, { deliveryId: 'd-1' }),
+  ).toEqual(snapshot)
+  expect(read).toHaveBeenCalledTimes(2)
+  const envelope = {
+    workspaceId: 'workspace-1',
+    eventNumber: 1,
+    occurredAt: 1800000000000,
+    event: {
+      type: 'github.updated',
+      banner: snapshot.banner,
+      checks: snapshot.checks,
+    },
+  }
+  expect(memory.values.get('github:state')).toEqual(snapshot)
+  expect(memory.values.get('workspace:event-number')).toBe(1)
+  expect(memory.values.get('workspace:event:1')).toEqual(envelope)
+  expect(memory.values.get('github:delivery:d-1')).toEqual({
+    snapshot,
+    envelope,
+  })
+  expect(memory.events).toEqual([envelope])
+  expect(memory.published).toEqual([envelope])
 })
 
 it('serializes refresh reads so a slow older operation cannot replace newer state', async () => {

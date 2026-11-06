@@ -1,6 +1,10 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import { TEST_TIME } from '../test-support/harness'
-import type { GitHubRefreshRequest, GitHubStatePort } from './contracts'
+import type {
+  GitHubRefreshRequest,
+  GitHubStatePort,
+  GitHubStateTransaction,
+} from './contracts'
 import { WorkspaceGitHubState } from './workspace-state'
 
 export class MemoryWorkspace {
@@ -9,22 +13,35 @@ export class MemoryWorkspace {
   published: WorkspaceEventEnvelope[] = []
   scheduled: { request: GitHubRefreshRequest; delayMs: number }[] = []
   failPublish = false
+  failWritePrefix: string | null = null
   state: WorkspaceGitHubState
   private readonly port: GitHubStatePort
 
   constructor(workspaceId: string) {
+    const transactionEvents = new WeakMap<
+      GitHubStateTransaction,
+      WorkspaceEventEnvelope[]
+    >()
     this.port = {
       transaction: async (action) => {
         const pending = new Map(this.values)
+        const pendingEvents: WorkspaceEventEnvelope[] = []
         const transaction = {
           get: async <T>(key: string) =>
             structuredClone(pending.get(key)) as T | undefined,
           put: async <T>(key: string, value: T) => {
+            if (
+              this.failWritePrefix !== null &&
+              key.startsWith(this.failWritePrefix)
+            )
+              throw new Error('Test storage write failed')
             pending.set(key, structuredClone(value))
           },
         }
+        transactionEvents.set(transaction, pendingEvents)
         const result = await action(transaction)
         this.values = pending
+        this.events.push(...pendingEvents)
         return result
       },
       appendEvent: async (transaction, event) => {
@@ -41,7 +58,7 @@ export class MemoryWorkspace {
           `workspace:event:${envelope.eventNumber}`,
           envelope,
         )
-        this.events.push(envelope)
+        transactionEvents.get(transaction)?.push(envelope)
         return envelope
       },
       publish: async (envelope) => {

@@ -1,6 +1,6 @@
-import type { GitHubBanner, GitHubCheck } from '../../src/shared/github'
-import { parsePull, pullBanner, type GitHubPull } from './banner'
-import { parseCheck } from './checks'
+import type { GitHubBanner } from '../../src/shared/github'
+import { parsePull, pullBanner } from './banner'
+import { readChecks } from './check-rollup'
 import type {
   GitHubBranchDependencies,
   GitHubReadDependencies,
@@ -59,7 +59,9 @@ export class GitHubReader {
       number: lookup.pullNumber,
     })
     const pull = parsePull(repository.pullRequest, this.workspace)
-    const checks = await this.checks(pull)
+    const checks = await readChecks(pull, (after, mergeAfter) =>
+      this.repository(CHECKS, { number: pull.number, after, mergeAfter }),
+    )
     const reviewers = await this.reviewers(pull.number)
     return {
       banner: pullBanner(
@@ -157,26 +159,6 @@ export class GitHubReader {
       checks: { state: 'waiting-for-pull-request', checks: [] },
       headSha,
     }
-  }
-
-  private async checks(pull: GitHubPull): Promise<GitHubCheck[]> {
-    const checks: GitHubCheck[] = []
-    let after: string | null = null
-    do {
-      const repository = await this.repository(CHECKS, {
-        number: pull.number,
-        after,
-      })
-      const current = object(repository.pullRequest)
-      if (text(current.headRefOid) !== pull.headSha) throw githubFailure()
-      if (current.statusCheckRollup === null) return checks
-      const connection = object(object(current.statusCheckRollup).contexts)
-      checks.push(
-        ...nodes(connection.nodes).map((value) => parseCheck(value, pull.url)),
-      )
-      after = nextPage(connection.pageInfo, after)
-    } while (after !== null)
-    return checks
   }
 
   private async reviewers(number: number): Promise<string[]> {
