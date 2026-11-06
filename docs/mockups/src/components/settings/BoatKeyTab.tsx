@@ -113,7 +113,7 @@ function ReplaceKeySection(props: { org: string }) {
   )
 }
 
-/** The Boat key tab of the org settings, which only an owner sees. */
+/** The Boat key tab of the org settings, which only an admin sees. */
 export function BoatKeyTab(props: { state: BoatKeyState; org: string }) {
   const { state } = props
   const saved = state === 'saved' || state === 'other-account'

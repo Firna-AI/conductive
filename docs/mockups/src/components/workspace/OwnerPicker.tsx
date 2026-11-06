@@ -16,9 +16,10 @@ import { PersonAvatar } from '../orgs/OrgTile'
 import styles from './OwnerPicker.module.css'
 
 /**
- * The members whom an owner can make the owner of a workspace, with the
- * current owner marked. The agents of a workspace use its owner's accounts,
- * so a new owner's accounts apply when the cloud computer starts again.
+ * The members whom an admin can make the owner of a workspace, with the
+ * current owner marked. Each message runs on the agent login of the person
+ * who sends it (decision 49), so a new owner changes no login, and the
+ * cloud computer keeps running.
  */
 export function reassignMenu(owner: PersonKey): MenuEntry[] {
   return [
@@ -34,21 +35,17 @@ export function reassignMenu(owner: PersonKey): MenuEntry[] {
     { kind: 'divider' },
     {
       kind: 'note',
-      text: "The agents use the owner's own Claude and Codex accounts.",
-    },
-    {
-      kind: 'note',
-      text: "The cloud computer stops, and starts again with the new owner's accounts.",
+      text: "Each message runs on its sender's own agent login.",
     },
   ]
 }
 
 /**
  * The owner of the open workspace, as a picker in its header: the avatar
- * and the name, or the avatar alone on a phone. An owner of the org picks
+ * and the name, or the avatar alone on a phone. An admin of the org picks
  * another member. `open` draws the menu beside the picker, and a phone
  * shows it as a sheet instead. `readOnly` shows the owner to a member who
- * is not an owner, without the menu.
+ * is not an admin, without the menu.
  */
 export function OwnerPicker(props: {
   owner: Person

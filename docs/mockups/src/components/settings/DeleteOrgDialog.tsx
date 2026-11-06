@@ -10,7 +10,7 @@ import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 
 /**
- * The owner confirms Delete org by typing the name of the org. The dialog
+ * An admin confirms Delete org by typing the name of the org. The dialog
  * says what happens at once, and the date when everything is deleted.
  */
 export function DeleteOrgDialog(props: { viewport: Viewport }) {
@@ -36,7 +36,7 @@ export function DeleteOrgDialog(props: { viewport: Viewport }) {
       <DialogText>
         Every cloud computer of {org.name} stops now, and its members can no
         longer open it. Everything is deleted on {deletedOrg.deletes}, unless an
-        owner restores {org.name} before then.
+        admin restores {org.name} before then.
       </DialogText>
       <Input
         label={`Type ${org.name} to confirm`}

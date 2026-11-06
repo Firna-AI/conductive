@@ -34,8 +34,8 @@ export type Workspace = {
   /** The time since the last activity, such as `2h`. */
   updated: string
   /**
-   * The member who created it, until an owner reassigns it. Its agents use
-   * this member's own accounts.
+   * The member who created it, until an admin reassigns it. Each message
+   * runs on the agent login of the person who sends it (decision 49).
    */
   owner: PersonKey
   /**
@@ -45,10 +45,18 @@ export type Workspace = {
   generatedName?: string
 }
 
+/**
+ * The branch of a workspace: the GitHub login of its owner, then a name,
+ * such as `calummoore/lisbon-7k2q`, as decision 53 says.
+ */
+function branchFor(owner: PersonKey, name: string): string {
+  return `${people[owner].login}/${name}`
+}
+
 export const checkoutAutocomplete: Workspace = {
   key: 'checkout-autocomplete',
   name: 'Checkout address autocomplete',
-  branch: 'cal/checkout-autocomplete',
+  branch: branchFor('cal', 'checkout-autocomplete'),
   repository: 'storefront',
   section: 'checkout',
   choice: defaultChoice,
@@ -62,7 +70,7 @@ export const savedCarts: Workspace = {
   key: 'saved-carts',
   name: 'Saved carts',
   generatedName: 'Lisbon',
-  branch: 'cal/lisbon-7k2q',
+  branch: branchFor('cal', 'lisbon-7k2q'),
   repository: 'storefront',
   section: 'general',
   choice: defaultChoice,
@@ -86,7 +94,7 @@ const codex: AgentChoice = {
 
 type Details = Pick<Workspace, 'repository' | 'section' | 'status' | 'updated'>
 
-/** A workspace of Acme. Its branch starts with the first name of its owner. */
+/** A workspace of Acme. Its branch starts with the GitHub login of its owner. */
 function workspace(
   key: string,
   name: string,
@@ -94,8 +102,7 @@ function workspace(
   choice: AgentChoice = defaultChoice,
 ): Workspace {
   const owner = details.owner ?? 'cal'
-  const prefix = people[owner].name.split(' ')[0].toLowerCase()
-  return { key, name, branch: `${prefix}/${key}`, choice, ...details, owner }
+  return { key, name, branch: branchFor(owner, key), choice, ...details, owner }
 }
 
 /** The workspaces of Acme when the app opens, newest first in each section. */

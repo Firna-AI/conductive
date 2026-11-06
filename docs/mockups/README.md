@@ -71,7 +71,9 @@ chat, and five tabs at the bottom.
   `src/components/common/touch.tsx`, and local controls read the
   `--ui-touch-min` variable, which is 0 on desktop.
 - One `ModelPicker` in `src/components/chat/` sets the model and the effort
-  in every composer, such as "Opus 5.5 High". It names no agent brand.
+  in every composer, such as "Opus 5.5 High". It names no agent brand. In a
+  session with messages, each model of the other agent says "New session",
+  because it opens a new session with the draft, from decision 51.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
   `src/components/common/` beside its button, or in a `Sheet` on a phone.
   Firna's own menu rows are taller than the dense design. A row can lead with
@@ -192,24 +194,27 @@ The product is free for now, as the user decided on 5 November 2026 in
 decision 45. So the screens show no plans, no billing, no seats, and no
 plan limits.
 
-- An owner invites members by their GitHub login. The roles are owner and
-  member. Only an owner manages the members, adds the Boat key, deletes the
-  org, and reassigns a workspace. A member who is not an owner sees the
-  members and each workspace's owner without actions, and no Boat key tab.
-- The agents of a workspace use its owner's own accounts, so reassigning
-  stops the cloud computer, which starts again with the new owner's
-  accounts.
+- An admin invites members by their GitHub login. The roles are admin and
+  member, from decision 54. Only an admin manages the members, adds the
+  Boat key, deletes the org, and reassigns a workspace. A member who is not
+  an admin sees the members and each workspace's owner without actions, and
+  no Boat key tab. "Owner" names only the person who owns a workspace.
+- Each message runs on the agent login of the person who sends it, from
+  decision 49. So a reassign changes no login, and the cloud computer keeps
+  running.
+- Each branch starts with the GitHub login of the owner of its workspace,
+  such as `calummoore/lisbon-7k2q`, from decision 53.
 - Archive, from decision 16, deletes the cloud computer and keeps the chat
   read-only in the Archived group at the end of the list. It checks first
   for work that is not committed or not pushed. The pull request bar offers
-  it after a merge. Only the workspace's owner and the org's owners see
+  it after a merge. Only the workspace's owner and the org's admins see
   Archive, from decision 42. An archived workspace has no file lists and no
   tools, so a phone shows only its chat.
 - No workspace shows as expiring. Near day 14 of a stop, the app starts the
   cloud computer briefly and stops it again, from decision 43.
 - Any user creates orgs. Create org of the first run returns to Get started.
 - Delete org asks for the org name. The deleted org stays faded in the rail
-  of its owners until the date when everything is deleted, and its page
+  of its admins until the date when everything is deleted, and its page
   offers Restore.
 - Three orgs show: Acme, Firna, the first org of the sign-up, and Acme Labs,
   which Create org makes. The parts live in `src/components/members/`.
@@ -222,6 +227,8 @@ plan limits.
   limited to one environment. It shows only the last four characters of a
   saved key. It draws a key that failed its test, and a key of another Boat
   account, which it refuses while it keeps the saved key, from decision 56.
+  The tab label also names Boat on the other settings pages, because it
+  leads to the key screen, and a move to another provider renames both.
   The parts live in `src/components/settings/BoatKey.tsx` and
   `BoatKeyTab.tsx`.
 - The account connects Claude with a subscription token from
@@ -234,7 +241,7 @@ plan limits.
   users need their own Boat account.
 - The composer shows a notice when the agent of the chosen model is not
   connected, or when the org has no key. The key notice says "cloud
-  computers" and names no provider. Only an owner gets its Add key.
+  computers" and names no provider. Only an admin gets its Add key.
 
 ## The marketing site
 

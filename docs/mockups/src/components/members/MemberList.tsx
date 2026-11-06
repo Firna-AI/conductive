@@ -27,7 +27,7 @@ function owned(
 }
 
 /**
- * The role of a member, and the actions on it. Only an owner changes a
+ * The role of a member, and the actions on it. Only an admin changes a
  * role or removes a member, and nobody removes themselves here.
  */
 function RoleActions(props: {
@@ -119,9 +119,9 @@ function InviteRow(props: { invite: Invite }) {
 
 /**
  * The members of an org with their roles and the workspaces that each one
- * owns, then the open invites. An owner changes the role of a member and
+ * owns, then the open invites. An admin changes the role of a member and
  * removes a member. `viewer` is the person signed in, and `canManage` says
- * whether that person is an owner.
+ * whether that person is an admin.
  */
 export function MemberList(props: {
   members: readonly Membership[]

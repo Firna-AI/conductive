@@ -1,7 +1,7 @@
 import { Button } from '@firna/ui/button'
 import { InputFrame } from '@firna/ui/input'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
-import type { AgentChoice } from '../../fixtures/agents'
+import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
 import { noop } from '../../noop'
 import { ScreenLink } from '../common/ScreenLink'
@@ -20,6 +20,11 @@ export type ComposerState = {
   attachments: readonly Attachment[]
   /** The model picker is open. */
   picker?: boolean
+  /**
+   * The agent of the session, once it has messages. A model of the other
+   * agent opens a new session with the draft (decision 51).
+   */
+  sessionAgent?: AgentKey
   /** The text of an empty box. */
   placeholder?: string
   /** The screen that Send leads to, when the mockups draw it. */
@@ -75,7 +80,11 @@ export function Composer(props: ComposerState & { lines?: number }) {
         />
         <div className={styles.bar}>
           <IconButton icon={Paperclip} label="Attach files" />
-          <ModelPicker choice={props.choice} open={props.picker} />
+          <ModelPicker
+            choice={props.choice}
+            open={props.picker}
+            sessionAgent={props.sessionAgent}
+          />
           <span className={styles.spacer} />
           {props.running ? (
             <ActionButton icon={Square}>Stop</ActionButton>

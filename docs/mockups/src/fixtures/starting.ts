@@ -3,6 +3,8 @@
  * since the start began.
  */
 
+import { savedCarts } from './workspaces'
+
 export type StartingLog = {
   title: string
   steps: readonly string[]
@@ -18,7 +20,7 @@ export const creatingLog: StartingLog = {
   steps: [
     'Starting from the cloud computer of Acme',
     'Fetching main of acme/storefront',
-    'Creating branch cal/lisbon-7k2q',
+    `Creating branch ${savedCarts.branch}`,
   ],
   elapsed: '6s',
 }

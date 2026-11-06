@@ -23,7 +23,7 @@ function State(props: { status: ActivityStatus }) {
 /**
  * The name, repository, branch, owner, and state of the open workspace,
  * and Archive. The list groups workspaces by section, so the header names
- * the repository. For an owner of the org, the owner opens the menu that
+ * the repository. For an admin of the org, the owner opens the menu that
  * reassigns the workspace.
  */
 export function WorkspaceHeader(props: {
@@ -34,7 +34,7 @@ export function WorkspaceHeader(props: {
   viewport: Viewport
   /** The menu of the owner is open. A phone shows it as a sheet. */
   ownerOpen?: boolean
-  /** The person signed in is an owner of the org, who can reassign. */
+  /** The person signed in is an admin of the org, who can reassign. */
   canReassign: boolean
   /** The workspace can be archived: it is not archived yet. */
   archivable: boolean

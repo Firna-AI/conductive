@@ -14,12 +14,12 @@ export type SettingsTab =
 
 /**
  * The parts of the org settings, as tabs that link to each part. Only an
- * owner sees the Boat key tab. `wrap` puts the tabs on two lines, for a
+ * admin sees the Boat key tab. `wrap` puts the tabs on two lines, for a
  * phone, where they do not fit on one.
  */
 export function SettingsTabs(props: {
   tab: SettingsTab
-  owner: boolean
+  admin: boolean
   wrap?: boolean
 }) {
   const tabs = [
@@ -33,7 +33,7 @@ export function SettingsTabs(props: {
     <LinkTabs
       label="Org settings"
       tabs={tabs
-        .filter((item) => props.owner || item.tab !== 'boat-key')
+        .filter((item) => props.admin || item.tab !== 'boat-key')
         .map((item) => ({
           label: item.label,
           to: item.to,
@@ -72,7 +72,7 @@ export function OrgDetailsSection(props: { name: string; initials: string }) {
 /**
  * Deletes the org, as the user decided in decision 30: every cloud computer
  * stops and the org hides at once, and everything is deleted after 7 days
- * unless an owner restores it.
+ * unless an admin restores it.
  */
 export function DeleteOrgSection(props: { name: string }) {
   return (
@@ -84,7 +84,7 @@ export function DeleteOrgSection(props: { name: string }) {
           </ActionButton>
         </ScreenLink>
       }
-      description={`Stops every cloud computer of ${props.name} and hides it from its members. Everything is deleted after 7 days, unless an owner restores it.`}
+      description={`Stops every cloud computer of ${props.name} and hides it from its members. Everything is deleted after 7 days, unless an admin restores it.`}
       title="Delete org"
     />
   )

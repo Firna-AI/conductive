@@ -56,10 +56,10 @@ export function WorkspaceScreen(props: {
         : 'ready'
       : state.sandbox
   const archived = state.sandbox === 'archived'
-  const owner = state.viewer === 'owner'
-  const viewer = owner ? you : memberViewer
-  // Decision 42: the workspace's owner and the org's owners archive it.
-  const archivable = !archived && (owner || workspace.owner === viewer)
+  const admin = state.viewer === 'admin'
+  const viewer = admin ? you : memberViewer
+  // Decision 42: the workspace's owner and the org's admins archive it.
+  const archivable = !archived && (admin || workspace.owner === viewer)
   const problem =
     state.sandbox === 'stopped' ||
     state.sandbox === 'error' ||
@@ -87,7 +87,7 @@ export function WorkspaceScreen(props: {
   const header = (
     <WorkspaceHeader
       archivable={archivable}
-      canReassign={owner && !archived}
+      canReassign={admin && !archived}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
       status={status}
@@ -139,7 +139,7 @@ export function WorkspaceScreen(props: {
   return (
     <AppFrame
       overlay={overlay}
-      rail={owner ? undefined : { ...acmeRail, person: people[memberViewer] }}
+      rail={admin ? undefined : { ...acmeRail, person: people[memberViewer] }}
       sidebar={workspaceSidebar(workspace, status)}
     >
       <WorkspaceBody

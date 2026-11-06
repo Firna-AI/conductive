@@ -70,8 +70,8 @@ export const workspaceStateSchema = {
         'archive-pushed',
       ],
     },
-    /** The person signed in: an owner of the org, or a member who is not. */
-    viewer: { enum: ['owner', 'member'] },
+    /** The person signed in: an admin of the org, or a member who is not. */
+    viewer: { enum: ['admin', 'member'] },
   },
 } as const
 
@@ -91,7 +91,7 @@ export const readyWorkspace: WorkspaceState = {
   composer: 'empty',
   resize: 'none',
   overlay: 'none',
-  viewer: 'owner',
+  viewer: 'admin',
 }
 
 /**

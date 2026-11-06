@@ -38,7 +38,7 @@ export const checks = defineScreen({
       slug: 'merged',
       title: 'Merged',
       description:
-        'The pull request is merged into the default branch. The bar offers Archive to the owner of the workspace and the owners of the org.',
+        'The pull request is merged into the default branch. The bar offers Archive to the owner of the workspace and the admins of the org.',
       movedFrom: 'app/banner/merged',
       props: { banner: 'merged' },
     },

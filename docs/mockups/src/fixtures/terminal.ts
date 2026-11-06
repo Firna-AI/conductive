@@ -2,6 +2,8 @@
  * Terminal sessions. Each line is a list of coloured segments.
  */
 
+import { checkoutAutocomplete, savedCarts } from './workspaces'
+
 export type TerminalTone =
   'prompt' | 'plain' | 'muted' | 'success' | 'accent' | 'error'
 
@@ -28,7 +30,7 @@ function success(text: string): TerminalLine {
   return [{ text, tone: 'success' }]
 }
 
-const workspaceLocation = 'storefront (cal/checkout-autocomplete)'
+const workspaceLocation = `storefront (${checkoutAutocomplete.branch})`
 
 /** The dev server in the open workspace. */
 export const workspaceSession: readonly TerminalLine[] = [
@@ -78,4 +80,4 @@ export const failedBuildLog: readonly TerminalLine[] = [
 export const workspaceSessionPrompt = `${workspaceLocation} $ `
 
 /** A new workspace: the terminal waits at its first prompt. */
-export const freshSessionPrompt = 'storefront (cal/lisbon-7k2q) $ '
+export const freshSessionPrompt = `storefront (${savedCarts.branch}) $ `

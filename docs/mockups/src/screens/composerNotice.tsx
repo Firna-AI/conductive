@@ -17,7 +17,7 @@ const connectPaths: Readonly<Record<AgentKey, string>> = {
  * The notice over the composer when a message cannot go yet, from
  * decision 33 D: the agent of the chosen model is not connected, or the
  * org has no key for its cloud computers. The notice names no provider,
- * as decision 47 says. Only an owner adds the key, so only an owner gets
+ * as decision 47 says. Only an admin adds the key, so only an admin gets
  * its action.
  */
 export function composerNotice(state: WorkspaceState, choice: AgentChoice) {
@@ -40,7 +40,7 @@ export function composerNotice(state: WorkspaceState, choice: AgentChoice) {
   if (state.viewer === 'member') {
     return (
       <Notice
-        body={`An owner of ${org} adds it in the org settings.`}
+        body={`An admin of ${org} adds it in the org settings.`}
         icon={KeyRound}
         title={`The cloud computers of ${org} need a key`}
       />

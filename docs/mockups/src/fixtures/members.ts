@@ -1,7 +1,7 @@
 /**
- * The people of the orgs. Each person signs in with GitHub, and an owner
- * invites a member by their GitHub login. Only an owner manages the
- * members of an org and reassigns its workspaces.
+ * The people of the orgs. Each person signs in with GitHub, and an admin
+ * invites a member by their GitHub login. Only an admin manages the
+ * members of an org and reassigns its workspaces (decision 54).
  */
 
 import { account } from './orgs'
@@ -34,16 +34,17 @@ export const people: Readonly<Record<PersonKey, Person>> = {
   },
 }
 
-/** The person signed in, who owns both orgs that the mockups draw. */
+/** The person signed in, an admin of both orgs that the mockups draw. */
 export const you: PersonKey = 'cal'
 
-/** The member of Acme who is not an owner, whose view the mockups draw. */
+/** The member of Acme who is not an admin, whose view the mockups draw. */
 export const memberViewer: PersonKey = 'priya'
 
-export type Role = 'owner' | 'member'
+/** The roles of an org, as in Conductor (decision 54). */
+export type Role = 'admin' | 'member'
 
 export const roleLabels: Readonly<Record<Role, string>> = {
-  owner: 'Owner',
+  admin: 'Admin',
   member: 'Member',
 }
 
@@ -52,9 +53,9 @@ export type Membership = { person: PersonKey; role: Role }
 /** An invite that waits for its GitHub user to accept it. */
 export type Invite = { login: string; sent: string }
 
-/** The members of Acme, owners first. */
+/** The members of Acme, admins first. */
 export const acmeMembers: readonly Membership[] = [
-  { person: 'cal', role: 'owner' },
+  { person: 'cal', role: 'admin' },
   { person: 'priya', role: 'member' },
   { person: 'jonas', role: 'member' },
 ]

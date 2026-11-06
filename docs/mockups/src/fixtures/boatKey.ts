@@ -2,7 +2,7 @@ import type { PersonKey } from './members'
 
 /**
  * The pages of Boat that the Boat key screen and Get started link to, as
- * decision 47 allows: the sign-up, and the dashboard where an owner makes
+ * decision 47 allows: the sign-up, and the dashboard where an admin makes
  * an API key.
  */
 export const boatPages = {

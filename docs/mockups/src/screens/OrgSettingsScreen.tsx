@@ -31,15 +31,15 @@ export const orgSettingsSchema = {
     },
     /** The builds of the cloud computer, which its tab shows. */
     build: { enum: ['ready', 'building', 'failed', 'changed'] },
-    /** The Boat key of the org, which its tab shows to an owner. */
+    /** The Boat key of the org, which its tab shows to an admin. */
     boatKey: { enum: boatKeyStates },
     /** A dialog over the page: Delete org, or the removal of a member. */
     dialog: { enum: ['none', 'delete-org', 'remove-member'] },
     /**
-     * The person signed in: an owner, or a member who is not an owner and
-     * sees no actions on the members and no Delete org.
+     * The person signed in: an admin, or a member who is not an admin and
+     * sees no actions on the members, no Boat key, and no Delete org.
      */
-    viewer: { enum: ['owner', 'member'] },
+    viewer: { enum: ['admin', 'member'] },
   },
 } as const
 
@@ -51,20 +51,20 @@ export const acmeSettings: OrgSettingsState = {
   build: 'ready',
   boatKey: 'saved',
   dialog: 'none',
-  viewer: 'owner',
+  viewer: 'admin',
 }
 
 const org = orgs.acme
 
 function TabBody(props: { state: OrgSettingsState }) {
   const { state } = props
-  const owner = state.viewer === 'owner'
+  const admin = state.viewer === 'admin'
   switch (state.tab) {
     case 'general':
       return (
         <>
           <OrgDetailsSection initials={org.initials} name={org.name} />
-          {owner ? <DeleteOrgSection name={org.name} /> : null}
+          {admin ? <DeleteOrgSection name={org.name} /> : null}
         </>
       )
     case 'repositories':
@@ -79,10 +79,10 @@ function TabBody(props: { state: OrgSettingsState }) {
     case 'computer':
       return <ComputerTab build={state.build} org={org.name} />
     case 'boat-key':
-      return owner ? <BoatKeyTab org={org.name} state={state.boatKey} /> : null
+      return admin ? <BoatKeyTab org={org.name} state={state.boatKey} /> : null
     case 'members':
       return (
-        <MembersTab canManage={owner} viewer={owner ? you : memberViewer} />
+        <MembersTab canManage={admin} viewer={admin ? you : memberViewer} />
       )
   }
 }
@@ -90,7 +90,7 @@ function TabBody(props: { state: OrgSettingsState }) {
 /**
  * The settings of an org: its name and initials, the repositories that it
  * uses, its cloud computer, its Boat key, and its members. The app-wide
- * connections live in the account. Only an owner sees the Boat key,
+ * connections live in the account. Only an admin sees the Boat key,
  * changes the members, and deletes the org.
  */
 export function OrgSettingsScreen(props: {
@@ -98,7 +98,7 @@ export function OrgSettingsScreen(props: {
   viewport: Viewport
 }) {
   const { state, viewport } = props
-  const owner = state.viewer === 'owner'
+  const admin = state.viewer === 'admin'
   const mobile = viewport === 'mobile'
   const dialogs: Readonly<Record<OrgSettingsState['dialog'], ReactNode>> = {
     none: null,
@@ -109,7 +109,7 @@ export function OrgSettingsScreen(props: {
     <Page
       back={mobile ? { label: 'Workspaces', to: paths.shell } : undefined}
       subtitle="Org settings"
-      tabs={<SettingsTabs owner={owner} tab={state.tab} wrap={mobile} />}
+      tabs={<SettingsTabs admin={admin} tab={state.tab} wrap={mobile} />}
       title={org.name}
       viewport={viewport}
     >
@@ -138,7 +138,7 @@ export function OrgSettingsScreen(props: {
       rail={{
         orgs: orgList,
         current: org.key,
-        person: owner ? undefined : people[memberViewer],
+        person: admin ? undefined : people[memberViewer],
       }}
       sidebar={sidebar}
     >

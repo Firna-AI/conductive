@@ -103,8 +103,8 @@ export function NewOrgEmpty(props: { org: NewOrg }) {
 }
 
 /**
- * The page of an org that its owner deleted. Its cloud computers are
- * stopped and its members cannot open it. An owner restores it until the
+ * The page of an org that an admin deleted. Its cloud computers are
+ * stopped and its members cannot open it. An admin restores it until the
  * date when everything is deleted.
  */
 export function DeletedOrg() {

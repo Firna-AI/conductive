@@ -8,9 +8,9 @@ import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { ScreenLink } from '../common/ScreenLink'
 
 /**
- * The owner confirms that a member leaves the org. The member's workspaces
- * move to the owner who removes them, so no workspace is left without an
- * owner.
+ * An admin confirms that a member leaves the org. The member's workspaces
+ * move to the admin who removes them, so no workspace is left without an
+ * owner (decision 39).
  */
 export function RemoveMemberDialog(props: { viewport: Viewport }) {
   const person = people[removedMember]
@@ -33,7 +33,7 @@ export function RemoveMemberDialog(props: { viewport: Viewport }) {
     >
       <DialogText>
         {first} can no longer open {orgs.acme.name}. {first}&apos;s {owned}{' '}
-        workspaces move to you, and their agents then use your accounts.
+        workspaces move to you.
       </DialogText>
     </ConfirmDialog>
   )

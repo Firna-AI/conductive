@@ -22,7 +22,9 @@ export const composer = defineScreen({
       slug: 'picker',
       title: 'Model and effort',
       description:
-        'The open picker: the Claude models and the Codex models in two groups, with no brand names, then the effort levels of the chosen model. It marks Opus 5.5 and High.',
+        'The open picker: the Claude models and the Codex models in two groups, with no brand names, then the effort levels of the chosen model. It marks Opus 5.5 and High. This session runs Claude, so each Codex model says New session, and a note says that the draft moves there.',
+      rationale:
+        'The user chose option B of decision 51: a model of the same agent stays in the session, and a model of the other agent opens a new session with the draft, as in Conductor. A Claude session and a Codex session keep separate memory, so the switch cannot stay in one session.',
       props: { composer: 'picker' },
     },
     {
@@ -38,9 +40,9 @@ export const composer = defineScreen({
       slug: 'no-key',
       title: 'No key for the cloud computers',
       description:
-        'Acme has no Boat key, for example because an owner removed it, so the message waits and Send is off. The notice over the composer names no provider, and Add key opens the Boat key tab of the org settings.',
+        'Acme has no Boat key, for example because an admin removed it, so the message waits and Send is off. The notice over the composer names no provider, and Add key opens the Boat key tab of the org settings.',
       rationale:
-        'The user chose option D of decision 33: Get started adds the Boat key, and this notice catches a key that is missing later. The notice says "cloud computers", because the app names Boat only on the key screen, the marketing site, and Get started (decision 47). Only an owner adds the key, so a member sees the notice without Add key.',
+        'The user chose option D of decision 33: Get started adds the Boat key, and this notice catches a key that is missing later. The notice says "cloud computers", because the app names Boat only on the key screen, the marketing site, and Get started (decision 47). Only an admin adds the key, so a member sees the notice without Add key.',
       props: { composer: 'no-key' },
     },
   ],

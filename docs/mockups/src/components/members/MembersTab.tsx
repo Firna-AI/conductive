@@ -13,7 +13,7 @@ import { Section } from '../settings/Section'
 import { MemberList } from './MemberList'
 import styles from './Members.module.css'
 
-/** The invite of an owner, by GitHub login. */
+/** The invite of an admin, by GitHub login. */
 function InviteSection() {
   const { field } = useControlSizes()
   return (
@@ -38,8 +38,8 @@ function InviteSection() {
 
 /**
  * The members of an org: an invite by GitHub login, then each member with
- * their role. Owners manage the members and who owns each workspace. A
- * member who is not an owner sees the members and their roles, without
+ * their role. Admins manage the members and who owns each workspace. A
+ * member who is not an admin sees the members and their roles, without
  * the invite and without actions.
  */
 export function MembersTab(props: { viewer: PersonKey; canManage: boolean }) {
@@ -47,7 +47,7 @@ export function MembersTab(props: { viewer: PersonKey; canManage: boolean }) {
     <>
       {props.canManage ? <InviteSection /> : null}
       <Section
-        description="Owners manage the members and who owns each workspace. Members work in the workspaces."
+        description="Admins manage the members and who owns each workspace. Members work in the workspaces."
         title="Members"
       >
         <MemberList

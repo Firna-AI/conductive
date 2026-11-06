@@ -17,7 +17,7 @@ export type RailState = {
   current?: OrgKey | 'create' | 'account'
   /** The org whose name shows beside it, as on hover. */
   hint?: OrgKey
-  /** An org that its owner deleted, which waits for its restore. */
+  /** An org that an admin deleted, which waits for its restore. */
   deleted?: OrgKey
   /** No org exists yet, and nothing is connected. */
   firstRun?: boolean

@@ -14,7 +14,7 @@ import styles from './BoatKey.module.css'
 /** How to make a key. The key screen and Get started both say it. */
 export const makeKeyText = `Make an API key in the Boat dashboard with the ${boatKeyPreset} preset, limited to one environment.`
 
-/** The pages of Boat where an owner signs up and makes a key. */
+/** The pages of Boat where an admin signs up and makes a key. */
 export function BoatLinks() {
   return (
     <div className={styles.links}>

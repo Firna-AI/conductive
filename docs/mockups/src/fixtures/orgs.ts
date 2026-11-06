@@ -51,7 +51,7 @@ export const installations = [
 export const firstInstallation = installations[2]
 
 /**
- * An org that its owner deleted: its cloud computers stopped, and it is
+ * An org that an admin deleted: its cloud computers stopped, and it is
  * hidden from its members until the date when everything is deleted.
  */
 export const deletedOrg = {
