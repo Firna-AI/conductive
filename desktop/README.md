@@ -77,6 +77,11 @@ npm --prefix desktop run test:electron
 The shell test runs under Xvfb on Linux.
 It also runs on macOS.
 Linux is a test host, not a release target.
+The [window-space test](tests/window-space.spec.ts) runs only on macOS.
+It checks 64px of rendered window-button space in a normal window.
+It checks 0px in full screen and 64px after leaving full screen.
+It waits for the native full-screen events before checking the layout.
+Other hosts skip this test.
 The `test:logic` command uses the repository's Vitest runner with the desktop configuration.
 The root gate includes these unit tests once.
 It also runs desktop typecheck, lint, and formatting checks.
