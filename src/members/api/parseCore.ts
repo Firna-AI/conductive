@@ -42,6 +42,7 @@ const efforts: Readonly<Record<Effort, Effort>> = {
 }
 const workspaceStates: Readonly<Record<WorkspaceState, WorkspaceState>> = {
   working: 'working',
+  input: 'input',
   unread: 'unread',
   ready: 'ready',
   starting: 'starting',
