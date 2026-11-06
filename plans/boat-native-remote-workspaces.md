@@ -3298,6 +3298,27 @@ Added on 6 November 2026 from PR #14 round 2 finding 9, wider fix D.
 - **Recommendation:** A.
 - **Chosen:** A, by the user on 6 November 2026. Nothing changes.
 
+
+### 100. Rename the product to Conductive
+
+Added on 6 November 2026 from the user's request: "can we change the name
+from conducting to conductive - I have purchased conductive.build domain
+we can use for it".
+
+- **Chosen:** by the user on 6 November 2026. The product is
+  "Conductive", on `conductive.build`, with the app on
+  `app.conductive.build`. This replaces the name of decision 32.
+- **Agent calls on 6 November 2026,** which the user can override:
+  - Every form of the name changes, also the internal ones: the
+    environment variables, the request header, the service names, the
+    Mac app's name, bundle ID, and URL scheme, the D1 database name, the
+    test domains, and the brand file names. Reason: nothing is deployed
+    yet, and each internal name costs more to change after the first
+    release.
+  - Decision records keep the old name, because they are history.
+  - Milestone 15j does the rename. It starts now and merges after the
+    open milestones, so that it renames the names that they add.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4627,6 +4648,27 @@ Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
       everything of the org after 7 days, as the orgs protocol says.
       Added on 6 November 2026, because no milestone connected these hooks.
 - [ ] Run the complete gate, and compare each screen with its mockup.
+
+## Milestone 15j: Rename to Conductive
+
+Depends on: none
+
+Apply decision 100. Merge it after the milestones that are open when it
+starts, and rename each name that they add.
+
+- [ ] Change the name and the domain in `docs/mockups/src/brand.ts`, and
+      in each text that names the product: `AGENTS.md`, the READMEs,
+      `docs/`, the marketing site, the legal pages, the mockups, and the
+      present-tense lines of the plan. Keep the decision records as they
+      are.
+- [ ] Rename the internal names: the `CONDUCTING_*` environment
+      variables, the `X-Conducting-Turn-Id` header, the `conducting-*`
+      services, the Mac app's name, bundle ID, and URL scheme, the D1
+      database name, the test domains, and the brand file names.
+- [ ] Redraw the name in the brand lockups of `docs/brand/`, and make the
+      marketing pictures and the screenshots that show the name again.
+- [ ] Merge the primary branch last, and rename each new occurrence. Then
+      a search for "conducting" finds only decision records and history.
 
 ## Milestone 15d: Marketing site
 
