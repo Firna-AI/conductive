@@ -1,49 +1,14 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo } from 'react'
+import { inlineElements } from './inline-render'
 import { parseMarkdown, type MdBlock, type MdListItem } from './markdown-blocks'
-import { parseInline, type MdInline } from './markdown-inline'
 import styles from './MarkdownView.module.css'
 
 type Definitions = ReadonlyMap<string, string>
 
 const headingTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const
 
-/** Inline content as React elements. React escapes every text. */
-function inlineNodes(nodes: readonly MdInline[]): ReactNode[] {
-  return nodes.map((node, index) => {
-    switch (node.kind) {
-      case 'text':
-        return node.text
-      case 'code':
-        return (
-          <code className={styles.code} key={index}>
-            {node.text}
-          </code>
-        )
-      case 'strong':
-        return <strong key={index}>{inlineNodes(node.children)}</strong>
-      case 'emphasis':
-        return <em key={index}>{inlineNodes(node.children)}</em>
-      case 'strike':
-        return <del key={index}>{inlineNodes(node.children)}</del>
-      case 'link':
-        return (
-          <a
-            href={node.href}
-            key={index}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            {inlineNodes(node.children)}
-          </a>
-        )
-      case 'break':
-        return <br key={index} />
-    }
-  })
-}
-
 function Inline(props: { text: string; definitions: Definitions }) {
-  return <>{inlineNodes(parseInline(props.text, props.definitions))}</>
+  return <>{inlineElements(props.text, props.definitions)}</>
 }
 
 function Item(props: { item: MdListItem; definitions: Definitions }) {

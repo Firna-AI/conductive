@@ -39,6 +39,24 @@ const headingLevels: readonly HeadingLevel[] = [1, 2, 3, 4, 5, 6]
 const quoteLine = /^ {0,3}> ?/
 const atxHeading = /^ {0,3}(#{1,6})(?:[ ]+|$)(.*)$/
 
+/**
+ * The text of an ATX heading without its closing `#` run: the trailing
+ * spaces, the run, and the spaces before it. The run closes only after a
+ * space or at the start. It gives the result of
+ * `replace(/(?:^|[ ]+)#+[ ]*$/, '')` in one backward pass.
+ */
+function withoutClosingHashes(text: string): string {
+  let end = text.length
+  while (end > 0 && text[end - 1] === ' ') end -= 1
+  let start = end
+  while (start > 0 && text[start - 1] === '#') start -= 1
+  if (start === end) return text
+  if (start === 0) return ''
+  if (text[start - 1] !== ' ') return text
+  while (start > 0 && text[start - 1] === ' ') start -= 1
+  return text.slice(0, start)
+}
+
 /** A line that ends a paragraph, because it starts another block. */
 function startsBlock(line: string): boolean {
   if (openingFence(line) || atxHeading.test(line)) return true
@@ -101,7 +119,7 @@ class BlockParser {
     const heading = atxHeading.exec(line)
     if (heading) {
       const level = headingLevels[heading[1].length - 1]
-      const text = heading[2].replace(/(?:^|[ ]+)#+[ ]*$/, '').trim()
+      const text = withoutClosingHashes(heading[2]).trim()
       blocks.push({ kind: 'heading', level, text })
       return index + 1
     }

@@ -123,63 +123,67 @@ const markup: Language = {
   capitalTypes: false,
 }
 
-const byExtension: Readonly<Record<string, Language>> = {
-  ts: script,
-  tsx: script,
-  mts: script,
-  cts: script,
-  js: script,
-  jsx: script,
-  mjs: script,
-  cjs: script,
-  json: { ...script, keywords: words('true false null') },
-  c: cFamily,
-  h: cFamily,
-  cc: cFamily,
-  cpp: cFamily,
-  hpp: cFamily,
-  cs: cFamily,
-  go: cFamily,
-  java: cFamily,
-  kt: cFamily,
-  rs: cFamily,
-  scala: cFamily,
-  swift: cFamily,
-  dart: cFamily,
-  prisma: cFamily,
-  py: python,
-  rb: ruby,
-  sh: shell,
-  bash: shell,
-  zsh: shell,
-  env: shell,
-  yml: data,
-  yaml: data,
-  toml: data,
-  sql,
-  css,
-  scss: { ...css, lineComments: ['//'] },
-  less: { ...css, lineComments: ['//'] },
-  html: markup,
-  xml: markup,
-  svg: markup,
-  vue: markup,
-}
+/**
+ * The tables are maps, so a name such as `constructor` finds no member of
+ * a plain object, and the file shows as plain text.
+ */
+const byExtension: ReadonlyMap<string, Language> = new Map([
+  ['ts', script],
+  ['tsx', script],
+  ['mts', script],
+  ['cts', script],
+  ['js', script],
+  ['jsx', script],
+  ['mjs', script],
+  ['cjs', script],
+  ['json', { ...script, keywords: words('true false null') }],
+  ['c', cFamily],
+  ['h', cFamily],
+  ['cc', cFamily],
+  ['cpp', cFamily],
+  ['hpp', cFamily],
+  ['cs', cFamily],
+  ['go', cFamily],
+  ['java', cFamily],
+  ['kt', cFamily],
+  ['rs', cFamily],
+  ['scala', cFamily],
+  ['swift', cFamily],
+  ['dart', cFamily],
+  ['prisma', cFamily],
+  ['py', python],
+  ['rb', ruby],
+  ['sh', shell],
+  ['bash', shell],
+  ['zsh', shell],
+  ['env', shell],
+  ['yml', data],
+  ['yaml', data],
+  ['toml', data],
+  ['sql', sql],
+  ['css', css],
+  ['scss', { ...css, lineComments: ['//'] }],
+  ['less', { ...css, lineComments: ['//'] }],
+  ['html', markup],
+  ['xml', markup],
+  ['svg', markup],
+  ['vue', markup],
+])
 
-const byName: Readonly<Record<string, Language>> = {
-  dockerfile: shell,
-  makefile: shell,
-  '.gitignore': shell,
-  '.npmrc': shell,
-  '.nvmrc': shell,
-}
+const byName: ReadonlyMap<string, Language> = new Map([
+  ['dockerfile', shell],
+  ['makefile', shell],
+  ['.gitignore', shell],
+  ['.npmrc', shell],
+  ['.nvmrc', shell],
+])
 
 /** The language of a file name, or null when the view shows plain text. */
 export function languageOf(name: string): Language | null {
   const lower = name.toLowerCase()
-  const named = byName[lower]
+  const named = byName.get(lower)
   if (named) return named
   if (lower.startsWith('.env')) return shell
   const dot = lower.lastIndexOf('.')
-  return dot < 0 ? null : (byExtension[lower.slice(dot + 1)] ?? null)
+  return dot < 0 ? null : (byExtension.get(lower.slice(dot + 1)) ?? null)
 }

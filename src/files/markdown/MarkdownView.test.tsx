@@ -43,6 +43,10 @@ it('shows HTML of the file as text', () => {
   expect(html).toContain('Hello &lt;script&gt;alert(1)&lt;/script&gt;')
   expect(html).toContain('&lt;img src=x onerror=&quot;alert(1)&quot;&gt;')
   expect(html).not.toMatch(/<script|<img/)
+  // An unknown character reference stays as typed. A known one decodes.
+  expect(render('&constructor; &toString; &copy;')).toContain(
+    '<p>&amp;constructor; &amp;toString; ©</p>',
+  )
 })
 
 it('links only absolute http, https, and mailto addresses', () => {

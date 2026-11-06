@@ -35,7 +35,7 @@ export async function editOpenTab(
   edit: number,
 ): Promise<void> {
   const line = `Edit ${edit} from the development page.`
-  const base = devTextFiles[tab.path] ?? ''
+  const base = devTextFiles.get(tab.path) ?? ''
   registerText(server, tab.path, `${base}${line}\n`)
   const old = await files.client.readDiff(tab.path)
   if (old.ok) {

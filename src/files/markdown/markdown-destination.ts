@@ -35,6 +35,16 @@ function rawEnd(text: string, start: number): number {
   return -1
 }
 
+/**
+ * The first `>` after the `<` at `open`, within the length of an address,
+ * or -1. The search stops at that length, so text with many `<(` reads in
+ * linear time.
+ */
+function angleEnd(text: string, open: number): number {
+  const at = text.slice(open + 1, open + 1 + maxLength).indexOf('>')
+  return at < 0 ? -1 : open + 1 + at
+}
+
 /** The index after the closing quote of a link title, or -1. */
 function titleEnd(text: string, start: number): number {
   const open = text[start]
@@ -59,8 +69,8 @@ export function readDestination(
   let index = skipSpace(text, start)
   let destination: string
   if (text[index] === '<') {
-    const close = text.indexOf('>', index + 1)
-    if (close < 0 || close - index > maxLength) return null
+    const close = angleEnd(text, index)
+    if (close < 0) return null
     destination = text.slice(index + 1, close)
     if (/[\n<]/.test(destination)) return null
     index = close + 1

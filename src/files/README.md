@@ -85,6 +85,12 @@ and only absolute `http`, `https`, and `mailto` links become links. A link
 opens in a new tab with `noopener noreferrer`. Quotes and lists nest at
 most 16 levels deep, and deeper content shows as text.
 
+A run of more than 256 characters without a space renders as adjacent
+text nodes that end between whole graphemes. The text and its lines stay
+the same, and the browser lays the run out in linear time. Text with
+spaces stays one text node. The part length is a rendering detail, not a
+read limit.
+
 The screens set no limits of their own. A file over the read limit shows
 the size and the limit that the backend sends, with Download.
 

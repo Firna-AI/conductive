@@ -1,24 +1,28 @@
-const namedEntities: Readonly<Record<string, string>> = {
-  amp: '&',
-  lt: '<',
-  gt: '>',
-  quot: '"',
-  apos: "'",
-  nbsp: ' ',
-  copy: '©',
-  reg: '®',
-  trade: '™',
-  hellip: '…',
-  mdash: '—',
-  ndash: '–',
-  lsquo: '‘',
-  rsquo: '’',
-  ldquo: '“',
-  rdquo: '”',
-  bull: '•',
-  middot: '·',
-  times: '×',
-}
+/**
+ * The named references that the renderer decodes. A map finds no member
+ * of a plain object, so `&constructor;` stays as typed.
+ */
+const namedEntities: ReadonlyMap<string, string> = new Map([
+  ['amp', '&'],
+  ['lt', '<'],
+  ['gt', '>'],
+  ['quot', '"'],
+  ['apos', "'"],
+  ['nbsp', ' '],
+  ['copy', '©'],
+  ['reg', '®'],
+  ['trade', '™'],
+  ['hellip', '…'],
+  ['mdash', '—'],
+  ['ndash', '–'],
+  ['lsquo', '‘'],
+  ['rsquo', '’'],
+  ['ldquo', '“'],
+  ['rdquo', '”'],
+  ['bull', '•'],
+  ['middot', '·'],
+  ['times', '×'],
+])
 
 function codePoint(value: number): string {
   const valid =
@@ -33,7 +37,7 @@ export function decodeEntities(text: string): string {
     (match, decimal?: string, hex?: string, name?: string) => {
       if (decimal) return codePoint(Number.parseInt(decimal, 10))
       if (hex) return codePoint(Number.parseInt(hex, 16))
-      return (name && namedEntities[name]) ?? match
+      return (name && namedEntities.get(name)) ?? match
     },
   )
 }

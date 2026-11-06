@@ -19,6 +19,31 @@ function closingRun(text: string, length: number, from: number): number {
   return -1
 }
 
+function isLineTerminator(char: string): boolean {
+  return (
+    char === '\n' || char === '\r' || char === '\u2028' || char === '\u2029'
+  )
+}
+
+/**
+ * True when one space pads each end of a code span that holds other text.
+ * It gives the result of the test `/^ .*[^ ].* $/` in one pass. A dot
+ * matches no line terminator, so one terminator at most can stand between
+ * the two spaces, as the one character of `[^ ]`.
+ */
+function padded(code: string): boolean {
+  const last = code.length - 1
+  if (last < 2 || code[0] !== ' ' || code[last] !== ' ') return false
+  let terminators = 0
+  let other = false
+  for (let index = 1; index < last; index += 1) {
+    const char = code[index]
+    if (isLineTerminator(char)) terminators += 1
+    else if (char !== ' ') other = true
+  }
+  return terminators === 1 || (terminators === 0 && other)
+}
+
 /**
  * The code spans of a text, by start index. A run of backticks without a
  * closing run of the same length is cached, so the scan stays linear.
@@ -46,19 +71,30 @@ export function codeSpans(text: string): Map<number, CodeSpan> {
       continue
     }
     let code = text.slice(index + length, close).replace(/\n/g, ' ')
-    if (/^ .*[^ ].* $/.test(code)) code = code.slice(1, -1)
+    if (padded(code)) code = code.slice(1, -1)
     spans.set(index, { end: close + length, code })
     index = close + length
   }
   return spans
 }
 
-/** The `]` that closes each `[`, skipping escapes and code spans. */
+export interface BracketPairs {
+  /** The `]` that closes each `[`. */
+  close: ReadonlyMap<number, number>
+  /**
+   * The `[` of each pair that holds another pair. Such a pair holds a `]`,
+   * and no definition label does, so its text never names a reference.
+   */
+  holders: ReadonlySet<number>
+}
+
+/** The bracket pairs of a text, skipping escapes and code spans. */
 export function bracketPairs(
   text: string,
   spans: ReadonlyMap<number, CodeSpan>,
-): Map<number, number> {
-  const pairs = new Map<number, number>()
+): BracketPairs {
+  const close = new Map<number, number>()
+  const holders = new Set<number>()
   const open: number[] = []
   for (let index = 0; index < text.length; index += 1) {
     const span = spans.get(index)
@@ -67,8 +103,12 @@ export function bracketPairs(
     else if (text[index] === '[') open.push(index)
     else if (text[index] === ']') {
       const start = open.pop()
-      if (start !== undefined) pairs.set(start, index)
+      if (start === undefined) continue
+      close.set(start, index)
+      // The `[` below on the stack opens a pair that holds this one.
+      const outer = open[open.length - 1]
+      if (outer !== undefined) holders.add(outer)
     }
   }
-  return pairs
+  return { close, holders }
 }

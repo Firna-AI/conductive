@@ -1,11 +1,12 @@
-import { readDestination } from './markdown-destination'
 import {
   bracketPairs,
   codeSpans,
   runLength,
+  type BracketPairs,
   type CodeSpan,
 } from './markdown-spans'
-import { decodeEntities, normalizeLabel, safeHref } from './markdown-text'
+import { linkTarget } from './markdown-targets'
+import { decodeEntities, safeHref } from './markdown-text'
 
 /** Inline content of a block. A link holds a checked, safe address. */
 export type MdInline =
@@ -39,15 +40,20 @@ function isDelimiter(char: string): boolean {
 }
 
 class InlineScanner {
-  private readonly text: string
-  private readonly definitions: Definitions
+  readonly text: string
+  readonly definitions: Definitions
   private readonly depth: number
   private readonly inLink: boolean
   private readonly spans: Map<number, CodeSpan>
-  private readonly brackets: Map<number, number>
+  readonly brackets: BracketPairs
   private readonly closerless = new Map<string, number>()
   private readonly nodes: MdInline[] = []
   private buffer = ''
+  /**
+   * The spaces after the buffer. A line end drops them, or makes two or
+   * more of them a hard break, without a read of the whole buffer.
+   */
+  private spaces = 0
 
   constructor(
     text: string,
@@ -79,15 +85,31 @@ class InlineScanner {
     ).run()
   }
 
+  /** Adds text after the waiting spaces. */
+  private add(text: string): void {
+    if (text === '') return
+    if (this.spaces > 0) this.buffer += ' '.repeat(this.spaces)
+    this.spaces = 0
+    this.buffer += text
+  }
+
   private flush(): void {
+    if (this.spaces > 0) this.buffer += ' '.repeat(this.spaces)
+    this.spaces = 0
     if (this.buffer === '') return
     this.nodes.push({ kind: 'text', text: decodeEntities(this.buffer) })
     this.buffer = ''
   }
 
-  private push(...nodes: MdInline[]): void {
+  private push(node: MdInline): void {
     this.flush()
-    this.nodes.push(...nodes)
+    this.nodes.push(node)
+  }
+
+  /** Adds each node in turn. A spread of a long list into a call overflows the stack. */
+  private pushAll(nodes: readonly MdInline[]): void {
+    this.flush()
+    for (const node of nodes) this.nodes.push(node)
   }
 
   private step(index: number): number {
@@ -100,10 +122,14 @@ class InlineScanner {
     const char = text[index]
     if (char === '\\') return this.escape(index)
     if (char === '\n') {
-      const hard = / {2,}$/.test(this.buffer)
-      this.buffer = this.buffer.replace(/ +$/, '')
+      const hard = this.spaces >= 2
+      this.spaces = 0
       if (hard) this.push({ kind: 'break' })
-      else this.buffer += '\n'
+      else this.add('\n')
+      return index + 1
+    }
+    if (char === ' ') {
+      this.spaces += 1
       return index + 1
     }
     let end = -1
@@ -113,7 +139,7 @@ class InlineScanner {
     } else if (isDelimiter(char)) end = this.emphasis(index, char)
     if (end > index) return end
     const run = isDelimiter(char) ? runLength(text, index, char) : 1
-    this.buffer += text.slice(index, index + run)
+    this.add(text.slice(index, index + run))
     return index + run
   }
 
@@ -123,7 +149,7 @@ class InlineScanner {
     if (next === '\n') this.push({ kind: 'break' })
     else if (punctuation.test(next)) this.push({ kind: 'text', text: next })
     else {
-      this.buffer += '\\'
+      this.add('\\')
       return index + 1
     }
     return index + 2
@@ -149,35 +175,16 @@ class InlineScanner {
   private link(index: number): number {
     const image = this.text[index] === '!'
     const open = image ? index + 1 : index
-    const close = this.brackets.get(open)
+    const close = this.brackets.close.get(open)
     if (close === undefined) return -1
-    const label = this.text.slice(open + 1, close)
-    const target = this.target(close + 1, label)
+    const target = linkTarget(this, open, close)
     if (!target) return -1
-    const children = this.nested(label, true)
+    const children = this.nested(this.text.slice(open + 1, close), true)
     const href = image || this.inLink ? null : safeHref(target.destination)
     if (image) this.push({ kind: 'text', text: plainText(children) })
     else if (href) this.push({ kind: 'link', href, children })
-    else this.push(...children)
+    else this.pushAll(children)
     return target.end
-  }
-
-  /** An inline address, a full or collapsed reference, or a shortcut. */
-  private target(after: number, label: string) {
-    const { text, definitions } = this
-    if (text[after] === '(') {
-      const inline = readDestination(text, after + 1)
-      if (inline) return inline
-    }
-    const refClose = text[after] === '[' ? this.brackets.get(after) : undefined
-    if (refClose !== undefined) {
-      const ref = text.slice(after + 1, refClose)
-      const key = normalizeLabel(ref === '' ? label : ref)
-      const destination = definitions.get(key)
-      if (destination !== undefined) return { destination, end: refClose + 1 }
-    }
-    const destination = definitions.get(normalizeLabel(label))
-    return destination === undefined ? null : { destination, end: after }
   }
 
   private emphasis(index: number, char: string): number {
@@ -192,7 +199,7 @@ class InlineScanner {
     for (const size of sizes) {
       const closer = this.closer(char, size, index + run)
       if (closer < 0) continue
-      this.buffer += text.slice(index, index + run - size)
+      this.add(text.slice(index, index + run - size))
       const inner = text.slice(index + run, closer)
       // Three delimiters are strong text around emphasised text.
       const content = size === 3 ? `${char}${inner}${char}` : inner

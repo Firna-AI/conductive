@@ -15,19 +15,19 @@ const org = FAKE_IDS.org
 const id = FAKE_IDS.workspace
 
 /** The text of each development file, by path. Development only. */
-export const devTextFiles: Readonly<Record<string, string>> = {
-  'README.md': samples.readme,
-  'docs/README.md': samples.readme,
-  'src/app/checkout/useAddressAutocomplete.ts': `${autocompleteHook}\n`,
-  'src/app/checkout/AddressForm.tsx': `${samples.addressForm}\n`,
-  'src/app/layout.tsx': samples.layout,
-  'tests/checkout/address.test.ts': samples.addressTest,
-  'next.config.ts': samples.nextConfig,
-  'package.json': samples.packageJson,
-  'tsconfig.json': samples.tsconfig,
-  '.env.example': samples.envExample,
-  'notes.txt': samples.notes,
-}
+export const devTextFiles: ReadonlyMap<string, string> = new Map([
+  ['README.md', samples.readme],
+  ['docs/README.md', samples.readme],
+  ['src/app/checkout/useAddressAutocomplete.ts', `${autocompleteHook}\n`],
+  ['src/app/checkout/AddressForm.tsx', `${samples.addressForm}\n`],
+  ['src/app/layout.tsx', samples.layout],
+  ['tests/checkout/address.test.ts', samples.addressTest],
+  ['next.config.ts', samples.nextConfig],
+  ['package.json', samples.packageJson],
+  ['tsconfig.json', samples.tsconfig],
+  ['.env.example', samples.envExample],
+  ['notes.txt', samples.notes],
+])
 
 /** A 1 × 1 PNG, so the page shows its binary state. */
 const pixel =
@@ -113,7 +113,7 @@ export function registerDevFiles(server: FakeApiServer): void {
     revision: tree.revision,
     entries: [...tree.entries, ...extraEntries],
   })
-  for (const [path, text] of Object.entries(devTextFiles)) {
+  for (const [path, text] of devTextFiles) {
     registerText(server, path, text)
   }
   server.json('GET', filePaths.content(org, id, 'public/hero.png'), {

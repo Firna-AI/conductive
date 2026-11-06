@@ -34,8 +34,14 @@ it('keeps a block comment open across lines, and shows unknown files without col
   expect(lines(code)[1]).toContain(
     `<span class="${styles.comment}">two */</span>`,
   )
-  const plain = renderToStaticMarkup(
-    <CodeView name="LICENSE" text={'const MIT = 1'} />,
-  )
-  expect(lines(plain)[0]).toContain('<span>const MIT = 1</span>')
+  // Names of members of plain objects are unknown files too.
+  for (const name of ['LICENSE', 'constructor', 'notes.constructor']) {
+    let plain = ''
+    expect(() => {
+      plain = renderToStaticMarkup(
+        <CodeView name={name} text="const MIT = 1" />,
+      )
+    }, name).not.toThrow()
+    expect(lines(plain)[0], name).toContain('<span>const MIT = 1</span>')
+  }
 })
