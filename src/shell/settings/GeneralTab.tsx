@@ -12,25 +12,31 @@ import {
 import { ActionButton } from '../ui/actions'
 import { tileInitials } from '../ui/Avatars'
 import { useAction } from '../ui/useAction'
+import { useSavedDraft } from '../ui/useSavedDraft'
 import { DeleteOrgDialog, deletionDays } from './DeleteOrgDialog'
+
+function sameNames(a: OrgNameDraft, b: OrgNameDraft): boolean {
+  return a.name === b.name && a.initials === b.initials
+}
 
 /**
  * The name and the initials of the org, which an admin changes. Save waits
  * for a change, and a name of spaces only does not count. Empty initials
- * keep the saved ones.
+ * keep the saved ones. When the saved name or initials change, here or
+ * elsewhere, the fields show them, unless the admin changed the fields.
  */
 function NameSection(props: { org: OrgSummary }) {
   const { org } = props
   const app = useApp()
-  const [draft, setDraft] = useState<OrgNameDraft>({
-    name: org.name,
-    initials: org.initials ?? '',
-  })
+  const names = useSavedDraft<OrgNameDraft>(
+    { name: org.name, initials: org.initials ?? '' },
+    sameNames,
+  )
   const rename = useAction(
-    () => app.renameOrg(org.id, orgNameFields(draft)),
+    () => names.save((draft) => app.renameOrg(org.id, orgNameFields(draft))),
     'The org was not saved',
   )
-  const next = orgNameFields(draft)
+  const next = orgNameFields(names.draft)
   const changed =
     next.name !== '' &&
     (next.name !== org.name ||
@@ -41,16 +47,21 @@ function NameSection(props: { org: OrgSummary }) {
   return (
     <Section
       actions={
-        <ActionButton busy={rename.pending} disabled={!changed} onPress={save}>
+        <ActionButton
+          busy={rename.pending}
+          disabled={!changed}
+          keepFocus
+          onPress={save}
+        >
           Save
         </ActionButton>
       }
       title="Org"
     >
       <OrgNameFields
-        change={setDraft}
+        change={names.change}
         disabled={rename.pending}
-        draft={draft}
+        draft={names.draft}
         submit={save}
       />
     </Section>
@@ -107,8 +118,7 @@ export function GeneralTab(props: { org: OrgSummary }) {
   }
   return (
     <>
-      {/* A new name or initials, saved here or elsewhere, start a new draft. */}
-      <NameSection key={`${org.name} ${org.initials ?? ''}`} org={org} />
+      <NameSection org={org} />
       <DeleteSection org={org} />
     </>
   )

@@ -48,27 +48,23 @@ function AttachmentList(props: {
 
 /**
  * The composer of a new workspace: attached files above the text, then the
- * attach button, the model and effort picker, and Send. Send is off while
- * the text is empty, while a notice blocks the message, and while it sends.
+ * attach button, the model and effort picker, and Send. Send is off until
+ * the message can go, as the screen decides for Send and Try again. While
+ * the create runs, the text and the attach button are off.
  */
 export function Composer(props: {
   model: NewWorkspaceModel
   choice: AgentChoice | undefined
   models: readonly AgentModel[]
-  blocked: boolean
+  /** Whether the message can go now. */
+  ready: boolean
   send: () => void
 }) {
   const control = useControlSizes()
   const draft = useStore(props.model.draft)
-  const upload = useStore(props.model.upload)
   const create = useStore(props.model.create)
   const files = useRef<HTMLInputElement>(null)
   const sending = create.state === 'sending'
-  const off =
-    draft.text.trim() === '' ||
-    props.blocked ||
-    upload.pending > 0 ||
-    !props.choice
   return (
     <div className={styles.wrap}>
       <div className={styles.composer}>
@@ -93,6 +89,7 @@ export function Composer(props: {
         />
         <div className={styles.bar}>
           <IconButton
+            disabled={sending}
             icon={Paperclip}
             label="Attach files"
             onPress={() => files.current?.click()}
@@ -121,18 +118,18 @@ export function Composer(props: {
             accessibilityLabel="Send"
             boxSize={control.height}
             busy={sending}
-            disabled={off}
+            disabled={!props.ready}
             icon={ArrowUp}
             onPress={props.send}
             shape="square"
             size="sm"
-            tone={off ? 'secondary' : 'primary'}
+            tone={props.ready ? 'primary' : 'secondary'}
           />
         </div>
       </div>
-      {upload.error ? (
+      {draft.upload.error ? (
         <p className={ui.error} role="alert">
-          {`The file wasn't attached. ${upload.error.message}`}
+          {`The file wasn't attached. ${draft.upload.error.message}`}
         </p>
       ) : null}
     </div>

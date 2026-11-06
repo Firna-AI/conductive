@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { AppModel } from '../app/app-model'
 import { memoryNavigation, NavigationContext } from '../app/navigation'
 import { PanelWidths } from '../app/panels'
-import { ServicesContext, type AppServices } from '../app/services'
+import { ServicesContext } from '../app/services'
 import { testServices } from '../app/test-kit'
 import type { FakeApiServer } from '../test-support/fake-api'
 import { AppModelContext } from './context'
@@ -11,10 +11,13 @@ import { PanelContext } from './layout/panels'
 import { ThemeRoot } from './ui/ThemeRoot'
 import { ViewportProvider, type Viewport } from './ui/viewport'
 
-/** An app model over the fake API, after its first loads. */
+/**
+ * An app model over the fake API, after its first loads. The overrides
+ * are those of `testServices`, such as the fetch of `HeldRequests`.
+ */
 export async function startedApp(
   server: FakeApiServer,
-  overrides: Partial<AppServices> = {},
+  overrides: Parameters<typeof testServices>[1] = {},
 ): Promise<AppModel> {
   const app = new AppModel(testServices(server, overrides))
   await app.start()

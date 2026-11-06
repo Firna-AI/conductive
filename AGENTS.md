@@ -3,9 +3,7 @@
 This repository builds Conducting, a coding tool at
 `conducting.build`. Each workspace is one task with its own branch and its own
 cloud computer, a Boat sandbox, where agents powered by Claude and Codex
-work. The app has a minimal page and the Worker core. The product screens
-are not built yet. The
-requirements live in
+work. The requirements live in
 `docs/architecture.md` and `docs/protocol/`, and the Mokly mockup catalogue
 lives in `docs/mockups/`, in TypeScript and React with `@firna/ui`. The root
 npm package holds the React and Vite web app under `src/` and the Cloudflare
@@ -134,7 +132,6 @@ GitHub Actions runs `npm run check` on each push and pull request, from
 
 ## Status
 
-- This project is not in production. The app has a minimal page. The
-  Worker has GitHub sign-in, org records, and an encrypted Boat key store.
+- This project is not in production.
 - Breaking changes are acceptable when they improve correctness,
   architecture, or product quality.

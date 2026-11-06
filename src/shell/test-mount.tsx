@@ -2,6 +2,7 @@ import { act, type ReactElement } from 'react'
 import { createRoot } from 'react-dom/client'
 import { onTestFinished, vi } from 'vitest'
 import type { AppModel } from '../app/app-model'
+import { flushMicrotasks } from '../app/test-kit'
 import { AppProviders, type ScreenOptions } from './test-render'
 
 /**
@@ -37,13 +38,14 @@ export function mountScreen(
 export function press(
   target: EventTarget,
   key: string,
-  options: { shift?: boolean } = {},
+  options: { shift?: boolean; alt?: boolean } = {},
 ): void {
   act(() => {
     target.dispatchEvent(
       new KeyboardEvent('keydown', {
         key,
         shiftKey: options.shift ?? false,
+        altKey: options.alt ?? false,
         bubbles: true,
         cancelable: true,
       }),
@@ -56,5 +58,36 @@ export function click(target: HTMLElement): void {
   act(() => {
     target.focus()
     target.click()
+  })
+}
+
+/**
+ * Types text into a field, as the keyboard does: the field takes the focus,
+ * and its value becomes `text`, so that React sees the change.
+ */
+export function typeText(
+  field: HTMLInputElement | HTMLTextAreaElement,
+  text: string,
+): void {
+  const prototype =
+    field instanceof HTMLTextAreaElement
+      ? HTMLTextAreaElement.prototype
+      : HTMLInputElement.prototype
+  const setValue = Object.getOwnPropertyDescriptor(prototype, 'value')?.set
+  if (!setValue) throw new Error('The field takes no text.')
+  act(() => {
+    field.focus()
+    setValue.call(field, text)
+    field.dispatchEvent(new Event('input', { bubbles: true }))
+  })
+}
+
+/**
+ * Lets the answers of the fake API, and the renders that they start, run
+ * to their end. It waits for microtasks only, inside `act`.
+ */
+export async function settle(): Promise<void> {
+  await act(async () => {
+    await flushMicrotasks()
   })
 }

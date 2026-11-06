@@ -125,6 +125,27 @@ export class ManualFocus {
   }
 }
 
+/** The input of the user on the page, which comes only when the test says so. */
+export class ManualInput {
+  private readonly listeners = new Set<() => void>()
+
+  readonly onInput = (listener: () => void): (() => void) => {
+    this.listeners.add(listener)
+    return () => {
+      this.listeners.delete(listener)
+    }
+  }
+
+  get listening(): number {
+    return this.listeners.size
+  }
+
+  /** The user types, presses a key or the pointer, or scrolls. */
+  input(): void {
+    for (const listener of [...this.listeners]) listener()
+  }
+}
+
 /** Whether the page shows. It starts visible and changes when the test says so. */
 export class ManualVisibility implements Readable<boolean> {
   private shown = true
@@ -190,6 +211,7 @@ export class MemoryStorage implements KeyValueStorage {
  * Services over a fake API server, with no real network, clock, timer, or
  * storage. A timer runs only through a `ManualDelay` that the test gives.
  * The page shows, unless the test gives a `ManualVisibility` and hides it.
+ * Input comes only through a `ManualInput` that the test gives.
  */
 export function testServices(
   server: FakeApiServer,
@@ -208,6 +230,7 @@ export function testServices(
     copy: async () => undefined,
     delay: new ManualDelay().delay,
     onFocus: new ManualFocus().onFocus,
+    onInput: new ManualInput().onInput,
     visible: new ManualVisibility(),
     ...rest,
   }

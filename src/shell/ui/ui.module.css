@@ -14,6 +14,11 @@
   display: contents;
 }
 
+/* A wrapper without a box, such as the one of a button that keeps its focus. */
+.contents {
+  display: contents;
+}
+
 .plainButton {
   width: 100%;
   margin: 0;

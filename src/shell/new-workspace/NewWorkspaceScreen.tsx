@@ -3,6 +3,7 @@ import { ChevronDown, FolderGit2, Sparkles } from 'lucide-react'
 import chat from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/screens/NewWorkspaceScreen.module.css'
+import { draftReady } from '../../app/new-workspace-model'
 import { currentBuild } from '../../app/org-model'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
@@ -118,9 +119,18 @@ export function NewWorkspaceScreen(props: {
   const repositoryId = draft.repositoryId ?? chosen[0]?.id
   const choice = draft.choice ?? account?.defaultChoice
   const notice = useBlockingNotice(choice, models)
+  // One readiness for Send and Try again: the text and the files of the
+  // draft, the agent login of the notice, the repository, and the model.
+  const ready =
+    notice === null &&
+    repositoryId !== undefined &&
+    choice !== undefined &&
+    draftReady(draft)
+      ? { repositoryId, choice }
+      : null
   const send = async () => {
-    if (!repositoryId || !choice) return
-    const created = await model.send({ repositoryId, choice })
+    if (!ready) return
+    const created = await model.send(ready)
     if (created) go(routes.workspace(org.id, created.workspace.id))
   }
   const section = sections?.find((item) => item.id === props.sectionId)
@@ -145,14 +155,18 @@ export function NewWorkspaceScreen(props: {
         </div>
         <div className={chat.footer}>
           {create.state === 'failed' ? (
-            <CreateFailed error={create.error} retry={() => void send()} />
+            <CreateFailed
+              error={create.error}
+              ready={ready !== null}
+              retry={() => void send()}
+            />
           ) : null}
           {notice}
           <Composer
-            blocked={notice !== null || repositoryId === undefined}
             choice={choice}
             model={model}
             models={models}
+            ready={ready !== null}
             send={() => void send()}
           />
         </div>

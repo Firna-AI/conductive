@@ -2,6 +2,7 @@ import { createApiClient } from './api/client'
 import { browserDelay, socketEventSource } from './events'
 import {
   windowFocus,
+  windowInput,
   windowStorage,
   windowVisibility,
   type AppServices,
@@ -15,6 +16,7 @@ export function createLiveServices(target: Window): AppServices {
     now: () => Date.now(),
     delay: browserDelay,
     onFocus: windowFocus(target),
+    onInput: windowInput(target),
     visible: windowVisibility(target),
     storage: windowStorage(target),
     newId: () => target.crypto.randomUUID(),

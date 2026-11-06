@@ -55,12 +55,23 @@ function failureBody(error: ApiError): string {
   return `${error.message} Your message is kept.`
 }
 
-/** A create that failed. The draft stays, and Try again sends it again. */
-export function CreateFailed(props: { error: ApiError; retry: () => void }) {
+/**
+ * A create that failed. The draft stays, and Try again sends it again. Try
+ * again is off while the message cannot go, as Send is.
+ */
+export function CreateFailed(props: {
+  error: ApiError
+  ready: boolean
+  retry: () => void
+}) {
   return (
     <Notice
       action={
-        <ActionButton onPress={props.retry} tone="primary">
+        <ActionButton
+          disabled={!props.ready}
+          onPress={props.retry}
+          tone="primary"
+        >
           Try again
         </ActionButton>
       }

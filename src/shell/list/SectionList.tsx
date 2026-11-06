@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, type KeyboardEvent } from 'react'
+import { Fragment, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
 import { stepTarget, type SectionGroup } from '../../app/sections'
@@ -8,6 +8,7 @@ import { ArchivedGroup } from './ArchivedGroup'
 import type { DropTarget } from './drop-target'
 import { SectionHeader, type SectionActions } from './SectionHeader'
 import { useRowDrag, type RowDragState } from './useRowDrag'
+import { useRowFocus } from './useRowFocus'
 import { WorkspaceRow, type RowVariant } from './WorkspaceRow'
 import list from './list.module.css'
 
@@ -69,19 +70,10 @@ export function SectionList(props: {
   move: (workspaceId: string, target: DropTarget) => void
 }) {
   const { drag, bind, layout } = useRowDrag(props.move)
-  const [focusId, setFocusId] = useState<string | null>(null)
+  /** A move by keys keeps the focus on its row. */
+  const rows = useRowFocus()
   /** What a move by keys says to a screen reader. */
   const [announcement, setAnnouncement] = useState('')
-  /** The link of each row, so a move by keys keeps the focus on its row. */
-  const [links] = useState(() => new Map<string, HTMLAnchorElement>())
-  const linkRef = (workspaceId: string) => (node: HTMLAnchorElement | null) => {
-    if (node) links.set(workspaceId, node)
-    else if (links.get(workspaceId)?.isConnected === false)
-      links.delete(workspaceId)
-  }
-  useEffect(() => {
-    if (focusId !== null) links.get(focusId)?.focus()
-  }, [focusId, links, props.groups])
   const onKeyDown = (
     workspace: Workspace,
     event: KeyboardEvent<HTMLElement>,
@@ -93,7 +85,6 @@ export function SectionList(props: {
     event.preventDefault()
     const target = stepTarget(props.groups, workspace.id, step)
     if (!target) return
-    setFocusId(workspace.id)
     const section = props.groups.find(
       (group) => group.section.id === target.sectionId,
     )
@@ -142,9 +133,11 @@ export function SectionList(props: {
                             ? 'placeholder'
                             : undefined
                         }
-                        linkRef={linkRef(workspace.id)}
+                        linkRef={rows.linkRef(workspace.id)}
                         now={props.now}
                         onKeyDown={(event) => onKeyDown(workspace, event)}
+                        onLinkBlur={rows.blur}
+                        onLinkFocus={(event) => rows.focus(workspace.id, event)}
                         rowRef={layout.row(workspace.id, section.id)}
                         selected={workspace.id === props.selectedId}
                         variant={props.variant}

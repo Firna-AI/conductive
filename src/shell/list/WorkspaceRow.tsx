@@ -1,4 +1,4 @@
-import type { HTMLAttributes, KeyboardEvent, Ref } from 'react'
+import type { FocusEvent, HTMLAttributes, KeyboardEvent, Ref } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
 import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
@@ -53,6 +53,9 @@ export function WorkspaceRow({
   rowRef?: Ref<HTMLSpanElement>
   /** The row's link, which keeps the focus after a move by keys. */
   linkRef?: Ref<HTMLAnchorElement>
+  /** The row's link takes the focus, or loses it. */
+  onLinkFocus?: (event: FocusEvent<HTMLAnchorElement>) => void
+  onLinkBlur?: (event: FocusEvent<HTMLAnchorElement>) => void
 }) {
   const { workspace } = props
   const className = classes(
@@ -79,6 +82,8 @@ export function WorkspaceRow({
       <AppLink
         aria-current={props.selected ? 'page' : undefined}
         className={className}
+        onBlur={props.onLinkBlur}
+        onFocus={props.onLinkFocus}
         ref={linkRef}
         to={routes.workspace(workspace.orgId, workspace.id)}
       >

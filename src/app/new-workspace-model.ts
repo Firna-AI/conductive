@@ -11,6 +11,12 @@ import { readAttachment, readCreated } from './api/read-workspaces'
 import type { OrgModel } from './org-model'
 import { asApiError, Store } from './store'
 
+/** The files that still upload, and the error of the last one that failed. */
+export interface UploadState {
+  pending: number
+  error: ApiError | null
+}
+
 /** The first message of a workspace that does not exist yet. */
 export interface Draft {
   text: string
@@ -18,6 +24,8 @@ export interface Draft {
   repositoryId: string | null
   choice: AgentChoice | null
   attachments: readonly Attachment[]
+  /** The uploads of the files, which a new draft starts without. */
+  upload: UploadState
   /** The client ID of the first message. Try again sends the same one. */
   messageId: string
 }
@@ -27,9 +35,12 @@ export type CreateState =
   | { state: 'sending' }
   | { state: 'failed'; error: ApiError }
 
-export interface UploadState {
-  pending: number
-  error: ApiError | null
+/**
+ * Whether the draft can go: it has text, and none of its files still
+ * uploads. Send and Try again both wait for it.
+ */
+export function draftReady(draft: Draft): boolean {
+  return draft.text.trim() !== '' && draft.upload.pending === 0
 }
 
 async function base64(file: Blob): Promise<string> {
@@ -43,12 +54,13 @@ async function base64(file: Blob): Promise<string> {
 
 /**
  * New workspace: an empty chat whose first message creates the workspace.
- * When the create fails, the draft stays, so Try again sends it again.
+ * When the create fails, the draft stays, so Try again sends it again. A
+ * create and an upload never run together: the create waits for the files,
+ * and a file that comes while the create runs does not upload.
  */
 export class NewWorkspaceModel {
   readonly draft: Store<Draft>
   readonly create = new Store<CreateState>({ state: 'idle' })
-  readonly upload = new Store<UploadState>({ pending: 0, error: null })
   /** `null` puts the workspace in General, the default section. */
   readonly sectionId: string | null
   private readonly org: OrgModel
@@ -65,8 +77,13 @@ export class NewWorkspaceModel {
       repositoryId: keep?.repositoryId ?? null,
       choice: keep?.choice ?? null,
       attachments: [],
+      upload: { pending: 0, error: null },
       messageId: this.org.services.newId(),
     }
+  }
+
+  private changeUpload(change: (upload: UploadState) => UploadState): void {
+    this.draft.change((draft) => ({ ...draft, upload: change(draft.upload) }))
   }
 
   setText(text: string): void {
@@ -81,8 +98,13 @@ export class NewWorkspaceModel {
     this.draft.change((draft) => ({ ...draft, choice }))
   }
 
+  /**
+   * Uploads files for the draft. While the create runs, it uploads nothing,
+   * because the create already sent the files of the draft.
+   */
   async attach(files: readonly File[]): Promise<void> {
-    this.upload.change((upload) => ({
+    if (this.create.get().state === 'sending') return
+    this.changeUpload((upload) => ({
       pending: upload.pending + files.length,
       error: null,
     }))
@@ -104,12 +126,9 @@ export class NewWorkspaceModel {
           attachments: [...draft.attachments, attachment],
         }))
       } catch (error) {
-        this.upload.change((upload) => ({
-          ...upload,
-          error: asApiError(error),
-        }))
+        this.changeUpload((upload) => ({ ...upload, error: asApiError(error) }))
       } finally {
-        this.upload.change((upload) => ({
+        this.changeUpload((upload) => ({
           ...upload,
           pending: upload.pending - 1,
         }))
@@ -126,14 +145,15 @@ export class NewWorkspaceModel {
 
   /**
    * Sends the first message, which creates the workspace. It returns the
-   * new workspace, or `null` when the create failed and the draft stays.
+   * new workspace, or `null` when the create failed and the draft stays. It
+   * sends nothing while the draft is not ready or a create runs.
    */
   async send(defaults: {
     repositoryId: string
     choice: AgentChoice
   }): Promise<CreateWorkspaceResponse | null> {
     const draft = this.draft.get()
-    if (draft.text.trim() === '' || this.create.get().state === 'sending') {
+    if (!draftReady(draft) || this.create.get().state === 'sending') {
       return null
     }
     const request: CreateWorkspaceRequest = {

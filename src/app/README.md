@@ -127,6 +127,26 @@ the invite, the roles, and the removal there.
   itself and from a text field. When it closes, the frame is active again
   before the focus goes back to the trigger. A desktop menu leaves the
   frame active.
+- A move of a workspace row by keys keeps the focus on the row. The list
+  gives back only a lost focus, as a layer does: when a render takes the
+  focused row link out of the page and the focus falls to the page, the
+  new link of the same workspace takes it, also after a failed move puts
+  the row back. When the user moves the focus away, a later read of the
+  list leaves the focus there.
+- An editor of a saved value, such as a script or the org name, stays
+  mounted through its saves (`useSavedDraft`). When the saved value
+  changes, a draft that the user did not change takes the new value, and
+  an edited draft stays. A draft that equals the one that went out for a
+  save takes the value of the answer. A failed save keeps the draft.
+- Save keeps the focus when a save leaves nothing to save
+  (`ActionButton` with `keepFocus`). A browser takes the focus from a
+  natively disabled button, so Save stays a native button while it has
+  the focus: it looks off, its wrapper says `aria-disabled`, and a press
+  does nothing. When the focus leaves, Save is natively disabled.
+- New workspace sends and uploads one at a time: the create waits for the
+  files, and the paperclip is off while the create runs. Send and Try
+  again read one readiness: the text, the files, the agent login, the
+  repository, and the model.
 
 ## Rules for this code
 
@@ -144,9 +164,12 @@ the invite, the roles, and the removal there.
   generation. An answer that arrives after their screen closed or the user
   cancelled starts no stream, writes no older state, opens no question,
   and schedules no request.
-- Timers, the focus, and the visibility of the page come from
-  `AppServices` (`delay`, `onFocus`, and `visible`), so that no unit test
-  runs a real timer or needs a browser page.
+- Timers, the focus, the visibility, and the input of the page come from
+  `AppServices` (`delay`, `onFocus`, `visible`, and `onInput`), so that no
+  unit test runs a real timer or needs a browser page. The browser hears
+  the input in the capture phase, before a field can stop it. An open
+  workspace counts the input anywhere on the page as activity, at most
+  once a minute.
 - The shell reuses the design tokens, the pure parts, and the CSS modules of
   the [mockups](../../docs/mockups/README.md). It never imports a mockup
   screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.
@@ -159,11 +182,12 @@ the invite, the roles, and the removal there.
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
 fake API, requests or answers that wait for the test (also two at one
 path), a manual timer with the wait of each pending timer, a manual page
-focus and visibility, and a recording event source.
+focus, visibility, and input, and a recording event source.
 `../shell/test-render.tsx` draws a screen with every provider through
 server rendering, after the test loads its data. A test that needs focus
 and keys opts into happy-dom with `// @vitest-environment happy-dom`, and
-mounts the screen with `../shell/test-mount.tsx`.
+mounts the screen with `../shell/test-mount.tsx`, which also presses keys,
+clicks, types, and lets the answers of the fake API settle.
 
 ## Key code
 
@@ -188,5 +212,7 @@ mounts the screen with `../shell/test-mount.tsx`.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
   `useDismiss`, the layer of sheets and dialogs.
+- `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.
+  `../shell/list/useRowFocus.ts`: the focus of a row after a move by keys.
 - `../shell/orgs/`: Create org and the name and initials fields.
   `../shell/settings/RepositorySearch.tsx`: the searchable repository list.

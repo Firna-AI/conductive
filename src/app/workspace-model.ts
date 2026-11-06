@@ -55,8 +55,9 @@ export class WorkspaceModel {
 
   /**
    * Opens the workspace. A stopped sandbox resumes, and the steps stream in.
-   * A call to `close` while the request runs makes its answer obsolete, so
-   * an old open never starts the stream again.
+   * The input of the user on the page counts as activity until `close`. A
+   * call to `close` while the request runs makes its answer obsolete, so an
+   * old open never starts the stream again.
    */
   async open(): Promise<void> {
     const run = ++this.generation
@@ -91,6 +92,8 @@ export class WorkspaceModel {
       this.stream.last.subscribe(markRead),
       this.detail.subscribe(markRead),
       this.org.services.visible.subscribe(markRead),
+      // Input anywhere on the page counts, also in a field that stops it.
+      this.org.services.onInput(() => this.reportActivity()),
     )
     this.stream.start()
   }
@@ -151,7 +154,7 @@ export class WorkspaceModel {
     this.setDetail(changes.reduce((value, change) => change(value), detail))
   }
 
-  /** Counts input in the workspace, at most once a minute. */
+  /** Counts input in the open workspace, at most once a minute. */
   reportActivity(): void {
     const state = valueOf(this.detail.get())?.workspace.state
     if (state === undefined || state === 'stopped' || state === 'error') return

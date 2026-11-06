@@ -5,6 +5,7 @@ import { createApiClient } from '../api/client'
 import { browserDelay, type WorkspaceEventSource } from '../events'
 import {
   windowFocus,
+  windowInput,
   windowStorage,
   windowVisibility,
   type AppServices,
@@ -72,6 +73,7 @@ export function createFakeServices(search: string): AppServices {
     now,
     delay: browserDelay,
     onFocus: windowFocus(window),
+    onInput: windowInput(window),
     visible: windowVisibility(window),
     storage: windowStorage(window),
     newId,

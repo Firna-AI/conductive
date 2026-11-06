@@ -139,7 +139,6 @@ export function WorkspaceScreen(props: {
     />
   )
   const dialog = <ArchiveDialog archive={model.archive} workspace={workspace} />
-  const onInput = () => model.reportActivity()
   if (phone) {
     const view = phoneView(props.view)
     const archived = sandbox === 'archived'
@@ -154,12 +153,7 @@ export function WorkspaceScreen(props: {
       tool: panel(features.tools?.(context)),
     }
     return (
-      <div
-        className={page.mobileBody}
-        onKeyDown={onInput}
-        onPointerDown={onInput}
-        onWheel={onInput}
-      >
+      <div className={page.mobileBody}>
         {header}
         {features.pullRequest?.(context)}
         <div className={page.mobileBody}>
@@ -175,12 +169,7 @@ export function WorkspaceScreen(props: {
     )
   }
   return (
-    <div
-      className={body.body}
-      onKeyDown={onInput}
-      onPointerDown={onInput}
-      onWheel={onInput}
-    >
+    <div className={body.body}>
       <div className={body.chat}>
         {header}
         {features.tabs?.(context)}

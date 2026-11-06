@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
@@ -9,6 +9,7 @@ import {
 import type { ComputerModel, ScriptKind } from '../../app/computer-model'
 import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
+import { useSavedDraft } from '../ui/useSavedDraft'
 
 interface ScriptProps {
   title: string
@@ -21,13 +22,16 @@ interface ScriptProps {
   notice?: ReactNode
 }
 
-/** The script in a code field, with Save script, which waits for a change. */
+/**
+ * The script in a code field, with Save script, which waits for a change.
+ * The field keeps the text that the user types while a save runs.
+ */
 function ScriptEditor(props: ScriptProps) {
   const theme = useSharedUiTheme()
   const { field } = useControlSizes()
-  const [draft, setDraft] = useState(props.script)
+  const script = useSavedDraft(props.script)
   const save = useAction(
-    () => props.computer.saveScript(props.kind, draft),
+    () => script.save((draft) => props.computer.saveScript(props.kind, draft)),
     'The script was not saved',
   )
   return (
@@ -35,7 +39,8 @@ function ScriptEditor(props: ScriptProps) {
       actions={
         <ActionButton
           busy={save.pending}
-          disabled={draft === props.script}
+          disabled={script.draft === props.script}
+          keepFocus
           onPress={() => save.run()}
         >
           Save script
@@ -51,11 +56,11 @@ function ScriptEditor(props: ScriptProps) {
         autoCorrect={false}
         inputStyle={{ fontFamily: theme.fonts.mono, fontSize: 12.5 }}
         multiline
-        numberOfLines={Math.max(3, draft.split('\n').length)}
-        onChangeText={setDraft}
+        numberOfLines={Math.max(3, script.draft.split('\n').length)}
+        onChangeText={script.change}
         size={field}
         spellCheck={false}
-        value={draft}
+        value={script.draft}
       />
       {props.notice}
     </Section>
@@ -68,10 +73,7 @@ function ScriptEditor(props: ScriptProps) {
  */
 export function ScriptSection(props: ScriptProps & { admin: boolean }) {
   const { admin, ...script } = props
-  if (admin) {
-    // A newly saved script starts a new draft.
-    return <ScriptEditor key={script.script} {...script} />
-  }
+  if (admin) return <ScriptEditor {...script} />
   return (
     <Section description={script.description} title={script.title}>
       <MonoBlock text={script.script} />
