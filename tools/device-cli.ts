@@ -1,5 +1,6 @@
 import { parseArgs } from 'node:util'
 
+import { deviceCommandSucceeded } from '../src/shared/device.ts'
 import { readDeviceCommandInput } from '../src/shared/device-read.ts'
 import type { WorkspaceToolClient } from './client.ts'
 import type { ToolOutput } from './cli.ts'
@@ -42,8 +43,5 @@ export async function runMacCli(
   })
   const response = await client.runMacCommand(input)
   output.stdout(`${JSON.stringify(response)}\n`)
-  return response.request.state === 'completed' &&
-    response.request.result?.exitCode === 0
-    ? 0
-    : 1
+  return deviceCommandSucceeded(response.request) ? 0 : 1
 }

@@ -80,7 +80,9 @@ An offline Mac returns an unavailable result.
 A stopped turn cancels its command with `turn_ended`.
 The response preserves the exit code, timeout, and output truncation.
 Combined stdout and stderr have a 65,536-byte UTF-8 cap.
-The CLI writes the result as JSON and returns status 1 for an unsuccessful command.
+A Mac command succeeds only when its state is `completed` and its exit code is 0.
+The CLI returns status 1 and MCP returns `isError: true` for every other result.
+Both adapters keep the complete command result, including its output, timeout, and truncation fields.
 
 The Mac command route is mounted in the real Worker.
 General image installation and runner tool registration remain composition work.

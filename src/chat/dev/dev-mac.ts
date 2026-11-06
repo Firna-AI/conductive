@@ -9,6 +9,7 @@ import {
 } from '../../shared/device'
 import {
   FAKE_PAIRING,
+  fakeLiteralCommands,
   fakeMacRequests,
   fakeMacSettings,
   type FakeMacScenario,
@@ -37,7 +38,17 @@ export class DevMac {
   constructor(scenario: FakeMacScenario, now: number, onMac: boolean) {
     this.onMac = onMac
     this.requests = [...fakeMacRequests(scenario)]
-    const settings = fakeMacSettings(now)
+    const base = fakeMacSettings(now)
+    const settings =
+      scenario === 'literal'
+        ? {
+            ...base,
+            alwaysAllowedCommands: [
+              ...base.alwaysAllowedCommands,
+              ...fakeLiteralCommands,
+            ],
+          }
+        : base
     const waits = this.requests.some((request) => request.state === 'waiting')
     this.settings = waits ? { ...settings, workspaceWindows: [] } : settings
   }

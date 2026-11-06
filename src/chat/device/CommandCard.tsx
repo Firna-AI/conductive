@@ -3,6 +3,7 @@ import type { DeviceCommandRecord } from '../../shared/device'
 import card from '../../../docs/mockups/src/components/chat/MacCommand.module.css'
 import { limitLabel, macName, outputOf, stateNote } from './command-text'
 import { CommandLine, CommandStatus } from './CommandParts'
+import { LiteralText } from './LiteralText'
 
 /** A command that ran gives its output back to the agent. */
 const ran = (request: DeviceCommandRecord) =>
@@ -32,7 +33,7 @@ export function CommandCard(props: {
       </div>
       <CommandLine command={request.command} />
       <span className={card.meta}>
-        in <code className={card.path}>{request.folder}</code> · up to{' '}
+        in <LiteralText className={card.path} text={request.folder} /> · up to{' '}
         {limitLabel(request.timeoutSeconds)}
       </span>
       {ran(request) && output !== null ? (

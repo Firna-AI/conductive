@@ -64,6 +64,7 @@ export const choices = {
     'timed-out',
     'failed',
     'unavailable',
+    'literal',
   ],
   app: ['browser', 'mac'],
   page: ['chat', 'this-mac'],

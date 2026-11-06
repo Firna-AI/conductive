@@ -35,6 +35,17 @@ export type FakeMacScenario =
   | 'failed'
   | 'unavailable'
   | 'other-session'
+  | 'literal'
+
+/**
+ * Commands that only a literal display shows as they are: a comment, then a
+ * second command on its own line with a tab and two spaces, and a no-break
+ * space before `#`, which the shell does not read as a comment.
+ */
+export const fakeLiteralCommands = [
+  'printf safe # display comment\nprintf SECOND\tX  Y',
+  'echo hi\u00A0#; echo RAN',
+] as const
 
 /** A run that started on the Mac at 6 s and ended `seconds` later. */
 const ran = (seconds: number) => ({
@@ -159,6 +170,14 @@ const scenarios: Readonly<
     fakeMacRequest({ state: 'unavailable', device: null, deviceName: null }),
   ],
   'other-session': () => [fakeMacRequest({ sessionId: 'other-session' })],
+  literal: () =>
+    fakeLiteralCommands.map((command, index) =>
+      fakeMacRequest({
+        requestId: `mac-literal-${index + 1}`,
+        command,
+        createdAt: FAKE_TIME + 5_500 + index * 100,
+      }),
+    ),
 }
 
 /** The Mac command records of a scenario, the oldest first. */

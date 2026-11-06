@@ -9,16 +9,24 @@ import {
   personName,
   statePresentation,
 } from './command-text'
+import { LiteralText } from './LiteralText'
 
-/** The exact command, after a muted shell prompt. A long command wraps. */
+/**
+ * The exact command, after a muted shell prompt, with its line breaks,
+ * tabs, repeated spaces, and a mark for each hidden character. A long
+ * command wraps.
+ */
 export function CommandLine(props: { command: string }) {
   return (
-    <code className={card.command}>
-      <span aria-hidden className={card.prompt}>
-        ${' '}
-      </span>
-      {props.command}
-    </code>
+    <LiteralText
+      className={card.command}
+      lead={
+        <span aria-hidden className={card.prompt}>
+          ${' '}
+        </span>
+      }
+      text={props.command}
+    />
   )
 }
 
@@ -47,22 +55,23 @@ function factsOf(request: DeviceCommandRecord, readers: RequestReaders) {
     ? `${request.workspaceName}, in ${readers.orgName}`
     : request.workspaceName
   return [
-    { term: 'Folder', value: request.folder, mono: true },
-    { term: 'Reason', value: request.reason, mono: false },
-    { term: 'Workspace', value: workspace, mono: false },
+    { term: 'Folder', value: request.folder, literal: true },
+    { term: 'Reason', value: request.reason, literal: false },
+    { term: 'Workspace', value: workspace, literal: false },
     {
       term: 'Sender',
       value:
         request.sender.id === readers.viewerId ? `${sender} (you)` : sender,
-      mono: false,
+      literal: false,
     },
   ]
 }
 
 /**
  * The Mac and the time limit as a small label, and Details, which opens
- * the folder, the reason, the workspace, and the sender. The reason for a
- * time limit above 120 seconds shows without a click.
+ * the folder, the reason, the workspace, and the sender. The folder shows
+ * as literal text, as the Mac uses it. The reason for a time limit above
+ * 120 seconds shows without a click.
  */
 export function RequestDetails(props: {
   request: DeviceCommandRecord
@@ -91,8 +100,12 @@ export function RequestDetails(props: {
         {factsOf(request, props.readers).map((fact) => (
           <div className={styles.fact} key={fact.term}>
             <dt className={styles.term}>{fact.term}</dt>
-            <dd className={fact.mono ? styles.mono : styles.value}>
-              {fact.value}
+            <dd className={fact.literal ? styles.mono : styles.value}>
+              {fact.literal ? (
+                <LiteralText as="span" text={fact.value} />
+              ) : (
+                fact.value
+              )}
             </dd>
           </div>
         ))}

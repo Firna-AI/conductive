@@ -103,6 +103,12 @@ export interface DeviceCommandRecord {
   startedAt: number | null
   updatedAt: number
 }
+
+/** Process completion alone does not mean that the command succeeded. */
+export function deviceCommandSucceeded(request: DeviceCommandRecord): boolean {
+  return request.state === 'completed' && request.result?.exitCode === 0
+}
+
 export interface DeviceCommandResponse {
   request: DeviceCommandRecord
 }

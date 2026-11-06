@@ -8,6 +8,7 @@ import {
 } from './input.ts'
 import { WORKSPACE_MCP_TOOLS } from './mcp-tools.ts'
 import { readDeviceCommandInput } from '../src/shared/device-read.ts'
+import { deviceCommandSucceeded } from '../src/shared/device.ts'
 
 /** A fixed supported revision is negotiated, rather than echoing any revision. */
 export const MCP_PROTOCOL_VERSION = '2025-11-25'
@@ -118,7 +119,8 @@ export function createWorkspaceMcp(client: WorkspaceToolClient) {
         return success({
           content: [{ type: 'text', text: JSON.stringify(result) }],
           structuredContent: result,
-          isError: 'request' in result && result.request.state !== 'completed',
+          isError:
+            'request' in result && !deviceCommandSucceeded(result.request),
         })
       } catch (error) {
         return success({

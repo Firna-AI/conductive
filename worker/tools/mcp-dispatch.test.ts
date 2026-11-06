@@ -2,6 +2,8 @@ import { setImmediate } from 'node:timers/promises'
 
 import { expect, it } from 'vitest'
 
+import type { DeviceCommandResponse } from '../../src/shared/device'
+import { record, text } from '../../tools/input'
 import { runToolProcess } from '../../tools/main'
 import { MCP_PROTOCOL_VERSION } from '../../tools/mcp'
 import {
@@ -87,3 +89,103 @@ it('handles a detached reply failure and completes other replies before EOF exit
     ping: { result: {} },
   })
 })
+
+it.each([
+  { state: 'completed', exitCode: 1, timedOut: false },
+  { state: 'completed', exitCode: null, timedOut: false },
+  { state: 'timed-out', exitCode: 0, timedOut: true },
+] as const)(
+  'reports Mac $state with exit code $exitCode as failure and preserves the complete result in both adapters',
+  async ({ state, exitCode, timedOut }) => {
+    const response: DeviceCommandResponse = {
+      request: {
+        requestId: 'mac-command',
+        orgId: 'org',
+        workspaceId: 'workspace',
+        workspaceName: 'Workspace',
+        sessionId: 'session',
+        turnId: 'turn',
+        sender: {
+          id: 'sender',
+          githubLogin: 'sender',
+          displayName: null,
+          avatarUrl: null,
+        },
+        device: { deviceId: 'mac', connectionId: 'connection' },
+        deviceName: 'Sender Mac',
+        command: 'make test',
+        folder: '/Users/sender/project',
+        reason: 'Check the local build',
+        timeoutSeconds: 60,
+        longerTimeoutReason: null,
+        state,
+        result: {
+          stdout: 'Build output\n',
+          stderr: 'Build failed\n',
+          exitCode,
+          timedOut,
+          truncated: true,
+        },
+        error: null,
+        createdAt: 1,
+        startedAt: 2,
+        updatedAt: 3,
+      },
+    }
+    const { request } = response
+    const send = async () => Response.json(response)
+    const cli = toolOutput()
+    const cliStatus = await runToolProcess(
+      [
+        'mac',
+        'run',
+        '--command',
+        request.command,
+        '--folder',
+        request.folder,
+        '--reason',
+        request.reason,
+        '--request-id',
+        request.requestId,
+      ],
+      TOOL_TEST_ENVIRONMENT,
+      inputLines(),
+      cli.output,
+      send,
+    )
+    const mcp = toolOutput()
+    const mcpStatus = await runToolProcess(
+      ['mcp'],
+      TOOL_TEST_ENVIRONMENT,
+      inputLines([
+        MCP_INITIALIZE,
+        MCP_INITIALIZED,
+        mcpToolCall('mac', 'run_mac_command', {
+          command: request.command,
+          folder: request.folder,
+          reason: request.reason,
+          requestId: request.requestId,
+        }),
+      ]),
+      mcp.output,
+      send,
+    )
+
+    expect(cliStatus).toBe(1)
+    expect(cli.stderr).toEqual([])
+    expect(cli.stdout).toHaveLength(1)
+    expect(JSON.parse(cli.stdout[0])).toEqual(response)
+    expect(mcpStatus).toBe(0)
+    expect(mcp.stderr).toEqual([])
+    const result = record(mcpRepliesById(mcp.stdout).mac.result)
+    expect(result).toEqual({
+      isError: true,
+      structuredContent: response,
+      content: [{ type: 'text', text: expect.any(String) }],
+    })
+    const content = result.content
+    if (!Array.isArray(content))
+      throw new Error('The MCP result has no content.')
+    expect(JSON.parse(text(record(content[0]).text))).toEqual(response)
+  },
+)

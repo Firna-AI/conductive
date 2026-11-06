@@ -4569,6 +4569,12 @@ Implementation calls, 6 November 2026:
 - Use the existing command card for timeout, launch failure, nonzero exit,
   and cut output. Stack pending requests above the composer. These are
   outcomes of the approved command limits, without a new screen or flow.
+- Show command and folder text through one literal renderer. Keep line
+  breaks and show hidden characters by code point. Keep the original text
+  for execution, saved choices, and copies. This prevents a command from
+  hiding a second executable line in its approval.
+- Use one success rule for CLI, MCP, and chat: a completed command with
+  exit code 0. A completed process can still have failed.
 
 - [x] Register the Mac as a device of the signed-in user while the app
       runs and the Mac is awake, over one connection to the Worker.

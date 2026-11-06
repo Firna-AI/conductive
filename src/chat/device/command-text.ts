@@ -7,7 +7,11 @@ import {
   MonitorOff,
   TimerOff,
 } from 'lucide-react'
-import type { DeviceCommandRecord, DeviceSender } from '../../shared/device'
+import {
+  deviceCommandSucceeded,
+  type DeviceCommandRecord,
+  type DeviceSender,
+} from '../../shared/device'
 import type { StatusTone } from '../../../docs/mockups/src/components/common/StatusText'
 import { formatDuration } from '../state/format'
 
@@ -74,7 +78,7 @@ function completed(request: DeviceCommandRecord): StatePresentation {
   const code = request.result?.exitCode ?? null
   const time = runTime(request)
   const after = time ? ` after ${time}` : ''
-  if (code === 0) {
+  if (deviceCommandSucceeded(request)) {
     const label = time ? `Done in ${time}` : 'Done'
     return { label, tone: 'success', icon: CircleCheck }
   }

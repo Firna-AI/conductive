@@ -14,6 +14,7 @@ import type { FetchLike } from '../api/client'
 import { ActionButton } from '../ui/actions'
 import { systemClock, useNow, type Clock } from '../ui/clock'
 import { timeLeft } from './command-text'
+import { LiteralText } from './LiteralText'
 import local from './device.module.css'
 import { useMacSettings, type MacSettingsController } from './mac-settings'
 
@@ -39,7 +40,7 @@ function SavedChoices(props: {
         <ul aria-label="Always allowed commands" className={mac.list}>
           {settings.alwaysAllowedCommands.map((command) => (
             <li className={mac.row} key={command}>
-              <code className={local.command}>{command}</code>
+              <LiteralText className={local.command} text={command} />
               <ActionButton
                 accessibilityLabel={`Remove ${command}`}
                 busy={busy.includes(`command:${command}`)}

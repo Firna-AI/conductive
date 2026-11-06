@@ -4,6 +4,7 @@ import { DEVICE_SETTINGS_PATH } from '../../shared/device'
 import {
   byLabel,
   byRole,
+  queryByLabel,
   queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
@@ -11,6 +12,7 @@ import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import {
   FAKE_PAIRING,
+  fakeLiteralCommands,
   fakeMacSettings,
 } from '../../test-support/fixtures/devices'
 import {
@@ -95,6 +97,48 @@ describe('ThisMacSection', () => {
           action: 'stop-workspace',
           workspaceId: FAKE_IDS.workspace,
         },
+      },
+    ])
+  })
+
+  it('shows each saved command literally, with a mark for each line feed and hidden character', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ onMac: true })
+    server.json('GET', DEVICE_SETTINGS_PATH, {
+      ...FAKE_PAIRING,
+      settings: {
+        ...settings,
+        alwaysAllowedCommands: [...fakeLiteralCommands],
+      },
+    })
+    await mount(
+      <ThisMacSection clock={clock} fetch={server.fetch} viewport="desktop" />,
+    )
+    await waitFor(
+      () => queryByLabel('Always allowed commands'),
+      'the saved commands',
+    )
+    const saved = Array.from(
+      byLabel('Always allowed commands').querySelectorAll<HTMLElement>('code'),
+      (code) => ({
+        text: code.textContent,
+        whiteSpace: code.style.whiteSpace,
+        marks: Array.from(
+          code.querySelectorAll('[data-literal-code]'),
+          (mark) => mark.getAttribute('data-literal-code'),
+        ),
+      }),
+    )
+    expect(saved).toEqual([
+      {
+        text: fakeLiteralCommands[0],
+        whiteSpace: 'pre-wrap',
+        marks: ['U+000A'],
+      },
+      {
+        text: fakeLiteralCommands[1],
+        whiteSpace: 'pre-wrap',
+        marks: ['U+00A0'],
       },
     ])
   })

@@ -135,6 +135,15 @@ agent runner.
   name that the Mac app gave, or as the sender's Mac. A finished run shows
   its time from its start on the Mac, so the wait for the answer does not
   count.
+- Each command and folder that the Mac runs or keeps shows through
+  `LiteralText`, which owns its whitespace rules: line breaks, tabs, and
+  repeated spaces show as they are. A line feed, and each character that
+  does not draw as itself, such as U+00A0 or U+202E, shows a mark of its
+  code point that CSS draws. So a wrap looks different from a line break,
+  and the page text keeps the original characters. A hidden bidi control
+  is isolated in its mark. A copy of a selection inside the literal gives
+  the original text, because a native copy changes U+00A0 into a space.
+  Any other copy stays native.
 - Only a window whose pairing names the connection of the request gets Deny,
   Allow, and the menu of the other ways to allow. A browser, the Mac app of
   another Mac, and a replaced connection show the state only. The pairing
@@ -184,7 +193,7 @@ The address chooses the state. The first value of each option is the default:
 | `viewport` | `desktop`, `mobile` |
 | `scheme` | `dark`, `light` |
 | `clock` | `running`, `frozen` |
-| `mac` | `none`, `waiting`, `longer`, `several`, `running`, `denied`, `done`, `exit-code`, `cut`, `timed-out`, `failed`, `unavailable` |
+| `mac` | `none`, `waiting`, `longer`, `several`, `running`, `denied`, `done`, `exit-code`, `cut`, `timed-out`, `failed`, `unavailable`, `literal` (a two-line command and a U+00A0 command, also saved) |
 | `app` | `browser`, `mac` (the Mac app on the Mac that got the requests) |
 | `page` | `chat`, `this-mac` (the This Mac section of the account) |
 
@@ -236,7 +245,8 @@ on `FakeApiServer` and the recorded events, and render the chat with
 - `device/`: the Mac commands. `device-api.ts` holds the routes and the
   readers, `device-actions.ts` the reads and the answers of the chat, and
   `placement.ts` the place of each card in its turn. `PendingCommands.tsx`,
-  `CommandChoices.tsx`, and `CommandCard.tsx` draw the requests.
+  `CommandChoices.tsx`, and `CommandCard.tsx` draw the requests, and
+  `LiteralText.tsx` draws each command and folder exactly.
   `mac-settings.ts` reads and changes the Mac's settings for
   `ThisMacSection.tsx` and `AllowAllBar.tsx`.
 - `dev/`: the development page, its fake writes, its scripted agent, and
