@@ -198,3 +198,50 @@ it('rewrites upstream redirects and strips reserved response cookies and headers
   expect(response.headers.get('X-Secret')).toBe(null)
   expect(response.headers.get('Referrer-Policy')).toBe('no-referrer')
 })
+
+it('preserves a preflight response from an API that reflects the requested method and headers', async () => {
+  const setup = await open()
+  expect(setup.response.status).toBe(201)
+  const { preview }: PreviewResponse = await setup.response.json()
+  const origin =
+    'https://fedcba9876543210fedcba9876543210.conducting-previews.test'
+  const base = harness.dependencies.fetch
+  let upstreamHeaders = new Headers()
+  harness.dependencies.fetch = async (request) => {
+    if (new URL(request.url).hostname === 'boat.dev') return base(request)
+    upstreamHeaders = request.headers
+    const headers = new Headers()
+    const method = request.headers.get('Access-Control-Request-Method')
+    const caller = request.headers.get('Origin')
+    if (request.method === 'OPTIONS' && caller && method) {
+      headers.set('Access-Control-Allow-Origin', caller)
+      headers.set('Access-Control-Allow-Methods', method)
+      const requested = request.headers.get('Access-Control-Request-Headers')
+      if (requested) headers.set('Access-Control-Allow-Headers', requested)
+    }
+    return new Response(null, { status: 204, headers })
+  }
+  const response = await setup.handler.proxy(
+    new Request(`${preview.url}/api/cart`, {
+      method: 'OPTIONS',
+      headers: {
+        Origin: origin,
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'content-type',
+        Cookie: `_port_auth=forged; ${SESSION_COOKIE}=app-session`,
+        Authorization: 'Bearer app-secret',
+        'X-Private': 'secret',
+      },
+    }),
+  )
+  expect(response.status).toBe(204)
+  expect(response.headers.get('Access-Control-Allow-Methods')).toBe('POST')
+  expect(response.headers.get('Access-Control-Allow-Headers')).toBe(
+    'content-type',
+  )
+  expect(response.headers.get('Access-Control-Allow-Origin')).toBe(origin)
+  expect(response.headers.get('Referrer-Policy')).toBe('no-referrer')
+  expect(upstreamHeaders.get('Cookie')).toBe('_port_auth=server-port-token')
+  expect(upstreamHeaders.get('Authorization')).toBe(null)
+  expect(upstreamHeaders.get('X-Private')).toBe(null)
+})

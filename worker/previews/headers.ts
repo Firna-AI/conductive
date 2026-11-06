@@ -13,6 +13,8 @@ const requestHeaders = [
   'if-unmodified-since',
   'if-range',
   'origin',
+  'access-control-request-method',
+  'access-control-request-headers',
   'sec-websocket-protocol',
 ]
 const responseHeaders = [
