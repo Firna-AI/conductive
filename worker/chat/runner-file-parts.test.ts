@@ -221,4 +221,52 @@ it('refuses inconsistent changes metadata and empty multipart reports', async ()
       (await fixture.history()).events.map(({ event }) => event.type),
     ).toEqual(['runner.event-refused'])
   }
+  const fixture = await createRunnerLimitsFixture()
+  const files = new FilesState(fileStorage(fixture))
+  await fixture.receive(
+    1,
+    changes(1, {
+      partCount: 1,
+      summary: { files: 1, added: 1, removed: 0 },
+    }),
+  )
+  const stored = {
+    baseBranch: 'main',
+    files: [
+      {
+        path: 'file-1',
+        change: 'modified',
+        added: 1,
+        removed: 0,
+        uncommitted: true,
+      },
+    ],
+    summary: { files: 1, added: 1, removed: 0 },
+  }
+  expect(await files.changes()).toEqual(stored)
+  for (const [index, summary] of [
+    { files: 3, added: 2, removed: 0 },
+    { files: 2, added: 99, removed: 0 },
+    { files: 2, added: 2, removed: 7 },
+  ].entries()) {
+    const before = (await fixture.history()).events.length
+    const patch = { revision: index + 2, summary }
+    await fixture.receive(index * 2 + 2, changes(1, patch))
+    await fixture.receive(index * 2 + 3, changes(2, patch))
+    expect(
+      (await fixture.history()).events.slice(before).map(({ event }) => event),
+      JSON.stringify(summary),
+    ).toEqual([
+      {
+        type: 'runner.event-refused',
+        streamId: 'stream',
+        runnerEventNumber: index * 2 + 3,
+        runnerEventType: 'changes.updated',
+        reason: 'invalid',
+        sessionId: null,
+        turnId: null,
+      },
+    ])
+    expect(await files.changes()).toEqual(stored)
+  }
 })

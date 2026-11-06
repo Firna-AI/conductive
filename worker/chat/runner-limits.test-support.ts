@@ -2,6 +2,7 @@ import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type { WorkspaceToRunner } from '../../src/shared/runner'
 import { MemoryChatStorage } from './memory-storage.test-support'
 import { RunnerChannel } from './runner-channel'
+import { parseRunnerTransport } from './runner-input'
 import { ChatStore, type ChatTransaction } from './store'
 import type { ChatDependencies, RunnerPeer } from './types'
 
@@ -26,6 +27,13 @@ export const snapshot = (
   type: 'files.snapshot' as const,
   tree: { revision, partNumber, partCount, entries: paths.map(file) },
 })
+
+export function numberedRunnerInput(value: unknown) {
+  const input = parseRunnerTransport(value)
+  if (input.type !== 'event')
+    throw new Error('Expected a numbered runner event.')
+  return input
+}
 
 export async function createRunnerLimitsFixture() {
   const storage = new MemoryChatStorage()

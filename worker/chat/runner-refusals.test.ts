@@ -71,7 +71,17 @@ it('measures raw compact UTF-8 envelopes including escaped and discarded fields'
     extra: 'x'.repeat(RUNNER_EVENT_MAX_BYTES - bytes),
   }
   await fixture.raw(exact)
-  await fixture.raw({ ...exact, eventNumber: 2, extra: `${exact.extra}🙂\n` })
+  const oversized = {
+    ...exact,
+    eventNumber: 2,
+    extra: `${exact.extra.slice(0, -5)}🙂\n`,
+  }
+  const serialized = JSON.stringify(oversized)
+  expect(new TextEncoder().encode(serialized).byteLength).toBe(
+    RUNNER_EVENT_MAX_BYTES + 1,
+  )
+  expect(serialized.length).toBe(RUNNER_EVENT_MAX_BYTES - 1)
+  await fixture.raw(oversized)
   expect((await fixture.history()).events.map(({ event }) => event)).toEqual([
     event,
     {

@@ -4130,6 +4130,8 @@ Agent calls on 6 November 2026, within decision 76 E:
   untrusted IDs must not become arbitrary storage keys.
 - Keep the parts of the last complete report for repeat comparison.
   Reason: an identical repeated part must produce no second report.
+- Compute accepted changes totals from the joined files after checking
+  the runner summary. Reason: stored totals must come from stored files.
 
 Verification evidence: `.context/boat-native-remote-workspaces/7s/verification.md`.
 

@@ -57,14 +57,18 @@ function joinReport(
       return invalid()
     return part.changes.files
   })
-  const summary = first.changes.summary
+  const summary = { files: files.length, added: 0, removed: 0 }
+  for (const file of files) {
+    summary.added += file.added
+    summary.removed += file.removed
+  }
+  const reported = first.changes.summary
   if (
     new Set(files.map((entry) => entry.path)).size !== files.length ||
     (complete &&
-      (summary.files !== files.length ||
-        summary.added !== files.reduce((sum, entry) => sum + entry.added, 0) ||
-        summary.removed !==
-          files.reduce((sum, entry) => sum + entry.removed, 0) ||
+      (reported.files !== summary.files ||
+        reported.added !== summary.added ||
+        reported.removed !== summary.removed ||
         (files.length === 0 && first.changes.partCount !== 1)))
   )
     invalid()

@@ -9,8 +9,13 @@ import {
   FILE_EVENT_MAX_BYTES,
   FILE_TREE_DELTA_MAX_CHANGES,
 } from '../../src/shared/files'
-import { parseRunnerMessage } from './runner-input'
-import { context, file, snapshot } from './runner-limits.test-support'
+import { parseRunnerEnvelope } from './runner-input'
+import {
+  context,
+  file,
+  numberedRunnerInput,
+  snapshot,
+} from './runner-limits.test-support'
 
 const envelope = (event: unknown) => ({
   type: 'event',
@@ -49,32 +54,46 @@ const tool = (detail: string | null, omittedDetailBytes = 0) => ({
 
 it('enforces tool detail bytes and bounded unique turn summary files at their contract limits', () => {
   expect(
-    parseRunnerMessage(envelope(tool('x'.repeat(TOOL_DETAIL_MAX_BYTES - 2)))),
+    parseRunnerEnvelope(
+      numberedRunnerInput(
+        envelope(tool('x'.repeat(TOOL_DETAIL_MAX_BYTES - 2))),
+      ),
+    ),
   ).toEqual(envelope(tool('x'.repeat(TOOL_DETAIL_MAX_BYTES - 2))))
   expect(() =>
-    parseRunnerMessage(envelope(tool('x'.repeat(TOOL_DETAIL_MAX_BYTES - 1)))),
+    parseRunnerEnvelope(
+      numberedRunnerInput(
+        envelope(tool('x'.repeat(TOOL_DETAIL_MAX_BYTES - 1))),
+      ),
+    ),
   ).toThrowError(expect.objectContaining({ code: 'runner_event_too_large' }))
-  expect(() => parseRunnerMessage(envelope(tool(null, 1)))).toThrowError(
-    expect.objectContaining({ code: 'invalid_input' }),
-  )
+  expect(() =>
+    parseRunnerEnvelope(numberedRunnerInput(envelope(tool(null, 1)))),
+  ).toThrowError(expect.objectContaining({ code: 'invalid_input' }))
   const files = Array.from({ length: TURN_COMPLETED_MAX_FILES }, (_, index) =>
     changedFile(`file-${index}`),
   )
-  expect(parseRunnerMessage(envelope(complete(files)))).toEqual(
-    envelope(complete(files)),
-  )
+  expect(
+    parseRunnerEnvelope(numberedRunnerInput(envelope(complete(files)))),
+  ).toEqual(envelope(complete(files)))
   expect(() =>
-    parseRunnerMessage(envelope(complete([...files, changedFile('extra')]))),
+    parseRunnerEnvelope(
+      numberedRunnerInput(envelope(complete([...files, changedFile('extra')]))),
+    ),
   ).toThrowError(expect.objectContaining({ code: 'runner_event_too_large' }))
   expect(() =>
-    parseRunnerMessage(
-      envelope(complete([changedFile('same'), changedFile('same')])),
+    parseRunnerEnvelope(
+      numberedRunnerInput(
+        envelope(complete([changedFile('same'), changedFile('same')])),
+      ),
     ),
   ).toThrowError(expect.objectContaining({ code: 'invalid_input' }))
   expect(() =>
-    parseRunnerMessage(
-      envelope(
-        complete([changedFile('x'.repeat(TURN_COMPLETED_FILES_MAX_BYTES))]),
+    parseRunnerEnvelope(
+      numberedRunnerInput(
+        envelope(
+          complete([changedFile('x'.repeat(TURN_COMPLETED_FILES_MAX_BYTES))]),
+        ),
       ),
     ),
   ).toThrowError(expect.objectContaining({ code: 'runner_event_too_large' }))
@@ -86,19 +105,23 @@ it('enforces file payload bytes, part numbers, and bounded tree deltas', () => {
     JSON.stringify({ ...event, extra: '' }),
   ).length
   expect(
-    parseRunnerMessage(
-      envelope({
-        ...event,
-        extra: 'x'.repeat(FILE_EVENT_MAX_BYTES - emptyBytes),
-      }),
+    parseRunnerEnvelope(
+      numberedRunnerInput(
+        envelope({
+          ...event,
+          extra: 'x'.repeat(FILE_EVENT_MAX_BYTES - emptyBytes),
+        }),
+      ),
     ),
   ).toEqual(envelope(event))
   expect(() =>
-    parseRunnerMessage(
-      envelope({
-        ...event,
-        extra: 'x'.repeat(FILE_EVENT_MAX_BYTES - emptyBytes + 1),
-      }),
+    parseRunnerEnvelope(
+      numberedRunnerInput(
+        envelope({
+          ...event,
+          extra: 'x'.repeat(FILE_EVENT_MAX_BYTES - emptyBytes + 1),
+        }),
+      ),
     ),
   ).toThrowError(expect.objectContaining({ code: 'runner_event_too_large' }))
   const changes = Array.from(
@@ -106,22 +129,26 @@ it('enforces file payload bytes, part numbers, and bounded tree deltas', () => {
     (_, index) => ({ operation: 'upsert', entry: file(`file-${index}`) }),
   )
   const delta = { type: 'files.changed', delta: { revision: 2, changes } }
-  expect(parseRunnerMessage(envelope(delta))).toEqual(envelope(delta))
+  expect(parseRunnerEnvelope(numberedRunnerInput(envelope(delta)))).toEqual(
+    envelope(delta),
+  )
   expect(() =>
-    parseRunnerMessage(
-      envelope({
-        ...delta,
-        delta: {
-          ...delta.delta,
-          changes: [...changes, { operation: 'remove', path: 'extra' }],
-        },
-      }),
+    parseRunnerEnvelope(
+      numberedRunnerInput(
+        envelope({
+          ...delta,
+          delta: {
+            ...delta.delta,
+            changes: [...changes, { operation: 'remove', path: 'extra' }],
+          },
+        }),
+      ),
     ),
   ).toThrowError(expect.objectContaining({ code: 'runner_event_too_large' }))
   for (const invalid of [snapshot(0, 1, 1, []), snapshot(1, 2, 1, [])]) {
-    expect(() => parseRunnerMessage(envelope(invalid))).toThrowError(
-      expect.objectContaining({ code: 'invalid_input' }),
-    )
+    expect(() =>
+      parseRunnerEnvelope(numberedRunnerInput(envelope(invalid))),
+    ).toThrowError(expect.objectContaining({ code: 'invalid_input' }))
   }
 })
 
@@ -132,7 +159,7 @@ it('counts discarded fields in the serialized raw turn file list', () => {
       discarded: 'x'.repeat(TURN_COMPLETED_FILES_MAX_BYTES),
     },
   ])
-  expect(() => parseRunnerMessage(envelope(event))).toThrowError(
-    expect.objectContaining({ code: 'runner_event_too_large' }),
-  )
+  expect(() =>
+    parseRunnerEnvelope(numberedRunnerInput(envelope(event))),
+  ).toThrowError(expect.objectContaining({ code: 'runner_event_too_large' }))
 })

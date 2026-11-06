@@ -20,28 +20,14 @@ export interface IncomingRunnerEnvelope {
   raw: unknown
 }
 
-export type IncomingRunnerMessage =
-  | RunnerHello
-  | RunnerEventEnvelope
-  | {
-      type: 'file.read.result'
-      value: unknown
-    }
-  | {
-      type: 'file.diff.result'
-      value: unknown
-    }
-
-export function parseRunnerMessage(value: unknown): IncomingRunnerMessage {
-  const message = parseRunnerTransport(value)
-  return message.type === 'event' ? parseRunnerEnvelope(message) : message
-}
-
 /** Validate identity before payload checks, so duplicates and gaps remain harmless. */
 export function parseRunnerTransport(
   value: unknown,
 ):
-  Exclude<IncomingRunnerMessage, RunnerEventEnvelope> | IncomingRunnerEnvelope {
+  | RunnerHello
+  | IncomingRunnerEnvelope
+  | { type: 'file.read.result'; value: unknown }
+  | { type: 'file.diff.result'; value: unknown } {
   const input = record(value)
   if (input.type === 'hello') {
     if (input.protocolVersion !== RUNNER_PROTOCOL_VERSION) return invalidInput()
