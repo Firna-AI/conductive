@@ -2995,6 +2995,83 @@ Added on 6 November 2026 from decision 80.
   follow-up item `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`
   holds the three measures.
 
+### 83. Keep the preview credential away from other sites
+
+Added on 6 November 2026 from a finding check of the Milestone 11 review.
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. **Category:** Security.
+- **Background:** The random hostname of a port preview is its credential.
+  Browsers send `Origin` on cross-site requests and WebSocket connections
+  despite `no-referrer`, so a preview page can leak its hostname to each
+  site that it calls. The redirect rewrite also matches only `https`.
+- **Options:**
+  - **A.** Accept the leak, and match `http` in the redirect rewrite.
+    Effort: Small.
+  - **B.** Move the credential out of the hostname, into a cookie that the
+    preview domain sets. Effort: Medium.
+  - **C.** B, and check Boat's forwarded headers in the live smoke test.
+    Effort: Medium.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. Milestone 11a builds it,
+  and Milestone 16 checks Boat's forwarded headers.
+
+### 84. Decide the size limits of Boat replies
+
+Added on 6 November 2026 from the Milestone 4c work.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Security.
+- **Background:** Decision 65 B gave each Boat route a budget above Boat's
+  documented maximum. Boat publishes no total size for most replies, and a
+  command reply can reach about 96 MiB of escaped JSON.
+- **Options:**
+  - **A.** 1 MiB for account, lifecycle, snapshot, metadata, and error
+    replies, and 18 MiB for command replies. Keep the file budget.
+    Effort: Medium.
+  - **B.** Wait until Boat publishes complete limits. Effort: Large.
+  - **C.** Read command replies as a stream, and keep only the last part
+    of each output stream. Effort: Large.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 6 November 2026. This changes decision 65
+  B: a Boat reply over its budget fails, also when Boat would allow it.
+  Milestone 4c applies it.
+
+### 85. Make the members tests pass the gate every time
+
+Added on 6 November 2026 from the merge of Milestone 15a.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Test.
+- **Background:** Each members test started its own Miniflare and D1
+  database. Alone, a test took about 2 seconds, and one long scenario took
+  5 seconds. On the merged tree, the complete gate failed twice, each time
+  on another members test at about 5.1 seconds.
+- **Options:**
+  - **A.** A 20-second limit for the members tests only. Effort: Small.
+  - **B.** Fewer test files at the same time. Effort: Small.
+  - **C.** One Miniflare and one database for each members test file, with
+    the data reset between tests. Effort: Medium.
+- **Recommendation:** A now, and C as a follow-up item.
+- **Chosen:** C, by the user on 6 November 2026. The Milestone 15a branch
+  makes the change before it merges. The time limit stays at 5 seconds.
+
+### 86. Decide whether a preview ID can come back
+
+Added on 6 November 2026 from round 2 finding 2 of the Milestone 12
+review.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Review. **Category:** Docs or spec.
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **C.** Each open gives a new ID, and the API never gives out a revoked
+    ID again. Effort: Small.
+  - **D.** Hide revoked previews by their address. Effort: Medium.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. The preview contract states
+  the rule, and Milestone 11a tests it in the backend.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -3951,13 +4028,15 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build the chat with messages, tool calls, the running state,
-      steer, and interrupt.
-- [ ] Show the stored history while the sandbox is stopped or starting.
-- [ ] Compare each screen with its mockup.
-- [ ] Build several sessions as tabs, with the session history.
-- [ ] Queue the messages that arrive before the sandbox is ready, and
-      show the workspace title that the agent writes.
+- [x] Build the chat with messages, tool calls, the running state,
+      steer, and interrupt. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+- [x] Show the stored history while the sandbox is stopped or starting. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+- [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+- [x] Build several sessions as tabs, with the session history. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+- [x] Queue the messages that arrive before the sandbox is ready, and
+      show the workspace title that the agent writes. Branch: `conductor/boat-native-remote-workspaces-milestone-8`.
+
+Evidence: `.context/boat-native-remote-workspaces/milestone-8-verification.md`.
 
 ## Milestone 8i: Chat path wiring
 
@@ -4010,19 +4089,41 @@ Milestone 8i or 15i wires it to its backend.
 
 Depends on: 4a
 
-- [ ] Add the `ttyd` service with a per-workspace password to the org image setup.
-- [ ] Expose private ports, and proxy them with the `_port_auth`
+- [x] Add the `ttyd` service with a per-workspace password to the org image setup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Expose private ports, and proxy them with the `_port_auth`
       cookie, including WebSockets.
-- [ ] Issue random preview hostnames on the preview domain, map them in
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Issue random preview hostnames on the preview domain, map them in
       D1, and revoke them on stop, on close, and after 24 hours.
-- [ ] Set `Referrer-Policy: no-referrer` on each preview response.
-- [ ] Add the desktop URL endpoint.
-- [ ] Check whether an open desktop stream ends when its 10-minute URL
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Set `Referrer-Policy: no-referrer` on each preview response.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Add the desktop URL endpoint.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Check whether an open desktop stream ends when its 10-minute URL
       expires. Save the result under `.context/`. If it ends, report a
       mockup gap for a Reconnect state.
-- [ ] Test the proxy with a fake upstream: a revoked or unknown hostname
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+- [x] Test the proxy with a fake upstream: a revoked or unknown hostname
       gets no answer from the sandbox, and a browser `_port_auth` cookie
       never reaches it.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11`.
+
+## Milestone 11a: Preview credential in a cookie
+
+Depends on: 11
+
+Apply decision 83 C.
+
+- [ ] Move the credential of a port preview out of its hostname, into a
+      cookie that the preview domain sets, so that the hostname is no
+      secret.
+- [ ] Match `http` as well as `https` in the redirect rewrite.
+- [ ] Update the port preview rules of the access protocol, and test the
+      cookie, a leaked hostname, and both redirect schemes.
+- [ ] Test that a port opened again after a revoke gets a new preview ID,
+      as decision 86 says.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 
@@ -4033,9 +4134,9 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build the terminal with xterm.js, the port preview with its "Open
-      in new tab" link, and the desktop frame.
-- [ ] Compare each screen with its mockup.
+- [x] Build the terminal with xterm.js, the port preview with its "Open
+      in new tab" link, and the desktop frame. Branch: `conductor/boat-native-remote-workspaces-milestone-12`.
+- [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-12`.
 
 ## Milestone 13: GitHub banner backend
 
@@ -4099,11 +4200,11 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build Delete org with its restore.
-- [ ] Show the Repositories and Cloud computer tabs read-only to members,
-      as decision 57 says.
-- [ ] Build the org members page and workspace reassignment.
-- [ ] Compare each screen with its mockup.
+- [x] Build Delete org with its restore. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
+- [x] Show the Repositories and Cloud computer tabs read-only to members,
+      as decision 57 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
+- [x] Build the org members page and workspace reassignment. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
+- [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
 
 ## Milestone 15g: Email invitations
 
@@ -4129,6 +4230,12 @@ acceptance route.
 Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
 
 - [ ] Wire each feature's screens to its backend inside the app shell.
+- [ ] Connect the lifecycle hooks of the Milestone 15a members backend to
+      the workspace Durable Object and the sandboxes. `deleteWorkspaceState`
+      must delete the chat history of the workspace. Run
+      `cleanupDeletedOrgs` on a Cron Trigger, so that Delete org removes
+      everything of the org after 7 days, as the orgs protocol says.
+      Added on 6 November 2026, because no milestone connected these hooks.
 - [ ] Run the complete gate, and compare each screen with its mockup.
 
 ## Milestone 15d: Marketing site
@@ -4221,6 +4328,8 @@ This milestone needs the prerequisites from the user.
       the image's Node.
 - [ ] Kill ttyd once, and check that systemd restarts it with the same
       password, and that the terminal opens again without a new start.
+- [ ] Check which forwarded headers Boat sends to a preview app, such as
+      `X-Forwarded-Proto`, as decision 83 asks.
 
 ## Milestone 17: Verification, commit, review, and pull request
 

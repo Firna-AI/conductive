@@ -1,0 +1,214 @@
+/* Stand-ins for the app shell, as the mockups draw it. Dev page only. */
+.shell {
+  display: flex;
+  height: 100vh;
+}
+
+.rail {
+  flex-shrink: 0;
+  width: var(--ui-rail-width);
+  border-right: 1px solid var(--ui-border);
+  background: var(--ui-rail);
+  box-sizing: border-box;
+}
+
+.sidebar {
+  flex-shrink: 0;
+  width: var(--ui-sidebar-width);
+  border-right: 1px solid var(--ui-border);
+  background: var(--ui-sidebar);
+}
+
+.shell > .frame {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The right column of a workspace: the pull request bar, lists, and tools. */
+.rightColumn {
+  flex-shrink: 0;
+  width: var(--ui-right-width);
+  border-left: 1px solid var(--ui-border);
+  background: var(--ui-panel);
+}
+
+.frame,
+.mobile {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--ui-surface);
+}
+
+.mobile {
+  --ui-touch-min: 44px;
+}
+
+.header,
+.mobileHeader {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--ui-bar-height);
+  padding: 0 10px 0 var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  box-sizing: border-box;
+}
+
+.mobileHeader {
+  gap: 6px;
+  min-height: 52px;
+  padding: 6px 14px 6px 16px;
+}
+
+.titles,
+.mobileTitles {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: 10px;
+  overflow: hidden;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.mobileTitles {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.title {
+  overflow: hidden;
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-strong);
+  text-overflow: ellipsis;
+}
+
+.subtitle,
+.branch {
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+}
+
+.branch {
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+}
+
+.back {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.state {
+  flex-shrink: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+}
+
+.tabs,
+.mobileTabs {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  height: var(--ui-bar-height);
+  padding: 0 8px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  box-sizing: border-box;
+}
+
+.mobileTabs {
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  height: auto;
+  padding: 4px 8px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  height: calc(var(--ui-control-height) - 2px);
+  min-height: var(--ui-touch-min);
+  padding: 0 10px;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-decoration: none;
+  text-transform: var(--ui-label-case);
+  white-space: nowrap;
+}
+
+.selected {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+}
+
+.body,
+.mobileBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.column,
+.mobileColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+}
+
+.mobileColumn {
+  gap: 14px;
+  max-width: none;
+  padding: 16px;
+}
+
+.placeholder {
+  flex: 1;
+}
+
+.note {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+/* Dev buttons that give the live computer view new props. */
+.devControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px dashed var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+}
+
+.devButton {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  cursor: pointer;
+}

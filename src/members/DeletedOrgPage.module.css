@@ -1,0 +1,7 @@
+/* The reason of a failed restore, under Restore, as wide as the body text. */
+.error {
+  width: 100%;
+  max-width: 340px;
+  margin-top: 10px;
+  text-align: left;
+}
