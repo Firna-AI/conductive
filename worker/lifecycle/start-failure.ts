@@ -1,3 +1,4 @@
+import { providerState } from './provider-state'
 import type { AppEnv } from '../env'
 import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
@@ -26,7 +27,11 @@ export async function finishFailedStart(
   if (job.kind === 'resume') {
     if (job.cancelled && provider && job.allocatedSandboxId) {
       try {
-        await provider.stop(job.allocatedSandboxId)
+        if (
+          providerState((await provider.stop(job.allocatedSandboxId)).state) !==
+          'stopped'
+        )
+          return null
       } catch (error) {
         if (!(error instanceof ProviderError && error.kind === 'not_found'))
           return null

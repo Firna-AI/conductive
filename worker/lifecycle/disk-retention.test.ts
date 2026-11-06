@@ -3,7 +3,6 @@ import { expect, it } from 'vitest'
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
 import { FIRST_MESSAGE } from './durable-test-support'
-import { keepWorkspaceDisk } from './disk-retention'
 import { readRetention } from './retention-data'
 import { createWorkspace } from './workspaces'
 import { openWorkspace } from './workspace-resume'
@@ -15,42 +14,44 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
   const fixture = await backendFixture()
   try {
     const { runtime, org, user, boat } = fixture
-    const created = await createWorkspace(runtime, org.id, user, {
-      repositoryId: fixture.repositoryId,
-      firstMessage: FIRST_MESSAGE,
-    })
-    const durable = fixture.fixtures.get(created.workspace.id)
-    if (!durable) throw new Error('Missing durable state')
+    const created = await fixture.run(() =>
+      createWorkspace(runtime, org.id, user, {
+        repositoryId: fixture.repositoryId,
+        firstMessage: FIRST_MESSAGE,
+      }),
+    )
+    const actor = fixture.actors.get(created.workspace.id)?.endpoint()
+    if (!actor) throw new Error('Missing production controller')
     const context = {
       env: runtime.env,
       dependencies: runtime.dependencies,
       orgId: org.id,
       workspaceId: created.workspace.id,
     }
-    durable.hooks.keepalive.mockImplementation(() => keepWorkspaceDisk(context))
-    await durable.lifecycle.runnerReady()
-    await durable.lifecycle.runnerDisconnected()
+    await actor.reportRunnerLifecycle({ type: 'runner.ready' })
+    await actor.runnerLifecycleDisconnected()
     boat.states.set('bx_1', 'archived')
     expect(await reconcileWorkspaceSandbox(context)).toBe('stopped')
-    await durable.lifecycle.stopped()
+    fixture.setTime(TEST_TIME)
+    await actor.lifecycleStopped()
     fixture.setTime(TEST_TIME + 1_123_200_000)
-    await durable.lifecycle.alarm()
+    await actor.alarm()
     expect(boat.resumeIds).toEqual(['bx_1'])
     expect(
       await readRetention(runtime.env.DB, created.workspace.id),
     ).toMatchObject({ phase: 'wait' })
     boat.states.set('bx_1', 'archived')
-    await durable.lifecycle.alarm()
+    await actor.alarm()
     expect(
       await readRetention(runtime.env.DB, created.workspace.id),
     ).toMatchObject({ phase: 'resume' })
-    expect((await durable.lifecycle.read())?.nextDiskKeepaliveAt).toBe(
+    expect((await actor.readLifecycle())?.nextDiskKeepaliveAt).toBe(
       TEST_TIME + 1_123_200_000,
     )
-    await durable.lifecycle.alarm()
-    await durable.lifecycle.alarm()
+    await actor.alarm()
+    await actor.alarm()
     boat.synchronousExitCode = 1
-    await durable.lifecycle.alarm()
+    await actor.alarm()
     expect(await readRetention(runtime.env.DB, created.workspace.id)).toEqual({
       phase: 'stop',
       error: 'The startup script failed during disk retention.',
@@ -59,33 +60,111 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
       '/run/conducting/retention-startup.sh',
     )
     boat.failStop = true
-    await expect(durable.lifecycle.alarm()).rejects.toMatchObject({
-      kind: 'unavailable',
-    })
-    expect((await durable.lifecycle.read())?.nextDiskKeepaliveAt).toBe(
+    await actor.alarm()
+    expect(
+      await readRetention(runtime.env.DB, created.workspace.id),
+    ).toMatchObject({ phase: 'stop' })
+    expect((await actor.readLifecycle())?.nextDiskKeepaliveAt).toBe(
       TEST_TIME + 1_123_200_000,
     )
     expect(boat.resumeIds).toEqual(['bx_1', 'bx_1'])
     boat.failStop = false
     boat.synchronousExitCode = 0
-    await openWorkspace(
-      runtime,
-      org.id,
-      created.workspace.id,
-      user.id,
-      'tab-one',
+    await fixture.run(() =>
+      openWorkspace(runtime, org.id, created.workspace.id, user.id, 'tab-one'),
     )
     expect(await readRetention(runtime.env.DB, created.workspace.id)).toBe(null)
     expect(boat.resumeIds).toEqual(['bx_1', 'bx_1', 'bx_1'])
-    expect(await durable.lifecycle.read()).toMatchObject({
+    expect(await actor.readLifecycle()).toMatchObject({
       state: 'starting',
       start: { kind: 'resume' },
       nextDiskKeepaliveAt: null,
     })
     const stops = boat.stopIds.length
-    await durable.lifecycle.alarm()
+    await actor.alarm()
     expect(boat.stopIds).toHaveLength(stops)
     expect(boat.deletedIds).toEqual([])
+  } finally {
+    await fixture.dispose()
+  }
+})
+
+it('ends failed maintenance and refuses destructive resume of a normal errored workspace', async () => {
+  const fixture = await backendFixture()
+  try {
+    const { runtime, org, user, boat } = fixture
+    const created = await fixture.run(() =>
+      createWorkspace(runtime, org.id, user, {
+        repositoryId: fixture.repositoryId,
+        firstMessage: FIRST_MESSAGE,
+      }),
+    )
+    const actor = fixture.actors.get(created.workspace.id)?.endpoint()
+    if (!actor) throw new Error('Missing production controller')
+    // A failed maintenance restart can be stopped safely, then resumed normally.
+    fixture.setTime(TEST_TIME)
+    boat.states.set('bx_1', 'archived')
+    await actor.lifecycleStopped()
+    fixture.setTime(TEST_TIME + 1_123_200_000)
+    await actor.alarm()
+    boat.states.set('bx_1', 'error')
+    boat.failStop = true
+    await expect(
+      fixture.run(() =>
+        openWorkspace(
+          runtime,
+          org.id,
+          created.workspace.id,
+          user.id,
+          'error-tab',
+        ),
+      ),
+    ).rejects.toMatchObject({ code: 'workspace_start_failed' })
+    expect(
+      await readRetention(runtime.env.DB, created.workspace.id),
+    ).toMatchObject({
+      phase: 'stop',
+      error: 'The cloud computer failed during disk retention.',
+    })
+    await actor.lifecycleActivity()
+    boat.failStop = false
+    await actor.alarm()
+    expect(await readRetention(runtime.env.DB, created.workspace.id)).toBe(null)
+    await fixture.run(() =>
+      openWorkspace(
+        runtime,
+        org.id,
+        created.workspace.id,
+        user.id,
+        'recovered-tab',
+      ),
+    )
+    expect((await actor.readLifecycle())?.startupPrepared).toBe(true)
+    // A normal user's error can contain unsaved writes. Never resume it automatically.
+    await actor.reportRunnerLifecycle({ type: 'runner.ready' })
+    await actor.lifecycleFailed({
+      code: 'sandbox_failed',
+      message: 'The cloud computer failed.',
+      log: null,
+    })
+    boat.states.set('bx_1', 'error')
+    const resumes = boat.resumeIds.length
+    await expect(
+      fixture.run(() =>
+        openWorkspace(
+          runtime,
+          org.id,
+          created.workspace.id,
+          user.id,
+          'normal-error-tab',
+        ),
+      ),
+    ).rejects.toMatchObject({ code: 'workspace_start_failed' })
+    expect(boat.resumeIds).toHaveLength(resumes)
+    expect(boat.deletedIds).toEqual([])
+    expect((await actor.readLifecycle())?.pendingFirstMessage).toEqual(
+      FIRST_MESSAGE,
+    )
   } finally {
     await fixture.dispose()
   }

@@ -6,25 +6,16 @@ import {
   TEST_TIME,
   type TestHarness,
 } from '../test-support/harness'
-import { startFixture } from './start-test-support'
-import {
-  retainFailedCreation,
-  failedCreationForSender,
-  type FailedCreationDraft,
-  type FailedCreationStorage,
-} from './failed-creations'
-import { DurableLifecycle } from './durable'
-import { TurnScopes } from './turns'
-import { lifecycleFixture } from './durable-test-support'
 import { LifecycleBoat } from './lifecycle-boat-test-support'
-import { persistLifecycleState } from './workspace-data'
-import { clearRetention, readRetention } from './retention-data'
-import { keepWorkspaceDisk } from './disk-retention'
-import type {
-  PendingTurn,
-  WorkspaceLifecycleEndpoint,
-  WorkspaceRuntime,
-} from './workspace-runtime'
+import { backendPlatform } from './backend-test-platform'
+import { MemoryWorkspaceStorage } from './platform-test-storage'
+import {
+  START_JOB_KEY,
+  START_RESULT_KEY,
+  START_LOG_PREFIX,
+} from './start-storage'
+import type { WorkspaceStartJob, WorkspaceStartResult } from './start-types'
+import type { WorkspaceRuntime } from './workspace-runtime'
 import type { ImageRuntime, PrepareImageSources } from './image-builds'
 import type { ImageCoordinatorState } from './image-timers'
 
@@ -54,133 +45,127 @@ export async function backendFixture(sharedHarness?: TestHarness) {
     .run()
   let now = TEST_TIME
   let sequence = 0
-  const fixtures = new Map<string, ReturnType<typeof lifecycleFixture>>()
-  const endpoints = new Map<string, WorkspaceLifecycleEndpoint>()
-  const turns = new Map<string, TurnScopes>()
-  const cleanupIds: string[] = []
-  const failedDrafts = new Map<string, FailedCreationDraft>()
-  const failedStore = (id: string): FailedCreationStorage => ({
-    get: async () => structuredClone(failedDrafts.get(id)),
-    put: async (_key, draft) => {
-      failedDrafts.set(id, structuredClone(draft))
-    },
-  })
-  const starts = new Map<string, ReturnType<typeof startFixture>>()
-  let pauseStarts = false
-  let queuedResolve: (id: string) => void = () => {}
-  const queued = new Promise<string>((resolve) => {
-    queuedResolve = resolve
-  })
+  const actors = new Map<string, ReturnType<typeof backendPlatform>>()
+  const accepted = new Map<string, WorkspaceStartJob>()
   const queuedIds: string[] = []
   const queueWaiters: ((id: string) => void)[] = []
+  let wake: () => void = () => {}
+  let work = new Promise<void>((resolve) => {
+    wake = resolve
+  })
+  const changed = () => {
+    const resolve = wake
+    work = new Promise<void>((next) => {
+      wake = next
+    })
+    resolve()
+  }
   const dependencies: AppDependencies = {
     fetch: boat.fetch,
     now: () => now,
     randomToken: () => `lifecycle-${++sequence}`,
   }
-  const workspace = (id: string): WorkspaceLifecycleEndpoint => {
-    const prior = endpoints.get(id)
-    if (prior) return prior
-    const fixture = lifecycleFixture()
-    const lifecycle: DurableLifecycle = fixture.lifecycle
-    fixtures.set(id, fixture)
-    let storedTurns: PendingTurn[] = []
-    turns.set(
-      id,
-      new TurnScopes({
-        read: async () => structuredClone(storedTurns),
-        write: async (value) => {
-          storedTurns = structuredClone(value)
-        },
-      }),
-    )
-    fixture.hooks.changed.mockImplementation(async (state) => {
-      await persistLifecycleState(harness.env.DB, state, now)
-    })
-    const endpoint: WorkspaceLifecycleEndpoint = {
-      queueLifecycleStart: (job) => start.enqueue(job),
-      waitLifecycleStart: () => start.wait(),
-      readLifecycleStartLog: () => start.readLog(),
-      retainLifecycleFailedCreation: async (error, fallback) => {
-        await retainFailedCreation(
-          harness.env,
-          failedStore(id),
-          await lifecycle.read(),
-          error,
-          fallback,
-        )
-      },
-      initializeLifecycle: async (input) => {
-        await turns.get(id)?.register(input.firstTurn)
-        await lifecycle.initialize(input)
-      },
-      readLifecycle: () => lifecycle.read(),
-      beginLifecycleStart: async (kind) => {
-        await lifecycle.beginStart(kind)
-        await clearRetention(harness.env.DB, id)
-      },
-      lifecycleStep: (step, label, state) => lifecycle.step(step, label, state),
-      lifecyclePrepared: () => lifecycle.prepared(),
-      lifecycleFailed: (error) => lifecycle.fail(error),
-      lifecycleStopped: async () => {
-        await start.cancel()
-        await lifecycle.stopped()
-      },
-      clearLifecycle: async () => {
-        await turns.get(id)?.clear()
-        await lifecycle.clear()
-      },
-      lifecycleActivity: () => lifecycle.activity(),
-      openLifecycleTab: async (tab) => {
-        lifecycle.openTab(tab)
-      },
-      closeLifecycleTab: async (tab) => {
-        lifecycle.closeTab(tab)
-      },
-      credentialSender: async (turnId) =>
-        (await turns.get(id)?.sender(turnId)) ?? null,
-      retryFailedCreateCleanup: async (workspaceId) => {
-        cleanupIds.push(workspaceId)
-      },
-      finishDiskMaintenance: async () => {
-        await lifecycle.exclusive(async () => {
-          const state = await lifecycle.read()
-          if (!state) return
-          while (await readRetention(harness.env.DB, id)) {
-            if (
-              await keepWorkspaceDisk({
-                env: harness.env,
-                dependencies,
-                orgId: state.orgId,
-                workspaceId: id,
-              })
-            )
-              return
+  const workspace = (id: string) => {
+    let actor = actors.get(id)
+    if (!actor) {
+      actor = backendPlatform(env, dependencies, () => {
+        changed()
+        void actor?.storage.get('job', START_JOB_KEY).then((job) => {
+          if (job && accepted.get(id)?.attempt !== job.attempt) {
+            accepted.set(id, structuredClone(job))
+            const waiter = queueWaiters.shift()
+            if (waiter) waiter(id)
+            else queuedIds.push(id)
           }
         })
-      },
+      })
+      actors.set(id, actor)
     }
-    const start: ReturnType<typeof startFixture> = startFixture(
-      { ...harness.env, MACHINE_ORIGIN: 'https://machine.conducting.test' },
-      dependencies,
-      endpoint,
-      pauseStarts,
-      () => {
-        queuedResolve(id)
-        const waiter = queueWaiters.shift()
-        if (waiter) waiter(id)
-        else queuedIds.push(id)
-      },
+    return actor.endpoint()
+  }
+  async function run<T>(operation: () => Promise<T>): Promise<T> {
+    const existingAlarms = new Map(
+      [...actors.values()].map((actor) => [
+        actor,
+        actor.storage.alarmGeneration,
+      ]),
     )
-    starts.set(id, start)
-    endpoints.set(id, endpoint)
-    return endpoint
+    let finished = false
+    const result = operation().finally(() => {
+      finished = true
+      changed()
+    })
+    void result.catch(() => {})
+    while (!finished) {
+      const next = [...actors.values()]
+        .filter(
+          (actor) =>
+            actor.storage.alarmAt !== null &&
+            ((actor.storage.alarmAt ?? Infinity) <= now ||
+              actor.storage.alarmGeneration >
+                (existingAlarms.get(actor) ?? -1)),
+        )
+        .sort(
+          (a, b) =>
+            (a.storage.alarmAt ?? Infinity) - (b.storage.alarmAt ?? Infinity),
+        )[0]
+      if (!next || (next.storage.alarmAt ?? Infinity) > now + 60_000) {
+        await Promise.race([
+          work,
+          result.then(
+            () => {},
+            () => {},
+          ),
+        ])
+        continue
+      }
+      now = Math.max(now, next.storage.alarmAt ?? now)
+      harness.setTime(now)
+      await next.storage.deleteAlarm()
+      await next.endpoint().alarm()
+    }
+    return result
+  }
+  const starts = new Map<
+    string,
+    {
+      job(): Promise<WorkspaceStartJob | undefined>
+      advance(): Promise<void>
+      wait(): Promise<WorkspaceStartResult>
+      restart(): void
+      lastAccepted(): WorkspaceStartJob | undefined
+      storedCiphertexts(): Promise<string[]>
+      holdResultRead(): ReturnType<MemoryWorkspaceStorage['holdRead']>
+      holdAdmission(): ReturnType<MemoryWorkspaceStorage['holdTransaction']>
+    }
+  >()
+  const originalWorkspace = workspace
+  const endpoint = (id: string) => {
+    const controller = originalWorkspace(id)
+    const actor = actors.get(id)
+    if (!actor) throw new Error('Missing platform actor')
+    if (!starts.has(id))
+      starts.set(id, {
+        job: () => actor.storage.get('job', START_JOB_KEY),
+        advance: () => actor.endpoint().alarm(),
+        wait: () => actor.endpoint().waitLifecycleStart(),
+        restart: actor.restart,
+        lastAccepted: () => structuredClone(accepted.get(id)),
+        storedCiphertexts: async () => [
+          ...(
+            await actor.storage.list('text', { prefix: START_LOG_PREFIX })
+          ).values(),
+        ],
+        holdResultRead: () => actor.storage.holdRead(START_RESULT_KEY),
+        holdAdmission: () => actor.storage.holdTransaction(),
+      })
+    return controller
   }
   const env = {
     ...harness.env,
     MACHINE_ORIGIN: 'https://machine.conducting.test',
   }
-  const runtime: WorkspaceRuntime = { env, dependencies, workspace }
+  const runtime: WorkspaceRuntime = { env, dependencies, workspace: endpoint }
   const scheduled: ImageCoordinatorState[] = []
   const sourceCalls: Parameters<PrepareImageSources>[0][] = []
   const images: ImageRuntime = {
@@ -206,31 +191,21 @@ export async function backendFixture(sharedHarness?: TestHarness) {
     scheduled,
     sourceCalls,
     repositoryId,
-    fixtures,
-    turns,
-    cleanupIds,
+    actors,
+    run,
     failedCreation: (id: string, senderUserId = user.id) =>
-      failedCreationForSender(
-        harness.env,
-        failedStore(id),
-        org.id,
-        senderUserId,
-      ),
+      workspace(id).failedLifecycleCreation(org.id, senderUserId),
     starts,
-    queued,
     nextQueued: () => {
       const id = queuedIds.shift()
       return id !== undefined
         ? Promise.resolve(id)
         : new Promise<string>((resolve) => queueWaiters.push(resolve))
     },
-    pauseStarts: () => {
-      pauseStarts = true
-    },
+    pauseStarts: () => {},
     setTime: (value: number) => {
       now = value
       harness.setTime(value)
-      for (const fixture of fixtures.values()) fixture.setTime(value)
     },
     dispose: async () => {
       if (!sharedHarness) await harness.dispose()

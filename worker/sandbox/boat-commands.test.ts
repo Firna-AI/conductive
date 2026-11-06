@@ -112,7 +112,7 @@ it('starts a detached build and continues logs from provider byte offsets', asyn
     expect(request.headers.get('Authorization')).toBe('Bearer boat-first')
     expect(request.headers.get('X-Boat-Org')).toBe('team-one')
     expect(request.headers.get('Cookie')).toBeNull()
-    expect(request.redirect).toBe('error')
+    expect(request.redirect).toBe('manual')
   }
 })
 

@@ -21,7 +21,7 @@ export async function gitRequest(
   const response = await fetch(
     new Request(url, {
       method: body === undefined ? 'GET' : 'POST',
-      redirect: 'error',
+      redirect: 'manual',
       headers: {
         Authorization: `Basic ${btoa(`x-access-token:${token}`)}`,
         Accept: `application/x-git-upload-pack-${resultType}`,

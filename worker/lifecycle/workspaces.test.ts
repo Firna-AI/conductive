@@ -36,7 +36,7 @@ it('removes a failed create and its token while retaining the draft and cleanup 
       firstMessage: structuredClone(FIRST_MESSAGE),
     }
     await expect(
-      createWorkspace(runtime, org.id, user, input),
+      fixture.run(() => createWorkspace(runtime, org.id, user, input)),
     ).rejects.toMatchObject({ code: 'workspace_cleanup_pending' })
     expect(input.firstMessage).toEqual(FIRST_MESSAGE)
     expect(boat.starts[1]).toEqual(boat.starts[0])
@@ -65,7 +65,12 @@ it('removes a failed create and its token while retaining the draft and cleanup 
         'SELECT COUNT(*) AS count FROM workspace_tokens',
       ).first('count'),
     ).toBe(0)
-    expect(fixture.cleanupIds).toEqual(['lifecycle-1'])
+    expect(
+      await runtime.env.DB.prepare(
+        'SELECT workspace_id AS id FROM lifecycle_sandbox_cleanup',
+      ).first('id'),
+    ).toBe('lifecycle-1')
+    expect(fixture.actors.get('lifecycle-1')?.storage.alarmAt).not.toBe(null)
     expect(
       await retrySandboxCleanup(
         runtime.env,
@@ -79,8 +84,12 @@ it('removes a failed create and its token while retaining the draft and cleanup 
       ).first('count'),
     ).toBe(0)
     boat.commandExitCode = 0
-    const created = await createWorkspace(runtime, org.id, user, input)
-    const retry = await createWorkspace(runtime, org.id, user, input)
+    const created = await fixture.run(() =>
+      createWorkspace(runtime, org.id, user, input),
+    )
+    const retry = await fixture.run(() =>
+      createWorkspace(runtime, org.id, user, input),
+    )
     expect(retry.workspace.id).toBe(created.workspace.id)
     expect(created.workspace.branch).toMatch(/^octocat\/[a-z]+-[a-z0-9]{4}$/)
     expect(created.first.request).toEqual(FIRST_MESSAGE)
@@ -125,10 +134,12 @@ it('resumes the same disk and retries a failed startup on its already running ma
     )
       .bind(ciphertext, org.id)
       .run()
-    const created = await createWorkspace(runtime, org.id, user, {
-      repositoryId: fixture.repositoryId,
-      firstMessage: FIRST_MESSAGE,
-    })
+    const created = await fixture.run(() =>
+      createWorkspace(runtime, org.id, user, {
+        repositoryId: fixture.repositoryId,
+        firstMessage: FIRST_MESSAGE,
+      }),
+    )
     const endpoint = runtime.workspace(created.workspace.id)
     await endpoint.lifecycleStopped()
     boat.states.set('bx_1', 'archiving')
@@ -158,20 +169,27 @@ it('resumes the same disk and retries a failed startup on its already running ma
         .run()
     }
     await expect(
-      resumeWorkspace(runtime, org.id, created.workspace.id, user.id),
+      fixture.run(() =>
+        resumeWorkspace(runtime, org.id, created.workspace.id, user.id),
+      ),
     ).rejects.toMatchObject({
       code: 'workspace_start_failed',
       log: 'failed [hidden]',
     })
     expect(boat.resumeIds).toEqual(['bx_1'])
     expect(
-      fixture.starts.get(created.workspace.id)?.storedCiphertexts().join(''),
+      (
+        await fixture.starts.get(created.workspace.id)?.storedCiphertexts()
+      )?.join(''),
     ).not.toContain('org-secret')
     boat.commandExitCode = 0
-    await resumeWorkspace(runtime, org.id, created.workspace.id, user.id)
-    const durable = fixture.fixtures.get(created.workspace.id)
-    if (!durable) throw new Error('Missing durable state')
-    await durable.lifecycle.runnerReady()
+    fixture.setTime(TEST_TIME + 5_000_000)
+    await fixture.run(() =>
+      resumeWorkspace(runtime, org.id, created.workspace.id, user.id),
+    )
+    const actor = fixture.actors.get(created.workspace.id)?.endpoint()
+    if (!actor) throw new Error('Missing production controller')
+    await actor.reportRunnerLifecycle({ type: 'runner.ready' })
     const stale = fixture.starts.get(created.workspace.id)?.lastAccepted()
     if (!stale) throw new Error('Missing accepted resume')
     const commandCount = boat.commands.length

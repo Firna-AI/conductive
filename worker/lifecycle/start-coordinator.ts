@@ -5,7 +5,7 @@ import type {
 } from './start-types'
 import type { AppDependencies, AppEnv } from '../env'
 import { prepareWorkspaceRecords } from './start-records'
-import { completeCreationAttempt } from './creation-attempt-data'
+import { publishCreationResult } from './creation-publication'
 import { HttpError } from '../http'
 import { lifecycleProvider } from './lifecycle-provider'
 import type { SandboxProvider } from '../sandbox/provider'
@@ -26,6 +26,9 @@ export class WorkspaceStartCoordinator {
   private readonly endpoint: WorkspaceLifecycleEndpoint
   private readonly storage: StartJobStorage
   private readonly waiters = new Set<(result: WorkspaceStartResult) => void>()
+  private readonly creationWaiters = new Set<
+    (result: WorkspaceStartResult) => void
+  >()
   private accepting: Promise<unknown> = Promise.resolve()
 
   constructor(
@@ -42,6 +45,8 @@ export class WorkspaceStartCoordinator {
 
   enqueue(job: WorkspaceStartJob): Promise<boolean> {
     const accepted = this.accepting.then(async () => {
+      if (job.kind === 'create' && (await this.storage.creationResult()))
+        return false
       if (await this.storage.job()) return false
       const epoch = await this.storage.epoch()
       const state = await this.endpoint.readLifecycle()
@@ -62,18 +67,36 @@ export class WorkspaceStartCoordinator {
   }
 
   wait(): Promise<WorkspaceStartResult> {
+    return this.waitFor(false)
+  }
+  waitCreation(): Promise<WorkspaceStartResult> {
+    return this.waitFor(true)
+  }
+  creationResult() {
+    return this.storage.creationResult()
+  }
+  async pending(): Promise<boolean> {
+    return Boolean(
+      (await this.storage.job()) || (await this.storage.publication()),
+    )
+  }
+
+  private waitFor(creation: boolean): Promise<WorkspaceStartResult> {
+    const waiters = creation ? this.creationWaiters : this.waiters
     return new Promise((resolve, reject) => {
       const receive = (result: WorkspaceStartResult) => {
-        this.waiters.delete(receive)
+        waiters.delete(receive)
         resolve(result)
       }
-      this.waiters.add(receive)
-      void this.storage.result().then(
+      waiters.add(receive)
+      void (
+        creation ? this.storage.creationResult() : this.storage.result()
+      ).then(
         (stored) => {
           if (stored) receive(stored)
         },
         (error: unknown) => {
-          this.waiters.delete(receive)
+          waiters.delete(receive)
           reject(error)
         },
       )
@@ -88,7 +111,7 @@ export class WorkspaceStartCoordinator {
 
   private async advanceOwned(): Promise<boolean> {
     const job = await this.storage.job()
-    if (!job) return true
+    if (!job) return publishCreationResult(this.env, this.storage)
     let provider: SandboxProvider | undefined
     try {
       const admin = await firstOrgAdmin(this.env.DB, job.orgId)
@@ -245,10 +268,14 @@ export class WorkspaceStartCoordinator {
   private async finish(result: WorkspaceStartResult): Promise<void> {
     const job = await this.storage.job()
     if (result.ok && job?.cancelled) return
-    if (result.ok && job?.kind === 'create')
-      await completeCreationAttempt(this.env.DB, job.workspaceId)
     await this.storage.complete(result)
     const stored = (await this.storage.result()) ?? result
+    if (job?.kind === 'create') {
+      const created = (await this.storage.creationResult()) ?? stored
+      for (const waiter of this.creationWaiters) waiter(created)
+      this.creationWaiters.clear()
+      await publishCreationResult(this.env, this.storage)
+    }
     for (const waiter of this.waiters) waiter(stored)
     this.waiters.clear()
   }

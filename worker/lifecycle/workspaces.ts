@@ -1,36 +1,22 @@
 import type { User } from '../../src/shared/api'
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
-import { HttpError } from '../http'
-import { lifecycleProvider } from './lifecycle-provider'
-import { hash } from '../security/crypto'
 import { requireOrgMember } from './access'
-import { readImageSettings, selectedRepositories } from './settings-data'
-import { registerCreationAttempt } from './creation-attempt-data'
 import {
-  deleteProvisionalWorkspace,
-  findCreatedWorkspace,
-} from './workspace-data'
+  existingCreation,
+  claimCreation,
+  recordedCreationJob,
+  repairCreationPlan,
+  type CreationKey,
+  type CreationClaim,
+} from './creation-claims'
+import { markCreationFailed } from './creation-attempt-data'
+import { prepareCreationRequest } from './create-request'
 import { WorkspaceStartError } from './workspace-start'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import {
   provisionedResponse,
   type ProvisionedWorkspace,
 } from './workspace-response'
-
-const CITIES = [
-  'lisbon',
-  'oslo',
-  'kyoto',
-  'perth',
-  'lima',
-  'riga',
-  'bern',
-  'seoul',
-  'milan',
-  'porto',
-  'quito',
-  'delft',
-] as const
 
 export async function createWorkspace(
   runtime: WorkspaceRuntime,
@@ -39,93 +25,80 @@ export async function createWorkspace(
   input: CreateWorkspaceRequest,
   sender: User = user,
 ): Promise<ProvisionedWorkspace> {
-  const { env, dependencies } = runtime
-  await requireOrgMember(env.DB, orgId, user.id)
-  await requireOrgMember(env.DB, orgId, sender.id)
-  const prior = await findCreatedWorkspace(
-    env.DB,
+  await requireOrgMember(runtime.env.DB, orgId, user.id)
+  await requireOrgMember(runtime.env.DB, orgId, sender.id)
+  const key: CreationKey = {
     orgId,
-    sender.id,
-    input.firstMessage.id,
+    senderUserId: sender.id,
+    messageId: input.firstMessage.id,
+  }
+  const existing = await existingCreation(runtime.env.DB, key)
+  if (existing?.state === 'succeeded')
+    return provisionedResponse(runtime, orgId, existing.id, sender, input)
+  if (existing) {
+    const result = await runtime
+      .workspace(existing.id)
+      .readCreationLifecycleResult()
+    if (result?.ok)
+      return provisionedResponse(runtime, orgId, existing.id, sender, input)
+    if (result) await markCreationFailed(runtime.env.DB, existing.id)
+    else return joinCreation(runtime, key, existing, user, sender, input)
+  }
+  const candidate = await prepareCreationRequest(
+    runtime,
+    orgId,
+    user,
+    sender,
+    input,
   )
-  if (prior) return provisionedResponse(runtime, orgId, prior.id, sender, input)
-  const repository = (await selectedRepositories(env.DB, orgId)).find(
-    (entry) => entry.id === input.repositoryId,
+  const claim = await claimCreation(runtime.env.DB, key, candidate)
+  if (claim.state === 'succeeded')
+    return provisionedResponse(runtime, orgId, claim.id, sender, input)
+  return joinCreation(runtime, key, claim, user, sender, input)
+}
+
+async function joinCreation(
+  runtime: WorkspaceRuntime,
+  key: CreationKey,
+  claim: CreationClaim,
+  user: User,
+  sender: User,
+  input: CreateWorkspaceRequest,
+): Promise<ProvisionedWorkspace> {
+  let job = await recordedCreationJob(
+    runtime.env.DB,
+    key,
+    claim.id,
+    input.firstMessage.text,
   )
-  if (!repository)
-    throw new HttpError(
-      404,
-      'repository_not_found',
-      'The repository is not available.',
-    )
-  const settings = await readImageSettings(env.DB, orgId)
-  if (!settings.imageName)
-    throw new HttpError(
-      409,
-      'image_required',
-      'Ask an org admin to build the cloud computer image first.',
-    )
-  await lifecycleProvider(env, user.id, orgId, dependencies.fetch)
-  const id = dependencies.randomToken()
-  const endpoint = runtime.workspace(id)
-  const sessionId = dependencies.randomToken()
-  const turnId = dependencies.randomToken()
-  const random = await hash(dependencies.randomToken())
-  const city = CITIES[random.charCodeAt(0) % CITIES.length]
-  const suffix = [...random.slice(1, 5)]
-    .map(
-      (character) =>
-        'abcdefghijklmnopqrstuvwxyz0123456789'[character.charCodeAt(0) % 36],
-    )
-    .join('')
-  const branch = `${user.githubLogin}/${city}-${suffix}`
-  let accepted = false
-  try {
-    await registerCreationAttempt(env.DB, {
-      id,
-      orgId,
-      senderUserId: sender.id,
-      messageId: input.firstMessage.id,
-      now: dependencies.now(),
-    })
-    accepted = true
-    await endpoint.queueLifecycleStart({
-      workspaceId: id,
-      orgId,
-      kind: 'create',
-      imageName: settings.imageName,
-      startupScript: settings.startupScript,
-      environmentCiphertext: settings.envVarsCiphertext,
-      defaultBranch: repository.defaultBranch,
-      turnId,
-      attempt: `workspace-${id}-${dependencies.randomToken()}`,
-      phase: 'records',
-      creation: {
+  if (!job) {
+    await repairCreationPlan(
+      runtime.env.DB,
+      await prepareCreationRequest(
+        runtime,
+        key.orgId,
         user,
         sender,
-        repositoryId: repository.id,
-        sectionId: input.sectionId,
-        city,
-        branch,
-        sessionId,
-        request: input.firstMessage,
-        createdAt: dependencies.now(),
-      },
-      processId: null,
-      stdoutOffset: 0,
-      stderrOffset: 0,
-    })
-    const result = await endpoint.waitLifecycleStart()
-    if (!result.ok)
-      throw Object.assign(
-        new WorkspaceStartError(result.error.log),
-        result.error,
-      )
-    return provisionedResponse(runtime, orgId, id, sender, input)
-  } catch (error) {
-    if (accepted) throw error
-    await endpoint.clearLifecycle()
-    await deleteProvisionalWorkspace(env.DB, orgId, id)
-    throw error
+        input,
+        claim.id,
+      ),
+    )
+    job = await recordedCreationJob(
+      runtime.env.DB,
+      key,
+      claim.id,
+      input.firstMessage.text,
+    )
   }
+  if (!job) throw new Error('Missing recorded creation plan')
+  const endpoint = runtime.workspace(claim.id)
+  await endpoint.queueLifecycleStart(job)
+  const result = await endpoint.waitCreationLifecycle()
+  if (!result.ok)
+    throw Object.assign(new WorkspaceStartError(result.error.log), result.error)
+  const state = await endpoint.readLifecycle()
+  return provisionedResponse(runtime, key.orgId, claim.id, sender, {
+    ...input,
+    firstMessage: state?.pendingFirstMessage ?? input.firstMessage,
+  })
 }

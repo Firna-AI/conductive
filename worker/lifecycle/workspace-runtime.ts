@@ -41,6 +41,8 @@ export interface WorkspaceLifecycleEndpoint {
   finishDiskMaintenance(): Promise<void>
   queueLifecycleStart(job: WorkspaceStartJob): Promise<boolean>
   waitLifecycleStart(): Promise<WorkspaceStartResult>
+  waitCreationLifecycle(): Promise<WorkspaceStartResult>
+  readCreationLifecycleResult(): Promise<WorkspaceStartResult | undefined>
   readLifecycleStartLog(): Promise<string>
   retainLifecycleFailedCreation(
     error: FailedCreationDraft['error'],

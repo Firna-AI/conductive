@@ -1,3 +1,4 @@
+import type { WorkspaceStorage } from './platform-storage'
 import type {
   ChatHistoryResponse,
   WorkspaceEvent,
@@ -10,12 +11,12 @@ const PREFIX = 'workspace:events:record:'
 
 /** Milestone 7 appends chat events here, using the same counter and journal. */
 export class WorkspaceEventJournal {
-  private readonly storage: DurableObjectStorage
+  private readonly storage: WorkspaceStorage
   private readonly broadcast: (event: WorkspaceEventEnvelope) => Promise<void>
   private pending: Promise<unknown> = Promise.resolve()
 
   constructor(
-    storage: DurableObjectStorage,
+    storage: WorkspaceStorage,
     broadcast: (event: WorkspaceEventEnvelope) => Promise<void>,
   ) {
     this.storage = storage
@@ -29,15 +30,17 @@ export class WorkspaceEventJournal {
   ): Promise<WorkspaceEventEnvelope> {
     const next = this.pending.then(async () => {
       const envelope = await this.storage.transaction(async (transaction) => {
-        const eventNumber = ((await transaction.get<number>(COUNTER)) ?? 0) + 1
+        const eventNumber =
+          ((await transaction.get('number', COUNTER)) ?? 0) + 1
         const envelope: WorkspaceEventEnvelope = {
           workspaceId,
           eventNumber,
           occurredAt,
           event,
         }
-        await transaction.put(COUNTER, eventNumber)
+        await transaction.put('number', COUNTER, eventNumber)
         await transaction.put(
+          'event',
           `${PREFIX}${String(eventNumber).padStart(16, '0')}`,
           envelope,
         )
@@ -60,7 +63,7 @@ export class WorkspaceEventJournal {
       error: response.error,
     })
     if (
-      (await this.storage.get<string>('lifecycle:last-published')) === signature
+      (await this.storage.get('text', 'lifecycle:last-published')) === signature
     )
       return
     await this.append(
@@ -74,14 +77,14 @@ export class WorkspaceEventJournal {
         { type: 'start.updated', start: response.start },
         now,
       )
-    await this.storage.put('lifecycle:last-published', signature)
+    await this.storage.put('text', 'lifecycle:last-published', signature)
   }
 
   async after(eventNumber: number): Promise<ChatHistoryResponse> {
     const events: WorkspaceEventEnvelope[] = []
     let startAfter = `${PREFIX}${String(eventNumber).padStart(16, '0')}`
     while (true) {
-      const stored = await this.storage.list<WorkspaceEventEnvelope>({
+      const stored = await this.storage.list('event', {
         prefix: PREFIX,
         startAfter,
         limit: 1_000,
@@ -90,12 +93,12 @@ export class WorkspaceEventJournal {
       if (stored.size < 1_000) break
       startAfter = [...stored.keys()].at(-1) ?? startAfter
     }
-    const throughEventNumber = (await this.storage.get<number>(COUNTER)) ?? 0
+    const throughEventNumber = (await this.storage.get('number', COUNTER)) ?? 0
     return { events, throughEventNumber }
   }
 
   async clearFailedCreate(): Promise<void> {
-    const stored = await this.storage.list({ prefix: PREFIX })
+    const stored = await this.storage.list('event', { prefix: PREFIX })
     await this.storage.delete([...stored.keys()])
     await this.storage.delete([COUNTER, 'lifecycle:last-published'])
   }

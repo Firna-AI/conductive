@@ -1,3 +1,4 @@
+import type { WorkspacePlatform } from './workspace-platform'
 import type { AppEnv, AppDependencies } from '../env'
 import { DurableLifecycle } from './durable'
 import type { TurnScopes } from './turns'
@@ -16,14 +17,20 @@ import {
 import { keepWorkspaceDisk } from './disk-retention'
 
 export function createWorkspaceLifecycle(
-  ctx: DurableObjectState,
+  ctx: WorkspacePlatform,
   env: AppEnv,
   dependencies: AppDependencies,
   turns: TurnScopes,
   journal: WorkspaceEventJournal,
 ): DurableLifecycle {
   const lifecycle: DurableLifecycle = new DurableLifecycle(
-    ctx.storage,
+    {
+      get: (key) => ctx.storage.get('lifecycle', key),
+      put: (key, state) => ctx.storage.put('lifecycle', key, state),
+      delete: (key) => ctx.storage.delete(key),
+      setAlarm: (at) => ctx.storage.setAlarm(at),
+      deleteAlarm: () => ctx.storage.deleteAlarm(),
+    },
     dependencies.now,
     {
       changed: async (state) => {
@@ -66,7 +73,7 @@ export function createWorkspaceLifecycle(
         return result
       },
       startPending: async () =>
-        Boolean(await ctx.storage.get('lifecycle:start-job')),
+        Boolean(await ctx.storage.get('job', 'lifecycle:start-job')),
     },
   )
   return lifecycle

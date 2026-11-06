@@ -45,7 +45,7 @@ export async function installationToken(
       `https://api.github.com/app/installations/${repository.installationId}/access_tokens`,
       {
         method: 'POST',
-        redirect: 'error',
+        redirect: 'manual',
         headers: {
           Authorization: `Bearer ${body}.${base64Url(new Uint8Array(signature))}`,
           Accept: 'application/vnd.github+json',

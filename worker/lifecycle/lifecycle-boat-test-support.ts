@@ -25,6 +25,11 @@ export class LifecycleBoat {
   afterLostCreate?: () => Promise<void>
   beforeSandboxRead?: (sandboxId: string) => Promise<void>
   readonly deletedSnapshots: string[] = []
+  readonly statusRequests: {
+    processId: number
+    stdoutOffset: number
+    stderrOffset: number
+  }[] = []
   private readonly allocations = new Map<string, string>()
   private sandboxes = 0
   private processId = 0
@@ -115,6 +120,11 @@ export class LifecycleBoat {
         await this.beforeStatus?.()
         const processId = Number(operation.slice('commands/'.length))
         const offset = Number(url.searchParams.get('stdoutOffset') ?? '0')
+        this.statusRequests.push({
+          processId,
+          stdoutOffset: offset,
+          stderrOffset: Number(url.searchParams.get('stderrOffset') ?? '0'),
+        })
         const text = this.commandOutput
         const stdout = text.slice(offset, offset + this.statusChunkSize)
         const nextOffset = offset + stdout.length

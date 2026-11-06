@@ -1,3 +1,4 @@
+import { providerState } from './provider-state'
 import type { ImageBuild } from '../../src/shared/org-settings'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
@@ -164,13 +165,10 @@ export async function advanceImageBuild(
     }
     if (!job.sandboxId) throw new Error('Missing build sandbox')
     const machine = await provider.get(job.sandboxId)
-    if (
-      ['init', 'provisioning', 'provisioned', 'cloning'].includes(machine.state)
-    )
-      return false
-    if (['error', 'archived', 'cancelled'].includes(machine.state))
+    const status = providerState(machine.state)
+    if (status === 'error' || status === 'stopped')
       throw new Error('Image sandbox did not start')
-    if (!['ready', 'idle', 'running'].includes(machine.state)) return false
+    if (status !== 'ready') return false
     // A long build receives the same safety deadline as other active work.
     await provider.setAutoStop(job.sandboxId, 1_800)
     if (job.phase === 'snapshot') {

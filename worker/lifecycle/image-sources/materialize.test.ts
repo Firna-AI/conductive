@@ -63,17 +63,17 @@ it('streams complete default history to the authorized builder without credentia
     [
       'POST',
       'https://api.github.com/app/installations/701/access_tokens',
-      'error',
+      'manual',
     ],
     [
       'GET',
       'https://github.com/example/source-repository.git/info/refs?service=git-upload-pack',
-      'error',
+      'manual',
     ],
     [
       'POST',
       'https://github.com/example/source-repository.git/git-upload-pack',
-      'error',
+      'manual',
     ],
   ])
   expect(await fixture.requests[0].json()).toEqual({

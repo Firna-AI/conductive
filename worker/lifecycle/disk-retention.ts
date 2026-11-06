@@ -1,3 +1,6 @@
+import { providerState, type ProviderState } from './provider-state'
+import type { SandboxProvider } from '../sandbox/provider'
+import { WorkspaceStartError } from './workspace-start'
 import { DISK_KEEPALIVE_MS } from './durable-types'
 import { repositoryDirectory, writeFileCommand } from './commands'
 import { readImageSettings, workspaceEnvironment } from './settings-data'
@@ -14,7 +17,7 @@ import type { DurableLifecycle } from './durable'
 export async function keepWorkspaceDisk(
   context: WorkspaceActionContext,
 ): Promise<boolean> {
-  const { env, dependencies, workspaceId, orgId } = context
+  const { env, workspaceId, orgId } = context
   const { provider, sandboxId, row } = await actionResources(context)
   if (row.state !== 'stopped') {
     await clearRetention(env.DB, workspaceId)
@@ -25,9 +28,20 @@ export async function keepWorkspaceDisk(
     error: null,
   }
   const machine = await provider.get(sandboxId)
+  const status = providerState(machine.state)
+  if (status === 'error' && progress.phase !== 'stop') {
+    await setRetention(
+      env.DB,
+      workspaceId,
+      'stop',
+      'The cloud computer failed during disk retention.',
+    )
+    return stopMaintenance(context, provider, sandboxId, status)
+  }
   if (progress.phase === 'resume') {
     await setRetention(env.DB, workspaceId, 'resume')
-    if (machine.state === 'archived' || machine.state === 'cancelled') {
+    if (status === 'stopping') return false
+    if (status === 'stopped') {
       const environment = await workspaceEnvironment(env, orgId)
       const token = await readWorkspaceToken(env, workspaceId)
       await provider.resume(
@@ -48,19 +62,19 @@ export async function keepWorkspaceDisk(
     return false
   }
   if (progress.phase === 'wait') {
-    if (machine.state === 'archived' || machine.state === 'cancelled') {
+    if (status === 'stopped') {
       await setRetention(env.DB, workspaceId, 'resume')
       return false
     }
-    if (
-      machine.state === 'ready' ||
-      machine.state === 'running' ||
-      machine.state === 'idle'
-    )
-      await setRetention(env.DB, workspaceId, 'startup')
+    if (status === 'ready') await setRetention(env.DB, workspaceId, 'startup')
     return false
   }
   if (progress.phase === 'startup') {
+    if (status === 'stopped') {
+      await setRetention(env.DB, workspaceId, 'resume')
+      return false
+    }
+    if (status !== 'ready') return false
     const settings = await readImageSettings(env.DB, orgId)
     let error: string | null = null
     try {
@@ -89,11 +103,21 @@ export async function keepWorkspaceDisk(
     await setRetention(env.DB, workspaceId, 'stop', error)
     return false
   }
-  let stopped = machine.state === 'archived' || machine.state === 'cancelled'
-  if (!stopped) {
-    const result = await provider.stop(sandboxId)
-    stopped = result.state === 'archived' || result.state === 'cancelled'
-  }
+  return stopMaintenance(context, provider, sandboxId, status)
+}
+
+async function stopMaintenance(
+  context: WorkspaceActionContext,
+  provider: SandboxProvider,
+  sandboxId: string,
+  status: ProviderState,
+): Promise<boolean> {
+  const { env, dependencies, workspaceId, orgId } = context
+  if (status === 'stopping') return false
+  let stopped = status === 'stopped'
+  if (!stopped)
+    stopped =
+      providerState((await provider.stop(sandboxId)).state) === 'stopped'
   if (!stopped) return false
   await revokeWorkspacePreviews(env.DB, workspaceId, dependencies.now())
   await env.DB.prepare(
@@ -116,9 +140,12 @@ export async function finishDiskMaintenance(
   lifecycle: DurableLifecycle,
 ): Promise<void> {
   await lifecycle.exclusive(async () => {
-    while (await readRetention(context.env.DB, context.workspaceId)) {
+    if (!(await readRetention(context.env.DB, context.workspaceId))) return
+    try {
       if (await keepWorkspaceDisk(context)) return
-      await new Promise<void>((resolve) => setTimeout(resolve, 1_000))
+    } catch {
+      throw new WorkspaceStartError(null)
     }
+    throw new WorkspaceStartError(null)
   })
 }

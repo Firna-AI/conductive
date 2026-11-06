@@ -1,3 +1,5 @@
+import type { WorkspaceStorage } from './platform-storage'
+import type { AppEnv } from '../env'
 import type { AppDependencies } from '../env'
 import { HttpError } from '../http'
 import { createGitHubImageSourceMaterializer } from './image-sources/materialize'
@@ -6,19 +8,18 @@ import { runImageAlarm, type ImageCoordinatorState } from './image-timers'
 import type { ImageRuntime } from './image-builds'
 import { runningBuild } from './build-data'
 import { pendingImageCleanup } from './image-maintenance-data'
-import type { LifecycleEnvironment } from './runtime'
 
 const KEY = 'org-image:coordinator'
 
 /** Image coordinators use org-image:<orgId> names, never workspace names. */
 export class ImageCoordinator {
-  private readonly storage: DurableObjectStorage
-  private readonly env: LifecycleEnvironment
+  private readonly storage: WorkspaceStorage
+  private readonly env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string }
   private readonly dependencies: AppDependencies
 
   constructor(
-    storage: DurableObjectStorage,
-    env: LifecycleEnvironment,
+    storage: WorkspaceStorage,
+    env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string },
     dependencies: AppDependencies,
   ) {
     this.storage = storage
@@ -27,11 +28,11 @@ export class ImageCoordinator {
   }
 
   read(): Promise<ImageCoordinatorState | undefined> {
-    return this.storage.get(KEY)
+    return this.storage.get('image', KEY)
   }
 
   async schedule(state: ImageCoordinatorState): Promise<void> {
-    if (await this.storage.get('lifecycle:state'))
+    if (await this.storage.get('lifecycle', 'lifecycle:state'))
       throw new HttpError(
         409,
         'coordinator_conflict',
@@ -52,7 +53,7 @@ export class ImageCoordinator {
       if (cleanup)
         state = { ...state, buildId: cleanup, nextAt: this.dependencies.now() }
     }
-    await this.storage.put(KEY, {
+    await this.storage.put('image', KEY, {
       ...state,
       software: readImageSoftware(state.software),
     })

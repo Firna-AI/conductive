@@ -1,5 +1,6 @@
 import { DurableObject } from 'cloudflare:workers'
 
+import { nativeWorkspaceStorage } from './platform-storage'
 import { WorkspaceEventJournal } from './durable-journal'
 import { attachWorkspaceSubscription } from './workspace-sockets'
 
@@ -10,7 +11,7 @@ interface JournalFixtureEnvironment {
 /** Bundled only by the storage/socket integration test. */
 export class JournalFixture extends DurableObject<JournalFixtureEnvironment> {
   private readonly journal = new WorkspaceEventJournal(
-    this.ctx.storage,
+    nativeWorkspaceStorage(this.ctx.storage),
     async (envelope) => {
       for (const socket of this.ctx.getWebSockets('workspace'))
         socket.send(JSON.stringify({ type: 'event', envelope }))

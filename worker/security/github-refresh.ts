@@ -12,7 +12,7 @@ export async function refreshGitHubTokens(
     const response = await dependencies.fetch(
       new Request('https://github.com/login/oauth/access_token', {
         method: 'POST',
-        redirect: 'error',
+        redirect: 'manual',
         signal: AbortSignal.timeout(30_000),
         headers: {
           Accept: 'application/json',

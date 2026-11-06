@@ -1,3 +1,4 @@
+import { providerState } from './provider-state'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { lifecycleProvider } from './lifecycle-provider'
@@ -80,7 +81,8 @@ export async function reconcileWorkspaceSandbox(
 ): Promise<'stopped' | 'error' | undefined> {
   const { provider, sandboxId } = await actionResources(context)
   const sandbox = await provider.get(sandboxId)
-  if (sandbox.state === 'archived' || sandbox.state === 'cancelled') {
+  const status = providerState(sandbox.state)
+  if (status === 'stopped') {
     await revokeWorkspacePreviews(
       context.env.DB,
       context.workspaceId,
@@ -88,6 +90,6 @@ export async function reconcileWorkspaceSandbox(
     )
     return 'stopped'
   }
-  if (sandbox.state === 'error') return 'error'
+  if (status === 'error') return 'error'
   return undefined
 }

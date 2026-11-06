@@ -45,7 +45,7 @@ export class BoatTransport {
           method,
           headers,
           body: body === undefined ? undefined : JSON.stringify(body),
-          redirect: 'error',
+          redirect: 'manual',
           signal: AbortSignal.timeout(
             route.operation === 'command' ? 610_000 : 30_000,
           ),

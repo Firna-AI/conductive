@@ -29,16 +29,21 @@ it('gets the trusted turn sender token afresh for concurrent sessions and reject
       githubId: 18,
       githubLogin: 'teammate',
     }
-    const created = await createWorkspace(
-      runtime,
-      org.id,
-      user,
-      { repositoryId: fixture.repositoryId, firstMessage: FIRST_MESSAGE },
-      sender,
+    const created = await fixture.run(() =>
+      createWorkspace(
+        runtime,
+        org.id,
+        user,
+        { repositoryId: fixture.repositoryId, firstMessage: FIRST_MESSAGE },
+        sender,
+      ),
     )
     expect(created.workspace.owner.id).toBe(user.id)
     expect(created.first.sender.id).toBe('second-user')
-    await fixture.turns.get(created.workspace.id)?.register({
+    const actor = fixture.actors.get(created.workspace.id)?.endpoint()
+    if (!actor) throw new Error('Missing production controller')
+    await actor.reportRunnerLifecycle({ type: 'runner.ready' })
+    await actor.registerLifecycleTurn({
       turnId: 'second-turn',
       sessionId: 'second-session',
       senderUserId: user.id,
@@ -81,7 +86,7 @@ it('gets the trusted turn sender token afresh for concurrent sessions and reject
     expect(
       await (await handleGitCredential(request('second-turn'), runtime)).json(),
     ).toEqual({ token: 'new-sender-token' })
-    await fixture.turns.get(created.workspace.id)?.register({
+    await actor.registerLifecycleTurn({
       turnId: 'replacement-turn',
       sessionId: 'second-session',
       senderUserId: user.id,
@@ -100,7 +105,7 @@ it('gets the trusted turn sender token afresh for concurrent sessions and reject
         runtime,
       ),
     ).rejects.toMatchObject({ status: 409, code: 'current_turn_required' })
-    await fixture.turns.get(created.workspace.id)?.remove('replacement-turn')
+    await actor.finishLifecycleTurn('replacement-turn')
     await expect(
       handleGitCredential(request('replacement-turn'), runtime),
     ).rejects.toMatchObject({ status: 409, code: 'current_turn_required' })

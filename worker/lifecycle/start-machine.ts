@@ -1,3 +1,4 @@
+import { providerState } from './provider-state'
 import type { AppEnv } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
 import type { WorkspaceRow } from './workspace-data'
@@ -78,15 +79,10 @@ export async function advanceStartMachine(
       job.allocatedSandboxId = row.sandboxId
       await storage.update(job)
       const current = await provider.get(row.sandboxId)
-      if (
-        !['ready', 'idle', 'running', 'archived', 'cancelled'].includes(
-          current.state,
-        )
-      ) {
-        if (current.state === 'error') throw new WorkspaceStartError(null)
-        return null
-      }
-      if (current.state === 'archived' || current.state === 'cancelled') {
+      const status = providerState(current.state)
+      if (status === 'error') throw new WorkspaceStartError(null)
+      if (status === 'starting' || status === 'stopping') return null
+      if (status === 'stopped') {
         await recordRunningEnvironment(
           env.DB,
           job.workspaceId,
@@ -106,15 +102,15 @@ export async function advanceStartMachine(
   if (!row.sandboxId) throw new WorkspaceStartError(null)
   if (job.phase === 'ready') {
     const machine = await provider.get(row.sandboxId)
-    if (['archived', 'error', 'cancelled'].includes(machine.state)) {
-      if (job.kind === 'resume' && machine.state !== 'error')
-        return {
-          phase: 'machine',
-          environmentCiphertext: job.environmentCiphertext,
-        }
+    const status = providerState(machine.state)
+    if (status === 'stopped' && job.kind === 'resume')
+      return {
+        phase: 'machine',
+        environmentCiphertext: job.environmentCiphertext,
+      }
+    if (status === 'stopped' || status === 'error')
       throw new WorkspaceStartError(null)
-    }
-    if (!['ready', 'idle', 'running'].includes(machine.state)) return null
+    if (status !== 'ready') return null
     await provider.setAutoStop(row.sandboxId, 1_800)
     if (job.kind === 'create')
       await releaseImageLease(env.DB, job.orgId, job.workspaceId)

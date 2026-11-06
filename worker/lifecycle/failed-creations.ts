@@ -3,7 +3,7 @@ import type { SendMessageRequest } from '../../src/shared/messages'
 import type { DurableLifecycleState } from './durable-types'
 import { requireOrgMember } from './access'
 import { readWorkspace } from './workspace-data'
-import { creationSender, markCreationFailed } from './creation-attempt-data'
+import { creationSender } from './creation-attempt-data'
 
 export interface FailedCreationDraft {
   workspaceId: string
@@ -44,7 +44,6 @@ export async function retainFailedCreation(
   const index = await creationSender(env.DB, draft.workspaceId, draft.orgId)
   if (!index) return
   await storage.put(KEY, { ...draft, senderUserId: index.senderUserId, error })
-  await markCreationFailed(env.DB, draft.workspaceId)
 }
 
 /** Later browser recovery passes the authenticated sender, never a body user ID. */

@@ -38,6 +38,11 @@ export type WorkspaceStartResult =
   | { ok: true }
   | { ok: false; error: { code: string; message: string; log: string | null } }
 
+export interface CreationPublication {
+  workspaceId: string
+  state: 'succeeded' | 'failed'
+}
+
 export interface StartJobStorage {
   job(): Promise<WorkspaceStartJob | undefined>
   epoch(): Promise<number>
@@ -45,6 +50,9 @@ export interface StartJobStorage {
   stop(): Promise<boolean>
   update(job: WorkspaceStartJob): Promise<void>
   result(): Promise<WorkspaceStartResult | undefined>
+  creationResult(): Promise<WorkspaceStartResult | undefined>
+  publication(): Promise<CreationPublication | undefined>
+  clearPublication(): Promise<void>
   complete(result: WorkspaceStartResult): Promise<void>
   secrets(values: readonly string[]): Promise<void>
   capture(

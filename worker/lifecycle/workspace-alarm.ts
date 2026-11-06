@@ -1,3 +1,4 @@
+import type { WorkspaceStorage } from './platform-storage'
 import type { AppDependencies, AppEnv } from '../env'
 import { retrySandboxCleanup } from './cleanup'
 import type { DurableLifecycle } from './durable'
@@ -5,7 +6,7 @@ import type { ImageCoordinator } from './image-coordinator'
 import type { WorkspaceStartCoordinator } from './start-coordinator'
 
 export async function runWorkspaceAlarm(input: {
-  storage: DurableObjectStorage
+  storage: WorkspaceStorage
   env: AppEnv
   dependencies: AppDependencies
   images: ImageCoordinator
@@ -17,7 +18,7 @@ export async function runWorkspaceAlarm(input: {
     await input.images.alarm()
     return
   }
-  if (await storage.get('lifecycle:start-job')) {
+  if (await input.starts.pending()) {
     try {
       if (!(await input.starts.advance()))
         await storage.setAlarm(dependencies.now() + 1_000)
@@ -26,7 +27,7 @@ export async function runWorkspaceAlarm(input: {
     }
     return
   }
-  const cleanupId = await storage.get<string>('lifecycle:cleanup')
+  const cleanupId = await storage.get('text', 'lifecycle:cleanup')
   if (cleanupId) {
     try {
       if (await retrySandboxCleanup(env, dependencies, cleanupId)) {

@@ -21,7 +21,9 @@ export async function completeCreationAttempt(
   workspaceId: string,
 ): Promise<void> {
   await db
-    .prepare('DELETE FROM workspace_creation_attempts WHERE workspace_id = ?')
+    .prepare(
+      "UPDATE workspace_creation_attempts SET state = 'succeeded' WHERE workspace_id = ? AND state = 'pending'",
+    )
     .bind(workspaceId)
     .run()
 }
