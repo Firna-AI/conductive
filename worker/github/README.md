@@ -2,8 +2,7 @@
 
 This module reads GitHub branch state for the shared banner and checks API.
 It also verifies GitHub App webhooks and finds their workspace targets.
-It does not have production routing yet.
-Milestone 15i connects it to the Worker and the workspace Durable Object.
+A production consumer supplies the Worker routes and workspace Durable Object storage.
 
 The [banner protocol](../../docs/protocol/github-banner.md) states the requirements.
 The [shared contracts](../../src/shared/github.ts) define the response bodies.
@@ -28,7 +27,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   The token stays on the server.
   This module has no sandbox credential endpoint.
 
-## Wiring in Milestone 15i
+## Server integration
 
 1. Add `GITHUB_WEBHOOK_SECRET` and `GITHUB_APP_PRIVATE_KEY` as Worker secrets.
    Keep `GITHUB_CLIENT_ID` as the app's client ID.
@@ -39,7 +38,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
    Keep suspension and repository access records current.
    No active installation means no read or webhook publication.
 3. Route the machine webhook path to `handleGitHubWebhook` before the machine stub.
-   Subscribe to `push`, `pull_request`, `pull_request_review`, `check_run`, `check_suite`, and `status`.
+   Subscribe to `push`, `pull_request`, `pull_request_review`, `pull_request_review_thread`, `check_run`, `check_suite`, and `status`.
    Keep the raw request body intact.
 4. Route both app read paths to `handleGitHubRead` before the existing general app gate dispatch.
    This handler already owns its gate.
@@ -71,11 +70,31 @@ return refreshWorkspace(env.DB, workspace, signal, githubState, dependencies)
 The Worker callback forwards only the workspace binding and refresh signal to this operation.
 It sends no function or token over the Durable Object boundary.
 Neither public HTTP handler accepts a caller-supplied workspace token or installation token.
-The existing Worker entry points and empty workspace Durable Object do not call this module yet.
+
+The production consumer can persist the workspace binding and refresh signal before a read.
+The signal keeps the delivery ID, head SHA, and user ID when present.
+The consumer can schedule Durable Object alarm retries for failed reads or publication.
+A retry must keep these inputs so delivery receipts and access checks still apply.
+A failed refresh must remain a failure until the current read and publication succeed.
+
+## Body budgets
+
+Raw webhook bodies and GitHub API JSON responses each have a 26 MiB budget: 27,262,976 bytes.
+The webhook budget exceeds GitHub's documented [25 MB payload maximum](https://docs.github.com/en/webhooks/webhook-events-and-payloads#payload-cap).
+The reader counts actual streamed bytes instead of trusting `Content-Length`.
+It cancels the stream when the body exceeds its budget.
+Oversized webhooks return HTTP 413 with `github_webhook_too_large`.
+Oversized API responses return the safe HTTP 502 `github_unavailable` error.
+No upstream body or credential enters that error.
+
+A missing or malformed signature returns HTTP 403 before a body read.
+The handler verifies well-formed signatures over the exact bounded raw bytes.
+JSON parsing and storage access follow successful verification.
 
 ## Refresh behavior
 
 Each webhook triggers a fresh read instead of applying old payload state.
+Resolving or unresolving a review thread refreshes its pull request branch.
 Repository and installation IDs must match active local records.
 A foreign fork's same-named branch cannot update a workspace in the base repository.
 A default branch push refreshes all workspaces of that repository.
@@ -86,6 +105,8 @@ Failed reads and broadcasts remain retryable.
 
 Pull request lookup prefers an open request for the exact repository and branch.
 It then considers merged and closed requests, in GitHub's newest-created order.
+Without a pull request, a GraphQL comparison reads only the commit count and repository and head identity fields.
+It selects no file patches.
 The reader follows every lookup, review, and check connection page.
 The combined GitHub check rollup supplies check runs and status contexts in returned order.
 Check runs use their completed and started times for duration.
@@ -118,6 +139,8 @@ It does not replace the production Durable Object storage adapter.
 [Octokit webhook examples](https://github.com/octokit/webhooks/tree/main/payload-examples/api.github.com).
 The fixtures retain the payload shapes and use one test installation.
 The push fixture targets the test branch.
+The review-thread fixture keeps reduced routing fields from the
+[recorded resolved example](https://raw.githubusercontent.com/octokit/webhooks/main/payload-examples/api.github.com/pull_request_review_thread/resolved.payload.json).
 
 API references:
 
@@ -126,6 +149,7 @@ API references:
 - [Pull request fields](https://docs.github.com/en/graphql/reference/pulls)
 - [Check fields](https://docs.github.com/en/graphql/reference/checks)
 - [Combined status rollup](https://docs.github.com/en/graphql/reference/commits#statuscheckrollup)
+- [Ref comparison](https://docs.github.com/en/graphql/reference/git#ref)
 - [Installation tokens](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-an-installation-access-token-for-a-github-app)
 
 ### Key Code
@@ -136,3 +160,4 @@ API references:
 - [workspace-state.ts](workspace-state.ts) coordinates storage and publication.
 - [client.ts](client.ts) reads current GitHub state and follows pagination.
 - [credentials.ts](credentials.ts) gets server-only installation read tokens.
+- [body.ts](body.ts) bounds raw webhook and GitHub API body reads.

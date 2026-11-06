@@ -1,4 +1,5 @@
 import { errorResponse, HttpError, privateResponse } from '../http'
+import { readGitHubBody } from './body'
 import type { GitHubRefreshWorkspace } from './contracts'
 import {
   completeDelivery,
@@ -24,7 +25,7 @@ export interface GitHubWebhookDependencies {
 async function authenticatedBody(
   request: Request,
   secret: string,
-): Promise<ArrayBuffer> {
+): Promise<Uint8Array<ArrayBuffer>> {
   const signature = request.headers.get('X-Hub-Signature-256')
   if (!secret)
     throw new HttpError(
@@ -32,22 +33,32 @@ async function authenticatedBody(
       'github_unavailable',
       'GitHub is not available. Try again.',
     )
-  const body = await request.arrayBuffer()
-  let valid = false
-  if (signature && /^sha256=[\da-f]{64}$/i.test(signature)) {
-    const bytes = Uint8Array.from(
-      signature.slice(7).match(/../g) ?? [],
-      (hex) => Number.parseInt(hex, 16),
+  if (!signature || !/^sha256=[\da-f]{64}$/i.test(signature))
+    throw new HttpError(
+      403,
+      'github_signature_invalid',
+      'The GitHub signature is not valid.',
     )
-    const key = await crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(secret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['verify'],
-    )
-    valid = await crypto.subtle.verify('HMAC', key, bytes, body)
-  }
+  const body = await readGitHubBody(
+    request.body,
+    () =>
+      new HttpError(
+        413,
+        'github_webhook_too_large',
+        'The GitHub webhook is too large.',
+      ),
+  )
+  const bytes = Uint8Array.from(signature.slice(7).match(/../g) ?? [], (hex) =>
+    Number.parseInt(hex, 16),
+  )
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify'],
+  )
+  const valid = await crypto.subtle.verify('HMAC', key, bytes, body)
   if (!valid)
     throw new HttpError(
       403,

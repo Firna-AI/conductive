@@ -1,4 +1,5 @@
 import type { HttpFetch } from '../env'
+import { readGitHubBody } from './body'
 import { githubFailure, object } from './parsers'
 
 export const GITHUB_API_VERSION = '2026-03-10'
@@ -28,8 +29,12 @@ export async function githubJson(
 ): Promise<unknown> {
   try {
     const response = await fetch(request)
-    if (!response.ok) throw githubFailure()
-    return await response.json()
+    if (!response.ok) {
+      void response.body?.cancel().catch(() => undefined)
+      throw githubFailure()
+    }
+    const body = await readGitHubBody(response.body, githubFailure)
+    return JSON.parse(new TextDecoder().decode(body))
   } catch {
     throw githubFailure()
   }

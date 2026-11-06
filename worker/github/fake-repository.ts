@@ -89,12 +89,6 @@ export class RepositoryGitHub {
       return this.signIn.fetch(request)
     this.requests.push(request.clone())
     if (this.failure) return this.failure.clone()
-    if (
-      request.method === 'GET' &&
-      url.pathname.startsWith('/repos/Codertocat/Hello-World/compare/')
-    ) {
-      return Response.json({ ahead_by: this.ahead })
-    }
     const body: unknown = await request.json()
     if (
       !isRecord(body) ||
@@ -111,6 +105,14 @@ export class RepositoryGitHub {
       databaseId: this.repositoryId,
     }
     switch (operation) {
+      case 'BannerCompare':
+        repository.ref = {
+          compare: {
+            aheadBy: this.ahead,
+            headTarget: { oid: this.headSha },
+          },
+        }
+        break
       case 'BannerLookup': {
         const states = body.variables.states
         const key =

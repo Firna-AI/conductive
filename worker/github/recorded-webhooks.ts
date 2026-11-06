@@ -38,6 +38,16 @@ export const recordedReview = {
   installation,
 }
 
+export const recordedReviewThread = {
+  action: 'resolved',
+  pull_request: {
+    head: { ref: 'changes', repo: repository },
+    base: { ref: 'master', repo: repository },
+  },
+  repository,
+  installation,
+}
+
 export const recordedCheckRun = {
   action: 'completed',
   check_run: {

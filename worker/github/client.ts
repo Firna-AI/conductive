@@ -14,8 +14,8 @@ import {
   object,
   text,
 } from './parsers'
-import { CHECKS, LOOKUP, PULL, REVIEWS } from './queries'
-import { githubJson, githubRequest, graphql } from './transport'
+import { CHECKS, COMPARE, LOOKUP, PULL, REVIEWS } from './queries'
+import { graphql } from './transport'
 
 export class GitHubReader {
   private readonly dependencies: GitHubReadDependencies
@@ -123,16 +123,14 @@ export class GitHubReader {
   ): Promise<GitHubSnapshot> {
     let ahead = 0
     if (headSha !== null) {
-      const comparison = object(
-        await githubJson(
-          this.dependencies.fetch,
-          githubRequest(
-            `/repos/${fullName.split('/').map(encodeURIComponent).join('/')}/compare/${encodeURIComponent(baseBranch)}...${encodeURIComponent(headSha)}`,
-            this.token,
-          ),
-        ),
-      )
-      ahead = integer(comparison.ahead_by)
+      const repository = await this.repository(COMPARE, {
+        baseRef: `refs/heads/${baseBranch}`,
+        headRef: headSha,
+      })
+      const comparison = object(object(repository.ref).compare)
+      if (text(object(comparison.headTarget).oid) !== headSha)
+        throw githubFailure()
+      ahead = integer(comparison.aheadBy)
     }
     const repositoryUrl = `https://github.com/${fullName.split('/').map(encodeURIComponent).join('/')}`
     const banner: GitHubBanner = {

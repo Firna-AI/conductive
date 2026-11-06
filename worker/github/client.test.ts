@@ -108,6 +108,9 @@ it('offers the create link only for branch commits and waits for a pull request'
       checks: { state: 'waiting-for-pull-request', checks: [] },
       headSha: HEAD_SHA,
     })
+    expect(api.requests.every((request) => request.method === 'POST')).toBe(
+      true,
+    )
   }
   api.headSha = null
   api.requests = []
@@ -237,6 +240,14 @@ it('refuses mismatched repositories, changed heads, and malformed upstream repli
   api.repositoryId = 186853002
   api.onRequest = async (operation) => {
     if (operation === 'BannerChecks') api.pull.headRefOid = 'new-head'
+  }
+  await expect(read()).rejects.toMatchObject({
+    status: 502,
+    code: 'github_unavailable',
+  })
+  api.lookupPages = { 'open:': page([]), 'closed:': page([]) }
+  api.onRequest = async (operation) => {
+    if (operation === 'BannerCompare') api.headSha = 'changed-comparison-head'
   }
   await expect(read()).rejects.toMatchObject({
     status: 502,

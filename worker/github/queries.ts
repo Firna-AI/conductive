@@ -1,5 +1,15 @@
 const PAGE = 'pageInfo { hasNextPage endCursor }'
 
+export const COMPARE = `query BannerCompare($owner: String!, $name: String!,
+  $baseRef: String!, $headRef: String!) {
+  repository(owner: $owner, name: $name) {
+    databaseId
+    ref(qualifiedName: $baseRef) {
+      compare(headRef: $headRef) { aheadBy headTarget { oid } }
+    }
+  }
+}`
+
 export const LOOKUP = `query BannerLookup($owner: String!, $name: String!,
   $head: String!, $ref: String!, $states: [PullRequestState!]!, $after: String) {
   repository(owner: $owner, name: $name) {

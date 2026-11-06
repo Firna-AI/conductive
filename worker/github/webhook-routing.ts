@@ -41,6 +41,7 @@ export function webhookRoute(
       'push',
       'pull_request',
       'pull_request_review',
+      'pull_request_review_thread',
       'check_run',
       'check_suite',
       'status',
@@ -58,7 +59,11 @@ export function webhookRoute(
       ? { ...common, branch: ref.slice(11) }
       : null
   }
-  if (event === 'pull_request' || event === 'pull_request_review') {
+  if (
+    event === 'pull_request' ||
+    event === 'pull_request_review' ||
+    event === 'pull_request_review_thread'
+  ) {
     if (
       !isRecord(value.pull_request) ||
       !isRecord(value.pull_request.head) ||
