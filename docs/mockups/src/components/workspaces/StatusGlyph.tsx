@@ -16,6 +16,8 @@ const ring = [0, 1, 2, 5, 8, 7, 6, 3]
 const shapes: Readonly<Record<ActivityStatus, readonly number[]>> = {
   /** A light runs around the ring. */
   working: ring,
+  /** The middle column pulses, like a text cursor: the agent asks. */
+  input: [1, 4, 7],
   /** The full grid: a turn finished with output to read. */
   unread: cells,
   /** One cell in the centre, like a standby light. */
@@ -50,8 +52,8 @@ function delay(status: ActivityStatus, cell: number): CSSProperties {
 
 /**
  * The state of a workspace as a small dot-matrix square: a 3 × 3 grid whose
- * lit cells draw the state. Working moves around the ring, and starting
- * fills the middle row.
+ * lit cells draw the state. Working moves around the ring, starting fills
+ * the middle row, and a workspace that needs input pulses.
  */
 export function StatusGlyph(props: { status: ActivityStatus }) {
   const lit = new Set(shapes[props.status])

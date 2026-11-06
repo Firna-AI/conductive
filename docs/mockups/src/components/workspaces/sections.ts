@@ -47,10 +47,29 @@ function linkFor(key: string, open: boolean): string | undefined {
   return undefined
 }
 
-function rowFor(workspace: Workspace, open?: OpenWorkspace): WorkspaceRow {
+/** The open workspace has activity now, so its row shows no age. */
+const liveStatuses: ReadonlySet<ActivityStatus> = new Set([
+  'working',
+  'input',
+  'starting',
+])
+
+function rowFor(
+  workspace: Workspace,
+  open?: OpenWorkspace,
+  needsInput?: string,
+): WorkspaceRow {
   const isOpen = open !== undefined && workspace.key === open.workspace.key
-  const busy =
-    isOpen && (open.status === 'working' || open.status === 'starting')
+  if (!isOpen && workspace.key === needsInput) {
+    // Only the Mac app draws this state, so the row opens its request.
+    return {
+      workspace: { ...workspace, updated: 'now' },
+      status: 'input',
+      selected: false,
+      to: paths.macPrompt,
+    }
+  }
+  const busy = isOpen && liveStatuses.has(open.status)
   return {
     workspace: busy ? { ...workspace, updated: 'now' } : workspace,
     status: isOpen ? open.status : workspace.status,
@@ -62,8 +81,13 @@ function rowFor(workspace: Workspace, open?: OpenWorkspace): WorkspaceRow {
 /**
  * The sections of the org, each with its workspaces. The open workspace
  * shows its current status, and a new one joins the top of its section.
+ * `needsInput` marks a workspace whose agent waits for the user while the
+ * main area shows another page.
  */
-export function workspaceSections(open?: OpenWorkspace): SidebarSection[] {
+export function workspaceSections(
+  open?: OpenWorkspace,
+  needsInput?: string,
+): SidebarSection[] {
   const isNew =
     open !== undefined &&
     !workspaceList.some((item) => item.key === open.workspace.key)
@@ -72,7 +96,7 @@ export function workspaceSections(open?: OpenWorkspace): SidebarSection[] {
     section: sections[key],
     rows: all
       .filter((workspace) => workspace.section === key)
-      .map((workspace) => rowFor(workspace, open)),
+      .map((workspace) => rowFor(workspace, open, needsInput)),
   }))
 }
 
