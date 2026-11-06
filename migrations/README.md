@@ -7,6 +7,7 @@ Never change a migration that has merged or has been applied to a shared databas
 `202611060000_worker_core.sql` creates sign-in and the first org records.
 `202611060100_contracts.sql` adds the tables used by the feature backends.
 It keeps existing rows and gives each existing org its General section.
+`202611072100_email_invitations.sql` discards the pending invitations by GitHub login, then adds invitations by email and each user's verified emails.
 
 Chat history, sessions, runner event cursors, start steps, and banner state
 belong to workspace Durable Object storage. They have no D1 tables.

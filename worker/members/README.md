@@ -159,11 +159,24 @@ Only an acknowledged resume followed by a stop creates a new real stop date.
 A failed or uncertain resume keeps the older conservative date.
 The capability expires when its callback ends or its lease expires.
 
-Invitation acceptance has no browser route in the fixed contracts.
+An invitation names an email.
+The invite route sends it through `createInvitationMailer` in `worker/invitation-mailer.ts`.
+`AppDependencies.invitationMailer` replaces that mailer when it is set.
+The mailer posts to Resend with the `RESEND_API_KEY` Worker secret, from `invites@conducting.build`.
+Without that key, it writes each invitation link to the log when `APP_ORIGIN` is local, and fails each send on any other origin.
+A failed send returns `invite_email_failed` and keeps the invitation, so the admin can invite the same email again.
+The link opens the app origin with the invite ID in its `invite` query parameter.
+
+Each sign-in calls `saveVerifiedEmails`.
+It replaces the user's stored emails with the verified emails from GitHub's `GET /user/emails`.
+A failed read fails the sign-in.
+Emails match without case. An unverified email matches no invitation.
+Invitation acceptance and the pending invitation list have no browser route in the fixed contracts.
+Call `pendingOrgInvites` with the signed-in user's ID to list the invitations of active orgs that name one of their verified emails.
 Call `acceptOrgInvite` after an explicit acceptance by a signed-in user.
-It verifies the invite ID against that user's current stored GitHub login.
+It accepts only an invitation that names one of that user's stored verified emails.
 Sign-in alone does not accept an invitation.
-A membership-delete trigger invalidates that user's pending invites for the org, with a case-insensitive GitHub login match.
+A membership-delete trigger cancels the org's pending invitations that name one of the departing user's verified emails.
 
 Call `workspaceCreator` when the lifecycle creates a workspace.
 Store its ID in `owner_user_id` in the creation transaction.

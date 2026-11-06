@@ -39,6 +39,7 @@ The git credential payload is not defined yet.
 ## Key code
 
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
+- [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.

@@ -123,7 +123,7 @@ Each component keys its local state to the scope that it shows:
 | `DeleteOrgSection` | The org                                      |
 | `DeletedOrgPage`   | The org and the viewer's role                |
 
-When the scope changes, an open menu or question closes, a typed login and
+When the scope changes, an open menu or question closes, a typed email and
 an error go, and the component loads the data of the new scope. The answer
 of a request of the old scope changes nothing and calls no callback. So a
 callback always belongs to the scope that shows. The owner picker also uses
@@ -131,8 +131,8 @@ only the newest load of its members. The read-only tabs load again when the
 org changes, and drop the answers of an older load.
 
 The invite field sends one invite at a time. While an invite runs, Enter and
-Invite send nothing, and the field stays open for the next login. A sent
-invite clears the field only when the field still holds the login that went
+Invite send nothing, and the field stays open for the next email. A sent
+invite clears the field only when the field still holds the email that went
 out.
 
 ## The fake API
@@ -141,7 +141,7 @@ The dev page and the tests use `FakeApiServer` from
 [the browser fakes](../test-support/README.md). Its writes return recorded
 replies and change no later reply. So `dev/devServer.ts` records, before each
 write, the reply that the real API gives for the values of the request: the
-invited login, the new role, and the new owner. A new invite also gets its
+invited email, the new role, and the new owner. A new invite also gets its
 DELETE reply, so that the person can cancel it. With `people`, these replies
 use the generated members. So each of them can become the owner, get a new
 role, or be removed. `dev/devOrgs.ts` adds the

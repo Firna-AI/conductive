@@ -4257,17 +4257,31 @@ Depends on: 15a, 15c
 Apply decision 78. It must merge before Milestone 15i wires the
 acceptance route.
 
-- [ ] Change the contracts, the fakes, and the D1 schema so that an
-      invitation names an email in place of a GitHub login.
-- [ ] Send each invitation by email through the email service of decision
-      79. In development, a mailer writes the link to the log.
-- [ ] At sign-in, read the verified emails of the GitHub account, and show
+- [x] Change the contracts, the fakes, and the D1 schema so that an
+      invitation names an email in place of a GitHub login. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+- [x] Send each invitation by email through the email service of decision
+      79. In development, a mailer writes the link to the log. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+- [x] At sign-in, read the verified emails of the GitHub account, and show
       the pending invitations that name one of them. Cancel a departed
-      member's pending invitations.
-- [ ] Change the invite form of the members mockups and screens to an
-      email field.
-- [ ] Test with a fake GitHub that returns verified emails, and a fake
-      mailer.
+      member's pending invitations. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+- [x] Change the invite form of the members mockups and screens to an
+      email field. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+- [x] Test with a fake GitHub that returns verified emails, and a fake
+      mailer. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+
+Agent calls, 6 November 2026:
+
+- Keep verified emails in a private D1 table. Refresh them before a
+  browser session or a desktop handoff, so neither flow uses stale emails.
+- Keep a failed send pending for retry. Use the invitation ID and the
+  message digest for Resend idempotency, so identical retries keep their key.
+- Link to the app root with the invite ID in `?invite=`. Milestone 15i
+  connects the pending invitation reader and explicit acceptance to the shell.
+- Use the log mailer for loopback app origins and inject it in tests.
+  Other origins need `RESEND_API_KEY`, so a missing key cannot report delivery.
+
+Evidence: `.context/milestone-15g/` holds the delegated reports, test
+proofs, migration proof, and screenshots of both schemes and sizes.
 
 ## Milestone 15i: Feature wiring
 
