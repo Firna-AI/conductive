@@ -2794,6 +2794,10 @@ Added on 6 November 2026 from the Milestone 8 work.
 - **Chosen:** C, by the user on 6 November 2026. A stopped turn records
   the member who pressed Stop. The chat shows "Priya stopped the agent",
   or "You stopped the agent" to Priya.
+- **Agent call on 6 November 2026:** a turn that stops with no Stop
+  request, such as when the cloud computer stops, shows "The agent
+  stopped". Reason: such a stop has no member to name. The user can
+  override this text.
 
 ### 73. Decide the shape of the Rust backend
 
