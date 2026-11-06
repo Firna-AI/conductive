@@ -3848,13 +3848,13 @@ This milestone needs the prerequisites from the user.
 
 Depends on: 4a
 
-- [ ] Keep the file tree and the changes summary that the runner pushes in
+- [x] Keep the file tree and the changes summary that the runner pushes in
       the workspace Durable Object, and serve them to the Files and
-      Changes tabs, also while the cloud computer sleeps.
-- [ ] Read one file with a size limit, and one diff against the default
+      Changes tabs, also while the cloud computer sleeps. Branch: `conductor/boat-native-remote-workspaces-milestone-9`.
+- [x] Read one file with a size limit, and one diff against the default
       branch, through the runner. Use Boat's file read when the runner is
-      not connected.
-- [ ] Test both against the fake runner and the fake Boat server.
+      not connected. Branch: `conductor/boat-native-remote-workspaces-milestone-9`.
+- [x] Test both against the fake runner and the fake Boat server. Branch: `conductor/boat-native-remote-workspaces-milestone-9`.
 
 ## Milestone 10: Files UI
 
