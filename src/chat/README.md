@@ -67,6 +67,7 @@ agent runner.
   `Transcript.turnCompletions` keeps each completion event by turn ID, including stopped completions and `omittedFileCount`.
 - `Transcript.refusedEvents` keeps each session's refusal markers outside rendered items.
   Nullable turn context stays intact. Markers without a session stay outside per-session logs.
+  The chat state keeps no marker without a session yet.
 - Ordered history folding preserves these fields across completion and failure events.
   Their visible presentation remains work for Milestone 8j.
 - The chat loads the history of each session that becomes the shown session,
