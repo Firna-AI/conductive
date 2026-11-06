@@ -49,7 +49,7 @@ Rules for the bar:
 - When the pull request is ready to merge, "Open on GitHub" stands where a
   merge button would be.
 - After the merge, the bar offers Archive (decision 16). Only the workspace
-  owner and the org owners see it (decision 42).
+  owner and the admins see it (decision 42).
 - Each state shows an icon and words, never only a colour.
 - A state tints the whole bar. No edge of the bar gets its own colour.
 

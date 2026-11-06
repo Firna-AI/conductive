@@ -12,13 +12,14 @@ describes the structure that the [protocol docs](#protocol-docs) require.
 
 - **Org:** a group of people that owns workspaces, sections,
   repositories, an org image, and one Boat key.
-- **Org owner** and **member:** the two roles in an org. Each person in an
-  org has one of them.
+- **Admin** and **member:** the two roles in an org. Each person in an org
+  has one of them.
 - **Workspace:** one task in an org. It has one repository, one branch,
   one sandbox, and one or more sessions.
-- **Workspace owner:** the person whose agent logins the agents of a
-  workspace use. It is the person who created the workspace, until an org
-  owner reassigns it.
+- **Workspace owner:** the person who is responsible for a workspace. It is
+  the person who created the workspace, until an admin reassigns it.
+- **Sender:** the person who sent the message of a turn. The turn runs on
+  the agent login of its sender.
 - **Boat key:** the key of one Boat account. Each org has one, and every
   sandbox of the org runs on that account.
 - **Sandbox:** the Boat sandbox of one workspace. The product calls it a
@@ -129,8 +130,8 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
 
 - **GitHub App:** one app gives the sign-in, the repository access, and the
   webhooks of every org.
-- **Anthropic and OpenAI:** the model use of the agents bills to the
-  workspace owner's own Claude or OpenAI account.
+- **Anthropic and OpenAI:** the model use of each turn bills to the own
+  Claude or OpenAI account of its sender.
 - **Boat:** the Boat account of each org pays for its sandboxes and its
   saved snapshots. The app itself is free (decision 45).
 
@@ -154,8 +155,8 @@ hostname and of the preview domain are not chosen yet.
 1. The user sends the first message of a new workspace. The Worker records
    the workspace, and its Durable Object keeps the message.
 2. With the org's Boat key, the Worker asks Boat for a sandbox from the
-   newest good org image. The sandbox gets the workspace token, the org's
-   env vars, and the workspace owner's agent logins.
+   newest good org image. The sandbox gets the workspace token and the
+   org's env vars, but no agent login.
 3. The Durable Object pushes each start step to the open tabs.
 4. The agent runner starts and connects to the Durable Object. The Durable
    Object sends it the waiting message.
@@ -163,7 +164,7 @@ hostname and of the preview domain are not chosen yet.
 ### Chat
 
 1. A tab sends a message to the Worker. The Durable Object forwards it to
-   the agent runner.
+   the agent runner, with the agent login of its sender.
 2. The runner gives it to the agent through the SDK. It numbers each agent
    event and sends it to the Durable Object.
 3. The Durable Object stores each event, confirms it to the runner, and
@@ -213,10 +214,12 @@ hostname and of the preview domain are not chosen yet.
   a sandbox or to the browser.
 - Sandbox code is untrusted. Agents write and run it, and previews show it
   only on the preview domain.
-- A sandbox gets none of the secrets of its Boat account. It gets only the
-  secrets of its workspace, its org, and its workspace owner.
-- Open decision 49 sets how far the members of one org stay apart from
-  each other's agent logins.
+- A sandbox gets none of the secrets of its Boat account. At a start, it
+  gets only the secrets of its workspace and its org.
+- During a turn, the sandbox also holds the agent login of the sender. The
+  members of one org can reach that login, as
+  [Access and security](protocol/access-and-security.md#agent-logins-in-a-sandbox)
+  says.
 
 ## Decision numbers
 

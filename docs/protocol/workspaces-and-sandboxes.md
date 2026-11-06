@@ -66,8 +66,6 @@ says.
   starts with no secrets of a Boat environment.
 - [Access and security](access-and-security.md#secrets-that-users-enter)
   says how the app keeps the values.
-- Open decision 49 sets who may edit the install script, the startup
-  script, and the env vars.
 
 ## Create a workspace
 
@@ -77,9 +75,12 @@ says.
   [Chat and events](chat-and-events.md#messages) says.
 - A new workspace starts from the newest good org image. It then creates
   its branch in the folder of its repository.
-- The branch name is a prefix, then a city name and four random
-  characters, such as `<prefix>/lisbon-7k2q`. Open decision 53 sets the
-  prefix.
+- The branch name starts with the GitHub login that the workspace owner has
+  at the create (decision 53).
+- A city name and four random characters follow, such as
+  `calummoore/lisbon-7k2q`.
+- Reason: a GitHub login is unique, so the branches of each person stay
+  together. A first name was rejected, because two people can share one.
 - The workspace name starts as the city name.
   [Chat and events](chat-and-events.md#messages) says how the agent's title
   then renames it.

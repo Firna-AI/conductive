@@ -17,8 +17,23 @@ says.
   token in place of a sign-in.
 - The app sets no limit of its own on the workspaces that agents create
   (decision 8). The plan limits of the org's Boat account apply.
-- Open decision 52 sets what a create call takes, what the new workspace
-  gets, and what a list call returns.
+- A workspace that an agent creates starts with no approval step in the
+  app.
+
+## Create and list calls
+
+- A create call takes a repository of the same org and a first message
+  (decision 52).
+- A create call can also choose the model, and with it the agent. It can
+  also choose the effort and the section.
+- The new workspace gets the org and the workspace owner of the calling
+  workspace.
+- Without a choice in the call, the new workspace gets the default section
+  and the default model of its workspace owner.
+- The agent of the new workspace starts on the first message at once.
+- A list call returns every workspace of the org, with its name, its
+  branch, and its state. Reason: every member of the org already sees
+  these workspaces.
 
 ## Computer tools
 

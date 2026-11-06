@@ -47,8 +47,6 @@ says.
   pass-through to Boat.
 - [Orgs and members](orgs-and-members.md#members-and-roles) states the
   rules of each role.
-- Open decision 49 sets what a member may do in a workspace that another
-  member owns.
 
 ## Boat keys
 
@@ -59,21 +57,36 @@ says.
   Reason: a Boat key gives access to a whole Boat account.
 - The Boat key screen asks for a key that is limited to one Boat
   environment and to the actions that the app uses.
-- The app tests a Boat key once, when the org owner saves it.
+- The app tests a Boat key once, when an admin saves it.
 
 ## What a sandbox holds
 
 - Every sandbox starts with Boat's `noEnv` setting, so it gets none of the
   secrets of its Boat account.
-- A sandbox gets only these secrets:
-  - its workspace token
-  - the env vars of its org
-  - the agent logins of its workspace owner
+- At a start, a sandbox gets only two secrets: its workspace token and the
+  env vars of its org.
 - The sandbox gets them at create and at each resume. A changed secret
   applies at the next start.
 - No saved snapshot holds these secrets. Builds and refreshes get none of
   them.
+- A sandbox gets no agent login at a start. The next section says how a
+  turn gets its login.
 - GitHub access reaches a sandbox only through the git credential helper.
+
+## Agent logins in a sandbox
+
+- Each turn runs on the agent login of its sender (decision 49).
+- With each turn, the agent runner gets the login of the sender over its
+  connection to the Durable Object. Reason: the sandbox gets its secrets
+  only at a start, and each turn can have another sender.
+- The runner never writes a login to disk.
+- Risk: a member with a terminal in the same sandbox can read the login of
+  the turn that runs now. Every other process in the sandbox can read it
+  too, such as a tool of the agent or a server that the startup script
+  started.
+- So the members of one org trust each other with the logins of their
+  running turns. A proxy that keeps every login out of the sandbox was
+  rejected, because it is a much larger build.
 
 ## The workspace token
 
@@ -91,7 +104,7 @@ says.
 - Reason: a GitHub App user token expires after 8 hours, and the secrets
   of a sandbox change only at a resume.
 - Open decision 50 sets which repositories the token reaches, and whether
-  it acts as the workspace owner or as the app.
+  it acts as a person or as the app.
 
 ## Secrets that users enter
 
@@ -115,8 +128,8 @@ says.
 - A sign-in inside a sandbox was rejected, because the login would stay on
   the disk of one workspace.
 - A user's agent logins serve all of that user's orgs (decision 21).
-- The app gives the logins only to the sandboxes of the workspaces that
-  the user owns.
+- The app gives a user's login to a sandbox only for a turn that the user
+  sent.
 
 ## Terminal
 

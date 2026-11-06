@@ -20,8 +20,15 @@ says.
 - Claude runs through the Claude Agent SDK. Codex runs through the Codex
   SDK when that SDK can interrupt a turn and stream partial text. Otherwise
   Codex runs through the Codex App Server.
-- The agents of a workspace use the agent logins of its workspace owner
-  (decision 24).
+- Every member of the org can send messages in each of its workspaces.
+- Each turn runs on the agent login of its sender, the person who sent the
+  message (decision 49).
+- A turn on the login of the workspace owner was rejected, because one
+  member could then spend the login of another member.
+- When the next turn has another sender, the agent runs with the login of
+  that sender. The session keeps its history.
+- [Access and security](access-and-security.md#agent-logins-in-a-sandbox)
+  states how a login reaches the sandbox, and its risk.
 - A session keeps its memory across a stop and a resume of the sandbox.
 
 ## Names in the product
@@ -59,14 +66,18 @@ says.
 
 - The composer chooses the model and the effort of each message, and with
   the model its agent (decision 19).
-- Open decision 51 sets what happens when a message picks a model of the
-  other agent in a session.
+- A change to another model of the same agent stays in the session
+  (decision 51).
+- A model of the other agent opens a new session with that agent, and the
+  draft moves there.
+- Reason: neither SDK can switch agents inside one session. A hand-over of
+  the transcript to the other agent was rejected. The user chose the way
+  that Conductor works.
 - The composer attaches files to a message.
 - The composer shows a notice when the org has no Boat key (decision 33).
+  A Boat key that Boat refuses counts as no key.
 - The composer shows a notice when the user has no login for the agent of
   the chosen model.
-- Open decision 49 sets whether a member may send messages in a workspace
-  that another member owns.
 - The app accepts a message before the sandbox is ready. The workspace
   keeps the message, and gives it to the agent when the sandbox is ready
   (decision 14).
@@ -131,6 +142,6 @@ says.
 - A dropped connection loses no event. A resent event shows once.
 - The Durable Object forwards each message, each message during a turn,
   each interrupt, and each change of the model or the effort to the runner.
-- The runner starts the agent program as soon as the runner starts. Reason:
-  in the test of decision 36, the first start of the agent after a resume
-  took 6 to 8 seconds.
+- Each turn also brings the login of its sender, as
+  [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox)
+  says.

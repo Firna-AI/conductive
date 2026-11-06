@@ -25,8 +25,8 @@ says.
 
 - Each org has one Boat key. Every sandbox and the org image of the org
   run on that Boat account (decision 46).
-- An org owner adds the key on the Boat key screen of the org settings.
-  Open decision 54 asks whether an admin role can add it too.
+- An admin adds the key on the Boat key tab of the org settings. Only
+  admins see that tab.
 - The Boat key screen names Boat, and links to Boat's sign-up page and to
   its key page (decision 47).
 - A new key must reach the same Boat account as the old key. The key
@@ -40,8 +40,13 @@ says.
 ## Get started
 
 - Get started is the only first run.
-- It has steps that install the GitHub App, create the first org, add the
-  org's Boat key, and connect Claude or Codex (decision 33).
+- It has four steps, in this order (decision 33):
+  1. Install the GitHub App.
+  2. Create the first org.
+  3. Add the org's Boat key.
+  4. Connect Claude or Codex.
+- Reason for the order: the Boat key belongs to the org, so the org comes
+  first.
 - Get started says that users need their own Boat account (decision 47).
 - [Chat and events](chat-and-events.md#messages) states the notice for a
   missing Boat key or a missing agent login.
@@ -66,56 +71,64 @@ says.
 
 - Orgs have members, so that a workspace can move from one member to
   another.
-- The roles are owner and member. Open decision 54 asks whether orgs get an
-  admin role.
-- An org owner invites a person by GitHub login.
-- Only an org owner invites and removes members, changes a role, reassigns
-  a workspace, adds the Boat key, and deletes the org.
+- The roles are admin and member, as in Conductor (decision 54). An org
+  can have several admins.
+- A separate owner role above the admins was rejected, because several
+  admins already give an org more than one manager.
+- An admin invites a person by GitHub login.
+- Only an admin invites and removes members, changes a role, reassigns a
+  workspace, adds the Boat key, and deletes the org.
 - Every member of the org sees all of its workspaces (decision 39).
-- A member who is not an owner sees the Members tab and the owner of each
-  workspace, without the actions of an owner.
-- Only the workspace owner and the org owners can archive a workspace
+- Every member can send messages in every workspace of the org. Each turn
+  runs on the login of its sender, as
+  [Chat and events](chat-and-events.md#agents) says.
+- A member who is not an admin sees the Members tab and the owner of each
+  workspace, without the actions of an admin.
+- Only the workspace owner and the admins can archive a workspace
   (decision 42).
 - Archive by every member was rejected, because a member could then delete
   the sandbox and the unpushed work of another member.
-- Open decision 49 sets what a member may do in a workspace that another
-  member owns, and who may edit the scripts of the org.
 
 ## Workspace owners
 
-- Each workspace belongs to the person who created it, until an org owner
-  reassigns it (decision 24).
-- The agents of a workspace use the agent logins of its workspace owner.
-  Model use on an account of the app was rejected, because each workspace
-  owner's own account pays.
+- The workspace owner is the person who is responsible for the workspace
+  (decision 24).
+- Each workspace belongs to the person who created it, until an admin
+  reassigns it.
 - The header of a workspace names its workspace owner.
-- Reassigning a workspace stops its sandbox first. Reason: a sandbox gets
-  the logins of the new owner only at its next start.
+- Model use on an account of the app was rejected. Each turn runs on the
+  own login of its sender.
 
 ## When a member leaves
 
-- When a member leaves, or an org owner removes them, their workspaces
-  stay in the org (decision 39).
-- The workspaces move to the org owner who removed the member. When the
-  member left alone, they move to the earliest owner of the org.
-- Reason: the agents must not keep using the logins of a person who left.
-  The same reason rejects a person who left as a workspace owner.
-- Open decision 55 sets what happens when the last owner leaves.
+- When a member leaves, or an admin removes them, their workspaces stay in
+  the org (decision 39).
+- The workspaces move to the admin who removed the member. When the member
+  left alone, they move to the earliest admin of the org.
+- Reason: each workspace keeps a person in the org who is responsible for
+  it.
+- The last admin can leave only after they make another member an admin,
+  or by deleting the org (decision 55). This also holds when the last
+  admin deletes their account.
+- Reason: the org always keeps someone who can manage it. The person who
+  leaves chooses the next admin, so nobody gets the role by surprise.
+- An automatic admin role for the earliest member was rejected for that
+  reason.
 
 ## Delete org
 
 - Delete org asks for the name of the org.
 - It stops every sandbox of the org and hides the org at once
   (decision 30).
-- The app deletes everything of the org after 7 days, unless an org owner
+- The app deletes everything of the org after 7 days, unless an admin
   restores the org.
 - Reason: the work of every member stays safe for 7 days, and a stopped
   sandbox costs no machine time.
-- A delete at once was rejected, because an owner could then delete the
+- A delete at once was rejected, because an admin could then delete the
   unpushed work of a member.
 - The delete also removes the saved snapshots of the org, with the org
   image.
-- For 7 days, the deleted org stays faded in the rail of its owners, and
-  its page offers Restore. Its members cannot open it.
+- For 7 days, the deleted org stays faded in the rail of its admins, and
+  its page offers Restore. Its other members cannot open it.
 - Restore brings the org back as it was. Its workspaces start again when
   they open.
