@@ -1,31 +1,21 @@
-import type { ReactNode } from 'react'
-import { Spinner } from '@firna/ui/spinner'
-import { useSharedUiTheme } from '@firna/ui/theme'
-import { CircleAlert, MessageSquarePlus } from 'lucide-react'
 import type { Agent } from '../../shared/agents'
 import type { WorkspaceState } from '../../shared/workspaces'
-import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
-import waitStyles from '../../../docs/mockups/src/components/workspace/SandboxNotice.module.css'
 import { sendBlock } from '../state/blockers'
 import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { modelLabel } from '../state/format'
-import { ActionButton } from '../ui/actions'
 import { ChatPane } from './ChatPane'
 import { ActionNotice, BlockNotice } from './ChatNotices'
 import { Composer } from './Composer'
 import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
+import {
+  EarlierLoading,
+  emptyView,
+  historyStatus,
+  HistoryFailure,
+  showsContent,
+} from './SessionStatus'
 import { TranscriptView } from './TranscriptView'
-
-function Waiting(props: { text: string }) {
-  const theme = useSharedUiTheme()
-  return (
-    <div className={waitStyles.waiting}>
-      <Spinner color={theme.colors.muted} size={13} />
-      {props.text}
-    </div>
-  )
-}
 
 function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
   return state === 'stopped' || state === 'error' || state === 'archived'
@@ -43,64 +33,12 @@ export interface SessionChatProps {
   onAddBoatKey?: () => void
 }
 
-function emptyView(props: SessionChatProps): ReactNode {
-  const { snapshot, controller } = props
-  const { load, workspace } = snapshot
-  const id = snapshot.activeSessionId
-  if (load.state === 'failed') {
-    return (
-      <EmptyState
-        action={
-          <ActionButton onPress={controller.start}>Try again</ActionButton>
-        }
-        body={load.message}
-        icon={CircleAlert}
-        title="The chat didn't load"
-      />
-    )
-  }
-  if (load.state === 'loading' || !workspace)
-    return <Waiting text="Loading the chat" />
-  if (!id) {
-    return (
-      <EmptyState
-        body="Start a session with +, or reopen one from the session history."
-        icon={MessageSquarePlus}
-        title="No open session"
-      />
-    )
-  }
-  const state = sessionState(snapshot, id)
-  if (state.transcript.items.length > 0 || state.pending.length > 0) return null
-  if (state.transcript.turn || workspace.state === 'starting') return null
-  if (state.hydration === 'loading')
-    return <Waiting text="Loading the session" />
-  if (state.hydration === 'failed') {
-    return (
-      <EmptyState
-        action={
-          <ActionButton onPress={() => void controller.loadHistory(id)}>
-            Try again
-          </ActionButton>
-        }
-        icon={CircleAlert}
-        title="This session didn't load"
-      />
-    )
-  }
-  return (
-    <EmptyState
-      body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
-      icon={MessageSquarePlus}
-      title="New session"
-    />
-  )
-}
-
 /**
  * The chat of the open session: its history, with the start steps while the
  * sandbox starts, and under it the notices and the composer, or the bar that
- * takes the composer's place while the sandbox does not run.
+ * takes the composer's place while the sandbox does not run. The status of
+ * the stored history comes from its load alone, so content never hides a
+ * failed load.
  */
 export function SessionChat(props: SessionChatProps) {
   const { snapshot, controller, now } = props
@@ -118,8 +56,16 @@ export function SessionChat(props: SessionChatProps) {
   const hasMessages =
     state.pending.length > 0 ||
     state.transcript.items.some((item) => item.kind === 'user')
+  const status = historyStatus(state)
+  const content = showsContent(state, workspace)
   const footer = (
     <>
+      {id && content && status === 'failed' ? (
+        <HistoryFailure
+          besideContent
+          onRetry={() => void controller.loadHistory(id)}
+        />
+      ) : null}
       {shownNotice ? (
         <ActionNotice
           notice={shownNotice}
@@ -170,6 +116,7 @@ export function SessionChat(props: SessionChatProps) {
   )
   return (
     <ChatPane empty={emptyView(props)} footer={footer} mobile={props.mobile}>
+      {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView
         now={now}
         onOpenDiff={props.onOpenDiff}

@@ -1,58 +1,17 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { ACCOUNT_PATHS } from '../../shared/account'
-import { boatKeyPath } from '../../shared/api'
 import { sessionPaths } from '../../shared/sessions'
-import type { FakeApiOptions, FakeApiServer } from '../../test-support/fake-api'
 import {
   coreFixtures,
   FAKE_IDS,
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
 import { blankDraft } from '../state/chat-snapshot'
-import { chatFor } from '../state/test-kit'
 import { historyEntries } from './ChatOverlays'
 import { Composer } from './Composer'
-import { SessionChat } from './SessionChat'
+import { renderChat, textOf } from './render-kit'
 import { SessionTabs } from './SessionTabs'
-
-const now = FAKE_TIME + 161_000
-
-/** The text of rendered markup, with each tag as a space. */
-function textOf(html: string): string {
-  return html
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&#x27;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, '&')
-    .replace(/\s+/g, ' ')
-}
-
-async function renderChat(
-  options: FakeApiOptions & {
-    key?: boolean
-    setup?: (server: FakeApiServer) => void
-  },
-) {
-  const chat = chatFor(options)
-  if (options.key === false) {
-    chat.server.json('GET', boatKeyPath(FAKE_IDS.org), { configured: false })
-  }
-  options.setup?.(chat.server)
-  await chat.controller.start()
-  const markup = () =>
-    renderToStaticMarkup(
-      <SessionChat
-        controller={chat.controller}
-        mobile={false}
-        now={now}
-        onAddBoatKey={() => {}}
-        onConnectAgent={() => {}}
-        snapshot={chat.controller.getSnapshot()}
-      />,
-    )
-  return { chat, markup, text: () => textOf(markup()) }
-}
 
 describe('SessionChat', () => {
   it('keeps the stored chat in each sandbox state: Resume while stopped, and the composer while the workspace needs input', async () => {

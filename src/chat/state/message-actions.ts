@@ -3,6 +3,11 @@ import { sendBlock } from './blockers'
 import { sessionState, withSession, type SessionState } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { afterSend, changeDraft, draftIdOf, holderOf } from './drafts'
+import {
+  applyWorkspaceIfNewest,
+  beginChange,
+  WORKSPACE_RECORD,
+} from './session-records'
 import { toUpload } from './uploads'
 
 function change(
@@ -162,23 +167,22 @@ export async function interruptTurn(
   }
 }
 
-/** Resume, or Try again after a failed start, starts the sandbox. */
+/**
+ * Resume, or Try again after a failed start, starts the sandbox. Its reply
+ * shows the workspace and the start steps only while no newer event of the
+ * workspace came, and the button is free again in every case.
+ */
 export async function resumeWorkspace(context: ChatContext): Promise<void> {
   if (context.store.get().resuming) return
+  const version = beginChange(context, WORKSPACE_RECORD)
   context.store.update((snapshot) => ({ ...snapshot, resuming: true }))
   try {
-    const detail = await context.api.resume()
-    if (!context.live()) return
-    context.store.update((snapshot) => ({
-      ...snapshot,
-      workspace: detail.workspace,
-      start: detail.start,
-      resuming: false,
-    }))
+    applyWorkspaceIfNewest(context, await context.api.resume(), version)
   } catch (error) {
+    showNotice(context, null, "The sandbox didn't start", error)
+  } finally {
     if (context.live()) {
       context.store.update((snapshot) => ({ ...snapshot, resuming: false }))
     }
-    showNotice(context, null, "The sandbox didn't start", error)
   }
 }

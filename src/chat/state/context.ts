@@ -10,7 +10,11 @@ import {
   SessionLog,
   type ChatEnvelope,
 } from './session-log'
-import { beginChange } from './session-records'
+import {
+  beginChange,
+  WORKSPACE_RECORD,
+  type RecordKey,
+} from './session-records'
 import { placeSession } from './sessions'
 import type { Transcript } from './transcript'
 
@@ -23,8 +27,8 @@ export interface ChatContext {
   readonly logs: Map<string, SessionLog>
   /** The running history load of each session, so that loads are shared. */
   readonly loading: Map<string, Promise<number | null>>
-  /** The local version of each session record, as `session-records.ts` says. */
-  readonly versions: Map<string, number>
+  /** The local version of each record, as `session-records.ts` says. */
+  readonly versions: Map<RecordKey, number>
   /** The number of the latest model pick of each session. */
   readonly picks: Map<string, number>
   readonly newId: () => string
@@ -99,10 +103,16 @@ function lastRecords(
   return records
 }
 
+const changesWorkspace = (event: StreamEnvelope['event']) =>
+  event?.type === 'workspace.updated' ||
+  event?.type === 'workspace.title' ||
+  event?.type === 'start.updated'
+
 /**
  * Applies workspace stream events in order: chat events to the log of their
  * session, and records of the workspace, its start, and its sessions. A
- * session record from the stream starts a new version of its session, so an
+ * record from the stream starts a new version of its session, and an event
+ * of the workspace or its start a new version of the workspace record, so an
  * older reply no longer applies.
  */
 export function applyEnvelopes(
@@ -122,6 +132,9 @@ export function applyEnvelopes(
   )
   const records = lastRecords(envelopes)
   for (const id of records.keys()) beginChange(context, id)
+  if (envelopes.some(({ event }) => changesWorkspace(event))) {
+    beginChange(context, WORKSPACE_RECORD)
+  }
   context.store.update((snapshot) => {
     let next = snapshot
     for (const { event } of envelopes) {

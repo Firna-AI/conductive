@@ -58,13 +58,20 @@ agent runner.
   whatever changed the selection: a click, an action, or a record from the
   stream. One load runs at a time for each session, and a failed load waits
   for Try again or for the next selection.
+- The status of the stored history comes from its load alone. A chat with
+  content, such as live messages, a sent message, a running turn, or the
+  start steps, keeps it and shows a failed load as a notice by the composer,
+  with Try again. An empty chat shows the failure in place of the chat.
 - Each draft has an identity. When a model of the other agent moves the draft
   to a new session, its files that still upload and its send in flight
   finish on the draft there.
-- Session records carry no order from the server, so the chat counts a local
-  version for each session. A newer action or a record from the stream wins
-  over an older reply or rollback. The steps after an action, such as a view
-  save or the focus, still run when its reply record is older.
+- Session records and the workspace record carry no order from the server,
+  so the chat counts a local version for each session and one for the
+  workspace record with its start steps. A newer action or stream event wins
+  over an older reply or rollback. So a Resume reply never hides a newer
+  state from the stream, such as a failed start with its Try again. The steps
+  after an action, such as a view save, the focus, or a free Resume button,
+  still run when its reply is older.
 - The chat loads the session list and the view, then the full history of the
   shown session, then the workspace and the session list again. The stream
   starts after the history's `throughEventNumber`, so no change between the
@@ -131,7 +138,10 @@ on `FakeApiServer` and the recorded events, and render the chat with
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
-- `state/session-records.ts`: the local versions of the session records.
+- `state/session-records.ts`: the local versions of the session records and
+  of the workspace record.
+- `components/SessionStatus.tsx`: the empty views and the history status of
+  a session.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
   and the reconnect of the workspace stream.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
