@@ -7,14 +7,15 @@ computer. It replaces Conductor Cloud, which shuts down on 20 November 2026.
 
 ## Status
 
-The app has no product features yet. Today the repository holds:
+The web app has a minimal page. The Worker has GitHub sign-in, org records,
+and an encrypted Boat key store. Today the repository holds:
 
 - the [architecture doc](docs/architecture.md) and the protocol docs, which
   state the requirements
 - the [mockup catalogue](docs/mockups/README.md), which draws every screen
   at phone and desktop sizes
-- the app package: a minimal web page, a Worker with one health route, one
-  test, and the complete gate, which GitHub Actions runs
+- the app package, with tests against fake GitHub and Boat servers and
+  local D1 storage, and the complete gate, which GitHub Actions runs
 
 The app has no deployment yet.
 
@@ -23,7 +24,7 @@ The app has no deployment yet.
 These features are planned. The protocol docs state each one.
 
 - Sign in with GitHub. The product is free.
-- Each org runs on its own Boat account, with a Boat key that an org owner
+- Each org runs on its own Boat account, with a Boat key that an org admin
   adds.
 - A new workspace starts as an empty chat. The first message creates it,
   with its own cloud computer and branch.
@@ -48,24 +49,39 @@ These features are planned. The protocol docs state each one.
 
 ## Get started
 
-The package includes a minimal React app, a local Cloudflare Worker, and
-the mockup catalogue. The app has no product features yet.
+The package includes a minimal React app, the Worker core, and the mockup
+catalogue. The product screens are not built yet.
 
 1. Install Node 24, as `.nvmrc` says. The
    [mockups README](docs/mockups/README.md#commands) lists the Node
    versions that Mokly refuses.
 2. Run `npm install`. The `.npmrc` file sets `legacy-peer-deps`, which
    `@firna/ui` needs.
-3. Run `npm run dev`, and open `http://127.0.0.1:5173`.
-4. Open `http://127.0.0.1:5173/api/health` to check the Worker. It returns
+3. Run `npm run db:migrate` to create the local D1 tables.
+4. Run `npm run dev`, and open `http://127.0.0.1:5173`.
+5. Open `http://127.0.0.1:5173/api/health` to check the Worker. It returns
    `{"status":"ok"}`.
-5. Run `npm run check` before you submit a change.
+6. Run `npm run check` before you submit a change.
 
 Local development needs no Cloudflare account. Wrangler provides local D1
 and Durable Object storage under `.wrangler/`. The D1 ID in
 `wrangler.jsonc` is a placeholder. Deployment must set a real database ID.
 This setup creates no Cloudflare resources and includes no deploy command.
 Put local secrets in `.dev.vars`, which Git ignores.
+
+GitHub sign-in also needs these values in `.dev.vars`:
+
+| Name | Value |
+| --- | --- |
+| `APP_ORIGIN` | `http://127.0.0.1:5173` for local development |
+| `GITHUB_CLIENT_ID` | The GitHub App's client ID |
+| `GITHUB_CLIENT_SECRET` | The GitHub App's client secret |
+| `SESSION_SIGNING_KEY` | 32 random bytes, encoded as Base64 |
+| `BOAT_KEY_ENCRYPTION_KEY` | A separate 32 random bytes, encoded as Base64 |
+
+Keep the client secret and both keys as Worker secrets when deployment is
+set up. Open `/api/auth/github` to start sign-in. No GitHub App is registered
+yet. Automated tests use fakes and need no credentials.
 
 Worker types come from `wrangler.jsonc`. The type check generates them
 under `.wrangler/`, which Git also ignores.
@@ -77,6 +93,7 @@ under `.wrangler/`, which Git also ignores.
 | `npm run preview`           | Serve the built app and local Worker at port 5174              |
 | `npm run typecheck`         | Generate Worker types, then check the app, Worker, and tools   |
 | `npm run test`              | Run the Vitest tests                                           |
+| `npm run db:migrate`        | Apply the D1 migrations to local storage                       |
 | `npm run file-length:check` | Check the 300-line limit of JavaScript and TypeScript files     |
 | `npm run check`             | Run every check, including the app build and the mockup checks |
 | `npm run mockups:serve`     | Serve the catalogue at `http://127.0.0.1:4173`, and watch edits |
@@ -98,8 +115,14 @@ GitHub Actions uses `.nvmrc`, installs with `npm ci`, and runs
 - `docs/mockups/src/brand.ts`: the product name, which every screen reads.
 - `mokly.config.json`: the Mokly configuration.
 
-The web app will live under `src/`, and the Cloudflare Worker under
-`worker/`.
+- `worker/app.ts`: the Worker's HTTP entry point.
+- `worker/security/`: GitHub sign-in, signed sessions, and the request gate.
+- `worker/data/`: D1 queries for users, orgs, sessions, and encrypted keys.
+- `worker/sandbox/`: the typed Boat adapter and the encrypted key store.
+- `src/shared/api.ts`: the API paths and response types that the app shares.
+- `migrations/`: the D1 schema migrations.
+
+The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
 
 ## Docs
 

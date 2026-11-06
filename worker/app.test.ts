@@ -4,7 +4,7 @@ import { HEALTH_PATH } from '../src/shared/health'
 import { app } from './app'
 
 it('returns JSON health when the API receives a GET request', async () => {
-  const response = app.fetch(
+  const response = await app.fetch(
     new Request(`https://conducting.test${HEALTH_PATH}`),
   )
 

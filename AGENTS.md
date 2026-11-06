@@ -3,12 +3,13 @@
 This repository builds Conducting, a browser-only coding tool at
 `conducting.build`. Each workspace is one task with its own branch and its own
 cloud computer, a Boat sandbox, where agents powered by Claude and Codex
-work. The app has its package setup but no product features yet. The
+work. The app has a minimal page and the Worker core. The product screens
+are not built yet. The
 requirements live in
 `docs/architecture.md` and `docs/protocol/`, and the Mokly mockup catalogue
 lives in `docs/mockups/`, in TypeScript and React with `@firna/ui`. The app
-will be one npm package. Its React and Vite web app will live under `src/`,
-and its Cloudflare Worker with Durable Objects and D1 under `worker/`.
+is one npm package. Its React and Vite web app lives under `src/`, and its
+Cloudflare Worker with Durable Objects and D1 lives under `worker/`.
 
 This file holds the rules that are specific to this repository. The
 always-on rules and the detailed procedures live in the shared skills from
@@ -58,7 +59,8 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
 - Build preview: `npm run preview`. It serves the built app and the local
   Worker at `http://127.0.0.1:5174`. The mockup preview uses port 4173.
 - Targeted tests: `npm run test -- worker/app.test.ts`. Vitest runs the
-  health route test in Node. Tests live beside the code as `*.test.ts`.
+  Worker tests in Node, with local D1 and fake GitHub and Boat servers.
+  Tests live beside the code as `*.test.ts`.
 - Typecheck: `npm run typecheck`. It generates the Worker binding and
   runtime types under `.wrangler/`, then checks the app, Worker, and tools.
   Use `npm run mockups:typecheck` for the mockups.
@@ -97,8 +99,8 @@ GitHub Actions runs `npm run check` on each push and pull request, from
   Write "agents powered by Claude and Codex", as
   [Names in the product](docs/protocol/chat-and-events.md#names-in-the-product)
   says.
-- Name Boat in user-facing text only on the Boat key screen, on the
-  marketing site, and in Get started. Elsewhere, write "cloud computer" or
+- Name Boat in user-facing text only on the Boat key screen and its tab, on
+  the marketing site, and in Get started. Elsewhere, write "cloud computer" or
   "sandbox", as [The provider](docs/protocol/workspaces-and-sandboxes.md#the-provider)
   says.
 
@@ -110,7 +112,7 @@ GitHub Actions runs `npm run check` on each push and pull request, from
 - Mockup screens live in `docs/mockups/src/screens/`, and their shared
   parts in `docs/mockups/src/components/`. Check `@firna/ui` first, then
   those parts, before you create a component.
-- The screens of the app will live under `src/`.
+- The screens of the app live under `src/`.
 
 ## Review focus
 
@@ -128,7 +130,7 @@ GitHub Actions runs `npm run check` on each push and pull request, from
 
 ## Status
 
-- This project is not in production. The app has a minimal page, one
-  health route, and one test, and no product features yet.
+- This project is not in production. The app has a minimal page. The
+  Worker has GitHub sign-in, org records, and an encrypted Boat key store.
 - Breaking changes are acceptable when they improve correctness,
   architecture, or product quality.

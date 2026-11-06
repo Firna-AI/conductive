@@ -1,14 +1,4 @@
-import { HEALTH_PATH, type HealthResponse } from '../src/shared/health'
+import { createApp } from './application'
+import type { AppEnv } from './env'
 
-export const app = {
-  fetch(request: Request): Response {
-    if (
-      request.method === 'GET' &&
-      new URL(request.url).pathname === HEALTH_PATH
-    ) {
-      return Response.json({ status: 'ok' } satisfies HealthResponse)
-    }
-
-    return new Response('Not found', { status: 404 })
-  },
-} satisfies ExportedHandler<Env>
+export const app = createApp() satisfies ExportedHandler<AppEnv>
