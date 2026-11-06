@@ -2329,6 +2329,48 @@ Added on 6 November 2026 from the Milestone 2a docs.
   that no decision covers.
 - **Chosen:** B, by the user on 6 November 2026.
 
+### 58. Decide how to run more of the build at once
+
+Added on 6 November 2026 from the user's question: "the plan seems very
+linear, can we not do it more in parallel?" The brainstorm notes are in
+`.context/parallel-build/notes.md`.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design. **Category:** Process.
+- **Background:** Every feature milestone waited for Milestones 4 and 5,
+  and each screen milestone also waited for its backend. The longest
+  chain ran 4, 5, 7, 8, then 16. Conductor Cloud goes read-only on 13
+  November 2026.
+- **Root question:** How do we get to a working Conducting sooner by
+  building more parts at the same time?
+- **Options:**
+  - **A.** Keep the order, and run side by side only after Milestones 5
+    and 6. Effort: Small.
+  - **B.** A short contracts milestone after Milestone 4, then every
+    backend and screen milestone at once against fakes, then wiring.
+    Effort: Medium.
+  - **C.** Features cut as backend plus screens, built side by side after
+    a shared core. Effort: Medium.
+  - **D.** As B, with the chat path in the first wave and a first
+    deployment of it. Effort: Medium.
+- **Left out:** Stacked branches that start before their dependencies
+  merge, because the delegating rules forbid it.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 6 November 2026.
+
+### 59. Decide how many workspaces may run at once
+
+Added on 6 November 2026 with decision 58.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Process.
+- **Options:** **A.** Up to 3. **B.** Up to 5. **C.** Every milestone that
+  is ready to start.
+- **Recommendation:** B.
+- **Chosen:** C, by the user on 6 November 2026.
+- **Agent call on 6 November 2026:** the orchestrator reviews and merges
+  the chat path first: Milestones 5, 6, 7, 7r, 8, and 8i.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -3019,9 +3061,31 @@ Depends on: 3
 - [ ] Add the membership check and the `Origin` check.
 - [ ] Test the client and the checks against a fake Boat server.
 
-## Milestone 5: Bases and workspace lifecycle
+## Milestone 4a: Contracts
 
 Depends on: 4
+
+Fix the interfaces that let the later milestones build at the same time,
+as decision 58 says.
+
+- [ ] Define the API types between the web app and the Worker for every
+      feature milestone, in `src/shared/`.
+- [ ] Define the message types between the agent runner and the workspace
+      Durable Object: the protocol version, the event numbers, and the
+      confirm and resend rules.
+- [ ] Write the D1 tables that every feature milestone needs. Give each
+      later milestone its own range of migration numbers.
+- [ ] Define the Worker's host routing: the marketing site at the root
+      domain, the app at `app.`, and the hostname for machines.
+- [ ] Add a fake API server and recorded chat events, so that each screen
+      milestone builds without its backend.
+- [ ] Add a fake runner, so that the Durable Object builds without a cloud
+      computer.
+- [ ] Run the complete gate.
+
+## Milestone 5: Bases and workspace lifecycle
+
+Depends on: 4a
 
 - [ ] Build the org image from the install script and the chosen
       repositories, keep the build history, and refresh the image after
@@ -3040,13 +3104,16 @@ Depends on: 4
 - [ ] Count user activity as decision 29 says, and stop after 30 minutes
       without activity or a running agent turn.
 - [ ] Add the git credential helper to the org image, and the Worker's
-      token route behind the workspace token.
+      token route behind the workspace token. The token's reach waits for
+      decision 50.
 
 ## Milestone 6: App shell and workspaces
 
 Tags: ui
 
-Depends on: 5
+Depends on: 4a
+
+It builds against the fake API of Milestone 4a. Milestone 8i wires it.
 
 - [ ] Build the app shell, the workspace list, and the sandbox states,
       with the starting card and its steps.
@@ -3059,9 +3126,9 @@ Depends on: 5
 - [ ] Build the account page with the stored agent logins, and the org
       settings with the Boat key screen.
 
-## Milestone 7: Chat backend
+## Milestone 7r: Agent runner
 
-Depends on: 5
+Depends on: 4a
 
 - [ ] Build the agent runner: a small Node program that runs the Claude
       Agent SDK and Codex, installed as an always-on systemd service in
@@ -3069,28 +3136,39 @@ Depends on: 5
 - [ ] Connect the runner to the workspace Durable Object over one
       outbound WebSocket with the workspace token. Number the events,
       and resend each one that the Durable Object has not confirmed.
-- [ ] Add prompt, message during a turn, interrupt, and model and effort
-      endpoints. The Durable Object forwards them to the runner.
-- [ ] Pass the sender's agent login to the runner for each turn, and start
-      the agent again when the sender changes, as decision 49 says.
-- [ ] Keep each session on one agent. A model of the other agent opens a
-      new session with the draft, as decision 51 says.
+- [ ] Start each turn with the sender's agent login from the connection,
+      and warm Claude Code without a login when the service starts.
 - [ ] Test Codex streaming: the Codex SDK where it gives interrupt and
       partial text, and the Codex App Server otherwise. Save the result
       under `.context/`.
 - [ ] Measure the first agent start after a resume over several runs,
       with the runner inside and outside the home folder. Keep the faster
       place.
+- [ ] Test the runner against the fake Durable Object of Milestone 4a.
+
+## Milestone 7: Chat backend
+
+Depends on: 4a
+
+- [ ] Add prompt, message during a turn, interrupt, and model and effort
+      endpoints. The Durable Object forwards them to the runner.
+- [ ] Pass the sender's agent login to the runner for each turn, and start
+      the agent again when the sender changes, as decision 49 says.
+- [ ] Keep each session on one agent. A model of the other agent opens a
+      new session with the draft, as decision 51 says.
 - [ ] Map the SDK events to our event type, store them, and push them to
       the open tabs over a WebSocket.
 - [ ] Test the mapping against recorded SDK events, and the resend after
-      a dropped connection.
+      a dropped connection, with the fake runner of Milestone 4a.
 
 ## Milestone 8: Chat UI
 
 Tags: ui
 
-Depends on: 6, 7
+Depends on: 4a
+
+It builds against the fake API and the recorded events of Milestone 4a.
+Milestone 8i or 15i wires it to its backend.
 
 - [ ] Build the chat with messages, tool calls, the running state,
       steer, and interrupt.
@@ -3100,9 +3178,28 @@ Depends on: 6, 7
 - [ ] Queue the messages that arrive before the sandbox is ready, and
       show the workspace title that the agent writes.
 
+## Milestone 8i: Chat path wiring
+
+Depends on: 5, 6, 7, 7r, 8
+
+- [ ] Wire the app shell, the chat screens, the chat backend, and the
+      runner together, with a real Boat sandbox.
+- [ ] Test the chat end to end: create a workspace, send a message, stream
+      the answer, stop and resume, and send again.
+
+## Milestone 16a: First deployment
+
+Depends on: 8i
+
+This milestone needs the prerequisites from the user.
+
+- [ ] Deploy the chat path to the user's Cloudflare account, with GitHub
+      sign-in, so that the user can work in Conducting.
+- [ ] Smoke-test it with a real Boat sandbox.
+
 ## Milestone 9: Files backend
 
-Depends on: 5
+Depends on: 4a
 
 - [ ] List files, and read one file with a size limit.
 - [ ] List the changes and diffs against the default branch, as the
@@ -3113,7 +3210,10 @@ Depends on: 5
 
 Tags: ui
 
-Depends on: 6, 9
+Depends on: 4a
+
+It builds against the fake API and the recorded events of Milestone 4a.
+Milestone 8i or 15i wires it to its backend.
 
 - [ ] Build the All and Changes lists, the Markdown and code preview,
       and the diff of a changed file.
@@ -3121,7 +3221,7 @@ Depends on: 6, 9
 
 ## Milestone 11: Terminal, previews, and desktop backend
 
-Depends on: 5
+Depends on: 4a
 
 - [ ] Add the `ttyd` service with a per-workspace password to the org image setup.
 - [ ] Expose private ports, and proxy them with the `_port_auth`
@@ -3141,7 +3241,10 @@ Depends on: 5
 
 Tags: ui
 
-Depends on: 6, 11
+Depends on: 4a
+
+It builds against the fake API and the recorded events of Milestone 4a.
+Milestone 8i or 15i wires it to its backend.
 
 - [ ] Build the terminal with xterm.js, the port preview with its "Open
       in new tab" link, and the desktop frame.
@@ -3149,7 +3252,7 @@ Depends on: 6, 11
 
 ## Milestone 13: GitHub banner backend
 
-Depends on: 5
+Depends on: 4a
 
 - [ ] Receive and verify GitHub App webhooks.
 - [ ] Route each event to the workspace of its branch, and push it to the
@@ -3161,7 +3264,10 @@ Depends on: 5
 
 Tags: ui
 
-Depends on: 6, 13
+Depends on: 4a
+
+It builds against the fake API and the recorded events of Milestone 4a.
+Milestone 8i or 15i wires it to its backend.
 
 - [ ] Build the pull request bar of the right column, the compact pull
       request row on phones, and the Checks tab.
@@ -3169,7 +3275,7 @@ Depends on: 6, 13
 
 ## Milestone 15: Agent tools
 
-Depends on: 5
+Depends on: 4a
 
 - [ ] Add the create and list workspace endpoints for workspace tokens,
       as decision 52 says: create takes a repository and a first message,
@@ -3180,7 +3286,7 @@ Depends on: 5
 
 ## Milestone 15a: Members backend
 
-Depends on: 5
+Depends on: 4a
 
 - [ ] Add org members: invites by GitHub login, the admin and member
       roles, and removal.
@@ -3198,7 +3304,10 @@ Depends on: 5
 
 Tags: ui
 
-Depends on: 6, 15a
+Depends on: 4a
+
+It builds against the fake API and the recorded events of Milestone 4a.
+Milestone 8i or 15i wires it to its backend.
 
 - [ ] Build Delete org with its restore.
 - [ ] Show the Repositories and Cloud computer tabs read-only to members,
@@ -3206,11 +3315,18 @@ Depends on: 6, 15a
 - [ ] Build the org members page and workspace reassignment.
 - [ ] Compare each screen with its mockup.
 
+## Milestone 15i: Feature wiring
+
+Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c
+
+- [ ] Wire each feature's screens to its backend inside the app shell.
+- [ ] Run the complete gate, and compare each screen with its mockup.
+
 ## Milestone 15d: Marketing site
 
 Tags: ui
 
-Depends on: 3
+Depends on: 4a
 
 - [ ] Build the marketing site at the root of `conducting.build`, as
       Milestone 1c draws it.
@@ -3220,7 +3336,7 @@ Depends on: 3
 
 ## Milestone 16: Deployment and live smoke test
 
-Depends on: 8, 10, 12, 14, 15, 15c, 15d
+Depends on: 15i, 15d, 16a
 
 This milestone needs the prerequisites from the user.
 
