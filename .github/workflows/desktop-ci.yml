@@ -41,9 +41,6 @@ jobs:
       - run: npm --prefix desktop run format:check
       - run: npm --prefix desktop run test:logic
       - run: npm --prefix desktop run build
-      - name: One-time PR 1 window space proof
-        if: matrix.runner == 'macos-15'
-        run: node desktop/scripts/window-space-proof.ts
       - run: npm --prefix desktop run test:electron
       - run: npm --prefix desktop run package
       - run: npm --prefix desktop run test:packaged
