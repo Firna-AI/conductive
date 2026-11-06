@@ -36,7 +36,7 @@ export const chat = defineScreen({
       slug: 'interrupted',
       title: 'Interrupted',
       description:
-        'The user pressed Stop. The running tool call shows as stopped, and the composer is ready for the next message.',
+        'The user pressed Stop, so the chat says "You stopped the agent". Other members see the name of the user, from decision 72. The running tool call shows as stopped, and the composer is ready for the next message.',
       props: { conversation: 'interrupted', banner: 'none' },
     },
     {
