@@ -110,6 +110,7 @@ const records: Readonly<Record<RecordedChatScenario, readonly ChatEvent[]>> = {
         state: 'stopped',
       },
     },
+    { ...turn, type: 'turn.stop-requested', requestedById: message.sender.id },
     {
       ...turn,
       type: 'turn.completed',
