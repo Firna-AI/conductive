@@ -3330,10 +3330,13 @@ Depends on: 4a
 
 Add the Blocked state of decision 64. Milestones 13 and 14 build on it.
 
-- [ ] Add the Blocked state to the banner type in `src/shared/github.ts`,
+Agent call, 6 November 2026: use the Ban icon and the existing amber tone.
+Add the `blocked` variant at `app/banner/blocked/blocked`, to keep the existing paths.
+
+- [x] Add the Blocked state to the banner type in `src/shared/github.ts`,
       to the fake API, and to the banner mockups, at desktop and phone
-      sizes.
-- [ ] Run the complete gate.
+      sizes. Branch: `conductor/boat-native-remote-workspaces-milestone-4b`.
+- [x] Run the complete gate. Branch: `conductor/boat-native-remote-workspaces-milestone-4b`.
 
 ## Milestone 5: Bases and workspace lifecycle
 
