@@ -32,7 +32,7 @@ export const getStarted = defineScreen({
       slug: 'org-created',
       title: 'Org created',
       description:
-        'Firna exists, and the rail shows it. The next step asks for its Boat key, with links to the Boat sign-up and dashboard, and tests the key once when it is saved.',
+        'Firna exists, and the rail shows it. The next step asks for its Boat key, with links to the Boat sign-up and dashboard and the actions that the key needs, and tests the key once when it is saved.',
       props: { step: 'key' },
       useCasePaths: signUp,
     },

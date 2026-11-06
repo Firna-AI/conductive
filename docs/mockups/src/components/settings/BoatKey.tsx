@@ -1,19 +1,37 @@
 import { Input } from '@firna/ui/input'
+import { Copy } from 'lucide-react'
 import { productName } from '../../brand'
 import {
-  boatKeyPreset,
+  boatKeyActions,
   boatPages,
   type SavedBoatKey,
 } from '../../fixtures/boatKey'
 import { people } from '../../fixtures/members'
 import { noop } from '../../noop'
+import { IconButton } from '../common/actions'
 import { ExternalLink } from '../common/ExternalLink'
 import { useControlSizes } from '../common/touch'
 import { DetailList } from './DetailList'
 import styles from './BoatKey.module.css'
 
-/** How to make a key. The key screen and Get started both say it. */
-export const makeKeyText = `Make an API key in the Boat dashboard with the ${boatKeyPreset} preset, limited to one environment.`
+/**
+ * How to make a key, which `BoatKeyActions` follows. The key screen and
+ * Get started both say it.
+ */
+export const makeKeyText =
+  'Make an API key in the Boat dashboard. Choose Custom actions, add the actions below, and limit the key to one environment.'
+
+/** The actions that the key needs, in one block with a copy button. */
+export function BoatKeyActions() {
+  return (
+    <div className={styles.actions}>
+      <code aria-label="Actions of the key" className={styles.actionList}>
+        {boatKeyActions.join(', ')}
+      </code>
+      <IconButton icon={Copy} label="Copy the actions" quiet />
+    </div>
+  )
+}
 
 /** The pages of Boat where an admin signs up and makes a key. */
 export function BoatLinks() {

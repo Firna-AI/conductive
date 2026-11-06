@@ -8,3 +8,25 @@
 .links > a {
   min-height: var(--ui-touch-min);
 }
+
+/* The actions of the key: one block of code that wraps, with its copy button. */
+.actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 4px 6px 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-raised);
+}
+
+.actionList {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 0;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}

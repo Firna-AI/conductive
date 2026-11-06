@@ -7,6 +7,7 @@ import {
   type OpenAgentForm,
 } from '../components/settings/AccountSections'
 import {
+  BoatKeyActions,
   BoatKeyField,
   BoatLinks,
   makeKeyText,
@@ -143,6 +144,7 @@ export function KeyStep(props: { step: GetStartedStep }) {
       title={title}
     >
       <BoatLinks />
+      <BoatKeyActions />
       {next ? <BoatKeyField /> : null}
     </Section>
   )

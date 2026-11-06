@@ -229,8 +229,9 @@ plan limits.
 
 - Each org has one Boat key, which runs all its cloud computers, from
   decision 46. The Boat key tab of the org settings names Boat, links to the
-  Boat sign-up and dashboard, and asks for a key with the `ci` preset,
-  limited to one environment. It shows only the last four characters of a
+  Boat sign-up and dashboard, and asks for a key with custom actions,
+  limited to one environment. It lists the actions in one block to copy,
+  because Boat's `ci` preset deletes only the sandboxes of its own key. It shows only the last four characters of a
   saved key. It draws a key that failed its test, and a key of another Boat
   account, which it refuses while it keeps the saved key, from decision 56.
   The tab label also names Boat on the other settings pages, because it

@@ -22,14 +22,16 @@ export const boatKey = defineScreen({
       slug: 'empty',
       title: 'No key yet',
       description:
-        'Acme has no key, for example because an admin removed it. The tab says how to make one in the Boat dashboard, with the ci preset and limited to one environment, and links to the Boat sign-up and dashboard. Save and test checks the key once.',
+        'Acme has no key, for example because an admin removed it. The tab says how to make one in the Boat dashboard, with custom actions and limited to one environment, and lists the actions in one block to copy. It links to the Boat sign-up and dashboard. Save and test checks the key once.',
+      rationale:
+        'Boat has a ci preset, but it deletes only the sandboxes that its own key created. So the screen asks for custom actions in its place, as an agent call of Milestone 4 on 6 November 2026 says.',
       props: { boatKey: 'empty' },
     },
     {
       slug: 'failed',
       title: 'Test failed',
       description:
-        'The pasted key failed its test, because an older key with the ci preset cannot resume a cloud computer. The field keeps the key, and the notice says how to make a new one.',
+        'The pasted key failed its test, because it lacks the sandbox.resume action, so it cannot resume a cloud computer. The field keeps the key, and the notice says how to make a new one.',
       props: { boatKey: 'failed' },
     },
     {

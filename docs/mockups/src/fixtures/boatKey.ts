@@ -10,8 +10,30 @@ export const boatPages = {
   dashboard: 'https://boat.dev/dashboard',
 } as const
 
-/** The preset of a Boat API key that creates, uses, and deletes sandboxes. */
-export const boatKeyPreset = 'ci'
+/**
+ * The custom actions that the Boat key needs. Boat's `ci` preset deletes
+ * only the sandboxes that its own key created, so the key screen asks for
+ * these actions in its place.
+ */
+export const boatKeyActions = [
+  'account.read',
+  'sandbox.create',
+  'sandbox.read',
+  'sandbox.update',
+  'sandbox.stop',
+  'sandbox.resume',
+  'sandbox.fork',
+  'sandbox.delete',
+  'exec',
+  'snapshot.read',
+  'snapshot.write',
+  'file.read',
+  'host',
+  'desktop',
+] as const
+
+/** The action that the failed test finds missing from a key. */
+export const missingAction = 'sandbox.resume'
 
 /**
  * A saved Boat key, as the app shows it: only its last four characters,

@@ -1,11 +1,17 @@
 import { KeyRound, RefreshCw, Trash2, TriangleAlert } from 'lucide-react'
-import { acmeKey, boatKeyPreset, pastedKey } from '../../fixtures/boatKey'
+import { acmeKey, missingAction, pastedKey } from '../../fixtures/boatKey'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { StatusText } from '../common/StatusText'
-import { BoatKeyDetails, BoatKeyField, BoatLinks, makeKeyText } from './BoatKey'
+import {
+  BoatKeyActions,
+  BoatKeyDetails,
+  BoatKeyField,
+  BoatLinks,
+  makeKeyText,
+} from './BoatKey'
 import { Section } from './Section'
 import { TabIntro } from './TabIntro'
 
@@ -67,13 +73,14 @@ function AddKeySection(props: { failed: boolean }) {
       title="Add a key"
     >
       <BoatLinks />
+      <BoatKeyActions />
       <BoatKeyField
         invalid={props.failed}
         value={props.failed ? pastedKey : undefined}
       />
       {props.failed ? (
         <Notice
-          body={`Older keys with the ${boatKeyPreset} preset lack resume. Make a new key with the ${boatKeyPreset} preset, then save it here.`}
+          body={`It lacks the ${missingAction} action. Make a new key with every action above, then save it here.`}
           icon={TriangleAlert}
           title="This key can't resume cloud computers"
           tone="danger"
