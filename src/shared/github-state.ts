@@ -1,4 +1,9 @@
-import type { GitHubSnapshot } from './githubClient'
+import type { GitHubBanner, GitHubChecksResponse } from './github'
+
+interface GitHubDisplay {
+  banner: GitHubBanner
+  checks: GitHubChecksResponse
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -23,11 +28,8 @@ function sameJson(a: unknown, b: unknown): boolean {
   return keys.every((key) => Object.hasOwn(b, key) && sameJson(a[key], b[key]))
 }
 
-/**
- * Whether two GitHub states show the same banner and the same checks. The
- * time of the banner does not count, because the contract gives it no order.
- */
-export function sameGitHubState(a: GitHubSnapshot, b: GitHubSnapshot): boolean {
+/** Compare shown banner and checks. Ignore banner time and object-key order. */
+export function sameGitHubState(a: GitHubDisplay, b: GitHubDisplay): boolean {
   return (
     sameJson({ ...a.banner, updatedAt: 0 }, { ...b.banner, updatedAt: 0 }) &&
     sameJson(a.checks, b.checks)
