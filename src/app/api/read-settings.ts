@@ -121,7 +121,7 @@ function readInvite(value: unknown): OrgInvite {
   const invite = record(value, 'invite')
   return {
     id: text(invite, 'id'),
-    githubLogin: text(invite, 'githubLogin'),
+    email: text(invite, 'email'),
     createdAt: count(invite, 'createdAt'),
   }
 }
