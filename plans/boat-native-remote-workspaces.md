@@ -3091,6 +3091,30 @@ Added on 6 November 2026 from the user's question: "Will they be cached?"
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 6 November 2026. Milestone 8i builds it.
 
+### 88. Keep a small Markdown file from freezing the Files page
+
+Added on 6 November 2026 from round 2 finding 6 of the Milestone 10
+review.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Review. **Category:** Security.
+- **Background:** The Markdown preview fills each short table row with
+  empty cells up to the header's width. The page then builds a grid of
+  columns times rows, so a 1,202-byte file made 40,000 cells, and a 40 KB
+  file froze the page.
+- **Options:**
+  - **B.** Skip the empty cells, with one wide cell for the rest of each
+    row. A partial fix. Effort: Small.
+  - **D.** Count the empty cells of all tables in one file. Past a fixed
+    budget, such as 65,536, end the table and show the rest as text, as
+    cmark-gfm and markdown-it do for one table. Effort: Small.
+  - **F.** Measure the whole parsed file, and show the source when it is
+    far larger than the file. Effort: Medium.
+  - **C.** Render only the visible rows and columns. Effort: Large.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 6 November 2026. Milestone 10 applies it,
+  and the Files rules of the workspaces protocol state the limit.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
