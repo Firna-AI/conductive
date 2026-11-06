@@ -3790,17 +3790,27 @@ Give the app shell the contracts and fake replies that its approved
 mockups need. Milestone 6 uses these replies before backend wiring.
 Worker routes stay with the wiring and backend milestones.
 
-- [ ] Add the org initials and chosen repositories to the create request.
+Scope update, 6 November 2026: decision 80 returns the app to its own Boat
+account. Drop the Boat key details and removal TODO. No org has a Boat key.
+
+Agent calls, 6 November 2026:
+
+- Keep initials and base image fields optional, so existing records in
+  the Worker and open branches remain valid.
+- Keep `repositoryIds` as GitHub's numeric IDs. The account repository
+  list supplies those IDs before an org exists.
+- Return the base image software with org settings, so both views of the
+  Cloud computer tab can read the checked list.
+
+Merge resolution: `.context/boat-native-remote-workspaces/merge-plan-resolution.diff`.
+
+- [x] Add the org initials and chosen repositories to the create request.
       Add the repository list that the create screen reads.
       Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
-- [ ] Add the key's environment, the member who added it, and its time to
-      the Boat key status. Add the key removal contract and fake reply.
-      Leave the effect on running cloud computers to decision 80.
-      Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
-- [ ] Add the base image software list where the Cloud computer tab reads
+- [x] Add the base image software list where the Cloud computer tab reads
       it. Check Boat's docs and record the source and date beside it.
       Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
-- [ ] Run the complete gate.
+- [x] Run the complete gate.
       Branch: `conductor/boat-native-remote-workspaces-milestone-4e`.
 
 ## Milestone 4f: The app's own Boat account
