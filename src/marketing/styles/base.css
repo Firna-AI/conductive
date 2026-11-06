@@ -130,10 +130,22 @@ a:focus-visible {
 }
 
 .text-link {
+  position: relative;
   color: var(--ui-ink2);
   text-decoration: underline;
   text-decoration-color: var(--ui-border2);
   text-underline-offset: 3px;
+}
+
+/* Extend the touch area without moving the text or its line. */
+.text-link::after {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: max(100%, var(--ui-touch-min));
+  transform: translateY(-50%);
+  content: '';
 }
 
 .text-link:hover {
@@ -179,6 +191,10 @@ a:focus-visible {
 @media (max-width: 759.98px) {
   .site {
     --ui-touch-min: 44px;
+  }
+
+  .text-link {
+    white-space: nowrap;
   }
 
   .actions {
