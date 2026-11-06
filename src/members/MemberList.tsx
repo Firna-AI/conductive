@@ -95,7 +95,7 @@ function InviteRow(props: {
         <Mail size={13} />
       </span>
       <span className={styles.text}>
-        <span className={styles.name}>@{invite.githubLogin}</span>
+        <span className={styles.name}>{invite.email}</span>
         <span className={styles.detail}>
           Invited {inviteAge(invite.createdAt, props.now)}
         </span>
@@ -103,7 +103,7 @@ function InviteRow(props: {
       <IconButton
         busy={props.busy}
         icon={X}
-        label={`Cancel the invite to @${invite.githubLogin}`}
+        label={`Cancel the invite to ${invite.email}`}
         onPress={props.onCancel}
       />
     </li>

@@ -62,6 +62,7 @@ export function terminalEvent(
         files: [
           { path: 'changed.ts', change: 'modified', added: 2, removed: 1 },
         ],
+        omittedFileCount: 0,
         userMessageIds: [turn.message.id],
       }
 }

@@ -1,5 +1,10 @@
 import type { AgentChoice } from '../../shared/agents'
-import type { ChatEvent, ToolCall } from '../../shared/chat-events'
+import type {
+  AgentChatEvent,
+  ChatEvent,
+  RunnerEventRefused,
+  ToolCall,
+} from '../../shared/chat-events'
 import type { ChangedFile } from '../../shared/files'
 import type { UserMessage } from '../../shared/messages'
 import { foldTurn, markSent, replaceAt, userKey } from './turn-events'
@@ -42,6 +47,12 @@ export interface RunningTurn {
 export interface Transcript {
   items: readonly TranscriptItem[]
   turn: RunningTurn | null
+  /** Complete terminal data, including omitted files, without new rendering. */
+  turnCompletions: Readonly<
+    Record<string, Extract<AgentChatEvent, { type: 'turn.completed' }>>
+  >
+  /** Session markers stay separate from rendered items until their UI exists. */
+  refusedEvents: readonly RunnerEventRefused[]
   /**
    * The member who first pressed Stop, for each turn that has not ended. The
    * request alone ends nothing: the turn runs until it ends as stopped.
@@ -52,6 +63,8 @@ export interface Transcript {
 export const emptyTranscript: Transcript = {
   items: [],
   turn: null,
+  turnCompletions: {},
+  refusedEvents: [],
   stopRequests: {},
 }
 
@@ -68,6 +81,12 @@ export function foldEvent(
   switch (event.type) {
     case 'session.updated':
       return transcript
+    case 'runner.event-refused':
+      if (event.sessionId === null) return transcript
+      return {
+        ...transcript,
+        refusedEvents: [...transcript.refusedEvents, event],
+      }
     case 'message.accepted': {
       const item: TranscriptItem = {
         kind: 'user',

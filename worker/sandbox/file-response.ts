@@ -1,5 +1,3 @@
-import { readBoundedBody } from '../http/bounded-body'
-
 export function fileResponseBudget(path: string, maxBytes: number): number {
   // Base64 uses four ASCII bytes for each three file bytes. The envelope allows
   // the requested JSON-escaped path, the largest safe size, and two-space formatting.
@@ -19,13 +17,4 @@ export function fileResponseBudget(path: string, maxBytes: number): number {
   return (
     4 * Math.ceil(maxBytes / 3) + new TextEncoder().encode(envelope).byteLength
   )
-}
-
-export async function boundedFileJson(
-  response: Response,
-  budget: number,
-): Promise<unknown> {
-  if (!response.body) throw new SyntaxError('Missing file response body')
-  const bytes = await readBoundedBody(response.body, budget)
-  return JSON.parse(new TextDecoder().decode(bytes))
 }

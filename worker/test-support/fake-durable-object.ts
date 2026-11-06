@@ -1,5 +1,9 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { RunnerEventRefusalReason } from '../../src/shared/chat-events'
+import type {
+  WorkspaceEvent,
+  WorkspaceEventEnvelope,
+} from '../../src/shared/events'
 import {
   RUNNER_PROTOCOL_VERSION,
   type RunnerCommand,
@@ -9,12 +13,15 @@ import {
 } from '../../src/shared/runner'
 import type { RunnerConnector } from '../../src/shared/runner-transport'
 import type { RunnerFileResponse } from '../../src/shared/runner-files'
+import { FakeRunnerFileReports } from './fake-runner-files'
 import { FakeRunnerConnection } from './runner-connection'
 
 export interface FakeDurableObjectOptions {
   workspaceId: string
   workspaceToken: string
   origin?: string
+  /** Force a permanent refusal without implementing production validation. */
+  refuseEvent?: (event: RunnerEventEnvelope) => RunnerEventRefusalReason | null
 }
 
 /**
@@ -31,6 +38,7 @@ export class FakeDurableObjectEndpoint {
   confirmEvents = true
   private readonly cursors = new Map<string, number>()
   private readonly options: FakeDurableObjectOptions
+  private readonly files = new FakeRunnerFileReports()
   private connection: FakeRunnerConnection | null = null
 
   constructor(options: FakeDurableObjectOptions) {
@@ -61,6 +69,7 @@ export class FakeDurableObjectEndpoint {
           throw new Error('The runner hello does not match this workspace.')
         }
         hello = message
+        this.files.beginStream(hello.streamId)
         connection.reply({
           type: 'welcome',
           protocolVersion: RUNNER_PROTOCOL_VERSION,
@@ -112,14 +121,33 @@ export class FakeDurableObjectEndpoint {
       return
     }
     if (message.eventNumber === through + 1) {
-      this.runnerEvents.push(structuredClone(message))
+      const reason = this.options.refuseEvent?.(message) ?? null
+      if (!reason) this.runnerEvents.push(structuredClone(message))
+      else if (
+        message.event.type === 'files.snapshot' ||
+        message.event.type === 'changes.updated'
+      ) {
+        this.files.discard(message.event.type)
+      }
       this.cursors.set(message.streamId, message.eventNumber)
-      if (message.event.type !== 'runner.ready') {
+      const event: WorkspaceEvent | null = reason
+        ? {
+            type: 'runner.event-refused',
+            streamId: message.streamId,
+            runnerEventNumber: message.eventNumber,
+            runnerEventType: message.event.type,
+            reason,
+            sessionId:
+              'sessionId' in message.event ? message.event.sessionId : null,
+            turnId: 'turnId' in message.event ? message.event.turnId : null,
+          }
+        : this.browserEvent(message)
+      if (event) {
         this.events.push({
           workspaceId: this.options.workspaceId,
           eventNumber: this.events.length + 1,
           occurredAt: message.occurredAt,
-          event: structuredClone(message.event),
+          event: structuredClone(event),
         })
       }
     }
@@ -130,5 +158,18 @@ export class FakeDurableObjectEndpoint {
         throughEventNumber: this.cursors.get(message.streamId) ?? 0,
       })
     }
+  }
+
+  private browserEvent(message: RunnerEventEnvelope): WorkspaceEvent | null {
+    const event = message.event
+    if (event.type === 'runner.ready') return null
+    if (
+      event.type === 'files.snapshot' ||
+      event.type === 'files.changed' ||
+      event.type === 'changes.updated'
+    ) {
+      return this.files.accept(message.streamId, event)
+    }
+    return event
   }
 }

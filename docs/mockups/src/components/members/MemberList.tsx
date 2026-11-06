@@ -109,10 +109,10 @@ function InviteRow(props: { invite: Invite }) {
         <Mail size={13} />
       </span>
       <span className={styles.text}>
-        <span className={styles.name}>@{invite.login}</span>
+        <span className={styles.name}>{invite.email}</span>
         <span className={styles.detail}>Invited {invite.sent}</span>
       </span>
-      <IconButton icon={X} label={`Cancel the invite to @${invite.login}`} />
+      <IconButton icon={X} label={`Cancel the invite to ${invite.email}`} />
     </li>
   )
 }
@@ -142,7 +142,7 @@ export function MemberList(props: {
         />
       ))}
       {props.invites.map((invite) => (
-        <InviteRow invite={invite} key={invite.login} />
+        <InviteRow invite={invite} key={invite.email} />
       ))}
     </ul>
   )

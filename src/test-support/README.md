@@ -20,6 +20,17 @@ For example, use `server.events.subscribe(0, onMessage)`.
 The first message contains stored history. Later `emit` calls send live events.
 Use the last event number instead of zero to exercise a reconnect.
 
+The `omitted-data` conversation has a Unicode tool excerpt and a capped turn file list.
+Both records include positive omission counts.
+The `refused-events` conversation has one marker for each permanent refusal reason.
+The marker can have no turn context when the event is invalid.
+Browser file recordings contain complete reports.
+`recordedRunnerFileEvents` keeps four complete runner reports for current file readers.
+Each full report is explicitly part 1 of 1. Its tree ends at revision 2.
+`recordedMultipartRunnerFileEvents` supplies eight events for part-joining checks.
+It splits trees and changes into two parts and uses tree delta revisions 2 and 3.
+The small samples exercise joining without large fixtures.
+
 Writes return recorded replies. They do not change backend state.
 Repository PUT and DELETE replies change only the named repository in the
 recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
@@ -99,8 +110,8 @@ Replies, timers, and `waitFor` go on.
 - `fake-api-routes.ts` defines the reply registration interface.
 - `fake-events.ts` supplies history and live event messages.
 - `fake-terminal.ts` supplies decoded terminal output and records input and resize calls.
-- `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, and failure.
-- `recorded-files.ts` supplies full trees, file updates, branch summaries, reads, diffs, and a size error.
+- `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.
+- `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
 - `fixtures/workspaces.ts` maps workspace and session samples.

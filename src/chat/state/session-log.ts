@@ -1,4 +1,4 @@
-import type { ChatEvent } from '../../shared/chat-events'
+import type { ChatEvent, RunnerEventRefused } from '../../shared/chat-events'
 import type { ChatStreamEvent, StreamEnvelope } from '../api/read-workspace'
 import { emptyTranscript, foldEvent, type Transcript } from './transcript'
 
@@ -9,7 +9,9 @@ export interface ChatEnvelope {
 }
 
 /** A chat event that belongs to one session's transcript. */
-export type SessionEvent = Exclude<ChatEvent, { type: 'session.updated' }>
+export type SessionEvent =
+  | Exclude<ChatEvent, { type: 'session.updated' | 'runner.event-refused' }>
+  | (RunnerEventRefused & { sessionId: string })
 
 /** The event as a session event, or null for a workspace or session record. */
 export function asSessionEvent(
@@ -22,6 +24,10 @@ export function asSessionEvent(
     case 'workspace.title':
     case 'start.updated':
       return null
+    case 'runner.event-refused':
+      return event.sessionId === null
+        ? null
+        : { ...event, sessionId: event.sessionId }
     default:
       return event
   }

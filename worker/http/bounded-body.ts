@@ -34,3 +34,13 @@ export async function readBoundedBody(
     reader.releaseLock()
   }
 }
+
+/** Parse a complete UTF-8 JSON body after the bounded byte read succeeds. */
+export async function readBoundedJson(
+  body: ReadableStream<Uint8Array> | null,
+  budget: number,
+): Promise<unknown> {
+  if (!body) throw new SyntaxError('Missing JSON body')
+  const bytes = await readBoundedBody(body, budget)
+  return JSON.parse(new TextDecoder().decode(bytes))
+}

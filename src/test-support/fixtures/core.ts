@@ -113,7 +113,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
     })),
     invites: acmeInvites.map((invite, index) => ({
       id: `invite-${index}`,
-      githubLogin: invite.login,
+      email: invite.email,
       createdAt: FAKE_TIME - 172_800_000,
     })),
   }

@@ -92,6 +92,7 @@ describe('ChatController actions', () => {
       state: 'stopped',
       durationMs: 1_000,
       files: [],
+      omittedFileCount: 0,
       userMessageIds: ['sdk-added'],
     })
     expect(shown(chat.controller, id)).toEqual([...before, 'stopped by nobody'])

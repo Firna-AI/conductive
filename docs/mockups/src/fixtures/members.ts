@@ -1,6 +1,7 @@
 /**
- * The people of the orgs. Each person signs in with GitHub, and an admin
- * invites a member by their GitHub login. Only an admin manages the
+ * The people of the orgs. Each person signs in with GitHub. An admin
+ * invites a person by email, and the person joins with a GitHub account
+ * that has that email verified (decision 78). Only an admin manages the
  * members of an org and reassigns its workspaces (decision 54).
  */
 
@@ -50,8 +51,11 @@ export const roleLabels: Readonly<Record<Role, string>> = {
 
 export type Membership = { person: PersonKey; role: Role }
 
-/** An invite that waits for its GitHub user to accept it. */
-export type Invite = { login: string; sent: string }
+/**
+ * An invite that waits for its person to accept it, with a GitHub account
+ * that has its email verified.
+ */
+export type Invite = { email: string; sent: string }
 
 /** The members of Acme, admins first. */
 export const acmeMembers: readonly Membership[] = [
@@ -61,7 +65,7 @@ export const acmeMembers: readonly Membership[] = [
 ]
 
 export const acmeInvites: readonly Invite[] = [
-  { login: 'mira-k', sent: '2 days ago' },
+  { email: 'mira@example.com', sent: '2 days ago' },
 ]
 
 /** The member whom the remove state removes from Acme. */

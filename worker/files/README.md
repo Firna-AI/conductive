@@ -27,12 +27,15 @@ Pending reads fail when their connection closes or when their request signal abo
 
 The workspace owner keeps the shared handshake, stream cursor, event numbers, confirmations, and resend rules.
 It passes each accepted file event to `await files.state.apply(connectionId, event)` in event order.
+This hook takes complete reports. A single-part runner report keeps that behavior.
+The default runner recording uses part 1 of 1 for each full report.
+Multipart recordings are separate. Production part joining remains with Milestone 7s.
 It confirms the event only after this write succeeds.
 It sends the accepted event to browser tabs only when the hook returns `true`.
 The hook rejects a malformed payload and ignores an old connection or stale tree revision.
 It keeps the last tree until the current connection sends its new full snapshot.
 Tree revisions can restart on a new connection.
-The owner handles duplicate `changes.updated` envelopes because that payload has no revision.
+The owner handles duplicate `changes.updated` envelopes because the complete browser payload has no revision.
 
 Pass each file or diff result to `files.runner.receive(connectionId, payload)`.
 These results use request IDs and bypass the numbered chat event history.
@@ -73,14 +76,10 @@ The Boat API applies its own canonical path checks.
 The fallback gets `SandboxProvider` through `orgSandboxProvider`, with the authorized user's ID.
 The provider owns the fixed routes, headers, account pinning, and encrypted key handling.
 Its `readFile` requests base64 so a binary file keeps its bytes.
-It bounds only the file content response before parsing JSON.
-It uses the [shared bounded body reader](../http/README.md), with the file route's budget.
-On overflow, it cancels the body and reads `files/info` for the exact size.
-The handler returns that size with `file_too_large`.
-The metadata response uses the provider's normal response path.
+The [sandbox response policy](../sandbox/README.md#response-byte-limits) defines the reply budgets and the metadata fallback.
+The handler reports the file size with `file_too_large`.
 The provider checks that both replies name the requested absolute path.
-The [sandbox README](../sandbox/README.md) gives the byte budget and transport entry points.
-It converts valid UTF-8 to text and preserves a leading byte order mark.
+The Boat read adapter converts valid UTF-8 to text and preserves a leading byte order mark.
 It checks the returned size and decoded byte length against the configured limit.
 Provider error messages never reach the browser.
 The [Boat read-file reference](https://docs.boat.dev/api/reference/agent/read-sandbox-file) defines that route.

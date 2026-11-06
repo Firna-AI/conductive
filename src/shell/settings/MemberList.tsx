@@ -55,7 +55,7 @@ function MemberRow(props: {
   )
 }
 
-/** An open invite: the GitHub login, and when the invite went out. */
+/** An open invite: the invited email address, and when the invite went out. */
 function InviteRow(props: { invite: OrgInvite; when: string }) {
   return (
     <li className={styles.row}>
@@ -63,7 +63,7 @@ function InviteRow(props: { invite: OrgInvite; when: string }) {
         <Mail size={13} />
       </span>
       <span className={styles.text}>
-        <span className={styles.name}>{`@${props.invite.githubLogin}`}</span>
+        <span className={styles.name}>{props.invite.email}</span>
         <span className={styles.detail}>{`Invited ${props.when}`}</span>
       </span>
     </li>

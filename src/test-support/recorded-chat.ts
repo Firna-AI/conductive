@@ -11,6 +11,8 @@ export type RecordedChatScenario =
   | 'failed'
   | 'queued'
   | 'first-turn'
+  | 'omitted-data'
+  | 'refused-events'
 
 const { message } = workspaceFixtures()
 const turn = { sessionId: FAKE_IDS.session, turnId: 'turn-1' }
@@ -28,6 +30,7 @@ const tool: ToolCall = {
   kind: 'read',
   target: 'src/app/checkout/AddressForm.tsx',
   detail: null,
+  omittedDetailBytes: 0,
   state: 'done',
 }
 const beginning: readonly ChatEvent[] = [
@@ -64,6 +67,7 @@ const completed: readonly ChatEvent[] = [
     durationMs: 252_000,
     userMessageIds: [message.id],
     files: [{ path: tool.target, change: 'modified', added: 38, removed: 6 }],
+    omittedFileCount: 0,
   },
 ]
 
@@ -94,6 +98,7 @@ const records: Readonly<Record<RecordedChatScenario, readonly ChatEvent[]>> = {
       state: 'finished',
       durationMs: 270_000,
       files: [],
+      omittedFileCount: 0,
       userMessageIds: [message.id, 'steer-1'],
     },
   ],
@@ -117,6 +122,7 @@ const records: Readonly<Record<RecordedChatScenario, readonly ChatEvent[]>> = {
       state: 'stopped',
       durationMs: 161_000,
       files: [],
+      omittedFileCount: 0,
       userMessageIds: [message.id],
     },
   ],
@@ -138,6 +144,65 @@ const records: Readonly<Record<RecordedChatScenario, readonly ChatEvent[]>> = {
     { type: 'message.accepted', message: { ...message, state: 'queued' } },
   ],
   'first-turn': beginning.slice(0, 6),
+  'omitted-data': [
+    accepted,
+    started,
+    {
+      ...turn,
+      type: 'tool.updated',
+      tool: {
+        ...tool,
+        id: 'test-output',
+        kind: 'run',
+        target: 'npm test',
+        detail: 'Check "address"\n' + '🙂'.repeat(16_378),
+        omittedDetailBytes: 8,
+      },
+    },
+    {
+      ...turn,
+      type: 'turn.completed',
+      state: 'finished',
+      durationMs: 252_000,
+      files: Array.from({ length: 200 }, (_, index) => ({
+        path: `src/generated/address-${index}.ts`,
+        change: 'added' as const,
+        added: 1,
+        removed: 0,
+      })),
+      omittedFileCount: 3,
+      userMessageIds: [message.id],
+    },
+  ],
+  'refused-events': [
+    accepted,
+    started,
+    {
+      ...turn,
+      type: 'runner.event-refused',
+      streamId: 'recorded-stream-1',
+      runnerEventNumber: 3,
+      runnerEventType: 'tool.updated',
+      reason: 'too_large',
+    },
+    {
+      ...turn,
+      type: 'runner.event-refused',
+      streamId: 'recorded-stream-1',
+      runnerEventNumber: 4,
+      runnerEventType: 'assistant.delta',
+      reason: 'turn_not_active',
+    },
+    {
+      type: 'runner.event-refused',
+      streamId: 'recorded-stream-1',
+      runnerEventNumber: 5,
+      runnerEventType: 'unknown',
+      reason: 'invalid',
+      sessionId: null,
+      turnId: null,
+    },
+  ],
 }
 
 /** Recorded product events. They contain no provider events or credentials. */
@@ -148,7 +213,8 @@ export function recordedChatEvents(
 ): readonly WorkspaceEventEnvelope[] {
   return records[scenario].map((record, index) => {
     const event = structuredClone(record)
-    if ('sessionId' in event) event.sessionId = sessionId
+    if ('sessionId' in event && event.sessionId !== null)
+      event.sessionId = sessionId
     if (event.type === 'message.accepted') event.message.sessionId = sessionId
     return {
       workspaceId,

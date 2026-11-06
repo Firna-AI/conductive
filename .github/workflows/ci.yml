@@ -1,6 +1,10 @@
 name: CI
 
-on: [push, pull_request]
+# CI runs on pull requests, and on pushes to main and the primary branch.
+on:
+  push:
+    branches: [main, calummoore/conductor-alternative-architecture]
+  pull_request:
 
 permissions:
   contents: read

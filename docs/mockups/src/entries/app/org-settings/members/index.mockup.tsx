@@ -8,9 +8,9 @@ import {
 export const members = defineScreen({
   title: 'Members',
   description:
-    'The members of Acme: an invite by GitHub login, then each member with their role and the workspaces that they own, and an open invite. An admin changes a role, removes a member, and cancels an invite.',
+    'The members of Acme: an invite by email, then each member with their role and the workspaces that they own, and an open invite with its email. An admin changes a role, removes a member, and cancels an invite.',
   rationale:
-    'The user decided on 5 November 2026 that orgs have members, invited by their GitHub login. The roles are admin and member, as in Conductor, from decision 54. Only an admin reassigns a workspace or removes a member. The product is free for now, as the user chose in decision 45, so any user can invite members.',
+    'The user decided on 5 November 2026 that orgs have members. An admin invites a person by email, and the person joins with a GitHub account that has that email verified, as the user chose in decision 78, because a GitHub login can be renamed and taken by another account. Each member still shows their GitHub login. The roles are admin and member, as in Conductor, from decision 54. Only an admin reassigns a workspace or removes a member. The product is free for now, as the user chose in decision 45, so the app sets no member limit.',
   relatedDocs: [],
   propSchema: orgSettingsSchema,
   props: { ...acmeSettings, tab: 'members' },

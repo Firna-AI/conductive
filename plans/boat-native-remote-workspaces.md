@@ -3115,6 +3115,189 @@ review.
 - **Chosen:** D, by the user on 6 November 2026. Milestone 10 applies it,
   and the Files rules of the workspaces protocol state the limit.
 
+### 89. Start work in an empty repository
+
+Added on 6 November 2026 from finding 5 of the Milestone 5 work.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** A workspace branch starts from the default branch. A new
+  GitHub repository with no commits has no default branch, so the start
+  failed.
+- **Options:**
+  - **A.** An unborn workspace branch in the cloud computer. Effort: Small.
+  - **B.** A, through one shared branch helper. Effort: Small.
+  - **C.** A first commit in the cloud computer only. Effort: Small.
+  - **E.** Refuse the start until the repository has a commit. Effort:
+    Small.
+  - **D.** Push an empty first commit to the default branch with the
+    sender's GitHub token. Effort: Medium.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 6 November 2026. Milestone 5 applies it.
+
+### 90. Copy a large repository into an org image build
+
+Added on 6 November 2026 from finding 6 of the Milestone 5 work.
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** The Worker downloaded each repository and sent it into
+  the build's cloud computer in 64 KiB parts, one Boat command each, in
+  one background job, so that no GitHub token entered the org image. A
+  1 GiB repository needed 16,384 commands.
+- **Options:**
+  - **D.** Larger Boat uploads, one repository per job. Effort: Medium.
+  - **B.** A Git proxy in the Worker for builds. Effort: Medium.
+  - **E.** The build clones straight from GitHub with a short-lived token.
+    Effort: Medium.
+  - **A.** Store the copy's progress across jobs. Effort: Large.
+  - **C.** Move the copy into Cloudflare Workflows. Effort: Large.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 6 November 2026, from the question "can we
+  not just delete the token after the git clone?". Each clone uses its
+  own installation token, limited to that one repository and to reading.
+  The token exists only in the clone command's environment, and Git
+  writes it nowhere. The Worker revokes it right after the clone, before
+  any repository code runs. Milestone 5 applies it, and the access
+  protocol states it.
+
+### 91. Show the live start steps of a new workspace
+
+Added on 6 November 2026 from finding 7 of the Milestone 5 work.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** The create request answered only after the cloud
+  computer started, so the browser could not follow the start steps.
+- **Options:**
+  - **D.** Answer when the workspace is stored. A later failure goes out
+    as a workspace event, which returns the message to the composer.
+    Effort: Medium.
+  - **C.** Stream the progress through the create request. Effort: Large.
+  - **E.** Keep a failed create as a workspace in an error state. Effort:
+    Large.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 6 November 2026. Milestone 5 applies it.
+
+### 94. Decide where the repositories live in a cloud computer
+
+Added on 6 November 2026 from the check of round 2 finding 17 of the
+Milestone 5 review.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** The mockups and their sample install script put each
+  repository at `~/code/<name>`. The build used internal folders, and the
+  scripts got no path.
+- **Options:**
+  - **B.** Keep the internal folders, with one variable for each
+    repository. Effort: Small.
+  - **A.** Each repository at `~/code/<name>`. Effort: Small.
+  - **C.** A, a variable with each repository's folder, and the startup
+    script and the terminal of a workspace start in its repository's
+    folder, as Conductor does. Effort: Small.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. Milestone 5 applies it.
+
+
+### 92. Keep the Mac CI jobs within budget
+
+Added on 6 November 2026, when GitHub Actions stopped for a failed payment
+or a spending limit.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Process.
+- **Background:** The Mac workflow ran two Mac jobs on each push and pull
+  request that changed `src/`. Mac minutes cost about ten times Linux.
+- **Options:**
+  - **A.** Raise the spending limit only. Effort: Small.
+  - **B.** CI on pull requests, and on pushes to `main` and the primary
+    branch only. Effort: Small.
+  - **C.** B, and pull requests run only the Apple silicon job. Effort:
+    Small.
+  - **D.** C, and the Mac workflow runs nightly for web changes. Effort:
+    Small.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. The orchestrator applies
+  it on the primary branch.
+
+### 93. Give every request body a limit by default
+
+Added on 6 November 2026 from PR #21 finding 10 and PR #20 item 4.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review. **Category:** Security.
+- **Background:** Six handlers read their bodies with no limit, although
+  decision 65 B gives one shared reader.
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **E.** A lint against direct body reads. Effort: Small.
+  - **B.** A default 1 MB limit at the Worker entry, which a route can
+    raise for itself. Effort: Medium.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 6 November 2026. Milestone 4g builds it.
+
+### 95. Use a preview grant once
+
+Added on 6 November 2026 from PR #20 round 1 finding 5.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Review. **Category:** Security.
+- **Background:** A used preview launch link worked again until its
+  60-second grant expired.
+- **Options:**
+  - **D.** Keep the reusable grant. Effort: Small.
+  - **B.** Each grant works once, with the one-use records of sign-in.
+    Effort: Small.
+  - **C.** The workspace Durable Object issues and uses up the grants.
+    Effort: Medium.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 6 November 2026. Milestone 11a applies it.
+
+### 97. Retry only the newest turn
+
+Added on 6 November 2026 from the check of PR #24 round 1 finding 2.
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** The retry route checked only that a turn failed, so an
+  old Try again could send an older message again.
+- **Options:**
+  - **A.** Rely on the chat, which shows Try again only on the newest
+    turn. Effort: Small.
+  - **D.** The session record names the one message that may be retried,
+    and the route refuses any other with 409. Effort: Medium.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 6 November 2026. Milestone 8k builds it.
+
+### 98. Keep Node types out of the production Worker
+
+Added on 6 November 2026 from PR #2 finding 4, wider fix G.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Review. **Category:** Code structure.
+- **Background:** The Worker type project included the tests, so a
+  Node-only import in Worker code passed the typecheck.
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** A lint against `node:` imports in `worker/`. Effort: Small.
+  - **C.** Split the Worker type project into production and tests.
+    Effort: Small.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. Milestone 4h builds it.
+
+### 99. Keep the Preview and Source switch
+
+Added on 6 November 2026 from PR #14 round 2 finding 9, wider fix D.
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Review. **Category:** Code structure.
+- **Options:**
+  - **A.** Keep the segmented control, with its own test. Effort: Small.
+  - **D.** Build the switch from two links. Effort: Medium.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 6 November 2026. Nothing changes.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -3872,17 +4055,31 @@ Add the `blocked` variant at `app/banner/blocked/blocked`, to keep the existing 
 
 Depends on: 9
 
-Apply decision 65 B. The bounded reader of the Milestone 9 file read is
-the base.
+Apply decision 65 B as changed by decision 84 A. The bounded reader of
+the Milestone 9 file read is the base.
 
-- [ ] Use one bounded body reader in the request gate, with a 1 MB limit
+Agent call, 6 November 2026: replies above the new limits get HTTP 502
+with fixed error text. Reason: the request was valid, but the provider
+reply exceeded the Worker's budget.
+
+- [x] Use one bounded body reader in the request gate, with a 1 MB limit
       for each JSON body. A larger body gets a 413 answer.
-- [ ] Use the same reader in the Boat transport, with a budget for each
-      fixed Boat route above Boat's documented maximum for that route.
-- [ ] Test an oversized body at the gate and at a Boat route, with a
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Share the content type check, bounded read, and JSON object check
+      in one function. Name it in the HTTP README for later callers.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Use the same reader in the Boat transport, with a budget for each
+      fixed Boat route: 1 MiB for account, lifecycle, snapshot, metadata,
+      and error replies, and 18 MiB for command replies. Keep the file
+      budget. A larger reply fails, also when Boat would allow it.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Test each Boat budget with a stream that counts its chunks. An
+      oversized command reply says "The command output is too large."
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Test an oversized body at the gate and at a Boat route, with a
       stream that counts its chunks. State the 1 MB limit in the access
-      protocol.
-- [ ] Run the complete gate.
+      protocol. Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Run the complete gate. Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
 
 ## Milestone 4d: Runner event limits
 
@@ -3891,16 +4088,58 @@ Depends on: 4a
 Apply decision 76 E to the contracts. Milestone 7r builds the runner to
 this contract.
 
-- [ ] Add the byte limit of one stored runner event to the runner
-      contract.
-- [ ] Send a full file tree and a long list of changes as several
+Scope call on 6 November 2026: the user chose option D for review item 1.
+This branch may update the Worker chat and files readers, tests, and
+fakes. Missing required fields are invalid events. The default file
+samples remain complete single-part reports. Separate samples cover
+multipart reports. Production enforcement stays in Milestone 7s.
+
+Agent calls on 6 November 2026, within decision 76 E:
+
+- Measure the 1 MiB cap on compact UTF-8 JSON of the complete runner event
+  envelope. This includes runner identity fields and leaves room for the
+  workspace storage wrapper.
+- Keep browser file reports complete. Use separate runner parts with a
+  revision, part number, and part count. This preserves browser response
+  shapes and keeps partial reports out of the browser.
+- Cap each runner file-event payload at 256 KiB. Cap each tree delta at
+  512 changes too. The byte cap bounds arbitrary path lengths. The count
+  cap bounds the tree work of one event.
+- Give trees and changes independent revision sequences within one
+  runner stream. Number parts from 1. Keep confirmed parts across
+  reconnects. Use newer full reports to recover missing or refused data.
+  This permits complete reports without partial updates.
+- Cap serialized tool detail at 64 KiB. Count omitted normalized source
+  UTF-8 bytes before JSON escaping. Preserve null detail and whole
+  Unicode code points. This keeps the excerpt and its count clear.
+- Cap turn file summaries at 200 entries and 256 KiB of serialized array
+  data. Count omitted files. This bounds the chat summary while the
+  Changes response keeps the full list.
+- Use workspace-only refusal markers with the three fixed reasons.
+  Include verified turn context or null. Use `unknown` for an invalid
+  event type. This names lost data without copying the refused payload.
+- Keep runner protocol version 1. No runner is live, and Milestone 7r
+  adopts this contract after merge.
+
+Verification evidence: `.context/boat-native-remote-workspaces/checks/milestone-4d-verification.md`.
+
+- [x] Add the byte limit of one stored runner event to the runner
+      contract. Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Send a full file tree and a long list of changes as several
       numbered parts. Cap the changes of one tree delta.
-- [ ] Give a tool's detail and the file list at the end of a turn a cap
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Give a tool's detail and the file list at the end of a turn a cap
       and a count of the rest.
-- [ ] Add the chat event that marks a refused runner event, with the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Add the chat event that marks a refused runner event, with the
       stream, the event number, the event type, and the reason.
-- [ ] Update the fakes, the recorded events, and the chat and files
-      protocol rules.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Update the fakes, the recorded events, and the chat and files
+      protocol rules. Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
+- [x] Apply option D to the current Worker readers and their test inputs.
+      Preserve every existing assertion and keep multipart samples
+      separate from the default single-part reports.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4d`.
 
 ## Milestone 4e: Contracts for the app shell
 
@@ -3948,6 +4187,36 @@ Apply decision 80 before the first deployment.
 - [ ] Update the protocol docs, the architecture doc, and the naming rule
       of `AGENTS.md`.
 - [ ] Run the complete gate.
+
+## Milestone 4g: A default request body limit
+
+Depends on: 4c
+
+Apply decision 93 B.
+
+- [ ] Pass every request body through one bounded stream at the Worker
+      entry, 1 MB by default. A route that needs more, such as a file
+      upload, declares its own limit there.
+- [ ] Keep `readJsonObject` and `readBoundedJson` for parsing, and remove
+      the copies that the default makes unneeded.
+- [ ] Test the default, a raised limit, and a route that a later change
+      adds. State the rule in the access protocol.
+- [ ] Delete `plans/follow-ups/request-body-lint.md`, and close
+      `plans/follow-ups/agent-tools-unbounded-body.md` when the default
+      covers it.
+
+## Milestone 4h: Worker types without Node
+
+Depends on: none
+
+Apply decision 98 C.
+
+- [ ] Split `tsconfig.worker.json` into a production project without Node
+      types and a test project with them, and check both in
+      `npm run typecheck`.
+- [ ] Fix each Node-only import or Node global that the split finds in
+      production Worker code.
+- [ ] Delete `plans/follow-ups/worker-typecheck-accepts-node-imports.md`.
 
 ## Milestone 5: Bases and workspace lifecycle
 
@@ -4096,17 +4365,34 @@ Depends on: 4d, 8
 Decision 76 E: the runner caps the detail of a tool and the file list of
 a finished turn, and counts the rest. The workspace stores a marker for
 each runner event that it refuses. Milestone 4d keeps the counts and the
-markers in the chat state, but shows nothing. Added on 6 November 2026
-from round 1 finding 2 of the Milestone 4d review.
+markers of each session in the chat state, but shows nothing. It drops a
+marker that belongs to no session. Added on 6 November 2026 from round 1
+finding 2 of the Milestone 4d review.
 
 - [ ] Draw in the chat mockups how much tool detail and how many files the
       runner left out, and the line of a refused event, which names what
       was lost.
 - [ ] Draw where a marker that belongs to no session shows, such as the
       marker of a refused file event. No rule says where yet, so bring
-      the pictures to the user as a decision before you build it.
+      the pictures to the user as a decision before you build it. That
+      decision must also choose where the browser keeps such a marker and
+      how a browser tab that opens later reads it.
 - [ ] Show them in the chat screens.
 - [ ] Compare each screen with its mockup.
+
+## Milestone 8k: Retry only the newest turn
+
+Depends on: 7s, 8j
+
+Apply decision 97 D.
+
+- [ ] The session record names the one message that Try again may retry:
+      the retry message of the newest turn when that turn failed, or
+      none.
+- [ ] The retry route refuses any other message with 409. The chat shows
+      Try again only on the failed item that the record names.
+- [ ] Test an old Try again in a second tab, and update the chat protocol.
+- [ ] Delete `plans/follow-ups/chat-retry-newest-turn.md`.
 
 ## Milestone 8i: Chat path wiring
 
@@ -4331,17 +4617,47 @@ Depends on: 15a, 15c
 Apply decision 78. It must merge before Milestone 15i wires the
 acceptance route.
 
-- [ ] Change the contracts, the fakes, and the D1 schema so that an
-      invitation names an email in place of a GitHub login.
-- [ ] Send each invitation by email through the email service of decision
-      79. In development, a mailer writes the link to the log.
-- [ ] At sign-in, read the verified emails of the GitHub account, and show
+- [x] Change the contracts, the fakes, and the D1 schema so that an
+      invitation names an email in place of a GitHub login. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+- [x] Send each invitation by email through the email service of decision
+      79. In development, a mailer writes the link to the log. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+- [x] At sign-in, read the verified emails of the GitHub account, and show
       the pending invitations that name one of them. Cancel a departed
-      member's pending invitations.
-- [ ] Change the invite form of the members mockups and screens to an
-      email field.
-- [ ] Test with a fake GitHub that returns verified emails, and a fake
-      mailer.
+      member's pending invitations. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+- [x] Change the invite form of the members mockups and screens to an
+      email field. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+- [x] Test with a fake GitHub that returns verified emails, and a fake
+      mailer. Branch: `conductor/boat-native-remote-workspaces-milestone-15g`.
+
+Agent calls, 6 November 2026:
+
+- Keep verified emails in a private D1 table. Refresh them before a
+  browser session or a desktop handoff, so neither flow uses stale emails.
+- Keep a failed send pending for retry. Use the invitation ID and the
+  message digest for Resend idempotency, so identical retries keep their key.
+- Link to the app root with the invite ID in `?invite=`. Milestone 15i
+  connects the pending invitation reader and explicit acceptance to the shell.
+- Use the log mailer for loopback app origins and inject it in tests.
+  Other origins need `RESEND_API_KEY`, so a missing key cannot report delivery.
+
+Evidence: `.context/milestone-15g/` holds the delegated reports, test
+proofs, migration proof, and screenshots of both schemes and sizes.
+
+User approval, 6 November 2026, for round 1 finding 2 of the
+[PR #22](https://github.com/Firna-AI/remote-code/pull/22) review: the user
+chose option B. When a person removed an invited email from GitHub and
+signed in, the refresh lost the match that cancels their invitations at
+departure. A removed person could then verify the email again and accept.
+
+- Each invitation keeps a durable match to each user whose verified email
+  it named, at invitation or at sign-in.
+- When a member leaves or an admin removes them, the same batch cancels
+  the matched invitations of that org.
+- Acceptance still needs a current verified email.
+- The same request fixes the pending list. It leaves out the orgs where
+  the user is already a member.
+- The user approved a change in place to the unmerged migration
+  `202611072100_email_invitations.sql`, because nothing is deployed.
 
 ## Milestone 15i: Feature wiring
 

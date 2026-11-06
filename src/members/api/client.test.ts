@@ -36,10 +36,10 @@ describe('createMembersApi', () => {
     }[] = [
       {
         name: 'invite',
-        call: (api) => api.invite(org, { githubLogin: 'octocat' }),
+        call: (api) => api.invite(org, { email: 'ana@example.com' }),
         method: 'POST',
         path: invitesPath(org),
-        body: { githubLogin: 'octocat' },
+        body: { email: 'ana@example.com' },
       },
       {
         name: 'cancel invite',

@@ -81,7 +81,7 @@
   box-sizing: border-box;
 }
 
-/* The login field and Invite on one line. */
+/* The email field and Invite on one line. */
 .invite {
   display: flex;
   align-items: center;

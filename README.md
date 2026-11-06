@@ -107,8 +107,8 @@ under `.wrangler/`, which Git also ignores.
 | `npm run format`            | Format the files with Prettier                                 |
 
 GitHub Actions uses `.nvmrc`, installs with `npm ci` and
-`npm --prefix desktop ci`, and then runs `npm run check` on pushes and pull
-requests. It does not deploy.
+`npm --prefix desktop ci`, and then runs `npm run check` on pull requests, and
+on pushes to `main` and to the primary branch of the plan. It does not deploy.
 
 ## Mac app
 

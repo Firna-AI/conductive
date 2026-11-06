@@ -1,8 +1,8 @@
 import { useRef, useState, type Ref } from 'react'
-import { CircleAlert, AtSign, UserPlus } from 'lucide-react'
+import { CircleAlert, Mail, UserPlus } from 'lucide-react'
 import { InputFrame, type InputFrameProps } from '@firna/ui/input'
 import {
-  normalizeLogin,
+  normalizeEmail,
   runsAction,
   type MembersState,
   type MembersStore,
@@ -19,18 +19,19 @@ type InputHandle =
     : never
 
 /**
- * The invite of an admin, by GitHub login. Invite with an empty field moves
- * the focus to the field. One invite runs at a time: while it runs, Enter
- * and Invite send nothing, and the field stays open for the next login. A
- * sent invite joins the list, and it clears the field only when the field
- * still holds the login that went out.
+ * The invite of an admin, by email. The person joins when they accept, with
+ * a GitHub account that has that email verified. Invite with an empty field
+ * moves the focus to the field. One invite runs at a time: while it runs,
+ * Enter and Invite send nothing, and the field stays open for the next
+ * email. A sent invite joins the list, and it clears the field only when the
+ * field still holds the email that went out.
  */
 export function InviteSection(props: {
   store: MembersStore
   state: MembersState
 }) {
   const { field } = useControlSizes()
-  const [login, setLogin] = useState('')
+  const [email, setEmail] = useState('')
   const input = useRef<InputHandle>(null)
   const { state } = props
   const ready = state.status === 'ready'
@@ -42,34 +43,37 @@ export function InviteSection(props: {
     // The store's state, not the last render, says whether an invite runs.
     const now = props.store.getState()
     if (now.status === 'ready' && runsAction(now.pending, 'invite')) return
-    const sent = login
-    if (!normalizeLogin(sent)) {
+    const sent = email
+    if (!normalizeEmail(sent)) {
       input.current?.focus()
       return
     }
     if (await props.store.invite(sent)) {
-      setLogin((value) => (value === sent ? '' : value))
+      setEmail((value) => (value === sent ? '' : value))
     }
   }
 
   return (
     <Section
-      description="Invite a person by their GitHub login. They join when they accept."
+      description="Invite a person by an email that is verified on their GitHub account. They join when they accept."
       title="Invite a member"
     >
       <div className={styles.invite}>
         <InputFrame
-          accessibilityLabel="GitHub login"
+          accessibilityLabel="Email"
           autoCapitalize="none"
+          // The field holds the email of another person, not the admin's own.
+          autoComplete="off"
           autoCorrect={false}
+          inputMode="email"
           inputRef={input}
-          onChangeText={setLogin}
+          onChangeText={setEmail}
           onSubmitEditing={() => void submit()}
-          placeholder="GitHub login"
-          prefixIcon={AtSign}
+          placeholder="Email"
+          prefixIcon={Mail}
           size={field}
           spellCheck={false}
-          value={login}
+          value={email}
         />
         <ActionButton
           busy={busy}
@@ -84,7 +88,7 @@ export function InviteSection(props: {
         <Notice
           body={failure.message}
           icon={CircleAlert}
-          title={`The invite to @${failure.target} failed`}
+          title={`The invite to ${failure.target} failed`}
           tone="danger"
         />
       ) : null}
