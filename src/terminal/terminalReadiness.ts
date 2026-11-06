@@ -29,6 +29,7 @@ export const initialReadiness: TerminalReadiness = {
 const running: ReadonlySet<WorkspaceState> = new Set([
   'ready',
   'working',
+  'input',
   'unread',
 ])
 

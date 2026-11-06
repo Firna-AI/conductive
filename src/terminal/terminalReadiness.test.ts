@@ -28,7 +28,7 @@ function reduce(...actions: TerminalReadinessAction[]) {
 describe('terminal readiness', () => {
   it('reads again when the sandbox runs during a read, and keeps the older answer from a wait', () => {
     const state = reduce(
-      { type: 'workspace', state: 'ready' },
+      { type: 'workspace', state: 'input' },
       answer(1, { state: 'starting', socketPath: null }),
     )
 
@@ -43,6 +43,7 @@ describe('terminal readiness', () => {
     const state = reduce(
       answer(1, ready),
       { type: 'workspace', state: 'working' },
+      { type: 'workspace', state: 'input' },
       { type: 'workspace', state: 'unread' },
     )
 
