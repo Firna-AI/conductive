@@ -1,6 +1,7 @@
 import type { Viewport } from '@mokly/mokly'
 import { MessageSquarePlus } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
+import { isPendingCommand } from '../components/chat/PendingCommand'
 import { EmptyState } from '../components/common/EmptyState'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
@@ -38,6 +39,17 @@ import styles from './WorkspaceScreen.module.css'
 const widenedRight = 560
 
 /**
+ * The state of the open workspace, for its header and its row: the state
+ * of its sandbox, or, on a ready sandbox, whether its agent waits for the
+ * user or works.
+ */
+function activityOf(state: WorkspaceState): ActivityStatus {
+  if (state.sandbox !== 'ready') return state.sandbox
+  if (conversations[state.conversation].some(isPendingCommand)) return 'input'
+  return isRunning(state) ? 'working' : 'ready'
+}
+
+/**
  * An open workspace: its header, its tabs of sessions and files, the pull
  * request, the file lists, and the tools. Desktop shows them side by side; a
  * phone shows one at a time, with tabs to switch.
@@ -49,12 +61,7 @@ export function WorkspaceScreen(props: {
   const { state, viewport } = props
   const record = openableWorkspaceRecords[state.workspace]
   const workspace = { ...record, name: workspaceName(state, record) }
-  const status: ActivityStatus =
-    state.sandbox === 'ready'
-      ? isRunning(state)
-        ? 'working'
-        : 'ready'
-      : state.sandbox
+  const status = activityOf(state)
   const archived = state.sandbox === 'archived'
   const admin = state.viewer === 'admin'
   const viewer = admin ? you : memberViewer
