@@ -5,7 +5,14 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
-  globalIgnores(['.context', 'mokly-static', '.mokly-export-reservations']),
+  globalIgnores([
+    '.context',
+    'mokly-static',
+    '.mokly-export-reservations',
+    'dist',
+    '.wrangler',
+    'coverage',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

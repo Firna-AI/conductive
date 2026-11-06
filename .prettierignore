@@ -2,5 +2,8 @@
 plans
 mokly-static
 .mokly-export-reservations
+dist
+.wrangler
+coverage
 package-lock.json
 *.md

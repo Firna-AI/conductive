@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "conducting",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-11-06",
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "WORKSPACES", "class_name": "Workspace" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Workspace"] }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "conducting",
+      // Local development only. Set a real ID when deployment is added.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+    },
+  ],
+}

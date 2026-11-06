@@ -3,7 +3,8 @@
 This repository builds Conducting, a browser-only coding tool at
 `conducting.build`. Each workspace is one task with its own branch and its own
 cloud computer, a Boat sandbox, where agents powered by Claude and Codex
-work. No app code exists yet. The requirements live in
+work. The app has its package setup but no product features yet. The
+requirements live in
 `docs/architecture.md` and `docs/protocol/`, and the Mokly mockup catalogue
 lives in `docs/mockups/`, in TypeScript and React with `@firna/ui`. The app
 will be one npm package. Its React and Vite web app will live under `src/`,
@@ -50,24 +51,33 @@ skill at that moment instead of guessing the rule.
 
 Run each command from the repository root, with Node 24 from `.nvmrc`.
 
-- Build: `npm run mockups:build`. It builds the mockup catalogue into
-  `mokly-static/`. The app has no build yet.
-- Targeted tests: none yet. The repository has no tests.
-- Typecheck: `npm run mockups:typecheck`.
-- Early check (format, lint, file length): `npm run format:check` and
-  `npm run lint`. No command checks the file length yet.
-- Complete gate: no single command yet. Run `npm run mockups:check`,
-  `npm run lint`, and `npm run format:check`. `npm run mockups:check` stops
-  at its first failed step.
+- Development: `npm run dev`. It serves the web app and the local Worker
+  at `http://127.0.0.1:5173`.
+- Build: `npm run build`. It checks the types and builds the web app and
+  the Worker into `dist/`.
+- Build preview: `npm run preview`. It serves the built app and the local
+  Worker at `http://127.0.0.1:5174`. The mockup preview uses port 4173.
+- Targeted tests: `npm run test -- worker/app.test.ts`. Vitest runs the
+  health route test in Node. Tests live beside the code as `*.test.ts`.
+- Typecheck: `npm run typecheck`. It generates the Worker binding and
+  runtime types under `.wrangler/`, then checks the app, Worker, and tools.
+  Use `npm run mockups:typecheck` for the mockups.
+- Early check: `npm run format:check`, `npm run lint`, and
+  `npm run file-length:check`. The last command rejects JavaScript and
+  TypeScript files over 300 lines, including comments and blank lines.
+- Complete gate: `npm run check`. It checks types, lint, format, file
+  length, tests, the app build, and the mockups. It stops at its first
+  failed step. GitHub Actions runs it on pushes and pull requests.
 - Format: `npm run format`.
 - Mockup check: `npm run mockups:check`. It runs the typecheck, then the
-  strict build.
+  strict build into `mokly-static/`.
 - Mockup preview: `npm run mockups:serve`. It serves the catalogue at
   `http://127.0.0.1:4173`, and it watches the edits.
 
 ## CI
 
-The repository has no CI workflow yet.
+GitHub Actions runs `npm run check` on each push and pull request, from
+`.github/workflows/ci.yml`.
 
 - Agent merges: off
 
@@ -118,6 +128,7 @@ The repository has no CI workflow yet.
 
 ## Status
 
-- This project is not in production. No app code exists yet.
+- This project is not in production. The app has a minimal page, one
+  health route, and one test, and no product features yet.
 - Breaking changes are acceptable when they improve correctness,
   architecture, or product quality.

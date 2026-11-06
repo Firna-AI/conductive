@@ -13,3 +13,4 @@ dist/
 .wrangler/
 *.tsbuildinfo
 coverage/
+.dev.vars

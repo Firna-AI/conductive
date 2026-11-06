@@ -7,15 +7,16 @@ computer. It replaces Conductor Cloud, which shuts down on 20 November 2026.
 
 ## Status
 
-The app is not built yet. Today the repository holds:
+The app has no product features yet. Today the repository holds:
 
 - the [architecture doc](docs/architecture.md) and the protocol docs, which
   state the requirements
 - the [mockup catalogue](docs/mockups/README.md), which draws every screen
   at phone and desktop sizes
-- the type check, lint, and format setup of the mockups
+- the app package: a minimal web page, a Worker with one health route, one
+  test, and the complete gate, which GitHub Actions runs
 
-The repository has no app code, no tests, and no deployment yet.
+The app has no deployment yet.
 
 ## Features
 
@@ -47,22 +48,45 @@ These features are planned. The protocol docs state each one.
 
 ## Get started
 
-The mockup catalogue is the only part that runs today.
+The package includes a minimal React app, a local Cloudflare Worker, and
+the mockup catalogue. The app has no product features yet.
 
 1. Install Node 24, as `.nvmrc` says. The
    [mockups README](docs/mockups/README.md#commands) lists the Node
    versions that Mokly refuses.
 2. Run `npm install`. The `.npmrc` file sets `legacy-peer-deps`, which
    `@firna/ui` needs.
-3. Run `npm run mockups:serve`, and open `http://127.0.0.1:4173`.
+3. Run `npm run dev`, and open `http://127.0.0.1:5173`.
+4. Open `http://127.0.0.1:5173/api/health` to check the Worker. It returns
+   `{"status":"ok"}`.
+5. Run `npm run check` before you submit a change.
 
-| Command                 | What it does                                                    |
-| ----------------------- | --------------------------------------------------------------- |
-| `npm run mockups:serve` | Serve the catalogue, and rebuild it on each edit                |
-| `npm run mockups:check` | Type-check the mockups, then build the catalogue in strict mode |
-| `npm run lint`          | Run ESLint                                                      |
-| `npm run format:check`  | Check the formatting with Prettier                              |
-| `npm run format`        | Format the files with Prettier                                  |
+Local development needs no Cloudflare account. Wrangler provides local D1
+and Durable Object storage under `.wrangler/`. The D1 ID in
+`wrangler.jsonc` is a placeholder. Deployment must set a real database ID.
+This setup creates no Cloudflare resources and includes no deploy command.
+Put local secrets in `.dev.vars`, which Git ignores.
+
+Worker types come from `wrangler.jsonc`. The type check generates them
+under `.wrangler/`, which Git also ignores.
+
+| Command                     | What it does                                                   |
+| --------------------------- | -------------------------------------------------------------- |
+| `npm run dev`               | Serve the web app and the local Worker                         |
+| `npm run build`             | Check types and build the web app and Worker into `dist/`      |
+| `npm run preview`           | Serve the built app and local Worker at port 5174              |
+| `npm run typecheck`         | Generate Worker types, then check the app, Worker, and tools   |
+| `npm run test`              | Run the Vitest tests                                           |
+| `npm run file-length:check` | Check the 300-line limit of JavaScript and TypeScript files     |
+| `npm run check`             | Run every check, including the app build and the mockup checks |
+| `npm run mockups:serve`     | Serve the catalogue at `http://127.0.0.1:4173`, and watch edits |
+| `npm run mockups:check`     | Check mockup types, then build the catalogue in strict mode     |
+| `npm run lint`              | Run ESLint                                                     |
+| `npm run format:check`      | Check formatting with Prettier                                 |
+| `npm run format`            | Format the files with Prettier                                 |
+
+GitHub Actions uses `.nvmrc`, installs with `npm ci`, and runs
+`npm run check` on pushes and pull requests. It does not deploy.
 
 ## Key code
 

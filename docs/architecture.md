@@ -5,8 +5,8 @@ workspace is one task with its own branch and its own cloud computer, a
 Boat sandbox. Agents powered by Claude and Codex work in the sandbox, and
 the user follows them in the browser. Nothing runs on the user's computer.
 This doc describes the components, their responsibilities, and the
-boundaries between them. The app is not built yet, so the doc describes the
-structure that the [protocol docs](#protocol-docs) require.
+boundaries between them. The app has no product features yet, so the doc
+describes the structure that the [protocol docs](#protocol-docs) require.
 
 ## Terms
 
