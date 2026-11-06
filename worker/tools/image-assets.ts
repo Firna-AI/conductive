@@ -9,6 +9,10 @@ import mcpToolsSource from '../../tools/mcp-tools.ts?raw'
 import mcpSource from '../../tools/mcp.ts?raw'
 import responsesSource from '../../tools/responses.ts?raw'
 import runtimeSource from '../../tools/runtime.ts?raw'
+import deviceClientSource from '../../tools/device-client.ts?raw'
+import deviceCliSource from '../../tools/device-cli.ts?raw'
+import deviceSource from '../../src/shared/device.ts?raw'
+import deviceReadSource from '../../src/shared/device-read.ts?raw'
 
 /** Vite embeds these allowed sources as text in the Worker bundle. */
 export const WORKSPACE_TOOL_SOURCES = [
@@ -21,5 +25,9 @@ export const WORKSPACE_TOOL_SOURCES = [
   { path: 'tools/mcp.ts', contents: mcpSource },
   { path: 'tools/mcp-tools.ts', contents: mcpToolsSource },
   { path: 'tools/runtime.ts', contents: runtimeSource },
+  { path: 'tools/device-client.ts', contents: deviceClientSource },
+  { path: 'tools/device-cli.ts', contents: deviceCliSource },
+  { path: 'src/shared/device.ts', contents: deviceSource },
+  { path: 'src/shared/device-read.ts', contents: deviceReadSource },
   { path: 'src/shared/agent-tools.ts', contents: contractSource },
 ] as const satisfies readonly WorkspaceToolSource[]

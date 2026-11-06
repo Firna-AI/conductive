@@ -10,6 +10,7 @@ import { errorResponse, HttpError, privateResponse } from '../http'
 import { createFromTool } from './create'
 import type { AgentToolServices } from './services'
 import { callingWorkspace, orgWorkspaces } from './store'
+import { readJsonObject } from '../http/json-body'
 
 export interface AgentToolsEnvironment {
   DB: D1Database
@@ -63,20 +64,13 @@ export function createAgentToolsHandler(
           } satisfies AgentListWorkspacesResponse),
         )
       }
-      if (
-        request.headers
-          .get('Content-Type')
-          ?.split(';')[0]
-          .trim()
-          .toLowerCase() !== 'application/json'
-      ) {
-        throw new HttpError(415, 'json_required', 'Send the request as JSON.')
-      }
       let input: AgentCreateWorkspaceRequest
       try {
-        const body: unknown = await request.json()
+        const body: unknown = await readJsonObject(request)
         input = createWorkspaceInput(body)
       } catch (error) {
+        if (error instanceof HttpError && [413, 415].includes(error.status))
+          throw error
         throw new HttpError(
           400,
           'invalid_input',

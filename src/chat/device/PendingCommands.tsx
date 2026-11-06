@@ -1,0 +1,85 @@
+import { Laptop } from 'lucide-react'
+import type {
+  DeviceApprovalAction,
+  DeviceCommandRecord,
+} from '../../shared/device'
+import { classes } from '../../../docs/mockups/src/components/common/classes'
+import styles from '../../../docs/mockups/src/components/chat/PendingCommand.module.css'
+import { macLabel } from './command-text'
+import { CommandChoices } from './CommandChoices'
+import {
+  CommandLine,
+  CommandStatus,
+  RequestDetails,
+  type RequestReaders,
+} from './CommandParts'
+import { answerOf, canAnswer, type DeviceSnapshot } from './device-snapshot'
+import local from './device.module.css'
+
+/**
+ * A command that waits for its answer, as a compact message (decision 62):
+ * the exact command, the Mac, the time limit, and Details. The Mac app on
+ * the Mac that got the request shows Deny and Allow. Every other window
+ * shows the state only, because only that Mac app can allow the command.
+ */
+function PendingCommand(props: {
+  request: DeviceCommandRecord
+  devices: DeviceSnapshot
+  readers: RequestReaders
+  onAnswer: (requestId: string, action: DeviceApprovalAction) => void
+}) {
+  const { request, devices } = props
+  const choices = canAnswer(devices, request)
+  const mac = macLabel(request, choices)
+  return (
+    <section
+      aria-label={choices ? 'Run a command on this Mac?' : `Command on ${mac}`}
+      className={styles.pending}
+    >
+      <div className={styles.head}>
+        <Laptop aria-hidden className={styles.icon} size={14} />
+        <span className={styles.command}>
+          <CommandLine command={request.command} />
+        </span>
+        <span className={classes(styles.end, local.end)}>
+          {choices ? (
+            <CommandChoices
+              answering={answerOf(devices, request.requestId)}
+              onAnswer={(action) => props.onAnswer(request.requestId, action)}
+            />
+          ) : (
+            <CommandStatus request={request} />
+          )}
+        </span>
+      </div>
+      <RequestDetails mac={mac} readers={props.readers} request={request} />
+    </section>
+  )
+}
+
+/**
+ * The requests of the session that wait for an answer, the oldest first,
+ * just above the composer. Each one keeps its own choices, so every request
+ * that waits has a way to answer it.
+ */
+export function PendingCommands(props: {
+  requests: readonly DeviceCommandRecord[]
+  devices: DeviceSnapshot
+  readers: RequestReaders
+  onAnswer: (requestId: string, action: DeviceApprovalAction) => void
+}) {
+  if (props.requests.length === 0) return null
+  return (
+    <div className={local.pinned}>
+      {props.requests.map((request) => (
+        <PendingCommand
+          devices={props.devices}
+          key={request.requestId}
+          onAnswer={props.onAnswer}
+          readers={props.readers}
+          request={request}
+        />
+      ))}
+    </div>
+  )
+}

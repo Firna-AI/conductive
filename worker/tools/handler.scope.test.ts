@@ -151,3 +151,15 @@ it('rejects invalid create payloads before the lifecycle starts', async () => {
   expect(text.status).toBe(415)
   expect(fixture.services.createWorkspace).not.toHaveBeenCalled()
 })
+
+it('stops oversized JSON before a workspace tool can create work', async () => {
+  const response = await fixture.create({
+    repositoryId: 'repo-a',
+    firstMessage: 'x'.repeat(1_000_001),
+  })
+  expect(response.status).toBe(413)
+  expect(await response.json()).toMatchObject({
+    error: { code: 'body_too_large' },
+  })
+  expect(fixture.services.createWorkspace).not.toHaveBeenCalled()
+})

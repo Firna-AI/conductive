@@ -44,6 +44,9 @@ The default org is `acme`. The default workspace is `checkout-autocomplete`.
 `FAKE_IDS` in `fixtures/core.ts` names the shared sample IDs.
 Options select the org role, workspace state, conversation, and GitHub banner state.
 Replace a reply to draw a missing login, a missing key, a first run, or a deleted org.
+`macCommands` chooses the Mac commands of the fake workspace, and `onMac` makes the window the Mac app on the Mac of the fake user.
+Without `onMac`, the window is a browser: it has no pairing, and the Mac settings refuse it as the Worker does.
+The requests come after the tool call of the recorded turn, so the chat places a card after it.
 Preview and desktop URLs are recorded placeholders. Tests can replace them with local fixture URLs.
 
 ## Mounted tests
@@ -116,6 +119,8 @@ Replies, timers, and `waitFor` go on.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
 - `fixtures/workspaces.ts` maps workspace and session samples.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples.
+- `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings.
+- `fake-device-routes.ts` records the Mac command, pairing, answer, and Mac settings replies.
 
 See [the shared contracts](../shared/README.md) and
 [the backend fakes](../../worker/test-support/README.md).

@@ -1,0 +1,76 @@
+/* The requests that wait, one compact message each, just above the composer. */
+.pinned {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* On a phone, the arrow beside Allow is a 44 px touch target. */
+.arrow {
+  min-width: max(22px, var(--ui-touch-min, 0px));
+}
+
+/*
+ * Deny, Allow, and the menu, with no box of their own: the buttons stay in
+ * the row of the actions, and the menu opens from that row.
+ */
+.choices {
+  display: contents;
+}
+
+.end {
+  position: relative;
+}
+
+/*
+ * A narrow card, such as on a phone, puts the actions under the command.
+ * The menu then opens from the start of the actions and keeps inside them.
+ * From the end of the arrow, it would cross the left edge of a phone.
+ */
+@container (max-width: 440px) {
+  .menu {
+    left: 0;
+    max-width: 100%;
+  }
+}
+
+/* An always-allowed command keeps its exact text, and a long one wraps. */
+.command {
+  flex: 1;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* The workspace of a running 15 minutes, its time left, and Stop. */
+.window {
+  flex: 1;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+  overflow-wrap: anywhere;
+}
+
+.left {
+  flex-shrink: 0;
+  color: var(--ui-amber-deep);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ui-weight-strong);
+}
+
+.empty {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* A phone raises every local touch target of the section to 44 px. */
+.phone {
+  --ui-touch-min: 44px;
+}

@@ -1,5 +1,6 @@
 import type { OrgRole } from '../../shared/api'
 import type { WorkspaceState } from '../../shared/workspaces'
+import type { FakeMacScenario } from '../../test-support/fixtures/devices'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 
 /** The state that the development page draws, read from its address. */
@@ -14,6 +15,12 @@ export interface DevOptions {
   viewport: 'desktop' | 'mobile'
   scheme: 'dark' | 'light'
   clock: 'running' | 'frozen'
+  /** The Mac commands of the workspace. */
+  mac: FakeMacScenario
+  /** The window: a browser, or the Mac app on the Mac that got the requests. */
+  app: 'browser' | 'mac'
+  /** The chat, or the This Mac section of the Mac app's account. */
+  page: 'chat' | 'this-mac'
 }
 
 export const choices = {
@@ -44,6 +51,22 @@ export const choices = {
   viewport: ['desktop', 'mobile'],
   scheme: ['dark', 'light'],
   clock: ['running', 'frozen'],
+  mac: [
+    'none',
+    'waiting',
+    'longer',
+    'several',
+    'running',
+    'denied',
+    'done',
+    'exit-code',
+    'cut',
+    'timed-out',
+    'failed',
+    'unavailable',
+  ],
+  app: ['browser', 'mac'],
+  page: ['chat', 'this-mac'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 
 /** The options in the order that the page lists them. */
@@ -58,6 +81,9 @@ export const optionNames = [
   'viewport',
   'scheme',
   'clock',
+  'mac',
+  'app',
+  'page',
 ] as const satisfies readonly (keyof DevOptions)[]
 
 function pick<T extends string>(
@@ -81,6 +107,9 @@ export function readOptions(search: string): DevOptions {
     viewport: pick(choices.viewport, get('viewport')),
     scheme: pick(choices.scheme, get('scheme')),
     clock: pick(choices.clock, get('clock')),
+    mac: pick(choices.mac, get('mac')),
+    app: pick(choices.app, get('app')),
+    page: pick(choices.page, get('page')),
   }
 }
 

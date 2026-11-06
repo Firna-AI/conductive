@@ -4463,23 +4463,56 @@ Depends on: 15, 15e
 Let agents run commands on the user's Mac, as decision 62 says. No other
 milestone waits for it.
 
-- [ ] Register the Mac as a device of the signed-in user while the app
+Scope call, approved by the user on 6 November 2026: this branch may add
+device-only routing in `worker/application.ts`, a gated device operation
+in `worker/workspace.ts`, and the Mac command token rule in
+`docs/protocol/access-and-security.md`. The device operation reads the
+active turn's sender from stored records. New request bodies use the
+existing bounded reader until Milestone 4c supplies its JSON helper.
+
+Milestone 4c merged on 6 November 2026. The device routes and the agent
+tools handler now use its shared `readJsonObject` helper.
+
+Implementation calls, 6 November 2026:
+
+- Keep one current authenticated Mac connection for each sender. A new
+  connection replaces the old one and ends its work. This milestone adds
+  no device picker or broadcast.
+- A command belongs to its active stored turn. Ending that turn cancels
+  its pending or running commands, and a late answer cannot restart them.
+- Keep at most 65,536 UTF-8 bytes of combined output. Escaped output then
+  fits within the device message budget.
+- Use the existing command card for timeout, launch failure, nonzero exit,
+  and cut output. Stack pending requests above the composer. These are
+  outcomes of the approved command limits, without a new screen or flow.
+
+- [x] Register the Mac as a device of the signed-in user while the app
       runs and the Mac is awake, over one connection to the Worker.
-- [ ] Add the "run a command on the Mac" agent tool. Route each request to
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+- [x] Add the "run a command on the Mac" agent tool. Route each request to
       the Mac of the person who sent the turn, and answer "not available"
       when that Mac is not connected.
-- [ ] Show the permission prompt with Deny, Allow, Always allow, and Allow
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+- [x] Show the permission prompt with Deny, Allow, Always allow, and Allow
       all commands for 15 minutes, and a macOS notification when the app
       is in the background.
-- [ ] Run the command with its time limit and an output limit, and return
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+- [x] Run the command with its time limit and an output limit, and return
       the output to the agent.
-- [ ] Keep the always-allowed commands and the 15-minute window on the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+- [x] Keep the always-allowed commands and the 15-minute window on the
       Mac, with Remove and Stop.
-- [ ] Test the prompt choices, the time limits, and the offline answer.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+- [x] Test the prompt choices, the time limits, and the offline answer.
       Update `docs/protocol/desktop-app.md` and
       `docs/protocol/agent-tools.md`.
-- [ ] Set the workspace state to needs input while a command request
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+- [x] Set the workspace state to needs input while a command request
       waits, and back when the user answers it, as decision 68 says.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+
+Evidence: `.context/boat-native-remote-workspaces/verification/` and the
+three implementation reports under `.context/boat-native-remote-workspaces/reports/`.
 
 ## Milestone 16: Deployment and live smoke test
 

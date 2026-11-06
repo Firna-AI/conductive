@@ -1,6 +1,7 @@
 # Workspace CLI and MCP server
 
 These tools create and list Conducting workspaces from a running workspace.
+They can also ask to run a command on the active turn sender's connected Mac.
 They use the machine route in the [shared contract](../src/shared/agent-tools.ts).
 The [Worker handler](../worker/tools/README.md) verifies the workspace token and the calling turn.
 
@@ -15,6 +16,7 @@ conducting workspaces create --repository repo-id --message 'Build this feature.
 conducting workspaces create --repository repo-id --message 'Review the change.' \
   --agent codex --model model-name --effort high --section section-id
 conducting mcp
+conducting mac run --command 'pwd' --folder '/Users/me/project' --reason 'Check the local folder'
 ```
 
 Create inherits the calling workspace's org and owner.
@@ -44,7 +46,7 @@ List needs only the workspace token.
 
 ## MCP
 
-The stdio server exposes `create_workspace` and `list_workspaces`.
+The stdio server exposes `create_workspace`, `list_workspaces`, and `run_mac_command`.
 It supports the `2025-11-25` MCP revision.
 It returns this supported revision during initialization.
 It never copies an unknown offered revision into its reply.
@@ -59,6 +61,29 @@ It must pass that turn's environment to the process.
 It must stop the process when the turn ends.
 A process with an old turn ID cannot serve another turn or a concurrent session.
 The Worker rejects stale turn context.
+
+## Mac commands
+
+Mac commands use the same runtime token and active turn context.
+The Worker selects the stored sender, not the workspace owner or a caller-supplied user.
+The tool waits for the scoped request to finish.
+The exact command and folder reach the Mac without trimming.
+The normal reason is required.
+The time limit defaults to 60 seconds.
+`--timeout-seconds` accepts up to 120 seconds without an extra reason.
+Limits through 1800 seconds require `--longer-timeout-reason`.
+`--request-id` supplies an optional stable retry ID.
+Without it, the tool creates an opaque ID.
+
+Approval and saved permission rules stay on the Mac.
+An offline Mac returns an unavailable result.
+A stopped turn cancels its command with `turn_ended`.
+The response preserves the exit code, timeout, and output truncation.
+Combined stdout and stderr have a 65,536-byte UTF-8 cap.
+The CLI writes the result as JSON and returns status 1 for an unsuccessful command.
+
+The Mac command route is mounted in the real Worker.
+General image installation and runner tool registration remain composition work.
 
 ## Image assets
 

@@ -48,6 +48,11 @@ It identifies the lost runner event without copying its data.
 and runner connections of one workspace. A reconnect uses the last stored number.
 The history response gives the point after which live events continue.
 
+`device.ts` defines Mac command paths, socket messages, pairing, and local settings relays.
+It has no imports and also serves the Mac app's NodeNext build.
+`device-read.ts` validates its wire values and preserves command text, timeouts, and truncation.
+The combined Mac output cap is 65,536 UTF-8 bytes.
+
 The machine and preview hostnames remain deployment settings.
 Each open of a port preview gets a new preview ID, and the API never gives out
 a revoked ID again (decision 86). The Preview tool hides revoked previews by their ID.

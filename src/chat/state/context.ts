@@ -2,6 +2,7 @@ import type { Session } from '../../shared/sessions'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import { ChatApiError, type ChatApi, type WorkspaceTarget } from '../api/client'
 import type { StreamEnvelope } from '../api/read-workspace'
+import type { DeviceChannel } from '../device/device-actions'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
 import {
@@ -45,6 +46,8 @@ export interface ChatContext {
   readonly saveView: (view: WorkspaceView) => void
   /** The chat is still open. A response that arrives later changes nothing. */
   readonly live: () => boolean
+  /** The routes of Mac commands, and the number of their latest read. */
+  readonly devices: DeviceChannel
 }
 
 export function logOf(context: ChatContext, sessionId: string): SessionLog {
@@ -79,6 +82,7 @@ export function withTranscript(
   snapshot: ChatSnapshot,
   sessionId: string,
   transcript: Transcript,
+  times: ReadonlyMap<string, number>,
 ): ChatSnapshot {
   const shown = new Set(
     transcript.items.flatMap((item) =>
@@ -88,6 +92,7 @@ export function withTranscript(
   return withSession(snapshot, sessionId, (state) => ({
     ...state,
     transcript,
+    times,
     pending: state.pending.filter((message) => !shown.has(message.id)),
     stopping: transcript.turn ? state.stopping : false,
   }))
@@ -159,7 +164,8 @@ export function applyEnvelopes(
     for (const record of records.values()) next = placeSession(next, record)
     next = applyMoves(next, moves)
     for (const [id] of changed) {
-      next = withTranscript(next, id, logOf(context, id).transcript)
+      const log = logOf(context, id)
+      next = withTranscript(next, id, log.transcript, log.times)
     }
     return next
   })

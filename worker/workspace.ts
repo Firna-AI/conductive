@@ -2,6 +2,7 @@ import { DurableObject } from 'cloudflare:workers'
 
 import { WorkspaceChat } from './chat/backend'
 import type { AppEnv } from './env'
+import { DeviceRuntime } from './devices/runtime'
 
 interface WorkspaceEnv extends AppEnv {
   WORKSPACES: DurableObjectNamespace
@@ -9,16 +10,42 @@ interface WorkspaceEnv extends AppEnv {
 
 export class Workspace extends DurableObject<WorkspaceEnv> {
   private readonly chat: WorkspaceChat
+  private readonly devices: DeviceRuntime
+  private readonly context: DurableObjectState
 
   constructor(context: DurableObjectState, env: WorkspaceEnv) {
     super(context, env)
+    this.context = context
     this.chat = new WorkspaceChat(context.storage, env, {
       matchesObject: (workspaceId) =>
         env.WORKSPACES.idFromName(workspaceId).equals(context.id),
+      runnerEventStored: async (envelope) => {
+        if (
+          envelope.event.type === 'turn.completed' ||
+          envelope.event.type === 'turn.failed'
+        )
+          context.waitUntil(this.devices.reconcile())
+      },
     })
+    this.devices = new DeviceRuntime(
+      env,
+      context.storage,
+      this.chat,
+      (name) => env.WORKSPACES.idFromName(name).equals(context.id),
+      (when) => context.storage.setAlarm(when),
+    )
   }
 
-  fetch(request: Request): Promise<Response> {
-    return this.chat.fetch(request)
+  async fetch(request: Request): Promise<Response> {
+    const response = await this.devices.fetch(request)
+    if (response) return response
+    const chatResponse = await this.chat.fetch(request)
+    if (request.method !== 'GET' && request.method !== 'HEAD')
+      this.context.waitUntil(this.devices.reconcile())
+    return chatResponse
+  }
+
+  alarm(): Promise<void> {
+    return this.devices.alarm()
   }
 }

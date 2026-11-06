@@ -1,0 +1,187 @@
+import {
+  alwaysAllowed,
+  safariOutput,
+  safariSuite,
+  safariTest,
+  thisMac,
+} from '../../../docs/mockups/src/fixtures/mac'
+import { checkoutAutocomplete } from '../../../docs/mockups/src/fixtures/workspaces'
+import type {
+  DeviceCommandRecord,
+  DeviceCommandResult,
+  DevicePairing,
+  DeviceSettings,
+} from '../../shared/device'
+import { FAKE_IDS, FAKE_TIME, fakeUser } from './core'
+
+/** The pairing of the Mac app window on the Mac of the fake user. */
+export const FAKE_PAIRING: DevicePairing = {
+  deviceId: 'mac-cal',
+  connectionId: 'connection-1',
+}
+
+/** The Mac commands that a fake workspace can hold. */
+export type FakeMacScenario =
+  | 'none'
+  | 'waiting'
+  | 'longer'
+  | 'several'
+  | 'running'
+  | 'denied'
+  | 'done'
+  | 'exit-code'
+  | 'cut'
+  | 'timed-out'
+  | 'failed'
+  | 'unavailable'
+  | 'other-session'
+
+/** A run that started on the Mac at 6 s and ended `seconds` later. */
+const ran = (seconds: number) => ({
+  startedAt: FAKE_TIME + 6_000,
+  updatedAt: FAKE_TIME + 6_000 + seconds * 1_000,
+})
+
+const passed: DeviceCommandResult = {
+  stdout: safariOutput,
+  stderr: '',
+  exitCode: 0,
+  timedOut: false,
+  truncated: false,
+}
+
+/**
+ * A request of the recorded turn, after its tool call starts, as the
+ * Worker records it. The sender is the fake user, whose Mac is paired.
+ */
+export function fakeMacRequest(
+  change: Partial<DeviceCommandRecord> = {},
+): DeviceCommandRecord {
+  return {
+    requestId: 'mac-request-1',
+    orgId: FAKE_IDS.org,
+    workspaceId: FAKE_IDS.workspace,
+    workspaceName: checkoutAutocomplete.name,
+    sessionId: FAKE_IDS.session,
+    turnId: 'turn-1',
+    sender: {
+      id: fakeUser.id,
+      githubLogin: fakeUser.githubLogin,
+      displayName: fakeUser.displayName,
+      avatarUrl: fakeUser.avatarUrl,
+    },
+    device: FAKE_PAIRING,
+    deviceName: thisMac.name,
+    command: safariTest.command,
+    folder: safariTest.folder,
+    reason: safariTest.reason,
+    timeoutSeconds: 60,
+    longerTimeoutReason: null,
+    state: 'waiting',
+    result: null,
+    error: null,
+    createdAt: FAKE_TIME + 5_500,
+    startedAt: null,
+    updatedAt: FAKE_TIME + 5_500,
+    ...change,
+  }
+}
+
+const scenarios: Readonly<
+  Record<FakeMacScenario, () => readonly DeviceCommandRecord[]>
+> = {
+  none: () => [],
+  waiting: () => [fakeMacRequest()],
+  longer: () => [
+    fakeMacRequest({
+      command: safariSuite.command,
+      reason: safariSuite.reason,
+      timeoutSeconds: 600,
+      longerTimeoutReason: safariSuite.longerBecause ?? null,
+    }),
+  ],
+  several: () => [
+    fakeMacRequest(),
+    fakeMacRequest({
+      requestId: 'mac-request-2',
+      command: 'sw_vers',
+      reason: 'Read the macOS version for the bug report.',
+      createdAt: FAKE_TIME + 5_800,
+    }),
+  ],
+  running: () => [fakeMacRequest({ state: 'running', ...ran(0) })],
+  denied: () => [fakeMacRequest({ state: 'denied' })],
+  done: () => [
+    fakeMacRequest({ state: 'completed', result: passed, ...ran(16) }),
+  ],
+  'exit-code': () => [
+    fakeMacRequest({
+      ...ran(16),
+      state: 'completed',
+      result: {
+        ...passed,
+        stdout: '✗ checkout › suggests addresses (2.4s)\n1 failed (3.1s)',
+        exitCode: 1,
+      },
+    }),
+  ],
+  cut: () => [
+    fakeMacRequest({
+      ...ran(16),
+      state: 'completed',
+      result: { ...passed, truncated: true },
+    }),
+  ],
+  'timed-out': () => [
+    fakeMacRequest({
+      ...ran(60),
+      state: 'timed-out',
+      result: {
+        stdout: '> storefront@2.4.0 test:safari',
+        stderr: '',
+        exitCode: null,
+        timedOut: true,
+        truncated: false,
+      },
+    }),
+  ],
+  failed: () => [
+    fakeMacRequest({
+      ...ran(3),
+      state: 'failed',
+      error: {
+        code: 'turn_ended',
+        message: 'The turn ended before the command finished.',
+      },
+    }),
+  ],
+  unavailable: () => [
+    fakeMacRequest({ state: 'unavailable', device: null, deviceName: null }),
+  ],
+  'other-session': () => [fakeMacRequest({ sessionId: 'other-session' })],
+}
+
+/** The Mac command records of a scenario, the oldest first. */
+export function fakeMacRequests(
+  scenario: FakeMacScenario,
+): readonly DeviceCommandRecord[] {
+  return scenarios[scenario]()
+}
+
+/**
+ * The settings of the fake Mac: its commands from the mockups, and the
+ * 15 minutes of the fake workspace, with 14:32 left at `now`.
+ */
+export function fakeMacSettings(now = FAKE_TIME): DeviceSettings {
+  return {
+    deviceName: thisMac.name,
+    alwaysAllowedCommands: [...alwaysAllowed],
+    workspaceWindows: [
+      {
+        workspaceId: FAKE_IDS.workspace,
+        workspaceName: checkoutAutocomplete.name,
+        expiresAt: now + 14 * 60_000 + 32_000,
+      },
+    ],
+  }
+}

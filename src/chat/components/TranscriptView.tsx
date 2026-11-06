@@ -1,8 +1,7 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, CircleStop, Clock } from 'lucide-react'
-import type { ToolCall } from '../../shared/chat-events'
 import type { UserMessage } from '../../shared/messages'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { InlineText } from '../../../docs/mockups/src/components/common/InlineText'
@@ -20,23 +19,12 @@ import controls from '../ui/controls.module.css'
 import { AgentText } from './AgentText'
 import { SentFiles } from './AttachmentChips'
 import { ToolGroup } from './ToolGroup'
+import {
+  groupEntries,
+  type Entry,
+  type TranscriptInsert,
+} from './transcript-entries'
 import { TurnEnd } from './TurnEnd'
-
-type Entry =
-  | { kind: 'item'; item: TranscriptItem }
-  | { kind: 'tools'; id: string; calls: ToolCall[] }
-
-/** Groups each run of consecutive tool calls, so the chat can fold it. */
-function groupEntries(items: readonly TranscriptItem[]): Entry[] {
-  const entries: Entry[] = []
-  for (const item of items) {
-    const last = entries.at(-1)
-    if (item.kind !== 'tool') entries.push({ kind: 'item', item })
-    else if (last?.kind === 'tools') last.calls.push(item.tool)
-    else entries.push({ kind: 'tools', id: item.id, calls: [item.tool] })
-  }
-  return entries
-}
 
 /** A message that a person sent, and whether it waits for the sandbox. */
 export function UserBubble(props: { message: UserMessage }) {
@@ -149,14 +137,47 @@ function ItemView(props: {
   }
 }
 
+/** How each entry renders: Try again shows on the last part of the chat only. */
+interface EntryContext {
+  canRetry: (item: TranscriptItem) => boolean
+  retrying: boolean
+  onRetry: (messageId: string) => void
+  onOpenDiff?: (path: string) => void
+  readers: ChatReaders
+}
+
+function renderEntry(entry: Entry, context: EntryContext): ReactNode {
+  switch (entry.kind) {
+    case 'insert':
+      return <Fragment key={entry.insert.key}>{entry.insert.node}</Fragment>
+    case 'tools':
+      return <ToolGroup calls={entry.calls} key={entry.id} />
+    case 'item':
+      return (
+        <ItemView
+          actions={{
+            canRetry: context.canRetry(entry.item),
+            retrying: context.retrying,
+            onRetry: context.onRetry,
+            onOpenDiff: context.onOpenDiff,
+          }}
+          item={entry.item}
+          key={entry.item.id}
+          readers={context.readers}
+        />
+      )
+  }
+}
+
 /**
  * The parts of a session's chat in order: messages, answers, folded tool
- * calls, and the end of each turn. Sent messages that the stream has not
- * shown yet follow, then the running turn, then `children`, such as the
- * steps of a sandbox start.
+ * calls, the inserts, and the end of each turn. Sent messages that the
+ * stream has not shown yet follow, then the running turn, then `children`,
+ * such as the steps of a sandbox start.
  */
 export function TranscriptView(props: {
   transcript: Transcript
+  inserts?: readonly TranscriptInsert[]
   readers: ChatReaders
   pending: readonly UserMessage[]
   now: number
@@ -170,23 +191,15 @@ export function TranscriptView(props: {
   const last = transcript.items.at(-1)
   return (
     <>
-      {groupEntries(transcript.items).map((entry) =>
-        entry.kind === 'tools' ? (
-          <ToolGroup calls={entry.calls} key={entry.id} />
-        ) : (
-          <ItemView
-            actions={{
-              canRetry:
-                !props.readOnly && !transcript.turn && entry.item === last,
-              retrying: props.retrying,
-              onRetry: props.onRetry,
-              onOpenDiff: props.onOpenDiff,
-            }}
-            item={entry.item}
-            key={entry.item.id}
-            readers={props.readers}
-          />
-        ),
+      {groupEntries(transcript.items, props.inserts ?? []).map((entry) =>
+        renderEntry(entry, {
+          canRetry: (item) =>
+            !props.readOnly && !transcript.turn && item === last,
+          retrying: props.retrying,
+          onRetry: props.onRetry,
+          onOpenDiff: props.onOpenDiff,
+          readers: props.readers,
+        }),
       )}
       {props.pending.map((message) => (
         <UserBubble key={`pending:${message.id}`} message={message} />

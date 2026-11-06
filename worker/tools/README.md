@@ -5,6 +5,14 @@ It implements the [agent-tool requirements](../../docs/protocol/agent-tools.md).
 It uses the existing [shared contracts](../../src/shared/README.md) and D1 tables.
 It adds no migration.
 
+The [Mac command feature](../devices/README.md) also uses this area's machine entry point.
+`mac-command.ts` forwards only its fixed paths to the token's exact workspace object.
+The real application dispatches those paths before the machine stub.
+The object resolves the stored active sender and selects that sender's connected Mac.
+The create handler and Mac command handler use `readJsonObject` from the [shared request reader](../http/README.md#json-request-objects).
+It owns the 1,000,000-byte cap and the media type policy.
+The create handler preserves its HTTP 413 and HTTP 415 responses.
+
 ## Handler
 
 `createAgentToolsHandler` takes the database, the machine origin, and `AgentToolServices`.
@@ -75,7 +83,8 @@ The runner supplies credentials and active turn context at runtime.
 
 ## Production composition
 
-Production code does not use the handler, the installer, or `WORKSPACE_TOOLS_MCP` yet.
+Production code does not use the create/list handler, the installer, or `WORKSPACE_TOOLS_MCP` yet.
+The Mac-command machine handler is already dispatched.
 Production use requires this composition work:
 
 1. In `worker/application.ts`, route the machine workspace path to this handler before the machine surface stub.

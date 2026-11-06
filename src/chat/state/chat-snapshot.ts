@@ -9,6 +9,7 @@ import type {
   MemberSummary,
   OrgSummary,
 } from '../api/read-responses'
+import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
 import { emptyTranscript, type Transcript } from './transcript'
 
 /**
@@ -30,6 +31,8 @@ export interface Draft {
 
 export interface SessionState {
   transcript: Transcript
+  /** The time of the first event of each transcript item, by its ID. */
+  times: ReadonlyMap<string, number>
   hydration: 'idle' | 'loading' | 'ready' | 'failed'
   draft: Draft
   /** Sent messages that the stream has not shown yet. */
@@ -83,6 +86,8 @@ export interface ChatSnapshot {
   overlay: Overlay
   notice: ChatNotice | null
   resuming: boolean
+  /** The Mac commands of the workspace, as `device/device-snapshot.ts` says. */
+  devices: DeviceSnapshot
 }
 
 /** A draft with nothing in it, and no work in flight. */
@@ -99,6 +104,7 @@ export function blankDraft(id: string): Draft {
 
 const initialSession: Omit<SessionState, 'draft'> = {
   transcript: emptyTranscript,
+  times: new Map(),
   hydration: 'idle',
   pending: [],
   stopping: false,
@@ -123,6 +129,7 @@ export const initialSnapshot: ChatSnapshot = {
   overlay: { kind: 'none' },
   notice: null,
   resuming: false,
+  devices: initialDevices,
 }
 
 /**

@@ -3,7 +3,7 @@ import type { ElectronApplication, Page } from '@playwright/test'
 
 import { DESKTOP_ORIGIN } from '../../worker/security/desktop-contract.js'
 
-/** The minimal product has no links or preview yet. Arrange their real browser boundaries. */
+/** Arrange cross-frame links to check native navigation isolation in the real shell. */
 export async function expectFrameIsolation(
   electron: ElectronApplication,
   page: Page,
@@ -17,10 +17,16 @@ export async function expectFrameIsolation(
     link.click()
   }, DESKTOP_ORIGIN)
   await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/trusted-popup`)
+  await expect(
+    page.getByRole('navigation', { name: 'Window controls' }),
+  ).toBeVisible()
   await page.evaluate((origin) => {
     window.open(origin + '/script-popup', '_blank')
   }, appOrigin)
   await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/script-popup`)
+  await expect(
+    page.getByRole('navigation', { name: 'Window controls' }),
+  ).toBeVisible()
   await page.evaluate((origin) => {
     const child = document.createElement('iframe')
     child.title = 'Untrusted preview'

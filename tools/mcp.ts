@@ -7,6 +7,7 @@ import {
   ToolInputError,
 } from './input.ts'
 import { WORKSPACE_MCP_TOOLS } from './mcp-tools.ts'
+import { readDeviceCommandInput } from '../src/shared/device-read.ts'
 
 /** A fixed supported revision is negotiated, rather than echoing any revision. */
 export const MCP_PROTOCOL_VERSION = '2025-11-25'
@@ -104,13 +105,20 @@ export function createWorkspaceMcp(client: WorkspaceToolClient) {
         params.arguments === undefined ? {} : record(params.arguments)
       try {
         const result =
-          params.name === 'create_workspace'
-            ? await client.create(createWorkspaceInput(args))
-            : await client.list()
+          params.name === 'run_mac_command'
+            ? await client.runMacCommand(
+                readDeviceCommandInput({
+                  ...args,
+                  requestId: args.requestId ?? crypto.randomUUID(),
+                }),
+              )
+            : params.name === 'create_workspace'
+              ? await client.create(createWorkspaceInput(args))
+              : await client.list()
         return success({
           content: [{ type: 'text', text: JSON.stringify(result) }],
           structuredContent: result,
-          isError: false,
+          isError: 'request' in result && result.request.state !== 'completed',
         })
       } catch (error) {
         return success({

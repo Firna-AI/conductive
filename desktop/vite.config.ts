@@ -20,6 +20,7 @@ export default defineConfig({
         order: 'pre',
         handler: (html) =>
           html
+            .replace('src="/src/main.tsx"', 'src="/desktop/renderer/main.tsx"')
             .replace('<body>', '<body><div data-desktop-chrome-slot></div>')
             .replace(
               '</body>',
