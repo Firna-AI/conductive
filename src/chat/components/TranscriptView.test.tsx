@@ -33,6 +33,7 @@ describe('the line of a stopped turn', () => {
       state: 'stopped',
       durationMs: 5_000,
       files: [],
+      omittedFileCount: 0,
       userMessageIds: ['ask'],
     })
     expect(text()).toContain('Jonas Weber stopped the agent')
@@ -45,6 +46,7 @@ describe('the line of a stopped turn', () => {
       state: 'stopped',
       durationMs: 1_000,
       files: [],
+      omittedFileCount: 0,
       userMessageIds: [],
     })
     expect(text()).toContain('The agent stopped')

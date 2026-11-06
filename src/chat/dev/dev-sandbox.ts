@@ -108,6 +108,7 @@ function endTurn(backend: DevBackend, sessionId: string): void {
     state: 'stopped',
     durationMs: 161_000,
     files: [],
+    omittedFileCount: 0,
     userMessageIds: [],
   })
 }

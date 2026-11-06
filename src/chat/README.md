@@ -61,6 +61,14 @@ agent runner.
 - Each session keeps its own event log. A session that opens later loads its
   full stored history, whose numbers can be older than the stream's cursor,
   so a history never goes through the stream's duplicate check.
+- Browser readers preserve the required tool-detail and turn-file omission counts.
+  These new counts are non-negative safe integers. Missing counts make an event unreadable.
+- Tool transcript items keep `tool.omittedDetailBytes`.
+  `Transcript.turnCompletions` keeps each completion event by turn ID, including stopped completions and `omittedFileCount`.
+- `Transcript.refusedEvents` keeps each session's refusal markers outside rendered items.
+  Nullable turn context stays intact. Markers without a session stay outside per-session logs.
+- Ordered history folding preserves these fields across completion and failure events.
+  Their visible presentation remains work for Milestone 8j.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
   stream. One load runs at a time for each session, and a failed load waits
