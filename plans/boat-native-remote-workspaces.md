@@ -2441,6 +2441,10 @@ longer - what could be done to do a minimal version?"
 - **Recommendation:** E.
 - **Chosen:** E, by the user on 6 November 2026. The follow-up item is
   `plans/follow-ups/move-backend-to-rust-and-postgres.md`.
+- **Changed by the user on 6 November 2026:** the Rust backend started in
+  parallel (decision 71), and decisions 73, 74, and 75 set its shape, its
+  database, and its host. The same day, the user parked it again, outside
+  this plan. The follow-up item holds the work and those decisions.
 
 ### 62. Add a Mac app in parallel
 
@@ -2692,6 +2696,123 @@ workspace asking for help/approval/prompt".
   - The contract value is `input` in `WorkspaceState`. Milestone 15f sets
     it while a Mac command request waits. Each later feature that waits
     for the user sets it too.
+
+### 69. Pin the Node of the product's programs in each org image
+
+Added on 6 November 2026 from finding 3 of the Milestone 15 review.
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. **Category:** Product bug.
+- **Background:** The workspace tools are TypeScript files that Node 24
+  runs directly, and the agent runner is a Node program too. Boat's base
+  image has Node 24, but the org's install script runs with `sudo` and
+  can replace it. The launcher of the tools already ignores the shell's
+  search path and `NODE_OPTIONS`.
+- **Problem:** An org script that replaces the system Node breaks the
+  tools, and later the runner.
+- **Options:**
+  - **A.** Keep the system Node, and tell orgs not to replace Node 24.
+    Effort: Small.
+  - **B.** Build the tools into JavaScript that Node 18 and later runs.
+    Effort: Medium.
+  - **C.** Install a private Node that only the product's programs use.
+    Effort: Medium.
+  - **D.** Fail the image build when the Node is not Node 24. Effort:
+    Small.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. Each org image gets one
+  pinned Node 24 release in its own folder, and the tools and the runner
+  start it by its full path. The org's own Node stays for the org's code.
+  Milestone 5a builds it.
+
+### 70. Decide how soon an open tab loses access
+
+Added on 6 November 2026 from finding 1 of the Milestone 7 review.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Review. **Category:** Security.
+- **Background:** The Worker checks the session and the membership when a
+  tab opens its event socket. After that, the workspace Durable Object
+  sends each new event to the tab.
+- **Problem:** A removed member, a signed-out tab, or a tab of a deleted
+  org kept getting new chat events.
+- **Options:**
+  - **A.** Close each socket after 5 minutes. Effort: Small.
+  - **B.** Check the access of all open tabs again at most every 30
+    seconds, with one D1 read, and close each tab that fails. Effort:
+    Medium.
+  - **C.** Check access before each event. Effort: Medium.
+  - **D.** B, plus a close at once on removal and Delete org. Effort:
+    Medium.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 6 November 2026. The access protocol
+  states the 30-second rule. Milestone 7 applies it in its second fix
+  round. The runner side already checks the workspace token before each
+  agent login.
+
+### 71. Give each org its own database
+
+Added on 6 November 2026 from the user's request: "not each workspace -
+each org".
+
+- **Severity:** High. **Effort:** Large.
+- **Source:** Design. **Category:** Code structure.
+- **Background:** One D1 database holds the records of all orgs. Each
+  workspace has its own Durable Object for its chat.
+- **Options:**
+  - **A.** One Durable Object for each org, for the org's records, built
+    before the first deployment. Effort: Large.
+  - **B.** Keep one D1 now, and give each org its own database with the
+    move to Rust and Postgres. Effort: Small now.
+  - **C.** Keep D1 as the record, with a read copy of the members in a
+    Durable Object for each org. Effort: Medium.
+- **Recommendation:** A.
+- **Chosen:** by the user on 6 November 2026: keep the planned storage for
+  now, one D1 database and one Durable Object for each workspace. In
+  parallel, the Rust backend starts now, as part of this plan, and it
+  does not block the first merge. The database for each org becomes part
+  of the Rust backend's design. This changes the timing of decision 61 E,
+  which moved to Rust only after the first usable release.
+- **Changed by the user on 6 November 2026:** the Rust work is parked and
+  leaves this plan. `plans/follow-ups/move-backend-to-rust-and-postgres.md`
+  holds it, with decisions 73, 74, and 75.
+
+### 72. Name the member who stopped the agent
+
+Added on 6 November 2026 from the Milestone 8 work.
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Implementation. **Category:** UX wording.
+- **Background:** All members of an org see the same chat history. The
+  mockup said "You stopped the agent", but the stop event did not record
+  who pressed Stop.
+- **Options:**
+  - **A.** Keep "You stopped the agent". Effort: Small.
+  - **B.** Use a neutral message. Effort: Small.
+  - **C.** Record who pressed Stop, and name that member. Effort: Medium.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. A stopped turn records
+  the member who pressed Stop. The chat shows "Priya stopped the agent",
+  or "You stopped the agent" to Priya.
+
+### 73. Decide the shape of the Rust backend
+
+Added and answered on 6 November 2026 (C). The user parked the
+Rust work the same day, so the decision with its options moved to
+`plans/follow-ups/move-backend-to-rust-and-postgres.md`.
+
+### 74. Decide the database for each org in Postgres
+
+Added and answered on 6 November 2026: one Postgres database for every
+org. The user parked the Rust work the same day, so the decision with its
+options moved to
+`plans/follow-ups/move-backend-to-rust-and-postgres.md`.
+
+### 75. Decide where the Rust backend runs
+
+Added and answered on 6 November 2026 (A). The user parked the
+Rust work the same day, so the decision with its options moved to
+`plans/follow-ups/move-backend-to-rust-and-postgres.md`.
 
 ## Design
 
@@ -3486,6 +3607,23 @@ Depends on: 4a
       token route behind the workspace token. The route returns a fresh
       GitHub user token of the current turn's sender, as decision 50 says.
 
+## Milestone 5a: Pinned Node runtime
+
+Depends on: 5, 7r
+
+Apply decision 69 C.
+
+- [ ] In each org image build, download one pinned Node 24 release, check
+      its SHA-256 against a constant in the code, and extract it to a
+      folder named for its version under `/opt/conducting/runtime/`. Skip
+      the download when that release is already there.
+- [ ] Start the workspace tools and the agent runner with that Node by its
+      full path. The root folder of the tools installer also prefixes the
+      runtime path.
+- [ ] Test with a stand-in runtime under the root folder and a failing
+      `node` first on the search path. Say in the README how to update the
+      version and the checksum.
+
 ## Milestone 6: App shell and workspaces
 
 Tags: ui
@@ -3578,6 +3716,9 @@ This milestone needs the prerequisites from the user.
 - [ ] Deploy the chat path to the user's Cloudflare account, with GitHub
       sign-in, so that the user can work in Conducting.
 - [ ] Smoke-test it with a real Boat sandbox.
+- [ ] Check that chat survives a restart: send a message before the
+      runner connects, deploy again, then check the history, the event
+      numbers, and the delivery of the waiting message.
 
 ## Milestone 9: Files backend
 
@@ -3662,12 +3803,15 @@ Milestone 8i or 15i wires it to its backend.
 
 Depends on: 4a
 
-- [ ] Add the create and list workspace endpoints for workspace tokens,
+- [x] Add the create and list workspace endpoints for workspace tokens,
       as decision 52 says: create takes a repository and a first message,
       and can choose the agent and model, the effort, and the section.
       List returns the org's workspaces.
-- [ ] Add the CLI and the MCP server to the org image setup.
-- [ ] Test the token scope and both tools.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15`.
+- [x] Add the CLI and the MCP server to the org image setup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15`.
+- [x] Test the token scope and both tools.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15`.
 
 ## Milestone 15a: Members backend
 
@@ -3792,6 +3936,9 @@ This milestone needs the prerequisites from the user.
       a file, use the terminal, open a preview, stop, and resume.
 - [ ] Check that a private Boat port does not answer on the public
       address of the sandbox without its token.
+- [ ] In a real workspace, run `conducting workspaces list` and an MCP
+      `tools/list` request, so that the installed agent tools start on
+      the image's Node.
 
 ## Milestone 17: Verification, commit, review, and pull request
 
