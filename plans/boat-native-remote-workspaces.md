@@ -4193,8 +4193,9 @@ Apply decision 83 C.
 Agent design calls on 6 November 2026:
 
 - Keep `Preview.url` as the single navigation URL. It now opens an
-  authenticated app launcher, so frames and native links each get a fresh grant.
-- POST a stateless, encrypted grant with a 60-second life in a form body.
+  authenticated app launcher. Native new-tab handling fetches a fresh grant
+  from that same path through the Mac session before opening the browser.
+- Web and embedded launchers POST a stateless, encrypted grant with a 60-second life in a form body.
   It works across Worker instances without a migration. It is briefly replayable.
 - Use a trusted `authorize.<preview-domain>` host for the handoff.
   A preview app's service worker can intercept a grant sent to its own hostname.
@@ -4211,6 +4212,14 @@ Agent design calls on 6 November 2026:
 - Apply decision 65 B to authorizer forms with the shared bounded reader.
   Keep its client body budget of 1 MB, or 1,000,000 bytes.
   Return the existing 404 on overflow to keep one invalid-handoff response policy.
+- The user approved item 3 C on 6 November 2026. Finish Mac integration in
+  this branch with small launcher gate, frame policy, and native navigation changes.
+  Keep the main frame bundled, the separate sessions, and the no-bridge rule.
+- Mac new-tab grants use the trusted authorizer's URL fragment. Its bootstrap
+  clears that fragment before a same-origin header exchange or navigation.
+  The browser receives only a preview grant, never the Mac sign-in session.
+- Item 4 moved to the existing item 93 by the user's scope call.
+  No request-body bounds outside the preview routes change here.
 
 - [x] Move the credential of a port preview out of its hostname, into a
       cookie that the preview domain sets, so that the hostname is no
@@ -4227,9 +4236,9 @@ Agent design calls on 6 November 2026:
 - [x] Bound the authorizer form with the shared reader, and test early
       cancellation and invalid body streams, as decision 65 B requires.
       Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
-- [ ] Align the preview handoff with the newer Mac app session and
-      navigation contracts. Confirm ownership before changing the shared
-      gate or Mac app code outside this workspace's scope.
+- [x] Align the preview handoff with the newer Mac app session and
+      navigation contracts under item 3 C. Test the frame and new-tab flow
+      in Electron. Preserve the desktop protocol and its isolation rules.
       Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
 
 Verification evidence: `.context/boat-native-remote-workspaces/verification.md`.

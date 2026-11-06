@@ -1,11 +1,14 @@
+import type { PreviewLaunchResponse } from '../../src/shared/previews'
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
 import { readBoundedBody } from '../http/bounded-body'
 import { randomToken } from '../security/crypto'
+import { DESKTOP_ORIGIN } from '../security/desktop-contract'
+import { PREVIEW_HANDOFF_PATH } from '../security/preview-launch-path'
+import { previewBrowserDocument } from './browser-launch'
 import { launchGrant, launchGranted, previewCookie } from './credentials'
+import { previewLaunchDocument } from './launch-document'
 import { activePreview, type PreviewRecord } from './store'
-
-export const PREVIEW_HANDOFF_PATH = '/.conducting/authorize'
 
 export function previewHandoffUrl(env: AppEnv): string {
   return `https://authorize.${env.PREVIEW_DOMAIN?.toLowerCase()}${PREVIEW_HANDOFF_PATH}`
@@ -17,21 +20,56 @@ export async function previewLaunchPage(
   row: PreviewRecord,
   now: number,
 ): Promise<Response> {
-  const grant = await launchGrant(env, row, now)
+  const { token: grant } = await launchGrant(env, row, now)
   const nonce = randomToken()
   const action = previewHandoffUrl(env)
-  const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><form action="${action}" method="post"><input type="hidden" name="hostname" value="${row.hostname}"><input type="hidden" name="grant" value="${grant}"></form><script nonce="${nonce}">document.forms[0].submit()</script></body></html>`
+  const { html, policy } = previewLaunchDocument({
+    action,
+    hostname: row.hostname,
+    grant,
+    nonce,
+    appOrigin: env.APP_ORIGIN,
+    desktopOrigin: DESKTOP_ORIGIN,
+  })
   const response = privateResponse(
     new Response(html, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
-        'Content-Security-Policy': `default-src 'none'; script-src 'nonce-${nonce}'; form-action ${new URL(action).origin} https://${row.hostname}; frame-ancestors ${env.APP_ORIGIN}; base-uri 'none'`,
+        'Content-Security-Policy': policy,
       },
     }),
   )
   // A no-referrer form navigation sends Origin:null. The trusted issuer needs the app Origin.
   response.headers.set('Referrer-Policy', 'origin')
   return response
+}
+
+export async function previewNativeLaunch(
+  env: AppEnv,
+  row: PreviewRecord,
+  now: number,
+): Promise<Response> {
+  const { token, expiresAt } = await launchGrant(env, row, now)
+  const url = new URL(previewHandoffUrl(env))
+  url.hash = new URLSearchParams({
+    hostname: row.hostname,
+    grant: token,
+  }).toString()
+  return privateResponse(
+    Response.json({ url: url.href, expiresAt } satisfies PreviewLaunchResponse),
+  )
+}
+
+export function previewBrowserLaunch(): Response {
+  const { html, policy } = previewBrowserDocument(randomToken())
+  return privateResponse(
+    new Response(html, {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Security-Policy': policy,
+      },
+    }),
+  )
 }
 
 /** Stateless grants remain valid for at most 60 seconds, including across isolates. */
@@ -42,12 +80,16 @@ export async function previewHandoff(
 ): Promise<Response> {
   const contentType = request.headers.get('Content-Type')?.split(';')[0].trim()
   const body = request.body
+  const headerMode = request.headers.has('Authorization')
+  const expectedOrigin = headerMode
+    ? new URL(previewHandoffUrl(env)).origin
+    : env.APP_ORIGIN
   if (
     request.method !== 'POST' ||
     request.headers.has('Upgrade') ||
-    request.headers.get('Origin') !== env.APP_ORIGIN ||
-    contentType !== 'application/x-www-form-urlencoded' ||
-    !body
+    request.headers.get('Origin') !== expectedOrigin ||
+    (!headerMode &&
+      (contentType !== 'application/x-www-form-urlencoded' || !body))
   ) {
     throw new HttpError(
       404,
@@ -56,15 +98,21 @@ export async function previewHandoff(
     )
   }
   let form: URLSearchParams
-  try {
-    const bytes = await readBoundedBody(body, 1_000_000)
-    form = new URLSearchParams(new TextDecoder().decode(bytes))
-  } catch {
-    throw new HttpError(
-      404,
-      'preview_not_found',
-      'The preview is not available.',
-    )
+  if (headerMode) {
+    void body?.cancel().catch(() => undefined)
+    form = new URL(request.url).searchParams
+  } else {
+    try {
+      if (!body) throw new Error('Missing body')
+      const bytes = await readBoundedBody(body, 1_000_000)
+      form = new URLSearchParams(new TextDecoder().decode(bytes))
+    } catch {
+      throw new HttpError(
+        404,
+        'preview_not_found',
+        'The preview is not available.',
+      )
+    }
   }
   const hostnames = form.getAll('hostname')
   const suffix = `.${env.PREVIEW_DOMAIN?.toLowerCase()}`
@@ -80,7 +128,13 @@ export async function previewHandoff(
       'The preview is not available.',
     )
   const row = await activePreview(env.DB, hostname, now)
-  const grants = form.getAll('grant')
+  const grants = headerMode
+    ? [
+        request.headers
+          .get('Authorization')
+          ?.match(/^Bearer ([A-Za-z0-9_.-]+)$/)?.[1] ?? '',
+      ]
+    : form.getAll('grant')
   if (
     !row ||
     grants.length !== 1 ||
@@ -92,6 +146,13 @@ export async function previewHandoff(
       'The preview is not available.',
     )
   }
+  if (headerMode)
+    return privateResponse(
+      Response.json(
+        { url: `https://${row.hostname}/` },
+        { headers: { 'Set-Cookie': await previewCookie(env, row, now) } },
+      ),
+    )
   return privateResponse(
     new Response(null, {
       status: 303,

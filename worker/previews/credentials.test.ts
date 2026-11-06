@@ -6,6 +6,7 @@ import {
   type PreviewResponse,
 } from '../../src/shared/previews'
 import { TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
+import { DESKTOP_ORIGIN } from '../security/desktop-contract'
 import { createPreviewHandler } from './handler'
 import {
   handoffRequest,
@@ -42,7 +43,7 @@ it('launches each browser context with a protected partitioned cookie across han
     'https://authorize.conducting-previews.test/.conducting/authorize',
   )
   expect(page.headers.get('Content-Security-Policy')).toBe(
-    `default-src 'none'; script-src 'nonce-${nonce}'; form-action ${new URL(form.action).origin} ${setup.previewUrl}; frame-ancestors ${TEST_ORIGIN}; base-uri 'none'`,
+    `default-src 'none'; script-src 'nonce-${nonce}'; form-action ${new URL(form.action).origin} ${setup.previewUrl}; frame-ancestors ${TEST_ORIGIN} ${DESKTOP_ORIGIN}; base-uri 'none'`,
   )
   const restarted = createPreviewHandler(harness.env, harness.dependencies)
   const handoff = await restarted.proxy(handoffRequest(form, TEST_ORIGIN))
@@ -118,7 +119,11 @@ it('blocks a leaked hostname and invalid HTTP or WebSocket cookies before sandbo
     new Request(other.previewUrl, { headers: { Cookie: transplanted } }),
   )
   expect(foreign.status).toBe(404)
-  for (const path of ['/', '/sw.js', new URL(form.action).pathname]) {
+  for (const { path, status } of [
+    { path: '/', status: 404 },
+    { path: '/sw.js', status: 404 },
+    { path: new URL(form.action).pathname, status: 200 },
+  ]) {
     for (const upgrade of ['', 'websocket']) {
       const response = await setup.handler.proxy(
         new Request(new URL(path, form.action), {
@@ -128,7 +133,7 @@ it('blocks a leaked hostname and invalid HTTP or WebSocket cookies before sandbo
           },
         }),
       )
-      expect(response.status).toBe(404)
+      expect(response.status).toBe(upgrade ? 404 : status)
     }
   }
   expect(harness.requests).toHaveLength(0)

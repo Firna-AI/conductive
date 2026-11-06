@@ -7,12 +7,27 @@ import { readCookie, SESSION_COOKIE } from './cookies'
 import { verify } from './crypto'
 import { DESKTOP_ORIGIN, DESKTOP_SESSION_COOKIE } from './desktop-contract'
 import { trustedOrigin } from './desktop-origin'
+import { isPreviewLaunchPath } from './preview-launch-path'
 
 export interface RequestContext {
   user: User
   sessionId: string
   org: Org | null
   body: Record<string, unknown> | null
+}
+
+function sessionCookie(request: Request): string {
+  if (request.headers.get('Origin') === DESKTOP_ORIGIN)
+    return DESKTOP_SESSION_COOKIE
+  const navigation =
+    request.method === 'GET' &&
+    !request.headers.has('Origin') &&
+    !request.headers.has('Upgrade') &&
+    isPreviewLaunchPath(new URL(request.url).pathname)
+  const desktopPresent = (request.headers.get('Cookie') ?? '')
+    .split(';')
+    .some((part) => part.trim().startsWith(`${DESKTOP_SESSION_COOKIE}=`))
+  return navigation && desktopPresent ? DESKTOP_SESSION_COOKIE : SESSION_COOKIE
 }
 
 export function checkHost(request: Request, env: AppEnv): void {
@@ -40,12 +55,7 @@ export async function gate(
 ): Promise<RequestContext> {
   checkHost(request, env)
   checkOrigin(request, env)
-  const token = readCookie(
-    request,
-    request.headers.get('Origin') === DESKTOP_ORIGIN
-      ? DESKTOP_SESSION_COOKIE
-      : SESSION_COOKIE,
-  )
+  const token = readCookie(request, sessionCookie(request))
   const session = token
     ? await verify(token, 'session', env.SESSION_SIGNING_KEY, now)
     : null

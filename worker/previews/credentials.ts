@@ -52,13 +52,13 @@ async function valid(
   }
 }
 
-export function launchGrant(env: AppEnv, row: PreviewRecord, now: number) {
-  return issue(
-    env,
-    row,
-    'launch',
-    Math.min(row.expiresAt, now + launchLifetime),
-  )
+export async function launchGrant(
+  env: AppEnv,
+  row: PreviewRecord,
+  now: number,
+) {
+  const expiresAt = Math.min(row.expiresAt, now + launchLifetime)
+  return { token: await issue(env, row, 'launch', expiresAt), expiresAt }
 }
 
 export function launchGranted(

@@ -23,6 +23,7 @@ import { startDesktop } from './lifecycle.js'
 import { installMenu } from './menu.js'
 import { installNavigation } from './navigation.js'
 import { installPermissions } from './permissions.js'
+import { openPreviewInBrowser } from './preview.js'
 import { createSignIn } from './sign-in.js'
 import { startUpdates } from './updates.js'
 import { createWindow } from './window.js'
@@ -134,6 +135,13 @@ startDesktop({
       load: (url) => window.loadURL(url),
       external: (url) => shell.openExternal(url),
       signIn: () => signIn.start(),
+      preview: (url) =>
+        openPreviewInBrowser(url, {
+          appOrigin: configuration.appOrigin,
+          frameSources: configuration.frameSources,
+          fetch: (request) => window.webContents.session.fetch(request),
+          external: (address) => shell.openExternal(address),
+        }),
       warn,
     })
     return window

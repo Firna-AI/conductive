@@ -5,7 +5,11 @@ import { recordActivity, toolError } from './access'
 import type { PreviewConnection } from './connection'
 import { previewAuthorized } from './credentials'
 import { portRequest, portResponseHeaders } from './headers'
-import { previewHandoff, previewHandoffUrl } from './launch'
+import {
+  previewBrowserLaunch,
+  previewHandoff,
+  previewHandoffUrl,
+} from './launch'
 import { PrivatePorts } from './ports'
 import { PreviewRegistry } from './registry'
 import { bridgeSocket } from './socket'
@@ -48,8 +52,20 @@ export class PreviewProxy {
         ? `.${this.env.PREVIEW_DOMAIN.toLowerCase()}`
         : ''
       const label = suffix ? url.hostname.slice(0, -suffix.length) : ''
-      if (url.href === previewHandoffUrl(this.env))
+      const authorizer = new URL(previewHandoffUrl(this.env))
+      if (
+        url.origin === authorizer.origin &&
+        url.pathname === authorizer.pathname &&
+        !url.hash
+      ) {
+        if (
+          request.method === 'GET' &&
+          !url.search &&
+          !request.headers.has('Upgrade')
+        )
+          return previewBrowserLaunch()
         return await previewHandoff(request, this.env, this.dependencies.now())
+      }
       if (
         url.protocol !== 'https:' ||
         url.port ||

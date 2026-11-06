@@ -5,7 +5,7 @@ import type {
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
 import { requireRunning, toolError, toolRequest } from './access'
-import { previewLaunchPage } from './launch'
+import { previewLaunchPage, previewNativeLaunch } from './launch'
 import { PrivatePorts } from './ports'
 import { PreviewProxy } from './proxy'
 import {
@@ -73,7 +73,9 @@ export function createPreviewHandler(
               'preview_not_found',
               'The preview is not available.',
             )
-          return previewLaunchPage(env, row, now)
+          return request.headers.get('Accept') === 'application/json'
+            ? previewNativeLaunch(env, row, now)
+            : previewLaunchPage(env, row, now)
         }
         if (request.method === 'POST' && tail === null) {
           requireRunning(target)

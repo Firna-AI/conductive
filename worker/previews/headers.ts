@@ -1,4 +1,5 @@
 import { OAUTH_COOKIE, SESSION_COOKIE } from '../security/cookies'
+import { DESKTOP_SESSION_COOKIE } from '../security/desktop-contract'
 import type { PrivatePort } from '../sandbox/provider'
 import { PREVIEW_COOKIE_PREFIX } from './credentials'
 import { portUrl, previewLocation, upstreamOrigin } from './origins'
@@ -39,6 +40,7 @@ const responseHeaders = [
 const reservedCookies = new Set([
   SESSION_COOKIE.toLowerCase(),
   OAUTH_COOKIE.toLowerCase(),
+  DESKTOP_SESSION_COOKIE.toLowerCase(),
   '_port_auth',
 ])
 

@@ -28,3 +28,9 @@ export interface PreviewResponse {
 export interface PreviewsResponse {
   previews: readonly Preview[]
 }
+
+/** Native-only launcher reply. The short preview grant appears only in the URL fragment. */
+export interface PreviewLaunchResponse {
+  url: string
+  expiresAt: Timestamp
+}

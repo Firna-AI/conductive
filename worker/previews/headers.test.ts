@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { SESSION_COOKIE } from '../security/cookies'
+import { DESKTOP_SESSION_COOKIE } from '../security/desktop-contract'
 import { TEST_TIME } from '../test-support/harness'
 import { PREVIEW_COOKIE_PREFIX } from './credentials'
 import { openPreview } from './stream-test-support'
@@ -27,7 +28,7 @@ it('proxies HTTP with explicit headers and keeps only preview app cookies', asyn
       method: 'POST',
       body: 'cart=2',
       headers: {
-        Cookie: `_port_auth=forged; shop=blue; ${SESSION_COOKIE}=app-session; __Host-conducting-oauth=oauth`,
+        Cookie: `_port_auth=forged; shop=blue; ${SESSION_COOKIE}=app-session; ${DESKTOP_SESSION_COOKIE}=mac-session; __Host-conducting-oauth=oauth`,
         Authorization: 'Bearer app-secret',
         'X-Private': 'secret',
         'Content-Type': 'application/x-www-form-urlencoded',

@@ -29,23 +29,52 @@ the session. The handler then checks the membership, the running workspace,
 and the active preview. The GET returns trusted HTML that posts the preview
 hostname and a 60-second grant to the authorizer.
 
+The Mac app frames the same launch page from its desktop origin,
+`conducting-app://desktop`. Its frame load has no `Origin` header. On a GET of
+the exact launch path without `Origin` and `Upgrade` headers, the app gate then
+reads the Mac session cookie when the request carries it. The shared launch
+path matcher defines that path for the gate and the Mac app. Every other
+request keeps the gate rules.
+
+A GET with `Accept: application/json` gets a `PreviewLaunchResponse` instead.
+Its `url` is the authorizer address, with the hostname and a new grant only in
+the fragment. Its `expiresAt` ends that grant. The Mac app fetches it with its
+own session and the desktop Origin. It then opens `url` in the default browser.
+
 The launch page has a nonce-based CSP. Its `form-action` allows only the
 authorizer and the exact preview origin, because a browser can also check the
-303 target. Its `frame-ancestors` allows only `APP_ORIGIN`. It sends
-`Referrer-Policy: origin`, because a form POST under `no-referrer` sends
-`Origin: null`.
+303 target. Its `frame-ancestors` allows only `APP_ORIGIN` and the desktop
+origin. It sends `Referrer-Policy: origin`, because a form POST under
+`no-referrer` sends `Origin: null`.
 
-The authorizer accepts only a form POST with `Origin: APP_ORIGIN`, one
-hostname, and one valid grant for an active preview. Each failure gets the
-same 404. It sets `__Secure-conducting-preview-<preview ID>` with
+The authorizer has two POST modes. Each needs one hostname and one valid grant
+for an active preview. Each failure gets the same 404, also for the desktop
+Origin.
+
+- Form mode accepts a form POST with `Origin: APP_ORIGIN`. It answers with a
+  303 to `https://<hostname>/`.
+- Header mode accepts a POST with the authorizer's own Origin, the hostname in
+  the query, and `Authorization: Bearer <grant>`. It answers with JSON that
+  holds the clean preview address `https://<hostname>/`.
+
+Both modes set `__Secure-conducting-preview-<preview ID>` with
 `Domain=<PREVIEW_DOMAIN>; Path=/; Secure; HttpOnly; SameSite=None; Partitioned`.
-Its `Max-Age` is the remaining preview life. It then sends a 303 to
-`https://<hostname>/`. The `__Host-` prefix would forbid the `Domain` attribute.
+Its `Max-Age` is the remaining preview life. The `__Host-` prefix would forbid
+the `Domain` attribute.
 
-The authorizer uses the [bounded body reader](../http/README.md) before parsing
+Form mode uses the [bounded body reader](../http/README.md) before parsing
 the form. Decision 65 gives client bodies a limit of 1,000,000 bytes.
 It counts stream bytes and cancels on overflow. Missing, failed, and oversized
-bodies get the same 404 as an invalid grant.
+bodies get the same 404 as an invalid grant. Header mode cancels any body
+without reading or buffering it.
+
+A GET of the exact authorizer address without a query serves the authorizer
+page for a browser launch. Its CSP allows only its nonce script and requests
+to its own origin. Its `frame-ancestors 'none'` keeps it at the browser's top
+level. Its script removes the fragment from the address before any request.
+It then sends the header mode POST. It follows only the clean address of the
+same preview hostname. On a failure, it asks the user to open the preview
+again from the workspace.
 
 The `authorize` hostname never serves sandbox content. So no service worker of
 a previewed app can see a grant.
@@ -102,17 +131,20 @@ WebSocket handshake counts. Socket frames and idle connections do not count.
 
 The header allowlists live in `headers.ts`. The cookie allowlist filters
 request and response cookies. It accepts valid app cookie names. It excludes
-the port cookie, the Conducting session and sign-in cookies, and each name
-under `__Secure-conducting-preview-`. Responses keep app cookies with their
-domain removed. This makes them specific to the preview hostname.
+the port cookie, the browser and Mac session cookies, the sign-in cookie, and
+each name under `__Secure-conducting-preview-`. Responses keep app cookies
+with their domain removed. This makes them specific to the preview hostname.
 The proxy follows no upstream redirect.
 
 ### Key Code
 
 - [handler.ts](handler.ts) exports the API, launch, proxy, revocation, and expiry entry points.
-- [launch.ts](launch.ts) builds the launch page and handles the authorizer POST.
+- [launch.ts](launch.ts) builds the launch replies and the authorizer page response, and handles both authorizer POST modes.
+- [launch-document.ts](launch-document.ts) builds the launch page markup and its CSP.
+- [browser-launch.ts](browser-launch.ts) builds the authorizer page for a browser launch.
+- [preview-launch-path.ts](../security/preview-launch-path.ts) matches the exact launch path for the gate and the Mac app.
 - [credentials.ts](credentials.ts) issues and checks the encrypted grants and credential cookies.
-- [proxy.ts](proxy.ts) routes the authorizer, checks the credential cookie, and owns the request flow.
+- [proxy.ts](proxy.ts) routes the authorizer page and POST, checks the credential cookie, and owns the request flow.
 - [registry.ts](registry.ts) scopes HTTP and socket cancellation by workspace and preview.
 - [connection.ts](connection.ts) wraps both HTTP directions with authorization and backpressure.
 - [authorization.ts](authorization.ts) shares fresh reads across queued data.
@@ -132,6 +164,7 @@ The [sandbox provider](../sandbox/README.md) owns the fixed `host` and `desktop`
 routes, key factory, account pinning, parsers, transport, commands, and file reads.
 The feature adapter holds a `SandboxProvider`. It holds no plaintext key.
 
-See [access and security](../../docs/protocol/access-and-security.md#port-previews)
+See [access and security](../../docs/protocol/access-and-security.md#port-previews),
+the [Mac app](../../docs/protocol/desktop-app.md#port-previews),
 and the official [port API](https://docs.boat.dev/api/reference/agent/expose-a-port)
 and [port cookie rules](https://docs.boat.dev/hosting#who-can-open-a-protected-url).

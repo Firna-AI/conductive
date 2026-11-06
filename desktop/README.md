@@ -39,7 +39,14 @@ The Worker accepts desktop exchanges and credentials from the desktop origin.
 
 Other web addresses open in the browser.
 The bundled main page opens its app popups in the same window.
-Child frames cannot load the main page or start sign-in.
+A link or popup from that page to a port preview launch address opens the preview in the browser instead.
+The main process requires the bundled main frame as the navigation initiator.
+It never trusts a referrer.
+It gets `PreviewLaunchResponse` with its own session, the desktop Origin, and `Accept: application/json`.
+It opens only an authorizer URL on a preview domain that a configured frame source covers.
+The browser gets a 60-second preview grant in the URL fragment, and no sign-in session.
+The window policy adds the app origin to its frame sources, so a preview frame can load its launch page.
+Child frames cannot load the main page, open app addresses outside the frame, or start sign-in.
 
 Window bounds and the Chromium session persist across launches.
 The app has one instance.
@@ -140,7 +147,9 @@ It offers Restart now or Later once for each downloaded version.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.
 - [Desktop contract](../worker/security/desktop-contract.ts) shares the desktop origin and session cookie format without Worker dependencies.
 - [Navigation](src/navigation.ts) keeps remote pages outside the main frame.
+- [Preview launch](src/preview.ts) exchanges an authenticated launcher for a short browser handoff.
 - [Permissions](src/permissions.ts) denies unapproved browser access.
 - [Bundle server](src/export-handler.ts) serves only admitted local files.
 - [Chrome](renderer/chrome.ts) uses browser APIs for window layout and history.
 - [Brand assets](../docs/brand/README.md) define the approved icon.
+- [Preview Electron test](tests/previews.spec.ts) checks the Mac frame and a separate browser session.

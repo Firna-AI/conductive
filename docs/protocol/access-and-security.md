@@ -64,8 +64,8 @@ Later screens add the frame and connection sources that they need.
 - Images can also use data URLs and `https://avatars.githubusercontent.com`.
 - Network calls reach only the page's own origin and the configured app
   origin, with its matching WebSocket origin.
-- Frames load only from the page's own origin and the configured HTTPS
-  frame origins.
+- Frames load only from the page's own origin, the configured app origin,
+  and the configured HTTPS frame origins.
 - Pages use no plugin objects or base elements.
 - Other pages cannot frame the app.
 - Forms submit only to the page's own origin.
@@ -203,19 +203,39 @@ Later screens add the frame and connection sources that they need.
   grant. A form on the launch page posts the grant to the authorizer, a
   fixed hostname on the preview domain. The authorizer sets the credential
   cookie, then sends the browser to the preview hostname.
+- Only pages on the app origin and on the desktop origin of the
+  [Mac app](desktop-app.md#the-page) can frame the launch page.
 - A grant works for 60 seconds at most, and only for its own preview. It
   is not one-use, so it can work more than once in that time. Reason: it
-  needs no stored state, and it goes only from the launch page to the
-  authorizer.
-- A grant never goes into a URL or to a sandbox. A grant in a URL was
-  rejected, because the browser history keeps the URL.
-- The authorizer accepts a grant only in a form POST with the app's
-  `Origin`. It never serves sandbox content.
-- Authorizer form bodies have a size limit of 1,000,000 bytes under decision 65.
-  The authorizer cancels an oversized body and returns 404.
+  needs no stored state, and only the launch page, the Mac app, and the
+  authorizer's own page carry it to the authorizer.
+- A grant never goes to a sandbox or into a log. It never goes into the
+  path or the query of a URL. A grant in a query was rejected, because
+  the browser sends the query to the server.
+- Only a [browser launch](desktop-app.md#port-previews) carries a grant in
+  a URL. The grant and the preview hostname go in the fragment of an
+  authorizer address, because a browser sends no fragment to a server.
+- Risk: the browser can keep that address in its history. The grant in it
+  stops working within 60 seconds.
+- At that address, the authorizer serves its own page, the authorizer
+  page. No page can frame it. Before any request or navigation, the page
+  removes the fragment from its address.
+- The authorizer accepts a grant in two ways. Each needs one preview
+  hostname and one valid grant for an active preview:
+  - a form POST with the app's `Origin`, from the launch page. The
+    authorizer then sends the browser to the preview hostname.
+  - a POST with the authorizer's own `Origin` and the grant in its
+    `Authorization` header, from the authorizer page. The authorizer then
+    returns the address of the preview hostname, and the page goes there.
+- Both ways set the same credential cookie. The authorizer never serves
+  sandbox content.
 - Reason: a service worker of a previewed app can read a form that the
   browser posts to the origin of that preview. A handoff on the preview
   hostname was rejected for that reason.
+- Authorizer form bodies have a size limit of 1,000,000 bytes under decision 65.
+  The authorizer cancels an oversized body and returns 404.
+- The authorizer never reads or buffers the body of a POST with an
+  `Authorization` header.
 - The launch page sends only the app's origin as its referrer. Reason:
   under `no-referrer`, the form sends `Origin: null`, and the authorizer
   refuses it.
