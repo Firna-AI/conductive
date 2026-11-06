@@ -40,9 +40,15 @@ function fixtureUrl(name: 'preview' | 'desktop', suffix: string): string {
   return `${folder}/fixtures/${name}${suffix}`
 }
 
-function devPreview(port: number): Preview {
+/**
+ * The opens that the fakes of this page answered. Each open gets the next
+ * `opened-` ID, which no listed sample and no earlier open has.
+ */
+let opens = 0
+
+function devPreview(id: string, port: number): Preview {
   return {
-    id: port === 3000 ? FAKE_IDS.preview : `preview-${port}`,
+    id,
     port,
     url: fixtureUrl('preview', `?port=${port}`),
     expiresAt: FAKE_TIME + 86_400_000,
@@ -54,7 +60,9 @@ export function createDevServer(tool: DevTool, state: string): FakeApiServer {
   const server = new FakeApiServer({ conversation: 'running' })
   const org = FAKE_IDS.org
   const id = FAKE_IDS.workspace
-  server.json('GET', previewsPath(org, id), { previews: [devPreview(3000)] })
+  server.json('GET', previewsPath(org, id), {
+    previews: [devPreview(FAKE_IDS.preview, 3000)],
+  })
   server.json('GET', desktopPath(org, id), {
     url: fixtureUrl('desktop', '#fake-desktop-token'),
     expiresAt: FAKE_TIME + 600_000,
@@ -96,7 +104,8 @@ function requestedPort(body: string): number | null {
 
 /**
  * The fake API's fetch, with a log. It records a reply for each preview write
- * first, so that any port opens and any preview closes. `hold` can keep a
+ * first, so that any port opens and any preview closes. Each open gets a new
+ * preview ID, so a port opens again after a revoke. `hold` can keep a
  * terminal read from its answer.
  */
 export function devFetch(
@@ -111,7 +120,9 @@ export function devFetch(
     const body = typeof init?.body === 'string' ? init.body : ''
     const port = requestedPort(body)
     if (method === 'POST' && path === previews && port !== null) {
-      server.json('POST', path, { preview: devPreview(port) }, 201)
+      opens += 1
+      const preview = devPreview(`opened-${opens}`, port)
+      server.json('POST', path, { preview }, 201)
     }
     if (method === 'DELETE' && path.startsWith(`${previews}/`)) {
       server.empty('DELETE', path)

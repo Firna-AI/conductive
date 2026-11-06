@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { WorkspaceEvent } from '../shared/events'
 import { previewsPath } from '../shared/previews'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS } from '../test-support/fixtures/core'
@@ -46,7 +47,7 @@ async function listReply(server: FakeApiServer): Promise<PreviewsAction> {
   return { type: 'loaded', previews: result.value }
 }
 
-function reduce(...actions: PreviewsAction[]) {
+function reduce(...actions: (PreviewsAction | WorkspaceEvent)[]) {
   return actions.reduce(previewsReducer, initialPreviews)
 }
 
@@ -87,6 +88,23 @@ describe('preview list', () => {
     store.dispatch(await listReply(next))
     stopNext()
     expect(visiblePreviews(store.getSnapshot())).toEqual([second])
+  })
+
+  it('shows an open reply with a new ID for the same port after a revoke', () => {
+    const reopened = {
+      id: 'preview-3',
+      port: 3000,
+      url: 'https://f3c91d0e6b2a4c7d9e8f1a2b3c4d5e6f.conducting-previews.test',
+      expiresAt: 1_800_086_400_000,
+    }
+    const state = reduce(
+      { type: 'loaded', previews: [first, second] },
+      { type: 'preview.revoked', previewId: 'preview-1' },
+      { type: 'open' },
+      { type: 'opened', preview: reopened },
+    )
+
+    expect(visiblePreviews(state)).toEqual([second, reopened])
   })
 
   it('shows the first tab when the address names a closed preview', () => {
