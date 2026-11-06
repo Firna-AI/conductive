@@ -3037,6 +3037,41 @@ Added on 6 November 2026 from the Milestone 4c work.
   B: a Boat reply over its budget fails, also when Boat would allow it.
   Milestone 4c applies it.
 
+### 85. Make the members tests pass the gate every time
+
+Added on 6 November 2026 from the merge of Milestone 15a.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation. **Category:** Test.
+- **Background:** Each members test started its own Miniflare and D1
+  database. Alone, a test took about 2 seconds, and one long scenario took
+  5 seconds. On the merged tree, the complete gate failed twice, each time
+  on another members test at about 5.1 seconds.
+- **Options:**
+  - **A.** A 20-second limit for the members tests only. Effort: Small.
+  - **B.** Fewer test files at the same time. Effort: Small.
+  - **C.** One Miniflare and one database for each members test file, with
+    the data reset between tests. Effort: Medium.
+- **Recommendation:** A now, and C as a follow-up item.
+- **Chosen:** C, by the user on 6 November 2026. The Milestone 15a branch
+  makes the change before it merges. The time limit stays at 5 seconds.
+
+### 86. Decide whether a preview ID can come back
+
+Added on 6 November 2026 from round 2 finding 2 of the Milestone 12
+review.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Review. **Category:** Docs or spec.
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **C.** Each open gives a new ID, and the API never gives out a revoked
+    ID again. Effort: Small.
+  - **D.** Hide revoked previews by their address. Effort: Medium.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 6 November 2026. The preview contract states
+  the rule, and Milestone 11a tests it in the backend.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4085,6 +4120,8 @@ Apply decision 83 C.
 - [ ] Match `http` as well as `https` in the redirect rewrite.
 - [ ] Update the port preview rules of the access protocol, and test the
       cookie, a leaked hostname, and both redirect schemes.
+- [ ] Test that a port opened again after a revoke gets a new preview ID,
+      as decision 86 says.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 
