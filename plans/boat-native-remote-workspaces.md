@@ -967,6 +967,9 @@ decision.
   lets a user's Claude subscription serve as their account.
 - **Confirmed on 5 November 2026:** the user has Anthropic's permission
   for `claude setup-token` tokens. Decision 37 records the rule.
+- **Changed by decision 49 on 6 November 2026:** each turn runs on the
+  agent login of the person who sent the message. The workspace owner is
+  the person who is responsible for the workspace.
 
 ### 25. Set what the free plan includes
 
@@ -1662,10 +1665,9 @@ moved from A to D.
   org already see them.
 - **Agent call on 5 November 2026:** a departed member's workspaces move
   to the owner who removed the member, or to the org's earliest owner
-  when the member left alone. Reason: decision 24 runs a workspace's
-  agents on its owner's own login, which must not stay in use after the
-  person leaves. Decision 55 asks what happens when the last owner
-  leaves.
+  when the member left alone. Reason: each workspace needs a person who
+  is responsible for it. After decisions 49 and 54, the move goes to an
+  admin, and no login of the person who left stays in use.
 
 ### 40. Decide how seat changes are charged mid-period
 
@@ -1985,7 +1987,7 @@ Added on 5 November 2026 from decision 44.
 
 ### 49. Decide whose login runs a teammate's message
 
-Open. Added on 5 November 2026 from the Milestone 2 docs, item 1. Changed
+Added on 5 November 2026 from the Milestone 2 docs, item 1. Changed
 on 6 November 2026 after the user asked how Conductor handles a message
 from a teammate: options D and E are new, and the recommendation moved
 from C to D.
@@ -2039,6 +2041,7 @@ from C to D.
   person's turns run on their own login.
 - **Action:** ask the user, because D changes decision 24, and each
   option adds behaviour that no requirement covers.
+- **Chosen:** D, by the user on 6 November 2026. It changes decision 24.
 
 ### 50. Decide the reach of a cloud computer's GitHub token
 
@@ -2083,7 +2086,7 @@ Open. Added on 5 November 2026 from the Milestone 2 docs, item 2.
 
 ### 51. Decide how a session moves to the other agent
 
-Open. Added on 5 November 2026 from the Milestone 2 docs, item 3.
+Added on 5 November 2026 from the Milestone 2 docs, item 3.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -2114,10 +2117,13 @@ Open. Added on 5 November 2026 from the Milestone 2 docs, item 3.
   includes a switch when one agent reaches its usage limit.
 - **Action:** ask the user, because A and B change the user's choice in
   decision 19, and C adds a hand-over that no decision covers.
+- **Chosen:** B, by the user on 6 November 2026, as Conductor does it. A
+  model change within the same agent stays in the session. A model of the
+  other agent opens a new session with the draft.
 
 ### 52. Decide what agents can ask of the workspace tools
 
-Open. Added on 5 November 2026 from the Milestone 2 docs, item 5.
+Added on 5 November 2026 from the Milestone 2 docs, item 5.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. **Category:** Docs or spec.
@@ -2150,16 +2156,20 @@ Open. Added on 5 November 2026 from the Milestone 2 docs, item 5.
   workspaces, and each new workspace shows in its owner's list.
 - **Action:** ask the user, because the calls add behaviour at a boundary
   that no requirement covers.
+- **Chosen:** B, by the user on 6 November 2026, as Conductor does it.
+- **Agent call on 6 November 2026:** a list call returns every workspace
+  of the org, as Conductor's does. Reason: every member already sees
+  them.
 
 ### 53. Decide which name starts a branch
 
-Open. Added on 5 November 2026 from the Milestone 2 docs, item 8.
+Added on 5 November 2026 from the Milestone 2 docs, item 8.
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Implementation. **Category:** Mockup.
 - **Background:** The plan names each branch `<GitHub login>/<city>-<four
   random characters>`, so that each person's branches stay together. Its
-  example is `cal/lisbon-7k2q`. The mockups use the first name, but the
+  example was `cal/lisbon-7k2q`. The mockups use the first name, but the
   signed-in user's GitHub login is `calummoore`.
 - **Problem:** The plan and the mockups give two rules for the branch
   prefix.
@@ -2177,10 +2187,11 @@ Open. Added on 5 November 2026 from the Milestone 2 docs, item 8.
 - **Recommendation:** A. A GitHub login is unique.
 - **Action:** ask the user, because it decides which side of a mismatch
   between the mockups and the plan is right.
+- **Chosen:** A, by the user on 6 November 2026.
 
 ### 54. Decide whether orgs get an admin role
 
-Open. Added on 5 November 2026 from the answer to decision 46.
+Added on 5 November 2026 from the answer to decision 46.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design. **Category:** Docs or spec.
@@ -2209,10 +2220,14 @@ Open. Added on 5 November 2026 from the answer to decision 46.
   manager, and two roles stay simple.
 - **Action:** ask the user, because the user named a role that the plan
   does not have.
+- **Chosen by the user on 6 November 2026:** as Conductor does it.
+- **Agent call on 6 November 2026:** the roles are admin and member, as in
+  Conductor. This is option A, with the role named "admin" in place of
+  "owner".
 
 ### 55. Decide what happens when the last owner leaves
 
-Open. Added on 5 November 2026 from the answer to decision 39.
+Added on 5 November 2026 from the answer to decision 39.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design. **Category:** Docs or spec.
@@ -2240,6 +2255,8 @@ Open. Added on 5 November 2026 from the answer to decision 39.
   and nobody gets the role by surprise.
 - **Action:** ask the user, because A adds a refusal, and each option adds
   behaviour that no requirement covers.
+- **Chosen:** A, by the user on 6 November 2026. With decision 54, the rule
+  applies to the last admin.
 
 ### 56. Decide what happens when an org's Boat key changes account
 
@@ -2362,39 +2379,44 @@ and 1b, and the orchestrator accepted them on 5 November 2026:
   earlier call that users run on the app's own Boat subscription.
 - Users sign in with GitHub. No other sign-in method is offered.
 
-**Orgs and members.** The user decided these on 5 November 2026, in the
-answers to decisions 22, 24, 30, 39, 42, and 44 to 48:
+**Orgs and members.** The user decided these on 5 and 6 November 2026,
+in the answers to decisions 22, 24, 30, 39, 42, 44 to 49, 54, and 55:
 
-- Each org runs on one Boat key, which an org owner adds, as decisions 44
-  and 46 say. Decision 54 asks whether an admin role can add it too.
+- Each org runs on one Boat key, which an admin adds, as decisions 44, 46,
+  and 54 say.
 - The product is free for now, without billing or plan limits, as
   decision 45 says. Each Boat account's own plan limits apply.
 - Anyone with a GitHub account can sign up, as decisions 22 and 48 say.
 - Each workspace belongs to the user who created it, until it is
-  reassigned. Its agents use that user's own account.
+  reassigned. Each turn runs on the agent login of the person who sent
+  the message, as decision 49 says.
 - Delete org stops every machine and hides the org at once, and deletes
-  everything after 7 days unless an owner restores it.
-- Only a workspace's owner and the org's owners can archive the
+  everything after 7 days unless an admin restores it.
+- Only a workspace's owner and the org's admins can archive the
   workspace.
 - When a member leaves, their workspaces stay in the org, as decision 39
-  says. They move to the owner who removed the member, or to the org's
-  earliest owner.
+  says. They move to the admin who removed the member, or to the org's
+  earliest admin.
+- The roles are admin and member, as decision 54 says. The last admin
+  can leave only after they make another member an admin, or by deleting
+  the org, as decision 55 says.
 
 Agent calls of 5 November 2026:
 
 - Orgs get members, because a workspace can be reassigned to another
-  user. An owner invites members by GitHub login. The roles are owner
-  and member. Only an owner can reassign a workspace or remove a member.
-- A member who is not an owner sees the Members tab and each workspace's
+  user. An admin invites members by GitHub login. Only an admin can
+  reassign a workspace or remove a member.
+- A member who is not an admin sees the Members tab and each workspace's
   owner without actions.
-- Reassigning a workspace stops its cloud computer first. Reason: Boat
-  sets a sandbox's variables only at create and at resume, so the next
-  start must pass the new owner's agent credentials.
+- Agent call, 6 November 2026: the agent runner gets the sender's agent
+  login over its connection for each turn, and never writes it to disk.
+  Reason: Boat sets a sandbox's variables only at create and at resume,
+  and decision 49 runs each turn on its sender's login.
 - The app offers one machine size for now, Boat's default size of
   4 vCPU and 8 GB.
 - A Boat key that Boat refuses counts as no key, so the composer notice of
   decision 33 shows.
-- Only owners see the Boat key tab of the org settings. Its label names
+- Only admins see the Boat key tab of the org settings. Its label names
   Boat, because it leads to the key screen, and a move to another
   provider renames both together.
 - Get started has four steps: the GitHub App, the first org, the org's
@@ -2444,8 +2466,9 @@ The user added these requirements later on 5 November 2026:
   divider drags, and the app remembers the widths in the browser.
 
 Agent call, 5 November 2026: the branch is `<GitHub login>/<city>-<four
-random characters>`, such as `cal/lisbon-7k2q`, so branches stay grouped
-by user. The workspace name starts as the city name. When the agent's
+random characters>`, such as `calummoore/lisbon-7k2q`, so branches stay
+grouped by user. The workspace name starts as the city name. When the
+agent's
 first answer arrives, the Worker asks the agent for a title of three to
 five words in a side conversation, and renames the workspace.
 
@@ -2547,9 +2570,9 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   The workspace Durable Object extends it while the user is active or an
   agent turn runs, as decisions 11 and 29 say. Reason: a new sandbox stops after one hour by default.
 - Agent call: every workspace sandbox starts with `noEnv`, so that it gets
-  none of the Boat account's secrets. It gets only the GitHub token and
-  the agent credentials of its workspace owner, as decision 24 says.
-  Decision 50 decides the reach of the GitHub token.
+  none of the Boat account's secrets. It gets no agent login at start.
+  The runner gets the sender's login for each turn, as decision 49 says.
+  Decision 50 decides the GitHub token.
 - The org settings keep a startup script, which runs in each workspace's
   cloud computer at each start and resume, and env vars. Decision 17 chose
   where the env vars live.
@@ -2865,6 +2888,30 @@ Change the mockups for decisions 44 and 45.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
+## Milestone 1f: Roles, logins, and branch names
+
+Tags: mockup
+
+Depends on: 1e
+
+- [ ] Rename the org role "owner" to "admin" in every screen, as decision
+      54 says. Keep "owner" for the person who owns a workspace.
+- [ ] Change the reassign menu notes for decision 49: each message runs on
+      the login of the person who sends it, and reassigning does not stop
+      the cloud computer.
+- [ ] Mark the other agent's models in the picker as opening a new
+      session, as decision 51 says.
+- [ ] Change the branch samples to the GitHub login, such as
+      `calummoore/lisbon-7k2q`, as decision 53 says.
+- [ ] Run the mockup check. Smoke-test the changed pages.
+
+## Milestone 2a: Protocol updates for decisions 49 to 55
+
+Depends on: 2
+
+- [ ] Update `docs/protocol/` and `docs/architecture.md` for decisions 49,
+      51, 52, 53, 54, and 55, and remove their open-decision lines.
+
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1, 1a, 1b, 1c, 1d, 1e
@@ -2970,6 +3017,10 @@ Depends on: 5
       and resend each one that the Durable Object has not confirmed.
 - [ ] Add prompt, message during a turn, interrupt, and model and effort
       endpoints. The Durable Object forwards them to the runner.
+- [ ] Pass the sender's agent login to the runner for each turn, and start
+      the agent again when the sender changes, as decision 49 says.
+- [ ] Keep each session on one agent. A model of the other agent opens a
+      new session with the draft, as decision 51 says.
 - [ ] Test Codex streaming: the Codex SDK where it gives interrupt and
       partial text, and the Codex App Server otherwise. Save the result
       under `.context/`.
@@ -3066,7 +3117,10 @@ Depends on: 6, 13
 
 Depends on: 5
 
-- [ ] Add the create and list workspace endpoints for workspace tokens.
+- [ ] Add the create and list workspace endpoints for workspace tokens,
+      as decision 52 says: create takes a repository and a first message,
+      and can choose the agent and model, the effort, and the section.
+      List returns the org's workspaces.
 - [ ] Add the CLI and the MCP server to the org image setup.
 - [ ] Test the token scope and both tools.
 
@@ -3074,11 +3128,12 @@ Depends on: 5
 
 Depends on: 5
 
-- [ ] Add org members: invites by GitHub login, the owner and member
+- [ ] Add org members: invites by GitHub login, the admin and member
       roles, and removal.
 - [ ] Give each workspace an owner, the user who created it, and let an
-      org owner reassign it.
-- [ ] Use the workspace owner's agent credentials.
+      admin reassign it.
+- [ ] Refuse the last admin's leave until another member is an admin, as
+      decision 55 says.
 - [ ] Add Delete org with the 7-day restore, and remove the saved
       snapshots before each delete.
 - [ ] Test the reassignment and Delete org against the fake Boat server.
