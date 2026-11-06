@@ -1,0 +1,54 @@
+/* The row keeps the mockup height. On a phone the 44px targets overflow it. */
+.toolbar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  height: calc(var(--ui-bar-height) - 4px);
+  padding: 0 6px;
+  border-bottom: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* The link tab of the mockup. */
+.tab {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  height: calc(var(--ui-control-height) - 2px);
+  min-height: var(--ui-touch-min);
+  padding: 0 10px;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-decoration: none;
+  text-transform: var(--ui-label-case);
+  white-space: nowrap;
+}
+
+.tab:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+.current,
+.current:hover {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+}
+
+.spacer {
+  flex: 1;
+}

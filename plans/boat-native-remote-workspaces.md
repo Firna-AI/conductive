@@ -3455,9 +3455,9 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build the terminal with xterm.js, the port preview with its "Open
-      in new tab" link, and the desktop frame.
-- [ ] Compare each screen with its mockup.
+- [x] Build the terminal with xterm.js, the port preview with its "Open
+      in new tab" link, and the desktop frame. Branch: `conductor/boat-native-remote-workspaces-milestone-12`.
+- [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-12`.
 
 ## Milestone 13: GitHub banner backend
 
