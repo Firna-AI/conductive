@@ -2470,6 +2470,21 @@ parallel and not delay things".
     public repository, such as `Firna-AI/conducting-desktop`.
   - Milestone 17 does not wait for Milestone 15e. If 15e has not merged
     by then, it stays a follow-up branch.
+- **Added by the user on 6 November 2026:** the app must have the native
+  macOS window buttons, the red, yellow, and green dots, built into the
+  app's own top bar, as in Conductor's Mac app. "Otherwise people will
+  think its not a serious desktop app." The user's screenshot is in
+  `.context/attachments/assets/ee3f326c-4a2a-4bb3-a3de-6ee92adcf521/`.
+- **Agent calls on 6 November 2026, for the window buttons:**
+  - The window has a hidden title bar, and the native buttons sit inset
+    at the top left of the left panel. The sidebar toggle and the back
+    and forward buttons sit beside them, as in Conductor's Mac app.
+  - The top bars of the app are drag regions that move the window, and
+    their buttons are not.
+  - The page reserves the space of the window buttons, and drops it in
+    full screen, where macOS hides them. It learns this without a preload
+    script, from the window controls area that Electron exposes to CSS,
+    or else from a marker in the page address.
 
 ## Design
 
@@ -3455,9 +3470,16 @@ Depends on: 4a
 
 Build the Mac app as decision 62 says. No other milestone waits for it.
 
+- [ ] Draw the Mac app window in the mockups first: the native window
+      buttons inset at the top left of the left panel, with the sidebar
+      toggle and the back and forward buttons beside them, in a normal
+      window and in full screen.
 - [ ] Add `desktop/`, an Electron shell for macOS, as Mokly's
       `ts/desktop` does. It bundles the built web app and serves it from
       `conducting-app://desktop`.
+- [ ] Give the window a hidden title bar with the native window buttons
+      inset in the app's top bar, drag regions on the top bars, and the
+      reserved space that full screen drops, as decision 62 says.
 - [ ] Let the Worker accept the desktop origin in the `Origin` check, in
       CORS for the API, and for the session cookie. Hand off the GitHub
       sign-in from the browser to the app through the `conducting://`
