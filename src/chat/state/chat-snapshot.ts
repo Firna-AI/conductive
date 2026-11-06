@@ -7,11 +7,21 @@ import type { Workspace, WorkspaceStart } from '../../shared/workspaces'
 import type { AccountSummary, OrgSummary } from '../api/read-responses'
 import { emptyTranscript, type Transcript } from './transcript'
 
+/**
+ * The message that a user writes in a session. Its identity stays when the
+ * draft moves to another session, so the uploads and the send that it
+ * started finish on the draft, wherever it is then.
+ */
 export interface Draft {
+  id: string
   text: string
   attachments: readonly Attachment[]
   /** The client ID of a send that failed, so that a resend is one message. */
   sendId: string | null
+  /** Files that still upload. Send waits until they are attached. */
+  uploads: number
+  /** A send of this draft waits for its answer. */
+  sending: boolean
 }
 
 export interface SessionState {
@@ -20,9 +30,6 @@ export interface SessionState {
   draft: Draft
   /** Sent messages that the stream has not shown yet. */
   pending: readonly UserMessage[]
-  sending: boolean
-  /** Files that still upload. Send waits until they are attached. */
-  uploads: number
   stopping: boolean
   retrying: boolean
 }
@@ -66,15 +73,22 @@ export interface ChatSnapshot {
   resuming: boolean
 }
 
-export const emptyDraft: Draft = { text: '', attachments: [], sendId: null }
+/** A draft with nothing in it, and no work in flight. */
+export function blankDraft(id: string): Draft {
+  return {
+    id,
+    text: '',
+    attachments: [],
+    sendId: null,
+    uploads: 0,
+    sending: false,
+  }
+}
 
-export const initialSession: SessionState = {
+const initialSession: Omit<SessionState, 'draft'> = {
   transcript: emptyTranscript,
   hydration: 'idle',
-  draft: emptyDraft,
   pending: [],
-  sending: false,
-  uploads: 0,
   stopping: false,
   retrying: false,
 }
@@ -97,12 +111,20 @@ export const initialSnapshot: ChatSnapshot = {
   resuming: false,
 }
 
-/** The state of one session, with its defaults before anything loads. */
+/**
+ * The state of one session, with its defaults before anything loads. The
+ * first draft of a session takes its identity from the session.
+ */
 export function sessionState(
   snapshot: ChatSnapshot,
   sessionId: string,
 ): SessionState {
-  return snapshot.sessionStates[sessionId] ?? initialSession
+  return (
+    snapshot.sessionStates[sessionId] ?? {
+      ...initialSession,
+      draft: blankDraft(`draft:${sessionId}`),
+    }
+  )
 }
 
 export function withSession(

@@ -1,6 +1,7 @@
 import type { SessionsResponse } from '../../shared/sessions'
 import type { WorkspaceResponse } from '../../shared/workspaces'
-import { hydrate, messageOf, type ChatContext } from './context'
+import { messageOf, type ChatContext } from './context'
+import { hydrate } from './history'
 import { orderSessions, pickActive, sortHistory } from './sessions'
 
 const orNull = <T>(request: Promise<T>): Promise<T | null> =>
@@ -15,7 +16,8 @@ const orNull = <T>(request: Promise<T>): Promise<T | null> =>
  *    change between the reads and the stream gets lost.
  *
  * Without an open session, the stream starts at the beginning, so its
- * history holds every session.
+ * history holds every session. The watch of the shown session, which the
+ * controller starts, loads the history of each later shown session.
  */
 export async function loadChat(context: ChatContext): Promise<void> {
   const { api, store } = context
@@ -88,6 +90,4 @@ export async function loadChat(context: ChatContext): Promise<void> {
     }
   })
   context.stream.start(after)
-  const shown = store.get().activeSessionId
-  if (shown) void hydrate(context, shown)
 }

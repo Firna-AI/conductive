@@ -145,7 +145,7 @@ export function SessionChat(props: SessionChatProps) {
       ) : null}
       {!problem && session && snapshot.load.state === 'ready' ? (
         <Composer
-          attaching={state.uploads > 0}
+          attaching={state.draft.uploads > 0}
           blocked={block !== null}
           choice={session.choice}
           draft={state.draft}
@@ -161,7 +161,7 @@ export function SessionChat(props: SessionChatProps) {
           onSend={() => void controller.send(session.id)}
           onStop={() => void controller.interrupt(session.id)}
           running={state.transcript.turn !== null}
-          sending={state.sending}
+          sending={state.draft.sending}
           sessionAgent={hasMessages ? session.choice.agent : undefined}
           stopping={state.stopping}
         />

@@ -8,27 +8,13 @@ import { list, record, text } from '../api/json'
 import { readAttachment, readChoice } from '../api/read-chat'
 import type { DevBackend } from './dev-backend'
 import { resume } from './dev-sandbox'
+import { place } from './dev-sessions'
 
 const reply = (body: unknown, status = 200) => Response.json(body, { status })
 
 async function bodyOf(request: Request): Promise<Record<string, unknown>> {
   const value: unknown = await request.clone().json()
   return record(value)
-}
-
-/** Places a session among the tabs or in the history, and tells the tabs. */
-export function place(backend: DevBackend, session: Session): void {
-  const others = (items: Session[]) =>
-    items.filter((item) => item.id !== session.id)
-  if (session.closedAt === null) {
-    backend.open = [...others(backend.open), session]
-    backend.closed = others(backend.closed)
-  } else {
-    backend.open = others(backend.open)
-    backend.closed = [session, ...others(backend.closed)]
-  }
-  backend.stream.emit({ type: 'session.updated', session })
-  backend.sync()
 }
 
 function newSession(backend: DevBackend, choice: Session['choice']): Session {

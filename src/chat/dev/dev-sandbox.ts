@@ -103,9 +103,13 @@ export function failStart(backend: DevBackend): void {
   setState(backend, 'error')
 }
 
-/** The title that the agent writes after its first answer in a new workspace. */
-export function writeTitle(backend: DevBackend, name: string): void {
-  backend.workspace = { ...backend.workspace, name }
-  backend.stream.emit({ type: 'workspace.title', name })
+/**
+ * The fake starts every new workspace. The page gives it the state of its
+ * address, as it gives the state to the other workspace, so that the first
+ * turn of a new workspace can show a ready sandbox.
+ */
+export function takeState(backend: DevBackend, state: WorkspaceState): void {
+  backend.workspace = { ...backend.workspace, state }
+  backend.start = null
   backend.sync()
 }

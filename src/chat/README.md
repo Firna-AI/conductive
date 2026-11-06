@@ -34,6 +34,10 @@ agent runner.
 - `onWorkspaceChange` gets the workspace record after each change: its state,
   and the title that the agent writes through `workspace.title` and
   `workspace.updated` events. The header and the list of the app show it.
+- Each tab shows the `title` of its session record. The backend provides
+  the titles that the mockups show: the first session of a new workspace
+  has the workspace name, and the agent's title renames both. The
+  development page does the same.
 - `extraTabs` takes `<li>` tabs, such as open files, after the session tabs.
 - Render the chat inside the Firna theme provider and the Graphite token CSS
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
@@ -50,6 +54,17 @@ agent runner.
 - Each session keeps its own event log. A session that opens later loads its
   full stored history, whose numbers can be older than the stream's cursor,
   so a history never goes through the stream's duplicate check.
+- The chat loads the history of each session that becomes the shown session,
+  whatever changed the selection: a click, an action, or a record from the
+  stream. One load runs at a time for each session, and a failed load waits
+  for Try again or for the next selection.
+- Each draft has an identity. When a model of the other agent moves the draft
+  to a new session, its files that still upload and its send in flight
+  finish on the draft there.
+- Session records carry no order from the server, so the chat counts a local
+  version for each session. A newer action or a record from the stream wins
+  over an older reply or rollback. The steps after an action, such as a view
+  save or the focus, still run when its reply record is older.
 - The chat loads the session list and the view, then the full history of the
   shown session, then the workspace and the session list again. The stream
   starts after the history's `throughEventNumber`, so no change between the
@@ -113,6 +128,10 @@ on `FakeApiServer` and the recorded events, and render the chat with
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
 - `state/session-log.ts`: the event log of each session.
+- `state/history.ts`: the shared history load of each session, and the
+  watch that loads the history of each shown session.
+- `state/drafts.ts`: the draft identity, its moves, and its work in flight.
+- `state/session-records.ts`: the local versions of the session records.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
   and the reconnect of the workspace stream.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared

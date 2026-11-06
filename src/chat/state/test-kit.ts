@@ -1,4 +1,4 @@
-import type { WorkspaceEvent } from '../../shared/events'
+import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import { FakeApiServer, type FakeApiOptions } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import type { FetchLike } from '../api/client'
@@ -88,10 +88,42 @@ export function chatFor(
   const bodies = (method: string, path: string) =>
     Promise.all(
       requests(method, path).map(async (request): Promise<unknown> =>
-        request.json(),
+        request.clone().json(),
       ),
     )
-  return { server, controller, after, timers, emit, requests, bodies, held }
+  /** The number of history requests for one session. */
+  const histories = (sessionId: string) =>
+    server.requests.filter((request) => {
+      const url = new URL(request.url)
+      return (
+        request.method === 'GET' &&
+        url.pathname === historyPathname &&
+        url.searchParams.get('sessionId') === sessionId
+      )
+    }).length
+  const historyPathname = new URL(
+    chatHistoryPath(
+      FAKE_IDS.org,
+      options.workspaceId ?? FAKE_IDS.workspace,
+      '',
+    ),
+    'https://held.test',
+  ).pathname
+  /** The draft of a session as the snapshot holds it. */
+  const draftOf = (sessionId: string) =>
+    controller.getSnapshot().sessionStates[sessionId]?.draft
+  return {
+    server,
+    controller,
+    after,
+    timers,
+    emit,
+    requests,
+    bodies,
+    held,
+    histories,
+    draftOf,
+  }
 }
 
 /** The kinds and texts of a session's transcript, in the order of the chat. */

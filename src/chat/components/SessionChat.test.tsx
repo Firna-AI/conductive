@@ -8,7 +8,7 @@ import {
   FAKE_IDS,
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
-import { emptyDraft } from '../state/chat-snapshot'
+import { blankDraft } from '../state/chat-snapshot'
 import { chatFor } from '../state/test-kit'
 import { historyEntries } from './ChatOverlays'
 import { Composer } from './Composer'
@@ -204,7 +204,7 @@ describe('session parts', () => {
           attaching={attaching}
           blocked={false}
           choice={{ agent: 'claude', model: 'Opus 5.5', effort: 'high' }}
-          draft={{ ...emptyDraft, text: 'See the screenshot.' }}
+          draft={{ ...blankDraft('draft'), text: 'See the screenshot.' }}
           models={[]}
           onAttach={() => {}}
           onChangeText={() => {}}

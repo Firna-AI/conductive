@@ -26,7 +26,8 @@ import type { Clock } from '../ui/clock'
 import { DevAgent } from './dev-agent'
 import type { DevOptions } from './dev-options'
 import { handleWrite } from './dev-routes'
-import { writeTitle } from './dev-sandbox'
+import { takeState } from './dev-sandbox'
+import { followTitle } from './dev-sessions'
 import { DevStream } from './dev-stream'
 
 export const NEW_WORKSPACE = 'saved-carts'
@@ -48,6 +49,8 @@ export class DevBackend {
   queue: UserMessage[] = []
   timers: number[] = []
   count = 0
+  /** The first session of a new workspace, which follows its title. */
+  titled: string | null = null
 
   private constructor(parts: {
     target: WorkspaceTarget
@@ -123,10 +126,8 @@ export class DevBackend {
     })
     backend.note(recorded.map((envelope) => envelope.event))
     if (options.workspace === 'new') {
-      backend.agent.onAnswer = () => {
-        if (backend.workspace.name === 'Saved carts') return
-        writeTitle(backend, 'Saved carts')
-      }
+      followTitle(backend)
+      if (options.state !== 'starting') takeState(backend, options.state)
     }
     if (live) backend.replay(recorded.map((envelope) => envelope.event))
     return backend

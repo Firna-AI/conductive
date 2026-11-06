@@ -1,12 +1,8 @@
 import type { SendMessageRequest } from '../../shared/messages'
 import { sendBlock } from './blockers'
-import {
-  emptyDraft,
-  sessionState,
-  withSession,
-  type SessionState,
-} from './chat-snapshot'
+import { sessionState, withSession, type SessionState } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
+import { afterSend, changeDraft, draftIdOf, holderOf } from './drafts'
 import { toUpload } from './uploads'
 
 function change(
@@ -31,35 +27,37 @@ export function setDraftText(
 
 /**
  * Uploads files to the workspace and attaches them to the draft. Send waits
- * while a file uploads, so a message never leaves without its files.
+ * while a file uploads, so a message never leaves without its files. Each
+ * file finishes on its draft, also after the draft moved to another session.
  */
 export async function attachFiles(
   context: ChatContext,
   sessionId: string,
   files: readonly File[],
 ): Promise<void> {
-  change(context, sessionId, (state) => ({
-    ...state,
-    uploads: state.uploads + files.length,
+  if (files.length === 0) return
+  const draftId = draftIdOf(context, sessionId)
+  changeDraft(context, draftId, (draft) => ({
+    ...draft,
+    uploads: draft.uploads + files.length,
   }))
   for (const file of files) {
     try {
       const attachment = await context.api.attach(await toUpload(file))
-      change(context, sessionId, (state) => ({
-        ...state,
-        draft: {
-          ...state.draft,
-          attachments: [...state.draft.attachments, attachment],
-          sendId: null,
-        },
+      changeDraft(context, draftId, (draft) => ({
+        ...draft,
+        attachments: [...draft.attachments, attachment],
+        sendId: null,
+        uploads: Math.max(0, draft.uploads - 1),
       }))
     } catch (error) {
-      showNotice(context, sessionId, "The file didn't attach", error)
+      changeDraft(context, draftId, (draft) => ({
+        ...draft,
+        uploads: Math.max(0, draft.uploads - 1),
+      }))
+      const holder = holderOf(context.store.get(), draftId) ?? sessionId
+      showNotice(context, holder, "The file didn't attach", error)
     }
-    change(context, sessionId, (state) => ({
-      ...state,
-      uploads: Math.max(0, state.uploads - 1),
-    }))
   }
 }
 
@@ -83,18 +81,18 @@ export function removeAttachment(
 /**
  * Sends the draft of a session. Before the sandbox is ready the workspace
  * queues it, and during a turn it steers the turn. A failed send keeps the
- * draft and its client ID, so that Send again is the same message.
+ * draft and its client ID, so that Send again is the same message. The send
+ * finishes on its draft, also after the draft moved to another session.
  */
 export async function sendDraft(
   context: ChatContext,
   sessionId: string,
 ): Promise<void> {
   const snapshot = context.store.get()
-  const state = sessionState(snapshot, sessionId)
   const session = snapshot.sessions.find((item) => item.id === sessionId)
-  const { draft } = state
+  const { draft } = sessionState(snapshot, sessionId)
   const empty = draft.text.trim() === '' && draft.attachments.length === 0
-  const busy = state.sending || state.uploads > 0
+  const busy = draft.sending || draft.uploads > 0
   if (!session || busy || empty || sendBlock(snapshot, sessionId)) return
   const request: SendMessageRequest = {
     id: draft.sendId ?? context.newId(),
@@ -102,10 +100,11 @@ export async function sendDraft(
     attachmentIds: draft.attachments.map((attachment) => attachment.id),
     choice: session.choice,
   }
-  change(context, sessionId, (current) => ({
+  const draftId = draftIdOf(context, sessionId)
+  changeDraft(context, draftId, (current) => ({
     ...current,
+    sendId: request.id,
     sending: true,
-    draft: { ...current.draft, sendId: request.id },
   }))
   try {
     const { message } = await context.api.send(sessionId, request)
@@ -113,19 +112,20 @@ export async function sendDraft(
       const shown = current.transcript.items.some(
         (item) => item.id === `user:${message.id}`,
       )
-      return {
-        ...current,
-        sending: false,
-        draft: current.draft.sendId === request.id ? emptyDraft : current.draft,
-        pending: shown ? current.pending : [...current.pending, message],
-      }
+      return shown
+        ? current
+        : { ...current, pending: [...current.pending, message] }
     })
-    if (context.live() && context.store.get().notice?.sessionId === sessionId) {
+    changeDraft(context, draftId, (current) => afterSend(current, request))
+    const holder = holderOf(context.store.get(), draftId)
+    const owner = context.store.get().notice?.sessionId
+    if (context.live() && owner && (owner === sessionId || owner === holder)) {
       context.store.update((current) => ({ ...current, notice: null }))
     }
   } catch (error) {
-    change(context, sessionId, (current) => ({ ...current, sending: false }))
-    showNotice(context, sessionId, "Your message didn't send", error)
+    changeDraft(context, draftId, (current) => ({ ...current, sending: false }))
+    const holder = holderOf(context.store.get(), draftId) ?? sessionId
+    showNotice(context, holder, "Your message didn't send", error)
   }
 }
 

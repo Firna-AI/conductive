@@ -7,7 +7,8 @@ import {
   optionValue,
   type DevOptions,
 } from './dev-options'
-import { failStart, makeReady, stopSandbox, writeTitle } from './dev-sandbox'
+import { failStart, makeReady, stopSandbox } from './dev-sandbox'
+import { writeTitle } from './dev-sessions'
 import styles from './DevPage.module.css'
 
 /** Opens the page again with one option changed. */

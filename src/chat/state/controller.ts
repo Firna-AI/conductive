@@ -15,12 +15,8 @@ import {
   type ChatSnapshot,
   type Overlay,
 } from './chat-snapshot'
-import {
-  applyEnvelopes,
-  hydrate,
-  viewWriter,
-  type ChatContext,
-} from './context'
+import { applyEnvelopes, viewWriter, type ChatContext } from './context'
+import { hydrate, watchShownSession } from './history'
 import { loadChat } from './load'
 import {
   attachFiles,
@@ -63,6 +59,7 @@ export class ChatController {
   private readonly store = new ChatStore()
   private context: ChatContext
   private run = 0
+  private unwatch: (() => void) | null = null
 
   constructor(options: ChatControllerOptions) {
     this.options = options
@@ -72,16 +69,22 @@ export class ChatController {
   readonly subscribe = (listener: () => void) => this.store.subscribe(listener)
   readonly getSnapshot = (): ChatSnapshot => this.store.get()
 
-  /** Loads the chat, then opens its stream. */
+  /**
+   * Loads the chat, then opens its stream. From now on, each session that
+   * becomes the shown session loads its history.
+   */
   readonly start = (): Promise<void> => {
     this.stop()
     this.context = this.createContext(this.run)
     this.store.update(() => initialSnapshot)
+    this.unwatch = watchShownSession(this.context)
     return loadChat(this.context)
   }
 
   readonly stop = (): void => {
     this.run += 1
+    this.unwatch?.()
+    this.unwatch = null
     this.context.stream.stop()
   }
 
@@ -89,13 +92,20 @@ export class ChatController {
     const { target, subscribe, timers } = this.options
     const api = createChatApi(this.options.fetch, target)
     const live = () => this.run === run
+    let drafts = 0
     const context: ChatContext = {
       target,
       api,
       store: this.store,
       logs: new Map(),
+      loading: new Map(),
+      versions: new Map(),
       picks: new Map(),
       newId: this.options.newId ?? (() => crypto.randomUUID()),
+      newDraftId: () => {
+        drafts += 1
+        return `draft-${drafts}`
+      },
       saveView: viewWriter((view) => api.saveView(view)),
       live,
       stream: new WorkspaceStream({

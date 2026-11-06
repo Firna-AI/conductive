@@ -1,8 +1,9 @@
-import type { Session } from '../../shared/sessions'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import { isRunning } from './chat-snapshot'
-import { hydrate, showNotice, type ChatContext } from './context'
-import { placeSession, viewShowing } from './sessions'
+import { showNotice, type ChatContext } from './context'
+import { hydrate } from './history'
+import { beginChange, placeEdit, placeIfNewest } from './session-records'
+import { viewShowing } from './sessions'
 
 /** The view already shows these tabs, with the same tab open. */
 function sameTabs(current: WorkspaceView | null, next: WorkspaceView): boolean {
@@ -38,9 +39,12 @@ export async function selectSession(
   await hydrate(context, sessionId)
 }
 
-function showSession(context: ChatContext, session: Session): Promise<void> {
-  context.store.update((snapshot) => placeSession(snapshot, session))
-  return selectSession(context, session.id)
+/** Shows a session that an action opened, when it is open now. */
+async function showIfOpen(context: ChatContext, sessionId: string) {
+  const open = context.store
+    .get()
+    .sessions.some((item) => item.id === sessionId)
+  if (open) await selectSession(context, sessionId)
 }
 
 /**
@@ -59,7 +63,8 @@ export async function newSession(context: ChatContext): Promise<void> {
   if (!choice) return
   try {
     const session = await context.api.createSession(choice)
-    if (context.live()) await showSession(context, session)
+    placeIfNewest(context, session, 0)
+    if (context.live()) await showIfOpen(context, session.id)
   } catch (error) {
     showNotice(context, null, "The new session didn't open", error)
   }
@@ -79,21 +84,18 @@ export async function renameSession(
     overlay: { kind: 'none' },
   }))
   if (!session || name === '' || name === session.title) return
-  context.store.update((snapshot) =>
-    placeSession(snapshot, { ...session, title: name }),
-  )
+  const version = placeEdit(context, { ...session, title: name })
   try {
     const saved = await context.api.renameSession(sessionId, name)
-    if (context.live())
-      context.store.update((snapshot) => placeSession(snapshot, saved))
+    placeIfNewest(context, saved, version)
   } catch (error) {
     if (!context.live()) return
-    context.store.update((snapshot) => {
-      const current = snapshot.sessions.find((item) => item.id === sessionId)
-      return current
-        ? placeSession(snapshot, { ...current, title: session.title })
-        : snapshot
-    })
+    const current = context.store
+      .get()
+      .sessions.find((item) => item.id === sessionId)
+    if (current) {
+      placeIfNewest(context, { ...current, title: session.title }, version)
+    }
     showNotice(context, sessionId, "The new name didn't save", error)
   }
 }
@@ -103,10 +105,11 @@ async function closeSession(
   sessionId: string,
   stopRunningTurn: boolean,
 ): Promise<void> {
+  const version = beginChange(context, sessionId)
   try {
     const session = await context.api.closeSession(sessionId, stopRunningTurn)
     if (!context.live()) return
-    context.store.update((snapshot) => placeSession(snapshot, session))
+    placeIfNewest(context, session, version)
     const { view, activeSessionId } = context.store.get()
     if (view) context.saveView(view)
     if (activeSessionId) await hydrate(context, activeSessionId)
@@ -152,11 +155,12 @@ export async function reopenSession(
     ...snapshot,
     overlay: { kind: 'none' },
   }))
+  const version = beginChange(context, sessionId)
   try {
     const session = await context.api.reopenSession(sessionId)
     if (!context.live()) return
-    if (session.closedAt === null) await showSession(context, session)
-    else context.store.update((snapshot) => placeSession(snapshot, session))
+    placeIfNewest(context, session, version)
+    await showIfOpen(context, sessionId)
   } catch (error) {
     showNotice(context, null, "The session didn't reopen", error)
   }

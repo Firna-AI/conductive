@@ -1,3 +1,4 @@
+import type { Session } from '../../shared/sessions'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import { ChatApiError, type ChatApi, type WorkspaceTarget } from '../api/client'
 import type { StreamEnvelope } from '../api/read-workspace'
@@ -5,11 +6,11 @@ import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
 import {
   asSessionEvent,
-  chatEventsOf,
   sessionOf,
   SessionLog,
   type ChatEnvelope,
 } from './session-log'
+import { beginChange } from './session-records'
 import { placeSession } from './sessions'
 import type { Transcript } from './transcript'
 
@@ -20,9 +21,15 @@ export interface ChatContext {
   readonly store: ChatStore
   readonly stream: WorkspaceStream
   readonly logs: Map<string, SessionLog>
+  /** The running history load of each session, so that loads are shared. */
+  readonly loading: Map<string, Promise<number | null>>
+  /** The local version of each session record, as `session-records.ts` says. */
+  readonly versions: Map<string, number>
   /** The number of the latest model pick of each session. */
   readonly picks: Map<string, number>
   readonly newId: () => string
+  /** A new identity for a draft that a session starts after its draft moved. */
+  readonly newDraftId: () => string
   readonly saveView: (view: WorkspaceView) => void
   /** The chat is still open. A response that arrives later changes nothing. */
   readonly live: () => boolean
@@ -75,8 +82,28 @@ export function withTranscript(
 }
 
 /**
+ * The last record of each session in a batch of the stream, in the order of
+ * those last records. A batch, such as the history after a reconnect, then
+ * shows only where each session ends. An older close in the batch can then
+ * not move the focus away from a session that the batch leaves open.
+ */
+function lastRecords(
+  envelopes: readonly StreamEnvelope[],
+): Map<string, Session> {
+  const records = new Map<string, Session>()
+  for (const { event } of envelopes) {
+    if (event?.type !== 'session.updated') continue
+    records.delete(event.session.id)
+    records.set(event.session.id, event.session)
+  }
+  return records
+}
+
+/**
  * Applies workspace stream events in order: chat events to the log of their
- * session, and records of the workspace, its start, and its sessions.
+ * session, and records of the workspace, its start, and its sessions. A
+ * session record from the stream starts a new version of its session, so an
+ * older reply no longer applies.
  */
 export function applyEnvelopes(
   context: ChatContext,
@@ -93,6 +120,8 @@ export function applyEnvelopes(
   const changed = [...bySession].filter(([id, events]) =>
     logOf(context, id).merge(events),
   )
+  const records = lastRecords(envelopes)
+  for (const id of records.keys()) beginChange(context, id)
   context.store.update((snapshot) => {
     let next = snapshot
     for (const { event } of envelopes) {
@@ -102,55 +131,14 @@ export function applyEnvelopes(
         next = { ...next, workspace: { ...next.workspace, name: event.name } }
       } else if (event?.type === 'start.updated') {
         next = { ...next, start: event.start }
-      } else if (event?.type === 'session.updated') {
-        next = placeSession(next, event.session)
       }
     }
+    for (const record of records.values()) next = placeSession(next, record)
     for (const [id] of changed) {
       next = withTranscript(next, id, logOf(context, id).transcript)
     }
     return next
   })
-}
-
-/**
- * Loads the full stored history of a session once, or `again`, and returns
- * the event number that it reaches, or null when it loads nothing. Its events can be older than the stream's cursor,
- * so they go to the session's own log, never through the stream's check.
- */
-export async function hydrate(
-  context: ChatContext,
-  sessionId: string,
-  again = false,
-): Promise<number | null> {
-  const state = context.store.get().sessionStates[sessionId]
-  const known = state?.hydration === 'loading' || state?.hydration === 'ready'
-  if (known && !again) return null
-  const mark = (hydration: 'loading' | 'ready' | 'failed') =>
-    context.store.update((snapshot) =>
-      withSession(snapshot, sessionId, (current) => ({
-        ...current,
-        hydration,
-      })),
-    )
-  mark('loading')
-  try {
-    const history = await context.api.history(sessionId)
-    if (!context.live()) return null
-    const own = history.envelopes.filter(
-      (envelope) => envelope.workspaceId === context.target.workspaceId,
-    )
-    const log = logOf(context, sessionId)
-    log.merge(chatEventsOf(sessionId, own))
-    context.store.update((snapshot) =>
-      withTranscript(snapshot, sessionId, log.transcript),
-    )
-    mark('ready')
-    return history.throughEventNumber
-  } catch {
-    if (context.live()) mark('failed')
-    return null
-  }
 }
 
 /** Saves the view one request at a time. A newer view replaces one that waits. */
