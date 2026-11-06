@@ -1,4 +1,5 @@
 import type { FileResponse } from '../../src/shared/files'
+import { decodeUtf8 } from '../../src/shared/utf8'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
@@ -66,19 +67,13 @@ export async function readBoatFile(
     path,
     maxBytes,
   )
-  try {
-    const content = new TextDecoder('utf-8', {
-      fatal: true,
-      ignoreBOM: true,
-    }).decode(fileBytes(file))
-    return {
-      ...file,
-      encoding: 'utf-8',
-      content,
-      mediaType: textMediaType(path),
-    }
-  } catch {
-    return file
+  const content = decodeUtf8(fileBytes(file))
+  if (content === null) return file
+  return {
+    ...file,
+    encoding: 'utf-8',
+    content,
+    mediaType: textMediaType(path),
   }
 }
 

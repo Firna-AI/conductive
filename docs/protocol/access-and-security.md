@@ -20,6 +20,8 @@ says.
   account, so the check no longer protects a shared account.
 - The session lives in a signed cookie that is HttpOnly, Secure, and
   SameSite=Lax.
+- The [Mac app](desktop-app.md#the-sign-in-session) has a separate session
+  cookie, with its own origin rule.
 - The sign-in page and the footer of the marketing site link to the Terms
   and Privacy pages (decision 35).
 
@@ -31,9 +33,12 @@ says.
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
-- Two routes of `app.conducting.build` need no sign-in: the health check,
-  and the GitHub sign-in with its callback. The callback checks its
-  `state` value instead.
+- The health check and GitHub sign-in with its callback need no sign-in.
+  The callback checks its `state` value instead.
+- The Mac app's public sign-in exchange also needs no sign-in.
+  It checks the one-use handoff and its secret instead.
+  Its JSON body can contain at most 1,000,000 bytes, which is 1 MB.
+  The Worker stops reading a larger body and returns HTTP 413 before sign-in.
 - A GET or HEAD read may come without an `Origin` header, because
   browsers send none on a read from the same site. A present `Origin`
   must match. Every write and every socket upgrade needs a matching
@@ -43,6 +48,27 @@ says.
   webhook signature or a workspace token in place of the sign-in.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
 - The marketing site at `conducting.build` needs no sign-in.
+
+The [Mac app](desktop-app.md#the-worker-and-the-desktop-origin) states the
+additional origin that the app gate accepts.
+
+## Content security policy
+
+Decision 67 applies the prepared policy to both apps now.
+Deferring the web policy was rejected because the app has few screens now.
+Later screens add the frame and connection sources that they need.
+
+- The web app and the Mac app use the same content security policy.
+- Scripts and fonts load only from the page's own origin.
+- Styles can also use inline values.
+- Images can also use data URLs and `https://avatars.githubusercontent.com`.
+- Network calls reach only the page's own origin and the configured app
+  origin, with its matching WebSocket origin.
+- Frames load only from the page's own origin and the configured HTTPS
+  frame origins.
+- Pages use no plugin objects or base elements.
+- Other pages cannot frame the app.
+- Forms submit only to the page's own origin.
 
 ## Orgs and workspaces
 

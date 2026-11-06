@@ -1,11 +1,10 @@
-import { readFile, readdir } from 'node:fs/promises'
-
 import { Miniflare } from 'miniflare'
 import { build } from 'vite'
 
 import { encrypt, hash, sign } from '../security/crypto'
 import { SESSION_COOKIE } from '../security/cookies'
 import { TEST_ORIGIN } from '../test-support/harness'
+import { applyMigrations } from '../test-support/migrations'
 import {
   MACHINE_ORIGIN,
   WORKSPACE_ID,
@@ -77,20 +76,7 @@ export async function createAdapterRuntime() {
     ],
   })
   const db = await runtime.getD1Database('DB')
-  const directory = `${import.meta.dirname}/../../migrations`
-  const migrations = (await readdir(directory))
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-  for (const name of migrations) {
-    const sql = await readFile(`${directory}/${name}`, 'utf8')
-    await db.batch(
-      sql
-        .split(';')
-        .map((statement) => statement.trim())
-        .filter(Boolean)
-        .map((statement) => db.prepare(statement)),
-    )
-  }
+  await applyMigrations(db)
   await db.batch([
     db
       .prepare(

@@ -1,0 +1,268 @@
+import { beforeEach, expect, it } from 'vitest'
+
+import { TEST_TIME } from '../test-support/harness'
+import { HEAD_SHA, passedRun, repositoryPull } from './fake-pull'
+import { createReaderHarness } from './reader-test-harness'
+
+let api: ReturnType<typeof createReaderHarness>['api']
+let read: ReturnType<typeof createReaderHarness>['read']
+beforeEach(() => {
+  const harness = createReaderHarness()
+  api = harness.api
+  read = harness.read
+})
+
+it('maps pull request blockers and terminal states into the shared banner', async () => {
+  const original = structuredClone(api.pulls[2])
+  const cases = [
+    { patch: { isDraft: true }, checks: [passedRun], state: 'draft' },
+    {
+      patch: { mergeable: 'CONFLICTING' },
+      checks: [passedRun],
+      state: 'conflict',
+    },
+    {
+      patch: { reviewDecision: 'CHANGES_REQUESTED' },
+      checks: [passedRun],
+      state: 'changes-requested',
+    },
+    {
+      patch: {},
+      checks: [{ ...passedRun, status: 'IN_PROGRESS', conclusion: null }],
+      state: 'checks-running',
+    },
+    {
+      patch: {},
+      checks: [{ ...passedRun, conclusion: 'STARTUP_FAILURE' }],
+      state: 'checks-failed',
+    },
+    {
+      patch: { mergeStateStatus: 'CLEAN' },
+      checks: [passedRun],
+      state: 'ready-to-merge',
+    },
+    {
+      patch: { state: 'MERGED', mergedAt: '2026-11-06T12:00:00Z' },
+      checks: [],
+      state: 'merged',
+    },
+    {
+      patch: { state: 'CLOSED', closedAt: '2026-11-06T12:00:00Z' },
+      checks: [],
+      state: 'closed',
+    },
+  ]
+  for (const sample of cases) {
+    api.pulls[2] = { ...original, mergeStateStatus: 'BLOCKED', ...sample.patch }
+    api.checks.set(HEAD_SHA, sample.checks)
+    const snapshot = await read()
+    expect(snapshot.banner, sample.state).toMatchObject({
+      branch: 'changes',
+      baseBranch: 'main',
+      state: sample.state,
+      updatedAt: TEST_TIME,
+    })
+    expect(snapshot.checks.state).toBe('available')
+    expect(snapshot.headSha).toBe(HEAD_SHA)
+  }
+})
+
+it('offers the create link only for branch commits and waits for a pull request', async () => {
+  api.pulls = {}
+  for (const sample of [
+    { ahead: 0, state: 'no-commits', url: null },
+    {
+      ahead: 3,
+      state: 'none',
+      url: 'https://github.com/Codertocat/Hello-World/compare/main...changes?expand=1',
+    },
+  ]) {
+    api.comparisons.set('refs/heads/main', new Map([[HEAD_SHA, sample.ahead]]))
+    expect(await read()).toEqual({
+      banner: {
+        state: sample.state,
+        branch: 'changes',
+        baseBranch: 'main',
+        updatedAt: TEST_TIME,
+        pullRequest: null,
+        createPullRequestUrl: sample.url,
+      },
+      checks: { state: 'waiting-for-pull-request', checks: [] },
+      headSha: HEAD_SHA,
+    })
+    expect(api.requests.every((request) => request.method === 'POST')).toBe(
+      true,
+    )
+  }
+  api.branches.delete('refs/heads/changes')
+  api.requests = []
+  expect((await read()).banner).toMatchObject({
+    state: 'no-commits',
+    createPullRequestUrl: null,
+  })
+  expect(api.requests.every((request) => request.method === 'POST')).toBe(true)
+})
+
+it('paginates lookup, checks, and reviews while preserving GitHub order and durations', async () => {
+  api.pageSize = 1
+  api.pulls[88] = repositoryPull({
+    number: 88,
+    createdAt: 88,
+    headRepository: { databaseId: 999 },
+  })
+  api.pulls[2].reviewDecision = 'CHANGES_REQUESTED'
+  api.pulls[2].potentialMergeCommit = { oid: 'merge-commit' }
+  api.checks.set('merge-commit', [
+    passedRun,
+    {
+      __typename: 'StatusContext',
+      id: 'status-a',
+      context: 'A external CI',
+      state: 'SUCCESS',
+      createdAt: '2026-11-06T11:01:12Z',
+    },
+    {
+      ...passedRun,
+      id: 'run-b',
+      name: 'B test',
+      status: 'IN_PROGRESS',
+      conclusion: null,
+    },
+  ])
+  api.pulls[2].reviews = [
+    { state: 'APPROVED', author: { login: 'alice' } },
+    { state: 'CHANGES_REQUESTED', author: { login: 'bob' } },
+  ]
+  const snapshot = await read()
+  expect(snapshot.banner).toMatchObject({
+    state: 'changes-requested',
+    review: 'changes-requested',
+    changesRequestedBy: ['bob'],
+  })
+  expect(snapshot.checks.checks).toEqual([
+    {
+      id: 'run-z',
+      name: 'Z build',
+      state: 'passed',
+      url: 'https://github.com/Codertocat/Hello-World/runs/5',
+      startedAt: 1793962800000,
+      completedAt: 1793962872000,
+      durationMs: 72000,
+    },
+    {
+      id: 'status-a',
+      name: 'A external CI',
+      state: 'passed',
+      url: 'https://github.com/Codertocat/Hello-World/pull/2/checks',
+      startedAt: null,
+      completedAt: 1793962872000,
+      durationMs: null,
+    },
+    {
+      id: 'run-b',
+      name: 'B test',
+      state: 'running',
+      url: 'https://github.com/Codertocat/Hello-World/runs/5',
+      startedAt: 1793962800000,
+      completedAt: null,
+      durationMs: null,
+    },
+  ])
+})
+
+it('uses merge checks when present and otherwise uses head checks for both outputs', async () => {
+  const failedHead = { ...passedRun, id: 'failed-head', conclusion: 'FAILURE' }
+  const failedMerge = { ...passedRun, id: 'merge-run', conclusion: 'FAILURE' }
+  const passedMerge = { ...passedRun, id: 'merge-run' }
+  for (const sample of [
+    {
+      head: passedRun,
+      merge: [failedMerge],
+      state: 'checks-failed',
+      id: 'merge-run',
+      check: 'failed',
+    },
+    {
+      head: failedHead,
+      merge: [passedMerge],
+      state: 'ready-to-merge',
+      id: 'merge-run',
+      check: 'passed',
+    },
+    {
+      head: failedHead,
+      merge: null,
+      state: 'checks-failed',
+      id: 'failed-head',
+      check: 'failed',
+    },
+    {
+      head: passedRun,
+      merge: [],
+      state: 'ready-to-merge',
+      id: 'run-z',
+      check: 'passed',
+    },
+  ]) {
+    api.checks.set(HEAD_SHA, [sample.head])
+    api.checks.set('merge-commit', sample.merge ?? [])
+    api.pulls[2].potentialMergeCommit =
+      sample.merge === null ? null : { oid: 'merge-commit' }
+    const snapshot = await read()
+    expect(snapshot.banner.state, sample.id).toBe(sample.state)
+    expect(snapshot.checks, sample.id).toMatchObject({
+      state: 'available',
+      checks: [{ id: sample.id, state: sample.check }],
+    })
+    expect(snapshot.checks.checks).toHaveLength(1)
+  }
+})
+
+it('shows known merge blockers and retries unresolved merge states', async () => {
+  for (const state of ['BEHIND', 'BLOCKED']) {
+    api.pulls[2].mergeStateStatus = state
+    await expect(read(), state).resolves.toMatchObject({
+      banner: { state: 'blocked', review: 'approved' },
+      checks: { state: 'available' },
+      headSha: HEAD_SHA,
+    })
+  }
+  for (const state of ['UNSTABLE', 'UNKNOWN']) {
+    api.pulls[2].mergeStateStatus = state
+    await expect(read(), state).rejects.toMatchObject({
+      status: 503,
+      code: 'github_pending',
+    })
+  }
+  api.pulls[2].mergeStateStatus = 'CLEAN'
+  api.pulls[2].mergeable = 'UNKNOWN'
+  await expect(read()).rejects.toMatchObject({
+    status: 503,
+    code: 'github_pending',
+  })
+})
+
+it('refuses mismatched repositories, changed heads, and malformed upstream replies', async () => {
+  api.repositoryId = 999
+  await expect(read()).rejects.toMatchObject({
+    status: 502,
+    code: 'github_unavailable',
+  })
+  api.repositoryId = 186853002
+  api.onRequest = async (operation) => {
+    if (operation === 'BannerChecks') api.pulls[2].headRefOid = 'new-head'
+  }
+  await expect(read()).rejects.toMatchObject({
+    status: 502,
+    code: 'github_unavailable',
+  })
+  api.pulls = {}
+  api.onRequest = null
+  api.failure = Response.json({
+    data: { repository: { databaseId: 186853002, pullRequests: [] } },
+  })
+  await expect(read()).rejects.toMatchObject({
+    status: 502,
+    code: 'github_unavailable',
+  })
+})

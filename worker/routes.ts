@@ -48,6 +48,7 @@ export async function route(
           await storeBoatKey(
             env,
             context.org.id,
+            context.user.id,
             requiredString(context.body?.key),
             dependencies.fetch,
             dependencies.now(),

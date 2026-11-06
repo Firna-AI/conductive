@@ -41,7 +41,7 @@ async function signingKey(secret: string): Promise<CryptoKey> {
 
 export async function sign(
   payload: Record<string, unknown>,
-  purpose: 'session' | 'github-state',
+  purpose: 'session' | 'github-state' | 'desktop-handoff',
   secret: string,
 ): Promise<string> {
   const body = base64Url(
@@ -57,7 +57,7 @@ export async function sign(
 
 export async function verify(
   token: string,
-  purpose: 'session' | 'github-state',
+  purpose: 'session' | 'github-state' | 'desktop-handoff',
   secret: string,
   now: number,
 ): Promise<Record<string, unknown> | null> {

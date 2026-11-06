@@ -1,0 +1,28 @@
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.quiet {
+  flex-shrink: 0;
+  color: var(--ui-faint);
+}
+
+/* A link with the look of a secondary Firna button. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--ui-control-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.link:hover {
+  background: var(--ui-soft);
+}

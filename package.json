@@ -12,7 +12,7 @@
     "test": "vitest run",
     "db:migrate": "wrangler d1 migrations apply DB --local",
     "file-length:check": "eslint . --rule 'max-lines: [error, 300]'",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm run file-length:check && npm run test && npm run build && npm run mockups:check",
+    "check": "npm run typecheck && npm run desktop:typecheck && npm run lint && npm run desktop:lint && npm run format:check && npm run desktop:format:check && npm run file-length:check && npm run test && npm run build && npm run mockups:check",
     "mockups:build": "mokly build --strict",
     "mockups:serve": "mokly serve",
     "mockups:typecheck": "tsc -p docs/mockups/tsconfig.json",
@@ -20,7 +20,10 @@
     "marketing:pictures": "node tools/marketing-pictures/run.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "desktop:typecheck": "npm --prefix desktop run typecheck",
+    "desktop:lint": "npm --prefix desktop run lint",
+    "desktop:format:check": "npm --prefix desktop run format:check"
   },
   "dependencies": {
     "@firna/ui": "4.0.0",
