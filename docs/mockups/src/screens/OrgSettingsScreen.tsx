@@ -12,7 +12,10 @@ import {
   OrgDetailsSection,
   SettingsTabs,
 } from '../components/settings/OrgSections'
-import { RepositoryList } from '../components/settings/RepositoryList'
+import {
+  OrgRepositoryList,
+  RepositoryList,
+} from '../components/settings/RepositoryList'
 import { Section } from '../components/settings/Section'
 import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
@@ -36,8 +39,9 @@ export const orgSettingsSchema = {
     /** A dialog over the page: Delete org, or the removal of a member. */
     dialog: { enum: ['none', 'delete-org', 'remove-member'] },
     /**
-     * The person signed in: an admin, or a member who is not an admin and
-     * sees no actions on the members, no Boat key, and no Delete org.
+     * The person signed in: an admin, or a member who is not an admin. A
+     * member sees no actions on the members, no Boat key, no Delete org,
+     * and the name, the repositories, and the cloud computer read-only.
      */
     viewer: { enum: ['admin', 'member'] },
   },
@@ -63,21 +67,31 @@ function TabBody(props: { state: OrgSettingsState }) {
     case 'general':
       return (
         <>
-          <OrgDetailsSection initials={org.initials} name={org.name} />
+          <OrgDetailsSection
+            initials={org.initials}
+            name={org.name}
+            readOnly={!admin}
+          />
           {admin ? <DeleteOrgSection name={org.name} /> : null}
         </>
       )
     case 'repositories':
       return (
         <Section
-          description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. A change takes effect at the next build.`}
+          description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. ${admin ? 'A change takes effect at the next build.' : 'Only an admin can change them.'}`}
           title="Repositories"
         >
-          <RepositoryList repositories={acmeRepositories} search="" />
+          {admin ? (
+            <RepositoryList repositories={acmeRepositories} search="" />
+          ) : (
+            <OrgRepositoryList repositories={acmeRepositories} />
+          )}
         </Section>
       )
     case 'computer':
-      return <ComputerTab build={state.build} org={org.name} />
+      return (
+        <ComputerTab build={state.build} org={org.name} readOnly={!admin} />
+      )
     case 'boat-key':
       return admin ? <BoatKeyTab org={org.name} state={state.boatKey} /> : null
     case 'members':

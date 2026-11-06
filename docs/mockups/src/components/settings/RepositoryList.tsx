@@ -9,7 +9,8 @@ import styles from './RepositoryList.module.css'
 
 const githubAccessUrl = 'https://github.com/settings/installations'
 
-function Row(props: { repository: ReachableRepository }) {
+/** One repository. `readOnly` drops its Add or Remove. */
+function Row(props: { repository: ReachableRepository; readOnly?: boolean }) {
   const { repository } = props
   return (
     <li className={styles.row}>
@@ -18,7 +19,7 @@ function Row(props: { repository: ReachableRepository }) {
         <span className={styles.name}>{repository.name}</span>
         <span className={styles.description}>{repository.description}</span>
       </span>
-      {repository.used ? (
+      {props.readOnly ? null : repository.used ? (
         <>
           <span className={styles.added}>
             <Check aria-hidden size={13} />
@@ -64,5 +65,23 @@ export function RepositoryList(props: {
         <ExternalLink href={githubAccessUrl}>Manage access</ExternalLink>
       </p>
     </div>
+  )
+}
+
+/**
+ * The repositories that the org uses, without search and actions, for a
+ * member who is not an admin (decision 57).
+ */
+export function OrgRepositoryList(props: {
+  repositories: readonly ReachableRepository[]
+}) {
+  return (
+    <ul aria-label="Repositories" className={styles.list}>
+      {props.repositories
+        .filter((repository) => repository.used)
+        .map((repository) => (
+          <Row key={repository.name} readOnly repository={repository} />
+        ))}
+    </ul>
   )
 }

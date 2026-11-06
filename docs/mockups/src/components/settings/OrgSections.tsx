@@ -6,6 +6,7 @@ import { ActionButton } from '../common/actions'
 import { LinkTabs } from '../common/LinkTabs'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
+import { DetailList } from './DetailList'
 import { Section } from './Section'
 import styles from './OrgSections.module.css'
 
@@ -61,7 +62,28 @@ export function OrgNameFields(props: { name: string; initials: string }) {
   )
 }
 
-export function OrgDetailsSection(props: { name: string; initials: string }) {
+/**
+ * The name of the org and the initials that the rail shows. `readOnly`
+ * shows them without fields and Save, for a member who is not an admin,
+ * because only admins manage the settings of the org.
+ */
+export function OrgDetailsSection(props: {
+  name: string
+  initials: string
+  readOnly?: boolean
+}) {
+  if (props.readOnly) {
+    return (
+      <Section description="Only an admin can change it." title="Org">
+        <DetailList
+          rows={[
+            { term: 'Name', value: props.name },
+            { term: 'Initials', value: props.initials },
+          ]}
+        />
+      </Section>
+    )
+  }
   return (
     <Section actions={<ActionButton disabled>Save</ActionButton>} title="Org">
       <OrgNameFields initials={props.initials} name={props.name} />

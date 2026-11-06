@@ -64,59 +64,62 @@ function Log(props: { failed: boolean }) {
   )
 }
 
-function Head(props: { state: BuildState }) {
+/** The action of the build head. A member who is not an admin gets none. */
+function HeadAction(props: { state: BuildState; readOnly: boolean }) {
+  if (props.readOnly) return null
   switch (props.state) {
     case 'building':
       return (
-        <>
-          <StatusText
-            busy
-            label={`Building · ${runningBuild.elapsed}`}
-            tone="active"
-          />
-          <span className={styles.spacer} />
-          <ActionButton disabled icon={Hammer}>
-            Build computer
-          </ActionButton>
-        </>
+        <ActionButton disabled icon={Hammer}>
+          Build computer
+        </ActionButton>
       )
     case 'failed':
       return (
-        <>
-          <span className={styles.label}>Last build</span>
-          <span className={styles.when}>{failedBuild.when}</span>
-          <Result build={failedBuild} />
-          <span className={styles.spacer} />
-          <ActionButton icon={RotateCw} tone="primary">
-            Try again
-          </ActionButton>
-        </>
+        <ActionButton icon={RotateCw} tone="primary">
+          Try again
+        </ActionButton>
       )
     case 'ready':
     case 'changed':
-      return (
-        <>
-          <span className={styles.label}>Last build</span>
-          <span className={styles.when}>{lastBuild.when}</span>
-          <Result build={lastBuild} />
-          <span className={styles.spacer} />
-          <ActionButton icon={Hammer}>Build computer</ActionButton>
-        </>
-      )
+      return <ActionButton icon={Hammer}>Build computer</ActionButton>
   }
+}
+
+function Head(props: { state: BuildState }) {
+  if (props.state === 'building') {
+    return (
+      <StatusText
+        busy
+        label={`Building · ${runningBuild.elapsed}`}
+        tone="active"
+      />
+    )
+  }
+  const build = props.state === 'failed' ? failedBuild : lastBuild
+  return (
+    <>
+      <span className={styles.label}>Last build</span>
+      <span className={styles.when}>{build.when}</span>
+      <Result build={build} />
+    </>
+  )
 }
 
 /**
  * The builds of the org's cloud computer: the last build with its result,
  * Build computer, the log of a build that runs or failed, and the history.
- * A failed build leaves the last good build in use.
+ * A failed build leaves the last good build in use. `readOnly` drops the
+ * actions, for a member who is not an admin (decision 57).
  */
-export function BuildSection(props: { state: BuildState }) {
+export function BuildSection(props: { state: BuildState; readOnly?: boolean }) {
   const { state } = props
   return (
     <section aria-label="Builds" className={styles.card}>
       <div className={styles.head}>
         <Head state={state} />
+        <span className={styles.spacer} />
+        <HeadAction readOnly={props.readOnly ?? false} state={state} />
       </div>
       {state === 'building' || state === 'failed' ? (
         <div className={styles.body}>

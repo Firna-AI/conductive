@@ -10,7 +10,7 @@ export const cloudComputer = defineScreen({
   description:
     'The shared cloud computer of the org, which every workspace starts from: the last build with its history, the install script, the startup script, and the environment variables.',
   rationale:
-    'The user chose one cloud computer for each org on 5 November 2026: it holds every repository of the org, so the org keeps one snapshot, not one per repository. The install script runs only when the user builds the computer, and the startup script runs at each start and resume. Values of environment variables are write-only, so a secret never reaches the browser. Moved here from the repository settings, because repositories have no settings for now.',
+    'The user chose one cloud computer for each org on 5 November 2026: it holds every repository of the org, so the org keeps one snapshot, not one per repository. The install script runs only when an admin builds the computer, and the startup script runs at each start and resume. Values of environment variables are write-only, so a secret never reaches the browser. Moved here from the repository settings, because repositories have no settings for now.',
   relatedDocs: [],
   movedFrom: 'app/repository-settings',
   propSchema: orgSettingsSchema,
@@ -41,6 +41,15 @@ export const cloudComputer = defineScreen({
       description:
         'The user saved a changed install script. A notice under the script asks for a build, because the script runs only at a build. Workspaces keep the current build until then.',
       props: { build: 'changed' },
+    },
+    {
+      slug: 'member',
+      title: 'Seen by a member',
+      description:
+        'Priya, a member who is not an admin, sees the last build and its history, both scripts as text, and the names of the environment variables. The tab has no Build computer, no Save script, and no Add variable, and no variable can be changed or deleted. The intro says that only an admin can change the computer.',
+      rationale:
+        'The user chose option B of decision 57: only admins change the repositories, the scripts, and the environment variables, because a changed script reaches every new sandbox of the org and runs during the turns of other members.',
+      props: { viewer: 'member' },
     },
   ],
 })

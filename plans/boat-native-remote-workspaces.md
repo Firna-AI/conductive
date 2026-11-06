@@ -2445,6 +2445,9 @@ Agent calls of 5 November 2026:
 - Only admins change the repositories, the install script, the startup
   script, and the env vars, as decision 57 says. Members see these tabs
   read-only.
+- Agent call, 6 November 2026: only admins rename the org, and members
+  see the General tab read-only. Reason: the admins manage the org's
+  settings, as decisions 54 and 57 say.
 - Agent call, 6 November 2026: the agent runner gets the sender's agent
   login over its connection for each turn, and never writes it to disk.
   Reason: Boat sets a sandbox's variables only at create and at resume,
@@ -2952,9 +2955,9 @@ Tags: mockup
 
 Depends on: 1f
 
-- [ ] Draw the Repositories and Cloud computer tabs read-only for a member
+- [x] Draw the Repositories and Cloud computer tabs read-only for a member
       who is not an admin, as decision 57 says.
-- [ ] Run the mockup check. Smoke-test the changed pages.
+- [x] Run the mockup check. Smoke-test the changed pages.
 
 ## Milestone 2a: Protocol updates for decisions 49 to 55
 

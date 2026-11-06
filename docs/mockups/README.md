@@ -199,6 +199,12 @@ plan limits.
   Boat key, deletes the org, and reassigns a workspace. A member who is not
   an admin sees the members and each workspace's owner without actions, and
   no Boat key tab. "Owner" names only the person who owns a workspace.
+- Only an admin renames the org, and changes the repositories, the scripts,
+  and the env vars, from decisions 54 and 57. A member sees the General,
+  Repositories, and Cloud computer tabs read-only: the values, without edit
+  fields, Save, or Build computer. The General tab of a member is the child
+  page `app/org-settings/member`, because `app/org-settings` has child
+  pages. `DetailList` in `src/components/settings/` shows such values.
 - Each message runs on the agent login of the person who sends it, from
   decision 49. So a reassign changes no login, and the cloud computer keeps
   running.

@@ -81,6 +81,7 @@ says.
 - Only an admin changes the repositories, the install script, the startup
   script, and the env vars (decision 57). Other members see them
   read-only.
+- Only an admin renames the org. Other members see the name read-only.
 - Changes by every member were rejected, because a changed script reaches
   every new sandbox of the org and runs during other members' turns.
 - Every member of the org sees all of its workspaces (decision 39).

@@ -9,6 +9,7 @@ import { people } from '../../fixtures/members'
 import { noop } from '../../noop'
 import { ExternalLink } from '../common/ExternalLink'
 import { useControlSizes } from '../common/touch'
+import { DetailList } from './DetailList'
 import styles from './BoatKey.module.css'
 
 /** How to make a key. The key screen and Get started both say it. */
@@ -53,23 +54,16 @@ export function BoatKeyField(props: { value?: string; invalid?: boolean }) {
  */
 export function BoatKeyDetails(props: { saved: SavedBoatKey }) {
   const { saved } = props
-  const rows = [
-    { term: 'Key', value: `•••• ${saved.tail}`, mono: true },
-    { term: 'Environment', value: saved.environment, mono: true },
-    {
-      term: 'Added',
-      value: `${saved.added}, by ${people[saved.addedBy].name}`,
-      mono: false,
-    },
-  ]
   return (
-    <dl className={styles.details}>
-      {rows.map((row) => (
-        <div className={styles.row} key={row.term}>
-          <dt className={styles.term}>{row.term}</dt>
-          <dd className={row.mono ? styles.mono : styles.value}>{row.value}</dd>
-        </div>
-      ))}
-    </dl>
+    <DetailList
+      rows={[
+        { term: 'Key', value: `•••• ${saved.tail}`, mono: true },
+        { term: 'Environment', value: saved.environment, mono: true },
+        {
+          term: 'Added',
+          value: `${saved.added}, by ${people[saved.addedBy].name}`,
+        },
+      ]}
+    />
   )
 }
