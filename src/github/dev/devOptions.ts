@@ -13,6 +13,7 @@ export const bannerStates: readonly BannerState[] = [
   'changes-requested',
   'draft',
   'closed',
+  'blocked',
 ]
 export const schemes = ['dark', 'light'] as const
 export const viewers = ['owner', 'admin', 'member'] as const

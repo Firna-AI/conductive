@@ -34,7 +34,7 @@ it('shows the newest GitHub event of the history, and each live event after a lo
     githubEvent(3, 'checks-failed'),
   ])
   const store = new GitHubStore(target)
-  connect(store, new FakeApiServer().fetch, events)
+  connect(store, new FakeApiServer({ banner: 'blocked' }).fetch, events)
   const fromHistory = shown(store)
   await store.load()
   const loaded = shown(store)
@@ -43,7 +43,7 @@ it('shows the newest GitHub event of the history, and each live event after a lo
 
   expect([fromHistory, loaded, shown(store)]).toEqual([
     'checks-failed',
-    'ready-to-merge',
+    'blocked',
     'merged',
   ])
 })

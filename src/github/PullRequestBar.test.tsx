@@ -77,6 +77,7 @@ it('links each pull request state to GitHub, with no button that acts on GitHub'
     'changes-requested',
     'draft',
     'closed',
+    'blocked',
   ] as const
   const github = [
     {
@@ -99,6 +100,7 @@ it('links each pull request state to GitHub, with no button that acts on GitHub'
     { state: 'changes-requested', links: github, buttons: [] },
     { state: 'draft', links: github, buttons: [] },
     { state: 'closed', links: github, buttons: [] },
+    { state: 'blocked', links: github, buttons: [] },
   ])
 })
 
@@ -110,9 +112,10 @@ it('offers Archive after the merge only to the workspace owner and the admins', 
 
   expect([
     buttonsIn(renderBar(merged, ownerViewer)),
+    buttonsIn(renderBar(merged, ownerViewer, 'input')),
     buttonsIn(renderBar(merged, admin)),
     buttonsIn(renderBar(merged, member)),
     buttonsIn(renderBar(merged, admin, 'archived')),
     buttonsIn(renderBar(closed, admin)),
-  ]).toEqual([['Archive'], ['Archive'], [], [], []])
+  ]).toEqual([['Archive'], ['Archive'], ['Archive'], [], [], []])
 })

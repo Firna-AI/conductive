@@ -21,6 +21,7 @@ function renderRow(github: GitHubFeed): string {
 it('opens the checks from a pull request, and GitHub from a branch without one', () => {
   const rows = [
     renderRow(readyFeed(snapshotOf('ready-to-merge'))),
+    renderRow(readyFeed(snapshotOf('blocked'))),
     renderRow(branchFeed('none', compareUrl)),
     renderRow(branchFeed('no-commits', null)),
   ]
@@ -33,6 +34,10 @@ it('opens the checks from a pull request, and GitHub from a branch without one',
       links: [
         { text: '#482 Ready to merge Show the checks', href: checksHref },
       ],
+    },
+    {
+      text: '#482 Blocked Show the checks',
+      links: [{ text: '#482 Blocked Show the checks', href: checksHref }],
     },
     {
       text: 'Create pull request',

@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import {
+  Ban,
   CircleCheck,
   CircleX,
   GitMerge,
@@ -40,7 +41,7 @@ export function reviewLabel(
     case 'changes-requested':
       return 'Changes requested'
     case 'pending':
-      return 'Waiting for review'
+      return 'Pending'
     case null:
       return null
   }
@@ -92,6 +93,9 @@ export function bannerStatus(
       return still(GitPullRequestDraft, 'Draft', 'neutral')
     case 'closed':
       return still(GitPullRequestClosed, 'Closed without a merge', 'neutral')
+    case 'blocked':
+      // GitHub names the reason on the pull request, so the bar names none.
+      return still(Ban, 'Blocked', 'warning')
   }
 }
 
@@ -121,6 +125,7 @@ export function bannerDetail(
       return timeAgo(banner.closedAt, now)
     case 'checks-failed':
     case 'draft':
+    case 'blocked':
       return null
   }
 }

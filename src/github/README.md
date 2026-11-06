@@ -97,7 +97,7 @@ mounts it, and the production build leaves it out.
 
 - The address keeps the options, such as
   `?state=checks-failed&scheme=light&viewer=member&github=error`.
-- `state` is one of the ten banner states. `viewer` is `owner`, `admin`, or
+- `state` is one of the eleven banner states. `viewer` is `owner`, `admin`, or
   `member`. `github` is `normal`, `slow`, or `error`.
 - `sample` changes the fake data to other valid data: `every-check` gives
   one check in each of the nine states, `no-checks` a pull request without

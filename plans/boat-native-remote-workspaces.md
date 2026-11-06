@@ -3589,9 +3589,9 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build the pull request bar of the right column, the compact pull
+- [x] Build the pull request bar of the right column, the compact pull
       request row on phones, and the Checks tab. Branch: `conductor/boat-native-remote-workspaces-milestone-14`.
-- [ ] Compare it with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-14`.
+- [x] Compare it with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-14`.
 
 ## Milestone 15: Agent tools
 

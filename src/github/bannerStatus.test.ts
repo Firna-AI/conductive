@@ -13,7 +13,8 @@ function statusOf(state: BannerState) {
   const { checks } = snapshotOf(state).checks
   const { busy, icon, text, tone } = bannerStatus(banner, checks)
   const detail = bannerDetail(banner, checks, FAKE_TIME)
-  const mark = busy ? 'spinner' : icon ? 'icon' : 'none'
+  // The icon by its name, so that each state shows the icon of the mockups.
+  const mark = busy ? 'spinner' : (icon?.displayName ?? 'none')
   return { state, text, detail, tone, mark }
 }
 
@@ -39,6 +40,7 @@ it('names each pull request state in words, with an icon and the tint of the moc
     'changes-requested',
     'draft',
     'closed',
+    'blocked',
   ] as const
 
   expect(states.map(statusOf)).toEqual([
@@ -54,49 +56,56 @@ it('names each pull request state in words, with an icon and the tint of the moc
       text: '2 checks failed',
       detail: null,
       tone: 'danger',
-      mark: 'icon',
+      mark: 'CircleX',
     },
     {
       state: 'ready-to-merge',
       text: 'Ready to merge',
       detail: 'Approved',
       tone: 'success',
-      mark: 'icon',
+      mark: 'CircleCheck',
     },
     {
       state: 'merged',
       text: 'Merged into main',
       detail: '2h ago',
       tone: 'neutral',
-      mark: 'icon',
+      mark: 'GitMerge',
     },
     {
       state: 'conflict',
       text: 'Merge conflict',
       detail: 'with main',
       tone: 'warning',
-      mark: 'icon',
+      mark: 'GitMergeConflict',
     },
     {
       state: 'changes-requested',
       text: 'Changes requested',
       detail: 'by @priyaraman',
       tone: 'warning',
-      mark: 'icon',
+      mark: 'MessageSquareWarning',
     },
     {
       state: 'draft',
       text: 'Draft',
       detail: null,
       tone: 'neutral',
-      mark: 'icon',
+      mark: 'GitPullRequestDraft',
     },
     {
       state: 'closed',
       text: 'Closed without a merge',
       detail: '1d ago',
       tone: 'neutral',
-      mark: 'icon',
+      mark: 'GitPullRequestClosed',
+    },
+    {
+      state: 'blocked',
+      text: 'Blocked',
+      detail: null,
+      tone: 'warning',
+      mark: 'Ban',
     },
   ])
 })
@@ -137,7 +146,7 @@ it('fits the counts, the reviewers, and the review to the data', () => {
     'by @priyaraman and @jonasweber',
     'by @priyaraman and 2 others',
     null,
-    'Waiting for review',
+    'Pending',
     null,
   ])
 })

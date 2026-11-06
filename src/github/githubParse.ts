@@ -21,6 +21,7 @@ const pullRequestStates: Readonly<Record<PullRequestState, true>> = {
   'changes-requested': true,
   draft: true,
   closed: true,
+  blocked: true,
 }
 
 const checkStates: Readonly<Record<CheckState, true>> = {
