@@ -40,5 +40,5 @@ export function mapTool(
             : /bash|command|exec|shell/.test(lower)
               ? 'run'
               : 'other'
-  return { id, kind, target, detail, state }
+  return { id, kind, target, detail, omittedDetailBytes: 0, state }
 }

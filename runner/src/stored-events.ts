@@ -78,6 +78,7 @@ function tool(value: unknown): ToolCall {
     ]),
     target: string(input.target),
     detail: nullable(input.detail),
+    omittedDetailBytes: integer(input.omittedDetailBytes),
     state: oneOf(input.state, ['running', 'done', 'stopped', 'failed']),
   }
 }
@@ -113,6 +114,8 @@ export function parseEvent(value: unknown): RunnerEvent {
       type,
       tree: {
         revision: integer(tree.revision),
+        partNumber: integer(tree.partNumber),
+        partCount: integer(tree.partCount),
         entries: array(tree.entries, entry),
       },
     }
@@ -133,6 +136,9 @@ export function parseEvent(value: unknown): RunnerEvent {
     return {
       type,
       changes: {
+        revision: integer(update.revision),
+        partNumber: integer(update.partNumber),
+        partCount: integer(update.partCount),
         baseBranch: string(update.baseBranch),
         files: array(update.files, (value) => ({
           ...changed(value),
@@ -184,6 +190,7 @@ export function parseEvent(value: unknown): RunnerEvent {
       state: oneOf(input.state, ['finished', 'stopped']),
       durationMs: integer(input.durationMs),
       files: array(input.files, changed),
+      omittedFileCount: integer(input.omittedFileCount),
       userMessageIds: array(input.userMessageIds, string),
     }
   if (type === 'turn.failed') {

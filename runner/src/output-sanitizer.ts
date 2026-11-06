@@ -1,4 +1,5 @@
 import type { RunnerEvent } from '../../src/shared/runner'
+import type { RunnerFileEvent } from '../../src/shared/files'
 import { parseEvent } from './stored-events'
 
 type Delta = Extract<RunnerEvent, { type: 'assistant.delta' }>
@@ -10,6 +11,17 @@ export class OutputSanitizer {
 
   add(secret: string): void {
     if (secret) this.secrets.add(secret)
+  }
+
+  fileReport(event: RunnerFileEvent): RunnerFileEvent {
+    const result = this.clean(event)
+    if (
+      result.type === 'files.snapshot' ||
+      result.type === 'files.changed' ||
+      result.type === 'changes.updated'
+    )
+      return result
+    throw new Error('The filtered file report changed its type.')
   }
 
   accept(event: RunnerEvent): RunnerEvent[] {

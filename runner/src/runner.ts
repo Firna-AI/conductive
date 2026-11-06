@@ -5,6 +5,7 @@ import type {
 } from '../../src/shared/runner-transport'
 import { checkpoint, changedSince } from './checkpoint'
 import { AgentEngine } from './engine'
+import { boundChatEvent } from './event-limits'
 import { FileReporter } from './files'
 import { RunnerLink } from './link'
 import { OutputSanitizer } from './output-sanitizer'
@@ -45,8 +46,15 @@ export class Runner {
     this.options = options
     this.sanitizer.add(options.request.workspaceToken)
     const repository = new Repository(options.cwd, options.warn)
-    this.files = new FileReporter(repository, options.defaultBranch, (event) =>
-      this.emit(event),
+    this.files = new FileReporter(
+      repository,
+      options.defaultBranch,
+      (event) => this.emit(event, true),
+      {
+        revisions: options.store.snapshot.fileRevisions,
+        prepare: (event) => this.sanitizer.fileReport(event),
+        warn: options.warn,
+      },
     )
     this.engine = new AgentEngine({
       ...options,
@@ -109,10 +117,10 @@ export class Runner {
     this.link.close()
   }
 
-  private emit(event: RunnerEvent): Promise<void> {
+  private emit(event: RunnerEvent, prepared = false): Promise<void> {
     const emitted = this.emitted.then(async () => {
-      for (const safe of this.sanitizer.accept(event))
-        await this.link.emit(safe)
+      for (const safe of prepared ? [event] : this.sanitizer.accept(event))
+        await this.link.emit(boundChatEvent(safe))
     })
     this.emitted = emitted
     return emitted

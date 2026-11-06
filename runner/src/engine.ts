@@ -60,6 +60,7 @@ export class AgentEngine {
             state: 'stopped',
             durationMs: 0,
             files: [],
+            omittedFileCount: 0,
             userMessageIds: [],
           })
         return

@@ -28,6 +28,7 @@ it('changes sender credentials at a tool boundary and resumes stored conversatio
       kind: 'read',
       target: 'README.md',
       detail: null,
+      omittedDetailBytes: 0,
       state: 'running',
     },
   })

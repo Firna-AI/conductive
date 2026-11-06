@@ -35,6 +35,7 @@ export async function finishTurn(
       state: stopped ? 'stopped' : 'finished',
       durationMs,
       files: await options.changedSince(turn.baseline),
+      omittedFileCount: 0,
       userMessageIds: turn.messageIds,
     })
   }

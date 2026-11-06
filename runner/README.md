@@ -43,14 +43,48 @@ them.
 - One output filter replaces the workspace token and known logins with
   `[redacted]`. It holds possible secret prefixes across text events.
 - The runner saves each event in its state file before it sends it. The
-  state file holds events and conversation references. It holds no command
-  and no login.
+  state file holds the stream ID, its event counter, the unconfirmed
+  events, the tree and changes revisions, and the conversation references.
+  It holds no command and no login.
 - Before it connects, the runner reads the `claude` program file once, so
   that the disk loads it early. This step uses no login and starts no
   agent.
 - The runner protocol carries no GitHub token.
   [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
   states how a sandbox gets GitHub access.
+
+## Event limits
+
+The runner keeps each event within the limits that
+[Chat and events](../docs/protocol/chat-and-events.md#the-agent-runner) and
+[Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+state. The [shared contracts](../src/shared/README.md) hold the constants.
+No variable changes them, and the runner protocol stays at version 1.
+
+- The runner applies each cap after the output filter. Each byte budget
+  measures the filtered event or field.
+- A tool detail keeps the longest prefix that fits
+  [`TOOL_DETAIL_MAX_BYTES`](../src/shared/chat-events.ts).
+  `omittedDetailBytes` gives the size of the rest.
+- A turn summary keeps the first whole files that fit
+  `TURN_COMPLETED_MAX_FILES` and `TURN_COMPLETED_FILES_MAX_BYTES`.
+  `omittedFileCount` counts the rest. The Changes report still lists every
+  file.
+- Each file event fits [`FILE_EVENT_MAX_BYTES`](../src/shared/files.ts). A
+  full tree or changes report goes as numbered parts of one revision. A
+  large tree update goes as deltas of at most `FILE_TREE_DELTA_MAX_CHANGES`
+  changes, with consecutive revisions.
+- Tree reports and changes reports have separate revision counters. The
+  state file keeps both with the stream, so a reconnect or a restart
+  continues them. Each forced refresh, such as the one after each connect,
+  sends a full tree and a full changes report with newer revisions.
+- Before the outbox takes an event number, it checks the complete envelope
+  against [`RUNNER_EVENT_MAX_BYTES`](../src/shared/runner.ts). An event
+  that does not fit gets a local warning and no number, so later events
+  continue. This check covers the size of an event only.
+- A confirm can also cover a refusal marker that the workspace stored for
+  an event. The runner then removes that event from its outbox and does
+  not send it again. The runner never sends a refusal marker.
 
 ## Commands
 
@@ -165,6 +199,9 @@ The runner could not start. Check its configuration and saved state.
 - The tests live beside the code as `*.test.ts`. They connect the runner
   to `FakeDurableObjectEndpoint` from the
   [backend and runner fakes](../worker/test-support/README.md).
+- That fake endpoint joins file parts before it reports a complete file
+  event. Its `refuseEvent` setting refuses an event with a marker. It does
+  not check event sizes.
 - `test-support/` holds the runner fakes: a fake Claude SDK query, a fake
   Codex App Server, fake agent processes, and a temporary Git repository.
   `harness.ts` starts a `Runner` with them.
@@ -222,6 +259,8 @@ defaults are the current folder and the home folder of the user.
   reports. It removes known secrets from each event.
 - `src/output-sanitizer.ts`: the shared filter for complete and streamed
   text before the runner saves an event.
+- `src/event-limits.ts`: byte accounting and tool and turn-summary caps.
+- `src/file-parts.ts`: full report parts and bounded tree deltas.
 - `src/link.ts`, `src/state.ts`, and `src/socket.ts`: the hello, welcome,
   confirm, and resend rules, the state file, and the WebSocket connector.
 - `src/commands.ts` and `src/stored-events.ts`: the checks of each

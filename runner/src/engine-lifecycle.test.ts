@@ -145,6 +145,7 @@ it('acknowledges unmatched interrupts without stopping another running turn', as
     state: 'stopped',
     durationMs: 0,
     files: [],
+    omittedFileCount: 0,
     userMessageIds: [],
   })
   await h.engine.command(interrupt)
@@ -163,6 +164,7 @@ it('acknowledges unmatched interrupts without stopping another running turn', as
     state: 'stopped',
     durationMs: 0,
     files: [],
+    omittedFileCount: 0,
     userMessageIds: [],
   })
   expect(h.providers.latest.stops).toBe(0)
@@ -188,6 +190,7 @@ it('acknowledges unmatched interrupts without stopping another running turn', as
     state: 'stopped',
     durationMs: 0,
     files: [],
+    omittedFileCount: 0,
     userMessageIds: [],
   })
   expect(h.store.snapshot.sessions.map((session) => session.sessionId)).toEqual(

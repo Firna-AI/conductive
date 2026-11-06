@@ -4095,8 +4095,8 @@ Depends on: 4a
       command for an idle session or for another turn gets a local
       warning and no event. An interrupt for a turn that the runner does
       not run gets `turn.completed` with state `stopped`. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
-- [ ] Adopt decision 76 after the owner confirms that Milestone 4d has
-      merged. Split and cap outbound events with the new shared contract.
+- [x] Adopt decision 76 E from the Milestone 4d contract, which merged at
+      `1a3cc19`. Split and cap outbound events with the shared contract.
       Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
 
 Agent calls, 6 November 2026:
@@ -4152,7 +4152,30 @@ Owner instructions, 6 November 2026:
 - Keep the decision 76 TODO unchecked until the owner confirms that
   Milestone 4d has merged. The pull request stays a draft.
 
-Evidence: `.context/boat-native-remote-workspaces/runner/handoff.md`.
+Owner instructions, 6 November 2026, after the Milestone 4d merge:
+
+- The owner announced that Milestone 4d merged at `1a3cc19`. Adopt
+  decision 76 E in the runner now, with runner protocol version 1.
+- Run the complete gate, commit and push, and mark the pull request ready
+  for review.
+- This instruction supersedes the earlier wait for the Milestone 4d merge
+  notice and the draft state of the pull request.
+
+Agent calls on 6 November 2026, within decision 76 E:
+
+- Apply each cap after the output filter. Reason: the limits measure the
+  bytes that the runner sends, and the filter can change their length.
+- Keep the tree and changes revision counters in the state file with the
+  stream. Reason: the contract keeps revisions across reconnects. Each
+  full report also needs a newer revision than the last one of its kind,
+  after a restart too.
+- Check the complete envelope against the 1 MiB limit before the outbox
+  takes an event number. An event that does not fit gets a local warning
+  and no number. Reason: the workspace never moves its cursor past a gap,
+  so a number with no event would stop all later events.
+
+Evidence: `.context/boat-native-remote-workspaces/runner/handoff.md` and
+`.context/boat-native-remote-workspaces/adopt-76/runner/handoff.md`.
 
 ## Milestone 7: Chat backend
 

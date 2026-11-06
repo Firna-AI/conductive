@@ -75,6 +75,9 @@ it('watches new directories and Git index changes as tree deltas', async () => {
   expect(events.at(-1)).toEqual({
     type: 'changes.updated',
     changes: {
+      revision: 3,
+      partNumber: 1,
+      partCount: 1,
       baseBranch: 'main',
       files: [
         {
@@ -136,6 +139,9 @@ it('waits for warm-up and watches files after an initial connection failure', as
   expect(h.endpoint.runnerEvents.at(-1)?.event).toEqual({
     type: 'changes.updated',
     changes: {
+      revision: 3,
+      partNumber: 1,
+      partCount: 1,
       baseBranch: 'main',
       files: [
         {

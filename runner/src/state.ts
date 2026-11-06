@@ -3,8 +3,14 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
 import type { Agent } from '../../src/shared/agents'
-import type { RunnerEvent, RunnerEventEnvelope } from '../../src/shared/runner'
-import { parseEnvelope } from './stored-events'
+import { FILE_EVENT_MAX_BYTES } from '../../src/shared/files'
+import {
+  RUNNER_EVENT_MAX_BYTES,
+  type RunnerEvent,
+  type RunnerEventEnvelope,
+} from '../../src/shared/runner'
+import { jsonBytes } from './event-limits'
+import { parseEnvelope, parseEvent } from './stored-events'
 import { array, integer, object, oneOf, string } from './parse'
 
 export interface SavedSession {
@@ -19,6 +25,12 @@ export interface RunnerState {
   confirmedThrough: number
   outbox: RunnerEventEnvelope[]
   sessions: SavedSession[]
+  fileRevisions: FileRevisions
+}
+
+export interface FileRevisions {
+  tree: number
+  changes: number
 }
 
 export interface StateStorage {
@@ -54,10 +66,15 @@ export class DiskStorage implements StateStorage {
 
 function parseState(value: unknown): RunnerState {
   const input = object(value)
+  const revisions = object(input.fileRevisions)
   const state: RunnerState = {
     streamId: string(input.streamId),
     nextEventNumber: integer(input.nextEventNumber),
     confirmedThrough: integer(input.confirmedThrough),
+    fileRevisions: {
+      tree: integer(revisions.tree),
+      changes: integer(revisions.changes),
+    },
     outbox: array(input.outbox, parseEnvelope),
     sessions: array(input.sessions, (value) => {
       const session = object(value)
@@ -105,6 +122,7 @@ export class EventStore {
             confirmedThrough: 0,
             outbox: [],
             sessions: [],
+            fileRevisions: { tree: 0, changes: 0 },
           }
         : parseState(saved)
     const store = new EventStore(storage, state)
@@ -119,14 +137,30 @@ export class EventStore {
   async append(
     event: RunnerEvent,
     occurredAt: number,
-  ): Promise<RunnerEventEnvelope> {
+  ): Promise<RunnerEventEnvelope | null> {
     const envelope: RunnerEventEnvelope = {
       type: 'event',
       streamId: this.state.streamId,
-      eventNumber: this.state.nextEventNumber++,
+      eventNumber: this.state.nextEventNumber,
       occurredAt,
-      event: structuredClone(event),
+      event: parseEvent(event),
     }
+    const file =
+      event.type === 'files.snapshot' ||
+      event.type === 'files.changed' ||
+      event.type === 'changes.updated'
+    if (
+      jsonBytes(envelope) > RUNNER_EVENT_MAX_BYTES ||
+      (file && jsonBytes(envelope.event) > FILE_EVENT_MAX_BYTES)
+    )
+      return null
+    this.state.nextEventNumber++
+    if (event.type === 'files.snapshot')
+      this.state.fileRevisions.tree = event.tree.revision
+    if (event.type === 'files.changed')
+      this.state.fileRevisions.tree = event.delta.revision
+    if (event.type === 'changes.updated')
+      this.state.fileRevisions.changes = event.changes.revision
     this.state.outbox.push(envelope)
     await this.save()
     return structuredClone(envelope)

@@ -167,6 +167,7 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
       kind: 'read',
       target: 'README.md',
       detail: null,
+      omittedDetailBytes: 0,
       state: 'done',
     },
   })

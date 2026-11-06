@@ -22,6 +22,9 @@ it('reports committed, staged, unstaged, renamed, and untracked branch changes',
   expect(update).toEqual({
     type: 'changes.updated',
     changes: {
+      revision: 2,
+      partNumber: 1,
+      partCount: 1,
       baseBranch: 'main',
       files: [
         {

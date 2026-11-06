@@ -162,10 +162,23 @@ it('replays only saved events while another append write is held', async () => {
     warn: () => {},
   })
   await link.connect()
-  await link.emit({ type: 'workspace.title', name: 'one' })
+  await link.emit({
+    type: 'files.snapshot',
+    tree: { revision: 1, partNumber: 1, partCount: 1, entries: [] },
+  })
   await link.emit({ type: 'workspace.title', name: 'two' })
   hold = true
-  const third = link.emit({ type: 'workspace.title', name: 'three' })
+  const third = link.emit({
+    type: 'changes.updated',
+    changes: {
+      revision: 1,
+      partNumber: 1,
+      partCount: 1,
+      baseBranch: 'main',
+      files: [],
+      summary: { files: 0, added: 0, removed: 0 },
+    },
+  })
   onTestFinished(async () => {
     release()
     await third
@@ -181,6 +194,7 @@ it('replays only saved events while another append write is held', async () => {
     1, 2,
   ])
   expect(store.snapshot.nextEventNumber).toBe(3)
+  expect(store.snapshot.fileRevisions).toEqual({ tree: 1, changes: 0 })
   expect(store.snapshot.outbox.map((event) => event.eventNumber)).toEqual([
     1, 2,
   ])
@@ -191,5 +205,6 @@ it('replays only saved events while another append write is held', async () => {
     1, 2, 3,
   ])
   expect(store.snapshot.nextEventNumber).toBe(4)
+  expect(store.snapshot.fileRevisions).toEqual({ tree: 1, changes: 1 })
   expect(await store.snapshot).toEqual(saved)
 })

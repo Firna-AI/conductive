@@ -12,6 +12,7 @@ export async function engineFixture() {
     confirmedThrough: 0,
     outbox: [],
     sessions: [],
+    fileRevisions: { tree: 0, changes: 0 },
   }
   const storage = {
     read: async () => saved,

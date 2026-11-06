@@ -50,6 +50,7 @@ it('combines partial text, steers a turn, and reports actual touched files', asy
       kind: 'read',
       target: 'README.md',
       detail: null,
+      omittedDetailBytes: 0,
       state: 'running',
     },
   })
@@ -102,6 +103,7 @@ it('combines partial text, steers a turn, and reports actual touched files', asy
     state: 'finished',
     durationMs: 150,
     files: [{ path: 'README.md', change: 'modified', added: 1, removed: 1 }],
+    omittedFileCount: 0,
     userMessageIds: ['message-1', 'message-2'],
   })
   expect(JSON.stringify(await h.storage.read())).not.toContain('secret-alice')
@@ -125,6 +127,7 @@ it('stops a turn without an error and keeps the session on its original agent', 
       kind: 'run',
       target: 'npm test',
       detail: null,
+      omittedDetailBytes: 0,
       state: 'running',
     },
   })
@@ -151,6 +154,7 @@ it('stops a turn without an error and keeps the session on its original agent', 
     state: 'stopped',
     durationMs: 0,
     files: [],
+    omittedFileCount: 0,
     userMessageIds: ['message-1', 'message-queued'],
   })
   expect(h.endpoint.runnerEvents.map((event) => event.event)).toContainEqual({
@@ -162,6 +166,7 @@ it('stops a turn without an error and keeps the session on its original agent', 
       kind: 'run',
       target: 'npm test',
       detail: null,
+      omittedDetailBytes: 0,
       state: 'stopped',
     },
   })
@@ -188,6 +193,7 @@ it('stops a turn without an error and keeps the session on its original agent', 
       kind: 'run',
       target: 'old command',
       detail: null,
+      omittedDetailBytes: 0,
       state: 'running',
     },
   })

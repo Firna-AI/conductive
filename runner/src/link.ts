@@ -61,6 +61,10 @@ export class RunnerLink {
 
   async emit(event: RunnerEvent): Promise<void> {
     const envelope = await this.store.append(event, this.options.now())
+    if (envelope === null) {
+      this.options.warn('The runner event exceeds its byte limit.')
+      return
+    }
     if (this.welcomed) this.send(envelope)
   }
 
