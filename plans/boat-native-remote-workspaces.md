@@ -4151,9 +4151,9 @@ Build the Mac app as decision 62 says. No other milestone waits for it.
       fixes. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 - [x] Preserve local asset responses without sign-in settings, and verify
       ad-hoc signatures in PR packages. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
-- [ ] Make the local web bootstrap compatible with the shared content
-      policy. This waits for the web app owner to update Vite's React
-      bootstrap and the existing local module origin handling. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+- [x] Make the local web bootstrap compatible with the shared content
+      policy. Use the React module preamble and accept matching local
+      module origins when `APP_ORIGIN` is missing or empty. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
 
 ## Milestone 15f: Mac device commands
 

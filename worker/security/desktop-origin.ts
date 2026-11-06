@@ -5,8 +5,16 @@ import { DESKTOP_ORIGIN } from './desktop-contract'
 export function trustedOrigin(
   origin: string | null,
   env: Pick<AppEnv, 'APP_ORIGIN'>,
+  request: Request,
 ): boolean {
-  return origin === env.APP_ORIGIN || origin === DESKTOP_ORIGIN
+  if (origin === env.APP_ORIGIN || origin === DESKTOP_ORIGIN) return true
+  if (env.APP_ORIGIN) return false
+  const url = new URL(request.url)
+  return (
+    url.protocol === 'http:' &&
+    ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) &&
+    origin === url.origin
+  )
 }
 
 /** Call before the session gate. A preflight never grants an app session. */

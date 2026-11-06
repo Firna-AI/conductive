@@ -11,11 +11,8 @@ import { HttpError } from '../http'
 import { cookie, OAUTH_COOKIE, readCookie, SESSION_COOKIE } from './cookies'
 import { hash, sign, verify } from './crypto'
 import { GitHubClient } from './github'
-import {
-  createDesktopHandoff,
-  desktopChallenge,
-  desktopSessionCookie,
-} from './desktop-auth'
+import { createDesktopHandoff, desktopChallenge } from './desktop-auth'
+import { desktopSessionCookie } from './desktop-contract'
 
 const OAUTH_SECONDS = 600
 const SESSION_SECONDS = 7 * 24 * 60 * 60

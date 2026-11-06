@@ -25,7 +25,10 @@ export function checkOrigin(request: Request, env: AppEnv): void {
   const origin = request.headers.get('Origin')
   const read = request.method === 'GET' || request.method === 'HEAD'
   const upgrade = request.headers.has('Upgrade')
-  if (!trustedOrigin(origin, env) && !(read && !upgrade && origin === null)) {
+  if (
+    !trustedOrigin(origin, env, request) &&
+    !(read && !upgrade && origin === null)
+  ) {
     throw new HttpError(403, 'origin_forbidden', 'Open the app to continue.')
   }
 }

@@ -4,6 +4,7 @@ import {
   DESKTOP_CALLBACK,
   DESKTOP_ORIGIN,
   DESKTOP_SESSION_COOKIE,
+  desktopSessionCookie,
 } from '../../worker/security/desktop-contract.js'
 import { createSignIn, handoffToken } from './sign-in.js'
 import type { DesktopCookie } from './sign-in.js'
@@ -63,7 +64,7 @@ it('exchanges a verifier-bound handoff once and saves the cookie before loading 
     new Response(null, {
       status: 204,
       headers: {
-        'Set-Cookie': `${DESKTOP_SESSION_COOKIE}=session.signature; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=604800`,
+        'Set-Cookie': desktopSessionCookie('session.signature', 604800),
       },
     }),
   )

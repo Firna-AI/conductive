@@ -82,6 +82,8 @@ The root gate includes these unit tests once.
 It also runs desktop typecheck, lint, and formatting checks.
 It does not build, launch, or package Electron.
 Playwright runs the real Electron window test.
+That test starts sign-in through the native menu and receives the handoff in the main process.
+It checks the real Chromium session cookie on an API call before and after a restart.
 
 Mac CI runs the source and packaged tests on Apple silicon and Intel runners.
 It builds DMG and ZIP files with publishing disabled.
@@ -131,6 +133,7 @@ It offers Restart now or Later once for each downloaded version.
 - [Main process](src/main.ts) composes the protocol, window, session, and updater.
 - [Window](src/window.ts) owns native controls and saved bounds.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.
+- [Desktop contract](../worker/security/desktop-contract.ts) shares the desktop origin and session cookie format without Worker dependencies.
 - [Navigation](src/navigation.ts) keeps remote pages outside the main frame.
 - [Permissions](src/permissions.ts) denies unapproved browser access.
 - [Bundle server](src/export-handler.ts) serves only admitted local files.

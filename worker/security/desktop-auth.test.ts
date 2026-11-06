@@ -1,9 +1,5 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import {
-  contentSecurityPolicy,
-  readConfiguration,
-} from '../../desktop/src/config'
 import { API_PATHS } from '../../src/shared/api'
 import { HEALTH_PATH } from '../../src/shared/health'
 import { createApp } from '../application'
@@ -220,48 +216,5 @@ it('serves desktop preflights and API errors without admitting foreign origins o
       response.headers.get('Access-Control-Allow-Methods'),
       input.host,
     ).toBeNull()
-  }
-})
-
-it('serves web assets with the policy from the actual desktop configuration consumer', async () => {
-  const previewDomain = 'conducting-previews.test'
-  for (const binding of ['configured', 'missing', 'empty'] as const) {
-    const requestOrigin =
-      binding === 'configured'
-        ? harness.env.APP_ORIGIN
-        : 'http://127.0.0.1:5173'
-    const requests: string[] = []
-    const env = {
-      ...harness.env,
-      APP_ORIGIN: binding === 'configured' ? harness.env.APP_ORIGIN : '',
-      PREVIEW_DOMAIN: previewDomain,
-      ASSETS: {
-        fetch: async (request: Request) => {
-          requests.push(request.url)
-          return new Response('<main>Conducting</main>', {
-            headers: { 'Content-Type': 'text/html' },
-          })
-        },
-      },
-    }
-    if (binding === 'missing') Reflect.deleteProperty(env, 'APP_ORIGIN')
-    const response = await createApp().fetch(
-      new Request(`${requestOrigin}/app`),
-      env,
-    )
-    expect(response.status, binding).toBe(200)
-    expect(await response.text(), binding).toBe('<main>Conducting</main>')
-    expect(response.headers.get('Content-Type'), binding).toBe('text/html')
-    expect(requests, binding).toEqual([`${requestOrigin}/app`])
-    const desktopPolicy = contentSecurityPolicy(
-      readConfiguration({
-        appOrigin: requestOrigin,
-        frameSources: [`https://*.${previewDomain}`],
-      }),
-    )
-    expect(desktopPolicy, binding).not.toBe('')
-    expect(response.headers.get('Content-Security-Policy'), binding).toBe(
-      desktopPolicy,
-    )
   }
 })

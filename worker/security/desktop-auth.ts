@@ -1,15 +1,17 @@
 import { saveOAuthState, saveSession, takeOAuthState } from '../data/users'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError, isRecord } from '../http'
+import { BodyBudgetExceeded, readBoundedBody } from '../http/bounded-body'
 import { hash, sign, verify } from './crypto'
 import {
   DESKTOP_CALLBACK,
   DESKTOP_ORIGIN,
-  DESKTOP_SESSION_COOKIE,
+  desktopSessionCookie,
 } from './desktop-contract'
 
 const HANDOFF_SECONDS = 60
 const SESSION_SECONDS = 7 * 24 * 60 * 60
+const EXCHANGE_BODY_BYTES = 1_000_000
 
 export function desktopChallenge(request?: Request): string | undefined {
   const value =
@@ -46,15 +48,27 @@ export async function finishDesktopSignIn(
   if (request.headers.get('Origin') !== DESKTOP_ORIGIN) {
     throw new HttpError(403, 'origin_forbidden', 'Open the app to continue.')
   }
-  if (
-    request.headers.get('Content-Type')?.split(';')[0] !== 'application/json'
-  ) {
+  const contentType = request.headers
+    .get('Content-Type')
+    ?.split(';')[0]
+    .trim()
+    .toLowerCase()
+  if (contentType !== 'application/json') {
     throw new HttpError(415, 'json_required', 'Send the request as JSON.')
   }
   let body: unknown
   try {
-    body = await request.json()
-  } catch {
+    if (!request.body) throw invalidHandoff()
+    const bytes = await readBoundedBody(request.body, EXCHANGE_BODY_BYTES)
+    body = JSON.parse(new TextDecoder().decode(bytes))
+  } catch (error) {
+    if (error instanceof BodyBudgetExceeded) {
+      throw new HttpError(
+        413,
+        'body_too_large',
+        'The request body is too large.',
+      )
+    }
     throw invalidHandoff()
   }
   if (
@@ -91,10 +105,6 @@ export async function finishDesktopSignIn(
     status: 204,
     headers: { 'Set-Cookie': desktopSessionCookie(session, SESSION_SECONDS) },
   })
-}
-
-export function desktopSessionCookie(value: string, seconds: number): string {
-  return `${DESKTOP_SESSION_COOKIE}=${value}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=${seconds}`
 }
 
 function invalidHandoff(): HttpError {

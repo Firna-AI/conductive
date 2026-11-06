@@ -6,11 +6,16 @@ import type { ElectronApplication } from '@playwright/test'
 import { DESKTOP_ORIGIN } from '../../worker/security/desktop-contract.js'
 import { readConfiguration } from '../src/config.js'
 import { expectFrameIsolation } from './frame-navigation.js'
+import {
+  sessionEndpoint,
+  signInThroughMain,
+  storedSessionCookie,
+} from './sign-in-journey.js'
 
 const desktop = resolve(import.meta.dirname, '..')
 const evidence = resolve(desktop, '../.context/boat-native-remote-workspaces')
 
-test('the bundled app keeps navigation inside one isolated window and restores its bounds', async () => {
+test('the bundled app keeps one isolated window and restores its bounds and sign-in session', async () => {
   await mkdir(evidence, { recursive: true })
   const profile = await mkdtemp(resolve(evidence, 'desktop-profile-'))
   let electron: ElectronApplication | undefined
@@ -70,11 +75,14 @@ test('the bundled app keeps navigation inside one isolated window and restores i
     const configuration: unknown = JSON.parse(
       await readFile(resolve(desktop, 'dist/bundle/build-config.json'), 'utf8'),
     )
-    await expectFrameIsolation(
-      electron,
-      page,
-      readConfiguration(configuration).appOrigin,
-    )
+    const { appOrigin } = readConfiguration(configuration)
+    await expectFrameIsolation(electron, page, appOrigin)
+    const fetchSession = await sessionEndpoint(page, appOrigin)
+    await fetchSession(false)
+    await signInThroughMain(electron, appOrigin)
+    await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/`)
+    const beforeRestart = await fetchSession(true)
+    const cookieBeforeRestart = await storedSessionCookie(electron, appOrigin)
 
     // Read-only host evidence verifies the real protocol and renderer boundary.
     const host = await electron.evaluate(
@@ -145,6 +153,27 @@ test('the bundled app keeps navigation inside one isolated window and restores i
         BrowserWindow.getAllWindows()[0].getNormalBounds(),
       ),
     ).toEqual(host.bounds)
+    const fetchRestoredSession = await sessionEndpoint(page, appOrigin)
+    const afterRestart = await fetchRestoredSession(true)
+    const cookieAfterRestart = await storedSessionCookie(electron, appOrigin)
+    await writeFile(
+      resolve(
+        evidence,
+        packaged
+          ? 'desktop-packaged-session.json'
+          : 'desktop-shell-session.json',
+      ),
+      JSON.stringify(
+        {
+          beforeRestart,
+          afterRestart,
+          cookieBeforeRestart,
+          cookieAfterRestart,
+        },
+        null,
+        2,
+      ) + '\n',
+    )
   } finally {
     await electron?.close()
     await rm(profile, { recursive: true, force: true })

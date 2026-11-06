@@ -33,9 +33,12 @@ says.
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
-- Two routes of `app.conducting.build` need no sign-in: the health check,
-  and the GitHub sign-in with its callback. The callback checks its
-  `state` value instead.
+- The health check and GitHub sign-in with its callback need no sign-in.
+  The callback checks its `state` value instead.
+- The Mac app's public sign-in exchange also needs no sign-in.
+  It checks the one-use handoff and its secret instead.
+  Its JSON body can contain at most 1,000,000 bytes, which is 1 MB.
+  The Worker stops reading a larger body and returns HTTP 413 before sign-in.
 - A GET or HEAD read may come without an `Origin` header, because
   browsers send none on a read from the same site. A present `Origin`
   must match. Every write and every socket upgrade needs a matching
