@@ -2,6 +2,7 @@ import type { ChangesResponse } from '../../shared/files'
 import type { FilesClient } from '../api/files-client'
 import type { FilesError } from '../api/files-errors'
 import { parseStreamMessage, type StreamEnvelope } from '../api/parse-events'
+import { FilesInvalidation } from './files-invalidation'
 import {
   emptySync,
   syncEvent,
@@ -30,7 +31,7 @@ export interface FilesSnapshot {
   changesError: FilesError | null
   /** The folders that the user opened or closed in this page session. */
   folders: ReadonlyMap<string, boolean>
-  /** Grows when a full tree replaces the old one. */
+  /** Grows when affected paths cannot be named, including tree replacement. */
   epoch: number
   /** Grows for each path whose content an event may have changed. */
   versions: ReadonlyMap<string, number>
@@ -59,7 +60,6 @@ export class WorkspaceFiles {
   private readonly listeners = new Set<() => void>()
   private readonly reads = new Map<Resource, AbortController>()
   private lastEventNumber = 0
-  private synced = false
   private subscription = 0
   private unsubscribe: (() => void) | null = null
   private running = false
@@ -126,52 +126,62 @@ export class WorkspaceFiles {
   private receive(raw: unknown): void {
     const message = parseStreamMessage(raw)
     if (!message) return
+    const invalidation = new FilesInvalidation()
     if (message.type === 'history') {
-      const live = this.synced
-      for (const envelope of message.envelopes) this.take(envelope, live)
+      let taken = false
+      for (const envelope of message.envelopes) {
+        taken = this.take(envelope, invalidation) || taken
+      }
       this.lastEventNumber = Math.max(
         this.lastEventNumber,
         message.throughEventNumber,
       )
-      this.synced = true
-      return this.publish({})
+      return taken ? this.commit(invalidation) : this.publish({})
     }
     // A gap: subscribe again, so the history brings the missed events.
     if (message.envelope.eventNumber > this.lastEventNumber + 1) {
       return this.listen()
     }
-    if (this.take(message.envelope, true)) this.publish({})
+    if (this.take(message.envelope, invalidation)) this.commit(invalidation)
   }
 
   /** Takes one numbered event once. True when it was a new file event. */
-  private take(envelope: StreamEnvelope, live: boolean): boolean {
+  private take(
+    envelope: StreamEnvelope,
+    invalidation: FilesInvalidation,
+  ): boolean {
     if (envelope.eventNumber <= this.lastEventNumber) return false
     this.lastEventNumber = envelope.eventNumber
     if (!envelope.event) return false
-    this.apply(syncEvent(this.sync, envelope.event), live)
+    this.apply(syncEvent(this.sync, envelope.event), invalidation)
     return true
   }
 
-  private apply(step: SyncStep, live: boolean): void {
+  private apply(step: SyncStep, invalidation: FilesInvalidation): void {
     this.sync = step.sync
-    if (live && (step.allTouched || step.touched.size > 0)) {
-      const versions = new Map(this.snapshot.versions)
-      step.touched.forEach((path) => {
-        versions.set(path, (versions.get(path) ?? 0) + 1)
-      })
-      const epoch = this.snapshot.epoch + (step.allTouched ? 1 : 0)
-      this.snapshot = { ...this.snapshot, versions, epoch }
-    }
-    if (this.sync.treeStale && !this.reads.has('tree')) this.read('tree')
+    invalidation.add(step)
   }
 
-  private read(resource: Resource): void {
+  private commit(
+    invalidation: FilesInvalidation,
+    change: Partial<FilesSnapshot> = {},
+  ): void {
+    if (this.sync.treeStale && !this.reads.has('tree')) {
+      this.read('tree', false)
+      change = { ...change, treeError: null }
+    }
+    this.publish({ ...invalidation.apply(this.snapshot), ...change })
+  }
+
+  private read(resource: Resource, publishStart = true): void {
     this.reads.get(resource)?.abort()
     const controller = new AbortController()
     this.reads.set(resource, controller)
-    this.publish(
-      resource === 'tree' ? { treeError: null } : { changesError: null },
-    )
+    if (publishStart) {
+      this.publish(
+        resource === 'tree' ? { treeError: null } : { changesError: null },
+      )
+    }
     const done = () => {
       if (this.reads.get(resource) !== controller) return false
       this.reads.delete(resource)
@@ -180,18 +190,19 @@ export class WorkspaceFiles {
     if (resource === 'tree') {
       void this.client.readTree(controller.signal).then((result) => {
         if (!done()) return
-        if (result.ok)
-          this.apply(syncFetchedTree(this.sync, result.value), true)
-        this.publish({ treeError: result.ok ? null : result.error })
+        if (!result.ok) return this.publish({ treeError: result.error })
+        const invalidation = new FilesInvalidation()
+        this.apply(syncFetchedTree(this.sync, result.value), invalidation)
+        this.commit(invalidation, { treeError: null })
       })
       return
     }
     void this.client.readChanges(controller.signal).then((result) => {
       if (!done()) return
-      if (result.ok) {
-        this.apply(syncFetchedChanges(this.sync, result.value), true)
-      }
-      this.publish({ changesError: result.ok ? null : result.error })
+      if (!result.ok) return this.publish({ changesError: result.error })
+      const invalidation = new FilesInvalidation()
+      this.apply(syncFetchedChanges(this.sync, result.value), invalidation)
+      this.commit(invalidation, { changesError: null })
     })
   }
 }

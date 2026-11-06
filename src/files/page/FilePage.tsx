@@ -9,9 +9,10 @@ import {
   type FilesNavigation,
 } from '../navigation'
 import { isMarkdown } from '../panel/file-icons'
+import { LoadingFile, ReadError } from '../ui/FileStates'
 import { LayoutRoot } from '../ui/layout'
 import type { FileActionTargets } from './file-actions'
-import { FileContent, LoadingFile, ReadError } from './FileBody'
+import { FileContent } from './FileBody'
 import { PageHeader } from './PageHeader'
 import { useFileActions } from './use-file-actions'
 import { useFollowed } from './use-followed'

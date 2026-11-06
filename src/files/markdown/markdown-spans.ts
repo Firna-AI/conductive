@@ -9,14 +9,38 @@ export function runLength(text: string, index: number, char: string): number {
   return end - index
 }
 
-/** The next run of exactly `length` backticks from `from`, or -1. */
-function closingRun(text: string, length: number, from: number): number {
-  for (let at = text.indexOf('`', from); at >= 0;) {
-    const run = runLength(text, at, '`')
-    if (run === length) return at
-    at = text.indexOf('`', at + run)
+/** The starts of the whole backtick runs of one length, and a read position. */
+interface Runs {
+  starts: number[]
+  cursor: number
+}
+
+/**
+ * The closing runs of a text. One pass indexes each whole backtick run by
+ * its length, in text order. `next` moves the cursor of one length forward
+ * only. Callers ask in text order, so each cursor passes each run once.
+ */
+function closingRuns(text: string) {
+  const byLength = new Map<number, Runs>()
+  for (let at = text.indexOf('`'); at >= 0;) {
+    const length = runLength(text, at, '`')
+    const runs = byLength.get(length)
+    if (runs) runs.starts.push(at)
+    else byLength.set(length, { starts: [at], cursor: 0 })
+    at = text.indexOf('`', at + length)
   }
-  return -1
+  return {
+    /** The first whole run of exactly `length` backticks from `from`, or -1. */
+    next(length: number, from: number): number {
+      const runs = byLength.get(length)
+      if (!runs) return -1
+      const { starts } = runs
+      while (runs.cursor < starts.length && starts[runs.cursor] < from) {
+        runs.cursor += 1
+      }
+      return runs.cursor < starts.length ? starts[runs.cursor] : -1
+    },
+  }
 }
 
 function isLineTerminator(char: string): boolean {
@@ -45,12 +69,15 @@ function padded(code: string): boolean {
 }
 
 /**
- * The code spans of a text, by start index. A run of backticks without a
- * closing run of the same length is cached, so the scan stays linear.
+ * The code spans of a text, by start index. A backslash before an opening
+ * run escapes its first backtick. Inside code, a backslash escapes
+ * nothing, so it cannot hide a closing run. The scan, the index of the
+ * runs, and the closing-run cursors each read the text once, so the work
+ * stays linear in its length for any mix of run lengths.
  */
 export function codeSpans(text: string): Map<number, CodeSpan> {
   const spans = new Map<number, CodeSpan>()
-  const closerless = new Map<number, number>()
+  const closers = closingRuns(text)
   let index = 0
   while (index < text.length) {
     const char = text[index]
@@ -62,11 +89,11 @@ export function codeSpans(text: string): Map<number, CodeSpan> {
       index += 1
       continue
     }
+    // The rest of the run from `index`: a whole run, or the run after an
+    // escaped backtick. It ends where the whole run ends.
     const length = runLength(text, index, '`')
-    const missing = (closerless.get(length) ?? Infinity) <= index
-    const close = missing ? -1 : closingRun(text, length, index + length)
+    const close = closers.next(length, index + length)
     if (close < 0) {
-      if (!missing) closerless.set(length, index)
       index += length
       continue
     }

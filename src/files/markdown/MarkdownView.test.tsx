@@ -1,9 +1,13 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
+import { parseMarkdown } from './markdown-document'
 import { MarkdownView } from './MarkdownView'
 
+/** A static render, with the whole parse of the worker on this thread. */
 function render(text: string): string {
-  return renderToStaticMarkup(<MarkdownView text={text} />)
+  return renderToStaticMarkup(
+    <MarkdownView parser={parseMarkdown} text={text} />,
+  )
 }
 
 it('renders headings, a numbered list, and inline code', () => {

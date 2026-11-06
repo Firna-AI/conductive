@@ -13,23 +13,33 @@ import { takeDefinitions } from './markdown-text'
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
 export type CellAlign = 'left' | 'center' | 'right' | null
 
-/** One block of a Markdown file. Inline text stays raw until it renders. */
-export type MdBlock =
-  | { kind: 'heading'; level: HeadingLevel; text: string }
-  | { kind: 'paragraph'; text: string }
+/**
+ * One block of a Markdown file. `Inline` is the inline text of a block:
+ * the raw text as the block parser reads it, or the parsed inline content
+ * of the document.
+ */
+export type MdBlock<Inline = string> =
+  | { kind: 'heading'; level: HeadingLevel; text: Inline }
+  | { kind: 'paragraph'; text: Inline }
   | { kind: 'code'; text: string }
-  | { kind: 'quote'; blocks: MdBlock[] }
-  | { kind: 'list'; ordered: boolean; start: number; items: MdListItem[] }
+  | { kind: 'quote'; blocks: MdBlock<Inline>[] }
+  | {
+      kind: 'list'
+      ordered: boolean
+      start: number
+      items: MdListItem<Inline>[]
+    }
   | { kind: 'rule' }
-  | { kind: 'table'; align: CellAlign[]; head: string[]; rows: string[][] }
+  | { kind: 'table'; align: CellAlign[]; head: Inline[]; rows: Inline[][] }
 
-export interface MdListItem {
+export interface MdListItem<Inline = string> {
   /** A task item is done or not done. Null for other items. */
   checked: boolean | null
-  blocks: MdBlock[]
+  blocks: MdBlock<Inline>[]
 }
 
-export interface MarkdownDocument {
+/** The blocks of a file with raw inline text, before the inline parse. */
+export interface MarkdownBlocks {
   blocks: MdBlock[]
   /** Link reference definitions, by their normalized label. */
   definitions: ReadonlyMap<string, string>
@@ -201,8 +211,11 @@ class BlockParser {
   }
 }
 
-/** Parses Markdown into blocks. The parser never runs or keeps HTML. */
-export function parseMarkdown(source: string): MarkdownDocument {
+/**
+ * Parses Markdown into blocks, and collects the link reference
+ * definitions of the whole file. The parser never runs or keeps HTML.
+ */
+export function parseBlocks(source: string): MarkdownBlocks {
   const lines = source.split(/\r\n|\n|\r/).map(expandTabs)
   const parser = new BlockParser()
   const blocks = parser.parse(lines)

@@ -1,7 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
+import { parseMarkdown } from '../markdown/markdown-document'
 import { fileText } from '../model/file-text'
-import { FileContent, ReadError } from './FileBody'
+import { ReadError } from '../ui/FileStates'
+import { FileContent } from './FileBody'
 
 const noop = () => {}
 
@@ -76,7 +78,12 @@ it('starts Markdown rendered and shows its source as text with line numbers', ()
   const decoded = fileText(readme)
   expect(decoded).toEqual({ kind: 'text', text: '# Café\n\nThe *shop*.\n' })
   const preview = renderToStaticMarkup(
-    <FileContent mode="preview" path="README.md" text={decoded} />,
+    <FileContent
+      markdownParser={parseMarkdown}
+      mode="preview"
+      path="README.md"
+      text={decoded}
+    />,
   )
   expect(preview).toContain('<h1>Café</h1>')
   expect(preview).toContain('<em>shop</em>')

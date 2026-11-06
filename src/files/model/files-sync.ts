@@ -26,7 +26,7 @@ export interface FilesSync {
 export interface SyncStep {
   sync: FilesSync
   touched: ReadonlySet<string>
-  /** A new full tree replaced the old one, so any file may have changed. */
+  /** The affected paths cannot be named, so any file may have changed. */
   allTouched: boolean
 }
 
@@ -43,6 +43,10 @@ const none: ReadonlySet<string> = new Set()
 
 function unchanged(sync: FilesSync): SyncStep {
   return { sync, touched: none, allTouched: false }
+}
+
+function unknownPaths(sync: FilesSync): SyncStep {
+  return { sync, touched: none, allTouched: true }
 }
 
 /** Applies the waiting updates that are newer than the tree, in order. */
@@ -103,11 +107,11 @@ export function syncFetchedChanges(
 function syncDelta(sync: FilesSync, delta: FileTreeDelta): SyncStep {
   const { tree } = sync
   if (!tree || sync.treeStale) {
-    return unchanged({ ...sync, pending: [...sync.pending, delta] })
+    return unknownPaths({ ...sync, pending: [...sync.pending, delta] })
   }
-  if (delta.revision <= tree.revision) return unchanged(sync)
+  if (delta.revision <= tree.revision) return unknownPaths(sync)
   if (delta.revision > tree.revision + 1) {
-    return unchanged({
+    return unknownPaths({
       ...sync,
       pending: [...sync.pending, delta],
       treeStale: true,
@@ -142,7 +146,7 @@ export function syncEvent(sync: FilesSync, event: FileEvent): SyncStep {
       return {
         sync: { ...sync, changes: event.changes, changesFromStream: true },
         touched: listedPaths(sync.changes, event.changes),
-        allTouched: false,
+        allTouched: sync.changes === null,
       }
   }
 }
