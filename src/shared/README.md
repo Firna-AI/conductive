@@ -31,7 +31,8 @@ and runner connections of one workspace. A reconnect uses the last stored number
 The history response gives the point after which live events continue.
 
 The machine and preview hostnames remain deployment settings.
-The git credential payload waits for the user's decision about token reach.
+The git credential payload is not defined yet.
+[GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens) states its rule.
 
 ## Key code
 

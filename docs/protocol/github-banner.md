@@ -37,6 +37,9 @@ The bar shows one state of the branch of the workspace (decision 18):
 - changes requested
 - draft
 - closed without a merge
+- blocked: GitHub blocks the merge for a reason that no other state
+  names, such as a missing approval or a branch behind its base
+  (decision 64)
 
 Rules for the bar:
 
@@ -48,6 +51,8 @@ Rules for the bar:
   without GitHub write access.
 - When the pull request is ready to merge, "Open on GitHub" stands where a
   merge button would be.
+- The bar shows Blocked only when no other state applies. Its action
+  opens the pull request on GitHub, where GitHub names the reason.
 - After the merge, the bar offers Archive (decision 16). Only the workspace
   owner and the admins see it (decision 42).
 - Each state shows an icon and words, never only a colour.

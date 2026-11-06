@@ -8,13 +8,16 @@ import { StartingCard } from '../workspace/StartingCard'
 import { ChatItemView } from './ChatItemView'
 import { Composer, type ComposerState } from './Composer'
 import { groupItems } from './groupItems'
+import { isPendingCommand, PendingCommand } from './PendingCommand'
 import { ToolGroup } from './ToolGroup'
 import styles from './ChatPane.module.css'
 
 /**
  * The chat transcript, with the composer or a sandbox bar under it. While
  * the sandbox starts, its steps show at the end of the transcript. An empty
- * transcript shows `empty` instead.
+ * transcript shows `empty` instead. A command that waits for approval on a
+ * Mac leaves the transcript and stays in view just above the composer.
+ * Once answered, it shows at its place in the transcript.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
@@ -27,6 +30,8 @@ export function ChatPane(props: {
   viewport: Viewport
 }) {
   const empty = props.items.length === 0 && !props.starting
+  const pending = props.items.find(isPendingCommand)
+  const transcript = props.items.filter((item) => !isPendingCommand(item))
   return (
     <section
       aria-label="Chat"
@@ -40,7 +45,7 @@ export function ChatPane(props: {
       ) : (
         <div className={styles.scroll} data-mokly-scroll="chat-transcript">
           <div className={styles.transcript}>
-            {groupItems(props.items).map((entry) =>
+            {groupItems(transcript).map((entry) =>
               entry.kind === 'tools' ? (
                 <ToolGroup calls={entry.calls} key={entry.id} />
               ) : (
@@ -52,6 +57,7 @@ export function ChatPane(props: {
         </div>
       )}
       <div className={styles.footer}>
+        {pending ? <PendingCommand request={pending.request} /> : null}
         {props.notice}
         {props.problem ? (
           <SandboxBar problem={props.problem} />

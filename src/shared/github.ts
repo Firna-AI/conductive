@@ -23,6 +23,8 @@ export type BannerState =
   | 'changes-requested'
   | 'draft'
   | 'closed'
+  /** GitHub blocks the merge, and no other state applies. */
+  | 'blocked'
 
 export type GitHubBanner = {
   branch: string

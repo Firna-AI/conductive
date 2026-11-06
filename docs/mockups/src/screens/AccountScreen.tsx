@@ -93,7 +93,10 @@ export function AccountScreen(props: {
   if (mobile) return <MobileFrame>{page}</MobileFrame>
   // The Mac app keeps the sidebar of the org beside the account.
   const sidebar = mac ? (
-    <Sidebar org={orgs.acme} sections={workspaceSections()} />
+    <Sidebar
+      org={orgs.acme}
+      sections={workspaceSections(undefined, mac.needsInput)}
+    />
   ) : undefined
   return (
     <AppFrame rail={connected ? connectedRail : firstRunRail} sidebar={sidebar}>
