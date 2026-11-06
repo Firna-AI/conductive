@@ -51,8 +51,9 @@ The caller chooses the budget, parses the bytes, and maps errors to its response
 The helper has no route, provider, credential, file, or JSON policy.
 The caller also handles a missing body stream.
 
-The [sandbox file content route](../sandbox/README.md#file-reads) keeps its base64 response budget and JSON parsing in sandbox code.
-Other Boat responses have no transport byte limit.
+The [sandbox transport](../sandbox/README.md#response-byte-limits) uses the collector for every Boat response.
+It owns the response budgets, JSON parsing, and provider error mapping.
+The successful file content route keeps its dynamic base64 budget and size fallback.
 
 ## Development
 

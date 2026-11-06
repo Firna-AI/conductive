@@ -60,6 +60,12 @@ says.
   sandbox belongs to a workspace of that org.
 - The Worker calls only a fixed list of Boat routes. It has no general
   pass-through to Boat.
+- Account, lifecycle, saved snapshot, file metadata, and error replies
+  from Boat can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
+- A successful command reply from Boat can contain at most 18 MiB, or
+  18,874,368 bytes. The limit includes the whole JSON body.
+- A reply above these budgets gets HTTP 502, even when Boat permits it.
+  For a command reply, the error says "The command output is too large."
 - [Orgs and members](orgs-and-members.md#members-and-roles) states the
   rules of each role.
 

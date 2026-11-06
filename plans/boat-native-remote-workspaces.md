@@ -3794,8 +3794,12 @@ Add the `blocked` variant at `app/banner/blocked/blocked`, to keep the existing 
 
 Depends on: 9
 
-Apply decision 65 B. The bounded reader of the Milestone 9 file read is
-the base.
+Apply decision 65 B as changed by decision 84 A. The bounded reader of
+the Milestone 9 file read is the base.
+
+Agent call, 6 November 2026: replies above the new limits get HTTP 502
+with fixed error text. Reason: the request was valid, but the provider
+reply exceeded the Worker's budget.
 
 - [x] Use one bounded body reader in the request gate, with a 1 MB limit
       for each JSON body. A larger body gets a 413 answer.
@@ -3803,8 +3807,13 @@ the base.
 - [x] Share the content type check, bounded read, and JSON object check
       in one function. Name it in the HTTP README for later callers.
       Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
-- [ ] Use the same reader in the Boat transport, with a budget for each
-      fixed Boat route above Boat's documented maximum for that route.
+- [x] Use the same reader in the Boat transport, with a budget for each
+      fixed Boat route: 1 MiB for account, lifecycle, snapshot, metadata,
+      and error replies, and 18 MiB for command replies. Keep the file
+      budget. A larger reply fails, also when Boat would allow it.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
+- [x] Test each Boat budget with a stream that counts its chunks. An
+      oversized command reply says "The command output is too large."
       Branch: `conductor/boat-native-remote-workspaces-milestone-4c`.
 - [x] Test an oversized body at the gate and at a Boat route, with a
       stream that counts its chunks. State the 1 MB limit in the access
