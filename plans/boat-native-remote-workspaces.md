@@ -3998,16 +3998,22 @@ Depends on: 4a
 
 It builds against the fake API of Milestone 4a. Milestone 8i wires it.
 
-- [ ] Build the app shell, the workspace list, and the sandbox states,
+- [x] Build the app shell, the workspace list, and the sandbox states,
       with the starting card and its steps.
-- [ ] Add draggable dividers on both sides of the chat: one for the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-6`.
+- [x] Add draggable dividers on both sides of the chat: one for the
       left panel and one for the right column. Remember the widths.
-- [ ] Build the new workspace and the org settings screens.
-- [ ] Compare each screen with its mockup.
-- [ ] Build sections, Archive with its check and the Archived group, and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-6`.
+- [x] Build the new workspace and the org settings screens.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-6`.
+- [x] Compare each screen with its mockup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-6`.
+- [x] Build sections, Archive with its check and the Archived group, and
       Get started with its first-run steps.
-- [ ] Build the account page with the stored agent logins, and the org
-      settings with the Boat key screen.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-6`.
+- [x] Build the account page with the stored agent logins, and the org
+      settings. The Boat key screen is dropped by decision 80.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-6`.
 
 ## Milestone 7r: Agent runner
 

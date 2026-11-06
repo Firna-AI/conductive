@@ -21,6 +21,8 @@ The first message contains stored history. Later `emit` calls send live events.
 Use the last event number instead of zero to exercise a reconnect.
 
 Writes return recorded replies. They do not change backend state.
+Repository PUT and DELETE replies change only the named repository in the
+recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
 Set the next reply with `server.json(method, path, body, status)`.
 Use `server.empty` for a 204 response.
 Use `server.response` for a download or a custom error response.

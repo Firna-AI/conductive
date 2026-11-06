@@ -1,0 +1,71 @@
+import { useRef, type KeyboardEvent, type ReactNode } from 'react'
+import styles from '../../../docs/mockups/src/components/common/Sheet.module.css'
+import {
+  focusableSelector,
+  Overlay,
+  useDismiss,
+  useLayerFocus,
+} from './Overlay'
+
+/**
+ * Keeps the Tab key inside a modal layer, as a dialog needs. Tab from the
+ * last element goes to the first, and Shift+Tab from the first goes to the
+ * last. From the layer itself, which takes the focus on a press outside its
+ * controls, Tab goes to the first and Shift+Tab to the last. The layer
+ * listens in the capture phase, because a text field stops its key events.
+ */
+export function trapTab(event: KeyboardEvent<HTMLElement>): void {
+  if (event.key !== 'Tab') return
+  const tabbable = Array.from(
+    event.currentTarget.querySelectorAll<HTMLElement>(focusableSelector),
+  ).filter((element) => element.tabIndex >= 0)
+  const first = tabbable[0]
+  const last = tabbable.at(-1)
+  if (!first || !last) {
+    event.preventDefault()
+    return
+  }
+  const from = event.target
+  const inside = tabbable.some((element) => element === from)
+  if (event.shiftKey && (from === first || !inside)) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && (from === last || !inside)) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+/**
+ * A sheet that rises from the bottom of a phone screen over the dimmed
+ * app. A press on the dim area or Escape closes it.
+ */
+export function Sheet(props: {
+  title: string
+  close: () => void
+  children: ReactNode
+}) {
+  const sheet = useRef<HTMLElement>(null)
+  useDismiss(true, sheet, props.close)
+  useLayerFocus(sheet, { modal: true })
+  return (
+    <Overlay>
+      <div className={styles.layer}>
+        <div aria-hidden className={styles.scrim} />
+        <section
+          aria-label={props.title}
+          aria-modal
+          className={styles.sheet}
+          onKeyDownCapture={trapTab}
+          ref={sheet}
+          role="dialog"
+          tabIndex={-1}
+        >
+          <span aria-hidden className={styles.handle} />
+          <h2 className={styles.title}>{props.title}</h2>
+          {props.children}
+        </section>
+      </div>
+    </Overlay>
+  )
+}
