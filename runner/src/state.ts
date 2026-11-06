@@ -85,12 +85,14 @@ function parseState(value: unknown): RunnerState {
 /** Only events and conversation references enter this store. Never commands. */
 export class EventStore {
   private state: RunnerState
+  private committed: RunnerState
   private readonly storage: StateStorage
   private writes: Promise<void> = Promise.resolve()
 
   private constructor(storage: StateStorage, state: RunnerState) {
     this.storage = storage
     this.state = state
+    this.committed = structuredClone(state)
   }
 
   static async open(storage: StateStorage): Promise<EventStore> {
@@ -111,7 +113,7 @@ export class EventStore {
   }
 
   get snapshot(): RunnerState {
-    return structuredClone(this.state)
+    return structuredClone(this.committed)
   }
 
   async append(
@@ -150,8 +152,11 @@ export class EventStore {
   }
 
   private save(): Promise<void> {
-    const snapshot = this.snapshot
-    this.writes = this.writes.then(() => this.storage.write(snapshot))
+    const snapshot = structuredClone(this.state)
+    this.writes = this.writes.then(async () => {
+      await this.storage.write(snapshot)
+      this.committed = structuredClone(snapshot)
+    })
     return this.writes
   }
 }

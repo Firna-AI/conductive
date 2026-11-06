@@ -33,6 +33,27 @@ export function pathInput(paths: readonly string[]): Buffer {
   return Buffer.from(paths.map((path) => `${path}\0`).join(''))
 }
 
+export async function treeEntries(git: Git, sha: string): Promise<GitEntry[]> {
+  return zeroPaths(await git.run(['ls-tree', '-r', '-z', sha])).flatMap(
+    (record) => {
+      const match =
+        /^(100644|100755|120000|160000) (?:blob|commit) ([a-f0-9]+)\t([\s\S]+)$/.exec(
+          record,
+        )
+      if (!match) return []
+      const mode = match[1]
+      if (
+        mode !== '100644' &&
+        mode !== '100755' &&
+        mode !== '120000' &&
+        mode !== '160000'
+      )
+        return []
+      return [{ mode, oid: match[2], stage: '0', path: match[3] }]
+    },
+  )
+}
+
 export async function treeEntry(
   git: Git,
   sha: string,

@@ -1,6 +1,7 @@
 import { expect, it, onTestFinished, vi } from 'vitest'
 
 import { FakeClaudeQuery } from '../../test-support/claude-query'
+import { checkClaudeFailures } from '../../test-support/claude-failures'
 import { runnerHarness, turn } from '../../test-support/harness'
 import { string } from '../parse'
 import { Runner } from '../runner'
@@ -261,4 +262,5 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
       message: 'The agent login failed. Reconnect your agent account.',
     },
   })
+  await checkClaudeFailures(runner, h.endpoint, () => sdk, h.root, h.home)
 })

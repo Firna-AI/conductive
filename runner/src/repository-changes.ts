@@ -49,11 +49,7 @@ export async function branchChanges(
   const sha = await git.resolve(branch)
   return withGitIndex(
     git,
-    async (index) => {
-      if (index.unavailable.length)
-        warn('Some repository files cannot be stored by Git.')
-      return changesFromIndex(index, branch, sha)
-    },
+    (index) => changesFromIndex(index, branch, sha, warn),
     sha,
   )
 }
@@ -62,7 +58,10 @@ export async function changesFromIndex(
   index: TemporaryIndex,
   branch: string,
   sha: string,
+  warn: (message: string) => void = () => {},
 ): Promise<ChangesResponse> {
+  if (index.unavailable.length)
+    warn('Some repository files cannot be stored by Git.')
   await addUntracked(index)
   const [names, counts, status] = await Promise.all([
     comparison(index, sha, '--name-status'),

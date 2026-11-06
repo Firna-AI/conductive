@@ -1,4 +1,4 @@
-import { chmod, symlink, unlink } from 'node:fs/promises'
+import { chmod, rename, symlink, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { expect, it } from 'vitest'
@@ -70,6 +70,29 @@ it('compares Git link, mode, and filter representations without changing stored 
   await h.write('filtered.txt', 'SECOND\n')
   expect(await changedSince(repository, 'main', before)).toEqual([])
   expect(await gitStorage(h.root)).toEqual(saved)
+})
+
+it('reports one branch rename for staged, plain, and old-path-only turn changes', async () => {
+  for (const method of ['staged', 'plain', 'old-path-only']) {
+    const h = await repositoryFixture()
+    const repository = new Repository(h.root)
+    if (method === 'old-path-only')
+      await h.write('renamed.txt', 'keep\nthese\nlines\n')
+    const before = await checkpoint(repository)
+    if (method === 'staged') await h.git('mv', 'rename me.txt', 'renamed.txt')
+    else if (method === 'plain')
+      await rename(join(h.root, 'rename me.txt'), join(h.root, 'renamed.txt'))
+    else await unlink(join(h.root, 'rename me.txt'))
+    expect(await changedSince(repository, 'main', before), method).toEqual([
+      {
+        path: 'renamed.txt',
+        previousPath: 'rename me.txt',
+        change: 'renamed',
+        added: 0,
+        removed: 0,
+      },
+    ])
+  }
 })
 
 it('tracks submodule commits and worktree state without changing either index', async () => {

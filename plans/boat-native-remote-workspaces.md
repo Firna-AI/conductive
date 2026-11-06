@@ -3669,6 +3669,9 @@ Depends on: 4a
       against the default branch over the connection. Read one file or one
       diff on request. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
 - [x] Test the runner against the fake Durable Object of Milestone 4a. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [ ] Adopt decision 76 after the owner confirms that Milestone 4d has
+      merged. Split and cap outbound events with the new shared contract.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
 
 Agent calls, 6 November 2026:
 
@@ -3676,9 +3679,14 @@ Agent calls, 6 November 2026:
   milestone changes no shared package configuration.
 - Write bundles under the existing ignored `dist/runner/`, so generated
   code stays outside the source file-length check.
+- Take the private Node path from one install-time `CONDUCTING_NODE`
+  setting, and pass it to the service as an argument, as decision 69 says.
+  Milestone 5a owns the runtime download and path.
 - Use Codex App Server. The installed SDK can abort, but the local fake
   API probe shows no partial assistant text from it.
 - Keep the outbox in an atomic JSON file. One runner owns its stream.
+- Expose only committed outbox state, so replays cannot publish pending
+  writes.
 - Let image integration supply the computer MCP URL. No provider endpoint
   is fixed in this milestone.
 - Combine text deltas for 40 ms, so text stays live with fewer events.

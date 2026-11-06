@@ -51,19 +51,32 @@ export async function changedSince(
     repository.changes(branch),
   ])
   const paths = new Set([...before.keys(), ...after.keys()])
-  return [...paths]
-    .filter((path) => before.get(path) !== after.get(path))
-    .map((path) => {
-      const file = changes.files.find((file) => file.path === path)
-      if (file)
-        return {
-          path: file.path,
-          ...(file.previousPath ? { previousPath: file.previousPath } : {}),
-          change: file.change,
-          added: file.added,
-          removed: file.removed,
-        }
-      return {
+  const identities = new Map(changes.files.map((file) => [file.path, file]))
+  for (const file of changes.files) {
+    if (
+      file.change === 'renamed' &&
+      file.previousPath &&
+      !identities.has(file.previousPath)
+    )
+      identities.set(file.previousPath, file)
+  }
+  const emitted = new Set<(typeof changes.files)[number]>()
+  const result: ChangedFile[] = []
+  for (const path of paths) {
+    if (before.get(path) === after.get(path)) continue
+    const file = identities.get(path)
+    if (file) {
+      if (emitted.has(file)) continue
+      emitted.add(file)
+      result.push({
+        path: file.path,
+        ...(file.previousPath ? { previousPath: file.previousPath } : {}),
+        change: file.change,
+        added: file.added,
+        removed: file.removed,
+      })
+    } else
+      result.push({
         path,
         change: !after.has(path)
           ? 'deleted'
@@ -72,6 +85,7 @@ export async function changedSince(
             : 'modified',
         added: 0,
         removed: 0,
-      }
-    })
+      })
+  }
+  return result
 }

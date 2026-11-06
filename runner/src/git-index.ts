@@ -1,9 +1,10 @@
-import { copyFile, lstat, mkdir, mkdtemp, rm } from 'node:fs/promises'
+import { copyFile, mkdir, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { Git, zeroPaths } from './git'
-import { indexEntries, pathInput } from './git-entries'
+import { indexEntries, pathInput, treeEntries } from './git-entries'
+import { GitPathClassifier, type GitPathState } from './git-paths'
 
 export interface TemporaryIndex {
   git: Git
@@ -11,6 +12,8 @@ export interface TemporaryIndex {
   paths: readonly string[]
   untracked: readonly string[]
   unavailable: readonly string[]
+  states: ReadonlyMap<string, GitPathState>
+  classifier: GitPathClassifier
 }
 
 /** Only this temporary directory receives index writes and new blob objects. */
@@ -56,12 +59,10 @@ export async function withGitIndex<T>(
       await git.run(['read-tree', '--empty'])
     }
     await git.run(['update-index', '--no-split-index'])
-    const [tracked, others, basePaths] = await Promise.all([
+    const [tracked, others, baseEntries] = await Promise.all([
       indexEntries(git),
       source.run(['ls-files', '--others', '--exclude-standard', '-z']),
-      base
-        ? source.run(['ls-tree', '-r', '--name-only', '-z', base])
-        : Promise.resolve(Buffer.alloc(0)),
+      base ? treeEntries(source, base) : Promise.resolve([]),
     ])
     // A copied index has a newer mtime. Clear copied stat data so it cannot
     // hide a same-size edit that Git would call racily clean in the real index.
@@ -77,57 +78,39 @@ export async function withGitIndex<T>(
         ),
       })
     const untracked = zeroPaths(others)
-    const modes = new Map(tracked.map((entry) => [entry.path, entry.mode]))
+    const modes = new Map(
+      [...baseEntries, ...tracked].map((entry) => [entry.path, entry.mode]),
+    )
+    const classifier = new GitPathClassifier(source.root, {
+      modes,
+      submodules: new Set(
+        tracked
+          .filter((entry) => entry.mode === '160000')
+          .map((entry) => entry.path),
+      ),
+    })
     const candidates = new Set([
       ...tracked.map((entry) => entry.path),
       ...untracked,
-      ...zeroPaths(basePaths),
+      ...baseEntries.map((entry) => entry.path),
     ])
-    const classified = await Promise.all(
-      [...candidates].map(
-        async (
+    const states = new Map(
+      await Promise.all(
+        [...candidates].map(async (path): Promise<[string, GitPathState]> => [
           path,
-        ): Promise<{
-          path: string
-          kind: 'supported' | 'directory' | 'unavailable'
-        }> => {
-          try {
-            const info = await lstat(join(source.root, path))
-            if (
-              info.isDirectory() &&
-              modes.has(path) &&
-              modes.get(path) !== '160000'
-            )
-              return { path, kind: 'directory' }
-            else if (
-              info.isFile() ||
-              info.isSymbolicLink() ||
-              info.isDirectory()
-            )
-              return { path, kind: 'supported' }
-            else return { path, kind: 'unavailable' }
-          } catch (error) {
-            if (!(
-              error instanceof Error &&
-              'code' in error &&
-              error.code === 'ENOENT'
-            ))
-              throw error
-            return { path, kind: 'supported' }
-          }
-        },
+          await classifier.classify(path),
+        ]),
       ),
     )
-    const paths = classified
-      .filter((entry) => entry.kind === 'supported')
-      .map((entry) => entry.path)
-    const unavailable = classified
-      .filter((entry) => entry.kind === 'unavailable')
-      .map((entry) => entry.path)
-    const removedDirectories = classified
-      .filter((entry) => entry.kind === 'directory')
-      .map((entry) => entry.path)
-    const removed = [...unavailable, ...removedDirectories]
+    const paths = [...states]
+      .filter(([, state]) => state.entry === 'present')
+      .map(([path]) => path)
+    const unavailable = [...states]
+      .filter(([, state]) => state.entry === 'unavailable')
+      .map(([path]) => path)
+    const removed = [...states]
+      .filter(([, state]) => state.entry !== 'present')
+      .map(([path]) => path)
     if (removed.length)
       await git.run(['update-index', '--force-remove', '-z', '--stdin'], {
         input: pathInput(removed),
@@ -139,6 +122,8 @@ export async function withGitIndex<T>(
       paths,
       untracked: untracked.filter((path) => supported.has(path)),
       unavailable,
+      states,
+      classifier,
     })
   } finally {
     await rm(directory, { recursive: true, force: true })

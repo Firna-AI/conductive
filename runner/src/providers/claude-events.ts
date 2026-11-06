@@ -1,6 +1,6 @@
 import { array, object, string } from '../parse'
 import { mapTool } from './tool'
-import { failureCause } from './failure'
+import { assistantError, claudeOutcome } from './claude-outcome'
 import type { ProviderEvent } from './types'
 
 export function synthetic(text: string): boolean {
@@ -12,6 +12,7 @@ export class ClaudeEvents {
   private messageId = ''
   private readonly tools = new Map<string, ReturnType<typeof mapTool>>()
   private userIds: string[] = []
+  private errorKind: ReturnType<typeof assistantError> = null
   private readonly ids: Map<string, string>
   private readonly emit: (event: ProviderEvent) => void
   stopped = false
@@ -39,7 +40,13 @@ export class ClaudeEvents {
     if (input.type === 'stream_event') this.partial(object(input.event))
     if (input.type === 'system' && input.subtype === 'thinking_tokens')
       this.emit({ type: 'thinking' })
-    if (input.type === 'assistant' && input.isSynthetic !== true) {
+    if (input.type === 'assistant') {
+      const kind = assistantError(input.error)
+      if (kind) {
+        this.errorKind = kind
+        return
+      }
+      if (input.isSynthetic === true) return
       const message = object(input.message)
       const id = string(message.id)
       const blocks = array(message.content, object)
@@ -79,20 +86,16 @@ export class ClaudeEvents {
       }
     }
     if (input.type === 'result') {
-      if (this.stopped)
-        this.emit({
-          type: 'result',
-          state: 'stopped',
-          userMessageIds: this.userIds,
-        })
-      else if (input.is_error === true) this.emit(failureCause(input.errors))
+      const outcome = claudeOutcome(input, this.errorKind, this.stopped)
+      if (outcome.state === 'failed') this.emit(outcome.failure)
       else
         this.emit({
           type: 'result',
-          state: 'finished',
+          state: outcome.state,
           userMessageIds: this.userIds,
         })
       this.stopped = false
+      this.errorKind = null
     }
   }
 

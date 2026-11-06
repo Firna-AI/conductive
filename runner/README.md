@@ -13,8 +13,7 @@ states its requirements, and the
 [shared contracts](../src/shared/README.md) define its messages.
 
 This folder is a separate Node 24 package with its own lockfile. The root
-`npm install` does not install it. The Worker has no runner route yet.
-Until it has one, the runner connects only to fakes.
+`npm install` does not install it. Tests inject the fake workspace endpoint.
 
 ## What it does
 
@@ -72,24 +71,25 @@ and file-length checks do cover the runner files.
 Each build of the org image installs the runner as a systemd service. The
 install script needs root, because it writes a systemd unit.
 
-1. Install Node 24, npm, and Git. Root must find Node 24 as `node`,
-   because the install script records that path. The runner runs `git`
-   from the `PATH` of the service.
+1. Get the private Node 24 path from the image builder. Its `npm` command
+   must sit beside it. The runner also needs Git.
 2. Install the runner packages and build the bundles with the commands
    above.
-3. As root, run `sh runner/scripts/install.sh <user> [<folder>]`. The user
-   runs the agents. The folder is `/opt/conducting-runner` by default.
+3. Set `CONDUCTING_NODE` to that full executable path. As root, run
+   `sh runner/scripts/install.sh <user> [<folder>]`. The user runs the
+   agents. The folder is `/opt/conducting-runner` by default.
 
 The install script does these steps:
 
-- It stops when the user does not exist, or when root finds no `node`.
+- It requires the service user and the explicit private Node path.
 - It copies the three bundles, `runner/package.json`,
   `runner/package-lock.json`, and `runner/service/start.sh` into the
   folder.
-- It runs `npm ci --omit=dev --ignore-scripts` in the folder. The runtime
-  packages then sit beside the bundles.
+- It runs the adjacent npm command with the configured Node and
+  `ci --omit=dev --ignore-scripts`. The runtime packages sit beside the
+  bundles.
 - It writes `/etc/systemd/system/conducting-runner.service` with the user,
-  the folder, and the path of `node` that root finds.
+  the folder, and the configured private Node path.
 - It reloads systemd and enables the service. It does not start the
   service.
 
@@ -100,8 +100,8 @@ The unit has these settings:
 
 - The service runs as the user, in the home folder of the user, after
   `network-online.target`.
-- `CONDUCTING_NODE` holds the path of `node`. It is the only variable
-  that the unit sets.
+- The unit passes the private Node path to the startup wrapper as an
+  argument. Sandbox env changes keep that argument unchanged.
 - systemd starts the service again 2 seconds after it ends, for any
   reason.
 - `UMask=0077` makes the new files of the runner and its agents private to
@@ -112,9 +112,9 @@ The unit has these settings:
 
 `service/start.sh` exports each variable of `/run/ascii-secrets/env.sh`,
 the file where Boat writes the variables of the sandbox. Then it starts
-`runner.mjs` from the folder with `CONDUCTING_NODE`, or with `node` when
-that variable is empty. When the file is missing, the start fails, and
-systemd tries again.
+`runner.mjs` from the folder with the full Node path in its service
+argument. The image builder owns that path and its download. When the
+secrets file is missing, the start fails, and systemd tries again.
 
 ## Configuration
 
@@ -228,6 +228,7 @@ defaults are the current folder and the home folder of the user.
 - `src/checkpoint.ts`: the files that one turn changed.
 - `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary
   indexes and objects for Git comparisons. The real index stays unchanged.
+- `src/git-paths.ts`: shared Git namespace states for paths and parents.
 - `src/measure.ts` and `src/compare.ts`: the first-start measurement and
   the comparison of its samples.
 - `scripts/` and `service/`: the build, the install script, the Codex

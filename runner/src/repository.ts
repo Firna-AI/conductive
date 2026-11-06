@@ -1,15 +1,15 @@
-import { lstat } from 'node:fs/promises'
-import { basename, dirname, join } from 'node:path'
+import { basename, dirname } from 'node:path'
 
 import type {
   ChangesResponse,
   DiffResponse,
   FileEntry,
 } from '../../src/shared/files'
-import { readFileResponse, safePath } from './file-access'
+import { readFileResponse } from './file-access'
 import { readGitDiff } from './git-diff'
-import { branchChanges } from './repository-changes'
-import { Git, zeroPaths } from './git'
+import { branchChanges, changesFromIndex } from './repository-changes'
+import { Git } from './git'
+import { withGitIndex } from './git-index'
 
 export interface RepositorySnapshot {
   entries: FileEntry[]
@@ -25,34 +25,38 @@ export class Repository {
   }
 
   async snapshot(defaultBranch: string): Promise<RepositorySnapshot> {
-    const changes = await this.changes(defaultBranch)
-    const marks = new Map(changes.files.map((file) => [file.path, file.change]))
-    const paths = zeroPaths(
-      await this.git.run([
-        'ls-files',
-        '--cached',
-        '--others',
-        '--exclude-standard',
-        '-z',
-      ]),
-    )
-    const entries = new Map<string, FileEntry>()
-    await Promise.all(
-      paths.map(async (path) => {
-        try {
-          safePath(path)
-          const info = await lstat(join(this.git.root, path))
+    const sha = await this.git.resolve(defaultBranch)
+    return withGitIndex(
+      this.git,
+      async (index) => {
+        const changes = await changesFromIndex(
+          index,
+          defaultBranch,
+          sha,
+          this.warn,
+        )
+        const marks = new Map(
+          changes.files.map((file) => [file.path, file.change]),
+        )
+        const entries = new Map<string, FileEntry>()
+        for (const [path, state] of index.states) {
+          if (state.kind === 'absent') continue
           entries.set(path, {
             path,
             name: basename(path),
-            kind: info.isDirectory() ? 'directory' : 'file',
-            change: marks.get(path) ?? null,
+            kind: state.kind === 'directory' ? 'directory' : 'file',
+            change:
+              state.kind === 'directory' && !state.submodule
+                ? null
+                : (marks.get(path) ?? null),
           })
           for (
             let parent = dirname(path);
             parent !== '.';
             parent = dirname(parent)
           ) {
+            if ((await index.classifier.classify(parent)).kind !== 'directory')
+              break
             entries.set(parent, {
               path: parent,
               name: basename(parent),
@@ -60,17 +64,16 @@ export class Repository {
               change: null,
             })
           }
-        } catch {
-          /* Deleted and unavailable paths are absent from the full tree. */
         }
-      }),
+        return {
+          entries: [...entries.values()].sort((a, b) =>
+            a.path.localeCompare(b.path, 'en'),
+          ),
+          changes,
+        }
+      },
+      sha,
     )
-    return {
-      entries: [...entries.values()].sort((a, b) =>
-        a.path.localeCompare(b.path, 'en'),
-      ),
-      changes,
-    }
   }
 
   changes(defaultBranch: string): Promise<ChangesResponse> {

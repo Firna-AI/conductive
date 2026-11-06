@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { expect, it, onTestFinished } from 'vitest'
 
 import type {
   RunnerEventEnvelope,
@@ -99,4 +99,97 @@ it('retains numbered events across gaps, wrong confirms, reconnect, and restart'
   expect(restored.store.snapshot.outbox).toEqual([])
   expect(endpoint.events.map((event) => event.eventNumber)).toEqual([1, 2, 3])
   restored.close()
+})
+
+it('replays only saved events while another append write is held', async () => {
+  let saved: RunnerState | null = null
+  let hold = false
+  let started: () => void = () => {}
+  let release: () => void = () => {}
+  const writing = new Promise<void>((resolve) => {
+    started = resolve
+  })
+  const gate = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  const store = await EventStore.open({
+    read: async () => saved,
+    write: async (value) => {
+      if (hold && value.nextEventNumber === 4) {
+        started()
+        await gate
+      }
+      saved = structuredClone(value)
+    },
+  })
+  const endpoint = new FakeDurableObjectEndpoint({
+    workspaceId: 'workspace-1',
+    workspaceToken: 'fake-token',
+  })
+  endpoint.confirmEvents = false
+  let drop = true
+  let resend: WorkspaceToRunner | null = null
+  let deliver: (message: WorkspaceToRunner) => void = () => {}
+  const connect: RunnerConnector = async (request) => {
+    const connection = await endpoint.connect(request)
+    return {
+      send: (message) => {
+        if (message.type === 'event' && drop) {
+          drop = false
+          return
+        }
+        connection.send(message)
+      },
+      onMessage: (listener) => {
+        deliver = listener
+        return connection.onMessage((message) => {
+          if (message.type === 'resend') resend = message
+          else listener(message)
+        })
+      },
+      onClose: (listener) => connection.onClose(listener),
+      close: () => connection.close(),
+    }
+  }
+  const link = new RunnerLink(store, {
+    workspaceId: 'workspace-1',
+    request: { url: endpoint.url, workspaceToken: 'fake-token' },
+    connect,
+    now: () => 100,
+    command: () => {},
+    connected: async () => {},
+    disconnected: () => {},
+    warn: () => {},
+  })
+  await link.connect()
+  await link.emit({ type: 'workspace.title', name: 'one' })
+  await link.emit({ type: 'workspace.title', name: 'two' })
+  hold = true
+  const third = link.emit({ type: 'workspace.title', name: 'three' })
+  onTestFinished(async () => {
+    release()
+    await third
+    link.close()
+  })
+  await writing
+  expect(resend).toMatchObject({ type: 'resend', fromEventNumber: 1 })
+  if (resend === null)
+    throw new Error('The fake endpoint did not request a resend.')
+  deliver(resend)
+  await link.idle()
+  expect(endpoint.runnerEvents.map((event) => event.eventNumber)).toEqual([
+    1, 2,
+  ])
+  expect(store.snapshot.nextEventNumber).toBe(3)
+  expect(store.snapshot.outbox.map((event) => event.eventNumber)).toEqual([
+    1, 2,
+  ])
+  release()
+  await third
+  await link.idle()
+  expect(endpoint.runnerEvents.map((event) => event.eventNumber)).toEqual([
+    1, 2, 3,
+  ])
+  expect(store.snapshot.nextEventNumber).toBe(4)
+  expect(await store.snapshot).toEqual(saved)
 })

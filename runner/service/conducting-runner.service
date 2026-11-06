@@ -7,8 +7,7 @@ Wants=network-online.target
 Type=simple
 User=@USER@
 WorkingDirectory=~
-Environment="CONDUCTING_NODE=@NODE@"
-ExecStart="@PREFIX@/service/start.sh"
+ExecStart="@PREFIX@/service/start.sh" "@NODE@"
 Restart=always
 RestartSec=2
 UMask=0077

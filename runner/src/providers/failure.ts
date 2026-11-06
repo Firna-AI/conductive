@@ -20,6 +20,17 @@ export function errorText(value: unknown): string | null {
   return null
 }
 
+export function authenticationFailure(): Extract<
+  ProviderEvent,
+  { type: 'failed' }
+> {
+  return {
+    type: 'failed',
+    code: 'agent_authentication_failed',
+    message: 'The agent login failed. Reconnect your agent account.',
+  }
+}
+
 /** Known causes get a short recovery action. Other causes keep their meaning. */
 export function failureCause(
   value: unknown,
@@ -30,11 +41,7 @@ export function failureCause(
       message,
     )
   ) {
-    return {
-      type: 'failed',
-      code: 'agent_authentication_failed',
-      message: 'The agent login failed. Reconnect your agent account.',
-    }
+    return authenticationFailure()
   }
   if (
     /insufficient.quota|credit balance|quota exceeded|billing|usage limit/i.test(
