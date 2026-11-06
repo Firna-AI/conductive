@@ -134,6 +134,8 @@ function orgOf(path: string): DevOrgId | null {
 export function createDevFetch(options: {
   role: OrgRole
   failure: DevFailure | null
+  /** The failure happens only for the first matching request. */
+  once: boolean
   delay: number
   slow: DevOrgId | null
   computer: ComputerScene
@@ -145,6 +147,7 @@ export function createDevFetch(options: {
   addFutexRoutes(server, options.role, options.computer)
   const delay = options.delay || (options.slow ? 250 : 0)
   let pending = 0
+  let failed = 0
   const count = (change: number) => {
     pending += change
     document.documentElement.dataset.devPending = String(pending)
@@ -157,7 +160,10 @@ export function createDevFetch(options: {
       const org = orgOf(path)
       const wait = org !== null && org === options.slow ? delay * 4 : delay
       if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait))
-      if (options.failure && fails(options.failure, request.method, path)) {
+      const matches =
+        options.failure !== null && fails(options.failure, request.method, path)
+      if (options.failure && matches && !(options.once && failed > 0)) {
+        failed += 1
         return failure(options.failure)
       }
       if (request.method !== 'GET' && org !== null) {

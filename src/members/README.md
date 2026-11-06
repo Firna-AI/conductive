@@ -34,6 +34,7 @@ The query string chooses the state:
 | `computer` | `history` (default), `running`, `failed`, `changed`, `live`                                    |
 | `fail`     | `invite`, `role`, `remove`, `cancel`, `reassign`, `delete`, `restore`, `load`, for Acme        |
 | `delay`    | A delay in ms before each reply, to show the busy states                                       |
+| `once`     | `1`: the failure of `fail` happens only for the first matching request                         |
 | `slow`     | `acme` or `futex`: the replies of that org wait four times the delay                           |
 
 The dev page keeps its state in the address. Back and Forward change the

@@ -115,13 +115,13 @@ function useHeaderWorkspace(org: DevOrgId) {
  */
 export function DevHost() {
   const [options, navigate] = useDevOptions()
-  const { role, failure, delay, slow, computer } = options
+  const { role, failure, once, delay, slow, computer } = options
   const api = useMemo(
     () =>
       createMembersApi(
-        createDevFetch({ role, failure, delay, slow, computer }),
+        createDevFetch({ role, failure, once, delay, slow, computer }),
       ),
-    [role, failure, delay, slow, computer],
+    [role, failure, once, delay, slow, computer],
   )
   const fixtures = coreFixtures(role)
   const active =

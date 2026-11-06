@@ -25,6 +25,8 @@ export type DevOptions = {
   viewport: Viewport
   scheme: 'dark' | 'light'
   failure: DevFailure | null
+  /** The failure happens only for the first matching request. */
+  once: boolean
   /** A delay before each reply, in ms, so that the busy states show. */
   delay: number
   /** An org whose replies wait four times as long as the others. */
@@ -53,6 +55,7 @@ export function readDevOptions(params: URLSearchParams): DevOptions {
     ),
     scheme: pick(['dark', 'light'], params.get('scheme'), 'dark'),
     failure: devFailures.find((item) => item === params.get('fail')) ?? null,
+    once: params.get('once') === '1',
     delay: Number.isFinite(delay) && delay > 0 ? delay : 0,
     slow: devOrgIds.find((item) => item === params.get('slow')) ?? null,
     computer: pick(computerScenes, params.get('computer'), 'history'),
@@ -70,6 +73,7 @@ export function devHref(options: DevOptions, view: DevView): string {
     computer: options.computer,
   })
   if (options.failure) params.set('fail', options.failure)
+  if (options.once) params.set('once', '1')
   if (options.delay > 0) params.set('delay', String(options.delay))
   if (options.slow) params.set('slow', options.slow)
   return `?${params.toString()}`

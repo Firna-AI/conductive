@@ -1,4 +1,4 @@
-import type { KeyboardEvent, ReactNode, Ref } from 'react'
+import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { Check } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
@@ -78,14 +78,11 @@ function Item<T extends string>(props: {
 /**
  * The content of a menu of choices: an optional label, the choices with
  * the current one checked, then an error and a note. While a change runs,
- * its choice shows a spinner and the other choices wait.
+ * its choice shows a spinner and the other choices wait. The current choice
+ * takes the focus when it shows, also when the choices come after the menu
+ * opened.
  */
-export function MenuPanel<T extends string>({
-  ref,
-  ...props
-}: {
-  /** The list of choices, which takes the keyboard focus. */
-  ref: Ref<HTMLDivElement>
+export function MenuPanel<T extends string>(props: {
   label: string
   group?: string
   choices: readonly MenuChoice<T>[]
@@ -102,6 +99,21 @@ export function MenuPanel<T extends string>({
   const focused = current
     ? props.selected
     : (props.choices.at(0)?.value ?? null)
+  const list = useRef<HTMLDivElement>(null)
+  const shown = props.status ? null : focused
+
+  // The marked choice takes the focus when it shows, unless the focus is
+  // already in the list. In a sheet that opens with its choices, the dialog
+  // is still closed here, so this does nothing, and the modal hook focuses
+  // the marked choice after showModal().
+  useEffect(() => {
+    const menu = list.current
+    if (shown === null || !menu || menu.contains(document.activeElement)) {
+      return
+    }
+    menu.querySelector<HTMLElement>('[data-autofocus]')?.focus()
+  }, [shown])
+
   return (
     <>
       {props.group ? (
@@ -118,7 +130,7 @@ export function MenuPanel<T extends string>({
           aria-label={props.label}
           className={styles.items}
           onKeyDown={onMenuKeyDown}
-          ref={ref}
+          ref={list}
           role="menu"
         >
           {props.choices.map((choice) => (

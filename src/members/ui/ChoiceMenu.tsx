@@ -55,7 +55,6 @@ export function ChoiceMenu<T extends string>(props: {
   const mobile = useViewport() === 'mobile'
   const anchor = useRef<HTMLSpanElement>(null)
   const trigger = useRef<ButtonHandle>(null)
-  const list = useRef<HTMLDivElement>(null)
   const wasOpen = useRef(false)
 
   useEffect(() => {
@@ -69,12 +68,6 @@ export function ChoiceMenu<T extends string>(props: {
     return () =>
       document.removeEventListener('pointerdown', onPointerDown, true)
   }, [open, mobile, onOpenChange])
-
-  // On desktop the current choice takes the focus. A sheet does it itself.
-  useEffect(() => {
-    if (!open || mobile) return
-    list.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus()
-  }, [open, mobile, props.status])
 
   // A choice that closes the menu gives the focus back to the button.
   useEffect(() => {
@@ -112,7 +105,6 @@ export function ChoiceMenu<T extends string>(props: {
       label={props.label}
       note={props.note}
       onSelect={props.onSelect}
-      ref={list}
       selected={props.selected}
       status={props.status}
     />
