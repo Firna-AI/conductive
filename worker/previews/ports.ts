@@ -1,6 +1,7 @@
 import type { AppEnv } from '../env'
 import { listenerMode } from './listeners'
-import { WorkspaceTools, type PortMode, type PrivatePort } from './provider'
+import { WorkspaceTools } from './provider'
+import type { PortMode, PrivatePort } from '../sandbox/provider'
 import { savePreviewMode, type PreviewRecord } from './store'
 import type { ToolDependencies, WorkspaceTarget } from './types'
 

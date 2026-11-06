@@ -28,12 +28,14 @@ it('keeps the local password through automatic service restarts and caches only 
     'image',
   )
   expect(installed).toContain('RuntimeDirectoryPreserve=yes')
-  expect(installed).toContain('if ! grep -Eq')
+  expect(installed).toContain('if ! valid_password')
   const password = 'b'.repeat(64)
+  let readiness = ''
   const base = harness.dependencies.fetch
   harness.dependencies.fetch = async (request) => {
     if (new URL(request.url).pathname.endsWith('/commands')) {
       const body: { command: string } = await request.json()
+      readiness = body.command
       expect(body.command.startsWith("sudo -n -- /bin/sh -c '")).toBe(true)
       expect(body.command).not.toContain(password)
       expect(body.command).not.toContain('printf')
@@ -41,9 +43,20 @@ it('keeps the local password through automatic service restarts and caches only 
         ok: true,
         type: 'command.finished',
         exitCode: 0,
-        stdout: password + '\n',
+        stdout: '',
         stderr: '',
         timedOut: false,
+      })
+    }
+    if (new URL(request.url).pathname.endsWith('/files')) {
+      return Response.json({
+        ok: true,
+        type: 'file.read',
+        success: true,
+        path: new URL(request.url).searchParams.get('path'),
+        size: 64,
+        encoding: 'base64',
+        content: btoa(password),
       })
     }
     return base(request)
@@ -54,6 +67,7 @@ it('keeps the local password through automatic service restarts and caches only 
     seed.workspaceId,
     harness.dependencies,
   )
+  expect(readiness).not.toContain('cat /run/conducting-terminal/password')
   const stored = await harness.env.DB.prepare(
     'SELECT ciphertext FROM terminal_credentials WHERE workspace_id = ?',
   )
@@ -82,7 +96,7 @@ it('refuses to cache a terminal password when the sandbox changes during its rea
         ok: true,
         type: 'command.finished',
         exitCode: 0,
-        stdout: 'c'.repeat(64) + '\n',
+        stdout: '',
         stderr: '',
         timedOut: false,
       })

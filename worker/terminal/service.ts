@@ -6,6 +6,8 @@ import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
 import { cacheTerminalPassword } from './credentials'
 import { privilegedCommand } from './privileged'
+import { credentialScript, launcherScript } from './scripts'
+import { TERMINAL_RUNTIME } from './scripts'
 
 export const TERMINAL_PORT = 7681
 
@@ -14,21 +16,11 @@ apt-get update
 apt-get install -y ttyd
 install -d -m 755 /usr/local/lib/conducting
 cat > /usr/local/lib/conducting/terminal <<'CONDUCTING_TERMINAL'
-#!/bin/sh
-set -eu
-exec /usr/bin/ttyd --interface 0.0.0.0 --port 7681 --writable --credential "conducting:$(cat /run/conducting-terminal/password)" /bin/bash -l
+${launcherScript()}
 CONDUCTING_TERMINAL
 chmod 755 /usr/local/lib/conducting/terminal
 cat > /usr/local/lib/conducting/terminal-password <<'CONDUCTING_PASSWORD'
-#!/bin/sh
-set -eu
-umask 077
-install -d -m 700 -o user -g user /run/conducting-terminal
-if ! grep -Eq '^[a-f0-9]{64}$' /run/conducting-terminal/password 2>/dev/null; then
-od -An -N32 -tx1 /dev/urandom | tr -d ' \\n' > /run/conducting-terminal/password
-fi
-chown user:user /run/conducting-terminal/password
-chmod 600 /run/conducting-terminal/password
+${credentialScript()}
 CONDUCTING_PASSWORD
 chmod 755 /usr/local/lib/conducting/terminal-password
 cat > /etc/systemd/system/conducting-terminal.service <<'CONDUCTING_SERVICE'
@@ -86,13 +78,22 @@ export async function startWorkspaceTerminal(
 install -d -m 700 -o user -g user /run/conducting-terminal
 touch /run/conducting-terminal/enabled
 systemctl start conducting-terminal.service
-systemctl is-active --quiet conducting-terminal.service
-cat /run/conducting-terminal/password`
+systemctl is-active --quiet conducting-terminal.service`
   const result = await provider.command(privilegedCommand(command))
   if (result.exitCode !== 0 || result.timedOut)
     throw new ProviderError('unavailable', 502)
-  const password = result.stdout.trim()
-  if (!/^[a-f0-9]{64}$/.test(password))
+  const file = await provider.readFile(`${TERMINAL_RUNTIME}/password`, 64)
+  if (file.kind !== 'file') throw new ProviderError('invalid_response', 502)
+  let password: string
+  try {
+    password =
+      file.file.encoding === 'base64'
+        ? atob(file.file.content)
+        : file.file.content
+  } catch {
+    throw new ProviderError('invalid_response', 502)
+  }
+  if (file.file.sizeBytes !== 64 || !/^[a-f0-9]{64}$/.test(password))
     throw new ProviderError('invalid_response', 502)
   await cacheTerminalPassword(env, target, password, dependencies.now())
 }

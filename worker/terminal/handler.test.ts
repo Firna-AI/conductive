@@ -54,7 +54,10 @@ it('installs an enabled ttyd service without an image password and starts with a
     .first<{ ciphertext: string }>()
   expect(row?.ciphertext.startsWith('v1.')).toBe(true)
   const command: { command: string } = await harness.requests[0].json()
-  expect(command.command).toContain('/run/conducting-terminal/password')
+  expect(command.command).not.toContain('/run/conducting-terminal/password')
+  expect(new URL(harness.requests[1].url).searchParams.get('path')).toBe(
+    '/run/conducting-terminal/password',
+  )
   expect(command.command).toContain(
     'systemctl start conducting-terminal.service',
   )
@@ -74,9 +77,9 @@ it('installs an enabled ttyd service without an image password and starts with a
     'workspace-two',
     harness.dependencies,
   )
-  const otherCommand: { command: string } = await harness.requests[1].json()
+  const otherCommand: { command: string } = await harness.requests[2].json()
   expect(otherCommand.command).toBe(command.command)
-  expect(harness.requests[1].url).not.toBe(harness.requests[0].url)
+  expect(harness.requests[2].url).not.toBe(harness.requests[0].url)
   expect(
     await harness.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM terminal_credentials',
@@ -108,7 +111,7 @@ it('returns ready, starting, and stopped terminal states without exposing a pass
     const response = await handler.fetch(seed.request(path))
     expect(await response.json()).toEqual({ state, socketPath: null })
   }
-  expect(harness.requests).toHaveLength(1)
+  expect(harness.requests).toHaveLength(2)
 })
 
 it('authenticates the ttyd handshake on the server and counts only terminal input as activity', async () => {
@@ -135,7 +138,7 @@ it('authenticates the ttyd handshake on the server and counts only terminal inpu
   expect(response.status).toBe(101)
   expect(response.headers.get('Sec-WebSocket-Protocol')).toBe('tty')
   expect(response.headers.get('Authorization')).toBe(null)
-  const upstreamRequest = harness.requests[2]
+  const upstreamRequest = harness.requests[3]
   expect(upstreamRequest.url).toBe('https://sandbox-7681.on.boat.dev/ws')
   expect(upstreamRequest.headers.get('Cookie')).toBe(
     '_port_auth=server-port-token',

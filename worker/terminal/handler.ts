@@ -11,19 +11,21 @@ import {
 import { portRequest } from '../previews/headers'
 import { WorkspaceTools } from '../previews/provider'
 import { bridgeSocket } from '../previews/socket'
-import { AuthorizationBatch } from '../previews/authorization'
 import type { ToolDependencies } from '../previews/types'
 import { ProviderError } from '../sandbox/errors'
 import { terminalPassword } from './credentials'
 import { terminalFrames } from './protocol'
 import { TERMINAL_PORT } from './service'
+import { TerminalConnections, type TerminalRegistration } from './connections'
 
 export function createTerminalHandler(
   env: AppEnv,
   dependencies: ToolDependencies,
 ) {
+  const connections = new TerminalConnections(env, dependencies)
   return {
     fetch: async (request: Request): Promise<Response> => {
+      let registration: TerminalRegistration | null = null
       try {
         const { context, target, tail } = await toolRequest(
           request,
@@ -89,6 +91,19 @@ export function createTerminalHandler(
         )
         const port = await provider.privatePort(TERMINAL_PORT, 'network')
         await verifyTarget(env, target, context.user.id)
+        if (!target.sandboxId)
+          throw new HttpError(
+            409,
+            'terminal_starting',
+            'The terminal is starting. Try again.',
+          )
+        registration = await connections.add({
+          sessionId: context.sessionId,
+          userId: context.user.id,
+          orgId: target.orgId,
+          workspaceId: target.workspaceId,
+          sandboxId: target.sandboxId,
+        })
         const auth = btoa(`conducting:${password}`)
         let upstream: Response
         try {
@@ -98,21 +113,23 @@ export function createTerminalHandler(
         }
         if (upstream.headers.get('Sec-WebSocket-Protocol') !== 'tty')
           throw new ProviderError('invalid_response', 502)
-        const authorization = new AuthorizationBatch(() =>
-          verifyTarget(env, target, context.user.id),
-        )
-        return bridgeSocket(upstream, dependencies, {
+        const bridge = bridgeSocket(upstream, dependencies, {
           headers: new Headers({
             'Sec-WebSocket-Protocol': 'tty',
             'Cache-Control': 'no-store',
             'Referrer-Policy': 'no-referrer',
           }),
-          authorize: () => authorization.check(),
+          authorize: registration.check,
+          onClose: registration.dispose,
           fromBrowser: terminalFrames(auth, () =>
             recordActivity(env, dependencies, target.workspaceId, 'terminal'),
           ),
-        }).response
+        })
+        registration.attach(bridge.close)
+        await registration.check()
+        return bridge.response
       } catch (error) {
+        registration?.dispose()
         return toolError(error)
       }
     },

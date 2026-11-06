@@ -1,5 +1,6 @@
 import { OAUTH_COOKIE, SESSION_COOKIE } from '../security/cookies'
-import type { PrivatePort } from './provider'
+import type { PrivatePort } from '../sandbox/provider'
+import { portUrl, previewLocation, upstreamOrigin } from './origins'
 
 const requestHeaders = [
   'accept',
@@ -64,16 +65,6 @@ function copyHeaders(source: Headers, names: readonly string[]): Headers {
   return headers
 }
 
-function portUrl(request: Request, port: PrivatePort, terminal: boolean): URL {
-  const source = new URL(request.url)
-  const url = new URL(port.origin)
-  url.pathname = terminal ? '/ws' : source.pathname
-  url.search = terminal ? '' : source.search
-  url.searchParams.delete('_token')
-  url.searchParams.delete('_port_auth')
-  return url
-}
-
 export function portRequest(
   request: Request,
   port: PrivatePort,
@@ -84,6 +75,8 @@ export function portRequest(
   const headers = terminalAuth
     ? new Headers()
     : copyHeaders(request.headers, requestHeaders)
+  const origin = upstreamOrigin(request, port, terminalAuth !== undefined)
+  if (origin !== null) headers.set('Origin', origin)
   const cookies = terminalAuth
     ? []
     : (request.headers.get('Cookie') ?? '').split(';').flatMap((value) => {
@@ -97,7 +90,6 @@ export function portRequest(
   if (terminalAuth) {
     headers.set('Authorization', `Basic ${terminalAuth}`)
     headers.set('Sec-WebSocket-Protocol', 'tty')
-    headers.set('Origin', port.origin)
   }
   const init = {
     method: request.method,
@@ -131,16 +123,8 @@ export function portResponseHeaders(
   }
   const location = upstream.headers.get('Location')
   if (location) {
-    const url = new URL(location, portUrl(request, port, false))
-    url.searchParams.delete('_token')
-    url.searchParams.delete('_port_auth')
-    if (url.origin === port.origin) {
-      const preview = new URL(request.url)
-      url.protocol = preview.protocol
-      url.host = preview.host
-    }
-    if (['http:', 'https:'].includes(url.protocol))
-      headers.set('Location', url.href)
+    const rewritten = previewLocation(location, request, port)
+    if (rewritten !== null) headers.set('Location', rewritten)
   }
   headers.set('Cache-Control', 'no-store')
   headers.set('Referrer-Policy', 'no-referrer')

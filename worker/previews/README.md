@@ -28,6 +28,13 @@ A server must accept its private `.on.boat.dev` hostname.
 For Vite, configure `server.allowedHosts: ['.on.boat.dev']` in its repository.
 The proxy preserves the upstream Host behavior. It does not change user repositories.
 
+For an Origin header with `Sec-Fetch-Site:same-origin`, the proxy sends the
+private port origin. This includes a form's literal `Origin:null`.
+When fetch metadata is absent, only the preview's own Origin is mapped.
+Foreign Origins and a missing Origin keep their meaning. The shared origin
+helper also owns redirect mapping and the terminal's private port Origin.
+The application still owns its CORS policy.
+
 The workspace lifecycle owner must call `revokeWorkspace(workspaceId)` on
 stop and archive. Call it before stopping the sandbox. The close API
 revokes one preview. Use `nextExpiry(workspaceId)` to schedule the workspace
@@ -61,12 +68,14 @@ specific to the preview hostname. The proxy follows no upstream redirect.
 - [store.ts](store.ts) and [workspace-store.ts](workspace-store.ts) hold the D1 queries.
 - [provider.ts](provider.ts) exports the typed `WorkspaceTools` adapter.
 - [headers.ts](headers.ts) builds private upstream requests and safe responses.
+- [origins.ts](origins.ts) maps request Origins and private redirects.
 - [socket.ts](socket.ts) selects binary frames and drains queued data before forwarding a normal close with its code and reason.
 - [types.ts](types.ts) defines the fetch, activity, and socket boundaries.
 
-The adapter adds only the fixed `host` and `desktop` provider routes.
-It reuses the encrypted org key store and the provider error types.
-It pins each request to the stored account. Commands use the existing Boat client.
+The feature adapter checks workspace access before each provider operation.
+The [sandbox provider](../sandbox/README.md) owns the fixed `host` and `desktop`
+routes, key factory, account pinning, parsers, transport, commands, and file reads.
+The feature adapter holds a `SandboxProvider`. It holds no plaintext key.
 
 See [access and security](../../docs/protocol/access-and-security.md#port-previews)
 and the official [port API](https://docs.boat.dev/api/reference/agent/expose-a-port)

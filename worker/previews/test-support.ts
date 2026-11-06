@@ -123,6 +123,20 @@ export async function createToolsHarness() {
       if (response) return response()
       const url = new URL(request.url)
       if (url.hostname === 'boat.dev') {
+        if (url.pathname.endsWith('/files')) {
+          const password =
+            passwords.get(url.pathname.replace(/\/files$/, '/commands')) ??
+            'a'.repeat(64)
+          return Response.json({
+            ok: true,
+            type: 'file.read',
+            success: true,
+            path: url.searchParams.get('path'),
+            size: 64,
+            encoding: 'base64',
+            content: btoa(password),
+          })
+        }
         if (url.pathname.endsWith('/host')) {
           const body: { port: number } = await request.json()
           return Response.json({
@@ -153,7 +167,9 @@ export async function createToolsHarness() {
               timedOut: false,
             })
           }
-          if (body.command.includes('cat /run/conducting-terminal/password')) {
+          if (
+            body.command.includes('systemctl start conducting-terminal.service')
+          ) {
             let password = passwords.get(url.pathname)
             if (!password) {
               password = String(++terminalSequence).padStart(64, 'a')
@@ -163,7 +179,7 @@ export async function createToolsHarness() {
               ok: true,
               type: 'command.finished',
               exitCode: 0,
-              stdout: password + '\n',
+              stdout: '',
               stderr: '',
               timedOut: false,
             })

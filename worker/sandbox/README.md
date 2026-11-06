@@ -5,8 +5,22 @@ Call `orgSandboxProvider` with the authorized user and org.
 It checks membership and returns `SandboxProvider` without exposing the key.
 The caller must first check that the sandbox belongs to an authorized workspace.
 
+Trusted feature code can call `authorizedOrgSandboxProvider` after it authorizes
+the workspace and org. This factory reuses the same encrypted key handling.
+It returns no plaintext key. `orgSandboxProvider` retains its membership check
+and its existing missing-key behavior.
+
 The transport creates the URL and headers from fixed routes.
 It pins the saved account with `X-Boat-Org` and forwards no browser cookie.
+
+`SandboxProvider.privatePort(sandboxId, port, mode)` calls only the fixed host
+route. It requires explicit localhost or network mode and private access.
+It parses the provider URL into a server-only origin and token.
+`SandboxProvider.desktop(sandboxId)` calls only the fixed desktop route.
+It returns a typed ready URL or a starting result. Ready URLs require HTTPS
+and a fragment token. The feature layer maps starting into its public response.
+Both methods use the same `BoatTransport` as commands, lifecycle, and file reads.
+The transport validates sandbox ID segments and centralizes errors and account pinning.
 
 ## File reads
 

@@ -199,6 +199,42 @@ it('rewrites upstream redirects and strips reserved response cookies and headers
   expect(response.headers.get('Referrer-Policy')).toBe('no-referrer')
 })
 
+it('maps same-origin form and fetch Origins to the private port while preserving foreign and missing Origins', async () => {
+  const setup = await open()
+  const { preview }: PreviewResponse = await setup.response.json()
+  const base = harness.dependencies.fetch
+  const origins: (string | null)[] = []
+  harness.dependencies.fetch = async (request) => {
+    if (new URL(request.url).hostname === 'boat.dev') return base(request)
+    origins.push(request.headers.get('Origin'))
+    return new Response('accepted')
+  }
+  const cases: Record<string, string>[] = [
+    { Origin: 'null', 'Sec-Fetch-Site': 'same-origin' },
+    { Origin: preview.url, 'Sec-Fetch-Site': 'same-origin' },
+    { Origin: preview.url },
+    { Origin: 'https://another-preview.test', 'Sec-Fetch-Site': 'cross-site' },
+    {},
+  ]
+  for (const headers of cases) {
+    const response = await setup.handler.proxy(
+      new Request(`${preview.url}/submit`, {
+        method: 'POST',
+        body: 'value=1',
+        headers: new Headers(headers),
+      }),
+    )
+    expect(await response.text()).toBe('accepted')
+  }
+  expect(origins).toEqual([
+    'https://sandbox-3000.on.boat.dev',
+    'https://sandbox-3000.on.boat.dev',
+    'https://sandbox-3000.on.boat.dev',
+    'https://another-preview.test',
+    null,
+  ])
+})
+
 it('preserves a preflight response from an API that reflects the requested method and headers', async () => {
   const setup = await open()
   expect(setup.response.status).toBe(201)

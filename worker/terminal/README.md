@@ -23,8 +23,9 @@ resume, before the owner marks the workspace ready. It enables and starts
 the service. The synchronous `ExecStartPre` step creates a random password
 locally under `/run`. It keeps an existing valid password on service restarts.
 `RuntimeDirectoryPreserve=yes` keeps that password through an automatic restart.
-The hook reads the current password from `/run/conducting-terminal/password`
-through the trusted command response. It caches the password encrypted in D1.
+The readiness command returns no password in stdout or command history.
+The hook reads `/run/conducting-terminal/password` through the provider's
+bounded file API, with a 64-byte limit. It caches that password encrypted in D1.
 The cache update checks that the workspace still owns the same sandbox.
 The app supplies no extra terminal secret at start. The workspace token
 keeps its existing scope and does not authenticate terminal access.
@@ -35,15 +36,33 @@ Set `dependencies.onActivity` to notify the workspace lifecycle owner.
 The handler also updates the D1 activity time. Only terminal input counts.
 The initial handshake, window changes, output, and idle sockets do not count.
 
+`TerminalConnections` owns each authenticated session and workspace/sandbox
+registration. One query checks its live registrations every 15 seconds.
+The grant expires after 30 seconds or at session expiry, whichever comes first.
+An independent deadline cancels idle connections if an access read stalls.
+Frame checks use only the live registration. They run no D1 access query.
+Cleanup removes the registration and its scheduled work.
+Inject `dependencies.terminalSchedule` and `now` to test these deadlines.
+
+`scripts.ts` builds the exact credential and launcher programs installed in
+the image. Its trusted options select paths, account names, and executables.
+The credential program captures entropy before conversion and commits a
+complete password through a temporary file. The launcher checks the password
+before it executes ttyd. Tests execute both programs in isolated runtime folders.
+
 ### Key Code
 
 - [handler.ts](handler.ts) exports `createTerminalHandler`.
+- [connections.ts](connections.ts) owns terminal registration, expiry, and scheduled access checks.
+- [access-store.ts](access-store.ts) reads each session, membership, and sandbox identity in one batch.
 - [service.ts](service.ts) exports the image and start hooks and `TERMINAL_PORT`.
+- [scripts.ts](scripts.ts) builds the credential and launcher programs.
 - [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
 - [store.ts](store.ts) binds each cached password to its current sandbox.
 - [privileged.ts](privileged.ts) quotes installation and service control commands.
 - [protocol.ts](protocol.ts) adds server authentication to ttyd's first JSON message.
 - [The tools adapter](../previews/provider.ts) exposes the private port.
+- [The sandbox provider](../sandbox/README.md) owns credentials, fixed routes, and bounded file reads.
 
 See [access and security](../../docs/protocol/access-and-security.md) and
 [workspace tools](../../docs/protocol/workspaces-and-sandboxes.md#terminal).

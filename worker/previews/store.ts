@@ -1,6 +1,6 @@
 import type { Preview } from '../../src/shared/previews'
 import type { WorkspaceTarget } from './types'
-import type { PortMode } from './provider'
+import type { PortMode } from '../sandbox/provider'
 
 export interface PreviewRecord extends WorkspaceTarget {
   id: string

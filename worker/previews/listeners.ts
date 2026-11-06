@@ -1,5 +1,6 @@
 import { ProviderError } from '../sandbox/errors'
-import type { PortMode, WorkspaceTools } from './provider'
+import type { WorkspaceTools } from './provider'
+import type { PortMode } from '../sandbox/provider'
 
 /** Specific network addresses can belong to Boat's relay. They are not wildcard app listeners. */
 export async function listenerMode(

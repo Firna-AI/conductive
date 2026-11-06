@@ -19,6 +19,7 @@ says. The lifecycle owner must not cache the URL.
 ### Key Code
 
 - [handler.ts](handler.ts) exports `createDesktopHandler`.
-- [The tools adapter](../previews/provider.ts) owns the fixed desktop API route.
+- [The tools adapter](../previews/provider.ts) checks access and maps the provider's ready or starting result.
+- [The sandbox provider](../sandbox/README.md) owns the fixed desktop route and its typed parser.
 
 See [access and security](../../docs/protocol/access-and-security.md#desktop).
