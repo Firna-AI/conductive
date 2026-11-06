@@ -21,6 +21,7 @@ const tool = (
   kind,
   target,
   detail: null,
+  omittedDetailBytes: 0,
   state: 'running',
 })
 
@@ -149,6 +150,7 @@ export class DevAgent {
               removed: 3,
             },
           ],
+          omittedFileCount: 0,
           userMessageIds: turn.answers,
         }),
       ],
@@ -231,6 +233,7 @@ export class DevAgent {
       state: 'stopped',
       durationMs: this.clock.now() - turn.startedAt,
       files: [],
+      omittedFileCount: 0,
       userMessageIds: turn.answers,
     })
   }

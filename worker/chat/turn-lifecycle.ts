@@ -157,6 +157,7 @@ export class TurnLifecycle {
       state: 'stopped',
       durationMs: 0,
       files: [],
+      omittedFileCount: 0,
       userMessageIds: turn.messageIds,
     })
     await this.finish(turn, { state: 'stopped' })

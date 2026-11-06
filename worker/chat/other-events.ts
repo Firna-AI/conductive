@@ -54,6 +54,12 @@ function startStep(value: unknown): StartStep {
   }
 }
 
+function positiveCounter(value: unknown): number {
+  const result = counter(value)
+  if (result === 0) return invalidInput()
+  return result
+}
+
 /** These events share numbering with chat. Their feature owners keep projections. */
 export function parseOtherEvent(value: unknown): RunnerEvent | null {
   const input = record(value)
@@ -81,6 +87,8 @@ export function parseOtherEvent(value: unknown): RunnerEvent | null {
         type: input.type,
         tree: {
           revision: counter(tree.revision),
+          partNumber: positiveCounter(tree.partNumber),
+          partCount: positiveCounter(tree.partCount),
           entries: array(tree.entries, fileEntry),
         },
       }
@@ -101,6 +109,9 @@ export function parseOtherEvent(value: unknown): RunnerEvent | null {
       return {
         type: input.type,
         changes: {
+          revision: positiveCounter(changes.revision),
+          partNumber: positiveCounter(changes.partNumber),
+          partCount: positiveCounter(changes.partCount),
           baseBranch: string(changes.baseBranch),
           files: array(changes.files, (entry) => {
             const file = record(entry)

@@ -117,6 +117,7 @@ describe('workspace chat durability', () => {
       state: 'finished',
       durationMs: 10,
       files: [],
+      omittedFileCount: 0,
       userMessageIds: ['message-1'],
     })
     await fixture.drain()
@@ -196,6 +197,7 @@ describe('workspace chat durability', () => {
       state: 'finished',
       durationMs: 10,
       files: [],
+      omittedFileCount: 0,
       userMessageIds: ['separate-turn'],
     })
     runner.emit({ type: 'workspace.title', name: 'The stream still works' })

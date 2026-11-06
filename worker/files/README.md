@@ -27,12 +27,15 @@ Pending reads fail when their connection closes or when their request signal abo
 
 The workspace owner keeps the shared handshake, stream cursor, event numbers, confirmations, and resend rules.
 It passes each accepted file event to `await files.state.apply(connectionId, event)` in event order.
+This hook takes complete reports. A single-part runner report keeps that behavior.
+The default runner recording uses part 1 of 1 for each full report.
+Multipart recordings are separate. Production part joining remains with Milestone 7s.
 It confirms the event only after this write succeeds.
 It sends the accepted event to browser tabs only when the hook returns `true`.
 The hook rejects a malformed payload and ignores an old connection or stale tree revision.
 It keeps the last tree until the current connection sends its new full snapshot.
 Tree revisions can restart on a new connection.
-The owner handles duplicate `changes.updated` envelopes because that payload has no revision.
+The owner handles duplicate `changes.updated` envelopes because the complete browser payload has no revision.
 
 Pass each file or diff result to `files.runner.receive(connectionId, payload)`.
 These results use request IDs and bypass the numbered chat event history.

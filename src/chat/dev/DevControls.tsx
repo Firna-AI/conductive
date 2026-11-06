@@ -57,6 +57,7 @@ function outOfOrder(backend: DevBackend): void {
         state: 'finished',
         durationMs: 2_000,
         files: [],
+        omittedFileCount: 0,
         userMessageIds: [],
       })
     }, 2_500),
