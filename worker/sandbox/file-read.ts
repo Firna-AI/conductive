@@ -11,7 +11,7 @@ function isSize(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
 }
 
-/** Only file content uses a body budget. Metadata keeps the ordinary transport. */
+/** Read file content and use metadata after a successful content overflow. */
 export async function readSandboxFile(
   transport: BoatTransport,
   sandboxId: string,

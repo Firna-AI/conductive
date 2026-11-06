@@ -33,6 +33,8 @@ says.
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
+- Each JSON body at the app gate can contain at most 1 MB, or 1,000,000
+  UTF-8 bytes. A larger body gets HTTP 413 (decision 65).
 - The health check and GitHub sign-in with its callback need no sign-in.
   The callback checks its `state` value instead.
 - The Mac app's public sign-in exchange also needs no sign-in.
@@ -84,6 +86,12 @@ Later screens add the frame and connection sources that they need.
   sandbox belongs to a workspace of that org.
 - The Worker calls only a fixed list of Boat routes. It has no general
   pass-through to Boat.
+- Account, lifecycle, saved snapshot, file metadata, and error replies
+  from Boat can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
+- A successful command reply from Boat can contain at most 18 MiB, or
+  18,874,368 bytes. The limit includes the whole JSON body.
+- A reply above these budgets gets HTTP 502, even when Boat permits it.
+  For a command reply, the error says "The command output is too large."
 - [Orgs and members](orgs-and-members.md#members-and-roles) states the
   rules of each role.
 
