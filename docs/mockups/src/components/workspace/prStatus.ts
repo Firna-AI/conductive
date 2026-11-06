@@ -1,13 +1,23 @@
 import type { LucideIcon } from 'lucide-react'
-import { CircleCheck, CircleX, GitMerge } from 'lucide-react'
 import {
+  CircleCheck,
+  CircleX,
+  GitMerge,
+  GitMergeConflict,
+  GitPullRequestClosed,
+  GitPullRequestDraft,
+  MessageSquareWarning,
+} from 'lucide-react'
+import {
+  changesRequestedBy,
   checksByState,
+  closedWhen,
   mergedInto,
   reviewByState,
   type BannerState,
 } from '../../fixtures/pullRequests'
 
-export type PrTone = 'neutral' | 'success' | 'danger'
+export type PrTone = 'neutral' | 'success' | 'warning' | 'danger'
 
 export type PrStatus = {
   /** A spinner shows while checks run. */
@@ -19,12 +29,20 @@ export type PrStatus = {
   tone: PrTone
 }
 
-/** The state of an open pull request, as its bar and its row show it. */
-export function prStatus(state: Exclude<BannerState, 'none'>): PrStatus {
+/** The states of a branch that has a pull request. */
+export type PullRequestState = Exclude<BannerState, 'none' | 'no-commits'>
+
+/**
+ * The state of a pull request, as its bar and its row show it. A state
+ * that blocks the merge until someone acts on GitHub takes the warning
+ * tone, and failed checks the danger tone.
+ */
+export function prStatus(state: PullRequestState): PrStatus {
   const checks = checksByState[state]
   const failed = checks.filter((check) => check.state === 'failed').length
   const done = checks.filter((check) => check.state !== 'running').length
   const review = reviewByState[state]
+  const still = { busy: false }
   switch (state) {
     case 'checks-running':
       return {
@@ -35,14 +53,14 @@ export function prStatus(state: Exclude<BannerState, 'none'>): PrStatus {
       }
     case 'checks-failed':
       return {
-        busy: false,
+        ...still,
         icon: CircleX,
         text: `${failed} checks failed`,
         tone: 'danger',
       }
     case 'ready-to-merge':
       return {
-        busy: false,
+        ...still,
         icon: CircleCheck,
         text: 'Ready to merge',
         detail: review,
@@ -50,10 +68,41 @@ export function prStatus(state: Exclude<BannerState, 'none'>): PrStatus {
       }
     case 'merged':
       return {
-        busy: false,
+        ...still,
         icon: GitMerge,
         text: `Merged into ${mergedInto.branch}`,
         detail: mergedInto.when,
+        tone: 'neutral',
+      }
+    case 'conflict':
+      return {
+        ...still,
+        icon: GitMergeConflict,
+        text: 'Merge conflict',
+        detail: `with ${mergedInto.branch}`,
+        tone: 'warning',
+      }
+    case 'changes-requested':
+      return {
+        ...still,
+        icon: MessageSquareWarning,
+        text: 'Changes requested',
+        detail: `by @${changesRequestedBy}`,
+        tone: 'warning',
+      }
+    case 'draft':
+      return {
+        ...still,
+        icon: GitPullRequestDraft,
+        text: 'Draft',
+        tone: 'neutral',
+      }
+    case 'closed':
+      return {
+        ...still,
+        icon: GitPullRequestClosed,
+        text: 'Closed without a merge',
+        detail: closedWhen,
         tone: 'neutral',
       }
   }

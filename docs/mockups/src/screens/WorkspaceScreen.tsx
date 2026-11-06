@@ -1,10 +1,7 @@
 import type { Viewport } from '@mokly/mokly'
-import { MessageSquarePlus, Plug } from 'lucide-react'
+import { MessageSquarePlus } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
-import { ActionButton } from '../components/common/actions'
 import { EmptyState } from '../components/common/EmptyState'
-import { Notice } from '../components/common/Notice'
-import { ScreenLink } from '../components/common/ScreenLink'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
@@ -17,7 +14,6 @@ import { ToolsPanel } from '../components/workspace/ToolsPanel'
 import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
-import { agents, type AgentChoice } from '../fixtures/agents'
 import { conversations } from '../fixtures/conversations'
 import { memberViewer, people, you } from '../fixtures/members'
 import {
@@ -25,6 +21,7 @@ import {
   type ActivityStatus,
 } from '../fixtures/workspaces'
 import { composerFor, isRunning } from './composerFor'
+import { composerNotice } from './composerNotice'
 import {
   FilesContent,
   openFile,
@@ -32,7 +29,6 @@ import {
   ToolContent,
   workspaceSidebar,
 } from './workspaceParts'
-import { paths } from '../paths'
 import { workspaceOverlay } from './workspaceOverlays'
 import type { WorkspaceState } from './workspaceState'
 import { tabsFor, workspaceName } from './workspaceTabs'
@@ -40,26 +36,6 @@ import styles from './WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
 const widenedRight = 560
-
-/**
- * The notice over the composer when the agent of the chosen model is not
- * connected, from decision 33, drawn as its recommended option D.
- */
-function connectNotice(state: WorkspaceState, choice: AgentChoice) {
-  if (state.composer !== 'no-agent') return undefined
-  const agent = agents[choice.agent].name
-  return (
-    <Notice
-      action={
-        <ScreenLink asChild to={paths.account}>
-          <ActionButton icon={Plug}>{`Connect ${agent}`}</ActionButton>
-        </ScreenLink>
-      }
-      icon={Plug}
-      title={`Connect ${agent} to use ${choice.model}`}
-    />
-  )
-}
 
 /**
  * An open workspace: its header, its tabs of sessions and files, the pull
@@ -102,7 +78,7 @@ export function WorkspaceScreen(props: {
         />
       }
       items={fresh ? [] : conversations[state.conversation]}
-      notice={connectNotice(state, workspace.choice)}
+      notice={composerNotice(state, workspace.choice)}
       problem={problem}
       starting={startingLogFor(state)}
       viewport={viewport}

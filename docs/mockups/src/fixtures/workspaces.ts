@@ -39,11 +39,6 @@ export type Workspace = {
    */
   owner: PersonKey
   /**
-   * When the cloud computer of a workspace that stopped long ago is
-   * deleted, such as `tomorrow`, 14 days after the stop.
-   */
-  expires?: string
-  /**
    * The name that the app gives a new workspace, a city, until the agent's
    * first answer names it after the task.
    */
@@ -160,16 +155,13 @@ export const workspaceList: readonly Workspace[] = [
     status: 'ready',
     updated: '20m',
   }),
-  {
-    ...workspace('retry-queue', 'Move retries to a queue', {
-      repository: 'billing-service',
-      section: 'infra',
-      status: 'stopped',
-      updated: '13d',
-      owner: 'jonas',
-    }),
-    expires: 'tomorrow',
-  },
+  workspace('retry-queue', 'Move retries to a queue', {
+    repository: 'billing-service',
+    section: 'infra',
+    status: 'stopped',
+    updated: '2d',
+    owner: 'jonas',
+  }),
 ]
 
 /** The workspace that the drag state moves, and where it lands. */

@@ -7,18 +7,29 @@ import {
   DefaultsSection,
   GitHubSection,
   SignInSection,
+  type OpenAgentForm,
 } from '../components/settings/AccountSections'
-import { agentKeys } from '../fixtures/agents'
+import { agentKeys, type AgentKey } from '../fixtures/agents'
+import {
+  accountLogins,
+  type AgentLogins,
+  type LoginKind,
+} from '../fixtures/logins'
 import { account, orgList } from '../fixtures/orgs'
 import { paths } from '../paths'
 
 export const accountSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['connections'],
+  required: ['connections', 'form'],
   properties: {
     /** GitHub and the agents are connected, or not yet, as at the first run. */
     connections: { enum: ['connected', 'not-connected'] },
+    /**
+     * The Connect form that is open. Its agent is not connected yet, and the
+     * other agent is.
+     */
+    form: { enum: ['none', 'claude', 'codex'] },
   },
 } as const
 
@@ -28,6 +39,17 @@ const connectedRail: RailState = { orgs: orgList, current: 'account' }
 
 /** At the first run the rail has no org yet. */
 const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
+
+/** The logins of the agents in a state, without the agent of the form. */
+function loginsFor(state: AccountState): AgentLogins {
+  const logins: Partial<Record<AgentKey, LoginKind>> = {}
+  if (state.connections === 'not-connected') return logins
+  for (const key of agentKeys) {
+    const login = accountLogins[key]
+    if (login && key !== state.form) logins[key] = login
+  }
+  return logins
+}
 
 /**
  * The account: the GitHub sign-in, and what every org shares. The GitHub
@@ -39,7 +61,12 @@ export function AccountScreen(props: {
   state: AccountState
   viewport: Viewport
 }) {
+  const { form } = props.state
   const connected = props.state.connections === 'connected'
+  const openForm: OpenAgentForm | undefined =
+    form === 'none'
+      ? undefined
+      : { agent: form, connectTo: paths.account, cancel: true }
   const mobile = props.viewport === 'mobile'
   const back = connected
     ? { label: 'Workspaces', to: paths.shell }
@@ -53,7 +80,7 @@ export function AccountScreen(props: {
     >
       <SignInSection />
       <GitHubSection connected={connected} />
-      <AgentsSection connected={connected ? agentKeys : []} />
+      <AgentsSection form={openForm} logins={loginsFor(props.state)} />
       <DefaultsSection />
     </Page>
   )

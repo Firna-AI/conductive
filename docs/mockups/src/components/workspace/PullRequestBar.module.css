@@ -28,6 +28,10 @@
   background: var(--ui-rose-soft);
 }
 
+.warning {
+  background: var(--ui-amber-soft);
+}
+
 .number {
   flex-shrink: 0;
   padding: 1px 6px;
@@ -49,6 +53,11 @@
   color: var(--ui-rose);
 }
 
+.warning .number {
+  border-color: var(--ui-warning-border);
+  color: var(--ui-amber-deep);
+}
+
 .state {
   display: inline-flex;
   flex-shrink: 0;
@@ -67,6 +76,10 @@
   color: var(--ui-rose);
 }
 
+.warning .state {
+  color: var(--ui-amber-deep);
+}
+
 .detail {
   overflow: hidden;
   min-width: 0;
@@ -77,6 +90,13 @@
 
 .spacer {
   flex: 1;
+}
+
+/* Why a branch without commits has no link that creates a pull request. */
+.note {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  white-space: nowrap;
 }
 
 .branches {

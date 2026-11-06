@@ -45,6 +45,12 @@ export const installations = [
 ] as const
 
 /**
+ * The account where a new user installs the app in Get started: firna,
+ * which owns the repositories of Firna, the first org.
+ */
+export const firstInstallation = installations[2]
+
+/**
  * An org that its owner deleted: its cloud computers stopped, and it is
  * hidden from its members until the date when everything is deleted.
  */

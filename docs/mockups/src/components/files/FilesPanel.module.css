@@ -10,9 +10,3 @@
   min-height: 0;
   overflow-y: auto;
 }
-
-.meta {
-  flex-shrink: 0;
-  color: var(--ui-muted);
-  font-size: var(--ui-text-sm);
-}

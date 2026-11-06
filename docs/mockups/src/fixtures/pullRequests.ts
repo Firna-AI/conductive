@@ -3,12 +3,22 @@
  * checks that GitHub reports for it.
  */
 
+/**
+ * The states of the pull request bar (decision 18). `none` is a branch
+ * without a pull request, and `no-commits` is one without a commit, which
+ * has nothing to open a pull request with.
+ */
 export const bannerStates = [
   'none',
+  'no-commits',
   'checks-running',
   'checks-failed',
   'ready-to-merge',
   'merged',
+  'conflict',
+  'changes-requested',
+  'draft',
+  'closed',
 ] as const
 
 export type BannerState = (typeof bannerStates)[number]
@@ -50,6 +60,7 @@ const allPassed: readonly Check[] = [
 /** The checks of the pull request in each banner state, in GitHub's order. */
 export const checksByState: Readonly<Record<BannerState, readonly Check[]>> = {
   none: [],
+  'no-commits': [],
   'checks-running': [
     ...allPassed.slice(0, 4),
     { name: 'e2e (chromium)', state: 'running' },
@@ -65,16 +76,31 @@ export const checksByState: Readonly<Record<BannerState, readonly Check[]>> = {
   ],
   'ready-to-merge': allPassed,
   merged: allPassed,
+  conflict: allPassed,
+  'changes-requested': allPassed,
+  draft: allPassed,
+  closed: allPassed,
 }
 
 /** The review state that GitHub reports, when the pull request has one. */
 export const reviewByState: Readonly<Record<BannerState, string | undefined>> =
   {
     none: undefined,
+    'no-commits': undefined,
     'checks-running': undefined,
     'checks-failed': undefined,
     'ready-to-merge': 'Approved',
     merged: 'Approved',
+    conflict: undefined,
+    'changes-requested': 'Changes requested',
+    draft: undefined,
+    closed: undefined,
   }
 
 export const mergedInto = { branch: 'main', when: '2h ago' }
+
+/** The reviewer who asked for changes, by GitHub login. */
+export const changesRequestedBy = 'priyaraman'
+
+/** When the pull request closed without a merge. */
+export const closedWhen = '1d ago'

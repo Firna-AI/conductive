@@ -85,7 +85,8 @@ chat, and five tabs at the bottom.
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green
   square, and ready is one bright cell on a faint green grid.
-- No screen names the sandbox provider. Copy says sandbox or cloud computer.
+- Copy says cloud computer or sandbox. Only the Boat key tab, the marketing
+  site, and Get started name Boat, from decision 47.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no
@@ -102,41 +103,52 @@ chat, and five tabs at the bottom.
 
 ## The catalogue
 
-| Path                | What it shows                                                                |
-| ------------------- | ---------------------------------------------------------------------------- |
-| `marketing`         | The home page of the site: the app, its features, and sign-up                |
-| `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge  |
-| `app/sign-in`       | The GitHub sign-in, Get started as the only first run, and refused sign-ups  |
-| `app/shell`         | The workspace list, and the sandbox starting, stopped, and with an error     |
-| `app/sections`      | The menu of a section, and a workspace dragged to another section            |
-| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted    |
-| `app/account`       | The GitHub sign-in, the GitHub App, the agents, and the default model        |
-| `app/banner`        | The pull request bar and Checks: none, running, failed, ready, merged        |
-| `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn      |
-| `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members      |
-| `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure         |
-| `app/sessions`      | A new session, the session history, and closing a session while it works     |
-| `app/reassign`      | The owner of a workspace and the menu that reassigns it, and a member's view |
-| `app/archive`       | Archive with its check for unpushed work, and the Archived group             |
-| `app/composer`      | Attached files, the open model and effort picker, and an agent to connect    |
-| `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab      |
-| `app/tools`         | The terminal, a port preview, no preview, and the desktop                    |
-| `app/panels`        | The right column, widened by the handle on its inner edge                    |
-| `user-flows`        | Sign up, create a workspace, reopen a stopped workspace, and create an org   |
+| Path                | What it shows                                                                 |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `marketing`         | The home page of the site: the app, its features, and sign-up                 |
+| `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
+| `app/sign-in`       | The GitHub sign-in, and Get started, the only first run, in four steps        |
+| `app/shell`         | The workspace list, and the sandbox starting, stopped, and with an error      |
+| `app/sections`      | The menu of a section, and a workspace dragged to another section             |
+| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted     |
+| `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
+| `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
+| `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn       |
+| `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, Boat key, Members |
+| `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure          |
+| `app/sessions`      | A new session, the session history, and closing a session while it works      |
+| `app/reassign`      | The owner of a workspace and the menu that reassigns it, and a member's view  |
+| `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
+| `app/composer`      | Attached files, the model and effort picker, and a missing agent or key       |
+| `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
+| `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
+| `app/panels`        | The right column, widened by the handle on its inner edge                     |
+| `user-flows`        | Sign up, create a workspace, reopen a stopped workspace, and create an org    |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `app`, `app/sign-in`,
-`app/orgs`, and `app/org-settings` do. `app/org-settings/cloud-computer` and its building
+`app/orgs`, `app/org-settings`, and `app/banner` do. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. `app/sign-in/get-started`
 moved into its own folder and kept its path. Get started is the only first
 run, so the first run of `app/shell` and the not-connected state of
-`app/orgs/new` are gone, and their links lead to Get started. Its last step
-opens `app/orgs/new/first`, whose Cancel returns to Get started. The entries
+`app/orgs/new` are gone, and their links lead to Get started. Its second
+step opens `app/orgs/new/first`, whose Create org and Cancel return to Get
+started. The entries
 of `app/orgs/new`, `app/orgs/empty`, and `app/orgs/deleted` moved into their
 own folders and kept their paths, so `app/orgs` shows only its canonical
 screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
 paid plan went away, and declares `movedFrom`.
+
+`app/banner` shows a branch with commits and no pull request. Its child
+pages show the other states of decision 18: `app/banner/checks` has the
+running, failed, and passed checks and the merge, which moved from
+`app/banner/checks-running`, `checks-failed`, `ready-to-merge`, and `merged`
+and declare `movedFrom`. `app/banner/blocked` has a merge conflict, requested
+changes, a draft, and a pull request closed without a merge. A conflict and
+requested changes tint the bar amber. `app/banner/no-commits` has a branch
+without commits, whose bar offers no Create pull request, as in
+`app/new-workspace/creating` and `first-turn`.
 
 ## Folder layout
 
@@ -150,7 +162,7 @@ paid plan went away, and declares `movedFrom`.
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`            | The catalogue paths that screens link to                            |
-| `src/brand.ts`            | The working name of the product, "Remote Code"                      |
+| `src/brand.ts`            | The name of the product, "Conducting", and its domains              |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 
@@ -181,26 +193,48 @@ decision 45. So the screens show no plans, no billing, no seats, and no
 plan limits.
 
 - An owner invites members by their GitHub login. The roles are owner and
-  member. Only an owner manages the members, deletes the org, and
-  reassigns a workspace. A member who is not an owner sees the members and
-  each workspace's owner without actions.
+  member. Only an owner manages the members, adds the Boat key, deletes the
+  org, and reassigns a workspace. A member who is not an owner sees the
+  members and each workspace's owner without actions, and no Boat key tab.
 - The agents of a workspace use its owner's own accounts, so reassigning
   stops the cloud computer, which starts again with the new owner's
   accounts.
 - Archive, from decision 16, deletes the cloud computer and keeps the chat
   read-only in the Archived group at the end of the list. It checks first
   for work that is not committed or not pushed. The pull request bar offers
-  it after a merge, and an hourglass marks a workspace whose cloud computer
-  is deleted soon, 14 days after its stop. Only the workspace's owner and
-  the org's owners see Archive, from decision 42. An archived workspace has
-  no file lists and no tools, so a phone shows only its chat.
-- Any user creates orgs. Create org of the first run returns to Get started
-  on Cancel.
+  it after a merge. Only the workspace's owner and the org's owners see
+  Archive, from decision 42. An archived workspace has no file lists and no
+  tools, so a phone shows only its chat.
+- No workspace shows as expiring. Near day 14 of a stop, the app starts the
+  cloud computer briefly and stops it again, from decision 43.
+- Any user creates orgs. Create org of the first run returns to Get started.
 - Delete org asks for the org name. The deleted org stays faded in the rail
   of its owners until the date when everything is deleted, and its page
   offers Restore.
 - Three orgs show: Acme, Firna, the first org of the sign-up, and Acme Labs,
   which Create org makes. The parts live in `src/components/members/`.
+
+## Keys and logins
+
+- Each org has one Boat key, which runs all its cloud computers, from
+  decision 46. The Boat key tab of the org settings names Boat, links to the
+  Boat sign-up and dashboard, and asks for a key with the `ci` preset,
+  limited to one environment. It shows only the last four characters of a
+  saved key. It draws a key that failed its test, and a key of another Boat
+  account, which it refuses while it keeps the saved key, from decision 56.
+  The parts live in `src/components/settings/BoatKey.tsx` and
+  `BoatKeyTab.tsx`.
+- The account connects Claude with a subscription token from
+  `claude setup-token` or an API key, and Codex with an OpenAI API key.
+  `AgentConnectForm` opens under the row of the agent. A connected login
+  shows its kind and Remove.
+- Get started has four steps: install the GitHub App, create the first
+  org, add its Boat key, and connect Claude or Codex, from decision 33. The
+  next step opens its form. Get started and the marketing site say that
+  users need their own Boat account.
+- The composer shows a notice when the agent of the chosen model is not
+  connected, or when the org has no key. The key notice says "cloud
+  computers" and names no provider. Only an owner gets its Add key.
 
 ## The marketing site
 
@@ -225,10 +259,13 @@ and "Sign in", lead to `app/sign-in`. The parts live in
   one scale.
 - Each claim on the page is one that the plan decides. The page shows no
   customer logos, testimonials, user counts, certifications, desktop or
-  native mobile app, API, other agents, changelog, or sandbox provider.
-- The page shows no plans, because the product is free for now. How the page
-  states the price waits on decision 47. The product name is a working name
-  in `src/brand.ts`, because the user has not chosen one yet.
-- The footer and the sign-in page link to Terms, Privacy, Refunds and
-  cancellation, and Contact, from `LegalLinks`. The pages are not drawn yet,
-  so the links have no address.
+  native mobile app, API, other agents, or changelog.
+- The page shows no plans, because the product is free for now. A line
+  under each "Start free with GitHub" says that users need their own Boat
+  account, which runs their cloud computers, from decision 47.
+- The product is "Conducting", on `conducting.build`, from decision 32.
+  `src/brand.ts` holds the name and the domains, so that one change renames
+  the product.
+- The footer and the sign-in page link to Terms and Privacy, from
+  `LegalLinks` and decision 35. The pages are not drawn yet, so the links
+  have no address.

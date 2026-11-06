@@ -29,10 +29,19 @@ export const composer = defineScreen({
       slug: 'no-agent',
       title: 'Agent not connected',
       description:
-        'Claude is not connected, for example because the user removed its key, so the message for Opus 5.5 waits and Send is off. The notice over the composer leads to the account, where the user connects Claude.',
+        'Claude is not connected, for example because the user removed its login, so the message for Opus 5.5 waits and Send is off. The notice over the composer leads to the account, with the Connect form of Claude open.',
       rationale:
-        'Waits on decision 33, drawn as its recommended option D: Get started connects an agent, and this notice catches an agent that is not connected later. Picking a model of a connected agent also lets the message go.',
+        'The user chose option D of decision 33: Get started connects an agent, and this notice catches an agent that is not connected later. Picking a model of a connected agent also lets the message go.',
       props: { composer: 'no-agent' },
+    },
+    {
+      slug: 'no-key',
+      title: 'No key for the cloud computers',
+      description:
+        'Acme has no Boat key, for example because an owner removed it, so the message waits and Send is off. The notice over the composer names no provider, and Add key opens the Boat key tab of the org settings.',
+      rationale:
+        'The user chose option D of decision 33: Get started adds the Boat key, and this notice catches a key that is missing later. The notice says "cloud computers", because the app names Boat only on the key screen, the marketing site, and Get started (decision 47). Only an owner adds the key, so a member sees the notice without Add key.',
+      props: { composer: 'no-key' },
     },
   ],
 })

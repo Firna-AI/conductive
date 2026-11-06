@@ -23,7 +23,7 @@ const creating: WorkspaceState = {
   workspace: 'saved-carts',
   sandbox: 'starting',
   conversation: 'queued',
-  banner: 'none',
+  banner: 'no-commits',
 }
 
 function workspace(state: WorkspaceState, viewport: Viewport) {

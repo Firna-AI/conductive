@@ -47,9 +47,12 @@ export const workspaceStateSchema = {
     tab: { enum: ['session', 'new-session', 'code', 'markdown', 'diff'] },
     /**
      * The composer: empty, with attached files, with its picker open, or
-     * with a message for an agent that is not connected.
+     * with a message for an agent that is not connected, or in an org that
+     * has no key for its cloud computers.
      */
-    composer: { enum: ['empty', 'attachments', 'picker', 'no-agent'] },
+    composer: {
+      enum: ['empty', 'attachments', 'picker', 'no-agent', 'no-key'],
+    },
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },
     /**
@@ -89,4 +92,15 @@ export const readyWorkspace: WorkspaceState = {
   resize: 'none',
   overlay: 'none',
   viewer: 'owner',
+}
+
+/**
+ * The workspace of the banner screens: the right column and a phone both
+ * show the Checks tab under the pull request bar.
+ */
+export const checksWorkspace: WorkspaceState = {
+  ...readyWorkspace,
+  files: 'checks',
+  tool: 'preview',
+  focus: 'files',
 }

@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import { ArrowUpRight, LogOut } from 'lucide-react'
 import {
   agentKeys,
@@ -6,11 +5,13 @@ import {
   defaultChoice,
   type AgentKey,
 } from '../../fixtures/agents'
+import { loginLabels, type AgentLogins } from '../../fixtures/logins'
 import { account, installations } from '../../fixtures/orgs'
 import { ModelPicker } from '../chat/ModelPicker'
 import { ActionButton } from '../common/actions'
 import { AccountAvatar } from '../orgs/OrgTile'
 import { StatusText } from '../common/StatusText'
+import { AgentConnectForm } from './AgentConnectForm'
 import { Section } from './Section'
 import styles from './AccountSections.module.css'
 
@@ -68,29 +69,61 @@ export function GitHubSection(props: { connected: boolean }) {
   )
 }
 
+/** The Connect form that is open under the row of an agent. */
+export type OpenAgentForm = {
+  agent: AgentKey
+  connectTo: string
+  /** The form can close, because it did not open as the next step. */
+  cancel: boolean
+}
+
 /**
- * Claude and Codex, each with Connect, or Connected once the user connected
- * it. `connect` draws the button of an agent, such as a link to the next
- * step of the first run.
+ * Claude and Codex, each with Connect, or Connected and the kind of its
+ * login. `form` opens the Connect form of an agent under its row.
+ * `removable` gives each connected login its Remove, as on the account.
  */
 export function AgentList(props: {
-  connected: readonly AgentKey[]
-  connect?: (agent: AgentKey) => ReactNode
+  logins: AgentLogins
+  form?: OpenAgentForm
+  removable?: boolean
 }) {
   return (
     <ul aria-label="Agents" className={styles.list}>
       {agentKeys.map((key) => {
-        const done = props.connected.includes(key)
-        const button = props.connect ? (
-          props.connect(key)
-        ) : (
-          <ActionButton>Connect</ActionButton>
-        )
+        const login = props.logins[key]
+        const form = props.form?.agent === key ? props.form : undefined
+        let action = form ? null : <ActionButton>Connect</ActionButton>
+        if (login) {
+          action = props.removable ? (
+            <ActionButton
+              accessibilityLabel={`Remove ${agents[key].name}`}
+              tone="plain"
+            >
+              Remove
+            </ActionButton>
+          ) : null
+        }
         return (
-          <li className={styles.row} key={key}>
-            <span className={styles.name}>{agents[key].name}</span>
-            <span className={styles.detail}>{done ? connected : null}</span>
-            {done ? null : button}
+          <li key={key}>
+            <div className={styles.row}>
+              <span className={styles.name}>{agents[key].name}</span>
+              <span className={styles.detail}>
+                {login ? (
+                  <>
+                    {connected}
+                    <span className={styles.kind}>{loginLabels[login]}</span>
+                  </>
+                ) : null}
+              </span>
+              {action}
+            </div>
+            {form && !login ? (
+              <AgentConnectForm
+                agent={key}
+                cancel={form.cancel}
+                connectTo={form.connectTo}
+              />
+            ) : null}
           </li>
         )
       })}
@@ -99,13 +132,16 @@ export function AgentList(props: {
 }
 
 /**
- * The agents that every org uses, Claude and Codex. The rows say only
- * Connect or Connected.
+ * The agents that every org uses, Claude and Codex: each connected login
+ * with its kind and Remove, or Connect, which opens the form of the agent.
  */
-export function AgentsSection(props: { connected: readonly AgentKey[] }) {
+export function AgentsSection(props: {
+  logins: AgentLogins
+  form?: OpenAgentForm
+}) {
   return (
     <Section description="Every org uses these agents." title="Agents">
-      <AgentList connected={props.connected} />
+      <AgentList form={props.form} logins={props.logins} removable />
     </Section>
   )
 }

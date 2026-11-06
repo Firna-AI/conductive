@@ -4,6 +4,7 @@ import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
 import { MembersTab } from '../components/members/MembersTab'
 import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
+import { BoatKeyTab, boatKeyStates } from '../components/settings/BoatKeyTab'
 import { ComputerTab } from '../components/settings/ComputerTab'
 import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
 import {
@@ -23,11 +24,15 @@ import { paths } from '../paths'
 export const orgSettingsSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['tab', 'build', 'dialog', 'viewer'],
+  required: ['tab', 'build', 'boatKey', 'dialog', 'viewer'],
   properties: {
-    tab: { enum: ['general', 'repositories', 'computer', 'members'] },
+    tab: {
+      enum: ['general', 'repositories', 'computer', 'boat-key', 'members'],
+    },
     /** The builds of the cloud computer, which its tab shows. */
     build: { enum: ['ready', 'building', 'failed', 'changed'] },
+    /** The Boat key of the org, which its tab shows to an owner. */
+    boatKey: { enum: boatKeyStates },
     /** A dialog over the page: Delete org, or the removal of a member. */
     dialog: { enum: ['none', 'delete-org', 'remove-member'] },
     /**
@@ -44,6 +49,7 @@ export type OrgSettingsState = SchemaProps<typeof orgSettingsSchema>
 export const acmeSettings: OrgSettingsState = {
   tab: 'general',
   build: 'ready',
+  boatKey: 'saved',
   dialog: 'none',
   viewer: 'owner',
 }
@@ -72,6 +78,8 @@ function TabBody(props: { state: OrgSettingsState }) {
       )
     case 'computer':
       return <ComputerTab build={state.build} org={org.name} />
+    case 'boat-key':
+      return owner ? <BoatKeyTab org={org.name} state={state.boatKey} /> : null
     case 'members':
       return (
         <MembersTab canManage={owner} viewer={owner ? you : memberViewer} />
@@ -81,8 +89,9 @@ function TabBody(props: { state: OrgSettingsState }) {
 
 /**
  * The settings of an org: its name and initials, the repositories that it
- * uses, its cloud computer, and its members. The app-wide connections live
- * in the account. Only an owner changes the members and deletes the org.
+ * uses, its cloud computer, its Boat key, and its members. The app-wide
+ * connections live in the account. Only an owner sees the Boat key,
+ * changes the members, and deletes the org.
  */
 export function OrgSettingsScreen(props: {
   state: OrgSettingsState
@@ -100,7 +109,7 @@ export function OrgSettingsScreen(props: {
     <Page
       back={mobile ? { label: 'Workspaces', to: paths.shell } : undefined}
       subtitle="Org settings"
-      tabs={<SettingsTabs tab={state.tab} wrap={mobile} />}
+      tabs={<SettingsTabs owner={owner} tab={state.tab} wrap={mobile} />}
       title={org.name}
       viewport={viewport}
     >

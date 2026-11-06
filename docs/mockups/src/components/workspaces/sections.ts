@@ -83,16 +83,14 @@ export function newOrgSections(): SidebarSection[] {
 
 /**
  * The sections after the open workspace was archived. It leaves its section
- * for the open Archived group, and Infra is open, with a workspace whose
- * cloud computer expires soon.
+ * for the open Archived group.
  */
 export function archivedSections(open: Workspace): {
   sections: SidebarSection[]
   archived: WorkspaceRow[]
 } {
   const list = sectionKeys.map((key) => ({
-    section:
-      key === 'infra' ? { ...sections[key], collapsed: false } : sections[key],
+    section: sections[key],
     rows: workspaceList
       .filter((item) => item.section === key && item.key !== open.key)
       .map((item) => rowFor(item)),

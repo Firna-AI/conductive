@@ -15,7 +15,7 @@ export const firstTurn = defineScreen({
     ...readyWorkspace,
     workspace: 'saved-carts',
     conversation: 'first-turn',
-    banner: 'none',
+    banner: 'no-commits',
   },
   useCasePaths: ['user-flows/create-workspace'],
   render: (props, context) => (

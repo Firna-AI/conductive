@@ -9,20 +9,17 @@ import { ActionButton } from '../common/actions'
 import { Notice } from '../common/Notice'
 import { BuildSection, type BuildState } from './BuildSection'
 import { EnvVarsSection, ScriptSection } from './EnvironmentSections'
-import styles from './ComputerTab.module.css'
+import { TabIntro } from './TabIntro'
 
 /** The org's cloud computer: its builds, its scripts, and its env vars. */
 export function ComputerTab(props: { org: string; build: BuildState }) {
   const changed = props.build === 'changed'
   return (
     <>
-      <div className={styles.intro}>
-        <h2 className={styles.title}>Cloud computer</h2>
-        <p className={styles.text}>
-          The shared cloud computer of {props.org}. Every workspace starts from
-          it, with every repository of the org.
-        </p>
-      </div>
+      <TabIntro title="Cloud computer">
+        The shared cloud computer of {props.org}. Every workspace starts from
+        it, with every repository of the org.
+      </TabIntro>
       <BuildSection state={props.build} />
       <ScriptSection
         description={`${includedSoftware} The install script runs only when you build the computer.`}

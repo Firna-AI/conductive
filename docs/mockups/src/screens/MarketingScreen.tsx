@@ -17,7 +17,7 @@ const links: SiteLinks = { home: paths.marketing, signIn: paths.signIn }
 const year = 2026
 
 /**
- * The home page of the marketing site, public at the root of the app
+ * The home page of the marketing site, public at the root of the product
  * domain: the hero with the app, the features with real screens, the
  * smaller features, and a last call to action. Every picture is
  * a real screen of the catalogue, and none of it links into the app.

@@ -16,7 +16,7 @@ export const creating = defineScreen({
     workspace: 'saved-carts',
     sandbox: 'starting',
     conversation: 'queued',
-    banner: 'none',
+    banner: 'no-commits',
   },
   useCasePaths: ['user-flows/create-workspace'],
   render: (props, context) => (

@@ -4,7 +4,7 @@ import { ScreenLink } from '../common/ScreenLink'
 import styles from './Wordmark.module.css'
 
 /**
- * The mark and the working name of the product. With `to` it links to that
+ * The mark and the name of the product. With `to` it links to that
  * page, such as the home page of the site.
  */
 export function Wordmark(props: { to?: string }) {

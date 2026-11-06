@@ -12,13 +12,6 @@
   margin-top: 4px;
 }
 
-.note {
-  margin: 0;
-  color: var(--ui-muted);
-  font-size: var(--ui-text-sm);
-  line-height: 1.5;
-}
-
 /* A field that Firna does not draw, labelled as Firna labels its fields. */
 .field {
   display: flex;

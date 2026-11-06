@@ -61,14 +61,6 @@ a.selected:hover {
   text-align: right;
 }
 
-/* A stopped workspace near day 14: its cloud computer is deleted soon. */
-.expiring {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  color: var(--ui-warning);
-}
-
 /* The row under the pointer: a raised card with a full outline. */
 .lifted {
   border: 1px solid var(--ui-border2);

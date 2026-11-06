@@ -17,26 +17,28 @@ export function isRunning(state: WorkspaceState): boolean {
  * The composer of a workspace state: a steer message while a turn runs, or
  * a message with attached files, with the model picker open when the state
  * asks for it. A new session starts empty. A message for an agent that is
- * not connected waits, and Send is off.
+ * not connected, or in an org without a key for its cloud computers,
+ * waits, and Send is off.
  */
 export function composerFor(
   state: WorkspaceState,
   workspace: Workspace,
 ): ComposerState {
   const fresh = state.tab === 'new-session'
-  const noAgent = !fresh && state.composer === 'no-agent'
+  const waits =
+    !fresh && (state.composer === 'no-agent' || state.composer === 'no-key')
   const withFiles =
     !fresh && (state.composer === 'attachments' || state.composer === 'picker')
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (withFiles) draft = attachmentDraft
-  else if (noAgent) draft = followUpDraft
+  else if (waits) draft = followUpDraft
   return {
     choice: workspace.choice,
     running: !fresh && isRunning(state),
     draft,
     attachments: withFiles ? draftAttachments : [],
     picker: state.composer === 'picker',
-    blocked: noAgent,
+    blocked: waits,
   }
 }

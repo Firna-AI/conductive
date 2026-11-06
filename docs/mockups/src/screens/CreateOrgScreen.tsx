@@ -16,7 +16,7 @@ export const createOrgSchema = {
   properties: {
     /**
      * Another org beside the user's orgs, or the first org of a new user,
-     * whose Cancel returns to Get started.
+     * which returns to Get started.
      */
     kind: { enum: ['another', 'first'] },
   },
@@ -36,13 +36,14 @@ export function CreateOrgScreen(props: {
 }) {
   const first = props.state.kind === 'first'
   const form = first ? newOrg : anotherOrg
-  const cancelTo = first ? paths.getStarted : paths.shell
+  const cancelTo = first ? paths.getStartedInstalled : paths.shell
+  const createdTo = first ? paths.getStartedOrgCreated : paths.anotherNewOrg
   const actions = (
     <>
       <ScreenLink asChild to={cancelTo}>
         <ActionButton>Cancel</ActionButton>
       </ScreenLink>
-      <ScreenLink asChild to={first ? paths.newOrg : paths.anotherNewOrg}>
+      <ScreenLink asChild to={createdTo}>
         <ActionButton tone="primary">Create org</ActionButton>
       </ScreenLink>
     </>

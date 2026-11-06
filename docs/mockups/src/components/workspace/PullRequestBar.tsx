@@ -40,6 +40,19 @@ function GitHubLink(props: { href: string; label: string }) {
   )
 }
 
+/** The branch and the branch that it merges into. */
+function Branches(props: { workspace: Workspace }) {
+  const { workspace } = props
+  return (
+    <span className={styles.branches}>
+      <GitBranch className={styles.muted} size={13} />
+      <span className={styles.branch}>{workspace.branch}</span>
+      <ArrowRight className={styles.muted} size={12} />
+      {repositories[workspace.repository].defaultBranch}
+    </span>
+  )
+}
+
 function StateLabel(props: { status: PrStatus }) {
   const theme = useSharedUiTheme()
   const Icon = props.status.icon
@@ -57,8 +70,9 @@ function StateLabel(props: { status: PrStatus }) {
 /**
  * The pull request of the workspace branch, at the top of the right column:
  * its number, its checks and merge state, and a link to GitHub. A branch
- * without a pull request shows its target and a link that creates one.
- * After the merge, the bar offers Archive, as decision 16 says.
+ * without a pull request shows its target and a link that creates one,
+ * once the branch has a commit. After the merge, the bar offers Archive,
+ * as decision 16 says.
  */
 export function PullRequestBar(props: {
   state: BannerState
@@ -70,13 +84,16 @@ export function PullRequestBar(props: {
   if (state === 'none') {
     return (
       <div className={styles.bar}>
-        <span className={styles.branches}>
-          <GitBranch className={styles.muted} size={13} />
-          <span className={styles.branch}>{workspace.branch}</span>
-          <ArrowRight className={styles.muted} size={12} />
-          {repositories[workspace.repository].defaultBranch}
-        </span>
+        <Branches workspace={workspace} />
         <GitHubLink href={compareUrl(workspace)} label="Create pull request" />
+      </div>
+    )
+  }
+  if (state === 'no-commits') {
+    return (
+      <div className={styles.bar}>
+        <Branches workspace={workspace} />
+        <span className={styles.note}>No commits yet</span>
       </div>
     )
   }
@@ -106,6 +123,14 @@ export function PullRequestRow(props: {
 }) {
   const { state } = props
   const createHref = useOutsideHref(compareUrl(props.workspace))
+  if (state === 'no-commits') {
+    return (
+      <div className={styles.row}>
+        <GitBranch className={styles.muted} size={14} />
+        <span className={styles.rowText}>No commits yet</span>
+      </div>
+    )
+  }
   if (state === 'none') {
     return (
       <a

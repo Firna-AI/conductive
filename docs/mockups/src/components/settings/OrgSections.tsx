@@ -9,38 +9,36 @@ import { useControlSizes } from '../common/touch'
 import { Section } from './Section'
 import styles from './OrgSections.module.css'
 
-export type SettingsTab = 'general' | 'repositories' | 'computer' | 'members'
+export type SettingsTab =
+  'general' | 'repositories' | 'computer' | 'boat-key' | 'members'
 
 /**
- * The parts of the org settings, as tabs that link to each part. `wrap`
- * puts the tabs on two lines, for a phone, where they do not fit on one.
+ * The parts of the org settings, as tabs that link to each part. Only an
+ * owner sees the Boat key tab. `wrap` puts the tabs on two lines, for a
+ * phone, where they do not fit on one.
  */
-export function SettingsTabs(props: { tab: SettingsTab; wrap?: boolean }) {
+export function SettingsTabs(props: {
+  tab: SettingsTab
+  owner: boolean
+  wrap?: boolean
+}) {
+  const tabs = [
+    { label: 'General', to: paths.orgSettings, tab: 'general' },
+    { label: 'Repositories', to: paths.repositories, tab: 'repositories' },
+    { label: 'Cloud computer', to: paths.cloudComputer, tab: 'computer' },
+    { label: 'Boat key', to: paths.boatKey, tab: 'boat-key' },
+    { label: 'Members', to: paths.members, tab: 'members' },
+  ] satisfies readonly { label: string; to: string; tab: SettingsTab }[]
   return (
     <LinkTabs
       label="Org settings"
-      tabs={[
-        {
-          label: 'General',
-          to: paths.orgSettings,
-          selected: props.tab === 'general',
-        },
-        {
-          label: 'Repositories',
-          to: paths.repositories,
-          selected: props.tab === 'repositories',
-        },
-        {
-          label: 'Cloud computer',
-          to: paths.cloudComputer,
-          selected: props.tab === 'computer',
-        },
-        {
-          label: 'Members',
-          to: paths.members,
-          selected: props.tab === 'members',
-        },
-      ]}
+      tabs={tabs
+        .filter((item) => props.owner || item.tab !== 'boat-key')
+        .map((item) => ({
+          label: item.label,
+          to: item.to,
+          selected: props.tab === item.tab,
+        }))}
       wrap={props.wrap}
     />
   )
