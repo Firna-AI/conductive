@@ -1,0 +1,79 @@
+import type { DiffResponse, FileResponse } from '../../src/shared/files'
+import { isRecord } from '../http'
+import { FileTooLargeError, invalidFileResponse } from './errors'
+import { natural } from './parsers'
+
+export function fileBytes(file: FileResponse): Uint8Array<ArrayBuffer> {
+  if (file.encoding === 'utf-8')
+    return Uint8Array.from(new TextEncoder().encode(file.content))
+  try {
+    if (
+      !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(
+        file.content,
+      )
+    ) {
+      throw invalidFileResponse()
+    }
+    return Uint8Array.from(atob(file.content), (character) =>
+      character.charCodeAt(0),
+    )
+  } catch {
+    throw invalidFileResponse()
+  }
+}
+
+export function parseFile(
+  value: unknown,
+  path: string,
+  maxBytes: number,
+): FileResponse {
+  if (
+    !isRecord(value) ||
+    value.path !== path ||
+    typeof value.mediaType !== 'string' ||
+    !value.mediaType ||
+    /[\r\n]/.test(value.mediaType) ||
+    !natural(value.sizeBytes) ||
+    (value.encoding !== 'utf-8' && value.encoding !== 'base64') ||
+    typeof value.content !== 'string'
+  )
+    throw invalidFileResponse()
+  if (value.sizeBytes > maxBytes)
+    throw new FileTooLargeError(value.sizeBytes, maxBytes)
+  const file: FileResponse = {
+    path,
+    mediaType: value.mediaType,
+    sizeBytes: value.sizeBytes,
+    encoding: value.encoding,
+    content: value.content,
+  }
+  const size = fileBytes(file).byteLength
+  if (size > maxBytes) throw new FileTooLargeError(size, maxBytes)
+  if (size !== file.sizeBytes) throw invalidFileResponse()
+  return file
+}
+
+export function parseDiff(
+  value: unknown,
+  path: string,
+  defaultBranch: string,
+): DiffResponse {
+  if (
+    !isRecord(value) ||
+    value.path !== path ||
+    value.baseBranch !== defaultBranch ||
+    (value.oldContent !== null && typeof value.oldContent !== 'string') ||
+    (value.newContent !== null && typeof value.newContent !== 'string') ||
+    typeof value.patch !== 'string' ||
+    typeof value.binary !== 'boolean'
+  )
+    throw invalidFileResponse()
+  return {
+    path,
+    baseBranch: defaultBranch,
+    oldContent: value.oldContent,
+    newContent: value.newContent,
+    patch: value.patch,
+    binary: value.binary,
+  }
+}
