@@ -2910,11 +2910,12 @@ Depends on: 3
       assigns.
 - [ ] Store each Boat key encrypted, test it once when it is saved, and
       never send it to the browser or into a cloud computer.
+- [ ] Refuse a new Boat key of another Boat account, as decision 56 says.
 - [ ] Confirm which Boat key actions the app needs, and match the key
       screen's text about the key preset.
 - [ ] Add the D1 schema and its migrations for repositories, workspaces,
       and settings.
-- [ ] Add the ownership check and the `Origin` check.
+- [ ] Add the membership check and the `Origin` check.
 - [ ] Test the client and the checks against a fake Boat server.
 
 ## Milestone 5: Bases and workspace lifecycle
