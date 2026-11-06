@@ -147,14 +147,16 @@ it('maps same-origin form and fetch Origins to the private port while preserving
   ])
 })
 
-it('preserves a preflight response from an API that reflects the requested method and headers', async () => {
+it('forwards authenticated OPTIONS and rejects browser preflights without a credential cookie', async () => {
   const setup = await openPreview(harness)
   expect(setup.response.status).toBe(201)
   const origin =
     'https://fedcba9876543210fedcba9876543210.conducting-previews.test'
   const base = harness.dependencies.fetch
+  const calls: Request[] = []
   let upstreamHeaders = new Headers()
   harness.dependencies.fetch = async (request) => {
+    calls.push(request)
     if (new URL(request.url).hostname === 'boat.dev') return base(request)
     upstreamHeaders = request.headers
     const headers = new Headers()
@@ -168,6 +170,18 @@ it('preserves a preflight response from an API that reflects the requested metho
     }
     return new Response(null, { status: 204, headers })
   }
+  const preflight = await setup.handler.proxy(
+    new Request(`${setup.previewUrl}/api/cart`, {
+      method: 'OPTIONS',
+      headers: {
+        Origin: origin,
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'content-type',
+      },
+    }),
+  )
+  expect(preflight.status).toBe(404)
+  expect(calls).toEqual([])
   const response = await setup.handler.proxy(
     setup.previewRequest(`${setup.previewUrl}/api/cart`, {
       method: 'OPTIONS',

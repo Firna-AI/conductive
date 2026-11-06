@@ -4131,6 +4131,9 @@ Agent design calls on 6 November 2026:
 - Give only the trusted app launcher `Referrer-Policy: origin`, so the form sends the app Origin.
   Allow the authorizer and the exact preview origin in CSP `form-action`, because Chrome checks the redirect too.
   The authorizer and every sandbox preview response keep `no-referrer`.
+- Apply the required cookie check to browser preflights too. Browsers send no
+  cookie on them, and default fetches between preview origins also omit it.
+  A same-origin proxy in the previewed app's dev server keeps API calls working.
 
 - [x] Move the credential of a port preview out of its hostname, into a
       cookie that the preview domain sets, so that the hostname is no

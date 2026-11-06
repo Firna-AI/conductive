@@ -72,7 +72,12 @@ private port origin. This includes a form's literal `Origin:null`.
 When fetch metadata is absent, only the preview's own Origin is mapped.
 Foreign Origins and a missing Origin keep their meaning. The shared origin
 helper also maps `http` and `https` private redirects to the preview origin.
-It also owns the terminal's private port Origin. The application owns its CORS policy.
+It also owns the terminal's private port Origin. The application owns the
+CORS policy of requests that carry a valid preview cookie.
+
+Browser preflights carry no cookie, so the proxy rejects them before any sandbox
+call. A default cross-origin fetch also carries no cookie and gets the same 404.
+Use a same-origin proxy in the previewed app's dev server to reach a separate API.
 
 The workspace lifecycle owner must call `revokeWorkspace(workspaceId)` on
 stop and archive. Call it before stopping the sandbox. The close API
