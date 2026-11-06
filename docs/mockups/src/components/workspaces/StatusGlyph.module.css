@@ -28,6 +28,14 @@
   color: var(--ui-primary);
 }
 
+/*
+ * The agent waits for the user, such as for the approval of a command: a
+ * column in the accent colour that pulses.
+ */
+.input {
+  color: var(--ui-primary);
+}
+
 /* A finished turn: every cell in bright green. */
 .unread {
   color: var(--ui-success);
@@ -60,6 +68,18 @@
   }
 }
 
+/* The column of a workspace that needs input dims, then lights again. */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
 /* The middle row lights from left to right, then fades. */
 @keyframes fill {
   0%,
@@ -80,9 +100,14 @@
   animation: fill 1200ms ease-in-out infinite;
 }
 
+.input .on {
+  animation: pulse 1600ms ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .working .on,
-  .starting .on {
+  .starting .on,
+  .input .on {
     animation: none;
   }
 }
