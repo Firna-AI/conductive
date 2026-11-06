@@ -1,0 +1,22 @@
+/*
+ * The chat fills the column that the app gives it. It sets no position, so a
+ * dialog or a sheet covers the whole app frame, as in the mockups.
+ */
+.column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* A phone raises every local touch target to 44 px. */
+.phone {
+  --ui-touch-min: 44px;
+
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}

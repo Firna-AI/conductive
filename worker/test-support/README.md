@@ -1,14 +1,30 @@
 # Backend and runner fakes
 
-`createHarness` creates a local D1 database and applies every migration in filename order.
+`createHarness` creates a local D1 database.
 It supplies fake GitHub and Boat servers, a fixed clock, sign-in, org creation, and cleanup.
 Backend tests use it without an external account or cloud computer.
+
+Every harness uses `applyMigrations(db)` from [migrations.ts](migrations.ts).
+It applies migrations in filename order with Wrangler's SQL splitter.
+The splitter keeps each trigger body in one statement.
+
+Each members test file creates one harness in `beforeAll` and disposes it in `afterAll`.
+Its `beforeEach` calls `reset` to delete all application rows in a fixed child-first order.
+The reset also restores the clock, token sequence, and fake services.
+Each test creates its own members client and lifecycle hooks.
+Members files set `resetBoatAccounts: true` to restore default fake accounts before each test.
+Other harnesses keep their configured accounts across resets.
+
+`memberFixture` prepares three users, signed sessions, an org, memberships, and settings in one D1 batch.
+Signed sessions use the real signer and the seven-day expiry.
+The `signIn` helper still runs the real OAuth flow when a scenario calls it.
+Scenario requests still use the real request gate.
 
 `FakeBoat.responseFactories` queues one response factory for each request.
 Use a factory to return a fresh streaming body when a test observes cancellation.
 These replies are not cloned or teed.
 Clear unused factories in the test's cleanup hook.
-The harness reset keeps its existing behavior.
+The harness reset clears factories.
 
 The runner boundary uses plain TypeScript types.
 Tests need no Cloudflare Durable Object or real WebSocket.
@@ -62,6 +78,7 @@ Read replies also cover file content, a diff, and a size error.
 ## Key code
 
 - `harness.ts` owns D1 setup and the HTTP test app.
+- `migrations.ts` applies migrations for every test harness.
 - `fake-boat.ts` supplies provider replies and fresh streaming response factories.
 - `fake-github.ts` supplies sign-in replies.
 - `fake-runner.ts` supplies the runner without an agent SDK.

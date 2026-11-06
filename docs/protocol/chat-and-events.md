@@ -134,6 +134,13 @@ says.
 - A tab that opens gets the stored history first, then the live events.
 - The Durable Object of the workspace stores every event, so the chat
   survives a stop of the sandbox.
+- A tab keeps the chat of each workspace that it showed in memory. A
+  return to that workspace shows the chat at once, then gets only the new
+  events (decision 87).
+- A reload or a new tab starts empty. No chat stays on the disk of the
+  device.
+- A cache on the disk was rejected, because the chat, with its code and
+  any secret that an agent printed, would stay on the device.
 
 ## The agent runner
 
