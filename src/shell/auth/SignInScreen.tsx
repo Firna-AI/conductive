@@ -1,6 +1,6 @@
 import { Button } from '@firna/ui/button'
-import appIcon from '../../../docs/brand/conducting-icon.svg'
 import { productDomain, productName } from '../../../docs/mockups/src/brand'
+import { Lockup } from '../../../docs/mockups/src/components/brand/Logo'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { GitHubMark } from '../../../docs/mockups/src/components/common/GitHubMark'
 import legal from '../../../docs/mockups/src/components/marketing/LegalLinks.module.css'
@@ -48,8 +48,7 @@ export function SignInScreen() {
     <div className={classes(styles.page, phone && styles.mobile)}>
       <header className={styles.header}>
         <a className={wordmark.wordmark} href={`https://${productDomain}`}>
-          <img alt="" height={28} src={appIcon} width={28} />
-          <span className={wordmark.name}>{productName}</span>
+          <Lockup height={30} />
         </a>
       </header>
       <div className={styles.body}>

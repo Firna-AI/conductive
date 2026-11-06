@@ -4,7 +4,7 @@ import { ApiError } from './api/client'
 import { readBoatKey } from './api/read-core'
 import { readRepositories } from './api/read-settings'
 import type { OrgModel } from './org-model'
-import { ready, valueOf } from './store'
+import { valueOf } from './store'
 
 /**
  * Adds or removes a repository of the org. The write names every chosen
@@ -19,13 +19,14 @@ export async function setRepositorySelected(
   const ids = list
     .filter((item) => (item.id === repository.id ? selected : item.selected))
     .map((item) => item.githubId)
-  const repositories = await org.services.api.send(
-    'PUT',
-    orgSettingsPaths.repositories(org.orgId),
-    { githubRepositoryIds: ids },
-    readRepositories,
+  await org.resources.repositories.save(() =>
+    org.services.api.send(
+      'PUT',
+      orgSettingsPaths.repositories(org.orgId),
+      { githubRepositoryIds: ids },
+      readRepositories,
+    ),
   )
-  org.repositories.set(ready(repositories))
 }
 
 /** Why Boat refused a key, so that the key screen can say what to do. */
@@ -44,11 +45,7 @@ export function boatKeyProblem(error: unknown): BoatKeyProblem {
  * saved key as it was.
  */
 export async function saveBoatKey(org: OrgModel, key: string): Promise<void> {
-  const status = await org.services.api.send(
-    'PUT',
-    boatKeyPath(org.orgId),
-    { key },
-    readBoatKey,
+  await org.resources.boatKey.save(() =>
+    org.services.api.send('PUT', boatKeyPath(org.orgId), { key }, readBoatKey),
   )
-  org.boatKey.set(ready(status))
 }

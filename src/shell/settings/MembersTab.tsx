@@ -18,10 +18,7 @@ export function MembersTab(props: { org: OrgSummary; user: User }) {
   const model = useOrgModel(org.id)
   const members = useStore(model.members)
   const workspaces = useStore(model.workspaces)
-  useEffect(() => {
-    model.ensure('members')
-    model.ensure('list')
-  }, [model])
+  useEffect(() => model.watch('members', 'list'), [model])
   return (
     <Section
       description="Admins manage the members and who owns each workspace. Members work in the workspaces."

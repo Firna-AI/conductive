@@ -43,9 +43,7 @@ function KeySection(props: { actions?: ReactNode; children?: ReactNode }) {
 function SavedText(props: { org: OrgSummary }) {
   const model = useOrgModel(props.org.id)
   const key = useStore(model.boatKey)
-  useEffect(() => {
-    model.ensure('boatKey')
-  }, [model])
+  useEffect(() => model.watch('boatKey'), [model])
   if (key.state === 'failed') {
     return (
       <LoadFailure

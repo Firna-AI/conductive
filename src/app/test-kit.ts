@@ -15,54 +15,88 @@ function requestKey(method: string, path: string): string {
 
 /** Requests that wait until the test releases them, to order an answer. */
 export class HeldRequests {
-  private readonly gates = new Map<string, Promise<void>>()
-  private readonly releases = new Map<string, () => void>()
+  private readonly gates = new Map<string, Promise<void>[]>()
+  private readonly releases = new Map<string, (() => void)[]>()
   readonly fetch: FetchLike
 
   constructor(server: FakeApiServer) {
     this.fetch = async (input, init) => {
-      const key = requestKey(init?.method ?? 'GET', input)
-      const gate = this.gates.get(key)
-      if (gate) {
-        this.gates.delete(key)
-        await gate
-      }
+      const gate = this.gates
+        .get(requestKey(init?.method ?? 'GET', input))
+        ?.shift()
+      if (gate) await gate
       return server.fetch(input, init)
     }
   }
 
-  /** The next request with this method and path waits for `release`. */
+  /**
+   * The next request with this method and path waits for `release`. Each
+   * call holds one more request, so two requests can wait at one path.
+   */
   hold(method: string, path: string): void {
     const key = requestKey(method, path)
-    this.gates.set(
-      key,
-      new Promise((resolve) => this.releases.set(key, () => resolve())),
+    const gates = this.gates.get(key) ?? []
+    const releases = this.releases.get(key) ?? []
+    gates.push(
+      new Promise((resolve) => {
+        releases.push(() => resolve())
+      }),
     )
+    this.gates.set(key, gates)
+    this.releases.set(key, releases)
   }
 
+  /** Lets the oldest held request with this method and path go on. */
   release(method: string, path: string): void {
-    this.releases.get(requestKey(method, path))?.()
+    this.releases.get(requestKey(method, path))?.shift()?.()
   }
 }
 
 /** A clock for timers that runs a timer only when the test says so. */
 export class ManualDelay {
-  private readonly timers = new Set<() => unknown>()
+  private readonly timers = new Set<{ ms: number; run: () => unknown }>()
 
-  readonly delay: Delay = (_ms, run) => {
-    this.timers.add(run)
-    return () => this.timers.delete(run)
+  readonly delay: Delay = (ms, run) => {
+    const timer = { ms, run }
+    this.timers.add(timer)
+    return () => this.timers.delete(timer)
   }
 
   get pending(): number {
     return this.timers.size
   }
 
+  /** The wait of each pending timer, in ms, in the order that they started. */
+  get waits(): number[] {
+    return [...this.timers].map((timer) => timer.ms)
+  }
+
   /** Runs the due timers, and waits for the work that they started. */
   async runAll(): Promise<void> {
     const due = [...this.timers]
     this.timers.clear()
-    await Promise.all(due.map((run) => run()))
+    await Promise.all(due.map((timer) => timer.run()))
+  }
+}
+
+/** The focus of the page, which comes back only when the test says so. */
+export class ManualFocus {
+  private readonly listeners = new Set<() => void>()
+
+  readonly onFocus = (listener: () => void): (() => void) => {
+    this.listeners.add(listener)
+    return () => {
+      this.listeners.delete(listener)
+    }
+  }
+
+  get listening(): number {
+    return this.listeners.size
+  }
+
+  /** The user comes back to the page. */
+  focus(): void {
+    for (const listener of [...this.listeners]) listener()
   }
 }
 
@@ -102,7 +136,10 @@ export class MemoryStorage implements KeyValueStorage {
   }
 }
 
-/** Services over a fake API server, with no real network, clock, or storage. */
+/**
+ * Services over a fake API server, with no real network, clock, timer, or
+ * storage. A timer runs only through a `ManualDelay` that the test gives.
+ */
 export function testServices(
   server: FakeApiServer,
   overrides: Partial<AppServices> & { fetch?: FetchLike } = {},
@@ -118,6 +155,8 @@ export function testServices(
     newId: () => `client-${++id}`,
     leave: () => undefined,
     copy: async () => undefined,
+    delay: new ManualDelay().delay,
+    onFocus: new ManualFocus().onFocus,
     ...rest,
   }
 }

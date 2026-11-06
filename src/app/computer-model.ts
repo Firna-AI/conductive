@@ -3,6 +3,7 @@ import {
   buildPath,
   orgSettingsPaths,
   type BuildLogEvent,
+  type BuildsResponse,
   type ImageBuild,
   type OrgSettings,
   type UpdateOrgSettingsRequest,
@@ -12,9 +13,10 @@ import {
   readBuildResponse,
   readSettings,
 } from './api/read-settings'
-import { browserDelay, type Delay } from './events'
-import type { OrgModel } from './org-model'
-import { load, loading, Store, type Loadable } from './store'
+import type { Delay } from './events'
+import { latestBuild, type OrgModel } from './org-model'
+import { Resource } from './resource'
+import { Store, type Loadable, type Readable } from './store'
 
 export type ScriptKind = 'installScript' | 'startupScript'
 
@@ -26,43 +28,94 @@ export interface BuildLog {
 
 const pollInterval = 2_000
 
+/** The newest build at one look: its ID and state, and whether it ended. */
+interface Newest {
+  key: string
+  ended: boolean
+}
+
+/** The newest build, or `null` while the builds load. */
+function newestOf(builds: Loadable<BuildsResponse>): Newest | null {
+  if (builds.state !== 'ready') return null
+  const build = latestBuild(builds.value)
+  if (!build) return { key: '', ended: false }
+  return { key: `${build.id} ${build.state}`, ended: build.state !== 'running' }
+}
+
 /**
  * The Cloud computer tab: the scripts, the env var names, the builds, and
  * the log of the newest build. Env var values are write-only: a write
  * carries a value, and no answer brings one back.
  */
 export class ComputerModel {
-  readonly settings = new Store<Loadable<OrgSettings>>(loading)
+  readonly settings: Readable<Loadable<OrgSettings>>
   readonly log = new Store<BuildLog | null>(null)
   private readonly org: OrgModel
   private readonly delay: Delay
+  private readonly saved: Resource<OrgSettings>
   private stopPoll: (() => void) | null = null
   /** `stop` counts one up, so an older request knows that its tab closed. */
   private generation = 0
+  private following: (() => void)[] = []
+  /** The newest build at the last look, or `null` before the builds load. */
+  private newest: Newest | null = null
 
-  constructor(org: OrgModel, delay: Delay = browserDelay) {
+  constructor(org: OrgModel, delay: Delay = org.services.delay) {
     this.org = org
     this.delay = delay
+    this.saved = new Resource(() =>
+      this.api.get(orgSettingsPaths.settings(org.orgId), readSettings),
+    )
+    this.settings = this.saved.store
   }
 
   private get api() {
     return this.org.services.api
   }
 
+  /**
+   * The tab shows. It reads the settings, and it follows the builds of the
+   * org until `stop`. When the newest build ends, by any path, the settings
+   * read again, because the server changes them at a build: a success
+   * clears `needsBuild`.
+   */
+  start(): void {
+    this.unfollow()
+    this.newest = newestOf(this.org.builds.get())
+    this.following = [
+      this.org.watch('builds'),
+      this.org.builds.subscribe(() => this.followBuilds()),
+    ]
+    void this.load()
+  }
+
+  /**
+   * Reads the settings. An answer after `stop` changes nothing, and so does
+   * the answer of a read that started before a save answered. A failure
+   * keeps the settings that show.
+   */
   load(): Promise<void> {
-    return load(this.settings, () =>
-      this.api.get(orgSettingsPaths.settings(this.org.orgId), readSettings),
-    )
+    const run = this.generation
+    return this.saved.read(() => run === this.generation)
+  }
+
+  private followBuilds(): void {
+    const newest = newestOf(this.org.builds.get())
+    if (newest?.key === this.newest?.key) return
+    const known = this.newest !== null
+    this.newest = newest
+    if (known && newest?.ended) void this.load()
   }
 
   private async write(request: UpdateOrgSettingsRequest): Promise<void> {
-    const settings = await this.api.send(
-      'PATCH',
-      orgSettingsPaths.settings(this.org.orgId),
-      request,
-      readSettings,
+    await this.saved.save(() =>
+      this.api.send(
+        'PATCH',
+        orgSettingsPaths.settings(this.org.orgId),
+        request,
+        readSettings,
+      ),
     )
-    this.settings.set({ state: 'ready', value: settings })
   }
 
   saveScript(kind: ScriptKind, script: string): Promise<void> {
@@ -98,7 +151,11 @@ export class ComputerModel {
     else void this.org.reload('builds')
   }
 
-  /** Shows the log of a build that runs or failed, and follows a running one. */
+  /**
+   * Shows the log of a build that runs or failed, and follows a running
+   * one. The answer also goes to the builds, so a build that ended while
+   * no tab showed it no longer shows as running.
+   */
   async showLog(build: ImageBuild): Promise<void> {
     const run = this.generation
     const detail = await this.api.get(
@@ -106,17 +163,25 @@ export class ComputerModel {
       readBuildResponse,
     )
     if (run !== this.generation) return
+    this.org.putBuild(detail.build)
     this.log.set({ buildId: build.id, events: detail.log })
     if (detail.build.state === 'running') this.poll(detail.build, run)
+    else void this.org.reload('builds')
   }
 
   /**
-   * Stops the log. A request that still runs when the tab closes finds a
-   * newer generation, so it schedules no more requests.
+   * Stops the log and the following of the builds. A request that still
+   * runs when the tab closes finds a newer generation, so it schedules no
+   * more requests and changes no settings.
    */
   stop(): void {
     this.generation += 1
     this.cancelTimer()
+    this.unfollow()
+  }
+
+  private unfollow(): void {
+    for (const stop of this.following.splice(0)) stop()
   }
 
   private cancelTimer(): void {

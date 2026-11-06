@@ -113,12 +113,10 @@ export function NewWorkspaceScreen(props: {
   const draft = useStore(model.draft)
   const create = useStore(model.create)
   const phone = useViewport() === 'phone'
-  useEffect(() => {
-    orgModel.ensure('repositories')
-    orgModel.ensure('builds')
-    orgModel.ensure('boatKey')
-    orgModel.ensure('list')
-  }, [orgModel])
+  useEffect(
+    () => orgModel.watch('repositories', 'builds', 'boatKey', 'list'),
+    [orgModel],
+  )
   const chosen = (repositories ?? []).filter((item) => item.selected)
   const repositoryId = draft.repositoryId ?? chosen[0]?.id
   const choice = draft.choice ?? account?.defaultChoice

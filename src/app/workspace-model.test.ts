@@ -165,4 +165,41 @@ describe('WorkspaceModel', () => {
       value: { workspace: { state: 'working' } },
     })
   })
+
+  test('an update to unread that comes with the newest event is marked read', async () => {
+    const server = new FakeApiServer()
+    const { events, workspace } = setup(server)
+    const readPath = workspacePaths.read(org, id)
+    await workspace.open()
+    events.send({
+      type: 'history',
+      history: { events: [], throughEventNumber: 20 },
+    })
+    const detail = workspace.detail.get()
+    if (detail.state !== 'ready') throw new Error('The workspace did not open.')
+    events.send({
+      type: 'event',
+      envelope: {
+        workspaceId: id,
+        eventNumber: 21,
+        occurredAt: FAKE_TIME,
+        event: {
+          type: 'workspace.updated',
+          workspace: { ...detail.value.workspace, state: 'unread' },
+        },
+      },
+    })
+    await flushMicrotasks()
+    const reads = server.requests.filter(
+      (request) =>
+        request.method === 'PUT' && new URL(request.url).pathname === readPath,
+    )
+    expect(await Promise.all(reads.map((read) => read.json()))).toEqual([
+      { throughEventNumber: 21 },
+    ])
+    expect(workspace.detail.get()).toMatchObject({
+      state: 'ready',
+      value: { workspace: { state: 'ready' } },
+    })
+  })
 })

@@ -21,7 +21,7 @@ function ChooseWorkspace(props: { org: OrgSummary }) {
   const workspaces = valueOf(useStore(model.workspaces))
   const repositories = valueOf(useStore(model.repositories))
   const go = useGo()
-  useEffect(() => model.ensure('repositories'), [model])
+  useEffect(() => model.watch('repositories'), [model])
   const newWorkspace = (
     <ActionButton
       icon={Plus}

@@ -63,7 +63,7 @@ export function OrgList(props: {
   const workspaces = useStore(org.workspaces)
   const now = useNow(30_000)
   const { actions, move, adding, create, cancelAdding } = useListActions(org)
-  useEffect(() => org.ensure('list'), [org])
+  useEffect(() => org.watch('list'), [org])
   const failure = (error: ApiError) => (
     <LoadFailure
       error={error}

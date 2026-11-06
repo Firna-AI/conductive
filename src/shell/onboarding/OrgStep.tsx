@@ -22,9 +22,7 @@ const title = '2. Create your first org'
 function CreatedText(props: { org: OrgSummary }) {
   const model = useOrgModel(props.org.id)
   const repositories = useStore(model.repositories)
-  useEffect(() => {
-    model.ensure('repositories')
-  }, [model])
+  useEffect(() => model.watch('repositories'), [model])
   switch (repositories.state) {
     case 'loading':
       return null

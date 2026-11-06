@@ -29,6 +29,7 @@ const BANNERS = [
   'changes-requested',
   'draft',
   'closed',
+  'blocked',
 ] as const satisfies readonly BannerState[]
 
 /**

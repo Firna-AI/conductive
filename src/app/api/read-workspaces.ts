@@ -24,6 +24,7 @@ import { readChoice, readSender } from './read-core'
 
 export const WORKSPACE_STATES = [
   'working',
+  'input',
   'unread',
   'ready',
   'starting',

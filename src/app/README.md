@@ -55,21 +55,55 @@ The Members tab of the org settings is `MembersTab` in
 `../shell/settings/`. It shows the members read-only, and Milestone 15c adds
 the invite, the roles, and the removal there.
 
+## Data lifecycle
+
+- A screen asks for the org parts that it shows, as in
+  `useEffect(() => org.watch('repositories', 'list'), [org])`. A part
+  reads when its first screen mounts, each time that the user comes back
+  to the page, and on a timer while a screen shows it. The last screen
+  that leaves stops the timer. Screens that show a part share its reads.
+- The timer is short while a row works, needs input, or starts, or while a
+  build runs. Otherwise it is slow, so that changes from other tabs and
+  other people show. Repositories, the Boat key, and the members read at
+  entry and at focus only. The waits are choices of the app, not product
+  limits.
+- Each part is a `Resource`. A screen sees the answer of the newest read,
+  then the changes that the server confirmed after that read started, such
+  as events, then the waiting writes in the order that they went out. A
+  read that started before a change keeps the change. A failed read keeps
+  the value that shows.
+- A list write shows its change at once, and a failure takes back that
+  change only. An answer confirms only the fields of its write: a move
+  answer sets the section of the workspace, not its state. A workspace
+  record from an event, an open, or Archive keeps the place of its row,
+  because only a read of the list and a move change the place.
+- A save whose answer holds the whole value, such as the Boat key, the
+  repositories, or the computer settings, counts as an answer from the time
+  that it arrives. A read that started before it changes nothing.
+- The Cloud computer tab follows the builds while it shows. When the newest
+  build ends, by any path, the tab reads the settings again, because the
+  server changes them at a build, such as `needsBuild`.
+- The read mark of an open workspace follows both the applied state and
+  the number of the newest event, so their order does not count.
+
 ## Rules for this code
 
 - A screen reads data only through a model and `useStore`. A model sends the
   request, parses the answer with the readers in `api/`, and keeps the
   result. An answer of an unknown shape is an `ApiError`, not a guess.
-- A change to the list shows at once, and the list goes back when its write
-  fails. Other writes show their answer.
+- A screen never sets a value of an org. The stores of `OrgModel` are
+  read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after
   the save. No answer brings a stored secret back.
 - The browser keeps only the panel widths (`panels.ts`). A browser that
   refuses its storage keeps them until the page closes.
-- The open of a workspace, its read mark, the Archive check, and the poll
-  of a build log count a generation. An answer that arrives after their
-  screen closed or the user cancelled starts no stream, writes no older
-  state, opens no question, and schedules no request.
+- The open of a workspace, its read mark, the Archive check, the poll of a
+  build log, and the settings reads of the Cloud computer tab count a
+  generation. An answer that arrives after their screen closed or the user
+  cancelled starts no stream, writes no older state, opens no question,
+  and schedules no request.
+- Timers and the focus of the page come from `AppServices` (`delay` and
+  `onFocus`), so that no unit test runs a real timer.
 - The shell reuses the design tokens, the pure parts, and the CSS modules of
   the [mockups](../../docs/mockups/README.md). It never imports a mockup
   screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.
@@ -80,17 +114,22 @@ the invite, the roles, and the removal there.
 ## Tests
 
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
-fake API, requests that wait for the test, a manual timer, and a recording
-event source. `../shell/test-render.tsx` draws a screen with every provider
-through server rendering, after the test loads its data.
+fake API, requests that wait for the test (also two at one path), a manual
+timer with the wait of each pending timer, a manual page focus, and a
+recording event source. `../shell/test-render.tsx` draws a screen with
+every provider through server rendering, after the test loads its data.
 
 ## Key code
 
 - `api/client.ts`: the JSON client and `ApiError`. `api/read-*.ts`: the readers.
 - `app-model.ts`: the session, the orgs, the models list, and Get started.
 - `org-model.ts`: the sections, workspaces, repositories, builds, Boat key,
-  and members of one org.
-- `section-actions.ts` and `sections.ts`: sections, moves, and the Archived group.
+  and members of one org, with `watch` and the wait of each part.
+- `resource.ts`: `Resource`, a server value with its confirmed changes and
+  its waiting writes. `refresh.ts`: `Refresher`, the shared reads of a part
+  while screens show it.
+- `section-actions.ts`, `list-changes.ts`, and `sections.ts`: the list
+  writes, their changes, moves, and the Archived group.
 - `workspace-model.ts` and `archive-model.ts`: an open workspace and Archive.
 - `new-workspace-model.ts`: the first message that creates a workspace.
 - `computer-model.ts`: the scripts, the env vars, the builds, and the log.

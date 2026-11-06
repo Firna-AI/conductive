@@ -3,51 +3,38 @@ import { workspacePath } from '../shared/workspaces'
 import { ignore, nested, record } from './api/parse'
 import { readSection } from './api/read-core'
 import { readWorkspaceResponse } from './api/read-workspaces'
+import {
+  sectionAdded,
+  sectionCollapsed,
+  sectionDeleted,
+  sectionRenamed,
+  workspaceMoved,
+} from './list-changes'
 import type { OrgModel } from './org-model'
-import { moveWorkspace, withoutSection } from './sections'
-import { patch, valueOf } from './store'
+import { same } from './resource'
+
+/*
+ * The writes of the list. A collapse, a delete, and a move show at once,
+ * and a create and a rename show their answer. Each write keeps its change
+ * apart from the list that the server confirmed: a failure takes back only
+ * that change, and an answer confirms only the fields of its write.
+ */
 
 const readSectionResponse = (body: unknown) =>
   nested(record(body), 'section', readSection)
 
-function putSection(org: OrgModel, section: Section): void {
-  patch(org.sections, (sections) =>
-    sections.some((item) => item.id === section.id)
-      ? sections.map((item) => (item.id === section.id ? section : item))
-      : [...sections, section],
+export function createSection(org: OrgModel, name: string): Promise<Section> {
+  return org.resources.list.write(
+    same,
+    () =>
+      org.services.api.send(
+        'POST',
+        sectionsPath(org.orgId),
+        { name },
+        readSectionResponse,
+      ),
+    sectionAdded,
   )
-}
-
-/** Runs a write after a change to the list, and undoes the change if it fails. */
-async function withUndo<T>(
-  org: OrgModel,
-  change: () => void,
-  write: () => Promise<T>,
-): Promise<T> {
-  const sections = org.sections.get()
-  const workspaces = org.workspaces.get()
-  change()
-  try {
-    return await write()
-  } catch (error) {
-    org.sections.set(sections)
-    org.workspaces.set(workspaces)
-    throw error
-  }
-}
-
-export async function createSection(
-  org: OrgModel,
-  name: string,
-): Promise<Section> {
-  const section = await org.services.api.send(
-    'POST',
-    sectionsPath(org.orgId),
-    { name },
-    readSectionResponse,
-  )
-  putSection(org, section)
-  return section
 }
 
 export async function renameSection(
@@ -55,14 +42,16 @@ export async function renameSection(
   sectionId: string,
   name: string,
 ): Promise<void> {
-  putSection(
-    org,
-    await org.services.api.send(
-      'PATCH',
-      sectionPath(org.orgId, sectionId),
-      { name },
-      readSectionResponse,
-    ),
+  await org.resources.list.write(
+    same,
+    () =>
+      org.services.api.send(
+        'PATCH',
+        sectionPath(org.orgId, sectionId),
+        { name },
+        readSectionResponse,
+      ),
+    (section) => sectionRenamed(section.id, section.name),
   )
 }
 
@@ -71,14 +60,8 @@ export async function setSectionCollapsed(
   sectionId: string,
   collapsed: boolean,
 ): Promise<void> {
-  const section = await withUndo(
-    org,
-    () =>
-      patch(org.sections, (sections) =>
-        sections.map((item) =>
-          item.id === sectionId ? { ...item, collapsed } : item,
-        ),
-      ),
+  await org.resources.list.write(
+    sectionCollapsed(sectionId, collapsed),
     () =>
       org.services.api.send(
         'PATCH',
@@ -86,8 +69,8 @@ export async function setSectionCollapsed(
         { collapsed },
         readSectionResponse,
       ),
+    (section) => sectionCollapsed(section.id, section.collapsed),
   )
-  putSection(org, section)
 }
 
 /** Deletes a section. Its workspaces move to General, so nothing is lost. */
@@ -95,16 +78,8 @@ export async function deleteSection(
   org: OrgModel,
   sectionId: string,
 ): Promise<void> {
-  await withUndo(
-    org,
-    () => {
-      const sections = valueOf(org.sections.get())
-      const workspaces = valueOf(org.workspaces.get())
-      if (!sections || !workspaces) return
-      const next = withoutSection(sections, workspaces, sectionId)
-      patch(org.sections, () => next.sections)
-      patch(org.workspaces, () => next.workspaces)
-    },
+  await org.resources.list.write(
+    sectionDeleted(sectionId),
     () =>
       org.services.api.send(
         'DELETE',
@@ -112,12 +87,15 @@ export async function deleteSection(
         {},
         ignore,
       ),
+    () => sectionDeleted(sectionId),
   )
 }
 
 /**
  * Moves a workspace to `index` of a section, as a drop does. The index
- * counts the workspaces of that section without the moved one.
+ * counts the workspaces of that section without the moved one. The answer
+ * confirms the section only: its record of the workspace can be older than
+ * an event, so the state of the workspace stays as the list has it.
  */
 export async function moveToSection(
   org: OrgModel,
@@ -125,13 +103,8 @@ export async function moveToSection(
   sectionId: string,
   index: number,
 ): Promise<void> {
-  const sections = valueOf(org.sections.get()) ?? []
-  const detail = await withUndo(
-    org,
-    () =>
-      patch(org.workspaces, (list) =>
-        moveWorkspace(list, sections, workspaceId, sectionId, index),
-      ),
+  await org.resources.list.write(
+    workspaceMoved(workspaceId, sectionId, index),
     () =>
       org.services.api.send(
         'PATCH',
@@ -139,6 +112,6 @@ export async function moveToSection(
         { sectionId, position: index },
         readWorkspaceResponse,
       ),
+    (detail) => workspaceMoved(workspaceId, detail.workspace.sectionId, index),
   )
-  org.putWorkspace(detail.workspace)
 }

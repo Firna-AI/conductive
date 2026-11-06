@@ -52,7 +52,7 @@ export function WorkspaceHeader(props: {
   const model = useOrgModel(org.id)
   const repositories = valueOf(useStore(model.repositories))
   const go = useGo()
-  useEffect(() => model.ensure('repositories'), [model])
+  useEffect(() => model.watch('repositories'), [model])
   const repository =
     repositories?.find((item) => item.id === workspace.repositoryId)
       ?.fullName ?? workspace.repositoryId

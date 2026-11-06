@@ -1,4 +1,4 @@
-import { useSyncExternalStore, type ReactNode } from 'react'
+import { useLayoutEffect, useSyncExternalStore, type ReactNode } from 'react'
 import { SharedUiThemeProvider } from '@firna/ui/theme'
 import { ToastProvider } from '@firna/ui/toast'
 import { themeFor, tokensCss } from '../../../docs/mockups/src/theme'
@@ -33,6 +33,11 @@ export function ThemeRoot(props: {
 }) {
   const system = useSyncExternalStore(subscribe, systemScheme, darkScheme)
   const scheme = props.scheme ?? system
+  // The brand parts of the mockups, such as the lockup, read the scheme
+  // from the style of the page root, where the mockup renderer puts it.
+  useLayoutEffect(() => {
+    document.documentElement.style.colorScheme = scheme
+  }, [scheme])
   return (
     <>
       {/* The theme provider adds the stylesheet of Firna's controls itself. */}

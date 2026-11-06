@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Plus } from 'lucide-react'
-import appIcon from '../../../docs/brand/conducting-icon.svg'
+import { LogoTile } from '../../../docs/mockups/src/components/brand/Logo'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/layout/OrgRail.module.css'
 import { routes } from '../../app/router'
@@ -50,7 +50,7 @@ export function OrgRail(props: {
   return (
     <nav aria-label="Orgs" className={styles.rail}>
       <span className={styles.mark}>
-        <img alt="" height={28} src={appIcon} width={28} />
+        <LogoTile size={24} />
       </span>
       <ul className={styles.orgs}>
         {props.orgs.map((org) => {

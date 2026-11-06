@@ -109,17 +109,15 @@ export function ComputerSettings(props: {
 
 /**
  * The Cloud computer tab. It keeps one computer model while it shows: the
- * model loads the settings, and stops following a build log on unmount.
+ * model reads the settings and follows the builds, and it stops following
+ * them and the build log on unmount.
  */
 export function ComputerTab(props: { org: OrgSummary }) {
   const model = useOrgModel(props.org.id)
   const [computer] = useState(() => new ComputerModel(model))
   useEffect(() => {
-    void computer.load()
+    computer.start()
     return () => computer.stop()
   }, [computer])
-  useEffect(() => {
-    model.ensure('builds')
-  }, [model])
   return <ComputerSettings computer={computer} org={props.org} />
 }

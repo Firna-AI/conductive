@@ -17,9 +17,7 @@ export function RepositoriesTab(props: { org: OrgSummary }) {
   const admin = org.role === 'admin'
   const model = useOrgModel(org.id)
   const repositories = useStore(model.repositories)
-  useEffect(() => {
-    model.ensure('repositories')
-  }, [model])
+  useEffect(() => model.watch('repositories'), [model])
   return (
     <Section
       description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. ${admin ? 'A change takes effect at the next build.' : 'Only an admin can change them.'}`}

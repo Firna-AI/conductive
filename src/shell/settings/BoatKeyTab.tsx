@@ -173,9 +173,7 @@ export function BoatKeyTab(props: { org: OrgSummary }) {
   const { org } = props
   const model = useOrgModel(org.id)
   const status = useStore(model.boatKey)
-  useEffect(() => {
-    model.ensure('boatKey')
-  }, [model])
+  useEffect(() => model.watch('boatKey'), [model])
   return (
     <>
       <TabIntro title="Boat key">

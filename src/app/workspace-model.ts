@@ -40,7 +40,7 @@ export class WorkspaceModel {
     this.stream = new WorkspaceStream(
       org.services.events,
       { orgId: org.orgId, workspaceId },
-      delay,
+      delay ?? org.services.delay,
     )
     this.archive = new ArchiveModel(org, workspaceId, (detail) => {
       this.detail.set(ready(detail))
@@ -80,11 +80,15 @@ export class WorkspaceModel {
     if (run !== this.generation) return
     this.detail.set(ready(detail))
     this.org.putWorkspace(detail.workspace)
+    // The read mark follows both inputs, so their order does not count: the
+    // number of an event changes before the event applies.
+    const markRead = () => void this.markRead()
     this.stops.push(
       this.stream.subscribe((envelope) => {
         if (envelope.shell) this.apply(envelope.shell)
       }),
-      this.stream.last.subscribe(() => void this.markRead()),
+      this.stream.last.subscribe(markRead),
+      this.detail.subscribe(markRead),
     )
     this.stream.start()
   }
@@ -148,9 +152,10 @@ export class WorkspaceModel {
   }
 
   /**
-   * Output that the open workspace shows counts as read. The answer changes
-   * the state only while the workspace is still unread through the same
-   * event, so an older answer never hides a newer update.
+   * Output that the open workspace shows counts as read. It runs when the
+   * applied state or the number of the newest event changes. The answer
+   * changes the state only while the workspace is still unread through the
+   * same event, so an older answer never hides a newer update.
    */
   private async markRead(): Promise<void> {
     const detail = valueOf(this.detail.get())

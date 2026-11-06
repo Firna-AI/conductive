@@ -66,6 +66,7 @@ export function sandboxState(workspace: Workspace): SandboxState {
     case 'archived':
       return workspace.state
     case 'working':
+    case 'input':
     case 'unread':
     case 'ready':
       return 'ready'

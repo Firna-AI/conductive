@@ -7,74 +7,152 @@ import {
   type Repository,
 } from '../shared/org-settings'
 import { sectionsPath, type Section } from '../shared/sections'
-import { workspacesPath, type Workspace } from '../shared/workspaces'
+import {
+  workspacesPath,
+  type Workspace,
+  type WorkspaceState,
+} from '../shared/workspaces'
 import { items, record } from './api/parse'
 import { readBoatKey, readSection } from './api/read-core'
 import { readWorkspaces } from './api/read-workspaces'
 import { readBuilds, readMembers, readRepositories } from './api/read-settings'
+import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
+import { Refresher, type RefreshWait, type Refreshing } from './refresh'
+import { Resource } from './resource'
 import type { AppServices } from './services'
-import { load, loading, patch, Store, valueOf, type Loadable } from './store'
+import { ready, Store, valueOf, type Loadable, type Readable } from './store'
 
 export type OrgPart = 'list' | 'repositories' | 'builds' | 'boatKey' | 'members'
 
 /**
- * The data of one org: its sections and workspaces, its repositories, the
- * builds of its cloud computer, its Boat key status, and its members. Each
- * part loads the first time that a screen needs it.
+ * How soon a shown part reads again. These are choices of the app, not
+ * product limits: soon while a workspace or a build is active, and slowly
+ * otherwise, so that changes from other tabs and people show.
+ */
+const activeWait = 5_000
+const idleWait = 30_000
+const activeStates: ReadonlySet<WorkspaceState> = new Set([
+  'working',
+  'input',
+  'starting',
+])
+
+const listWait: RefreshWait<ListData> = (list) =>
+  list?.workspaces.some((workspace) => activeStates.has(workspace.state))
+    ? activeWait
+    : idleWait
+
+const buildsWait: RefreshWait<BuildsResponse> = (builds) =>
+  builds?.builds.some((build) => build.state === 'running')
+    ? activeWait
+    : idleWait
+
+/** Repositories, the Boat key, and members read at entry and focus only. */
+const onEntry: RefreshWait<unknown> = () => null
+
+/** One part of a loaded value, which changes only when that part changes. */
+function partOf<T, P>(
+  source: Readable<Loadable<T>>,
+  pick: (value: T) => P,
+): Readable<Loadable<P>> {
+  const select = (value: Loadable<T>): Loadable<P> =>
+    value.state === 'ready' ? ready(pick(value.value)) : value
+  const target = new Store(select(source.get()))
+  source.subscribe(() => {
+    const next = source.get()
+    const current = target.get()
+    const kept =
+      next.state === 'ready' &&
+      current.state === 'ready' &&
+      pick(next.value) === current.value
+    if (!kept) target.set(select(next))
+  })
+  return target
+}
+
+/**
+ * The data of one org: its list of sections and workspaces, its
+ * repositories, the builds of its cloud computer, its Boat key status, and
+ * its members. A part reads while a screen shows it, as `watch` says.
  */
 export class OrgModel {
   readonly orgId: string
   readonly services: AppServices
-  readonly sections = new Store<Loadable<readonly Section[]>>(loading)
-  readonly workspaces = new Store<Loadable<readonly Workspace[]>>(loading)
-  readonly repositories = new Store<Loadable<readonly Repository[]>>(loading)
-  readonly builds = new Store<Loadable<BuildsResponse>>(loading)
-  readonly boatKey = new Store<Loadable<BoatKeyStatus>>(loading)
-  readonly members = new Store<Loadable<MembersResponse>>(loading)
-  private readonly requested = new Set<OrgPart>()
+  readonly resources: {
+    readonly list: Resource<ListData>
+    readonly repositories: Resource<readonly Repository[]>
+    readonly builds: Resource<BuildsResponse>
+    readonly boatKey: Resource<BoatKeyStatus>
+    readonly members: Resource<MembersResponse>
+  }
+  readonly sections: Readable<Loadable<readonly Section[]>>
+  readonly workspaces: Readable<Loadable<readonly Workspace[]>>
+  readonly repositories: Readable<Loadable<readonly Repository[]>>
+  readonly builds: Readable<Loadable<BuildsResponse>>
+  readonly boatKey: Readable<Loadable<BoatKeyStatus>>
+  readonly members: Readable<Loadable<MembersResponse>>
+  private readonly parts: Readonly<Record<OrgPart, Refreshing>>
   private readonly drafts = new Map<string, NewWorkspaceModel>()
 
   constructor(services: AppServices, orgId: string) {
     this.services = services
     this.orgId = orgId
-  }
-
-  /** Loads a part once. Later calls keep the loaded value. */
-  ensure(part: OrgPart): void {
-    if (this.requested.has(part)) return
-    this.requested.add(part)
-    void this.reload(part)
-  }
-
-  reload(part: OrgPart): Promise<void> {
-    const { api } = this.services
-    const id = this.orgId
-    switch (part) {
-      case 'list':
-        return Promise.all([
-          load(this.sections, () =>
-            api.get(sectionsPath(id), (body) =>
-              items(record(body), 'sections', readSection),
-            ),
+    const { api } = services
+    this.resources = {
+      list: new Resource<ListData>(async () => {
+        const [sections, workspaces] = await Promise.all([
+          api.get(sectionsPath(orgId), (body) =>
+            items(record(body), 'sections', readSection),
           ),
-          load(this.workspaces, () =>
-            api.get(workspacesPath(id), readWorkspaces),
-          ),
-        ]).then(() => undefined)
-      case 'repositories':
-        return load(this.repositories, () =>
-          api.get(orgSettingsPaths.repositories(id), readRepositories),
-        )
-      case 'builds':
-        return load(this.builds, () =>
-          api.get(orgSettingsPaths.builds(id), readBuilds),
-        )
-      case 'boatKey':
-        return load(this.boatKey, () => api.get(boatKeyPath(id), readBoatKey))
-      case 'members':
-        return load(this.members, () => api.get(membersPath(id), readMembers))
+          api.get(workspacesPath(orgId), readWorkspaces),
+        ])
+        return { sections, workspaces }
+      }),
+      repositories: new Resource<readonly Repository[]>(() =>
+        api.get(orgSettingsPaths.repositories(orgId), readRepositories),
+      ),
+      builds: new Resource<BuildsResponse>(() =>
+        api.get(orgSettingsPaths.builds(orgId), readBuilds),
+      ),
+      boatKey: new Resource<BoatKeyStatus>(() =>
+        api.get(boatKeyPath(orgId), readBoatKey),
+      ),
+      members: new Resource<MembersResponse>(() =>
+        api.get(membersPath(orgId), readMembers),
+      ),
     }
+    const { list, repositories, builds, boatKey, members } = this.resources
+    this.sections = partOf(list.store, (value) => value.sections)
+    this.workspaces = partOf(list.store, (value) => value.workspaces)
+    this.repositories = repositories.store
+    this.builds = builds.store
+    this.boatKey = boatKey.store
+    this.members = members.store
+    this.parts = {
+      list: new Refresher(list, listWait, services),
+      repositories: new Refresher(repositories, onEntry, services),
+      builds: new Refresher(builds, buildsWait, services),
+      boatKey: new Refresher(boatKey, onEntry, services),
+      members: new Refresher(members, onEntry, services),
+    }
+  }
+
+  /**
+   * A screen shows these parts. Each part reads at once, at each return of
+   * the user to the page, and on its timer, until the last screen that
+   * shows it calls the result. Screens that show a part share its reads.
+   */
+  watch(...parts: OrgPart[]): () => void {
+    const releases = parts.map((part) => this.parts[part].watch())
+    return () => {
+      for (const release of releases) release()
+    }
+  }
+
+  /** Reads a part now, such as for Try again. */
+  reload(part: OrgPart): Promise<void> {
+    return this.parts[part].refresh()
   }
 
   /** The draft of New workspace for a section. It stays while the app is open. */
@@ -88,12 +166,14 @@ export class OrgModel {
     return draft
   }
 
-  /** Puts a workspace in the list: in its place, or at the top when it is new. */
+  /**
+   * Puts a newer record of a workspace in the list, such as from an event,
+   * an open, Archive, or a create. Its place in the list stays.
+   */
   putWorkspace(workspace: Workspace): void {
-    patch(this.workspaces, (list) =>
-      list.some((item) => item.id === workspace.id)
-        ? list.map((item) => (item.id === workspace.id ? workspace : item))
-        : [workspace, ...list],
+    this.resources.list.confirm(
+      workspaceUpdated(workspace),
+      `workspace ${workspace.id}`,
     )
   }
 
@@ -103,14 +183,20 @@ export class OrgModel {
     )
   }
 
-  /** Puts a build in the history, newest first. */
+  /** Puts a newer record of a build in the history, newest first. */
   putBuild(build: ImageBuild): void {
-    patch(this.builds, (builds) => ({
-      ...builds,
-      builds: [build, ...builds.builds.filter((item) => item.id !== build.id)],
-      currentImageBuildId:
-        build.state === 'succeeded' ? build.id : builds.currentImageBuildId,
-    }))
+    this.resources.builds.confirm(
+      (builds) => ({
+        ...builds,
+        builds: [
+          build,
+          ...builds.builds.filter((item) => item.id !== build.id),
+        ],
+        currentImageBuildId:
+          build.state === 'succeeded' ? build.id : builds.currentImageBuildId,
+      }),
+      `build ${build.id}`,
+    )
   }
 }
 

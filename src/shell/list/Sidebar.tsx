@@ -27,7 +27,7 @@ export type ListCurrent =
 export function SettingsLink(props: { orgId: string; current: boolean }) {
   const org = useOrgModel(props.orgId)
   const builds = valueOf(useStore(org.builds))
-  useEffect(() => org.ensure('builds'), [org])
+  useEffect(() => org.watch('builds'), [org])
   const alert = builds ? latestBuild(builds)?.state === 'failed' : false
   return (
     <AppLink

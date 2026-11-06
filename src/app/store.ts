@@ -1,11 +1,17 @@
 import { useSyncExternalStore } from 'react'
 import { ApiError } from './api/client'
 
+/** A value that screens read and follow. Only its owner changes it. */
+export interface Readable<T> {
+  get: () => T
+  subscribe: (listener: () => void) => () => void
+}
+
 /**
  * One value that screens read and models change. Screens subscribe through
  * `useStore`, so a change draws every screen that shows the value.
  */
-export class Store<T> {
+export class Store<T> implements Readable<T> {
   private value: T
   private readonly listeners = new Set<() => void>()
 
@@ -31,7 +37,7 @@ export class Store<T> {
   }
 }
 
-export function useStore<T>(store: Store<T>): T {
+export function useStore<T>(store: Readable<T>): T {
   return useSyncExternalStore(store.subscribe, store.get, store.get)
 }
 
