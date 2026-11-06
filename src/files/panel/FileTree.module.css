@@ -1,0 +1,57 @@
+.tree {
+  margin: 0;
+  padding: 6px 8px 16px;
+  list-style: none;
+}
+
+/* A folder is a button that opens or closes it. A file is a link. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: calc(var(--ui-row-height) - 4px);
+  min-height: var(--ui-touch-min);
+  margin: 0;
+  padding: 0 8px 0 0;
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: none;
+  color: var(--ui-ink2);
+  font: inherit;
+  font-size: var(--ui-text-md);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.row:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+.open,
+.open:hover {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+}
+
+.chevron,
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.spacer {
+  flex-shrink: 0;
+  width: 14px;
+}
+
+.name {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

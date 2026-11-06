@@ -1,0 +1,21 @@
+.added,
+.modified,
+.deleted,
+.renamed,
+.untracked {
+  flex-shrink: 0;
+}
+
+.added,
+.untracked {
+  color: var(--ui-success);
+}
+
+.modified,
+.renamed {
+  color: var(--ui-warning);
+}
+
+.deleted {
+  color: var(--ui-rose);
+}

@@ -4149,9 +4149,9 @@ Depends on: 4a
 It builds against the fake API and the recorded events of Milestone 4a.
 Milestone 8i or 15i wires it to its backend.
 
-- [ ] Build the All and Changes lists, the Markdown and code preview,
-      and the diff of a changed file.
-- [ ] Compare each screen with its mockup.
+- [x] Build the All and Changes lists, the Markdown and code preview,
+      and the diff of a changed file. Branch: `conductor/boat-native-remote-workspaces-milestone-10`.
+- [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-10`.
 
 ## Milestone 11: Terminal, previews, and desktop backend
 
