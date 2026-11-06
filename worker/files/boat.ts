@@ -1,8 +1,9 @@
 import type { FileResponse } from '../../src/shared/files'
-import { readBoatKey } from '../data/boat-keys'
 import type { AppEnv, HttpFetch } from '../env'
-import { HttpError, isRecord } from '../http'
-import { decrypt } from '../security/crypto'
+import { HttpError } from '../http'
+import { ProviderError } from '../sandbox/errors'
+import { orgSandboxProvider } from '../sandbox/keys'
+import type { SandboxFileRead } from '../sandbox/provider'
 import type { FilesWorkspace } from './data'
 import { fileBytes, parseFile } from './content'
 import {
@@ -10,12 +11,12 @@ import {
   fileUnavailable,
   invalidFileResponse,
 } from './errors'
-import { natural } from './parsers'
 import { checkByteLimit, readFilePath } from './paths'
 
 /** Fixed Boat file route. The handler supplies the authorized D1 workspace. */
 export async function readBoatFile(
   env: AppEnv,
+  userId: string,
   workspace: FilesWorkspace,
   repositoryRoot: string,
   path: string,
@@ -29,81 +30,38 @@ export async function readBoatFile(
   if (!root.startsWith('/home/user/') || !readFilePath(root.slice(1))) {
     throw new Error('Configure the absolute repository root under /home/user.')
   }
-  const stored = await readBoatKey(env.DB, workspace.orgId)
-  if (!stored) throw fileUnavailable()
-  const key = await decrypt(
-    stored.ciphertext,
-    JSON.stringify([
-      'boat-key',
-      workspace.orgId,
-      stored.accountType,
-      stored.accountId,
-    ]),
-    env.BOAT_KEY_ENCRYPTION_KEY,
-  )
-  const sandboxId = workspace.sandboxId
-  if (
-    !sandboxId ||
-    /[/\\?#]/.test(sandboxId) ||
-    sandboxId === '.' ||
-    sandboxId === '..'
-  )
-    throw fileUnavailable()
-  const url = new URL(
-    `https://boat.dev/api/v1/sandboxes/${encodeURIComponent(sandboxId)}/files`,
-  )
   const absolutePath = `${root}/${path}`
-  url.search = new URLSearchParams({
-    path: absolutePath,
-    encoding: 'base64',
-  }).toString()
-  let response: Response
+  let result: SandboxFileRead
   try {
-    response = await fetch(
-      new Request(url, {
-        headers: {
-          Authorization: `Bearer ${key}`,
-          Accept: 'application/json',
-          'X-Boat-Org':
-            stored.accountType === 'personal' ? 'personal' : stored.accountId,
-        },
-        redirect: 'error',
-        signal: AbortSignal.timeout(65_000),
-      }),
+    const provider = await orgSandboxProvider(
+      env,
+      userId,
+      workspace.orgId,
+      fetch,
     )
-  } catch {
-    throw fileUnavailable()
+    result = await provider.readFile(
+      workspace.sandboxId,
+      absolutePath,
+      maxBytes,
+    )
+  } catch (error) {
+    if (error instanceof HttpError && error.code === 'boat_key_required')
+      throw fileUnavailable()
+    if (error instanceof ProviderError) {
+      if (error.kind === 'not_found')
+        throw new HttpError(404, 'file_not_found', 'The file is not available.')
+      if (error.kind === 'invalid_response') throw invalidFileResponse()
+      throw fileUnavailable()
+    }
+    throw error
   }
-  if (response.status === 404)
-    throw new HttpError(404, 'file_not_found', 'The file is not available.')
-  if (!response.ok) throw fileUnavailable()
-  let value: unknown
-  try {
-    value = await response.json()
-  } catch {
-    throw invalidFileResponse()
-  }
-  if (
-    !isRecord(value) ||
-    value.ok !== true ||
-    value.type !== 'file.read' ||
-    typeof value.success !== 'boolean' ||
-    typeof value.path !== 'string' ||
-    (value.encoding !== 'utf8' && value.encoding !== 'base64') ||
-    !natural(value.size) ||
-    typeof value.content !== 'string'
-  )
-    throw invalidFileResponse()
-  if (!value.success) throw fileUnavailable()
-  if (value.path !== absolutePath) throw invalidFileResponse()
-  if (value.size > maxBytes) throw new FileTooLargeError(value.size, maxBytes)
+  if (result.kind === 'too_large')
+    throw new FileTooLargeError(result.sizeBytes, result.limitBytes)
   const file = parseFile(
     {
+      ...result.file,
       path,
       mediaType: 'application/octet-stream',
-      sizeBytes: value.size,
-      encoding: value.encoding === 'utf8' ? 'utf-8' : 'base64',
-      content: value.content,
     },
     path,
     maxBytes,

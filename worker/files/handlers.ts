@@ -95,6 +95,7 @@ export function createFilesHandler(options: FilesHandlerOptions) {
             pending ??
             (await readBoatFile(
               env,
+              context.user.id,
               workspace,
               options.repositoryRoot(workspace),
               path,

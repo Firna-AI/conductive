@@ -3,7 +3,7 @@
 This module serves the Files and Changes API for Conducting.
 It keeps the runner's last tree and branch changes in workspace Durable Object storage.
 It also sends file and diff requests to the connected runner.
-A disconnected file read uses the org's encrypted Boat key on the server.
+A disconnected file read uses the shared sandbox provider on the server.
 
 The lifecycle milestone owns the workspace Durable Object and root routes.
 This module exports the hooks for that later wiring.
@@ -70,10 +70,16 @@ It appends only a repository-relative file path.
 The runner must resolve and confine file paths to its own checkout, including symlinks.
 The Boat API applies its own canonical path checks.
 
-The fallback calls only `GET /api/v1/sandboxes/{id}/files`.
-It pins `X-Boat-Org` to the account of the org's saved key.
-It requests base64 so a binary file keeps its bytes.
-It checks that the response names the absolute path that it requested.
+The fallback gets `SandboxProvider` through `orgSandboxProvider`, with the authorized user's ID.
+The provider owns the fixed routes, headers, account pinning, and encrypted key handling.
+Its `readFile` requests base64 so a binary file keeps its bytes.
+It bounds only the file content response before parsing JSON.
+It uses the [shared bounded body reader](../http/README.md), with the file route's budget.
+On overflow, it cancels the body and reads `files/info` for the exact size.
+The handler returns that size with `file_too_large`.
+The metadata response uses the provider's normal response path.
+The provider checks that both replies name the requested absolute path.
+The [sandbox README](../sandbox/README.md) gives the byte budget and transport entry points.
 It converts valid UTF-8 to text and preserves a leading byte order mark.
 It checks the returned size and decoded byte length against the configured limit.
 Provider error messages never reach the browser.
@@ -97,7 +103,7 @@ No migration is required.
 - [state.ts](state.ts) applies snapshots and tree updates and keeps branch changes.
 - [storage.ts](storage.ts) adapts Durable Object storage and writes the chunks atomically.
 - [runner.ts](runner.ts) matches file and diff commands to their results.
-- [boat.ts](boat.ts) implements the fixed file read fallback.
+- [boat.ts](boat.ts) converts the provider's file read result for the browser.
 - [data.ts](data.ts) reads the workspace and repository relationship from D1.
 
 See the [shared contracts](../../src/shared/README.md),
