@@ -1,18 +1,21 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
+import { classes } from './classes'
 import { Sheet } from './Sheet'
 import styles from './ConfirmDialog.module.css'
 
 /**
  * A question that the user confirms before an action, drawn open. Desktop
  * shows a dialog over the dimmed app, and a phone shows a sheet. The
- * actions come last, with the confirming action at the end.
+ * actions come last, with the confirming action at the end. A wide dialog
+ * fits more actions, such as the choices of a command prompt.
  */
 export function ConfirmDialog(props: {
   title: string
   viewport: Viewport
   children: ReactNode
   actions: ReactNode
+  wide?: boolean
 }) {
   if (props.viewport === 'mobile') {
     return (
@@ -30,7 +33,7 @@ export function ConfirmDialog(props: {
       <section
         aria-label={props.title}
         aria-modal
-        className={styles.dialog}
+        className={classes(styles.dialog, props.wide && styles.wide)}
         role="dialog"
       >
         <h2 className={styles.title}>{props.title}</h2>

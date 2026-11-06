@@ -1,0 +1,36 @@
+/* The state tints the whole bar, and its edges stay neutral. */
+.bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  height: var(--ui-bar-height);
+  padding: 0 8px 0 var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-amber-soft);
+  box-sizing: border-box;
+  font-size: var(--ui-text-sm);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-amber-deep);
+}
+
+.text {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.left {
+  flex-shrink: 0;
+  color: var(--ui-amber-deep);
+  font-family: var(--ui-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ui-weight-strong);
+}
