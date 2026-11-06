@@ -1,0 +1,47 @@
+/* The dialog fills the bottom of the screen and draws nothing itself. */
+.layer {
+  width: 100%;
+  max-width: none;
+  max-height: calc(100% - 24px);
+  margin: auto 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+}
+
+.layer::backdrop {
+  background: rgba(4, 6, 8, 0.55);
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 8px 22px;
+  border: 1px solid var(--ui-border2);
+  border-bottom: 0;
+  border-radius: var(--ui-radius-xxl) var(--ui-radius-xxl) 0 0;
+  background: var(--ui-composer);
+  box-shadow: 0 -8px 28px var(--ui-shadow);
+  box-sizing: border-box;
+}
+
+.handle {
+  width: 36px;
+  height: 4px;
+  margin: 0 auto 8px;
+  border-radius: 2px;
+  background: var(--ui-border2);
+}
+
+.title {
+  overflow: hidden;
+  margin: 0;
+  padding: 2px 12px 8px;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-lg);
+  font-weight: var(--ui-weight-heading);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

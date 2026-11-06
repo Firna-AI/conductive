@@ -1,0 +1,28 @@
+.terminal {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--ui-surface);
+}
+
+/* The padding of the mockup terminal. xterm.js fits its rows into the host. */
+.screen {
+  flex: 1;
+  min-height: 0;
+  padding: 10px var(--ui-pad-x);
+}
+
+.host {
+  width: 100%;
+  height: 100%;
+}
+
+.keys {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+}
