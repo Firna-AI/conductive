@@ -8,7 +8,7 @@ import { createMacWindow } from './chrome'
 import { installAppPopups } from './navigation'
 import { createDesktopServices } from './services'
 
-installAppPopups(__CONDUCTING_APP_ORIGIN__)
+installAppPopups(__CONDUCTIVE_APP_ORIGIN__)
 
 const root = document.getElementById('root')
 if (root) {
@@ -17,7 +17,7 @@ if (root) {
       <MacApp window={createMacWindow(window)}>
         <App
           navigation={browserNavigation(window)}
-          services={createDesktopServices(window, __CONDUCTING_APP_ORIGIN__)}
+          services={createDesktopServices(window, __CONDUCTIVE_APP_ORIGIN__)}
         />
       </MacApp>
     </StrictMode>,

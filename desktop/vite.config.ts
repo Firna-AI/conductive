@@ -6,16 +6,16 @@ import { DEFAULT_APP_ORIGIN, readConfiguration } from './src/config.ts'
 export default defineConfig({
   root: resolve(import.meta.dirname, '..'),
   define: {
-    __CONDUCTING_APP_ORIGIN__: JSON.stringify(
+    __CONDUCTIVE_APP_ORIGIN__: JSON.stringify(
       readConfiguration({
-        appOrigin: process.env.CONDUCTING_APP_ORIGIN ?? DEFAULT_APP_ORIGIN,
+        appOrigin: process.env.CONDUCTIVE_APP_ORIGIN ?? DEFAULT_APP_ORIGIN,
       }).appOrigin,
     ),
   },
   plugins: [
     react(),
     {
-      name: 'conducting-desktop-chrome',
+      name: 'conductive-desktop-chrome',
       transformIndexHtml: {
         order: 'pre',
         handler: (html) =>

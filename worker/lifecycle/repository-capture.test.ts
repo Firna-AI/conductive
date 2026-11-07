@@ -27,8 +27,8 @@ it('keeps the workspace image folder map at resume and retention after a later s
     const ciphertext = await encrypt(
       JSON.stringify({
         APP_SECRET: secret,
-        CONDUCTING_REPOSITORY_DIR: '/wrong-current',
-        CONDUCTING_REPOSITORY_STOREFRONT_DIR: '/wrong-repository',
+        CONDUCTIVE_REPOSITORY_DIR: '/wrong-current',
+        CONDUCTIVE_REPOSITORY_STOREFRONT_DIR: '/wrong-repository',
       }),
       orgEnvironmentContext(org.id),
       runtime.env.BOAT_KEY_ENCRYPTION_KEY,
@@ -50,7 +50,7 @@ it('keeps the workspace image folder map at resume and retention after a later s
     }),
   )
   expect(boat.starts[0].env).toEqual({
-    CONDUCTING_REPOSITORY_STOREFRONT_DIR: '/home/user/code/storefront',
+    CONDUCTIVE_REPOSITORY_STOREFRONT_DIR: '/home/user/code/storefront',
   })
   const created = await fixture.run(() =>
     createCompletedWorkspace(runtime, org.id, user, {
@@ -63,7 +63,7 @@ it('keeps the workspace image folder map at resume and retention after a later s
     {
       repositoryId,
       directory: '/home/user/code/storefront',
-      variable: 'CONDUCTING_REPOSITORY_STOREFRONT_DIR',
+      variable: 'CONDUCTIVE_REPOSITORY_STOREFRONT_DIR',
     },
   ]
   expect(await workspaceRepositoryLocations(runtime.env.DB, id)).toEqual(
@@ -72,8 +72,8 @@ it('keeps the workspace image folder map at resume and retention after a later s
   expect(boat.starts[1]).toMatchObject({
     env: {
       APP_SECRET: 'first-secret',
-      CONDUCTING_REPOSITORY_DIR: '/home/user/code/storefront',
-      CONDUCTING_REPOSITORY_STOREFRONT_DIR: '/home/user/code/storefront',
+      CONDUCTIVE_REPOSITORY_DIR: '/home/user/code/storefront',
+      CONDUCTIVE_REPOSITORY_STOREFRONT_DIR: '/home/user/code/storefront',
     },
   })
   const row = await readWorkspace(runtime.env.DB, org.id, id)
@@ -119,12 +119,12 @@ it('keeps the workspace image folder map at resume and retention after a later s
     {
       repositoryId: 'collision-repository',
       directory: '/home/user/code/other-storefront',
-      variable: 'CONDUCTING_REPOSITORY_OTHER_STOREFRONT_DIR',
+      variable: 'CONDUCTIVE_REPOSITORY_OTHER_STOREFRONT_DIR',
     },
     {
       repositoryId,
       directory: '/home/user/code/acme-storefront',
-      variable: 'CONDUCTING_REPOSITORY_ACME_STOREFRONT_DIR',
+      variable: 'CONDUCTIVE_REPOSITORY_ACME_STOREFRONT_DIR',
     },
   ])
   expect(await workspaceRepositoryLocations(runtime.env.DB, id)).toEqual(
@@ -136,9 +136,9 @@ it('keeps the workspace image folder map at resume and retention after a later s
   await fixture.run(() => resumeWorkspace(runtime, org.id, id, user.id))
   expect(resumedEnvironments[0]).toMatchObject({
     APP_SECRET: 'fresh-secret',
-    CONDUCTING_REPOSITORY_DIR: '/home/user/code/storefront',
-    CONDUCTING_REPOSITORY_STOREFRONT_DIR: '/home/user/code/storefront',
-    CONDUCTING_DISK_KEEPALIVE: '0',
+    CONDUCTIVE_REPOSITORY_DIR: '/home/user/code/storefront',
+    CONDUCTIVE_REPOSITORY_STOREFRONT_DIR: '/home/user/code/storefront',
+    CONDUCTIVE_DISK_KEEPALIVE: '0',
   })
   boat.states.set(row.sandboxId, 'archived')
   await runtime.workspace(id).lifecycleStopped()
@@ -150,9 +150,9 @@ it('keeps the workspace image folder map at resume and retention after a later s
   })
   expect(resumedEnvironments[1]).toMatchObject({
     APP_SECRET: 'fresh-secret',
-    CONDUCTING_REPOSITORY_DIR: '/home/user/code/storefront',
-    CONDUCTING_REPOSITORY_STOREFRONT_DIR: '/home/user/code/storefront',
-    CONDUCTING_DISK_KEEPALIVE: '1',
+    CONDUCTIVE_REPOSITORY_DIR: '/home/user/code/storefront',
+    CONDUCTIVE_REPOSITORY_STOREFRONT_DIR: '/home/user/code/storefront',
+    CONDUCTIVE_DISK_KEEPALIVE: '1',
   })
   expect(
     await runtime.env.DB.prepare(

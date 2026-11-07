@@ -25,7 +25,7 @@ export const workspacePath = routes.workspace(FAKE_IDS.org, FAKE_IDS.workspace)
 export const workspaceTitle = 'Checkout address autocomplete'
 
 export function launchWindow(profile: string) {
-  const packaged = process.env.CONDUCTING_PACKAGED_APP
+  const packaged = process.env.CONDUCTIVE_PACKAGED_APP
   return _electron.launch({
     ...(packaged ? { executablePath: packaged } : {}),
     args: [

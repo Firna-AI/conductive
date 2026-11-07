@@ -99,6 +99,20 @@ says.
   computer stops, shows "The agent stopped".
 - The next message after a stop continues the same session.
 - A turn that fails names the cause, and Try again retries the turn.
+- Try again can retry only the newest turn of a session, and only when that
+  turn failed (decision 97). It sends the retry message that the failure
+  names.
+- The session record names that message in `retryMessageId`. In every
+  other case, the field holds null, also after a refused end. Each tab gets
+  the record from the session routes and the `session.updated` events.
+- The chat shows Try again only on the failed turn whose retry message the
+  record names.
+- The retry route refuses each other message of the session with HTTP 409
+  and the error code `retry_not_available`. The chat then says in plain
+  words that only the newest failed request can run again.
+- Reason: a tab that missed newer events can still show an older Try again.
+  A check in the chat alone was rejected, because such a tab could send an
+  older message again. The agent would then answer out of order.
 - After the first answer of the agent in a new workspace, the app asks the
   agent for a title of three to five words. The chat does not show that
   request.
@@ -147,8 +161,8 @@ says.
 
 - The runner starts with the sandbox, and starts again after each resume.
 - The runner opens one outbound WebSocket to the Durable Object of its
-  workspace, on the hostname for machines. It proves itself with the
-  workspace token.
+  workspace, at `/v1/runner` on `api.conductive.build`, the hostname for
+  machines. It proves itself with the workspace token.
 - The runner connection carries a protocol version. The Durable Object
   serves each version that a live org image or sandbox can hold.
 - Each build of the org image installs the newest runner. Reason: a stopped

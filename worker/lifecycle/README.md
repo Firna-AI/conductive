@@ -101,7 +101,7 @@ turn and the branch step use the sender.
 `MACHINE_PATHS.gitCredential` on the machine hostname. The
 [git credential helper](../../image/README.md#git-credentials) sends the
 workspace token as a bearer token, and the current turn ID in the
-`X-Conducting-Turn-Id` header. The handler reads no request body and needs
+`X-Conductive-Turn-Id` header. The handler reads no request body and needs
 no content type. The workspace object maps that turn to its sender. Only
 trusted turn records give a sender: the first turn of a create, and each
 turn that the chat backend registers. A stop clears them.
@@ -213,7 +213,7 @@ The lifecycle code reads `LifecycleEnvironment` from
 | Name | Value |
 | --- | --- |
 | `WORKSPACES` | The Durable Object binding in `wrangler.jsonc`. |
-| `MACHINE_ORIGIN` | The `https://` origin of the machine hostname. Each sandbox gets it as `CONDUCTING_MACHINE_ORIGIN`. Both credential routes refuse every request without it, and a build cannot copy a repository. |
+| `MACHINE_ORIGIN` | The `https://` origin of the machine hostname. Each sandbox gets it as `CONDUCTIVE_MACHINE_ORIGIN`. Both credential routes refuse every request without it, and a build cannot copy a repository. |
 | `GITHUB_APP_PRIVATE_KEY` | The GitHub App's private key, as PEM. A build or refresh needs it when the org chose a repository. The PEM file from GitHub works as it is. |
 
 `BOAT_KEY_ENCRYPTION_KEY` also encrypts the workspace tokens.

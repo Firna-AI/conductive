@@ -37,9 +37,9 @@ it('runs the sample install script in named image repositories and keeps install
       ).bind(
         [
           installScript,
-          'test "$CONDUCTING_REPOSITORY_STOREFRONT_DIR" = "$HOME/code/storefront"',
-          'test "$CONDUCTING_REPOSITORY_BILLING_SERVICE_DIR" = "$HOME/code/billing-service"',
-          'test "$CONDUCTING_REPOSITORY_MARKETING_SITE_DIR" = "$HOME/code/marketing-site"',
+          'test "$CONDUCTIVE_REPOSITORY_STOREFRONT_DIR" = "$HOME/code/storefront"',
+          'test "$CONDUCTIVE_REPOSITORY_BILLING_SERVICE_DIR" = "$HOME/code/billing-service"',
+          'test "$CONDUCTIVE_REPOSITORY_MARKETING_SITE_DIR" = "$HOME/code/marketing-site"',
         ].join('\n'),
         org.id,
       ),
@@ -80,7 +80,7 @@ it('runs the sample install script in named image repositories and keeps install
     const installs: (number | null)[] = []
     const installErrors: string[] = []
     boat.beforeCommand = async (command) => {
-      if (!command.includes('/tmp/conducting-install.sh')) return
+      if (!command.includes('/tmp/conductive-install.sh')) return
       const start = boat.starts.at(-1)
       const environment = start?.env
       if (typeof environment !== 'object' || environment === null)
@@ -117,17 +117,17 @@ it('runs the sample install script in named image repositories and keeps install
     const job = await readBuildJob(runtime.env.DB, org.id, build)
     expect(boat.starts[0]).toMatchObject({
       env: {
-        CONDUCTING_REPOSITORY_STOREFRONT_DIR: '/home/user/code/storefront',
-        CONDUCTING_REPOSITORY_BILLING_SERVICE_DIR:
+        CONDUCTIVE_REPOSITORY_STOREFRONT_DIR: '/home/user/code/storefront',
+        CONDUCTIVE_REPOSITORY_BILLING_SERVICE_DIR:
           '/home/user/code/billing-service',
-        CONDUCTING_REPOSITORY_MARKETING_SITE_DIR:
+        CONDUCTIVE_REPOSITORY_MARKETING_SITE_DIR:
           '/home/user/code/marketing-site',
       },
     })
     expect(Object.keys(boat.starts[0].env ?? {}).sort()).toEqual([
-      'CONDUCTING_REPOSITORY_BILLING_SERVICE_DIR',
-      'CONDUCTING_REPOSITORY_MARKETING_SITE_DIR',
-      'CONDUCTING_REPOSITORY_STOREFRONT_DIR',
+      'CONDUCTIVE_REPOSITORY_BILLING_SERVICE_DIR',
+      'CONDUCTIVE_REPOSITORY_MARKETING_SITE_DIR',
+      'CONDUCTIVE_REPOSITORY_STOREFRONT_DIR',
     ])
     await runtime.env.DB.prepare('UPDATE repositories SET selected = 0').run()
     const refresh = await startImageBuild(images, {

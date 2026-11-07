@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { productName } from '../../docs/mockups/src/brand'
 import { siteResponse } from './routes'
 
-const SITE = 'https://conducting.test'
-const APP_ORIGIN = 'https://app.conducting.test'
+const SITE = 'https://conductive.test'
+const APP_ORIGIN = 'https://app.conductive.test'
 /** 15 January 2027, in milliseconds. */
 const NOW = 1_800_000_000_000
 

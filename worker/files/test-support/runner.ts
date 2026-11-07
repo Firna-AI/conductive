@@ -1,3 +1,4 @@
+import { MACHINE_PATHS } from '../../../src/shared/agent-tools'
 import { FakeRunner } from '../../test-support/fake-runner'
 import { FakeRunnerConnection } from '../../test-support/runner-connection'
 import { RunnerFiles } from '../runner'
@@ -16,7 +17,7 @@ export async function connectFilesRunner(workspaceId = 'workspace-1') {
   connection.onClose(() => files.detach(connectionId))
   files.attach(connectionId, (command) => connection.reply(command))
   await runner.connect(() => connection, {
-    url: 'https://machines.conducting.test/runner',
+    url: `https://machines.conductive.test${MACHINE_PATHS.runner}`,
     workspaceToken: 'test-workspace-token',
   })
   return { files, runner, connection, connectionId }
@@ -55,7 +56,7 @@ export async function connectWorkspaceFiles(
     else commands.push(command)
   })
   await runner.connect(() => connection, {
-    url: 'https://machines.conducting.test/runner',
+    url: `https://machines.conductive.test${MACHINE_PATHS.runner}`,
     workspaceToken: 'test-workspace-token',
   })
   return {

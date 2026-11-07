@@ -5,7 +5,7 @@ import { app } from './app'
 
 it('returns JSON health when the API receives a GET request', async () => {
   const response = await app.fetch(
-    new Request(`https://conducting.test${HEALTH_PATH}`),
+    new Request(`https://conductive.test${HEALTH_PATH}`),
   )
 
   expect(response.status).toBe(200)

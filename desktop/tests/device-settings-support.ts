@@ -47,7 +47,7 @@ export function deviceSettingsFixture() {
   const closed = vi.fn(() => session.dispose())
   const socket = connectDevice(
     {
-      appOrigin: 'https://app.conducting.test',
+      appOrigin: 'https://app.conductive.test',
       deviceId: 'local-device',
       credential: 'fixture.signature',
       events: { message: (message) => session.receive(message), closed },

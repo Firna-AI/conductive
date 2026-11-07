@@ -56,14 +56,14 @@ export async function keepWorkspaceDisk(
           ...environment,
           ...repositoryEnvironment(locations),
           WORKSPACE_TOKEN: token,
-          CONDUCTING_WORKSPACE_ID: workspaceId,
-          CONDUCTING_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
-          CONDUCTING_REPOSITORY_DIR: repositoryLocation(
+          CONDUCTIVE_WORKSPACE_ID: workspaceId,
+          CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
+          CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
             locations,
             row.repositoryId,
           ),
-          CONDUCTING_TURN_ID: '',
-          CONDUCTING_DISK_KEEPALIVE: '1',
+          CONDUCTIVE_TURN_ID: '',
+          CONDUCTIVE_DISK_KEEPALIVE: '1',
         },
         1_800,
       )

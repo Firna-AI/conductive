@@ -50,24 +50,24 @@ it('keeps one app instance and delivers startup and second-instance links to its
   app.emit(
     'open-url',
     event,
-    'conducting://auth/github/callback#token=first.signature',
+    'conductive://auth/github/callback#token=first.signature',
   )
   expect(received).toEqual([])
   ready()
   await delivery
   expect(event.preventDefault).toHaveBeenCalledTimes(1)
   expect(received).toEqual([
-    'conducting://auth/github/callback#token=first.signature',
+    'conductive://auth/github/callback#token=first.signature',
   ])
   app.emit('second-instance', {}, [
-    'conducting://auth/github/callback#token=second.signature',
+    'conductive://auth/github/callback#token=second.signature',
   ])
   expect(received).toEqual([
-    'conducting://auth/github/callback#token=first.signature',
-    'conducting://auth/github/callback#token=second.signature',
+    'conductive://auth/github/callback#token=first.signature',
+    'conductive://auth/github/callback#token=second.signature',
   ])
   expect(createWindow).toHaveBeenCalledTimes(1)
-  expect(active.loadURL).toHaveBeenCalledWith('conducting-app://desktop/')
+  expect(active.loadURL).toHaveBeenCalledWith('conductive-app://desktop/')
   expect(active.focus).toHaveBeenCalledTimes(2)
   app.requestSingleInstanceLock.mockReturnValue(false)
   startDesktop(dependencies)

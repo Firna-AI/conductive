@@ -40,7 +40,7 @@ it('launches each browser context with a protected partitioned cookie across han
   const nonce = /<script nonce="([^"]+)"/.exec(html)?.[1]
   const form = launchForm(html)
   expect(form.action).toBe(
-    'https://authorize.conducting-previews.test/.conducting/authorize',
+    'https://authorize.conductive-previews.test/.conductive/authorize',
   )
   expect(page.headers.get('Content-Security-Policy')).toBe(
     `default-src 'none'; script-src 'nonce-${nonce}'; form-action ${new URL(form.action).origin} ${setup.previewUrl}; frame-ancestors ${TEST_ORIGIN} ${DESKTOP_ORIGIN}; base-uri 'none'`,
@@ -50,11 +50,11 @@ it('launches each browser context with a protected partitioned cookie across han
   expect(handoff.status).toBe(303)
   const destination = handoff.headers.get('Location')
   expect(destination).toMatch(
-    /^https:\/\/[a-f0-9]{32}\.conducting-previews\.test\/$/,
+    /^https:\/\/[a-f0-9]{32}\.conductive-previews\.test\/$/,
   )
   const value = handoff.headers.getSetCookie()[0]
   expect(value).toMatch(
-    /^__Secure-conducting-preview-[a-f0-9-]+=[^;]+; Domain=conducting-previews\.test; Path=\/; HttpOnly; Secure; SameSite=None; Partitioned; Max-Age=86400$/,
+    /^__Secure-conductive-preview-[a-f0-9-]+=[^;]+; Domain=conductive-previews\.test; Path=\/; HttpOnly; Secure; SameSite=None; Partitioned; Max-Age=86400$/,
   )
   expect(new URL(form.action).hostname).not.toBe(
     new URL(destination ?? '').hostname,

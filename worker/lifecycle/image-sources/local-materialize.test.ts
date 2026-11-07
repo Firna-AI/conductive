@@ -75,7 +75,7 @@ it('clones default history and tags natively and refreshes captured clean folder
     await fixture.write('node_modules/installed', 'installed dependencies')
     await fixture.write('source.txt', 'dirty tracked content')
     await fixture.git('config', 'credential.helper', '!exit 90')
-    await fixture.git('config', 'conducting.fixture', 'kept local setting')
+    await fixture.git('config', 'conductive.fixture', 'kept local setting')
     await fixture.refresh()
     await expect(fixture.finish()).resolves.toBeUndefined()
     expect((await fixture.git('rev-parse', 'HEAD')).toString()).toBe(
@@ -153,9 +153,9 @@ it('clones default history and tags natively and refreshes captured clean folder
         expect(bytes.includes(Buffer.from(secret))).toBe(false)
     }
     await expect(
-      fixture.git('config', '--local', '--get', 'conducting.fixture'),
+      fixture.git('config', '--local', '--get', 'conductive.fixture'),
     ).resolves.toEqual(Buffer.from('kept local setting\n'))
-    expect(await fixture.config()).not.toContain('CONDUCTING_IMAGE_GIT_TOKEN')
+    expect(await fixture.config()).not.toContain('CONDUCTIVE_IMAGE_GIT_TOKEN')
     expect(
       fixture.provider.results.map(({ exitCode, stdout, stderr }) => ({
         exitCode,

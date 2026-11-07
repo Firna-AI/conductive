@@ -1,7 +1,9 @@
 import type { Miniflare } from 'miniflare'
 import { expect } from 'vitest'
 
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { chatHistoryPath, workspaceEventsPath } from '../../src/shared/events'
+import { retryMessagePath, sessionsPath } from '../../src/shared/sessions'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { closeSockets, SocketInbox } from './adapter-sockets.test-support'
 import {
@@ -44,7 +46,7 @@ export async function verifyAdapterRestart(
     history: body,
   })
   const resumedRunnerResponse = await runtime.dispatchFetch(
-    `${MACHINE_ORIGIN}/runner`,
+    `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
     {
       headers: {
         Upgrade: 'websocket',
@@ -147,5 +149,92 @@ export async function verifyAdapterRestart(
       record(live).envelope,
     ],
   })
+  resumedRunner.send(
+    JSON.stringify({
+      type: 'event',
+      streamId: 'adapter-stream',
+      eventNumber: 5,
+      occurredAt: 5,
+      event: {
+        type: 'turn.failed',
+        sessionId,
+        turnId: string(resumedTurn.turnId),
+        error: { code: 'agent_unavailable', message: 'Try again.' },
+        retryMessageId: 'offline-ask',
+        durationMs: 5,
+      },
+    }),
+  )
+  expect(await resumedRunnerInbox.next()).toEqual({
+    type: 'confirm',
+    streamId: 'adapter-stream',
+    throughEventNumber: 5,
+  })
+  const failed = await resumedBrowserInbox.next()
+  expect(failed).toMatchObject({
+    type: 'event',
+    envelope: {
+      eventNumber: 12,
+      event: { type: 'turn.failed', retryMessageId: 'offline-ask' },
+    },
+  })
+  const failedSession = await resumedBrowserInbox.next()
+  expect(failedSession).toMatchObject({
+    type: 'event',
+    envelope: {
+      eventNumber: 13,
+      event: {
+        type: 'session.updated',
+        session: {
+          id: sessionId,
+          activeTurnId: null,
+          retryMessageId: 'offline-ask',
+        },
+      },
+    },
+  })
   await closeSockets(resumedRunner, resumedBrowser)
+  await runtime.unsafeEvictDurableObject('chat-adapter-tests', 'Workspace', {
+    name: WORKSPACE_ID,
+  })
+  const failedHistory = await runtime.dispatchFetch(
+    `${TEST_ORIGIN}${chatHistoryPath('org', WORKSPACE_ID, sessionId)}`,
+    { headers },
+  )
+  expect(failedHistory.status).toBe(200)
+  expect(await failedHistory.json()).toEqual({
+    throughEventNumber: 13,
+    events: [
+      ...array(record(body).events, record),
+      record(sent).envelope,
+      record(live).envelope,
+      record(failed).envelope,
+      record(failedSession).envelope,
+    ],
+  })
+  const sessions = await runtime.dispatchFetch(
+    `${TEST_ORIGIN}${sessionsPath('org', WORKSPACE_ID)}`,
+    { headers },
+  )
+  expect(sessions.status).toBe(200)
+  expect(await sessions.json()).toEqual({
+    sessions: [record(record(record(failedSession).envelope).event).session],
+    history: [],
+  })
+  const retry = await runtime.dispatchFetch(
+    `${TEST_ORIGIN}${retryMessagePath('org', WORKSPACE_ID, sessionId, 'offline-ask')}`,
+    { method: 'POST', headers, body: '{}' },
+  )
+  expect(retry.status).toBe(202)
+  const retried = record(await retry.json())
+  expect(retried).toMatchObject({
+    message: {
+      sessionId,
+      text: 'Keep this queued through eviction',
+      sender: { id: 'owner' },
+      state: 'queued',
+    },
+    turnId: null,
+  })
+  expect(string(record(retried.message).id)).not.toBe('offline-ask')
 }

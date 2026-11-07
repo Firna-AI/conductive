@@ -19,7 +19,7 @@ it('uses the private Node for npm and the service after sandbox env loading', as
       fixture.prefix,
     ]),
     'systemctl daemon-reload',
-    'systemctl enable conducting-runner.service',
+    'systemctl enable conductive-runner.service',
   ])
   const invocation = (await fixture.unit())
     .split('\n')
@@ -47,7 +47,7 @@ it('requires an absolute Node setting before installing the service', async () =
     const installed = await fixture.install(setting)
     expect(installed.code, JSON.stringify(setting)).toBe(1)
     expect(installed.stderr).toContain(
-      'Set CONDUCTING_NODE to an absolute Node executable path.',
+      'Set CONDUCTIVE_NODE to an absolute Node executable path.',
     )
     expect(await fixture.calls()).toEqual([])
   }

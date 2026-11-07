@@ -7,7 +7,7 @@ export function sourceLayoutCommand(
   locations: readonly RepositoryLocation[],
   previous: readonly RepositoryLocation[],
 ): string {
-  const root = `/home/user/conducting/source-relocation/${encodeURIComponent(buildId)}`
+  const root = `/home/user/conductive/source-relocation/${encodeURIComponent(buildId)}`
   const changed = previous.filter(
     (location) =>
       locations.find((entry) => entry.repositoryId === location.repositoryId)

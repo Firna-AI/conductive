@@ -35,12 +35,12 @@ export function createCodexFactory(
     await prepareProviderHome(options.home)
     options.signal?.throwIfAborted()
     const configs = {
-      model_provider: 'conducting',
-      'model_providers.conducting.name': 'Conducting',
-      'model_providers.conducting.base_url': 'https://api.openai.com/v1',
-      'model_providers.conducting.env_key': 'OPENAI_API_KEY',
-      'model_providers.conducting.wire_api': 'responses',
-      'model_providers.conducting.requires_openai_auth': false,
+      model_provider: 'conductive',
+      'model_providers.conductive.name': 'Conductive',
+      'model_providers.conductive.base_url': 'https://api.openai.com/v1',
+      'model_providers.conductive.env_key': 'OPENAI_API_KEY',
+      'model_providers.conductive.wire_api': 'responses',
+      'model_providers.conductive.requires_openai_auth': false,
       cli_auth_credentials_store: 'ephemeral',
       'mcp_servers.computer.url': options.computerMcpUrl,
     }
@@ -98,8 +98,8 @@ export function createCodexFactory(
     try {
       await rpc.request('initialize', {
         clientInfo: {
-          name: 'conducting',
-          title: 'Conducting',
+          name: 'conductive',
+          title: 'Conductive',
           version: '0.1.0',
         },
         capabilities: { experimentalApi: true },
@@ -113,7 +113,7 @@ export function createCodexFactory(
               ? { threadId: options.conversationId }
               : {}),
             model: choice.model,
-            modelProvider: 'conducting',
+            modelProvider: 'conductive',
             cwd: options.cwd,
             approvalPolicy: 'never',
             sandbox: 'danger-full-access',

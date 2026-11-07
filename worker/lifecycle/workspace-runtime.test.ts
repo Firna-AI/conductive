@@ -152,7 +152,7 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   expect(fixture.boat.commandRequests.at(-1)).toMatchObject({
     detached: false,
     command: expect.stringContaining(
-      'systemctl start conducting-terminal.service',
+      'systemctl start conductive-terminal.service',
     ),
   })
   expect(await restored.readLifecycle()).toMatchObject({

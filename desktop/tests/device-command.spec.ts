@@ -59,7 +59,7 @@ test('main authenticates its device, executes an approved command, and cancels p
   await mkdir(evidence, { recursive: true })
   const profile = await mkdtemp(resolve(evidence, 'device-profile-'))
   const relay = await deviceRelay()
-  const packaged = process.env.CONDUCTING_PACKAGED_APP
+  const packaged = process.env.CONDUCTIVE_PACKAGED_APP
   let electron: ElectronApplication | undefined
   const readiness: ReturnType<typeof processReady>[] = []
   try {

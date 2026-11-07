@@ -76,6 +76,7 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
       createdAt: FAKE_TIME - (index + 1) * 60_000,
       closedAt: null,
       activeTurnId: state === 'working' ? 'turn-1' : null,
+      retryMessageId: null,
     })),
     history: closedSessions.map((session, index) => ({
       id: session.key,
@@ -88,6 +89,7 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
       createdAt: FAKE_TIME - (index + 2) * 86_400_000,
       closedAt: FAKE_TIME - (index + 1) * 86_400_000,
       activeTurnId: null,
+      retryMessageId: null,
     })),
   }
   const message: UserMessage = {

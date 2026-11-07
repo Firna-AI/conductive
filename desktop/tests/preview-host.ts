@@ -57,13 +57,13 @@ const configuration=${JSON.stringify(input)};
 registerScheme(protocol);
 app.setPath('userData',${JSON.stringify(directory)});
 void app.whenReady().then(async()=>{
-const jar=session.fromPartition('persist:conducting');
+const jar=session.fromPartition('persist:conductive');
 installPermissions(jar);
-jar.protocol.handle('conducting-app',exportHandler({read:readFile,realpath,stat},${JSON.stringify(web)},contentSecurityPolicy({appOrigin:configuration.appOrigin,frameSources:configuration.frames,updates:'unpublished'})));
-await jar.cookies.set({url:configuration.appOrigin,name:'__Host-conducting-desktop-session',value:'mac-session',secure:true,httpOnly:true,sameSite:'no_restriction',expirationDate:Date.now()/1000+3600});
+jar.protocol.handle('conductive-app',exportHandler({read:readFile,realpath,stat},${JSON.stringify(web)},contentSecurityPolicy({appOrigin:configuration.appOrigin,frameSources:configuration.frames,updates:'unpublished'})));
+await jar.cookies.set({url:configuration.appOrigin,name:'__Host-conductive-desktop-session',value:'mac-session',secure:true,httpOnly:true,sameSite:'no_restriction',expirationDate:Date.now()/1000+3600});
 const window=createWindow({create:options=>new BrowserWindow(options),readState:()=>'',saveState:()=>{},visible:()=>true,warn:()=>{}});
-const external=async url=>{process.env.CONDUCTING_TEST_PREVIEW_EXTERNAL=url};
-installNavigation(window.webContents,configuration.appOrigin,{load:url=>window.loadURL(url),external,signIn:async()=>{},preview:url=>openPreviewInBrowser(url,{appOrigin:configuration.appOrigin,frameSources:configuration.frames,fetch:request=>jar.fetch(request),external}),warn:error=>{process.env.CONDUCTING_TEST_PREVIEW_ERROR=String(error?.message??'failed')}});
+const external=async url=>{process.env.CONDUCTIVE_TEST_PREVIEW_EXTERNAL=url};
+installNavigation(window.webContents,configuration.appOrigin,{load:url=>window.loadURL(url),external,signIn:async()=>{},preview:url=>openPreviewInBrowser(url,{appOrigin:configuration.appOrigin,frameSources:configuration.frames,fetch:request=>jar.fetch(request),external}),warn:error=>{process.env.CONDUCTIVE_TEST_PREVIEW_ERROR=String(error?.message??'failed')}});
 await window.loadURL('${DESKTOP_ORIGIN}/');
 app.on('window-all-closed',()=>app.quit());
 }).catch(error=>{process.stderr.write(String(error));app.quit()});

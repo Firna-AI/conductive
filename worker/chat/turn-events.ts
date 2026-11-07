@@ -85,10 +85,13 @@ export async function prepareAgentEvent(
     }
     await transaction.emit(event, occurredAt)
     if (event.type === 'turn.completed' || event.type === 'turn.failed') {
-      const state = event.type === 'turn.failed' ? 'failed' : event.state
       await new TurnLifecycle(transaction, session).finish(
         turn,
-        state === 'finished' ? { state, randomId } : { state },
+        event.type === 'turn.failed'
+          ? { state: 'failed', retryMessageId: event.retryMessageId }
+          : event.state === 'finished'
+            ? { state: 'finished', randomId }
+            : { state: 'stopped' },
       )
     } else {
       await transaction.saveTurn(turn)

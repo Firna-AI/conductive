@@ -25,7 +25,7 @@ test('a notification reopens one Mac window and keeps the request after Dock act
   await mkdir(evidence, { recursive: true })
   const profile = await mkdtemp(resolve(evidence, 'notification-profile-'))
   const relay = await deviceRelay()
-  const packaged = process.env.CONDUCTING_PACKAGED_APP
+  const packaged = process.env.CONDUCTIVE_PACKAGED_APP
   let electron: ElectronApplication | undefined
   try {
     electron = await _electron.launch({
@@ -50,7 +50,7 @@ test('a notification reopens one Mac window and keeps the request after Dock act
     // Capture the native delivery boundary. The real notification click handler stays installed.
     await electron.evaluate(({ Notification, BrowserWindow }) => {
       Notification.prototype.show = function (this: NativeNotification) {
-        Reflect.set(globalThis, 'conductingPendingNotice', this)
+        Reflect.set(globalThis, 'conductivePendingNotice', this)
       }
       BrowserWindow.getAllWindows()[0].close()
     })
@@ -70,13 +70,13 @@ test('a notification reopens one Mac window and keeps the request after Dock act
     await expect
       .poll(() =>
         electron!.evaluate(() =>
-          Reflect.has(globalThis, 'conductingPendingNotice'),
+          Reflect.has(globalThis, 'conductivePendingNotice'),
         ),
       )
       .toBe(true)
     const opened = electron.waitForEvent('window')
     await electron.evaluate(() => {
-      const notice: unknown = Reflect.get(globalThis, 'conductingPendingNotice')
+      const notice: unknown = Reflect.get(globalThis, 'conductivePendingNotice')
       if (typeof notice !== 'object' || notice === null)
         throw new Error('The native notice is missing')
       Reflect.apply(Reflect.get(notice, 'emit'), notice, ['click'])

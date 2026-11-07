@@ -22,7 +22,7 @@ import type { ImageCoordinatorState } from './image-timers'
 import { seedPublishedImage } from './published-image-test-support'
 
 export const SOFTWARE = {
-  url: 'https://software.conducting.test/runner.tar.gz',
+  url: 'https://software.conductive.test/runner.tar.gz',
   sha256: 'a'.repeat(64),
 }
 
@@ -188,7 +188,7 @@ export async function backendFixture(sharedHarness?: TestHarness) {
   }
   const env = {
     ...harness.env,
-    MACHINE_ORIGIN: 'https://machine.conducting.test',
+    MACHINE_ORIGIN: 'https://machine.conductive.test',
   }
   const runtime: WorkspaceRuntime = { env, dependencies, workspace: endpoint }
   const scheduled: ImageCoordinatorState[] = []

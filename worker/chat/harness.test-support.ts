@@ -1,3 +1,4 @@
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AgentChoice } from '../../src/shared/agents'
 import type {
   WorkspaceSocketMessage,
@@ -38,7 +39,7 @@ export const CODEX: AgentChoice = {
   model: 'test-codex',
   effort: 'medium',
 }
-export const MACHINE_ORIGIN = 'https://machines.conducting.test'
+export const MACHINE_ORIGIN = 'https://machines.conductive.test'
 export const WORKSPACE_ID = 'workspace-chat'
 export const WORKSPACE_TOKEN = 'workspace-token'
 
@@ -131,7 +132,7 @@ export async function createChatFixture(
         return connection
       },
       {
-        url: `${MACHINE_ORIGIN}/runner`,
+        url: `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
         workspaceToken: WORKSPACE_TOKEN,
         ...parameters,
       },

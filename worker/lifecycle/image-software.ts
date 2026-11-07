@@ -1,7 +1,7 @@
 import credentialScript from '../../image/git-credential-helper.mjs?raw'
 import credentialStart from '../../image/git-credential-helper.sh?raw'
 import installScript from '../../image/install.sh?raw'
-import runnerService from '../../image/conducting-runner.service?raw'
+import runnerService from '../../image/conductive-runner.service?raw'
 import runnerStart from '../../image/runner-start.sh?raw'
 import { HttpError, isRecord } from '../http'
 import { terminalInstallCommand } from '../terminal/service'
@@ -58,15 +58,15 @@ export function installImageSoftware(artifact: ImageSoftwareArtifact): string {
     'runner-start.sh': runnerStart,
     'git-credential-helper.sh': credentialStart,
     'git-credential-helper.mjs': credentialScript,
-    'conducting-runner.service': runnerService,
+    'conductive-runner.service': runnerService,
   }
   return [
     'set -eu',
-    'sudo -n install -d -m 700 -o user -g user /opt/conducting/staged',
+    'sudo -n install -d -m 700 -o user -g user /opt/conductive/staged',
     ...Object.entries(files).map(([name, text]) =>
-      writeFileCommand(`/opt/conducting/staged/${name}`, text, '644'),
+      writeFileCommand(`/opt/conductive/staged/${name}`, text, '644'),
     ),
-    `sudo -n sh /opt/conducting/staged/install.sh ${shellQuote(artifact.url)} ${shellQuote(artifact.sha256)}`,
+    `sudo -n sh /opt/conductive/staged/install.sh ${shellQuote(artifact.url)} ${shellQuote(artifact.sha256)}`,
     terminalInstallCommand(),
   ].join('\n')
 }
@@ -77,22 +77,22 @@ export function workspaceStartupCommand(
 ): string {
   const path =
     mode === 'retention'
-      ? '/run/conducting/retention-startup.sh'
-      : '/run/conducting/startup.sh'
+      ? '/run/conductive/retention-startup.sh'
+      : '/run/conductive/startup.sh'
   return [
     'set -eu',
     'umask 077',
-    'sudo -n install -d -m 700 -o user -g user /run/conducting',
+    'sudo -n install -d -m 700 -o user -g user /run/conductive',
     savedScriptCommand(path, script, [
       'set -a',
       '. /run/ascii-secrets/env.sh',
       'set +a',
-      'cd "$CONDUCTING_REPOSITORY_DIR"',
+      'cd "$CONDUCTIVE_REPOSITORY_DIR"',
     ]),
     ...(mode === 'workspace'
       ? [
-          'touch /run/conducting/workspace-ready',
-          'sudo -n systemctl restart conducting-runner.service',
+          'touch /run/conductive/workspace-ready',
+          'sudo -n systemctl restart conductive-runner.service',
         ]
       : []),
   ].join('\n')

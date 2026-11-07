@@ -4,7 +4,8 @@ import { HttpError, privateResponse } from '../../http'
 import { claimSourceGrant, sourceTokenContext } from './source-data'
 
 /** Private lifecycle handler for the machine host's composition root. */
-export const IMAGE_SOURCE_CREDENTIAL_PATH = '/internal/image-source/credential'
+export const IMAGE_SOURCE_CREDENTIAL_PATH =
+  '/v1/internal/image-source/credential'
 
 export async function handleImageSourceCredential(
   request: Request,

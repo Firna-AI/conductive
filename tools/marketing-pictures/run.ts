@@ -9,7 +9,7 @@ import { serveMockups } from './server.ts'
 
 async function regenerate(signal: AbortSignal): Promise<void> {
   await buildMockups(signal)
-  const temporary = await mkdtemp(join(tmpdir(), 'conducting-pictures-'))
+  const temporary = await mkdtemp(join(tmpdir(), 'conductive-pictures-'))
   let server: Awaited<ReturnType<typeof serveMockups>> | undefined
   let browser: Browser | undefined
   try {

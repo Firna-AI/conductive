@@ -133,7 +133,7 @@ export function toolFixtures(bannerState: BannerState = 'ready-to-merge') {
   }
   const previews: PreviewsResponse = { previews: [preview.preview] }
   const desktop: DesktopResponse = {
-    url: 'https://desktop.conducting.test/#fake-desktop-token',
+    url: 'https://desktop.conductive.test/#fake-desktop-token',
     expiresAt: FAKE_TIME + 600_000,
   }
   const terminal: TerminalResponse = {
