@@ -3969,10 +3969,14 @@ first called it decision 123, which the plan uses for another question.
 - **Left out:** C, which returned another sender's messages only to an
   open tab, because a reload loses them.
 - **Recommendation:** A. D is the wider fix.
-- **Open:** waits for the user. Records:
+- **Chosen:** A now, by the user on 8 November 2026, with D as a later
+  follow-up: `plans/follow-ups/failed-first-start-keeps-workspace.md`. The
+  user first chose D, after the question "can't we store the messages in
+  a queue for that workspace, and then replay them when the server
+  starts?", and then changed to A now. Milestone 8i applies A in PR #42.
+  Records:
   `.context/boat-native-remote-workspaces/initial-create-decision-130.md`
-  and `initial-create-final-report.md`. The 8i orchestrator applies the
-  answer.
+  and `initial-create-final-report.md`.
 
 ## Design
 
