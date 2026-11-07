@@ -4647,6 +4647,28 @@ Apply decision 69 C.
       `node` first on the search path. Say in the README how to update the
       version and the checksum.
 
+## Milestone 5b: Lifecycle fixes from the reviews
+
+Depends on: 5
+
+Apply the `fix after merge` items of the Milestone 5 review and of the
+build logs. Added on 7 November 2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/creation-admission-restart.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/completed-retry-first-message.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-race-tests-storage.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-resource-intents.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/build-log-total-size.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/build-log-follower.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/script-command-type.md`, and
+      delete that item.
+
 ## Milestone 6: App shell and workspaces
 
 Tags: ui
@@ -4970,9 +4992,10 @@ chose one fixed kill limit in review finding 2 B of PR #30.
 
 Tags: ui
 
-Depends on: 7t, 8k
+Depends on: 7t
 
-Apply decision 105 F. Added on 7 November 2026.
+Apply decision 105 F. Added on 7 November 2026. Merge the primary
+branch after Milestone 8k merges, before the chat changes.
 
 - [ ] Run each turn of a session on the login of the member who started
       the session, whoever sends the message. A message of any member
@@ -5222,6 +5245,28 @@ Depends on: 5, 6, 7, 7r, 8, 8j
       Moved from Milestone 7r on 6 November 2026, because it needs a real sandbox and real logins.
       Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
 
+## Milestone 8m: Chat fixes from the reviews
+
+Depends on: 7w, 8i, 8k
+
+Apply the `fix after merge` items of the chat. Added on 7 November
+2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/chat-late-event-mark.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/chat-refused-turn-end.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/agent-event-rollback-test.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/chat-client-stale-records.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/chat-history-read-memory.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/chat-stop-after-failed-history.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/workspace-read-mark-retry.md`, and
+      delete that item.
+
 ## Milestone 16a: First deployment
 
 Depends on: 8i
@@ -5259,6 +5304,18 @@ Milestone 8i or 15i wires it to its backend.
 - [x] Build the All and Changes lists, the Markdown and code preview,
       and the diff of a changed file. Branch: `conductor/boat-native-remote-workspaces-milestone-10`.
 - [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-10`.
+
+## Milestone 10a: Files fixes from the reviews
+
+Depends on: 9, 10
+
+Apply the `fix after merge` items of the files area. Added on
+7 November 2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/file-read-size-refusals.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/markdown-emphasis-delimiters.md`, and
+      delete that item.
 
 ## Milestone 11: Terminal, previews, and desktop backend
 
@@ -5344,6 +5401,17 @@ Agent design calls on 6 November 2026:
 
 Verification evidence: `.context/boat-native-remote-workspaces/verification.md`.
 
+## Milestone 11b: One access check for open connections
+
+Depends on: 7, 11
+
+Apply option B of the follow-up item. Added on 7 November 2026. Its
+option C, the desktop proxy and the shell that survives its socket,
+waits for the user.
+
+- [ ] Apply the recorded option of `plans/follow-ups/shared-session-check-for-connections.md`, and
+      delete that item.
+
 ## Milestone 12: Terminal, previews, and desktop UI
 
 Tags: ui
@@ -5379,6 +5447,20 @@ Milestone 8i or 15i wires it to its backend.
 - [x] Build the pull request bar of the right column, the compact pull
       request row on phones, and the Checks tab. Branch: `conductor/boat-native-remote-workspaces-milestone-14`.
 - [x] Compare it with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-14`.
+
+## Milestone 13a: GitHub fixes from the reviews
+
+Depends on: 13, 14
+
+Apply the `fix after merge` items of the GitHub banner. Added on
+7 November 2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/github-banner-freshness.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/github-delivery-receipt-size.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/shared-hook-for-workspace-stores.md`, and
+      delete that item.
 
 ## Milestone 15: Agent tools
 
@@ -5424,6 +5506,20 @@ Milestone 8i or 15i wires it to its backend.
       as decision 57 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
 - [x] Build the org members page and workspace reassignment. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
 - [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
+
+## Milestone 15l: Members fixes from the reviews
+
+Depends on: 15a, 15c
+
+Apply the `fix after merge` items of the members area. Added on
+7 November 2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/members-guarded-write-helper.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/members-tab-shared-dialog-state.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/members-yesterday-label-clock-changes.md`, and
+      delete that item.
 
 ## Milestone 15g: Email invitations
 
@@ -5528,6 +5624,22 @@ on 7 November 2026.
       `mac-command-watchdog-alarm`, `mac-command-internal-payload-budget`,
       `mac-approval-scroll-flake`, `desktop-renderer-tests-in-gate`, and
       `local-dev-origin`.
+
+## Milestone 15m: Marketing and mockup fixes
+
+Depends on: 4f, 15j
+
+Apply the `fix after merge` items of the marketing site and the
+mockups. Added on 7 November 2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/marketing-pictures-one-list.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/marketing-mockup-gaps.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/firna-ui-missing-parts.md`, and
+      delete that item.
 
 ## Milestone 15d: Marketing site
 
