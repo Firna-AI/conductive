@@ -1,9 +1,9 @@
 import type { OrgRole } from '../../src/shared/api'
 import type { MembersResponse } from '../../src/shared/members'
 import { HttpError } from '../http'
+import { guardedMembersWrite } from './guarded-write'
 import { listInvites } from './invite-data'
 import {
-  hasOtherAdmin,
   orgMember,
   orgMembers,
   removeMembership,
@@ -30,11 +30,14 @@ export async function changeMemberRole(
   userId: string,
   role: OrgRole,
 ) {
-  await requireOrgAdmin(db, orgId, actorId)
-  await requireMember(db, orgId, userId)
-  if (!(await updateRole(db, orgId, actorId, userId, role))) {
-    throw lastAdminError()
-  }
+  await guardedMembersWrite({
+    checks: [
+      () => requireOrgAdmin(db, orgId, actorId),
+      () => requireMember(db, orgId, userId),
+    ],
+    write: () => updateRole(db, orgId, actorId, userId, role),
+    refusal: lastAdminError,
+  })
   return requireMember(db, orgId, userId)
 }
 
@@ -46,13 +49,17 @@ export async function removeOrgMember(
   now: number,
 ) {
   const voluntary = actorId === userId
-  if (voluntary) await requireOrgMember(db, orgId, actorId)
-  else await requireOrgAdmin(db, orgId, actorId)
-  await requireMember(db, orgId, userId)
-  if (!(await hasOtherAdmin(db, orgId, userId))) throw lastAdminError()
-  if (!(await removeMembership(db, orgId, actorId, userId, voluntary, now))) {
-    throw lastAdminError()
-  }
+  await guardedMembersWrite({
+    checks: [
+      () =>
+        voluntary
+          ? requireOrgMember(db, orgId, actorId)
+          : requireOrgAdmin(db, orgId, actorId),
+      () => requireMember(db, orgId, userId),
+    ],
+    write: () => removeMembership(db, orgId, actorId, userId, voluntary, now),
+    refusal: lastAdminError,
+  })
 }
 
 export async function requireMember(

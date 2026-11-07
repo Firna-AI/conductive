@@ -94,11 +94,14 @@ with the message of the API.
   with more room, and it gets shorter to fit. It follows its button when the
   page scrolls or the window changes size. In a long menu, only the choices
   scroll. The heading, an error, and the note stay in view.
-- While a change runs, its question or menu stays open. Cancel, Escape, Tab,
+- While a removal, owner change, org deletion, or restore runs, its question
+  or menu stays open. Cancel, Escape, Tab,
   a press outside, on the dimmed page, or on the menu's button, and a close
   by the browser change nothing. A failed change shows its error in the open
   question or menu. After a change that worked, the component closes it and
   calls its callback.
+- A role menu closes when the admin chooses a role. A failed role change or
+  invite cancellation shows a notice above the members list.
 
 ### Live builds
 
@@ -129,6 +132,18 @@ of a request of the old scope changes nothing and calls no callback. So a
 callback always belongs to the scope that shows. The owner picker also uses
 only the newest load of its members. The read-only tabs load again when the
 org changes, and drop the answers of an older load.
+
+In one scope, the Members tab store in `membersStore.ts` holds the member
+whose removal question is open. It keeps the error of each failed change
+under the `pendingKey` of that change, such as `remove:priya`. So, in any
+order of the answers, a removal can close only the question of its own
+member. Each change can set or remove only the errors of its own member or
+invite.
+
+When a removal question opens, only the last error of that removal goes. A
+close request for one member never closes the question of another member. A
+removal question still stays open while its removal runs, but the store does
+not depend on that.
 
 The invite field sends one invite at a time. While an invite runs, Enter and
 Invite send nothing, and the field stays open for the next email. A sent
