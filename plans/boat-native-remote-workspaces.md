@@ -3391,6 +3391,27 @@ Added on 7 November 2026, with decision 101.
   `https://api.conductive.build/v1/github/webhooks`. The preview domain is
   `conductive.page`, which the user bought. Milestone 15j applies both.
 
+### 104. Keep the late events of a turn that has ended
+
+Added on 7 November 2026 from round 2 finding 5 of the Milestone 8j
+review, and the user's question "why do we reject these events?".
+
+- **Background:** Decision 76 refused a runner event of a turn that is
+  not active. When a cloud computer stops during a turn, the runner sends
+  its unconfirmed events again after the resume, and the workspace has
+  already ended that turn. So real agent text was lost.
+- **Options:**
+  - **D.** Keep refusing them, with the reason "turn not active" first.
+  - **E.** Keep a late event in its turn, without reopening the turn.
+  - **B.** Keep refusing them, and let the chat keep its own list of
+    turns.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 7 November 2026. The workspace stores a
+  late event of an ended turn in that turn. The turn stays ended: no
+  Working state, no Stop, and a tool that was running shows as stopped.
+  The workspace refuses only an event of a turn that never started.
+  Milestone 7s builds the workspace side, and Milestone 8j the chat side.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4429,6 +4450,10 @@ Apply decision 76 E in the workspace Durable Object.
 - [ ] Join the parts of a file tree and of a changes list before the
       files store takes them.
 - [ ] Test each refusal, a tree in parts, and a resend after a refusal.
+- [ ] Apply decision 104 E: store a late event of an ended turn in that
+      turn, and never reopen the turn. Refuse only an event of a turn that
+      never started. State the rule in the protocol, in place of the old
+      refusal of every event of a turn that is not active.
 - [ ] Apply decision 96 E: add a runner command that asks for a fresh full
       report of the file list, the changes list, the start steps, or the
       workspace name. Send it once after the workspace refuses such an
