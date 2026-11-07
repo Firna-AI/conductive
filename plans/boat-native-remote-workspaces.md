@@ -4571,6 +4571,27 @@ Apply the runner half of decision 96 E.
       parts, the start steps, or the last workspace name.
 - [ ] Test each kind, and a command during a running turn.
 
+## Milestone 7u: Runner fixes from the review
+
+Depends on: 7r
+
+Apply the `fix after merge` items that the review of Milestone 7r
+recorded. Added on 7 November 2026.
+
+- [ ] Close the agent process at the end of each turn, as option A of
+      `plans/follow-ups/idle-agent-login-lifetime.md` says. Delete that
+      item.
+- [ ] Let each write chain of the runner continue after a failure, as
+      option A of `plans/follow-ups/runner-rejected-write-chains.md` says.
+      Delete that item.
+- [ ] End each turn that a runner process leaves behind, at a shutdown
+      and at the next start, as option D of
+      `plans/follow-ups/runner-shutdown-turn-end.md` says. Delete that
+      item.
+- [ ] Run the runner session tests on `DiskStorage`, as option A of
+      `plans/follow-ups/runner-session-tests-store.md` says. Delete that
+      item.
+
 ## Milestone 8: Chat UI
 
 Tags: ui
