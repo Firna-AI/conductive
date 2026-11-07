@@ -3984,6 +3984,23 @@ first called it decision 123, which the plan uses for another question.
   `.context/boat-native-remote-workspaces/initial-create-decision-130.md`
   and `initial-create-final-report.md`.
 
+### 131. Decide what a failed save of agent output does to a turn
+
+Added on 8 November 2026 from the check of finding 2 of PR #48
+(Milestone 7v).
+
+- **Background:** The runner saves each event before it sends it. A
+  failed save keeps the event in memory, and the next save that works
+  writes it. Today a failed save of agent output still fails the running
+  turn.
+- **Options:**
+  - **A.** Keep the rule: the turn fails.
+  - **D.** Keep the event, try one more save, warn, and let the turn go
+    on.
+- **Recommendation:** D.
+- **Chosen:** A now, by the user on 8 November 2026, with D as a later
+  follow-up: `plans/follow-ups/runner-output-save-failure.md`.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says

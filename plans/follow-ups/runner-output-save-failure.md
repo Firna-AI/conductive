@@ -1,7 +1,7 @@
 # One failed save of agent text fails the whole turn
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-08, the blocked wider fix of finding 2 of PR #48, branch `conductor/boat-native-remote-workspaces-milestone-7v`, round 1, option D of its check, with a problem outside the scope of that check.
 - **Location:** `Runner.emit` in `runner/src/runner.ts:150`, and the catch in `runner/src/engine-runtime.ts:203`.
 
@@ -19,4 +19,4 @@
 - **Wider fix:** D. No output loop can then stop early, whatever its shape.
 - **Previous examples:** commit `6d5d54e`, which made the output filter loop attempt every event after a failed save, decision 109 D, and finding 2 of PR #48.
 - **Recommendation:** D. A short disk error then costs a warning, not a failed turn.
-- **Action:** ask the user, because D changes what a failed save does to a running turn, which the chat shows to the user.
+- **Action:** fix after merge, apply D, because the user chose A now and D as a later follow-up on 8 November 2026 (decision 131).
