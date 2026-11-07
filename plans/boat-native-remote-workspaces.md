@@ -4714,14 +4714,58 @@ Depends on: 11
 
 Apply decision 83 C.
 
-- [ ] Move the credential of a port preview out of its hostname, into a
+Agent design calls on 6 November 2026:
+
+- Keep `Preview.url` as the single navigation URL. It now opens an
+  authenticated app launcher. Native new-tab handling fetches a fresh grant
+  from that same path through the Mac session before opening the browser.
+- Web and embedded launchers POST a stateless, encrypted grant with a 60-second life in a form body.
+  It works across Worker instances without a migration. It is briefly replayable.
+- Use a trusted `authorize.<preview-domain>` host for the handoff.
+  A preview app's service worker can intercept a grant sent to its own hostname.
+- Set one `__Secure-conducting-preview-<ID>` cookie per preview, with
+  `Domain=<preview-domain>; Path=/; Secure; HttpOnly; SameSite=None; Partitioned`.
+  Bind its encrypted value to the preview hostname and ID. Its life ends with the preview.
+  The frame and new tab each launch in their own cookie partition.
+- Give only the trusted app launcher `Referrer-Policy: origin`, so the form sends the app Origin.
+  Allow the authorizer and the exact preview origin in CSP `form-action`, because Chrome checks the redirect too.
+  The authorizer and every sandbox preview response keep `no-referrer`.
+- Apply the required cookie check to browser preflights too. Browsers send no
+  cookie on them, and default fetches between preview origins also omit it.
+  A same-origin proxy in the previewed app's dev server keeps API calls working.
+- Apply decision 65 B to authorizer forms with the shared bounded reader.
+  Keep its client body budget of 1 MB, or 1,000,000 bytes.
+  Return the existing 404 on overflow to keep one invalid-handoff response policy.
+- The user approved item 3 C on 6 November 2026. Finish Mac integration in
+  this branch with small launcher gate, frame policy, and native navigation changes.
+  Keep the main frame bundled, the separate sessions, and the no-bridge rule.
+- Mac new-tab grants use the trusted authorizer's URL fragment. Its bootstrap
+  clears that fragment before a same-origin header exchange or navigation.
+  The browser receives only a preview grant, never the Mac sign-in session.
+- Item 4 moved to the existing item 93 by the user's scope call.
+  No request-body bounds outside the preview routes change here.
+
+- [x] Move the credential of a port preview out of its hostname, into a
       cookie that the preview domain sets, so that the hostname is no
       secret.
-- [ ] Match `http` as well as `https` in the redirect rewrite.
-- [ ] Update the port preview rules of the access protocol, and test the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
+- [x] Match `http` as well as `https` in the redirect rewrite.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
+- [x] Update the port preview rules of the access protocol, and test the
       cookie, a leaked hostname, and both redirect schemes.
-- [ ] Test that a port opened again after a revoke gets a new preview ID,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
+- [x] Test that a port opened again after a revoke gets a new preview ID,
       as decision 86 says.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
+- [x] Bound the authorizer form with the shared reader, and test early
+      cancellation and invalid body streams, as decision 65 B requires.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
+- [x] Align the preview handoff with the newer Mac app session and
+      navigation contracts under item 3 C. Test the frame and new-tab flow
+      in Electron. Preserve the desktop protocol and its isolation rules.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11a`.
+
+Verification evidence: `.context/boat-native-remote-workspaces/verification.md`.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 

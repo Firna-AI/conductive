@@ -23,7 +23,9 @@ it('uses HTTP backpressure to read one response chunk only when the browser requ
     new URL(request.url).hostname === 'boat.dev'
       ? base(request)
       : new Response(source.stream)
-  const response = await setup.handler.proxy(new Request(setup.preview.url))
+  const response = await setup.handler.proxy(
+    setup.previewRequest(setup.previewUrl),
+  )
   expect(source.pulls).toBe(0)
   const reader = response.body?.getReader()
   const requested = source.nextPull()
@@ -61,7 +63,7 @@ it('rechecks preview access after an asynchronous activity callback before openi
     },
   }
   const handler = createPreviewHandler(harness.env, dependencies)
-  const pending = handler.proxy(new Request(setup.preview.url))
+  const pending = handler.proxy(setup.previewRequest(setup.previewUrl))
   await started.promise
   await setup.handler.revokeWorkspace(setup.workspaceId)
   release.resolve()

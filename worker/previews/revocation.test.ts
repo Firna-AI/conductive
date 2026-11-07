@@ -7,6 +7,7 @@ import {
 } from '../../src/shared/previews'
 import { TEST_TIME } from '../test-support/harness'
 import { createPreviewHandler } from './handler'
+import { launchPreview } from './launch-test-support'
 import { barrier, bodySource, openPreview } from './stream-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
 
@@ -24,7 +25,9 @@ afterAll(async () => {
 it('keeps a foreign preview open when another authorized workspace closes its ID', async () => {
   const setup = await openPreview(harness)
   await setup.handler.proxy(
-    new Request(setup.preview.url, { headers: { Upgrade: 'websocket' } }),
+    setup.previewRequest(setup.previewUrl, {
+      headers: { Upgrade: 'websocket' },
+    }),
   )
   const victim = harness.serverSockets[0]
   harness.github.profile = {
@@ -85,8 +88,13 @@ it('cancels local HTTP streams on preview close, workspace revocation, and expir
       }),
     )
     const { preview }: PreviewResponse = await opened.json()
+    const browser = await launchPreview(
+      setup.handler,
+      setup.request,
+      preview.url,
+    )
     source = bodySource()
-    const response = await setup.handler.proxy(new Request(preview.url))
+    const response = await setup.handler.proxy(browser.request())
     const reader = response.body?.getReader()
     const before = reader?.read()
     source.send('before')
@@ -117,7 +125,9 @@ it('blocks HTTP response data revoked by another handler after the stream opened
     new URL(request.url).hostname === 'boat.dev'
       ? base(request)
       : new Response(source.stream)
-  const response = await setup.handler.proxy(new Request(setup.preview.url))
+  const response = await setup.handler.proxy(
+    setup.previewRequest(setup.previewUrl),
+  )
   const reader = response.body?.getReader()
   const before = reader?.read()
   source.send('before')
@@ -140,6 +150,11 @@ it('rejects streamed uploads after workspace revocation or stop', async () => {
       }),
     )
     const { preview }: PreviewResponse = await opened.json()
+    const browser = await launchPreview(
+      setup.handler,
+      setup.request,
+      preview.url,
+    )
     const source = bodySource()
     const attached = barrier<ReadableStreamDefaultReader<Uint8Array>>()
     const base = harness.dependencies.fetch
@@ -151,7 +166,9 @@ it('rejects streamed uploads after workspace revocation or stop', async () => {
       return new Response('ok')
     }
     const init = { method: 'POST', body: source.stream, duplex: 'half' }
-    const pending = setup.handler.proxy(new Request(preview.url, init))
+    const pending = setup.handler.proxy(
+      browser.request(browser.previewUrl, init),
+    )
     const reader = await attached.promise
     const before = reader.read()
     source.send('before')

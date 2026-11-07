@@ -2,10 +2,11 @@ import {
   DESKTOP_ORIGIN,
   isDesktopAddress,
 } from '../../worker/security/desktop-contract.js'
+import { isPreviewLaunchPath } from '../../worker/security/preview-launch-path.js'
 
 export type Navigation =
   | { action: 'allow' | 'drop' | 'sign-in' }
-  | { action: 'external' | 'load'; url: string }
+  | { action: 'external' | 'load' | 'preview'; url: string }
 
 export type NavigationSource = 'trusted-main' | 'untrusted'
 
@@ -63,6 +64,8 @@ export function navigationTarget(
     return popup ? { action: 'load', url: url.href } : { action: 'allow' }
   }
   if (!['http:', 'https:'].includes(url.protocol)) return { action: 'drop' }
+  if (url.origin === appOrigin && isPreviewLaunchPath(url.pathname))
+    return { action: popup ? 'load' : 'preview', url: url.href }
   if (url.origin === appOrigin && !url.pathname.startsWith('/api/')) {
     return {
       action: 'load',
@@ -79,6 +82,7 @@ export function installNavigation(
     load(url: string): Promise<unknown>
     external(url: string): Promise<unknown>
     signIn(): Promise<unknown>
+    preview(url: string): Promise<unknown>
     warn(error: unknown): void
   },
 ): void {
@@ -101,6 +105,8 @@ export function installNavigation(
       void dependencies.load(result.url).catch(dependencies.warn)
     if (result.action === 'sign-in')
       void dependencies.signIn().catch(dependencies.warn)
+    if (result.action === 'preview')
+      void dependencies.preview(result.url).catch(dependencies.warn)
   }
   contents.on('will-navigate', (event) => {
     const result = navigationTarget(

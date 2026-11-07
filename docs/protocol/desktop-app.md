@@ -37,9 +37,10 @@ them yet.
 - The page calls the API and opens its sockets on `app.conducting.build`,
   as in a browser.
 - Each file carries the same content security policy as the web app. That
-  policy also names `app.conducting.build` for the API and the sockets.
-- Reason: in the Mac app, the API and the sockets are on another origin
-  than the page.
+  policy also names `app.conducting.build` for the API, the sockets, and
+  the frames.
+- Reason: in the Mac app, the API, the sockets, and the launch address of
+  each port preview are on another origin than the page.
 
 ## The window
 
@@ -76,10 +77,38 @@ them yet.
 - Every other web address opens in the user's default browser.
 - A request for a new window follows the same rules. The Mac app opens no
   second window.
+- The launch address of a port preview follows the rules of
+  [Port previews](#port-previews).
 - An address with another scheme, such as `file:`, goes nowhere.
 - A frame in the page, such as a port preview or the live desktop of a
   sandbox, can load its own pages. It cannot replace the main frame, and it
   cannot open a `conducting://` address.
+- A frame cannot open an address of the app hostname or of the desktop
+  origin outside the frame. Such a request goes nowhere.
+
+## Port previews
+
+- A port preview shows in a frame of the page, as in a browser. The frame
+  loads the launch address of the preview from `app.conducting.build`, as
+  [Port previews](access-and-security.md#port-previews) says.
+- A link or a request for a new window from the main page to a launch
+  address opens the preview in the user's default browser. The window
+  keeps its page.
+- The Mac app accepts that request only when the main frame on the desktop
+  origin starts it. A referrer does not identify the frame that starts a
+  request, so the Mac app never trusts one.
+- To open the preview, the Mac app gets a browser launch from the launch
+  address. It sends its own sign-in session, the desktop origin, and
+  `Accept: application/json`.
+- A browser launch is a JSON reply with an authorizer address and the
+  expiry of its grant. The address carries the preview hostname and a new
+  grant only in its fragment.
+- The Mac app opens only an authorizer address on a preview domain that
+  the configured frame origins include. It opens no other address from a
+  browser launch.
+- The browser gets the grant of that one preview, and no sign-in session.
+  Reason: the launch address needs a sign-in session, and the browser may
+  hold none.
 
 ## Sign-in
 
@@ -116,9 +145,18 @@ them yet.
   with those calls.
 - The session cookie of the browser keeps SameSite=Lax, as
   [Access and security](access-and-security.md#sign-in) says.
-- The Worker reads the cookie of the Mac app only on a request whose
-  `Origin` header is the desktop origin. Reason: a frame in the window,
-  such as a port preview, then cannot use that session.
+- The Worker reads the cookie of the Mac app on a request whose `Origin`
+  header is the desktop origin.
+- It also reads that cookie on a GET of the exact launch address of a port
+  preview without an `Origin` or an `Upgrade` header. When such a GET
+  carries the cookie of the Mac app, the Worker reads no other session
+  cookie.
+- Reason: the window loads the launch address in a frame, and a navigation
+  sends no `Origin` header. Such a GET returns only the launch page or a
+  browser launch. No other origin can read either reply.
+- Every other request uses only the session cookie of the browser. Reason:
+  a frame in the window, such as a port preview, then cannot use the
+  session of the Mac app for the API.
 - The sign-in session stays across launches of the Mac app, until it
   expires or the user signs out.
 - Sign out ends the sign-in session of the Mac app, and removes its
