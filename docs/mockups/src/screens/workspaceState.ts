@@ -74,12 +74,13 @@ export const workspaceStateSchema = {
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**
-     * Where an update that belongs to no session shows after the workspace
-     * refused it: nowhere, under the file lists, under the header, or each
-     * one beside its data: file reports under the file lists, and the rest
+     * The notices of data without a session (decision 96). After a lost
+     * update the workspace asks for a fresh full report, and nothing shows.
+     * `failed-repair` draws the notices that show when that report is lost
+     * too: a file list's under the file lists, and the workspace name's
      * under the header.
      */
-    lostUpdate: { enum: ['none', 'files', 'header', 'contextual'] },
+    lostUpdate: { enum: ['none', 'failed-repair'] },
   },
 } as const
 

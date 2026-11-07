@@ -4229,14 +4229,15 @@ finding 2 of the Milestone 4d review.
 - [x] Compare the per-session screens with their mockups at desktop and
       phone sizes, in dark and light.
       Branch: `conductor/boat-native-remote-workspaces-milestone-8j`.
-- [ ] Build the chosen place, browser memory, and later-tab replay for
-      markers without a session after the user answers the pending choice.
-      This needs app shell, Files, and protocol ownership outside this branch.
-- [ ] Compare the chosen no-session display with its mockup after that work.
+
+Handoff: this milestone builds no notice for a marker without a session.
+Decision 96 E gives that notice to Milestone 8l, after Milestone 7s adds
+the contract for a failed repair.
 
 Evidence: `.context/boat-native-remote-workspaces/8j-mockups-report.md` and
 `.context/boat-native-remote-workspaces/8j-options-check.md`.
 Per-session checks: `.context/boat-native-remote-workspaces/8j-app-report.md`.
+Decision 96 mockups: `.context/boat-native-remote-workspaces/decision-96/implementor-report.md`.
 
 Design calls on 6 November 2026:
 
@@ -4255,37 +4256,24 @@ Design calls on 6 November 2026:
 - Keep the member name on a stopped line and add its omitted file count.
   A zero count leaves that line unchanged.
 
-Added on 6 November 2026. No option is chosen or built.
+### Decision 96: markers without a session
 
-### Pending choice: markers without a session
-
-- **Severity:** Medium. **Effort:** Medium.
-- **Source:** Design.
-- **Category:** docs or spec.
-- **Location:** `plans/boat-native-remote-workspaces.md`, Milestone 8j; `docs/mockups/src/entries/app/chat/lost-updates/index.mockup.tsx`.
-- **Terms:**
-  - **Marker:** A stored notice that names data lost when the workspace refuses an event from the agent runner.
-  - **Session:** One chat tab in a workspace.
-  - **App shell:** The browser code that holds the workspace header, Files panel, and chat.
-- **Background:** Conducting shows one workspace with several chats and one Files panel. A refused file update can have no session. The server stores its marker in the workspace event history. The chat currently drops that marker.
-- **Problem:** The protocol calls each marker a chat line. It gives no place or browser memory owner when no session exists.
-- **Impact if no action:** A file list can miss an update without telling the user. A new tab also misses older markers.
-- **Root question:** Where should each tab show markers without a session, and when should the notices end?
-- **Options:**
-  - **A.** Show every marker under the Files lists. The Files store keeps the notices in memory. Its existing stream replays workspace events from zero for each new tab. New complete file, title, and start reports clear matching notices. Other notices stay in Files. Phone users must open Files. Effort: Medium.
-  - **B.** Show every marker below the workspace header, with Dismiss. The app shell keeps the notices in memory. Its existing stream replays from zero for each new tab. Complete file reports, newer titles, and newer start steps clear their corresponding notices. Other notices stay until Dismiss.
-
-    Dismiss stays in this tab across workspace returns. A reload or new tab shows any unresolved notice again. The bars use space above every view. Effort: Medium.
-  - **D.** Show file losses beside Files and other losses below the header. The Files store keeps one notice for each affected file list. A newer complete report clears that notice. The app shell keeps the other notices with B's recovery and Dismiss rules.
-
-    Each new tab replays both existing streams from zero. This uses two places and two memory owners. Phone users must open Files to see file losses. Effort: Medium.
-- **Left out:** C, every open chat: no notice shows when no session is open. A second fallback place would repeat B or D. E, server notice state: it needs Worker and shared-contract changes outside the user's explicit scope. The current streams already restore notices without those changes. Keep the current silence: it fails the requested loss notice. Browser disk storage: it breaks decision 87 B.
-- **Wider fix:** D. File notices stay with their source, and the header covers every other marker kind.
-- **Previous examples:** Decision 76 E and Milestone 4d store session markers. The chat starts its stream after the active session history cursor. The shell and Files streams already replay from zero. Only the chat's cursor would miss old workspace markers.
-- **Recommendation:** D. Each notice shows beside the data that it concerns. The options check changed the first recommendation from B.
-- **Action:** ask the user, because the task explicitly reserves the placement and browser state choice for the user.
-
-Shared requirements come from decision 76 E, decision 87 B, and the task. The server stores each refusal marker. Browser state stays in memory. A later tab restores notices from the server. All choices need a protocol update and app integration outside this branch's owned files. No choice has been applied.
+- **Chosen:** E, by the user on 6 November 2026. After a lost update
+  without a session, the workspace asks the runner for a fresh full report,
+  and the browser shows nothing. A notice shows beside the data, as in
+  option D, only when the fresh report is lost too. Milestone 8l builds that
+  notice after Milestone 7s adds the contract for a failed repair.
+- **Mockup:** `app/chat/lost-updates` keeps the option D picture as the
+  failed-repair notice: the notice of a file list under the file lists, and
+  the notice of the workspace name under the header. The standalone
+  pictures of options A and B are removed.
+- **History:** before the answer on 6 November 2026, the choice offered
+  these options, and the options check recommended D:
+  - **A.** Every notice under the Files lists, kept by the Files store.
+  - **B.** Every notice below the workspace header, with Dismiss, kept by
+    the app shell.
+  - **D.** File notices beside Files and the other notices below the
+    header, with both owners.
 
 ## Milestone 8i: Chat path wiring
 

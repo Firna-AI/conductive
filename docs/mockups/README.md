@@ -184,12 +184,14 @@ running turn, steer, interrupt, and a failure, which moved from
 `movedFrom`. `app/chat/lost-data` draws the data that the chat does not
 have, from decision 76: tool output and turn files that the runner left out,
 and the lines of runner events that the workspace refused.
-`app/chat/lost-updates` draws three places for a refused update
-that belongs to no session, such as a file update: under the file lists,
-under the header, and each update beside its data, with file reports under
-the file lists and the rest under the header. The user chooses one, and the
-app builds none of them before that decision. The `lostUpdate` state of the
-workspace screen draws all three.
+`app/chat/lost-updates` draws a failed repair, from decision 96. After a
+refused update that belongs to no session, such as a file update, the
+workspace asks for a fresh full report, and nothing shows. Only when that
+report is lost too does a notice name the data that stays unavailable,
+beside that data: under the file lists for a file list, and under the
+header for other data, such as the workspace name. The `failed-repair`
+value of the `lostUpdate` state draws it, and every other screen stays
+silent. The app shows no such notice yet.
 
 ## Folder layout
 

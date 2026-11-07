@@ -1,50 +1,53 @@
 import { CircleSlash, X } from 'lucide-react'
 import { IconButton } from '../common/actions'
-import { lostText, type LostReason, type LostWhat } from './lostCopy'
+import { unavailableText, type UnavailableData } from './lostCopy'
 import styles from './LostUpdate.module.css'
 
-/** A refused runner event that belongs to no session, such as a file update. */
-export type LostUpdateMarker = {
-  what: LostWhat
-  reason: LostReason
-  /** The time since the update was lost, such as "4m ago". */
+/**
+ * Workspace data that a failed repair leaves unavailable (decision 96): an
+ * update without a session was lost, and the fresh full report that the
+ * workspace asked for was lost too.
+ */
+export type FailedRepair = {
+  data: UnavailableData
+  /** The time since the data became unavailable, such as "4m ago". */
   ago: string
 }
 
-function Text(props: { marker: LostUpdateMarker }) {
-  const { marker } = props
+function Text(props: { repair: FailedRepair }) {
+  const { repair } = props
   return (
     <>
       <CircleSlash aria-hidden className={styles.icon} size={14} />
-      <span className={styles.text}>
-        {lostText(marker.what, marker.reason)}
-      </span>
-      <span className={styles.ago}>{marker.ago}</span>
+      <span className={styles.text}>{unavailableText(repair.data)}</span>
+      <span className={styles.ago}>{repair.ago}</span>
     </>
   )
 }
 
 /**
- * Option B for an update without a session: a bar under the workspace
- * header, above the tabs, so it shows on every tab until Dismiss.
+ * The notice of a failed repair of workspace data other than a file list,
+ * such as the workspace name: a bar under the workspace header, above the
+ * tabs, with Dismiss.
  */
-export function LostUpdateBar(props: { marker: LostUpdateMarker }) {
+export function LostUpdateBar(props: { repair: FailedRepair }) {
   return (
     <div className={styles.bar} role="status">
-      <Text marker={props.marker} />
+      <Text repair={props.repair} />
       <IconButton icon={X} label="Dismiss" quiet />
     </div>
   )
 }
 
 /**
- * Option A for an update without a session: a row under the file lists of
- * the Files panel, in the column beside the chat or the Files tab of a phone.
+ * The notice of a failed repair of a file list: a row under the file lists
+ * of the Files panel, in the column beside the chat or the Files tab of a
+ * phone.
  */
-export function LostUpdateRow(props: { marker: LostUpdateMarker }) {
+export function LostUpdateRow(props: { repair: FailedRepair }) {
   return (
     <div className={styles.row} role="status">
-      <Text marker={props.marker} />
+      <Text repair={props.repair} />
     </div>
   )
 }

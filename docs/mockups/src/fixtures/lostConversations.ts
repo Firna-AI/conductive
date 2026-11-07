@@ -171,16 +171,8 @@ export function lostConversations(history: readonly ChatItem[]) {
   } as const satisfies Record<string, readonly ChatItem[]>
 }
 
-/** A lost report of Changes, an update that belongs to no session. */
-export const lostChanges = {
-  what: 'changes',
-  reason: 'too_large',
-  ago: '4m ago',
-} as const
+/** A failed repair of the list of changes, which belongs to no session. */
+export const changesUnavailable = { data: 'changes', ago: '4m ago' } as const
 
-/** A lost workspace name from the agent, which belongs to no session. */
-export const lostTitle = {
-  what: 'title',
-  reason: 'invalid',
-  ago: '2m ago',
-} as const
+/** A failed repair of the workspace name that the agent wrote. */
+export const titleUnavailable = { data: 'title', ago: '2m ago' } as const

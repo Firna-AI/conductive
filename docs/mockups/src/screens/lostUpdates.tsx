@@ -1,55 +1,40 @@
 import type { ReactNode } from 'react'
+import { LostUpdateBar, LostUpdateRow } from '../components/chat/LostUpdate'
 import {
-  LostUpdateBar,
-  LostUpdateRow,
-  type LostUpdateMarker,
-} from '../components/chat/LostUpdate'
-import { lostChanges, lostTitle } from '../fixtures/lostConversations'
+  changesUnavailable,
+  titleUnavailable,
+} from '../fixtures/lostConversations'
 import type { WorkspaceState } from './workspaceState'
 
-/** The parts of the workspace screen that a lost update can join. */
+/** The parts of the workspace screen that a notice can join. */
 type Parts = { header: ReactNode; files: ReactNode }
 
-function underFiles(parts: Parts, marker: LostUpdateMarker): Parts {
-  return {
-    ...parts,
-    files: (
-      <>
-        {parts.files}
-        <LostUpdateRow marker={marker} />
-      </>
-    ),
-  }
-}
-
-function underHeader(parts: Parts, marker: LostUpdateMarker): Parts {
-  return {
-    ...parts,
-    header: (
-      <>
-        {parts.header}
-        <LostUpdateBar marker={marker} />
-      </>
-    ),
-  }
-}
-
 /**
- * Adds the line of an update that belongs to no session to the part of the
- * workspace that the state chooses: under the file lists, under the header,
- * or, in the contextual option, a lost Changes report under the file lists
- * and a lost workspace name under the header. The shared header and Files
- * panel stay as they are.
+ * Adds the notices of a failed repair (decision 96) to the workspace: the
+ * data that stays unavailable after an update without a session and its
+ * fresh full report were both lost. The notice of a file list joins the file
+ * lists, and the notice of other data, such as the workspace name, joins the
+ * header. In every other state nothing shows, also after a lost update whose
+ * fresh report arrives. The shared header and Files panel stay as they are.
  */
 export function placeLostUpdate(state: WorkspaceState, parts: Parts): Parts {
   switch (state.lostUpdate) {
     case 'none':
       return parts
-    case 'files':
-      return underFiles(parts, lostChanges)
-    case 'header':
-      return underHeader(parts, lostChanges)
-    case 'contextual':
-      return underHeader(underFiles(parts, lostChanges), lostTitle)
+    case 'failed-repair':
+      return {
+        header: (
+          <>
+            {parts.header}
+            <LostUpdateBar repair={titleUnavailable} />
+          </>
+        ),
+        files: (
+          <>
+            {parts.files}
+            <LostUpdateRow repair={changesUnavailable} />
+          </>
+        ),
+      }
   }
 }

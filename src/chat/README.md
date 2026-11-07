@@ -74,7 +74,8 @@ agent runner.
   The transcript keeps the marker only in that item. A repeat of the same marker replaces its item.
   The line names the lost data and the reason in plain words, and never the stream, number, or event type.
   Nullable turn context stays intact. Markers without a session stay outside per-session logs.
-  The chat state keeps no marker without a session, because their place is an open decision.
+  The chat keeps no marker without a session. The browser shows nothing after the first loss, as decision 96 requires.
+  A notice beside the data shows only when the fresh full report that repairs it is lost too. The chat builds no such notice.
 - A refused `turn.completed` or `turn.failed` ends the turn that its marker names.
   Its running calls show as stopped, its Stop request clears, and no time, files, or Try again appear.
   A marker of a turn that was not running, or without a turn, ends nothing.

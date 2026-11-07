@@ -78,3 +78,20 @@ export function leftOutOfRun(bytes: number): string {
 export function unlistedFiles(count: number): string {
   return `${count} changed ${count === 1 ? 'file' : 'files'} not listed`
 }
+
+/**
+ * Workspace data that stays unavailable after a failed repair (decision 96):
+ * an update without a session was lost, and the fresh full report that should
+ * replace it was lost too. The first loss shows nothing.
+ */
+export type UnavailableData = Extract<LostWhat, 'changes' | 'title'>
+
+const unavailable: Readonly<Record<UnavailableData, string>> = {
+  changes: 'The latest list of changes is unavailable',
+  title: 'The new workspace name is unavailable',
+}
+
+/** The words of a failed-repair notice, which name the unavailable data. */
+export function unavailableText(data: UnavailableData): string {
+  return unavailable[data]
+}
