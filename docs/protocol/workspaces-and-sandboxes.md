@@ -285,6 +285,18 @@ says.
 
 - The Terminal tab opens a shell in the sandbox, in the folder of the
   workspace's repository (decision 94).
+- The Terminal shell of a workspace keeps running when its connection
+  drops. Each new connection attaches to that shell, with its running
+  commands and its current screen (decision 118).
+- Reason: a connection can drop at any time, such as at a network change
+  or when Cloudflare updates the runtime of the Worker. A shell that ends
+  with its connection was rejected, because the user then loses a running
+  command, such as a dev server.
+- When the user ends the shell, such as with `exit`, the next connection
+  opens a new shell.
+- A stop of the sandbox ends the shell and its commands, as
+  [Stop and resume](#stop-and-resume) says. The first connection after the
+  resume opens a new shell.
 - On a phone, a row of keys adds the keys that a phone keyboard lacks.
 
 ### Port previews
