@@ -32,8 +32,8 @@ function Preview(props: {
   viewer: GitHubViewer
   onArchive: () => void
 }) {
-  const { fetch, subscribe } = props.source
-  const github = useGitHubState(target, { fetch, subscribe })
+  const { fetch, subscribe, delay } = props.source
+  const github = useGitHubState(target, { fetch, subscribe, delay })
   return (
     <div className={styles.frames}>
       <section aria-label="Desktop right column">

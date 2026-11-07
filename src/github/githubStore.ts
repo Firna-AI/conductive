@@ -1,3 +1,4 @@
+import type { Delay } from '../app/events'
 import type {
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
@@ -24,7 +25,17 @@ export type SubscribeToWorkspace = (
 export interface GitHubSource {
   fetch: FetchLike
   subscribe: SubscribeToWorkspace
+  /** Runs the next fresh read later: `AppServices.delay` in the app. */
+  delay: Delay
 }
+
+/**
+ * The wait before the next fresh read of an open workspace, in ms. GitHub
+ * events keep the state current, so these reads only catch a change that no
+ * webhook names. Each read costs GitHub API calls in every open tab, so the
+ * wait is long. It is a choice of the app, not a product limit.
+ */
+const freshReadWait = 300_000
 
 export type GitHubState =
   | { status: 'loading' }
@@ -52,6 +63,11 @@ interface Read {
  * as new, because the Worker reads the current state. A history that comes
  * during a read, or after its reply shows, has no known order against that
  * reply: when the two differ, the store keeps what it shows and reads again.
+ *
+ * While connected, the timer of the next fresh read waits whenever no read
+ * runs. It starts when a read ends or a live event cancels a read, and each
+ * read stops it. So a timed read never overlaps or cancels another read. A
+ * live event keeps a timer that waits, so events never put off the reads.
  */
 export class GitHubStore {
   readonly target: WorkspaceTarget
@@ -63,21 +79,27 @@ export class GitHubStore {
   /** Whether the shown state came from a read, not from the stream. */
   private shownFromRead = false
   private running: Read | null = null
+  /** Cancels the timer of the next fresh read, while one waits. */
+  private cancelTimer: (() => void) | null = null
 
   constructor(target: WorkspaceTarget) {
     this.target = target
   }
 
-  getState = (): GitHubState => this.state
+  getSnapshot = (): GitHubState => this.state
 
-  listen = (listener: () => void): (() => void) => {
+  subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener)
     return () => {
       this.listeners.delete(listener)
     }
   }
 
-  /** Starts the first API read and the stream until the returned function disconnects. */
+  /**
+   * Starts the first API read and the stream until the returned function
+   * disconnects. Until then, the store also reads again after a slow wait,
+   * so a change that no event names shows too.
+   */
   connect(source: GitHubSource): () => void {
     this.source = source
     const unsubscribe = source.subscribe(this.lastEventNumber, this.receive)
@@ -87,17 +109,34 @@ export class GitHubStore {
       if (this.source !== source) return
       this.source = null
       this.cancelRead()
+      this.stopTimer()
     }
   }
 
   /** Reads the banner and the checks. It settles after the reply is handled. */
   load(): Promise<void> {
+    return this.read(false)
+  }
+
+  retry = (): Promise<void> => this.load()
+
+  /**
+   * The timed read. It shows no loading, and a failure keeps the state. No
+   * read runs now, because each read stops the timer.
+   */
+  private refresh = (): Promise<void> => {
+    this.cancelTimer = null
+    return this.read(true)
+  }
+
+  private read(timed: boolean): Promise<void> {
     const source = this.source
     if (!source) return Promise.resolve()
     this.cancelRead()
+    this.stopTimer()
     const read: Read = { controller: new AbortController(), sawHistory: false }
     this.running = read
-    if (this.state.status === 'error') this.set({ status: 'loading' })
+    if (!timed && this.state.status === 'error') this.set({ status: 'loading' })
     return loadGitHubSnapshot(
       source.fetch,
       this.target,
@@ -107,20 +146,22 @@ export class GitHubStore {
         if (this.running !== read) return
         this.running = null
         this.readReply(reply, read.sawHistory)
+        this.schedule()
       },
       (error: unknown) => {
         if (this.running !== read) return
         this.running = null
-        // GitHub events keep a shown state current, so it stays.
+        this.schedule()
+        // GitHub events keep a shown state current, so it stays. A timed
+        // read also keeps a shown error, and Try again still reads.
         if (this.state.status === 'ready') return
+        if (timed && this.state.status === 'error') return
         const message =
           error instanceof GitHubLoadError ? error.userMessage : null
         this.set({ status: 'error', message })
       },
     )
   }
-
-  retry = (): Promise<void> => this.load()
 
   private receive = (message: WorkspaceSocketMessage): void => {
     if (message.type === 'event') {
@@ -129,6 +170,7 @@ export class GitHubStore {
       // A live event is newer than the reply of any read that runs.
       this.cancelRead()
       this.show(live, false)
+      this.schedule()
       return
     }
     let latest: GitHubSnapshot | null = null
@@ -173,6 +215,18 @@ export class GitHubStore {
       return
     }
     this.show(reply, true)
+  }
+
+  /** Starts the timer of the next fresh read, unless one waits or a read runs. */
+  private schedule(): void {
+    const source = this.source
+    if (!source || this.running || this.cancelTimer) return
+    this.cancelTimer = source.delay(freshReadWait, this.refresh)
+  }
+
+  private stopTimer(): void {
+    this.cancelTimer?.()
+    this.cancelTimer = null
   }
 
   private cancelRead(): void {

@@ -1,4 +1,8 @@
-import { useEffect, useMemo, useSyncExternalStore } from 'react'
+import { useCallback } from 'react'
+import {
+  useWorkspaceStore,
+  type WorkspaceIdentity,
+} from '../app/workspace-store'
 import type { FetchLike } from './api/client'
 import type { ChatSnapshot } from './state/chat-snapshot'
 import { ChatController } from './state/controller'
@@ -13,6 +17,12 @@ export interface ChatConnection {
   subscribe: SubscribeToWorkspace
 }
 
+/** Starts a run of the chat. Its stop makes late replies change nothing. */
+function startChat(controller: ChatController): () => void {
+  void controller.start()
+  return controller.stop
+}
+
 /**
  * The controller of one workspace's chat and its current snapshot. A new
  * workspace, `fetch`, or `subscribe` makes a new controller, so pass stable
@@ -24,19 +34,14 @@ export function useChatController(connection: ChatConnection): {
   snapshot: ChatSnapshot
 } {
   const { orgId, workspaceId, fetch, subscribe } = connection
-  const controller = useMemo(
-    () =>
-      new ChatController({ target: { orgId, workspaceId }, fetch, subscribe }),
-    [orgId, workspaceId, fetch, subscribe],
+  const create = useCallback(
+    (target: WorkspaceIdentity) =>
+      new ChatController({ target, fetch, subscribe }),
+    [fetch, subscribe],
   )
-  useEffect(() => {
-    void controller.start()
-    return controller.stop
-  }, [controller])
-  const snapshot = useSyncExternalStore(
-    controller.subscribe,
-    controller.getSnapshot,
-    controller.getSnapshot,
+  const { store, snapshot } = useWorkspaceStore(
+    { orgId, workspaceId },
+    { create, connect: startChat },
   )
-  return { controller, snapshot }
+  return { controller: store, snapshot }
 }

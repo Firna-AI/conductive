@@ -156,14 +156,14 @@ it('shows an error for a failed or a broken reply, loads again on Try again, and
   server.json('GET', bannerPath, unavailable, 503)
   connect(store, server.fetch, new FakeWorkspaceEvents([]))
   await nextChange(store)
-  const failed = store.getState()
+  const failed = store.getSnapshot()
   server.json('GET', bannerPath, toolFixtures('ready-to-merge').banner)
   server.json('GET', checksPath, {
     state: 'available',
     checks: [{ id: 'check-0', name: 'build' }],
   })
   await store.retry()
-  const broken = store.getState()
+  const broken = store.getSnapshot()
   server.json('GET', checksPath, toolFixtures('ready-to-merge').checks)
   await store.retry()
   const loaded = shown(store)
