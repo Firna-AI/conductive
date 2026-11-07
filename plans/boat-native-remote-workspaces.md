@@ -3939,7 +3939,11 @@ individual user?"
     sign-in.
   - **E.** A, plus the workspace disable of B.
 - **Recommendation:** D.
-- **Open:** waits for the user. Notes:
+- **Chosen:** a user and an org, by the user on 8 November 2026: "sorry
+  I meant user and org". The orchestrator reads this as A plus C. The
+  user suspension stays as Milestone 15m builds it, because decisions
+  123 E and 125 B rely on it, and an org suspension comes on top of it.
+  Milestone 15o adds the org suspension. Notes:
   `.context/suspension-unit/brainstorm.md`.
 
 ### 130. Recover messages after a failed first start
@@ -3966,7 +3970,7 @@ first called it decision 123, which the plan uses for another question.
   open tab, because a reload loses them.
 - **Recommendation:** A. D is the wider fix.
 - **Open:** waits for the user. Records:
-  `.context/boat-native-remote-workspaces/initial-create-decision-123.md`
+  `.context/boat-native-remote-workspaces/initial-create-decision-130.md`
   and `initial-create-final-report.md`. The 8i orchestrator applies the
   answer.
 
@@ -6233,6 +6237,41 @@ publishes the parts. Added on 8 November 2026.
       `docs/mockups/src/design/`, and the app under `src/` with the
       library's parts. Keep each screen as its mockup draws it, and compare
       each changed screen. Delete the follow-up item.
+
+
+## Milestone 15o: Suspend an org
+
+Tags: ui
+
+Depends on: 15m
+
+Apply decision 129: the operator can suspend an org, beside the user
+suspension of Milestone 15m. Added on 8 November 2026.
+
+Design calls of the orchestrator, 8 November 2026:
+
+- The operator suspends an org through the operator route, as for a
+  user.
+- Every cloud computer of the org stops. Its previews, terminals, and
+  runner connections close, its workspace tokens are revoked, and no
+  start, build, or image refresh runs.
+- Members keep their accounts and their other orgs. They can open the
+  suspended org and read its chats. A notice says that the org is
+  suspended, and it gives the abuse address.
+- Nothing in the org can change while it is suspended. A member can
+  still leave.
+- Decision 125 B also holds for the org: its workspaces get no disk
+  restart near day 14.
+
+- [ ] Draw the suspended org in the mockups: the notice in the org and
+      on its workspaces, and the refused actions. Then build the screens,
+      and compare each with its mockup.
+- [ ] Add the org suspension: the operator route, one shared check that
+      every start, build, refresh, connection, preview, tool, and token
+      path uses with the user suspension, and native tests through the
+      production objects.
+- [ ] Add the org suspension to the suspension page of the protocol and
+      to the Terms page.
 
 ## Milestone 15d: Marketing site
 
