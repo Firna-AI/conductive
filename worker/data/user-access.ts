@@ -1,4 +1,6 @@
 import { HttpError } from '../http'
+import type { WorkspaceState } from '../../src/shared/workspaces'
+import { workspaceTokenResourcePredicate } from './workspace-token-access'
 
 export interface UserAccess {
   id: string
@@ -54,23 +56,53 @@ export async function requireActiveWorkspaceOwner(
   if (await userSuspended(db, userId)) throw suspendedWorkspaceOwnerError()
 }
 
-export function suspendedWorkspace(
-  db: D1Database,
-  workspaceId: string,
-): Promise<{
+export interface WorkspaceAccessStopRecord {
   ownerUserId: string
   orgId: string
   sandboxId: string | null
   orgDeletedAt: number | null
-} | null> {
-  return db
+  state: WorkspaceState
+  ownerSuspended: boolean
+  revokedTokenRunning: boolean
+  maintenanceAllowed: boolean
+}
+
+export async function readWorkspaceAccessStop(
+  db: D1Database,
+  workspaceId: string,
+): Promise<WorkspaceAccessStopRecord | null> {
+  const row = await db
     .prepare(
       `SELECT w.owner_user_id AS ownerUserId, w.org_id AS orgId, w.sandbox_id AS sandboxId,
-         o.deleted_at AS orgDeletedAt
+         o.deleted_at AS orgDeletedAt, w.state,
+         CASE WHEN u.suspended_at IS NOT NULL THEN 1 ELSE 0 END AS ownerSuspended,
+         CASE WHEN t.revoked_at IS NOT NULL AND w.state IN
+           ('starting', 'ready', 'working', 'unread', 'input')
+           THEN 1 ELSE 0 END AS revokedTokenRunning,
+         CASE WHEN w.state = 'stopped' AND w.sandbox_id IS NOT NULL
+           AND ${workspaceTokenResourcePredicate} THEN 1 ELSE 0 END AS maintenanceAllowed
        FROM workspaces w JOIN users u ON u.id = w.owner_user_id
        JOIN orgs o ON o.id = w.org_id
-       WHERE w.id = ? AND u.suspended_at IS NOT NULL`,
+       LEFT JOIN workspace_tokens t ON t.workspace_id = w.id
+       WHERE w.id = ?`,
     )
     .bind(workspaceId)
-    .first()
+    .first<
+      Omit<
+        WorkspaceAccessStopRecord,
+        'ownerSuspended' | 'revokedTokenRunning' | 'maintenanceAllowed'
+      > & {
+        ownerSuspended: number
+        revokedTokenRunning: number
+        maintenanceAllowed: number
+      }
+    >()
+  return row
+    ? {
+        ...row,
+        ownerSuspended: row.ownerSuspended === 1,
+        revokedTokenRunning: row.revokedTokenRunning === 1,
+        maintenanceAllowed: row.maintenanceAllowed === 1,
+      }
+    : null
 }

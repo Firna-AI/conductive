@@ -43,7 +43,8 @@ The action takes these steps, in this order:
 The reply is a `UserSuspensionResponse`: `userId`, `suspendedAt`,
 `pendingWorkspaceIds`, and `pendingBuildIds`. The status is 200 when
 nothing is pending. It is 202 when the stop of a workspace has not
-finished, or when the user started an unfinished build. The suspension is
+finished, or when the user started an unfinished build. A call that the
+workspace object skipped also counts as not finished. The suspension is
 in force in both cases. Each pending workspace retries its stop on its own
 alarm, without the operator.
 
@@ -141,13 +142,13 @@ from [`user-access.ts`](../data/user-access.ts). A refusal is 403
 
 - `requireOrgMember` refuses a suspended user. So that user cannot
   create, resume, or build.
-- An open or a resume that would start the sandbox also needs an owner
-  who is not suspended. So no member can start a workspace of a suspended
-  owner. A member who is not suspended can still open that workspace and
-  read its history, also when it is archived. `requireActiveWorkspaceOwner`
-  makes this check, with the same owner reply as sandbox access. The
-  checks of the suspended user's own requests keep the reply "This
-  account is suspended."
+- A resume of a stopped or failed workspace also needs an owner who is
+  not suspended. So no member can start a workspace of a suspended owner.
+  A member who is not suspended can still open that workspace, because an
+  open reads its detail and history before any Resume, also when it is
+  archived. `requireActiveWorkspaceOwner` makes this check, with the same
+  owner reply as sandbox access. The checks of the suspended user's own
+  requests keep the reply "This account is suspended."
 - The start coordinator checks the users of a queued start before each
   phase: the owner and the sender of a create, the owner of a resume, and
   the member who asked for the resume. A refusal cancels the start. A
@@ -171,26 +172,46 @@ from [`user-access.ts`](../data/user-access.ts). A refusal is 403
 
 ### The stop of one workspace
 
-`suspendLifecycle(workspaceId, ownerUserId)` of the workspace object stops
-one workspace of a suspended owner. The third step of the action calls it
-for each workspace that the user owns.
+`WorkspaceAccessStop` in
+[`workspace-suspension.ts`](../lifecycle/workspace-suspension.ts) decides
+and runs the stop of one workspace, one call at a time. Each check reads
+one row with `readWorkspaceAccessStop` from
+[`user-access.ts`](../data/user-access.ts): the owner and the suspension
+of the owner, the state, the sandbox, the org, and a revoked workspace
+token. The workspace must stop in either of these cases:
 
-1. It cancels the active start, and it revokes the preview hostnames of
-   the workspace.
+- Its owner is suspended.
+- It runs with a revoked workspace token, and no start waits. A waiting
+  start gives it a new token, so that start goes on.
+
+The stop takes these steps:
+
+1. For a suspended owner, it cancels the active start. In both cases it
+   revokes the preview hostnames of the workspace.
 2. While a start still runs, it sets an alarm one second later and
    reports that the stop is pending.
 3. Otherwise it stops the sandbox with the app's Boat key, also when the
    org is deleted. A confirmed stop clears the turn records and sets the
    `stopped` state. A sandbox that Boat no longer has counts as stopped. A
-   Boat `error` state sets the error state with `user_suspended`.
+   Boat `error` state sets the error state, with the owner reply of
+   `user_suspended` for a suspended owner.
 4. A stop that Boat has not confirmed, or a failed stop, sets an alarm 30
    seconds later and reports that the stop is pending.
+5. After a confirmed stop, it deletes the alarm only for a suspended
+   owner. An owner who is not suspended keeps the disk retention alarm.
 
-While the owner stays suspended, each alarm of the workspace object runs
-this stop again. So the stop continues without the operator.
-`suspendLifecycle` returns `true` when the stop is complete. It also
-returns `true` when the workspace has no suspended owner, or when another
-user owns it now.
+Each alarm of the workspace object runs this check. So a stop goes on
+without the operator, also after the workspace gets another owner.
+
+- `suspendLifecycle(workspaceId, ownerUserId)` runs the check for the
+  third step of the action. It returns `true` only for a confirmed stop.
+  A skipped or pending stop returns `false`, so the reply lists the
+  workspace as pending.
+- `reconcileLifecycleAccess(workspaceId)` runs the check after each owner
+  change, in every state. It uses the same queue as the check, so a late
+  stop for the former owner finishes before it reads the new owner. When
+  nothing must stop, no start waits, and a stopped workspace has an owner
+  who is not suspended, it rearms the lifecycle alarm of that workspace.
 
 ## Settings
 

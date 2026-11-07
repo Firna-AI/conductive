@@ -166,14 +166,6 @@ export class Workspace
     return this.controller.lifecycleActivity()
   }
 
-  async openLifecycleTab(tabId: string) {
-    return this.controller.openLifecycleTab(tabId)
-  }
-
-  async closeLifecycleTab(tabId: string) {
-    return this.controller.closeLifecycleTab(tabId)
-  }
-
   async lifecycleStopped(): Promise<void> {
     return this.controller.lifecycleStopped()
   }
@@ -183,6 +175,10 @@ export class Workspace
     ownerUserId: string,
   ): Promise<boolean> {
     return this.controller.suspendLifecycle(workspaceId, ownerUserId)
+  }
+
+  reconcileLifecycleAccess(workspaceId: string): Promise<void> {
+    return this.controller.reconcileLifecycleAccess(workspaceId)
   }
 
   async clearLifecycle(): Promise<void> {

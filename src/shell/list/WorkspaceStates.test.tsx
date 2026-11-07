@@ -42,6 +42,7 @@ describe('workspace states', () => {
             view: [],
             stream: open.stream,
             archive: null,
+            onReassigned: () => undefined,
           }}
         />,
       ),

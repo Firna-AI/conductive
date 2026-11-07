@@ -25,9 +25,10 @@ export const termsDocument: LegalDocument = {
   title: legalTitles.terms,
   description: `The terms of use of ${productName}, as a draft for lawyer review.`,
   lead: text`These terms cover your use of ${productName} at ${productDomain}
-  and ${appDomain}. You accept them when you continue with GitHub to sign
-  up. Effective date:
-  ${draft('To confirm: the date when these terms start')}.`,
+  and ${appDomain}. You accept their current version each time that you
+  continue with GitHub to sign in. ${productName} keeps the latest version
+  that you accepted, and the time when you first accepted it. Effective
+  date: ${draft('To confirm: the date when these terms start')}.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -179,7 +180,10 @@ export const termsDocument: LegalDocument = {
     {
       title: 'Changes to these terms',
       blocks: [
-        paragraph`${draft('To write: how the operator tells you about a change, and when it takes effect')}`,
+        paragraph`A changed version of these terms applies from your next sign-in.
+          A sign-in session lasts at most 7 days, so a change applies within 7 days
+          while you keep using ${productName}. You accept the changed version
+          when you continue with GitHub.`,
       ],
     },
     {

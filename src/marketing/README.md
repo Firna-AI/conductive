@@ -125,8 +125,8 @@ Sources for the review:
   confirm that the section protects the providers at least as much as
   their own rules do.
 
-Each new user accepts the Terms at sign-up. The agreement sits beside
-Continue with GitHub, as
+Each sign-in accepts the current revision of the Terms. The agreement sits
+beside Continue with GitHub, as
 [Terms consent](../../worker/security/README.md#terms-consent) says. The
 Terms page also has a Suspension section and a Report abuse section. The
 [operator action](../../worker/operator/README.md) suspends an account.

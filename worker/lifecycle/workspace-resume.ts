@@ -58,16 +58,3 @@ export async function resumeWorkspace(
   if (!result.ok) throw workspaceStartFailure(result.error)
   return workspaceResponse(runtime, orgId, workspaceId)
 }
-
-export async function openWorkspace(
-  runtime: WorkspaceRuntime,
-  orgId: string,
-  workspaceId: string,
-  userId: string,
-  tabId: string,
-): Promise<WorkspaceResponse> {
-  await requireOrgMember(runtime.env.DB, orgId, userId)
-  await readWorkspace(runtime.env.DB, orgId, workspaceId)
-  await runtime.workspace(workspaceId).openLifecycleTab(tabId)
-  return resumeWorkspace(runtime, orgId, workspaceId, userId)
-}

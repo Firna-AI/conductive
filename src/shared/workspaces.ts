@@ -9,7 +9,6 @@ export function workspacePath(orgId: string, workspaceId: string): string {
   return `${workspacesPath(orgId)}/${encodeURIComponent(workspaceId)}`
 }
 export const workspacePaths = {
-  open: (orgId: string, id: string) => `${workspacePath(orgId, id)}/open`,
   resume: (orgId: string, id: string) => `${workspacePath(orgId, id)}/resume`,
   activity: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/activity`,

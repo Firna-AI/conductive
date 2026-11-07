@@ -1,6 +1,7 @@
 import {
-  suspendedWorkspace,
+  readWorkspaceAccessStop,
   suspendedWorkspaceOwnerError,
+  type WorkspaceAccessStopRecord,
 } from '../data/user-access'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
@@ -8,8 +9,9 @@ import type { DurableLifecycle } from './durable'
 import type { WorkspaceStorage } from './platform-storage'
 import type { WorkspaceStartCoordinator } from './start-coordinator'
 import type { TurnScopes } from './turns'
-import { stopSuspendedWorkspaceSandbox } from './workspace-actions'
+import { stopAccessDeniedWorkspaceSandbox } from './workspace-actions'
 import { revokeWorkspacePreviews } from './workspace-data'
+import { reconciledLifecycle } from './durable-reconciliation'
 
 export interface WorkspaceSuspensionContext {
   env: AppEnv
@@ -20,15 +22,63 @@ export interface WorkspaceSuspensionContext {
   turns: TurnScopes
 }
 
-export async function suspendWorkspaceLifecycle(
+export class WorkspaceAccessStop {
+  private pending: Promise<unknown> = Promise.resolve()
+  private readonly context: () => WorkspaceSuspensionContext
+
+  constructor(context: () => WorkspaceSuspensionContext) {
+    this.context = context
+  }
+
+  check(
+    workspaceId: string,
+    ownerUserId?: string,
+  ): Promise<boolean | undefined> {
+    return this.serial(
+      async () => (await this.run(workspaceId, ownerUserId)).result,
+    )
+  }
+
+  ownerChanged(workspaceId: string): Promise<void> {
+    return this.serial(async () => {
+      const checked = await this.run(workspaceId)
+      if (
+        checked.result === undefined &&
+        !checked.startPending &&
+        checked.row?.maintenanceAllowed
+      )
+        await checked.input.lifecycle.rearmStopped()
+    })
+  }
+
+  private async run(workspaceId: string, ownerUserId?: string) {
+    const input = this.context()
+    const row = await readWorkspaceAccessStop(input.env.DB, workspaceId)
+    const startPending = await input.starts.pending()
+    const ownerStop =
+      row?.ownerSuspended && (!ownerUserId || row.ownerUserId === ownerUserId)
+    const tokenStop = row?.revokedTokenRunning && !startPending
+    const result =
+      row && (ownerStop || tokenStop)
+        ? await stopForAccess(input, workspaceId, row)
+        : undefined
+    return { input, row, startPending, result }
+  }
+
+  private serial<T>(work: () => Promise<T>): Promise<T> {
+    const next = this.pending.then(work)
+    this.pending = next.catch(() => undefined)
+    return next
+  }
+}
+
+async function stopForAccess(
   input: WorkspaceSuspensionContext,
   workspaceId: string,
-  ownerUserId?: string,
-): Promise<boolean | undefined> {
-  const row = await suspendedWorkspace(input.env.DB, workspaceId)
-  if (!row || (ownerUserId && row.ownerUserId !== ownerUserId)) return undefined
+  row: WorkspaceAccessStopRecord,
+): Promise<boolean> {
   const { env, dependencies, storage, lifecycle, starts, turns } = input
-  await starts.cancel()
+  if (row.ownerSuspended) await starts.cancel()
   await revokeWorkspacePreviews(env.DB, workspaceId, dependencies.now())
   if (await starts.pending()) {
     await storage.setAlarm(dependencies.now() + 1_000)
@@ -36,27 +86,35 @@ export async function suspendWorkspaceLifecycle(
   }
   try {
     const result = await lifecycle.exclusive(() =>
-      stopSuspendedWorkspaceSandbox({
-        env,
-        dependencies,
-        workspaceId,
-        orgId: row.orgId,
-      }),
+      stopAccessDeniedWorkspaceSandbox(
+        {
+          env,
+          dependencies,
+          workspaceId,
+          orgId: row.orgId,
+        },
+        row.sandboxId,
+      ),
     )
-    if (result === undefined) return undefined
     if (result === 'pending') {
       await storage.setAlarm(dependencies.now() + 30_000)
       return false
     }
     await turns.clear()
     try {
-      if (result === 'error') {
+      if (result === 'error' && row.ownerSuspended) {
         const error = suspendedWorkspaceOwnerError()
         await lifecycle.fail({
           code: error.code,
           message: error.message,
           log: null,
         })
+      } else if (result === 'error') {
+        const state = await lifecycle.read()
+        if (state)
+          await lifecycle.fail(
+            reconciledLifecycle(state, 'error', dependencies.now()).error,
+          )
       } else await lifecycle.stopped()
     } catch (error) {
       if (!(
@@ -66,7 +124,7 @@ export async function suspendWorkspaceLifecycle(
       ))
         throw error
     }
-    await storage.deleteAlarm()
+    if (row.ownerSuspended) await storage.deleteAlarm()
     return true
   } catch {
     await storage.setAlarm(dependencies.now() + 30_000)

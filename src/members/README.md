@@ -82,7 +82,8 @@ with the message of the API.
   when the answer has them. The shell shows it as an active org again. Its
   workspaces start only when they open.
 - `onReassigned` gets the workspace of the API's answer. The header shows its
-  new owner. The cloud computer keeps running.
+  new owner. The cloud computer keeps running. One exception: a workspace
+  whose stop for a suspended owner has not finished still stops.
 - `onMemberRemoved` tells the shell that the member's workspaces now belong
   to the viewer, so it can load the workspace list again.
 - On desktop, a menu opens as a popover in the top layer of the page. So a

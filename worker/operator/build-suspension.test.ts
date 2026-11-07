@@ -79,6 +79,12 @@ it('recovers an uncertain image allocation after suspension and removes the comp
   )
   expect(fixture.boat.states.size).toBe(1)
   await suspendUser(fixture.runtime, fixture.user.githubId, fixture.user.id)
+  const retryAt = (
+    await readBuildJob(fixture.runtime.env.DB, fixture.org.id, buildId)
+  ).providerRetry?.retryAt
+  if (typeof retryAt !== 'number')
+    throw new Error('Missing allocation retry deadline')
+  fixture.setTime(retryAt)
   let complete = false
   for (let step = 0; step < 5 && !complete; step++)
     complete = await advanceImageBuild(fixture.images, fixture.org.id, buildId)

@@ -6318,6 +6318,27 @@ Evidence: `.context/milestone-15m/reports/`,
 
 Fix round evidence: `.context/milestone-15m/orchestrator-round1/`.
 
+Final review round, 8 November 2026: apply findings 13 B, 14 E, and 15 B.
+Keep workspace detail and history before a start. Recover pending stops
+after ownership changes. Correct the latest-consent legal copy.
+
+- [x] Draw the refused sandbox notice for finding 13 before its screen
+      implementation. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply finding 13 B to detail, history, owner recovery, and the dead
+      open route. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply finding 14 E to pending stop recovery, owner changes, alarms,
+      and operator results. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply finding 15 B to the latest consent record and privacy text.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+
+Final round evidence: `.context/milestone-15m/orchestrator-round2/`.
+
+Agent calls of the final round, 8 November 2026: keep start failures in a
+separate store, tied to the owner ID. Apply only the confirmed owner from
+an owner-picker reply. Serialize access recovery and owner reconciliation,
+so an older stop cannot remove the new owner's disk alarm. The refused
+notice promises chat history, because decision 125 permits disk expiry.
+
 ## Milestone 15n: Use the new shared UI parts
 
 Depends on: 15m

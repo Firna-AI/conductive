@@ -8,6 +8,15 @@ import { realRuntimeFixture, runtimeBundle } from './real-runtime-test-support'
 import { runningRuntimeWorkspace } from './runtime-lifecycle-test-support'
 import { workspaceRuntime } from './runtime'
 import { readWorkspace, workspaceView } from './workspace-data'
+import { authenticateWorkspaceToken, readWorkspaceToken } from './tokens'
+import { heldOperation } from './platform-test-storage'
+import {
+  activeRuntimeOwner,
+  finishRuntimeStart,
+  queueRuntimeResume,
+  reassignRuntimeWorkspace,
+  runtimeOwnershipHooks,
+} from './ownership-maintenance-test-support'
 
 let bundle: string
 let fixture: Awaited<ReturnType<typeof realRuntimeFixture>>
@@ -31,14 +40,7 @@ it.each(['reassign', 'remove'] as const)(
     const nextKeepaliveAt = stopped.nextDiskKeepaliveAt
     expect(stopped.state).toBe('stopped')
     expect(await actor.alarmAt()).toBeNull()
-    await fixture.env.DB.batch([
-      fixture.env.DB.prepare(
-        "INSERT INTO users (id, github_id, github_login, created_at, updated_at) VALUES ('active-admin', 12, 'active-admin', 0, 0)",
-      ),
-      fixture.env.DB.prepare(
-        "INSERT INTO org_members (org_id, user_id, role, joined_at) VALUES ('runtime-org', 'active-admin', 'admin', 1)",
-      ),
-    ])
+    await activeRuntimeOwner(fixture)
     const runtime = workspaceRuntime(fixture.env)
     const hooks = {
       workspaceOwnerChanged: workspaceOwnerChangedHook(runtime),
@@ -74,3 +76,90 @@ it.each(['reassign', 'remove'] as const)(
     expect(await fixture.actor(workspaceId).alarmAt()).toBe(nextKeepaliveAt)
   },
 )
+
+it('retries a revoked-token stop after active ownership and preserves maintenance before a fresh resume', async () => {
+  const { workspaceId, sandboxId } = await runningRuntimeWorkspace(fixture)
+  await activeRuntimeOwner(fixture)
+  const oldToken = await readWorkspaceToken(fixture.env, workspaceId)
+  fixture.boat.failStop = true
+  const suspended = await suspendUser(
+    workspaceRuntime(fixture.env),
+    11,
+    'active-admin',
+  )
+  expect(suspended.pendingWorkspaceIds).toEqual([workspaceId])
+  await reassignRuntimeWorkspace(fixture, workspaceId)
+  await fixture.restart()
+  fixture.boat.failStop = false
+  await fixture.actor(workspaceId).tick()
+  expect(fixture.boat.states.get(sandboxId)).toBe('archived')
+  expect(fixture.boat.stopIds).toEqual([sandboxId, sandboxId, sandboxId])
+  expect(await fixture.actor(workspaceId).readLifecycle()).toMatchObject({
+    state: 'stopped',
+    runnerConnected: false,
+    runningSessions: [],
+  })
+  const stopped = await fixture.actor(workspaceId).readLifecycle()
+  if (!stopped) throw new Error('Missing stopped lifecycle')
+  expect(await fixture.actor(workspaceId).alarmAt()).toBe(
+    stopped.nextDiskKeepaliveAt,
+  )
+  expect(stopped.nextDiskKeepaliveAt).not.toBeNull()
+  await queueRuntimeResume(fixture, workspaceId)
+  expect(await finishRuntimeStart(fixture, workspaceId)).toEqual({ ok: true })
+  const token = readWorkspaceToken(fixture.env, workspaceId)
+  await expect(token).resolves.not.toBe(oldToken)
+  await expect(
+    authenticateWorkspaceToken(fixture.env, oldToken),
+  ).rejects.toMatchObject({ code: 'workspace_token_refused' })
+  expect(fixture.boat.resumeIds).toEqual([sandboxId])
+})
+
+it('orders a late suspended-owner stop before the new active owner restores the disk alarm', async () => {
+  const { workspaceId, sandboxId } = await runningRuntimeWorkspace(fixture)
+  await activeRuntimeOwner(fixture)
+  const stoppedReply = heldOperation()
+  const ownerWritten = heldOperation()
+  const fetch = fixture.boat.fetch
+  let held = false
+  fixture.boat.fetch = async (request) => {
+    const response = await fetch(request)
+    if (!held && new URL(request.url).pathname.endsWith(`/${sandboxId}/stop`)) {
+      held = true
+      await stoppedReply.wait()
+    }
+    return response
+  }
+  const suspending = suspendUser(
+    workspaceRuntime(fixture.env),
+    11,
+    'active-admin',
+  )
+  await stoppedReply.entered
+  const hooks = runtimeOwnershipHooks(fixture)
+  const reconcile = hooks.workspaceOwnerChanged
+  hooks.workspaceOwnerChanged = async (id) => {
+    ownerWritten.release()
+    await reconcile(id)
+  }
+  const reassigned = reassignWorkspace(
+    fixture.env.DB,
+    'runtime-org',
+    'active-admin',
+    workspaceId,
+    'active-admin',
+    Date.now(),
+    hooks,
+  )
+  await ownerWritten.wait()
+  stoppedReply.release()
+  await Promise.all([suspending, reassigned])
+  const state = await fixture.actor(workspaceId).readLifecycle()
+  if (!state) throw new Error('Missing stopped lifecycle')
+  expect(state.state).toBe('stopped')
+  expect(state.nextDiskKeepaliveAt).not.toBeNull()
+  expect(await fixture.actor(workspaceId).alarmAt()).toBe(
+    state.nextDiskKeepaliveAt,
+  )
+  expect(fixture.boat.resumeIds).toEqual([])
+})

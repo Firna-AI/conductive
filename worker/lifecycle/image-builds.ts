@@ -1,11 +1,7 @@
 import type { ImageBuild } from '../../src/shared/org-settings'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import {
-  requireActiveUser,
-  userSuspended,
-  suspendedUserError,
-} from '../data/user-access'
+import { requireActiveUser, userSuspended } from '../data/user-access'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
@@ -191,17 +187,16 @@ export async function advanceImageBuild(
         throw imageSourceFailure()
       }
     }
-    if (
+    const suspended =
       !recoveringAllocation &&
       job.state === 'running' &&
       job.phase !== 'cleanup' &&
-      job.startedByUserId &&
+      job.startedByUserId !== null &&
       (await userSuspended(env.DB, job.startedByUserId))
-    )
-      throw suspendedUserError()
     if (
       job.state === 'running' &&
       job.phase !== 'cleanup' &&
+      !suspended &&
       providerRetryPending(job.providerRetry, dependencies.now())
     )
       return false

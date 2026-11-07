@@ -108,13 +108,10 @@ export class WorkspaceStartCoordinator {
     if (!job) return publishCreationResult(this.env, this.storage)
     let provider: SandboxProvider | undefined
     try {
-      if (!job.cancelled && !job.failure) {
+      if (job.phase === 'records' && !job.cancelled && !job.failure) {
         await requireActiveStartUsers(this.env.DB, job)
         if (providerRetryPending(job.providerRetry, this.dependencies.now()))
           return false
-      }
-      if (job.phase === 'records' && !job.cancelled && !job.failure) {
-        await requireActiveStartUsers(this.env.DB, job)
         const imageName = await prepareWorkspaceRecords(
           this.env,
           this.dependencies,
@@ -162,6 +159,8 @@ export class WorkspaceStartCoordinator {
         return result !== null
       }
       await requireActiveStartUsers(this.env.DB, job)
+      if (providerRetryPending(job.providerRetry, this.dependencies.now()))
+        return false
       if (providerRetryExpired(job.providerRetry, this.dependencies.now()))
         throw new ProviderRetryExhausted()
       const row = await readWorkspace(this.env.DB, job.orgId, job.workspaceId)

@@ -39,8 +39,10 @@ export const privacyDocument: LegalDocument = {
           text`Your GitHub account: your GitHub user ID, login, display name,
             and avatar. They sign you in, and they show who owns and who
             sends each piece of work.`,
-          text`Your agreement: the version of the terms that you accepted at
-            sign-up, and the time. They show that you accepted the terms.`,
+          text`Your agreement: you accept the current version of the terms at
+            each sign-in. ${productName} keeps the latest version that you
+            accepted, and the time when you first accepted it. They show that
+            you accepted the terms.`,
           text`A suspension: the time when the operator suspended your
             account, if that happens. It keeps your cloud computers stopped.`,
           text`Your session: a cookie of the app keeps you signed in. A
@@ -91,6 +93,9 @@ export const privacyDocument: LegalDocument = {
             can read it there too.`,
           text`The members of your orgs also see who started each session,
             whose login it uses, and whether it can use that login.`,
+          text`If the operator suspends your account, the members of your orgs
+            learn that it is suspended. A workspace that you own then says
+            that its owner is suspended.`,
         ),
         paragraph`${draft('To confirm: the contracts with these providers, and any other recipient')}`,
       ],

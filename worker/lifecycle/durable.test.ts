@@ -105,7 +105,7 @@ it('keeps the first draft and timed start steps across a durable restart', async
   })
 })
 
-it('stops after idle input despite open tabs and preserves disks near day fourteen', async () => {
+it('stops after idle input and preserves disks near day fourteen', async () => {
   const fixture = lifecycleFixture()
   const lifecycle = fixture.lifecycle
   const startedAt = fixture.now()
@@ -115,8 +115,6 @@ it('stops after idle input despite open tabs and preserves disks near day fourte
     firstMessage: FIRST_MESSAGE,
   })
   await lifecycle.runnerReady()
-  expect(lifecycle.openTab('tab-one')).toBe(1)
-  expect(lifecycle.openTab('tab-two')).toBe(2)
   fixture.setTime(startedAt + 1_799_999)
   await lifecycle.runnerDisconnected()
   await lifecycle.runnerReady()
@@ -139,7 +137,6 @@ it('stops after idle input despite open tabs and preserves disks near day fourte
     state: 'stopped',
     nextDiskKeepaliveAt: startedAt + 2_248_200_000,
   })
-  expect(lifecycle.closeTab('tab-one')).toBe(1)
 })
 
 it('extends the safety deadline for input and every running session', async () => {

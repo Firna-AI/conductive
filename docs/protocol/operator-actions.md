@@ -32,6 +32,8 @@ number names a dated record, as
   has not finished.
 - The reply names each workspace and each build whose stop has not
   finished. Its status is 202 while one is pending, and 200 when none is.
+- A workspace counts as finished only when its stop is confirmed. A call
+  that the workspace skipped keeps it in the reply as pending.
 
 ## Sessions and sign-in
 
@@ -77,11 +79,22 @@ These rules hold for each workspace that the suspended user owns.
 
 - The suspension stops the sandbox of each workspace that the user owns.
   A stop that fails runs again until it completes.
+- That stop goes on after an admin assigns the workspace to another
+  member. A running workspace whose workspace token is revoked stops,
+  whoever owns it, and the stop runs again every 30 seconds until it is
+  confirmed. Only a start that waits keeps it running, because that
+  start gives the workspace a new token.
+- After such a stop, a workspace whose owner is not suspended keeps its
+  restart near day 14. Each owner change makes the workspace check its
+  stop and its restart at once.
 - No member can start a workspace whose owner is suspended. This covers a
-  create, a resume, and an open that would start the sandbox.
-- The refusal of a resume or of such an open has the code
-  `user_suspended`. It says that the workspace owner is suspended, and
-  that an admin can assign another member.
+  create and a resume.
+- The refusal of a resume has the code `user_suspended`. It says that
+  the workspace owner is suspended, and that an admin can assign another
+  member.
+- A refused start keeps the workspace page open, with its chat history,
+  its header, and its owner control. The notice of the refusal ends when
+  the workspace gets another owner.
 - A start of such a workspace that waits or runs stops before its next
   step.
 - A stopped workspace whose owner is suspended gets no restart near day 14

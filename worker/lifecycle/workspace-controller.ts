@@ -23,7 +23,7 @@ import { initializeWorkspaceLifecycle } from './lifecycle-admission'
 import { createWorkspaceLifecycle } from './create-workspace-lifecycle'
 import { finishDiskMaintenance } from './disk-retention'
 import { clearRetention } from './retention-data'
-import { suspendWorkspaceLifecycle } from './workspace-suspension'
+import { WorkspaceAccessStop } from './workspace-suspension'
 import type {
   PendingTurn,
   WorkspaceLifecycleEndpoint,
@@ -51,6 +51,14 @@ export function createWorkspaceController(
     turns,
     journal,
   )
+  const accessStop = new WorkspaceAccessStop(() => ({
+    env,
+    dependencies,
+    storage: platform.storage,
+    lifecycle,
+    starts,
+    turns,
+  }))
   const drafts: FailedCreationStorage = {
     get: (key) => platform.storage.get('draft', key),
     put: (key, value) => platform.storage.put('draft', key, value),
@@ -123,12 +131,6 @@ export function createWorkspaceController(
     lifecycleActivity() {
       return lifecycle.activity()
     },
-    async openLifecycleTab(tabId: string) {
-      lifecycle.openTab(tabId)
-    },
-    async closeLifecycleTab(tabId: string) {
-      lifecycle.closeTab(tabId)
-    },
     async lifecycleStopped(): Promise<void> {
       await starts.cancel()
       await turns.clear()
@@ -138,20 +140,10 @@ export function createWorkspaceController(
       workspaceId: string,
       ownerUserId: string,
     ): Promise<boolean> {
-      return (
-        (await suspendWorkspaceLifecycle(
-          {
-            env,
-            dependencies,
-            storage: platform.storage,
-            lifecycle,
-            starts,
-            turns,
-          },
-          workspaceId,
-          ownerUserId,
-        )) ?? true
-      )
+      return (await accessStop.check(workspaceId, ownerUserId)) === true
+    },
+    reconcileLifecycleAccess(workspaceId: string): Promise<void> {
+      return accessStop.ownerChanged(workspaceId)
     },
     async clearLifecycle(): Promise<void> {
       await turns.clear()
@@ -205,6 +197,7 @@ export function createWorkspaceController(
         starts: starts,
         lifecycle: lifecycle,
         turns,
+        accessStop,
       })
     },
   }

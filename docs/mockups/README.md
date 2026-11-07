@@ -96,6 +96,12 @@ chat, and five tabs at the bottom.
   square, and ready is one bright cell on a faint green grid. A workspace
   whose agent waits for the user, such as for the approval of a command,
   shows Needs input: a middle column in the accent colour that pulses.
+- `SandboxNotice` in `src/components/workspace/` draws the states of the
+  cloud computer: stopped, error, archived, and refused. A refused start,
+  such as for a suspended workspace owner, shows "The sandbox can't start"
+  with its reason and no action. The history, the tabs, the header, and
+  the owner picker stay, as `app/shell/refused` and its `reassign` variant
+  show. The notice takes any refusal reason.
 - Copy says cloud computer or sandbox. No screen names Boat, also not the
   marketing site or Get started.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
@@ -138,7 +144,7 @@ chat, and five tabs at the bottom.
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
 | `app/sign-in`       | The GitHub sign-in with the agreement to the Terms, the page before GitHub, and Get started, the only first run, in three steps |
-| `app/shell`         | The workspace list, and the sandbox starting, stopped, and with an error      |
+| `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted     |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |

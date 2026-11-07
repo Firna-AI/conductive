@@ -1,7 +1,6 @@
 import { providerState } from './provider-state'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import { suspendedWorkspace } from '../data/user-access'
 import { orgSandboxProvider, sandboxProvider } from '../sandbox/client'
 import { readWorkspace, revokeWorkspacePreviews } from './workspace-data'
 import { firstOrgAdmin } from './settings-data'
@@ -76,13 +75,11 @@ export async function stopWorkspaceSandbox(
   return 'pending'
 }
 
-export async function stopSuspendedWorkspaceSandbox(
+export async function stopAccessDeniedWorkspaceSandbox(
   context: WorkspaceActionContext,
-): Promise<LifecycleStopResult | undefined> {
-  const row = await suspendedWorkspace(context.env.DB, context.workspaceId)
-  if (!row) return undefined
-  if (!row.sandboxId) return 'stopped'
-  const sandboxId = row.sandboxId
+  sandboxId: string | null,
+): Promise<LifecycleStopResult> {
+  if (!sandboxId) return 'stopped'
   const provider = sandboxProvider(context.env, context.dependencies.fetch)
   let sandbox: Sandbox
   try {

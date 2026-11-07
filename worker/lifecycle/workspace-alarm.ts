@@ -5,8 +5,8 @@ import type { DurableLifecycle } from './durable'
 import type { ImageCoordinator } from './image-coordinator'
 import type { WorkspaceStartCoordinator } from './start-coordinator'
 import type { TurnScopes } from './turns'
-import { suspendWorkspaceLifecycle } from './workspace-suspension'
 import { START_JOB_KEY } from './start-storage'
+import type { WorkspaceAccessStop } from './workspace-suspension'
 
 export async function runWorkspaceAlarm(input: {
   storage: WorkspaceStorage
@@ -16,6 +16,7 @@ export async function runWorkspaceAlarm(input: {
   starts: WorkspaceStartCoordinator
   lifecycle: DurableLifecycle
   turns: TurnScopes
+  accessStop: WorkspaceAccessStop
 }): Promise<void> {
   const { storage, env, dependencies } = input
   if (await input.images.read()) {
@@ -41,10 +42,7 @@ export async function runWorkspaceAlarm(input: {
     }
   }
   const state = await input.lifecycle.read()
-  if (
-    state &&
-    (await suspendWorkspaceLifecycle(input, state.workspaceId)) !== undefined
-  )
+  if (state && (await input.accessStop.check(state.workspaceId)) !== undefined)
     return
   if (advancedStart) return
   const cleanupId = await storage.get('text', 'lifecycle:cleanup')

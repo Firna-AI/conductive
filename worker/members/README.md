@@ -76,7 +76,9 @@ Supply all six `MembersHooks` callbacks:
   It must authorize the viewer. All current org members can read all workspaces.
 - `workspaceOwnerChanged` runs after each workspace that gets a new owner, by a reassignment or by a member who leaves or is removed.
   `workspaceOwnerChangedHook` in [`ownership-maintenance.ts`](../lifecycle/ownership-maintenance.ts) supplies it.
-  It wakes the lifecycle alarm of a stopped workspace whose new owner is not suspended, and it makes no provider call.
+  It calls `reconcileLifecycleAccess` of the workspace object, which checks the workspace at once, in every state.
+  The check stops a workspace that must still stop, such as a running workspace with a revoked token, and rearms the lifecycle alarm of a stopped workspace whose new owner is not suspended.
+  [The stop of one workspace](../operator/README.md#the-stop-of-one-workspace) says how.
 - `suspendOrg` stops org access before resource enumeration.
   It must reject new starts and writes for the deleted org.
   It must drain pending workspace starts and image builds.

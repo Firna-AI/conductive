@@ -3,7 +3,8 @@ import { expect, it } from 'vitest'
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
 import { DISK_KEEPALIVE_MS } from '../lifecycle/durable-types'
 import { FIRST_MESSAGE } from '../lifecycle/durable-test-support'
-import { openWorkspace, resumeWorkspace } from '../lifecycle/workspace-resume'
+import { resumeWorkspace } from '../lifecycle/workspace-resume'
+import { workspaceResponse } from '../lifecycle/workspace-response'
 import { createWorkspace } from '../lifecycle/workspaces'
 import { existingWorkspace, joinedMember } from './suspension-test-support'
 import { suspendUser } from './suspend-user'
@@ -57,13 +58,7 @@ it('stops each owned computer, retries a failure, and blocks its owner from star
     .bind(fixture.runtime.dependencies.now(), second.id)
     .run()
   await expect(
-    openWorkspace(
-      fixture.runtime,
-      fixture.org.id,
-      second.id,
-      other.id,
-      'history-tab',
-    ),
+    workspaceResponse(fixture.runtime, fixture.org.id, second.id),
   ).resolves.toMatchObject({ workspace: { state: 'archived' } })
   const firstActor = fixture.actors.get(first.id)
   if (!firstActor) throw new Error('Missing suspended actor')

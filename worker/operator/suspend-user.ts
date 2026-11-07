@@ -20,9 +20,9 @@ export async function suspendUser(
   for (const workspace of await ownedWorkspaces(env.DB, user.userId)) {
     try {
       if (
-        await runtime
+        (await runtime
           .workspace(workspace.id)
-          .suspendLifecycle(workspace.id, user.userId)
+          .suspendLifecycle(workspace.id, user.userId)) === true
       )
         continue
     } catch {

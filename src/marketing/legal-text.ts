@@ -134,8 +134,9 @@ export const notFoundText = {
 } as const
 
 /**
- * The agreement next to Continue with GitHub. A new user accepts the terms
- * when they continue, and the privacy notice says how their data is used.
+ * The agreement next to Continue with GitHub. Each sign-in accepts the
+ * current terms when the user continues, and the privacy notice says how
+ * their data is used.
  */
 export const termsAgreement: Text = text`By continuing, you agree to the
   ${link('terms', legalTitles.terms)}. The

@@ -38,10 +38,9 @@ export interface WorkspaceLifecycleEndpoint {
   ): Promise<void>
   lifecycleStopped(): Promise<void>
   suspendLifecycle(workspaceId: string, ownerUserId: string): Promise<boolean>
+  reconcileLifecycleAccess(workspaceId: string): Promise<void>
   clearLifecycle(): Promise<void>
   lifecycleActivity(): Promise<void>
-  openLifecycleTab(tabId: string): Promise<void>
-  closeLifecycleTab(tabId: string): Promise<void>
   credentialSender(turnId: string): Promise<string | null>
   retryFailedCreateCleanup(workspaceId: string): Promise<void>
   finishDiskMaintenance(): Promise<void>
