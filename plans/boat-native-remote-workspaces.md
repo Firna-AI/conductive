@@ -5470,8 +5470,19 @@ Apply option B of the follow-up item. Added on 7 November 2026. Its
 option C, the desktop proxy and the shell that survives its socket,
 waits for the user.
 
-- [ ] Apply the recorded option of `plans/follow-ups/shared-session-check-for-connections.md`, and
-      delete that item.
+Implementation calls on 7 November 2026: one security module owns the
+shared identities, grants, reader, and scheduler to remove the terminal
+dependency on chat code. Tagged identities preserve chat history access and
+terminal sandbox checks. Each grant ends at session expiry or 30 seconds
+from the read start to bound delayed reads. Both callers refresh every
+15 seconds to leave time before a grant ends.
+
+Independent expiry timers close connections while a read waits. Chat reads
+the first grant before history and checks it again before delivery. The
+existing store queue preserves history and event order.
+
+- [x] Apply the recorded option of `plans/follow-ups/shared-session-check-for-connections.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-11b`.
 
 ## Milestone 11c: Shells that survive a reconnect
 

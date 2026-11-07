@@ -1,4 +1,4 @@
-import type { ChatScheduler } from './types'
+import type { ConnectionScheduler } from '../security/connection-access'
 
 export class ManualChatClock {
   private time: number
@@ -14,7 +14,7 @@ export class ManualChatClock {
 
   now = () => this.time
 
-  schedule: ChatScheduler = (work, delayMs) => {
+  schedule: ConnectionScheduler = (work, delayMs) => {
     const id = ++this.sequence
     this.tasks.set(id, { at: this.time + delayMs, work })
     return () => this.tasks.delete(id)
