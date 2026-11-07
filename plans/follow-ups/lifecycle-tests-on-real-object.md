@@ -18,6 +18,6 @@
   - **E.** Run the lifecycle test fixture on the real object in Miniflare, through `workspaceLifecycleEndpoint`, and remove the hand-written store. It needs a clock seam inside the object, native forms of the fixture's restart, hold, and alarm helpers, changes to 29 test files, and a slower gate. Effort: Large.
 - **Left out:** A Node stub of the Workers runtime that builds the real class over a fake state, because it replaces one hand-written store with another.
 - **Wider fix:** E.
-- **Previous examples:** the deleted follow-up `lifecycle-race-tests-storage`, whose fix `4e9c731` kept the fake store, and finding 9 of PR #45.
+- **Previous examples:** the deleted follow-up `lifecycle-race-tests-storage`, whose fix `4e9c731` kept the fake store, finding 9 of PR #45, and finding 3 of PR #47. PR #47 (Milestone 5c) added five restart test files and one support file on the fake store, with a second store at `worker/lifecycle/retry-test-support.ts:53`. A move to the real object also needs a harness for the image coordinator and a clock seam for the timed retry tests.
 - **Recommendation:** E. It keeps every lifecycle test on the real object, whatever shape the next defect takes.
 - **Action:** fix after merge, apply E, because it reaches 29 test files outside the diff of PR #45.
