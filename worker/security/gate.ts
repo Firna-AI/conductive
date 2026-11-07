@@ -4,6 +4,7 @@ import { sessionUser } from '../data/users'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { readJsonObject } from '../http/json-body'
+import { appOrigin } from './app-origin'
 import { readCookie, SESSION_COOKIE } from './cookies'
 import { verify } from './crypto'
 import { DESKTOP_ORIGIN, DESKTOP_SESSION_COOKIE } from './desktop-contract'
@@ -32,7 +33,7 @@ function sessionCookie(request: Request): string {
 }
 
 export function checkHost(request: Request, env: AppEnv): void {
-  if (new URL(request.url).origin !== env.APP_ORIGIN) {
+  if (new URL(request.url).origin !== appOrigin(request, env)) {
     throw new HttpError(403, 'origin_forbidden', 'Open the app to continue.')
   }
 }

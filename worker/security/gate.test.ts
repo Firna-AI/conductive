@@ -34,6 +34,55 @@ it('checks sign-in before known routes, unknown routes, and socket upgrades', as
   }
 })
 
+it('uses the local command origin for gated requests and GitHub sign-in', async () => {
+  for (const input of [
+    { origin: 'http://127.0.0.1:5173', configured: '' },
+    {
+      origin: 'http://127.0.0.1:5174',
+      configured: 'http://127.0.0.1:5173',
+    },
+  ]) {
+    const env = { ...harness.env, APP_ORIGIN: input.configured }
+    if (!input.configured) Reflect.deleteProperty(env, 'APP_ORIGIN')
+    const app = createApp({ now: () => TEST_TIME })
+    const response = await app.fetch(
+      new Request(`${input.origin}${API_PATHS.orgs}`, {
+        method: 'POST',
+        headers: { Origin: input.origin },
+      }),
+      env,
+    )
+    expect(response.status, input.origin).toBe(401)
+    expect(await response.json()).toMatchObject({
+      error: { code: 'sign_in_required' },
+    })
+    const signIn = await app.fetch(
+      new Request(`${input.origin}${API_PATHS.githubSignIn}`),
+      env,
+    )
+    expect(signIn.status, input.origin).toBe(302)
+    expect(
+      new URL(signIn.headers.get('Location') ?? '').searchParams.get(
+        'redirect_uri',
+      ),
+      input.origin,
+    ).toBe(`${input.origin}${API_PATHS.githubCallback}`)
+    const otherOrigin =
+      input.origin === 'http://127.0.0.1:5173'
+        ? 'http://127.0.0.1:5174'
+        : 'http://127.0.0.1:5173'
+    const refused = await app.fetch(
+      new Request(`${input.origin}${API_PATHS.orgs}`, {
+        method: 'POST',
+        headers: { Origin: otherOrigin },
+      }),
+      env,
+    )
+    expect(refused.status, `${input.origin} from ${otherOrigin}`).toBe(403)
+    expect(env.APP_ORIGIN, input.origin).toBe(input.configured || undefined)
+  }
+})
+
 it('refuses tampered, expired, and unknown signed sessions', async () => {
   const session = await harness.login()
   const tampered = session.replace('session=', 'session=x')
@@ -110,63 +159,68 @@ it('requires a matching Origin for socket upgrades before dispatch', async () =>
 
 it('routes site, app, and machine hosts before dispatch', async () => {
   const app = createApp()
-  const env = {
-    ...harness.env,
-    MARKETING_ORIGIN: 'https://conductive.test',
-    MACHINE_ORIGIN: 'https://api.conductive.build',
-    PREVIEW_DOMAIN: 'conductive.page',
-  }
-  const site = await app.fetch(
-    new Request('https://conductive.test/api/session'),
-    env,
-  )
-  expect(site.status).toBe(404)
-  expect(site.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
-  for (const input of [
-    {
-      host: TEST_ORIGIN,
-      path: '/',
-      status: 501,
-      body: { surface: 'app', status: 'not-implemented' },
-    },
-    {
-      host: env.MACHINE_ORIGIN,
-      path: MACHINE_PATHS.runner,
-      status: 401,
-      body: {
-        error: {
-          code: 'workspace_token_required',
-          message: 'The connection is not available.',
-        },
-      },
-    },
+  for (const [marketing, machine] of [
+    ['https://conductive.test', 'https://api.conductive.build'],
+    ['http://127.0.0.1:4173', 'http://127.0.0.1:8787'],
   ]) {
-    const response = await app.fetch(
-      new Request(`${input.host}${input.path}`),
+    const env = {
+      ...harness.env,
+      MARKETING_ORIGIN: marketing,
+      MACHINE_ORIGIN: machine,
+      PREVIEW_DOMAIN: 'conductive.page',
+    }
+    const site = await app.fetch(
+      new Request(`${env.MARKETING_ORIGIN}/api/session`),
       env,
     )
-    expect(response.status, input.host).toBe(input.status)
-    expect(await response.json()).toEqual(input.body)
+    expect(site.status).toBe(404)
+    expect(site.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
+    for (const input of [
+      {
+        host: TEST_ORIGIN,
+        path: '/',
+        status: 501,
+        body: { surface: 'app', status: 'not-implemented' },
+      },
+      {
+        host: env.MACHINE_ORIGIN,
+        path: MACHINE_PATHS.runner,
+        status: 401,
+        body: {
+          error: {
+            code: 'workspace_token_required',
+            message: 'The connection is not available.',
+          },
+        },
+      },
+    ]) {
+      const response = await app.fetch(
+        new Request(`${input.host}${input.path}`),
+        env,
+      )
+      expect(response.status, input.host).toBe(input.status)
+      expect(await response.json()).toEqual(input.body)
+    }
+    const unknown = await app.fetch(
+      new Request('https://untrusted.test/api/session'),
+      env,
+    )
+    expect(unknown.status).toBe(403)
+    const preview = await app.fetch(
+      new Request(`https://unknown.${env.PREVIEW_DOMAIN}/`),
+      env,
+    )
+    expect(preview.status).toBe(404)
+    expect((await harness.fetch(API_PATHS.session)).status).toBe(401)
+    const session = await harness.login()
+    const response = await harness.fetch(API_PATHS.session, {
+      headers: { Cookie: session },
+    })
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      user: { githubLogin: 'octocat' },
+    })
   }
-  const unknown = await app.fetch(
-    new Request('https://untrusted.test/api/session'),
-    env,
-  )
-  expect(unknown.status).toBe(403)
-  const preview = await app.fetch(
-    new Request(`https://unknown.${env.PREVIEW_DOMAIN}/`),
-    env,
-  )
-  expect(preview.status).toBe(404)
-  expect((await harness.fetch(API_PATHS.session)).status).toBe(401)
-  const session = await harness.login()
-  const response = await harness.fetch(API_PATHS.session, {
-    headers: { Cookie: session },
-  })
-  expect(response.status).toBe(200)
-  expect(await response.json()).toMatchObject({
-    user: { githubLogin: 'octocat' },
-  })
 })
 
 it('accepts only a JSON object for writes before route dispatch', async () => {

@@ -8,6 +8,7 @@ import { route, routeDevice } from './routes'
 import { routeChat, routeRunner } from './chat/router'
 import { isDeviceAppPath, isDeviceMachinePath } from './devices/paths'
 import { routeMacCommand } from './tools/mac-command'
+import { appOrigin } from './security/app-origin'
 import { finishSignIn, startSignIn } from './security/auth'
 import { appContentSecurityPolicy } from './security/content-security'
 import { cookie, OAUTH_COOKIE } from './security/cookies'
@@ -44,6 +45,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             'service_unavailable',
             'The app is not available. Try again.',
           )
+        const origin = appOrigin(request, env)
+        if (origin !== env.APP_ORIGIN) env = { ...env, APP_ORIGIN: origin }
         const surface = hostSurface(request, env)
         appApi = surface === 'app' && path.startsWith('/api/')
         if (surface === 'marketing') {
@@ -61,7 +64,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             response.headers.set(
               'Content-Security-Policy',
               appContentSecurityPolicy(
-                env.APP_ORIGIN || new URL(request.url).origin,
+                env.APP_ORIGIN,
                 env.PREVIEW_DOMAIN ? [`https://*.${env.PREVIEW_DOMAIN}`] : [],
               ),
             )

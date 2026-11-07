@@ -11,7 +11,7 @@ import type { ChatStorage } from '../chat/types'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { activeDeviceSender, desktopSessionAlive } from './access'
-import { deviceCall } from './internal'
+import { deviceCall, type DeviceOperationValue } from './internal'
 import { deviceBrokerName } from './paths'
 import { commandPending, DeviceRecords } from './records'
 import { workspaceMachine } from './workspace-machine'
@@ -135,7 +135,9 @@ export class WorkspaceDevices {
     for (const record of await this.records.list())
       if (commandPending(record)) await this.refresh(record)
   }
-  async operation(operation: Record<string, unknown>): Promise<Response> {
+  async operation(
+    operation: Record<string, unknown>,
+  ): Promise<DeviceOperationValue> {
     const record = await this.records.require(
       deviceRequired(operation.requestId),
     )
@@ -146,11 +148,9 @@ export class WorkspaceDevices {
         'The Mac request is not available.',
       )
     if (operation.type === 'workspace.validate')
-      return Response.json(
-        commandPending(record)
-          ? await this.validation(record, deviceRequired(operation.tokenHash))
-          : { valid: false, reason: 'request_ended' },
-      )
+      return commandPending(record)
+        ? await this.validation(record, deviceRequired(operation.tokenHash))
+        : { valid: false, reason: 'request_ended' }
     if (
       operation.type !== 'workspace.update' &&
       operation.type !== 'workspace.claim'
@@ -179,12 +179,12 @@ export class WorkspaceDevices {
         record.sender.id,
         this.now(),
       )
-      return Response.json({
+      return {
         claimed:
           access.valid &&
           Boolean(alive) &&
           (await this.records.markDispatched(record.requestId)),
-      })
+      }
     }
     const state = readDeviceState(operation.state)
     const updated = await this.records.change(
@@ -254,6 +254,6 @@ export class WorkspaceDevices {
         }
       },
     )
-    return Response.json({ request: updated })
+    return { request: updated }
   }
 }

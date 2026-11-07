@@ -5,8 +5,8 @@ Status: Active. On branch `calummoore/conductor-alternative-architecture`, no pu
 Conductor Cloud goes read-only on 13 November 2026 and shuts down on
 20 November 2026. This change builds Conductive, a browser-only replacement, at
 `conductive.build`. Users
-sign in with GitHub and bring their own Boat key: one Boat
-sandbox per workspace, chat with coding agents, a
+sign in with GitHub. Each workspace gets one sandbox in the app's own Boat
+account (decision 80), with chat with coding agents, a
 file list and preview, a terminal, port previews, a GitHub banner, one
 prepared cloud computer image per org, and agent tools that create
 workspaces.
@@ -62,6 +62,40 @@ Contract owners. Milestone 2 creates them:
   - The session fixture in `runner/test-support/engine.ts`, and the wire
     fixture in `runner/test-support/wire.ts` with its unused
     `storageOverride` parameter.
+- Lifecycle code that each connected view copies for its workspace store →
+  the shared `useWorkspaceStore` hook in `src/app/workspace-store.ts`. The
+  hook makes the store with a stable `create`, and connects it after the
+  render with a stable `connect`. It reads the store through `subscribe`
+  and `getSnapshot`. It stops the store at unmount and at a switch of
+  workspace. Milestone 13a moved `useGitHubState` and `useChatController`.
+  Milestone 15i moves the files owners. Milestone 13b moves the tools and
+  the workspace screen, then deletes `useToolStore` and `ToolStore.listen`.
+  Added on 7 November 2026, for finding 2 of the PR #37 review. Consumers:
+  - The shell's `WorkspaceFiles` owner and its factory, which Milestone 15i
+    adds. It starts on the hook, as the Integration section of
+    `src/files/README.md` shows. Milestone 15i.
+  - `src/files/dev/DevApp.tsx`, which starts and stops the module-level
+    store of `src/files/dev/main.tsx` in its own effect. Milestone 15i.
+  - `src/shell/workspace/dev/DevPage.tsx`, which does the same with the
+    module-level store of `src/shell/workspace/dev/main.tsx`. Milestone 15i.
+  - `TerminalToolBody` in `src/terminal/TerminalTool.tsx`, which keeps its
+    `ToolStore` through `useToolStore` and runs its `loadTerminal` read in
+    its own effect. Milestone 13b.
+  - `PreviewToolBody` in `src/previews/PreviewTool.tsx`, which keeps its
+    `ToolStore` the same way and runs its `listPreviews` read and its retry
+    in its own effect. Milestone 13b.
+  - `useToolStore` in `src/terminal/tool-parts/useToolStore.ts`, which
+    makes a `ToolStore` in `useState` and subscribes it through
+    `ToolStore.listen` while React listens. Milestone 13b deletes it.
+  - `WorkspaceScreen` in `src/shell/workspace/WorkspaceScreen.tsx`, which
+    makes its `WorkspaceModel` and `HeaderNotices` in `useState`. Its own
+    effects follow the stream, then open and close the model. Milestone 13b.
+  - The tests that subscribe a `ToolStore` through `listen`:
+    `src/terminal/tool-parts/toolStore.test.ts` and
+    `src/previews/previewsState.test.ts`. Milestone 13b.
+  - The docs that show the old code: the "Workspace events" section and the
+    Key code of `src/terminal/README.md`, and the Integration section of
+    `src/shell/workspace/README.md`. Milestone 13b.
 
 ## Decisions
 
@@ -3773,17 +3807,19 @@ and 1b, and the orchestrator accepted them on 5 November 2026:
 
 **Users and sign-in.** The user decided these on 5 November 2026:
 
-- Users bring their own Boat key, as decision 44 says. This reverses the
-  earlier call that users run on the app's own Boat subscription.
+- Every cloud computer runs in the app's own Boat account, with one key
+  from a Worker secret, as decision 80 says. Decision 80 reversed
+  decision 44, which had each user bring their own Boat key.
 - Users sign in with GitHub. No other sign-in method is offered.
 
 **Orgs and members.** The user decided these on 5 and 6 November 2026,
 in the answers to decisions 22, 24, 30, 39, 42, 44 to 49, 54, and 55:
 
-- Each org runs on one Boat key, which an admin adds, as decisions 44, 46,
-  and 54 say.
+- Every org runs in the app's own Boat account, as decision 80 says. No
+  org has a Boat key.
 - The product is free for now, without billing or plan limits, as
-  decision 45 says. Each Boat account's own plan limits apply.
+  decision 45 says. Decisions 81 and 82 ask again about cost and abuse,
+  because the app now pays for every cloud computer.
 - Anyone with a GitHub account can sign up, as decisions 22 and 48 say.
 - Each workspace belongs to the user who created it, until it is
   reassigned. Each turn runs on the agent login of the person who sent
@@ -3818,13 +3854,9 @@ Agent calls of 5 November 2026:
   and decision 49 runs each turn on its sender's login.
 - The app offers one machine size for now, Boat's default size of
   4 vCPU and 8 GB.
-- A Boat key that Boat refuses counts as no key, so the composer notice of
-  decision 33 shows.
-- Only admins see the Boat key tab of the org settings. Its label names
-  Boat, because it leads to the key screen, and a move to another
-  provider renames both together.
-- Get started has four steps: the GitHub App, the first org, the org's
-  Boat key, and Claude or Codex. Reason: the key belongs to the org.
+- Get started has three steps: the GitHub App, the first org, and Claude
+  or Codex. Decision 80 removed the Boat key tab, its composer notice, and
+  the key step of Get started.
 - Agent call, 6 November 2026, from Milestone 4: the Boat key needs the
   actions `account.read`, `sandbox.create`, `sandbox.read`,
   `sandbox.update`, `sandbox.stop`, `sandbox.resume`, `sandbox.fork`,
@@ -3864,9 +3896,9 @@ The user added these requirements later on 5 November 2026:
   column, as in Conductor. "+" starts a new agent session in the same
   workspace, on the same branch and cloud computer. The right column keeps
   the pull request bar, the file lists, and the tool panel.
-- The app names Boat only on the Boat key screen, on the marketing site,
-  and in Get started, as decision 47 says. Everywhere else it says "cloud
-  computer", so that it can move to another provider later.
+- The app names Boat to no user, as decision 80 says, which replaces
+  decision 47. User-facing text says "cloud computer", so that the app can
+  move to another provider later.
 - A new workspace starts as an empty chat window. The first message
   creates it. The branch is generated from a city name with a random
   suffix. The name is generated too.
@@ -3892,9 +3924,8 @@ the app domain, served from the Worker's static assets. The app moves to
 an `app.` subdomain with GitHub sign-in. Reason: visitors must see the
 site without signing in, and the app keeps one sign-in boundary.
 Agent call, 5 November 2026: the main action keeps "Start free with
-GitHub", and the site says that users need their own Boat account.
-Reason: the app is free, as decision 45 says, and decision 47 names Boat
-on the site.
+GitHub". Since decision 80, the site names no provider and asks users for
+no Boat account.
 
 Agent call, 5 November 2026: the copy says "agents powered by Claude and
 Codex", not "Claude Code and Codex". Reason: Anthropic forbids "Claude
@@ -3911,10 +3942,8 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   is HttpOnly, Secure, and SameSite=Lax. This replaces Cloudflare Access.
 - Agent call: each request checks that the signed-in user is a member of
   the org that owns the workspace that it names. Decision 22 decides who may sign in.
-- Each Boat key is the user's own, as decision 44 says. The Worker
-  stores it encrypted, uses it only for the cloud computers that it
-  belongs to, and never sends it to the browser or into a cloud
-  computer.
+- The app's one Boat key is a Worker secret, as decision 80 says. The
+  Worker never sends it to the browser or into a cloud computer.
 - Agent call: a git credential helper in the org image asks the Worker
   for a fresh GitHub token on each git operation, signed with the
   workspace token. Reason: GitHub App user tokens expire after 8 hours,
@@ -4064,8 +4093,8 @@ check state from the GitHub API.
 
 **Prerequisites from the user.** A Cloudflare account on Workers Paid.
 Two domains on that account: one for the app, and a separate registrable
-domain for port previews. A Boat key for development and tests, as
-decision 44 says. For signed public Mac builds, later: an Apple Developer
+domain for port previews. The app's Boat key and its organization ID for
+development and tests, as decision 80 says. For signed public Mac builds, later: an Apple Developer
 ID with a notarization key, and a public repository for the release feed,
 as decision 62 says. A GitHub App with its key. Anthropic's Commercial Terms, accepted
 through an Anthropic Console account, because they govern products that
@@ -4686,16 +4715,27 @@ Depends on: 5, 7r
 
 Apply decision 69 C.
 
-- [ ] In each org image build, download one pinned Node 24 release, check
+Agent call, 7 November 2026: pin Node 24.22.2 for Linux x64. Its official
+release lists the SHA-256 digest of the archive.
+
+- [x] In each org image build, download one pinned Node 24 release, check
       its SHA-256 against a constant in the code, and extract it to a
       folder named for its version under `/opt/conductive/runtime/`. Skip
       the download when that release is already there.
-- [ ] Start the workspace tools and the agent runner with that Node by its
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5a`.
+- [x] Start the workspace tools and the agent runner with that Node by its
       full path. The root folder of the tools installer also prefixes the
       runtime path.
-- [ ] Test with a stand-in runtime under the root folder and a failing
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5a`.
+- [x] Test with a stand-in runtime under the root folder and a failing
       `node` first on the search path. Say in the README how to update the
       version and the checksum.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5a`.
+
+Evidence: `.context/boat-native-remote-workspaces/milestone-5a/implementation-handoff.md`
+and `.context/boat-native-remote-workspaces/milestone-5a/docs-handoff.md`.
+Rename merge evidence: `.context/boat-native-remote-workspaces/milestone-5a/rename/code-handoff.md`
+and `.context/boat-native-remote-workspaces/milestone-5a/rename/docs-handoff.md`.
 
 ## Milestone 5b: Lifecycle fixes from the reviews
 
@@ -5633,12 +5673,50 @@ Depends on: 13, 14
 Apply the `fix after merge` items of the GitHub banner. Added on
 7 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/github-banner-freshness.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/github-delivery-receipt-size.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/shared-hook-for-workspace-stores.md`, and
-      delete that item.
+Agent call, 7 November 2026: wait five minutes after a read before the
+next backup read. This limits GitHub calls while webhooks provide live
+updates. The shared hook serves the GitHub and chat stores now. The other
+consumers move to it later: the files owners in Milestone 15i, and the
+tools and the workspace screen in Milestone 13b. Replaced ways lists each
+consumer. The user corrected this call on 7 November 2026, for finding 2
+of the PR #37 review.
+
+- [x] Apply the recorded option of `plans/follow-ups/github-banner-freshness.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-13a`.
+- [x] Apply the recorded option of `plans/follow-ups/github-delivery-receipt-size.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-13a`.
+- [x] Apply the recorded option of `plans/follow-ups/shared-hook-for-workspace-stores.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-13a`.
+
+## Milestone 13b: Shared store hook for the tools and the workspace screen
+
+Tags: ui
+
+Depends on: 13a
+
+Move the tool stores and the workspace screen to `useWorkspaceStore`, as
+Replaced ways lists. This is option C of finding 2 of the PR #37 review.
+It starts after PR #37 merges. Added on 7 November 2026.
+
+- [ ] Move `TerminalToolBody` in `src/terminal/TerminalTool.tsx` to
+      `useWorkspaceStore`, with a stable `create` and `connect`. Move its
+      `loadTerminal` read from its own effect into the store.
+- [ ] Move `PreviewToolBody` in `src/previews/PreviewTool.tsx` the same
+      way. Move its `listPreviews` read and its retry into the store.
+- [ ] Delete `useToolStore` and `ToolStore.listen` when no tool uses them.
+      Move `src/terminal/tool-parts/toolStore.test.ts` and
+      `src/previews/previewsState.test.ts` to the new subscription, with
+      every assertion.
+- [ ] Move `WorkspaceScreen` in `src/shell/workspace/WorkspaceScreen.tsx`
+      to `useWorkspaceStore`. A stable `create` makes the `WorkspaceModel`
+      and its `HeaderNotices`. A stable `connect` makes the notices follow
+      the stream before it opens the model. Its stop closes the model and
+      ends the follow. The store that `create` returns needs `subscribe`
+      and `getSnapshot`. They can read the `detail` store of the model.
+- [ ] Update the "Workspace events" section and the Key code of
+      `src/terminal/README.md`, and the Integration section of
+      `src/shell/workspace/README.md`.
+- [ ] Compare each tool and the workspace screen with its mockup.
 
 ## Milestone 15: Agent tools
 
@@ -5767,7 +5845,7 @@ departure. A removed person could then verify the email again and accept.
 
 ## Milestone 15i: Feature wiring
 
-Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
+Depends on: 8i, 9, 10, 11, 12, 13, 13a, 14, 15, 15a, 15c, 15g
 
 - [ ] Wire each feature's screens to its backend inside the app shell.
 - [ ] Connect the lifecycle hooks of the Milestone 15a members backend to
@@ -5776,6 +5854,19 @@ Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
       `cleanupDeletedOrgs` on a Cron Trigger, so that Delete org removes
       everything of the org after 7 days, as the orgs protocol says.
       Added on 6 November 2026, because no milestone connected these hooks.
+- [ ] Give the shell one `WorkspaceFiles` owner on `useWorkspaceStore`,
+      as the Integration section of `src/files/README.md` shows. Its stable
+      `create` is the factory: it builds the store from `createFilesClient`
+      and the workspace socket. Its stable `connect` calls `files.start()`
+      and returns `() => files.stop()`, because `stop` is an ordinary
+      method. Added on 7 November 2026, for finding 2 of the PR #37 review.
+- [ ] Move `src/files/dev/DevApp.tsx` to `useWorkspaceStore`. Move the
+      module-level `WorkspaceFiles` of `src/files/dev/main.tsx` into its
+      stable `create`. Replace its start and stop effect with its stable
+      `connect`.
+- [ ] Move `src/shell/workspace/dev/DevPage.tsx` to `useWorkspaceStore` the
+      same way, with the module-level `WorkspaceFiles` of
+      `src/shell/workspace/dev/main.tsx`.
 - [ ] Run the complete gate, and compare each screen with its mockup.
 
 ## Milestone 15j: Rename to Conductive
@@ -5833,15 +5924,19 @@ Depends on: 15j
 Apply decision 110 C and the fix-after-merge items of the Mac app. Added
 on 7 November 2026.
 
-- [ ] Before the Mac saves "Always allow", measure the saved list with
+- [x] Before the Mac saves "Always allow", measure the saved list with
       the new command. Above about 900,000 bytes, refuse the save with a
       message, and still let Allow run the command once (decision 110).
       Delete `plans/follow-ups/always-allow-size-limit.md`.
-- [ ] Apply the recorded option of each of these follow-up items, and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15k`.
+- [x] Apply the recorded option of each of these follow-up items, and
       delete each item: `mac-command-result-after-stop`,
       `mac-command-watchdog-alarm`, `mac-command-internal-payload-budget`,
       `mac-approval-scroll-flake`, `desktop-renderer-tests-in-gate`, and
       `local-dev-origin`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15k`.
+
+Evidence: `.context/boat-native-remote-workspaces/ledger.md`.
 
 ## Milestone 15m: Marketing and mockup fixes
 

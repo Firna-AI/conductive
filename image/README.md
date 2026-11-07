@@ -11,6 +11,8 @@ archive packager and the live check.
 
 ## Responsibilities
 
+- Install the pinned private Node after a check of its SHA-256 digest, or
+  reuse it when the image already holds it.
 - Install the runner archive after a check of its SHA-256 digest.
 - Install and enable the agent runner's systemd service.
 - Make the git credential helper the system credential helper of git.
@@ -38,10 +40,9 @@ the [lifecycle README](../worker/lifecycle/README.md#browser-routes) says.
 with a user name, a password, a query, or a fragment. It also refuses a
 digest that is not 64 hexadecimal characters.
 
-The archive must hold these paths:
-
-- `node/bin/node`: an executable Node.
-- `runner/main.mjs`: the agent runner, with its SDK dependencies.
+The archive must hold `runner/main.mjs`: the agent runner, with its SDK
+dependencies. It needs no Node, because the runner runs on the
+[private Node runtime](runtime.md).
 
 Put no credential in the URL or in the archive. Each saved snapshot keeps
 the unpacked archive.
@@ -64,6 +65,11 @@ The Worker does not serve the archive. No Worker variable or binding holds
 its URL or its digest yet. No production code supplies the `software`
 option yet, because the root Worker does not call the lifecycle routes.
 
+## The private Node runtime
+
+[The private Node runtime](runtime.md) gives the pinned Node release, its
+paths, and its update steps.
+
 ## Install
 
 Before this step, Git in the build sandbox copies each chosen repository
@@ -82,22 +88,24 @@ when the copy ends, as
 says.
 
 The software step of a build calls `installImageSoftware`. It writes the
-scripts and the runner unit of this folder to `/opt/conductive/staged/`, and
-then it runs this command:
+scripts and the runner unit of this folder to `/opt/conductive/staged/`.
+Each staged script holds the quoted full path of the private Node in place
+of `@CONDUCTIVE_NODE@`. Then the step runs these commands, in this order:
 
 ```sh
+sudo -n sh /opt/conductive/staged/install-runtime.sh '<Node URL>' '<Node digest>' '<version folder>'
 sudo -n sh /opt/conductive/staged/install.sh '<archive URL>' '<SHA-256 digest>'
 ```
 
-Boat runs commands as `user`, with passwordless sudo. The installer needs
+Boat runs commands as `user`, with passwordless sudo. The installers need
 system permissions. The installed runner service runs as `user`.
 
 `install.sh` does these steps. A failure stops it, and the build fails.
 
 1. It downloads the archive with `curl`, and checks the digest with
    `sha256sum`.
-2. It unpacks the archive into a new folder, checks both paths, and writes
-   the Node version to the build log.
+2. It unpacks the archive into a new folder, and checks `runner/main.mjs`.
+   It writes the version of the private Node to the build log.
 3. It replaces `/opt/conductive/software` with the new folder, so no file
    of an older archive stays.
 4. It installs the runner start script, the git credential helper, and the
@@ -171,7 +179,7 @@ retention restart runs `workspaceStartupCommand` in its `retention` mode.
 That mode runs the startup script, but it writes no ready marker and does
 not restart the runner service.
 
-Otherwise, `runner-start.sh` runs `runner/main.mjs` with the archive's
+Otherwise, `runner-start.sh` runs `runner/main.mjs` with the private
 Node, in the repository folder. The runner unit restarts its service after
 a failure. The terminal backend describes its launcher, its shell server,
 its password, and its automatic restart in its
@@ -198,7 +206,7 @@ in a workspace sandbox.
 `install.sh` installs `git-credential-helper.sh` as
 `/usr/local/bin/conductive-git-credential`. This wrapper keeps the
 caller's `CONDUCTIVE_TURN_ID`, loads the sandbox variables, and runs
-`git-credential-helper.mjs` with the archive's Node.
+`git-credential-helper.mjs` with the private Node.
 
 - The helper answers only a `get` request for `https` on `github.com`. It
   ignores every other request.
@@ -245,18 +253,26 @@ file, in a temporary folder under `.context/`. It maps only
 `/opt/conductive` and `/run/ascii-secrets` to that folder, and it refuses
 a launcher that uses any other absolute path. It runs the launcher with
 `/bin/sh`, and checks the outgoing credential request and its turn ID.
+Both shell fixtures decode their files from the command of
+`installImageSoftware` through one shared test helper.
+
+Run the installer tests with
+`npm run test -- worker/lifecycle/image-runtime.test.ts worker/lifecycle/image-software.test.ts`.
+They run the shipped scripts with local archives and a fake `curl`.
 
 Run the start script test with
 `npm run test -- worker/chat/integration/runner-launcher.test.ts`. It stages
 the software with `installImageSoftware` in a temporary folder under
 `.context/`, and runs the staged `runner-start.sh` with `/bin/sh`. It checks
 the settings that the runner configuration reads, and that the script uses
-the Node of the archive, not a `node` on the path. It also checks that a
+the private Node, not a `node` on the path. It also checks that a
 build, a disk retention restart, and an unfinished start start no runner.
 
 - The Worker imports each file with Vite's `?raw` suffix. When you add a
-  file that the sandbox needs, also add it to `installImageSoftware` and to
-  `install.sh`. The developer scripts stay out of the sandbox.
+  file that the sandbox needs, also add it to `installImageSoftware`.
+  Add it to `install.sh` too when a sandbox uses it after the build. The
+  developer scripts stay out of the sandbox.
+- Start Node in a script only as `@CONDUCTIVE_NODE@`.
 - `runner-start.sh` holds the placeholder `@RUNNER_PATH@`.
   `installImageSoftware` replaces it with `MACHINE_PATHS.runner` when it
   stages the script, so the runner path has one source. Run only the staged
@@ -268,6 +284,8 @@ build, a disk retention restart, and an unfinished start start no runner.
 
 ### Key Code
 
+- [`install-runtime.sh`](install-runtime.sh): installs the private Node.
+  Its arguments are the download URL, the digest, and the version folder.
 - [`install.sh`](install.sh): installs the runner archive, its service,
   and the git helper. Its arguments are the archive URL and the digest.
 - [`runner-start.sh`](runner-start.sh) and
@@ -278,6 +296,8 @@ build, a disk retention restart, and an unfinished start start no runner.
 - [`git-credential-helper.sh`](git-credential-helper.sh) and
   [`git-credential-helper.mjs`](git-credential-helper.mjs): the git
   credential helper.
+- [`image-runtime.ts`](../worker/lifecycle/image-runtime.ts): the pinned
+  Node release, its digest, and its paths.
 - [`image-software.ts`](../worker/lifecycle/image-software.ts): stages these
   files for a build, adds the terminal install command, and makes the
   startup command for a workspace start or a disk retention restart.

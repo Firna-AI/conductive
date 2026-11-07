@@ -58,8 +58,9 @@ export class DeviceBroker {
   pending(): Promise<BrokerRequest[]> {
     return this.requests.pending()
   }
-  store(item: BrokerRequest): Promise<void> {
-    return this.requests.store(item)
+  async store(item: BrokerRequest): Promise<void> {
+    await this.requests.store(item)
+    await this.schedule()
   }
   forget(item: BrokerRequest): Promise<void> {
     return this.requests.forget(item)
@@ -181,6 +182,12 @@ export class DeviceBroker {
         await expireDeviceCommand(this, connection, item)
       }
     }
+    await this.schedule()
+    return true
+  }
+  private async schedule(): Promise<void> {
+    const connection = this.connection
+    if (!connection) return
     await this.alarm(
       Math.min(
         connection.lastSeen + DEVICE_LEASE_MS,
@@ -189,7 +196,6 @@ export class DeviceBroker {
         ),
       ),
     )
-    return true
   }
   async attach(connection: DeviceConnection): Promise<void> {
     await this.drop(DEVICE_REPLACED_CLOSE_CODE, DEVICE_REPLACED_CLOSE_REASON)

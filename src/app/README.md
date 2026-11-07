@@ -13,9 +13,8 @@ says.
 - `npm run dev` serves the app at `http://127.0.0.1:5173` with the fake API
   of `src/test-support/`. Development only: `main.tsx` loads it behind
   `import.meta.env.DEV`, so the production build never bundles it.
-- The local Worker serves the page, so the ignored `.dev.vars` needs
-  `APP_ORIGIN="http://127.0.0.1:5173"`, as the
-  [Get started steps](../../README.md#get-started) say.
+- The local Worker serves the page. The
+  [Get started steps](../../README.md#get-started) give its local setup.
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
@@ -122,6 +121,18 @@ and removal are not wired into this tab yet.
   order does not count. A hidden page sends no read mark. When the page
   shows again, the mark goes through the newest event that arrived. A page
   without the focus still shows its output, so the focus does not count.
+- The chat and the GitHub views keep one store for each workspace through
+  `useWorkspaceStore`. The hook makes the store, connects it after
+  the render, and follows its snapshot. It stops the store at unmount. A
+  switch of workspace stops the old store and makes a new one.
+- The other workspace stores do not use the hook yet. The files
+  development pages start and stop their `WorkspaceFiles` in their own
+  effects. The terminal and preview tools keep a `ToolStore` through
+  `useToolStore`. `WorkspaceScreen` opens and closes its `WorkspaceModel`
+  in its own effect. The [files integration](../files/README.md#integration)
+  shows the hook for a new files owner. The
+  [tool README](../terminal/README.md#workspace-events) gives the current
+  rules of the tool store.
 
 ## Screens
 
@@ -228,6 +239,14 @@ clicks, types, and lets the answers of the fake API settle.
 - `new-workspace-model.ts`: the first message that creates a workspace.
 - `computer-model.ts`: the scripts, the env vars, the builds, and the log.
 - `events.ts`: the ordered event stream and the event socket.
+- `workspace-store.ts`: `useWorkspaceStore`, which gives a connected view
+  the store of its workspace, and the `create` and `connect` functions that
+  the view supplies.
+- `workspace-store.test.tsx`: mounts the real hook with logged test stores in
+  happy-dom. It checks the connection after the render and the stop at
+  unmount. It checks that a switch stops the old store before the new one
+  connects, and shows only the new store. It also checks when the hook keeps
+  a store, connects it again, or makes a new one.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and

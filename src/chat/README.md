@@ -77,6 +77,11 @@ stops its own controller:
   takes the tabs from `tabSessions`, and the session history from
   `historySessions` with the times of `endedAt`, so an archived workspace
   navigates without a write.
+- `useChatController` makes the controller through the shared
+  `useWorkspaceStore` hook of [the web app](../app/README.md). The hook
+  starts the controller after the render. It stops the controller at
+  unmount. When a new controller replaces it, the hook stops the old
+  controller before the new controller starts.
 
 ### A chat that the app keeps
 
@@ -240,7 +245,8 @@ check in the Mac app.
 
 - `WorkspaceChat.tsx`: `WorkspaceChat`, which owns its controller, and
   `WorkspaceChatView`, which draws a kept one, with their callbacks.
-- `useChatController.ts`: the controller of one workspace and its snapshot.
+- `useChatController.ts`: the controller of one workspace and its snapshot,
+  through `useWorkspaceStore`.
 - `state/controller.ts`: `ChatController`, the public boundary of the chat
   state and its actions, with `show` and `hide` for a kept chat.
 - `components/SessionChat.tsx`: the chat of the open session, and

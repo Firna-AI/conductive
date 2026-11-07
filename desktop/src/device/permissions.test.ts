@@ -94,6 +94,24 @@ it('does not grant a permission when its private atomic write fails', () => {
   expect(test.timers.size).toBe(0)
 })
 
+it('refuses an always-allowed list above 900,000 UTF-8 bytes and keeps it removable', () => {
+  const test = setup()
+  const store = test.open()
+  const command = 'é'.repeat(449_998)
+  store.allowCommand(command)
+  expect(() => store.allowCommand('printf extra')).toThrowError(
+    'Always allow is full. Remove a saved command in This Mac, or request this command again and choose Allow.',
+  )
+  expect(store.settings().alwaysAllowedCommands).toEqual([command])
+  expect(store.permits('printf extra', 'one')).toBe(false)
+  store.dispose()
+  const restored = test.open()
+  expect(restored.settings().alwaysAllowedCommands).toEqual([command])
+  expect(restored.removeCommand(command)).toEqual({ status: 'done' })
+  restored.allowCommand('printf extra')
+  expect(test.open().settings().alwaysAllowedCommands).toEqual(['printf extra'])
+})
+
 it('discards malformed local settings without logging their contents', () => {
   const test = setup()
   const store = test.open()

@@ -87,6 +87,13 @@ A Mac command succeeds only when its state is `completed` and its exit code is 0
 The CLI returns status 1 and MCP returns `isError: true` for every other result.
 Both adapters keep the complete command result, including its output, timeout, and truncation fields.
 
+Each call to create or read a Mac command needs the active turn.
+So the tool cannot read a `turn_ended` result after Stop.
+The Worker answers its next call with HTTP 403 `calling_turn_required`.
+The tool then stops polling and reports: `The agent turn ended. The tool cannot read the Mac command result.`
+The CLI writes that message to stderr and returns status 1.
+MCP returns it in a tool result with `isError: true`.
+
 The Mac command route is mounted in the real Worker.
 General image installation and runner tool registration remain composition work.
 
@@ -102,15 +109,16 @@ The installer places the sources under `/opt/conductive/agent-tools`.
 It installs `/usr/local/bin/conductive` as an executable launcher.
 The launcher reads `/run/ascii-secrets/env.sh` at runtime when that file exists.
 It then removes `NODE_OPTIONS` from the environment.
-It selects the first executable Node file in `/usr/local/bin`, `/usr/bin`, and `/bin`, in that order.
-It ignores the caller's `PATH` when it selects Node.
-It reports an error when those folders contain no executable Node file.
-The installation root prefixes these Node paths, the program path, and the secrets path.
-The image must already have Node 24 in one of these system folders.
-The installer adds no Node runtime.
+It starts the image's private Node 24 by its full path.
+[The private Node runtime](../image/runtime.md) gives that path and its update steps.
+It never uses the caller's `PATH` or a system Node.
+It reports an error when the private Node is not an executable file.
+The installation root prefixes the Node path, the program path, and the secrets path.
+The software step of each image build installs the private Node.
+The tools installer adds no Node runtime.
 No workspace token, agent login, or org environment value enters the image assets.
 
-The image builder and the runner do not exist yet.
+The image build and the runner do not use these tools yet.
 The [Worker README](../worker/tools/README.md#production-composition) lists the required composition work.
 
 ## Development
@@ -119,6 +127,10 @@ Run `npm run test -- worker/tools` from the repository root.
 The tests import every module under `tools/`.
 The existing Worker TypeScript project therefore checks these modules with strict settings.
 No root test or TypeScript configuration change is needed.
+
+The Mac command tests of the CLI and MCP adapters live in `worker/devices/tools.test.ts`.
+They run against a local Worker runtime and cover Stop.
+Run them with `npm run test -- worker/devices/tools.test.ts`.
 
 ## Key code
 

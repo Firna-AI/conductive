@@ -20,6 +20,7 @@ import { readJsonObject } from '../http/json-body'
 import { requestBearer } from './access'
 import { deviceBrokerName } from './paths'
 import { deviceFrame, deviceWire } from './socket'
+import type { DeviceOperationValue } from './internal'
 
 export function approvalAction(value: unknown): DeviceApprovalAction {
   switch (value) {
@@ -165,7 +166,7 @@ export async function brokerBrowserRoute(
 export async function brokerOperation(
   broker: DeviceBroker,
   operation: Record<string, unknown>,
-): Promise<Response> {
+): Promise<DeviceOperationValue> {
   if (operation.type === 'broker.target')
     return broker.serial(async () => {
       const valid = await broker.check()
@@ -173,11 +174,11 @@ export async function brokerOperation(
         valid && broker.connection?.userId === deviceRequired(operation.userId)
           ? broker.connection
           : null
-      return Response.json({
+      return {
         device: connection?.device ?? null,
         deviceName: connection?.deviceName ?? null,
         sessionId: connection?.sessionId ?? null,
-      })
+      }
     })
   if (operation.type === 'broker.cancel')
     return broker.serial(async () => {
@@ -194,23 +195,23 @@ export async function brokerOperation(
         })
         await broker.forget(item)
       }
-      return Response.json({ cancelled: true })
+      return { cancelled: true }
     })
   if (operation.type === 'broker.current')
-    return Response.json({
+    return {
       device: await broker.serial(() =>
         broker.current(
           deviceRequired(operation.userId),
           deviceRequired(operation.sessionId),
         ),
       ),
-    })
+    }
   if (operation.type === 'broker.dispatch')
-    return Response.json({
+    return {
       sent: await broker.serial(() =>
         broker.dispatch(operation.request, deviceRequired(operation.tokenHash)),
       ),
-    })
+    }
   if (operation.type === 'broker.approval') {
     return broker.serial(async () => {
       if (!(await broker.check()))
@@ -248,26 +249,24 @@ export async function brokerOperation(
         requestId: id,
         action: approvalAction(operation.action),
       })
-      return Response.json({ accepted: true })
+      return { accepted: true }
     })
   }
   if (operation.type === 'broker.check')
-    return Response.json(
-      await broker.serial(async () => {
-        if (!(await broker.check())) return { live: false, known: false }
-        const pairing = readDevicePairing(operation.device)
-        const live =
-          broker.connection?.device.connectionId === pairing.connectionId &&
-          broker.connection.device.deviceId === pairing.deviceId
-        const known =
-          live &&
-          (await broker.pending()).some(
-            ({ request }) =>
-              request.workspaceId === operation.workspaceId &&
-              request.requestId === operation.requestId,
-          )
-        return { live, known }
-      }),
-    )
+    return broker.serial(async () => {
+      if (!(await broker.check())) return { live: false, known: false }
+      const pairing = readDevicePairing(operation.device)
+      const live =
+        broker.connection?.device.connectionId === pairing.connectionId &&
+        broker.connection.device.deviceId === pairing.deviceId
+      const known =
+        live &&
+        (await broker.pending()).some(
+          ({ request }) =>
+            request.workspaceId === operation.workspaceId &&
+            request.requestId === operation.requestId,
+        )
+      return { live, known }
+    })
   throw new HttpError(404, 'not_found', 'The page is not available.')
 }

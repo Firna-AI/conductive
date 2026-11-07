@@ -12,7 +12,10 @@ import {
 } from './harness.test-support'
 import { agentLoginContext } from './queries'
 
-export async function createAdapterRuntime() {
+export async function createAdapterRuntime(
+  entryPoint = 'worker/workspace.ts',
+  workspaceId = WORKSPACE_ID,
+) {
   const bundle = await build({
     configFile: false,
     logLevel: 'silent',
@@ -20,7 +23,7 @@ export async function createAdapterRuntime() {
       write: false,
       minify: false,
       target: 'es2022',
-      lib: { entry: 'worker/workspace.ts', formats: ['es'] },
+      lib: { entry: entryPoint, formats: ['es'] },
       rolldownOptions: { external: ['cloudflare:workers'] },
     },
   })
@@ -66,7 +69,7 @@ export async function createAdapterRuntime() {
                 contents: `
           export { Workspace } from './workspace.js';
           export default { fetch(request, env) {
-            return env.WORKSPACES.get(env.WORKSPACES.idFromName('${WORKSPACE_ID}')).fetch(request);
+            return env.WORKSPACES.get(env.WORKSPACES.idFromName('${workspaceId}')).fetch(request);
           } };`,
               },
             },
@@ -108,7 +111,7 @@ export async function createAdapterRuntime() {
         'INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, name, branch, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       )
       .bind(
-        WORKSPACE_ID,
+        workspaceId,
         'org',
         'repo',
         'owner',
@@ -121,7 +124,7 @@ export async function createAdapterRuntime() {
       .prepare(
         'INSERT INTO workspace_tokens (workspace_id, token_hash, ciphertext, created_at) VALUES (?, ?, ?, ?)',
       )
-      .bind(WORKSPACE_ID, await hash(WORKSPACE_TOKEN), 'unused', 1),
+      .bind(workspaceId, await hash(WORKSPACE_TOKEN), 'unused', 1),
   ])
   await db
     .prepare(
