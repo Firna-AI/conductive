@@ -2,7 +2,7 @@
 
 - **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-06, from PR #12, branch `conductor/boat-native-remote-workspaces-milestone-7r`, two new problems of the round 2 check of finding 6, and the lifecycle note of that review.
+- **Added:** 2026-11-06, from PR #12, branch `conductor/boat-native-remote-workspaces-milestone-7r`, two new problems of the round 2 check of finding 6, and the lifecycle note of that review. The user sees it as item 109.
 - **Location:** the turn start in `AgentEngine.command` in `runner/src/engine.ts`, `finishTurn` in `runner/src/engine-finish.ts:37`, the `connected` callback in `runner/src/runner.ts:60`, and `RunnerLink.enqueue` in `runner/src/link.ts:83`.
 - **Reason:** on 6 November 2026 the owner told the branch that built the runner to record this note without a fix.
 

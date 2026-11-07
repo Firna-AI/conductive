@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-07, from PR #23, branch `conductor/boat-native-remote-workspaces-milestone-15f`, the wider fix D of round 1 finding 8.
+- **Added:** 2026-11-07, from PR #23, branch `conductor/boat-native-remote-workspaces-milestone-15f`, the wider fix D of round 1 finding 8. The user sees it as item 111.
 - **Location:** the device tests in `worker/devices/`.
 - **Reason:** a test for a whole class of defect needs the user, as the testing rules say.
 

@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-07, from PR #23, branch `conductor/boat-native-remote-workspaces-milestone-15f`, the wider fix C of round 1 finding 9.
+- **Added:** 2026-11-07, from PR #23, branch `conductor/boat-native-remote-workspaces-milestone-15f`, the wider fix C of round 1 finding 9. The user sees it as item 112.
 - **Location:** the complete gate in `package.json`.
 - **Reason:** the fix adds a check to the gate and a dependency.
 
