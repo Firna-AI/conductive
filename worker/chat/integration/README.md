@@ -22,23 +22,94 @@ depends on where the code runs:
 - `sendFileCommand` also waits in the serial queue. Do not await it inside
   a runner hook.
 
-## Milestone 8i: the outer Worker
+## The outer Worker
 
 - `createApp` in `worker/application.ts` forwards the Mac device routes to
-  the Durable Object. Other machine routes still get a stub. See
-  [Mac device commands](../../devices/README.md).
-- Forward each chat route and the runner route to
-  `env.WORKSPACES.get(env.WORKSPACES.idFromName(workspaceId))`.
-- Use the decoded workspace ID as the name.
-- Forward the original request, with its URL, its headers, and its unread
-  body. The Durable Object runs the gate again.
+  the Durable Object. See [Mac device commands](../../devices/README.md).
+- After the host and `Origin` checks, `createApp` gives each other app API
+  request to `routeChat` in `router.ts`. This happens before the app
+  request gate.
+- `routeChat` matches the `sessions` path of a workspace and each path below
+  it. It also matches the `history` and `events` paths. Each other path goes
+  on to the app request gate.
+- `routeChat` decodes the workspace ID of the path once. An ID that does not
+  decode gets `404 workspace_not_found`.
+- `forwardWorkspaceRequest` sends the original request to
+  `env.WORKSPACES.get(env.WORKSPACES.idFromName(workspaceId))`. The request
+  keeps its URL, its headers, and its unread body. The body limit of the
+  Worker entry still bounds that body. The Durable Object runs the gate
+  itself.
+- `forwardWorkspaceRequest` copies the response into a new `Response`, with
+  the WebSocket of an upgrade. So the outer Worker can add its private
+  response headers.
 - Do not run `gate` on a request that you forward. `gate` reads the JSON
   body of each write.
-- A chat route has the workspace ID in its path. The runner request has
-  only its bearer token. Find its workspace with `tokenWorkspace`.
+- The outer Worker does not forward the runner socket yet. On the machine
+  hostname, it serves only the Mac device routes. Each other machine path
+  gets a `501` stub.
+- The runner request has only its bearer token. Its route must find the
+  workspace with `tokenWorkspace`. Then it must forward the request without
+  the browser gate.
+- The outer Worker has no lifecycle route yet. So no browser request can
+  create a workspace or queue its first message. The
+  [lifecycle README](../../lifecycle/README.md#browser-routes) gives the
+  handler and its options.
+
+## Outer Worker tests
+
+The files of this section live in this folder, `worker/chat/integration/`.
+
+- `forwarding.test.ts` sends each request through `worker/index.ts`, the
+  production Worker entry, in Miniflare. It uses the real `Workspace`
+  class, SQLite storage, D1, and real WebSockets. Only Boat and GitHub are
+  fakes.
+- These tests check that an encoded workspace ID reaches its own object,
+  with the authenticated headers and the complete JSON body. They check the
+  gate of the object on forwarded routes. They also check the replay cursor
+  and the live events of the events socket.
+- `createOuterRuntime` in `outer-runtime.test-support.ts` bundles that
+  entry with Vite and starts it. `seedOuterRuntime` in
+  `outer-seed.test-support.ts` adds three users with sessions, two orgs,
+  two workspaces with tokens, stored agent logins, a Boat key, and a
+  published org image.
+
+`run-browser-harness.mjs` serves a production app build through the same
+runtime, over local HTTPS. Run it from the repository root, after
+`npm run build`:
+
+```sh
+node worker/chat/integration/run-browser-harness.mjs
+CHAT_HARNESS_ASSETS=path/to/client CHAT_HARNESS_PORT=5181 \
+  node worker/chat/integration/run-browser-harness.mjs
+```
+
+- It serves `https://127.0.0.1:5178`, with a self-signed certificate.
+  `CHAT_HARNESS_PORT` sets another port.
+- It reads the built app from `dist/client`. `CHAT_HARNESS_ASSETS` sets
+  another folder, which must hold `index.html`.
+- It writes the origin, the session cookie of the seeded owner, the
+  workspace URL, the machine origin, the workspace token, and the IDs to
+  `.context/chat-harness/browser-harness.json`.
+- `startBrowserHarness` in `browser-server.test-support.ts` starts the
+  runtime. SIGINT or SIGTERM stops it.
+- The harness hides no missing route. The app API paths that the outer
+  Worker does not route still get `404` there. So the app shell fails to
+  start in it.
 
 ## Milestone 5: workspace lifecycle
 
+- `Workspace` gives the lifecycle `appendWorkspaceEvent` for its workspace
+  events. No other production code connects the lifecycle and chat yet.
+  The [lifecycle README](../../lifecycle/README.md#workspace-durable-object)
+  lists the lifecycle hooks that wait for chat.
+- No chat code implements the `acceptFirstMessage` option of a create. It
+  must store the first message with the session and turn IDs that the
+  lifecycle chose. A repeat with the same IDs must return the same message
+  and store nothing new.
+- `ChatDependencies` has no hook for a sent turn or a closed runner
+  connection. `Workspace` does not give runner events to the lifecycle yet.
+- No code calls `closeRunner()` at a sandbox stop. `WorkspaceChat` has no
+  method that ends the active turns at a stop.
 - `Workspace.fetch` tries device routes, then gives the remaining requests
   to chat. Match lifecycle routes before the chat call.
 - `authorizeBrowser` gives a lifecycle route the same gate and workspace

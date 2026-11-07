@@ -5233,17 +5233,60 @@ Depends on: 5, 6, 7, 7r, 8, 8j
 
 - [ ] Wire the app shell, the chat screens, the chat backend, and the
       runner together, with a real Boat sandbox.
-- [ ] Keep the chat of each workspace that the tab showed in memory, as
+  - [x] Forward the browser chat routes to the object named by the decoded
+        workspace ID, before the outer browser gate.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Mount the chat in the workspace screen and use the app's JSON client
+        for chat and Mac command requests. Move the components, development
+        pages, and tests to that client, and remove the chat-only transport.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Add a runner archive packager for the existing URL and SHA-256
+        artifact contract. Include the runtime packages and the measurement
+        tools. Document the external archive supply that a build needs.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Add one script for the real app and sandbox check and the repeated
+        resume measurements in both placements. Check it with local fake
+        endpoints. Keep the real runs open.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Keep the chat of each workspace that the tab showed in memory, as
       decision 87 says. A return to the workspace shows the chat at once,
       then gets only the events after its last event number. A reload or a
       new tab starts empty.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
 - [ ] Test the chat end to end: create a workspace, send a message, stream
       the answer, stop and resume, and send again.
+  - [x] Test unread chat writes, the object gate, and stored and live events
+        through the production Worker and real local objects. Add a local
+        browser harness with fake external services.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
 - [ ] Measure the first agent start after a resume over several runs,
       with the runner inside and outside the home folder. Keep the faster
       place.
       Moved from Milestone 7r on 6 November 2026, because it needs a real sandbox and real logins.
       Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+
+Agent calls on 7 November 2026:
+
+- Use `AppServices.api` for the chat, its device controls, and their
+  development pages and tests. Reason: the shell already owns that JSON
+  client, and it supplies no separate fetch function.
+- Keep each shown workspace's model, header notices, and chat controller
+  with the tab's app model and signed-in user. Reason: both workspace
+  streams must retain their cursors, and a return must draw before its
+  open request finishes. A sign-out clears the memory.
+- Keep the shell's start card and sandbox bar in the mounted chat. Reason:
+  the shell's start card shows the required step times.
+
+Blocked: production first-message admission, lifecycle/chat hooks, runner
+startup settings, archive configuration, and the shell API handlers need
+ownership outside the assigned files. The local production browser stops
+at missing account, model, and Get started routes. Runner forwarding and
+the final launcher names also wait for the rename merge. The retry merge
+is pending too. No real sandbox or measurement run has completed here.
+
+Evidence: `.context/boat-native-remote-workspaces/8i/worker-report.md`,
+`ui-report.md`, `image-report.md`, `docs-report.md`, `scope-gap.md`, and
+`browser-smoke.json` in the same folder.
 
 ## Milestone 8m: Chat fixes from the reviews
 

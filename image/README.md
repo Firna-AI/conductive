@@ -5,7 +5,9 @@ it into the org image before it runs the org's install script. The org
 image is the saved snapshot that every new sandbox of an org starts from.
 In a workspace sandbox, this software starts the agent runner. It also
 gives git a fresh GitHub token for each operation. The agent tools are not
-in this folder yet.
+in this folder yet. The folder also holds two
+[developer scripts](developer-scripts.md) that no build installs: the
+archive packager and the live check.
 
 ## Responsibilities
 
@@ -14,6 +16,8 @@ in this folder yet.
 - Make the git credential helper the system credential helper of git.
 - Start no runner in a build sandbox. The service runs it only in a
   workspace sandbox.
+- Package the runner archive and its digest on a developer machine.
+- Check the chat path and time the first agent start in a real sandbox.
 
 The [terminal backend](../worker/terminal/README.md) owns ttyd, its service,
 its launcher, and its local password. The software step of each image build
@@ -27,7 +31,7 @@ Each build takes one input, an `ImageSoftwareArtifact`. It is the public
 HTTPS URL of a `.tar.gz` archive, with the SHA-256 digest of the archive.
 The caller of the lifecycle routes supplies it as the `software` option, as
 the [lifecycle README](../worker/lifecycle/README.md#browser-routes) says.
-No code in this repository builds the archive yet. `readImageSoftware` in
+`readImageSoftware` in
 [`image-software.ts`](../worker/lifecycle/image-software.ts) refuses a URL
 with a user name, a password, a query, or a fragment. It also refuses a
 digest that is not 64 hexadecimal characters.
@@ -39,6 +43,24 @@ The archive must hold these paths:
 
 Put no credential in the URL or in the archive. Each saved snapshot keeps
 the unpacked archive.
+
+[`package-runner.mjs`](package-runner.mjs) makes the archive on a
+developer machine, as
+[Developer scripts](developer-scripts.md#package-the-archive) says. It
+writes the URL and the digest of the archive to `<archive>.json`.
+
+To supply an archive:
+
+1. Publish the exact archive at its URL, on a public HTTPS host.
+2. Give that URL and the matching digest to the lifecycle routes as the
+   `software` option. `<archive>.json` holds both.
+
+A build fails when the file at the URL does not match the digest. So a
+versioned URL for each archive is a good choice.
+
+The Worker does not serve the archive. No Worker variable or binding holds
+its URL or its digest yet. No production code supplies the `software`
+option yet, because the root Worker does not call the lifecycle routes.
 
 ## Install
 
@@ -151,6 +173,12 @@ Node, in the repository folder. The runner unit restarts its service after
 a failure. The terminal backend describes its launcher, password, and
 automatic restart in its [README](../worker/terminal/README.md).
 
+The runner reads its token, its runner URL, and its repository folder from
+other variables, as its [configuration](../runner/README.md#configuration)
+says. `runner-start.sh` does not set those variables from the table yet.
+The Worker also gives no default branch and no `computer` MCP URL. So the
+runner fails at its start in a workspace sandbox.
+
 ## Git credentials
 
 `install.sh` installs `git-credential-helper.sh` as
@@ -205,9 +233,12 @@ a launcher that uses any other absolute path. It runs the launcher with
 `/bin/sh`, and checks the outgoing credential request and its turn ID.
 
 - The Worker imports each file with Vite's `?raw` suffix. When you add a
-  file here, also add it to `installImageSoftware` and to `install.sh`.
+  file that the sandbox needs, also add it to `installImageSoftware` and to
+  `install.sh`. The developer scripts stay out of the sandbox.
 - Keep each start script safe to run in a build sandbox. Of the variables
   in the table, a build sandbox has only the folder variables.
+- [Developer scripts](developer-scripts.md#development) gives the checks of
+  the developer scripts.
 
 ### Key Code
 
@@ -227,6 +258,8 @@ a launcher that uses any other absolute path. It runs the launcher with
 - [`saved-script.ts`](../worker/lifecycle/saved-script.ts):
   `savedScriptCommand`, which writes the org's install or startup script to
   a file and runs it with Bash.
+- [Developer scripts](developer-scripts.md#key-code): the archive packager
+  and the live check.
 
 ### Related Docs
 

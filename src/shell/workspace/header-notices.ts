@@ -45,8 +45,9 @@ function failedRepair(envelope: StreamEnvelope): HeaderNotice | null {
  * time of the first one.
  *
  * Dismiss hides a notice in this view only. The failure stays, so a new view
- * or a new tab shows it again from the stored history. The next failure
- * after a full report shows again here too.
+ * or a new tab shows it again. A new tab reads it from the stored history. A
+ * tab that keeps the store calls `newView` when the workspace shows again.
+ * The next failure after a full report shows again here too.
  */
 export class HeaderNotices {
   /** The notices that the header shows, the name first. */
@@ -63,6 +64,13 @@ export class HeaderNotices {
     return () => {
       stop()
     }
+  }
+
+  /** Starts a new view: each failed repair shows again, also a dismissed one. */
+  newView(): void {
+    if (this.dismissed.size === 0) return
+    this.dismissed.clear()
+    this.publish()
   }
 
   /** Hides the notice of this kind in this view. The failure stays. */

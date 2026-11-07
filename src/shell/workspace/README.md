@@ -1,14 +1,64 @@
 # Workspace screen
 
 The workspace screen shows one open workspace: its header, the start
-steps, the states of its cloud computer, and the Archive question. On
-desktop the chat column sits beside the right column. A phone shows one
-view at a time, with a tab bar. The chat, the files, the tools, and the
-pull request bar plug in as features, as
+steps, the states of its cloud computer, the Archive question, and its
+chat. On desktop the chat column sits beside the right column. A phone
+shows one view at a time, with a tab bar. The chat fills the centre by
+default, as [The chat of the workspace](#the-chat-of-the-workspace) says.
+The files, the tools, and the pull request bar plug in as features, as
 [Composition](../../app/README.md#composition) says. The visual spec is the
 `app` page of the [mockup catalogue](../../../docs/mockups/README.md). The
 states of the cloud computer are in `app/shell`, and the notices are in
 `app/chat/lost-updates`.
+
+The production app cannot open a workspace yet. The Worker serves no
+lifecycle route, so the open of the screen gets `404`, as the
+[Worker routes](../../../worker/README.md#routes) say.
+
+## The kept workspace
+
+The tab keeps a `ShownWorkspace` for each workspace that it showed: its
+`WorkspaceModel`, its `HeaderNotices`, and its `ChatController`.
+`shownWorkspaces(app, user)` in `shown-workspaces.ts` gives the memory of
+the `AppModel` of the tab, for the signed-in user.
+
+- Each mount of the screen calls `notices.newView()`, `model.open()`, and
+  `chat.show()`. Each unmount calls `model.close()` and `chat.hide()`.
+- An unmount closes the socket of the model and the socket of the chat.
+  Each stream keeps its last event number.
+- A return draws the kept header, notices, and chat at once. Then each
+  socket asks only for the events after its own last event number.
+- On a return, the model sends its open again, as at each open. The chat
+  reads nothing again: no history, no session list, and no view.
+- A kept detail that failed waits for the open of this view, with the
+  spinner. So a return never shows an old failure.
+- A chat load that ends while the screen is away opens no socket until the
+  next mount.
+- A sign-out, or a sign-in of another user, stops every kept workspace and
+  forgets it.
+- Nothing goes to browser storage. So a reload or a new tab starts empty,
+  and reads the stored history again.
+- The memory has no size limit. It keeps each workspace that the tab
+  showed until a reload or a sign-out.
+
+## The chat of the workspace
+
+`ChatArea` draws the chat in the centre: `WorkspaceChatView` with the kept
+`ChatController`, as
+[A chat that the app keeps](../../chat/README.md#a-chat-that-the-app-keeps)
+says.
+
+- The shell draws the start steps, with the time of each step, and the
+  sandbox bar, with Resume. It draws them from its own record of the
+  workspace, and gives them to the chat as `host`. The chat places them.
+- Connect, on the notice of a missing agent login, opens the Connect form
+  of the account.
+- The shell gives the chat no `onOpenDiff`, `onAddBoatKey`, or `extraTabs`
+  yet. So a file of a finished turn opens no diff, the notice of a missing
+  Boat key shows no button, and the chat shows no file tabs.
+- A `center` part takes the place of the chat.
+- When the features give the `tabs`, `transcript`, or `composer` slot, the
+  shell draws its own chat column with those slots, in place of the chat.
 
 ## Notices of a failed repair
 
@@ -23,7 +73,8 @@ gives the rules. The Files panel shows the notices of the file lists, as
 [the Files screens](../../files/README.md#integration) say.
 
 - `HeaderNotices` keeps these failed repairs. It is a store of its own,
-  apart from `WorkspaceModel`. The screen makes one for each mount.
+  apart from `WorkspaceModel`. The tab keeps one for each workspace that it
+  showed, as [The kept workspace](#the-kept-workspace) says.
 - Only a marker with `repairFailed: true` and no session adds a failed
   repair. A first loss adds nothing. The chat owns the markers of a session.
 - Only a later full report of the same kind in the stream clears a failed
@@ -42,40 +93,50 @@ Dismiss hides a bar in the mounted view only:
 
 - It sends nothing to the Worker, and the failed repair stays.
 - A further failure of the same kind stays hidden.
-- A new view or a new tab reads the stored history, so it shows the bar.
+- Each mount of the screen starts a new view with `newView`, so a return
+  shows the bar again. A new tab reads the stored history, so it shows the
+  bar too.
 - A full report of that kind clears the failed repair. A failure after
   that report shows again, also in the view where Dismiss hid the bar.
 
 ## Integration
 
-The screen makes the store and follows the event stream of its
-`WorkspaceModel` before `open` starts that stream:
+`ShownWorkspaces.get` makes the parts of a workspace at its first show.
+The notices then follow the stream of the model before its first open. So
+they get the stored history of the workspace from its first event, then the
+live events, in event order. Each mount of the screen takes the kept parts:
 
 ```tsx
-const [notices] = useState(() => new HeaderNotices())
-useEffect(() => notices.follow(model.stream), [notices, model])
+const app = useApp()
+const [shown] = useState(() =>
+  shownWorkspaces(app, viewer).get(orgId, workspaceId),
+)
+const { model, notices, chat } = shown
 useEffect(() => {
+  notices.newView()
   void model.open()
-  return () => model.close()
-}, [model])
+  chat.show()
+  return () => {
+    model.close()
+    chat.hide()
+  }
+}, [notices, model, chat])
 ```
 
-React runs the effects of a component in their order. So the store gets
-the stored history of the workspace from its first event, then the live
-events, in event order. `follow` gives the function that ends the
-subscription. Place `<HeaderNoticeBars notices={notices} />` directly
-after the header. It draws `notices.shown` with the CSS module of the
+`follow` gives the function that ends the subscription, and `clear` calls
+it. Place `<HeaderNoticeBars notices={notices} />` directly after the
+header. It draws `notices.shown` with the CSS module of the
 mockups' `LostUpdateBar` and the words of `lostCopy.ts`. Its Dismiss is the
 shell's `IconButton`. The ages use the clock of `AppServices`, and they
 move on every 30 seconds.
 
 ## Development page
 
-The development page runs the app shell with this workspace and its Files
-panel over the [fake API](../../test-support/README.md). It uses React
-alone, with no Worker. The clock of the page stands still at `FAKE_TIME`,
-so each stored age stays as drawn. The product build does not include the
-page. From the repository root:
+The development page runs the app shell with this workspace, its chat, and
+its Files panel over the [fake API](../../test-support/README.md). It uses
+React alone, with no Worker. The clock of the page stands still at
+`FAKE_TIME`, so each stored age stays as drawn. The product build does not
+include the page. From the repository root:
 
 ```sh
 npx vite --config src/shell/workspace/dev/vite.config.js --port 5182
@@ -108,27 +169,36 @@ Changes.
 - "Send a full report" clears the notice of that kind only.
 - "Send a tree update" sends a tree delta, which leaves the notice of All
   files.
-- "Open the workspace again" mounts a new workspace screen. Its header
-  notices read the stored history again, so a bar that Dismiss hid shows
-  again.
+- "Open the workspace again" mounts a new workspace screen in the same
+  tab. The kept notices start a new view, so a bar that Dismiss hid shows
+  again, with no new read of the stored history.
 
-The page mounts only the Files feature. It has no tools panel and no pull
-request row, so on desktop the notices of the file lists sit at the end of
-the right column.
+The page gives only the Files feature, so the real chat fills the centre.
+It has no tools panel and no pull request row, so on desktop the notices
+of the file lists sit at the end of the right column.
 
 Run the tests with `npm run test -- src/shell/workspace`.
 
 ## Key code
 
-- `WorkspaceScreen.tsx`: the screen of one open workspace. It makes the
-  `WorkspaceModel` and the `HeaderNotices` of the mount, and places the
+- `WorkspaceScreen.tsx`: the screen of one open workspace. It takes the
+  kept parts of the workspace, shows and hides them, and places the
   header, the notices, the columns, and the features.
+- `shown-workspaces.ts`: `ShownWorkspaces`, the kept workspaces of one tab
+  and one user, and `shownWorkspaces`, which clears them at a sign-out or a
+  sign-in of another user.
+- `ChatArea.tsx`: the chat of the centre, with the start steps and the
+  sandbox bar of the shell, or the shell's own column for the chat slots.
 - `header-notices.ts`: `HeaderNotices`, the failed repairs of the name and
   the start steps. `follow` reads a stream, `dismiss` hides a notice in
-  this view, and `shown` gives the notices to draw.
+  this view, `newView` shows each notice again, and `shown` gives the
+  notices to draw.
 - `HeaderNoticeBars.tsx`: the bars below the header, with Dismiss.
 - `HeaderNotices.test.tsx`: mounts the screen in happy-dom over the fake
   API and its event stream, and checks the notices.
+- `KeptWorkspace.test.tsx`: mounts the whole app over the fake API. It
+  checks a return, the event number of each socket, a new tab, and the
+  clear at a sign-out.
 - `features.ts`: `WorkspaceFeatures`, the parts that plug in, and
   `WorkspaceContext`, what each part gets.
 - `WorkspaceHeader.tsx` and `WorkspaceColumns.tsx`: the header, the
@@ -146,6 +216,7 @@ Run the tests with `npm run test -- src/shell/workspace`.
   and [Workspace states](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-states).
 - [Web app: data and composition](../../app/README.md): the models, the
   event stream, and the features.
+- [The chat](../../chat/README.md): the chat that fills the centre.
 - [The Files screens](../../files/README.md) and
   [the browser fakes](../../test-support/README.md).
 - [The web app in the architecture](../../../docs/architecture.md#web-app).

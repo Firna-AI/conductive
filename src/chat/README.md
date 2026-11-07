@@ -4,17 +4,30 @@ The chat of a workspace: the session tabs with the session history, and the
 chat of the open session with its composer. It shows messages, folded tool
 calls, the running turn, steer, Stop, failures with Try again, the start
 steps of the sandbox, the Mac commands of each turn, and the bar that takes
-the composer's place while the sandbox does not run. It builds against the
-fake API and the recorded chat events of `src/test-support/`. No app screen
-mounts it yet.
+the composer's place while the sandbox does not run. The workspace screen
+of the app shell mounts it by default, as
+[the workspace screen](../shell/workspace/README.md#the-chat-of-the-workspace)
+says. It builds against the fake API and the recorded chat events of
+`src/test-support/`.
+
+The production app cannot show the chat yet. The Worker serves the
+sessions, the history, and the events of a workspace. It does not serve
+the workspace record that the chat load reads last, as the
+[Worker routes](../../worker/README.md#routes) say.
 
 ## Use it in the app
+
+The tab keeps one `ChatController` for each workspace that it showed. The
+workspace screen draws it with `WorkspaceChatView`, as
+[A chat that the app keeps](#a-chat-that-the-app-keeps) says. A part that
+needs a chat of its own mounts `WorkspaceChat`, which makes, starts, and
+stops its own controller:
 
 ```tsx
 <WorkspaceChat
   orgId={orgId}
   workspaceId={workspaceId}
-  fetch={appFetch}
+  client={services.api}
   subscribe={openWorkspaceEvents}
   viewport={phone ? 'mobile' : 'desktop'}
   onWorkspaceChange={(workspace) => showInHeader(workspace)}
@@ -25,12 +38,17 @@ mounts it yet.
 />
 ```
 
-- `fetch` and `subscribe` must be stable functions. A new one starts a new
-  chat, so give the component a module function or a memoized one.
+- `client` and `subscribe` must be stable. A new one starts a new chat.
+  `client` is an `ApiClient`: `AppServices.api` in the app, or one from
+  `createApiClient` over a fake.
+- Each call of the chat goes through that client. A failure shows the
+  message of its `ApiError`, such as the message of the Worker. A reply that
+  a reader of the chat refuses shows "The request failed. Try again."
 - `subscribe(target, afterEventNumber, listener)` opens the stream of
-  `workspaceEventsPath` after the event number. It gives each message to
-  `listener.message`, the stored history first, and calls `listener.closed()`
-  when the connection drops. The chat checks each message as `unknown`.
+  `workspaceEventsPath` after the event number. In the app, it opens
+  `AppServices.events`. It gives each message to `listener.message`, the
+  stored history first, and calls `listener.closed()` when the connection
+  drops. The chat checks each message as `unknown`.
 - The chat reads the signed-in user from the account route and the members
   of the org from the members route. A stopped turn then says "You stopped
   the agent" to the member who pressed Stop, and names that member to the
@@ -43,6 +61,9 @@ mounts it yet.
   has the workspace name, and the agent's title renames both. The
   development page does the same.
 - `extraTabs` takes `<li>` tabs, such as open files, after the session tabs.
+- `host` takes the start steps and the sandbox bar that the app draws, as
+  `ChatHost` in `components/SessionChat.tsx` says. The chat places them.
+  Without a host, the chat draws both from its own record of the workspace.
 - Render the chat inside the Firna theme provider and the Graphite token CSS
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position. A dialog or a sheet covers the nearest
@@ -55,6 +76,25 @@ mounts it yet.
   takes the tabs from `tabSessions`, and the session history from
   `historySessions` with the times of `endedAt`, so an archived workspace
   navigates without a write.
+
+### A chat that the app keeps
+
+`WorkspaceChatView` draws a `ChatController` that the app keeps, such as
+across the pages of a tab. It takes the props of `WorkspaceChat` other than
+the connection. The app makes the controller with a stable `client` and
+`subscribe`, and calls `show` and `hide` itself:
+
+- The first `show` loads the chat, as `start` does. A `show` after a failed
+  load loads it again.
+- A later `show` opens the stream again after its cursor. So the chat shows
+  at once, and it reads no history, no session list, and no view again.
+- `hide` closes the stream while the app shows another page. The chat keeps
+  its sessions, drafts, transcripts, and cursor. Actions and loads that run
+  still finish.
+- A load that ends while the chat is hidden opens no stream until the next
+  `show`.
+- `stop` ends the controller, as at a sign-out. Late replies then change
+  nothing.
 
 ## Rules for this code
 
@@ -133,7 +173,9 @@ mounts it yet.
   starts after the history's `throughEventNumber`, so no change between the
   reads and the stream gets lost.
 - The chat writes no browser storage. The drafts stay in memory, and the
-  server keeps the open tabs through the view route.
+  server keeps the open tabs through the view route. A kept controller
+  lives only in the memory of its tab, so a reload or a new tab starts
+  empty.
 - [The Mac commands](device/README.md) hold the rules of the requests,
   their answers, and the settings of the Mac.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
@@ -152,64 +194,31 @@ mounts it yet.
 
 ## Development page
 
-Run the page from the repository root:
-
-```sh
-npx vite --config src/chat/dev/vite.config.js --port 5181 --strictPort
-```
-
-Then open `http://127.0.0.1:5181/src/chat/dev/`. This Vite configuration
-serves the page with React on the fake API alone, without the Worker and its
-sign-in gate.
-
-The address chooses the state. The first value of each option is the default:
-
-| Option | Values |
-| --- | --- |
-| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `loss` (left-out output and files, lost events, and a lost turn end) |
-| `workspace` | `existing`, `new` (Lisbon, which starts) |
-| `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
-| `role` | `admin`, `member` |
-| `key`, `login` | `on`, `off` |
-| `replay` | `stored`, `live` (the recorded chat arrives event by event) |
-| `viewport` | `desktop`, `mobile` |
-| `scheme` | `dark`, `light` |
-| `clock` | `running`, `frozen` |
-| `mac` | `none`, `waiting`, `longer`, `several`, `many` (four requests, the first a long script), `running`, `denied`, `done`, `exit-code`, `cut`, `timed-out`, `failed`, `unavailable`, `literal` (a two-line command and a U+00A0 command, also saved) |
-| `app` | `browser`, `mac` (the Mac app on the Mac that got the requests) |
-| `change` | `done`, `done-not-saved`, `failed` (what the page's Mac does with a change of its settings) |
-| `page` | `chat`, `this-mac` (the This Mac section of the account) |
-
-The desktop page keeps the mockup's columns, so the chat column is 718 px wide
-in a 1440 px window. The buttons of the page make the sandbox ready, stop it,
-fail its start, write the title, drop the connection, resend the last event,
-send two parts out of order, and connect the Mac again under a new pairing,
-whose next read the page then makes. Writes of the page change the fake's state:
-new sessions, rename, close, reopen, messages, steer, Stop, Try again, model
-changes, uploads, Resume, and the view. A model change opens its session
-under the ID that the chat chose. Stop and the close of a running tab
-record the member of the `role` option as the one who pressed Stop. Stop
-the sandbox ends a running turn with no Stop request. With `app=mac`, the
-page's Mac acts on each answer: Deny ends the request, and the other choices
-run the command and keep the choice. The bar of the 15 minutes shows above
-the header while they run. The Mac refuses a change of an older pairing, as
-the Worker does.
+The [chat development page](dev/README.md) shows the chat on a fake API
+with state, with no Worker. Its address chooses the scenario, the state of
+the sandbox, the role, and the Mac. `npm run dev` also shows the chat, in
+the whole app, with the limits that [Run it](../app/README.md#run-it) gives.
 
 ## Tests
 
 Run `npm run test -- src/chat`. The tests drive the controller and the stream
 on `FakeApiServer` and the recorded events, and render the chat with
-`react-dom/server`. `state/test-kit.ts` holds their helpers.
+`react-dom/server`. `state/test-kit.ts` holds their helpers. The
+[workspace screen](../shell/workspace/README.md#key-code) tests the kept
+chat in the whole app.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
 
 ### Key code
 
-- `WorkspaceChat.tsx`: the integration component and its callbacks.
+- `WorkspaceChat.tsx`: `WorkspaceChat`, which owns its controller, and
+  `WorkspaceChatView`, which draws a kept one, with their callbacks.
 - `useChatController.ts`: the controller of one workspace and its snapshot.
 - `state/controller.ts`: `ChatController`, the public boundary of the chat
-  state and its actions.
+  state and its actions, with `show` and `hide` for a kept chat.
+- `components/SessionChat.tsx`: the chat of the open session, and
+  `ChatHost`, the start steps and the sandbox bar that the app can draw.
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
 - `state/session-log.ts`: the event log of each session.
@@ -234,9 +243,10 @@ check in the Mac app.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
-  and the reconnect of the workspace stream.
+  the reconnect, and the `hold` and `release` of the workspace stream.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
-  route builders, and the readers of their responses.
+  route builders and the app's `ApiClient`, and the readers of their
+  responses.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
 - `device/`: the Mac commands. Their [README](device/README.md) names

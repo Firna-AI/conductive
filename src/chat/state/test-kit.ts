@@ -1,9 +1,9 @@
+import { createApiClient, type FetchLike } from '../../app/api/client'
 import type { AgentChoice } from '../../shared/agents'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import type { ChangeModelResponse, Session } from '../../shared/sessions'
 import { FakeApiServer, type FakeApiOptions } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
-import type { FetchLike } from '../api/client'
 import { record, text } from '../api/json'
 import { readDraft } from '../api/read-chat'
 import type { StreamTimers } from '../stream/workspace-stream'
@@ -106,7 +106,7 @@ export function chatFor(
       orgId: FAKE_IDS.org,
       workspaceId: options.workspaceId ?? FAKE_IDS.workspace,
     },
-    fetch,
+    client: createApiClient(fetch),
     subscribe: (_target, from, listener) => {
       after.push(from)
       return server.events.subscribe(from, (message) =>

@@ -8,34 +8,33 @@ import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
 import { mayArchive } from '../../app/permissions'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
-import { WorkspaceModel } from '../../app/workspace-model'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
-import { useOrgModel } from '../context'
+import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
 import { ArchiveDialog } from './ArchiveDialog'
+import { ChatArea } from './ChatArea'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
-import { HeaderNotices } from './header-notices'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
-import { SandboxBar, SandboxPanel } from './SandboxNotice'
-import { StartingCard } from './StartingCard'
-import {
-  ChatColumn,
-  PhoneTabBar,
-  phoneView,
-  RightColumn,
-} from './WorkspaceColumns'
+import { SandboxPanel } from './SandboxNotice'
+import { shownWorkspaces } from './shown-workspaces'
+import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import workspaceStyles from './workspace.module.css'
 
 /**
  * An open workspace. Desktop shows the chat column beside the right column;
  * a phone shows one view at a time, with five tabs to switch. The shell draws
- * the header, the start steps, and the states of the sandbox. Later
- * milestones fill the chat, the files, the tools, and the pull request bar.
+ * the header, the start steps, and the states of the sandbox, and the chat
+ * fills the centre. Later milestones fill the files, the tools, and the pull
+ * request bar.
+ *
+ * The tab keeps the model, the header notices, and the chat of each
+ * workspace that it showed. So a return draws the workspace at once, and
+ * each stream asks only for the events after its own last event number.
  */
 export function WorkspaceScreen(props: {
   org: OrgSummary
@@ -43,23 +42,37 @@ export function WorkspaceScreen(props: {
   view: readonly string[]
   viewer: User
 }) {
-  const org = useOrgModel(props.org.id)
-  const [model] = useState(() => new WorkspaceModel(org, props.workspaceId))
-  const [notices] = useState(() => new HeaderNotices())
+  const app = useApp()
+  const [shown] = useState(() =>
+    shownWorkspaces(app, props.viewer).get(props.org.id, props.workspaceId),
+  )
+  const { model, notices, chat } = shown
+  // A failure that a kept model shows is from an earlier open. It waits for
+  // the open of this view, as a first open does.
+  const [reopening, setReopening] = useState(
+    () => model.detail.get().state === 'failed',
+  )
   const detail = useStore(model.detail)
   const features = useFeatures()
   const viewport = useViewport()
   const theme = useSharedUiTheme()
   const go = useGo()
   const resume = useAction(() => model.resume(), "The sandbox didn't start.")
-  // The notices follow the stream before `open` starts it, so that they
-  // also read the stored history.
-  useEffect(() => notices.follow(model.stream), [notices, model])
   useEffect(() => {
-    void model.open()
-    return () => model.close()
-  }, [model])
-  if (detail.state === 'loading') {
+    let current = true
+    // Each view shows every failed repair, also one that Dismiss hid before.
+    notices.newView()
+    void model.open().finally(() => {
+      if (current) setReopening(false)
+    })
+    chat.show()
+    return () => {
+      current = false
+      model.close()
+      chat.hide()
+    }
+  }, [notices, model, chat])
+  if (detail.state === 'loading' || reopening) {
     return (
       <div className={workspaceStyles.center}>
         <Spinner
@@ -111,7 +124,6 @@ export function WorkspaceScreen(props: {
       : null,
   }
   const phone = viewport === 'phone'
-  const problem = sandbox === 'ready' || sandbox === 'starting' ? null : sandbox
   const panel = (content: ReactNode) =>
     sandbox === 'ready' ? (
       content
@@ -122,21 +134,8 @@ export function WorkspaceScreen(props: {
         workspace={workspace}
       />
     )
-  const chat = features.center?.(context) ?? (
-    <ChatColumn
-      footer={
-        problem ? (
-          <SandboxBar problem={problem} resume={resume} workspace={workspace} />
-        ) : (
-          features.composer?.(context)
-        )
-      }
-      phone={phone}
-      starting={
-        sandbox === 'starting' && start ? <StartingCard start={start} /> : null
-      }
-      transcript={features.transcript?.(context)}
-    />
+  const chatArea = (
+    <ChatArea chat={chat} context={context} resume={resume} start={start} />
   )
   const header = (
     <WorkspaceHeader
@@ -149,12 +148,7 @@ export function WorkspaceScreen(props: {
     const view = phoneView(props.view)
     const archived = sandbox === 'archived'
     const content = {
-      chat: (
-        <>
-          {features.tabs?.(context)}
-          {chat}
-        </>
-      ),
+      chat: chatArea,
       files: panel(features.files?.(context)),
       tool: panel(features.tools?.(context)),
     }
@@ -180,8 +174,7 @@ export function WorkspaceScreen(props: {
       <div className={body.chat}>
         {header}
         <HeaderNoticeBars notices={notices} />
-        {features.tabs?.(context)}
-        {chat}
+        {chatArea}
       </div>
       <RightColumn
         files={panel(features.files?.(context))}

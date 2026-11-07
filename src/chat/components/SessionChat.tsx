@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Agent } from '../../shared/agents'
 import type { WorkspaceState } from '../../shared/workspaces'
 import { PendingCommands } from '../device/PendingCommands'
@@ -25,6 +26,18 @@ function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
     : null
 }
 
+/**
+ * The parts of the chat that the app draws from its own record of the
+ * workspace: the start steps at the end of the history while the sandbox
+ * starts, and the bar that takes the composer's place while the sandbox is
+ * down. Null leaves the place empty. Without a host, the chat draws both
+ * from its own record.
+ */
+export interface ChatHost {
+  starting: ReactNode | null
+  sandboxBar: ReactNode | null
+}
+
 export interface SessionChatProps {
   snapshot: ChatSnapshot
   controller: ChatController
@@ -33,6 +46,30 @@ export interface SessionChatProps {
   onOpenDiff?: (path: string) => void
   onConnectAgent?: (agent: Agent) => void
   onAddBoatKey?: () => void
+  host?: ChatHost
+}
+
+/** The start steps and the sandbox bar: the host's, or the chat's own. */
+function sandboxParts(props: SessionChatProps): ChatHost {
+  if (props.host) return props.host
+  const { snapshot, controller, now } = props
+  const { workspace } = snapshot
+  const problem = problemOf(workspace?.state)
+  return {
+    starting:
+      workspace?.state === 'starting' ? (
+        <StartingCard now={now} start={snapshot.start} />
+      ) : null,
+    sandboxBar:
+      problem && workspace ? (
+        <SandboxBar
+          archivedAt={workspace.archivedAt}
+          busy={snapshot.resuming}
+          onResume={() => void controller.resume()}
+          problem={problem}
+        />
+      ) : null,
+  }
 }
 
 /**
@@ -48,7 +85,8 @@ export function SessionChat(props: SessionChatProps) {
   const id = snapshot.activeSessionId
   const session = snapshot.sessions.find((item) => item.id === id) ?? null
   const state = sessionState(snapshot, id ?? '')
-  const problem = problemOf(workspace?.state)
+  const { starting, sandboxBar } = sandboxParts(props)
+  const down = sandboxBar !== null
   const block = sendBlock(snapshot, id)
   const { notice } = snapshot
   const shownNotice =
@@ -59,7 +97,7 @@ export function SessionChat(props: SessionChatProps) {
     state.pending.length > 0 ||
     state.transcript.items.some((item) => item.kind === 'user')
   const status = historyStatus(state)
-  const content = showsContent(state, workspace)
+  const content = showsContent(state, starting !== null)
   const viewerId = snapshot.account?.user.id ?? null
   const commands = sessionCommands(snapshot, id, state)
   const footer = (
@@ -76,7 +114,7 @@ export function SessionChat(props: SessionChatProps) {
           onDismiss={controller.dismissNotice}
         />
       ) : null}
-      {!problem && session && block ? (
+      {!down && session && block ? (
         <BlockNotice
           block={block}
           model={modelLabel(snapshot.models, session.choice)}
@@ -96,15 +134,8 @@ export function SessionChat(props: SessionChatProps) {
         readers={{ viewerId, orgName: snapshot.org?.name ?? null }}
         requests={commands.waiting}
       />
-      {problem && workspace ? (
-        <SandboxBar
-          archivedAt={workspace.archivedAt}
-          busy={snapshot.resuming}
-          onResume={() => void controller.resume()}
-          problem={problem}
-        />
-      ) : null}
-      {!problem && session && snapshot.load.state === 'ready' ? (
+      {sandboxBar}
+      {!down && session && snapshot.load.state === 'ready' ? (
         <Composer
           attaching={state.draft.uploads > 0}
           blocked={block !== null}
@@ -130,7 +161,11 @@ export function SessionChat(props: SessionChatProps) {
     </>
   )
   return (
-    <ChatPane empty={emptyView(props)} footer={footer} mobile={props.mobile}>
+    <ChatPane
+      empty={emptyView({ snapshot, controller, starting: starting !== null })}
+      footer={footer}
+      mobile={props.mobile}
+    >
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView
         inserts={commands.inserts}
@@ -143,9 +178,7 @@ export function SessionChat(props: SessionChatProps) {
         retrying={state.retrying}
         transcript={state.transcript}
       >
-        {workspace?.state === 'starting' ? (
-          <StartingCard now={now} start={snapshot.start} />
-        ) : null}
+        {starting}
       </TranscriptView>
     </ChatPane>
   )

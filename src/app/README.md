@@ -3,9 +3,10 @@
 The web app is the React app under `src/`. `src/app/` holds its data: the
 typed API client, the models that screens read, the router, the event
 stream, and the services that the app gets from outside. `src/shell/` holds
-the screens of the app shell, which Milestone 6 built against the fake API.
-The chat, the files, the tools, and the pull request bar plug into the shell
-as features, as [Composition](#composition) says.
+the screens of the app shell.
+The workspace screen mounts the chat. The files, the tools, and the pull
+request bar plug into the shell as features, as [Composition](#composition)
+says.
 
 ## Run it
 
@@ -21,6 +22,16 @@ as features, as [Composition](#composition) says.
   `?login=none`, or `?deleted=1`. `dev/options.ts` lists them. A new org
   of the dev fake gets every repository of the account's list, and keeps
   its custom initials through rename, delete, and restore.
+- The workspace screen shows the real chat over the dev fake. The fake
+  answers each chat write with a recorded reply, changes no state, and
+  sends no event. So a sent message stays pending, and a new session adds
+  no tab.
+- One counter numbers the events of all workspaces of the dev fake, and its
+  event source ignores the workspace. So after the first event of another
+  workspace, the chat applies no more live events. Use `npm run dev` for
+  the chat load and the kept chat. The
+  [chat development page](../chat/dev/README.md) has a fake with state for
+  live events and writes.
 - The production build uses `live-services.ts`: the Worker on the origin of
   the page, and its event socket.
 
@@ -35,26 +46,30 @@ as features, as [Composition](#composition) says.
 | `features`   | `WorkspaceFeatures` from `../shell/workspace/features.ts`: the workspace parts |
 
 The workspace screen draws the frame, the header, the start steps, the
-Archive question, and the states of the sandbox. Each feature is a function
+Archive question, and the states of the sandbox. The real chat fills the
+centre by default. The `tabs`, `transcript`, and `composer` slots replace it
+with the shell's own chat column, as
+[The chat of the workspace](../shell/workspace/README.md#the-chat-of-the-workspace)
+says. Each feature is a function
 of `WorkspaceContext`, which gives the org, the workspace, the viewer, the
 sandbox state, the layout, the address after the workspace, the ordered
 event stream, and the Archive action. A missing feature leaves its place
 empty.
 
-| Feature       | Place                                         | Milestone |
-| ------------- | --------------------------------------------- | --------- |
-| `tabs`        | The session and file tabs of the centre       | 8         |
-| `transcript`  | The chat history, before the start steps      | 8         |
-| `composer`    | The composer while the sandbox runs or starts | 8         |
-| `center`      | A file or diff tab in place of the chat       | 10        |
-| `files`       | All files, Changes, and Checks                | 10 and 14 |
-| `tools`       | Terminal, Preview, and Desktop                | 12        |
-| `pullRequest` | The pull request bar, or the row on a phone   | 14        |
-| `owner`       | The owner picker that reassigns a workspace   | 15c       |
+| Feature       | Place |
+| ------------- | ----- |
+| `tabs`        | The tabs of the shell's own chat column, in place of the chat |
+| `transcript`  | The history of that column, before the start steps |
+| `composer`    | The composer of that column while the sandbox runs or starts |
+| `center`      | A file or diff tab in place of the chat |
+| `files`       | All files, Changes, and Checks |
+| `tools`       | Terminal, Preview, and Desktop |
+| `pullRequest` | The pull request bar, or the row on a phone |
+| `owner`       | The owner picker that reassigns a workspace |
 
 The Members tab of the org settings is `MembersTab` in
-`../shell/settings/`. It shows the members read-only, and Milestone 15c adds
-the invite, the roles, and the removal there.
+`../shell/settings/`. It shows the members read-only. Invite, role changes,
+and removal are not wired into this tab yet.
 
 ## Data lifecycle
 
@@ -90,6 +105,12 @@ the invite, the roles, and the removal there.
   before a later remove of the same repository.
 - A Resume reply keeps each newer field change that arrived while its
   request ran. A reply after close changes no workspace state.
+- The tab keeps the `WorkspaceModel` of each workspace that it showed, for
+  the signed-in user, as
+  [The kept workspace](../shell/workspace/README.md#the-kept-workspace)
+  says. A return opens the model again, and its stream starts after its
+  last event number. A sign-out, or a sign-in of another user, closes and
+  forgets every kept model.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.

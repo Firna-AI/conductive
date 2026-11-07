@@ -34,6 +34,12 @@ which serves these routes. The path helpers live in
 | `GET` events socket | `workspaceEventsPath` | Sends the stored history, then each new event |
 | `GET` runner socket | `MACHINE_PATHS.runner` | Connects the agent runner on the machine hostname |
 
+The outer Worker forwards each browser route of this table to the object
+of its workspace. `routeChat` in [`router.ts`](router.ts) does this, as
+[the integration README](integration/README.md#the-outer-worker) says. The
+outer Worker does not forward the runner socket yet. So no runner can
+connect through the machine hostname.
+
 Trusted Worker code can also call three methods of `WorkspaceChat`. They
 run no gate.
 
@@ -58,6 +64,9 @@ ignores this field.
 
 The Durable Object runs the gates itself.
 
+- A forwarded browser chat request keeps the body limit of the Worker
+  entry and the host and `Origin` checks. The outer Worker skips its
+  request gate, so only the gate of the Durable Object parses the JSON body.
 - `authorizeBrowser` runs `gate` from `worker/security/gate.ts`, the gate
   of the other app routes. It checks the app hostname, the `Origin`
   header, the session cookie, the org membership, and the body of writes.
@@ -213,6 +222,10 @@ npm run typecheck
 - It closes every socket before Miniflare evicts the real object. The
   restarted object keeps its SQLite history, queued message, and runner
   cursor. The test checks delivery and continued event numbers after restart.
+- `integration/forwarding.test.ts` checks the forwarding of the outer
+  Worker, and `integration/run-browser-harness.mjs` serves a production app
+  build through it. [Outer Worker tests](integration/README.md#outer-worker-tests)
+  describes both.
 
 ## Seams for other milestones
 
@@ -247,6 +260,8 @@ lifecycle, the files, the agent runner, and the logins and attachments.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-tabs.ts` and `browser-access.ts`: open tabs, the scheduled access
   check, and its batched D1 query.
+- `router.ts`: `routeChat` and `forwardWorkspaceRequest`, which forward
+  the browser chat routes from the outer Worker to the object.
 - `queries.ts`: the D1 reads of workspaces, tokens, members, and logins.
 - `login-access.ts`: the combined sender and runner-token access check
   before login dispatch.

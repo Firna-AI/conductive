@@ -87,8 +87,8 @@ export function DevPage(props: {
   const mobile = options.viewport === 'mobile'
   const chat = (
     <WorkspaceChat
+      client={backend.client}
       clock={props.clock}
-      fetch={backend.fetch}
       onAddBoatKey={() => note('The app opens the Boat key screen.')}
       onConnectAgent={(agent) =>
         note(`The app opens the Connect form of ${agent}.`)
@@ -110,8 +110,8 @@ export function DevPage(props: {
   const shown = account ? (
     <div className={styles.account}>
       <ThisMacSection
+        client={backend.client}
         clock={props.clock}
-        fetch={backend.fetch}
         viewport={options.viewport}
       />
     </div>

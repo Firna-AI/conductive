@@ -1,10 +1,7 @@
+import type { ApiClient } from '../../app/api/client'
 import type { AgentChoice } from '../../shared/agents'
 import type { DeviceApprovalAction } from '../../shared/device'
-import {
-  createChatApi,
-  type FetchLike,
-  type WorkspaceTarget,
-} from '../api/client'
+import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { StreamEnvelope } from '../api/read-workspace'
 import {
   answerCommand,
@@ -48,8 +45,8 @@ import {
 
 export interface ChatControllerOptions {
   target: WorkspaceTarget
-  /** The browser's `fetch` in the app, or the fake API's `fetch`. */
-  fetch: FetchLike
+  /** The JSON client of the app, over the Worker or the fake API. */
+  client: ApiClient
   /** Opens the workspace event stream: the app's socket, or the fake's events. */
   subscribe: SubscribeToWorkspace
   timers?: StreamTimers
@@ -65,13 +62,15 @@ const changesWorkspace = (envelopes: readonly StreamEnvelope[]) =>
  * shown session, reads the workspace stream, and runs the user's actions
  * against the API. React reads it through `subscribe` and `getSnapshot`.
  * Each `start` begins a fresh run, and `stop` makes late responses of the
- * run change nothing.
+ * run change nothing. An app that keeps the chat while it shows another page
+ * calls `hide` and `show` instead, as `show` says.
  */
 export class ChatController {
   private readonly options: ChatControllerOptions
   private readonly store = new ChatStore()
   private context: ChatContext
   private run = 0
+  private started = false
   private unwatch: (() => void) | null = null
 
   constructor(options: ChatControllerOptions) {
@@ -88,6 +87,7 @@ export class ChatController {
    */
   readonly start = (): Promise<void> => {
     this.stop()
+    this.started = true
     this.context = this.createContext(this.run)
     this.store.update(() => initialSnapshot)
     this.unwatch = watchShownSession(this.context)
@@ -101,9 +101,32 @@ export class ChatController {
     this.context.stream.stop()
   }
 
+  /**
+   * Shows the chat. The first show loads it, as `start` does, and so does a
+   * show after a failed load. A later show opens the stream again after its
+   * cursor, so the chat shows at once and gets only the newer events. A load
+   * that still runs keeps going, and its end opens the stream.
+   */
+  readonly show = (): void => {
+    if (!this.started || this.store.get().load.state === 'failed') {
+      void this.start()
+      return
+    }
+    this.context.stream.release()
+  }
+
+  /**
+   * Closes the stream while the app shows another page. The chat keeps its
+   * sessions, drafts, transcripts, and cursor, and the actions and loads that
+   * run still finish.
+   */
+  readonly hide = (): void => {
+    this.context.stream.hold()
+  }
+
   private createContext(run: number): ChatContext {
     const { target, subscribe, timers } = this.options
-    const api = createChatApi(this.options.fetch, target)
+    const api = createChatApi(this.options.client, target)
     const live = () => this.run === run
     let drafts = 0
     const context: ChatContext = {
@@ -123,7 +146,7 @@ export class ChatController {
       saveView: viewWriter((view) => api.saveView(view)),
       live,
       devices: {
-        api: createDeviceApi(this.options.fetch),
+        api: createDeviceApi(this.options.client),
         reads: new DeviceReads(),
       },
       stream: new WorkspaceStream({

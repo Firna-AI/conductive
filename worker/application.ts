@@ -5,6 +5,7 @@ import { hostStub, hostSurface, marketingResponse } from './hosts'
 import { errorResponse, HttpError, privateResponse } from './http'
 import { requestBodyEntry } from './http/request-body'
 import { route, routeDevice } from './routes'
+import { routeChat } from './chat/router'
 import { isDeviceAppPath, isDeviceMachinePath } from './devices/paths'
 import { routeMacCommand } from './tools/mac-command'
 import { finishSignIn, startSignIn } from './security/auth'
@@ -94,6 +95,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         }
         if (isDeviceAppPath(path))
           return respond(await routeDevice(request, env))
+        const chatResponse = await routeChat(request, env)
+        if (chatResponse) return respond(chatResponse)
         const context = await gate(request, env, dependencies.now())
         return respond(await route(request, env, context, dependencies))
       } catch (error) {
