@@ -3919,6 +3919,10 @@ Added on 8 November 2026 from the check of finding 2 of PR #47
 - **Recommendation:** C.
 - **Chosen:** C, by the user on 8 November 2026, who also asked that the
   app tell the user of the limit. Milestone 5d applies it.
+- **Design call of the orchestrator, 8 November 2026:** the start limit
+  also covers the disk restart near day 14 (decision 43 D), because the
+  protocol counts that restart as a start, and an unfinished restart
+  blocks every resume.
 
 ### 129. Choose what the operator turns off after an abuse report
 
