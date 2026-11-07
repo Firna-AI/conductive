@@ -2,6 +2,7 @@ import type {
   WorkspaceStartJob,
   WorkspaceStartResult,
   StartJobStorage,
+  WorkspaceCreationAdmission,
 } from './start-types'
 import type { AppDependencies, AppEnv } from '../env'
 import { prepareWorkspaceRecords } from './start-records'
@@ -18,6 +19,8 @@ import { readWorkspaceToken } from './tokens'
 import { WorkspaceStartError } from './workspace-start'
 import { advanceStartMachine } from './start-machine'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
+import { creationAdmissionResponse } from './creation-admission-response'
+import { StartWaiters } from './start-waiters'
 
 /** The actor's alarm owns progress. Waiting HTTP requests own no phase. */
 export class WorkspaceStartCoordinator {
@@ -25,10 +28,10 @@ export class WorkspaceStartCoordinator {
   private readonly dependencies: AppDependencies
   private readonly endpoint: WorkspaceLifecycleEndpoint
   private readonly storage: StartJobStorage
-  private readonly waiters = new Set<(result: WorkspaceStartResult) => void>()
-  private readonly creationWaiters = new Set<
-    (result: WorkspaceStartResult) => void
-  >()
+  private readonly waiters = new StartWaiters<WorkspaceStartResult>()
+  private readonly creationWaiters = new StartWaiters<WorkspaceStartResult>()
+  private readonly admissionWaiters =
+    new StartWaiters<WorkspaceCreationAdmission>()
   private accepting: Promise<unknown> = Promise.resolve()
 
   constructor(
@@ -67,40 +70,21 @@ export class WorkspaceStartCoordinator {
   }
 
   wait(): Promise<WorkspaceStartResult> {
-    return this.waitFor(false)
+    return this.waiters.wait(() => this.storage.result())
   }
   waitCreation(): Promise<WorkspaceStartResult> {
-    return this.waitFor(true)
+    return this.creationWaiters.wait(() => this.storage.creationResult())
   }
   creationResult() {
     return this.storage.creationResult()
+  }
+  waitAdmission(): Promise<WorkspaceCreationAdmission> {
+    return this.admissionWaiters.wait(() => this.storage.admission())
   }
   async pending(): Promise<boolean> {
     return Boolean(
       (await this.storage.job()) || (await this.storage.publication()),
     )
-  }
-
-  private waitFor(creation: boolean): Promise<WorkspaceStartResult> {
-    const waiters = creation ? this.creationWaiters : this.waiters
-    return new Promise((resolve, reject) => {
-      const receive = (result: WorkspaceStartResult) => {
-        waiters.delete(receive)
-        resolve(result)
-      }
-      waiters.add(receive)
-      void (
-        creation ? this.storage.creationResult() : this.storage.result()
-      ).then(
-        (stored) => {
-          if (stored) receive(stored)
-        },
-        (error: unknown) => {
-          waiters.delete(receive)
-          reject(error)
-        },
-      )
-    })
   }
 
   advance(): Promise<boolean> {
@@ -114,6 +98,23 @@ export class WorkspaceStartCoordinator {
     if (!job) return publishCreationResult(this.env, this.storage)
     let provider: SandboxProvider | undefined
     try {
+      if (job.phase === 'records' && !job.cancelled && !job.failure) {
+        const imageName = await prepareWorkspaceRecords(
+          this.env,
+          this.dependencies,
+          this.endpoint,
+          job,
+        )
+        if (imageName === null) return false
+        job.imageName = imageName
+        await this.next(job, 'machine')
+        await this.storage.admit(
+          await creationAdmissionResponse(this.env, this.endpoint, job),
+        )
+        const admitted = await this.storage.admission()
+        if (admitted) this.admissionWaiters.publish(admitted)
+        return false
+      }
       const admin = await firstOrgAdmin(this.env.DB, job.orgId)
       if (!admin)
         throw new HttpError(404, 'org_not_found', 'The org is not available.')
@@ -133,16 +134,6 @@ export class WorkspaceStartCoordinator {
         )
         if (result) await this.finish(result)
         return result !== null
-      }
-      if (job.phase === 'records') {
-        job.imageName = await prepareWorkspaceRecords(
-          this.env,
-          this.dependencies,
-          this.endpoint,
-          job,
-        )
-        await this.next(job, 'machine')
-        return false
       }
       const row = await readWorkspace(this.env.DB, job.orgId, job.workspaceId)
       if (row.archivedAt !== null || row.state === 'archived') {
@@ -276,13 +267,13 @@ export class WorkspaceStartCoordinator {
     await this.storage.complete(result)
     const stored = (await this.storage.result()) ?? result
     if (job?.kind === 'create') {
+      const admission = await this.storage.admission()
+      if (admission) this.admissionWaiters.publish(admission)
       const created = (await this.storage.creationResult()) ?? stored
-      for (const waiter of this.creationWaiters) waiter(created)
-      this.creationWaiters.clear()
+      this.creationWaiters.publish(created)
       await publishCreationResult(this.env, this.storage)
     }
-    for (const waiter of this.waiters) waiter(stored)
-    this.waiters.clear()
+    this.waiters.publish(stored)
   }
 }
 

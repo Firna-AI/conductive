@@ -55,6 +55,7 @@ export async function prepareCreationRequest(
     startupScript: image.startupScript,
     environmentCiphertext: image.environmentCiphertext,
     defaultBranch: repository.defaultBranch,
+    repositoryLocations: image.repositoryLocations,
     turnId,
     attempt: `workspace-${id}-${dependencies.randomToken()}`,
     phase: 'records',

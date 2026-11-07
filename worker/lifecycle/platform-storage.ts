@@ -5,6 +5,7 @@ import type {
   WorkspaceStartJob,
   WorkspaceStartResult,
   CreationPublication,
+  WorkspaceCreationAdmission,
 } from './start-types'
 import type { PendingTurn } from './workspace-runtime'
 
@@ -13,6 +14,7 @@ export interface WorkspaceValues {
   job: WorkspaceStartJob
   result: WorkspaceStartResult
   publication: CreationPublication
+  admission: WorkspaceCreationAdmission
   turns: PendingTurn[]
   image: ImageCoordinatorState
   draft: FailedCreationDraft

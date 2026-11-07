@@ -48,6 +48,8 @@ says.
 - The hostname for machines serves the GitHub webhooks, the agent tools,
   the agent runner, and the git credential helper. Its gate checks a
   webhook signature or a workspace token in place of the sign-in.
+- The gate also accepts a one-use build grant, but only on the route that
+  gives the Git command of a build its read token (decision 90).
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
 - The marketing site at `conducting.build` needs no sign-in.
 
@@ -118,7 +120,10 @@ Later screens add the frame and connection sources that they need.
   them.
 - A sandbox gets no agent login at a start. The next section says how a
   turn gets its login.
-- GitHub access reaches a sandbox only through the git credential helper.
+- GitHub access reaches a workspace sandbox only through the git credential
+  helper.
+- A build sandbox gets GitHub access only for the Git command that copies
+  each repository, as [GitHub tokens](#github-tokens) says (decision 90).
 
 ## Agent logins in a sandbox
 
@@ -157,6 +162,27 @@ Later screens add the frame and connection sources that they need.
 - A user token reaches every repository where that person installed the
   GitHub App and has access. A limit to the org's repositories was
   rejected for now, because GitHub cannot set it on a user token.
+- A build or a refresh copies each repository of the image with Git in the
+  build sandbox (decision 90). Each copy uses its own GitHub App
+  installation token, which can only read the contents of that one
+  repository.
+- Only the Git command of that copy gets the token, and Git writes it
+  nowhere. No command text, command history, remote URL, Git config, file,
+  or saved snapshot holds it.
+- The Git command gets the token with a one-use build grant. The grant
+  works once, and only for its own build and repository.
+- The Worker revokes the token as soon as the Git command ends, also when
+  the command fails. The build goes on only after GitHub confirms the
+  revocation. No checkout, software step, install script, snapshot, or
+  other repository code runs before that.
+- Reason: Git in the build sandbox copies a repository of any size, and the
+  Git data does not pass through the Worker. Larger uploads and stored
+  progress were rejected, because one repository or one Git response must
+  still fit in one Worker job. A Git proxy in the Worker and a Workflow
+  were rejected, because each puts a new service in the path of the Git
+  data.
+- A workspace sandbox never gets an installation token. Its Git gets
+  GitHub tokens only from the git credential helper.
 
 ## Secrets that users enter
 

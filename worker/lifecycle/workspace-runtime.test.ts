@@ -25,26 +25,18 @@ afterEach(async () => {
 it('refuses credentialed redirects in the actual Worker runtime', async () => {
   fixture.refuseRedirects()
   const bodies: unknown[] = []
-  for (const path of [
-    '/boat',
-    '/signin',
-    '/refresh',
-    '/source',
-    '/installation',
-  ])
+  for (const path of ['/boat', '/signin', '/refresh', '/installation'])
     bodies.push(await (await fixture.fetch(path)).json())
   expect(bodies).toEqual([
     { error: 'unavailable', status: 302 },
     { error: 'github_sign_in_failed', status: 502 },
     { error: 'github_refresh_failed', status: 502 },
-    { error: 'source_refused' },
     { error: 'installation_refused' },
   ])
   expect(fixture.requests).toEqual([
     'https://boat.dev/api/v1/sandboxes/bx_one',
     'https://github.com/login/oauth/access_token',
     'https://github.com/login/oauth/access_token',
-    'https://github.com/example/source.git/info/refs?service=git-upload-pack',
     'https://api.github.com/app/installations/91/access_tokens',
   ])
 })

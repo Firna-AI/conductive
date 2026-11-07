@@ -3,7 +3,7 @@ import { expect, it } from 'vitest'
 import { setupBackendTests } from './backend-test-hooks'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { IDLE_MS } from './durable-types'
-import { createWorkspace } from './workspaces'
+import { createCompletedWorkspace } from './completed-creation-test-support'
 
 const backendFixture = setupBackendTests()
 
@@ -17,7 +17,7 @@ it.each([
     const fixture = await backendFixture()
     const { runtime, org, user, boat } = fixture
     const created = await fixture.run(() =>
-      createWorkspace(runtime, org.id, user, {
+      createCompletedWorkspace(runtime, org.id, user, {
         repositoryId: fixture.repositoryId,
         firstMessage: FIRST_MESSAGE,
       }),

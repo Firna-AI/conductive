@@ -10,6 +10,7 @@ import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import type { SelectedRepository } from './settings-data'
 import { readBuildSnapshot } from './build-log-reader'
 import { buildLogStatements } from './build-log-statements'
+import type { RepositoryLocation } from './repository-locations'
 
 export type BuildPhase =
   | 'create'
@@ -36,6 +37,8 @@ export interface BuildJob {
   stderrOffset: number
   installScript: string
   repositoriesJson: string
+  repositoryLocationsJson: string | null
+  previousRepositoryLocationsJson: string | null
   softwareJson: string
   previousImageName: string | null
 }
@@ -46,6 +49,8 @@ const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state,
   j.phase, j.process_id AS processId, j.stdout_offset AS stdoutOffset,
   j.stderr_offset AS stderrOffset, j.install_script AS installScript,
   j.repositories_json AS repositoriesJson, j.software_json AS softwareJson,
+  j.repository_locations_json AS repositoryLocationsJson,
+  j.previous_repository_locations_json AS previousRepositoryLocationsJson,
   j.previous_image_name AS previousImageName`
 
 const buildColumns = `id, org_id AS orgId, kind, state, started_at AS startedAt,
@@ -92,6 +97,8 @@ export async function insertBuild(
     settingsRevision: number
     installScript: string
     repositories: readonly SelectedRepository[]
+    repositoryLocations: readonly RepositoryLocation[]
+    previousRepositoryLocations: readonly RepositoryLocation[]
     software: ImageSoftwareArtifact
     previousImageName: string | null
     now: number
@@ -116,8 +123,9 @@ export async function insertBuild(
       ),
     db
       .prepare(
-        `INSERT INTO image_build_jobs (build_id, phase, install_script, repositories_json, software_json, previous_image_name)
-       VALUES (?, 'create', ?, ?, ?, ?)`,
+        `INSERT INTO image_build_jobs (build_id, phase, install_script, repositories_json, software_json, previous_image_name,
+          repository_locations_json, previous_repository_locations_json)
+       VALUES (?, 'create', ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         input.id,
@@ -125,6 +133,8 @@ export async function insertBuild(
         JSON.stringify(input.repositories),
         JSON.stringify(input.software),
         input.previousImageName,
+        JSON.stringify(input.repositoryLocations),
+        JSON.stringify(input.previousRepositoryLocations),
       ),
     ...(input.nextImageRefreshAt === undefined
       ? []

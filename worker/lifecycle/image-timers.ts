@@ -11,6 +11,7 @@ import {
   readImageSchedule,
 } from './image-schedule'
 import { firstOrgAdmin, readImageSettings } from './settings-data'
+import { cleanupOrgImageSources } from './image-sources/cleanup'
 
 export { IMAGE_DAY_MS, IMAGE_POLL_MS } from './image-schedule'
 
@@ -88,7 +89,17 @@ export async function runImageAlarm(
   runtime: ImageRuntime,
   state: ImageCoordinatorState,
 ): Promise<void> {
-  if (!(await firstOrgAdmin(runtime.env.DB, state.orgId))) return
+  if (!(await firstOrgAdmin(runtime.env.DB, state.orgId))) {
+    if (
+      !(await cleanupOrgImageSources(
+        runtime.env,
+        runtime.dependencies.fetch,
+        state.orgId,
+      ))
+    )
+      throw new Error('Image source access cleanup is pending')
+    return
+  }
   const next = await readImageSchedule(
     runtime.env.DB,
     state.orgId,

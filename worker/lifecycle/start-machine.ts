@@ -8,7 +8,11 @@ import {
   recordRunningEnvironment,
   runningEnvironment,
 } from './start-environment'
-import { repositoryDirectory } from './commands'
+import {
+  repositoryEnvironment,
+  repositoryLocation,
+} from './repository-locations'
+import { workspaceRepositoryLocations } from './repository-location-data'
 import { workspaceEnvironment } from './settings-data'
 import { readWorkspaceToken } from './tokens'
 import { WorkspaceStartError } from './workspace-start'
@@ -33,12 +37,20 @@ export async function advanceStartMachine(
       job.environmentCiphertext,
     )
     const token = await readWorkspaceToken(env, job.workspaceId)
+    const locations =
+      job.repositoryLocations ??
+      (await workspaceRepositoryLocations(env.DB, job.workspaceId))
+    job.repositoryLocations = locations
     const runtimeEnv = {
       ...environment,
+      ...repositoryEnvironment(locations),
       WORKSPACE_TOKEN: token,
       CONDUCTING_WORKSPACE_ID: job.workspaceId,
       CONDUCTING_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
-      CONDUCTING_REPOSITORY_DIR: repositoryDirectory(row.repositoryId),
+      CONDUCTING_REPOSITORY_DIR: repositoryLocation(
+        locations,
+        row.repositoryId,
+      ),
       CONDUCTING_TURN_ID: '',
       CONDUCTING_DISK_KEEPALIVE: '0',
     }

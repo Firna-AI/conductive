@@ -3,6 +3,8 @@ import type { User } from '../../src/shared/api'
 import type { WorkspaceStartJob } from './start-types'
 import { HttpError } from '../http'
 import { leaseStatement, planStatement } from './creation-plan-statements'
+import { readRepositories } from './settings-data'
+import { capturedRepositoryLocations } from './repository-locations'
 import {
   imageAdmissionError,
   publishedImageSource,
@@ -100,6 +102,9 @@ interface PlanRow {
   environmentCiphertext: string | null
   imageName: string | null
   defaultBranch: string
+  repositoriesJson: string | null
+  repositoryLocationsJson: string | null
+  messageText: string | null
   agent: AgentChoice['agent']
   model: string
   effort: AgentChoice['effort']
@@ -119,6 +124,7 @@ export async function recordedCreationJob(
     p.section_id AS sectionId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.branch,
     p.start_attempt AS attempt, p.startup_script AS startupScript, p.environment_ciphertext AS environmentCiphertext,
     p.image_name AS imageName, p.default_branch AS defaultBranch, p.agent, p.model, p.effort,
+    p.repositories_json AS repositoriesJson, p.repository_locations_json AS repositoryLocationsJson, p.message_text AS messageText,
     p.attachment_ids_json AS attachmentIds, a.created_at AS createdAt
     FROM workspace_creation_plans p JOIN workspace_creation_attempts a ON a.workspace_id = p.workspace_id
     WHERE p.workspace_id = ? AND a.org_id = ? AND a.sender_user_id = ? AND a.first_message_id = ?`,
@@ -141,6 +147,13 @@ export async function recordedCreationJob(
     startupScript: plan.startupScript,
     environmentCiphertext: plan.environmentCiphertext,
     defaultBranch: plan.defaultBranch,
+    repositoryLocations:
+      plan.repositoriesJson === null
+        ? undefined
+        : capturedRepositoryLocations(
+            plan.repositoryLocationsJson,
+            readRepositories(JSON.parse(plan.repositoriesJson)),
+          ),
     turnId: plan.turnId,
     attempt: plan.attempt,
     phase: 'records',
@@ -158,7 +171,7 @@ export async function recordedCreationJob(
       createdAt: plan.createdAt,
       request: {
         id: key.messageId,
-        text,
+        text: plan.messageText ?? text,
         attachmentIds,
         choice: { agent: plan.agent, model: plan.model, effort: plan.effort },
       },

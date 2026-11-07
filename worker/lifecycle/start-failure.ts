@@ -9,8 +9,13 @@ import type {
   StartJobStorage,
 } from './start-types'
 import { allocateWorkspace } from './start-allocation'
-import { deleteSandboxIfPresent, recordSandboxCleanup } from './cleanup'
+import {
+  clearSandboxCleanup,
+  deleteSandboxIfPresent,
+  recordSandboxCleanup,
+} from './cleanup'
 import { deleteProvisionalWorkspace } from './workspace-data'
+import { markCreationFailed } from './creation-attempt-data'
 
 export async function finishFailedStart(
   env: AppEnv,
@@ -81,21 +86,30 @@ export async function finishFailedStart(
     if (!sandboxId) return null
   }
   let cleanupPending = false
+  if (sandboxId)
+    await recordSandboxCleanup(env.DB, {
+      workspaceId: job.workspaceId,
+      orgId: job.orgId,
+      sandboxId,
+    })
+  await markCreationFailed(env.DB, job.workspaceId)
+  if (await endpoint.readLifecycle())
+    await endpoint.lifecycleFailed({
+      code: failure.code,
+      message: failure.message,
+      log: null,
+    })
+  await endpoint.clearLifecycle()
+  await deleteProvisionalWorkspace(env.DB, job.orgId, job.workspaceId)
   if (sandboxId) {
     try {
       if (!provider) throw new Error('Provider unavailable')
       await deleteSandboxIfPresent(provider, sandboxId)
+      await clearSandboxCleanup(env.DB, job.workspaceId)
     } catch {
-      await recordSandboxCleanup(env.DB, {
-        workspaceId: job.workspaceId,
-        orgId: job.orgId,
-        sandboxId,
-      })
       cleanupPending = true
     }
   }
-  await endpoint.clearLifecycle()
-  await deleteProvisionalWorkspace(env.DB, job.orgId, job.workspaceId)
   if (cleanupPending) await endpoint.retryFailedCreateCleanup(job.workspaceId)
   return {
     ok: false,

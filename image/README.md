@@ -25,7 +25,9 @@ starts nothing.
 
 Each build takes one input, an `ImageSoftwareArtifact`. It is the public
 HTTPS URL of a `.tar.gz` archive, with the SHA-256 digest of the archive.
-Milestone 7r, the agent runner, supplies the archive. `readImageSoftware` in
+The caller of the lifecycle routes supplies it as the `software` option, as
+the [lifecycle README](../worker/lifecycle/README.md#browser-routes) says.
+No code in this repository builds the archive yet. `readImageSoftware` in
 [`image-software.ts`](../worker/lifecycle/image-software.ts) refuses a URL
 with a user name, a password, a query, or a fragment. It also refuses a
 digest that is not 64 hexadecimal characters.
@@ -39,6 +41,11 @@ Put no credential in the URL or in the archive. Each saved snapshot keeps
 the unpacked archive.
 
 ## Install
+
+Before this step, Git in the build sandbox copies each chosen repository
+into its folder, as the
+[source loader](../worker/lifecycle/repository-layout.md#the-source-loader)
+says. That Git uses the base image, not this folder's software.
 
 The software step of a build calls `installImageSoftware`. It writes the
 scripts and the runner unit of this folder to `/opt/conducting/staged/`, and
@@ -79,17 +86,29 @@ each resume, together with the org's env vars:
 | `WORKSPACE_TOKEN` | The workspace token. |
 | `CONDUCTING_WORKSPACE_ID` | The workspace ID. |
 | `CONDUCTING_MACHINE_ORIGIN` | The origin of the machine hostname. |
-| `CONDUCTING_REPOSITORY_DIR` | The repository folder, from `repositoryDirectory` in [`commands.ts`](../worker/lifecycle/commands.ts). |
+| `CONDUCTING_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
+| `CONDUCTING_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
 | `CONDUCTING_TURN_ID` | Empty. The runner sets it for each agent process. |
 | `CONDUCTING_DISK_KEEPALIVE` | `1` in a disk retention restart, and `0` otherwise. |
 
+[Repository folders](../docs/protocol/repository-folders.md) gives the
+folder names and the variable names. The
+[repository layout](../worker/lifecycle/repository-layout.md) says how the
+Worker makes and keeps the folder map.
+
 The runner and the terminal launcher read the variables from
 `/run/ascii-secrets/env.sh`, where Boat puts them. A systemd service does
-not get them in another way.
+not get them in another way. A Boat command process does not get them
+either. So the install command of a build loads the same file, with
+automatic export, before Bash runs the org's install script. The install
+script then gets the folder variables.
 
 At a create, the Worker first fetches the default branch and creates the
-workspace branch. At each create and each resume, it then runs the command
-of `workspaceStartupCommand`:
+workspace branch. When the GitHub repository has no refs, the fetch step
+first pushes an empty first commit to the default branch. That push gets
+its token from the [git credential helper](#git-credentials), as every
+other git operation does. At each create and each resume, the Worker then
+runs the command of `workspaceStartupCommand`:
 
 1. It writes the org's startup script to `/run/conducting/startup.sh`, with
    mode 600.
@@ -146,8 +165,13 @@ The Worker's route is not wired to the machine hostname yet, as the
 
 ## Secrets
 
-- A build sandbox starts with no org env vars and no workspace token. So no
-  saved snapshot holds a secret of a workspace.
+- A build sandbox starts with no org env vars and no workspace token. It
+  gets only the folder variables, which hold no secret. So no saved
+  snapshot holds a secret of a workspace.
+- Only the Git command that copies a repository gets a read token for that
+  repository. The Worker revokes it before the build goes on, as
+  [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
+  says. The software step and the install script run only after that.
 - The archive URL can hold no user name, no password, and no query.
 - The workspace object keeps the env values and output chunks of a start
   only in encrypted form. Before it returns a start log, it masks the
@@ -172,8 +196,8 @@ a launcher that uses any other absolute path. It runs the launcher with
 
 - The Worker imports each file with Vite's `?raw` suffix. When you add a
   file here, also add it to `installImageSoftware` and to `install.sh`.
-- Keep each start script safe to run in a build sandbox, which has no
-  workspace variables.
+- Keep each start script safe to run in a build sandbox. Of the variables
+  in the table, a build sandbox has only the folder variables.
 
 ### Key Code
 

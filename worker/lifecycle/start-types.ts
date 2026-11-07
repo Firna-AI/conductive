@@ -1,6 +1,8 @@
 import type { User } from '../../src/shared/api'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { MaskedStartLog } from './masked-start-log'
+import type { ProvisionedWorkspace } from './workspace-response'
+import type { RepositoryLocation } from './repository-locations'
 
 export interface WorkspaceStartJob {
   workspaceId: string
@@ -10,6 +12,7 @@ export interface WorkspaceStartJob {
   startupScript: string
   environmentCiphertext: string | null
   defaultBranch: string
+  repositoryLocations?: readonly RepositoryLocation[]
   turnId: string
   attempt: string
   phase: 'records' | 'machine' | 'ready' | 'fetch' | 'branch' | 'startup'
@@ -39,6 +42,10 @@ export type WorkspaceStartResult<Log = MaskedStartLog> =
   | { ok: true }
   | { ok: false; error: { code: string; message: string; log: Log | null } }
 
+export type WorkspaceCreationAdmission =
+  | { ok: true; created: ProvisionedWorkspace }
+  | Extract<WorkspaceStartResult<null>, { ok: false }>
+
 export interface CreationPublication {
   workspaceId: string
   state: 'succeeded' | 'failed'
@@ -52,6 +59,8 @@ export interface StartJobStorage {
   update(job: WorkspaceStartJob): Promise<void>
   result(): Promise<WorkspaceStartResult | undefined>
   creationResult(): Promise<WorkspaceStartResult | undefined>
+  admission(): Promise<WorkspaceCreationAdmission | undefined>
+  admit(created: ProvisionedWorkspace): Promise<void>
   publication(): Promise<CreationPublication | undefined>
   clearPublication(): Promise<void>
   complete(result: WorkspaceStartResult): Promise<void>

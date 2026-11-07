@@ -2,10 +2,6 @@ export function shellQuote(value: string): string {
   return `'${value.replaceAll("'", "'\"'\"'")}'`
 }
 
-export function repositoryDirectory(id: string): string {
-  return `/home/user/conducting/repositories/${encodeURIComponent(id)}`
-}
-
 export function writeFileCommand(
   path: string,
   text: string,

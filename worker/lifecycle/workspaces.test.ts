@@ -6,7 +6,7 @@ import { setupBackendTests } from './backend-test-hooks'
 import { retrySandboxCleanup } from './cleanup'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { orgEnvironmentContext } from './settings-data'
-import { createWorkspace } from './workspaces'
+import { createCompletedWorkspace } from './completed-creation-test-support'
 import { resumeWorkspace } from './workspace-resume'
 
 const backendFixture = setupBackendTests()
@@ -36,7 +36,7 @@ it('removes a failed create and its token while retaining the draft and cleanup 
       firstMessage: structuredClone(FIRST_MESSAGE),
     }
     await expect(
-      fixture.run(() => createWorkspace(runtime, org.id, user, input)),
+      fixture.run(() => createCompletedWorkspace(runtime, org.id, user, input)),
     ).rejects.toMatchObject({ code: 'workspace_cleanup_pending' })
     expect(input.firstMessage).toEqual(FIRST_MESSAGE)
     expect(boat.starts[1]).toEqual(boat.starts[0])
@@ -85,10 +85,10 @@ it('removes a failed create and its token while retaining the draft and cleanup 
     ).toBe(0)
     boat.commandExitCode = 0
     const created = await fixture.run(() =>
-      createWorkspace(runtime, org.id, user, input),
+      createCompletedWorkspace(runtime, org.id, user, input),
     )
     const retry = await fixture.run(() =>
-      createWorkspace(runtime, org.id, user, input),
+      createCompletedWorkspace(runtime, org.id, user, input),
     )
     expect(retry.workspace.id).toBe(created.workspace.id)
     expect(created.workspace.branch).toMatch(/^octocat\/[a-z]+-[a-z0-9]{4}$/)
@@ -135,7 +135,7 @@ it('resumes the same disk and retries a failed startup on its already running ma
       .bind(ciphertext, org.id)
       .run()
     const created = await fixture.run(() =>
-      createWorkspace(runtime, org.id, user, {
+      createCompletedWorkspace(runtime, org.id, user, {
         repositoryId: fixture.repositoryId,
         firstMessage: FIRST_MESSAGE,
       }),

@@ -70,3 +70,25 @@ export async function installationToken(
   }
   return value.token
 }
+
+/** GitHub uses 401 for invalid credentials. Other failures retain revocation ownership. */
+export async function revokeInstallationToken(
+  fetch: HttpFetch,
+  token: string,
+): Promise<void> {
+  const response = await fetch(
+    new Request('https://api.github.com/installation/token', {
+      method: 'DELETE',
+      redirect: 'manual',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2026-03-10',
+        'User-Agent': 'Conducting',
+      },
+    }),
+  )
+  await response.body?.cancel()
+  if (response.status !== 204 && response.status !== 401)
+    throw new Error('Installation access could not be revoked')
+}

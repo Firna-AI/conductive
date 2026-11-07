@@ -9,7 +9,7 @@ with the org's own Boat key.
 
 The root Worker does not call these handlers yet. `worker/routes.ts` has no
 lifecycle route, and `worker/application.ts` serves a stub on the machine
-hostname. Milestones 8i and 15i own the root route wiring.
+hostname. The composition root must add each route and wrapper below.
 
 ## Responsibilities
 
@@ -40,8 +40,9 @@ from [`runtime.ts`](runtime.ts). The caller gives three options:
 
 - `software`: the runner archive for each new build and refresh, as the
   [image README](../../image/README.md#the-runner-archive) says.
-- `acceptFirstMessage`: the hook of the chat backend. It stores the first
-  message of a new workspace and returns it.
+- `acceptFirstMessage`: the hook of the chat backend. It stores the queued
+  first message of a new workspace and returns it, after the admission and
+  for each repeat. So it must be idempotent for the message and session IDs.
 - `waitUntil`: the `waitUntil` of the Worker's execution context. A create
   gives it its work, so the work continues when the browser closes.
 
@@ -57,14 +58,21 @@ const response = await handleLifecycleRequest(request, context, runtime, {
 - A create needs a published org image and a repository that its build
   loaded. A change to the chosen repositories takes effect after the next
   successful build. A repeat of the same first message ID from the same
-  sender returns the same workspace.
-- A create or a resume queues its start with `queueLifecycleStart`, and
-  waits with `waitLifecycleStart`. The workspace object runs the start, so
-  a closed browser does not cancel it.
-- A failed create removes the workspace and its token records. The
-  workspace object keeps the sandbox cleanup until the delete succeeds. It
-  also keeps the first message as a hidden draft, which
-  `failedLifecycleCreation` finds for later recovery and org purge.
+  sender returns the same workspace, until that create fails.
+- A create or a resume queues its start with `queueLifecycleStart`. The
+  workspace object runs the start, so a closed browser does not cancel it.
+- A create waits only for its admission, with `waitCreationAdmission`.
+  Admission makes the workspace, its token, and the first message durable.
+  The sandbox can still be starting. `waitCreationLifecycle` waits for the
+  end of a create, and `waitLifecycleStart` for the end of a resume.
+- A failed create keeps the full first message, with its attachment IDs,
+  as a hidden draft, and records the sandbox cleanup. It then releases the
+  creation claim and publishes the failed `start.updated` and the error
+  `workspace.updated`. After that, it removes the workspace and its token
+  records. `failedLifecycleCreation` finds the draft for the event replay
+  and the org purge. Lifecycle cleanup leaves the attachments to their owner.
+- A retry gets a fresh workspace ID with the same first message ID. Its
+  start waits until the records of the failed attempt are gone.
 - Open and resume restart only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
@@ -99,8 +107,12 @@ The handler returns a fresh GitHub App user token of the sender, from
 `freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).
 It stores no token. A user without a stored GitHub token must sign in again.
 
-The route is not reachable until the root wiring adds it. Until then, the
-fetch step of a create cannot fetch a private repository.
+The composition root must route `MACHINE_PATHS.gitCredential` to this
+handler, and `IMAGE_SOURCE_CREDENTIAL_PATH` to `handleImageSourceCredential`
+in [`image-sources/credential.ts`](image-sources/credential.ts), on the
+machine hostname only, before any browser route, with the private error
+response wrapper. Until then, a create cannot fetch a private repository
+or push to an empty one, and a build cannot copy a repository.
 
 ### Workspace Durable Object
 
@@ -158,6 +170,12 @@ The `fetch` of the class opens the workspace event socket at
 `workspaceEventsPath` of `src/shared/events.ts`. Forward the browser's
 upgrade request without changes, because the object runs the browser gate
 itself. The socket sends the stored history first, then each new event.
+After a failed create removes its records, `failedCreationEvents` in
+[`failed-creation-events.ts`](failed-creation-events.ts) serves that path
+only to the sender of the first message, after the browser gate. It sends
+the stored public history once, with the `message.accepted` event of the
+first message, and then closes. The browser does not restore the composer
+from it yet. The owner of `src/app/` and `src/shell/` adds that recovery.
 
 `WorkspaceEventJournal` in [`durable-journal.ts`](durable-journal.ts) keeps
 ordered lifecycle publication and suppresses unchanged updates. The
@@ -175,8 +193,7 @@ D1 stores the step, output offsets, and log. Each row holds at most
 256 KiB of UTF-8 text, split between complete characters.
 
 - A build sandbox starts from the current org image, or as a new default
-  sandbox for the first build. It gets no org env vars and no workspace
-  token.
+  sandbox for the first build. Its env holds only the folder variables.
 - A build loads the chosen repositories, installs the image software, runs
   the install script with Bash, and saves a snapshot. A refresh only loads
   the repositories of the current image again, and saves a snapshot.
@@ -188,18 +205,9 @@ D1 stores the step, output offsets, and log. Each row holds at most
 - Cleanup waits for a lease before it deletes an old snapshot. D1 keeps
   deferred cleanup. A ready sandbox, a workspace delete, or a claim that
   leaves the pending state releases the lease.
-
-`createGitHubImageSourceMaterializer` in
-[`image-sources/materialize.ts`](image-sources/materialize.ts) loads the
-repositories, as the required `prepareSources` of `ImageRuntime`. The
-Worker signs a GitHub App JWT with `GITHUB_APP_PRIVATE_KEY` and
-`GITHUB_CLIENT_ID`. It gets an installation token that can only read one
-repository. It fetches the default branch over Git's HTTP protocol, with
-each tag that the branch reaches. Only the Git pack bytes and the ref data
-reach the build sandbox, and no GitHub credential does.
-
-Each failure of that loader gives one fixed error, because Boat output and
-Git errors can hold a credential.
+- The composition root must pass the Members lifecycle hooks through
+  `withImageSourceCleanup(env, fetch, hooks)` from `image-sources/members.ts`,
+  as the [source loader](repository-layout.md#the-source-loader) says.
 
 `refreshImagesForPush` in [`image-timers.ts`](image-timers.ts) starts a
 refresh for each org whose current image holds the pushed repository. It
@@ -218,7 +226,7 @@ The lifecycle code reads `LifecycleEnvironment` from
 | Name | Value |
 | --- | --- |
 | `WORKSPACES` | The Durable Object binding in `wrangler.jsonc`. |
-| `MACHINE_ORIGIN` | The `https://` origin of the machine hostname. Each sandbox gets it as `CONDUCTING_MACHINE_ORIGIN`. The git credential route refuses every request without it. |
+| `MACHINE_ORIGIN` | The `https://` origin of the machine hostname. Each sandbox gets it as `CONDUCTING_MACHINE_ORIGIN`. Both credential routes refuse every request without it, and a build cannot copy a repository. |
 | `GITHUB_APP_PRIVATE_KEY` | The GitHub App's private key, as PEM. A build or refresh needs it when the org chose a repository. The PEM file from GitHub works as it is. |
 
 `BOAT_KEY_ENCRYPTION_KEY` also encrypts the workspace tokens.
@@ -232,11 +240,6 @@ this folder, where the tests can reach it.
 
 D1 holds the workspace, token, build, and log records. The storage of each
 object holds the lifecycle state, the turn records, and the events.
-
-`image-sources/local-materialize.test.ts` runs the production source loader
-with local Git, `/bin/sh`, and fake GitHub requests. Its provider maps the
-sandbox home to a temporary folder under `.context/`. It refuses each
-command that still holds the production home path.
 
 ### Key Code
 
@@ -273,12 +276,9 @@ command that still holds the production home path.
 - [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
   `runImageAlarm`.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
-- [`image-sources/materialize.ts`](image-sources/materialize.ts):
-  `createGitHubImageSourceMaterializer`.
 - [`image-software.ts`](image-software.ts): the runner archive check and
   install/start commands. [`savedScriptCommand`](saved-script.ts) runs Bash.
-- [`commands.ts`](commands.ts): `repositoryDirectory`, the repository folder
-  in a sandbox.
+- [Repository layout](repository-layout.md#key-code): the repository entries.
 - [`tokens.ts`](tokens.ts): the encrypted workspace token and
   `authenticateWorkspaceToken`.
 - [`runtime.ts`](runtime.ts): `LifecycleEnvironment`, `workspaceRuntime`,

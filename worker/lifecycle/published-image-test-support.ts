@@ -1,6 +1,10 @@
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type { ImageSoftwareArtifact } from './image-software'
 import type { SelectedRepository } from './settings-data'
+import {
+  repositoryLocations,
+  type RepositoryLocation,
+} from './repository-locations'
 
 /** Fixtures use a complete published record, as production image publication does. */
 export async function seedPublishedImage(
@@ -12,6 +16,7 @@ export async function seedPublishedImage(
     repositories: readonly SelectedRepository[]
     software: ImageSoftwareArtifact
     now: number
+    locations?: readonly RepositoryLocation[] | null
   },
 ): Promise<void> {
   await db.batch([
@@ -32,13 +37,18 @@ export async function seedPublishedImage(
     db
       .prepare(
         `INSERT INTO image_build_jobs
-       (build_id, phase, install_script, repositories_json, software_json)
-       VALUES (?, 'done', '', ?, ?)`,
+       (build_id, phase, install_script, repositories_json, software_json, repository_locations_json)
+       VALUES (?, 'done', '', ?, ?, ?)`,
       )
       .bind(
         input.buildId,
         JSON.stringify(input.repositories),
         JSON.stringify(input.software),
+        input.locations === null
+          ? null
+          : JSON.stringify(
+              input.locations ?? repositoryLocations(input.repositories),
+            ),
       ),
     db
       .prepare(

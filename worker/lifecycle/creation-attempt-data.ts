@@ -52,3 +52,26 @@ export async function markCreationFailed(
     .bind(workspaceId)
     .run()
 }
+
+/** A fresh actor waits for the failed actor's public-row deletion after publication. */
+export async function previousFailedCreation(
+  db: D1Database,
+  input: {
+    orgId: string
+    senderUserId: string
+    messageId: string
+    workspaceId: string
+  },
+): Promise<boolean> {
+  return Boolean(
+    await db
+      .prepare(
+        `SELECT r.workspace_id FROM workspace_runtime r
+    JOIN workspace_creation_attempts a ON a.workspace_id = r.workspace_id
+    WHERE r.org_id = ? AND r.created_by_user_id = ? AND r.first_message_id = ?
+      AND r.workspace_id != ? AND a.state = 'failed' LIMIT 1`,
+      )
+      .bind(input.orgId, input.senderUserId, input.messageId, input.workspaceId)
+      .first(),
+  )
+}

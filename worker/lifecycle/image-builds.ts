@@ -5,6 +5,7 @@ import { HttpError } from '../http'
 import { lifecycleProvider } from './lifecycle-provider'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
+import { cleanupBuildImageSources } from './image-sources/cleanup'
 import { requireOrgMember } from './access'
 import {
   assignBuildSandbox,
@@ -16,7 +17,6 @@ import {
   readBuildJob,
   runningBuild,
   updateBuildJob,
-  writeBuildLog,
 } from './build-data'
 import { advanceBuildCommand, cleanupBuild } from './build-execution'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
@@ -28,6 +28,13 @@ import {
   selectedRepositories,
   type SelectedRepository,
 } from './settings-data'
+import {
+  capturedRepositoryLocations,
+  repositoryLocations,
+  repositoryEnvironment,
+  readRepositoryLocations,
+  type RepositoryLocation,
+} from './repository-locations'
 
 export interface ImageScheduler {
   schedule(
@@ -44,8 +51,10 @@ export type PrepareImageSources = (input: {
   buildId: string
   sandboxId: string
   repositories: readonly SelectedRepository[]
+  repositoryLocations?: readonly RepositoryLocation[]
+  previousRepositoryLocations?: readonly RepositoryLocation[]
   provider: SandboxProvider
-}) => Promise<void>
+}) => Promise<boolean | void>
 
 export interface ImageRuntime {
   env: AppEnv
@@ -84,15 +93,26 @@ export async function startImageBuild(
       'image_required',
       'Build the cloud computer image first.',
     )
+  const previous = settings.imageBuildId
+    ? await readBuildJob(env.DB, input.orgId, settings.imageBuildId)
+    : null
+  const previousRepositories = previous
+    ? readRepositories(JSON.parse(previous.repositoriesJson))
+    : []
+  const previousLocations = previous
+    ? capturedRepositoryLocations(
+        previous.repositoryLocationsJson,
+        previousRepositories,
+      )
+    : []
   const repositories =
-    input.kind === 'refresh' && settings.imageBuildId
-      ? readRepositories(
-          JSON.parse(
-            (await readBuildJob(env.DB, input.orgId, settings.imageBuildId))
-              .repositoriesJson,
-          ),
-        )
+    input.kind === 'refresh' && previous
+      ? previousRepositories
       : await selectedRepositories(env.DB, input.orgId)
+  const locations =
+    input.kind === 'refresh' && previous
+      ? previousLocations
+      : repositoryLocations(repositories)
   const id = dependencies.randomToken()
   const now = dependencies.now()
   try {
@@ -102,12 +122,13 @@ export async function startImageBuild(
       userId: input.userId,
       kind: input.kind,
       settingsRevision:
-        input.kind === 'refresh' && settings.imageBuildId
-          ? (await readBuildJob(env.DB, input.orgId, settings.imageBuildId))
-              .settingsRevision
+        input.kind === 'refresh' && previous
+          ? previous.settingsRevision
           : settings.revision,
       installScript: settings.installScript,
       repositories,
+      repositoryLocations: locations,
+      previousRepositoryLocations: previousLocations,
       software,
       previousImageName: settings.imageName,
       now,
@@ -146,6 +167,11 @@ export async function advanceImageBuild(
   let job = await readBuildJob(env.DB, orgId, buildId)
   let provider: SandboxProvider | undefined
   try {
+    if (
+      (job.phase === 'cleanup' || job.state !== 'running') &&
+      !(await cleanupBuildImageSources(env, dependencies.fetch, buildId))
+    )
+      return false
     const admin = await firstOrgAdmin(env.DB, orgId)
     if (!admin)
       throw new HttpError(404, 'org_not_found', 'The org is not available.')
@@ -161,7 +187,12 @@ export async function advanceImageBuild(
       const sandbox = await provider.create({
         snapshotName: job.previousImageName ?? undefined,
         name: `image-${job.buildId}`,
-        env: {},
+        env: repositoryEnvironment(
+          capturedRepositoryLocations(
+            job.repositoryLocationsJson,
+            readRepositories(JSON.parse(job.repositoriesJson)),
+          ),
+        ),
         ttlSeconds: 1_800,
         idempotencyKey: `image-${job.buildId}`,
         labels: { org: orgId, build: buildId },
@@ -194,19 +225,24 @@ export async function advanceImageBuild(
       return await cleanupBuild(runtime, provider, job)
     }
     if (job.phase === 'sources') {
-      await writeBuildLog(
-        env.DB,
-        buildId,
-        'Updating the repositories.\n',
-        dependencies.now(),
-      )
-      await runtime.prepareSources({
+      const prepared = await runtime.prepareSources({
         orgId,
         buildId,
         sandboxId: job.sandboxId,
         repositories: readRepositories(JSON.parse(job.repositoriesJson)),
+        repositoryLocations: capturedRepositoryLocations(
+          job.repositoryLocationsJson,
+          readRepositories(JSON.parse(job.repositoriesJson)),
+        ),
+        previousRepositoryLocations:
+          job.previousRepositoryLocationsJson === null
+            ? undefined
+            : readRepositoryLocations(
+                JSON.parse(job.previousRepositoryLocationsJson),
+              ),
         provider,
       })
+      if (prepared === false) return false
       await updateBuildJob(
         env.DB,
         buildId,
@@ -236,6 +272,8 @@ export async function advanceImageBuild(
         : 'The cloud computer image could not build. Check the log and try again.'
     await failBuild(env.DB, buildId, message, dependencies.now())
     await updateBuildJob(env.DB, buildId, 'cleanup')
+    if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))
+      return false
     if (!provider) {
       if (job.sandboxId) return false
       await updateBuildJob(env.DB, buildId, 'done')

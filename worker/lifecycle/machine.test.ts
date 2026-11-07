@@ -8,7 +8,7 @@ import { setupBackendTests } from './backend-test-hooks'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { handleGitCredential } from './machine'
 import { readWorkspaceToken } from './tokens'
-import { createWorkspace } from './workspaces'
+import { createCompletedWorkspace } from './completed-creation-test-support'
 
 const backendFixture = setupBackendTests()
 
@@ -17,7 +17,7 @@ it('returns the trusted sender token without reading a large request body', asyn
   try {
     const { runtime, org, user } = fixture
     const created = await fixture.run(() =>
-      createWorkspace(runtime, org.id, user, {
+      createCompletedWorkspace(runtime, org.id, user, {
         repositoryId: fixture.repositoryId,
         firstMessage: FIRST_MESSAGE,
       }),
@@ -84,7 +84,7 @@ it('gets the trusted turn sender token afresh for concurrent sessions and reject
       githubLogin: 'teammate',
     }
     const created = await fixture.run(() =>
-      createWorkspace(
+      createCompletedWorkspace(
         runtime,
         org.id,
         user,

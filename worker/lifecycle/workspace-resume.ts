@@ -7,6 +7,7 @@ import { readWorkspace } from './workspace-data'
 import { workspaceResponse } from './workspace-response'
 import { WorkspaceStartError } from './workspace-start'
 import type { WorkspaceRuntime } from './workspace-runtime'
+import { workspaceRepositoryLocations } from './repository-location-data'
 
 export async function resumeWorkspace(
   runtime: WorkspaceRuntime,
@@ -39,6 +40,10 @@ export async function resumeWorkspace(
     startupScript: settings.startupScript,
     environmentCiphertext: settings.envVarsCiphertext,
     defaultBranch: repository.defaultBranch,
+    repositoryLocations: await workspaceRepositoryLocations(
+      env.DB,
+      workspaceId,
+    ),
     turnId: row.firstTurnId,
     attempt: `resume-${workspaceId}-${dependencies.randomToken()}`,
     phase: 'machine',

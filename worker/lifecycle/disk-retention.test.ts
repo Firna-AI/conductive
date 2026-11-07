@@ -4,7 +4,7 @@ import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { readRetention } from './retention-data'
-import { createWorkspace } from './workspaces'
+import { createCompletedWorkspace } from './completed-creation-test-support'
 import { openWorkspace } from './workspace-resume'
 import { reconcileWorkspaceSandbox } from './workspace-actions'
 
@@ -15,7 +15,7 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
   try {
     const { runtime, org, user, boat } = fixture
     const created = await fixture.run(() =>
-      createWorkspace(runtime, org.id, user, {
+      createCompletedWorkspace(runtime, org.id, user, {
         repositoryId: fixture.repositoryId,
         firstMessage: FIRST_MESSAGE,
       }),
@@ -94,7 +94,7 @@ it('ends failed maintenance and refuses destructive resume of a normal errored w
   try {
     const { runtime, org, user, boat } = fixture
     const created = await fixture.run(() =>
-      createWorkspace(runtime, org.id, user, {
+      createCompletedWorkspace(runtime, org.id, user, {
         repositoryId: fixture.repositoryId,
         firstMessage: FIRST_MESSAGE,
       }),

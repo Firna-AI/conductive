@@ -6,13 +6,15 @@ import { leasedCreationImage } from './image-leases'
 import { ensureWorkspaceToken } from './tokens'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { WorkspaceStartJob } from './start-types'
+import { previousFailedCreation } from './creation-attempt-data'
+import { workspaceRepositoryLocations } from './repository-location-data'
 
 export async function prepareWorkspaceRecords(
   env: AppEnv,
   dependencies: AppDependencies,
   endpoint: WorkspaceLifecycleEndpoint,
   job: WorkspaceStartJob,
-): Promise<string> {
+): Promise<string | null> {
   const creation = job.creation
   if (!creation || job.kind !== 'create')
     throw new HttpError(
@@ -22,6 +24,15 @@ export async function prepareWorkspaceRecords(
     )
   await requireOrgMember(env.DB, job.orgId, creation.user.id)
   await requireOrgMember(env.DB, job.orgId, creation.sender.id)
+  if (
+    await previousFailedCreation(env.DB, {
+      orgId: job.orgId,
+      senderUserId: creation.sender.id,
+      messageId: creation.request.id,
+      workspaceId: job.workspaceId,
+    })
+  )
+    return null
   const image = await leasedCreationImage(
     env.DB,
     job.orgId,
@@ -43,8 +54,13 @@ export async function prepareWorkspaceRecords(
       turnId: job.turnId,
       message: creation.request,
       now: creation.createdAt,
+      repositoryLocations: job.repositoryLocations,
     })
   }
+  job.repositoryLocations ??= await workspaceRepositoryLocations(
+    env.DB,
+    job.workspaceId,
+  )
   await ensureWorkspaceToken(
     env,
     job.workspaceId,

@@ -66,6 +66,9 @@ export function createWorkspaceController(
     waitCreationLifecycle() {
       return starts.waitCreation()
     },
+    waitCreationAdmission() {
+      return starts.waitAdmission()
+    },
     readCreationLifecycleResult() {
       return starts.creationResult()
     },

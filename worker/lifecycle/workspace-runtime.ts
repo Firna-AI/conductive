@@ -5,7 +5,11 @@ import type { AppDependencies, AppEnv } from '../env'
 import type { DurableLifecycleState } from './durable-types'
 import type { FailedCreationDraft } from './failed-creations'
 import type { MaskedStartLog } from './masked-start-log'
-import type { WorkspaceStartJob, WorkspaceStartResult } from './start-types'
+import type {
+  WorkspaceStartJob,
+  WorkspaceStartResult,
+  WorkspaceCreationAdmission,
+} from './start-types'
 
 export interface PendingTurn {
   turnId: string
@@ -43,6 +47,7 @@ export interface WorkspaceLifecycleEndpoint {
   queueLifecycleStart(job: WorkspaceStartJob): Promise<boolean>
   waitLifecycleStart(): Promise<WorkspaceStartResult>
   waitCreationLifecycle(): Promise<WorkspaceStartResult>
+  waitCreationAdmission(): Promise<WorkspaceCreationAdmission>
   readCreationLifecycleResult(): Promise<WorkspaceStartResult | undefined>
   readLifecycleStartLog(): Promise<MaskedStartLog>
   retainLifecycleFailedCreation(

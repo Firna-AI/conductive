@@ -3,6 +3,7 @@ import type { SendMessageRequest } from '../../src/shared/messages'
 import type { Workspace, WorkspaceState } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
 import { leasedImage } from './image-leases'
+import type { RepositoryLocation } from './repository-locations'
 
 export interface WorkspaceRow {
   id: string
@@ -94,6 +95,7 @@ export async function insertWorkspace(
     turnId: string
     message: SendMessageRequest
     now: number
+    repositoryLocations?: readonly RepositoryLocation[]
   },
 ): Promise<string> {
   if (!input.sectionId) {
@@ -138,8 +140,8 @@ export async function insertWorkspace(
       ),
     db
       .prepare(
-        `INSERT INTO workspace_runtime (workspace_id, org_id, created_by_user_id, session_id, first_turn_id, agent, model, effort, first_message_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO workspace_runtime (workspace_id, org_id, created_by_user_id, session_id, first_turn_id, agent, model, effort, first_message_id, repository_locations_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         input.id,
@@ -151,6 +153,9 @@ export async function insertWorkspace(
         input.message.choice.model,
         input.message.choice.effort,
         input.message.id,
+        input.repositoryLocations
+          ? JSON.stringify(input.repositoryLocations)
+          : null,
       ),
   ])
   return leasedImage(db, input.orgId, input.id)
@@ -187,10 +192,16 @@ export async function deleteProvisionalWorkspace(
   orgId: string,
   workspaceId: string,
 ): Promise<void> {
-  await db
-    .prepare('DELETE FROM workspaces WHERE id = ? AND org_id = ?')
-    .bind(workspaceId, orgId)
-    .run()
+  await db.batch([
+    db
+      .prepare('DELETE FROM workspaces WHERE id = ? AND org_id = ?')
+      .bind(workspaceId, orgId),
+    db
+      .prepare(
+        "UPDATE workspace_creation_attempts SET state = 'failed' WHERE workspace_id = ? AND org_id = ?",
+      )
+      .bind(workspaceId, orgId),
+  ])
 }
 
 export async function persistLifecycleState(

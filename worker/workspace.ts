@@ -23,6 +23,7 @@ import {
 import { createWorkspaceController } from './lifecycle/workspace-controller'
 import type { WorkspaceController } from './lifecycle/workspace-controller-types'
 import { nativeWorkspacePlatform } from './lifecycle/workspace-platform'
+import { failedCreationEvents } from './lifecycle/failed-creation-events'
 
 export class Workspace
   extends DurableObject<LifecycleEnvironment>
@@ -65,6 +66,9 @@ export class Workspace
       await this.controller.waitCreationLifecycle(),
       () => this.readLifecycleStartLog(),
     )
+  }
+  async waitCreationAdmission() {
+    return this.controller.waitCreationAdmission()
   }
   async readCreationLifecycleResult() {
     const result = await this.controller.readCreationLifecycleResult()
@@ -178,6 +182,19 @@ export class Workspace
   }
 
   async fetch(request: Request): Promise<Response> {
-    return this.chat.fetch(request)
+    const response = await this.chat.fetch(request)
+    if (response.status !== 404) return response
+    return (
+      (await failedCreationEvents(
+        request,
+        this.env,
+        this.controller,
+        (id) => this.env.WORKSPACES.idFromName(id).equals(this.ctx.id),
+        (id, after) =>
+          this.chat.store.run(() =>
+            this.chat.store.read(id, (view) => view.history(after)),
+          ),
+      )) ?? response
+    )
   }
 }

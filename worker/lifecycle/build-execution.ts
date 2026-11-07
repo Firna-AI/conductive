@@ -13,6 +13,7 @@ import { imageIsLeased } from './image-leases'
 import { scheduleIdleImage } from './image-schedule'
 import type { ImageRuntime } from './image-builds'
 import { deleteSandboxIfPresent, deleteSnapshotIfPresent } from './cleanup'
+import { cleanupBuildImageSources } from './image-sources/cleanup'
 
 export async function advanceBuildCommand(
   runtime: ImageRuntime,
@@ -26,7 +27,7 @@ export async function advanceBuildCommand(
     if (job.phase === 'software')
       command = installImageSoftware(jobSoftware(job))
     else
-      command = `set -eu\n${savedScriptCommand('/tmp/conducting-install.sh', job.installScript)}\nrm -f /tmp/conducting-install.sh`
+      command = `set -eu\n${savedScriptCommand('/tmp/conducting-install.sh', job.installScript, ['set -a', '. /run/ascii-secrets/env.sh', 'set +a'])}\nrm -f /tmp/conducting-install.sh`
     await writeBuildLog(
       runtime.env.DB,
       job.buildId,
@@ -65,6 +66,14 @@ export async function cleanupBuild(
   provider: SandboxProvider,
   job: BuildJob,
 ): Promise<boolean> {
+  if (
+    !(await cleanupBuildImageSources(
+      runtime.env,
+      runtime.dependencies.fetch,
+      job.buildId,
+    ))
+  )
+    return false
   if (job.sandboxId) {
     await deleteSandboxIfPresent(provider, job.sandboxId)
     await runtime.env.DB.prepare(

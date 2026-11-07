@@ -3,16 +3,61 @@ import { BoatClient } from '../sandbox/boat'
 import { ProviderError } from '../sandbox/errors'
 import { GitHubClient } from '../security/github'
 import { refreshGitHubTokens } from '../security/github-refresh'
-import { gitRequest } from './image-sources/git-http'
 import { installationToken } from './image-sources/github-app'
 import { HttpError } from '../http'
 import type { LifecycleEnvironment } from './runtime'
 import type { WorkspaceStartJob } from './start-types'
 import { START_JOB_KEY } from './start-storage'
 import { IDLE_MS } from './durable-types'
+import { ChatStore } from '../chat/store'
+import type { FirstWorkspaceMessage } from './workspace-runtime'
+import type { UserMessage } from '../../src/shared/messages'
 
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
+  async acceptFirstFixtureMessage(
+    first: FirstWorkspaceMessage,
+  ): Promise<UserMessage> {
+    const store = new ChatStore(this.ctx.storage, Date.now)
+    return store.run(() =>
+      store.change(
+        first.workspaceId,
+        async (transaction) => {
+          const stored = await transaction.message(first.request.id)
+          if (stored) return stored
+          const message: UserMessage = {
+            id: first.request.id,
+            sessionId: first.sessionId,
+            sender: first.sender,
+            text: first.request.text,
+            attachments: first.request.attachmentIds.map((id) => ({
+              id,
+              name: `${id}.txt`,
+              kind: 'file',
+              mediaType: 'text/plain',
+              sizeBytes: 7,
+            })),
+            choice: first.request.choice,
+            createdAt: Date.now(),
+            state: 'queued',
+          }
+          await transaction.saveSession({
+            id: first.sessionId,
+            workspaceId: first.workspaceId,
+            title: 'Session',
+            choice: message.choice,
+            createdAt: message.createdAt,
+            closedAt: null,
+            activeTurnId: null,
+          })
+          await transaction.saveMessage(message)
+          await transaction.emit({ type: 'message.accepted', message })
+          return message
+        },
+        () => {},
+      ),
+    )
+  }
   async tick(): Promise<void> {
     await this.alarm()
   }
@@ -62,13 +107,6 @@ export default {
             now: Date.now,
           })
           break
-        case '/source':
-          await gitRequest(
-            send,
-            'https://github.com/example/source.git/info/refs?service=git-upload-pack',
-            'private-source-token',
-          )
-          break
         case '/installation': {
           const keys = await crypto.subtle.generateKey(
             {
@@ -99,11 +137,6 @@ export default {
         return Response.json({ error: error.kind, status: error.status })
       if (error instanceof HttpError)
         return Response.json({ error: error.code, status: error.status })
-      if (
-        error instanceof Error &&
-        error.message === 'GitHub source is not available'
-      )
-        return Response.json({ error: 'source_refused' })
       if (
         error instanceof Error &&
         error.message === 'Installation access is not available'

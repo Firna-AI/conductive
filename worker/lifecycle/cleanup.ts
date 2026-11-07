@@ -42,12 +42,18 @@ export async function retrySandboxCleanup(
     dependencies.fetch,
   )
   await deleteSandboxIfPresent(provider, cleanup.sandboxId)
-  await env.DB.prepare(
-    'DELETE FROM lifecycle_sandbox_cleanup WHERE workspace_id = ?',
-  )
+  await clearSandboxCleanup(env.DB, workspaceId)
+  return true
+}
+
+export async function clearSandboxCleanup(
+  db: D1Database,
+  workspaceId: string,
+): Promise<void> {
+  await db
+    .prepare('DELETE FROM lifecycle_sandbox_cleanup WHERE workspace_id = ?')
     .bind(workspaceId)
     .run()
-  return true
 }
 
 export async function deleteSandboxIfPresent(

@@ -14,6 +14,8 @@ export function backendPlatform(
 ) {
   const storage = new MemoryWorkspaceStorage()
   const events: WorkspaceEventPublication[] = []
+  let observer:
+    ((event: WorkspaceEventPublication) => Promise<void>) | undefined
   const platform: WorkspacePlatform = {
     storage,
     blockConcurrencyWhile: (operation) => operation(),
@@ -22,6 +24,7 @@ export function backendPlatform(
     },
     publish: async (event) => {
       events.push(structuredClone(event))
+      await observer?.(event)
     },
   }
   let controller: WorkspaceController = createWorkspaceController(
@@ -33,6 +36,11 @@ export function backendPlatform(
   return {
     storage,
     events,
+    observePublication: (
+      value: (event: WorkspaceEventPublication) => Promise<void>,
+    ) => {
+      observer = value
+    },
     endpoint: () => controller,
     restart: () => {
       controller = createWorkspaceController(env, dependencies, platform)

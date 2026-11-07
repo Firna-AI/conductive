@@ -2,7 +2,11 @@ import { providerState, type ProviderState } from './provider-state'
 import type { SandboxProvider } from '../sandbox/provider'
 import { WorkspaceStartError } from './workspace-start'
 import { DISK_KEEPALIVE_MS } from './durable-types'
-import { repositoryDirectory } from './commands'
+import {
+  repositoryEnvironment,
+  repositoryLocation,
+} from './repository-locations'
+import { workspaceRepositoryLocations } from './repository-location-data'
 import { workspaceStartupCommand } from './image-software'
 import { readImageSettings, workspaceEnvironment } from './settings-data'
 import { readWorkspaceToken } from './tokens'
@@ -45,14 +49,19 @@ export async function keepWorkspaceDisk(
     if (status === 'stopped') {
       const environment = await workspaceEnvironment(env, orgId)
       const token = await readWorkspaceToken(env, workspaceId)
+      const locations = await workspaceRepositoryLocations(env.DB, workspaceId)
       await provider.resume(
         sandboxId,
         {
           ...environment,
+          ...repositoryEnvironment(locations),
           WORKSPACE_TOKEN: token,
           CONDUCTING_WORKSPACE_ID: workspaceId,
           CONDUCTING_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
-          CONDUCTING_REPOSITORY_DIR: repositoryDirectory(row.repositoryId),
+          CONDUCTING_REPOSITORY_DIR: repositoryLocation(
+            locations,
+            row.repositoryId,
+          ),
           CONDUCTING_TURN_ID: '',
           CONDUCTING_DISK_KEEPALIVE: '1',
         },

@@ -1,5 +1,9 @@
 import { HttpError } from '../http'
 import { readRepositories, type SelectedRepository } from './settings-data'
+import {
+  capturedRepositoryLocations,
+  type RepositoryLocation,
+} from './repository-locations'
 
 /** The settings pointer and snapshot must identify one completed publication. */
 export const publishedImageSource = `FROM settings s
@@ -33,10 +37,12 @@ export async function readCreationImage(
   startupScript: string
   environmentCiphertext: string | null
   repository: SelectedRepository
+  repositoryLocations: RepositoryLocation[]
 }> {
   const image = await db
     .prepare(
       `SELECT b.snapshot_name AS imageName, j.repositories_json AS repositoriesJson,
+       j.repository_locations_json AS repositoryLocationsJson,
        s.startup_script AS startupScript, s.env_vars_ciphertext AS environmentCiphertext
        ${publishedImageSource} WHERE s.org_id = ?`,
     )
@@ -44,13 +50,22 @@ export async function readCreationImage(
     .first<{
       imageName: string
       repositoriesJson: string
+      repositoryLocationsJson: string | null
       startupScript: string
       environmentCiphertext: string | null
     }>()
   if (!image) throw imageAdmissionError('image_required')
-  const repository = readRepositories(JSON.parse(image.repositoriesJson)).find(
+  const repositories = readRepositories(JSON.parse(image.repositoriesJson))
+  const repository = repositories.find(
     (entry) => entry.id === repositoryId && entry.orgId === orgId,
   )
   if (!repository) throw imageAdmissionError('repository_not_found')
-  return { ...image, repository }
+  return {
+    ...image,
+    repository,
+    repositoryLocations: capturedRepositoryLocations(
+      image.repositoryLocationsJson,
+      repositories,
+    ),
+  }
 }

@@ -93,12 +93,8 @@ async function joinCreation(
   if (!job) throw new Error('Missing recorded creation plan')
   const endpoint = runtime.workspace(claim.id)
   await endpoint.queueLifecycleStart(job)
-  const result = await endpoint.waitCreationLifecycle()
+  const result = await endpoint.waitCreationAdmission()
   if (!result.ok)
     throw Object.assign(new WorkspaceStartError(result.error.log), result.error)
-  const state = await endpoint.readLifecycle()
-  return provisionedResponse(runtime, key.orgId, claim.id, sender, {
-    ...input,
-    firstMessage: state?.pendingFirstMessage ?? input.firstMessage,
-  })
+  return result.created
 }

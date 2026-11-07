@@ -64,7 +64,8 @@ it('starts and caches the terminal after startup at create and resume while rete
   expect((await endpoint.readLifecycle())?.startupPrepared).toBe(false)
   boat.commandRunning = false
   await coordinator.advance()
-  expect((await creation).workspace.state).toBe('ready')
+  expect((await creation).workspace.state).toBe('starting')
+  expect((await endpoint.readLifecycle())?.state).toBe('ready')
   expect(terminalStarts).toBe(1)
   expect(boat.fileReads).toEqual([`${TERMINAL_RUNTIME}/password`])
   expect(await terminalPassword(runtime.env, id, 'bx_1')).toBe('b'.repeat(64))

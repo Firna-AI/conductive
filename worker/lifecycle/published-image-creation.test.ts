@@ -9,7 +9,7 @@ import { advanceImageBuild } from './image-builds'
 import { leasedImage } from './image-leases'
 import { seedPublishedImage } from './published-image-test-support'
 import { orgEnvironmentContext } from './settings-data'
-import { createWorkspace } from './workspaces'
+import { createCompletedWorkspace } from './completed-creation-test-support'
 
 const fixtureForTest = setupBackendTests()
 
@@ -34,7 +34,7 @@ it('creates from captured image repositories while current settings and selectio
     ).bind('echo current-startup', ciphertext, org.id),
   ])
   const creation = fixture.run(() =>
-    createWorkspace(runtime, org.id, user, {
+    createCompletedWorkspace(runtime, org.id, user, {
       repositoryId,
       firstMessage: FIRST_MESSAGE,
     }),
@@ -54,7 +54,7 @@ it('creates from captured image repositories while current settings and selectio
     environmentCiphertext: ciphertext,
   })
   await expect(
-    createWorkspace(runtime, org.id, user, {
+    createCompletedWorkspace(runtime, org.id, user, {
       repositoryId: 'new-selection',
       firstMessage: { ...FIRST_MESSAGE, id: 'new-selection-message' },
     }),
@@ -65,7 +65,7 @@ it('creates from captured image repositories while current settings and selectio
     .bind(org.id)
     .run()
   await expect(
-    createWorkspace(runtime, org.id, user, {
+    createCompletedWorkspace(runtime, org.id, user, {
       repositoryId,
       firstMessage: { ...FIRST_MESSAGE, id: 'unpublished-message' },
     }),
@@ -118,7 +118,7 @@ it('leases the image and captured branch from the same publication at claim admi
   })
   const input = { repositoryId, firstMessage: FIRST_MESSAGE }
   const queued = fixture.nextQueued()
-  const pending = createWorkspace(runtime, org.id, user, input)
+  const pending = createCompletedWorkspace(runtime, org.id, user, input)
   void pending.catch(() => {})
   const id = await queued
   runtime.env.DB = db
@@ -154,7 +154,7 @@ it('leases the image and captured branch from the same publication at claim admi
     false,
   )
   expect(boat.deletedSnapshots).not.toContain('next-image')
-  const repeated = createWorkspace(runtime, org.id, user, input)
+  const repeated = createCompletedWorkspace(runtime, org.id, user, input)
   void repeated.catch(() => {})
   for (let step = 0; step < 15 && (await actor.job()); step++)
     await actor.advance()
@@ -184,7 +184,7 @@ it('releases a failed claim lease before records exist and allows a fresh retry'
     firstMessage: FIRST_MESSAGE,
   }
   const queued = fixture.nextQueued()
-  const failed = createWorkspace(runtime, org.id, user, input)
+  const failed = createCompletedWorkspace(runtime, org.id, user, input)
   void failed.catch(() => {})
   const id = await queued
   const actor = fixture.starts.get(id)
@@ -209,7 +209,7 @@ it('releases a failed claim lease before records exist and allows a fresh retry'
   ).toBe(0)
   expect((await fixture.failedCreation(id))?.request).toEqual(FIRST_MESSAGE)
   const retried = await fixture.run(() =>
-    createWorkspace(runtime, org.id, user, {
+    createCompletedWorkspace(runtime, org.id, user, {
       repositoryId,
       firstMessage: FIRST_MESSAGE,
     }),

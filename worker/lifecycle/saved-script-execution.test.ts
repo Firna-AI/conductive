@@ -13,7 +13,7 @@ import {
   SAVED_BASH_SCRIPT,
 } from './saved-script-test-support'
 import { stopWorkspaceSandbox } from './workspace-actions'
-import { createWorkspace } from './workspaces'
+import { createCompletedWorkspace } from './completed-creation-test-support'
 
 const backendFixture = setupBackendTests()
 
@@ -29,13 +29,15 @@ async function saveScripts(
 
 it('runs the saved image install script in Bash with its existing directory and no org environment', async () => {
   const fixture = await backendFixture()
-  const local = await localSavedScriptFixture(fixture.repositoryId)
+  const local = await localSavedScriptFixture(fixture.repositoryId, 'build')
   try {
     await saveScripts(fixture)
     const results: CommandResult[] = []
     fixture.boat.beforeCommand = async (command) => {
-      if (local.contains(command, 'install'))
+      if (local.contains(command, 'install')) {
+        await local.writeBuildEnvironment(fixture.boat.starts.at(-1)?.env)
         results.push(await local.run(command))
+      }
     }
     const id = await startImageBuild(fixture.images, {
       orgId: fixture.org.id,
@@ -73,7 +75,7 @@ it('runs saved workspace startup in Bash with the org environment before marking
         results.push(await local.run(command))
     }
     await fixture.run(() =>
-      createWorkspace(fixture.runtime, fixture.org.id, fixture.user, {
+      createCompletedWorkspace(fixture.runtime, fixture.org.id, fixture.user, {
         repositoryId: fixture.repositoryId,
         firstMessage: FIRST_MESSAGE,
       }),
@@ -99,11 +101,11 @@ it('runs saved workspace startup in Bash with the org environment before marking
 
 it('runs retention startup in Bash with its org environment without marking ready or restarting the runner', async () => {
   const fixture = await backendFixture()
-  const local = await localSavedScriptFixture(fixture.repositoryId, '1')
+  const local = await localSavedScriptFixture(fixture.repositoryId, 'retention')
   try {
     await saveScripts(fixture)
     const created = await fixture.run(() =>
-      createWorkspace(fixture.runtime, fixture.org.id, fixture.user, {
+      createCompletedWorkspace(fixture.runtime, fixture.org.id, fixture.user, {
         repositoryId: fixture.repositoryId,
         firstMessage: FIRST_MESSAGE,
       }),

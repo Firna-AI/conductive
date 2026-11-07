@@ -3,7 +3,9 @@ import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 
 import type { CommandResult } from '../sandbox/provider'
-import { repositoryDirectory, shellQuote } from './commands'
+import { isRecord } from '../http'
+import { shellQuote } from './commands'
+import { legacyRepositoryDirectory } from './repository-locations'
 
 export const SAVED_BASH_SCRIPT = [
   'set -euo pipefail',
@@ -22,7 +24,7 @@ type ScriptKind = keyof typeof scriptPaths
 /** Runs only known, harmless scripts inside an isolated temporary sandbox. */
 export async function localSavedScriptFixture(
   repositoryId: string,
-  diskKeepalive: '0' | '1' = '0',
+  mode: 'build' | 'workspace' | 'retention' = 'workspace',
 ) {
   const root = resolve(
     import.meta.dirname,
@@ -36,19 +38,22 @@ export async function localSavedScriptFixture(
   const runnerCalls = join(directory, 'runner-calls')
   const install = join(directory, 'install.sh')
   const mappedPaths = new Map([
-    [repositoryDirectory(repositoryId), repository],
+    [legacyRepositoryDirectory(repositoryId), repository],
     ['/run/conducting', runtime],
     ['/run/ascii-secrets/env.sh', environment],
     [scriptPaths.install, install],
+    ['/home/user/code', join(directory, 'code')],
   ])
   await mkdir(repository)
   await writeFile(
     environment,
-    [
-      `CONDUCTING_REPOSITORY_DIR=${shellQuote(repository)}`,
-      `CONDUCTING_DISK_KEEPALIVE=${shellQuote(diskKeepalive)}`,
-      `SAVED_TEXT='loaded value'`,
-    ].join('\n'),
+    mode === 'build'
+      ? ''
+      : [
+          `CONDUCTING_REPOSITORY_DIR=${shellQuote(repository)}`,
+          `CONDUCTING_DISK_KEEPALIVE=${shellQuote(mode === 'retention' ? '1' : '0')}`,
+          `SAVED_TEXT='loaded value'`,
+        ].join('\n'),
     { mode: 0o600 },
   )
   function mapPath(path: string): string {
@@ -70,6 +75,18 @@ export async function localSavedScriptFixture(
   return {
     directory,
     repository,
+    writeBuildEnvironment: async (values: unknown) => {
+      if (!isRecord(values)) throw new Error('Missing image environment')
+      const lines: string[] = []
+      for (const [name, value] of Object.entries(values)) {
+        if (typeof value !== 'string') throw new Error('Invalid image variable')
+        const mapped = value.startsWith('/home/user/') ? mapPath(value) : value
+        if (mapped.startsWith(`${directory}/`))
+          await mkdir(mapped, { recursive: true })
+        lines.push(`${name}=${shellQuote(mapped)}`)
+      }
+      await writeFile(environment, lines.join('\n'), { mode: 0o600 })
+    },
     contains: (command: string, kind: ScriptKind) =>
       command.includes(scriptPaths[kind]),
     run: async (command: string): Promise<CommandResult> => {

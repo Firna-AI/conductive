@@ -1,10 +1,6 @@
 import { mkdir, mkdtemp } from 'node:fs/promises'
 
-import {
-  Miniflare,
-  Response as RuntimeResponse,
-  type WebSocket,
-} from 'miniflare'
+import { Miniflare, Response as RuntimeResponse, WebSocket } from 'miniflare'
 import { build } from 'vite'
 
 import { workspaceEventsPath } from '../../src/shared/events'
@@ -194,7 +190,11 @@ export async function realRuntimeFixture(bundle: string) {
     actor: (id: string) => bindings.WORKSPACES.getByName(id),
     fetch: (path: string) =>
       runtime.dispatchFetch(`https://runtime.test${path}`),
-    openEvents: async (id: string, after = 0) => {
+    openEvents: async (
+      id: string,
+      after = 0,
+      headers: Record<string, string> = {},
+    ) => {
       const response = await runtime.dispatchFetch(
         `${env.APP_ORIGIN}${workspaceEventsPath('runtime-org', id, after)}`,
         {
@@ -202,6 +202,7 @@ export async function realRuntimeFixture(bundle: string) {
             Origin: env.APP_ORIGIN,
             Cookie: `${SESSION_COOKIE}=${sessionToken}`,
             Upgrade: 'websocket',
+            ...headers,
           },
         },
       )
@@ -210,8 +211,20 @@ export async function realRuntimeFixture(bundle: string) {
         throw new Error(`No browser socket. Status: ${response.status}`)
       const inbox = new SocketInbox(socket)
       sockets.add(socket)
+      const closed = new Promise<void>((resolve) => {
+        socket.addEventListener(
+          'close',
+          () => {
+            if (socket.readyState === WebSocket.READY_STATE_CLOSING)
+              socket.close(1000, 'Connection closed.')
+            sockets.delete(socket)
+            resolve()
+          },
+          { once: true },
+        )
+      })
       socket.accept()
-      return { response, inbox }
+      return { response, inbox, closed }
     },
     refuseRedirects: () => {
       redirects = true

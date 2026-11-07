@@ -14,6 +14,7 @@ const JOB = START_JOB_KEY
 export const START_RESULT_KEY = 'lifecycle:start-result'
 const RESULT = START_RESULT_KEY
 const CREATE_RESULT = 'lifecycle:create-result'
+export const CREATE_ADMISSION_KEY = 'lifecycle:create-admission'
 const PUBLICATION = 'lifecycle:create-publication'
 export const START_LOG_PREFIX = 'lifecycle:start-log:'
 const LOG = START_LOG_PREFIX
@@ -113,6 +114,13 @@ export function durableStartStorage(
     },
     result: () => storedResult(RESULT),
     creationResult: () => storedResult(CREATE_RESULT),
+    admission: () => storage.get('admission', CREATE_ADMISSION_KEY),
+    admit: async (created) => {
+      await storage.put('admission', CREATE_ADMISSION_KEY, {
+        ok: true,
+        created,
+      })
+    },
     publication: () => storage.get('publication', PUBLICATION),
     clearPublication: async () => {
       await storage.delete(PUBLICATION)
@@ -126,6 +134,11 @@ export function durableStartStorage(
           : { ...result, error: { ...result.error, log: null } }
         await transaction.put('result', RESULT, stored)
         if (current.kind === 'create') {
+          if (!(await transaction.get('admission', CREATE_ADMISSION_KEY))) {
+            if (stored.ok)
+              throw new Error('A create completed before admission')
+            await transaction.put('admission', CREATE_ADMISSION_KEY, stored)
+          }
           await transaction.put('result', CREATE_RESULT, stored)
           await transaction.put('publication', PUBLICATION, {
             workspaceId: current.workspaceId,

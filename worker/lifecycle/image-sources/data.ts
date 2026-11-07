@@ -1,4 +1,4 @@
-import type { SelectedRepository } from '../settings-data'
+import { readRepositories, type SelectedRepository } from '../settings-data'
 
 export interface SourceRepository extends SelectedRepository {
   githubRepositoryId: number
@@ -11,15 +11,18 @@ export async function authorizeImageBuilder(
   orgId: string,
   buildId: string,
   sandboxId: string,
-): Promise<void> {
+): Promise<SelectedRepository[]> {
   const build = await db
     .prepare(
-      `SELECT id FROM image_builds
-       WHERE id = ? AND org_id = ? AND sandbox_id = ? AND state = 'running'`,
+      `SELECT j.repositories_json AS repositoriesJson FROM image_builds b
+       JOIN image_build_jobs j ON j.build_id = b.id JOIN orgs o ON o.id = b.org_id
+       WHERE b.id = ? AND b.org_id = ? AND b.sandbox_id = ? AND b.state = 'running'
+       AND j.phase = 'sources' AND o.deleted_at IS NULL`,
     )
     .bind(buildId, orgId, sandboxId)
-    .first<{ id: string }>()
+    .first<{ repositoriesJson: string }>()
   if (!build) throw new Error('Image builder is not available')
+  return readRepositories(JSON.parse(build.repositoriesJson))
 }
 
 export async function readSourceRepository(
