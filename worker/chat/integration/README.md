@@ -6,7 +6,8 @@ A file name without a folder names a file in `worker/chat/`.
 
 `WorkspaceChat` takes `ChatDependencies` from `types.ts` as overrides.
 `Workspace` sets `matchesObject` and `runnerEventStored`. The latter starts
-device cleanup when a turn ends. A later handler must keep that call.
+device cleanup when a turn ends, including a refused turn end.
+A later handler must keep that call.
 The other hooks keep their defaults until their owners set them.
 
 Other features can add events to the same numbered history. The method

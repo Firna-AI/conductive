@@ -198,6 +198,8 @@ npm run typecheck
   each kind, and reads the requests and markers of the repair tests.
 - `late-events.test.ts` and `never-started.test.ts` cover replay after a
   workspace stop and the queued-turn eligibility rules.
+- `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
+  end. It also checks that late ends preserve the next turn and its commands.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,
   D1, and real WebSockets. `createAdapterRuntime` sets up that runtime.
 - It closes every socket before Miniflare evicts the real object. The
