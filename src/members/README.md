@@ -14,11 +14,8 @@ the `*.test.*` files.
 
 ## Development
 
-1. Give the local Worker `APP_ORIGIN=http://127.0.0.1:5173`, in `.dev.vars`
-   as the [root README](../../README.md#get-started) says. Without it the
-   Worker's `Origin` check refuses the module scripts of the page. Or start
-   the server with the value from the shell:
-   `CLOUDFLARE_INCLUDE_PROCESS_ENV=true APP_ORIGIN=http://127.0.0.1:5173 npm run dev`.
+1. Run `npm run dev`. The [root README](../../README.md#get-started) gives
+   the local setup.
 2. Open `http://127.0.0.1:5173/src/members/dev`. The assets server
    redirects `dev.html` to that address.
 

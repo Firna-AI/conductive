@@ -107,9 +107,8 @@ mounts it, and the production build leaves it out.
   The live events of a sample carry the same data as its replies.
 - Send gives a live `github.updated` event. With `github=error`, "Let GitHub
   answer" makes the next Try again succeed.
-- The local Worker refuses the module requests of each page until
-  `APP_ORIGIN` is `http://127.0.0.1:5173`. Set it in `.dev.vars`, as
-  [Get started](../../README.md#get-started) says.
+- The local Worker serves the page. [Get started](../../README.md#get-started)
+  gives its local setup.
 
 ## Key code
 

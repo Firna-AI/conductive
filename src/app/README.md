@@ -12,9 +12,8 @@ as features, as [Composition](#composition) says.
 - `npm run dev` serves the app at `http://127.0.0.1:5173` with the fake API
   of `src/test-support/`. Development only: `main.tsx` loads it behind
   `import.meta.env.DEV`, so the production build never bundles it.
-- The local Worker serves the page, so the ignored `.dev.vars` needs
-  `APP_ORIGIN="http://127.0.0.1:5173"`, as the
-  [Get started steps](../../README.md#get-started) say.
+- The local Worker serves the page. The
+  [Get started steps](../../README.md#get-started) give its local setup.
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
