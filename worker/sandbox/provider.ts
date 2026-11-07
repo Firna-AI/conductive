@@ -1,8 +1,3 @@
-export interface BoatAccount {
-  id: string
-  type: 'personal' | 'org'
-}
-
 export const SANDBOX_STATES = [
   'init',
   'provisioning',

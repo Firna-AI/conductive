@@ -10,7 +10,6 @@ export const devViews = [
   'general',
   'repositories',
   'computer',
-  'boat-key',
   'members',
   'deleted',
   'workspace',

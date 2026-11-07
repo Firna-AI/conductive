@@ -96,8 +96,8 @@ chat, and five tabs at the bottom.
   square, and ready is one bright cell on a faint green grid. A workspace
   whose agent waits for the user, such as for the approval of a command,
   shows Needs input: a middle column in the accent colour that pulses.
-- Copy says cloud computer or sandbox. Only the Boat key tab, the marketing
-  site, and Get started name Boat, from decision 47.
+- Copy says cloud computer or sandbox. No screen names Boat, also not the
+  marketing site or Get started.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no
@@ -123,7 +123,7 @@ chat, and five tabs at the bottom.
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
   frame of a picture on the marketing site.
-- On a phone the org settings put their five tabs in three columns, so every
+- On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its rename and close buttons.
 
@@ -133,20 +133,20 @@ chat, and five tabs at the bottom.
 | ------------------- | ----------------------------------------------------------------------------- |
 | `marketing`         | The home page of the site: the app, its features, and sign-up                 |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
-| `app/sign-in`       | The GitHub sign-in, and Get started, the only first run, in four steps        |
+| `app/sign-in`       | The GitHub sign-in, and Get started, the only first run, in three steps       |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, and with an error      |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted     |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn       |
-| `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, Boat key, Members |
+| `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
 | `app/chat`          | A finished turn, then running turns, lost data, and lost updates              |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
-| `app/composer`      | Attached files, the picker, another member's login, a missing agent or key    |
+| `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge                     |
@@ -237,10 +237,10 @@ plan limits.
 
 - An admin invites a person by email, from decision 78. An open invite shows
   its email, and a member row shows the GitHub login. The roles are admin and
-  member, from decision 54. Only an admin manages the members, adds the
-  Boat key, deletes the org, and reassigns a workspace. A member who is not
-  an admin sees the members and each workspace's owner without actions, and
-  no Boat key tab. "Owner" names only the person who owns a workspace.
+  member, from decision 54. Only an admin manages the members, deletes the
+  org, and reassigns a workspace. A member who is not an admin sees the
+  members and each workspace's owner without actions. "Owner" names only
+  the person who owns a workspace.
 - Only an admin renames the org, and changes the repositories, the scripts,
   and the env vars, from decisions 54 and 57. A member sees the General,
   Repositories, and Cloud computer tabs read-only: the values, without edit
@@ -283,32 +283,21 @@ plan limits.
 - Three orgs show: Acme, Firna, the first org of the sign-up, and Acme Labs,
   which Create org makes. The parts live in `src/components/members/`.
 
-## Keys and logins
+## Logins
 
-- Each org has one Boat key, which runs all its cloud computers, from
-  decision 46. The Boat key tab of the org settings names Boat, links to the
-  Boat sign-up and dashboard, and asks for a key with custom actions,
-  limited to one environment. It lists the actions in one block to copy,
-  because Boat's `ci` preset deletes only the sandboxes of its own key. It shows only the last four characters of a
-  saved key. It draws a key that failed its test, and a key of another Boat
-  account, which it refuses while it keeps the saved key, from decision 56.
-  The tab label also names Boat on the other settings pages, because it
-  leads to the key screen, and a move to another provider renames both.
-  The parts live in `src/components/settings/BoatKey.tsx` and
-  `BoatKeyTab.tsx`.
+- The app runs every cloud computer in its own account. So no org has a
+  key for its cloud computers, and no screen asks for one or for another
+  account.
 - The account connects Claude with a subscription token from
   `claude setup-token` or an API key, and Codex with an OpenAI API key.
   `AgentConnectForm` opens under the row of the agent. A connected login
   shows its kind and Remove.
-- Get started has four steps: install the GitHub App, create the first
-  org, add its Boat key, and connect Claude or Codex, from decision 33. The
-  next step opens its form. Get started and the marketing site say that
-  users need their own Boat account.
+- Get started has three steps: install the GitHub App, create the first
+  org, and connect Claude or Codex, from decision 33. The next step opens
+  its form.
 - The composer shows a notice when the agent of the chosen model is not
-  connected, or when the org has no key. In a session that another member
-  started, a message uses the available login of that member, so no agent
-  notice shows. The key notice says "cloud computers" and names no
-  provider. Only an admin gets its Add key.
+  connected. In a session that another member started, a message uses the
+  available login of that member, so no agent notice shows.
 
 ## The Mac app
 
@@ -384,9 +373,9 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
 - Each claim on the page is one that the plan decides. The page shows no
   customer logos, testimonials, user counts, certifications, desktop or
   native mobile app, API, other agents, or changelog.
-- The page shows no plans, because the product is free for now. A line
-  under each "Start free with GitHub" says that users need their own Boat
-  account, which runs their cloud computers, from decision 47.
+- The page shows no plans, because the product is free for now. It asks
+  for no other account, because the app runs every cloud computer in its
+  own account.
 - The product is "Conductive", on `conductive.build`.
   `src/brand.ts` holds the name and the domains, so that one change renames
   the product.

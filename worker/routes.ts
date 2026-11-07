@@ -1,9 +1,7 @@
-import { API_PATHS, boatKeyPath, orgPath } from '../src/shared/api'
-import { boatKeyStatus } from './data/boat-keys'
+import { API_PATHS, orgPath } from '../src/shared/api'
 import { createOrg, listOrgs } from './data/orgs'
 import type { AppDependencies, AppEnv } from './env'
 import { HttpError, requiredString } from './http'
-import { storeBoatKey } from './sandbox/keys'
 import { signOut } from './security/auth'
 import type { RequestContext } from './security/gate'
 
@@ -40,23 +38,6 @@ export async function route(
   if (context.org) {
     if (path === orgPath(context.org.id) && request.method === 'GET') {
       return Response.json({ org: context.org })
-    }
-    if (path === boatKeyPath(context.org.id)) {
-      if (request.method === 'GET') {
-        return Response.json(await boatKeyStatus(env.DB, context.org.id))
-      }
-      if (request.method === 'PUT') {
-        return Response.json(
-          await storeBoatKey(
-            env,
-            context.org.id,
-            context.user.id,
-            requiredString(context.body?.key),
-            dependencies.fetch,
-            dependencies.now(),
-          ),
-        )
-      }
     }
   }
   throw new HttpError(404, 'not_found', 'The page is not available.')

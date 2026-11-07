@@ -11,7 +11,7 @@ Run `membersGate` before feature dispatch on the app hostname.
 It calls the existing gate for sign-in, hostname, Origin, and JSON checks.
 It then reads current membership from D1.
 It permits a deleted org only for its admins on its detail, Delete retry,
-Restore, and existing key GET/PUT paths.
+and Restore paths.
 It also checks admin permission on shared-settings writes.
 Use `membersRoute` before the current core dispatcher.
 An unmatched route returns `null` for the next handler.
@@ -26,22 +26,11 @@ It must also include `activeAdminPredicate` in its D1 mutation.
 Bind the org ID and actor ID for that predicate.
 This keeps a concurrent role change or deletion from permitting a stale write.
 
-The key store uses `assertCanMaintainOrgKey` and
-`orgKeyMaintenancePredicate` from `key-maintenance.ts`.
-Its insert-select checks the current admin in the same statement as the account guard.
-That one authorization condition covers the first save and every upsert.
-The core route passes the actual sender's user ID to the store.
-After a refused atomic save, the store checks permission again before reporting an account mismatch.
-This permission includes current admins of deleted orgs.
-Other deleted-org settings stay blocked.
-An active org's members can still read key status for the composer.
-The existing key store keeps encryption and same-account protection.
-A provider authentication refusal under a cleanup lease returns
-`boat_key_required` and asks the current admin to replace the cloud computer key.
-Both authorized provider paths use `storedOrgSandboxProvider` in `worker/sandbox/keys.ts`.
-Each caller first authorizes its org and resource.
-The loader returns `SandboxProvider` and keeps the encryption context and plaintext key private.
-Each caller supplies its own missing-key text.
+Deleted-org work gets its provider from `deletedOrgProvider` in `cleanup-provider.ts`.
+It first checks the cleanup lease of the org.
+It then calls `sandboxProvider` from the [sandbox area](../sandbox/README.md), which uses the app's one Boat key.
+Under a cleanup lease, a provider failure returns 502 `org_cleanup_failed`.
+A refused Boat key is such a failure. The recovery state stays for a retry.
 
 ## Lifecycle ownership
 
@@ -144,7 +133,7 @@ After seven days, it removes all recorded org-image and build snapshots
 before any sandbox deletion. It then removes workspace state and D1 rows.
 The resource journal keeps completed steps after a failure.
 The result names purged orgs and orgs that need another attempt.
-D1 ownership and encrypted keys stay until every external cleanup succeeds.
+D1 ownership records stay until every external cleanup succeeds.
 A cleanup lease separates Restore from cleanup calls.
 An expired lease permits a later attempt after a worker stops.
 
@@ -221,8 +210,8 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - `lifecycle-contract.ts` defines ownership and the receiver's atomic mutation helper.
 - `lifecycle-data.ts` allocates generations and guards lifecycle writes and renewal.
 - `restore.ts` implements the retryable Restore handoff.
-- `cleanup-lease.ts` scopes cleanup work and maps refused-key errors.
-- `key-maintenance.ts` supplies deleted-org key repair permission.
+- `cleanup-lease.ts` scopes cleanup work and maps its failures to `org_cleanup_failed`.
+- `cleanup-provider.ts` checks the cleanup lease before it gives deleted-org work a provider.
 - `cleanup.ts` implements scheduled provider and data cleanup.
 - `account.ts` exposes the last-admin account-deletion guard.
 - `*-data.ts` owns the D1 queries and the guarded mutation predicates.

@@ -10,7 +10,6 @@ export interface DevOptions {
   workspace: 'existing' | 'new'
   state: WorkspaceState
   role: OrgRole
-  key: boolean
   login: boolean
   /**
    * The login of the member who started each session: it works, it is not
@@ -58,7 +57,6 @@ export const choices = {
     'archived',
   ],
   role: ['admin', 'member'],
-  key: ['on', 'off'],
   login: ['on', 'off'],
   starter: ['on', 'off', 'none', 'linked'],
   replay: ['stored', 'live'],
@@ -92,7 +90,6 @@ export const optionNames = [
   'workspace',
   'state',
   'role',
-  'key',
   'login',
   'starter',
   'replay',
@@ -120,7 +117,6 @@ export function readOptions(search: string): DevOptions {
     workspace: pick(choices.workspace, get('workspace')),
     state: pick(choices.state, get('state')),
     role: pick(choices.role, get('role')),
-    key: pick(choices.key, get('key')) === 'on',
     login: pick(choices.login, get('login')) === 'on',
     starter: pick(choices.starter, get('starter')),
     replay: pick(choices.replay, get('replay')),

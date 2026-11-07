@@ -1,6 +1,6 @@
 import type { AgentLoginStatus } from '../../shared/account'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
-import type { BoatKeyStatus, Org, OrgRole, User } from '../../shared/api'
+import type { Org, User } from '../../shared/api'
 import type { Attachment, SendMessageResponse } from '../../shared/messages'
 import type {
   ChangeModelResponse,
@@ -33,7 +33,8 @@ export interface AccountSummary {
 /** A member of the org, with what the chat needs to name them. */
 export type MemberSummary = Pick<User, 'id' | 'githubLogin' | 'displayName'>
 
-export type OrgSummary = Pick<Org, 'name' | 'role'>
+/** What the chat needs to know about the org: its name. */
+export type OrgSummary = Pick<Org, 'name'>
 
 export function readSessions(value: unknown): SessionsResponse {
   const source = record(value, 'sessions')
@@ -110,14 +111,7 @@ export function readMembers(value: unknown): readonly MemberSummary[] {
 
 export function readOrg(value: unknown): OrgSummary {
   const org = record(record(value, 'org response').org, 'org')
-  return {
-    name: text(org.name),
-    role: oneOf<OrgRole>({ admin: true, member: true })(org.role),
-  }
-}
-
-export function readBoatKey(value: unknown): Pick<BoatKeyStatus, 'configured'> {
-  return { configured: flag(record(value, 'key').configured) }
+  return { name: text(org.name) }
 }
 
 function readTab(value: unknown): WorkspaceTab {

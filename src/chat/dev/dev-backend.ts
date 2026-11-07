@@ -1,4 +1,3 @@
-import { boatKeyPath } from '../../shared/api'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import type { Session } from '../../shared/sessions'
 import { sessionsPath } from '../../shared/sessions'
@@ -108,8 +107,6 @@ export class DevBackend {
     const workspaceId =
       options.workspace === 'new' ? NEW_WORKSPACE : FAKE_IDS.workspace
     const target = { orgId: org, workspaceId }
-    if (!options.key)
-      server.json('GET', boatKeyPath(org), { configured: false })
     const claudeLogin = writeReaderLogin(server, options)
     const api = createChatApi(server.fetch, target)
     const [detail, listed, view] = await Promise.all([

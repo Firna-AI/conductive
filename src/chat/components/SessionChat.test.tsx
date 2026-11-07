@@ -79,20 +79,6 @@ describe('SessionChat', () => {
     expect(markup()).toContain('placeholder="Steer the agent while it works"')
   })
 
-  it('names a missing key, gives only an admin its action, and keeps Send off', async () => {
-    const admin = await renderChat({ key: false })
-    admin.chat.controller.setDraft(FAKE_IDS.session, 'Add tests.')
-    expect(admin.text()).toContain(
-      'Add a key for the cloud computers of Acme Add key',
-    )
-    expect(admin.markup()).toMatch(/aria-label="Send" aria-disabled="true"/)
-    const member = await renderChat({ key: false, role: 'member' })
-    expect(member.text()).toContain(
-      'The cloud computers of Acme need a key An admin of Acme adds it in the org settings.',
-    )
-    expect(member.text()).not.toContain('Add key')
-  })
-
   it('names a missing login, also when the account lists no entry for the agent, and keeps Send off', async () => {
     const { account } = coreFixtures()
     // The reader started these sessions, so their records say the same.

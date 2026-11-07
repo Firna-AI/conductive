@@ -37,15 +37,6 @@ export const composer = defineScreen({
       props: { composer: 'no-agent' },
     },
     {
-      slug: 'no-key',
-      title: 'No key for the cloud computers',
-      description:
-        'Acme has no Boat key, for example because an admin removed it, so the message waits and Send is off. The notice over the composer names no provider, and Add key opens the Boat key tab of the org settings.',
-      rationale:
-        'The user chose option D of decision 33: Get started adds the Boat key, and this notice catches a key that is missing later. The notice says "cloud computers", because the app names Boat only on the key screen, the marketing site, and Get started (decision 47). Only an admin adds the key, so a member sees the notice without Add key.',
-      props: { composer: 'no-key' },
-    },
-    {
       slug: 'login',
       title: "Another member's login",
       description:

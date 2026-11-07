@@ -4585,17 +4585,35 @@ Merge resolution: `.context/boat-native-remote-workspaces/merge-plan-resolution.
 
 Depends on: 5, 6, 15a, 15c
 
+Status: Complete.
+
 Apply decision 80 before the first deployment.
 
-- [ ] Run every cloud computer with the app's one Boat key, from a Worker
+Agent call, 7 November 2026: `BOAT_API_KEY` is the Worker's one provider
+secret. The nonsecret `BOAT_ORG_ID` setting pins every provider request to
+the app's dedicated Boat organization. This keeps the account boundary of
+decision 5 F when the key user's active wallet changes.
+
+- [x] Run every cloud computer with the app's one Boat key, from a Worker
       secret. Remove the encrypted store of org keys and its routes.
-- [ ] Remove the Boat key tab, the key repair of deleted orgs, and the key
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4f`.
+- [x] Remove the Boat key tab, the key repair of deleted orgs, and the key
       steps of Get started, in the screens and the mockups.
-- [ ] Remove the Boat account requirement from the marketing site and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4f`.
+- [x] Remove the Boat account requirement from the marketing site and
       Get started, so that the app names Boat to no user.
-- [ ] Update the protocol docs, the architecture doc, and the naming rule
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4f`.
+- [x] Update the protocol docs, the architecture doc, and the naming rule
       of `AGENTS.md`.
-- [ ] Run the complete gate.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4f`.
+- [x] Run the complete gate.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4f`.
+
+Evidence: `.context/boat-native-remote-workspaces/worker-report.md`,
+`ui-report.md`, `docs-report.md`, `smoke-results.json`, `check.log`, and
+`primary-integration.md` in that folder.
+
+Review: `.context/reviews/conductor/boat-native-remote-workspaces-milestone-4f/round-1-review.md`.
 
 ## Milestone 4g: A default request body limit
 
@@ -5505,8 +5523,19 @@ Apply option B of the follow-up item. Added on 7 November 2026. Its
 option C, the desktop proxy and the shell that survives its socket,
 waits for the user.
 
-- [ ] Apply the recorded option of `plans/follow-ups/shared-session-check-for-connections.md`, and
-      delete that item.
+Implementation calls on 7 November 2026: one security module owns the
+shared identities, grants, reader, and scheduler to remove the terminal
+dependency on chat code. Tagged identities preserve chat history access and
+terminal sandbox checks. Each grant ends at session expiry or 30 seconds
+from the read start to bound delayed reads. Both callers refresh every
+15 seconds to leave time before a grant ends.
+
+Independent expiry timers close connections while a read waits. Chat reads
+the first grant before history and checks it again before delivery. The
+existing store queue preserves history and event order.
+
+- [x] Apply the recorded option of `plans/follow-ups/shared-session-check-for-connections.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-11b`.
 
 ## Milestone 11c: Shells that survive a reconnect
 

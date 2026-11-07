@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { boatKeyPath } from '../../src/shared/api'
 import { deleteOrgPath, restoreOrgPath } from '../../src/shared/orgs'
 import {
   createHarness,
@@ -13,7 +12,8 @@ import { seedWorkspace, signIn, write } from './members-test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
-  harness = await createHarness({ resetBoatAccounts: true })
+  harness = await createHarness()
+  await harness.env.DB.prepare('DROP TABLE boat_keys').run()
 })
 beforeEach(async () => {
   await harness.reset()
@@ -27,11 +27,6 @@ it('purges snapshots before sandboxes and deletes durable workspace state only a
   const outsider = await signIn(harness, 30, 'outsider')
   const unrelated = await harness.createOrg(outsider.session, 'Unrelated')
   await seedWorkspace(harness, unrelated, outsider.user, 'unrelated-workspace')
-  await harness.request(
-    boatKeyPath(unrelated.id),
-    outsider.session,
-    write({ key: 'boat-other' }, 'PUT'),
-  )
   await client.request(
     deleteOrgPath(org.id),
     admin.session,
@@ -72,14 +67,12 @@ it('purges snapshots before sandboxes and deletes durable workspace state only a
   expect(
     await harness.env.DB.prepare('SELECT id FROM workspaces').all(),
   ).toMatchObject({ results: [{ id: 'unrelated-workspace' }] })
-  expect(
-    await harness.env.DB.prepare('SELECT org_id FROM boat_keys').all(),
-  ).toMatchObject({ results: [{ org_id: unrelated.id }] })
+
   expect(
     harness.boat.requests.every(
       (request) =>
         request.headers.get('Authorization') === 'Bearer boat-first' &&
-        request.headers.get('X-Boat-Org') === 'team-one',
+        request.headers.get('X-Boat-Org') === 'app-org',
     ),
   ).toBe(true)
 })

@@ -1,17 +1,22 @@
 # Sandbox provider
 
-This area owns Boat transport and the org's encrypted sandbox key.
-Call `orgSandboxProvider` with the authorized user and org.
-It checks membership and returns `SandboxProvider` without exposing the key.
-The caller must first check that the sandbox belongs to an authorized workspace.
+This area owns the Boat transport and the use of the app's one Boat key.
+Every sandbox and every saved snapshot of every org lives in the app's own
+Boat organization. The key does not keep the orgs apart, so each caller
+authorizes its org and its resource before it asks for a provider.
 
-Trusted feature code can call `authorizedOrgSandboxProvider` after it authorizes
-the workspace and org. This factory reuses the same encrypted key handling.
-It returns no plaintext key. `orgSandboxProvider` retains its membership check
-and its existing missing-key behavior.
+Call `orgSandboxProvider(env, userId, orgId, fetch)` when the caller still
+needs the membership check. It returns 404 `org_not_found` for a user who is
+not a member of the org.
+Trusted feature code calls `sandboxProvider(env, fetch)` after it authorizes
+its workspace, its build, or its cleanup lease.
+Both return `SandboxProvider`. Neither gives the key to its caller.
+The caller checks ownership before it passes a sandbox or saved snapshot ID.
 
 The transport creates the URL and headers from fixed routes.
-It pins the saved account with `X-Boat-Org` and forwards no browser cookie.
+It sends `X-Boat-Org` with `BOAT_ORG_ID` on every request. A change of the
+active Boat organization of the key's user then moves no work of the app.
+It forwards no browser cookie.
 
 `SandboxProvider.privatePort(sandboxId, port, mode)` calls only the fixed host
 route. It requires explicit localhost or network mode and private access.
@@ -20,12 +25,45 @@ It parses the provider URL into a server-only origin and token.
 It returns a typed ready URL or a starting result. Ready URLs require HTTPS
 and a fragment token. The feature layer maps starting into its public response.
 Both methods use the same `BoatTransport` as commands, lifecycle, and file reads.
-The transport validates sandbox ID segments and centralizes errors and account pinning.
+The transport validates sandbox ID segments and centralizes errors and the organization pin.
 
 `SandboxProvider.runCommand` and `SandboxProvider.startCommand` both call `POST /sandboxes/{id}/commands`.
 `runCommand` waits for the command, with a 600 second Boat timeout and a 610 second request timeout.
 `startCommand` starts a detached command, with a 30 second request timeout.
 `SandboxProvider.getCommandStatus` reads detached output from byte offsets, with the same 30 second timeout.
+
+## The app's Boat account
+
+The Worker reads two values. The root [Get started](../../README.md#get-started)
+says where to set them.
+
+- `BOAT_API_KEY`: an API key for the app's own Boat organization. It is the
+  only Boat credential, and a Worker secret.
+- `BOAT_ORG_ID`: the ID of that organization. It is not a secret.
+
+Make the organization and the key once, in the Boat dashboard:
+
+1. Use a Boat organization that holds only the app's sandboxes and saved
+   snapshots. Keep other Boat work in other organizations.
+2. Read its `id` once with `GET /orgs`, using an operator credential with
+   `account.read`. Set `BOAT_ORG_ID` to that value. The
+   [organization reference](https://docs.boat.dev/api/reference/account/list-organizations)
+   defines the reply. The [scope reference](https://docs.boat.dev/api-keys/scopes)
+   gives the lookup permission.
+3. Select that organization in the dashboard. Make an API key with Custom
+   actions, and add these actions:
+   `sandbox.create`, `sandbox.read`, `sandbox.update`, `sandbox.stop`,
+   `sandbox.resume`, `sandbox.fork`, `sandbox.delete`, `exec`,
+   `snapshot.read`, `snapshot.write`, `file.read`, `host`, and `desktop`.
+4. Limit the key to one environment. Give it a lifetime of 365 days, and
+   plan its replacement before that date.
+
+Boat's `ci` preset deletes only the sandboxes that its own key created, so
+the key needs custom actions. The fixed routes in [routes.ts](routes.ts) set
+the actions. A new route can need a new action.
+To replace the key, put the new key in the Worker secret. The new key must
+reach the same organization, because the sandboxes and the org images
+stay there.
 
 ## Response byte limits
 
@@ -40,7 +78,6 @@ A command with a nonzero exit code still uses 18 MiB when its HTTP response is s
 
 | Fixed route | Successful response budget | Error response budget |
 | --- | --- | --- |
-| `GET /orgs` | 1 MiB | 1 MiB |
 | `POST /sandboxes` | 1 MiB | 1 MiB |
 | `GET`, `PATCH`, `DELETE /sandboxes/{id}` | 1 MiB | 1 MiB |
 | `POST /sandboxes/{id}/stop`, `POST /sandboxes/{id}/resume`, `POST /sandboxes/{id}/fork` | 1 MiB | 1 MiB |
@@ -60,14 +97,12 @@ Boat permits 8 MiB of output for each waiting command stream.
 Two plain ASCII streams at that limit fit with room for the envelope.
 More JSON escaping can make an otherwise permitted command reply exceed the Worker budget.
 
-The [organization reference](https://docs.boat.dev/api/reference/account/list-organizations) defines the org array.
 The [limits reference](https://docs.boat.dev/limits#other-limits) states the command output limit.
 The [command reference](https://docs.boat.dev/api/reference/agent/execute-sandbox-command) defines both output fields and the other response fields.
 The [file reference](https://docs.boat.dev/api/reference/agent/read-sandbox-file) states the 5 MiB content limit.
 The [metadata reference](https://docs.boat.dev/api/reference/agent/get-sandbox-file-info) defines the file detail fields.
 
 The [public OpenAPI schema](https://docs.boat.dev/openapi/boat-v1.yaml) gives no total response byte maximum for most routes.
-The org list has no item bound.
 The common error schema leaves message lengths and `error.details` unbounded.
 Thus these Worker budgets can reject responses that Boat permits.
 The shared reader retains chunks while it allocates the collected byte buffer.
@@ -142,7 +177,7 @@ The transport tests use counted streams to check exact budgets and early cancell
 
 - [provider.ts](provider.ts) defines the server's sandbox and file read interface.
 - [boat.ts](boat.ts) forwards provider operations to the Boat helpers.
-- [keys.ts](keys.ts) checks membership and decrypts the org's key inside this area.
+- [client.ts](client.ts) creates the provider from the app's Boat values, with or without the membership check.
 - [routes.ts](routes.ts) holds the fixed Boat route list.
 - [transport.ts](transport.ts) owns request headers and response handling.
 - [transport-body.test.ts](transport-body.test.ts) checks normal and command byte limits and safe overflow messages.
@@ -152,5 +187,6 @@ The transport tests use counted streams to check exact budgets and early cancell
 - [file-read.ts](file-read.ts) parses file replies and runs the metadata fallback.
 - [file-read.test.ts](file-read.test.ts) checks size results and safe errors from the metadata fallback.
 
-See the [access requirements](../../docs/protocol/access-and-security.md#orgs-and-workspaces)
-and [file requirements](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes).
+See the [access requirements](../../docs/protocol/access-and-security.md#orgs-and-workspaces),
+the [rules of the app's Boat key](../../docs/protocol/access-and-security.md#the-apps-boat-key),
+and the [file requirements](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes).

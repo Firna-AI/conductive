@@ -1,11 +1,11 @@
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
-import { storedOrgSandboxProvider } from '../sandbox/keys'
+import { sandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { authorizedCleanup } from './deletion-data'
 
-/** Only deletion workers use this boundary. Active-org sandbox calls use sandbox/keys. */
+/** Only deletion workers use this boundary. Active-org sandbox calls use sandbox/client. */
 export async function deletedOrgProvider(
   env: AppEnv,
   orgId: string,
@@ -15,12 +15,7 @@ export async function deletedOrgProvider(
   const authorized = await authorizedCleanup(env.DB, orgId, leaseToken)
   if (!authorized)
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
-  return storedOrgSandboxProvider(
-    env,
-    orgId,
-    fetch,
-    'Replace the cloud computer key to continue.',
-  )
+  return sandboxProvider(env, fetch)
 }
 
 export async function ignoreAlreadyRemoved(action: () => Promise<unknown>) {

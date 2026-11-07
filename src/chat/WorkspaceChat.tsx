@@ -27,8 +27,6 @@ export interface WorkspaceChatProps extends ChatConnection {
   onOpenDiff?: (path: string) => void
   /** The notice of an agent with no login leads to its Connect form. */
   onConnectAgent?: (agent: Agent) => void
-  /** The notice of an org with no key leads an admin to the key screen. */
-  onAddBoatKey?: () => void
 }
 
 function useReport<T>(value: T | null, report?: (value: T) => void): void {
@@ -92,7 +90,6 @@ export function WorkspaceChat(props: WorkspaceChatProps) {
         controller={controller}
         mobile={mobile}
         now={now}
-        onAddBoatKey={props.onAddBoatKey}
         onConnectAgent={props.onConnectAgent}
         onOpenDiff={props.onOpenDiff}
         snapshot={snapshot}

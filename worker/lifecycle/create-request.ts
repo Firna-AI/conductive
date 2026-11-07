@@ -2,7 +2,6 @@ import type { User } from '../../src/shared/api'
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
 import { hash } from '../security/crypto'
 import { requireOrgMember } from './access'
-import { lifecycleProvider } from './lifecycle-provider'
 import { readCreationImage } from './published-image-data'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import type { WorkspaceStartJob } from './start-types'
@@ -34,7 +33,6 @@ export async function prepareCreationRequest(
   await requireOrgMember(env.DB, orgId, user.id)
   const image = await readCreationImage(env.DB, orgId, input.repositoryId)
   const { repository } = image
-  await lifecycleProvider(env, user.id, orgId, dependencies.fetch)
   const id = reservedId ?? dependencies.randomToken()
   const sessionId = dependencies.randomToken()
   const turnId = dependencies.randomToken()

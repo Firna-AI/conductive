@@ -26,8 +26,7 @@ export function isRunning(state: WorkspaceState): boolean {
  * a message with attached files, with the model picker open when the state
  * asks for it. A new session starts empty. In a session with messages,
  * the picker marks the models of the other agent as opening a new session.
- * A message for an agent that is not connected, or in an org without a key
- * for its cloud computers, waits, and Send is off.
+ * A message for an agent that is not connected waits, and Send is off.
  *
  * A session runs on the login of its starter, and a line under the box
  * names that login. When the starter is another member, the own login of
@@ -43,9 +42,7 @@ export function composerFor(
   const starter = otherStarter(state, workspace)
   const noLogin =
     state.composer === 'no-agent' || state.composer === 'no-starter-login'
-  const waits =
-    !fresh &&
-    (state.composer === 'no-key' || (noLogin && starter === undefined))
+  const waits = !fresh && noLogin && starter === undefined
   const opensLinked =
     !fresh && state.composer === 'no-starter-login' && starter !== undefined
   const withFiles =
@@ -53,9 +50,7 @@ export function composerFor(
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (withFiles) draft = attachmentDraft
-  else if (!fresh && (noLogin || state.composer === 'no-key')) {
-    draft = followUpDraft
-  }
+  else if (!fresh && noLogin) draft = followUpDraft
   return {
     choice: workspace.choice,
     running: !fresh && isRunning(state),

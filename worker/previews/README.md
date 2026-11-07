@@ -179,7 +179,7 @@ The proxy follows no upstream redirect.
 
 The feature adapter checks workspace access before each provider operation.
 The [sandbox provider](../sandbox/README.md) owns the fixed `host` and `desktop`
-routes, key factory, account pinning, parsers, transport, commands, and file reads.
+routes, provider factory, organization pin, parsers, transport, commands, and file reads.
 The feature adapter holds a `SandboxProvider`. It holds no plaintext key.
 
 See [access and security](../../docs/protocol/access-and-security.md#port-previews),

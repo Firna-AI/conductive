@@ -12,6 +12,11 @@ import type {
   WorkspaceEvent,
   WorkspaceEventEnvelope,
 } from '../../src/shared/events'
+import type {
+  ConnectionGrant,
+  ConnectionIdentity,
+  ConnectionScheduler,
+} from '../security/connection-access'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -89,18 +94,6 @@ export interface BrowserPeer {
   close(): void
 }
 
-export interface BrowserIdentity {
-  sessionId: string
-  userId: string
-  orgId: string
-  workspaceId: string
-}
-
-export type ChatScheduler = (
-  work: () => Promise<void>,
-  delayMs: number,
-) => () => void
-
 export interface ResolvedAttachments {
   attachments: readonly Attachment[]
   paths: readonly RunnerAttachment[]
@@ -114,11 +107,11 @@ export type ChatCallbackPublisher = (
 
 export interface ChatDependencies {
   now: () => number
-  scheduleBrowserCheck: ChatScheduler
-  readBrowserAccess: (
-    tabs: readonly BrowserIdentity[],
+  scheduleBrowserCheck: ConnectionScheduler
+  readConnectionAccess: (
+    identities: readonly ConnectionIdentity[],
     now: number,
-  ) => Promise<readonly number[]>
+  ) => Promise<readonly ConnectionGrant[]>
   randomId: () => string
   resolveLogin: (
     userId: string | null,

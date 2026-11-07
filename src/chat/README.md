@@ -21,7 +21,6 @@ mounts it yet.
   onViewChange={(view) => keepTabs(view)}
   onOpenDiff={(path) => openDiffTab(path)}
   onConnectAgent={(agent) => openAccount(agent)}
-  onAddBoatKey={() => openBoatKeyTab()}
 />
 ```
 
@@ -215,7 +214,7 @@ The address chooses the state. The first value of each option is the default:
 | `workspace` | `existing`, `new` (Lisbon, which starts) |
 | `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
 | `role` | `admin`, `member` |
-| `key`, `login` | `on`, `off` |
+| `login` | `on`, `off` |
 | `starter` | `on`, `off` (the login of each starter is not available), `none` (older records that name no starter), `linked` (the reader's message opened a linked session, whose turn waits) |
 | `replay` | `stored`, `live` (the recorded chat arrives event by event) |
 | `viewport` | `desktop`, `mobile` |

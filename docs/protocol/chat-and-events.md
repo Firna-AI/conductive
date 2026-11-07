@@ -109,11 +109,9 @@ says.
 - The composer names the member whose login its message runs on, such as
   "Uses Priya's Claude login", or "Uses your Claude login" to Priya.
 - The composer attaches files to a message.
-- The composer shows a notice when the org has no Boat key (decision 33).
-  A Boat key that Boat refuses counts as no key.
 - The composer shows a notice when the user has no login for the agent of
-  the chosen model. It shows no such notice when the message runs on the
-  login of another member.
+  the chosen model (decision 33). It shows no such notice when the message
+  runs on the login of another member.
 - The app accepts a message before the sandbox is ready. The workspace
   keeps the message, and gives it to the agent when the sandbox is ready
   (decision 14).

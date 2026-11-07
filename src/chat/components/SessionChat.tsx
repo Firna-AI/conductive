@@ -35,7 +35,6 @@ export interface SessionChatProps {
   now: number
   onOpenDiff?: (path: string) => void
   onConnectAgent?: (agent: Agent) => void
-  onAddBoatKey?: () => void
 }
 
 /**
@@ -90,9 +89,7 @@ export function SessionChat(props: SessionChatProps) {
         <BlockNotice
           block={block}
           model={modelLabel(snapshot.models, session.choice)}
-          onAddBoatKey={props.onAddBoatKey}
           onConnectAgent={props.onConnectAgent}
-          org={snapshot.org}
         />
       ) : null}
       {!problem && session && !block && login?.kind === 'linked' ? (
