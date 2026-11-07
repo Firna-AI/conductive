@@ -2,6 +2,7 @@ import { DurableObject } from 'cloudflare:workers'
 import type { RunnerEvent } from '../src/shared/runner'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
 import { WorkspaceChat } from './chat/backend'
+import type { DeviceOperationResult } from './devices/internal'
 import { DeviceRuntime } from './devices/runtime'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
 import type { FailedCreationDraft } from './lifecycle/failed-creations'
@@ -27,7 +28,7 @@ import { nativeWorkspacePlatform } from './lifecycle/workspace-platform'
 import { failedCreationEvents } from './lifecycle/failed-creation-events'
 
 interface WorkspaceEnv extends Omit<LifecycleEnvironment, 'WORKSPACES'> {
-  WORKSPACES: DurableObjectNamespace
+  WORKSPACES: DurableObjectNamespace<Workspace>
 }
 
 export class Workspace
@@ -211,6 +212,13 @@ export class Workspace
   async alarm(): Promise<void> {
     await this.controller.alarm()
     await this.devices.alarm()
+  }
+
+  deviceOperation(
+    target: string,
+    operation: unknown,
+  ): Promise<DeviceOperationResult> {
+    return this.devices.operation(target, operation)
   }
 
   async fetch(request: Request): Promise<Response> {

@@ -11,7 +11,7 @@ import {
 } from '../src/shared/device-read.ts'
 import type { WorkspaceToolConfiguration } from './client.ts'
 import { TOOL_TURN_HEADER } from './context.ts'
-import { ToolInputError } from './input.ts'
+import { isRecord, ToolInputError } from './input.ts'
 
 export type MacCommandOptions = Omit<DeviceCommandInput, 'requestId'> & {
   requestId?: string
@@ -52,10 +52,19 @@ export function createMacCommandClient(
       } catch {
         throw new ToolInputError('The Mac request failed. Try again.')
       }
-      if (!response.ok)
+      if (!response.ok) {
+        const failure: unknown = await response.json().catch(() => null)
+        const turnEnded =
+          response.status === 403 &&
+          isRecord(failure) &&
+          isRecord(failure.error) &&
+          failure.error.code === 'calling_turn_required'
         throw new ToolInputError(
-          'The Mac request failed. Check the active turn and try again.',
+          turnEnded
+            ? 'The agent turn ended. The tool cannot read the Mac command result.'
+            : 'The Mac request failed. Check the active turn and try again.',
         )
+      }
       try {
         return {
           request: readDeviceRecord(

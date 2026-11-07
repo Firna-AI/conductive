@@ -22,9 +22,17 @@ class Wire extends EventEmitter {
   terminate = vi.fn()
 }
 
-export function deviceSettingsFixture() {
+export function deviceSettingsFixture(savedCommands: readonly string[] = []) {
   const time = fakeClock()
   const { files } = memoryFiles()
+  const read = files.read
+  // Legacy permission files can exceed the current save budget.
+  files.read = (name) =>
+    read(name) ??
+    JSON.stringify({
+      alwaysAllowedCommands: savedCommands,
+      workspaceWindows: [],
+    })
   const warn = vi.fn()
   const openPermissions = () =>
     createPermissionStore({

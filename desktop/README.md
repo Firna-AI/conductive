@@ -74,6 +74,14 @@ The revocation stays in force for the rest of the app run, including reconnects.
 A failed save can restore the old permission after a full app restart.
 Settings replies report whether the change was saved.
 A settings reply that is too large fails its own operation and keeps commands connected.
+
+Always allow has a budget of 900,000 UTF-8 bytes for the JSON-encoded list of always-allowed commands.
+A save above the budget fails.
+The saved list stays unchanged in memory and on disk.
+A new request for the same command can then use Allow.
+Allow runs the command once and saves no rule.
+Permission files that already hold a larger list still load.
+
 Commands run in the user's shell with bounded output and time.
 Folders `~` and `~/...` use the local OS account's home directory.
 Other folder values stay exact. The app does not expand shell variables in them.
@@ -176,8 +184,9 @@ The [browser window test](tests/browser-window.spec.ts) opens a fresh web build 
 There, the workspace shows no window controls.
 
 The `test:logic` command uses the repository's Vitest runner with the desktop configuration.
+It runs the unit tests under `src/` and `renderer/`.
 The typecheck checks main and scripts with NodeNext, then renderer and Electron tests with the app's bundler resolution.
-The root gate includes these unit tests once.
+The root gate runs these unit tests once, in its `npm run test` step.
 It also runs desktop typecheck, lint, and formatting checks.
 It does not build, launch, or package Electron.
 
@@ -241,7 +250,7 @@ It offers Restart now or Later once for each downloaded version.
 - [Device connection](src/device/connection.ts) owns authentication, pairing, heartbeat, and reconnect state.
 - [Device session](src/device/session.ts) owns pending requests, scoped approvals, settings operations, and cancellation.
 - [Device settings](src/device/settings.ts) reports change outcomes and checks settings replies against the device message budget.
-- [Local permissions](src/device/permissions.ts) owns exact command rules and workspace deadlines.
+- [Local permissions](src/device/permissions.ts) owns exact command rules, the Always allow budget, and workspace deadlines.
 - [Command runner](src/device/runner.ts) owns time and output limits through injected process and clock boundaries.
 - [Device contract](../src/shared/device.ts) supplies shared message types, routes, and wire limits.
 - [Desktop contract](../worker/security/desktop-contract.ts) shares the desktop origin and session cookie format without Worker dependencies.

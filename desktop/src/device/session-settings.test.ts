@@ -8,14 +8,13 @@ import { deviceSettingsFixture } from '../../tests/device-settings-support.js'
 import { command } from '../../tests/device-support.js'
 
 it('reports oversized settings for only that operation and keeps commands, output bounds, and cancellation working', async () => {
-  const test = deviceSettingsFixture()
   const commands = [
     'printf ongoing',
     'printf cancelled',
     `printf '${'a'.repeat(500_000)}'`,
     `printf '${'b'.repeat(500_000)}'`,
   ]
-  commands.forEach((text) => test.permissions.allowCommand(text))
+  const test = deviceSettingsFixture(commands)
   expect(
     Buffer.byteLength(JSON.stringify(test.permissions.settings())),
   ).toBeGreaterThan(DEVICE_FRAME_LIMIT_BYTES)

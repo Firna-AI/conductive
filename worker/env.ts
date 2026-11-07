@@ -1,4 +1,5 @@
 import type { InvitationMailer } from './invitation-mailer'
+import type { Workspace } from './workspace'
 
 export interface AppEnv {
   DB: D1Database
@@ -7,7 +8,7 @@ export interface AppEnv {
   MACHINE_ORIGIN?: string
   PREVIEW_DOMAIN?: string
   ASSETS?: { fetch(request: Request): Promise<Response> }
-  WORKSPACES?: DurableObjectNamespace
+  WORKSPACES?: DurableObjectNamespace<Workspace>
   GITHUB_CLIENT_ID: string
   GITHUB_CLIENT_SECRET: string
   SESSION_SIGNING_KEY: string
