@@ -76,6 +76,9 @@ npm --prefix desktop run test:electron
 
 The shell test runs under Xvfb on Linux.
 It also runs on macOS.
+The smoke tests wait for the bundled page title.
+They read the product name from the [shared brand file](../docs/mockups/src/brand.ts).
+This wait does not depend on the sign-in state.
 Linux is a test host, not a release target.
 The [window-space test](tests/window-space.spec.ts) runs only on macOS.
 It checks 64px of rendered window-button space in a normal window.
@@ -90,9 +93,10 @@ Playwright runs the real Electron window test.
 That test starts sign-in through the native menu and receives the handoff in the main process.
 It checks the real Chromium session cookie on an API call before and after a restart.
 
-Mac CI runs the source and packaged tests on Apple silicon and Intel runners.
+Mac CI runs the source and packaged tests on an Apple silicon runner for each pull request.
+Pushes to `main` and to the primary branch of the plan, and release tags that start with `v`, also run them on an Intel runner.
 It builds DMG and ZIP files with publishing disabled.
-Mac jobs run on pushes and pull requests only when changed files match these paths:
+Mac jobs run only when changed files match these paths:
 
 - `desktop/**`
 - `worker/security/desktop-*`
