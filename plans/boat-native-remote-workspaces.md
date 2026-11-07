@@ -4692,6 +4692,8 @@ share that budget.
 
 Evidence: `.context/milestone-5b/` holds the implementation reports and checks.
 
+The review also fixed recovery of a snapshot intent stored before dispatch.
+
 - [x] Apply the recorded option of `plans/follow-ups/creation-admission-restart.md`, and
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
 - [x] Apply the recorded option of `plans/follow-ups/completed-retry-first-message.md`, and

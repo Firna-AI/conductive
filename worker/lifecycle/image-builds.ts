@@ -205,9 +205,10 @@ export async function advanceImageBuild(
     // A long build receives the same safety deadline as other active work.
     await provider.setAutoStop(job.sandboxId, 1_800)
     if (job.phase === 'snapshot') {
-      const snapshot = job.snapshotName
-        ? await provider.getSnapshot(job.snapshotName)
-        : await createResource(provider, buildSnapshotIntent(env.DB, job))
+      const snapshot = await createResource(
+        provider,
+        buildSnapshotIntent(env.DB, job),
+      )
       await assignBuildSnapshot(env.DB, buildId, snapshot.name)
       if (snapshot.status === 'failed') throw new Error('Image save failed')
       if (snapshot.status === 'ready')
