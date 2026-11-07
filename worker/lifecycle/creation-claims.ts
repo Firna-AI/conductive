@@ -5,6 +5,7 @@ import { HttpError } from '../http'
 import { leaseStatement, planStatement } from './creation-plan-statements'
 import { readRepositories } from './settings-data'
 import { capturedRepositoryLocations } from './repository-locations'
+import { readSavedScript } from './saved-script'
 import {
   imageAdmissionError,
   publishedImageSource,
@@ -144,7 +145,7 @@ export async function recordedCreationJob(
     orgId: key.orgId,
     kind: 'create',
     imageName: plan.imageName,
-    startupScript: plan.startupScript,
+    startupScript: readSavedScript(plan.startupScript),
     environmentCiphertext: plan.environmentCiphertext,
     defaultBranch: plan.defaultBranch,
     repositoryLocations:

@@ -3,6 +3,8 @@ import type {
   WorkspaceStartResult,
   StartJobStorage,
   WorkspaceCreationAdmission,
+  WorkspaceRunningStartJob,
+  WorkspaceMachinePhase,
 } from './start-types'
 import type { AppDependencies, AppEnv } from '../env'
 import { prepareWorkspaceRecords } from './start-records'
@@ -106,11 +108,20 @@ export class WorkspaceStartCoordinator {
           job,
         )
         if (imageName === null) return false
-        job.imageName = imageName
-        await this.next(job, 'machine')
-        await this.storage.admit(
-          await creationAdmissionResponse(this.env, this.endpoint, job),
+        const created = await creationAdmissionResponse(
+          this.env,
+          this.endpoint,
+          job,
         )
+        await this.storage.update({
+          ...job,
+          phase: 'machine',
+          imageName,
+          admission: created,
+          processId: null,
+          stdoutOffset: 0,
+          stderrOffset: 0,
+        })
         const admitted = await this.storage.admission()
         if (admitted) this.admissionWaiters.publish(admitted)
         return false
@@ -207,7 +218,7 @@ export class WorkspaceStartCoordinator {
         stepLabel(job.phase),
         'completed',
       )
-      if (job.phase !== 'startup') {
+      if (job.phase === 'fetch' || job.phase === 'branch') {
         await this.next(job, job.phase === 'fetch' ? 'branch' : 'startup')
         return false
       }
@@ -249,8 +260,8 @@ export class WorkspaceStartCoordinator {
   }
 
   private async next(
-    job: WorkspaceStartJob,
-    phase: WorkspaceStartJob['phase'],
+    job: WorkspaceRunningStartJob,
+    phase: WorkspaceMachinePhase,
   ): Promise<void> {
     await this.storage.update({
       ...job,
