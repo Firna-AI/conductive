@@ -4638,10 +4638,28 @@ Depends on: 7r, 7s
 
 Apply the runner half of decision 96 E.
 
-- [ ] Answer the fresh-report command of Milestone 7s with a full report
+Agent calls on 7 November 2026, within decision 96 E:
+
+- Run refresh reports in the existing file scan queue. Reason: full parts
+  and tree deltas must keep their revision order.
+- Keep separate tree and changes comparison states. Reason: a refresh of
+  one kind must not hide a later update of the other kind.
+- Save the last actual start and name reports. Reason: confirmations and
+  restarts must not remove the data that a replacement needs.
+- Save each completed refresh ID with its last response event. Reason:
+  a restart after that save must not answer the same request twice.
+- Process commands after the welcome while the initial scan runs.
+  Reason: a refresh request can arrive before `runner.ready`.
+
+Verification evidence: `.context/boat-native-remote-workspaces/7t/verification.md`.
+
+- [x] Answer the fresh-report command of Milestone 7s with a full report
       of the asked kind: the file list and the changes list in numbered
       parts, the start steps, or the last workspace name.
-- [ ] Test each kind, and a command during a running turn.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7t`.
+- [x] Test each kind, a command during a running turn, and a command
+      before `runner.ready`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7t`.
 
 ## Milestone 7u: Runner fixes from the review
 

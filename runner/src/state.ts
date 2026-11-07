@@ -14,6 +14,12 @@ import { parseEnvelope, parseEvent } from './stored-events'
 import { array, integer, object, oneOf, string } from './parse'
 import { parseSavedTurn, recordTurn, type SavedTurn } from './state-turns'
 import { SerialQueue } from './serial-queue'
+import {
+  emptyReports,
+  parseReports,
+  retainReport,
+  type ReportState,
+} from './report-state'
 
 export interface SavedSession {
   sessionId: string
@@ -29,6 +35,7 @@ export interface RunnerState {
   sessions: SavedSession[]
   fileRevisions: FileRevisions
   turns: SavedTurn[]
+  reports: ReportState
 }
 
 export interface FileRevisions {
@@ -75,6 +82,7 @@ function parseState(value: unknown): RunnerState {
     },
     outbox: array(input.outbox, parseEnvelope),
     turns: array(input.turns, parseSavedTurn),
+    reports: parseReports(input.reports),
     sessions: array(input.sessions, (value) => {
       const session = object(value)
       return {
@@ -98,7 +106,7 @@ function parseState(value: unknown): RunnerState {
   return state
 }
 
-/** Only events and conversation references enter this store. Never commands. */
+/** Store events, conversation references, and report receipts. Never logins. */
 export class EventStore {
   private state: RunnerState
   private committed: RunnerState
@@ -123,6 +131,7 @@ export class EventStore {
             sessions: [],
             fileRevisions: { tree: 0, changes: 0 },
             turns: [],
+            reports: emptyReports(),
           }
         : parseState(saved)
     const store = new EventStore(storage, state)
@@ -137,6 +146,7 @@ export class EventStore {
   async append(
     event: RunnerEvent,
     occurredAt: number,
+    reportCommandId?: string,
   ): Promise<RunnerEventEnvelope | null> {
     const envelope: RunnerEventEnvelope = {
       type: 'event',
@@ -163,6 +173,9 @@ export class EventStore {
       this.state.fileRevisions.changes = event.changes.revision
     this.state.outbox.push(envelope)
     recordTurn(this.state.turns, envelope.event, envelope.eventNumber)
+    retainReport(this.state.reports, envelope.event)
+    if (reportCommandId !== undefined)
+      this.state.reports.commands.push(reportCommandId)
     await this.save()
     return structuredClone(envelope)
   }
@@ -186,6 +199,11 @@ export class EventStore {
       (item) => item.sessionId !== session.sessionId,
     )
     this.state.sessions.push(structuredClone(session))
+    await this.save()
+  }
+
+  async rememberReportCommand(commandId: string): Promise<void> {
+    this.state.reports.commands.push(commandId)
     await this.save()
   }
 

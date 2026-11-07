@@ -30,6 +30,7 @@ export class RunnerLink {
   private connection: RunnerConnection | null = null
   private welcomed = false
   private pending: Promise<void> = Promise.resolve()
+  private initializing: Promise<void> = Promise.resolve()
 
   constructor(store: EventStore, options: LinkOptions) {
     this.store = store
@@ -57,10 +58,16 @@ export class RunnerLink {
       streamId: this.store.snapshot.streamId,
     })
     await this.idle()
+    await this.initializing
+    await this.idle()
   }
 
-  async emit(event: RunnerEvent): Promise<void> {
-    const envelope = await this.store.append(event, this.options.now())
+  async emit(event: RunnerEvent, reportCommandId?: string): Promise<void> {
+    const envelope = await this.store.append(
+      event,
+      this.options.now(),
+      reportCommandId,
+    )
     if (envelope === null) {
       this.options.warn('The runner event exceeds its byte limit.')
       return
@@ -116,7 +123,10 @@ export class RunnerLink {
       await this.store.confirm(message.confirmedThrough)
       this.welcomed = true
       this.resend(message.confirmedThrough + 1)
-      await this.options.connected()
+      this.initializing = this.options.connected().catch(() => {
+        this.options.warn('The runner connection could not process a message.')
+        if (this.connection === connection) connection.close()
+      })
     } else if (message.type === 'confirm') {
       if (this.welcomed && message.streamId === stream)
         await this.store.confirm(message.throughEventNumber)
