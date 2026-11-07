@@ -3,18 +3,8 @@ import { HttpError } from '../http'
 import { markSent } from './messages'
 import { sameAgent } from './sessions'
 import type { ChatTransaction } from './store'
+import { verifiedTurn } from './turn-context'
 import { TurnLifecycle } from './turn-lifecycle'
-
-export async function storeAgentEvent(
-  transaction: ChatTransaction,
-  event: AgentChatEvent,
-  occurredAt: number,
-  randomId: () => string,
-): Promise<void> {
-  await (
-    await prepareAgentEvent(transaction, event, occurredAt, randomId)
-  )()
-}
 
 /** Validate every acknowledgement before any message or command changes. */
 export async function prepareAgentEvent(
@@ -23,18 +13,11 @@ export async function prepareAgentEvent(
   occurredAt: number,
   randomId: () => string,
 ): Promise<() => Promise<void>> {
-  const session = (await transaction.sessions()).find(
-    (session) => session.id === event.sessionId,
-  )
-  const turn =
-    session?.activeTurnId === event.turnId
-      ? await transaction.turn(session.activeTurnId)
-      : undefined
+  const target = await verifiedTurn(transaction, event)
   if (
-    !session ||
-    !turn ||
-    turn.sessionId !== session.id ||
-    session.activeTurnId !== turn.id
+    !target ||
+    target.started === false ||
+    (!target.ended && (!target.active || target.started !== true))
   ) {
     throw new HttpError(
       400,
@@ -42,6 +25,7 @@ export async function prepareAgentEvent(
       'The turn is not available.',
     )
   }
+  const { session, turn } = target
   let acknowledged: readonly string[] = []
   if (event.type === 'turn.started') {
     sameAgent(session, event.choice)
@@ -80,6 +64,11 @@ export async function prepareAgentEvent(
     }
   }
   return async () => {
+    if (target.ended) {
+      await transaction.emit(event, occurredAt)
+      return
+    }
+    turn.started = true
     if (event.type === 'turn.started' && turn.state !== 'stopping')
       turn.state = 'running'
     for (const messageId of acknowledged)

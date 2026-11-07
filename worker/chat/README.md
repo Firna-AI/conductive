@@ -39,8 +39,8 @@ run no gate.
 - `appendWorkspaceEvent(workspaceId, event, occurredAt)` stores one
   `WorkspaceEvent` with the next workspace event number. Then it pushes
   the event to the open tabs. Inside a runner hook, use the hook's
-  `publish` argument instead, as [the seams](#seams-for-other-milestones)
-  say.
+  `publish` argument instead, as
+  [the integration README](integration/README.md) says.
 - `sendFileCommand(workspaceId, command)` sends one `file.read` or
   `file.diff` command to the ready runner. It resolves to `false` when no
   runner is ready or the send fails.
@@ -108,13 +108,18 @@ The Durable Object runs the gates itself.
   a runner event, or its refusal marker, only when its number is the stream
   cursor plus one.
 - A duplicate gets a new confirm and is not stored again. A gap gets a
-  `resend` from the first missing number. The `welcome` gives the cursor.
-- A refused `turn.completed` or `turn.failed` ends its active turn as `failed`.
+  `resend` from the first missing number. The `welcome` gives the cursor,
+  or less while a [report repair](#report-repairs) waits for its first send.
+- The `turn_not_active` reason means that the turn never started.
+- Valid late events append to a started turn that ended. They change no
+  turn, session, message, or command state.
+- A refused `turn.completed` or `turn.failed` ends its started active turn as `failed`.
 - A message and its command commit together. The Durable Object sends the
   commands in order when the runner is ready.
 - After the login checks, delivery commits the turn state before sending.
   If sending a newly dispatched turn throws, delivery restores its queued
   state. `message.sent` follows a successful send.
+- The internal `StoredTurn.started` marker keeps dispatch evidence after an end.
 - The interrupt route stores and pushes `turn.stop-requested` with the
   authenticated member's ID before it interrupts the runner. Runner events
   cannot set that member.
@@ -124,10 +129,52 @@ The Durable Object runs the gates itself.
   work. Closing a session records its waiting turns as stopped in history.
 - A command stays pending until the Durable Object removes it. A new runner
   connection gets each pending command again, with the same command ID.
-- An agent event that lists a message ID removes the command of that
-  message. The end of a turn removes each command of that turn.
+- An active agent event that lists a message ID removes that message's
+  command. The first end of a turn removes each command of that turn.
 - A new `model` command replaces the pending `model` command of its
   session.
+
+## Report repairs
+
+[Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+states the rules. A report repair is the stored `report.refresh` command of
+one `RunnerReportKind`.
+
+- `ReportRepairs` on `ChatTransaction.repairs` keeps one record for each kind
+  under the `chat:v1:report-repair:` prefix.
+- A record holds its command, its cause, its state, a `sent` flag, and a
+  `replacementRevision`. The cause is the stream and the event number of the
+  first refusal. For a file kind, it also holds the newest applied,
+  incomplete, or refused full-report revision. The state is `pending` or
+  `failed`.
+- `refuseRunnerEvent` calls `refuseReportRepair` before `refuse(type)`
+  discards the incomplete file report. So the check still reads the revision
+  of that report.
+- The first refusal of a kind saves a `pending` record with a new command ID.
+  A later refusal of a replacement sets `failed`, and its marker gets
+  `repairFailed`. A remaining part or a tree delta changes nothing.
+- A stored new part 1 of a multipart report on the cause stream sets
+  `replacementRevision`. So the later parts of a reused revision count as a
+  replacement.
+- The record, the marker, and the cursor commit in the receipt transaction.
+- A complete tree, changes list, start steps, or name removes the record of
+  its kind in the same transaction. A tree delta and a pending part do not.
+- After the commit, `RepairDelivery.flush` sends each `pending` record that
+  the connection did not get yet. The first send of a record then commits
+  `sent`.
+- Only then does `RunnerChannel` send the confirm and run the hooks. A send
+  failure or a failed `sent` commit throws. The channel then closes the
+  connection without the confirm.
+- The `welcome` holds `confirmedThrough` below the cause of each `pending`
+  record of its stream that no connection got. So the runner sends that
+  event again, and the channel confirms it as a duplicate.
+- After the `welcome`, the channel sends the repairs before the other
+  commands. A repair needs no `runner.ready` and carries no login, so its
+  send runs no login or token check.
+- Turn, message, interrupt, model, and file commands still wait for
+  `runner.ready`.
+- Each new connection gets each `pending` record again, with the same
+  command ID. A `failed` record is never sent again.
 
 ## Tests
 
@@ -146,6 +193,10 @@ npm run typecheck
 - Its key order and `startAfter` comparison use UTF-8 bytes, like real storage.
 - `createRunnerLimitsFixture` in `runner-limits.test-support.ts` runs one
   `RunnerChannel` for the refusal, cap, and file part tests.
+- `runner-repairs.test-support.ts` builds a full and an oversized report of
+  each kind, and reads the requests and markers of the repair tests.
+- `late-events.test.ts` and `never-started.test.ts` cover replay after a
+  workspace stop and the queued-turn eligibility rules.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,
   D1, and real WebSockets. `createAdapterRuntime` sets up that runtime.
 - It closes every socket before Miniflare evicts the real object. The
@@ -154,112 +205,9 @@ npm run typecheck
 
 ## Seams for other milestones
 
-`WorkspaceChat` takes `ChatDependencies` from `types.ts` as overrides.
-`Workspace` sets `matchesObject`. The other hooks keep their defaults until
-their owners set them.
-
-Other features can add events to the same numbered history. The method
-depends on where the code runs:
-
-- Outside the runner hooks, await `appendWorkspaceEvent`.
-- Inside `runnerReady` or `runnerEventStored`, await the `publish`
-  argument, a `ChatCallbackPublisher`. It commits the event in the task of
-  the hook, then pushes it to the open tabs.
-- Do not call `appendWorkspaceEvent` inside a runner hook. The hook runs in
-  the serial queue, so the call would wait for the hook itself.
-- `sendFileCommand` also waits in the serial queue. Do not await it inside
-  a runner hook.
-
-### Milestone 8i: the outer Worker
-
-- Today `createApp` in `worker/application.ts` forwards no request to the
-  Durable Object. It answers the machine hostname with a stub.
-- Forward each chat route and the runner route to
-  `env.WORKSPACES.get(env.WORKSPACES.idFromName(workspaceId))`.
-- Use the decoded workspace ID as the name.
-- Forward the original request, with its URL, its headers, and its unread
-  body. The Durable Object runs the gate again.
-- Do not run `gate` on a request that you forward. `gate` reads the JSON
-  body of each write.
-- A chat route has the workspace ID in its path. The runner request has
-  only its bearer token. Find its workspace with `tokenWorkspace`.
-
-### Milestone 5: workspace lifecycle
-
-- `Workspace.fetch` gives every request to the chat. Match the lifecycle
-  routes before that call.
-- `authorizeBrowser` gives a lifecycle route the same gate and workspace
-  check. It reads the body, so do not pass that request on to `fetch`.
-- `runnerReady(workspaceId, publish)` runs after the Durable Object stores
-  each `runner.ready` event.
-- `runnerEventStored(envelope, publish)` runs after each other stored runner
-  event or refusal marker. Examples are `start.updated` and `workspace.title`.
-- Both hooks run after the commit and the confirm. A hook error closes the
-  runner connection, and the runner does not send that event again.
-- Add the start steps and `workspace.updated` with `appendWorkspaceEvent`.
-  Inside a hook, use its `publish` argument.
-- Call `closeRunner()` when the sandbox stops.
-- Keep the lifecycle records outside the `chat:v1:` key prefix.
-
-### Milestone 9: files
-
-- The Durable Object joins file parts with `RunnerFileReports` on
-  `ChatTransaction.files`. It stores each complete report before the confirm.
-- `runnerEventStored` gets each complete file report and tree delta, never a
-  part. It must not apply them to the files projection again.
-- Send each `file.read` and `file.diff` request with `sendFileCommand`. A
-  `false` result means that no runner got the request.
-- `receiveFileResult(value)` gets each `file.read.result` and
-  `file.diff.result` message without checks. Validate the message in the
-  hook. File results never enter the history.
-- [The files integration](../files/README.md#integration) says how to attach
-  file reads. Do not call `WorkspaceFiles.connect` on this path.
-
-### Milestone 7r: the agent runner
-
-- The Durable Object stores agent events as the runner sends them. It
-  copies only the known fields, and it refuses an unknown event type.
-- It requires and preserves tool-detail and turn-file omission counts.
-  These counts are non-negative safe integers.
-- It requires file-report revisions, part numbers, and part counts as positive
-  safe integers.
-- `runner.event-refused` is workspace-only. The runner parser refuses it.
-- So the runner maps the SDK events, removes the text that an SDK adds,
-  and maps each result to `userMessageIds`.
-- `turn.started` names the sender of the turn and its message IDs. Each
-  agent event names the active turn of its session.
-- An event that breaks these rules or a cap gets a refusal marker and a
-  confirm. The runner must not send it again.
-- Deduplicate the commands by `commandId`. A new connection gets each
-  pending command again.
-- After a text-only turn, each unanswered message moves to a new turn. So
-  one message can come first in a `message` command, then in a new `turn`
-  command with a new command ID.
-- Each `turn` and `message` command carries the login of its message's
-  sender. When the sender of a turn changes, start the agent again.
-- An interrupt for a turn that the runner does not run still gets
-  `turn.completed` with state `stopped`.
-- A new stream gets commands only after its `runner.ready` event. A stream
-  that sent `runner.ready` before gets commands right after the `welcome`.
-
-### Agent logins and attachments
-
-- The code that stores an agent login must encrypt it with `encrypt`,
-  `agentLoginContext(userId, agent)`, and `BOAT_KEY_ENCRYPTION_KEY`.
-- `readAgentLogin` decrypts with the same context and key. It accepts the
-  kinds `token` and `api-key` for Claude, and only `api-key` for Codex.
-- A message without a stored login gets `409 agent_login_required`.
-- When the login is gone as a command goes out, `turn.failed` ends the
-  turn only while it is queued.
-- A running or stopping turn keeps the command, and the Durable Object does
-  not send it. So the later runner events of that turn stay valid.
-- When that turn finishes, an unanswered message moves to a new queued
-  turn. That turn then fails with `agent_login_required`.
-- `resolveAttachments(userId, workspaceId, ids)` returns the attachment
-  records and the sandbox path of each attachment. The command gives the
-  paths to the runner.
-- By default, a message with an attachment gets
-  `503 attachments_unavailable`.
+[Chat backend integration](integration/README.md) gives the seams for other
+features. It covers the hooks, the workspace events, the outer Worker, the
+lifecycle, the files, the agent runner, and the logins and attachments.
 
 ## Key code
 
@@ -274,11 +222,15 @@ depends on where the code runs:
   or refusal marker of each runner event.
 - `runner-delivery.ts`: the sends of pending commands, with the login
   check.
+- `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the
+  report repair of each kind, its start or failure at a refusal, and its
+  sends before the confirm.
 - `delivery-state.ts`: dispatch state before sending and queued-state restoration.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
-- `turn-lifecycle.ts`, `turn-events.ts`, and `continuation.ts`: active and
-  waiting turns, terminal events, and unanswered messages.
+- `turn-lifecycle.ts`, `turn-events.ts`, `turn-context.ts`, and
+  `continuation.ts`: active and waiting turns, safe turn context, late data,
+  terminal events, and unanswered messages.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-tabs.ts` and `browser-access.ts`: open tabs, the scheduled access
   check, and its batched D1 query.
@@ -291,6 +243,8 @@ depends on where the code runs:
 ## Related docs
 
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
+- [Chat and events: Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+- [Chat backend integration](integration/README.md)
 - [Access and security: Agent logins in a sandbox](../../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
 - [Access and security: The workspace token](../../docs/protocol/access-and-security.md#the-workspace-token)
 - [Architecture: Workspace Durable Object](../../docs/architecture.md#workspace-durable-object)

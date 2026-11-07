@@ -4460,6 +4460,23 @@ Agent calls on 6 November 2026, within decision 76 E:
 - Compute accepted changes totals from the joined files after checking
   the runner summary. Reason: stored totals must come from stored files.
 
+Agent calls on 7 November 2026, within decisions 96 E and 104 E:
+
+- Use `report.refresh` with the four full-report event types as its kinds.
+  Reason: the command names the same data that the runner reports.
+- Keep one durable command ID for each open repair. Reconnects reuse that
+  ID. A failed repair sends no more requests until a complete report
+  clears its kind. Reason: transport recovery must not create a repair loop.
+- Record the first successful request send before confirming its loss.
+  Bound a welcome only for an unsent trigger on its own stream. Reason:
+  reconnects must not confirm an update before its required first send.
+- Keep accepted replacement part-one evidence across restart. Reason:
+  fresh reports can reuse refused unapplied revisions, while old tails
+  must not show a failed-repair notice.
+- Keep valid late data from old ended turns when their start evidence is
+  incomplete. Reason: missing old metadata does not prove that a turn
+  never started, and the late path changes no lifecycle state.
+
 Verification evidence: `.context/boat-native-remote-workspaces/7s/verification.md`.
 
 - [x] Check the byte limit with the other event checks.
@@ -4472,12 +4489,12 @@ Verification evidence: `.context/boat-native-remote-workspaces/7s/verification.m
       files store takes them. Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
 - [x] Test each refusal, a tree in parts, and a resend after a refusal.
       Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
-- [ ] Apply decision 104 E: store a late event of an ended turn in that
+- [x] Apply decision 104 E: store a late event of an ended turn in that
       turn, and never reopen the turn. Refuse only an event of a turn that
       never started. State the rule in the protocol, in place of the old
       refusal of every event of a turn that is not active.
       Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
-- [ ] Apply decision 96 E: add a runner command that asks for a fresh full
+- [x] Apply decision 96 E: add a runner command that asks for a fresh full
       report of the file list, the changes list, the start steps, or the
       workspace name. Send it once after the workspace refuses such an
       update. When the fresh report is refused too, store the marker as a

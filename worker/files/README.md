@@ -29,7 +29,7 @@ The standalone integration takes only complete reports.
 
 ### Combined integration with the chat backend
 
-The [chat backend](../chat/README.md#milestone-9-files) owns the runner stream, its cursor, and its confirmations.
+The [chat backend](../chat/integration/README.md#milestone-9-files) owns the runner stream, its cursor, and its confirmations.
 It creates `RunnerFileReports` on `ChatTransaction.files`.
 That adapter writes in the chat transaction of the runner message.
 So the assembly state, the projection, the history event, and the cursor commit together before the confirm.
@@ -52,6 +52,10 @@ Other errors are not refusals. The chat backend then closes the runner connectio
 
 For each refused file event, the chat backend stores a refusal marker and calls `refuse(type)`.
 That call discards the incomplete report of the refused kind. A tree delta has the tree kind.
+The chat backend reads these values before that call.
+`storedReportGenerations` gives the newest applied or incomplete revision of a kind, and the revision of its incomplete report.
+`fullReportRevision` and `isMultipartTail` read the revision and the part fields of a raw event, also an invalid one.
+The [report repairs](../chat/README.md#report-repairs) use them to tell a remaining part of a refused report from a replacement.
 The last complete tree and changes stay in the projection while parts are pending or refused.
 The chat backend's `runnerEventStored` hook is a notification after the commit and the confirm.
 It must not apply a file report again.
@@ -145,8 +149,8 @@ Boat may therefore refuse a file read until the cloud computer is ready.
 Run `npm run test -- worker/files` from the repository root with Node 24.
 The storage tests use SQLite Durable Object storage in Miniflare and evict the object before reload.
 The API tests use local D1, the existing fake runner, and FakeBoat.
-The part joining tests run through the chat backend:
-`npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts`.
+The part joining and report repair tests run through the chat backend:
+`npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts worker/chat/runner-repair-parts.test.ts`.
 No migration is required.
 
 ### Key Code
@@ -156,6 +160,7 @@ No migration is required.
 - [state.ts](state.ts) applies snapshots and tree updates and keeps branch changes.
 - [runner-reports.ts](runner-reports.ts) joins runner report parts and applies each complete report in the caller's transaction.
 - [report-storage.ts](report-storage.ts) keeps the assembly state and the stored parts of each report kind.
+- [report-generation.ts](report-generation.ts) reads the stored revisions of a report kind and the revision and part fields of a raw report.
 - [runner-input.ts](runner-input.ts) parses a runner file event with its revision and part fields.
 - [storage.ts](storage.ts) adapts Durable Object storage and writes the chunks atomically.
 - [runner.ts](runner.ts) matches file and diff commands to their results.
@@ -164,5 +169,6 @@ No migration is required.
 
 See the [shared contracts](../../src/shared/README.md),
 [backend fakes](../test-support/README.md),
-[runner event rules](../../docs/protocol/chat-and-events.md#the-agent-runner), and
+[runner event rules](../../docs/protocol/chat-and-events.md#the-agent-runner),
+[lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates), and
 [file requirements](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes).

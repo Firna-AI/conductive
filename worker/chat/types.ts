@@ -44,6 +44,8 @@ export interface StoredTurn {
   senderId: string
   messageIds: string[]
   state: 'queued' | 'running' | 'stopping' | 'finished' | 'stopped' | 'failed'
+  /** Retained dispatch evidence. Older records may have no evidence. */
+  started?: boolean
   closeAfterStop: boolean
   /** Internal waiting work. Older records have no successor. */
   nextTurnId?: string | null

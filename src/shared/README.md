@@ -17,6 +17,9 @@ confirmations, and resend rules. Its comments state the delivery contract.
 The 1 MiB limit leaves room for the workspace storage wrapper.
 The workspace stores a refusal marker before it confirms a permanent refusal.
 Storage and network failures remain unconfirmed.
+After a refused file tree, changes list, start steps, or workspace name,
+`RunnerReportRefresh` asks for one fresh full report of that `RunnerReportKind`.
+It carries no login. A redelivery keeps its command ID.
 `runner-transport.ts` defines the injectable socket boundary.
 Runner commands carry each message sender's login. Browser response types do not.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
@@ -43,6 +46,10 @@ Turn summaries keep at most 200 files and 256 KiB of serialized file-list data.
 They count omitted files. The complete Changes response has no summary cap.
 `runner.event-refused` belongs only to workspace chat events.
 It identifies the lost runner event without copying its data.
+Its `repairFailed: true` flag marks a refused replacement of a lost workspace update.
+Only the workspace sets that flag.
+[Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+states the rules of the request and of a failed repair.
 
 `events.ts` defines the browser stream. Its event numbers span all sessions
 and runner connections of one workspace. A reconnect uses the last stored number.

@@ -7,6 +7,7 @@ import { RunnerFileReports } from '../files/runner-reports'
 import type { IncomingRunnerEnvelope } from './runner-input'
 import type { ChatTransaction } from './store'
 import { refuseReportRepair } from './repair-refusal'
+import { verifiedTurn } from './turn-context'
 import { TurnLifecycle } from './turn-lifecycle'
 
 export function runnerEventType(
@@ -31,27 +32,6 @@ export function runnerEventType(
     default:
       return 'unknown'
   }
-}
-
-export async function verifiedTurn(
-  transaction: ChatTransaction,
-  value: unknown,
-) {
-  if (
-    !isRecord(value) ||
-    typeof value.sessionId !== 'string' ||
-    typeof value.turnId !== 'string'
-  )
-    return null
-  const session = (await transaction.sessions()).find(
-    (session) => session.id === value.sessionId,
-  )
-  if (!session) return null
-  const turn = (await transaction.turns()).find(
-    (turn) => turn.id === value.turnId,
-  )
-  if (!session || !turn || turn.sessionId !== session.id) return null
-  return { session, turn, active: session.activeTurnId === turn.id }
 }
 
 export async function refuseRunnerEvent(
@@ -91,7 +71,12 @@ export async function refuseRunnerEvent(
       : transaction.now
   await new RunnerFileReports(transaction.files).refuse(type)
   await transaction.emit(marker, occurredAt)
-  if (target?.active && (type === 'turn.completed' || type === 'turn.failed')) {
+  if (
+    target?.active &&
+    !target.ended &&
+    target.started === true &&
+    (type === 'turn.completed' || type === 'turn.failed')
+  ) {
     await new TurnLifecycle(transaction, target.session).finish(target.turn, {
       state: 'failed',
     })
