@@ -81,13 +81,16 @@ The Durable Object runs the gates itself.
   other workspace gets `404 workspace_not_found`. So does a workspace that
   `matchesObject` refuses, because `WORKSPACES.idFromName` names another
   object.
-- `resolveLogin` reads the agent login of a starter or of a linked-session
-  member. One D1 read first checks the workspace, that user, the sender,
-  and the runner token. An override replaces only the login read.
+- `readLogin` in `login-access.ts` is the only caller of `resolveLogin`. It
+  reads the agent login of a starter or of a linked-session member, for one
+  agent. `resolveLogin` first checks the workspace, that user, the sender,
+  and the runner token in one D1 read. An override replaces only the login
+  read.
 - A revoked or replaced runner token closes that connection without a
   login, and the command stays queued. A sender who left the org gets no
   login either. [Session logins](integration/README.md#session-logins) says
-  when the starter's login is checked. The storage never holds a login.
+  when the workspace observes the starter's login. The storage never holds a
+  login.
 
 ## History and event order
 
@@ -235,6 +238,8 @@ agent runner, the logins and attachments, and the test fixtures.
   tabs, and the one publisher of committed events.
 - `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
   owner can replace. The login resolver always wraps an override.
+- `operation.ts`: `ChatOperation`, the reads and changes of one route, tab
+  subscription, or dispatch, in the serial queue that its caller holds.
 - `http-routes.ts`, `send-message.ts`, `messages.ts`, and `sessions.ts`: the
   routes, Send and Retry with linked sessions, the turns, and session state.
 - `model-changes.ts`: client session IDs, the creation records that repeated
@@ -265,8 +270,9 @@ agent runner, the logins and attachments, and the test fixtures.
   `WorkspaceChat` gives it `readConnectionAccess` from
   [`worker/security/connection-access.ts`](../security/connection-access.ts).
 - `queries.ts`: the D1 reads of workspaces, tokens, members, and logins.
-- `login-access.ts`, `session-login.ts`, and `session-storage.ts`: the
-  login checks, `loginAvailable`, and the defaults of older session records.
+- `login-access.ts`, `session-login.ts`, and `session-storage.ts`:
+  `readLogin` and the access checks, the committed login observations of
+  `SessionLogins`, and the defaults of older session records.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
   and the peer types.
 

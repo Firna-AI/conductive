@@ -2,6 +2,7 @@ import type { AgentChoice } from '../../src/shared/agents'
 import type { MessageSender } from '../../src/shared/messages'
 import type { Session } from '../../src/shared/sessions'
 import { HttpError } from '../http'
+import { readLogin } from './login-access'
 import type { ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
 import type { ChatDependencies } from './types'
@@ -28,7 +29,7 @@ export async function createSession(
   dependencies: ChatDependencies,
   sourceSessionId: string | null = null,
 ): Promise<Session> {
-  const login = await dependencies.resolveLogin(startedBy.id, choice.agent)
+  const login = await readLogin(dependencies, startedBy.id, choice.agent)
   const session: Session = {
     id,
     workspaceId: transaction.workspaceId,

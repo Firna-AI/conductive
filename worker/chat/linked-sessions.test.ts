@@ -117,9 +117,19 @@ describe('empty linked sessions', () => {
       choice: CLAUDE,
       attachmentIds: [],
     }
+    await sessionRecord(fixture, source.id)
     fixture.storage.crashAfterCommit = true
     const lost = await fixture.fetch(path, input, fixture.memberCookie)
     expect(lost.status).toBe(500)
+    const committed = await fixture.chat.store.read(WORKSPACE_ID, (view) =>
+      view.message(input.id),
+    )
+    expect(committed).toMatchObject({
+      id: '__proto__',
+      sender: { id: fixture.member.id },
+      state: 'queued',
+    })
+    expect(committed?.sessionId).not.toBe(source.id)
     fixture.restart()
     const replay = await fixture.fetch(path, input, fixture.memberCookie)
     expect(replay.status).toBe(202)

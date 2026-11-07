@@ -2,7 +2,8 @@ import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type { RunnerCommand, RunnerLogin } from '../../src/shared/runner'
 import { DeliveryState } from './delivery-state'
 import { RunnerAccessDenied, SenderAccessDenied } from './login-access'
-import { sessionLogin, unavailableLoginMessage } from './session-login'
+import { unavailableLoginMessage } from './session-login'
+import { ChatOperation } from './operation'
 import type { ChatStore, ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
 import type { ActiveRunner, ChatDependencies, PendingCommand } from './types'
@@ -104,22 +105,18 @@ export class RunnerDelivery {
     if (!message) return null
     let login: RunnerLogin | null
     try {
-      login = await this.store.change(
+      const operation = new ChatOperation(
+        this.store,
         active.workspace.id,
-        async (transaction) => {
-          const session = await transaction.session(command.sessionId)
-          return session
-            ? sessionLogin(
-                transaction,
-                session,
-                this.dependencies,
-                active.workspace.tokenHash,
-                message.sender.id,
-              )
-            : null
-        },
+        this.dependencies,
         this.publish,
       )
+      const observed = await operation.logins.observe(
+        command.sessionId,
+        active.workspace.tokenHash,
+        message.sender.id,
+      )
+      login = observed.login
     } catch (error) {
       if (!(error instanceof SenderAccessDenied)) throw error
       await this.failLogin(active.workspace.id, command, error.message)

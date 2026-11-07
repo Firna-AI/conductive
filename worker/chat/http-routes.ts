@@ -4,9 +4,8 @@ import type { RequestContext } from '../security/gate'
 import { choice, counter, identifier, invalidInput } from './inputs'
 import { send, retryMessage } from './send-message'
 import { changeModel } from './model-changes'
-import { refreshSessionLogins, sessionLogin } from './session-login'
+import type { ChatOperation } from './operation'
 import { closeSession, createSession, sessionFor, stopTurn } from './sessions'
-import type { ChatTransaction } from './store'
 import type { ChatDependencies } from './types'
 
 export function afterNumber(url: URL): number {
@@ -26,18 +25,16 @@ export async function chatRoute(
   request: Request,
   suffix: string,
   context: RequestContext,
-  transaction: ChatTransaction,
+  operation: ChatOperation,
   dependencies: ChatDependencies,
 ): Promise<Response> {
   const url = new URL(request.url)
   if (suffix === '/history' && request.method === 'GET') {
     const sessionId = identifier(url.searchParams.get('sessionId'))
-    await sessionLogin(
-      transaction,
-      await sessionFor(transaction, sessionId),
-      dependencies,
+    await operation.logins.observe(sessionId)
+    const history = await operation.read((view) =>
+      view.history(afterNumber(url)),
     )
-    const history = await transaction.history(afterNumber(url))
     history.events = history.events.filter(
       ({ event }) =>
         ('sessionId' in event && event.sessionId === sessionId) ||
@@ -49,8 +46,8 @@ export async function chatRoute(
   }
   if (suffix === '/sessions') {
     if (request.method === 'GET') {
-      await refreshSessionLogins(transaction, dependencies)
-      const sessions = await transaction.sessions()
+      await operation.logins.refresh()
+      const sessions = await operation.read((view) => view.sessions())
       return Response.json({
         sessions: sessions
           .filter((session) => session.closedAt === null)
@@ -61,17 +58,19 @@ export async function chatRoute(
       } satisfies SessionsResponse)
     }
     if (request.method === 'POST') {
-      return Response.json(
-        {
-          session: await createSession(
-            transaction,
-            choice(context.body?.choice),
-            dependencies.randomId(),
-            context.user,
-            dependencies,
-          ),
-        },
-        { status: 201 },
+      return operation.change(async (transaction) =>
+        Response.json(
+          {
+            session: await createSession(
+              transaction,
+              choice(context.body?.choice),
+              dependencies.randomId(),
+              context.user,
+              dependencies,
+            ),
+          },
+          { status: 201 },
+        ),
       )
     }
   }
@@ -80,69 +79,73 @@ export async function chatRoute(
   )
   if (!match)
     throw new HttpError(404, 'not_found', 'The page is not available.')
-  const session = await sessionFor(transaction, decode(match[1]))
+  const sessionId = decode(match[1])
+  await operation.read((view) => sessionFor(view, sessionId))
   const action = match[2]
-  if (action !== 'messages')
-    await sessionLogin(transaction, session, dependencies)
-  if (!action && request.method === 'PATCH') {
-    session.title = requiredString(context.body?.title)
-    await transaction.saveSession(session)
-    await transaction.emit({ type: 'session.updated', session })
-    return Response.json({ session })
-  }
-  if (action === 'messages' && request.method === 'POST') {
+  if (action === 'messages') {
+    if (request.method !== 'POST')
+      throw new HttpError(404, 'not_found', 'The page is not available.')
     const reply =
       match[4] === 'retry'
         ? await retryMessage(
-            transaction,
-            session.id,
+            operation,
+            sessionId,
             decode(match[3]),
             context,
             dependencies,
           )
-        : await send(transaction, session.id, context, dependencies)
+        : await send(operation, sessionId, context, dependencies)
     return Response.json(reply, { status: 202 })
   }
-  if (action === 'interrupt' && request.method === 'POST') {
-    const turnId = identifier(context.body?.turnId)
-    await transaction.emit({
-      type: 'turn.stop-requested',
-      sessionId: session.id,
-      turnId,
-      requestedById: context.user.id,
-    })
-    return Response.json(
-      await stopTurn(transaction, session, turnId, dependencies.randomId()),
-    )
-  }
-  if (action === 'close' && request.method === 'POST') {
-    if (typeof context.body?.stopRunningTurn !== 'boolean')
-      return invalidInput()
-    return Response.json({
-      session: await closeSession(
-        transaction,
-        session,
-        context.body.stopRunningTurn,
-        dependencies.randomId(),
-      ),
-    })
-  }
-  if (action === 'reopen' && request.method === 'POST') {
-    session.closedAt = null
-    await transaction.saveSession(session)
-    await transaction.emit({ type: 'session.updated', session })
-    return Response.json({ session })
-  }
-  if (action === 'model' && request.method === 'PUT') {
-    return Response.json(
-      await changeModel(
-        transaction,
-        session,
-        context.body,
-        context.user,
-        dependencies,
-      ),
-    )
-  }
-  throw new HttpError(404, 'not_found', 'The page is not available.')
+  const { session } = await operation.logins.observe(sessionId)
+  return operation.change(async (transaction) => {
+    if (!action && request.method === 'PATCH') {
+      session.title = requiredString(context.body?.title)
+      await transaction.saveSession(session)
+      await transaction.emit({ type: 'session.updated', session })
+      return Response.json({ session })
+    }
+    if (action === 'interrupt' && request.method === 'POST') {
+      const turnId = identifier(context.body?.turnId)
+      await transaction.emit({
+        type: 'turn.stop-requested',
+        sessionId: session.id,
+        turnId,
+        requestedById: context.user.id,
+      })
+      return Response.json(
+        await stopTurn(transaction, session, turnId, dependencies.randomId()),
+      )
+    }
+    if (action === 'close' && request.method === 'POST') {
+      if (typeof context.body?.stopRunningTurn !== 'boolean')
+        return invalidInput()
+      return Response.json({
+        session: await closeSession(
+          transaction,
+          session,
+          context.body.stopRunningTurn,
+          dependencies.randomId(),
+        ),
+      })
+    }
+    if (action === 'reopen' && request.method === 'POST') {
+      session.closedAt = null
+      await transaction.saveSession(session)
+      await transaction.emit({ type: 'session.updated', session })
+      return Response.json({ session })
+    }
+    if (action === 'model' && request.method === 'PUT') {
+      return Response.json(
+        await changeModel(
+          transaction,
+          session,
+          context.body,
+          context.user,
+          dependencies,
+        ),
+      )
+    }
+    throw new HttpError(404, 'not_found', 'The page is not available.')
+  })
 }

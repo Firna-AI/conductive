@@ -3,26 +3,23 @@ import { HttpError } from '../http'
 import type { RequestContext } from '../security/gate'
 import { sendMessage } from './inputs'
 import { acceptMessage, existingMessage } from './messages'
-import { sessionLogin } from './session-login'
+import type { ChatOperation } from './operation'
+import { readLogin } from './login-access'
 import { createSession, sameAgent, sessionFor } from './sessions'
-import type { ChatTransaction } from './store'
 import type { ChatDependencies } from './types'
 
 export async function send(
-  transaction: ChatTransaction,
+  operation: ChatOperation,
   sessionId: string,
   context: RequestContext,
   dependencies: ChatDependencies,
 ): Promise<SendMessageResponse> {
   const input = sendMessage(context.body)
-  const existing = await existingMessage(
-    transaction,
-    sessionId,
-    input,
-    context.user,
+  const existing = await operation.read((view) =>
+    existingMessage(view, sessionId, input, context.user),
   )
   if (existing) return existing
-  const source = await sessionFor(transaction, sessionId)
+  const source = await operation.read((view) => sessionFor(view, sessionId))
   sameAgent(source, input.choice)
   if (source.closedAt !== null)
     throw new HttpError(
@@ -30,19 +27,18 @@ export async function send(
       'session_closed',
       'Reopen the session to send a message.',
     )
-  const login = await sessionLogin(
-    transaction,
-    source,
-    dependencies,
+  const { session: observed, login } = await operation.logins.observe(
+    sessionId,
     undefined,
     context.user.id,
   )
-  let target = source
+  let linked = false
   if (!login) {
     const ownLogin =
       source.startedBy?.id === context.user.id
         ? null
-        : await dependencies.resolveLogin(
+        : await readLogin(
+            dependencies,
             context.user.id,
             input.choice.agent,
             undefined,
@@ -54,54 +50,60 @@ export async function send(
         'agent_login_required',
         'Connect your agent login to send a message.',
       )
-    target = await createSession(
-      transaction,
-      input.choice,
-      dependencies.randomId(),
-      context.user,
-      dependencies,
-      source.id,
+    linked = true
+  }
+  return operation.change(async (transaction) => {
+    const source = await sessionFor(transaction, sessionId)
+    const target = linked
+      ? await createSession(
+          transaction,
+          input.choice,
+          dependencies.randomId(),
+          context.user,
+          dependencies,
+          observed.id,
+        )
+      : source
+    const attachments = await dependencies.resolveAttachments(
+      context.user.id,
+      transaction.workspaceId,
+      input.attachmentIds,
     )
-  }
-  const attachments = await dependencies.resolveAttachments(
-    context.user.id,
-    transaction.workspaceId,
-    input.attachmentIds,
-  )
-  const response = await acceptMessage(
-    transaction,
-    target.id,
-    input,
-    context.user,
-    attachments,
-    dependencies.randomId,
-  )
-  if (target.id !== source.id) {
-    await transaction.saveMessageSource(input.id, source.id)
-    if (source.retryMessageId !== null) {
-      source.retryMessageId = null
-      await transaction.saveSession(source)
-      await transaction.emit({ type: 'session.updated', session: source })
+    const response = await acceptMessage(
+      transaction,
+      target.id,
+      input,
+      context.user,
+      attachments,
+      dependencies.randomId,
+    )
+    if (target.id !== source.id) {
+      await transaction.saveMessageSource(input.id, source.id)
+      if (source.retryMessageId !== null) {
+        source.retryMessageId = null
+        await transaction.saveSession(source)
+        await transaction.emit({ type: 'session.updated', session: source })
+      }
     }
-  }
-  return response
+    return response
+  })
 }
 
 export async function retryMessage(
-  transaction: ChatTransaction,
+  operation: ChatOperation,
   sessionId: string,
   messageId: string,
   context: RequestContext,
   dependencies: ChatDependencies,
 ): Promise<SendMessageResponse> {
-  const previous = await transaction.message(messageId)
+  const previous = await operation.read((view) => view.message(messageId))
   if (!previous || previous.sessionId !== sessionId)
     throw new HttpError(
       404,
       'message_not_found',
       'The message is not available.',
     )
-  const session = await sessionFor(transaction, sessionId)
+  const session = await operation.read((view) => sessionFor(view, sessionId))
   if (session.retryMessageId !== messageId)
     throw new HttpError(
       409,
@@ -109,7 +111,7 @@ export async function retryMessage(
       'Only the newest failed request can run again. Send a new message.',
     )
   return send(
-    transaction,
+    operation,
     sessionId,
     {
       ...context,

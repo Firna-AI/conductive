@@ -192,23 +192,36 @@ state the rules.
 - The first message of a new workspace must create its session with
   `FirstWorkspaceMessage.sender` as the starter, never the workspace owner.
   The outer Worker does not wire that hook yet.
-- `sessionLogin` in `session-login.ts` reads the starter's login for the
-  agent of the session through `resolveLogin`. It stores a changed
-  `loginAvailable` with a `session.updated` event.
-- The check runs at these points, in the serial queue:
-  - the creation of a session, the session list, and a history read
-  - the other routes of one session: rename, interrupt, model, close, and
-    reopen
-  - a new tab subscription
-  - each new message that Send or Retry accepts
+- `SessionLogins.observe` in `session-login.ts` reads the starter's login of
+  one existing session through `readLogin`. When `loginAvailable` changes,
+  it commits the new value and a `session.updated` event in its own change.
+  An unchanged result writes nothing. `SessionLogins.refresh` observes each
+  session of the workspace.
+- `ChatOperation` in `operation.ts` gives each caller its reads and changes
+  in the serial queue that the caller holds. Each change commits on its
+  own.
+- These points run an observation, in the serial queue:
+  - the session list and a new tab subscription, which refresh each session
+  - a history read
+  - the other routes of one session, before their own change: rename,
+    interrupt, model, close, and reopen
+  - Send, and a Retry that the session record allows, before the workspace
+    accepts or refuses the message
   - each `turn` or `message` command, before it goes to the runner
+- An observed change stays when the action after it fails or is refused.
+  For example, the workspace refuses Send after it observes the starter's
+  missing login. Each tab still gets `loginAvailable: false`.
+- A message, its commands, its attachment references, and a linked session
+  commit together in one change, or not at all.
+- A new session gets its first `loginAvailable` from `readLogin` in the
+  change that creates its record, because no earlier record exists.
 - A repeated message ID returns its stored target with no new check. A
   `model` or `interrupt` command carries no login, so its dispatch reads no
   login. No timer watches logins.
-- `send` in `send-message.ts` checks the starter's login before it accepts
-  a message. When that login cannot be used, another member with a login
-  gets a new linked session with `sourceSessionId`. Only the new message
-  goes there.
+- `send` in `send-message.ts` observes the starter's login before it accepts
+  a message. When that login cannot be used, `readLogin` checks the own
+  login of the member. Another member with a login gets a new linked session
+  with `sourceSessionId`. Only the new message goes there.
 - While the starter's login cannot be used, the starter's own message gets
   `409 agent_login_required`. So does the message of another member who
   has no login either. No session is created.
@@ -249,6 +262,8 @@ test support files and tests check the chat backend.
   session records.
 - `session-logins.test.ts`, `linked-sessions.test.ts`, `linked-retry.test.ts`,
   and `legacy-sessions.test.ts` test starters, linked sessions, and old data.
+  `login-observation.test.ts` tests that an observed change stays after a
+  refused Send, and that a repeated message ID observes nothing.
 - `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
   end. It also checks that late ends preserve the next turn and its commands.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,

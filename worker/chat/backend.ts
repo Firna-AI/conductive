@@ -11,7 +11,7 @@ import { gate, type RequestContext } from '../security/gate'
 import { afterNumber, chatRoute } from './http-routes'
 import { BrowserTabs } from './browser-tabs'
 import { findChatWorkspace, tokenWorkspace } from './queries'
-import { refreshSessionLogins } from './session-login'
+import { ChatOperation } from './operation'
 import { chatDependencies } from './dependencies'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore, type ChatTransaction } from './store'
@@ -73,17 +73,12 @@ export class WorkspaceChat {
             'The archived chat is read-only.',
           )
         }
-        const response = await this.store.change(
-          access.workspace.id,
-          (transaction) =>
-            chatRoute(
-              request,
-              access.suffix,
-              access.context,
-              transaction,
-              this.dependencies,
-            ),
-          (events) => this.publish(events),
+        const response = await chatRoute(
+          request,
+          access.suffix,
+          access.context,
+          this.operation(access.workspace.id),
+          this.dependencies,
         )
         await this.runner.flush()
         return privateResponse(response)
@@ -238,15 +233,7 @@ export class WorkspaceChat {
     peer: BrowserPeer,
   ): Promise<() => void> {
     return this.store.run(async () => {
-      const sessions = await this.store.read(access.workspace.id, (view) =>
-        view.sessions(),
-      )
-      if (sessions.length > 0)
-        await this.store.change(
-          access.workspace.id,
-          (transaction) => refreshSessionLogins(transaction, this.dependencies),
-          (events) => this.publish(events),
-        )
+      await this.operation(access.workspace.id).logins.refresh()
       const unsubscribe = await this.browsers
         .add(peer, {
           kind: 'workspace',
@@ -275,6 +262,15 @@ export class WorkspaceChat {
         throw error
       }
     })
+  }
+
+  private operation(workspaceId: string): ChatOperation {
+    return new ChatOperation(
+      this.store,
+      workspaceId,
+      this.dependencies,
+      this.publish,
+    )
   }
 
   private bind(workspaceId: string): void {

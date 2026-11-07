@@ -1,3 +1,4 @@
+import type { Agent } from '../../src/shared/agents'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { readAgentLogin, senderLoginAccess } from './queries'
@@ -14,6 +15,22 @@ export class SenderAccessDenied extends HttpError {
       'The message sender no longer has access to this workspace.',
     )
   }
+}
+
+export async function readLogin(
+  dependencies: ChatDependencies,
+  userId: string | null,
+  agent: Agent,
+  runnerTokenHash?: string,
+  senderId?: string,
+) {
+  const login = await dependencies.resolveLogin(
+    userId,
+    agent,
+    runnerTokenHash,
+    senderId,
+  )
+  return login?.agent === agent ? login : null
 }
 
 export function loginResolver(
