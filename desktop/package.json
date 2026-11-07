@@ -1,10 +1,10 @@
 {
-  "name": "@conducting/desktop",
+  "name": "@conductive/desktop",
   "private": true,
   "version": "0.1.0-alpha.1",
-  "description": "The Conducting Mac app",
-  "homepage": "https://conducting.build",
-  "author": "Conducting",
+  "description": "The Conductive Mac app",
+  "homepage": "https://conductive.build",
+  "author": "Conductive",
   "type": "module",
   "main": "dist/app/desktop/src/main.js",
   "scripts": {

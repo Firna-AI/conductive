@@ -5,7 +5,7 @@ import { OpenInNewTab, PreviewFrame } from './PreviewFrame'
 const preview = {
   id: 'preview-1',
   port: 3000,
-  url: 'https://a4826b97d1c04f15802c7e9bb2546d30.conducting-previews.test/',
+  url: 'https://a4826b97d1c04f15802c7e9bb2546d30.conductive-previews.test/',
   expiresAt: 1_800_086_400_000,
 }
 

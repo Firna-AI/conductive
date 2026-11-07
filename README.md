@@ -1,6 +1,6 @@
-# Conducting
+# Conductive
 
-Conducting is a coding tool at `conducting.build`, in the browser and in a
+Conductive is a coding tool at `conductive.build`, in the browser and in a
 Mac app. Each workspace is one task with its own branch and its own cloud
 computer, where agents powered by Claude and Codex work. The agents run
 only in the cloud. It replaces Conductor Cloud, which shuts down on

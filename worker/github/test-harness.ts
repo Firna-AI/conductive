@@ -15,7 +15,7 @@ import { GITHUB_WEBHOOK_PATH, handleGitHubWebhook } from './webhook'
 import { refreshWorkspace } from './refresh'
 import { MemoryWorkspace } from './memory-workspace'
 
-export const MACHINE_ORIGIN = 'https://machines.conducting.test'
+export const MACHINE_ORIGIN = 'https://machines.conductive.test'
 export const WEBHOOK_SECRET = 'test-only-webhook-secret'
 
 export class GitHubTestHarness {

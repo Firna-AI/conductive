@@ -29,7 +29,7 @@ test('gives back native window-button space in full screen and restores it after
   const profile = await mkdtemp(
     resolve(evidence, 'desktop-window-space-profile-'),
   )
-  const packaged = process.env.CONDUCTING_PACKAGED_APP
+  const packaged = process.env.CONDUCTIVE_PACKAGED_APP
   const stages: {
     stage: 'normal' | 'full-screen' | 'restored'
     isFullScreen: boolean
@@ -46,7 +46,7 @@ test('gives back native window-button space in full screen and restores it after
     })
     const page = await electron.firstWindow()
     await expect(
-      page.getByRole('heading', { name: 'Conducting', exact: true }),
+      page.getByRole('heading', { name: 'Conductive', exact: true }),
     ).toBeVisible()
     // This decorative reserve has no accessible name and can have zero height.
     const reserve = page.locator('[data-desktop-window-space]')

@@ -1,6 +1,6 @@
 # Workspace CLI and MCP server
 
-These tools create and list Conducting workspaces from a running workspace.
+These tools create and list Conductive workspaces from a running workspace.
 They use the machine route in the [shared contract](../src/shared/agent-tools.ts).
 The [Worker handler](../worker/tools/README.md) verifies the workspace token and the calling turn.
 
@@ -10,11 +10,11 @@ They use its native TypeScript support and need no runtime npm packages.
 ## Use
 
 ```sh
-conducting workspaces list
-conducting workspaces create --repository repo-id --message 'Build this feature.'
-conducting workspaces create --repository repo-id --message 'Review the change.' \
+conductive workspaces list
+conductive workspaces create --repository repo-id --message 'Build this feature.'
+conductive workspaces create --repository repo-id --message 'Review the change.' \
   --agent codex --model model-name --effort high --section section-id
-conducting mcp
+conductive mcp
 ```
 
 Create inherits the calling workspace's org and owner.
@@ -25,18 +25,18 @@ List returns every workspace in the org, including archived workspaces.
 
 The CLI writes one JSON response to stdout.
 It writes a failure message to stderr and returns exit status 1.
-`conducting --help` works without runtime credentials.
+`conductive --help` works without runtime credentials.
 
 The runner supplies these values in the process environment:
 
 | Name | Value |
 | --- | --- |
-| `CONDUCTING_MACHINE_ORIGIN` | The configured machine origin |
-| `CONDUCTING_WORKSPACE_TOKEN` | The calling workspace's runtime token |
-| `CONDUCTING_TURN_ID` | The `turnId` of the active runner command |
+| `CONDUCTIVE_MACHINE_ORIGIN` | The configured machine origin |
+| `CONDUCTIVE_WORKSPACE_TOKEN` | The calling workspace's runtime token |
+| `CONDUCTIVE_TURN_ID` | The `turnId` of the active runner command |
 
 The tools send the token as a bearer credential.
-They send the turn ID in `X-Conducting-Turn-Id`.
+They send the turn ID in `X-Conductive-Turn-Id`.
 The turn ID selects context.
 It grants no access by itself.
 Create requires valid active turn context.
@@ -68,8 +68,8 @@ The asset module uses the source contract in [image-manifest.ts](image-manifest.
 It needs no filesystem at runtime and reads no environment values or secret files.
 The image builder passes these assets to `installWorkspaceTools` from [the installer](../worker/tools/image.ts).
 
-The installer places the sources under `/opt/conducting/agent-tools`.
-It installs `/usr/local/bin/conducting` as an executable launcher.
+The installer places the sources under `/opt/conductive/agent-tools`.
+It installs `/usr/local/bin/conductive` as an executable launcher.
 The launcher reads `/run/ascii-secrets/env.sh` at runtime when that file exists.
 It then removes `NODE_OPTIONS` from the environment.
 It selects the first executable Node file in `/usr/local/bin`, `/usr/bin`, and `/bin`, in that order.

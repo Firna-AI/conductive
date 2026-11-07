@@ -1,6 +1,6 @@
 # Workspace files backend
 
-This module serves the Files and Changes API for Conducting.
+This module serves the Files and Changes API for Conductive.
 It keeps the runner's last tree and branch changes in workspace Durable Object storage.
 It also sends file and diff requests to the connected runner.
 A disconnected file read uses the shared sandbox provider on the server.

@@ -16,7 +16,7 @@ export async function connectFilesRunner(workspaceId = 'workspace-1') {
   connection.onClose(() => files.detach(connectionId))
   files.attach(connectionId, (command) => connection.reply(command))
   await runner.connect(() => connection, {
-    url: 'https://machines.conducting.test/runner',
+    url: 'https://machines.conductive.test/runner',
     workspaceToken: 'test-workspace-token',
   })
   return { files, runner, connection, connectionId }
@@ -55,7 +55,7 @@ export async function connectWorkspaceFiles(
     else commands.push(command)
   })
   await runner.connect(() => connection, {
-    url: 'https://machines.conducting.test/runner',
+    url: 'https://machines.conductive.test/runner',
     workspaceToken: 'test-workspace-token',
   })
   return {

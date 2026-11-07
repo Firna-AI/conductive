@@ -29,7 +29,7 @@ says.
 
 - Each hostname has one gate. It runs before every route and every
   WebSocket upgrade.
-- The gate of `app.conducting.build` checks the sign-in, a matching
+- The gate of `app.conductive.build` checks the sign-in, a matching
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
@@ -49,7 +49,7 @@ says.
   the agent runner, and the git credential helper. Its gate checks a
   webhook signature or a workspace token in place of the sign-in.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
-- The marketing site at `conducting.build` needs no sign-in.
+- The marketing site at `conductive.build` needs no sign-in.
 
 The [Mac app](desktop-app.md#the-worker-and-the-desktop-origin) states the
 additional origin that the app gate accepts.
@@ -185,7 +185,7 @@ Later screens add the frame and connection sources that they need.
 
 ## Terminal
 
-- The terminal socket runs on `app.conducting.build`, behind its gate.
+- The terminal socket runs on `app.conductive.build`, behind its gate.
 - The terminal listens on a private port of the sandbox. The Worker
   connects to it with Boat's port cookie and a password for each
   workspace.

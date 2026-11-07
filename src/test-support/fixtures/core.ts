@@ -33,7 +33,7 @@ import type { CreateOrgResponse, OrgsResponse } from '../../shared/orgs'
 import type { SectionsResponse } from '../../shared/sections'
 import { repositoryFixtures } from './repositories'
 
-export const FAKE_ORIGIN = 'https://app.conducting.test'
+export const FAKE_ORIGIN = 'https://app.conductive.test'
 export const FAKE_TIME = 1_800_000_000_000
 export const FAKE_IDS = {
   org: 'acme',
@@ -157,7 +157,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
       repositoryCount: installation.repositories,
       settingsUrl: `https://github.com/organizations/${installation.account}/settings/installations/${index + 1}`,
     })),
-    installUrl: 'https://github.com/apps/conducting/installations/new',
+    installUrl: 'https://github.com/apps/conductive/installations/new',
   }
   const getStarted: GetStartedResponse = {
     orgId: FAKE_IDS.org,

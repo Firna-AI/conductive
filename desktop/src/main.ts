@@ -52,9 +52,9 @@ startDesktop({
     configuration = readConfiguration(value)
     if (process.platform === 'darwin')
       app.dock?.setIcon(
-        resolve(app.getAppPath(), 'dist/bundle/conducting-icon-1024.png'),
+        resolve(app.getAppPath(), 'dist/bundle/conductive-icon-1024.png'),
       )
-    const rendererSession = session.fromPartition('persist:conducting')
+    const rendererSession = session.fromPartition('persist:conductive')
     installPermissions(rendererSession)
     rendererSession.on('will-download', (event) => event.preventDefault())
     rendererSession.protocol.handle(
@@ -81,7 +81,7 @@ startDesktop({
       },
     })
     if (app.isPackaged && process.platform === 'darwin')
-      app.setAsDefaultProtocolClient('conducting')
+      app.setAsDefaultProtocolClient('conductive')
     const updates = startUpdates({
       updater: electronUpdater.autoUpdater,
       packaged: app.isPackaged,

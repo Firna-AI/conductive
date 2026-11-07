@@ -27,17 +27,17 @@ them yet.
 ## The page
 
 - The Mac app bundles the built web app. It serves these files from its
-  own origin, `conducting-app://desktop`, the desktop origin.
+  own origin, `conductive-app://desktop`, the desktop origin.
 - The page opens from the package, also without the network. The window
   never loads the page from a server.
 - The desktop origin serves only the files of the package. A path outside
   the package gets no file.
 - An address that names no file and has no file extension gets the start
   page of the web app.
-- The page calls the API and opens its sockets on `app.conducting.build`,
+- The page calls the API and opens its sockets on `app.conductive.build`,
   as in a browser.
 - Each file carries the same content security policy as the web app. That
-  policy also names `app.conducting.build` for the API and the sockets.
+  policy also names `app.conductive.build` for the API and the sockets.
 - Reason: in the Mac app, the API and the sockets are on another origin
   than the page.
 
@@ -79,28 +79,28 @@ them yet.
 - An address with another scheme, such as `file:`, goes nowhere.
 - A frame in the page, such as a port preview or the live desktop of a
   sandbox, can load its own pages. It cannot replace the main frame, and it
-  cannot open a `conducting://` address.
+  cannot open a `conductive://` address.
 
 ## Sign-in
 
 - In the Mac app, GitHub sign-in opens in the user's default browser
   (decision 62). The browser then hands the sign-in to the Mac app through
-  a `conducting://` address.
+  a `conductive://` address.
 - A sign-in inside the app window was rejected. Reason: the browser already
   holds the user's GitHub sign-in and passkeys, and the window opens other
   sites in the browser.
 - A sign-in that starts in the Mac app gives the browser no sign-in
   session.
-- The `conducting://` address carries a handoff code. It never carries a
+- The `conductive://` address carries a handoff code. It never carries a
   sign-in session or a GitHub token.
 - A handoff code works once, and only for 60 seconds.
 - A handoff code works only with a secret that the Mac app made when it
   started that sign-in. Only the exchange with the Worker carries that
   secret.
-- Reason: another app on the Mac can claim the `conducting://` scheme. A
+- Reason: another app on the Mac can claim the `conductive://` scheme. A
   code that such an app catches is of no use without the secret.
 - The Mac app accepts only its exact handoff address, and only while a
-  sign-in that it started waits. It ignores every other `conducting://`
+  sign-in that it started waits. It ignores every other `conductive://`
   address.
 - The Mac app exchanges the code with the Worker for its own sign-in
   session. The scripts of the page never get the code or a session token.
@@ -126,7 +126,7 @@ them yet.
 
 ## The Worker and the desktop origin
 
-- The gate of `app.conducting.build` accepts the desktop origin wherever
+- The gate of `app.conductive.build` accepts the desktop origin wherever
   it accepts the app origin.
   [Access and security](access-and-security.md#hostnames-and-gates) states
   that gate.

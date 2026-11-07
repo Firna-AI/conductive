@@ -19,7 +19,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
   await mkdir(evidence, { recursive: true })
   const profile = await mkdtemp(resolve(evidence, 'desktop-profile-'))
   let electron: ElectronApplication | undefined
-  const packaged = process.env.CONDUCTING_PACKAGED_APP
+  const packaged = process.env.CONDUCTIVE_PACKAGED_APP
   const launch = () =>
     _electron.launch({
       ...(packaged ? { executablePath: packaged } : {}),
@@ -30,7 +30,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
     electron = await launch()
     let page = await electron.firstWindow()
     await expect(
-      page.getByRole('heading', { name: 'Conducting', exact: true }),
+      page.getByRole('heading', { name: 'Conductive', exact: true }),
     ).toBeVisible()
     await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/`)
     const nav = page.getByRole('navigation', { name: 'Window controls' })
@@ -57,7 +57,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
     // Capture the native browser boundary. No external browser opens in this test.
     await electron.evaluate(({ shell }) => {
       shell.openExternal = async (url) => {
-        process.env.CONDUCTING_TEST_OPENED = url
+        process.env.CONDUCTIVE_TEST_OPENED = url
       }
     })
     await page.evaluate(() => {
@@ -68,7 +68,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
       link.click()
     })
     await expect
-      .poll(() => electron!.evaluate(() => process.env.CONDUCTING_TEST_OPENED))
+      .poll(() => electron!.evaluate(() => process.env.CONDUCTIVE_TEST_OPENED))
       .toBe('https://example.com/review')
     expect(electron.windows()).toHaveLength(1)
     await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/history`)
@@ -89,7 +89,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
       async ({ app, BrowserWindow, screen }) => {
         const active = BrowserWindow.getAllWindows()[0]
         const response = await active.webContents.session.fetch(
-          'conducting-app://desktop/',
+          'conductive-app://desktop/',
         )
         const preferences: unknown = Reflect.apply(
           Reflect.get(active.webContents, 'getLastWebPreferences'),
@@ -113,7 +113,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
           electronVersion: process.versions.electron,
           bounds,
           url: active.webContents.getURL(),
-          childTopNavigation: process.env.CONDUCTING_TEST_TOP_NAVIGATION,
+          childTopNavigation: process.env.CONDUCTIVE_TEST_TOP_NAVIGATION,
         }
       },
     )
@@ -146,7 +146,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
     electron = await launch()
     page = await electron.firstWindow()
     await expect(
-      page.getByRole('heading', { name: 'Conducting', exact: true }),
+      page.getByRole('heading', { name: 'Conductive', exact: true }),
     ).toBeVisible()
     expect(
       await electron.evaluate(({ BrowserWindow }) =>

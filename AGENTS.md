@@ -1,7 +1,7 @@
 # A guide for agents
 
-This repository builds Conducting, a coding tool at
-`conducting.build`. Each workspace is one task with its own branch and its own
+This repository builds Conductive, a coding tool at
+`conductive.build`. Each workspace is one task with its own branch and its own
 cloud computer, a Boat sandbox, where agents powered by Claude and Codex
 work. The requirements live in
 `docs/architecture.md` and `docs/protocol/`, and the Mokly mockup catalogue
@@ -95,8 +95,8 @@ plan. A push to another branch runs no CI until its pull request opens.
 - Prettier ignores Markdown and `plans/`, and no command checks the links
   in Markdown. Check each relative link of a changed Markdown file
   yourself.
-- The product is "Conducting", on `conducting.build`, as the user chose
-  for decision 32. Code reads the name from `docs/mockups/src/brand.ts`,
+- The product is "Conductive", on `conductive.build`, as the user chose
+  for decision 100. Code reads the name from `docs/mockups/src/brand.ts`,
   so that one change renames the product.
 - Never use "Claude Code" as a name of the product or of its features.
   Write "agents powered by Claude and Codex", as

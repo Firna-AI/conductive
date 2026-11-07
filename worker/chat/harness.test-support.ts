@@ -38,7 +38,7 @@ export const CODEX: AgentChoice = {
   model: 'test-codex',
   effort: 'medium',
 }
-export const MACHINE_ORIGIN = 'https://machines.conducting.test'
+export const MACHINE_ORIGIN = 'https://machines.conductive.test'
 export const WORKSPACE_ID = 'workspace-chat'
 export const WORKSPACE_TOKEN = 'workspace-token'
 

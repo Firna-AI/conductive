@@ -9,7 +9,7 @@ import { TEST_TIME, type TestHarness } from '../test-support/harness'
 import { createAgentToolsHandler } from './handler'
 import type { CallingTurn, ToolWorkspaceCreation } from './services'
 
-export const TOOL_TEST_ORIGIN = 'https://machine.conducting.test'
+export const TOOL_TEST_ORIGIN = 'https://machine.conductive.test'
 export const TOOL_TEST_TOKEN = 'workspace-token-for-tools-tests'
 export const TOOL_TEST_TURN = 'turn-from-teammate'
 export const OWNER_CHOICE = {

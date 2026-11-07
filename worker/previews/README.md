@@ -52,7 +52,7 @@ The proxy also updates the D1 activity time. Each preview HTTP request and
 WebSocket handshake counts. Socket frames and idle connections do not count.
 
 The header allowlists live in `headers.ts`. The cookie allowlist accepts
-valid app cookie names and excludes the port and Conducting session cookies.
+valid app cookie names and excludes the port and Conductive session cookies.
 Responses keep app cookies with their domain removed. This makes them
 specific to the preview hostname. The proxy follows no upstream redirect.
 

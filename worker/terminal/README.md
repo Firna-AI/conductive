@@ -24,7 +24,7 @@ the service. The synchronous `ExecStartPre` step creates a random password
 locally under `/run`. It keeps an existing valid password on service restarts.
 `RuntimeDirectoryPreserve=yes` keeps that password through an automatic restart.
 The readiness command returns no password in stdout or command history.
-The hook reads `/run/conducting-terminal/password` through the provider's
+The hook reads `/run/conductive-terminal/password` through the provider's
 bounded file API, with a 64-byte limit. It caches that password encrypted in D1.
 The cache update checks that the workspace still owns the same sandbox.
 The app supplies no extra terminal secret at start. The workspace token

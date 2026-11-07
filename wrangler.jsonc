@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "conducting",
+  "name": "conductive",
   "main": "./worker/index.ts",
   "compatibility_date": "2026-11-06",
   "assets": {
@@ -15,7 +15,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "conducting",
+      "database_name": "conductive",
       // Local development only. Set a real ID when deployment is added.
       "database_id": "00000000-0000-0000-0000-000000000000",
       "migrations_dir": "migrations",

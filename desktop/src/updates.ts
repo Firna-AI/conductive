@@ -1,7 +1,7 @@
 export const UPDATE_FEED = {
   provider: 'github',
   owner: 'Firna-AI',
-  repo: 'conducting-desktop',
+  repo: 'conductive-desktop',
 } as const
 
 export interface Updater {

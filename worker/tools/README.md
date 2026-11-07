@@ -1,6 +1,6 @@
 # Agent workspace tools
 
-This area handles create and list calls from agents inside a Conducting workspace.
+This area handles create and list calls from agents inside a Conductive workspace.
 It implements the [agent-tool requirements](../../docs/protocol/agent-tools.md).
 It uses the existing [shared contracts](../../src/shared/README.md) and D1 tables.
 It adds no migration.
@@ -31,7 +31,7 @@ This response exposes a missing integration dependency.
 It does not set a new product default.
 A fully specified model and effort need no default lookup.
 
-POST also requires `X-Conducting-Turn-Id`.
+POST also requires `X-Conductive-Turn-Id`.
 The `callingTurn` service must read the active turn from the calling workspace's turn store.
 It must return the matching workspace ID, turn ID, and sender user ID.
 The handler checks these IDs and the sender's current org membership.
@@ -89,7 +89,7 @@ Production use requires this composition work:
 9. Launch a new workspace MCP process for each active turn with that turn's `turnId`.
 10. Stop that MCP process when its turn ends.
 
-The runner passes `CONDUCTING_MACHINE_ORIGIN`, `CONDUCTING_WORKSPACE_TOKEN`, and `CONDUCTING_TURN_ID`.
+The runner passes `CONDUCTIVE_MACHINE_ORIGIN`, `CONDUCTIVE_WORKSPACE_TOKEN`, and `CONDUCTIVE_TURN_ID`.
 The CLI inherits the same environment from the active agent process.
 The MCP process cannot keep one fixed turn ID across turns or concurrent sessions.
 The active-turn resolver must reject stale IDs.

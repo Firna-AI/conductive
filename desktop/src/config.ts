@@ -1,6 +1,6 @@
 import { appContentSecurityPolicy } from '../../worker/security/content-security.ts'
 
-export const DEFAULT_APP_ORIGIN = 'https://app.conducting.build'
+export const DEFAULT_APP_ORIGIN = 'https://app.conductive.build'
 
 export interface BuildConfig {
   appOrigin: string

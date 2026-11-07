@@ -42,7 +42,7 @@ it('persists an unpredictable preview hostname and lists it with a 24-hour expir
     expiresAt: TEST_TIME + 86_400_000,
   })
   expect(new URL(preview.url).hostname).toMatch(
-    /^[a-f0-9]{32}\.conducting-previews\.test$/,
+    /^[a-f0-9]{32}\.conductive-previews\.test$/,
   )
   expect(preview.url).not.toContain('server-port-token')
   const another = createPreviewHandler(harness.env, harness.dependencies)
@@ -78,7 +78,7 @@ it('blocks unknown, closed, stopped, and expired preview hostnames before upstre
   const closed = await setup.handler.proxy(new Request(preview.url))
   const unknown = await setup.handler.proxy(
     new Request(
-      'https://00000000000000000000000000000000.conducting-previews.test',
+      'https://00000000000000000000000000000000.conductive-previews.test',
     ),
   )
   expect([closed.status, unknown.status]).toEqual([404, 404])
@@ -132,7 +132,7 @@ it('proxies HTTP with explicit headers and keeps only preview app cookies', asyn
       method: 'POST',
       body: 'cart=2',
       headers: {
-        Cookie: `_port_auth=forged; shop=blue; ${SESSION_COOKIE}=app-session; __Host-conducting-oauth=oauth`,
+        Cookie: `_port_auth=forged; shop=blue; ${SESSION_COOKIE}=app-session; __Host-conductive-oauth=oauth`,
         Authorization: 'Bearer app-secret',
         'X-Private': 'secret',
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -240,7 +240,7 @@ it('preserves a preflight response from an API that reflects the requested metho
   expect(setup.response.status).toBe(201)
   const { preview }: PreviewResponse = await setup.response.json()
   const origin =
-    'https://fedcba9876543210fedcba9876543210.conducting-previews.test'
+    'https://fedcba9876543210fedcba9876543210.conductive-previews.test'
   const base = harness.dependencies.fetch
   let upstreamHeaders = new Headers()
   harness.dependencies.fetch = async (request) => {

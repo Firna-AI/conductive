@@ -1,6 +1,6 @@
 # Worker backend
 
-This Cloudflare Worker serves the browser API for Conducting.
+This Cloudflare Worker serves the browser API for Conductive.
 It checks sign-in and org access before it dispatches protected app requests.
 Durable Objects hold workspace state, and D1 holds shared records.
 The [security area](security/README.md) owns the app request gate and its JSON body limit.

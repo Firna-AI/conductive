@@ -6,15 +6,15 @@ import { DEFAULT_APP_ORIGIN, readConfiguration } from '../src/config.ts'
 
 const desktop = resolve(import.meta.dirname, '..')
 const repository = resolve(desktop, '..')
-const frameSources = (process.env.CONDUCTING_FRAME_SOURCES ?? '')
+const frameSources = (process.env.CONDUCTIVE_FRAME_SOURCES ?? '')
   .split(/\s+/)
   .filter(Boolean)
 const configuration = readConfiguration({
-  appOrigin: process.env.CONDUCTING_APP_ORIGIN ?? DEFAULT_APP_ORIGIN,
+  appOrigin: process.env.CONDUCTIVE_APP_ORIGIN ?? DEFAULT_APP_ORIGIN,
   frameSources,
   // Enabling the feed needs a published public repository and a deliberate build.
   updates:
-    process.env.CONDUCTING_DESKTOP_UPDATES === 'enabled'
+    process.env.CONDUCTIVE_DESKTOP_UPDATES === 'enabled'
       ? 'enabled'
       : 'unpublished',
 })
@@ -37,8 +37,8 @@ run(process.execPath, [
 ])
 await mkdir(resolve(desktop, 'dist/bundle'), { recursive: true })
 await copyFile(
-  resolve(repository, 'docs/brand/conducting-icon-1024.png'),
-  resolve(desktop, 'dist/bundle/conducting-icon-1024.png'),
+  resolve(repository, 'docs/brand/conductive-icon-1024.png'),
+  resolve(desktop, 'dist/bundle/conductive-icon-1024.png'),
 )
 await writeFile(
   resolve(desktop, 'dist/bundle/build-config.json'),

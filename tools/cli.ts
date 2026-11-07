@@ -3,12 +3,12 @@ import { parseArgs } from 'node:util'
 import { WorkspaceToolError, type WorkspaceToolClient } from './client.ts'
 import { createWorkspaceInput, ToolInputError } from './input.ts'
 
-export const CLI_HELP = `Conducting workspace tools
+export const CLI_HELP = `Conductive workspace tools
 
-conducting workspaces list
-conducting workspaces create --repository ID --message TEXT
+conductive workspaces list
+conductive workspaces create --repository ID --message TEXT
   [--agent claude|codex --model NAME] [--effort LEVEL] [--section ID]
-conducting mcp
+conductive mcp
 
 Create starts a workspace in the calling workspace's org, with its owner.
 Omitted options use the owner's model and effort, and the default section.

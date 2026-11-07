@@ -14,39 +14,39 @@ export const TERMINAL_PORT = 7681
 const installScript = `set -eu
 apt-get update
 apt-get install -y ttyd
-install -d -m 755 /usr/local/lib/conducting
-cat > /usr/local/lib/conducting/terminal <<'CONDUCTING_TERMINAL'
+install -d -m 755 /usr/local/lib/conductive
+cat > /usr/local/lib/conductive/terminal <<'CONDUCTIVE_TERMINAL'
 ${launcherScript()}
-CONDUCTING_TERMINAL
-chmod 755 /usr/local/lib/conducting/terminal
-cat > /usr/local/lib/conducting/terminal-password <<'CONDUCTING_PASSWORD'
+CONDUCTIVE_TERMINAL
+chmod 755 /usr/local/lib/conductive/terminal
+cat > /usr/local/lib/conductive/terminal-password <<'CONDUCTIVE_PASSWORD'
 ${credentialScript()}
-CONDUCTING_PASSWORD
-chmod 755 /usr/local/lib/conducting/terminal-password
-cat > /etc/systemd/system/conducting-terminal.service <<'CONDUCTING_SERVICE'
+CONDUCTIVE_PASSWORD
+chmod 755 /usr/local/lib/conductive/terminal-password
+cat > /etc/systemd/system/conductive-terminal.service <<'CONDUCTIVE_SERVICE'
 [Unit]
-Description=Conducting terminal
+Description=Conductive terminal
 After=network.target
-ConditionPathExists=/run/conducting-terminal/enabled
+ConditionPathExists=/run/conductive-terminal/enabled
 
 [Service]
 Type=simple
 User=user
 Group=user
 WorkingDirectory=/home/user
-RuntimeDirectory=conducting-terminal
+RuntimeDirectory=conductive-terminal
 RuntimeDirectoryMode=0700
 RuntimeDirectoryPreserve=yes
-ExecStartPre=+/usr/local/lib/conducting/terminal-password
-ExecStart=/usr/local/lib/conducting/terminal
+ExecStartPre=+/usr/local/lib/conductive/terminal-password
+ExecStart=/usr/local/lib/conductive/terminal
 Restart=on-failure
 RestartSec=1
 
 [Install]
 WantedBy=multi-user.target
-CONDUCTING_SERVICE
+CONDUCTIVE_SERVICE
 systemctl daemon-reload
-systemctl enable conducting-terminal.service`
+systemctl enable conductive-terminal.service`
 
 /** Call during each org image build. It enables the service without a credential. */
 export async function installTerminalService(
@@ -75,10 +75,10 @@ export async function startWorkspaceTerminal(
     dependencies.fetch,
   )
   const command = `set -eu
-install -d -m 700 -o user -g user /run/conducting-terminal
-touch /run/conducting-terminal/enabled
-systemctl start conducting-terminal.service
-systemctl is-active --quiet conducting-terminal.service`
+install -d -m 700 -o user -g user /run/conductive-terminal
+touch /run/conductive-terminal/enabled
+systemctl start conductive-terminal.service
+systemctl is-active --quiet conductive-terminal.service`
   const result = await provider.command(privilegedCommand(command))
   if (result.exitCode !== 0 || result.timedOut)
     throw new ProviderError('unavailable', 502)

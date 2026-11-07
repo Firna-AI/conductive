@@ -120,13 +120,13 @@ export function toolFixtures(bannerState: BannerState = 'ready-to-merge') {
     preview: {
       id: FAKE_IDS.preview,
       port: 3000,
-      url: 'https://a4826b97d1c04f15802c7e9bb2546d30.conducting-previews.test',
+      url: 'https://a4826b97d1c04f15802c7e9bb2546d30.conductive-previews.test',
       expiresAt: FAKE_TIME + 86_400_000,
     },
   }
   const previews: PreviewsResponse = { previews: [preview.preview] }
   const desktop: DesktopResponse = {
-    url: 'https://desktop.conducting.test/#fake-desktop-token',
+    url: 'https://desktop.conductive.test/#fake-desktop-token',
     expiresAt: FAKE_TIME + 600_000,
   }
   const terminal: TerminalResponse = {

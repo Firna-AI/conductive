@@ -112,7 +112,7 @@ it('grants the workspace token no other host, route, method, or socket', async (
   }
   const otherHost = await fixture.request(
     {},
-    `https://app.conducting.test${MACHINE_PATHS.workspaces}`,
+    `https://app.conductive.test${MACHINE_PATHS.workspaces}`,
   )
   expect(otherHost.status).toBe(404)
   for (const init of [

@@ -39,14 +39,14 @@ export async function expectFrameIsolation(
     .click()
   // This opener call proves that the prior child popup requests reached the native handler.
   await expect
-    .poll(() => electron.evaluate(() => process.env.CONDUCTING_TEST_OPENED))
+    .poll(() => electron.evaluate(() => process.env.CONDUCTIVE_TEST_OPENED))
     .toBe('https://example.com/child')
   await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/script-popup`)
   await electron.evaluate(({ BrowserWindow }) => {
     const contents = BrowserWindow.getAllWindows()[0].webContents
     contents.on('will-navigate', (event) => {
       if (event.url.endsWith('/child-top')) {
-        process.env.CONDUCTING_TEST_TOP_NAVIGATION = JSON.stringify({
+        process.env.CONDUCTIVE_TEST_TOP_NAVIGATION = JSON.stringify({
           blocked: event.defaultPrevented,
           mainInitiator: event.initiator === contents.mainFrame,
         })
@@ -67,7 +67,7 @@ export async function expectFrameIsolation(
     .click()
   await expect
     .poll(() =>
-      electron.evaluate(() => process.env.CONDUCTING_TEST_TOP_NAVIGATION),
+      electron.evaluate(() => process.env.CONDUCTIVE_TEST_TOP_NAVIGATION),
     )
     .toBe('{"blocked":true,"mainInitiator":false}')
   await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/script-popup`)

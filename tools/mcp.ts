@@ -10,7 +10,7 @@ import { WORKSPACE_MCP_TOOLS } from './mcp-tools.ts'
 
 /** A fixed supported revision is negotiated, rather than echoing any revision. */
 export const MCP_PROTOCOL_VERSION = '2025-11-25'
-const serverInfo = { name: 'conducting-workspaces', version: '1.0.0' }
+const serverInfo = { name: 'conductive-workspaces', version: '1.0.0' }
 
 export interface McpResponse {
   jsonrpc: '2.0'

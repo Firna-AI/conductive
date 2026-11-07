@@ -17,13 +17,13 @@ import {
 const first = {
   id: 'preview-1',
   port: 3000,
-  url: 'https://a4826b97d1c04f15802c7e9bb2546d30.conducting-previews.test',
+  url: 'https://a4826b97d1c04f15802c7e9bb2546d30.conductive-previews.test',
   expiresAt: 1_800_086_400_000,
 }
 const second = {
   id: 'preview-2',
   port: 4000,
-  url: 'https://k7q2m9x4p8w3zr5t.conducting-previews.test',
+  url: 'https://k7q2m9x4p8w3zr5t.conductive-previews.test',
   expiresAt: 1_800_086_400_000,
 }
 
@@ -94,7 +94,7 @@ describe('preview list', () => {
     const reopened = {
       id: 'preview-3',
       port: 3000,
-      url: 'https://f3c91d0e6b2a4c7d9e8f1a2b3c4d5e6f.conducting-previews.test',
+      url: 'https://f3c91d0e6b2a4c7d9e8f1a2b3c4d5e6f.conductive-previews.test',
       expiresAt: 1_800_086_400_000,
     }
     const state = reduce(

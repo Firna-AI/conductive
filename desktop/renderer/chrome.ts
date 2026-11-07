@@ -1,7 +1,7 @@
 import './chrome.css'
 import { installAppPopups } from './navigation.js'
 
-installAppPopups(__CONDUCTING_APP_ORIGIN__)
+installAppPopups(__CONDUCTIVE_APP_ORIGIN__)
 
 /** Standard web APIs only. This document has no access to Electron or Node. */
 const chrome = document.createElement('nav')

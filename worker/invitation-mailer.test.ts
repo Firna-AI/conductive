@@ -8,10 +8,10 @@ const invitation = {
   email: 'mira@example.com',
   orgName: 'Example org',
   invitedBy: 'Cal',
-  link: invitationLink('https://app.conducting.build', 'invite-1'),
+  link: invitationLink('https://app.conductive.build', 'invite-1'),
 }
 
-function env(origin = 'https://app.conducting.build') {
+function env(origin = 'https://app.conductive.build') {
   return {
     APP_ORIGIN: origin,
   }
@@ -47,10 +47,10 @@ it('sends a plain text invitation through Resend with the secret and a stable de
     requests[2].headers.get('Idempotency-Key'),
   )
   expect(await request.json()).toEqual({
-    from: 'Conducting <invites@conducting.build>',
+    from: 'Conductive <invites@conductive.build>',
     to: ['mira@example.com'],
-    subject: 'Join Example org on Conducting',
-    text: 'Cal invited you to join Example org on Conducting.\n\nSign in with GitHub and accept your invitation:\nhttps://app.conducting.build/?invite=invite-1',
+    subject: 'Join Example org on Conductive',
+    text: 'Cal invited you to join Example org on Conductive.\n\nSign in with GitHub and accept your invitation:\nhttps://app.conductive.build/?invite=invite-1',
   })
 })
 

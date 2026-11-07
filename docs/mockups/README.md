@@ -175,7 +175,7 @@ without commits, whose bar offers no Create pull request, as in
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`            | The catalogue paths that screens link to                            |
-| `src/brand.ts`            | The name of the product, "Conducting", and its domains              |
+| `src/brand.ts`            | The name of the product, "Conductive", and its domains              |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 
@@ -331,7 +331,7 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
 - The page shows no plans, because the product is free for now. A line
   under each "Start free with GitHub" says that users need their own Boat
   account, which runs their cloud computers, from decision 47.
-- The product is "Conducting", on `conducting.build`, from decision 32.
+- The product is "Conductive", on `conductive.build`, from decision 100.
   `src/brand.ts` holds the name and the domains, so that one change renames
   the product.
 - The footer and the sign-in page link to Terms and Privacy, from
