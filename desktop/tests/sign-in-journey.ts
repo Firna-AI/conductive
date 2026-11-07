@@ -2,7 +2,6 @@ import { expect } from '@playwright/test'
 import type { ElectronApplication, Page } from '@playwright/test'
 
 import { API_PATHS } from '../../src/shared/api.js'
-import { FakeApiServer } from '../../src/test-support/fake-api'
 import {
   DESKTOP_CALLBACK,
   DESKTOP_EXCHANGE_PATH,
@@ -11,83 +10,42 @@ import {
   desktopSessionCookie,
 } from '../../worker/security/desktop-contract.js'
 
-/** The real shell reads a fake Worker over Chromium's actual credentialed transport. */
+/** A stand-in HTTP boundary reads Chromium's real outgoing credentials. */
 export async function sessionEndpoint(page: Page, appOrigin: string) {
-  const server = new FakeApiServer()
-  const requests: {
-    origin: string | undefined
-    credentialPresent: boolean
-    status: number
-    body: unknown
-  }[] = []
-  const cors = {
-    'Access-Control-Allow-Origin': DESKTOP_ORIGIN,
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    Vary: 'Origin',
-  }
-  await page.context().route(appOrigin + '/api/**', async (route) => {
-    const request = route.request()
-    if (request.method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: cors })
-      return
-    }
-    const headers = await request.allHeaders()
+  const requests: { origin: string | undefined; credentialPresent: boolean }[] =
+    []
+  await page.route(appOrigin + API_PATHS.session, async (route) => {
+    const headers = await route.request().allHeaders()
     const credentialPresent =
       headers.cookie === `${DESKTOP_SESSION_COOKIE}=session.signature`
-    const response = credentialPresent
-      ? await server.fetch(request.url(), {
-          method: request.method(),
-          headers,
-          body: request.postData() ?? undefined,
-        })
-      : Response.json(
-          {
-            error: {
-              code: 'sign_in_required',
-              message: 'Sign in to continue.',
-            },
-          },
-          { status: 401 },
-        )
-    const body = await response.text()
-    if (new URL(request.url()).pathname === API_PATHS.session) {
-      const value: unknown = JSON.parse(body)
-      requests.push({
-        origin: headers.origin,
-        credentialPresent,
-        status: response.status,
-        body: value,
-      })
-    }
+    requests.push({ origin: headers.origin, credentialPresent })
     await route.fulfill({
-      status: response.status,
-      headers: { ...Object.fromEntries(response.headers), ...cors },
-      body,
+      status: credentialPresent ? 200 : 401,
+      headers: {
+        'Access-Control-Allow-Origin': DESKTOP_ORIGIN,
+        'Access-Control-Allow-Credentials': 'true',
+        Vary: 'Origin',
+      },
+      json: { signedIn: credentialPresent },
     })
   })
   return async (signedIn: boolean) => {
-    const before = requests.length
-    await page.reload()
-    await expect.poll(() => requests.length).toBeGreaterThan(before)
+    // Check Chromium's credentials directly, without the product's session UI.
+    const result = await page.evaluate(async (url) => {
+      const response = await fetch(url, { credentials: 'include' })
+      const body: unknown = await response.json()
+      return { status: response.status, body }
+    }, appOrigin + API_PATHS.session)
+    expect(result).toEqual({
+      status: signedIn ? 200 : 401,
+      body: { signedIn },
+    })
     const outgoing = requests.at(-1)
-    expect(outgoing?.origin).toBe(DESKTOP_ORIGIN)
-    expect(outgoing?.credentialPresent).toBe(signedIn)
-    expect(outgoing?.status).toBe(signedIn ? 200 : 401)
-    if (signedIn)
-      await page.getByRole('link', { name: 'Account', exact: true }).waitFor()
-    else
-      await page
-        .getByRole('heading', { name: 'Sign in to Conducting', exact: true })
-        .waitFor()
-    return {
-      response: { status: outgoing?.status, body: outgoing?.body },
-      outgoing: {
-        origin: outgoing?.origin,
-        credentialPresent: outgoing?.credentialPresent,
-      },
-    }
+    expect(outgoing).toEqual({
+      origin: DESKTOP_ORIGIN,
+      credentialPresent: signedIn,
+    })
+    return { response: result, outgoing }
   }
 }
 

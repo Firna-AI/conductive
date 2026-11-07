@@ -121,6 +121,9 @@ npm --prefix desktop run test:electron
 
 The shell test runs under Xvfb on Linux.
 It also runs on macOS.
+The smoke tests wait for the bundled page title.
+They read the product name from the [shared brand file](../docs/mockups/src/brand.ts).
+This wait does not depend on the sign-in state.
 Linux is a test host, not a release target.
 The [window-space test](tests/window-space.spec.ts) runs only on macOS.
 It checks 64px of rendered window-button space in a normal window.

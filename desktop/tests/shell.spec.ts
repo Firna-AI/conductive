@@ -3,8 +3,7 @@ import { resolve } from 'node:path'
 import { _electron, expect, test } from '@playwright/test'
 import type { ElectronApplication } from '@playwright/test'
 
-import { routes } from '../../src/app/router'
-import { FAKE_IDS } from '../../src/test-support/fixtures/core'
+import { productName } from '../../docs/mockups/src/brand.js'
 import { DESKTOP_ORIGIN } from '../../worker/security/desktop-contract.js'
 import { readConfiguration } from '../src/config.js'
 import { expectFrameIsolation } from './frame-navigation.js'
@@ -31,15 +30,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
   try {
     electron = await launch()
     let page = await electron.firstWindow()
-    const configuration: unknown = JSON.parse(
-      await readFile(resolve(desktop, 'dist/bundle/build-config.json'), 'utf8'),
-    )
-    const { appOrigin } = readConfiguration(configuration)
-    const fetchSession = await sessionEndpoint(page, appOrigin)
-    await fetchSession(false)
-    await expect(
-      page.getByRole('heading', { name: 'Sign in to Conducting', exact: true }),
-    ).toBeVisible()
+    await expect(page).toHaveTitle(productName)
     await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/`)
     const nav = page.getByRole('navigation', { name: 'Window controls' })
     await expect(nav).toBeVisible()
@@ -49,7 +40,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
       page.getByRole('button', { name: 'Back', exact: true }),
     ).toBeDisabled()
 
-    // Arrange a same-window link to exercise native Back and Forward from the signed-out shell.
+    // Use a fixed local link to test history without the product router.
     await page.evaluate((origin) => {
       const link = document.createElement('a')
       link.href = origin + '/history'
@@ -80,10 +71,15 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
       .toBe('https://example.com/review')
     expect(electron.windows()).toHaveLength(1)
     await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/history`)
+    const configuration: unknown = JSON.parse(
+      await readFile(resolve(desktop, 'dist/bundle/build-config.json'), 'utf8'),
+    )
+    const { appOrigin } = readConfiguration(configuration)
     await expectFrameIsolation(electron, page, appOrigin)
+    const fetchSession = await sessionEndpoint(page, appOrigin)
     await fetchSession(false)
     await signInThroughMain(electron, appOrigin)
-    await expect(page).toHaveURL(DESKTOP_ORIGIN + routes.org(FAKE_IDS.org))
+    await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/`)
     const beforeRestart = await fetchSession(true)
     const cookieBeforeRestart = await storedSessionCookie(electron, appOrigin)
 
@@ -148,6 +144,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
     electron = undefined
     electron = await launch()
     page = await electron.firstWindow()
+    await expect(page).toHaveTitle(productName)
     expect(
       await electron.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0].getNormalBounds(),

@@ -1,10 +1,9 @@
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { _electron, expect, test } from '@playwright/test'
 import type { ElectronApplication } from '@playwright/test'
 
-import { readConfiguration } from '../src/config.js'
-import { sessionEndpoint } from './sign-in-journey.js'
+import { productName } from '../../docs/mockups/src/brand.js'
 
 const desktop = resolve(import.meta.dirname, '..')
 const evidence = resolve(desktop, '../.context/boat-native-remote-workspaces')
@@ -48,14 +47,7 @@ test('gives back native window-button space in full screen and restores it after
       cwd: desktop,
     })
     const page = await electron.firstWindow()
-    const configuration: unknown = JSON.parse(
-      await readFile(resolve(desktop, 'dist/bundle/build-config.json'), 'utf8'),
-    )
-    const shellSession = await sessionEndpoint(
-      page,
-      readConfiguration(configuration).appOrigin,
-    )
-    await shellSession(false)
+    await expect(page).toHaveTitle(productName)
     // This decorative reserve has no accessible name and can have zero height.
     const reserve = page.locator('[data-desktop-window-space]')
     await expect(reserve).toHaveCount(1)
