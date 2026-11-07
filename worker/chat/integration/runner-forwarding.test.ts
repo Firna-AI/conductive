@@ -98,7 +98,7 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
     type: 'turn',
     sessionId,
     message: { id: 'runner-ask', state: 'sent', sender: { id: 'member' } },
-    login: { secret: 'outer-secret-member' },
+    login: { secret: 'outer-secret-owner' },
   })
   const turnId = string(turn.turnId)
   expect(await browserInbox.next()).toMatchObject({
@@ -195,4 +195,5 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
     ],
   })
   expect(JSON.stringify(stored)).not.toContain('outer-secret-member')
+  expect(JSON.stringify(stored)).not.toContain('outer-secret-owner')
 })

@@ -5739,6 +5739,11 @@ packages. The image installs Node separately. The live measurement uses
 that same Node for both runner placements. Today's sender-login behavior
 stays until Milestone 7w merges.
 
+Primary Milestone 7w is included through `d923fe0`. Each session now uses
+its starter's login. The production admission passes its checked first
+sender to that session factory. The primary registration at `e58c914`
+keeps decision 130 open and records the later 8m recovery work.
+
 Review summary: finding 2 is addressed with app-owned inputs for each
 kept chat. The regression checks preserve the draft, current login and
 default model, org and member data, and both event cursors.

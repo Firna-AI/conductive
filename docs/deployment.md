@@ -111,9 +111,10 @@ The shape of the two values, with placeholders in place of real values:
 
 ## The runner archive
 
-Each image build and refresh installs the runner archive into the org
-image. [The runner archive](../image/README.md#the-runner-archive) says
-how to make and publish it.
+Each new image build installs the runner archive into the org image. A
+refresh keeps the installed runner and updates the repositories.
+[The runner archive](../image/README.md#the-runner-archive) says how to make
+and publish it.
 
 - Publish the exact archive at its public HTTPS URL first.
 - Set `CONDUCTIVE_RUNNER_ARCHIVE_URL` to that URL. It can hold no user
