@@ -4308,16 +4308,26 @@ Depends on: 4c
 
 Apply decision 93 B.
 
-- [ ] Pass every request body through one bounded stream at the Worker
+Agent calls, 7 November 2026: Read request bytes only when a handler asks
+for them, so access checks can return without a body read. Keep the
+unmounted webhook's standalone bound until its handler is mounted.
+Keep its existing 26 MiB budget at the entry. Composer uploads have no
+Worker handler or chosen byte budget yet, so they have no raised limit.
+
+- [x] Pass every request body through one bounded stream at the Worker
       entry, 1 MB by default. A route that needs more, such as a file
       upload, declares its own limit there.
-- [ ] Keep `readJsonObject` and `readBoundedJson` for parsing, and remove
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4g`.
+- [x] Keep `readJsonObject` and `readBoundedJson` for parsing, and remove
       the copies that the default makes unneeded.
-- [ ] Test the default, a raised limit, and a route that a later change
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4g`.
+- [x] Test the default, a raised limit, and a route that a later change
       adds. State the rule in the access protocol.
-- [ ] Delete `plans/follow-ups/request-body-lint.md`, and close
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4g`.
+- [x] Delete `plans/follow-ups/request-body-lint.md`, and close
       `plans/follow-ups/agent-tools-unbounded-body.md` when the default
       covers it.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4g`.
 
 ## Milestone 4h: Worker types without Node
 

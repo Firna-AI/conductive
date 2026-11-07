@@ -7,10 +7,10 @@ import { TOOL_TURN_HEADER } from '../../tools/context'
 import { createWorkspaceInput, ToolInputError } from '../../tools/input'
 import { createdWorkspace } from '../../tools/responses'
 import { errorResponse, HttpError, privateResponse } from '../http'
+import { readJsonObject } from '../http/json-body'
 import { createFromTool } from './create'
 import type { AgentToolServices } from './services'
 import { callingWorkspace, orgWorkspaces } from './store'
-import { readJsonObject } from '../http/json-body'
 
 export interface AgentToolsEnvironment {
   DB: D1Database
@@ -66,10 +66,9 @@ export function createAgentToolsHandler(
       }
       let input: AgentCreateWorkspaceRequest
       try {
-        const body: unknown = await readJsonObject(request)
-        input = createWorkspaceInput(body)
+        input = createWorkspaceInput(await readJsonObject(request))
       } catch (error) {
-        if (error instanceof HttpError && [413, 415].includes(error.status))
+        if (error instanceof HttpError && error.code === 'json_required')
           throw error
         throw new HttpError(
           400,
