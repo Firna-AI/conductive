@@ -1,5 +1,6 @@
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
+import { appOrigin } from './app-origin'
 import { DESKTOP_ORIGIN } from './desktop-contract'
 
 export function trustedOrigin(
@@ -7,14 +8,7 @@ export function trustedOrigin(
   env: Pick<AppEnv, 'APP_ORIGIN'>,
   request: Request,
 ): boolean {
-  if (origin === env.APP_ORIGIN || origin === DESKTOP_ORIGIN) return true
-  if (env.APP_ORIGIN) return false
-  const url = new URL(request.url)
-  return (
-    url.protocol === 'http:' &&
-    ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) &&
-    origin === url.origin
-  )
+  return origin === appOrigin(request, env) || origin === DESKTOP_ORIGIN
 }
 
 /** Call before the session gate. A preflight never grants an app session. */

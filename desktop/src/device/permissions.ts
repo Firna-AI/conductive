@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import { createHash } from 'node:crypto'
 
 import type {
@@ -9,6 +10,16 @@ import type { DeviceClock } from './clock.js'
 import type { DeviceFiles } from './files.js'
 
 const WINDOW_MS = 15 * 60 * 1000
+const ALWAYS_ALLOWED_COMMANDS_LIMIT_BYTES = 900_000
+
+export class AlwaysAllowLimitError extends Error {
+  constructor() {
+    super(
+      'Always allow is full. Remove a saved command in This Mac, or request this command again and choose Allow.',
+    )
+  }
+}
+
 interface PermissionDependencies {
   files: DeviceFiles
   userId: string
@@ -129,7 +140,13 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       )
     },
     allowCommand(command: string): void {
-      save(new Set([...commands, command]), windows)
+      const nextCommands = new Set([...commands, command])
+      if (
+        Buffer.byteLength(JSON.stringify([...nextCommands])) >
+        ALWAYS_ALLOWED_COMMANDS_LIMIT_BYTES
+      )
+        throw new AlwaysAllowLimitError()
+      save(nextCommands, windows)
     },
     removeCommand(command: string): DeviceSettingsOutcome {
       readState = 'changed'

@@ -64,21 +64,25 @@ export interface GitHubReadDependencies {
 export interface GitHubStateTransaction {
   get<T>(key: string): Promise<T | undefined>
   put<T>(key: string, value: T): Promise<void>
+  emit(event: GitHubUpdate): Promise<WorkspaceEventEnvelope>
 }
 
 export type GitHubUpdate = Extract<WorkspaceEvent, { type: 'github.updated' }>
 
-export interface GitHubStatePort {
+export interface GitHubStateOperation {
   transaction<T>(
     action: (transaction: GitHubStateTransaction) => Promise<T>,
   ): Promise<T>
-  /** Append to the common workspace stream inside this same transaction. */
-  appendEvent(
-    transaction: GitHubStateTransaction,
-    event: GitHubUpdate,
-  ): Promise<WorkspaceEventEnvelope>
-  /** Broadcast the committed envelope to every open tab. */
   publish(envelope: WorkspaceEventEnvelope): Promise<void>
+}
+
+export interface GitHubStatePort {
+  read<T>(key: string): Promise<T | undefined>
+  /** Check access after queue entry, then commit or replay in that same task. */
+  run<T>(
+    authorize: () => Promise<void>,
+    work: (operation: GitHubStateOperation) => Promise<T>,
+  ): Promise<T>
   /** Persist plain request data for a fresh read after the given delay. */
   scheduleRefresh(request: GitHubRefreshRequest, delayMs: number): Promise<void>
 }

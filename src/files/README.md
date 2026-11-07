@@ -15,19 +15,35 @@ yet. The development pages and the tests run them against the fake API of
 
 ## Integration
 
-The shell creates one `WorkspaceFiles` store for each open workspace. It
-injects the fetch of the app and the subscription of its workspace event
-socket:
+The shell keeps one `WorkspaceFiles` store for each open workspace through
+`useWorkspaceStore` of [the web app](../app/README.md). A stable `create`
+builds the store with the fetch of the app and the subscription of its
+workspace event socket. It starts nothing. A stable `connect` starts the
+store and returns its stop:
 
 ```ts
-const files = new WorkspaceFiles({
-  client: createFilesClient({ fetch, orgId, workspaceId }),
-  subscribe: (afterEventNumber, listener) =>
-    socket.subscribe(afterEventNumber, listener),
-})
-files.start() // when the workspace mounts
-files.stop() // when it unmounts
+function startFiles(files: WorkspaceFiles): () => void {
+  files.start()
+  return () => files.stop()
+}
+
+const create = useCallback(
+  ({ orgId, workspaceId }: WorkspaceIdentity) =>
+    new WorkspaceFiles({
+      client: createFilesClient({ fetch, orgId, workspaceId }),
+      subscribe: (afterEventNumber, listener) =>
+        socket.subscribe(afterEventNumber, listener),
+    }),
+  [fetch, socket],
+)
+const { store: files } = useWorkspaceStore(
+  { orgId, workspaceId },
+  { create, connect: startFiles },
+)
 ```
+
+A new `create` makes a new store, so keep `fetch` and `socket` stable.
+Give `files` to the screens.
 
 The first message of the subscription holds the stored history, and the
 store reads each message from `unknown`. The store reads the tree and the

@@ -1,0 +1,38 @@
+import type { AgentChoice } from '../../src/shared/agents'
+import type { GitHubSnapshot } from './contracts'
+
+export const SQLITE_WORKSPACE_ID = 'github-workspace'
+export const SQLITE_TIME = 1_800_000_000_000
+export const SQLITE_CHOICE: AgentChoice = {
+  agent: 'claude',
+  model: 'test-claude',
+  effort: 'high',
+}
+
+export function sqliteSnapshot(large = false): GitHubSnapshot {
+  return {
+    banner: {
+      state: 'no-commits',
+      branch: 'owner/workspace',
+      baseBranch: 'main',
+      updatedAt: 1,
+      pullRequest: null,
+      createPullRequestUrl: null,
+    },
+    checks: large
+      ? {
+          state: 'available',
+          checks: Array.from({ length: 5000 }, (_, index) => ({
+            id: `check-${index}`,
+            name: `Storage integration ${index} ${'check'.repeat(16)}`,
+            state: 'passed',
+            url: `https://github.com/owner/repository/actions/runs/123456789/job/${index}`,
+            startedAt: SQLITE_TIME,
+            completedAt: SQLITE_TIME + 1000,
+            durationMs: 1000,
+          })),
+        }
+      : { state: 'waiting-for-pull-request', checks: [] },
+    headSha: null,
+  }
+}

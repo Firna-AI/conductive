@@ -52,14 +52,18 @@ it('keeps an executing command before its watchdog and times it out at its alarm
   expect(response.status).toBe(202)
   const request = readDeviceRecord(deviceObject(await response.json()).request)
   expect(await mac.inbox.next()).toMatchObject({ type: 'command.request' })
-  await sendFrame(mac, { type: 'command.approved', ...ref() })
+  const beforeApproval = await throughEventNumber(fixture)
+  mac.socket.send(JSON.stringify({ type: 'command.approved', ...ref() }))
+  await expect
+    .poll(() => throughEventNumber(fixture), { timeout: 10_000 })
+    .toBe(beforeApproval + 1)
+  const deadline = DEVICE_TEST_NOW + 11_000
+  await expect.poll(() => clock.scheduled(), { timeout: 10_000 }).toBe(deadline)
   expect(await stored(fixture)).toMatchObject({
     state: 'running',
     startedAt: DEVICE_TEST_NOW,
   })
-  const before = await throughEventNumber(fixture)
-  const deadline = DEVICE_TEST_NOW + 11_000
-  expect(await clock.scheduled()).toBe(deadline)
+  const before = beforeApproval + 1
   await clock.set(deadline - 1)
   await clock.runAlarm()
   expect(await throughEventNumber(fixture)).toBe(before)

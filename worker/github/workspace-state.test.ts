@@ -45,7 +45,11 @@ it('stores banner state, an event, and a receipt before broadcast through the un
   })
   expect(memory.values.get('github:delivery:d-1')).toEqual({
     snapshot,
-    envelope: memory.events[0],
+    envelope: {
+      workspaceId: 'workspace-1',
+      eventNumber: 8,
+      occurredAt: 1800000000000,
+    },
   })
   expect(memory.published).toEqual(memory.events)
 })
@@ -86,7 +90,11 @@ it('rolls back a receipt-write failure and retries with one new read and event',
   expect(memory.values.get('workspace:event:1')).toEqual(envelope)
   expect(memory.values.get('github:delivery:d-1')).toEqual({
     snapshot,
-    envelope,
+    envelope: {
+      workspaceId: 'workspace-1',
+      eventNumber: 1,
+      occurredAt: 1800000000000,
+    },
   })
   expect(memory.events).toEqual([envelope])
   expect(memory.published).toEqual([envelope])

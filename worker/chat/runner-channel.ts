@@ -175,12 +175,13 @@ export class RunnerChannel {
       streamId: message.streamId,
       throughEventNumber: cursor,
     })
-    const publish: ChatCallbackPublisher = (event, occurredAt) =>
-      this.store.change(
+    const publish: ChatCallbackPublisher = async (event, occurredAt) => {
+      await this.store.change(
         active.workspace.id,
         (transaction) => transaction.emit(event, occurredAt),
         this.publish,
       )
+    }
     if (becameReady) {
       active.ready = true
       await this.dependencies.runnerReady(active.workspace.id, publish)

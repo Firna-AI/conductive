@@ -7,19 +7,18 @@ import { workspacePath } from '../../src/shared/workspaces'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
-import { randomToken } from '../security/crypto'
 import { gate, type RequestContext } from '../security/gate'
-import {
-  readConnectionAccess,
-  scheduleConnectionCheck,
-} from '../security/connection-access'
 import { afterNumber, chatRoute } from './http-routes'
 import { BrowserTabs } from './browser-tabs'
 import { findChatWorkspace, tokenWorkspace } from './queries'
-import { loginResolver } from './login-access'
 import { refreshSessionLogins } from './session-login'
+import { chatDependencies } from './dependencies'
 import { RunnerChannel } from './runner-channel'
-import { ChatStore } from './store'
+import { ChatStore, type ChatTransaction } from './store'
+import {
+  runWorkspaceOperation,
+  type WorkspaceOperation,
+} from './workspace-operation'
 import { browserUpgrade, runnerUpgrade } from './sockets'
 import type {
   BrowserPeer,
@@ -50,32 +49,7 @@ export class WorkspaceChat {
     overrides: Partial<ChatDependencies> = {},
   ) {
     this.env = env
-    this.dependencies = {
-      now: Date.now,
-      scheduleBrowserCheck: scheduleConnectionCheck,
-      readConnectionAccess: (tabs, now) =>
-        readConnectionAccess(env.DB, tabs, now),
-      randomId: randomToken,
-      resolveAttachments: async (_userId, _workspaceId, ids) => {
-        if (ids.length)
-          throw new HttpError(
-            503,
-            'attachments_unavailable',
-            'Attachments are not available. Try again.',
-          )
-        return { attachments: [], paths: [] }
-      },
-      receiveFileResult: async () => undefined,
-      runnerEventStored: async () => undefined,
-      runnerReady: async () => undefined,
-      matchesObject: () => true,
-      ...overrides,
-      resolveLogin: loginResolver(
-        env,
-        () => this.workspaceId,
-        overrides.resolveLogin,
-      ),
-    }
+    this.dependencies = chatDependencies(env, () => this.workspaceId, overrides)
     this.store = new ChatStore(storage, this.dependencies.now)
     this.browsers = new BrowserTabs(this.dependencies)
     this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>
@@ -202,13 +176,42 @@ export class WorkspaceChat {
     event: WorkspaceEvent,
     occurredAt = this.dependencies.now(),
   ): Promise<void> {
+    await this.changeWorkspace(workspaceId, (transaction) =>
+      transaction.emit(event, occurredAt),
+    )
+  }
+
+  readWorkspace<T>(
+    workspaceId: string,
+    work: (view: ChatTransaction) => Promise<T>,
+  ): Promise<T> {
+    this.bind(workspaceId)
+    return this.store.run(() => this.store.read(workspaceId, work))
+  }
+
+  /** Keep feature records, events, and publication in one serial task. */
+  changeWorkspace<T>(
+    workspaceId: string,
+    work: (transaction: ChatTransaction) => Promise<T>,
+  ): Promise<T> {
     this.bind(workspaceId)
     return this.store.run(() =>
-      this.store.change(
-        workspaceId,
-        (transaction) => transaction.emit(event, occurredAt),
-        (events) => this.publish(events),
-      ),
+      this.store.change(workspaceId, work, (events) => this.publish(events)),
+    )
+  }
+
+  authorizedWorkspaceOperation<T>(
+    workspaceId: string,
+    authorize: () => Promise<void>,
+    work: (operation: WorkspaceOperation) => Promise<T>,
+  ): Promise<T> {
+    this.bind(workspaceId)
+    return runWorkspaceOperation(
+      this.store,
+      workspaceId,
+      authorize,
+      this.publish,
+      work,
     )
   }
 
@@ -275,7 +278,7 @@ export class WorkspaceChat {
     this.workspaceId = workspaceId
   }
 
-  private publish(events: readonly WorkspaceEventEnvelope[]): void {
+  private publish = (events: readonly WorkspaceEventEnvelope[]): void => {
     this.browsers.publish(events)
   }
 }

@@ -11,7 +11,7 @@ The parts read the shared contracts in `src/shared/github.ts` and
 ## Use the parts in the app
 
 ```tsx
-const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe })
+const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe, delay })
 
 // Desktop: the top of the right column, and the Checks tab.
 <PullRequestBar
@@ -35,8 +35,11 @@ const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe })
   the stored history, and later messages hold live events, as
   `WorkspaceSocketMessage` says. The fake API's `server.events.subscribe` has
   this shape.
-- Keep `fetch` and `subscribe` stable, for example with `useCallback`. A new
-  function connects again and reloads.
+- `delay` is `AppServices.delay`, the timer of the app. The store waits with
+  it before each [backup read](#backup-reads). The development page gives
+  `browserDelay`.
+- Keep `fetch`, `subscribe`, and `delay` stable, for example with
+  `useCallback`. A new function connects the same store again and reloads.
 - `now` is the clock of the relative times, such as "2h ago" after a merge.
   Give it a value that changes each minute.
 - After a merge, the bar shows Archive only to the workspace owner and the
@@ -76,7 +79,8 @@ The store applies them in this way:
   another workspace, a repeated event, and an event older than the last one.
 - `GitHubStore.connect()` starts the first read and the event subscription.
   The first read starts even when the history never comes.
-  `useGitHubState` connects the store and subscribes the views.
+  `useGitHubState` connects the store and subscribes the views through
+  `useWorkspaceStore` in `src/app/workspace-store.ts`.
 - A live GitHub event shows at once, and it cancels a read that runs.
 - A history that comes before a read shows at once. The reply of the read
   then replaces it, because the read returns the current state.
@@ -89,6 +93,22 @@ The store applies them in this way:
   that arrives later.
 - A failed load shows an error with Try again. A state that already shows
   stays, because GitHub events keep it current.
+
+## Backup reads
+
+GitHub events keep the state current. A change that no webhook names, or a
+lost webhook, needs a fresh read. So the store reads again while it is
+connected:
+
+- The store waits five minutes after a read ends, then reads again. The
+  wait is a choice of the app, not a product limit.
+- A live event that cancels a read starts the wait too. A live event keeps
+  a wait that runs, so events never put off a backup read.
+- A backup read never overlaps another read, because each read stops the
+  wait.
+- A backup read shows no loading. When it fails, the state or the error that
+  shows stays, and Try again still reads.
+- A disconnect stops the wait.
 
 ## Development page
 
@@ -107,18 +127,25 @@ mounts it, and the production build leaves it out.
   The live events of a sample carry the same data as its replies.
 - Send gives a live `github.updated` event. With `github=error`, "Let GitHub
   answer" makes the next Try again succeed.
-- The local Worker refuses the module requests of each page until
-  `APP_ORIGIN` is `http://127.0.0.1:5173`. Set it in `.dev.vars`, as
-  [Get started](../../README.md#get-started) says.
+- The local Worker serves the page. [Get started](../../README.md#get-started)
+  gives its local setup.
 
 ## Key code
 
-- `useGitHubState.ts`: the hook that gives one workspace its store.
+- `useGitHubState.ts`: the hook that gives one workspace its store, through
+  the shared `useWorkspaceStore`.
 - `githubStore.ts`: starts the first read on connection, then merges reads,
-  the event history, and live events in order.
+  the event history, and live events in order. It also runs the backup
+  reads.
 - `useGitHubState.test.tsx`: mounts a hook probe with the real store and fake
   API in happy-dom. It checks the first read, live events, workspace switches,
-  and retry after a failed first read through an unbound callback.
+  and retry after a failed first read through an unbound callback. After a
+  switch, it also checks that only the new workspace gets a backup read.
+- `freshReads.test.ts`: drives the store with `ManualDelay` on the fake API,
+  in Node. It checks that a backup read shows a new state without a GitHub
+  event. It checks that a failed backup read keeps the shown state or error.
+  It also checks that a disconnect stops the timer, and how other reads and
+  live events stop, keep, or start it.
 - `PullRequestActions.test.tsx`: mounts the bar and row in happy-dom. It
   clicks the retry, Archive, and Checks actions and checks their callbacks.
   The other view tests keep their static markup checks in Node.

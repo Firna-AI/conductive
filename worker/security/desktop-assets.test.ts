@@ -28,15 +28,22 @@ function policyParts(value: string | null) {
 
 it('serves app assets and same-origin local modules with the actual desktop policy while preserving host boundaries', async () => {
   const previewDomain = 'conductive-previews.test'
-  for (const binding of ['configured', 'missing', 'empty'] as const) {
+  for (const binding of ['configured', 'missing', 'empty', 'stale'] as const) {
     const requestOrigin =
       binding === 'configured'
         ? harness.env.APP_ORIGIN
-        : 'http://127.0.0.1:5173'
+        : binding === 'stale'
+          ? 'http://127.0.0.1:5174'
+          : 'http://127.0.0.1:5173'
     const requests: string[] = []
     const env = {
       ...harness.env,
-      APP_ORIGIN: binding === 'configured' ? harness.env.APP_ORIGIN : '',
+      APP_ORIGIN:
+        binding === 'configured'
+          ? harness.env.APP_ORIGIN
+          : binding === 'stale'
+            ? 'http://127.0.0.1:5173'
+            : '',
       MACHINE_ORIGIN: 'https://machines.conductive.test',
       PREVIEW_DOMAIN: previewDomain,
       ASSETS: {
@@ -80,7 +87,11 @@ it('serves app assets and same-origin local modules with the actual desktop poli
       )
       expect(module.status, `${binding} ${path}`).toBe(200)
     }
-    for (const origin of ['http://127.0.0.1:5174', 'https://untrusted.test']) {
+    const otherLocalOrigin =
+      requestOrigin === 'http://127.0.0.1:5174'
+        ? 'http://127.0.0.1:5173'
+        : 'http://127.0.0.1:5174'
+    for (const origin of [otherLocalOrigin, 'https://untrusted.test']) {
       const refused = await app.fetch(
         new Request(`${requestOrigin}/src/main.tsx`, {
           headers: { Origin: origin },

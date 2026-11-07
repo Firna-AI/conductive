@@ -34,21 +34,8 @@ which serves these routes. The path helpers live in
 | `GET` events socket | `workspaceEventsPath` | Sends the stored history, then each new event |
 | `GET` runner socket | `MACHINE_PATHS.runner` | Connects the agent runner on the machine hostname |
 
-Trusted Worker code can also call three methods of `WorkspaceChat`. They
-run no gate.
-
-- `appendWorkspaceEvent(workspaceId, event, occurredAt)` stores one
-  `WorkspaceEvent` with the next workspace event number. Then it pushes
-  the event to the open tabs. Inside a runner hook, use the hook's
-  `publish` argument instead, as
-  [the integration README](integration/README.md) says.
-- `sendFileCommand(workspaceId, command)` sends one `file.read` or
-  `file.diff` command to the ready runner. It resolves to `false` when no
-  runner is ready or the send fails.
-- `sendFileCommand` adds nothing to the history or to the pending
-  commands. So a new runner connection does not get the command again.
-- `closeRunner()` closes the current runner connection, for example when
-  the sandbox stops.
+Trusted Worker code can also call six methods of `WorkspaceChat` that run no
+gate. [Trusted workspace calls](integration/README.md#trusted-workspace-calls) gives their rules.
 
 A cross-agent model change uses the client's `newSessionId`. A repeated
 request gets the same session. An unrelated occupied ID is refused. A
@@ -105,10 +92,16 @@ The Durable Object runs the gates itself.
 ## History and event order
 
 - `ChatStore.run` is one serial queue. Each request, each runner message,
-  and each command send runs in it, one at a time.
+  each command send, and each trusted read, change, or replay runs in it,
+  one at a time.
 - `ChatStore.change` commits the new events, the runner cursor, and the
   changed records in one storage transaction. The tabs get the events
   only after the commit.
+- One publisher of `WorkspaceChat` pushes the events of each commit to the
+  open tabs, in the queue task of that commit. So the tabs get the events
+  in commit order.
+- A failed send closes its tab. When the tab connects again, it gets the
+  missed events from the stored history.
 - Each event gets the next workspace event number. The numbers start at 1,
   have no gaps, and span all sessions and runner streams.
 - A tab connects with `after`, the last event number that it has. It gets
@@ -257,22 +250,30 @@ npm run typecheck
   keeps SQLite history, queued messages, and the runner cursor. Event numbers
   continue. The resumed queued turn fails. Its message can retry after a
   second eviction.
+- `createAdapterRuntime` can bundle another Durable Object entry for
+  another workspace ID. The [GitHub store tests](../github/README.md#verification)
+  use it to run `WorkspaceChat` with the GitHub state on SQLite.
 
 ## Seams for other milestones
 
 [Chat backend integration](integration/README.md) gives the seams for other
-features. It covers the hooks, the workspace events, the outer Worker, the
-lifecycle, the files, the agent runner, and the logins and attachments.
+features. It covers the hooks, the trusted workspace calls and the workspace
+events, the outer Worker, the lifecycle, the files, the GitHub state, the
+agent runner, and the logins and attachments.
 
 ## Key code
 
-- `backend.ts`: `WorkspaceChat`, its gates, and the open tabs.
+- `backend.ts`: `WorkspaceChat`, its gates, its trusted methods, the open
+  tabs, and the one publisher of committed events.
+- `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
+  owner can replace. The login resolver always wraps an override.
 - `http-routes.ts`, `send-message.ts`, `messages.ts`, and `sessions.ts`: the
   routes, Send and Retry with linked sessions, the turns, and session state.
 - `model-changes.ts`: client session IDs, the creation records that repeated
   requests match, and ID conflicts.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
-  the records, the event numbers, and the chunks of large file reports.
+  the records, the event numbers, the GitHub view of a transaction, and the
+  chunks of large file reports.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event.
@@ -307,6 +308,7 @@ lifecycle, the files, the agent runner, and the logins and attachments.
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
 - [Chat and events: Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
 - [Chat backend integration](integration/README.md)
+- [GitHub banner backend](../github/README.md)
 - [Access and security: Agent logins in a sandbox](../../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
 - [Access and security: The workspace token](../../docs/protocol/access-and-security.md#the-workspace-token)
 - [Architecture: Workspace Durable Object](../../docs/architecture.md#workspace-durable-object)

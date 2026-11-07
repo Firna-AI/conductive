@@ -31,7 +31,7 @@
     - A turn token stops working when its turn ends. A process that stays can still read the token of a later turn while that turn runs.
     - Cost: each model request goes through the Worker, with one more network hop.
     - Cost: model requests are larger than the Worker's default body limit of 1,000,000 bytes in `worker/http/request-body.ts`, so the route needs its own limit.
-    - Cost: the privacy page in `src/marketing/privacy.ts` says that code stays in the cloud computers of the org's Boat account. It must say that model requests pass through the app.
+    - Cost: the privacy page in `src/marketing/privacy.ts` says where code stays. It must say that model requests pass through the app.
     - Risk: a request that an agent program sends with the login to another host fails, because it carries the turn token. Check these requests with both Claude login kinds and with Codex. Boat documents the same base URL design for both Claude login kinds and for Codex, which lowers this risk. Unchecked.
     - Risk: check Cloudflare's limits for answers that stream for many minutes.
   - **B.** An HTTPS proxy on a new server outside the sandbox. Effort: Large.
@@ -43,7 +43,7 @@
     - Boat documents a proxy for AI credentials. With it on, a sandbox gets placeholder keys and `ANTHROPIC_BASE_URL` set to Boat's proxy, and the real keys stay with Boat. It covers the Claude sign-in, the Anthropic API key, the ChatGPT sign-in, and the OpenAI API key.
     - Each workspace gets its own Boat environment with `proxyAiCredentials` on, and its own credential profile.
     - At the start of a turn, the Worker writes the turn login into the profile and unblocks the AI access of the sandbox with `PUT /sandboxes/{id}/ai-access`. When no turn runs, the Worker removes the login and blocks the access. Boat then refuses the placeholders with `403`.
-    - Cost: each org's Boat key needs the scope `account.admin`, and the app needs one Boat environment for each workspace.
+    - Cost: the app's Boat key needs the scope `account.admin`, and the app needs one Boat environment for each workspace.
     - Cost: the org's Boat wallet pays $1 for each day that the proxy is on, and $1 for each 1,000 model requests.
     - Risk: a Boat placeholder belongs to a sandbox start, not to a turn. Only the block between turns limits it to a turn.
     - Risk: two sessions in one workspace that run on different logins need one Boat custom API each.

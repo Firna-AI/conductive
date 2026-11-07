@@ -87,6 +87,13 @@ A Mac command succeeds only when its state is `completed` and its exit code is 0
 The CLI returns status 1 and MCP returns `isError: true` for every other result.
 Both adapters keep the complete command result, including its output, timeout, and truncation fields.
 
+Each call to create or read a Mac command needs the active turn.
+So the tool cannot read a `turn_ended` result after Stop.
+The Worker answers its next call with HTTP 403 `calling_turn_required`.
+The tool then stops polling and reports: `The agent turn ended. The tool cannot read the Mac command result.`
+The CLI writes that message to stderr and returns status 1.
+MCP returns it in a tool result with `isError: true`.
+
 The Mac command route is mounted in the real Worker.
 General image installation and runner tool registration remain composition work.
 
@@ -119,6 +126,10 @@ Run `npm run test -- worker/tools` from the repository root.
 The tests import every module under `tools/`.
 The existing Worker TypeScript project therefore checks these modules with strict settings.
 No root test or TypeScript configuration change is needed.
+
+The Mac command tests of the CLI and MCP adapters live in `worker/devices/tools.test.ts`.
+They run against a local Worker runtime and cover Stop.
+Run them with `npm run test -- worker/devices/tools.test.ts`.
 
 ## Key code
 
