@@ -29,4 +29,4 @@
 - **Wider fix:** B.
 - **Previous examples:** The accounting mockups keep notices, tags, and page chrome local.
 - **Recommendation:** B. One shared version keeps the look and the accessibility the same in every app.
-- **Action:** fix after merge, apply B, because the library lives in the `futex-ai/ui` repository and has its own release.
+- **Action:** fix after merge, apply B, as the user chose on 8 November 2026 (decision 119): A now, and B in parallel. A workspace on `futex-ai/ui` adds the parts and publishes them, and Milestone 15n replaces the local copies.
