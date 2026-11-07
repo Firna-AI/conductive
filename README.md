@@ -58,9 +58,10 @@ how the app runs in development and in the production build.
 1. Install Node 24, as `.nvmrc` says. The
    [mockups README](docs/mockups/README.md#commands) lists the Node
    versions that Mokly refuses.
-2. Run `npm install`. Then run `npm --prefix desktop ci` for the Mac shell's
-   check dependencies. The `.npmrc` file sets `legacy-peer-deps`, which
-   `@firna/ui` needs.
+2. Run `npm install`. The `.npmrc` file sets `legacy-peer-deps`, which
+   `@firna/ui` needs. Then run `npm --prefix desktop ci` for the Mac shell's
+   check dependencies. Run `npm ci --prefix runner` for the check
+   dependencies of the [agent runner](runner/README.md).
 3. Run `npm run db:migrate` to create the local D1 tables.
 4. Run `npm run dev`, and open `http://127.0.0.1:5173`.
 5. Open `http://127.0.0.1:5173/api/health` to check the Worker. It returns
@@ -99,16 +100,17 @@ under `.wrangler/`, which Git also ignores.
 | `npm run test`              | Run the Vitest tests                                           |
 | `npm run db:migrate`        | Apply the D1 migrations to local storage                       |
 | `npm run file-length:check` | Check the 300-line limit of JavaScript and TypeScript files     |
-| `npm run check`             | Run every check, including the app build and the mockup checks |
+| `npm run check`             | Run every check, including the app build, the mockup checks, and the runner checks |
 | `npm run mockups:serve`     | Serve the catalogue at `http://127.0.0.1:4173`, and watch edits |
 | `npm run mockups:check`     | Check mockup types, then build the catalogue in strict mode     |
 | `npm run lint`              | Run ESLint                                                     |
 | `npm run format:check`      | Check formatting with Prettier                                 |
 | `npm run format`            | Format the files with Prettier                                 |
 
-GitHub Actions uses `.nvmrc`, installs with `npm ci` and
-`npm --prefix desktop ci`, and then runs `npm run check` on pull requests, and
-on pushes to `main` and to the primary branch of the plan. It does not deploy.
+GitHub Actions uses `.nvmrc`. It installs with `npm ci`,
+`npm --prefix desktop ci`, and `npm ci --prefix runner`. Then it runs
+`npm run check` on pull requests, and on pushes to `main` and to the primary
+branch of the plan. It does not deploy.
 
 ## Mac app
 

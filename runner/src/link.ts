@@ -2,6 +2,7 @@ import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type {
   RunnerCommand,
   RunnerEvent,
+  RunnerEventEnvelope,
   WorkspaceToRunner,
 } from '../../src/shared/runner'
 import type { RunnerFileResponse } from '../../src/shared/runner-files'
@@ -11,6 +12,7 @@ import type {
   RunnerConnector,
 } from '../../src/shared/runner-transport'
 import type { EventStore } from './state'
+import type { RetainedReport, RetainedReportKind } from './report-state'
 
 export interface LinkOptions {
   workspaceId: string
@@ -68,11 +70,21 @@ export class RunnerLink {
       this.options.now(),
       reportCommandId,
     )
-    if (envelope === null) {
-      this.options.warn('The runner event exceeds its byte limit.')
-      return
-    }
-    if (this.welcomed) this.send(envelope)
+    this.sendSaved(envelope)
+  }
+
+  async refreshReport(
+    kind: RetainedReportKind,
+    commandId: string,
+    prepare: (report: RetainedReport) => RetainedReport,
+  ): Promise<void> {
+    const envelope = await this.store.refreshReport(
+      kind,
+      commandId,
+      this.options.now(),
+      prepare,
+    )
+    if (envelope !== undefined) this.sendSaved(envelope)
   }
 
   reply(response: RunnerFileResponse): void {
@@ -104,6 +116,14 @@ export class RunnerLink {
     } catch {
       this.connection?.close()
     }
+  }
+
+  private sendSaved(envelope: RunnerEventEnvelope | null): void {
+    if (envelope === null) {
+      this.options.warn('The runner event exceeds its byte limit.')
+      return
+    }
+    if (this.welcomed) this.send(envelope)
   }
 
   private async receive(

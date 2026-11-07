@@ -148,12 +148,14 @@ export class Runner {
   private async refresh(command: RunnerReportRefresh): Promise<void> {
     if (this.refreshed.has(command.commandId)) return
     this.refreshed.add(command.commandId)
-    if (command.kind === 'files.snapshot' || command.kind === 'changes.updated')
-      await this.files.refresh(true, command.kind, command.commandId)
-    else {
-      const report = this.options.store.snapshot.reports.latest[command.kind]
-      if (report) await this.emit(report, false, command.commandId)
-      else await this.options.store.rememberReportCommand(command.commandId)
-    }
+    const kind = command.kind
+    if (kind === 'files.snapshot' || kind === 'changes.updated')
+      await this.files.refresh(true, kind, command.commandId)
+    else
+      await this.emitted.run(() =>
+        this.link.refreshReport(kind, command.commandId, (report) =>
+          this.sanitizer.retainedReport(report),
+        ),
+      )
   }
 }

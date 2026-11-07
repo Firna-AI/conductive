@@ -138,13 +138,13 @@ states the requirements.
   and diffs do not use this queue.
 - A watcher scan compares each kind with the last scan of that kind. So a
   request for one kind hides no later update of the other kind.
-- The state file keeps the last `start.updated` event and the last
-  `workspace.title` event that the runner saved. A confirm does not remove
-  them. They stay after a restart.
-- A `start.updated` or `workspace.title` request sends that saved event
-  again, with a new event number. The copy passes the output filter again.
-  The runner makes no start steps and no name of its own.
-- Until the runner saves an event of that kind, such a request sends
+- The runner keeps the latest `start.updated` and `workspace.title`
+  reports in memory. Each saved state includes them. A confirm does not
+  remove them. They stay after a restart.
+- A `start.updated` or `workspace.title` request selects the current
+  report and appends its filtered copy in one store operation. It saves
+  the copy before it sends it, with a new event number.
+- Until the runner accepts an event of that kind, such a request sends
   nothing. The runner has no source of new start steps or new workspace
   names yet.
 - The runner skips a command ID that it has seen. When the runner answers
@@ -172,9 +172,10 @@ The build writes `runner.mjs`, `measure.mjs`, and `compare.mjs` into
 links `dist/runner/node_modules` to `runner/node_modules`, so that the
 bundles find them.
 
-The root `npm run check` does not run the runner typecheck or the runner
-tests. Run both after each change to the runner. The root lint, format,
-and file-length checks do cover the runner files.
+The complete gate, the root `npm run check`, runs the runner typecheck and
+the runner tests. Run `npm ci --prefix runner` once before the gate, as CI
+does. The root lint, format, and file-length checks also cover the runner
+files.
 
 ## Service
 

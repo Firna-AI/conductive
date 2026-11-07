@@ -69,10 +69,12 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
   `npm run file-length:check`. The last command rejects JavaScript and
   TypeScript files over 300 lines, including comments and blank lines.
 - Complete gate: `npm run check`. It checks types, lint, format, file
-  length, tests, the app build, and the mockups. It stops at its first
-  failed step. GitHub Actions runs it on pushes and pull requests. Run
-  `npm --prefix desktop ci` once before the gate, as CI does. That command
-  installs the dependencies of the gate's desktop checks.
+  length, tests, the app build, and the mockups. It also runs the typecheck
+  and the tests of the [agent runner](runner/README.md). It stops at its
+  first failed step. GitHub Actions runs it on pushes and pull requests. Run
+  `npm --prefix desktop ci` and `npm ci --prefix runner` once before the
+  gate, as CI does. These commands install the dependencies of the gate's
+  desktop and runner checks.
 - Format: `npm run format`.
 - Mockup check: `npm run mockups:check`. It runs the typecheck, then the
   strict build into `mokly-static/`.

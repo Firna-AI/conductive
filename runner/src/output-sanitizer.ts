@@ -1,6 +1,7 @@
 import type { RunnerEvent } from '../../src/shared/runner'
 import type { RunnerFileEvent } from '../../src/shared/files'
 import { parseEvent } from './stored-events'
+import type { RetainedReport } from './report-state'
 
 type Delta = Extract<RunnerEvent, { type: 'assistant.delta' }>
 
@@ -22,6 +23,13 @@ export class OutputSanitizer {
     )
       return result
     throw new Error('The filtered file report changed its type.')
+  }
+
+  retainedReport(event: RetainedReport): RetainedReport {
+    const result = this.clean(event)
+    if (result.type === 'start.updated' || result.type === 'workspace.title')
+      return result
+    throw new Error('The filtered retained report changed its type.')
   }
 
   accept(event: RunnerEvent): RunnerEvent[] {

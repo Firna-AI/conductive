@@ -2,11 +2,12 @@ import type { RunnerEvent } from '../../src/shared/runner'
 import { array, object, string } from './parse'
 import { parseEvent } from './stored-events'
 
-type RetainedKind = 'start.updated' | 'workspace.title'
+export type RetainedReportKind = 'start.updated' | 'workspace.title'
+export type RetainedReport = Extract<RunnerEvent, { type: RetainedReportKind }>
 
 export interface ReportState {
   latest: {
-    [Kind in RetainedKind]: Extract<RunnerEvent, { type: Kind }> | null
+    [Kind in RetainedReportKind]: Extract<RunnerEvent, { type: Kind }> | null
   }
   commands: string[]
 }

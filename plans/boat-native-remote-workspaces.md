@@ -4650,6 +4650,15 @@ Agent calls on 7 November 2026, within decision 96 E:
   a restart after that save must not answer the same request twice.
 - Process commands after the welcome while the initial scan runs.
   Reason: a refresh request can arrive before `runner.ready`.
+- Select the current start or name report and append its filtered copy
+  in one store operation. Reason: a pending new report must not be
+  replaced by an older copy.
+
+User choice on 7 November 2026, item 106 A: add the runner typecheck and
+tests to the complete gate, and install the runner packages in CI.
+The alternatives were a separate CI job for runner or shared-contract
+changes, or no gate change. Reason for A: a shared-contract change in any
+milestone can break the runner. Delete the completed follow-up item.
 
 Verification evidence: `.context/boat-native-remote-workspaces/7t/verification.md`.
 
@@ -4659,6 +4668,10 @@ Verification evidence: `.context/boat-native-remote-workspaces/7t/verification.m
       Branch: `conductor/boat-native-remote-workspaces-milestone-7t`.
 - [x] Test each kind, a command during a running turn, and a command
       before `runner.ready`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7t`.
+- [x] Apply item 106 A to the gate and CI. Update its command docs,
+      delete `plans/follow-ups/runner-checks-in-gate.md`, and compare
+      the gate time before and after the change.
       Branch: `conductor/boat-native-remote-workspaces-milestone-7t`.
 
 ## Milestone 7u: Runner fixes from the review

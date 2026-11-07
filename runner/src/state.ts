@@ -19,6 +19,8 @@ import {
   parseReports,
   retainReport,
   type ReportState,
+  type RetainedReport,
+  type RetainedReportKind,
 } from './report-state'
 
 export interface SavedSession {
@@ -205,6 +207,21 @@ export class EventStore {
   async rememberReportCommand(commandId: string): Promise<void> {
     this.state.reports.commands.push(commandId)
     await this.save()
+  }
+
+  /** Select current pending state and append its filtered copy without yielding. */
+  async refreshReport(
+    kind: RetainedReportKind,
+    commandId: string,
+    occurredAt: number,
+    prepare: (report: RetainedReport) => RetainedReport,
+  ): Promise<RunnerEventEnvelope | null | undefined> {
+    const report = this.state.reports.latest[kind]
+    if (report === null) {
+      await this.rememberReportCommand(commandId)
+      return
+    }
+    return this.append(prepare(structuredClone(report)), occurredAt, commandId)
   }
 
   private save(): Promise<void> {
