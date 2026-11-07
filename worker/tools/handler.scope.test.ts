@@ -103,6 +103,7 @@ it('denies missing, invalid, revoked, archived, and deleted-org workspace creden
 it('grants the workspace token no other host, route, method, or socket', async () => {
   for (const path of [
     '/api/orgs',
+    '/tools/workspaces',
     MACHINE_PATHS.runner,
     MACHINE_PATHS.gitCredential,
     MACHINE_PATHS.githubWebhook,

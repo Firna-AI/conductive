@@ -48,7 +48,8 @@ It identifies the lost runner event without copying its data.
 and runner connections of one workspace. A reconnect uses the last stored number.
 The history response gives the point after which live events continue.
 
-The machine and preview hostnames remain deployment settings.
+`MACHINE_PATHS` in `agent-tools.ts` puts each machine route under `/v1/`.
+The machine origin and the preview domain stay Worker settings.
 Each open of a port preview gets a new preview ID, and the API never gives out
 a revoked ID again (decision 86). The Preview tool hides revoked previews by their ID.
 The git credential payload is not defined yet.

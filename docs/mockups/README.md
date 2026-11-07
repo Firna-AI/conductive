@@ -331,7 +331,7 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
 - The page shows no plans, because the product is free for now. A line
   under each "Start free with GitHub" says that users need their own Boat
   account, which runs their cloud computers, from decision 47.
-- The product is "Conductive", on `conductive.build`, from decision 100.
+- The product is "Conductive", on `conductive.build`.
   `src/brand.ts` holds the name and the domains, so that one change renames
   the product.
 - The footer and the sign-in page link to Terms and Privacy, from

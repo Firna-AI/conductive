@@ -1,7 +1,7 @@
 /**
- * The name and the domain of the product, as the user chose them for
- * decision 100. Every screen reads them from here, so that one change
- * renames the product. The app lives on the `app.` subdomain.
+ * The name and the domain of the product. Every screen reads them from
+ * here, so that one change renames the product. The app lives on the
+ * `app.` subdomain.
  */
 export const productName = 'Conductive'
 

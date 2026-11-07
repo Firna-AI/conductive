@@ -45,9 +45,16 @@ says.
   browsers send none on a read from the same site. A present `Origin`
   must match. Every write and every socket upgrade needs a matching
   `Origin` (decision 60).
-- The hostname for machines serves the GitHub webhooks, the agent tools,
-  the agent runner, and the git credential helper. Its gate checks a
-  webhook signature or a workspace token in place of the sign-in.
+- The hostname for machines is `api.conductive.build`. It serves the
+  GitHub webhooks, the agent tools, the agent runner, and the git
+  credential helper. Its gate checks a webhook signature or a workspace
+  token in place of the sign-in.
+- Each route of `api.conductive.build` has a path under `/v1/`
+  (decision 102).
+- Paths without a version were rejected. Reason: a later change to the
+  API can then use a new version.
+- `machines.conductive.build` and `m.conductive.build` were rejected.
+  Reason: these routes form an API, so their hostname starts with `api`.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
 - The marketing site at `conductive.build` needs no sign-in.
 
@@ -147,7 +154,8 @@ Later screens add the frame and connection sources that they need.
 ## GitHub tokens
 
 - The git credential helper asks the Worker for a fresh GitHub token for
-  each git operation. It proves itself with the workspace token.
+  each git operation, at `/v1/git/credential` on `api.conductive.build`.
+  It proves itself with the workspace token.
 - Reason: a GitHub App user token expires after 8 hours, and the secrets
   of a sandbox change only at a resume.
 - The token is a GitHub App user token of the person who sent the current
@@ -194,7 +202,8 @@ Later screens add the frame and connection sources that they need.
 
 ## Port previews
 
-- Previews live on a separate registrable domain (decision 6).
+- Previews live on `conductive.page`, a separate registrable domain
+  (decisions 6 and 102).
 - Each preview gets a random hostname one level under that domain, with at
   least 128 random bits. The hostname is the credential, so a frame needs
   no cookie.

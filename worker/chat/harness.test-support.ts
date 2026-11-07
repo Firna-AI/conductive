@@ -1,3 +1,4 @@
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AgentChoice } from '../../src/shared/agents'
 import type {
   WorkspaceSocketMessage,
@@ -131,7 +132,7 @@ export async function createChatFixture(
         return connection
       },
       {
-        url: `${MACHINE_ORIGIN}/runner`,
+        url: `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
         workspaceToken: WORKSPACE_TOKEN,
         ...parameters,
       },

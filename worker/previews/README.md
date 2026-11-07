@@ -9,8 +9,8 @@ Send app API requests to its `fetch(request)` method.
 Send preview domain HTTP requests and WebSocket upgrades to `proxy(request)`.
 The proxy uses the hostname as its credential. It requires no app cookie.
 
-Set `PREVIEW_DOMAIN` to a separate registrable domain from `APP_ORIGIN`.
-Use a wildcard DNS record and certificate for its one-level hostnames.
+`wrangler.jsonc` sets `PREVIEW_DOMAIN` to `conductive.page`, a separate registrable domain from `APP_ORIGIN`.
+Use a wildcard DNS record and certificate for its one-level hostnames, `*.conductive.page`.
 Each hostname holds 128 random bits. D1 stores its workspace, port, and expiry.
 The server keeps private port descriptors in memory for each workspace,
 sandbox, and port. It sends each token only in its upstream `_port_auth` cookie.

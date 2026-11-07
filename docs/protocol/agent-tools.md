@@ -13,8 +13,9 @@ says.
 - Both tools call the Worker with the workspace token of their sandbox.
 - With the workspace token, the tools can create and list workspaces, and
   nothing else.
-- The tools call the hostname for machines. Its gate checks the workspace
-  token in place of a sign-in.
+- The tools call `/v1/tools/workspaces` on `api.conductive.build`, the
+  hostname for machines. Its gate checks the workspace token in place of a
+  sign-in.
 - The app sets no limit of its own on the workspaces that agents create
   (decision 8). The plan limits of the org's Boat account apply.
 - A workspace that an agent creates starts with no approval step in the

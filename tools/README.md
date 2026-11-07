@@ -1,7 +1,7 @@
 # Workspace CLI and MCP server
 
 These tools create and list Conductive workspaces from a running workspace.
-They use the machine route in the [shared contract](../src/shared/agent-tools.ts).
+They call the machine route `/v1/tools/workspaces` from the [shared contract](../src/shared/agent-tools.ts).
 The [Worker handler](../worker/tools/README.md) verifies the workspace token and the calling turn.
 
 The tools require Node 24.
@@ -31,7 +31,7 @@ The runner supplies these values in the process environment:
 
 | Name | Value |
 | --- | --- |
-| `CONDUCTIVE_MACHINE_ORIGIN` | The configured machine origin |
+| `CONDUCTIVE_MACHINE_ORIGIN` | The machine origin with no path, `https://api.conductive.build` in production |
 | `CONDUCTIVE_WORKSPACE_TOKEN` | The calling workspace's runtime token |
 | `CONDUCTIVE_TURN_ID` | The `turnId` of the active runner command |
 

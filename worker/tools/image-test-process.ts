@@ -11,9 +11,14 @@ export function imageTestProcess(
   input = '',
   environment: Readonly<Record<string, string | undefined>> = {},
 ): Promise<CommandResult> {
+  // Worker type generation extends ProcessEnv. Clear a copy to keep child values isolated.
+  const isolatedEnvironment = { ...process.env }
+  for (const key of Object.keys(isolatedEnvironment))
+    delete isolatedEnvironment[key]
   return new Promise((resolve) => {
     const child = spawn(executable, [...args], {
       env: {
+        ...isolatedEnvironment,
         PATH: [dirname(process.execPath), '/usr/bin', '/bin'].join(delimiter),
         ...environment,
       },

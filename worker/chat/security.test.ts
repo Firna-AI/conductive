@@ -10,7 +10,12 @@ import {
 import { workspacePath } from '../../src/shared/workspaces'
 import { FakeRunner } from '../test-support/fake-runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
-import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
+import {
+  CLAUDE,
+  createChatFixture,
+  MACHINE_ORIGIN,
+  WORKSPACE_ID,
+} from './harness.test-support'
 
 describe('workspace chat security', () => {
   let harness: TestHarness
@@ -99,6 +104,9 @@ describe('workspace chat security', () => {
 
   it('authenticates the runner token and validates its hello and neutral event type', async () => {
     const fixture = await createChatFixture(harness)
+    await expect(
+      fixture.connect(undefined, { url: `${MACHINE_ORIGIN}/runner` }),
+    ).rejects.toMatchObject({ status: 403, code: 'machine_forbidden' })
     await expect(
       fixture.connect(undefined, { workspaceToken: 'wrong-token' }),
     ).rejects.toMatchObject({ status: 401, code: 'workspace_token_required' })

@@ -4769,6 +4769,9 @@ Agent calls on 7 November 2026:
 Evidence: `.context/milestone-15j/visual-review.md`,
 `.context/milestone-15j/check.log`, and
 `.context/milestone-15j/mockups-check.log`.
+Decision 102 evidence: `.context/milestone-15j/decision-102-code-report.md`,
+`.context/milestone-15j/decision-102-check.log`, and
+`.context/milestone-15j/decision-102-mockups-check.log`.
 
 - [x] Change the name and the domain in `docs/mockups/src/brand.ts`, and
       in each text that names the product: `AGENTS.md`, the READMEs,
@@ -4783,7 +4786,7 @@ Evidence: `.context/milestone-15j/visual-review.md`,
 - [x] Redraw the name in the brand lockups of `docs/brand/`, and make the
       marketing pictures and the screenshots that show the name again.
       Branch: `conductor/boat-native-remote-workspaces-milestone-15j`.
-- [ ] Serve the machine routes on `api.conductive.build` under `/v1/`: the
+- [x] Serve the machine routes on `api.conductive.build` under `/v1/`: the
       runner socket, the agent tools, the git credential helper, and the
       GitHub webhooks, as decision 102 says. Use `conductive.page` as the
       preview domain. Name both in the architecture doc and the protocol.

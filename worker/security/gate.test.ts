@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { API_PATHS, boatKeyPath, orgPath } from '../../src/shared/api'
 import { createApp } from '../application'
 import {
@@ -112,8 +113,8 @@ it('routes site, app, and machine hosts before dispatch', async () => {
   const env = {
     ...harness.env,
     MARKETING_ORIGIN: 'https://conductive.test',
-    MACHINE_ORIGIN: 'https://machines.conductive.test',
-    PREVIEW_DOMAIN: 'conductive-previews.test',
+    MACHINE_ORIGIN: 'https://api.conductive.build',
+    PREVIEW_DOMAIN: 'conductive.page',
   }
   const site = await app.fetch(
     new Request('https://conductive.test/api/session'),
@@ -124,8 +125,8 @@ it('routes site, app, and machine hosts before dispatch', async () => {
   for (const input of [
     { host: TEST_ORIGIN, path: '/', status: 501, surface: 'app' },
     {
-      host: 'https://machines.conductive.test',
-      path: '/api/session',
+      host: env.MACHINE_ORIGIN,
+      path: MACHINE_PATHS.runner,
       status: 501,
       surface: 'machine',
     },
@@ -146,7 +147,7 @@ it('routes site, app, and machine hosts before dispatch', async () => {
   )
   expect(unknown.status).toBe(403)
   const preview = await app.fetch(
-    new Request('https://unknown.conductive-previews.test/'),
+    new Request(`https://unknown.${env.PREVIEW_DOMAIN}/`),
     env,
   )
   expect(preview.status).toBe(404)

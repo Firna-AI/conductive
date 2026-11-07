@@ -8,7 +8,7 @@ It adds no migration.
 ## Handler
 
 `createAgentToolsHandler` takes the database, the machine origin, and `AgentToolServices`.
-It accepts GET and POST at `MACHINE_PATHS.workspaces` on that origin only.
+It accepts GET and POST at `MACHINE_PATHS.workspaces`, which is `/v1/tools/workspaces`, on that origin only.
 It uses workspace bearer authentication instead of browser sessions.
 It returns private responses with caching disabled.
 

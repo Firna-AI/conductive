@@ -136,8 +136,8 @@ them yet.
 - Every API response carries `Vary: Origin`.
 - A preflight from the desktop origin needs no sign-in, and it gives no
   access. It allows only JSON requests with the methods of the API.
-- The hostname for machines and the preview domain never accept the
-  desktop origin.
+- The hostname for machines, `api.conductive.build`, and the preview
+  domain, `conductive.page`, never accept the desktop origin.
 
 ## Permissions
 

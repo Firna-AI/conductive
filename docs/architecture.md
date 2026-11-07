@@ -148,12 +148,13 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
 | ----------------------- | --------------------------------------------------------------------------- |
 | `conductive.build`      | The marketing site, with the Terms and Privacy pages                        |
 | `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
-| A hostname for machines | The GitHub webhooks, the agent tools, the runner, and the credential helper |
-| The preview domain      | One random hostname for each open port preview, one level deep              |
+| `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper |
+| `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
 
-The preview domain is a separate registrable domain, so preview code is
-never same-site with the app (decision 6). The names of the machine
-hostname and of the preview domain are not chosen yet.
+`api.conductive.build` is the hostname for machines. Each of its routes has
+a path under `/v1/` (decision 102). The preview domain, `conductive.page`,
+is a separate registrable domain, so preview code is never same-site with
+the app (decision 6).
 
 ## Flows
 

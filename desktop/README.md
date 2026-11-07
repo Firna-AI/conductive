@@ -26,7 +26,7 @@ It defaults to `https://app.conductive.build`.
 Local development can use an HTTP localhost origin.
 `CONDUCTIVE_FRAME_SOURCES` lists space-separated HTTPS frame origins.
 Set the same frame sources in the web policy.
-Include the preview domain and cloud desktop stream origin when those tools exist.
+Include the preview domain, `https://*.conductive.page`, and the cloud desktop stream origin when those tools exist.
 Packaged apps use their bundled configuration.
 They ignore runtime environment overrides.
 
