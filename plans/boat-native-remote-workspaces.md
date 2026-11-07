@@ -3346,6 +3346,72 @@ we can use for it".
   - Milestone 15j does the rename. It starts now and merges after the
     open milestones, so that it renames the names that they add.
 
+
+### 101. Decide who owns the GitHub App
+
+Added on 7 November 2026, when the user asked to set up the GitHub App and
+Cloudflare.
+
+- **Options:**
+  - **A.** The Firna-AI organization.
+  - **B.** The user's personal account.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 7 November 2026. The app is named
+  "Conductive".
+
+### 103. Let agents change GitHub workflow files
+
+Added on 7 November 2026, with decision 101.
+
+- **Background:** GitHub refuses a push that changes `.github/workflows/`
+  unless the app has the Workflows permission.
+- **Options:**
+  - **A.** No Workflows permission.
+  - **B.** The app asks for the Workflows permission, so agents can change
+    CI files.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 7 November 2026.
+
+### 102. Name the hostname for machines and version its paths
+
+Added on 7 November 2026, with decision 101.
+
+- **Background:** The runner, the agent tools, the git credential helper,
+  and GitHub's webhooks call the Worker on their own hostname. Its gate
+  checks a workspace token or a webhook signature, never a browser
+  cookie.
+- **Options:**
+  - **A.** `machines.conductive.build`.
+  - **B.** `api.conductive.build`.
+  - **C.** `m.conductive.build`.
+- **Recommendation:** A.
+- **Chosen:** B, by the user on 7 November 2026, with versioned paths: "sounds
+  like an api - so api.conductive.build - but also we should version it".
+  The machine routes live under `/v1/`, such as
+  `https://api.conductive.build/v1/github/webhooks`. The preview domain is
+  `conductive.page`, which the user bought. Milestone 15j applies both.
+
+### 104. Keep the late events of a turn that has ended
+
+Added on 7 November 2026 from round 2 finding 5 of the Milestone 8j
+review, and the user's question "why do we reject these events?".
+
+- **Background:** Decision 76 refused a runner event of a turn that is
+  not active. When a cloud computer stops during a turn, the runner sends
+  its unconfirmed events again after the resume, and the workspace has
+  already ended that turn. So real agent text was lost.
+- **Options:**
+  - **D.** Keep refusing them, with the reason "turn not active" first.
+  - **E.** Keep a late event in its turn, without reopening the turn.
+  - **B.** Keep refusing them, and let the chat keep its own list of
+    turns.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 7 November 2026. The workspace stores a
+  late event of an ended turn in that turn. The turn stays ended: no
+  Working state, no Stop, and a tool that was running shows as stopped.
+  The workspace refuses only an event of a turn that never started.
+  Milestone 7s builds the workspace side, and Milestone 8j the chat side.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4259,12 +4325,19 @@ Depends on: none
 
 Apply decision 98 C.
 
-- [ ] Split `tsconfig.worker.json` into a production project without Node
+Status: Complete. The split found no Node-only use in production Worker code.
+
+Verification evidence: `.context/boat-native-remote-workspaces/milestone-4h/verification.md`.
+
+- [x] Split `tsconfig.worker.json` into a production project without Node
       types and a test project with them, and check both in
       `npm run typecheck`.
-- [ ] Fix each Node-only import or Node global that the split finds in
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4h`.
+- [x] Fix each Node-only import or Node global that the split finds in
       production Worker code.
-- [ ] Delete `plans/follow-ups/worker-typecheck-accepts-node-imports.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4h`.
+- [x] Delete `plans/follow-ups/worker-typecheck-accepts-node-imports.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4h`.
 
 ## Milestone 5: Bases and workspace lifecycle
 
@@ -4392,6 +4465,10 @@ Apply decision 76 E in the workspace Durable Object.
 - [ ] Join the parts of a file tree and of a changes list before the
       files store takes them.
 - [ ] Test each refusal, a tree in parts, and a resend after a refusal.
+- [ ] Apply decision 104 E: store a late event of an ended turn in that
+      turn, and never reopen the turn. Refuse only an event of a turn that
+      never started. State the rule in the protocol, in place of the old
+      refusal of every event of a turn that is not active.
 - [ ] Apply decision 96 E: add a runner command that asks for a fresh full
       report of the file list, the changes list, the start steps, or the
       workspace name. Send it once after the workspace refuses such an
@@ -4441,15 +4518,97 @@ markers of each session in the chat state, but shows nothing. It drops a
 marker that belongs to no session. Added on 6 November 2026 from round 1
 finding 2 of the Milestone 4d review.
 
-- [ ] Draw in the chat mockups how much tool detail and how many files the
+- [x] Draw in the chat mockups how much tool detail and how many files the
       runner left out, and the line of a refused event, which names what
-      was lost.
+      was lost. Branch: `conductor/boat-native-remote-workspaces-milestone-8j`.
 - [x] Draw where a marker that belongs to no session shows, and bring the
       pictures to the user. The user chose decision 96 E: the workspace
       repairs such a loss, and Milestone 8l shows a notice only for a
       failed repair. Branch: `conductor/boat-native-remote-workspaces-milestone-8j`.
-- [ ] Show them in the chat screens.
-- [ ] Compare each screen with its mockup.
+- [x] Show the omitted tool detail, omitted turn files, and session refusal
+      lines in the chat screens.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8j`.
+- [x] Compare the per-session screens with their mockups at desktop and
+      phone sizes, in dark and light.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8j`.
+
+Handoff: this milestone builds no notice for a marker without a session.
+Decision 96 E gives that notice to Milestone 8l, after Milestone 7s adds
+the contract for a failed repair.
+
+Evidence: `.context/boat-native-remote-workspaces/8j-mockups-report.md` and
+`.context/boat-native-remote-workspaces/8j-options-check.md`.
+Per-session checks: `.context/boat-native-remote-workspaces/8j-app-report.md`.
+Decision 96 mockups: `.context/boat-native-remote-workspaces/decision-96/implementor-report.md`.
+Finding 5 and decision 104 E: `.context/boat-native-remote-workspaces/fix-2/implementor-report.md`.
+
+Design calls on 6 November 2026:
+
+- Keep the omitted detail count visible when tool calls are folded.
+  Use the current count of each tool update, not the sum of its updates.
+- Show the omitted file count as plain text after the listed files.
+  The chat has no action that opens Changes yet.
+- Reuse one pure loss-line component in the mockups and the app.
+  Keep the event type and reason out of product copy.
+- Fold each session marker into the transcript at its event position.
+  Keep Try again on the failed item of the newest turn when a marker follows it.
+  A newer turn takes Try again away, also when the end of that turn was lost.
+- A refused end stops only the turn that its marker names.
+  Mark its unfinished tools as stopped, because the lost payload gives no result.
+  The wider session-record fix stays in `plans/follow-ups/chat-refused-turn-end.md`.
+- Keep the member name on a stopped line and add its omitted file count.
+  A zero count leaves that line unchanged.
+
+### Decision 96: markers without a session
+
+- **Chosen:** E, by the user on 6 November 2026. After a lost update
+  without a session, the workspace asks the runner for a fresh full report,
+  and the browser shows nothing. A notice shows beside the data, as in
+  option D, only when the fresh report is lost too. Milestone 8l builds that
+  notice after Milestone 7s adds the contract for a failed repair.
+- **Mockup:** `app/chat/lost-updates` keeps the option D picture as the
+  failed-repair notice: the notice of a file list under the file lists, and
+  the notice of the workspace name under the header. The standalone
+  pictures of options A and B are removed.
+- **History:** before the answer on 6 November 2026, the choice offered
+  these options, and the options check recommended D:
+  - **A.** Every notice under the Files lists, kept by the Files store.
+  - **B.** Every notice below the workspace header, with Dismiss, kept by
+    the app shell.
+  - **D.** File notices beside Files and the other notices below the
+    header, with both owners.
+
+### Finding 5 and decision 104: late events of an ended turn
+
+- **Finding:** round 2 finding 5 of the review. A late event of an ended
+  turn reopened it with Working and Stop, could replace a running newer
+  turn, and showed under a later request. A refused end of an older turn
+  moved the newest turn back and took Try again from a newer failure.
+- **Chosen:** E of decision 104, by the user on 7 November 2026. The
+  workspace stores a late event of an ended turn in that turn, and refuses
+  only an event of a turn that never started. Milestone 7s builds the
+  workspace side. This milestone builds the chat side.
+- **Chat rules, design calls on 7 November 2026:**
+  - The chat knows each turn from its first accepted event, in that order.
+    The last one is the newest turn. A turn ends with its end, with a
+    refused end while it runs, or when a newer turn starts.
+  - A late accepted event shows inside its ended turn, before the row
+    where the turn ended and before any later request. It brings back no
+    Working and no Stop, and changes neither a running turn nor the newest
+    turn. A running tool of that turn shows as stopped. The files of a late
+    end show as a file row, and the stopped line keeps its member.
+  - Each item stays with its turn, before a message that no turn has
+    taken yet. So a turn's last row stays above a request that waited
+    during the turn.
+  - A refusal marker starts no turn and never changes the newest turn. A
+    refused end ends its turn only while that turn runs.
+  - Try again follows the latest event that added an item. A later lost
+    line, a late item of an older turn, or a message accepted before the
+    failure keeps it. A message accepted after the failure, or a newer
+    turn, takes it away.
+  - The lines say "The summary of a turn", "The error of a turn", and "its
+    turn never started", because a line can follow a newer turn.
+
 
 ## Milestone 8k: Retry only the newest turn
 
@@ -4733,6 +4892,10 @@ starts, and rename each name that they add.
       database name, the test domains, and the brand file names.
 - [ ] Redraw the name in the brand lockups of `docs/brand/`, and make the
       marketing pictures and the screenshots that show the name again.
+- [ ] Serve the machine routes on `api.conductive.build` under `/v1/`: the
+      runner socket, the agent tools, the git credential helper, and the
+      GitHub webhooks, as decision 102 says. Use `conductive.page` as the
+      preview domain. Name both in the architecture doc and the protocol.
 - [ ] Merge the primary branch last, and rename each new occurrence. Then
       a search for "conducting" finds only decision records and history.
 
@@ -4824,10 +4987,11 @@ This milestone needs the prerequisites from the user.
 
 - [ ] Deploy the Worker, D1, and the web app to the user's Cloudflare
       account, with GitHub sign-in.
-- [ ] Create the D1 database with the Western Europe location hint, near
+- [x] Create the D1 database with the Western Europe location hint, near
       the workspace Durable Objects and Boat's machines. Cloudflare fixes
       the place of the database when it creates it. Added on 6 November
-      2026.
+      2026. Done on 7 November 2026: `conductive`, in `WEUR`, with every
+      merged migration applied. Branch: `calummoore/conductor-alternative-architecture`.
 - [ ] Smoke-test with a real Boat sandbox: create a workspace, chat, open
       a file, use the terminal, open a preview, stop, and resume.
 - [ ] Check that a private Boat port does not answer on the public

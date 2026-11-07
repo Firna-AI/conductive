@@ -26,6 +26,7 @@ export const workspaceStateSchema = {
     'resize',
     'overlay',
     'viewer',
+    'lostUpdate',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -72,6 +73,14 @@ export const workspaceStateSchema = {
     },
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
+    /**
+     * The notices of data without a session (decision 96). After a lost
+     * update the workspace asks for a fresh full report, and nothing shows.
+     * `failed-repair` draws the notices that show when that report is lost
+     * too: a file list's under the file lists, and the workspace name's
+     * under the header.
+     */
+    lostUpdate: { enum: ['none', 'failed-repair'] },
   },
 } as const
 
@@ -92,6 +101,7 @@ export const readyWorkspace: WorkspaceState = {
   resize: 'none',
   overlay: 'none',
   viewer: 'admin',
+  lostUpdate: 'none',
 }
 
 /**

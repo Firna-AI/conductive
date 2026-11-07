@@ -63,6 +63,7 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
   Tests live beside the code as `*.test.ts`.
 - Typecheck: `npm run typecheck`. It generates the Worker binding and
   runtime types under `.wrangler/`, then checks the app, Worker, and tools.
+  It checks Worker production code without Node types and tests with them.
   Use `npm run mockups:typecheck` for the mockups.
 - Early check: `npm run format:check`, `npm run lint`, and
   `npm run file-length:check`. The last command rejects JavaScript and

@@ -40,13 +40,6 @@ export function formatDay(timestamp: number, timeZone?: string): string {
   }).format(new Date(timestamp))
 }
 
-/** A file size such as "12 KB". */
-export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
 export function findModel(
   models: readonly AgentModel[],
   choice: Pick<AgentChoice, 'agent' | 'model'>,
