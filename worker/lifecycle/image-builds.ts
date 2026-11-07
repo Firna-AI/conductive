@@ -2,7 +2,7 @@ import { providerState } from './provider-state'
 import type { ImageBuild } from '../../src/shared/org-settings'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import { lifecycleProvider } from './lifecycle-provider'
+import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
@@ -179,7 +179,7 @@ export async function advanceImageBuild(
     const admin = await firstOrgAdmin(env.DB, orgId)
     if (!admin)
       throw new HttpError(404, 'org_not_found', 'The org is not available.')
-    provider = await lifecycleProvider(
+    provider = await orgSandboxProvider(
       env,
       admin.userId,
       orgId,

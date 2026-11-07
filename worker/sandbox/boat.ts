@@ -2,7 +2,6 @@ import type { HttpFetch } from '../env'
 import { ProviderError } from './errors'
 import { readSandboxFile } from './file-read'
 import {
-  readAccount,
   readCommand,
   readCommandStatus,
   readSandbox,
@@ -10,7 +9,6 @@ import {
   readStartedCommand,
 } from './parsers'
 import type {
-  BoatAccount,
   CommandOffsets,
   CommandStatus,
   PrivatePort,
@@ -25,8 +23,8 @@ import { BoatTransport } from './transport'
 export class BoatClient implements SandboxProvider {
   private readonly transport: BoatTransport
 
-  constructor(key: string, fetch: HttpFetch, account: BoatAccount) {
-    this.transport = new BoatTransport(key, fetch, account)
+  constructor(key: string, fetch: HttpFetch, orgId: string) {
+    this.transport = new BoatTransport(key, fetch, orgId)
   }
 
   readFile(sandboxId: string, path: string, maxBytes: number) {
@@ -110,18 +108,6 @@ export class BoatClient implements SandboxProvider {
     )
       throw new ProviderError('invalid_response', 502)
     return { kind: 'ready', url: url.href }
-  }
-
-  static async inspectAccount(
-    key: string,
-    fetch: HttpFetch,
-    expected?: BoatAccount,
-  ) {
-    const transport = new BoatTransport(key, fetch)
-    return readAccount(
-      await transport.request({ operation: 'account' }),
-      expected,
-    )
   }
 
   async create(input: SandboxStart) {

@@ -5,7 +5,7 @@ It checks sign-in and org access before it dispatches protected app requests.
 Durable Objects hold workspace state, and D1 holds shared records.
 The [security area](security/README.md) owns the app request gate.
 The [HTTP area](http/README.md) owns the request body limit at the Worker entry.
-The [sandbox area](sandbox/README.md) owns the Boat adapter and encrypted org keys.
+The [sandbox area](sandbox/README.md) owns the Boat adapter and the use of the app's one Boat key.
 
 ## Development
 

@@ -11,9 +11,7 @@ import { applyMigrations } from './migrations'
 export const TEST_ORIGIN = 'https://app.conductive.test'
 export const TEST_TIME = 1_800_000_000_000
 
-export async function createHarness(
-  options: { resetBoatAccounts?: boolean } = {},
-) {
+export async function createHarness() {
   const runtime = new Miniflare({
     enableDevRegistry: false,
     telemetry: { enabled: false },
@@ -46,6 +44,8 @@ export async function createHarness(
     GITHUB_CLIENT_ID: 'github-client-id',
     GITHUB_CLIENT_SECRET: 'github-client-secret',
     SESSION_SIGNING_KEY: btoa('s'.repeat(32)),
+    BOAT_API_KEY: 'boat-first',
+    BOAT_ORG_ID: 'app-org',
     BOAT_KEY_ENCRYPTION_KEY: btoa('e'.repeat(32)),
   }
   const github = new FakeGitHub()
@@ -134,7 +134,6 @@ export async function createHarness(
           'workspaces',
           'sections',
           'repositories',
-          'boat_keys',
           'settings',
           'image_build_logs',
           'image_builds',
@@ -146,7 +145,7 @@ export async function createHarness(
         ].map((table) => db.prepare(`DELETE FROM ${table}`)),
       )
       github.reset()
-      boat.reset({ accounts: options.resetBoatAccounts ?? false })
+      boat.reset()
       now = TEST_TIME
       sequence = 0
     },

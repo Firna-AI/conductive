@@ -48,12 +48,9 @@ export const workspaceStateSchema = {
     tab: { enum: ['session', 'new-session', 'code', 'markdown', 'diff'] },
     /**
      * The composer: empty, with attached files, with its picker open, or
-     * with a message for an agent that is not connected, or in an org that
-     * has no key for its cloud computers.
+     * with a message for an agent that is not connected.
      */
-    composer: {
-      enum: ['empty', 'attachments', 'picker', 'no-agent', 'no-key'],
-    },
+    composer: { enum: ['empty', 'attachments', 'picker', 'no-agent'] },
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },
     /**

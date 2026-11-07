@@ -3,7 +3,6 @@ import { HttpError, isRecord } from '../http'
 import { BodyBudgetExceeded, readBoundedJson } from '../http/bounded-body'
 import { ProviderError, providerError } from './errors'
 import { fileResponseBudget } from './file-response'
-import type { BoatAccount } from './provider'
 import { boatRoute, type BoatRoute } from './routes'
 
 const BOAT_API = 'https://boat.dev/api/v1'
@@ -13,12 +12,12 @@ const COMMAND_RESPONSE_BUDGET = 18_874_368
 export class BoatTransport {
   private readonly key: string
   private readonly fetch: HttpFetch
-  private readonly account?: BoatAccount
+  private readonly orgId: string
 
-  constructor(key: string, fetch: HttpFetch, account?: BoatAccount) {
+  constructor(key: string, fetch: HttpFetch, orgId: string) {
     this.key = key
     this.fetch = fetch
-    this.account = account
+    this.orgId = orgId
   }
 
   async request(
@@ -34,18 +33,12 @@ export class BoatTransport {
     const headers = new Headers({
       Authorization: `Bearer ${this.key}`,
       Accept: 'application/json',
+      'X-Boat-Org': this.orgId,
     })
     if (body !== undefined) headers.set('Content-Type', 'application/json')
     if (idempotencyKey) headers.set('Idempotency-Key', idempotencyKey)
     if (route.operation === 'delete')
       headers.set('X-Ascii-Confirm-Delete', route.sandboxId)
-    if (this.account) {
-      // An account key's active wallet can change outside the app.
-      headers.set(
-        'X-Boat-Org',
-        this.account.type === 'personal' ? 'personal' : this.account.id,
-      )
-    }
     let response: Response
     try {
       response = await this.fetch(

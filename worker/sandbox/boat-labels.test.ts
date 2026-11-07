@@ -3,12 +3,9 @@ import { expect, it } from 'vitest'
 import { FakeBoat } from '../test-support/fake-boat'
 import { BoatClient } from './boat'
 
-it('sends workspace labels on creation and forks with pinned credentials', async () => {
+it('sends workspace labels on creation and forks with the app credentials', async () => {
   const server = new FakeBoat()
-  const client = new BoatClient('boat-first', server.fetch, {
-    id: 'team-one',
-    type: 'org',
-  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
   const input = {
     labels: { user: 'user-one', repository: 'repo-one', workspace: 'task-one' },
     env: { WORKSPACE_TOKEN: 'workspace-token' },
@@ -33,7 +30,7 @@ it('sends workspace labels on creation and forks with pinned credentials', async
       ttlSeconds: 1800,
     })
     expect(request.headers.get('Authorization')).toBe('Bearer boat-first')
-    expect(request.headers.get('X-Boat-Org')).toBe('team-one')
+    expect(request.headers.get('X-Boat-Org')).toBe('app-org')
   }
   expect(server.requests).toHaveLength(2)
   expect(server.requests[0].headers.get('Idempotency-Key')).toBe(

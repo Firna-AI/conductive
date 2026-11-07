@@ -140,7 +140,7 @@ After a failure, `cleanupBuildImageSources` in
 and revokes the token before it deletes the source record.
 [`image-sources/cleanup-data.ts`](image-sources/cleanup-data.ts) holds those
 writes. The build cleanup runs it before it deletes the build sandbox, also
-when the org's Boat key is not available. `cleanupOrgImageSources` does the
+when Boat refuses the app's Boat key. `cleanupOrgImageSources` does the
 same for each build of an org. The image coordinator calls it before it
 stops for an org that is gone. Each failure of the loader gives one fixed
 error, because Boat output and Git errors can hold a credential.
@@ -251,7 +251,7 @@ each token.
   but no captured default branch.
 - `image-sources/deadline.test.ts` returns each alarm while Git runs, and
   allows the install only after revocation. It keeps the last good image
-  after a failure, and revokes when the Boat key is not available.
+  after a failure, and revokes when Boat refuses the app's Boat key.
 - `image-sources/members.test.ts` runs the real org delete and cleanup with
   the wrapper. The purge waits until a failed revocation succeeds.
 - `repository-names.test.ts` checks the folder names, the variable names,

@@ -1,8 +1,8 @@
 # Orgs and members
 
 This doc holds the requirements and the decisions in force for orgs, their
-Boat keys, their sections, and their members. It also covers the first run
-and the end of an org. The terms are those of the
+sections, and their members. It also covers the first run and the end of
+an org. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
@@ -11,9 +11,12 @@ says.
 
 - An org owns its workspaces, its sections, its repositories, and the
   settings of its org image (decision 21).
-- An org also has members and one Boat key.
+- An org also has members.
 - All orgs share the app's GitHub App. The agent logins of a user serve all
   of that user's orgs (decision 21).
+- All orgs share the app's Boat account and its plan limits, as
+  [The provider](workspaces-and-sandboxes.md#the-provider) says
+  (decision 80). No org has a Boat key.
 - Orgs that mirror GitHub accounts were rejected, because a new org would
   then need the GitHub App on another GitHub account.
 - The org rail lists the orgs of the user, and the user can create orgs.
@@ -21,39 +24,22 @@ says.
 - Before the org exists, the create screen lists repositories that the
   signed-in user and the shared GitHub App can both reach.
 - The org rail and General settings show the saved initials.
-- The product is free (decision 45). It has no plans, no billing, and no
-  limits of its own on workspaces, minutes, or members.
-- The plan limits of the org's Boat account apply to its sandboxes.
-
-## The Boat key
-
-- Each org has one Boat key. Every sandbox and the org image of the org
-  run on that Boat account (decision 46).
-- An admin adds the key on the Boat key tab of the org settings. Only
-  admins see that tab.
-- The Boat key screen names Boat, and links to Boat's sign-up page and to
-  its key page (decision 47).
-- A new key must reach the same Boat account as the old key. The key
-  screen refuses a key of another Boat account, and says why (decision
-  56).
-- A Boat key for each member was rejected. A workspace that moves to
-  another member would then have to move to another Boat account.
-- [Access and security](access-and-security.md#boat-keys) states how the
-  Worker keeps the key.
+- The product is free, with no limits (decisions 45 and 81). It has no
+  plans, no billing, and no limits of its own on workspaces, minutes, or
+  members.
+- Limits for each user, billing, and an invite-only sign-up were rejected
+  for now. Billing can come later (decision 81).
 
 ## Get started
 
 - Get started is the only first run.
-- It has four steps, in this order (decision 33):
+- It has three steps, in this order (decisions 33 and 80):
   1. Install the GitHub App.
   2. Create the first org.
-  3. Add the org's Boat key.
-  4. Connect Claude or Codex.
-- Reason for the order: the Boat key belongs to the org, so the org comes
-  first.
-- Get started says that users need their own Boat account (decision 47).
+  3. Connect Claude or Codex.
+- Get started asks for no Boat account and no Boat key.
 - [Chat and events](chat-and-events.md#messages) states the notice for a
-  missing Boat key or a missing agent login.
+  missing agent login.
 
 ## Sections
 
@@ -87,7 +73,7 @@ says.
 - Reason: a GitHub login can be renamed and taken by another account. A
   verified email proves the inbox.
 - Only an admin invites and removes members, changes a role, reassigns a
-  workspace, adds the Boat key, and deletes the org.
+  workspace, and deletes the org.
 - Only an admin changes the repositories, the install script, the startup
   script, and the env vars (decision 57). Other members see them
   read-only.

@@ -1,5 +1,5 @@
 import type { AppDependencies, AppEnv } from '../env'
-import { lifecycleProvider } from './lifecycle-provider'
+import { orgSandboxProvider } from '../sandbox/client'
 import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
 import { firstOrgAdmin } from './settings-data'
@@ -35,7 +35,7 @@ export async function retrySandboxCleanup(
   if (!cleanup) return true
   const admin = await firstOrgAdmin(env.DB, cleanup.orgId)
   if (!admin) return false
-  const provider = await lifecycleProvider(
+  const provider = await orgSandboxProvider(
     env,
     admin.userId,
     cleanup.orgId,

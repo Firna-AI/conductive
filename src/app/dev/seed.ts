@@ -63,9 +63,8 @@ function acme(
 
 /**
  * The state when the app opens. Get started is done before `firstRun`, and
- * not done from it on. Its steps are the three of the app, without the key
- * step that decision 80 removed. The other recorded orgs start as new
- * orgs, because the recorded server has no replies for them.
+ * not done from it on. The other recorded orgs start as new orgs, because
+ * the recorded server has no replies for them.
  */
 export function seedState(options: DevOptions): DevState {
   const core = coreFixtures(options.server.role)

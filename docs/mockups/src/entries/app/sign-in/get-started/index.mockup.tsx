@@ -9,9 +9,9 @@ const signUp = ['user-flows/sign-up']
 export const getStarted = defineScreen({
   title: 'Get started',
   description:
-    'The only first run, after the GitHub sign-in, in four steps: install the GitHub App on the account that owns the repositories, create the first org, add its Boat key, and connect Claude or Codex. Create org waits for the install, and the key field waits for the org.',
+    'The only first run, after the GitHub sign-in, in three steps: install the GitHub App on the account that owns the repositories, create the first org, and connect Claude or Codex. Create org waits for the install.',
   rationale:
-    'A GitHub App user token reaches only what both the user and the app can reach, so a new user must install the app before an org can list repositories. The key belongs to the org, as the user chose in decision 46, so it follows the org. The steps are numbered, so the order is clear without a note. Install the GitHub App opens GitHub, which returns here when the install is done. The user chose option D of decision 33: the first run sets up the key and an agent, and the composer asks for each one when it is missing. Get started names Boat and says that users need their own Boat account, as the user chose in decision 47.',
+    'A GitHub App user token reaches only what both the user and the app can reach, so a new user must install the app before an org can list repositories. The steps are numbered, so the order is clear without a note. Install the GitHub App opens GitHub, which returns here when the install is done. The user chose option D of decision 33: the first run connects an agent, and the composer asks for one when it is missing. The app runs every cloud computer on its own account, so the first run asks for no key and no other account, as the user chose in decision 80.',
   relatedDocs: [],
   propSchema: getStartedSchema,
   props: { step: 'install' },
@@ -32,15 +32,7 @@ export const getStarted = defineScreen({
       slug: 'org-created',
       title: 'Org created',
       description:
-        'Firna exists, and the rail shows it. The next step asks for its Boat key, with links to the Boat sign-up and dashboard and the actions that the key needs, and tests the key once when it is saved.',
-      props: { step: 'key' },
-      useCasePaths: signUp,
-    },
-    {
-      slug: 'key-saved',
-      title: 'Boat key saved',
-      description:
-        'The key passed its test, and the step shows only its last four characters. The form of Claude is open, because the default model is a Claude model. Codex can follow at any time.',
+        'Firna exists, and the rail shows it. The form of Claude is open, because the default model is a Claude model. Codex can follow at any time.',
       props: { step: 'agent' },
       useCasePaths: signUp,
     },

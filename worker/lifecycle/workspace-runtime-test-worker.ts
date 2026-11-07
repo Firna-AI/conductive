@@ -1,5 +1,5 @@
 import { Workspace } from '../workspace'
-import { BoatClient } from '../sandbox/boat'
+import { sandboxProvider } from '../sandbox/client'
 import { ProviderError } from '../sandbox/errors'
 import { GitHubClient } from '../security/github'
 import { refreshGitHubTokens } from '../security/github-refresh'
@@ -100,10 +100,7 @@ export default {
     try {
       switch (new URL(request.url).pathname) {
         case '/boat':
-          await new BoatClient('boat-first', send, {
-            id: 'team-one',
-            type: 'org',
-          }).get('bx_one')
+          await sandboxProvider(env, send).get('bx_one')
           break
         case '/signin':
           await new GitHubClient(send).authorize(

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { API_PATHS, orgPath } from '../../src/shared/api'
 import { membersPath } from '../../src/shared/members'
+import { orgSettingsPaths } from '../../src/shared/org-settings'
 import { deleteOrgPath, restoreOrgPath } from '../../src/shared/orgs'
 import {
   createHarness,
@@ -15,7 +16,7 @@ import { memberFixture, membersClient, write } from './members-test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
-  harness = await createHarness({ resetBoatAccounts: true })
+  harness = await createHarness()
 })
 beforeEach(async () => {
   await harness.reset()
@@ -86,6 +87,15 @@ it('hides a deleted org from members and restores stopped workspaces without a p
   )
   expect(
     (await client.request(membersPath(org.id), admin.session)).status,
+  ).toBe(404)
+  expect(
+    (
+      await client.request(
+        orgSettingsPaths.settings(org.id),
+        admin.session,
+        write({}, 'PATCH'),
+      )
+    ).status,
   ).toBe(404)
   expect(
     (await client.request(restoreOrgPath(org.id), member.session, write({})))

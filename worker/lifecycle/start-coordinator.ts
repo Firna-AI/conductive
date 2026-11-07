@@ -11,7 +11,7 @@ import { prepareWorkspaceRecords } from './start-records'
 import { publishCreationResult } from './creation-publication'
 import { HttpError } from '../http'
 import { startWorkspaceTerminal } from '../terminal/service'
-import { lifecycleProvider } from './lifecycle-provider'
+import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { readWorkspace } from './workspace-data'
 import { finishFailedStart } from './start-failure'
@@ -129,7 +129,7 @@ export class WorkspaceStartCoordinator {
       const admin = await firstOrgAdmin(this.env.DB, job.orgId)
       if (!admin)
         throw new HttpError(404, 'org_not_found', 'The org is not available.')
-      provider = await lifecycleProvider(
+      provider = await orgSandboxProvider(
         this.env,
         admin.userId,
         job.orgId,

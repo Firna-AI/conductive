@@ -22,10 +22,7 @@ it('aborts detached command starts and status reads at 30 seconds while waited c
         )
       })
     }
-    const client = new BoatClient('boat-first', fetch, {
-      id: 'team-one',
-      type: 'org',
-    })
+    const client = new BoatClient('boat-first', fetch, 'app-org')
     const started = client.startCommand('bx_one', 'npm run build')
     const status = client.getCommandStatus('bx_one', 7, {
       stdoutOffset: 0,

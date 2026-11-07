@@ -63,10 +63,7 @@ it('reports the metadata size above the caller limit after small content refusal
   for (const refusal of refusals) {
     const server = new FakeBoat()
     server.responseFactories = [refusal.response, () => fileInfo(6_291_456)]
-    const client = new BoatClient('boat-first', server.fetch, {
-      id: 'team-one',
-      type: 'org',
-    })
+    const client = new BoatClient('boat-first', server.fetch, 'app-org')
     await expect(
       client.readFile('bx_one', path, 3),
       refusal.name,

@@ -5,7 +5,8 @@ life of each workspace. The org image is the saved snapshot that every new
 sandbox of an org starts from. A workspace is one task with its own branch
 and its own Boat sandbox. The code reaches Boat only through the
 `SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
-with the org's own Boat key.
+with the app's one Boat key, as the [sandbox area](../sandbox/README.md)
+says.
 
 The root Worker does not call these handlers yet. `worker/routes.ts` has no
 lifecycle route, and `worker/application.ts` serves a stub on the machine

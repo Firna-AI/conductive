@@ -5,10 +5,7 @@ import { BoatClient } from './boat'
 
 it('rejects malformed detached command results without exposing provider fields', async () => {
   const server = new FakeBoat()
-  const client = new BoatClient('boat-first', server.fetch, {
-    id: 'team-one',
-    type: 'org',
-  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
   server.responseOverride = Response.json({
     ok: true,
     type: 'command.started',
@@ -62,10 +59,7 @@ it('rejects malformed detached command results without exposing provider fields'
 
 it('keeps detached start and status errors typed and redacted', async () => {
   const server = new FakeBoat()
-  const client = new BoatClient('boat-first', server.fetch, {
-    id: 'team-one',
-    type: 'org',
-  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
   server.failure = { status: 409, code: 'agent_outdated' }
   await expect(
     client.getCommandStatus('bx_one', 1234, {
@@ -91,10 +85,7 @@ it('keeps detached start and status errors typed and redacted', async () => {
 
 it('rejects invalid command paths and byte offsets before a provider call', async () => {
   const server = new FakeBoat()
-  const client = new BoatClient('boat-first', server.fetch, {
-    id: 'team-one',
-    type: 'org',
-  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
   await expect(
     client.getCommandStatus('../orgs', 1234, {
       stdoutOffset: 0,

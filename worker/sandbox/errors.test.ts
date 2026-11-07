@@ -5,10 +5,7 @@ import { BoatClient } from './boat'
 
 it('returns typed provider failures without copying upstream messages', async () => {
   const server = new FakeBoat()
-  const client = new BoatClient('boat-first', server.fetch, {
-    id: 'team-one',
-    type: 'org',
-  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
   for (const [status, kind] of [
     [400, 'invalid_request'],
     [401, 'unauthorized'],
@@ -36,17 +33,14 @@ it('handles network failures and malformed provider success without returning un
     async () => {
       throw new Error('network boat-first')
     },
-    { id: 'team-one', type: 'org' },
+    'app-org',
   )
   await expect(unavailable.get('bx_one')).rejects.toMatchObject({
     kind: 'unavailable',
     status: 503,
   })
   const server = new FakeBoat()
-  const client = new BoatClient('boat-first', server.fetch, {
-    id: 'team-one',
-    type: 'org',
-  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
   for (const response of [
     new Response('bad JSON'),
     Response.json({
