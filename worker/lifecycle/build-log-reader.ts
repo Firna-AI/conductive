@@ -24,8 +24,8 @@ export async function readBuildSnapshot(
     db
       .prepare(
         `SELECT event_number AS eventNumber, occurred_at AS occurredAt, text
-       FROM image_build_logs WHERE build_id = ? AND event_number > ?
-       ORDER BY event_number LIMIT ?`,
+        FROM image_build_logs WHERE build_id = ? AND event_number > ?
+        ORDER BY event_number LIMIT ?`,
       )
       .bind(buildId, after, limit),
   ])

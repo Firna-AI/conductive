@@ -2,19 +2,19 @@ import type { DurableLifecycleState } from './durable-types'
 import type { FailedCreationDraft } from './failed-creations'
 import type { ImageCoordinatorState } from './image-timers'
 import type {
-  WorkspaceStartJob,
   WorkspaceStartResult,
   CreationPublication,
-  WorkspaceCreationAdmission,
+  CompletedWorkspaceCreation,
 } from './start-types'
+import type { StoredWorkspaceStartJob } from './start-job-codec'
 import type { PendingTurn } from './workspace-runtime'
 
 export interface WorkspaceValues {
   lifecycle: DurableLifecycleState
-  job: WorkspaceStartJob
+  job: StoredWorkspaceStartJob
   result: WorkspaceStartResult
   publication: CreationPublication
-  admission: WorkspaceCreationAdmission
+  creation: CompletedWorkspaceCreation
   turns: PendingTurn[]
   image: ImageCoordinatorState
   draft: FailedCreationDraft
@@ -92,6 +92,12 @@ class NativeOperations implements WorkspaceTransaction {
   }
 }
 
+class NativeTransaction extends NativeOperations {
+  constructor(transaction: DurableObjectTransaction) {
+    super(transaction)
+  }
+}
+
 export function nativeWorkspaceStorage(
   storage: DurableObjectStorage,
 ): WorkspaceStorage {
@@ -105,7 +111,7 @@ export function nativeWorkspaceStorage(
     deleteAlarm: operations.deleteAlarm.bind(operations),
     transaction: (operation) =>
       storage.transaction((transaction) =>
-        operation(new NativeOperations(transaction)),
+        operation(new NativeTransaction(transaction)),
       ),
   }
 }

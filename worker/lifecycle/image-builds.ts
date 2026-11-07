@@ -26,6 +26,7 @@ import { advanceBuildCommand, cleanupBuild } from './build-execution'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { IMAGE_DAY_MS, scheduleIdleImage } from './image-schedule'
 import { allocateImageBuild } from './image-allocation'
+import { buildSnapshotIntent, createResource } from './resource-intents'
 import {
   firstOrgAdmin,
   readImageSettings,
@@ -213,9 +214,10 @@ export async function advanceImageBuild(
     // A long build receives the same safety deadline as other active work.
     await provider.setAutoStop(job.sandboxId, 1_800)
     if (job.phase === 'snapshot') {
-      const snapshot = job.snapshotName
-        ? await provider.getSnapshot(job.snapshotName)
-        : await provider.saveSnapshot(job.sandboxId, `image-${buildId}`)
+      const snapshot = await createResource(
+        provider,
+        buildSnapshotIntent(env.DB, job),
+      )
       await assignBuildSnapshot(env.DB, buildId, snapshot.name)
       if (snapshot.status === 'failed') throw new Error('Image save failed')
       if (snapshot.status === 'ready')

@@ -2,6 +2,10 @@ import type { AppEnv } from '../env'
 import { releasedStartLog, type EncryptedStartLog } from './start-logs'
 import type { WorkspaceStartResult } from './start-types'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
+import {
+  serializeStartJob,
+  type StoredWorkspaceStartJob,
+} from './start-job-codec'
 
 type TransportStartResult = WorkspaceStartResult<EncryptedStartLog>
 
@@ -12,7 +16,9 @@ export interface WorkspaceLifecycleTransport extends Omit<
   | 'waitCreationLifecycle'
   | 'readCreationLifecycleResult'
   | 'readLifecycleStartLog'
+  | 'queueLifecycleStart'
 > {
+  queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean>
   waitLifecycleStart(): Promise<TransportStartResult>
   waitCreationLifecycle(): Promise<TransportStartResult>
   readCreationLifecycleResult(): Promise<TransportStartResult | undefined>
@@ -67,7 +73,8 @@ export function workspaceLifecycleEndpoint(
     credentialSender: (turnId) => transport.credentialSender(turnId),
     retryFailedCreateCleanup: (id) => transport.retryFailedCreateCleanup(id),
     finishDiskMaintenance: () => transport.finishDiskMaintenance(),
-    queueLifecycleStart: (job) => transport.queueLifecycleStart(job),
+    queueLifecycleStart: (job) =>
+      transport.queueLifecycleStart(serializeStartJob(job)),
     async waitLifecycleStart() {
       return releasedStartResult(env, await transport.waitLifecycleStart())
     },

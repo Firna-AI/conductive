@@ -4744,19 +4744,43 @@ Depends on: 5
 Apply the `fix after merge` items of the Milestone 5 review and of the
 build logs. Added on 7 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/creation-admission-restart.md`, and
+Design call, 7 November 2026: Each build log uses a 4 MiB budget, with
+space for its rows and omission line. Complete UTF-8 rows from each end
+share that budget.
+
+Evidence: `.context/milestone-5b/` holds the implementation reports and checks.
+
+The review also fixed recovery of a snapshot intent stored before dispatch.
+
+- [x] Apply the recorded option of `plans/follow-ups/creation-admission-restart.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/completed-retry-first-message.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/lifecycle-race-tests-storage.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/lifecycle-resource-intents.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/build-log-total-size.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/build-log-follower.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/script-command-type.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+
+## Milestone 5c: Lifecycle, build log, and members fixes
+
+Depends on: 5b
+
+Apply the `fix after merge` items of the Milestone 5b and 15l reviews.
+Added on 8 November 2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/build-log-stream-format.md`, and
       delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/completed-retry-first-message.md`, and
+- [ ] Apply the recorded option of `plans/follow-ups/image-build-transient-errors.md`, and
       delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-race-tests-storage.md`, and
+- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-command-repeat-after-restart.md`, and
       delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-resource-intents.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/build-log-total-size.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/build-log-follower.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/script-command-type.md`, and
+- [ ] Apply the recorded option of `plans/follow-ups/members-late-role-failure-after-removal.md`, and
       delete that item.
 
 ## Milestone 6: App shell and workspaces
@@ -5887,6 +5911,13 @@ User choice, 7 November 2026: complete the first three items here. Keep the
 shared UI item open. Its change and release belong to `futex-ai/ui` and
 need the user's go-ahead.
 
+Decision 119 moves the shared UI work to Milestone 15n. Its follow-up
+item stays unchanged.
+
+User choice, 8 November 2026: apply decision 121 A here. Disclose the
+GitHub token risk in the access protocol and name the token in the
+privacy page. The orchestrator owns its follow-up item.
+
 Agent calls, 7 November 2026: record consent only for new accounts, without
 inventing consent for existing users. Identify operators by configured,
 immutable GitHub IDs. Keep allocation intent until cleanup can recover a
@@ -5901,8 +5932,8 @@ covers one attachment.
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
 - [x] Apply the recorded option of `plans/follow-ups/marketing-mockup-gaps.md`, and
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
-- [ ] Apply the recorded option of `plans/follow-ups/firna-ui-missing-parts.md`, and
-      delete that item.
+- [x] Apply decision 121 A to the GitHub token risk disclosure and privacy
+      text. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
 
 Evidence: `.context/milestone-15m/reports/`,
 `.context/milestone-15m/marketing-pictures.log`,

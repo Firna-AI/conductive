@@ -4,6 +4,8 @@ import { FIRST_MESSAGE } from './durable-test-support'
 import { realRuntimeFixture, runtimeBundle } from './real-runtime-test-support'
 import { claimCreation } from './creation-claims'
 import type { WorkspaceStartJob } from './start-types'
+import { readSavedScript } from './saved-script'
+import { serializeStartJob } from './start-job-codec'
 import {
   hasStartStep,
   liveEvents,
@@ -55,7 +57,7 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     orgId: 'runtime-org',
     kind: 'create',
     imageName: 'base-runtime-image',
-    startupScript: '',
+    startupScript: readSavedScript(''),
     environmentCiphertext: null,
     defaultBranch: 'main',
     turnId: 'runtime-turn',
@@ -87,7 +89,7 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   fixture.boat.commandOutput = 'part'
   fixture.boat.commandRunning = true
   const caller = fixture.actor(id)
-  expect(await caller.queueLifecycleStart(job)).toBe(true)
+  expect(await caller.queueLifecycleStart(serializeStartJob(job))).toBe(true)
   const abandoned = caller.waitCreationLifecycle().catch(() => undefined)
   for (let step = 0; step < 12; step++) {
     const checkpoint = await caller.checkpoint()

@@ -1,11 +1,12 @@
 import type { AppEnv } from '../env'
 import { HttpError, isRecord } from '../http'
 import { decrypt } from '../security/crypto'
+import { readSavedScript, type SavedScript } from './saved-script'
 
 export interface ImageSettings {
   orgId: string
-  installScript: string
-  startupScript: string
+  installScript: SavedScript
+  startupScript: SavedScript
   envVarsCiphertext: string | null
   imageName: string | null
   imageBuildId: string | null
@@ -57,10 +58,19 @@ export async function readImageSettings(
      FROM settings WHERE org_id = ?`,
     )
     .bind(orgId)
-    .first<ImageSettings>()
+    .first<
+      Omit<ImageSettings, 'installScript' | 'startupScript'> & {
+        installScript: string
+        startupScript: string
+      }
+    >()
   if (!row)
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
-  return row
+  return {
+    ...row,
+    installScript: readSavedScript(row.installScript),
+    startupScript: readSavedScript(row.startupScript),
+  }
 }
 
 export async function selectedRepositories(

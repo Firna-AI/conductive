@@ -4,14 +4,21 @@ import { SectionText } from '../../../docs/mockups/src/components/settings/Secti
 import styles from '../../../docs/mockups/src/components/settings/BuildSection.module.css'
 import type { ComputerModel } from '../../app/computer-model'
 import { currentBuild, latestBuild } from '../../app/org-model'
+import { useStore } from '../../app/store'
 import { formatElapsed } from '../../app/time'
-import type { BuildsResponse, ImageBuild } from '../../shared/org-settings'
+import type {
+  BuildLogEvent,
+  BuildsResponse,
+  ImageBuild,
+} from '../../shared/org-settings'
 import { ActionButton } from '../ui/actions'
 import type { Action } from '../ui/useAction'
-import { BuildLog, useLatestLog } from './BuildLog'
+import { BuildLog } from './BuildLog'
 import { BuildButton, BuildHistory, BuildResult } from './BuildParts'
 import { LoadFailure } from '../ui/LoadFailure'
 import { inSentence, useWhen } from './when'
+
+const noEvents: readonly BuildLogEvent[] = []
 
 /** The state of the newest build: its time and result, or its run time. */
 function Head(props: { latest: ImageBuild; now: number; when: string }) {
@@ -84,8 +91,10 @@ function FirstBuild(props: { admin: boolean; build: Action<[]> }) {
 
 /**
  * The builds of the org's cloud computer: the newest build with its result,
- * the log of a build that runs or failed, and the history. A failed build
- * leaves the last good build in use (decision 9). Only an admin builds.
+ * the log of a build that runs or failed, and the history. The computer
+ * model chooses and follows the log, so the card only shows it. A failed
+ * build leaves the last good build in use (decision 9). Only an admin
+ * builds.
  */
 export function BuildCard(props: {
   admin: boolean
@@ -99,7 +108,7 @@ export function BuildCard(props: {
   const current = currentBuild(props.builds)
   const running = latest?.state === 'running'
   const { now, when } = useWhen(running ? 1_000 : 60_000)
-  const log = useLatestLog(props.computer, latest)
+  const log = useStore(props.computer.log)
   if (!latest) return <FirstBuild admin={props.admin} build={props.build} />
   const history = props.builds.builds
     .filter((build) => build.kind === 'build')
@@ -119,14 +128,14 @@ export function BuildCard(props: {
       </div>
       {latest.state === 'succeeded' ? null : (
         <div className={styles.body}>
-          {log.error ? (
+          {log?.error ? (
             <LoadFailure
               error={log.error}
-              retry={log.retry}
+              retry={() => props.computer.reloadLog()}
               title="The log did not load"
             />
           ) : (
-            <BuildLog events={log.events} live={running} />
+            <BuildLog events={log?.events ?? noEvents} live={running} />
           )}
           {note ? <SectionText muted>{note}</SectionText> : null}
         </div>

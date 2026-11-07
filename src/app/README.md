@@ -95,6 +95,13 @@ the invite, the roles, and the removal there.
 - The Cloud computer tab follows the builds while it shows. When the newest
   build ends, by any path, the tab reads the settings again, because the
   server changes them at a build, such as `needsBuild`.
+- While the tab shows, `ComputerModel` owns one `BuildLogFollower` for the
+  log of the newest build that runs or failed. A newer build replaces the
+  follower, so an answer for an older build changes neither the log nor
+  the timer. When the builds show the end of the build before the log
+  does, the follower reads the final log. When this update arrives during
+  an active read, the follower keeps it. After that read, the follower
+  reads again, unless that answer already shows the new state.
 - The read mark of an open workspace follows the applied state, the
   number of the newest event, and the visibility of the page, so their
   order does not count. A hidden page sends no read mark. When the page
@@ -176,11 +183,12 @@ the invite, the roles, and the removal there.
   the save. No answer brings a stored secret back.
 - The browser keeps only the panel widths (`panels.ts`). A browser that
   refuses its storage keeps them until the page closes.
-- The open of a workspace, its read mark, the Archive check, the poll of a
-  build log, and the settings reads of the Cloud computer tab count a
-  generation. An answer that arrives after their screen closed or the user
-  cancelled starts no stream, writes no older state, opens no question,
-  and schedules no request.
+- The open of a workspace, its read mark, the Archive check, and the
+  settings reads of the Cloud computer tab count a generation. An answer
+  that arrives after their screen closed or the user cancelled starts no
+  stream, writes no older state, opens no question, and schedules no
+  request. One follower owns the requests and the timer of a build log.
+  After it stops, an answer changes nothing and schedules nothing.
 - Timers, the focus, the visibility, and the input of the page come from
   `AppServices` (`delay`, `onFocus`, `visible`, and `onInput`), so that no
   unit test runs a real timer or needs a browser page. The browser hears
@@ -224,6 +232,8 @@ clicks, types, and lets the answers of the fake API settle.
 - `workspace-model.ts` and `archive-model.ts`: an open workspace and Archive.
 - `new-workspace-model.ts`: the first message that creates a workspace.
 - `computer-model.ts`: the scripts, the env vars, the builds, and the log.
+- `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
+  the log of one build.
 - `events.ts`: the ordered event stream and the event socket.
 - `workspace-store.ts`: `useWorkspaceStore`, which gives a connected view
   the store of its workspace, and the `create` and `connect` functions that

@@ -17,7 +17,11 @@ import { workspaceEnvironment } from './settings-data'
 import { readWorkspaceToken } from './tokens'
 import { WorkspaceStartError } from './workspace-start'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
-import type { WorkspaceStartJob, StartJobStorage } from './start-types'
+import type {
+  WorkspaceStartJob,
+  WorkspaceMachinePhase,
+  StartJobStorage,
+} from './start-types'
 
 export async function advanceStartMachine(
   env: AppEnv,
@@ -27,7 +31,7 @@ export async function advanceStartMachine(
   job: WorkspaceStartJob,
   storage: StartJobStorage,
 ): Promise<{
-  phase: WorkspaceStartJob['phase']
+  phase: WorkspaceMachinePhase
   environmentCiphertext: string | null
 } | null> {
   if (job.phase === 'machine') {

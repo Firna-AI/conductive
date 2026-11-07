@@ -83,7 +83,7 @@ export const privacyDocument: LegalDocument = {
             that provider apply.`,
           text`The members of your orgs see the workspaces of the org and
             their chats. A member with a terminal in a cloud computer can read
-            the agent login of a turn that runs there.`,
+            the agent login and the GitHub token of a turn that runs there.`,
         ),
         paragraph`${draft('To confirm: the contracts with these providers, and any other recipient')}`,
       ],

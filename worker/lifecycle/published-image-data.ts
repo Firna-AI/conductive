@@ -1,4 +1,5 @@
 import { HttpError } from '../http'
+import { readSavedScript, type SavedScript } from './saved-script'
 import { readRepositories, type SelectedRepository } from './settings-data'
 import {
   capturedRepositoryLocations,
@@ -34,7 +35,7 @@ export async function readCreationImage(
   repositoryId: string,
 ): Promise<{
   imageName: string
-  startupScript: string
+  startupScript: SavedScript
   environmentCiphertext: string | null
   repository: SelectedRepository
   repositoryLocations: RepositoryLocation[]
@@ -62,6 +63,7 @@ export async function readCreationImage(
   if (!repository) throw imageAdmissionError('repository_not_found')
   return {
     ...image,
+    startupScript: readSavedScript(image.startupScript),
     repository,
     repositoryLocations: capturedRepositoryLocations(
       image.repositoryLocationsJson,

@@ -184,6 +184,11 @@ Later screens add the frame and connection sources that they need.
 - So the members of one org trust each other with the logins of their
   turns, also after a turn ends. A proxy that keeps every login out of the
   sandbox was rejected, because it is a much larger build.
+- Risk: while a turn runs, each process in the sandbox can get the
+  sender's GitHub App user token. Each member with a terminal there can
+  get it too, for example with `git credential fill`. A copied token keeps
+  working after the turn until it expires. It also reaches the
+  repositories of that person outside the org (decision 121).
 
 ## The workspace token
 
@@ -218,8 +223,8 @@ Later screens add the frame and connection sources that they need.
   The helper gets it fresh for each call, and the sandbox never stores
   it.
 - A user token reaches every repository where that person installed the
-  GitHub App and has access. A limit to the org's repositories was
-  rejected for now, because GitHub cannot set it on a user token.
+  GitHub App and has access. A token that reaches only the repositories
+  of the workspace is follow-up work (decision 121).
 - A build or a refresh copies each repository of the image with Git in the
   build sandbox (decision 90). Each copy uses its own GitHub App
   installation token, which can only read the contents of that one

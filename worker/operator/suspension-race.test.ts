@@ -6,7 +6,12 @@ import { createWorkspace } from '../lifecycle/workspaces'
 import { heldOperation } from '../lifecycle/platform-test-storage'
 import { resumeWorkspace } from '../lifecycle/workspace-resume'
 import { stopWorkspaceSandbox } from '../lifecycle/workspace-actions'
-import { completedWorkspace, joinedMember } from './suspension-test-support'
+import { ensureWorkspaceToken } from '../lifecycle/tokens'
+import {
+  completedWorkspace,
+  existingWorkspace,
+  joinedMember,
+} from './suspension-test-support'
 import { suspendUser } from './suspend-user'
 
 const backendFixture = setupBackendTests()
@@ -103,4 +108,48 @@ it('cancels a queued resume when its caller is suspended and its owner stays act
   })
   expect(fixture.boat.resumeIds).toEqual([])
   expect((await endpoint.readLifecycle())?.state).toBe('stopped')
+})
+
+it('rejects a suspended resume caller after its queued job survives an actor restart', async () => {
+  const fixture = backendFixture()
+  const workspace = await existingWorkspace(fixture, 'resume-restart')
+  const member = await joinedMember(fixture)
+  await ensureWorkspaceToken(
+    fixture.runtime.env,
+    workspace.id,
+    fixture.runtime.dependencies.randomToken,
+    fixture.runtime.dependencies.now(),
+  )
+  const endpoint = fixture.runtime.workspace(workspace.id)
+  await stopWorkspaceSandbox({
+    env: fixture.runtime.env,
+    dependencies: fixture.runtime.dependencies,
+    orgId: fixture.org.id,
+    workspaceId: workspace.id,
+  })
+  await endpoint.lifecycleStopped()
+  const queued = fixture.nextQueued()
+  void resumeWorkspace(
+    fixture.runtime,
+    fixture.org.id,
+    workspace.id,
+    member.id,
+  ).catch(() => {})
+  await queued
+  const actor = fixture.starts.get(workspace.id)
+  if (!actor) throw new Error('Missing recovered resume actor')
+  actor.restart()
+  await suspendUser(fixture.runtime, member.githubId, fixture.user.id)
+  await actor.advance()
+  expect(fixture.boat.resumeIds).toEqual([])
+  expect(await actor.wait()).toMatchObject({
+    ok: false,
+    error: { code: 'user_suspended' },
+  })
+  await expect(
+    resumeWorkspace(fixture.runtime, fixture.org.id, workspace.id, member.id),
+  ).rejects.toMatchObject({ status: 403, code: 'user_suspended' })
+  expect(
+    (await fixture.runtime.workspace(workspace.id).readLifecycle())?.state,
+  ).toBe('stopped')
 })

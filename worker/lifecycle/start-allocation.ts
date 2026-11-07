@@ -3,6 +3,7 @@ import { isRecord } from '../http'
 import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider, SandboxStart } from '../sandbox/provider'
 import { encrypt, decrypt } from '../security/crypto'
+import { createResource } from './resource-intents'
 import { assignSandbox } from './workspace-data'
 import type { StartJobStorage, WorkspaceStartJob } from './start-types'
 
@@ -67,11 +68,14 @@ export async function allocateWorkspace(
       context,
       env.BOAT_KEY_ENCRYPTION_KEY,
     )
-    await storage.update(job)
   }
   try {
     if (!job.allocatedSandboxId) {
-      const sandbox = await provider.create(payload)
+      const sandbox = await createResource(provider, {
+        kind: 'sandbox',
+        input: payload,
+        persist: () => storage.update(job),
+      })
       job.allocatedSandboxId = sandbox.id
       await storage.update(job)
     }

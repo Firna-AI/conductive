@@ -34,13 +34,12 @@ export async function createWorkspace(
   }
   const existing = await existingCreation(runtime.env.DB, key)
   if (existing?.state === 'succeeded')
-    return provisionedResponse(runtime, orgId, existing.id, sender, input)
+    return provisionedResponse(runtime, orgId, existing.id)
   if (existing) {
     const result = await runtime
       .workspace(existing.id)
       .readCreationLifecycleResult()
-    if (result?.ok)
-      return provisionedResponse(runtime, orgId, existing.id, sender, input)
+    if (result?.ok) return provisionedResponse(runtime, orgId, existing.id)
     if (result) await markCreationFailed(runtime.env.DB, existing.id)
     else return joinCreation(runtime, key, existing, user, sender, input)
   }
@@ -53,7 +52,7 @@ export async function createWorkspace(
   )
   const claim = await claimCreation(runtime.env.DB, key, candidate)
   if (claim.state === 'succeeded')
-    return provisionedResponse(runtime, orgId, claim.id, sender, input)
+    return provisionedResponse(runtime, orgId, claim.id)
   return joinCreation(runtime, key, claim, user, sender, input)
 }
 
