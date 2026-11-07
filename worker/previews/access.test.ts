@@ -168,7 +168,11 @@ it('checks current membership and workspace ownership before each tool upstream 
     )
     expect(response.status).toBe(403)
     expect(await response.json()).toEqual({
-      error: { code: 'user_suspended', message: 'This account is suspended.' },
+      error: {
+        code: 'user_suspended',
+        message:
+          'The workspace owner is suspended. Ask an admin to assign another member.',
+      },
     })
   }
   expect(harness.requests).toHaveLength(0)

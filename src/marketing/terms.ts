@@ -83,10 +83,12 @@ export const termsDocument: LegalDocument = {
           text`While your login is connected, you cannot stop other members
             from using it in the sessions that you started.
             ${draft("Do Anthropic's terms let other members use a member's Claude subscription?")}`,
-          text`While a turn runs, its agent login is in the cloud computer of
-            the workspace. A member with a terminal in that cloud computer can
-            read it. Work in an org only with people whom you trust with your
-            logins.`,
+          text`While a turn runs, its agent login and its GitHub token are in
+            the cloud computer of the workspace. A member with a terminal in
+            that cloud computer can read them. A program that a tool of the
+            agent starts, such as a dev server, can keep the agent login after
+            the turn ends. A member with a terminal can read it there too. Work
+            in an org only with people whom you trust with your logins.`,
           text`Admins manage the members, the repositories, the scripts, and
             the env vars of the org.`,
         ),

@@ -29,6 +29,10 @@ import { createWorkspaceController } from './lifecycle/workspace-controller'
 import type { WorkspaceController } from './lifecycle/workspace-controller-types'
 import { nativeWorkspacePlatform } from './lifecycle/workspace-platform'
 import { failedCreationEvents } from './lifecycle/failed-creation-events'
+import {
+  scheduleConnectionCheck,
+  type ConnectionScheduler,
+} from './security/connection-access'
 
 interface WorkspaceEnv extends Omit<LifecycleEnvironment, 'WORKSPACES'> {
   WORKSPACES: DurableObjectNamespace<Workspace>
@@ -47,10 +51,12 @@ export class Workspace
     context: DurableObjectState,
     env: WorkspaceEnv,
     now: () => number = Date.now,
+    scheduleRunnerCheck: ConnectionScheduler = scheduleConnectionCheck,
   ) {
     super(context, env)
     this.context = context
     this.chat = new WorkspaceChat(context.storage, env, {
+      scheduleRunnerCheck,
       matchesObject: (workspaceId) =>
         env.WORKSPACES.idFromName(workspaceId).equals(context.id),
       runnerEventStored: async (envelope) => {

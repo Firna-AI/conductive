@@ -1,4 +1,7 @@
-import { suspendedWorkspace, suspendedUserError } from '../data/user-access'
+import {
+  suspendedWorkspace,
+  suspendedWorkspaceOwnerError,
+} from '../data/user-access'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import type { DurableLifecycle } from './durable'
@@ -48,7 +51,7 @@ export async function suspendWorkspaceLifecycle(
     await turns.clear()
     try {
       if (result === 'error') {
-        const error = suspendedUserError()
+        const error = suspendedWorkspaceOwnerError()
         await lifecycle.fail({
           code: error.code,
           message: error.message,

@@ -18,6 +18,7 @@ export class WorkspaceStartError extends HttpError {
 export function workspaceStartFailure(
   error: Extract<WorkspaceStartResult, { ok: false }>['error'],
 ): HttpError {
-  if (error.code === 'user_suspended') return suspendedUserError()
+  if (error.code === 'user_suspended')
+    return Object.assign(suspendedUserError(), { message: error.message })
   return Object.assign(new WorkspaceStartError(error.log), error)
 }

@@ -1,6 +1,6 @@
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
-import { requireActiveUser } from '../data/user-access'
+import { requireActiveWorkspaceOwner } from '../data/user-access'
 import { requireOrgMember } from './access'
 import { readImageSettings, workspaceRepository } from './settings-data'
 import { readWorkspace } from './workspace-data'
@@ -23,7 +23,7 @@ export async function resumeWorkspace(
     return workspaceResponse(runtime, orgId, workspaceId)
   if (row.state !== 'stopped' && row.state !== 'error')
     return workspaceResponse(runtime, orgId, workspaceId)
-  await requireActiveUser(env.DB, row.ownerUserId)
+  await requireActiveWorkspaceOwner(env.DB, row.ownerUserId)
   if (!row.sandboxId)
     throw new HttpError(
       409,

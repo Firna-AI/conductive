@@ -85,7 +85,10 @@ export const privacyDocument: LegalDocument = {
             that provider apply.`,
           text`The members of your orgs see the workspaces of the org and
             their chats. A member with a terminal in a cloud computer can read
-            the agent login and the GitHub token of a turn that runs there.`,
+            the agent login and the GitHub token of a turn that runs there. A
+            program that a tool of the agent starts, such as a dev server, can
+            keep the agent login after the turn ends. A member with a terminal
+            can read it there too.`,
           text`The members of your orgs also see who started each session,
             whose login it uses, and whether it can use that login.`,
         ),

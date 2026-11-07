@@ -13,10 +13,26 @@ import { ChatStore } from '../chat/store'
 import type { FirstWorkspaceMessage } from './workspace-runtime'
 import type { UserMessage } from '../../src/shared/messages'
 import { holdMachineCheckpoint } from './runtime-checkpoint-test-support'
+import type { ImageCoordinatorState } from './image-timers'
+import { ManualChatClock } from '../chat/chat-clock.test-support'
+import { CONNECTION_CHECK_MS } from '../security/connection-access'
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import { authenticateWorkspaceToken } from './tokens'
 
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
   private heldMachine: ReturnType<typeof holdMachineCheckpoint> | undefined
+  private readonly runnerClock: ManualChatClock
+
+  constructor(context: DurableObjectState, env: LifecycleEnvironment) {
+    const clock = new ManualChatClock(Date.now())
+    super(context, env, Date.now, clock.schedule)
+    this.runnerClock = clock
+  }
+
+  tickRunnerAccess(): Promise<void> {
+    return this.runnerClock.advance(CONNECTION_CHECK_MS)
+  }
 
   holdMachineCheckpoint(): void {
     this.heldMachine = holdMachineCheckpoint(this.ctx.storage)
@@ -75,6 +91,12 @@ export class WorkspaceRuntimeFixture extends Workspace {
   async tick(): Promise<void> {
     await this.alarm()
   }
+  alarmAt(): Promise<number | null> {
+    return this.ctx.storage.getAlarm()
+  }
+  imageSchedule(): Promise<ImageCoordinatorState | undefined> {
+    return this.ctx.storage.get('org-image:coordinator')
+  }
   checkpoint(): Promise<StoredWorkspaceStartJob | undefined> {
     return this.ctx.storage.get(START_JOB_KEY)
   }
@@ -92,6 +114,13 @@ export class WorkspaceRuntimeFixture extends Workspace {
 export default {
   async fetch(request: Request, env: LifecycleEnvironment): Promise<Response> {
     const path = new URL(request.url).pathname
+    if (path === MACHINE_PATHS.runner) {
+      const bearer = request.headers
+        .get('Authorization')
+        ?.match(/^Bearer (.+)$/i)?.[1]
+      const identity = await authenticateWorkspaceToken(env, bearer ?? '')
+      return env.WORKSPACES.getByName(identity.workspaceId).fetch(request)
+    }
     const events = path.match(
       /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/events$/,
     )

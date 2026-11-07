@@ -51,6 +51,13 @@ it('keeps previews closed to an active member while the suspended owner stop is 
     }),
   )
   expect(reopened.status).toBe(403)
+  expect(await reopened.json()).toEqual({
+    error: {
+      code: 'user_suspended',
+      message:
+        'The workspace owner is suspended. Ask an admin to assign another member.',
+    },
+  })
   expect(
     (await another.fetch(member.request(new URL(setup.preview.url).pathname)))
       .status,

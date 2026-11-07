@@ -162,6 +162,7 @@ export class WorkspaceStartCoordinator {
       if (job.phase === 'machine' || job.phase === 'ready') {
         const next = await advanceStartMachine(
           this.env,
+          this.dependencies,
           this.endpoint,
           provider,
           row,

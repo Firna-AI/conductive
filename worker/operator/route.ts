@@ -1,7 +1,7 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import type { RequestContext } from '../security/gate'
-import { workspaceLifecycleEndpoint } from '../lifecycle/workspace-transport'
+import { workspaceRuntime } from '../lifecycle/runtime'
 import { suspendUser } from './suspend-user'
 
 export async function handleOperatorRequest(
@@ -23,22 +23,7 @@ export async function handleOperatorRequest(
       'Operator access is required.',
     )
   const result = await suspendUser(
-    {
-      env,
-      dependencies,
-      workspace: (id) => {
-        if (!env.WORKSPACES)
-          throw new HttpError(
-            503,
-            'service_unavailable',
-            'The app is not available. Try again.',
-          )
-        return workspaceLifecycleEndpoint(
-          env.WORKSPACES.getByName(id, { locationHint: 'weur' }),
-          env,
-        )
-      },
-    },
+    workspaceRuntime(env, dependencies),
     Number(match[1]),
     context.user.id,
   )

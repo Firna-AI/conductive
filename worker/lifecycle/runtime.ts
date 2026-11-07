@@ -1,5 +1,6 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { randomToken } from '../security/crypto'
+import { HttpError } from '../http'
 import type { Workspace } from '../workspace'
 import type { ImageRuntime } from './image-builds'
 import { createGitHubImageSourceMaterializer } from './image-sources/materialize'
@@ -16,7 +17,7 @@ export function lifecycleDependencies(): AppDependencies {
 }
 
 export function workspaceRuntime(
-  env: LifecycleEnvironment,
+  env: AppEnv,
   dependencies = lifecycleDependencies(),
 ): WorkspaceRuntime {
   return {
@@ -24,14 +25,14 @@ export function workspaceRuntime(
     dependencies,
     workspace: (id) =>
       workspaceLifecycleEndpoint(
-        env.WORKSPACES.getByName(id, { locationHint: 'weur' }),
+        workspaceNamespace(env).getByName(id, { locationHint: 'weur' }),
         env,
       ),
   }
 }
 
 export function imageRuntime(
-  env: LifecycleEnvironment,
+  env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string },
   dependencies = lifecycleDependencies(),
 ): ImageRuntime {
   return {
@@ -40,10 +41,22 @@ export function imageRuntime(
     prepareSources: createGitHubImageSourceMaterializer(env, dependencies),
     scheduler: {
       schedule: async (orgId, software, at, buildId) => {
-        await env.WORKSPACES.getByName(`org-image:${orgId}`, {
-          locationHint: 'weur',
-        }).scheduleImage({ orgId, software, nextAt: at, buildId })
+        await workspaceNamespace(env)
+          .getByName(`org-image:${orgId}`, {
+            locationHint: 'weur',
+          })
+          .scheduleImage({ orgId, software, nextAt: at, buildId })
       },
     },
   }
+}
+
+function workspaceNamespace(env: AppEnv): NonNullable<AppEnv['WORKSPACES']> {
+  if (!env.WORKSPACES)
+    throw new HttpError(
+      503,
+      'service_unavailable',
+      'The app is not available. Try again.',
+    )
+  return env.WORKSPACES
 }

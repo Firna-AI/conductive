@@ -14,13 +14,30 @@ says.
   app then gives both the identity and the repository access.
 - Cloudflare Access was rejected. Users sign in with GitHub, and Access
   cannot sign in inside a frame.
-- Anyone with a GitHub account can sign up (decisions 22 and 48).
+- Anyone with a GitHub account can sign up (decisions 22 and 48). A
+  suspended account cannot sign in, as
+  [Operator actions](operator-actions.md#sessions-and-sign-in) says.
 - The sign-up check on the age and the email of a GitHub account was
   dropped (decision 48).
 - Risk: all users share the app's Boat account (decision 80). Misuse by
   one user can get that account suspended, and that stops the sandboxes
-  of every user. Terms at sign-up, an operator suspension, and an address
-  for abuse reports wait for a later change (decision 82).
+  of every user. [Operator actions](operator-actions.md) states the
+  suspension of a user and the address for abuse reports (decision 28).
+- Each sign-in starts after an agreement to the current revision of the
+  Terms (decision 28). A sign-in that starts without it shows a page with
+  the agreement before GitHub.
+- The agreement goes to the sign-in callback inside the signed sign-in
+  state. A revision in the address of the callback counts for nothing.
+- A sign-in creates a new account only with the agreement to the current
+  revision.
+- Each sign-in with the agreement records the revision. It records the
+  time only when the stored revision differs, so a repeat keeps the first
+  time.
+- A changed revision of the Terms applies at the user's next sign-in,
+  within 7 days for a user who keeps using the app (decision 126).
+  Browser and Mac app sign-in sessions last at most 7 days.
+- An open session needs no new agreement. A consent page that blocks the
+  app at once was rejected (decision 126).
 - The session lives in a signed cookie that is HttpOnly, Secure, and
   SameSite=Lax.
 - The [Mac app](desktop-app.md#the-sign-in-session) has a separate session
@@ -116,9 +133,13 @@ Later screens add the frame and connection sources that they need.
 - An open tab loses its workspace connection within 30 seconds after its
   user loses access: a removal from the org, a sign-out, or a deleted
   org (decision 70). The workspace checks the access of its open tabs
-  again at most every 30 seconds, and closes each tab that fails.
+  again at most every 30 seconds, and closes each tab that fails. A
+  [suspension](operator-actions.md#sessions-and-sign-in) of the user ends
+  that access too.
 - A runner connection gets no agent login after its workspace token is
   revoked. The workspace checks the token again before each login.
+  [Workspace tokens and runners](operator-actions.md#workspace-tokens-and-runners)
+  states the checks of an open runner connection.
 - No request names a sandbox or a saved snapshot. The Worker takes each
   one from its own records, and only from the records of an org that the
   request may reach.
@@ -208,6 +229,17 @@ Later screens add the frame and connection sources that they need.
   get it too, for example with `git credential fill`. A copied token keeps
   working after the turn until it expires. It also reaches the
   repositories of that person outside the org (decision 121).
+- Risk: each member with a terminal in a sandbox can read its workspace
+  token. A copy of the token of a workspace that another member owns
+  keeps the runner connection, the git credential route, and the agent
+  tools after the member who copied it is removed from the org or
+  suspended. So that member can get the agent logins and the GitHub tokens
+  of later turns (decision 124).
+- A suspension revokes the workspace tokens of the workspaces that the
+  suspended user owns. It revokes no token of another member's workspace,
+  as
+  [Workspace tokens and runners](operator-actions.md#workspace-tokens-and-runners)
+  says.
 
 ## The workspace token
 
@@ -242,8 +274,7 @@ Later screens add the frame and connection sources that they need.
   The helper gets it fresh for each call, and the sandbox never stores
   it.
 - A user token reaches every repository where that person installed the
-  GitHub App and has access. A token that reaches only the repositories
-  of the workspace is follow-up work (decision 121).
+  GitHub App and has access.
 - A build or a refresh copies each repository of the image with Git in the
   build sandbox (decision 90). Each copy uses its own GitHub App
   installation token, which can only read the contents of that one
@@ -374,6 +405,12 @@ Later screens add the frame and connection sources that they need.
 - The Durable Object of the workspace revokes the preview when the sandbox
   stops, when the user closes the preview, and after 24 hours. Reason: the
   cookies and the grants of a revoked preview stop working at once.
+- Each grant and each credential cookie belongs to one viewer: the user
+  and the session that launched the preview.
+- Each preview request and each batch of preview data checks the preview
+  and that viewer again.
+  [Previews and their viewers](operator-actions.md#previews-and-their-viewers)
+  states the full rules.
 - A revoked or an unknown hostname gets no answer from any sandbox.
 - The preview proxy adds Boat's `_port_auth` cookie on the server side. It
   drops any `_port_auth` cookie that the browser sends.

@@ -3,7 +3,7 @@ import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
 import { recordActivity, toolError } from './access'
 import type { PreviewConnection } from './connection'
-import { previewAuthorized } from './credentials'
+import { previewIdentity } from './credentials'
 import { portRequest, portResponseHeaders } from './headers'
 import {
   previewBrowserLaunch,
@@ -13,7 +13,7 @@ import {
 import { PrivatePorts } from './ports'
 import { PreviewRegistry } from './registry'
 import { bridgeSocket } from './socket'
-import { activePreview } from './store'
+import { readPreviewAccess } from './viewer-access'
 import type { ToolDependencies } from './types'
 
 export class PreviewProxy {
@@ -79,31 +79,22 @@ export class PreviewProxy {
           'The preview is not available.',
         )
       }
-      const row = await activePreview(
-        this.env.DB,
+      const identity = await previewIdentity(
+        request,
+        this.env,
         url.hostname,
         this.dependencies.now(),
       )
-      if (!row)
+      const row = identity
+        ? await readPreviewAccess(this.env, identity, this.dependencies.now())
+        : null
+      if (!identity || !row)
         throw new HttpError(
           404,
           'preview_not_found',
           'The preview is not available.',
         )
-      if (
-        !(await previewAuthorized(
-          request,
-          this.env,
-          row,
-          this.dependencies.now(),
-        ))
-      )
-        throw new HttpError(
-          404,
-          'preview_not_found',
-          'The preview is not available.',
-        )
-      const scope = this.registry.get(row)
+      const scope = this.registry.get(row, identity)
       connection = scope.connect()
       const destination = request.headers.get('Sec-Fetch-Dest')
       const refresh = destination === 'document' || destination === 'iframe'

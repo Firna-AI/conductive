@@ -28,10 +28,11 @@ The action takes these steps, in this order:
 
 1. It records the suspension on the user: the time, and the operator who
    sent the request.
-2. In one D1 batch, it deletes every session of the user, also the
-   sessions of the Mac app. In the same batch, it revokes the preview
-   hostnames of each workspace that the user owns. This happens before
-   any stop request.
+2. In one D1 batch, it deletes every sign-in session of the user, also
+   the sign-in sessions of the Mac app. In the same batch, it revokes the
+   workspace token and the preview hostnames of each workspace that the
+   user owns. This happens before any stop request. A workspace whose
+   token is revoked gets a new token at its next start.
 3. It asks the Durable Object of each workspace that the user owns to
    cancel the active start and stop the sandbox, as
    [The stop of one workspace](#the-stop-of-one-workspace) says.
@@ -68,21 +69,36 @@ curl -X POST "$APP/api/operator/users/<githubId>/suspension" \
 
 The suspension stays on the user record. Each of these entries reads it:
 
-- Sign-in, the sign-in exchange of the Mac app, each session, open chat
-  tabs, and terminal sockets, as
-  [Suspended users](../security/README.md#suspended-users) says.
+- Sign-in, the sign-in exchange of the Mac app, each sign-in session,
+  open chat tabs, and terminal sockets, as
+  [Suspended users](../security/README.md#suspended-users) says. The
+  preview grants, cookies, and streams of the user stop too, because each
+  one belongs to its viewer, as the [preview backend](../previews/README.md)
+  says.
 - New workspaces, resumes, queued starts, image builds, and the disk
   retention restart, as [Lifecycle checks](#lifecycle-checks) says. No
   member can start a workspace that the user owns. The other members can
   still open it and read its history.
 - Interactive access to the sandbox of each workspace that the user owns,
   also for the other members, as [Sandbox access](#sandbox-access) says.
-- The workspace token of each workspace that the user owns. The runner,
-  the agent tools, the git credential route, and the Mac command route
-  refuse it.
-- The user as the sender of a turn. The chat backend gives the runner no
-  agent login of that user. The agent tools and the Mac commands refuse
-  that sender.
+- The admin role of the user in owner choices and last-admin checks. The
+  [members backend](../members/README.md) counts only admins who are not
+  suspended, as
+  [Owners and admins](../../docs/protocol/operator-actions.md#owners-and-admins)
+  says.
+- The workspace token of each workspace that the user owns. The
+  suspension revokes it, and the shared token rule of
+  [`workspace-token-access.ts`](../data/workspace-token-access.ts) also
+  refuses a token whose workspace owner is suspended. An open runner
+  connection checks that rule before each message and every 15 seconds
+  while it is idle, so it closes, as the
+  [chat backend](../chat/README.md#access) says. The agent tools, the git
+  credential route, and the Mac command route refuse the token too.
+- The user as the starter of a session or the sender of a turn. In one
+  read, `resolveLogin` refuses the login of a suspended starter and the
+  message of a suspended sender, as the
+  [chat backend](../chat/README.md#access) says. The agent tools and the
+  Mac commands refuse that sender.
 
 A stopped workspace of the user gets no disk retention restart. So Boat
 can delete its disk after 14 days, as
@@ -102,7 +118,10 @@ for as long as the owner stays suspended, also while a stop is pending.
   `user_suspended` before any call to Boat.
   `requireRunning` and `verifyTarget` in
   [`access.ts`](../previews/access.ts) make this check for the previews,
-  the terminal, and the desktop.
+  the terminal, and the desktop. Their reply comes from
+  `suspendedWorkspaceOwnerError` in [`user-access.ts`](../data/user-access.ts):
+  the workspace owner is suspended, and an admin can assign another
+  member.
 - The preview proxy answers each request to a preview of such a
   workspace with the 404 of an unknown preview. It stops the data of an
   open preview at its next check.
@@ -125,7 +144,10 @@ from [`user-access.ts`](../data/user-access.ts). A refusal is 403
 - An open or a resume that would start the sandbox also needs an owner
   who is not suspended. So no member can start a workspace of a suspended
   owner. A member who is not suspended can still open that workspace and
-  read its history, also when it is archived.
+  read its history, also when it is archived. `requireActiveWorkspaceOwner`
+  makes this check, with the same owner reply as sandbox access. The
+  checks of the suspended user's own requests keep the reply "This
+  account is suspended."
 - The start coordinator checks the users of a queued start before each
   phase: the owner and the sender of a create, the owner of a resume, and
   the member who asked for the resume. A refusal cancels the start. A
@@ -199,8 +221,8 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
 - [`suspend-user.ts`](suspend-user.ts): `suspendUser`, the steps and the
   pending lists.
 - [`data.ts`](data.ts): `recordUserSuspension`, which records the
-  suspension and revokes the sessions and previews, and the reads of the
-  owned workspaces and builds.
+  suspension and revokes the sign-in sessions and previews, and the
+  reads of the owned workspaces and builds.
 - [`user-access.ts`](../data/user-access.ts): `requireActiveUser`,
   `suspendedUserError`, and the reads that the other areas use.
 - [`sandbox-access.ts`](../data/sandbox-access.ts):
@@ -217,6 +239,8 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
 
 ### Related Docs
 
+- [Operator actions](../../docs/protocol/operator-actions.md): the
+  requirements of the operator, the suspension, and abuse reports.
 - [Access and security](../../docs/protocol/access-and-security.md#sign-in)
 - [Worker backend](../README.md)
 - [Sign-in and request gate](../security/README.md)

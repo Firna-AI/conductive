@@ -1,12 +1,15 @@
 import type { Agent } from '../../src/shared/agents'
 import type { RunnerLogin } from '../../src/shared/runner'
 import type { AppEnv } from '../env'
+import {
+  workspaceTokenAccessPredicate,
+  workspaceTokenResourcePredicate,
+} from '../data/workspace-token-access'
 import { decrypt, hash } from '../security/crypto'
 import { agentLoginKind } from './login-kind'
 import type { RunnerWorkspaceRecord, WorkspaceRecord } from './types'
 
-const workspaceColumns = `workspaces.id, workspaces.org_id AS orgId,
-  workspaces.archived_at AS archivedAt`
+const workspaceColumns = `w.id, w.org_id AS orgId, w.archived_at AS archivedAt`
 
 export function findChatWorkspace(
   db: D1Database,
@@ -15,9 +18,9 @@ export function findChatWorkspace(
 ): Promise<WorkspaceRecord | null> {
   return db
     .prepare(
-      `SELECT ${workspaceColumns} FROM workspaces
-     JOIN orgs ON orgs.id = workspaces.org_id
-     WHERE workspaces.id = ? AND workspaces.org_id = ? AND orgs.deleted_at IS NULL`,
+      `SELECT ${workspaceColumns} FROM workspaces w
+     JOIN orgs ON orgs.id = w.org_id
+     WHERE w.id = ? AND w.org_id = ? AND orgs.deleted_at IS NULL`,
     )
     .bind(workspaceId, orgId)
     .first<WorkspaceRecord>()
@@ -29,13 +32,9 @@ export async function tokenWorkspace(
 ): Promise<RunnerWorkspaceRecord | null> {
   return db
     .prepare(
-      `SELECT ${workspaceColumns}, workspace_tokens.token_hash AS tokenHash FROM workspace_tokens
-     JOIN workspaces ON workspaces.id = workspace_tokens.workspace_id
-     JOIN orgs ON orgs.id = workspaces.org_id
-     JOIN users owner ON owner.id = workspaces.owner_user_id
-     WHERE workspace_tokens.token_hash = ? AND workspace_tokens.revoked_at IS NULL
-       AND orgs.deleted_at IS NULL AND workspaces.archived_at IS NULL
-       AND owner.suspended_at IS NULL`,
+      `SELECT ${workspaceColumns}, t.token_hash AS tokenHash FROM workspace_tokens t
+     JOIN workspaces w ON w.id = t.workspace_id
+     WHERE t.token_hash = ? AND ${workspaceTokenAccessPredicate}`,
     )
     .bind(await hash(token))
     .first<RunnerWorkspaceRecord>()
@@ -80,18 +79,14 @@ export async function senderLoginAccess(
   const row = await db
     .prepare(
       `SELECT
-       CASE WHEN orgs.deleted_at IS NULL AND workspaces.archived_at IS NULL
-         AND owner.suspended_at IS NULL THEN 1 ELSE 0 END AS workspaceAllowed,
+       CASE WHEN ${workspaceTokenResourcePredicate} THEN 1 ELSE 0 END AS workspaceAllowed,
        EXISTS(SELECT 1 FROM org_members JOIN users sender ON sender.id = org_members.user_id
-         WHERE org_id = workspaces.org_id AND user_id = ? AND sender.suspended_at IS NULL) AS senderAllowed,
+         WHERE org_id = w.org_id AND user_id = ? AND sender.suspended_at IS NULL) AS senderAllowed,
        EXISTS(SELECT 1 FROM org_members JOIN users login_owner ON login_owner.id = org_members.user_id
-         WHERE org_id = workspaces.org_id AND user_id = ? AND login_owner.suspended_at IS NULL) AS loginOwnerAllowed,
-       EXISTS(SELECT 1 FROM workspace_tokens WHERE workspace_id = workspaces.id
-         AND token_hash = ? AND revoked_at IS NULL) AS runnerAllowed
-     FROM workspaces
-     JOIN orgs ON orgs.id = workspaces.org_id
-     JOIN users owner ON owner.id = workspaces.owner_user_id
-     WHERE workspaces.id = ?`,
+         WHERE org_id = w.org_id AND user_id = ? AND login_owner.suspended_at IS NULL) AS loginOwnerAllowed,
+       EXISTS(SELECT 1 FROM workspace_tokens t WHERE t.workspace_id = w.id
+         AND t.token_hash = ? AND ${workspaceTokenAccessPredicate}) AS runnerAllowed
+     FROM workspaces w WHERE w.id = ?`,
     )
     .bind(
       senderId ?? loginOwnerId,

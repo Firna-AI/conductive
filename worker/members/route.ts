@@ -27,6 +27,7 @@ import { requireOrgAdmin, requireOrgMember } from './permissions'
 import { restoreOrg } from './restore'
 
 export interface MembersHooks extends OrgMaintenanceHooks {
+  workspaceOwnerChanged(workspaceId: string): Promise<void>
   readWorkspace(
     orgId: string,
     workspaceId: string,
@@ -93,7 +94,14 @@ export async function membersRoute(
     })
   }
   if (path === leaveOrgPath(orgId) && request.method === 'POST') {
-    await removeOrgMember(db, orgId, actorId, actorId, dependencies.now())
+    await removeOrgMember(
+      db,
+      orgId,
+      actorId,
+      actorId,
+      dependencies.now(),
+      hooks,
+    )
     return new Response(null, { status: 204 })
   }
   if (path === membersPath(orgId) && request.method === 'GET') {
@@ -140,7 +148,14 @@ export async function membersRoute(
       })
     }
     if (request.method === 'DELETE') {
-      await removeOrgMember(db, orgId, actorId, memberId, dependencies.now())
+      await removeOrgMember(
+        db,
+        orgId,
+        actorId,
+        memberId,
+        dependencies.now(),
+        hooks,
+      )
       return new Response(null, { status: 204 })
     }
   }

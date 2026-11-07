@@ -1,6 +1,6 @@
 import { API_PATHS } from '../../src/shared/api'
 import type { AppEnv } from '../env'
-import { suspendedUserError } from '../data/user-access'
+import { suspendedWorkspaceOwnerError } from '../data/user-access'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { ProviderError } from '../sandbox/errors'
 import { gate } from '../security/gate'
@@ -28,7 +28,7 @@ export async function workspaceTarget(
 }
 
 export function requireRunning(target: WorkspaceAccessTarget): void {
-  if (target.ownerActive !== 1) throw suspendedUserError()
+  if (target.ownerActive !== 1) throw suspendedWorkspaceOwnerError()
   if (!target.sandboxId || target.sandboxAllowed !== 1) {
     throw new HttpError(
       409,
@@ -57,7 +57,7 @@ export async function verifyTarget(
       'The workspace is not available.',
     )
   }
-  if (current.ownerActive !== 1) throw suspendedUserError()
+  if (current.ownerActive !== 1) throw suspendedWorkspaceOwnerError()
   if (running) requireRunning(current)
 }
 

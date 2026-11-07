@@ -20,6 +20,12 @@ export async function recordUserSuspension(
     db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.userId),
     db
       .prepare(
+        `UPDATE workspace_tokens SET revoked_at = ? WHERE revoked_at IS NULL
+       AND workspace_id IN (SELECT id FROM workspaces WHERE owner_user_id = ?)`,
+      )
+      .bind(now, user.userId),
+    db
+      .prepare(
         `UPDATE preview_hostnames SET revoked_at = ? WHERE revoked_at IS NULL
        AND workspace_id IN (SELECT id FROM workspaces WHERE owner_user_id = ?)`,
       )

@@ -6221,6 +6221,20 @@ interactive sandbox access while a stop waits. Keep history and cleanup
 available. Select an active admin for automatic image starts, while
 cleanup keeps its membership-based admin selection.
 
+Review round 1 choice, 8 November 2026: apply findings 4 C, 5 B and E,
+7 D, 9 C, 10 C, and 11 B. Rearm the alarm after transfer to an active
+owner, and use an owner-specific suspension message.
+
+User choice, 8 November 2026: apply decision 123 E to owner selection and
+the active-admin checks. Apply decision 124 A to the copied workspace
+token risk. Apply decision 126 A to acceptance of a changed Terms
+revision at the next sign-in, within 7 days. Apply decision 125 B: keep
+the current rule that gives a suspended owner's workspaces no disk restart. State
+the rule and the admin reassignment recovery in the suspension protocol.
+
+Agent call, 8 November 2026: move the chat README's report-repair details
+to a linked page, so the README stays below 300 lines. Keep every rule.
+
 - [x] Apply the recorded option of `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`, and
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
 - [x] Apply the recorded option of `plans/follow-ups/marketing-pictures-one-list.md`, and
@@ -6232,6 +6246,21 @@ cleanup keeps its membership-based admin selection.
       Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
 - [x] Apply decision 121 A to the GitHub token risk disclosure and privacy
       text. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply the approved findings of PR #45 review round 1 and its legal
+      text fixes. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 123 E to the shared active-admin rule, owner
+      selection, and atomic membership writes.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 124 A to the copied workspace token risk disclosure.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 126 A to the changed-Terms sign-in rule.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 125 B to the suspended-owner disk-restart rule and
+      its admin reassignment recovery text.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Merge Milestone 7w, keep both sides' legal facts, and capture the
+      marketing pictures with the desktop agents crop at y 444 and height
+      456. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
 
 Evidence: `.context/milestone-15m/reports/`,
 `.context/milestone-15m/marketing-pictures.log`,
@@ -6240,6 +6269,8 @@ Evidence: `.context/milestone-15m/reports/`,
 `.context/milestone-15m/check.log`,
 `.context/milestone-15m/check-review-fix.log`, and
 `.context/milestone-15m/check-final.log`.
+
+Fix round evidence: `.context/milestone-15m/orchestrator-round1/`.
 
 ## Milestone 15n: Use the new shared UI parts
 

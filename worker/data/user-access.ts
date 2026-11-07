@@ -39,6 +39,21 @@ export function suspendedUserError(): HttpError {
   return new HttpError(403, 'user_suspended', 'This account is suspended.')
 }
 
+export function suspendedWorkspaceOwnerError(): HttpError {
+  return new HttpError(
+    403,
+    'user_suspended',
+    'The workspace owner is suspended. Ask an admin to assign another member.',
+  )
+}
+
+export async function requireActiveWorkspaceOwner(
+  db: D1Database,
+  userId: string,
+): Promise<void> {
+  if (await userSuspended(db, userId)) throw suspendedWorkspaceOwnerError()
+}
+
 export function suspendedWorkspace(
   db: D1Database,
   workspaceId: string,

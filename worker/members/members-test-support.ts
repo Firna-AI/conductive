@@ -31,6 +31,7 @@ export function membersClient(harness: TestHarness) {
     },
   }
   const hooks: MembersHooks = {
+    workspaceOwnerChanged: async () => undefined,
     maintainDeletedOrg: maintainDisksForTests,
     restoreOrgMaintenance: async () => {},
     readWorkspace: (orgId, id) => readWorkspace(harness, orgId, id),

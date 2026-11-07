@@ -90,20 +90,60 @@ it('requires consent at OAuth start before it creates a new account', async () =
   ).toEqual({ version: '2026-11-07', acceptedAt: TEST_TIME })
 })
 
-it('keeps existing accounts and their consent record on repeat sign-in', async () => {
+it('records explicit consent for an existing account and keeps its identity', async () => {
   await harness.env.DB.prepare(
     "INSERT INTO users (id, github_id, github_login, created_at, updated_at) VALUES ('existing-user', 7, 'old-login', 0, 0)",
   ).run()
-  expect((await authorize(API_PATHS.githubSignIn)).status).toBe(302)
-  expect((await authorize(acceptedTermsSignInPath())).status).toBe(302)
+  expect(
+    (await authorize(API_PATHS.githubSignIn, '&terms_version=2026-11-07'))
+      .status,
+  ).toBe(302)
   expect(
     await harness.env.DB.prepare(
-      'SELECT id, github_login AS login, terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
+      'SELECT id, github_login AS login, created_at AS createdAt, terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
     ).first(),
   ).toEqual({
     id: 'existing-user',
     login: 'octocat',
+    createdAt: 0,
     version: null,
     acceptedAt: null,
   })
+  harness.setTime(TEST_TIME + 1_000)
+  expect((await authorize(acceptedTermsSignInPath())).status).toBe(302)
+  expect(
+    await harness.env.DB.prepare(
+      'SELECT id, github_login AS login, created_at AS createdAt, terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
+    ).first(),
+  ).toEqual({
+    id: 'existing-user',
+    login: 'octocat',
+    createdAt: 0,
+    version: '2026-11-07',
+    acceptedAt: TEST_TIME + 1_000,
+  })
+})
+
+it('replaces an old consent revision only after explicit current consent', async () => {
+  await harness.env.DB.prepare(
+    "INSERT INTO users (id, github_id, github_login, created_at, updated_at, terms_version, terms_accepted_at) VALUES ('existing-user', 7, 'old-login', 0, 0, '2026-10-01', ?)",
+  )
+    .bind(TEST_TIME - 10_000)
+    .run()
+  expect(
+    (await authorize(API_PATHS.githubSignIn, '&terms_version=2026-11-07'))
+      .status,
+  ).toBe(302)
+  expect(
+    await harness.env.DB.prepare(
+      'SELECT terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
+    ).first(),
+  ).toEqual({ version: '2026-10-01', acceptedAt: TEST_TIME - 10_000 })
+  harness.setTime(TEST_TIME + 1_000)
+  expect((await authorize(acceptedTermsSignInPath())).status).toBe(302)
+  expect(
+    await harness.env.DB.prepare(
+      'SELECT terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
+    ).first(),
+  ).toEqual({ version: '2026-11-07', acceptedAt: TEST_TIME + 1_000 })
 })

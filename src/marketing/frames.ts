@@ -1,9 +1,17 @@
+import {
+  marketingPictureKeys,
+  marketingPictures,
+  type MarketingPictureKey,
+  type PictureFrame,
+  type PictureLayout,
+} from '../../docs/mockups/src/screens/marketingPictureList'
 import { html, type Html } from './html'
-import { phoneMedia, pictures, type Picture } from './pictures'
+import { pictureFiles } from './picture-files'
+
+/** The phone layout of the site. The stylesheets use the same width. */
+const phoneMedia = '(max-width: 759.98px)'
 
 type Loading = 'eager' | 'lazy'
-
-type PictureView = Picture['desktop']
 
 const lightMedia = '(prefers-color-scheme: light)'
 
@@ -11,13 +19,22 @@ function source(media: string, url: string): Html {
   return html`<source media="${media}" srcset="${url}" />`
 }
 
-function image(picture: PictureView, loading: Loading): Html {
+/**
+ * The image of a picture in one layout: its dark file, its text, and the
+ * size of its part of the screen, from the shared list of the pictures.
+ */
+function image(
+  key: MarketingPictureKey,
+  layout: PictureLayout,
+  loading: Loading,
+): Html {
+  const { label, crop } = marketingPictures[key][layout]
   const priority = loading === 'eager' ? 'high' : 'auto'
   return html`<img
-    src="${picture.files.dark}"
-    alt="${picture.alt}"
-    width="${picture.width}"
-    height="${picture.height}"
+    src="${pictureFiles[key][layout].dark}"
+    alt="${label}"
+    width="${crop.width}"
+    height="${crop.height}"
     loading="${loading}"
     decoding="async"
     fetchpriority="${priority}"
@@ -29,21 +46,22 @@ function image(picture: PictureView, loading: Loading): Html {
  * and the colour scheme. When the two layouts show different things, each
  * layout gets its own image with its own text, and the other one hides.
  */
-function images(picture: Picture, loading: Loading): Html {
-  const { desktop, mobile } = picture
-  if (desktop.alt !== mobile.alt) {
+function images(key: MarketingPictureKey, loading: Loading): Html {
+  const { desktop, mobile } = marketingPictures[key]
+  const files = pictureFiles[key]
+  if (desktop.label !== mobile.label) {
     return html`<picture class="for-desktop"
-        >${source(lightMedia, desktop.files.light)}${image(desktop, loading)}</picture
+        >${source(lightMedia, files.desktop.light)}${image(key, 'desktop', loading)}</picture
       ><picture class="for-mobile"
-        >${source(lightMedia, mobile.files.light)}${image(mobile, loading)}</picture
+        >${source(lightMedia, files.mobile.light)}${image(key, 'mobile', loading)}</picture
       >`
   }
   return html`<picture
-    >${source(`${phoneMedia} and ${lightMedia}`, mobile.files.light)}${source(phoneMedia, mobile.files.dark)}${source(lightMedia, desktop.files.light)}${image(desktop, loading)}</picture
+    >${source(`${phoneMedia} and ${lightMedia}`, files.mobile.light)}${source(phoneMedia, files.mobile.dark)}${source(lightMedia, files.desktop.light)}${image(key, 'desktop', loading)}</picture
   >`
 }
 
-const frameClasses: Readonly<Record<Picture['frame'], string>> = {
+const frameClasses: Readonly<Record<PictureFrame, string>> = {
   excerpt: 'frame-excerpt',
   phone: 'frame-phone',
   'window-or-phone': 'frame-window frame-mobile-phone',
@@ -53,24 +71,29 @@ const frameClasses: Readonly<Record<Picture['frame'], string>> = {
  * A real screen of the app as a still picture in its frame: an excerpt, a
  * phone, or a window. A picture holds no link and no control.
  */
-export function pictureFrame(picture: Picture, loading: Loading): Html {
-  const content = images(picture, loading)
+export function pictureFrame(key: MarketingPictureKey, loading: Loading): Html {
+  const { frame } = marketingPictures[key]
+  const content = images(key, loading)
   const inner =
-    picture.frame === 'excerpt'
+    frame === 'excerpt'
       ? content
       : html`<div class="phone-screen">
           <div class="phone-band"><span class="phone-notch"></span></div>
           ${content}
         </div>`
-  return html`<div
-    class="frame ${frameClasses[picture.frame]} picture-${picture.key}"
-  >
+  return html`<div class="frame ${frameClasses[frame]} picture-${key}">
     ${inner}
   </div>`
 }
 
-function viewRules(selector: string, picture: PictureView): string {
-  const { width, height, scale } = picture
+/** The size of a picture in one layout, and the scale of its phone. */
+function viewRules(
+  selector: string,
+  key: MarketingPictureKey,
+  layout: PictureLayout,
+): string {
+  const { crop, scale } = marketingPictures[key][layout]
+  const { width, height } = crop
   if (scale === 'inherit') {
     return `${selector} img{width:calc(${width}px * var(--frame-scale));aspect-ratio:${width}/${height}}`
   }
@@ -82,10 +105,10 @@ function viewRules(selector: string, picture: PictureView): string {
  * uses the arithmetic of the mockup, so each picture has the mockup's size.
  */
 export function picturesCss(): string {
-  return Object.values(pictures)
-    .map((picture) => {
-      const selector = `.picture-${picture.key}`
-      return `${viewRules(selector, picture.desktop)}@media ${phoneMedia}{${viewRules(selector, picture.mobile)}}`
+  return marketingPictureKeys
+    .map((key) => {
+      const selector = `.picture-${key}`
+      return `${viewRules(selector, key, 'desktop')}@media ${phoneMedia}{${viewRules(selector, key, 'mobile')}}`
     })
     .join('')
 }

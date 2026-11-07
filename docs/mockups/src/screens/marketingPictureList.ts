@@ -157,7 +157,7 @@ export const marketingPictures: Readonly<
       label:
         'The composer with attached files, and the open picker of the model and the effort',
       screen: 'desktop',
-      crop: { x: 281, y: 466, width: 718, height: 434 },
+      crop: { x: 281, y: 444, width: 718, height: 456 },
       scale: 0.86,
     },
     mobile: {

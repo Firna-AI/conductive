@@ -18,7 +18,13 @@ export async function saveUser(
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (github_id) DO UPDATE SET
          github_login = excluded.github_login, display_name = excluded.display_name,
-         avatar_url = excluded.avatar_url, updated_at = excluded.updated_at
+         avatar_url = excluded.avatar_url, updated_at = excluded.updated_at,
+         terms_version = COALESCE(excluded.terms_version, users.terms_version),
+         terms_accepted_at = CASE
+           WHEN excluded.terms_version IS NOT NULL AND users.terms_version IS NOT excluded.terms_version
+             THEN excluded.terms_accepted_at
+           ELSE users.terms_accepted_at
+         END
        RETURNING ${columns}`,
     )
     .bind(

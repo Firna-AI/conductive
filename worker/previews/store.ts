@@ -88,24 +88,6 @@ export async function previewForLaunch(
   return row ? { ...target, ...row } : null
 }
 
-export function activePreview(
-  db: D1Database,
-  hostname: string,
-  now: number,
-): Promise<PreviewRecord | null> {
-  return db
-    .prepare(
-      `SELECT p.id, p.hostname, p.org_id AS orgId, p.workspace_id AS workspaceId,
-     p.port, p.expires_at AS expiresAt, p.listener_mode AS listenerMode,
-     p.listener_sandbox_id AS listenerSandboxId, w.sandbox_id AS sandboxId, w.state
-     FROM preview_hostnames p JOIN workspaces w ON w.id = p.workspace_id AND w.org_id = p.org_id
-     WHERE p.hostname = ? AND p.revoked_at IS NULL AND p.expires_at > ?
-     AND ${sandboxAccessPredicate}`,
-    )
-    .bind(hostname, now)
-    .first<PreviewRecord>()
-}
-
 export async function savePreviewMode(
   db: D1Database,
   target: WorkspaceTarget,

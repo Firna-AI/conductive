@@ -1,6 +1,7 @@
 import type { UserSuspensionResponse } from '../../src/shared/operator'
 import type { WorkspaceRuntime } from '../lifecycle/workspace-runtime'
 import { jobSoftware, readBuildJob } from '../lifecycle/build-data'
+import { imageRuntime } from '../lifecycle/runtime'
 import { ownedBuilds, ownedWorkspaces, recordUserSuspension } from './data'
 
 export async function suspendUser(
@@ -34,14 +35,12 @@ export async function suspendUser(
     pendingBuildIds.push(build.id)
     try {
       const job = await readBuildJob(env.DB, build.orgId, build.id)
-      await env.WORKSPACES?.getByName(`org-image:${build.orgId}`, {
-        locationHint: 'weur',
-      }).scheduleImage({
-        orgId: build.orgId,
-        buildId: build.id,
-        software: jobSoftware(job),
-        nextAt: dependencies.now(),
-      })
+      await imageRuntime(env, dependencies).scheduler.schedule(
+        build.orgId,
+        jobSoftware(job),
+        dependencies.now(),
+        build.id,
+      )
     } catch {
       // The existing image alarm also checks the persistent suspension.
     }

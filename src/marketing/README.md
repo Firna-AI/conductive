@@ -56,8 +56,9 @@ it. For each picture, it gives:
 - the files: one file for each layout, or one file that both layouts share
 - the capture page and the file name of each capture
 
-`pictures.ts` binds each picture of the list to its files in
-`picture-files.ts`. It keeps no label, size, or scale of its own.
+`frames.ts` reads each picture from the list by its key and its layout,
+and its files from `picture-files.ts`. `picture-files.ts` keeps only the
+bundled files. So the site keeps no label, size, or scale of its own.
 [`marketingPictures.tsx`](../../docs/mockups/src/screens/marketingPictures.tsx)
 chooses the screen and the state that each picture shows.
 
@@ -165,8 +166,8 @@ this repository creates that mailbox.
 - [`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts):
   the one list of the pictures, with `pictureCaptures`, `capturePagePath`,
   and `pictureFileName`.
-- `pictures.ts`, `frames.ts`, `picture-files.ts`: the pictures of the
-  list with their files, their frames, and the bundled files.
+- `frames.ts`, `picture-files.ts`: the frames, which read each picture
+  of the list by its key and its layout, and the bundled files.
 - [`tools/marketing-pictures/run.ts`](../../tools/marketing-pictures/run.ts):
   the capture command, its build, and its cleanup.
 - [`capture-pictures.ts`](../../tools/marketing-pictures/capture-pictures.ts),

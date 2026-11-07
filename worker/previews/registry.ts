@@ -1,8 +1,10 @@
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
+import type { PreviewConnectionIdentity } from '../security/connection-access'
 import { AuthorizationBatch } from './authorization'
 import { PreviewConnection } from './connection'
-import { activePreview, type PreviewRecord } from './store'
+import type { PreviewRecord } from './store'
+import { readPreviewAccess } from './viewer-access'
 import type { ToolDependencies } from './types'
 
 class PreviewScope {
@@ -16,6 +18,7 @@ class PreviewScope {
     env: AppEnv,
     dependencies: ToolDependencies,
     row: PreviewRecord,
+    identity: PreviewConnectionIdentity,
     empty: () => void,
   ) {
     this.row = row
@@ -23,7 +26,7 @@ class PreviewScope {
     this.authorization = new AuthorizationBatch(async () => {
       const current = this.closed
         ? null
-        : await activePreview(env.DB, row.hostname, dependencies.now())
+        : await readPreviewAccess(env, identity, dependencies.now())
       if (
         !current ||
         this.closed ||
@@ -61,7 +64,7 @@ class PreviewScope {
 
 /** Every cancellation starts with the authorized workspace, then its preview. */
 export class PreviewRegistry {
-  private readonly scopes = new Map<string, Map<string, PreviewScope>>()
+  private readonly scopes = new Map<string, PreviewScope>()
   private readonly env: AppEnv
   private readonly dependencies: ToolDependencies
 
@@ -70,42 +73,52 @@ export class PreviewRegistry {
     this.dependencies = dependencies
   }
 
-  get(row: PreviewRecord): PreviewScope {
-    let workspace = this.scopes.get(row.workspaceId)
-    if (!workspace) {
-      workspace = new Map()
-      this.scopes.set(row.workspaceId, workspace)
-    }
-    let scope = workspace.get(row.id)
+  get(row: PreviewRecord, identity: PreviewConnectionIdentity): PreviewScope {
+    const key = JSON.stringify([
+      row.workspaceId,
+      row.id,
+      identity.userId,
+      identity.sessionId,
+      identity.expiresAt,
+    ])
+    let scope = this.scopes.get(key)
     if (!scope || scope.row.sandboxId !== row.sandboxId) {
       scope?.close()
-      scope = new PreviewScope(this.env, this.dependencies, row, () => {
-        workspace?.delete(row.id)
-        if (workspace?.size === 0) this.scopes.delete(row.workspaceId)
-      })
-      this.scopes.set(row.workspaceId, workspace)
-      workspace.set(row.id, scope)
+      scope = new PreviewScope(
+        this.env,
+        this.dependencies,
+        row,
+        identity,
+        () => {
+          if (this.scopes.get(key) === scope) this.scopes.delete(key)
+        },
+      )
+      this.scopes.set(key, scope)
     }
     return scope
   }
 
   closePreview(workspaceId: string, previewId: string): void {
-    const workspace = this.scopes.get(workspaceId)
-    workspace?.get(previewId)?.close()
-    workspace?.delete(previewId)
+    for (const [key, scope] of this.scopes)
+      if (scope.row.workspaceId === workspaceId && scope.row.id === previewId) {
+        scope.close()
+        this.scopes.delete(key)
+      }
   }
 
   closeWorkspace(workspaceId: string): void {
-    for (const scope of this.scopes.get(workspaceId)?.values() ?? [])
-      scope.close()
-    this.scopes.delete(workspaceId)
+    for (const [key, scope] of this.scopes)
+      if (scope.row.workspaceId === workspaceId) {
+        scope.close()
+        this.scopes.delete(key)
+      }
   }
 
   expire(): void {
-    for (const [workspaceId, workspace] of this.scopes) {
-      for (const [id, scope] of workspace)
-        if (scope.row.expiresAt <= this.dependencies.now())
-          this.closePreview(workspaceId, id)
-    }
+    for (const [key, scope] of this.scopes)
+      if (scope.row.expiresAt <= this.dependencies.now()) {
+        scope.close()
+        this.scopes.delete(key)
+      }
   }
 }

@@ -45,7 +45,12 @@ it('stops each owned computer, retries a failure, and blocks its owner from star
   ).rejects.toMatchObject({ status: 403, code: 'user_suspended' })
   await expect(
     resumeWorkspace(fixture.runtime, fixture.org.id, second.id, other.id),
-  ).rejects.toMatchObject({ status: 403, code: 'user_suspended' })
+  ).rejects.toMatchObject({
+    status: 403,
+    code: 'user_suspended',
+    message:
+      'The workspace owner is suspended. Ask an admin to assign another member.',
+  })
   await fixture.runtime.env.DB.prepare(
     "UPDATE workspaces SET state = 'archived', archived_at = ? WHERE id = ?",
   )

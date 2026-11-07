@@ -78,9 +78,13 @@ export function createPreviewHandler(
               'preview_not_found',
               'The preview is not available.',
             )
+          const viewer = {
+            userId: context.user.id,
+            sessionId: context.sessionId,
+          }
           return request.headers.get('Accept') === 'application/json'
-            ? previewNativeLaunch(env, row, now)
-            : previewLaunchPage(env, row, now)
+            ? previewNativeLaunch(env, row, viewer, now)
+            : previewLaunchPage(env, row, viewer, now)
         }
         if (request.method === 'POST' && tail === null) {
           requireRunning(target)

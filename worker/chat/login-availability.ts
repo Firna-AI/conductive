@@ -1,4 +1,5 @@
 import type { Agent } from '../../src/shared/agents'
+import { workspaceTokenResourcePredicate } from '../data/workspace-token-access'
 import { agentLoginKind } from './login-kind'
 
 export interface SessionLoginTarget {
@@ -22,10 +23,11 @@ export async function readLoginAvailability(
      )
      SELECT requested.sessionId, requested.agent, agent_logins.kind
      FROM requested
-     JOIN workspaces ON workspaces.id = ? AND workspaces.archived_at IS NULL
-     JOIN orgs ON orgs.id = workspaces.org_id AND orgs.deleted_at IS NULL
-     JOIN org_members ON org_members.org_id = workspaces.org_id
+     JOIN workspaces w ON w.id = ? AND ${workspaceTokenResourcePredicate}
+     JOIN org_members ON org_members.org_id = w.org_id
        AND org_members.user_id = requested.userId
+     JOIN users login_owner ON login_owner.id = org_members.user_id
+       AND login_owner.suspended_at IS NULL
      JOIN agent_logins ON agent_logins.user_id = requested.userId
        AND agent_logins.agent = requested.agent`,
     )

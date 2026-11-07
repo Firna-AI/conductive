@@ -1,12 +1,12 @@
+import type { MarketingPictureKey } from '../../docs/mockups/src/screens/marketingPictureList'
 import type { IconName } from './icons'
-import type { PictureKey } from './pictures'
 
 /** One feature of the app: what it does, and a real screen that shows it. */
 export type Feature = {
   label: string
   title: string
   text: string
-  picture: PictureKey
+  picture: MarketingPictureKey
   /** The picture runs off the bottom of its stage, as a tall phone does. */
   bleed?: boolean
 }

@@ -4,6 +4,7 @@ import type { MessageSender } from '../../src/shared/messages'
 import { choice, record, text } from '../../tools/input'
 import { messageSender, workspaceState } from '../../tools/responses'
 import { HttpError } from '../http'
+import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
 import { hash } from '../security/crypto'
 
 export interface CallingWorkspace {
@@ -22,12 +23,9 @@ export async function callingWorkspace(
        w.owner_user_id AS ownerUserId
        FROM workspace_tokens t
        JOIN workspaces w ON w.id = t.workspace_id
-       JOIN orgs o ON o.id = w.org_id
        JOIN org_members m ON m.org_id = w.org_id AND m.user_id = w.owner_user_id
-       JOIN users owner ON owner.id = w.owner_user_id
-       WHERE t.token_hash = ? AND t.revoked_at IS NULL
-       AND w.archived_at IS NULL AND w.state != 'archived'
-       AND o.deleted_at IS NULL AND owner.suspended_at IS NULL`,
+       WHERE t.token_hash = ? AND ${workspaceTokenAccessPredicate}
+       AND w.state != 'archived'`,
     )
     .bind(await hash(token))
     .first<unknown>()
