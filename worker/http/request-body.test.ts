@@ -2,7 +2,6 @@ import { afterAll, beforeAll, expect, it } from 'vitest'
 
 import { API_PATHS } from '../../src/shared/api'
 import { createApp } from '../application'
-import { errorResponse } from '../http'
 import { GITHUB_WEBHOOK_PATH, handleGitHubWebhook } from '../github/webhook'
 import {
   DESKTOP_EXCHANGE_PATH,
@@ -13,7 +12,7 @@ import {
   TEST_ORIGIN,
   type TestHarness,
 } from '../test-support/harness'
-import { requestBodyBudget, withRequestBodyLimit } from './request-body'
+import { requestBodyEntry } from './request-body'
 import { readJsonObject } from './json-body'
 import {
   oversizedError,
@@ -168,20 +167,21 @@ it('keeps the existing webhook capacity and rejects its first extra byte at the 
         'Content-Length': '1',
       },
     )
-    const response = await withRequestBodyLimit(
-      request,
-      requestBodyBudget(request, machineOrigin),
-      (bounded) =>
-        handleGitHubWebhook(
-          bounded,
-          {
-            DB: harness.env.DB,
-            MACHINE_ORIGIN: machineOrigin,
-            GITHUB_WEBHOOK_SECRET: 'secret',
-          },
-          { now: () => 0, refresh: async () => null },
-        ),
-    ).catch(errorResponse)
+    const entry = requestBodyEntry((bounded) =>
+      handleGitHubWebhook(
+        bounded,
+        {
+          DB: harness.env.DB,
+          MACHINE_ORIGIN: machineOrigin,
+          GITHUB_WEBHOOK_SECRET: 'secret',
+        },
+        { now: () => 0, refresh: async () => null },
+      ),
+    )
+    const response = await entry(request, {
+      ...harness.env,
+      MACHINE_ORIGIN: machineOrigin,
+    })
     expect(response.status, extra ? 'overflow' : 'exact limit').toBe(
       extra ? 413 : 403,
     )
@@ -228,11 +228,10 @@ it('applies a raised JSON budget only to the declared host, method, and path', a
       body,
       headers: { 'Content-Type': 'application/json' },
     })
-    return withRequestBodyLimit(
-      request,
-      requestBodyBudget(request, machineOrigin),
-      read,
-    ).catch(errorResponse)
+    return requestBodyEntry(read)(request, {
+      ...harness.env,
+      MACHINE_ORIGIN: machineOrigin,
+    })
   }
   const raised = await send(`${machineOrigin}${GITHUB_WEBHOOK_PATH}`)
   expect(raised.status).toBe(200)

@@ -8,24 +8,16 @@ The [access protocol](../../docs/protocol/access-and-security.md#request-bodies)
 
 ## Request body limit
 
-`request-body.ts` exports these functions:
+`request-body.ts` exports this function:
 
 ```ts
 requestBodyEntry(
   handle: (request: Request, env?: AppEnv) => Promise<Response>,
 ): (request: Request, env?: AppEnv) => Promise<Response>
-
-requestBodyBudget(request: Request, machineOrigin?: string): number
-
-withRequestBodyLimit(
-  request: Request,
-  budget: number,
-  handle: (request: Request) => Promise<Response>,
-): Promise<Response>
 ```
 
 `createApp` in [application.ts](../application.ts) wraps its `fetch` handler in `requestBodyEntry`.
-The entry gets the budget from `requestBodyBudget` and bounds the body with `withRequestBodyLimit`.
+The entry uses the private helpers `requestBodyBudget` and `withRequestBodyLimit` to select and apply the body budget.
 It returns an overflow as a private JSON error response.
 On an app API path, that response gets the same desktop CORS headers as other API responses.
 
@@ -59,7 +51,8 @@ A `handle` function must finish its read of the request body before it returns a
 | --- | --- | --- | --- |
 | Body above its budget | 413 | `body_too_large` | The request is too large. Send less data. |
 
-Tests can call `withRequestBodyLimit` with `requestBodyBudget` to check a handler that the entry does not mount.
+Tests call `requestBodyEntry`, also for a handler that `createApp` does not mount.
+They pass the machine origin in the environment, so the entry selects the raised budget.
 
 ## JSON request objects
 
@@ -143,7 +136,7 @@ Run `npm run test -- worker/files worker/sandbox worker/http/bounded-body.test.t
 
 ### Key Code
 
-- [request-body.ts](request-body.ts) exports `requestBodyEntry`, `requestBodyBudget`, and `withRequestBodyLimit`.
+- [request-body.ts](request-body.ts) exports `requestBodyEntry` and keeps the budget selector and bounded stream helpers private.
 - [request-body.test.ts](request-body.test.ts) checks the default limit, the raised webhook budget, overflow answers, and WebSocket upgrades.
 - [request-body.test-support.ts](request-body.test-support.ts) builds streamed requests that count pulls, bytes, and cancellations.
 - [json-body.ts](json-body.ts) exports `readJsonObject` and owns the JSON request policy.

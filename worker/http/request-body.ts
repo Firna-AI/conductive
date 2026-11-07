@@ -7,10 +7,7 @@ import { hostSurface } from '../hosts'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { desktopCors } from '../security/desktop-origin'
 
-export function requestBodyBudget(
-  request: Request,
-  machineOrigin?: string,
-): number {
+function requestBodyBudget(request: Request, machineOrigin?: string): number {
   const url = new URL(request.url)
   return request.method === 'POST' &&
     url.origin === machineOrigin &&
@@ -20,7 +17,7 @@ export function requestBodyBudget(
 }
 
 /** Bound each body's stream before dispatch, including readers added later. */
-export async function withRequestBodyLimit(
+async function withRequestBodyLimit(
   request: Request,
   budget: number,
   handle: (request: Request) => Promise<Response>,
