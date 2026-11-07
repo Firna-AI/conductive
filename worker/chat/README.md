@@ -69,7 +69,7 @@ The Durable Object runs the gates itself.
 - The access timer stops when the last tab closes.
 - An archived workspace still serves its history and its events socket.
   Each write gets `409 workspace_archived`.
-- `connectRunner` accepts only `/runner` on `MACHINE_ORIGIN`, with
+- `connectRunner` accepts only `/v1/runner` on `MACHINE_ORIGIN`, with
   `Authorization: Bearer <workspace token>`.
 - `tokenWorkspace` hashes the token. It accepts a token that is not
   revoked, of a workspace that is not archived, in an org that is not

@@ -1,6 +1,7 @@
 import type { Miniflare } from 'miniflare'
 import { expect } from 'vitest'
 
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { chatHistoryPath, workspaceEventsPath } from '../../src/shared/events'
 import { retryMessagePath, sessionsPath } from '../../src/shared/sessions'
 import { TEST_ORIGIN } from '../test-support/harness'
@@ -45,7 +46,7 @@ export async function verifyAdapterRestart(
     history: body,
   })
   const resumedRunnerResponse = await runtime.dispatchFetch(
-    `${MACHINE_ORIGIN}/runner`,
+    `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
     {
       headers: {
         Upgrade: 'websocket',

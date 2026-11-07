@@ -117,7 +117,7 @@ it('hands the native launcher a short fragment grant and exchanges it only on th
   const launch: PreviewLaunchResponse = await native.json()
   expect(launch.expiresAt).toBe(TEST_TIME + 60_000)
   const url = new URL(launch.url)
-  expect(url.origin).toBe('https://authorize.conducting-previews.test')
+  expect(url.origin).toBe('https://authorize.conductive-previews.test')
   expect(url.search).toBe('')
   const fields = new URLSearchParams(url.hash.slice(1))
   const token = fields.get('grant') ?? ''

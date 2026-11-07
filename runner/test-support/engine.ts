@@ -11,7 +11,7 @@ import { DiskStorage, EventStore } from '../src/state'
 import { FakeProviders } from './providers'
 
 export async function engineFixture(overrides: Partial<EngineOptions> = {}) {
-  const directory = await mkdtemp(join(tmpdir(), 'conducting-engine-'))
+  const directory = await mkdtemp(join(tmpdir(), 'conductive-engine-'))
   const storage = new DiskStorage(join(directory, 'state.json'))
   const providers = new FakeProviders()
   const events: AgentChatEvent[] = []

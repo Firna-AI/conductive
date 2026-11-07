@@ -1,7 +1,7 @@
 import { deviceObject } from '../../src/shared/device-read'
 import { base64Url, hash } from '../security/crypto'
 
-const DOMAIN = 'conducting:device-operation:v1'
+const DOMAIN = 'conductive:device-operation:v1'
 const encoder = new TextEncoder()
 function decode(value: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(

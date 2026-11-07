@@ -35,7 +35,7 @@ it('gates internal device calls by exact body, signature domain, expiry, and obj
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Conducting-Device-Proof': credential,
+        'X-Conductive-Device-Proof': credential,
       },
       body: JSON.stringify(value),
     })

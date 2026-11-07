@@ -31,7 +31,7 @@ it('persists an unpredictable preview hostname and lists it with a 24-hour expir
     expiresAt: TEST_TIME + 86_400_000,
   })
   expect(new URL(setup.previewUrl).hostname).toMatch(
-    /^[a-f0-9]{32}\.conducting-previews\.test$/,
+    /^[a-f0-9]{32}\.conductive-previews\.test$/,
   )
   expect(preview.url).not.toContain('server-port-token')
   const another = createPreviewHandler(harness.env, harness.dependencies)
@@ -69,7 +69,7 @@ it('blocks unknown, closed, stopped, and expired preview hostnames before upstre
   )
   const unknown = await setup.handler.proxy(
     new Request(
-      'https://00000000000000000000000000000000.conducting-previews.test',
+      'https://00000000000000000000000000000000.conductive-previews.test',
     ),
   )
   expect([closed.status, unknown.status]).toEqual([404, 404])

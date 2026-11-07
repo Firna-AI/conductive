@@ -78,7 +78,7 @@ it('binds the callback to its browser and consumes state only once', async () =>
       .find((value) => value.startsWith(SESSION_COOKIE)),
   ).toContain('HttpOnly; Secure; SameSite=Lax')
   expect(responseCookie(callback, SESSION_COOKIE)).toMatch(
-    /^__Host-conducting-session=/,
+    /^__Host-conductive-session=/,
   )
   expect(callback.headers.get('Set-Cookie')).toContain('Max-Age=0')
   expect(

@@ -18,7 +18,7 @@ export function githubRequest(
       Accept: 'application/vnd.github+json',
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
-      'User-Agent': 'Conducting',
+      'User-Agent': 'Conductive',
       'X-GitHub-Api-Version': GITHUB_API_VERSION,
     },
   })

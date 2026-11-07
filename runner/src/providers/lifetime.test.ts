@@ -20,7 +20,7 @@ vi.mock('node:child_process', async (original) => ({
 
 async function fixture(child: FakeChild) {
   vi.mocked(spawn).mockReturnValue(child)
-  const directory = await mkdtemp(join(tmpdir(), 'conducting-lifetime-'))
+  const directory = await mkdtemp(join(tmpdir(), 'conductive-lifetime-'))
   const sdk = new FakeClaudeQuery()
   const start: ClaudeQueryFactory = (parameters) => {
     const options = {

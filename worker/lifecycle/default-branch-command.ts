@@ -16,19 +16,19 @@ export function defaultBranchCommand(input: {
     `GIT_COMMITTER_EMAIL=${shellQuote(email)}`,
   ].join(' ')
   return `set -eu
-export CONDUCTING_TURN_ID=${shellQuote(input.turnId)}
+export CONDUCTIVE_TURN_ID=${shellQuote(input.turnId)}
 cd ${shellQuote(input.directory)}
-conducting_remote_refs=$(git ls-remote origin)
-if [ -z "$conducting_remote_refs" ]; then
-  conducting_empty_tree=$(git mktree </dev/null)
-  conducting_initial_commit=$(${identity} git -c commit.gpgsign=false commit-tree "$conducting_empty_tree" -m 'Initialize empty repository')
-  if git push origin "$conducting_initial_commit":${shellQuote(`refs/heads/${input.defaultBranch}`)}; then
+conductive_remote_refs=$(git ls-remote origin)
+if [ -z "$conductive_remote_refs" ]; then
+  conductive_empty_tree=$(git mktree </dev/null)
+  conductive_initial_commit=$(${identity} git -c commit.gpgsign=false commit-tree "$conductive_empty_tree" -m 'Initialize empty repository')
+  if git push origin "$conductive_initial_commit":${shellQuote(`refs/heads/${input.defaultBranch}`)}; then
     :
   else
-    conducting_push_status=$?
-    conducting_remote_refs=$(git ls-remote origin)
-    if [ -z "$conducting_remote_refs" ]; then
-      exit "$conducting_push_status"
+    conductive_push_status=$?
+    conductive_remote_refs=$(git ls-remote origin)
+    if [ -z "$conductive_remote_refs" ]; then
+      exit "$conductive_push_status"
     fi
   fi
 fi

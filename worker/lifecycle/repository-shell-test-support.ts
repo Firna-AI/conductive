@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path'
 import { promisify } from 'node:util'
 
 import type { CommandResult } from '../sandbox/provider'
+import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { shellQuote } from './commands'
 
 const execute = promisify(execFile)
@@ -35,7 +36,7 @@ export async function repositoryShellFixture() {
   const mapped = (text: string) =>
     text
       .replaceAll('/home/user', home)
-      .replaceAll('/tmp/conducting-install.sh', join(directory, 'install.sh'))
+      .replaceAll('/tmp/conductive-install.sh', join(directory, 'install.sh'))
       .replaceAll('/run/ascii-secrets/env.sh', environment)
   return {
     directory,
@@ -64,7 +65,7 @@ export async function repositoryShellFixture() {
       try {
         const result = await execute('/bin/sh', ['-c', script], {
           cwd: home,
-          env: {
+          env: isolatedProcessEnvironment({
             PATH: `${bin}:/usr/bin:/bin`,
             HOME: home,
             LC_ALL: 'C',
@@ -78,7 +79,7 @@ export async function repositoryShellFixture() {
                 mapped(value),
               ]),
             ),
-          },
+          }),
         })
         return { ...result, exitCode: 0, timedOut: false }
       } catch (error) {

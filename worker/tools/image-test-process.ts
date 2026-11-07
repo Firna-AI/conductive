@@ -3,6 +3,7 @@ import { delimiter, dirname } from 'node:path'
 import process from 'node:process'
 
 import type { CommandResult } from '../sandbox/provider'
+import { isolatedProcessEnvironment } from '../test-support/process-environment'
 
 /** Capture child failures as results so the integration test can assert them. */
 export function imageTestProcess(
@@ -13,10 +14,10 @@ export function imageTestProcess(
 ): Promise<CommandResult> {
   return new Promise((resolve) => {
     const child = spawn(executable, [...args], {
-      env: {
+      env: isolatedProcessEnvironment({
         PATH: [dirname(process.execPath), '/usr/bin', '/bin'].join(delimiter),
         ...environment,
-      },
+      }),
     })
     let stdout = ''
     let stderr = ''

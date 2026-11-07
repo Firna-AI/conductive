@@ -1,12 +1,12 @@
 import type { Agent, Effort } from './agents'
 import type { Workspace, WorkspaceState } from './workspaces'
 
-/** Machine routes use a workspace bearer token, never a browser session. */
+/** Machine routes use workspace bearer tokens or a GitHub webhook signature. */
 export const MACHINE_PATHS = {
-  runner: '/runner',
-  githubWebhook: '/webhooks/github',
-  gitCredential: '/git/credential',
-  workspaces: '/tools/workspaces',
+  runner: '/v1/runner',
+  githubWebhook: '/v1/github/webhooks',
+  gitCredential: '/v1/git/credential',
+  workspaces: '/v1/tools/workspaces',
 } as const
 
 export interface AgentCreateWorkspaceRequest {

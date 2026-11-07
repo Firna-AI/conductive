@@ -8,12 +8,12 @@ Create one `createPreviewHandler(env, dependencies)` for the route owner.
 Send app API requests to its `fetch(request)` method. They include the
 launch GET of `previewPath(orgId, workspaceId, previewId)`.
 Send preview domain HTTP requests and WebSocket upgrades to `proxy(request)`.
-They include the authorizer at `https://authorize.<PREVIEW_DOMAIN>/.conducting/authorize`.
+They include the authorizer at `https://authorize.<PREVIEW_DOMAIN>/.conductive/authorize`.
 
-Set `PREVIEW_DOMAIN` to a separate registrable domain from `APP_ORIGIN`.
+`wrangler.jsonc` sets `PREVIEW_DOMAIN` to `conductive.page`, a separate registrable domain from `APP_ORIGIN`.
 Do not add it to the Public Suffix List. The authorizer sets a cookie for the
 whole domain, so the authorizer and each preview must share one site.
-Use a wildcard DNS record and certificate for its one-level hostnames.
+Use a wildcard DNS record and certificate for its one-level hostnames, `*.conductive.page`.
 The wildcard also covers `authorize`. A preview label is 32 hex characters,
 so it never matches `authorize`.
 
@@ -30,7 +30,7 @@ and the active preview. The GET returns trusted HTML that posts the preview
 hostname and a 60-second grant to the authorizer.
 
 The Mac app frames the same launch page from its desktop origin,
-`conducting-app://desktop`. Its frame load has no `Origin` header. On a GET of
+`conductive-app://desktop`. Its frame load has no `Origin` header. On a GET of
 the exact launch path without `Origin` and `Upgrade` headers, the app gate then
 reads the Mac session cookie when the request carries it. The shared launch
 path matcher defines that path for the gate and the Mac app. Every other
@@ -57,7 +57,7 @@ Origin.
   the query, and `Authorization: Bearer <grant>`. It answers with JSON that
   holds the clean preview address `https://<hostname>/`.
 
-Both modes set `__Secure-conducting-preview-<preview ID>` with
+Both modes set `__Secure-conductive-preview-<preview ID>` with
 `Domain=<PREVIEW_DOMAIN>; Path=/; Secure; HttpOnly; SameSite=None; Partitioned`.
 Its `Max-Age` is the remaining preview life. The `__Host-` prefix would forbid
 the `Domain` attribute.
@@ -150,7 +150,7 @@ WebSocket handshake counts. Socket frames and idle connections do not count.
 The header allowlists live in `headers.ts`. The cookie allowlist filters
 request and response cookies. It accepts valid app cookie names. It excludes
 the port cookie, the browser and Mac session cookies, the sign-in cookie, and
-each name under `__Secure-conducting-preview-`. Responses keep app cookies
+each name under `__Secure-conductive-preview-`. Responses keep app cookies
 with their domain removed. This makes them specific to the preview hostname.
 The proxy follows no upstream redirect.
 

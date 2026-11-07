@@ -13,12 +13,12 @@ const fields = new Map(
 )
 if (fields.get('protocol') !== 'https' || fields.get('host') !== 'github.com')
   process.exit(0)
-const { CONDUCTING_MACHINE_ORIGIN, CONDUCTING_TURN_ID, WORKSPACE_TOKEN } =
+const { CONDUCTIVE_MACHINE_ORIGIN, CONDUCTIVE_TURN_ID, WORKSPACE_TOKEN } =
   process.env
 try {
-  if (!CONDUCTING_MACHINE_ORIGIN || !CONDUCTING_TURN_ID || !WORKSPACE_TOKEN)
+  if (!CONDUCTIVE_MACHINE_ORIGIN || !CONDUCTIVE_TURN_ID || !WORKSPACE_TOKEN)
     throw new Error('Missing current turn')
-  const origin = new URL(CONDUCTING_MACHINE_ORIGIN)
+  const origin = new URL(CONDUCTIVE_MACHINE_ORIGIN)
   if (
     origin.protocol !== 'https:' ||
     origin.username ||
@@ -28,13 +28,13 @@ try {
     origin.hash
   )
     throw new Error('Invalid machine origin')
-  const response = await fetch(new URL('/git/credential', origin), {
+  const response = await fetch(new URL('/v1/git/credential', origin), {
     method: 'POST',
     redirect: 'error',
     signal: AbortSignal.timeout(30_000),
     headers: {
       Authorization: `Bearer ${WORKSPACE_TOKEN}`,
-      'X-Conducting-Turn-Id': CONDUCTING_TURN_ID,
+      'X-Conductive-Turn-Id': CONDUCTIVE_TURN_ID,
     },
   })
   if (!response.ok) throw new Error('Credential request failed')
