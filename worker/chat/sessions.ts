@@ -31,6 +31,7 @@ export async function createSession(
     createdAt: transaction.now,
     closedAt: null,
     activeTurnId: null,
+    retryMessageId: null,
   }
   await transaction.saveSession(session)
   await transaction.emit({ type: 'session.updated', session })

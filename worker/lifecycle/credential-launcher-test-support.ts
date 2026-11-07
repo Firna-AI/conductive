@@ -17,9 +17,10 @@ import process from 'node:process'
 import { URL } from 'node:url'
 
 import type { CommandResult } from '../sandbox/provider'
+import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { shellQuote } from './commands'
 
-const installedRoots = ['/opt/conducting', '/run/ascii-secrets']
+const installedRoots = ['/opt/conductive', '/run/ascii-secrets']
 
 /** Map only the launcher's approved absolute paths before executing it. */
 function mappedLauncher(source: string, root: string): string {
@@ -73,9 +74,9 @@ export async function credentialLauncher(
   )
   await mkdir(evidence, { recursive: true })
   const root = await realpath(await mkdtemp(join(evidence, "case launcher's ")))
-  const installation = join(root, 'opt/conducting')
+  const installation = join(root, 'opt/conductive')
   const secrets = join(root, 'run/ascii-secrets')
-  const launcher = join(root, 'conducting-git-credential')
+  const launcher = join(root, 'conductive-git-credential')
   const node = join(installation, 'software/node/bin/node')
   try {
     const source = await readFile(
@@ -107,7 +108,7 @@ export async function credentialLauncher(
             [launcher, 'get'],
             {
               cwd: root,
-              env: {
+              env: isolatedProcessEnvironment({
                 PATH: '/usr/bin:/bin',
                 HOME: root,
                 TMPDIR: root,
@@ -115,8 +116,8 @@ export async function credentialLauncher(
                 TZ: 'UTC',
                 GIT_CEILING_DIRECTORIES: root,
                 NODE_OPTIONS: `--import=data:text/javascript;base64,${Buffer.from(preload).toString('base64')}`,
-                CONDUCTING_TURN_ID: turnId,
-              },
+                CONDUCTIVE_TURN_ID: turnId,
+              }),
             },
             (error, stdout, stderr) => {
               resolve({

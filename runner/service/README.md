@@ -10,9 +10,9 @@ install script needs root, because it writes a systemd unit.
    must sit beside it. The runner also needs Git.
 2. Install the runner packages and build the bundles with the
    [runner commands](../README.md#commands).
-3. Set `CONDUCTING_NODE` to that full executable path. As root, run
+3. Set `CONDUCTIVE_NODE` to that full executable path. As root, run
    `sh runner/scripts/install.sh <user> [<folder>]`. The user runs the
-   agents. The folder is `/opt/conducting-runner` by default.
+   agents. The folder is `/opt/conductive-runner` by default.
 
 The install script does these steps:
 
@@ -23,7 +23,7 @@ The install script does these steps:
 - It runs the adjacent npm command with the configured Node and
   `ci --omit=dev --ignore-scripts`. The runtime packages sit beside the
   bundles.
-- It writes `/etc/systemd/system/conducting-runner.service` with the user,
+- It writes `/etc/systemd/system/conductive-runner.service` with the user,
   the folder, and the configured private Node path.
 - It reloads systemd and enables the service. It does not start the
   service.
@@ -31,7 +31,7 @@ The install script does these steps:
 Boat restarts the enabled services after each resume and fork. So the
 runner starts in each sandbox that starts from the org image.
 
-[`conducting-runner.service`](conducting-runner.service) is the template of
+[`conductive-runner.service`](conductive-runner.service) is the template of
 the unit. The unit has these settings:
 
 - The service runs as the user, in the home folder of the user, after

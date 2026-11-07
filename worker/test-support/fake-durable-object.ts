@@ -45,7 +45,7 @@ export class FakeDurableObjectEndpoint {
     this.options = options
     this.url = new URL(
       MACHINE_PATHS.runner,
-      options.origin ?? 'https://machines.conducting.test',
+      options.origin ?? 'https://machines.conductive.test',
     ).href
   }
 

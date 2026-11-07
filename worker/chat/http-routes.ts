@@ -9,7 +9,7 @@ import {
   invalidInput,
   sendMessage,
 } from './inputs'
-import { acceptMessage, existingMessage, responseFor } from './messages'
+import { acceptMessage, existingMessage } from './messages'
 import { changeModel } from './model-changes'
 import { closeSession, createSession, sessionFor, stopTurn } from './sessions'
 import type { ChatTransaction } from './store'
@@ -198,17 +198,15 @@ async function retryMessage(
       'message_not_found',
       'The message is not available.',
     )
-  const retryId = await transaction.retry(messageId, context.user.id)
-  const retried = retryId ? await transaction.message(retryId) : undefined
-  if (retried) return responseFor(transaction, retried)
-  const previousTurnId = await transaction.messageTurn(messageId)
-  const turn = previousTurnId
-    ? await transaction.turn(previousTurnId)
-    : undefined
-  if (turn?.state !== 'failed')
-    throw new HttpError(409, 'turn_not_failed', 'Wait for the turn to finish.')
+  const session = await sessionFor(transaction, sessionId)
+  if (session.retryMessageId !== messageId)
+    throw new HttpError(
+      409,
+      'retry_not_available',
+      'Only the newest failed request can run again. Send a new message.',
+    )
   const newId = dependencies.randomId()
-  const result = await send(
+  return send(
     transaction,
     sessionId,
     {
@@ -222,6 +220,4 @@ async function retryMessage(
     },
     dependencies,
   )
-  await transaction.saveRetry(messageId, context.user.id, newId)
-  return result
 }

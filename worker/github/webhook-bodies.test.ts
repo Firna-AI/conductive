@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { StreamedBody } from './streamed-body'
 import {
   createGitHubHarness,
@@ -7,7 +8,7 @@ import {
   WEBHOOK_SECRET,
   type GitHubTestHarness,
 } from './test-harness'
-import { GITHUB_WEBHOOK_PATH, handleGitHubWebhook } from './webhook'
+import { handleGitHubWebhook } from './webhook'
 
 let harness: GitHubTestHarness
 beforeAll(async () => {
@@ -25,7 +26,7 @@ function deliver(body: StreamedBody, signature: string | null) {
   if (signature !== null) headers.set('X-Hub-Signature-256', signature)
   const init = { method: 'POST', body: body.stream, duplex: 'half', headers }
   return handleGitHubWebhook(
-    new Request(`${MACHINE_ORIGIN}${GITHUB_WEBHOOK_PATH}`, init),
+    new Request(`${MACHINE_ORIGIN}${MACHINE_PATHS.githubWebhook}`, init),
     {
       DB: harness.env.DB,
       MACHINE_ORIGIN,

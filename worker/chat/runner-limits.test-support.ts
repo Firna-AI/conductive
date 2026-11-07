@@ -103,6 +103,7 @@ export async function createRunnerLimitsFixture() {
         createdAt: 25,
         closedAt: null,
         activeTurnId: context.turnId,
+        retryMessageId: null,
       })
       await transaction.saveTurn({
         id: context.turnId,

@@ -67,7 +67,7 @@ it('keeps the local password through automatic service restarts and caches only 
     seed.workspaceId,
     harness.dependencies,
   )
-  expect(readiness).not.toContain('cat /run/conducting-terminal/password')
+  expect(readiness).not.toContain('cat /run/conductive-terminal/password')
   const stored = await harness.env.DB.prepare(
     'SELECT ciphertext FROM terminal_credentials WHERE workspace_id = ?',
   )

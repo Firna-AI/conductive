@@ -32,17 +32,17 @@ limits, their results, and what the chat shows.
 ## The page
 
 - The Mac app bundles the built web app. It serves these files from its
-  own origin, `conducting-app://desktop`, the desktop origin.
+  own origin, `conductive-app://desktop`, the desktop origin.
 - The page opens from the package, also without the network. The window
   never loads the page from a server.
 - The desktop origin serves only the files of the package. A path outside
   the package gets no file.
 - An address that names no file and has no file extension gets the start
   page of the web app.
-- The page calls the API and opens its sockets on `app.conducting.build`,
+- The page calls the API and opens its sockets on `app.conductive.build`,
   as in a browser.
 - Each file carries the same content security policy as the web app. That
-  policy also names `app.conducting.build` for the API, the sockets, and
+  policy also names `app.conductive.build` for the API, the sockets, and
   the frames.
 - Reason: in the Mac app, the API, the sockets, and the launch address of
   each port preview are on another origin than the page.
@@ -87,14 +87,14 @@ limits, their results, and what the chat shows.
 - An address with another scheme, such as `file:`, goes nowhere.
 - A frame in the page, such as a port preview or the live desktop of a
   sandbox, can load its own pages. It cannot replace the main frame, and it
-  cannot open a `conducting://` address.
+  cannot open a `conductive://` address.
 - A frame cannot open an address of the app hostname or of the desktop
   origin outside the frame. Such a request goes nowhere.
 
 ## Port previews
 
 - A port preview shows in a frame of the page, as in a browser. The frame
-  loads the launch address of the preview from `app.conducting.build`, as
+  loads the launch address of the preview from `app.conductive.build`, as
   [Port previews](access-and-security.md#port-previews) says.
 - A link or a request for a new window from the main page to a launch
   address opens the preview in the user's default browser. The window
@@ -119,22 +119,22 @@ limits, their results, and what the chat shows.
 
 - In the Mac app, GitHub sign-in opens in the user's default browser
   (decision 62). The browser then hands the sign-in to the Mac app through
-  a `conducting://` address.
+  a `conductive://` address.
 - A sign-in inside the app window was rejected. Reason: the browser already
   holds the user's GitHub sign-in and passkeys, and the window opens other
   sites in the browser.
 - A sign-in that starts in the Mac app gives the browser no sign-in
   session.
-- The `conducting://` address carries a handoff code. It never carries a
+- The `conductive://` address carries a handoff code. It never carries a
   sign-in session or a GitHub token.
 - A handoff code works once, and only for 60 seconds.
 - A handoff code works only with a secret that the Mac app made when it
   started that sign-in. Only the exchange with the Worker carries that
   secret.
-- Reason: another app on the Mac can claim the `conducting://` scheme. A
+- Reason: another app on the Mac can claim the `conductive://` scheme. A
   code that such an app catches is of no use without the secret.
 - The Mac app accepts only its exact handoff address, and only while a
-  sign-in that it started waits. It ignores every other `conducting://`
+  sign-in that it started waits. It ignores every other `conductive://`
   address.
 - The Mac app exchanges the code with the Worker for its own sign-in
   session. The scripts of the page never get the code or a session token.
@@ -169,7 +169,7 @@ limits, their results, and what the chat shows.
 
 ## The Worker and the desktop origin
 
-- The gate of `app.conducting.build` accepts the desktop origin wherever
+- The gate of `app.conductive.build` accepts the desktop origin wherever
   it accepts the app origin.
   [Access and security](access-and-security.md#hostnames-and-gates) states
   that gate.
@@ -179,8 +179,8 @@ limits, their results, and what the chat shows.
 - Every API response carries `Vary: Origin`.
 - A preflight from the desktop origin needs no sign-in, and it gives no
   access. It allows only JSON requests with the methods of the API.
-- The hostname for machines and the preview domain never accept the
-  desktop origin.
+- The hostname for machines, `api.conductive.build`, and the preview
+  domain, `conductive.page`, never accept the desktop origin.
 
 ## Permissions
 
@@ -209,7 +209,7 @@ limits, their results, and what the chat shows.
 - While the Mac app runs and is signed in, it registers its Mac as a
   device of its signed-in user (decision 62).
 - The Mac app holds one device connection to the Worker, on
-  `app.conducting.build`. The connection proves its user with the sign-in
+  `app.conductive.build`. The connection proves its user with the sign-in
   session of the Mac app.
 - The Mac is available only while that connection is open. When the Mac
   sleeps, when the Mac app closes or signs out, or when the connection

@@ -8,7 +8,7 @@
 
 - **Terms:**
   - **Workspace token:** the secret that a workspace sandbox uses to prove itself to the Worker. The sandbox gets it as `WORKSPACE_TOKEN` in `/run/ascii-secrets/env.sh`.
-  - **Turn ID:** the ID of the running turn. The design gives it to each agent process as `CONDUCTING_TURN_ID`. Members also see turn IDs in the browser.
+  - **Turn ID:** the ID of the running turn. The design gives it to each agent process as `CONDUCTIVE_TURN_ID`. Members also see turn IDs in the browser.
   - **GitHub user token:** a GitHub App token that acts as one person. It reaches each repository that both the person and the app can reach, with every permission of the app. Since decision 103 B of 7 November 2026, that includes the Workflows permission.
   - **Scoped token:** a user token that GitHub's call `POST /applications/{client_id}/token/scoped` makes from another user token. It reaches only the named repositories, with only the named permissions.
 - **Background:**
@@ -18,7 +18,7 @@
   - The access doc says that a limit to the org's repositories "was rejected for now, because GitHub cannot set it on a user token". GitHub's scoped-token call contradicts that reason. Nobody has checked it with the real app.
   - The runner and the terminal run as the system user `user`, and Boat gives `user` passwordless sudo (`image/README.md`). The terminal loads `/run/ascii-secrets/env.sh` into each shell (`worker/terminal/scripts.ts`).
   - The runner redacts only the workspace token and the agent logins from tool output (`runner/src/runner.ts`). A GitHub token that a tool prints goes into the chat history that every member sees.
-  - The route is not wired yet. The machine hostname serves a stub (`worker/application.ts`), and the runner does not set `CONDUCTING_TURN_ID`. So the risk comes from the design, and it starts when the wiring lands.
+  - The route is not wired yet. The machine hostname serves a stub (`worker/application.ts`), and the runner does not set `CONDUCTIVE_TURN_ID`. So the risk comes from the design, and it starts when the wiring lands.
   - For agent logins, decision 49 D of 6 November 2026 accepted that processes can read the login during a turn. Decision 114 of 7 November 2026 states the risk for tool processes after the turn now, and fixes it later.
 - **Problem:** While a turn runs, each process in the sandbox, and each member with a terminal there, can get the sender's GitHub user token, for example with `git credential fill`. The token works after the turn, and on the person's repositories outside the org. The access doc does not state this risk.
 - **Impact if no action:** Sandbox code or another member can take a member's GitHub token and use it outside the product, also after the turn. With the Workflows permission, a taken token can push a workflow that reads the Actions secrets of each repository that it reaches.

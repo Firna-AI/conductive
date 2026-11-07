@@ -8,7 +8,7 @@ import { Codex } from '@openai/codex-sdk'
 
 // A one-time capability probe. It uses the installed SDK and its real CLI.
 // Every inference request goes to this local fake Responses server.
-const home = await mkdtemp(join(tmpdir(), 'conducting-codex-capability-'))
+const home = await mkdtemp(join(tmpdir(), 'conductive-codex-capability-'))
 let releaseResponse = () => {}
 let requested = () => {}
 let finishResponse = Promise.resolve()

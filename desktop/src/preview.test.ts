@@ -5,16 +5,16 @@ import { openPreviewInBrowser } from './preview.js'
 
 it('fetches a preview grant with the native cookie jar and opens only its trusted fragment URL', async () => {
   const launcher =
-    'https://app.conducting.test/api/orgs/org/workspaces/workspace/previews/preview'
+    'https://app.conductive.test/api/orgs/org/workspaces/workspace/previews/preview'
   const destination =
-    'https://authorize.conducting-previews.test/.conducting/authorize#hostname=0123456789abcdef0123456789abcdef.conducting-previews.test&grant=opaque'
+    'https://authorize.conductive-previews.test/.conductive/authorize#hostname=0123456789abcdef0123456789abcdef.conductive-previews.test&grant=opaque'
   const fetch = vi.fn<(request: Request) => Promise<Response>>(async () =>
     Response.json({ url: destination, expiresAt: 1_800_000_060_000 }),
   )
   const external = vi.fn<(url: string) => Promise<void>>(async () => {})
   const dependencies = {
-    appOrigin: 'https://app.conducting.test',
-    frameSources: ['https://*.conducting-previews.test'],
+    appOrigin: 'https://app.conductive.test',
+    frameSources: ['https://*.conductive-previews.test'],
     fetch,
     external,
   }

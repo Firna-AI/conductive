@@ -72,8 +72,8 @@ export async function realRuntimeFixture(bundle: string) {
                 exportName: 'WorkspaceRuntimeFixture',
               },
               DB: { type: 'd1', id: 'workspace-runtime-db' },
-              APP_ORIGIN: text('https://app.conducting.test'),
-              MACHINE_ORIGIN: text('https://machine.conducting.test'),
+              APP_ORIGIN: text('https://app.conductive.test'),
+              MACHINE_ORIGIN: text('https://machine.conductive.test'),
               GITHUB_CLIENT_ID: text('runtime-client'),
               GITHUB_CLIENT_SECRET: text('runtime-client-secret'),
               SESSION_SIGNING_KEY: text(btoa('s'.repeat(32))),
@@ -121,8 +121,8 @@ export async function realRuntimeFixture(bundle: string) {
   await applyMigrations(database)
   const env: AppEnv = {
     DB: database,
-    APP_ORIGIN: 'https://app.conducting.test',
-    MACHINE_ORIGIN: 'https://machine.conducting.test',
+    APP_ORIGIN: 'https://app.conductive.test',
+    MACHINE_ORIGIN: 'https://machine.conductive.test',
     GITHUB_CLIENT_ID: 'runtime-client',
     GITHUB_CLIENT_SECRET: 'runtime-client-secret',
     SESSION_SIGNING_KEY: btoa('s'.repeat(32)),
@@ -161,7 +161,7 @@ export async function realRuntimeFixture(bundle: string) {
       },
     ],
     software: {
-      url: 'https://software.conducting.test/runner.tar.gz',
+      url: 'https://software.conductive.test/runner.tar.gz',
       sha256: 'a'.repeat(64),
     },
     now: Date.now(),

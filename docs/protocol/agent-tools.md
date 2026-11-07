@@ -15,8 +15,10 @@ says.
 - With the workspace token, the tools can make only these three calls.
   [The workspace token](access-and-security.md#the-workspace-token) states
   what the token allows.
-- The tools call the hostname for machines. Its gate checks the workspace
-  token in place of a sign-in.
+- The tools call `api.conductive.build`, the hostname for machines. Its
+  gate checks the workspace token in place of a sign-in.
+- Create and list calls use `/v1/tools/workspaces`. Mac command requests
+  use `/v1/tools/mac-command` and the addresses under it.
 - The app sets no limit of its own on the workspaces that agents create
   (decision 8). The plan limits of the org's Boat account apply.
 - A workspace that an agent creates starts with no approval step in the

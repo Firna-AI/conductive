@@ -162,7 +162,7 @@ it('runs the real sign-in Origin and JSON checks before deleted-org authorizatio
     admin.session,
     write({ name: org.name }),
   )
-  const url = `https://app.conducting.test${restoreOrgPath(org.id)}`
+  const url = `https://app.conductive.test${restoreOrgPath(org.id)}`
   await expect(
     membersGate(
       new Request(url, {
@@ -183,7 +183,7 @@ it('runs the real sign-in Origin and JSON checks before deleted-org authorizatio
       new Request(url, {
         method: 'POST',
         headers: {
-          Origin: 'https://app.conducting.test',
+          Origin: 'https://app.conductive.test',
           'Content-Type': 'application/json',
         },
         body: '{}',
@@ -197,7 +197,7 @@ it('runs the real sign-in Origin and JSON checks before deleted-org authorizatio
       new Request(url, {
         method: 'POST',
         headers: {
-          Origin: 'https://app.conducting.test',
+          Origin: 'https://app.conductive.test',
           Cookie: admin.session,
         },
         body: '{}',
@@ -213,7 +213,7 @@ it('runs the real sign-in Origin and JSON checks before deleted-org authorizatio
     new Request(url, {
       method: 'POST',
       headers: {
-        Origin: 'https://app.conducting.test',
+        Origin: 'https://app.conductive.test',
         Cookie: admin.session,
         'Content-Type': 'application/json',
       },

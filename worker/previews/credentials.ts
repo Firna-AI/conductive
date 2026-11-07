@@ -5,12 +5,12 @@ import { readCookie } from '../security/cookies'
 import { decrypt, encrypt, hash } from '../security/crypto'
 import type { PreviewRecord } from './store'
 
-export const PREVIEW_COOKIE_PREFIX = '__Secure-conducting-preview-'
+export const PREVIEW_COOKIE_PREFIX = '__Secure-conductive-preview-'
 const launchLifetime = 60_000
 type Purpose = 'launch' | 'cookie'
 
 function context(env: AppEnv, row: PreviewRecord, purpose: Purpose): string {
-  return `conducting:preview:${purpose}:${env.APP_ORIGIN}:${row.hostname}:${row.id}`
+  return `conductive:preview:${purpose}:${env.APP_ORIGIN}:${row.hostname}:${row.id}`
 }
 
 async function issue(

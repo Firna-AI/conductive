@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 const desktop = resolve(import.meta.dirname, '..')
 const evidence = resolve(desktop, '../.context/boat-native-remote-workspaces')
 await mkdir(evidence, { recursive: true })
-const supplied = process.env.CONDUCTING_PACKAGED_APP
+const supplied = process.env.CONDUCTIVE_PACKAGED_APP
 let scratch: string | undefined
 let executable = supplied
 try {
@@ -27,7 +27,7 @@ try {
     )
     if (extraction.error) throw extraction.error
     if (extraction.status !== 0) throw new Error('The Mac ZIP did not extract')
-    executable = resolve(scratch, 'Conducting.app/Contents/MacOS/Conducting')
+    executable = resolve(scratch, 'Conductive.app/Contents/MacOS/Conductive')
   }
   const result = spawnSync(
     process.execPath,
@@ -35,7 +35,7 @@ try {
     {
       cwd: desktop,
       stdio: 'inherit',
-      env: { ...process.env, CONDUCTING_PACKAGED_APP: executable },
+      env: { ...process.env, CONDUCTIVE_PACKAGED_APP: executable },
     },
   )
   if (result.error) throw result.error

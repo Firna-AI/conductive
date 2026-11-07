@@ -28,7 +28,7 @@ it('starts and caches the terminal after startup at create and resume while rete
   let terminalStarts = 0
   boat.beforeCommand = async (command, detached) => {
     if (detached) return
-    if (!command.includes('systemctl start conducting-terminal.service')) return
+    if (!command.includes('systemctl start conductive-terminal.service')) return
     terminalStarts++
     await endpoint.reportRunnerLifecycle({ type: 'runner.ready' })
     expect(await endpoint.readLifecycle()).toMatchObject({
@@ -48,7 +48,7 @@ it('starts and caches the terminal after startup at create and resume while rete
     })
     expect(boat.commandRequests.at(-2)).toMatchObject({
       detached: true,
-      command: expect.stringContaining("bash '/run/conducting/startup.sh'"),
+      command: expect.stringContaining("bash '/run/conductive/startup.sh'"),
     })
   }
   for (let step = 0; step < 16; step++) {

@@ -1,7 +1,7 @@
 # A removed member can keep watching the desktop
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-07, option C of `shared-session-check-for-connections`, which Milestone 11b applies with option B and deletes. The user sees it as item 117.
 - **Location:** `worker/desktop/README.md:14`, and the sections "Orgs and workspaces" and "Desktop" of `docs/protocol/access-and-security.md`.
 - **Reason:** each option changes a protocol rule or adds a route of the sandbox provider.
@@ -20,4 +20,4 @@
 - **Wider fix:** C.
 - **Previous examples:** finding 1 of PR #6, and finding 4 of PR #9.
 - **Recommendation:** A now. A removal is rare, and the stream ends when the sandbox stops. C protects best, at the cost of a large build.
-- **Action:** ask the user, because each option changes the rule of decision 70 or adds a provider route.
+- **Action:** fix after merge, apply C, because the user chose A now and C as a later follow-up on 7 November 2026 (decision 117). The access protocol states the exception until C lands.

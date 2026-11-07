@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { chatHistoryPath, workspaceEventsPath } from '../../src/shared/events'
 import { sessionsPath, sessionPaths } from '../../src/shared/sessions'
 import { TEST_ORIGIN } from '../test-support/harness'
@@ -52,7 +53,7 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
       history: { throughEventNumber: 3 },
     })
     const runnerResponse = await runtime.dispatchFetch(
-      `${MACHINE_ORIGIN}/runner`,
+      `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
       {
         headers: {
           Upgrade: 'websocket',

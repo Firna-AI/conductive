@@ -1,5 +1,5 @@
 /*
- * The logo of Conducting, from the masters in `docs/brand/`. The files are
+ * The logo of Conductive, from the masters in `docs/brand/`. The files are
  * the one source: these rules only scale them, and never redraw them.
  */
 
@@ -12,7 +12,7 @@
   display: inline-block;
   flex-shrink: 0;
   border-radius: 22.5%;
-  background: url('../../../../brand/conducting-icon.svg') center / 124.27%
+  background: url('../../../../brand/conductive-icon.svg') center / 124.27%
     no-repeat;
 }
 
@@ -20,7 +20,7 @@
 .appIcon {
   display: inline-block;
   flex-shrink: 0;
-  background: url('../../../../brand/conducting-icon.svg') center / contain
+  background: url('../../../../brand/conductive-icon.svg') center / contain
     no-repeat;
 }
 
@@ -28,11 +28,11 @@
 .lockup {
   display: inline-block;
   flex-shrink: 0;
-  aspect-ratio: 690.36 / 127.32;
-  background: url('../../../../brand/conducting-lockup-light.svg') center /
+  aspect-ratio: 681.86 / 127.32;
+  background: url('../../../../brand/conductive-lockup-light.svg') center /
     contain no-repeat;
 }
 
 :global(html[style*='dark']) .lockup {
-  background-image: url('../../../../brand/conducting-lockup-dark.svg');
+  background-image: url('../../../../brand/conductive-lockup-dark.svg');
 }

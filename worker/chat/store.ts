@@ -73,6 +73,9 @@ export class ChatTransaction {
   messageTurn(id: string): Promise<string | undefined> {
     return this.data.get(key('message-turn', id))
   }
+  newestTurn(sessionId: string): Promise<string | undefined> {
+    return this.data.get(key('newest-turn', sessionId))
+  }
   async sessions(): Promise<Session[]> {
     return [
       ...(
@@ -136,6 +139,9 @@ export class ChatTransaction {
   saveMessageTurn(messageId: string, turnId: string): Promise<void> {
     return this.data.put(key('message-turn', messageId), turnId)
   }
+  saveNewestTurn(sessionId: string, turnId: string): Promise<void> {
+    return this.data.put(key('newest-turn', sessionId), turnId)
+  }
   saveCommand(command: PendingCommand): Promise<void> {
     return this.data.put(key('command', command.commandId), {
       command,
@@ -148,16 +154,6 @@ export class ChatTransaction {
   saveCursor(streamId: string, through: number): Promise<void> {
     return this.data.put(key('cursor', streamId), through)
   }
-  retry(messageId: string, userId: string): Promise<string | undefined> {
-    return this.data.get(key('retry', JSON.stringify([messageId, userId])))
-  }
-  saveRetry(messageId: string, userId: string, newId: string): Promise<void> {
-    return this.data.put(
-      key('retry', JSON.stringify([messageId, userId])),
-      newId,
-    )
-  }
-
   async history(after: number) {
     return {
       events: await Promise.all(

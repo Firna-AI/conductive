@@ -1,7 +1,7 @@
 # A Worker update ends each open shell
 
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-07, option C of `shared-session-check-for-connections`, which Milestone 11b applies with option B and deletes. The user sees it as item 118.
 - **Location:** `worker/terminal/service.ts:19`, the terminal setup of the org image in `image/`, and the section "Terminal" of `docs/protocol/workspaces-and-sandboxes.md`.
 - **Reason:** the fix changes what the user sees in the terminal.
@@ -20,4 +20,4 @@
 - **Wider fix:** B.
 - **Previous examples:** the check of finding 4 of PR #9.
 - **Recommendation:** B. Users keep their running commands, and the terminal reconnects to the same shell.
-- **Action:** ask the user, because B changes what the Terminal tab shows after a reconnect.
+- **Action:** fix after merge, apply B, as the user chose on 7 November 2026 (decision 118). Milestone 11c builds it.

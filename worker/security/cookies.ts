@@ -1,5 +1,5 @@
-export const SESSION_COOKIE = '__Host-conducting-session'
-export const OAUTH_COOKIE = '__Host-conducting-oauth'
+export const SESSION_COOKIE = '__Host-conductive-session'
+export const OAUTH_COOKIE = '__Host-conductive-oauth'
 
 export function readCookie(request: Request, name: string): string | null {
   const values = (request.headers.get('Cookie') ?? '')

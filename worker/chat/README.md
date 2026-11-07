@@ -26,7 +26,7 @@ which serves these routes. The path helpers live in
 | `POST` sessions | `sessionsPath` | Creates a session |
 | `PATCH` session | `sessionPath` | Renames a session |
 | `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn |
-| `POST` retry | `retryMessagePath` | Sends the message of a failed turn again |
+| `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
 | `POST` interrupt | `sessionPaths.interrupt` | Stops a turn |
 | `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session |
 | `POST` close, reopen | `sessionPaths.close`, `sessionPaths.reopen` | Moves a session to the session history, and back |
@@ -34,32 +34,12 @@ which serves these routes. The path helpers live in
 | `GET` events socket | `workspaceEventsPath` | Sends the stored history, then each new event |
 | `GET` runner socket | `MACHINE_PATHS.runner` | Connects the agent runner on the machine hostname |
 
-Trusted Worker code can also call six methods of `WorkspaceChat`. They
-run no gate.
+Trusted Worker code can also call six methods of `WorkspaceChat` that run no
+gate. [Trusted workspace calls](integration/README.md#trusted-workspace-calls) gives their rules.
 
-- `appendWorkspaceEvent(workspaceId, event, occurredAt)` stores one
-  `WorkspaceEvent` with the next workspace event number. Then it pushes
-  the event to the open tabs. Inside a runner hook, use the hook's
-  `publish` argument instead, as
-  [the integration README](integration/README.md) says.
-- `changeWorkspace(workspaceId, work)` runs `work` with a
-  `ChatTransaction` in one storage transaction. After the commit, it pushes
-  the new events to the open tabs. `appendWorkspaceEvent` uses it.
-- `readWorkspace(workspaceId, work)` runs `work` with a `ChatTransaction`
-  outside a storage transaction. Use it only for reads.
-- `republishWorkspaceEvent(envelope)` pushes one committed envelope to the
-  open tabs again. It stores nothing, so the event keeps its number.
-- `sendFileCommand(workspaceId, command)` sends one `file.read` or
-  `file.diff` command to the ready runner. It resolves to `false` when no
-  runner is ready or the send fails.
-- `sendFileCommand` adds nothing to the history or to the pending
-  commands. So a new runner connection does not get the command again.
-- `closeRunner()` closes the current runner connection, for example when
-  the sandbox stops.
-
-A cross-agent model change uses the client's `newSessionId`. A retry uses
-the same session. An unrelated occupied ID is refused. A same-agent change
-ignores this field.
+A cross-agent model change uses the client's `newSessionId`. A repeated
+request gets the same session. An unrelated occupied ID is refused. A
+same-agent change ignores this field.
 
 ## Access
 
@@ -76,7 +56,7 @@ The Durable Object runs the gates itself.
 - The access timer stops when the last tab closes.
 - An archived workspace still serves its history and its events socket.
   Each write gets `409 workspace_archived`.
-- `connectRunner` accepts only `/runner` on `MACHINE_ORIGIN`, with
+- `connectRunner` accepts only `/v1/runner` on `MACHINE_ORIGIN`, with
   `Authorization: Bearer <workspace token>`.
 - `tokenWorkspace` hashes the token. It accepts a token that is not
   revoked, of a workspace that is not archived, in an org that is not
@@ -118,9 +98,6 @@ The Durable Object runs the gates itself.
 - The history read and the new subscription run in the queue. So no event
   falls between them, and no event comes twice.
 - The records use the `chat:v1:` key prefix of the Durable Object storage.
-- `ChatTransaction.github` gives the [GitHub state](../github/README.md)
-  its records and its `github.updated` events in the same transaction. The
-  GitHub records use the `github:` key prefix.
 - Each runner stream numbers its events from 1. The Durable Object stores
   a runner event, or its refusal marker, only when its number is the stream
   cursor plus one.
@@ -150,6 +127,31 @@ The Durable Object runs the gates itself.
   command. The first end of a turn removes each command of that turn.
 - A new `model` command replaces the pending `model` command of its
   session.
+
+## Retries
+
+[Messages](../../docs/protocol/chat-and-events.md#messages) states the
+rules. `Session.retryMessageId` names the one message that the retry route
+accepts. It is the only public part of the retry state.
+
+- `ChatTransaction.newestTurn` and `saveNewestTurn` keep the ID of the
+  newest turn of each session under the `chat:v1:newest-turn:` prefix. This
+  internal record never reaches a tab.
+- Each accepted message records its turn there, also a running turn that it
+  joins. It also sets `retryMessageId` to null.
+- The end of the active turn sets `retryMessageId` to the retry message of a
+  failed end. It does so only when that turn is still the newest turn. Every
+  other end sets null.
+- A refused end has no retry message, so it sets null.
+- A turn that waits counts as the newest turn, also after a Stop ends it
+  before it starts.
+- When the newest turn finishes, a continuation of its unanswered messages
+  becomes the newest turn.
+- The session record and its `session.updated` event commit in the same
+  transaction as the change that sets the field.
+- A missing message, or a message of another session, gets
+  `404 message_not_found`. Each other message that the record does not name
+  gets `409 retry_not_available`, and the route writes nothing.
 
 ## Report repairs
 
@@ -214,21 +216,26 @@ npm run typecheck
   `beforeCommit` to test a failed or a late commit.
 - Its key order and `startAfter` comparison use UTF-8 bytes, like real storage.
 - Set `crashAfterCommit` to commit the next transaction, then throw once.
-  The restart tests use it to check repair requests, turn cleanup, and file
-  assembly after a crash immediately after the receipt commit.
+  The restart tests cover retry permission, report repairs, turn cleanup,
+  and file assembly after a commit crash.
 - `createRunnerLimitsFixture` in `runner-limits.test-support.ts` runs one
   `RunnerChannel` for the refusal, cap, and file part tests.
 - `runner-repairs.test-support.ts` builds a full and an oversized report of
   each kind, and reads the requests and markers of the repair tests.
 - `late-events.test.ts` and `never-started.test.ts` cover replay after a
   workspace stop and the queued-turn eligibility rules.
+- `retry.test.ts`, `retry-queue.test.ts`, and `retry-crash.test.ts` cover
+  the newest failed turn: stale tabs, refused ends, waiting work, rollback,
+  and commit crashes. `retry.test-support.ts` sends retries and reads the
+  session records.
 - `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
   end. It also checks that late ends preserve the next turn and its commands.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,
   D1, and real WebSockets. `createAdapterRuntime` sets up that runtime.
-- It closes every socket before Miniflare evicts the real object. The
-  restarted object keeps its SQLite history, queued message, and runner
-  cursor. The test checks delivery and continued event numbers after restart.
+- It closes every socket before Miniflare evicts the real object. Restart
+  keeps SQLite history, queued messages, and the runner cursor. Event numbers
+  continue. The resumed queued turn fails. Its message can retry after a
+  second eviction.
 - `createAdapterRuntime` can bundle another Durable Object entry for
   another workspace ID. The [GitHub store tests](../github/README.md#verification)
   use it to run `WorkspaceChat` with the GitHub state on SQLite.
@@ -236,9 +243,9 @@ npm run typecheck
 ## Seams for other milestones
 
 [Chat backend integration](integration/README.md) gives the seams for other
-features. It covers the hooks, the workspace events, the outer Worker, the
-lifecycle, the files, the GitHub state, the agent runner, and the logins
-and attachments.
+features. It covers the hooks, the trusted workspace calls and the workspace
+events, the outer Worker, the lifecycle, the files, the GitHub state, the
+agent runner, and the logins and attachments.
 
 ## Key code
 
@@ -246,7 +253,8 @@ and attachments.
   tabs, and the one publisher of committed events.
 - `http-routes.ts`, `messages.ts`, and `sessions.ts`: the routes, the turns,
   and the session state.
-- `model-changes.ts`: client session IDs, retry records, and ID conflicts.
+- `model-changes.ts`: client session IDs, the creation records that repeated
+  requests match, and ID conflicts.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, the GitHub view of a transaction, and the
   chunks of large file reports.
@@ -264,8 +272,9 @@ and attachments.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
 - `turn-lifecycle.ts`, `turn-events.ts`, `turn-context.ts`, and
-  `continuation.ts`: active and waiting turns, safe turn context, late data,
-  terminal events, and unanswered messages.
+  `continuation.ts`: active and waiting turns, the retry message of a turn
+  end, safe turn context, late data, terminal events, and unanswered
+  messages.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-tabs.ts` and `browser-access.ts`: open tabs, the scheduled access
   check, and its batched D1 query.
@@ -277,6 +286,7 @@ and attachments.
 
 ## Related docs
 
+- [Chat and events: Messages](../../docs/protocol/chat-and-events.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
 - [Chat and events: Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
 - [Chat backend integration](integration/README.md)
