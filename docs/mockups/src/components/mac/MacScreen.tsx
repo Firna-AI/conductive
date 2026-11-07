@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { classes } from '../common/classes'
-import { MacApp, type WindowMode } from './MacApp'
+import { MacApp, type MacChange, type WindowMode } from './MacApp'
 import { WindowButtons } from './WindowControls'
 import styles from './MacScreen.module.css'
 
@@ -19,6 +19,8 @@ export function MacScreen(props: {
   banner?: ReactNode
   /** The other ways to allow a waiting command are drawn open. */
   choicesOpen?: boolean
+  /** The result of the last change of the Mac's settings. */
+  change?: MacChange
   /** The workspace whose agent waits for the user, which the list marks. */
   needsInput?: string
   /** A layer over the whole screen, such as a notification of macOS. */
@@ -33,6 +35,7 @@ export function MacScreen(props: {
           <div className={window ? styles.window : styles.fullScreen}>
             <MacApp
               banner={props.banner}
+              change={props.change}
               choicesOpen={props.choicesOpen}
               mode={props.mode}
               needsInput={props.needsInput}

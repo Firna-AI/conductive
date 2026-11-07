@@ -1,34 +1,15 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import type { ToolCall } from '../../shared/chat-events'
 import type { UserMessage } from '../../shared/messages'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { formatDuration } from '../state/format'
 import { newestTurnId } from '../state/known-turns'
-import type {
-  RunningTurn,
-  Transcript,
-  TranscriptItem,
-} from '../state/transcript'
+import type { RunningTurn, Transcript } from '../state/transcript'
 import { ToolGroup } from './ToolGroup'
 import { ItemView, UserBubble, type ChatReaders } from './TranscriptItem'
 
-type Entry =
-  | { kind: 'item'; item: TranscriptItem }
-  | { kind: 'tools'; id: string; calls: ToolCall[] }
-
-/** Groups each run of consecutive tool calls, so the chat can fold it. */
-function groupEntries(items: readonly TranscriptItem[]): Entry[] {
-  const entries: Entry[] = []
-  for (const item of items) {
-    const last = entries.at(-1)
-    if (item.kind !== 'tool') entries.push({ kind: 'item', item })
-    else if (last?.kind === 'tools') last.calls.push(item.tool)
-    else entries.push({ kind: 'tools', id: item.id, calls: [item.tool] })
-  }
-  return entries
-}
+import { groupEntries, type TranscriptInsert } from './transcript-entries'
 
 /** The running turn: thinking until the agent writes, and the time since it started. */
 function WorkingRow(props: { turn: RunningTurn; now: number }) {
@@ -52,6 +33,7 @@ function WorkingRow(props: { turn: RunningTurn; now: number }) {
  */
 export function TranscriptView(props: {
   transcript: Transcript
+  inserts?: readonly TranscriptInsert[]
   readers: ChatReaders
   pending: readonly UserMessage[]
   now: number
@@ -77,8 +59,10 @@ export function TranscriptView(props: {
       : null
   return (
     <>
-      {groupEntries(transcript.items).map((entry) =>
-        entry.kind === 'tools' ? (
+      {groupEntries(transcript.items, props.inserts ?? []).map((entry) =>
+        entry.kind === 'insert' ? (
+          <Fragment key={entry.insert.key}>{entry.insert.node}</Fragment>
+        ) : entry.kind === 'tools' ? (
           <ToolGroup calls={entry.calls} key={entry.id} />
         ) : (
           <ItemView

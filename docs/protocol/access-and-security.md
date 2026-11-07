@@ -159,11 +159,23 @@ Later screens add the frame and connection sources that they need.
 ## The workspace token
 
 - Each workspace has its own workspace token.
-- With the token, the sandbox of the workspace can do three things:
+- With the token, the sandbox of the workspace can do four things:
   - connect its agent runner to the Durable Object of its own workspace
   - get a GitHub token for its own workspace
   - create and list workspaces through the agent tools
-- The token allows nothing else.
+  - ask for a command on the Mac of the sender of a turn that runs now,
+    through the agent tools
+- The token allows nothing else. It can never answer a request for a Mac
+  command, and it can never choose the Mac that gets the request.
+- The Worker reads the sender of each Mac command request from its own
+  record of the turn that runs now. It never takes a sender from the
+  sandbox, and it never uses the workspace owner in place of the sender.
+- Reason: agent code runs in the sandbox, so a sender that the sandbox
+  names can be false.
+- At each Mac command request, the Worker checks that the sender is still
+  a member of the org of the workspace.
+- [Agent tools](agent-tools.md#mac-commands) states the Mac command
+  requests.
 
 ## GitHub tokens
 

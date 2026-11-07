@@ -2,6 +2,8 @@ import { parseArgs } from 'node:util'
 
 import { WorkspaceToolError, type WorkspaceToolClient } from './client.ts'
 import { createWorkspaceInput, ToolInputError } from './input.ts'
+import { DeviceContractError } from '../src/shared/device-read.ts'
+import { runMacCli } from './device-cli.ts'
 
 export const CLI_HELP = `Conducting workspace tools
 
@@ -9,6 +11,8 @@ conducting workspaces list
 conducting workspaces create --repository ID --message TEXT
   [--agent claude|codex --model NAME] [--effort LEVEL] [--section ID]
 conducting mcp
+conducting mac run --command TEXT --folder PATH --reason TEXT
+  [--timeout-seconds SECONDS] [--longer-timeout-reason TEXT] [--request-id ID]
 
 Create starts a workspace in the calling workspace's org, with its owner.
 Omitted options use the owner's model and effort, and the default section.
@@ -30,6 +34,7 @@ export async function runWorkspaceCli(
     return 0
   }
   try {
+    if (args[0] === 'mac') return await runMacCli(args, client, output)
     const { values, positionals } = parseArguments(args)
     if (positionals[0] !== 'workspaces' || positionals.length !== 2) {
       throw new ToolInputError('Use workspaces create or workspaces list.')
@@ -86,7 +91,9 @@ function parseArguments(args: readonly string[]) {
 }
 
 export function toolErrorMessage(error: unknown): string {
-  return error instanceof ToolInputError || error instanceof WorkspaceToolError
+  return error instanceof ToolInputError ||
+    error instanceof WorkspaceToolError ||
+    error instanceof DeviceContractError
     ? error.message
     : 'The workspace request failed. Try again.'
 }

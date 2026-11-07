@@ -7,6 +7,7 @@ import {
   optionValue,
   type DevOptions,
 } from './dev-options'
+import { reconnectMac } from './dev-mac'
 import { failStart, makeReady, stopSandbox } from './dev-sandbox'
 import { writeTitle } from './dev-sessions'
 import styles from './DevPage.module.css'
@@ -79,6 +80,7 @@ export function DevControls(props: {
     ['Drop the connection', () => backend.stream.drop()],
     ['Resend the last event', () => backend.stream.resendLast()],
     ['Send parts out of order', () => outOfOrder(backend)],
+    ['Reconnect the Mac', () => reconnectMac(backend)],
   ]
   return (
     <aside aria-label="Development controls" className={styles.panel}>

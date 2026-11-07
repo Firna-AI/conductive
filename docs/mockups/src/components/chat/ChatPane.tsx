@@ -4,6 +4,8 @@ import type { ChatItem } from '../../fixtures/conversations'
 import type { PersonKey } from '../../fixtures/members'
 import type { StartingLog } from '../../fixtures/starting'
 import { classes } from '../common/classes'
+import { DrawnChoices } from '../mac/CommandActions'
+import { useMacApp } from '../mac/MacApp'
 import { SandboxBar, type SandboxProblem } from '../workspace/SandboxNotice'
 import { StartingCard } from '../workspace/StartingCard'
 import { ChatItemView } from './ChatItemView'
@@ -16,9 +18,10 @@ import styles from './ChatPane.module.css'
 /**
  * The chat transcript, with the composer or a sandbox bar under it. While
  * the sandbox starts, its steps show at the end of the transcript. An empty
- * transcript shows `empty` instead. A command that waits for approval on a
- * Mac leaves the transcript and stays in view just above the composer.
- * Once answered, it shows at its place in the transcript.
+ * transcript shows `empty` instead. The commands that wait for approval on
+ * a Mac leave the transcript and stay in view just above the composer, in a
+ * region that scrolls when they need more room. Once answered, a command
+ * shows at its place in the transcript.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
@@ -32,8 +35,9 @@ export function ChatPane(props: {
   viewer: PersonKey
   viewport: Viewport
 }) {
+  const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
-  const pending = props.items.find(isPendingCommand)
+  const pending = props.items.filter(isPendingCommand)
   const transcript = props.items.filter((item) => !isPendingCommand(item))
   return (
     <section
@@ -64,7 +68,22 @@ export function ChatPane(props: {
         </div>
       )}
       <div className={styles.footer}>
-        {pending ? <PendingCommand request={pending.request} /> : null}
+        {pending.length > 0 ? (
+          <div
+            aria-label="Commands that wait for an answer"
+            className={styles.requests}
+            role="group"
+          >
+            {pending.map((item, index) => (
+              <PendingCommand
+                key={item.id}
+                open={mac?.choicesOpen === true && index === 0}
+                request={item.request}
+              />
+            ))}
+          </div>
+        ) : null}
+        {mac?.choicesOpen && pending.length > 0 ? <DrawnChoices /> : null}
         {props.notice}
         {props.problem ? (
           <SandboxBar problem={props.problem} />

@@ -11,7 +11,12 @@ export const macCommands = defineScreen({
     'The user asked that the Mac app registers the Mac as a device, and that each command needs permission, with these choices (decision 62). The user then asked for a compact message in the chat instead of a dialog, with the command and its actions (decision 62). The request goes to the Mac of the person who sent the turn, because each turn runs on its sender login (decision 49). The command runs with the permissions of the user, with an output limit.',
   relatedDocs: [],
   propSchema: macAppSchema,
-  props: { window: 'window', page: 'workspace', command: 'prompt' },
+  props: {
+    window: 'window',
+    page: 'workspace',
+    command: 'prompt',
+    change: 'none',
+  },
   useCasePaths: flow,
   render: (props) => <MacAppScreen state={props} />,
   variants: [

@@ -4,6 +4,7 @@ import { thisMac, type MacCommandRequest } from '../../fixtures/mac'
 import { people } from '../../fixtures/members'
 import { orgs } from '../../fixtures/orgs'
 import { checkoutAutocomplete } from '../../fixtures/workspaces'
+import { classes } from '../common/classes'
 import { CommandActions } from '../mac/CommandActions'
 import { useMacApp } from '../mac/MacApp'
 import type { Detail } from '../settings/DetailList'
@@ -78,9 +79,13 @@ function RequestDetails(props: { request: MacCommandRequest; mac: boolean }) {
  * pins just above the composer (decision 62): the exact command, the Mac,
  * the time limit, and Details. The Mac app of the sender shows Deny and
  * Allow. A browser shows the state only, because only the Mac app can
- * allow a command on the Mac.
+ * allow a command on the Mac. `open` draws the other ways to allow open:
+ * the chat draws them outside the region of the requests, at its actions.
  */
-export function PendingCommand(props: { request: MacCommandRequest }) {
+export function PendingCommand(props: {
+  request: MacCommandRequest
+  open?: boolean
+}) {
   const mac = useMacApp()
   const { request } = props
   return (
@@ -95,9 +100,9 @@ export function PendingCommand(props: { request: MacCommandRequest }) {
         <span className={styles.command}>
           <CommandLine command={request.command} />
         </span>
-        <span className={styles.end}>
+        <span className={classes(styles.end, props.open && styles.endDrawn)}>
           {mac ? (
-            <CommandActions choicesOpen={mac.choicesOpen} />
+            <CommandActions choicesOpen={props.open} />
           ) : (
             <CommandStatus state="waiting" />
           )}

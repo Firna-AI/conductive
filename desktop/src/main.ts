@@ -18,6 +18,8 @@ import {
   DESKTOP_SCHEME,
 } from '../../worker/security/desktop-contract.js'
 import { contentSecurityPolicy, readConfiguration } from './config.js'
+import { startMacDevice } from './device/main.js'
+import { workspaceDeviceAddress } from './device/notification.js'
 import { exportHandler, registerScheme } from './export-handler.js'
 import { startDesktop } from './lifecycle.js'
 import { installMenu } from './menu.js'
@@ -38,6 +40,42 @@ if (profile) app.setPath('userData', resolve(profile))
 let active: BrowserWindow | undefined
 let signIn: ReturnType<typeof createSignIn>
 let configuration: ReturnType<typeof readConfiguration>
+
+const createAppWindow = () => {
+  if (active && !active.isDestroyed()) return active
+  const statePath = resolve(app.getPath('userData'), 'window.json')
+  const window = createWindow({
+    create: (options) => new BrowserWindow(options),
+    readState: () => readFileSync(statePath, 'utf8'),
+    saveState: (value) => writeFileSync(statePath, value, { mode: 0o600 }),
+    visible: (bounds) =>
+      screen
+        .getAllDisplays()
+        .some(
+          ({ workArea }) =>
+            bounds.x < workArea.x + workArea.width &&
+            bounds.x + bounds.width > workArea.x &&
+            bounds.y < workArea.y + workArea.height &&
+            bounds.y + bounds.height > workArea.y,
+        ),
+    warn,
+  })
+  active = window
+  installNavigation(window.webContents, configuration.appOrigin, {
+    load: (url) => window.loadURL(url),
+    external: (url) => shell.openExternal(url),
+    signIn: () => signIn.start(),
+    preview: (url) =>
+      openPreviewInBrowser(url, {
+        appOrigin: configuration.appOrigin,
+        frameSources: configuration.frameSources,
+        fetch: (request) => window.webContents.session.fetch(request),
+        external: (address) => shell.openExternal(address),
+      }),
+    warn,
+  })
+  return window
+}
 
 startDesktop({
   app,
@@ -81,6 +119,29 @@ startDesktop({
         }
       },
     })
+    startMacDevice({
+      appOrigin: configuration.appOrigin,
+      rendererSession,
+      userData: app.getPath('userData'),
+      foreground: () =>
+        Boolean(
+          active &&
+          !active.isDestroyed() &&
+          active.isFocused() &&
+          active.isVisible() &&
+          !active.isMinimized(),
+        ),
+      openWorkspace: (request) => {
+        if (!active || active.isDestroyed()) app.emit('activate')
+        const window = active
+        if (!window || window.isDestroyed()) return
+        if (window.isMinimized()) window.restore()
+        window.show()
+        window.focus()
+        void window.loadURL(workspaceDeviceAddress(request)).catch(warn)
+      },
+      warn,
+    })
     if (app.isPackaged && process.platform === 'darwin')
       app.setAsDefaultProtocolClient('conducting')
     const updates = startUpdates({
@@ -112,39 +173,6 @@ startDesktop({
       updates.available,
     )
   },
-  createWindow: () => {
-    const statePath = resolve(app.getPath('userData'), 'window.json')
-    const window = createWindow({
-      create: (options) => new BrowserWindow(options),
-      readState: () => readFileSync(statePath, 'utf8'),
-      saveState: (value) => writeFileSync(statePath, value, { mode: 0o600 }),
-      visible: (bounds) =>
-        screen
-          .getAllDisplays()
-          .some(
-            ({ workArea }) =>
-              bounds.x < workArea.x + workArea.width &&
-              bounds.x + bounds.width > workArea.x &&
-              bounds.y < workArea.y + workArea.height &&
-              bounds.y + bounds.height > workArea.y,
-          ),
-      warn,
-    })
-    active = window
-    installNavigation(window.webContents, configuration.appOrigin, {
-      load: (url) => window.loadURL(url),
-      external: (url) => shell.openExternal(url),
-      signIn: () => signIn.start(),
-      preview: (url) =>
-        openPreviewInBrowser(url, {
-          appOrigin: configuration.appOrigin,
-          frameSources: configuration.frameSources,
-          fetch: (request) => window.webContents.session.fetch(request),
-          external: (address) => shell.openExternal(address),
-        }),
-      warn,
-    })
-    return window
-  },
+  createWindow: createAppWindow,
   receive: (address) => signIn.receive(address),
 })

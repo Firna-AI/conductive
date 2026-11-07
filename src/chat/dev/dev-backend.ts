@@ -25,6 +25,7 @@ import {
 import { endsTurn } from '../state/known-turns'
 import type { Clock } from '../ui/clock'
 import { DevAgent } from './dev-agent'
+import { DevMac, handleMacWrite, writeMacReplies } from './dev-mac'
 import { lossEvents } from './dev-loss'
 import type { DevOptions } from './dev-options'
 import { handleWrite } from './dev-routes'
@@ -39,6 +40,8 @@ export class DevBackend {
   readonly target: WorkspaceTarget
   readonly stream: DevStream
   readonly agent: DevAgent
+  /** The Mac that acts on the answers to Mac commands. */
+  readonly mac: DevMac
   readonly server: FakeApiServer
   readonly clock: Clock
   readonly messages = new Map<string, UserMessage>()
@@ -66,6 +69,7 @@ export class DevBackend {
     start: WorkspaceStart | null
     open: Session[]
     closed: Session[]
+    mac: DevMac
   }) {
     this.target = parts.target
     this.viewerId = parts.viewerId
@@ -76,6 +80,7 @@ export class DevBackend {
     this.start = parts.start
     this.open = parts.open
     this.closed = parts.closed
+    this.mac = parts.mac
     this.agent = new DevAgent(parts.stream, parts.clock)
   }
 
@@ -86,6 +91,8 @@ export class DevBackend {
       role: options.role,
       workspaceState: options.state,
       conversation: scenario === 'loss' ? 'history' : scenario,
+      macCommands: options.mac,
+      onMac: options.app === 'mac',
     })
     const org = FAKE_IDS.org
     const workspaceId =
@@ -136,8 +143,15 @@ export class DevBackend {
       start: detail.start,
       open: [...list.sessions],
       closed: [...list.history],
+      mac: new DevMac(
+        options.mac,
+        clock.now(),
+        options.app === 'mac',
+        options.change,
+      ),
     })
     backend.note(recorded.map((envelope) => envelope.event))
+    writeMacReplies(backend)
     if (options.workspace === 'new') {
       followTitle(backend)
       if (options.state !== 'starting') takeState(backend, options.state)
@@ -151,7 +165,9 @@ export class DevBackend {
       input instanceof Request
         ? new Request(input, init)
         : new Request(new URL(String(input), FAKE_ORIGIN), init)
-    const written = await handleWrite(this, request)
+    const written =
+      (await handleMacWrite(this, request)) ??
+      (await handleWrite(this, request))
     return written ?? this.server.fetch(request)
   }
 

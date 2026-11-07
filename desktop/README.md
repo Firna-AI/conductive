@@ -3,12 +3,17 @@
 This package bundles the web app in a small Electron shell.
 It targets macOS arm64 and x64.
 Agents still run in cloud computers.
-The web app currently shows only the product name.
+The desktop renderer composes the shared React app shell with desktop services.
 
 The shell uses `conducting-app://desktop`.
 It has no preload script or privileged renderer bridge.
 Only the bundled main frame can use a sanitized clipboard write.
 All other permissions are denied.
+
+The desktop entry supplies the configured Worker origin to the app's API and event services.
+API calls use `credentials: include`, so Chromium sends the HttpOnly desktop session cookie.
+Workspace sockets use the same Worker origin.
+The renderer keeps its normal `fetch` function and has no OS bridge.
 
 ## Development
 
@@ -53,6 +58,52 @@ The app has one instance.
 Closing the last window leaves the Mac app in the Dock.
 The Dock can reopen the window.
 
+## Device commands
+
+The main process connects the signed-in, awake Mac to the Worker.
+It reads the desktop cookie from the Chromium session.
+The renderer sends approval and settings choices through the Worker relay.
+It receives no cookie or local command bridge.
+
+Local permissions belong to the signed-in account on this Mac.
+The app keeps exact allowed commands and workspace deadlines under its private user-data directory.
+The settings name comes from the OS hostname.
+The connection sends that hostname as display metadata for command requests.
+Remove and Stop revoke permissions in memory even when saving fails.
+The revocation stays in force for the rest of the app run, including reconnects.
+A failed save can restore the old permission after a full app restart.
+Settings replies report whether the change was saved.
+A settings reply that is too large fails its own operation and keeps commands connected.
+Commands run in the user's shell with bounded output and time.
+Folders `~` and `~/...` use the local OS account's home directory.
+Other folder values stay exact. The app does not expand shell variables in them.
+Sleep, sign-out, cookie replacement, connection loss, and app exit cancel the command process groups.
+A replacement connection stops automatic retries on the old Mac.
+Wake or a cookie change can connect it again.
+
+Background requests show a native notification.
+A click restores the window and opens the request's workspace.
+It does not approve the request.
+See the [Mac app protocol](../docs/protocol/desktop-app.md) for the device requirements.
+
+Focused device checks use these commands:
+
+```sh
+npm --prefix desktop run test:logic -- src/device
+npm --prefix desktop run test:electron -- tests/device-command.spec.ts
+npm --prefix desktop run test:electron -- tests/approval-region.spec.ts
+```
+
+Build the desktop app before the Electron check.
+That check uses an isolated relay and the real main process, cookie store, shell, and power-event hooks.
+It checks command results and process-group cancellation on sleep and sign-out.
+The existing shell check continues to check renderer isolation and session persistence.
+The [Mac notification test](tests/device-notification.spec.ts) reopens a closed window and keeps its request after Dock activation.
+Native notification display and click behavior also need a Mac smoke check.
+
+The main-process socket uses `ws` because the native WebSocket API cannot set authenticated upgrade headers.
+`@types/ws` supplies its TypeScript types.
+
 ## Window integration
 
 The hidden native title bar places the traffic lights at x=14 and y=11.
@@ -64,8 +115,8 @@ Window Controls Overlay removes the reserve in full screen without a bridge.
 The bar moves the window.
 Its buttons use `no-drag`.
 
-The current minimal web app has no sidebar.
-Its left control strip does not complete the full product mockup.
+The shared app shell supplies the sidebar and product pages.
+The desktop chrome strip remains separate from the app's panels.
 The product UI must place the chrome slot inside its left panel.
 It must add its working sidebar control in `data-desktop-panel-slot`.
 It must mark its other top bars as drag regions and their controls as no-drag.
@@ -93,6 +144,7 @@ It checks 0px in full screen and 64px after leaving full screen.
 It waits for the native full-screen events before checking the layout.
 Other hosts skip this test.
 The `test:logic` command uses the repository's Vitest runner with the desktop configuration.
+The typecheck checks main and scripts with NodeNext, then renderer and Electron tests with the app's bundler resolution.
 The root gate includes these unit tests once.
 It also runs desktop typecheck, lint, and formatting checks.
 It does not build, launch, or package Electron.
@@ -147,8 +199,18 @@ It offers Restart now or Later once for each downloaded version.
 ### Key code
 
 - [Main process](src/main.ts) composes the protocol, window, session, and updater.
+- [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation.
+- [Renderer services](renderer/services.ts) routes credentialed API calls and event sockets to the configured Worker.
 - [Window](src/window.ts) owns native controls and saved bounds.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.
+- [Device composition](src/device/main.ts) connects cookie, power, notification, and app-exit hooks.
+- [Device session factory](src/device/session-factory.ts) keeps each account's permission store across connections and disposes all stores at app exit.
+- [Device connection](src/device/connection.ts) owns authentication, pairing, heartbeat, and reconnect state.
+- [Device session](src/device/session.ts) owns pending requests, scoped approvals, settings operations, and cancellation.
+- [Device settings](src/device/settings.ts) reports change outcomes and checks settings replies against the device message budget.
+- [Local permissions](src/device/permissions.ts) owns exact command rules and workspace deadlines.
+- [Command runner](src/device/runner.ts) owns time and output limits through injected process and clock boundaries.
+- [Device contract](../src/shared/device.ts) supplies shared message types, routes, and wire limits.
 - [Desktop contract](../worker/security/desktop-contract.ts) shares the desktop origin and session cookie format without Worker dependencies.
 - [Navigation](src/navigation.ts) keeps remote pages outside the main frame.
 - [Preview launch](src/preview.ts) exchanges an authenticated launcher for a short browser handoff.

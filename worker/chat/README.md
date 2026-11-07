@@ -14,8 +14,9 @@ for other milestones.
 ## Entry points
 
 `Workspace` in [`worker/workspace.ts`](../workspace.ts) is the Durable
-Object class. Its `fetch` gives each request to `WorkspaceChat.fetch` in
-`backend.ts`, which serves these routes. The path helpers live in
+Object class. Its `fetch` gives device paths to the device feature first.
+It gives each other request to `WorkspaceChat.fetch` in `backend.ts`,
+which serves these routes. The path helpers live in
 `src/shared/sessions.ts`, `src/shared/events.ts`, and
 `src/shared/agent-tools.ts`.
 
@@ -151,8 +152,9 @@ npm run typecheck
 ## Seams for other milestones
 
 `WorkspaceChat` takes `ChatDependencies` from `types.ts` as overrides.
-`Workspace` sets `matchesObject`. The other hooks keep their defaults until
-their owners set them.
+`Workspace` sets `matchesObject` and `runnerEventStored`. The latter starts
+device cleanup when a turn ends. A later handler must keep that call.
+The other hooks keep their defaults until their owners set them.
 
 Other features can add events to the same numbered history. The method
 depends on where the code runs:
@@ -168,8 +170,9 @@ depends on where the code runs:
 
 ### Milestone 8i: the outer Worker
 
-- Today `createApp` in `worker/application.ts` forwards no request to the
-  Durable Object. It answers the machine hostname with a stub.
+- `createApp` in `worker/application.ts` forwards the Mac device routes to
+  the Durable Object. Other machine routes still get a stub. See
+  [Mac device commands](../devices/README.md).
 - Forward each chat route and the runner route to
   `env.WORKSPACES.get(env.WORKSPACES.idFromName(workspaceId))`.
 - Use the decoded workspace ID as the name.
@@ -182,8 +185,8 @@ depends on where the code runs:
 
 ### Milestone 5: workspace lifecycle
 
-- `Workspace.fetch` gives every request to the chat. Match the lifecycle
-  routes before that call.
+- `Workspace.fetch` tries device routes, then gives the remaining requests
+  to chat. Match lifecycle routes before the chat call.
 - `authorizeBrowser` gives a lifecycle route the same gate and workspace
   check. It reads the body, so do not pass that request on to `fetch`.
 - `runnerReady(workspaceId, publish)` runs after the Durable Object stores

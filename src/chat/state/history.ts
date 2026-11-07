@@ -24,7 +24,7 @@ async function loadHistory(
     const log = logOf(context, sessionId)
     log.merge(chatEventsOf(sessionId, own))
     context.store.update((snapshot) =>
-      withTranscript(snapshot, sessionId, log.transcript),
+      withTranscript(snapshot, sessionId, log.transcript, log.times),
     )
     mark('ready')
     return history.throughEventNumber

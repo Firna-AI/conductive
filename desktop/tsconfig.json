@@ -15,5 +15,5 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src", "renderer", "scripts", "tests", "*.ts"]
+  "include": ["src", "scripts", "*.ts"]
 }

@@ -3,11 +3,13 @@ import { FolderGit2, GitBranch } from 'lucide-react'
 import type { Workspace, WorkspaceState } from '../../shared/workspaces'
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
 import header from '../../../docs/mockups/src/components/workspace/WorkspaceHeader.module.css'
+import { ThisMacSection } from '../device/ThisMacSection'
 import type { Clock } from '../ui/clock'
 import { WorkspaceChat } from '../WorkspaceChat'
 import type { DevBackend } from './dev-backend'
 import type { DevOptions } from './dev-options'
 import { DevControls } from './DevControls'
+import { DevMacBanner } from './DevMacBanner'
 import styles from './DevPage.module.css'
 
 const stateLabels: Readonly<Record<WorkspaceState, string>> = {
@@ -100,12 +102,29 @@ export function DevPage(props: {
     />
   )
   const controls = <DevControls backend={backend} log={log} options={options} />
+  const account = options.page === 'this-mac'
+  const banner =
+    options.app === 'mac' && !account ? (
+      <DevMacBanner backend={backend} clock={props.clock} />
+    ) : null
+  const shown = account ? (
+    <div className={styles.account}>
+      <ThisMacSection
+        clock={props.clock}
+        fetch={backend.fetch}
+        viewport={options.viewport}
+      />
+    </div>
+  ) : (
+    chat
+  )
   if (mobile) {
     return (
       <div className={styles.mobileRoot}>
         <div className={styles.phone}>
-          <DevHeader mobile workspace={workspace} />
-          {chat}
+          {banner}
+          {account ? null : <DevHeader mobile workspace={workspace} />}
+          {shown}
         </div>
         {controls}
       </div>
@@ -115,8 +134,9 @@ export function DevPage(props: {
     <div className={styles.desktop}>
       {controls}
       <main className={styles.centre}>
-        <DevHeader mobile={false} workspace={workspace} />
-        {chat}
+        {banner}
+        {account ? null : <DevHeader mobile={false} workspace={workspace} />}
+        {shown}
       </main>
       <aside aria-label="Files and tools" className={styles.right} />
     </div>

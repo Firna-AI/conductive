@@ -9,7 +9,12 @@ export const macWindow = defineScreen({
     'The user asked for the native window buttons in the top bar of the app, as in Conductor, because the app must look like a serious desktop app (decision 62). The top bars move the window, and their buttons do not. The page keeps the space of the window buttons, and gives it back in full screen, where macOS hides them.',
   relatedDocs: [],
   propSchema: macAppSchema,
-  props: { window: 'window', page: 'workspace', command: 'none' },
+  props: {
+    window: 'window',
+    page: 'workspace',
+    command: 'none',
+    change: 'none',
+  },
   render: (props) => <MacAppScreen state={props} />,
   variants: [
     {

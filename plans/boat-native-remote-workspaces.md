@@ -5095,23 +5095,101 @@ Depends on: 15, 15e
 Let agents run commands on the user's Mac, as decision 62 says. No other
 milestone waits for it.
 
-- [ ] Register the Mac as a device of the signed-in user while the app
+Scope call, approved by the user on 6 November 2026: this branch may add
+device-only routing in `worker/application.ts`, a gated device operation
+in `worker/workspace.ts`, and the Mac command token rule in
+`docs/protocol/access-and-security.md`. The device operation reads the
+active turn's sender from stored records. New request bodies use the
+existing bounded reader until Milestone 4c supplies its JSON helper.
+
+Milestone 4c merged on 6 November 2026. The device routes and the agent
+tools handler now use its shared `readJsonObject` helper.
+
+Scope call, approved by the user on 7 November 2026: correct the four
+routing and hook statements in `worker/chat/README.md` for review item 5.
+The orchestrator owns the review after this branch's next push.
+
+Fix round 1, approved by the user on 7 November 2026:
+
+- Finding 31 B: bound the shared approval region, show its scroll edge,
+  and put the Allow menu in the top layer. Keep keyboard scrolling.
+- Finding 32 D, failure reply only: return a small settings failure when
+  a result exceeds one frame. Keep the connection and commands. Add no
+  save limit.
+- Finding 33 D: remove permissions from memory and cancel a stopped
+  window's timer before saving. Return done, done but not saved, or failed.
+  Keep each control's failure through refresh and a pairing change.
+- Finding 6 D: return the existing store key with each request. Use the
+  key in URLs, and keep the agent's exact stable retry ID.
+- Finding 7 C: inject one device clock. Test deadlines through the real
+  alarm, including a restarted broker, before and at each deadline.
+- Finding 8 C: fail the real D1 write with a temporary trigger. Restart
+  the object and test recovery through browser replay.
+- Finding 9 B: delete the three confirmed unused device helpers.
+
+The scope includes the shared approval CSS and the settings failure
+mockup states. The orchestrator owns review after the push.
+
+Milestone 4g merged on 7 November 2026. Public device requests use its
+default entry budget. New private device HTTP bodies keep the existing
+1 MB budget at their own entry. JSON parsing uses the shared helper.
+
+Fix round 2, approved by the user on 7 November 2026, is the last round.
+Finding 34 B keeps one permission store for each user for the app run.
+Sessions share that user's store, and app exit disposes every store.
+The registry and session factory live outside the Electron composition.
+A failed initial file read can retry at the next connection if no change
+has happened since. A reconnect never reverses a revocation whose save failed.
+The regression keeps its separate full-app-restart assertion.
+Findings 10 and 11 remain in their follow-up items after the merge.
+The orchestrator merges after this round. No further review runs here.
+
+Implementation calls, 6 November 2026:
+
+- Keep one current authenticated Mac connection for each sender. A new
+  connection replaces the old one and ends its work. This milestone adds
+  no device picker or broadcast.
+- A command belongs to its active stored turn. Ending that turn cancels
+  its pending or running commands, and a late answer cannot restart them.
+- Keep at most 65,536 UTF-8 bytes of combined output. Escaped output then
+  fits within the device message budget.
+- Use the existing command card for timeout, launch failure, nonzero exit,
+  and cut output. Stack pending requests above the composer. These are
+  outcomes of the approved command limits, without a new screen or flow.
+- Show command and folder text through one literal renderer. Keep line
+  breaks and show hidden characters by code point. Keep the original text
+  for execution, saved choices, and copies. This prevents a command from
+  hiding a second executable line in its approval.
+- Use one success rule for CLI, MCP, and chat: a completed command with
+  exit code 0. A completed process can still have failed.
+
+- [x] Register the Mac as a device of the signed-in user while the app
       runs and the Mac is awake, over one connection to the Worker.
-- [ ] Add the "run a command on the Mac" agent tool. Route each request to
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+- [x] Add the "run a command on the Mac" agent tool. Route each request to
       the Mac of the person who sent the turn, and answer "not available"
       when that Mac is not connected.
-- [ ] Show the permission prompt with Deny, Allow, Always allow, and Allow
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+- [x] Show the permission prompt with Deny, Allow, Always allow, and Allow
       all commands for 15 minutes, and a macOS notification when the app
       is in the background.
-- [ ] Run the command with its time limit and an output limit, and return
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+- [x] Run the command with its time limit and an output limit, and return
       the output to the agent.
-- [ ] Keep the always-allowed commands and the 15-minute window on the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+- [x] Keep the always-allowed commands and the 15-minute window on the
       Mac, with Remove and Stop.
-- [ ] Test the prompt choices, the time limits, and the offline answer.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+- [x] Test the prompt choices, the time limits, and the offline answer.
       Update `docs/protocol/desktop-app.md` and
       `docs/protocol/agent-tools.md`.
-- [ ] Set the workspace state to needs input while a command request
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+- [x] Set the workspace state to needs input while a command request
       waits, and back when the user answers it, as decision 68 says.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15f`.
+
+Evidence: `.context/boat-native-remote-workspaces/verification/` and the
+three implementation reports under `.context/boat-native-remote-workspaces/reports/`.
 
 ## Milestone 16: Deployment and live smoke test
 

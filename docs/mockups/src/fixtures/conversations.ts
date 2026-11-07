@@ -81,6 +81,7 @@ export const conversationKeys = [
   'queued',
   'first-turn',
   'mac-waiting',
+  'mac-waiting-many',
   'mac-waiting-suite',
   'mac-denied',
   'mac-done',
