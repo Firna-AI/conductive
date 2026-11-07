@@ -3346,6 +3346,32 @@ we can use for it".
   - Milestone 15j does the rename. It starts now and merges after the
     open milestones, so that it renames the names that they add.
 
+
+### 101. Decide who owns the GitHub App
+
+Added on 7 November 2026, when the user asked to set up the GitHub App and
+Cloudflare.
+
+- **Options:**
+  - **A.** The Firna-AI organization.
+  - **B.** The user's personal account.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 7 November 2026. The app is named
+  "Conductive".
+
+### 103. Let agents change GitHub workflow files
+
+Added on 7 November 2026, with decision 101.
+
+- **Background:** GitHub refuses a push that changes `.github/workflows/`
+  unless the app has the Workflows permission.
+- **Options:**
+  - **A.** No Workflows permission.
+  - **B.** The app asks for the Workflows permission, so agents can change
+    CI files.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 7 November 2026.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
