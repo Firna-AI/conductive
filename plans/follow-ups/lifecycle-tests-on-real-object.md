@@ -1,0 +1,23 @@
+# The lifecycle tests skip the real workspace object
+
+- **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-08, split off from finding 9 of PR #45, branch `conductor/boat-native-remote-workspaces-milestone-15m`, round 1, option E of its check.
+- **Location:** `worker/lifecycle/backend-test-platform.ts`, which 29 lifecycle test files use, and `worker/workspace.ts`.
+- **Reason:** the fix reaches 29 test files outside the diff, and it is Large.
+
+- **Terms:**
+  - **Workspace object:** the Durable Object that owns one workspace's lifecycle and chat in production.
+  - **Miniflare:** the local Cloudflare runtime that runs the real object with its native SQLite storage.
+- **Background:** Most lifecycle tests run the controller over a hand-written store, `MemoryWorkspaceStorage`, with a fake clock. A few native tests run the real object in Miniflare. PR #45 adds one native case for the suspension.
+- **Problem:** A method that the object only forwards gets no test of its own, because the testing rules give trivial code no test. So a no-op or a wrong forward passes the gate, as `Workspace.suspendLifecycle` did on PR #45.
+- **Impact if no action:** The next forwarded lifecycle method can break in production while every test passes.
+- **Root question:** How do the lifecycle tests reach the production object, its RPC wrapper, and its native storage?
+- **Options:**
+  - **D.** Generate the plain forwarders of `Workspace` and `workspaceLifecycleEndpoint` from one typed list, so that no forwarder can be a no-op or call the wrong method. TypeScript needs casts, and a method that does more than forward stays outside the list. Effort: Medium.
+  - **E.** Run the lifecycle test fixture on the real object in Miniflare, through `workspaceLifecycleEndpoint`, and remove the hand-written store. It needs a clock seam inside the object, native forms of the fixture's restart, hold, and alarm helpers, changes to 29 test files, and a slower gate. Effort: Large.
+- **Left out:** A Node stub of the Workers runtime that builds the real class over a fake state, because it replaces one hand-written store with another.
+- **Wider fix:** E.
+- **Previous examples:** the deleted follow-up `lifecycle-race-tests-storage`, whose fix `4e9c731` kept the fake store, and finding 9 of PR #45.
+- **Recommendation:** E. It keeps every lifecycle test on the real object, whatever shape the next defect takes.
+- **Action:** fix after merge, apply E, because it reaches 29 test files outside the diff of PR #45.

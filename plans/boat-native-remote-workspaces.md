@@ -3799,6 +3799,93 @@ Added on 8 November 2026 from the `futex-ai/ui` workspace of decision 119.
 - **Chosen:** A, by the user on 8 November 2026. The orchestrator merged
   #180 as `3cc857c` in `futex-ai/ui`.
 
+### 123. Decide who may receive a workspace when admins are suspended
+
+Added on 8 November 2026 from finding 12 of PR #45 (Milestone 15m).
+
+- **Background:** A member's workspaces move to the earliest admin when the
+  member leaves, and the last-admin check counts suspended admins. A
+  workspace whose owner is suspended cannot start, and it gets no disk
+  restart near day 14.
+- **Options:**
+  - **A.** Keep the rules, and state that the workspace stays blocked.
+  - **B.** Never give a workspace to a suspended member. Block the leave
+    when no active admin exists.
+  - **C.** Skip suspended admins in the automatic move. Confirm a manual
+    move to a suspended member.
+  - **D.** Skip suspended admins when an active admin exists. A manual
+    move to a suspended member fails.
+  - **E.** One shared rule of an active admin: the automatic move picks
+    the earliest active admin, the last-admin check counts only active
+    admins, an org with no active admin gives the workspaces to the
+    earliest member who is not suspended, and a manual move to a
+    suspended member fails.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 8 November 2026. Milestone 15m applies it
+  in PR #45.
+
+### 124. Accept that a copied workspace token outlives access
+
+Added on 8 November 2026 from the check of finding 5 of PR #45.
+
+- **Background:** Each member with a terminal in a cloud computer can read
+  its workspace token. A copied token keeps the runner connection, the git
+  credential route, and the agent tools after its member is removed or
+  suspended. So that member can collect the agent logins and GitHub tokens
+  of later turns.
+- **Options:**
+  - **A.** State the risk in the access protocol.
+  - **B.** Replace the tokens of the org's workspaces when a member loses
+    access.
+  - **C.** A machine identity that a copied token cannot reuse.
+- **Recommendation:** B.
+- **Chosen:** A now, by the user on 8 November 2026. Milestone 15m states
+  the risk. The user asked to review the other approaches later:
+  `plans/follow-ups/workspace-token-after-access-loss.md`.
+
+### 125. Decide the disk restart of a suspended owner's workspaces
+
+Added on 8 November 2026 from the check of finding 10 of PR #45.
+
+- **Background:** Milestone 15m skips the disk restart near day 14 for the
+  workspaces of a suspended owner, so their disks can be deleted with the
+  members' unpushed work.
+- **Options:**
+  - **A.** Keep the disk restart.
+  - **B.** Skip it, and tell the members that an admin can move the
+    workspace.
+  - **C.** Skip it, and keep the disk with a saved snapshot.
+- **Recommendation:** B.
+- **Open:** the user asked for an explanation on 8 November 2026.
+  `plans/follow-ups/suspended-owner-disk-restart.md` holds the item.
+
+### 126. Decide when a changed Terms revision applies
+
+Added on 8 November 2026 from the check of finding 7 of PR #45.
+
+- **Options:**
+  - **A.** At the next sign-in, within 7 days.
+  - **B.** At once, with a consent page that blocks the app.
+  - **C.** At the next sign-in, with an email about the change.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026. Milestone 15m states the
+  rule in the Sign-in section of the access protocol.
+
+### 127. Keep the marketing pictures fresh by hand
+
+Added on 8 November 2026 from the check of finding 8 of PR #46
+(Milestone 7w).
+
+- **Background:** The marketing site shows 26 stored pictures of mockup
+  screens. Nothing finds a stale picture.
+- **Options:**
+  - **A.** Keep the README rule, and capture again by hand.
+  - **D.** A picture drift check in the gate.
+  - **E.** Make the pictures in the build.
+  - **F.** Draw the screens on the site as HTML.
+- **Recommendation:** D.
+- **Chosen:** A, by the user on 8 November 2026.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
