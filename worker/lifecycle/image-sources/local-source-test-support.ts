@@ -20,6 +20,7 @@ import {
   nativeGit,
 } from './native-process-test-support'
 import { createGitHubImageSourceMaterializer } from './materialize'
+import { SourceCommandPort } from './source-commands'
 import { SOFTWARE } from '../backend-test-support'
 
 /** Real Git, a local bare GitHub repository, and the real private claim handler. */
@@ -157,7 +158,10 @@ export async function localSourceFixture(
       origin,
       harness.boat.fetch,
     )
-    const fullInput = { ...input, provider }
+    const fullInput = {
+      ...input,
+      commands: new SourceCommandPort(provider, input.sandboxId),
+    }
     const prepare = () =>
       createGitHubImageSourceMaterializer(env, { fetch: access.fetch })(
         fullInput,

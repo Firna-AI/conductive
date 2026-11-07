@@ -1,31 +1,37 @@
-import { providerState } from './provider-state'
 import type { ImageBuild } from '../../src/shared/org-settings'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
+import {
+  nextProviderRetry,
+  providerRetryPending,
+  providerRetryExpired,
+  ProviderRetryExhausted,
+} from './provider-retry'
+import {
+  progressImageRetry,
+  saveImageRetry,
+  clearImageRetryStatement,
+} from './image-retry-data'
+import { readSourceJob } from './image-sources/source-data'
+import { imageSourceFailure } from './image-sources/materialize'
+import { advanceBuildStep } from './image-build-steps'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
+import type { SourceCommandPort } from './image-sources/source-commands'
 import { requireOrgMember } from './access'
 import {
-  assignBuildSandbox,
-  assignBuildSnapshot,
   failBuild,
   insertBuild,
   jobSoftware,
-  publishBuild,
   readBuildJob,
   runningBuild,
   updateBuildJob,
 } from './build-data'
-import { advanceBuildCommand, cleanupBuild } from './build-execution'
+import { cleanupBuild } from './build-execution'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { IMAGE_DAY_MS, scheduleIdleImage } from './image-schedule'
-import {
-  buildSandboxIntent,
-  buildSnapshotIntent,
-  createResource,
-} from './resource-intents'
 import {
   firstOrgAdmin,
   readImageSettings,
@@ -36,7 +42,6 @@ import {
 import {
   capturedRepositoryLocations,
   repositoryLocations,
-  readRepositoryLocations,
   type RepositoryLocation,
 } from './repository-locations'
 
@@ -57,7 +62,7 @@ export type PrepareImageSources = (input: {
   repositories: readonly SelectedRepository[]
   repositoryLocations?: readonly RepositoryLocation[]
   previousRepositoryLocations?: readonly RepositoryLocation[]
-  provider: SandboxProvider
+  commands: SourceCommandPort
 }) => Promise<boolean | void>
 
 export interface ImageRuntime {
@@ -171,6 +176,21 @@ export async function advanceImageBuild(
   let job = await readBuildJob(env.DB, orgId, buildId)
   let provider: SandboxProvider | undefined
   try {
+    if (job.phase === 'sources' && job.state === 'running') {
+      const source = await readSourceJob(env.DB, buildId)
+      if (source && (source.failed || source.phase === 'abort')) {
+        await clearImageRetryStatement(env.DB, buildId).run()
+        if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))
+          return false
+        throw imageSourceFailure()
+      }
+    }
+    if (
+      job.state === 'running' &&
+      job.phase !== 'cleanup' &&
+      providerRetryPending(job.providerRetry, dependencies.now())
+    )
+      return false
     if (
       (job.phase === 'cleanup' || job.state !== 'running') &&
       !(await cleanupBuildImageSources(env, dependencies.fetch, buildId))
@@ -187,79 +207,29 @@ export async function advanceImageBuild(
     )
     if (job.phase === 'cleanup' || job.state !== 'running')
       return await cleanupBuild(runtime, provider, job)
-    if (job.phase === 'create') {
-      const sandbox = await createResource(
-        provider,
-        buildSandboxIntent(env.DB, job),
-      )
-      await assignBuildSandbox(env.DB, buildId, sandbox.id)
-      await updateBuildJob(env.DB, buildId, 'sources')
-      return false
-    }
-    if (!job.sandboxId) throw new Error('Missing build sandbox')
-    const machine = await provider.get(job.sandboxId)
-    const status = providerState(machine.state)
-    if (status === 'error' || status === 'stopped')
-      throw new Error('Image sandbox did not start')
-    if (status !== 'ready') return false
-    // A long build receives the same safety deadline as other active work.
-    await provider.setAutoStop(job.sandboxId, 1_800)
-    if (job.phase === 'snapshot') {
-      const snapshot = await createResource(
-        provider,
-        buildSnapshotIntent(env.DB, job),
-      )
-      await assignBuildSnapshot(env.DB, buildId, snapshot.name)
-      if (snapshot.status === 'failed') throw new Error('Image save failed')
-      if (snapshot.status === 'ready')
-        await updateBuildJob(env.DB, buildId, 'publish')
-      return false
-    }
-    if (job.phase === 'publish') {
-      await publishBuild(env.DB, job, dependencies.now())
-      job = await readBuildJob(env.DB, orgId, buildId)
-      return await cleanupBuild(runtime, provider, job)
-    }
-    if (job.phase === 'sources') {
-      const prepared = await runtime.prepareSources({
-        orgId,
-        buildId,
-        sandboxId: job.sandboxId,
-        repositories: readRepositories(JSON.parse(job.repositoriesJson)),
-        repositoryLocations: capturedRepositoryLocations(
-          job.repositoryLocationsJson,
-          readRepositories(JSON.parse(job.repositoriesJson)),
-        ),
-        previousRepositoryLocations:
-          job.previousRepositoryLocationsJson === null
-            ? undefined
-            : readRepositoryLocations(
-                JSON.parse(job.previousRepositoryLocationsJson),
-              ),
-        provider,
-      })
-      if (prepared === false) return false
-      await updateBuildJob(
-        env.DB,
-        buildId,
-        job.kind === 'refresh' ? 'snapshot' : 'software',
-      )
-      return false
-    }
-    return await advanceBuildCommand(runtime, provider, job)
+    if (providerRetryExpired(job.providerRetry, dependencies.now()))
+      throw new ProviderRetryExhausted()
+    const done = await advanceBuildStep(runtime, provider, job)
+    if (!done) await progressImageRetry(env.DB, buildId)
+    return done
   } catch (error) {
+    job = await readBuildJob(env.DB, orgId, buildId)
     if (job.phase === 'cleanup' || job.state !== 'running') throw error
+    const retry = nextProviderRetry(
+      job.providerRetry,
+      error,
+      dependencies.now(),
+    )
+    if (retry) {
+      await saveImageRetry(env.DB, buildId, retry)
+      return false
+    }
     if (
       provider &&
       job.phase === 'create' &&
       !job.sandboxId &&
-      (!(error instanceof ProviderError) ||
-        [
-          'unavailable',
-          'invalid_response',
-          'conflict',
-          'rate_limited',
-        ].includes(error.kind))
+      !(error instanceof ProviderRetryExhausted) &&
+      !(error instanceof ProviderError)
     )
       return false
     const message =

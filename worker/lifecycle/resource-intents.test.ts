@@ -13,67 +13,90 @@ import { buildSnapshotIntent } from './resource-intents'
 
 const backendFixture = setupBackendTests()
 
-it('cleans up a saved image after a lost reply and retains its name for Delete org', async () => {
-  const fixture = await backendFixture()
-  try {
-    const { images, org, user, boat, runtime, harness } = fixture
-    const buildId = await startImageBuild(images, {
-      orgId: org.id,
-      userId: user.id,
-      kind: 'build',
-      software: SOFTWARE,
-    })
-    const save = boatRoute({ operation: 'saveSnapshot' })
-    let intentAtSave: string | null = null
-    images.dependencies = {
-      ...images.dependencies,
-      fetch: async (request) => {
-        if (
-          request.method === save.method &&
-          new URL(request.url).pathname.endsWith(save.path)
-        ) {
-          intentAtSave = (await readBuildJob(runtime.env.DB, org.id, buildId))
-            .snapshotName
-          await boat.fetch(request)
-          throw new Error('Lost successful snapshot reply')
-        }
-        return boat.fetch(request)
-      },
+it.each([
+  ['recovers', false, 'succeeded'],
+  ['cleans up', true, 'failed'],
+] as const)(
+  '%s a saved image after a lost reply and retains its name for Delete org',
+  async (_action, refuseLookup, state) => {
+    const fixture = await backendFixture()
+    try {
+      const { images, org, user, boat, runtime, harness } = fixture
+      const buildId = await startImageBuild(images, {
+        orgId: org.id,
+        userId: user.id,
+        kind: 'build',
+        software: SOFTWARE,
+      })
+      const save = boatRoute({ operation: 'saveSnapshot' })
+      const lookup = boatRoute({
+        operation: 'getSnapshot',
+        name: `image-${buildId}`,
+      })
+      let intentAtSave: string | null = null
+      images.dependencies = {
+        ...images.dependencies,
+        fetch: async (request) => {
+          if (
+            refuseLookup &&
+            request.method === lookup.method &&
+            new URL(request.url).pathname.endsWith(lookup.path)
+          )
+            return Response.json(
+              { ok: false, code: 'forbidden' },
+              { status: 403 },
+            )
+          if (
+            request.method === save.method &&
+            new URL(request.url).pathname.endsWith(save.path)
+          ) {
+            intentAtSave = (await readBuildJob(runtime.env.DB, org.id, buildId))
+              .snapshotName
+            await boat.fetch(request)
+            throw new Error('Lost successful snapshot reply')
+          }
+          return boat.fetch(request)
+        },
+      }
+
+      await expect(finishImageBuild(fixture, buildId)).resolves.toBeUndefined()
+
+      expect(boat.deletedSnapshots).toEqual([
+        refuseLookup ? `image-${buildId}` : 'last-good-image',
+      ])
+      expect(intentAtSave).toBe(`image-${buildId}`)
+      expect(await readBuildJob(runtime.env.DB, org.id, buildId)).toMatchObject(
+        {
+          state,
+          phase: 'done',
+          snapshotName: `image-${buildId}`,
+          sandboxId: null,
+        },
+      )
+      expect(boat.deletedIds).toEqual(['bx_1'])
+      expect(
+        (await readBuildHistory(runtime.env.DB, org.id)).currentImageBuildId,
+      ).toBe(refuseLookup ? 'published-image' : buildId)
+
+      await deleteOrg(
+        runtime.env,
+        org.id,
+        user.id,
+        org.name,
+        runtime.dependencies,
+        membersClient(harness).hooks,
+      )
+      expect(await cleanupResources(runtime.env.DB, org.id)).toContainEqual({
+        kind: 'snapshot',
+        id: `image-${buildId}`,
+        stoppedAt: null,
+        removedAt: null,
+      })
+    } finally {
+      await fixture.dispose()
     }
-
-    await finishImageBuild(fixture, buildId)
-
-    expect(boat.deletedSnapshots).toEqual([`image-${buildId}`])
-    expect(intentAtSave).toBe(`image-${buildId}`)
-    expect(await readBuildJob(runtime.env.DB, org.id, buildId)).toMatchObject({
-      state: 'failed',
-      phase: 'done',
-      snapshotName: `image-${buildId}`,
-      sandboxId: null,
-    })
-    expect(boat.deletedIds).toEqual(['bx_1'])
-    expect(
-      (await readBuildHistory(runtime.env.DB, org.id)).currentImageBuildId,
-    ).toBe('published-image')
-
-    await deleteOrg(
-      runtime.env,
-      org.id,
-      user.id,
-      org.name,
-      runtime.dependencies,
-      membersClient(harness).hooks,
-    )
-    expect(await cleanupResources(runtime.env.DB, org.id)).toContainEqual({
-      kind: 'snapshot',
-      id: `image-${buildId}`,
-      stoppedAt: null,
-      removedAt: null,
-    })
-  } finally {
-    await fixture.dispose()
-  }
-})
+  },
+)
 
 it('replays an undispatched snapshot intent and waits for a racing save before publication', async () => {
   const fixture = await backendFixture()

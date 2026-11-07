@@ -102,6 +102,14 @@ the invite, the roles, and the removal there.
   does, the follower reads the final log. When this update arrives during
   an active read, the follower keeps it. After that read, the follower
   reads again, unless that answer already shows the new state.
+- Each read of the follower gets the build details at `buildPath`: the
+  build with its full log, in one answer. The follower takes the state and
+  the lines from the same answer, never from two reads. The follower sends
+  this read at the start, on its timer, for Try again, and when the builds
+  show a new state. While a read runs, a new read waits for its answer and
+  sends nothing. The Worker also serves an event stream of each build, as
+  the [lifecycle routes](../../worker/lifecycle/README.md#browser-routes)
+  say. The app does not read it.
 - The read mark of an open workspace follows the applied state, the
   number of the newest event, and the visibility of the page, so their
   order does not count. A hidden page sends no read mark. When the page

@@ -1,9 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import {
-  buildEventsPath,
-  buildPath,
-  orgSettingsPaths,
-} from '../shared/org-settings'
+import { buildPath, orgSettingsPaths } from '../shared/org-settings'
 import type { FetchLike } from './api/client'
 import { FakeApiServer } from '../test-support/fake-api'
 import {
@@ -83,10 +79,10 @@ describe('ComputerModel', () => {
     computer.start()
     await flushMicrotasks()
     expect(delay.pending).toBe(1)
-    held.hold('GET', buildEventsPath(org, FAKE_IDS.build))
+    held.hold('GET', buildPath(org, FAKE_IDS.build))
     const refreshing = delay.runAll()
     computer.stop()
-    held.release('GET', buildEventsPath(org, FAKE_IDS.build))
+    held.release('GET', buildPath(org, FAKE_IDS.build))
     await refreshing
     expect(delay.pending).toBe(0)
   })

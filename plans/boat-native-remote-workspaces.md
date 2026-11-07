@@ -5021,14 +5021,25 @@ Depends on: 5b
 Apply the `fix after merge` items of the Milestone 5b and 15l reviews.
 Added on 8 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/build-log-stream-format.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/image-build-transient-errors.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-command-repeat-after-restart.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/members-late-role-failure-after-removal.md`, and
-      delete that item.
+Agent calls, 7 November 2026: keep the Worker build event route, because
+it remains a public API. Reuse the saved build phases and job identities,
+because they already record progress and command intent.
+Use a source command interface, because starts must fail closed and
+polls of saved processes can resume.
+The shared provider retry window lasts 10 minutes from the first error
+of an unfinished step. Only a completed step resets it. This bounds
+lasting faults without limiting a healthy build or start.
+
+- [x] Apply the recorded option of `plans/follow-ups/build-log-stream-format.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.
+- [x] Apply the recorded option of `plans/follow-ups/image-build-transient-errors.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.
+- [x] Apply the recorded option of `plans/follow-ups/lifecycle-command-repeat-after-restart.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.
+- [x] Apply the recorded option of `plans/follow-ups/members-late-role-failure-after-removal.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.
+
+Verification evidence: `.context/boat-native-remote-workspaces/5c-checks/summary.md`.
 
 
 ## Milestone 5d: Time limits for builds and starts

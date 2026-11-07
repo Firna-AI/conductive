@@ -1,4 +1,5 @@
 import type { CommandStatus } from '../../sandbox/provider'
+import { clearImageRetryStatement } from '../image-retry-data'
 
 export type SourcePhase =
   | 'layout-starting'
@@ -78,13 +79,32 @@ export async function setSourcePhase(
   phase: SourcePhase,
   processId: number | null = null,
 ): Promise<void> {
-  await db
+  await sourcePhaseStatement(db, buildId, phase, processId).run()
+}
+
+function sourcePhaseStatement(
+  db: D1Database,
+  buildId: string,
+  phase: SourcePhase,
+  processId: number | null,
+) {
+  return db
     .prepare(
       `UPDATE image_source_jobs SET phase = ?, process_id = ?, stdout_offset = 0,
        stderr_offset = 0 WHERE build_id = ?`,
     )
     .bind(phase, processId, buildId)
-    .run()
+}
+
+export async function completeSourcePhase(
+  db: D1Database,
+  buildId: string,
+  phase: SourcePhase,
+): Promise<void> {
+  await db.batch([
+    sourcePhaseStatement(db, buildId, phase, null),
+    clearImageRetryStatement(db, buildId),
+  ])
 }
 
 export async function saveSourceStatus(
@@ -145,14 +165,16 @@ export function claimSourceGrant(db: D1Database, grantHash: string) {
 }
 
 export async function nextSource(db: D1Database, buildId: string) {
-  await db
-    .prepare(
-      `UPDATE image_source_jobs SET source_index = source_index + 1, repository_id = NULL,
+  await db.batch([
+    db
+      .prepare(
+        `UPDATE image_source_jobs SET source_index = source_index + 1, repository_id = NULL,
        phase = 'ready', process_id = NULL, stdout_offset = 0, stderr_offset = 0
        WHERE build_id = ? AND token_ciphertext IS NULL AND grant_hash IS NULL`,
-    )
-    .bind(buildId)
-    .run()
+      )
+      .bind(buildId),
+    clearImageRetryStatement(db, buildId),
+  ])
 }
 
 export async function orgSourceJobs(db: D1Database, orgId: string) {

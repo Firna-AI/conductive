@@ -43,6 +43,7 @@ export class LifecycleBoat {
     stderrOffset: number
   }[] = []
   private readonly allocations = new Map<string, string>()
+  private readonly snapshots = new Map<string, string>()
   private sandboxes = 0
   private processId = 0
 
@@ -70,7 +71,13 @@ export class LifecycleBoat {
       if (this.lostCreateReplies-- > 0) loseReply = true
     } else if (path === '/saved-snapshots' && request.method === 'POST') {
       const body: unknown = await request.clone().json()
-      if (!isRecord(body)) throw new Error('Invalid test snapshot')
+      if (
+        !isRecord(body) ||
+        typeof body.name !== 'string' ||
+        typeof body.sandboxId !== 'string'
+      )
+        throw new Error('Invalid test snapshot')
+      this.snapshots.set(body.name, body.sandboxId)
       response = Response.json({
         ok: true,
         type: 'snapshot.saved.info',
@@ -80,6 +87,18 @@ export class LifecycleBoat {
           status: 'ready',
         },
       })
+    } else if (
+      path.startsWith('/saved-snapshots/') &&
+      request.method === 'GET'
+    ) {
+      const name = decodeURIComponent(path.slice('/saved-snapshots/'.length))
+      const sourceSandboxId = this.snapshots.get(name)
+      if (sourceSandboxId)
+        response = Response.json({
+          ok: true,
+          type: 'snapshot.saved.info',
+          snapshot: { name, sourceSandboxId, status: 'ready' },
+        })
     } else if (sandboxId) {
       if (request.method === 'DELETE') {
         if (this.deleteFailures-- > 0)
