@@ -5,8 +5,7 @@ chat of the open session with its composer. It shows messages, folded tool
 calls, the running turn, steer, Stop, failures with Try again, the start
 steps of the sandbox, and the bar that takes the composer's place while the
 sandbox does not run. It builds against the fake API and the recorded chat
-events of `src/test-support/`. Milestone 8i wires it to the Worker and the
-agent runner.
+events of `src/test-support/`. No app screen mounts it yet.
 
 ## Use it in the app
 
@@ -65,11 +64,32 @@ agent runner.
   These new counts are non-negative safe integers. Missing counts make an event unreadable.
 - Tool transcript items keep `tool.omittedDetailBytes`.
   `Transcript.turnCompletions` keeps each completion event by turn ID, including stopped completions and `omittedFileCount`.
-- `Transcript.refusedEvents` keeps each session's refusal markers outside rendered items.
+- A tool call shows the size of output that the runner left out, such as "1.2 MB left out".
+  A folded run of calls shows the total of its calls' current counts, so a finished run still names it.
+- A finished turn ends its file list with the files that the runner left out, such as "47 more files".
+  A stopped line adds the count of its stopped completion: "You stopped the agent · 5 changed files not listed".
+  The counts come from `turnCompletions`. A zero count shows nothing.
+- Each refusal marker of a session becomes one `lost` item at its place among the events, which shows one line.
+  The transcript keeps the marker only in that item. A repeat of the same marker replaces its item.
+  The line names the lost data and the reason in plain words, and never the stream, number, or event type.
+  No line says "this turn", because a line can follow a newer turn.
   Nullable turn context stays intact. Markers without a session stay outside per-session logs.
-  The chat state keeps no marker without a session yet.
-- Ordered history folding preserves these fields across completion and failure events.
-  Their visible presentation remains work for Milestone 8j.
+  The chat keeps no marker without a session, and shows nothing after such a loss.
+  A notice beside the data shows only when the fresh full report that repairs it is lost too. The chat builds no such notice.
+- `Transcript.turns` lists the turns that accepted events named, in the order of their first event, and whether each one ended.
+  The last one is the newest turn. A turn ends with its completion or failure, with a refused end while it runs, or when a newer turn starts.
+- Each item stays with its turn: before any request or item of a later turn, and before a message that no turn has taken yet.
+- An accepted event of a turn that has ended shows inside that turn, before the row where the turn ended.
+  It brings back no Working row and no Stop, and it changes neither a running turn nor the newest turn.
+  A running tool of an ended turn shows as stopped. The files of a late end show as a file row, and the stopped line keeps its member.
+- A refusal marker starts no turn. A refused `turn.completed` or `turn.failed` ends its turn only while that turn runs.
+  Its running calls show as stopped, its Stop request clears, and no time, files, or Try again appear.
+  A marker of an ended turn, of a turn that never started, or without a turn ends nothing.
+- `Transcript.latestItemId` names the item that the latest event added or changed, other than a lost line or a late item of an ended turn.
+  Try again shows only on the failed item of the newest turn, when no turn runs and that item is the latest.
+  A later lost line, a late item of an older turn, and a message accepted before the failure keep it.
+  A message accepted after the failure, or a newer turn, takes it away, also when the end of that turn was lost.
+- Ordered history folding preserves these fields and lines across completion and failure events.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
   stream. One load runs at a time for each session, and a failed load waits
@@ -116,6 +136,10 @@ agent runner.
   so the app and the mockups look the same. The shared CSS also limits a
   long menu or sheet, which then scrolls. A mockup part that imports
   fixture data or has no handlers has an interactive version here.
+- Sizes, such as "12 KB" or "1.2 MB", come from `formatSize` in the mockups'
+  `src/components/chat/sizes.ts`. The attached files, the left-out output,
+  the mockups, and the composer of a new workspace share it. The chat keeps
+  no size formatter of its own.
 - User-facing text follows the
   [names in the product](../../docs/protocol/chat-and-events.md#names-in-the-product):
   no "Claude Code", and no provider name.
@@ -136,7 +160,7 @@ The address chooses the state. The first value of each option is the default:
 
 | Option | Values |
 | --- | --- |
-| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn` |
+| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `loss` (left-out output and files, lost events, and a lost turn end) |
 | `workspace` | `existing`, `new` (Lisbon, which starts) |
 | `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
 | `role` | `admin`, `member` |
@@ -171,6 +195,12 @@ on `FakeApiServer` and the recorded events, and render the chat with
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
 - `state/session-log.ts`: the event log of each session.
+- `state/known-turns.ts`: the known turns, their order, and their ends.
+- `state/placement.ts`: where an item goes in its turn, also a late one.
+- `state/late-events.ts`: accepted events of a turn that has ended.
+- `state/item-keys.ts`: the item IDs that later events of an item reuse.
+- `state/refused-events.ts`: how a refusal marker becomes a line, and how a
+  refused end ends its turn.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
@@ -180,6 +210,9 @@ on `FakeApiServer` and the recorded events, and render the chat with
   that first shows the new session.
 - `state/session-records.ts`: the local versions of the session records and
   of the workspace record.
+- `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
+  part of the chat, with the left-out counts and the plain words of a lost
+  event from the mockups' `lostCopy.ts`.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
@@ -188,7 +221,8 @@ on `FakeApiServer` and the recorded events, and render the chat with
   route builders, and the readers of their responses.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
-- `dev/`: the development page, its fake writes, and its scripted agent.
+- `dev/`: the development page, its fake writes, its scripted agent, and the
+  `loss` scenario in `dev/dev-loss.ts`.
 
 ### Related docs
 

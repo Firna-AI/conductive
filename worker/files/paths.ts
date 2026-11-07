@@ -1,16 +1,5 @@
+import { isFilePath } from '../../src/shared/file-path'
 import { HttpError } from '../http'
-
-export function isFilePath(value: unknown): value is string {
-  return (
-    typeof value === 'string' &&
-    value.length > 0 &&
-    !value.includes('\\') &&
-    ![...value].some((character) => character.charCodeAt(0) < 32) &&
-    value
-      .split('/')
-      .every((part) => part !== '' && part !== '.' && part !== '..')
-  )
-}
 
 export function readFilePath(value: unknown): string {
   if (!isFilePath(value)) {

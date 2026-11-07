@@ -2,7 +2,7 @@ import { FileText, ImageIcon, X } from 'lucide-react'
 import type { Attachment } from '../../shared/messages'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/chat/AttachmentChips.module.css'
-import { formatBytes } from '../state/format'
+import { formatSize } from '../../../docs/mockups/src/components/chat/sizes'
 import { IconButton } from '../ui/actions'
 import local from './chat.module.css'
 
@@ -13,7 +13,7 @@ function Chip(props: { file: Attachment; onRemove?: (id: string) => void }) {
     <li className={styles.chip}>
       <Icon aria-hidden className={styles.icon} size={13} />
       <span className={styles.name}>{file.name}</span>
-      <span className={styles.size}>{formatBytes(file.sizeBytes)}</span>
+      <span className={styles.size}>{formatSize(file.sizeBytes)}</span>
       {onRemove ? (
         <IconButton
           icon={X}

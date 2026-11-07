@@ -85,3 +85,22 @@
   font-size: var(--ui-text-xs);
   white-space: nowrap;
 }
+
+/* A narrow chat moves the left-out output of a folded run under its count. */
+.wraps {
+  flex-wrap: wrap;
+}
+
+.leftOut {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-xs);
+  white-space: nowrap;
+}
+
+.summary .leftOut {
+  margin-left: 4px;
+}

@@ -2,6 +2,7 @@ import { FileText } from 'lucide-react'
 import type { ChangedFile } from '../../shared/files'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { DiffStat } from '../../../docs/mockups/src/components/files/DiffStat'
+import { moreFiles } from '../../../docs/mockups/src/components/chat/lostCopy'
 import styles from '../../../docs/mockups/src/components/chat/TurnEnd.module.css'
 import { formatDuration } from '../state/format'
 import controls from '../ui/controls.module.css'
@@ -38,25 +39,30 @@ function FileChip(props: {
 
 /**
  * The end of a finished turn: how long it ran, and the files that it changed.
- * Each file opens its diff when the app gives `onOpenDiff`.
+ * Each file opens its diff when the app gives `onOpenDiff`. The runner lists
+ * at most 200 files of a turn, and `omittedFiles` counts the rest as plain
+ * text after the list.
  */
 export function TurnEnd(props: {
   durationMs: number
   files: readonly ChangedFile[]
+  omittedFiles: number
   onOpenDiff?: (path: string) => void
 }) {
+  const more = props.omittedFiles
   return (
     <div className={styles.end}>
       <span className={styles.duration}>
         {formatDuration(props.durationMs)}
       </span>
-      {props.files.length > 0 ? (
+      {props.files.length > 0 || more > 0 ? (
         <ul aria-label="Files this turn changed" className={styles.chips}>
           {props.files.map((file) => (
             <li key={file.path}>
               <FileChip file={file} onOpenDiff={props.onOpenDiff} />
             </li>
           ))}
+          {more > 0 ? <li className={styles.more}>{moreFiles(more)}</li> : null}
         </ul>
       ) : null}
     </div>

@@ -46,3 +46,16 @@ a.chip:hover {
   flex-shrink: 0;
   color: var(--ui-muted);
 }
+
+/* The files past the list: plain text in the row of the chips. */
+.more {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  min-height: var(--ui-touch-min);
+  padding: 0 2px;
+  border: 1px solid transparent;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+}
