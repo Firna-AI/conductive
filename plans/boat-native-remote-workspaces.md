@@ -5479,13 +5479,25 @@ Depends on: 5, 11
 
 Apply decision 118 B. Added on 7 November 2026.
 
-- [ ] Run each shell of the Terminal tab inside a terminal multiplexer,
+Agent calls of 7 November 2026: each workspace uses one tmux session that
+concurrent tabs share. A separate service owns the server, so a ttyd
+restart keeps its shells. The server ignores external configuration and
+stays up when no shell exists. A new connection can then create a shell
+after an explicit shell exit. Its socket stays under the workspace's
+private `/run` directory.
+
+- [x] Run each shell of the Terminal tab inside a terminal multiplexer,
       such as tmux, installed by the org image. A new connection attaches
       to the same shell, with its running commands and its screen.
-- [ ] Test a dropped terminal socket during a running command, and a new
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11c`.
+- [x] Test a dropped terminal socket during a running command, and a new
       socket that sees the same command still running. Update the section
       "Terminal" of the workspaces protocol. Delete
       `plans/follow-ups/terminal-shell-survives-reconnect.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11c`.
+
+Evidence: `.context/terminal-11c/implementor-report.md` and
+`.context/terminal-11c/orchestrator-smoke.log`.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 
