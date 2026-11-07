@@ -24,8 +24,14 @@ gate.
   to the open tabs. `appendWorkspaceEvent` uses it.
 - `readWorkspace(workspaceId, work)` runs `work` with a `ChatTransaction`
   outside a storage transaction. Use it only for reads.
-- `republishWorkspaceEvent(envelope)` pushes one committed envelope to the
-  open tabs again. It stores nothing, so the event keeps its number.
+- `authorizedWorkspaceOperation(workspaceId, authorize, work)` enters the
+  serial queue and awaits `authorize`. Only then does it run `work` in the
+  same task. `work` gets a `WorkspaceOperation` from
+  `workspace-operation.ts`. Its `change` runs one storage transaction, and
+  the one chat publisher pushes the new events after the commit. Its
+  `publish` pushes one committed envelope to the open tabs again. It
+  stores nothing, so the event keeps its number. Neither enters the queue
+  again.
 - `sendFileCommand(workspaceId, command)` sends one `file.read` or
   `file.diff` command to the ready runner. It resolves to `false` when no
   runner is ready or the send fails.
@@ -45,12 +51,15 @@ depends on where the code runs:
   the hook, then pushes it to the open tabs. Do not call
   `appendWorkspaceEvent` inside a runner hook.
 - `appendWorkspaceEvent`, `changeWorkspace`, `readWorkspace`,
-  `republishWorkspaceEvent`, and `sendFileCommand` wait in the serial
-  queue. A runner hook and the work of `changeWorkspace` also run in that
-  queue. Do not await these calls inside them. The call would wait for the
-  running task itself.
+  `authorizedWorkspaceOperation`, and `sendFileCommand` wait in the serial
+  queue. A runner hook and the work of `changeWorkspace` and
+  `authorizedWorkspaceOperation` also run in that queue. Do not await these
+  calls inside them. The call would wait for the running task itself.
+- Inside the work of `authorizedWorkspaceOperation`, use its `change` and
+  `publish`.
 - Do not add another event sequence or another publisher. To send a
-  committed event again, await `republishWorkspaceEvent`.
+  committed event again, use the `publish` of
+  `authorizedWorkspaceOperation`.
 
 ## Milestone 8i: the outer Worker
 
@@ -101,8 +110,9 @@ depends on where the code runs:
 ## GitHub state
 
 - `createGitHubStatePort` in `worker/github/chat-store.ts` builds the
-  GitHub state port from `readWorkspace`, `changeWorkspace`, and
-  `republishWorkspaceEvent`.
+  GitHub state port from `readWorkspace` and
+  `authorizedWorkspaceOperation`. Its `run` checks access again after it
+  enters the queue, then commits or replays in that same task.
 - Its transaction is `ChatTransaction.github`. That view gives the GitHub
   state its records and its `github.updated` events in the same chat
   transaction. The GitHub records use the `github:` key prefix.

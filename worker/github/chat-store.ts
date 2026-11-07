@@ -10,11 +10,14 @@ export function createGitHubStatePort(
   return {
     read: (key) =>
       chat.readWorkspace(workspaceId, (view) => view.github.get(key)),
-    transaction: (action) =>
-      chat.changeWorkspace(workspaceId, (transaction) =>
-        action(transaction.github),
+    run: (authorize, work) =>
+      chat.authorizedWorkspaceOperation(workspaceId, authorize, (operation) =>
+        work({
+          transaction: (action) =>
+            operation.change((transaction) => action(transaction.github)),
+          publish: async (envelope) => operation.publish(envelope),
+        }),
       ),
-    publish: (envelope) => chat.republishWorkspaceEvent(envelope),
     scheduleRefresh,
   }
 }

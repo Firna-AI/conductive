@@ -62,6 +62,40 @@ Contract owners. Milestone 2 creates them:
   - The session fixture in `runner/test-support/engine.ts`, and the wire
     fixture in `runner/test-support/wire.ts` with its unused
     `storageOverride` parameter.
+- Lifecycle code that each connected view copies for its workspace store →
+  the shared `useWorkspaceStore` hook in `src/app/workspace-store.ts`. The
+  hook makes the store with a stable `create`, and connects it after the
+  render with a stable `connect`. It reads the store through `subscribe`
+  and `getSnapshot`. It stops the store at unmount and at a switch of
+  workspace. Milestone 13a moved `useGitHubState` and `useChatController`.
+  Milestone 15i moves the files owners. Milestone 13b moves the tools and
+  the workspace screen, then deletes `useToolStore` and `ToolStore.listen`.
+  Added on 7 November 2026, for finding 2 of the PR #37 review. Consumers:
+  - The shell's `WorkspaceFiles` owner and its factory, which Milestone 15i
+    adds. It starts on the hook, as the Integration section of
+    `src/files/README.md` shows. Milestone 15i.
+  - `src/files/dev/DevApp.tsx`, which starts and stops the module-level
+    store of `src/files/dev/main.tsx` in its own effect. Milestone 15i.
+  - `src/shell/workspace/dev/DevPage.tsx`, which does the same with the
+    module-level store of `src/shell/workspace/dev/main.tsx`. Milestone 15i.
+  - `TerminalToolBody` in `src/terminal/TerminalTool.tsx`, which keeps its
+    `ToolStore` through `useToolStore` and runs its `loadTerminal` read in
+    its own effect. Milestone 13b.
+  - `PreviewToolBody` in `src/previews/PreviewTool.tsx`, which keeps its
+    `ToolStore` the same way and runs its `listPreviews` read and its retry
+    in its own effect. Milestone 13b.
+  - `useToolStore` in `src/terminal/tool-parts/useToolStore.ts`, which
+    makes a `ToolStore` in `useState` and subscribes it through
+    `ToolStore.listen` while React listens. Milestone 13b deletes it.
+  - `WorkspaceScreen` in `src/shell/workspace/WorkspaceScreen.tsx`, which
+    makes its `WorkspaceModel` and `HeaderNotices` in `useState`. Its own
+    effects follow the stream, then open and close the model. Milestone 13b.
+  - The tests that subscribe a `ToolStore` through `listen`:
+    `src/terminal/tool-parts/toolStore.test.ts` and
+    `src/previews/previewsState.test.ts`. Milestone 13b.
+  - The docs that show the old code: the "Workspace events" section and the
+    Key code of `src/terminal/README.md`, and the Integration section of
+    `src/shell/workspace/README.md`. Milestone 13b.
 
 ## Decisions
 
@@ -5544,8 +5578,11 @@ Apply the `fix after merge` items of the GitHub banner. Added on
 
 Agent call, 7 November 2026: wait five minutes after a read before the
 next backup read. This limits GitHub calls while webhooks provide live
-updates. The shared hook serves the GitHub and chat stores. The files and
-tool stores keep their existing lifecycle.
+updates. The shared hook serves the GitHub and chat stores now. The other
+consumers move to it later: the files owners in Milestone 15i, and the
+tools and the workspace screen in Milestone 13b. Replaced ways lists each
+consumer. The user corrected this call on 7 November 2026, for finding 2
+of the PR #37 review.
 
 - [x] Apply the recorded option of `plans/follow-ups/github-banner-freshness.md`, and
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-13a`.
@@ -5553,6 +5590,36 @@ tool stores keep their existing lifecycle.
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-13a`.
 - [x] Apply the recorded option of `plans/follow-ups/shared-hook-for-workspace-stores.md`, and
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-13a`.
+
+## Milestone 13b: Shared store hook for the tools and the workspace screen
+
+Tags: ui
+
+Depends on: 13a
+
+Move the tool stores and the workspace screen to `useWorkspaceStore`, as
+Replaced ways lists. This is option C of finding 2 of the PR #37 review.
+It starts after PR #37 merges. Added on 7 November 2026.
+
+- [ ] Move `TerminalToolBody` in `src/terminal/TerminalTool.tsx` to
+      `useWorkspaceStore`, with a stable `create` and `connect`. Move its
+      `loadTerminal` read from its own effect into the store.
+- [ ] Move `PreviewToolBody` in `src/previews/PreviewTool.tsx` the same
+      way. Move its `listPreviews` read and its retry into the store.
+- [ ] Delete `useToolStore` and `ToolStore.listen` when no tool uses them.
+      Move `src/terminal/tool-parts/toolStore.test.ts` and
+      `src/previews/previewsState.test.ts` to the new subscription, with
+      every assertion.
+- [ ] Move `WorkspaceScreen` in `src/shell/workspace/WorkspaceScreen.tsx`
+      to `useWorkspaceStore`. A stable `create` makes the `WorkspaceModel`
+      and its `HeaderNotices`. A stable `connect` makes the notices follow
+      the stream before it opens the model. Its stop closes the model and
+      ends the follow. The store that `create` returns needs `subscribe`
+      and `getSnapshot`. They can read the `detail` store of the model.
+- [ ] Update the "Workspace events" section and the Key code of
+      `src/terminal/README.md`, and the Integration section of
+      `src/shell/workspace/README.md`.
+- [ ] Compare each tool and the workspace screen with its mockup.
 
 ## Milestone 15: Agent tools
 
@@ -5681,7 +5748,7 @@ departure. A removed person could then verify the email again and accept.
 
 ## Milestone 15i: Feature wiring
 
-Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
+Depends on: 8i, 9, 10, 11, 12, 13, 13a, 14, 15, 15a, 15c, 15g
 
 - [ ] Wire each feature's screens to its backend inside the app shell.
 - [ ] Connect the lifecycle hooks of the Milestone 15a members backend to
@@ -5690,6 +5757,19 @@ Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
       `cleanupDeletedOrgs` on a Cron Trigger, so that Delete org removes
       everything of the org after 7 days, as the orgs protocol says.
       Added on 6 November 2026, because no milestone connected these hooks.
+- [ ] Give the shell one `WorkspaceFiles` owner on `useWorkspaceStore`,
+      as the Integration section of `src/files/README.md` shows. Its stable
+      `create` is the factory: it builds the store from `createFilesClient`
+      and the workspace socket. Its stable `connect` calls `files.start()`
+      and returns `() => files.stop()`, because `stop` is an ordinary
+      method. Added on 7 November 2026, for finding 2 of the PR #37 review.
+- [ ] Move `src/files/dev/DevApp.tsx` to `useWorkspaceStore`. Move the
+      module-level `WorkspaceFiles` of `src/files/dev/main.tsx` into its
+      stable `create`. Replace its start and stop effect with its stable
+      `connect`.
+- [ ] Move `src/shell/workspace/dev/DevPage.tsx` to `useWorkspaceStore` the
+      same way, with the module-level `WorkspaceFiles` of
+      `src/shell/workspace/dev/main.tsx`.
 - [ ] Run the complete gate, and compare each screen with its mockup.
 
 ## Milestone 15j: Rename to Conductive

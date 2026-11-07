@@ -16,6 +16,10 @@ import { findChatWorkspace, tokenWorkspace } from './queries'
 import { loginResolver } from './login-access'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore, type ChatTransaction } from './store'
+import {
+  runWorkspaceOperation,
+  type WorkspaceOperation,
+} from './workspace-operation'
 import { browserUpgrade, runnerUpgrade } from './sockets'
 import type {
   BrowserPeer,
@@ -221,9 +225,19 @@ export class WorkspaceChat {
     )
   }
 
-  republishWorkspaceEvent(envelope: WorkspaceEventEnvelope): Promise<void> {
-    this.bind(envelope.workspaceId)
-    return this.store.run(async () => this.publish([envelope]))
+  authorizedWorkspaceOperation<T>(
+    workspaceId: string,
+    authorize: () => Promise<void>,
+    work: (operation: WorkspaceOperation) => Promise<T>,
+  ): Promise<T> {
+    this.bind(workspaceId)
+    return runWorkspaceOperation(
+      this.store,
+      workspaceId,
+      authorize,
+      this.publish,
+      work,
+    )
   }
 
   async sendFileCommand(
@@ -276,7 +290,7 @@ export class WorkspaceChat {
     this.workspaceId = workspaceId
   }
 
-  private publish(events: readonly WorkspaceEventEnvelope[]): void {
+  private publish = (events: readonly WorkspaceEventEnvelope[]): void => {
     this.browsers.publish(events)
   }
 }

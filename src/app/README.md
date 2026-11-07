@@ -105,9 +105,14 @@ the invite, the roles, and the removal there.
   `useWorkspaceStore`. The hook makes the store, connects it after
   the render, and follows its snapshot. It stops the store at unmount. A
   switch of workspace stops the old store and makes a new one.
-- The files store and the tool store keep their own lifecycle. The
-  [files integration](../files/README.md#integration) and the
-  [tool README](../terminal/README.md#workspace-events) give their rules.
+- The other workspace stores do not use the hook yet. The files
+  development pages start and stop their `WorkspaceFiles` in their own
+  effects. The terminal and preview tools keep a `ToolStore` through
+  `useToolStore`. `WorkspaceScreen` opens and closes its `WorkspaceModel`
+  in its own effect. The [files integration](../files/README.md#integration)
+  shows the hook for a new files owner. The
+  [tool README](../terminal/README.md#workspace-events) gives the current
+  rules of the tool store.
 
 ## Screens
 

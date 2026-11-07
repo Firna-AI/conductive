@@ -3,6 +3,7 @@
 import { act, useLayoutEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { expect, it, onTestFinished, vi } from 'vitest'
+import { Store } from './store'
 import {
   useWorkspaceStore,
   type WorkspaceIdentity,
@@ -13,28 +14,19 @@ const cart = { orgId: 'org-1', workspaceId: 'cart' }
 const carts = { orgId: 'org-1', workspaceId: 'carts' }
 
 /** A store of one workspace. The test changes it, as a reply or an event does. */
-class TestStore {
+class TestStore extends Store<string> {
   readonly name: string
-  private snapshot: string
-  private readonly listeners = new Set<() => void>()
 
   constructor(workspace: WorkspaceIdentity, count: number) {
-    this.name = `${workspace.workspaceId}#${count}`
-    this.snapshot = `${this.name} loading`
+    const name = `${workspace.workspaceId}#${count}`
+    super(`${name} loading`)
+    this.name = name
   }
 
-  subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener)
-    return () => {
-      this.listeners.delete(listener)
-    }
-  }
+  getSnapshot = this.get
 
-  getSnapshot = (): string => this.snapshot
-
-  change(state: string): void {
-    this.snapshot = `${this.name} ${state}`
-    for (const listener of [...this.listeners]) listener()
+  show(state: string): void {
+    this.set(`${this.name} ${state}`)
   }
 }
 
@@ -125,8 +117,8 @@ it('connects the store of the workspace after its render, shows each change, and
   })
   const afterMount = [...stores.log]
 
-  act(() => stores.store('cart#1').change('ready'))
-  act(() => stores.store('cart#1').change('merged'))
+  act(() => stores.store('cart#1').show('ready'))
+  act(() => stores.store('cart#1').show('merged'))
   const shown = view.text()
   view.unmount()
 
@@ -146,12 +138,12 @@ it('stops the old store before it connects the new one at a workspace switch, an
   }
   const view = mountView()
   view.render(cart, lifecycle)
-  act(() => stores.store('cart#1').change('ready'))
+  act(() => stores.store('cart#1').show('ready'))
   const beforeSwitch = view.commits.length
 
   view.render(carts, lifecycle)
-  act(() => stores.store('cart#1').change('late'))
-  act(() => stores.store('carts#2').change('ready'))
+  act(() => stores.store('cart#1').show('late'))
+  act(() => stores.store('carts#2').show('ready'))
 
   expect({
     shown: view.text(),

@@ -69,14 +69,20 @@ export interface GitHubStateTransaction {
 
 export type GitHubUpdate = Extract<WorkspaceEvent, { type: 'github.updated' }>
 
-export interface GitHubStatePort {
-  read<T>(key: string): Promise<T | undefined>
-  /** Commit and publish inside the common workspace queue. */
+export interface GitHubStateOperation {
   transaction<T>(
     action: (transaction: GitHubStateTransaction) => Promise<T>,
   ): Promise<T>
-  /** Replay a committed envelope through the same queued publisher. */
   publish(envelope: WorkspaceEventEnvelope): Promise<void>
+}
+
+export interface GitHubStatePort {
+  read<T>(key: string): Promise<T | undefined>
+  /** Check access after queue entry, then commit or replay in that same task. */
+  run<T>(
+    authorize: () => Promise<void>,
+    work: (operation: GitHubStateOperation) => Promise<T>,
+  ): Promise<T>
   /** Persist plain request data for a fresh read after the given delay. */
   scheduleRefresh(request: GitHubRefreshRequest, delayMs: number): Promise<void>
 }

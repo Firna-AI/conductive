@@ -9,6 +9,7 @@ import { createSession } from '../chat/sessions'
 import type { ChatData, ChatStorage } from '../chat/types'
 import type { AppEnv } from '../env'
 import { createGitHubStatePort } from './chat-store'
+import { queuedAccessRace } from './queued-access.test-support'
 import {
   SQLITE_CHOICE,
   SQLITE_TIME,
@@ -85,6 +86,12 @@ export class Workspace extends DurableObject<AppEnv> {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url)
     try {
+      if (url.pathname === '/access-race')
+        return await queuedAccessRace(
+          this.chat,
+          this.env.DB,
+          url.searchParams.get('operation') === 'replay',
+        )
       if (url.pathname === '/observe') {
         await this.chat.openBrowser(
           new Request(

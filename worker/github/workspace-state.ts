@@ -33,36 +33,39 @@ export class WorkspaceGitHubState {
           : await this.port.read<GitHubDeliveryReceipt>(key)
       if (receipt) {
         await authorize()
-        if (receipt.envelope !== null)
-          await this.port.publish({
-            ...receipt.envelope,
-            event: githubUpdated(receipt.snapshot),
-          })
+        await this.port.run(authorize, async (operation) => {
+          if (receipt.envelope !== null)
+            await operation.publish({
+              ...receipt.envelope,
+              event: githubUpdated(receipt.snapshot),
+            })
+        })
         return receipt.snapshot
       }
       const snapshot = await read()
       await authorize()
       if (snapshot === null) return null
-      await this.port.transaction(async (transaction) => {
-        const stored = await transaction.get<GitHubSnapshot>('github:state')
-        if (stored && sameGitHubState(stored, snapshot)) {
+      await this.port.run(authorize, (operation) =>
+        operation.transaction(async (transaction) => {
+          const stored = await transaction.get<GitHubSnapshot>('github:state')
+          if (stored && sameGitHubState(stored, snapshot)) {
+            if (key !== null)
+              await transaction.put(key, {
+                snapshot,
+                envelope: null,
+              } satisfies GitHubDeliveryReceipt)
+            return
+          }
+          await transaction.put('github:state', snapshot)
+          const { workspaceId, eventNumber, occurredAt } =
+            await transaction.emit(githubUpdated(snapshot))
           if (key !== null)
             await transaction.put(key, {
               snapshot,
-              envelope: null,
+              envelope: { workspaceId, eventNumber, occurredAt },
             } satisfies GitHubDeliveryReceipt)
-          return
-        }
-        await transaction.put('github:state', snapshot)
-        const { workspaceId, eventNumber, occurredAt } = await transaction.emit(
-          githubUpdated(snapshot),
-        )
-        if (key !== null)
-          await transaction.put(key, {
-            snapshot,
-            envelope: { workspaceId, eventNumber, occurredAt },
-          } satisfies GitHubDeliveryReceipt)
-      })
+        }),
+      )
       return snapshot
     })
     this.pending = result.catch(() => undefined)
