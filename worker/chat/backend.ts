@@ -238,18 +238,31 @@ export class WorkspaceChat {
     peer: BrowserPeer,
   ): Promise<() => void> {
     return this.store.run(async () => {
-      await this.store.change(
-        access.workspace.id,
-        (transaction) => refreshSessionLogins(transaction, this.dependencies),
-        (events) => this.publish(events),
+      const sessions = await this.store.read(access.workspace.id, (view) =>
+        view.sessions(),
       )
-      const unsubscribe = await this.browsers.add(peer, {
-        kind: 'workspace',
-        workspaceId: access.workspace.id,
-        orgId: access.workspace.orgId,
-        userId: access.context.user.id,
-        sessionId: access.context.sessionId,
-      })
+      if (sessions.length > 0)
+        await this.store.change(
+          access.workspace.id,
+          (transaction) => refreshSessionLogins(transaction, this.dependencies),
+          (events) => this.publish(events),
+        )
+      const unsubscribe = await this.browsers
+        .add(peer, {
+          kind: 'workspace',
+          workspaceId: access.workspace.id,
+          orgId: access.workspace.orgId,
+          userId: access.context.user.id,
+          sessionId: access.context.sessionId,
+        })
+        .catch((error: unknown) => {
+          try {
+            peer.close()
+          } catch {
+            // The peer has already disconnected.
+          }
+          throw error
+        })
       try {
         const history = await this.store.read(access.workspace.id, (view) =>
           view.history(after),

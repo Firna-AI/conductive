@@ -1,7 +1,8 @@
 # Chat backend integration
 
-This README gives the seams of the chat backend for other features. The
-[chat backend README](../README.md) names the code and its guarantees.
+This README gives the seams of the chat backend for other features, and
+its test fixtures. The [chat backend README](../README.md) names the code
+and its guarantees.
 A file name without a folder names a file in `worker/chat/`.
 
 `WorkspaceChat` takes `ChatDependencies` from `types.ts` as overrides.
@@ -219,3 +220,43 @@ state the rules.
 - `normalizeSession` in `session-storage.ts` reads an older record without
   these fields as `null`, `null`, and `false`. Stored `session.updated`
   events get the same values. No history is removed.
+
+## Test fixtures
+
+The [chat backend README](../README.md#tests) gives the test commands. These
+test support files and tests check the chat backend.
+
+- `createChatFixture` in `harness.test-support.ts` builds on
+  `createHarness`. It adds an owner, a member, a workspace with a token,
+  and a stored login for each agent.
+- Its helpers send messages, open tabs, connect a `FakeRunner`, and
+  restart `WorkspaceChat` on the same storage.
+- `MemoryChatStorage` keeps the records in memory. Set `failCommit` or
+  `beforeCommit` to test a failed or a late commit.
+- Its key order and `startAfter` comparison use UTF-8 bytes, like real storage.
+- Set `crashAfterCommit` to commit the next transaction, then throw once.
+  The restart tests cover retry permission, report repairs, turn cleanup,
+  and file assembly after a commit crash.
+- `createRunnerLimitsFixture` in `runner-limits.test-support.ts` runs one
+  `RunnerChannel` for the refusal, cap, and file part tests.
+- `runner-repairs.test-support.ts` builds a full and an oversized report of
+  each kind, and reads the requests and markers of the repair tests.
+- `late-events.test.ts` and `never-started.test.ts` cover replay after a
+  workspace stop and the queued-turn eligibility rules.
+- `retry.test.ts`, `retry-queue.test.ts`, and `retry-crash.test.ts` cover
+  the newest failed turn: stale tabs, refused ends, waiting work, rollback,
+  and commit crashes. `retry.test-support.ts` sends retries and reads the
+  session records.
+- `session-logins.test.ts`, `linked-sessions.test.ts`, `linked-retry.test.ts`,
+  and `legacy-sessions.test.ts` test starters, linked sessions, and old data.
+- `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
+  end. It also checks that late ends preserve the next turn and its commands.
+- `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,
+  D1, and real WebSockets. `createAdapterRuntime` sets up that runtime.
+- It closes every socket before Miniflare evicts the real object. Restart
+  keeps SQLite history, queued messages, and the runner cursor. Event numbers
+  continue. The resumed queued turn fails. Its message can retry after a
+  second eviction.
+- `createAdapterRuntime` can bundle another Durable Object entry for
+  another workspace ID. The [GitHub store tests](../../github/README.md#verification)
+  use it to run `WorkspaceChat` with the GitHub state on SQLite.
