@@ -42,8 +42,8 @@ export type Workspace = {
   /** The time since the last activity, such as `2h`. */
   updated: string
   /**
-   * The member who created it, until an admin reassigns it. Each message
-   * runs on the agent login of the person who sends it (decision 49).
+   * The member who created it, until an admin reassigns it. Each session
+   * runs on the agent login of the member who started it.
    */
   owner: PersonKey
   /**

@@ -9,8 +9,12 @@ import { ChoiceMenu } from './ui/ChoiceMenu'
 import { ViewportScope, type Viewport } from './ui/controls'
 import { PersonAvatar } from './ui/PersonAvatar'
 
-/** Each message runs on its sender's login (decision 49). */
-const loginNote = "Each message runs on its sender's own agent login."
+/**
+ * Each session runs on the agent login of its starter, the member who
+ * started it.
+ */
+const loginNote =
+  'Each session runs on the agent login of the member who started it.'
 
 type Members =
   | { status: 'loading' }

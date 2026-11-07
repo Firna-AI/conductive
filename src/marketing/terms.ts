@@ -78,9 +78,10 @@ export const termsDocument: LegalDocument = {
           messages in each of them.
         </li>
         <li>
-          Each message runs on the agent login of the person who sends it. Its
-          git calls use a GitHub token of that person, so pushes and pull
-          requests show as that person.
+          Each session runs on the agent login of the member who started it,
+          also for the messages of other members. Each turn's git calls use a
+          GitHub token of the member whose message started the turn. Pushes and
+          pull requests show as that member.
         </li>
         <li>
           That GitHub token reaches every repository where that person installed
