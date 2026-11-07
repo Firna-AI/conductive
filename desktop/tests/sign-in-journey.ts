@@ -30,7 +30,7 @@ export async function sessionEndpoint(page: Page, appOrigin: string) {
     })
   })
   return async (signedIn: boolean) => {
-    // The minimal page has no session UI yet. Use its real credentialed fetch.
+    // Check Chromium's credentials directly, without the product's session UI.
     const result = await page.evaluate(async (url) => {
       const response = await fetch(url, { credentials: 'include' })
       const body: unknown = await response.json()

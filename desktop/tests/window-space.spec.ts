@@ -3,6 +3,8 @@ import { resolve } from 'node:path'
 import { _electron, expect, test } from '@playwright/test'
 import type { ElectronApplication } from '@playwright/test'
 
+import { productName } from '../../docs/mockups/src/brand.js'
+
 const desktop = resolve(import.meta.dirname, '..')
 const evidence = resolve(desktop, '../.context/boat-native-remote-workspaces')
 
@@ -45,9 +47,7 @@ test('gives back native window-button space in full screen and restores it after
       cwd: desktop,
     })
     const page = await electron.firstWindow()
-    await expect(
-      page.getByRole('heading', { name: 'Conducting', exact: true }),
-    ).toBeVisible()
+    await expect(page).toHaveTitle(productName)
     // This decorative reserve has no accessible name and can have zero height.
     const reserve = page.locator('[data-desktop-window-space]')
     await expect(reserve).toHaveCount(1)
