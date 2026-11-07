@@ -197,13 +197,9 @@ workspace event history, with chat and lifecycle events.
   when the copy ends, as
   [GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens)
   says.
-- D1 keeps at most 4 MiB of each build log: the first and the last output.
-  A write that passes that budget removes whole rows from the middle. The
-  line `[N output bytes omitted]` takes their place in the event order.
-  [Build jobs](image-builds.md#build-jobs) gives the size limit of a row.
 
 [Image builds](image-builds.md) gives the build entry points, the build
-steps, the snapshot leases, and the refresh timers.
+steps, the log limits, the snapshot leases, and the refresh timers.
 
 ## Settings
 
@@ -277,6 +273,10 @@ object holds the lifecycle state, the turn records, and the events.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text
   of a saved install or startup script. Only `savedScriptCommand` turns it
   into a Bash command.
+- [`image-runtime.ts`](image-runtime.ts): `IMAGE_NODE_RUNTIME`, the pinned
+  private Node of the org image, and its paths. The
+  [runtime guide](../../image/runtime.md#update-the-node-release) says how to
+  update it.
 - [Repository layout](repository-layout.md#key-code): the repository entries.
 - [`tokens.ts`](tokens.ts): the encrypted workspace token and
   `authenticateWorkspaceToken`.

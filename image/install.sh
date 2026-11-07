@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-# The staged archive contains node/bin/node and runner/main.mjs with its SDKs.
+# The staged archive contains runner/main.mjs with its SDKs.
 # It is public software. Never put credentials in the URL or the archive.
 artifact_url=$1
 artifact_sha256=$2
@@ -11,10 +11,9 @@ trap 'rm -f "$archive"; rm -rf "$fresh_software"' EXIT HUP INT TERM
 curl --fail --silent --show-error --location "$artifact_url" --output "$archive"
 printf '%s  %s\n' "$artifact_sha256" "$archive" | sha256sum --check --status
 tar -xzf "$archive" -C "$fresh_software" --no-same-owner
-test -x "$fresh_software/node/bin/node"
 test -f "$fresh_software/runner/main.mjs"
 chmod -R a+rX "$fresh_software"
-"$fresh_software/node/bin/node" --version
+@CONDUCTIVE_NODE@ --version
 rm -rf /opt/conductive/software
 mv "$fresh_software" /opt/conductive/software
 

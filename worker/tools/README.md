@@ -69,16 +69,17 @@ The builder must stop the build before it saves a snapshot when installation fai
 The installer also accepts an optional root folder.
 The root folder defaults to `/`.
 Each path that the installer writes starts with the root folder.
-The launcher's program and secrets paths also start with the root folder.
+The launcher's program, secrets, and Node paths also start with the root folder.
 A test can pass a temporary folder.
 Image builds must use the default root.
 The default root gives the production paths in [Image assets](../../tools/README.md#image-assets).
 
 The installer writes only program source and the launcher.
 It writes no credentials into the image.
-The image must already have Node 24 in `/usr/local/bin`, `/usr/bin`, or `/bin`.
-The launcher checks these folders in that order, under the installation root.
-It chooses executable files and never uses `PATH` to choose Node.
+The launcher starts Node only by the full path from [`imageNodeExecutable`](../lifecycle/image-runtime.ts).
+That path names the private Node that each image build installs, as [The private Node runtime](../../image/runtime.md) says.
+The launcher reports an error when no executable file is at that path.
+It never uses `PATH` or a system Node folder.
 It removes `NODE_OPTIONS` after it reads the rooted secrets file and before it starts Node.
 The installer adds no Node runtime.
 `WORKSPACE_TOOLS_MCP` supplies the executable and arguments for agent registration.

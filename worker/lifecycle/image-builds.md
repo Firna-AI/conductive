@@ -15,6 +15,10 @@ Software and install commands run detached and stream their output.
 D1 stores the step, output offsets, and log. Each row holds at most
 256 KiB of UTF-8 text, split between complete characters.
 
+D1 keeps at most 4 MiB of each build log: the first and the last output.
+A write that passes that budget removes whole rows from the middle.
+The line `[N output bytes omitted]` takes their place in the event order.
+
 - A build loads the chosen repositories, installs the image software, runs
   the install script with Bash, and saves a snapshot. A refresh only loads
   the repositories of the current image again, and saves a snapshot.

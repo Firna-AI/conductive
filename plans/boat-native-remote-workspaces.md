@@ -4715,16 +4715,27 @@ Depends on: 5, 7r
 
 Apply decision 69 C.
 
-- [ ] In each org image build, download one pinned Node 24 release, check
+Agent call, 7 November 2026: pin Node 24.22.2 for Linux x64. Its official
+release lists the SHA-256 digest of the archive.
+
+- [x] In each org image build, download one pinned Node 24 release, check
       its SHA-256 against a constant in the code, and extract it to a
       folder named for its version under `/opt/conductive/runtime/`. Skip
       the download when that release is already there.
-- [ ] Start the workspace tools and the agent runner with that Node by its
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5a`.
+- [x] Start the workspace tools and the agent runner with that Node by its
       full path. The root folder of the tools installer also prefixes the
       runtime path.
-- [ ] Test with a stand-in runtime under the root folder and a failing
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5a`.
+- [x] Test with a stand-in runtime under the root folder and a failing
       `node` first on the search path. Say in the README how to update the
       version and the checksum.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5a`.
+
+Evidence: `.context/boat-native-remote-workspaces/milestone-5a/implementation-handoff.md`
+and `.context/boat-native-remote-workspaces/milestone-5a/docs-handoff.md`.
+Rename merge evidence: `.context/boat-native-remote-workspaces/milestone-5a/rename/code-handoff.md`
+and `.context/boat-native-remote-workspaces/milestone-5a/rename/docs-handoff.md`.
 
 ## Milestone 5b: Lifecycle fixes from the reviews
 

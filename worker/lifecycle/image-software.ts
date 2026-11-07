@@ -1,11 +1,13 @@
 import credentialScript from '../../image/git-credential-helper.mjs?raw'
 import credentialStart from '../../image/git-credential-helper.sh?raw'
+import runtimeInstall from '../../image/install-runtime.sh?raw'
 import installScript from '../../image/install.sh?raw'
 import runnerService from '../../image/conductive-runner.service?raw'
 import runnerStart from '../../image/runner-start.sh?raw'
 import { HttpError, isRecord } from '../http'
 import { terminalInstallCommand } from '../terminal/service'
 import { shellQuote, writeFileCommand } from './commands'
+import { IMAGE_NODE_RUNTIME, imageRuntimeScript } from './image-runtime'
 import { savedScriptCommand, type SavedScript } from './saved-script'
 
 export interface ImageSoftwareArtifact {
@@ -55,6 +57,7 @@ export function readImageSoftware(value: unknown): ImageSoftwareArtifact {
 export function installImageSoftware(artifact: ImageSoftwareArtifact): string {
   const files: Readonly<Record<string, string>> = {
     'install.sh': installScript,
+    'install-runtime.sh': runtimeInstall,
     'runner-start.sh': runnerStart,
     'git-credential-helper.sh': credentialStart,
     'git-credential-helper.mjs': credentialScript,
@@ -64,8 +67,13 @@ export function installImageSoftware(artifact: ImageSoftwareArtifact): string {
     'set -eu',
     'sudo -n install -d -m 700 -o user -g user /opt/conductive/staged',
     ...Object.entries(files).map(([name, text]) =>
-      writeFileCommand(`/opt/conductive/staged/${name}`, text, '644'),
+      writeFileCommand(
+        `/opt/conductive/staged/${name}`,
+        imageRuntimeScript(text),
+        '644',
+      ),
     ),
+    `sudo -n sh /opt/conductive/staged/install-runtime.sh ${shellQuote(IMAGE_NODE_RUNTIME.url)} ${shellQuote(IMAGE_NODE_RUNTIME.sha256)} ${shellQuote(IMAGE_NODE_RUNTIME.directory)}`,
     `sudo -n sh /opt/conductive/staged/install.sh ${shellQuote(artifact.url)} ${shellQuote(artifact.sha256)}`,
     terminalInstallCommand(),
   ].join('\n')
