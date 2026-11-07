@@ -12,6 +12,7 @@ import { saveVerifiedEmails } from '../members/verified-email-data'
 import { cookie, OAUTH_COOKIE, readCookie, SESSION_COOKIE } from './cookies'
 import { hash, sign, verify } from './crypto'
 import { GitHubClient } from './github'
+import { saveGitHubTokens } from './github-tokens'
 import { createDesktopHandoff, desktopChallenge } from './desktop-auth'
 import { desktopSessionCookie } from './desktop-contract'
 
@@ -83,12 +84,11 @@ export async function finishSignIn(
       'GitHub sign-in was cancelled. Start sign-in again.',
     )
   }
-  const profile = await new GitHubClient(dependencies.fetch).authorize(
-    code,
-    stored.verifier,
-    env,
-  )
+  const { profile, tokens } = await new GitHubClient(
+    dependencies.fetch,
+  ).authorizeWithTokens(code, stored.verifier, env, now)
   const user = await saveUser(env.DB, dependencies.randomToken(), profile, now)
+  await saveGitHubTokens(env, user.id, tokens, now)
   await saveVerifiedEmails(env.DB, user.id, profile.verifiedEmails)
   if (typeof stored.desktopChallenge === 'string') {
     return new Response(null, {

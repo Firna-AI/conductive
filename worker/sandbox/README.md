@@ -22,6 +22,11 @@ and a fragment token. The feature layer maps starting into its public response.
 Both methods use the same `BoatTransport` as commands, lifecycle, and file reads.
 The transport validates sandbox ID segments and centralizes errors and account pinning.
 
+`SandboxProvider.runCommand` and `SandboxProvider.startCommand` both call `POST /sandboxes/{id}/commands`.
+`runCommand` waits for the command, with a 600 second Boat timeout and a 610 second request timeout.
+`startCommand` starts a detached command, with a 30 second request timeout.
+`SandboxProvider.getCommandStatus` reads detached output from byte offsets, with the same 30 second timeout.
+
 ## Response byte limits
 
 Every Boat response uses the [shared bounded JSON reader](../http/README.md#bounded-json-reader).
@@ -42,6 +47,7 @@ A command with a nonzero exit code still uses 18 MiB when its HTTP response is s
 | `POST /sandboxes/{id}/host` | 1 MiB | 1 MiB |
 | `POST /sandboxes/{id}/desktop` | 1 MiB | 1 MiB |
 | `POST /sandboxes/{id}/commands` | 18 MiB | 1 MiB |
+| `GET /sandboxes/{id}/commands/{processId}` | 18 MiB | 1 MiB |
 | `POST /saved-snapshots` | 1 MiB | 1 MiB |
 | `GET`, `DELETE /saved-snapshots/{name}` | 1 MiB | 1 MiB |
 | `GET /sandboxes/{id}/files` | `4 × ceil(maxBytes / 3) + envelopeBytes` | 1 MiB |
@@ -70,7 +76,7 @@ The shared reader retains chunks while it allocates the collected byte buffer.
 
 The reader cancels when the next chunk crosses the budget.
 It does not retain that chunk or parse an incomplete body.
-For a command response, overflow throws `HttpError` with status 502 and code `command_output_too_large`.
+For a command or command status response, overflow throws `HttpError` with status 502 and code `command_output_too_large`.
 Its exact message is "The command output is too large."
 Other response overflows use status 502 and code `sandbox_response_too_large`.
 Their message is "The cloud computer response is too large."

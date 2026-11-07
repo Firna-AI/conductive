@@ -3195,6 +3195,18 @@ Added on 6 November 2026 from finding 6 of the Milestone 5 work.
   writes it nowhere. The Worker revokes it right after the clone, before
   any repository code runs. Milestone 5 applies it, and the access
   protocol states it.
+- **Risk accepted by the user on 7 November 2026:** the user chose D for
+  item 107, from finding 21. The native Git copy stays, and the code does
+  not change. The user accepts this remaining risk:
+  - A build sandbox starts from the last org image. A program with root
+    access that an earlier install left in that image can read the clone
+    token of a later copy.
+  - That token can only read its own repository, which the image already
+    holds. The Worker revokes it when the copy ends.
+  - So the record of the choice above covers only what the Worker, Git,
+    and the build do.
+  - The access protocol, the image README, and the lifecycle README now
+    state this risk.
 
 ### 91. Show the live start steps of a new workspace
 
@@ -4543,25 +4555,33 @@ Verification evidence: `.context/boat-native-remote-workspaces/milestone-4h/veri
 
 Depends on: 4a
 
-- [ ] Build the org image from the install script and the chosen
+- [x] Build the org image from the install script and the chosen
       repositories, keep the build history, and refresh the image after
-      pushes.
-- [ ] Create a workspace: fork, labels, branch, and workspace token.
-- [ ] Add the workspace Durable Object: tabs, idle stop, and resume on
-      open.
-- [ ] Record each start step with its time in the workspace Durable
+      pushes. Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Create a workspace: fork, labels, branch, and workspace token.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Add the workspace Durable Object: tabs, idle stop, and resume on
+      open. Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Record each start step with its time in the workspace Durable
       Object, and push it to the open tabs, as decision 20 says.
-- [ ] Update the workspace state from the runner's reports, and read the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Update the workspace state from the runner's reports, and read the
       sandbox state from Boat's API when the runner does not report.
-- [ ] Add the daily refresh timer and the 30-minute push limit.
-- [ ] Test the lifecycle against the fake Boat server.
-- [ ] Near day 14 of a stop, start the cloud computer briefly and stop it
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Add the daily refresh timer and the 30-minute push limit.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Test the lifecycle against the fake Boat server.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Near day 14 of a stop, start the cloud computer briefly and stop it
       again, as decision 43 says.
-- [ ] Count user activity as decision 29 says, and stop after 30 minutes
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Count user activity as decision 29 says, and stop after 30 minutes
       without activity or a running agent turn.
-- [ ] Add the git credential helper to the org image, and the Worker's
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Add the git credential helper to the org image, and the Worker's
       token route behind the workspace token. The route returns a fresh
       GitHub user token of the current turn's sender, as decision 50 says.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
 
 ## Milestone 5a: Pinned Node runtime
 

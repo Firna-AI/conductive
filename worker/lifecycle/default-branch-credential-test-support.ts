@@ -1,0 +1,84 @@
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import { TOOL_TURN_HEADER } from '../../tools/context'
+import { saveGitHubTokens } from '../security/github-tokens'
+import { TEST_TIME } from '../test-support/harness'
+import type { backendFixture } from './backend-test-support'
+import { FIRST_MESSAGE } from './durable-test-support'
+import { handleGitCredential } from './machine'
+import { readWorkspaceToken } from './tokens'
+import { createWorkspace } from './workspaces'
+
+export const SENDER_GITHUB_TOKEN = 'bootstrap-sender-github-token'
+
+/** Keep the HTTP credential helper boundary local, but use the real route. */
+export async function defaultBranchCredential(
+  fixture: Awaited<ReturnType<typeof backendFixture>>,
+) {
+  const { runtime, org, user } = fixture
+  const sender = {
+    ...user,
+    id: 'bootstrap-sender',
+    githubId: 18,
+    githubLogin: 'teammate',
+    displayName: 'Trusted Sender',
+  }
+  await runtime.env.DB.batch([
+    runtime.env.DB.prepare(
+      'INSERT INTO users (id, github_id, github_login, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+    ).bind(
+      sender.id,
+      sender.githubId,
+      sender.githubLogin,
+      TEST_TIME,
+      TEST_TIME,
+    ),
+    runtime.env.DB.prepare(
+      "INSERT INTO org_members (org_id, user_id, role, joined_at) VALUES (?, ?, 'member', ?)",
+    ).bind(org.id, sender.id, TEST_TIME),
+  ])
+  await saveGitHubTokens(
+    runtime.env,
+    sender.id,
+    {
+      accessToken: SENDER_GITHUB_TOKEN,
+      expiresAt: null,
+      refreshToken: null,
+      refreshExpiresAt: null,
+    },
+    TEST_TIME,
+  )
+  const created = await fixture.run(async () => {
+    const admitted = await createWorkspace(
+      runtime,
+      org.id,
+      user,
+      { repositoryId: fixture.repositoryId, firstMessage: FIRST_MESSAGE },
+      sender,
+    )
+    await runtime.workspace(admitted.workspace.id).waitCreationLifecycle()
+    return admitted
+  })
+  const token = await readWorkspaceToken(runtime.env, created.workspace.id)
+  const turns: string[] = []
+  return {
+    sender,
+    turnId: created.first.turnId,
+    turns,
+    issue: (turnId: string) => {
+      turns.push(turnId)
+      return handleGitCredential(
+        new Request(
+          `${runtime.env.MACHINE_ORIGIN}${MACHINE_PATHS.gitCredential}`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              [TOOL_TURN_HEADER]: turnId,
+            },
+          },
+        ),
+        runtime,
+      )
+    },
+  }
+}
