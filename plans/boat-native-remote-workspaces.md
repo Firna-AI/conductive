@@ -4839,13 +4839,29 @@ Depends on: 7s, 8j
 
 Apply decision 97 D.
 
-- [ ] The session record names the one message that Try again may retry:
+Agent calls on 7 November 2026, within decision 97 D:
+
+- Keep an internal newest-turn ID after a waiting turn stops. Reason: its
+  removal from the waiting chain must not make an older failure retryable.
+- Keep the retry message of the session record with the highest event
+  number. Seed it from the session list read after history. Reason: an
+  older history reply must not replace newer retry permission.
+- When a continued message occurs in more than one failed turn, select
+  the item of the newer known turn. Reason: the record names one message,
+  and only one failed item may offer Try again.
+
+Verification evidence: `.context/boat-native-remote-workspaces/8k/verification.md`.
+
+- [x] The session record names the one message that Try again may retry:
       the retry message of the newest turn when that turn failed, or
-      none.
-- [ ] The retry route refuses any other message with 409. The chat shows
+      none. Branch: `conductor/boat-native-remote-workspaces-milestone-8k`.
+- [x] The retry route refuses any other message with 409. The chat shows
       Try again only on the failed item that the record names.
-- [ ] Test an old Try again in a second tab, and update the chat protocol.
-- [ ] Delete `plans/follow-ups/chat-retry-newest-turn.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8k`.
+- [x] Test an old Try again in a second tab, and update the chat protocol.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8k`.
+- [x] Delete `plans/follow-ups/chat-retry-newest-turn.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8k`.
 
 ## Milestone 8l: Notices of a failed repair
 

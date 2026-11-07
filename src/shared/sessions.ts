@@ -44,6 +44,7 @@ export interface Session {
   createdAt: Timestamp
   closedAt: Timestamp | null
   activeTurnId: string | null
+  retryMessageId: string | null
 }
 export interface SessionsResponse {
   sessions: readonly Session[]

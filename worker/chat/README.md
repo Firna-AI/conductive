@@ -26,7 +26,7 @@ which serves these routes. The path helpers live in
 | `POST` sessions | `sessionsPath` | Creates a session |
 | `PATCH` session | `sessionPath` | Renames a session |
 | `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn |
-| `POST` retry | `retryMessagePath` | Sends the message of a failed turn again |
+| `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
 | `POST` interrupt | `sessionPaths.interrupt` | Stops a turn |
 | `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session |
 | `POST` close, reopen | `sessionPaths.close`, `sessionPaths.reopen` | Moves a session to the session history, and back |
@@ -50,9 +50,9 @@ run no gate.
 - `closeRunner()` closes the current runner connection, for example when
   the sandbox stops.
 
-A cross-agent model change uses the client's `newSessionId`. A retry uses
-the same session. An unrelated occupied ID is refused. A same-agent change
-ignores this field.
+A cross-agent model change uses the client's `newSessionId`. A repeated
+request gets the same session. An unrelated occupied ID is refused. A
+same-agent change ignores this field.
 
 ## Access
 
@@ -135,6 +135,31 @@ The Durable Object runs the gates itself.
 - A new `model` command replaces the pending `model` command of its
   session.
 
+## Retries
+
+[Messages](../../docs/protocol/chat-and-events.md#messages) states the
+rules. `Session.retryMessageId` names the one message that the retry route
+accepts. It is the only public part of the retry state.
+
+- `ChatTransaction.newestTurn` and `saveNewestTurn` keep the ID of the
+  newest turn of each session under the `chat:v1:newest-turn:` prefix. This
+  internal record never reaches a tab.
+- Each accepted message records its turn there, also a running turn that it
+  joins. It also sets `retryMessageId` to null.
+- The end of the active turn sets `retryMessageId` to the retry message of a
+  failed end. It does so only when that turn is still the newest turn. Every
+  other end sets null.
+- A refused end has no retry message, so it sets null.
+- A turn that waits counts as the newest turn, also after a Stop ends it
+  before it starts.
+- When the newest turn finishes, a continuation of its unanswered messages
+  becomes the newest turn.
+- The session record and its `session.updated` event commit in the same
+  transaction as the change that sets the field.
+- A missing message, or a message of another session, gets
+  `404 message_not_found`. Each other message that the record does not name
+  gets `409 retry_not_available`, and the route writes nothing.
+
 ## Report repairs
 
 [Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
@@ -206,6 +231,10 @@ npm run typecheck
   each kind, and reads the requests and markers of the repair tests.
 - `late-events.test.ts` and `never-started.test.ts` cover replay after a
   workspace stop and the queued-turn eligibility rules.
+- `retry.test.ts` and `retry-queue.test.ts` cover the retry of the newest
+  failed turn: a stale second tab, a refused end, waiting work, and a
+  failed commit. `retry.test-support.ts` sends retries and reads the
+  session records.
 - `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
   end. It also checks that late ends preserve the next turn and its commands.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,
@@ -225,7 +254,8 @@ lifecycle, the files, the agent runner, and the logins and attachments.
 - `backend.ts`: `WorkspaceChat`, its gates, and the open tabs.
 - `http-routes.ts`, `messages.ts`, and `sessions.ts`: the routes, the turns,
   and the session state.
-- `model-changes.ts`: client session IDs, retry records, and ID conflicts.
+- `model-changes.ts`: client session IDs, the creation records that repeated
+  requests match, and ID conflicts.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, and the chunks of large file reports.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
@@ -242,8 +272,9 @@ lifecycle, the files, the agent runner, and the logins and attachments.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
 - `turn-lifecycle.ts`, `turn-events.ts`, `turn-context.ts`, and
-  `continuation.ts`: active and waiting turns, safe turn context, late data,
-  terminal events, and unanswered messages.
+  `continuation.ts`: active and waiting turns, the retry message of a turn
+  end, safe turn context, late data, terminal events, and unanswered
+  messages.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-tabs.ts` and `browser-access.ts`: open tabs, the scheduled access
   check, and its batched D1 query.
@@ -255,6 +286,7 @@ lifecycle, the files, the agent runner, and the logins and attachments.
 
 ## Related docs
 
+- [Chat and events: Messages](../../docs/protocol/chat-and-events.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
 - [Chat and events: Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
 - [Chat backend integration](integration/README.md)

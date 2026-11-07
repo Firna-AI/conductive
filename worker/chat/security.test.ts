@@ -180,12 +180,23 @@ describe('workspace chat security', () => {
     expect(response.status).toBe(202)
     expect(retry.message.sender.id).toBe(fixture.member.id)
     expect(retry.message.id).not.toBe('message-1')
-    expect(
-      await (await fixture.fetch(retryPath, {}, fixture.memberCookie)).json(),
-    ).toMatchObject({ message: { id: retry.message.id } })
+    const duplicate = await fixture.fetch(retryPath, {}, fixture.memberCookie)
+    expect(duplicate.status).toBe(409)
+    expect(await duplicate.json()).toEqual({
+      error: {
+        code: 'retry_not_available',
+        message:
+          'Only the newest failed request can run again. Send a new message.',
+      },
+    })
     expect(runner.commands).toHaveLength(2)
     const retried = runner.commands[1]
     if (retried?.type !== 'turn') throw new Error('Expected a retry turn.')
     expect(retried.login.secret).toBe(`secret-${fixture.member.id}-claude`)
+    expect(
+      (await fixture.history(session.id)).events.filter(
+        ({ event }) => event.type === 'message.accepted',
+      ),
+    ).toHaveLength(2)
   })
 })
