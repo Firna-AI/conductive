@@ -95,7 +95,7 @@ under `.wrangler/`, which Git also ignores.
 | `npm run dev`               | Serve the web app and the local Worker                         |
 | `npm run build`             | Check types and build the web app and Worker into `dist/`      |
 | `npm run preview`           | Serve the built app and local Worker at port 5174              |
-| `npm run typecheck`         | Generate Worker types, then check the app, Worker, and tools   |
+| `npm run typecheck`         | Generate types and check app, tools, Worker production, and Worker tests |
 | `npm run test`              | Run the Vitest tests                                           |
 | `npm run db:migrate`        | Apply the D1 migrations to local storage                       |
 | `npm run file-length:check` | Check the 300-line limit of JavaScript and TypeScript files     |

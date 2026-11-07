@@ -3372,6 +3372,46 @@ Added on 7 November 2026, with decision 101.
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 7 November 2026.
 
+### 102. Name the hostname for machines and version its paths
+
+Added on 7 November 2026, with decision 101.
+
+- **Background:** The runner, the agent tools, the git credential helper,
+  and GitHub's webhooks call the Worker on their own hostname. Its gate
+  checks a workspace token or a webhook signature, never a browser
+  cookie.
+- **Options:**
+  - **A.** `machines.conductive.build`.
+  - **B.** `api.conductive.build`.
+  - **C.** `m.conductive.build`.
+- **Recommendation:** A.
+- **Chosen:** B, by the user on 7 November 2026, with versioned paths: "sounds
+  like an api - so api.conductive.build - but also we should version it".
+  The machine routes live under `/v1/`, such as
+  `https://api.conductive.build/v1/github/webhooks`. The preview domain is
+  `conductive.page`, which the user bought. Milestone 15j applies both.
+
+### 104. Keep the late events of a turn that has ended
+
+Added on 7 November 2026 from round 2 finding 5 of the Milestone 8j
+review, and the user's question "why do we reject these events?".
+
+- **Background:** Decision 76 refused a runner event of a turn that is
+  not active. When a cloud computer stops during a turn, the runner sends
+  its unconfirmed events again after the resume, and the workspace has
+  already ended that turn. So real agent text was lost.
+- **Options:**
+  - **D.** Keep refusing them, with the reason "turn not active" first.
+  - **E.** Keep a late event in its turn, without reopening the turn.
+  - **B.** Keep refusing them, and let the chat keep its own list of
+    turns.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 7 November 2026. The workspace stores a
+  late event of an ended turn in that turn. The turn stays ended: no
+  Working state, no Stop, and a tool that was running shows as stopped.
+  The workspace refuses only an event of a turn that never started.
+  Milestone 7s builds the workspace side, and Milestone 8j the chat side.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4295,12 +4335,19 @@ Depends on: none
 
 Apply decision 98 C.
 
-- [ ] Split `tsconfig.worker.json` into a production project without Node
+Status: Complete. The split found no Node-only use in production Worker code.
+
+Verification evidence: `.context/boat-native-remote-workspaces/milestone-4h/verification.md`.
+
+- [x] Split `tsconfig.worker.json` into a production project without Node
       types and a test project with them, and check both in
       `npm run typecheck`.
-- [ ] Fix each Node-only import or Node global that the split finds in
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4h`.
+- [x] Fix each Node-only import or Node global that the split finds in
       production Worker code.
-- [ ] Delete `plans/follow-ups/worker-typecheck-accepts-node-imports.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4h`.
+- [x] Delete `plans/follow-ups/worker-typecheck-accepts-node-imports.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4h`.
 
 ## Milestone 5: Bases and workspace lifecycle
 
@@ -4420,6 +4467,10 @@ Apply decision 76 E in the workspace Durable Object.
 - [ ] Join the parts of a file tree and of a changes list before the
       files store takes them.
 - [ ] Test each refusal, a tree in parts, and a resend after a refusal.
+- [ ] Apply decision 104 E: store a late event of an ended turn in that
+      turn, and never reopen the turn. Refuse only an event of a turn that
+      never started. State the rule in the protocol, in place of the old
+      refusal of every event of a turn that is not active.
 - [ ] Apply decision 96 E: add a runner command that asks for a fresh full
       report of the file list, the changes list, the start steps, or the
       workspace name. Send it once after the workspace refuses such an
@@ -4761,6 +4812,10 @@ starts, and rename each name that they add.
       database name, the test domains, and the brand file names.
 - [ ] Redraw the name in the brand lockups of `docs/brand/`, and make the
       marketing pictures and the screenshots that show the name again.
+- [ ] Serve the machine routes on `api.conductive.build` under `/v1/`: the
+      runner socket, the agent tools, the git credential helper, and the
+      GitHub webhooks, as decision 102 says. Use `conductive.page` as the
+      preview domain. Name both in the architecture doc and the protocol.
 - [ ] Merge the primary branch last, and rename each new occurrence. Then
       a search for "conducting" finds only decision records and history.
 
