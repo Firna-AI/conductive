@@ -4767,6 +4767,22 @@ The review also fixed recovery of a snapshot intent stored before dispatch.
 - [x] Apply the recorded option of `plans/follow-ups/script-command-type.md`, and
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
 
+## Milestone 5c: Lifecycle, build log, and members fixes
+
+Depends on: 5b
+
+Apply the `fix after merge` items of the Milestone 5b and 15l reviews.
+Added on 8 November 2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/build-log-stream-format.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/image-build-transient-errors.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-command-repeat-after-restart.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/members-late-role-failure-after-removal.md`, and
+      delete that item.
+
 ## Milestone 6: App shell and workspaces
 
 Tags: ui
