@@ -1,7 +1,7 @@
 # Agent logins are readable inside the sandbox
 
 - **Severity:** High. **Effort:** Large. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-07, from the user's request on branch `calummoore/conductor-alternative-architecture`, after a read of Conductor's sandbox worker. The user sees it as item 120.
 - **Location:** `providerEnvironment` in `runner/src/providers/environment.ts:15`, the Codex model provider in `runner/src/providers/codex.ts:40`, the `RunnerLogin` type in `src/shared/runner.ts:88`, the login read in `worker/chat/queries.ts:52`, and the section "Agent logins in a sandbox" of `docs/protocol/access-and-security.md`.
 - **Reason:** the access protocol records that the user rejected a login proxy as a much larger build, so only the user can bring it back.
@@ -66,4 +66,4 @@
   - `plans/follow-ups/agent-login-in-tool-processes.md` has the same cause: the login is in the environment of the agent. Each option of this item also fixes that item. If the user chooses one, drop that item.
   - `plans/follow-ups/github-token-readable-in-sandbox.md` has the same class: a member's secret that sandbox code can take. The Worker proxy of option A and a Git proxy can share the check of the running turn.
 - **Recommendation:** A. It ties each turn token to one turn and its login, also when sessions run in parallel, and it needs no wider Boat key and no Boat fee.
-- **Action:** ask the user, because the access protocol records that the user rejected a login proxy as a much larger build, and each option reverses that rule.
+- **Action:** fix after merge, apply A, as the user chose on 8 November 2026 (decision 120), as a later follow-up. Before A covers Claude subscription tokens, check that the permission of decision 37 covers a proxy, because Anthropic's legal page forbids developers to intermediate Claude.ai credentials.

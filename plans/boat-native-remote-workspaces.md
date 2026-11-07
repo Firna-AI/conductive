@@ -3727,6 +3727,26 @@ Added on 7 November 2026 from option C of the follow-up item
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 7 November 2026. Milestone 11c builds it.
 
+### 120. Keep agent logins out of the sandbox
+
+Added on 7 November 2026 from the user's request after a read of
+Conductor's sandbox worker.
+
+- **Background:** The runner puts the real login into the agent program's
+  environment, so each process and each member's terminal in the sandbox
+  can read it while a turn runs.
+- **Options:**
+  - **A.** A model proxy in the Worker, with a turn token in the sandbox.
+  - **B.** An HTTPS proxy on a new server outside the sandbox.
+  - **C.** Boat's AI credentials proxy.
+  - **D.** Run the agent programs outside the sandbox.
+- **Recommendation:** A.
+- **Chosen:** A, as a later follow-up, by the user on 8 November 2026:
+  `plans/follow-ups/agent-logins-readable-in-sandbox.md`. It reverses the
+  earlier rejection of a login proxy when it lands. Before it covers
+  Claude subscription tokens, check that the permission of decision 37
+  covers a proxy.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
