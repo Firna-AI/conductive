@@ -5,7 +5,8 @@ import type {
   UserMessage,
 } from '../../src/shared/messages'
 import { HttpError } from '../http'
-import { queueModel, sameAgent, sessionFor } from './sessions'
+import { sessionFor } from './session-record'
+import { queueModel, sameAgent } from './sessions'
 import type { ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
 import type { ResolvedAttachments, StoredTurn } from './types'

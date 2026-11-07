@@ -80,7 +80,7 @@ export class WorkspaceChat {
           this.operation(access.workspace.id),
           this.dependencies,
         )
-        await this.runner.flush()
+        if (write) await this.runner.flush()
         return privateResponse(response)
       })
     } catch (error) {
@@ -233,7 +233,8 @@ export class WorkspaceChat {
     peer: BrowserPeer,
   ): Promise<() => void> {
     return this.store.run(async () => {
-      await this.operation(access.workspace.id).logins.refresh()
+      if (access.workspace.archivedAt === null)
+        await this.operation(access.workspace.id).logins.refresh()
       const unsubscribe = await this.browsers
         .add(peer, {
           kind: 'workspace',

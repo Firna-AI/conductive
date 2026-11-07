@@ -192,36 +192,46 @@ state the rules.
 - The first message of a new workspace must create its session with
   `FirstWorkspaceMessage.sender` as the starter, never the workspace owner.
   The outer Worker does not wire that hook yet.
-- `SessionLogins.observe` in `session-login.ts` reads the starter's login of
-  one existing session through `readLogin`. When `loginAvailable` changes,
-  it commits the new value and a `session.updated` event in its own change.
-  An unchanged result writes nothing. `SessionLogins.refresh` observes each
-  session of the workspace.
+- `SessionLogins` in `session-login.ts` holds every login lookup of the chat
+  backend. It has a metadata path and a credential path.
+- The metadata path reads only the org membership of each starter and the
+  kind of the stored login. It reads no ciphertext and decrypts nothing.
+  `readLoginAvailability` in `login-availability.ts` makes one D1 query for
+  all requested sessions, with a JSON input. `agentLoginKind` in `login-kind.ts`
+  gives this path and `readAgentLogin` one rule for a valid login kind.
+- `SessionLogins.refresh` runs the metadata path for the starters of all open
+  sessions when a new tab subscribes. An archived workspace skips it.
+- `SessionLogins.metadata` runs the metadata path for one session before
+  the other routes of that session make their own change: rename,
+  interrupt, model, close, and reopen. It skips a closed session.
+- The credential path reads and decrypts the login through `readLogin`, with
+  its access checks. `SessionLogins.observe` runs it for Send and for a Retry
+  that the session record allows. It also runs it for each `turn` or
+  `message` command before it goes to the runner.
+- When a path finds a changed `loginAvailable` of an existing session, it
+  commits the new value and a `session.updated` event in its own change. An
+  unchanged result writes nothing.
 - `ChatOperation` in `operation.ts` gives each caller its reads and changes
   in the serial queue that the caller holds. Each change commits on its
   own.
-- These points run an observation, in the serial queue:
-  - the session list and a new tab subscription, which refresh each session
-  - a history read
-  - the other routes of one session, before their own change: rename,
-    interrupt, model, close, and reopen
-  - Send, and a Retry that the session record allows, before the workspace
-    accepts or refuses the message
-  - each `turn` or `message` command, before it goes to the runner
+- The session list and a history read check no login and flush no runner. A
+  write route, a runner connection, and a runner event still flush it.
+- A login that the credential path reads never enters the history or the
+  storage.
 - An observed change stays when the action after it fails or is refused.
   For example, the workspace refuses Send after it observes the starter's
   missing login. Each tab still gets `loginAvailable: false`.
 - A message, its commands, its attachment references, and a linked session
   commit together in one change, or not at all.
-- A new session gets its first `loginAvailable` from `readLogin` in the
-  change that creates its record, because no earlier record exists.
+- A new session gets its first `loginAvailable` from `SessionLogins.initial`
+  in the change that creates its record, because no earlier record exists.
 - A repeated message ID returns its stored target with no new check. A
   `model` or `interrupt` command carries no login, so its dispatch reads no
   login. No timer watches logins.
 - `send` in `send-message.ts` observes the starter's login before it accepts
-  a message. When that login cannot be used, `readLogin` checks the own
-  login of the member. Another member with a login gets a new linked session
-  with `sourceSessionId`. Only the new message goes there.
+  a message. When that login cannot be used, `SessionLogins.forMember`
+  checks the own login of the member. Another member with a login gets a new
+  linked session with `sourceSessionId`. Only the new message goes there.
 - While the starter's login cannot be used, the starter's own message gets
   `409 agent_login_required`. So does the message of another member who
   has no login either. No session is created.
@@ -250,6 +260,9 @@ test support files and tests check the chat backend.
 - Set `crashAfterCommit` to commit the next transaction, then throw once.
   The restart tests cover retry permission, report repairs, turn cleanup,
   and file assembly after a commit crash.
+- Send and Retry can commit a changed login observation before acceptance.
+  So an acceptance crash test first makes the stored `loginAvailable` current,
+  then sets `crashAfterCommit`. The fault then hits the acceptance commit.
 - `createRunnerLimitsFixture` in `runner-limits.test-support.ts` runs one
   `RunnerChannel` for the refusal, cap, and file part tests.
 - `runner-repairs.test-support.ts` builds a full and an oversized report of
@@ -264,6 +277,13 @@ test support files and tests check the chat backend.
   and `legacy-sessions.test.ts` test starters, linked sessions, and old data.
   `login-observation.test.ts` tests that an observed change stays after a
   refused Send, and that a repeated message ID observes nothing.
+  `linked-retry.test.ts` also restarts after a crash at the acceptance of a
+  linked Retry. It checks each stored record, and a stale Retry gets 409.
+- `login-availability.test.ts` tests the metadata path. One query serves one
+  or four sessions and reads no credential. Reads check no login and flush
+  no runner. The list and a new tab still work with a damaged starter
+  ciphertext. Closed sessions and archived workspaces stay unchanged.
+  `login-queries.test-support.ts` records its D1 login queries.
 - `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
   end. It also checks that late ends preserve the next turn and its commands.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,

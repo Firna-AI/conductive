@@ -2,24 +2,10 @@ import type { AgentChoice } from '../../src/shared/agents'
 import type { MessageSender } from '../../src/shared/messages'
 import type { Session } from '../../src/shared/sessions'
 import { HttpError } from '../http'
-import { readLogin } from './login-access'
+import { SessionLogins } from './session-login'
 import type { ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
 import type { ChatDependencies } from './types'
-
-export async function sessionFor(
-  transaction: ChatTransaction,
-  id: string,
-): Promise<Session> {
-  const session = await transaction.session(id)
-  if (!session)
-    throw new HttpError(
-      404,
-      'session_not_found',
-      'The session is not available.',
-    )
-  return session
-}
 
 export async function createSession(
   transaction: ChatTransaction,
@@ -29,7 +15,11 @@ export async function createSession(
   dependencies: ChatDependencies,
   sourceSessionId: string | null = null,
 ): Promise<Session> {
-  const login = await readLogin(dependencies, startedBy.id, choice.agent)
+  const login = await SessionLogins.initial(
+    dependencies,
+    startedBy.id,
+    choice.agent,
+  )
   const session: Session = {
     id,
     workspaceId: transaction.workspaceId,

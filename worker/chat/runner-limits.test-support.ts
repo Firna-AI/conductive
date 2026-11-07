@@ -49,6 +49,7 @@ export async function createRunnerLimitsFixture() {
     scheduleBrowserCheck: () => () => undefined,
     readConnectionAccess: async () => [],
     randomId: () => `command-${++commandSequence}`,
+    readLoginAvailability: async () => new Set<string>(),
     resolveLogin: async () => null,
     resolveAttachments: async () => ({ attachments: [], paths: [] }),
     receiveFileResult: async () => undefined,

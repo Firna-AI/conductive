@@ -83,6 +83,7 @@ describe('session starter logins', () => {
     )
       .bind(fixture.org.id, fixture.owner.id)
       .run()
+    const newTab = await fixture.tab(0, undefined, fixture.memberCookie)
     const response = await fixture.fetch(
       sessionsPath(fixture.org.id, WORKSPACE_ID),
       undefined,
@@ -97,6 +98,25 @@ describe('session starter logins', () => {
     expect(liveSessions(memberTab.messages)).toMatchObject([
       { id: session.id, loginAvailable: false },
     ])
+    expect(newTab.messages[0]).toMatchObject({
+      type: 'history',
+      history: {
+        events: [
+          {
+            event: {
+              type: 'session.updated',
+              session: { loginAvailable: true },
+            },
+          },
+          {
+            event: {
+              type: 'session.updated',
+              session: { loginAvailable: false },
+            },
+          },
+        ],
+      },
+    })
     const linked = await fixture.send(
       session.id,
       'after-removal',
@@ -106,7 +126,9 @@ describe('session starter logins', () => {
     expect(linked.session.sourceSessionId).toBe(session.id)
     expect(linked.message.sessionId).toBe(linked.session.id)
     expect(JSON.stringify(memberTab.messages)).not.toContain('secret-')
+    expect(JSON.stringify(newTab.messages)).not.toContain('secret-')
     memberTab.close()
+    newTab.close()
   })
 
   it('checks the queued sender membership separately from the available starter login', async () => {

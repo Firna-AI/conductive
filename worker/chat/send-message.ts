@@ -4,8 +4,8 @@ import type { RequestContext } from '../security/gate'
 import { sendMessage } from './inputs'
 import { acceptMessage, existingMessage } from './messages'
 import type { ChatOperation } from './operation'
-import { readLogin } from './login-access'
-import { createSession, sameAgent, sessionFor } from './sessions'
+import { sessionFor } from './session-record'
+import { createSession, sameAgent } from './sessions'
 import type { ChatDependencies } from './types'
 
 export async function send(
@@ -37,13 +37,7 @@ export async function send(
     const ownLogin =
       source.startedBy?.id === context.user.id
         ? null
-        : await readLogin(
-            dependencies,
-            context.user.id,
-            input.choice.agent,
-            undefined,
-            context.user.id,
-          )
+        : await operation.logins.forMember(context.user.id, input.choice.agent)
     if (!ownLogin || ownLogin.agent !== input.choice.agent)
       throw new HttpError(
         409,

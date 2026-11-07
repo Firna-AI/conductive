@@ -117,7 +117,9 @@ describe('empty linked sessions', () => {
       choice: CLAUDE,
       attachmentIds: [],
     }
-    await sessionRecord(fixture, source.id)
+    const observation = await fixture.tab(0, undefined, fixture.memberCookie)
+    expect((await sessionRecord(fixture, source.id)).loginAvailable).toBe(false)
+    observation.close()
     fixture.storage.crashAfterCommit = true
     const lost = await fixture.fetch(path, input, fixture.memberCookie)
     expect(lost.status).toBe(500)

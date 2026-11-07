@@ -5,7 +5,8 @@ import { choice, counter, identifier, invalidInput } from './inputs'
 import { send, retryMessage } from './send-message'
 import { changeModel } from './model-changes'
 import type { ChatOperation } from './operation'
-import { closeSession, createSession, sessionFor, stopTurn } from './sessions'
+import { sessionFor } from './session-record'
+import { closeSession, createSession, stopTurn } from './sessions'
 import type { ChatDependencies } from './types'
 
 export function afterNumber(url: URL): number {
@@ -31,7 +32,7 @@ export async function chatRoute(
   const url = new URL(request.url)
   if (suffix === '/history' && request.method === 'GET') {
     const sessionId = identifier(url.searchParams.get('sessionId'))
-    await operation.logins.observe(sessionId)
+    await operation.read((view) => sessionFor(view, sessionId))
     const history = await operation.read((view) =>
       view.history(afterNumber(url)),
     )
@@ -46,7 +47,6 @@ export async function chatRoute(
   }
   if (suffix === '/sessions') {
     if (request.method === 'GET') {
-      await operation.logins.refresh()
       const sessions = await operation.read((view) => view.sessions())
       return Response.json({
         sessions: sessions
@@ -97,7 +97,7 @@ export async function chatRoute(
         : await send(operation, sessionId, context, dependencies)
     return Response.json(reply, { status: 202 })
   }
-  const { session } = await operation.logins.observe(sessionId)
+  const session = await operation.logins.metadata(sessionId)
   return operation.change(async (transaction) => {
     if (!action && request.method === 'PATCH') {
       session.title = requiredString(context.body?.title)

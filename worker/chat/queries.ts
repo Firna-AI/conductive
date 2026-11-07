@@ -2,6 +2,7 @@ import type { Agent } from '../../src/shared/agents'
 import type { RunnerLogin } from '../../src/shared/runner'
 import type { AppEnv } from '../env'
 import { decrypt, hash } from '../security/crypto'
+import { agentLoginKind } from './login-kind'
 import type { RunnerWorkspaceRecord, WorkspaceRecord } from './types'
 
 const workspaceColumns = `workspaces.id, workspaces.org_id AS orgId,
@@ -53,19 +54,14 @@ export async function readAgentLogin(
   )
     .bind(userId, agent)
     .first<{ kind: string; ciphertext: string }>()
-  if (!row) return null
+  const loginKind = row ? agentLoginKind(agent, row.kind) : null
+  if (!row || !loginKind) return null
   const secret = await decrypt(
     row.ciphertext,
     agentLoginContext(userId, agent),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
-  if (agent === 'codex' && row.kind === 'api-key') {
-    return { agent, kind: 'api-key', secret }
-  }
-  if (agent === 'claude' && (row.kind === 'token' || row.kind === 'api-key')) {
-    return { agent, kind: row.kind, secret }
-  }
-  return null
+  return { ...loginKind, secret }
 }
 
 export async function senderLoginAccess(
