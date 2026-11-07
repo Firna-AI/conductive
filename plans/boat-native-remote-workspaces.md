@@ -4343,14 +4343,14 @@ Verification evidence: `.context/boat-native-remote-workspaces/milestone-4h/veri
 
 Depends on: 4a
 
-- [ ] Build the org image from the install script and the chosen
+- [x] Build the org image from the install script and the chosen
       repositories, keep the build history, and refresh the image after
       pushes. Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
-- [ ] Create a workspace: fork, labels, branch, and workspace token.
+- [x] Create a workspace: fork, labels, branch, and workspace token.
       Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
 - [x] Add the workspace Durable Object: tabs, idle stop, and resume on
       open. Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
-- [ ] Record each start step with its time in the workspace Durable
+- [x] Record each start step with its time in the workspace Durable
       Object, and push it to the open tabs, as decision 20 says.
       Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
 - [x] Update the workspace state from the runner's reports, and read the
