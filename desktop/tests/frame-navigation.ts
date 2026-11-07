@@ -3,7 +3,7 @@ import type { ElectronApplication, Page } from '@playwright/test'
 
 import { DESKTOP_ORIGIN } from '../../worker/security/desktop-contract.js'
 
-/** The minimal product has no links or preview yet. Arrange their real browser boundaries. */
+/** Arrange real link and frame navigation to test the desktop boundaries. */
 export async function expectFrameIsolation(
   electron: ElectronApplication,
   page: Page,

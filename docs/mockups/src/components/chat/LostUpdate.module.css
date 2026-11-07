@@ -1,0 +1,53 @@
+/*
+ * Both places tint the whole bar or row in amber, as the other warning bars
+ * do, and their edges stay neutral. A narrow column wraps the text.
+ */
+.bar,
+.row {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 8px;
+  background: var(--ui-amber-soft);
+  box-sizing: border-box;
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.bar {
+  min-height: var(--ui-bar-height);
+  padding: 4px 6px 4px var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  align-items: center;
+}
+
+.row {
+  padding: 8px var(--ui-pad-x);
+  border-top: 1px solid var(--ui-border);
+}
+
+.icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--ui-amber-deep);
+}
+
+.bar .icon {
+  margin-top: 0;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  color: var(--ui-ink);
+  text-wrap: pretty;
+}
+
+.ago {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  line-height: 1.6;
+  white-space: nowrap;
+}

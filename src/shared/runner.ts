@@ -130,12 +130,23 @@ export interface RunnerChangeModel {
   choice: AgentChoice
 }
 
+export type RunnerReportKind =
+  'files.snapshot' | 'changes.updated' | 'start.updated' | 'workspace.title'
+
+/** Request a complete current report. Transport redelivery keeps the command ID. */
+export interface RunnerReportRefresh {
+  type: 'report.refresh'
+  commandId: string
+  kind: RunnerReportKind
+}
+
 export type RunnerCommand =
   | RunnerTurn
   | RunnerMessageDuringTurn
   | RunnerInterrupt
   | RunnerChangeModel
   | RunnerFileCommand
+  | RunnerReportRefresh
 
 export type WorkspaceToRunner =
   RunnerWelcome | RunnerConfirm | RunnerResend | RunnerCommand

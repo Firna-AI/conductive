@@ -9,9 +9,9 @@ A changed file opens its unified diff. The requirements are in
 The visual spec is the `app/files` page of the
 [mockup catalogue](../../docs/mockups/README.md).
 
-The screens render data from the Worker only. They build against the fake
-API of [the browser fakes](../test-support/README.md) until the shell wires
-them, in Milestone 15i of the plan.
+The screens render data from the Worker only. The app does not mount them
+yet. The development pages and the tests run them against the fake API of
+[the browser fakes](../test-support/README.md).
 
 ## Integration
 
@@ -38,7 +38,12 @@ revisions, it reads the tree route again.
 
 The stored history and the live events change the open pages in the same
 way. An event names the paths whose file or diff it may change, and the
-open page of such a path reads again. Some events cannot name their paths:
+open page of such a path reads again.
+
+An add-or-replace (`upsert`) with unchanged entry fields reports a content
+change, so the open file and diff read again.
+
+Some events cannot name their paths:
 
 - a new full tree
 - a tree update that waits for a tree, or that the tree already holds
@@ -47,6 +52,36 @@ open page of such a path reads again. Some events cannot name their paths:
 After such an event, each open page reads its file or diff again. The
 store collects the changes of one message: a whole history, or one live
 event. Then it applies them once.
+
+The workspace can refuse an update of a file list. After such a first
+loss, it asks the runner for a fresh full report of that list, and the
+screens show nothing. When the workspace refuses that report too, the
+repair failed.
+[Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+gives the rules. `FilesSnapshot.failedRepairs` holds the failed repairs of
+the two lists:
+
+- The key is `files.snapshot` for All files, or `changes.updated` for
+  Changes. The value is the time of the first failed repair since the last
+  full report of that list, in Unix milliseconds.
+- Only a marker with `repairFailed: true` and no session adds a failed
+  repair. A first loss adds nothing. The chat owns the markers of a session.
+- Only a later full report of the same list in the stream clears it. A
+  tree delta and a report of the other list clear nothing.
+  [Files and changes](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+  says which reports replace a list.
+- A reply of a route clears nothing, also the read of the tree after a gap
+  in the revisions. Only the order of the stream shows that a report is
+  newer than the failure.
+- A further failure of a failed list keeps the time of the first one.
+- The store reads the failures from the same stream as the file events, in
+  event order, and keeps them in memory. A new subscription after a gap
+  keeps them. A new store reads the stored history of the workspace from
+  its first event, so a new tab shows them too.
+
+The workspace screen shows the failed repairs of the name and the start
+steps below its header, as [the workspace screen](../shell/workspace/README.md)
+says.
 
 The shell owns the workspace view on the Worker: the open tabs, the
 active tab, and the list. It passes them to the screens, with a
@@ -63,7 +98,11 @@ The screens:
   for the right column on desktop and the Files tab on a phone. The
   `checks` prop takes the Checks list of the GitHub banner screens. The
   `placeholder` prop replaces All files and Changes, for example with a
-  sandbox state.
+  sandbox state. Under the lists, the panel shows one notice for each
+  failed repair, in the order of the tabs, with its age. The notices show
+  under each of the three tabs, and they have no Dismiss. The `now` prop
+  gives the clock of the ages. Pass a stable function. The default is
+  `Date.now`.
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
   switch navigates to the same tab with the other mode.
 - `DiffPage` shows the diff of one changed file.
@@ -153,6 +192,7 @@ state of the page:
 | `list`     | `all`, `changes`, or `checks`                                 |
 | `tab`      | `file:preview:<path>`, `file:source:<path>`, or `diff:<path>` |
 | `scenario` | `mockup`, the mockup data, or `live`, which replays the updates |
+| `repair`   | `all-files`, `changes`, or both, as `all-files,changes`: the failed repairs of the stored history |
 | `controls` | `off` hides the development controls                         |
 
 For example, `?list=changes&tab=diff:src/app/checkout/AddressForm.tsx`
@@ -167,6 +207,19 @@ as the Worker does. Download saves the reply of the fake API, through
 the recorded updates, edit the open file, and switch the layout, the
 theme, and the data. The product build does not include the page.
 
+`?list=changes&repair=all-files,changes` draws the notice of each list
+under the lists. The clock of the page stands still at `FAKE_TIME`, so
+each stored age stays as drawn. For All files and for Changes, the
+controls also have these buttons:
+
+- "Lose an update" sends the marker of a first loss, and nothing shows.
+- "Lose its fresh report" sends the marker of a failed repair, and the
+  notice shows.
+- "Send a full report" sends a full report of the list, which clears its
+  notice only.
+- "Send a tree update", for All files only, sends a tree delta, which
+  leaves the notice.
+
 Run the tests with `npm run test -- src/files`. The `*.mounted.test.tsx`
 files mount the screens in happy-dom, with `mount-test-kit.ts`, as the
 GitHub banner tests do. The kit also starts a store, presses a control,
@@ -176,9 +229,11 @@ tests keep their static markup checks in Node.
 ## Key code
 
 - `model/files-store.ts`: `WorkspaceFiles`, the live tree and changes of a
-  workspace, and `versionOf`, which grows when an event may change the
-  file or the diff of a path.
+  workspace with their failed repairs, and `versionOf`, which grows when an
+  event may change the file or the diff of a path.
 - `model/files-sync.ts`: the merge rules of the routes and the stream.
+- `model/failed-repairs.ts`: `repairsAfter`, the failed repairs of the
+  lists after one event of the stream.
 - `model/files-invalidation.ts`: `FilesInvalidation`, the changed paths and
   the events without named paths of one message, applied to the versions
   once.
@@ -191,11 +246,14 @@ tests keep their static markup checks in Node.
   saves the file from memory, with the fetch of the browser or of the
   fake API.
 - `api/parse-tree.ts`, `api/parse-changes.ts`, and `api/parse-events.ts`:
-  the parsers of the route bodies and the stream messages.
+  the parsers of the route bodies and the stream messages. A stream
+  envelope also keeps the failed repair of a file list.
 - `navigation.ts`: `FilesTarget`, `FilesNavigation`, and the tab types of
   the workspace view.
 - `panel/FilesPanel.tsx`, `page/FilePage.tsx`, `page/DiffPage.tsx`, and
   `tabs/FileTabItem.tsx`: the screens.
+- `panel/UnavailableLists.tsx`: the notices of the failed repairs under
+  the lists, with the mockups' `LostUpdateRow` and their ages.
 - `markdown/markdown-document.ts`: `parseMarkdown`, the whole parse of a
   file: its blocks, then the inline content of each block.
 - `markdown/markdown-worker.ts` and `markdown/worker-parse.ts`: the module
@@ -204,8 +262,9 @@ tests keep their static markup checks in Node.
   `parser` replaces the worker for a static render.
 - `code/`: the syntax colours and the code view.
 - `diff/`: the unified diff parser and view.
-- `dev/`: the development page, its Vite config, its fixtures, and its
-  Copy and Download targets.
+- `dev/`: the development page, its Vite config, its fixtures, its Copy
+  and Download targets, and `RepairControls`, the controls of the failed
+  repairs.
 
 See [the shared contracts](../shared/README.md) for the file routes, the
 events, and the workspace view.

@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { previewsPath, type PreviewResponse } from '../../src/shared/previews'
 import { SESSION_COOKIE } from '../security/cookies'
 import { TEST_TIME } from '../test-support/harness'
 import { createPreviewHandler } from './handler'
+import { openPreview } from './stream-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
 
 let harness: ToolsHarness
@@ -17,25 +17,12 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-async function open(port = 3000) {
-  const seed = await harness.seed()
-  const handler = createPreviewHandler(harness.env, harness.dependencies)
-  const response = await handler.fetch(
-    seed.request(previewsPath(seed.orgId, seed.workspaceId), {
-      method: 'POST',
-      body: JSON.stringify({ port }),
-    }),
-  )
-  return { ...seed, handler, response }
-}
-
 it('proxies WebSocket frames without keeping an idle workspace active and closes on revocation', async () => {
-  const setup = await open()
+  const setup = await openPreview(harness)
   expect(setup.response.status).toBe(201)
-  const { preview }: PreviewResponse = await setup.response.json()
   harness.setNow(TEST_TIME + 1000)
   const response = await setup.handler.proxy(
-    new Request(`${preview.url}/socket`, {
+    setup.previewRequest(`${setup.previewUrl}/socket`, {
       headers: {
         Upgrade: 'websocket',
         'Sec-WebSocket-Protocol': 'hot-reload',
@@ -65,7 +52,7 @@ it('proxies WebSocket frames without keeping an idle workspace active and closes
   expect(
     (
       await another.proxy(
-        new Request(`${preview.url}/socket`, {
+        setup.previewRequest(`${setup.previewUrl}/socket`, {
           headers: { Upgrade: 'websocket' },
         }),
       )
@@ -83,9 +70,8 @@ it('proxies WebSocket frames without keeping an idle workspace active and closes
 })
 
 it('returns a private preview error for failed upstream calls without exposing provider secrets', async () => {
-  const setup = await open()
+  const setup = await openPreview(harness)
   expect(setup.response.status).toBe(201)
-  const { preview }: PreviewResponse = await setup.response.json()
   const base = harness.dependencies.fetch
   let hostResponse = () =>
     Response.json(
@@ -97,7 +83,9 @@ it('returns a private preview error for failed upstream calls without exposing p
       ? Promise.resolve(hostResponse())
       : base(request)
   const response = await setup.handler.proxy(
-    new Request(preview.url, { headers: { 'Sec-Fetch-Dest': 'document' } }),
+    setup.previewRequest(setup.previewUrl, {
+      headers: { 'Sec-Fetch-Dest': 'document' },
+    }),
   )
   expect(response.status).toBe(502)
   expect(response.headers.get('Referrer-Policy')).toBe('no-referrer')
@@ -114,7 +102,9 @@ it('returns a private preview error for failed upstream calls without exposing p
       url: 'https://attacker.test/?_token=server-port-token',
     })
   const invalid = await setup.handler.proxy(
-    new Request(preview.url, { headers: { 'Sec-Fetch-Dest': 'document' } }),
+    setup.previewRequest(setup.previewUrl, {
+      headers: { 'Sec-Fetch-Dest': 'document' },
+    }),
   )
   expect(invalid.status).toBe(502)
   expect(harness.requests).toHaveLength(1)
@@ -127,6 +117,8 @@ it('returns a private preview error for failed upstream calls without exposing p
     .bind(setup.workspaceId)
     .run()
   harness.requests.length = 0
-  expect((await setup.handler.proxy(new Request(preview.url))).status).toBe(404)
+  expect(
+    (await setup.handler.proxy(setup.previewRequest(setup.previewUrl))).status,
+  ).toBe(404)
   expect(harness.requests).toHaveLength(0)
 })

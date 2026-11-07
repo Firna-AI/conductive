@@ -31,6 +31,17 @@ Each full report is explicitly part 1 of 1. Its tree ends at revision 2.
 It splits trees and changes into two parts and uses tree delta revisions 2 and 3.
 The small samples exercise joining without large fixtures.
 
+`recorded-repairs.ts` records the lost updates without a session: the file tree, the changes list, the start steps, and the workspace name.
+`firstLoss(kind)` gives the marker of a first loss. For the file tree, it is a refused tree delta.
+After a first loss, the workspace asks for a fresh full report, and the browser shows nothing.
+`refusedReport(kind, true)` gives the marker of the refused fresh report, with `repairFailed: true`. It marks a failed repair, which shows a notice.
+`fullReport(kind)` gives a complete report of that kind, which clears the notice. `treeUpdate(revision)` gives a tree delta, which clears nothing.
+`nextEnvelope(events, event, occurredAt)` numbers an event after the last event of the fake stream.
+`storeFailedRepairs(events, kinds, now)` adds a first loss and a failed repair of each kind to the stored history, before `now`.
+The name and the changes get the ages that the mockups draw.
+The failed-repair tests of the Files store, the Files panel, and the workspace screen use these helpers.
+The development pages of the Files screens and of the workspace screen use them too.
+
 Writes return recorded replies. They do not change backend state.
 Repository PUT and DELETE replies change only the named repository in the
 recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
@@ -44,6 +55,12 @@ The default org is `acme`. The default workspace is `checkout-autocomplete`.
 `FAKE_IDS` in `fixtures/core.ts` names the shared sample IDs.
 Options select the org role, workspace state, conversation, and GitHub banner state.
 Replace a reply to draw a missing login, a missing key, a first run, or a deleted org.
+`macCommands` chooses the Mac commands of the fake workspace, and `onMac` makes the window the Mac app on the Mac of the fake user.
+Without `onMac`, the window is a browser: it has no pairing, and the Mac settings refuse it as the Worker does.
+Each fake record has a `requestKey` from `fakeRequestKey`, which differs from its `requestId` and is safe in an address.
+The answer routes use that key, as the Worker's do, so an address built from the raw ID finds no reply.
+`fakeSettingsReply` gives a settings reply with its pairing and outcome: done, done but not saved, or failed.
+The requests come after the tool call of the recorded turn, so the chat places a card after it.
 Preview and desktop URLs are recorded placeholders. Tests can replace them with local fixture URLs.
 
 ## Mounted tests
@@ -112,10 +129,13 @@ Replies, timers, and `waitFor` go on.
 - `fake-terminal.ts` supplies decoded terminal output and records input and resize calls.
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.
 - `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
+- `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
 - `fixtures/workspaces.ts` maps workspace and session samples.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples.
+- `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings.
+- `fake-device-routes.ts` records the Mac command, pairing, answer, and Mac settings replies.
 
 See [the shared contracts](../shared/README.md) and
 [the backend fakes](../../worker/test-support/README.md).

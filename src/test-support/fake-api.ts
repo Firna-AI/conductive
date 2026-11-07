@@ -4,10 +4,13 @@ import type { BannerState } from '../shared/github'
 import type { WorkspaceState } from '../shared/workspaces'
 import type { FakeMethod, FakeRouteWriter } from './fake-api-routes'
 import { fakeCoreRoutes } from './fake-core-routes'
+import { fakeDeviceRoutes } from './fake-device-routes'
 import { FakeWorkspaceEvents } from './fake-events'
 import { fakeToolRoutes } from './fake-tool-routes'
 import { fakeWorkspaceRoutes } from './fake-workspace-routes'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
+import type { FakeMacScenario } from './fixtures/devices'
+import { workspaceFixtures } from './fixtures/workspaces'
 import { recordedChatEvents, type RecordedChatScenario } from './recorded-chat'
 import { recordedFileEvents } from './recorded-files'
 
@@ -16,6 +19,10 @@ export interface FakeApiOptions {
   workspaceState?: WorkspaceState
   conversation?: RecordedChatScenario
   banner?: BannerState
+  /** The Mac commands of the fake workspace. */
+  macCommands?: FakeMacScenario
+  /** The window is the Mac app on the Mac of the fake user. */
+  onMac?: boolean
 }
 
 function routeKey(method: string, path: string): string {
@@ -45,6 +52,16 @@ export class FakeApiServer implements FakeRouteWriter {
     fakeCoreRoutes(this, options.role ?? 'admin')
     fakeWorkspaceRoutes(this, options.workspaceState ?? 'ready', conversation)
     fakeToolRoutes(this, options.banner ?? 'ready-to-merge')
+    const { workspaces, created } = workspaceFixtures(options.workspaceState)
+    fakeDeviceRoutes(
+      this,
+      options.macCommands ?? 'none',
+      options.onMac ?? false,
+      [
+        ...workspaces.workspaces.map((workspace) => workspace.id),
+        created.workspace.id,
+      ],
+    )
   }
 
   json(method: FakeMethod, path: string, body: unknown, status = 200): void {

@@ -103,10 +103,27 @@ describe('authenticated Stop attribution', () => {
         { type: 'turn.stop-requested', requestedById: fixture.owner.id },
       ),
     })
-    await expect(fixture.drain()).rejects.toMatchObject({
-      code: 'invalid_input',
+    await fixture.drain()
+    expect(await fixture.history(session.id)).toEqual({
+      throughEventNumber: history.throughEventNumber + 1,
+      events: [
+        ...history.events,
+        {
+          workspaceId: WORKSPACE_ID,
+          eventNumber: history.throughEventNumber + 1,
+          occurredAt: 1_800_000_000_000,
+          event: {
+            type: 'runner.event-refused',
+            streamId: 'fake-stream-1',
+            runnerEventNumber: 4,
+            runnerEventType: 'unknown',
+            reason: 'invalid',
+            sessionId: session.id,
+            turnId: turn.turnId,
+          },
+        },
+      ],
     })
-    expect(await fixture.history(session.id)).toEqual(history)
     tab.close()
   })
 })

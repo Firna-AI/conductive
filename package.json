@@ -8,11 +8,11 @@
     "build": "npm run typecheck && vite build",
     "preview": "vite preview --port 5174",
     "types": "mkdir -p .wrangler && wrangler types .wrangler/worker-configuration.d.ts",
-    "typecheck": "npm run types && tsc -b",
+    "typecheck": "npm run types && tsc -b tsconfig.json tsconfig.worker-tests.json",
     "test": "vitest run",
     "db:migrate": "wrangler d1 migrations apply DB --local",
     "file-length:check": "eslint . --rule 'max-lines: [error, 300]'",
-    "check": "npm run typecheck && npm run desktop:typecheck && npm run lint && npm run desktop:lint && npm run format:check && npm run desktop:format:check && npm run file-length:check && npm run test && npm run build && npm run mockups:check",
+    "check": "npm run typecheck && npm run desktop:typecheck && npm run runner:typecheck && npm run lint && npm run desktop:lint && npm run format:check && npm run desktop:format:check && npm run file-length:check && npm run test && npm run runner:test && npm run build && npm run mockups:check",
     "mockups:build": "mokly build --strict",
     "mockups:serve": "mokly serve",
     "mockups:typecheck": "tsc -p docs/mockups/tsconfig.json",
@@ -23,7 +23,9 @@
     "format:check": "prettier --check .",
     "desktop:typecheck": "npm --prefix desktop run typecheck",
     "desktop:lint": "npm --prefix desktop run lint",
-    "desktop:format:check": "npm --prefix desktop run format:check"
+    "desktop:format:check": "npm --prefix desktop run format:check",
+    "runner:typecheck": "npm --prefix runner run typecheck",
+    "runner:test": "npm --prefix runner run test"
   },
   "dependencies": {
     "@firna/ui": "4.0.0",

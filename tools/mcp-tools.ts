@@ -2,6 +2,33 @@ import { TOOL_AGENTS, TOOL_EFFORTS } from './input.ts'
 
 export const WORKSPACE_MCP_TOOLS = [
   {
+    name: 'run_mac_command',
+    description:
+      "Ask to run a command on the active turn sender's connected Mac. Approval stays on that Mac.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        command: { type: 'string', minLength: 1 },
+        folder: { type: 'string', minLength: 1 },
+        reason: { type: 'string', minLength: 1 },
+        timeoutSeconds: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 1800,
+          default: 60,
+        },
+        longerTimeoutReason: { type: 'string' },
+        requestId: { type: 'string' },
+      },
+      required: ['command', 'folder', 'reason'],
+    },
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
+    },
+  },
+  {
     name: 'create_workspace',
     description:
       "Create a workspace in this org with this workspace's owner, and start its first message immediately.",

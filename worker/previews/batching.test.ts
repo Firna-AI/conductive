@@ -19,7 +19,9 @@ it('batches queued socket frames using a new authorization read after their arri
   expect(
     (
       await setup.handler.proxy(
-        new Request(setup.preview.url, { headers: { Upgrade: 'websocket' } }),
+        setup.previewRequest(setup.previewUrl, {
+          headers: { Upgrade: 'websocket' },
+        }),
       )
     ).status,
   ).toBe(101)
@@ -81,7 +83,9 @@ it('drains buffered socket data before forwarding the peer close code and reason
     { code: 1006, reason: 'connection lost', forwarded: 1011, browser: false },
   ].entries()) {
     await setup.handler.proxy(
-      new Request(setup.preview.url, { headers: { Upgrade: 'websocket' } }),
+      setup.previewRequest(setup.previewUrl, {
+        headers: { Upgrade: 'websocket' },
+      }),
     )
     const started = barrier<void>()
     const release = barrier<void>()

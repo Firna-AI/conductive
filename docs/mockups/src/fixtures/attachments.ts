@@ -6,12 +6,12 @@
 export type Attachment = {
   name: string
   kind: 'image' | 'file'
-  size: string
+  sizeBytes: number
 }
 
 export const draftAttachments: readonly Attachment[] = [
-  { name: 'postcode-overlap.png', kind: 'image', size: '284 KB' },
-  { name: 'checkout-console.log', kind: 'file', size: '12 KB' },
+  { name: 'postcode-overlap.png', kind: 'image', sizeBytes: 290_816 },
+  { name: 'checkout-console.log', kind: 'file', sizeBytes: 12_288 },
 ]
 
 /** The message that the user writes about the attached files. */

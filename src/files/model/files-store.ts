@@ -2,6 +2,11 @@ import type { ChangesResponse } from '../../shared/files'
 import type { FilesClient } from '../api/files-client'
 import type { FilesError } from '../api/files-errors'
 import { parseStreamMessage, type StreamEnvelope } from '../api/parse-events'
+import {
+  noFailedRepairs,
+  repairsAfter,
+  type FailedRepairs,
+} from './failed-repairs'
 import { FilesInvalidation } from './files-invalidation'
 import {
   emptySync,
@@ -35,6 +40,11 @@ export interface FilesSnapshot {
   epoch: number
   /** Grows for each path whose content an event may have changed. */
   versions: ReadonlyMap<string, number>
+  /**
+   * The file lists whose fresh full report was lost too. Only a newer full
+   * report of the same list in the stream clears one.
+   */
+  failedRepairs: FailedRepairs
 }
 
 type Resource = 'tree' | 'changes'
@@ -56,7 +66,9 @@ export class WorkspaceFiles {
     folders: new Map(),
     epoch: 0,
     versions: new Map(),
+    failedRepairs: noFailedRepairs,
   }
+  private repairs: FailedRepairs = noFailedRepairs
   private readonly listeners = new Set<() => void>()
   private readonly reads = new Map<Resource, AbortController>()
   private lastEventNumber = 0
@@ -108,7 +120,14 @@ export class WorkspaceFiles {
 
   private publish(change: Partial<FilesSnapshot>): void {
     const { tree, changes } = this.sync
-    this.snapshot = { ...this.snapshot, tree, changes, ...change }
+    const failedRepairs = this.repairs
+    this.snapshot = {
+      ...this.snapshot,
+      tree,
+      changes,
+      failedRepairs,
+      ...change,
+    }
     this.listeners.forEach((listener) => listener())
   }
 
@@ -145,14 +164,20 @@ export class WorkspaceFiles {
     if (this.take(message.envelope, invalidation)) this.commit(invalidation)
   }
 
-  /** Takes one numbered event once. True when it was a new file event. */
+  /**
+   * Takes one numbered event once. True when it was a new file event, or
+   * when it changed the failed repairs.
+   */
   private take(
     envelope: StreamEnvelope,
     invalidation: FilesInvalidation,
   ): boolean {
     if (envelope.eventNumber <= this.lastEventNumber) return false
     this.lastEventNumber = envelope.eventNumber
-    if (!envelope.event) return false
+    const repairs = repairsAfter(this.repairs, envelope)
+    const repaired = repairs !== this.repairs
+    this.repairs = repairs
+    if (!envelope.event) return repaired
     this.apply(syncEvent(this.sync, envelope.event), invalidation)
     return true
   }

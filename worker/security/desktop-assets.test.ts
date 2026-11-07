@@ -15,6 +15,17 @@ afterAll(async () => {
   await harness.dispose()
 })
 
+function policyParts(value: string | null) {
+  const directives = (value ?? '').split(';').map((part) => part.trim())
+  const frame = (directive: string) => directive.startsWith('frame-src ')
+  return {
+    other: directives.filter((directive) => !frame(directive)),
+    frames: directives
+      .filter(frame)
+      .map((directive) => directive.split(/\s+/).slice(1)),
+  }
+}
+
 it('serves app assets and same-origin local modules with the actual desktop policy while preserving host boundaries', async () => {
   const previewDomain = 'conductive-previews.test'
   for (const binding of ['configured', 'missing', 'empty'] as const) {
@@ -51,9 +62,15 @@ it('serves app assets and same-origin local modules with the actual desktop poli
       }),
     )
     expect(desktopPolicy, binding).not.toBe('')
-    expect(response.headers.get('Content-Security-Policy'), binding).toBe(
-      desktopPolicy,
-    )
+    const web = policyParts(response.headers.get('Content-Security-Policy'))
+    const desktop = policyParts(desktopPolicy)
+    expect(web.other, binding).toEqual(desktop.other)
+    expect(web.frames, binding).toEqual([
+      ["'self'", `https://*.${previewDomain}`],
+    ])
+    expect(desktop.frames, binding).toEqual([
+      ["'self'", requestOrigin, `https://*.${previewDomain}`],
+    ])
     for (const path of ['/@vite/client', '/src/main.tsx']) {
       const module = await app.fetch(
         new Request(`${requestOrigin}${path}`, {

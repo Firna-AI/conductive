@@ -1,5 +1,6 @@
 import type { ToolsHarness } from './test-support'
 import { createPreviewHandler } from './handler'
+import { launchPreview } from './launch-test-support'
 import { previewsPath, type PreviewResponse } from '../../src/shared/previews'
 
 export function barrier<T>() {
@@ -58,6 +59,14 @@ export async function openPreview(harness: ToolsHarness, port = 3000) {
       body: JSON.stringify({ port }),
     }),
   )
-  const { preview }: PreviewResponse = await response.json()
-  return { ...seed, handler, preview }
+  const { preview }: PreviewResponse = await response.clone().json()
+  const browser = await launchPreview(handler, seed.request, preview.url)
+  return {
+    ...seed,
+    handler,
+    response,
+    preview,
+    previewUrl: browser.previewUrl,
+    previewRequest: browser.request,
+  }
 }

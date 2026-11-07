@@ -17,6 +17,9 @@ confirmations, and resend rules. Its comments state the delivery contract.
 The 1 MiB limit leaves room for the workspace storage wrapper.
 The workspace stores a refusal marker before it confirms a permanent refusal.
 Storage and network failures remain unconfirmed.
+After a refused file tree, changes list, start steps, or workspace name,
+`RunnerReportRefresh` asks for one fresh full report of that `RunnerReportKind`.
+It carries no login. A redelivery keeps its command ID.
 `runner-transport.ts` defines the injectable socket boundary.
 Runner commands carry each message sender's login. Browser response types do not.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
@@ -43,13 +46,31 @@ Turn summaries keep at most 200 files and 256 KiB of serialized file-list data.
 They count omitted files. The complete Changes response has no summary cap.
 `runner.event-refused` belongs only to workspace chat events.
 It identifies the lost runner event without copying its data.
+Its `repairFailed: true` flag marks a refused replacement of a lost workspace update.
+Only the workspace sets that flag.
+[Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+states the rules of the request and of a failed repair.
 
 `events.ts` defines the browser stream. Its event numbers span all sessions
 and runner connections of one workspace. A reconnect uses the last stored number.
 The history response gives the point after which live events continue.
 
-`MACHINE_PATHS` in `agent-tools.ts` puts each machine route under `/v1/`.
+`device.ts` defines Mac command paths, socket messages, pairing, and local settings relays.
+It has no imports and also serves the Mac app's NodeNext build.
+`device-read.ts` validates its wire values and preserves command text, timeouts, and truncation.
+Command records return `requestKey` for URLs and retain `requestId` for retries and device frames.
+Settings results distinguish applied and saved changes, applied but unsaved changes, and failed changes.
+The small settings failure frame identifies an oversized reply without closing the connection.
+The combined Mac output cap is 65,536 UTF-8 bytes.
+
+`MACHINE_PATHS` in `agent-tools.ts` and `DEVICE_COMMAND_PATH` in `device.ts` put their machine routes under `/v1/`.
 The machine origin and the preview domain stay Worker settings.
+`Preview.url` is the absolute launch address of a preview on the app origin.
+It holds no secret. The browser loads it as it is, in the frame and in a new tab.
+In the Mac app, a new tab opens in the default browser through `PreviewLaunchResponse` instead.
+That JSON reply of `Preview.url` holds an authorizer `url` and the `expiresAt` of its grant.
+The `url` carries the preview hostname and a 60-second grant only in its fragment.
+[Port previews](../../docs/protocol/access-and-security.md#port-previews) states its access rules.
 Each open of a port preview gets a new preview ID, and the API never gives out
 a revoked ID again (decision 86). The Preview tool hides revoked previews by their ID.
 The git credential payload is not defined yet.

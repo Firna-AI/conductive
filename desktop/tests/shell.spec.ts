@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import { _electron, expect, test } from '@playwright/test'
 import type { ElectronApplication } from '@playwright/test'
 
+import { productName } from '../../docs/mockups/src/brand.js'
 import { DESKTOP_ORIGIN } from '../../worker/security/desktop-contract.js'
 import { readConfiguration } from '../src/config.js'
 import { expectFrameIsolation } from './frame-navigation.js'
@@ -29,9 +30,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
   try {
     electron = await launch()
     let page = await electron.firstWindow()
-    await expect(
-      page.getByRole('heading', { name: 'Conductive', exact: true }),
-    ).toBeVisible()
+    await expect(page).toHaveTitle(productName)
     await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/`)
     const nav = page.getByRole('navigation', { name: 'Window controls' })
     await expect(nav).toBeVisible()
@@ -41,7 +40,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
       page.getByRole('button', { name: 'Back', exact: true }),
     ).toBeDisabled()
 
-    // The minimal app has no product links. Arrange a real browser link click.
+    // Use a fixed local link to test history without the product router.
     await page.evaluate((origin) => {
       const link = document.createElement('a')
       link.href = origin + '/history'
@@ -145,9 +144,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
     electron = undefined
     electron = await launch()
     page = await electron.firstWindow()
-    await expect(
-      page.getByRole('heading', { name: 'Conductive', exact: true }),
-    ).toBeVisible()
+    await expect(page).toHaveTitle(productName)
     expect(
       await electron.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0].getNormalBounds(),

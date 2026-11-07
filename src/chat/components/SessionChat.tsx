@@ -1,5 +1,7 @@
 import type { Agent } from '../../shared/agents'
 import type { WorkspaceState } from '../../shared/workspaces'
+import { PendingCommands } from '../device/PendingCommands'
+import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
 import { sendBlock } from '../state/blockers'
 import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
@@ -58,6 +60,8 @@ export function SessionChat(props: SessionChatProps) {
     state.transcript.items.some((item) => item.kind === 'user')
   const status = historyStatus(state)
   const content = showsContent(state, workspace)
+  const viewerId = snapshot.account?.user.id ?? null
+  const commands = sessionCommands(snapshot, id, state)
   const footer = (
     <>
       {id && content && status === 'failed' ? (
@@ -81,6 +85,17 @@ export function SessionChat(props: SessionChatProps) {
           org={snapshot.org}
         />
       ) : null}
+      {snapshot.devices.load === 'failed' ? (
+        <DeviceLoadNotice onRetry={() => void controller.loadDevices()} />
+      ) : null}
+      <PendingCommands
+        devices={snapshot.devices}
+        onAnswer={(requestId, action) =>
+          void controller.answerCommand(requestId, action)
+        }
+        readers={{ viewerId, orgName: snapshot.org?.name ?? null }}
+        requests={commands.waiting}
+      />
       {problem && workspace ? (
         <SandboxBar
           archivedAt={workspace.archivedAt}
@@ -118,14 +133,12 @@ export function SessionChat(props: SessionChatProps) {
     <ChatPane empty={emptyView(props)} footer={footer} mobile={props.mobile}>
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView
+        inserts={commands.inserts}
         now={now}
         onOpenDiff={props.onOpenDiff}
         onRetry={(messageId) => id && void controller.retry(id, messageId)}
         pending={state.pending}
-        readers={{
-          viewerId: snapshot.account?.user.id ?? null,
-          members: snapshot.members,
-        }}
+        readers={{ viewerId, members: snapshot.members }}
         readOnly={workspace?.state === 'archived'}
         retrying={state.retrying}
         transcript={state.transcript}

@@ -34,3 +34,43 @@
   font-variant-numeric: tabular-nums;
   font-weight: var(--ui-weight-strong);
 }
+
+/*
+ * The result of a Stop. The bar grows for the cause that the Mac gave, and
+ * its tint follows the result.
+ */
+.result {
+  height: auto;
+  min-height: var(--ui-bar-height);
+  padding-block: 4px;
+}
+
+.result .text {
+  font-weight: 400;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.title {
+  font-weight: 500;
+}
+
+.done {
+  background: var(--ui-raised);
+}
+
+.done .icon {
+  color: var(--ui-success);
+}
+
+.notSaved .icon {
+  color: var(--ui-warning);
+}
+
+.failed {
+  background: var(--ui-rose-soft);
+}
+
+.failed .icon {
+  color: var(--ui-rose);
+}

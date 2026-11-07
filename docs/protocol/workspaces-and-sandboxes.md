@@ -35,6 +35,7 @@ says.
   build.
 - The install script prepares the image. It is a script, not a terminal
   session, and it runs only in a build.
+- Bash runs the install script.
 - The Cloud computer tab lists the operating system and software that the
   base image includes before the install script runs.
 - "Build computer" starts a build. A build runs the install script on a
@@ -56,10 +57,20 @@ says.
 - Reason: a new workspace then needs only a small fetch. The limit of one
   refresh in 30 minutes saves starts, because each refresh is a start.
 
+## Repository folders
+
+- [Repository folders](repository-folders.md) gives the folder and the
+  shell variable of each repository in a sandbox (decision 94).
+
 ## Startup script and env vars
 
 - The startup script runs in the sandbox of each workspace at each start
   and at each resume.
+- Bash runs the startup script.
+- The startup script starts in the folder of the workspace's repository
+  (decision 94).
+- [Folder variables](repository-folders.md#folder-variables) says which
+  scripts get the variable of each repository folder.
 - Only an admin changes the install script, the startup script, the env
   vars, and the repositories (decision 57). Other members see them
   read-only.
@@ -78,8 +89,32 @@ says.
   message creates the workspace.
 - The app accepts that message before the sandbox is ready, as
   [Chat and events](chat-and-events.md#messages) says.
+- The create answers when the workspace and its first message are stored,
+  before the sandbox starts (decision 91). The answer holds the workspace,
+  its session ID, and the queued first message, so that the new workspace
+  can show the live start steps.
+- Reason: the new workspace then follows its start steps on its own
+  events, as a resume does. A stream of the progress in the create request
+  was rejected, and so was a failed create that stays as a workspace in
+  the error state, because each is a larger build.
 - A new workspace starts from the newest good org image. It then creates
   its branch in the folder of its repository.
+- When the GitHub repository has no refs, such as branches or tags, the
+  start first pushes an empty first commit to the default branch of the
+  repository (decision 89). It then fetches that branch and creates the
+  workspace branch from it.
+- The push uses the GitHub user token of the sender of the current turn,
+  as [GitHub tokens](access-and-security.md#github-tokens) says. No
+  command and no Git config holds the token.
+- A repository with any ref gets no first commit from the app.
+- When another push reaches the repository first, the start keeps that
+  push and fetches the default branch. The app never force-pushes.
+- When the app cannot read the refs of the repository, or when the push
+  fails and the repository stays empty, the start fails.
+- Reason: the workspace branch starts from the default branch, and the
+  Changes list compares with it, so that branch must exist on GitHub. A
+  branch or a first commit only in the sandbox was rejected for that
+  reason, and a refused start because it blocks work in a new repository.
 - The branch name starts with the GitHub login that the workspace owner has
   at the create (decision 53).
 - A city name and four random characters follow, such as
@@ -89,9 +124,17 @@ says.
 - The workspace name starts as the city name.
   [Chat and events](chat-and-events.md#messages) says how the agent's title
   then renames it.
-- When the sandbox of a new workspace does not start, the workspace is not
-  created. The first message stays in the composer, and Try again sends it
-  again.
+- When the sandbox of a new workspace does not start, the workspace does
+  not stay. The events of the workspace first show the failed start and
+  the error state. The app then removes the workspace and its token.
+- The first message then goes back to the composer of the tab that sent
+  it, and Try again sends it again. No failure loses the message or its
+  attachments.
+- Try again creates the workspace with a new workspace ID. The message
+  keeps its message ID.
+- After the removal, only the member who sent the first message can still
+  get the events of the failed workspace. That member gets the stored
+  events once, and the connection then closes.
 
 ## Start steps
 
@@ -183,8 +226,6 @@ says.
   they add and remove.
 - A changed file opens its diff against the default branch as a tab.
 - The agent runner watches the repository and reports both lists.
-  Each new runner stream starts with a full file tree.
-- Later tree updates use deltas or a newer full recovery report.
   Branch changes count uncommitted and untracked work too.
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
   This includes the event type, metadata, escapes, and delimiters. It excludes the runner envelope.
@@ -210,9 +251,16 @@ says.
 - A resend keeps its stream, runner event number, and payload.
   A reconnect keeps pending parts. Confirmation of a part includes its durable assembly state.
 - A refused part, a newer full report, or a new stream discards the incomplete report.
-  The last complete report stays available.
 - A new full report has a newer revision than the last applied report of its kind.
   It can skip unapplied revisions to recover missing or refused data.
+- After a refused tree report or tree delta, the workspace asks for one full file tree, as
+  [Lost workspace updates](chat-and-events.md#lost-workspace-updates) says (decision 96).
+  After a refused changes report, it asks for one full changes list.
+- After the refused update, each part of that kind belongs to a replacement.
+  The only exception is a remaining part of the refused report or of an earlier report.
+- A stored new part 1 after the refused update starts a replacement, also at the revision of the refused report.
+- An invalid part counts as a replacement unless its stream, revision, and part number show a remaining part.
+  A tree delta is never a replacement, and it never ends or fails an open tree repair.
 - Each tree delta holds at most 512 changes and meets the same 256 KiB event budget.
   A large update uses several deltas, each with the next consecutive tree revision.
 - Reason: the count cap also bounds the tree work of each event.
@@ -229,7 +277,8 @@ says.
 
 ### Terminal
 
-- The Terminal tab opens a shell in the sandbox.
+- The Terminal tab opens a shell in the sandbox, in the folder of the
+  workspace's repository (decision 94).
 - On a phone, a row of keys adds the keys that a phone keyboard lacks.
 
 ### Port previews

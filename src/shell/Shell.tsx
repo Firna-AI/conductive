@@ -13,6 +13,9 @@ import { SignInScreen } from './auth/SignInScreen'
 import { useApp } from './context'
 import { PhoneFrame } from './layout/frames'
 import layout from './layout/layout.module.css'
+import { Sidebar } from './list/Sidebar'
+import { useKeptOrg } from './mac/mac-app'
+import { WindowStrip } from './mac/WindowControls'
 import { GetStartedScreen } from './onboarding/GetStartedScreen'
 import { CreateOrgScreen } from './orgs/CreateOrgScreen'
 import { NotAvailable, OrgRoutes, RailFrame } from './OrgRoutes'
@@ -21,13 +24,19 @@ import { OverlayHost } from './ui/Overlay'
 import { useViewport } from './ui/viewport'
 import ui from './ui/ui.module.css'
 
-/** A page alone in the window: a phone frame, or a desktop page without the rail. */
+/**
+ * A page alone in the window: a phone frame, or a desktop page without the
+ * rail. In the Mac app a strip with the window controls tops it.
+ */
 function Alone(props: { children: ReactNode }) {
   if (useViewport() === 'phone')
     return <PhoneFrame>{props.children}</PhoneFrame>
   return (
     <div className={layout.standalone}>
-      <OverlayHost>{props.children}</OverlayHost>
+      <OverlayHost>
+        <WindowStrip />
+        {props.children}
+      </OverlayHost>
     </div>
   )
 }
@@ -47,6 +56,25 @@ function Home() {
   return null
 }
 
+type AccountRoute = Extract<Route, { screen: 'account' }>
+
+/** The account. The Mac app keeps the sidebar of an org beside it. */
+function Account(props: { route: AccountRoute; user: User }) {
+  const phone = useViewport() === 'phone'
+  const org = useKeptOrg(useStore(useApp().orgs))
+  const page = <AccountScreen connect={props.route.connect} user={props.user} />
+  if (phone) return <PhoneFrame>{page}</PhoneFrame>
+  return (
+    <RailFrame
+      current="account"
+      sidebar={org ? <Sidebar current={null} org={org} /> : undefined}
+      user={props.user}
+    >
+      {page}
+    </RailFrame>
+  )
+}
+
 function Signed(props: { route: Route; user: User }) {
   const { route, user } = props
   const phone = useViewport() === 'phone'
@@ -64,10 +92,7 @@ function Signed(props: { route: Route; user: User }) {
     case 'get-started':
       return inRail(<GetStartedScreen user={user} />, null)
     case 'account':
-      return inRail(
-        <AccountScreen connect={route.connect} user={user} />,
-        'account',
-      )
+      return <Account route={route} user={user} />
     case 'create-org':
       return (
         <Alone>

@@ -13,21 +13,17 @@
   width: 22px;
   height: var(--ui-control-height);
   margin-left: 1px;
+  padding: 0;
   border: 1px solid var(--ui-primary);
   border-radius: 0 var(--ui-radius-md) var(--ui-radius-md) 0;
   background: var(--ui-primary);
   box-sizing: border-box;
   color: var(--ui-on-solid);
   cursor: pointer;
-  list-style: none;
-}
-
-.arrow::-webkit-details-marker {
-  display: none;
 }
 
 .arrow:hover,
-.more[open] .arrow {
+.arrow[aria-expanded='true'] {
   border-color: var(--ui-primary-deep);
   background: var(--ui-primary-deep);
 }
@@ -38,15 +34,11 @@
 }
 
 /*
- * The choices open above the split button, as a menu drawn in place. Its
- * shadow rises, so that it does not dim Allow under it.
+ * The choices open above the actions of the request, as a menu. Its shadow
+ * rises, so that it does not dim Allow under it.
  */
 .choices {
   display: flex;
-  position: absolute;
-  z-index: 20;
-  right: 0;
-  bottom: calc(100% + 6px);
   flex-direction: column;
   gap: 1px;
   width: max-content;
@@ -56,6 +48,48 @@
   background: var(--ui-composer);
   box-shadow: 0 -8px 24px var(--ui-shadow);
   box-sizing: border-box;
+  color: var(--ui-ink);
+}
+
+/*
+ * The menu is a popover in the top layer, so the region of the requests
+ * never cuts it. It keeps to the actions of its request, which `.end` of
+ * the request names, also while the region scrolls. With no room above, it
+ * opens under them.
+ */
+.choices[popover] {
+  inset: auto;
+  margin: 0 0 6px;
+  overflow: visible;
+  position-anchor: --command-actions;
+  position-area: block-start span-inline-start;
+  position-try-fallbacks: flip-block;
+}
+
+/*
+ * A narrow request, such as on a phone, puts its actions under the command.
+ * The menu then starts at the actions and keeps inside them, because from
+ * the end of the arrow it would cross the left edge of a phone.
+ */
+@container (max-width: 440px) {
+  .choices[popover] {
+    position-area: block-start span-inline-end;
+    max-width: anchor-size(width);
+  }
+}
+
+/*
+ * A view runs no script, so the chat draws the open menu outside the region
+ * of the requests, and anchors it to the actions of the request that draws
+ * its arrow open, which `.endDrawn` of the request names. The region keeps
+ * its bound and never cuts the menu.
+ */
+.drawn {
+  position: absolute;
+  z-index: 20;
+  margin: 0 0 6px;
+  position-anchor: --drawn-choices;
+  position-area: block-start span-inline-start;
 }
 
 .choice {

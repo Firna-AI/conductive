@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { desktopPath } from '../../src/shared/desktop'
-import { previewsPath } from '../../src/shared/previews'
+import { previewPath, previewsPath } from '../../src/shared/previews'
 import { terminalPaths } from '../../src/shared/terminal'
 import type { PreviewResponse } from '../../src/shared/previews'
 import { createDesktopHandler } from '../desktop/handler'
@@ -9,6 +9,7 @@ import { createTerminalHandler } from '../terminal/handler'
 import { startWorkspaceTerminal } from '../terminal/service'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { createPreviewHandler } from './handler'
+import { launchPreview } from './launch-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
 
 let harness: ToolsHarness
@@ -31,6 +32,11 @@ it('gates each tool route and terminal upgrade with sign-in and Origin before up
     {
       handler: preview,
       path: previewsPath(seed.orgId, seed.workspaceId),
+      upgrade: false,
+    },
+    {
+      handler: preview,
+      path: previewPath(seed.orgId, seed.workspaceId, 'preview-one'),
       upgrade: false,
     },
     {
@@ -85,6 +91,11 @@ it('checks current membership and workspace ownership before each tool upstream 
       method: 'POST',
     },
     {
+      handler: createPreviewHandler(harness.env, harness.dependencies),
+      path: previewPath(other.id, seed.workspaceId, 'preview-one'),
+      method: 'GET',
+    },
+    {
       handler: createTerminalHandler(harness.env, harness.dependencies),
       path: terminalPaths.socket(other.id, seed.workspaceId),
       method: 'GET',
@@ -108,7 +119,7 @@ it('checks current membership and workspace ownership before each tool upstream 
   await harness.env.DB.prepare('DELETE FROM org_members WHERE org_id = ?')
     .bind(other.id)
     .run()
-  const denied = await routes[2].handler.fetch(
+  const denied = await routes[3].handler.fetch(
     seed.request(desktopPath(other.id, seed.workspaceId)),
   )
   expect(denied.status).toBe(404)
@@ -146,7 +157,8 @@ it('keeps the terminal, port preview, and desktop available while a workspace ne
   )
   expect(opened.status).toBe(201)
   const body: PreviewResponse = await opened.json()
-  const page = await preview.proxy(new Request(body.preview.url))
+  const browser = await launchPreview(preview, seed.request, body.preview.url)
+  const page = await preview.proxy(browser.request())
   expect(page.status).toBe(200)
   expect(await page.text()).toBe('preview content')
   const desktop = createDesktopHandler(harness.env, harness.dependencies)

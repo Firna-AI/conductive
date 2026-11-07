@@ -1,0 +1,121 @@
+import { useEffect, useMemo, useState } from 'react'
+import type { AppModel } from '../../../app/app-model'
+import { memoryNavigation, NavigationContext } from '../../../app/navigation'
+import { PanelWidths } from '../../../app/panels'
+import { routes } from '../../../app/router'
+import { ServicesContext } from '../../../app/services'
+import type { WorkspaceFiles } from '../../../files/model/files-store'
+import type { FileListKind, FilesNavigation } from '../../../files/navigation'
+import { FilesPanel } from '../../../files/panel/FilesPanel'
+import type { FakeApiServer } from '../../../test-support/fake-api'
+import { FAKE_IDS } from '../../../test-support/fixtures/core'
+import { AppModelContext } from '../../context'
+import { PanelContext } from '../../layout/panels'
+import { Shell } from '../../Shell'
+import { ThemeRoot } from '../../ui/ThemeRoot'
+import { useViewport, ViewportProvider } from '../../ui/viewport'
+import {
+  FeaturesContext,
+  type WorkspaceContext,
+  type WorkspaceFeatures,
+} from '../features'
+import type { DevOptions } from './dev-options'
+import { DevControls } from './DevControls'
+
+/** The Files panel in its place, with its list in the memory of the page. */
+function DevFiles(props: {
+  context: WorkspaceContext
+  files: WorkspaceFiles
+  list: FileListKind
+  now: () => number
+}) {
+  const [list, setList] = useState(props.list)
+  const navigation = useMemo<FilesNavigation>(
+    () => ({
+      href: (target) => (target.kind === 'list' ? `?list=${target.list}` : '#'),
+      navigate: (target) => {
+        if (target.kind === 'list') setList(target.list)
+      },
+    }),
+    [],
+  )
+  return (
+    <FilesPanel
+      activeTab={null}
+      files={props.files}
+      layout={props.context.viewport}
+      list={list}
+      navigation={navigation}
+      now={props.now}
+    />
+  )
+}
+
+/**
+ * The development page of the notices of a failed repair: the app shell
+ * with the open workspace and its Files panel, over the fake API. The
+ * address sets the stored failures and the layout, as `DevOptions` says.
+ */
+export function DevPage(props: {
+  app: AppModel
+  server: FakeApiServer
+  files: WorkspaceFiles
+  options: DevOptions
+  now: () => number
+}) {
+  const { app, files, options, now } = props
+  const measured = useViewport()
+  const [mounts, setMounts] = useState(0)
+  const [navigation] = useState(() =>
+    memoryNavigation(
+      routes.workspace(
+        FAKE_IDS.org,
+        FAKE_IDS.workspace,
+        ...(options.view === 'chat' ? [] : [options.view]),
+      ),
+    ),
+  )
+  const [panels] = useState(() => new PanelWidths(null))
+  const features = useMemo<WorkspaceFeatures>(
+    () => ({
+      files: (context) => (
+        <DevFiles
+          context={context}
+          files={files}
+          list={options.list}
+          now={now}
+        />
+      ),
+    }),
+    [files, options.list, now],
+  )
+  useEffect(() => {
+    files.start()
+    return () => files.stop()
+  }, [files])
+  return (
+    <ServicesContext.Provider value={app.services}>
+      <AppModelContext.Provider value={app}>
+        <NavigationContext.Provider value={navigation}>
+          <PanelContext.Provider value={panels}>
+            <FeaturesContext.Provider value={features}>
+              <ViewportProvider viewport={options.viewport ?? measured}>
+                <ThemeRoot scheme={options.scheme}>
+                  <Shell key={mounts} />
+                  {options.controls ? (
+                    <DevControls
+                      files={files}
+                      now={now}
+                      onNewView={() => setMounts((count) => count + 1)}
+                      server={props.server}
+                    />
+                  ) : null}
+                </ThemeRoot>
+              </ViewportProvider>
+            </FeaturesContext.Provider>
+          </PanelContext.Provider>
+        </NavigationContext.Provider>
+      </AppModelContext.Provider>
+    </ServicesContext.Provider>
+  )
+}

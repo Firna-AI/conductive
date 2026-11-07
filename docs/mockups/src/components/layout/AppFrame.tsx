@@ -9,8 +9,8 @@ import styles from './AppFrame.module.css'
 /**
  * The desktop app: the org rail, the sidebar of the org, and the main area.
  * In a narrow window the sidebar hides, and the org in the rail leads to its
- * workspace list. A page outside an org, such as the account, has no
- * sidebar. `overlay` lies over the whole frame, such as an open dialog.
+ * workspace list. A page can leave out the sidebar. `overlay` lies over the
+ * whole frame, such as an open dialog.
  * In the Mac app the window controls sit at the top of the left panel,
  * and a banner of the Mac app can top the main area.
  */

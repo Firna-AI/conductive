@@ -3,12 +3,17 @@
 This package bundles the web app in a small Electron shell.
 It targets macOS arm64 and x64.
 Agents still run in cloud computers.
-The web app currently shows only the product name.
+The desktop renderer composes the shared React app shell with desktop services.
 
 The shell uses `conductive-app://desktop`.
 It has no preload script or privileged renderer bridge.
 Only the bundled main frame can use a sanitized clipboard write.
 All other permissions are denied.
+
+The desktop entry supplies the configured Worker origin to the app's API and event services.
+API calls use `credentials: include`, so Chromium sends the HttpOnly desktop session cookie.
+Workspace sockets use the same Worker origin.
+The renderer keeps its normal `fetch` function and has no OS bridge.
 
 ## Development
 
@@ -39,30 +44,107 @@ The Worker accepts desktop exchanges and credentials from the desktop origin.
 
 Other web addresses open in the browser.
 The bundled main page opens its app popups in the same window.
-Child frames cannot load the main page or start sign-in.
+A link or popup from that page to a port preview launch address opens the preview in the browser instead.
+The main process requires the bundled main frame as the navigation initiator.
+It never trusts a referrer.
+It gets `PreviewLaunchResponse` with its own session, the desktop Origin, and `Accept: application/json`.
+It opens only an authorizer URL on a preview domain that a configured frame source covers.
+The browser gets a 60-second preview grant in the URL fragment, and no sign-in session.
+The window policy adds the app origin to its frame sources, so a preview frame can load its launch page.
+Child frames cannot load the main page, open app addresses outside the frame, or start sign-in.
 
 Window bounds and the Chromium session persist across launches.
 The app has one instance.
 Closing the last window leaves the Mac app in the Dock.
 The Dock can reopen the window.
 
+## Device commands
+
+The main process connects the signed-in, awake Mac to the Worker.
+It reads the desktop cookie from the Chromium session.
+The renderer sends approval and settings choices through the Worker relay.
+It receives no cookie or local command bridge.
+
+Local permissions belong to the signed-in account on this Mac.
+The app keeps exact allowed commands and workspace deadlines under its private user-data directory.
+The settings name comes from the OS hostname.
+The connection sends that hostname as display metadata for command requests.
+Remove and Stop revoke permissions in memory even when saving fails.
+The revocation stays in force for the rest of the app run, including reconnects.
+A failed save can restore the old permission after a full app restart.
+Settings replies report whether the change was saved.
+A settings reply that is too large fails its own operation and keeps commands connected.
+Commands run in the user's shell with bounded output and time.
+Folders `~` and `~/...` use the local OS account's home directory.
+Other folder values stay exact. The app does not expand shell variables in them.
+Sleep, sign-out, cookie replacement, connection loss, and app exit cancel the command process groups.
+A replacement connection stops automatic retries on the old Mac.
+Wake or a cookie change can connect it again.
+
+Background requests show a native notification.
+A click restores the window and opens the request's workspace.
+It does not approve the request.
+See the [Mac app protocol](../docs/protocol/desktop-app.md) for the device requirements.
+
+Focused device checks use these commands:
+
+```sh
+npm --prefix desktop run test:logic -- src/device
+npm --prefix desktop run test:electron -- tests/device-command.spec.ts
+npm --prefix desktop run test:electron -- tests/approval-region.spec.ts
+```
+
+Build the desktop app before the Electron check.
+That check uses an isolated relay and the real main process, cookie store, shell, and power-event hooks.
+It checks command results and process-group cancellation on sleep and sign-out.
+The existing shell check continues to check renderer isolation and session persistence.
+The [Mac notification test](tests/device-notification.spec.ts) reopens a closed window and keeps its request after Dock activation.
+Native notification display and click behavior also need a Mac smoke check.
+
+The main-process socket uses `ws` because the native WebSocket API cannot set authenticated upgrade headers.
+`@types/ws` supplies its TypeScript types.
+
 ## Window integration
 
-The hidden native title bar places the traffic lights at x=14 and y=11.
-The controls fit the mockup's 34px top bar.
-The desktop build supplies an owned `data-desktop-chrome-slot`.
-Its controls reserve 64px for the traffic lights.
-They use standard browser history for Back and Forward.
-Window Controls Overlay removes the reserve in full screen without a bridge.
-The bar moves the window.
-Its buttons use `no-drag`.
+The window has no title bar of its own.
+macOS draws the native red, yellow, and green window buttons at x=14 and y=11.
+This centres them in the height of the 34px top bars.
 
-The current minimal web app has no sidebar.
-Its left control strip does not complete the full product mockup.
-The product UI must place the chrome slot inside its left panel.
-It must add its working sidebar control in `data-desktop-panel-slot`.
-It must mark its other top bars as drag regions and their controls as no-drag.
-The product must not add another native title bar.
+The desktop renderer wraps the shared App in the `MacApp` provider of the app shell.
+It gives that provider a `MacWindow` that uses only standard web APIs.
+Window Controls Overlay tells the `MacWindow` when full screen hides the window buttons.
+Back and Forward use the browser history.
+The [web entry](../src/main.tsx) renders no `MacApp`.
+In a browser, the app shows no window controls and no drag regions.
+
+The app shell draws one 34px `Window controls` bar on each page of the Mac app.
+In a normal window, the bar keeps 64px free for the window buttons.
+In full screen, it gives that space back.
+The sidebar toggle sits beside that space.
+It hides the sidebar and shows it again.
+Back and Forward sit at the right of the bar.
+
+The left panel holds the org rail and the sidebar.
+While the sidebar shows, the bar is the top of the left panel.
+It then follows the width of the rail and the sidebar.
+The sidebar does not show after the toggle hides it, in a window narrower than 900px, or on a page without one.
+Then the bar keeps its own width at the top left of the window.
+The top bar of the main area starts after the bar.
+
+The app disables the toggle in a window narrower than 900px and on a page without a sidebar.
+A page without the org rail, such as sign-in, shows the bar without the toggle in a 34px strip.
+On the account page, the Mac app shows the sidebar of the last org that the user opened.
+The app does not save the toggle state or that org.
+
+The element that holds the bar has `data-desktop-chrome-slot`.
+The sidebar toggle sits in `data-desktop-panel-slot`.
+The space of the window buttons has `data-desktop-window-space`.
+The bar, the strip, and the top bars of the main area move the window.
+Their buttons, links, fields, and other controls do not.
+A top bar of the main area gets its drag region from `useMacBar()`.
+
+[The window](../docs/protocol/desktop-app.md#the-window) states the requirements.
+The [Mac app mockups](../docs/mockups/README.md#the-mac-app) draw the layout.
 
 ## Checks and packages
 
@@ -76,17 +158,30 @@ npm --prefix desktop run test:electron
 
 The shell test runs under Xvfb on Linux.
 It also runs on macOS.
+The smoke tests wait for the bundled page title.
+They read the product name from the [shared brand file](../docs/mockups/src/brand.ts).
+This wait does not depend on the sign-in state.
 Linux is a test host, not a release target.
+
 The [window-space test](tests/window-space.spec.ts) runs only on macOS.
 It checks 64px of rendered window-button space in a normal window.
 It checks 0px in full screen and 64px after leaving full screen.
 It waits for the native full-screen events before checking the layout.
+At each step, it also checks the bar and the place of the sidebar toggle.
 Other hosts skip this test.
+
+The [window controls test](tests/window-controls.spec.ts) checks the bar, the left panel, and the drag regions in a workspace.
+It also checks the sidebar toggle, Back and Forward, and the layout after a sidebar resize and a window resize.
+The [browser window test](tests/browser-window.spec.ts) opens a fresh web build in a plain Electron window.
+There, the workspace shows no window controls.
+
 The `test:logic` command uses the repository's Vitest runner with the desktop configuration.
+The typecheck checks main and scripts with NodeNext, then renderer and Electron tests with the app's bundler resolution.
 The root gate includes these unit tests once.
 It also runs desktop typecheck, lint, and formatting checks.
 It does not build, launch, or package Electron.
-Playwright runs the real Electron window test.
+
+Playwright runs the shell test in the real Electron window.
 That test starts sign-in through the native menu and receives the handoff in the main process.
 It checks the real Chromium session cookie on an API call before and after a restart.
 
@@ -137,11 +232,24 @@ It offers Restart now or Later once for each downloaded version.
 ### Key code
 
 - [Main process](src/main.ts) composes the protocol, window, session, and updater.
+- [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation inside `MacApp`.
+- [Renderer services](renderer/services.ts) routes credentialed API calls and event sockets to the configured Worker.
 - [Window](src/window.ts) owns native controls and saved bounds.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.
+- [Device composition](src/device/main.ts) connects cookie, power, notification, and app-exit hooks.
+- [Device session factory](src/device/session-factory.ts) keeps each account's permission store across connections and disposes all stores at app exit.
+- [Device connection](src/device/connection.ts) owns authentication, pairing, heartbeat, and reconnect state.
+- [Device session](src/device/session.ts) owns pending requests, scoped approvals, settings operations, and cancellation.
+- [Device settings](src/device/settings.ts) reports change outcomes and checks settings replies against the device message budget.
+- [Local permissions](src/device/permissions.ts) owns exact command rules and workspace deadlines.
+- [Command runner](src/device/runner.ts) owns time and output limits through injected process and clock boundaries.
+- [Device contract](../src/shared/device.ts) supplies shared message types, routes, and wire limits.
 - [Desktop contract](../worker/security/desktop-contract.ts) shares the desktop origin and session cookie format without Worker dependencies.
 - [Navigation](src/navigation.ts) keeps remote pages outside the main frame.
+- [Preview launch](src/preview.ts) exchanges an authenticated launcher for a short browser handoff.
 - [Permissions](src/permissions.ts) denies unapproved browser access.
 - [Bundle server](src/export-handler.ts) serves only admitted local files.
-- [Chrome](renderer/chrome.ts) uses browser APIs for window layout and history.
+- [Chrome](renderer/chrome.ts) makes the `MacWindow` from Window Controls Overlay, the Navigation API, and the browser history.
+- [Shell window controls](../src/shell/mac/) hold `MacApp`, the bar, the strip, and the drag styles.
 - [Brand assets](../docs/brand/README.md) define the approved icon.
+- [Preview Electron test](tests/previews.spec.ts) checks the Mac frame and a separate browser session.

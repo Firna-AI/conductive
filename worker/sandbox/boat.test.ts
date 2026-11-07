@@ -23,7 +23,7 @@ it('identifies the active Boat wallet with one read-only discovery call', async 
   expect(server.requests[0].headers.get('Authorization')).toBe(
     'Bearer boat-first',
   )
-  expect(server.requests[0].redirect).toBe('error')
+  expect(server.requests[0].redirect).toBe('manual')
 })
 
 it('starts sandboxes without inherited credentials and pins the saved wallet', async () => {

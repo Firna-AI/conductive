@@ -1,0 +1,95 @@
+import type { AppEnv } from '../env'
+import { isRecord } from '../http'
+import { ProviderError } from '../sandbox/errors'
+import type { SandboxProvider, SandboxStart } from '../sandbox/provider'
+import { encrypt, decrypt } from '../security/crypto'
+import { assignSandbox } from './workspace-data'
+import type { StartJobStorage, WorkspaceStartJob } from './start-types'
+
+function strings(value: unknown): Record<string, string> {
+  if (!isRecord(value)) throw new Error('Invalid stored create values')
+  const result: Record<string, string> = {}
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry !== 'string')
+      throw new Error('Invalid stored create value')
+    result[key] = entry
+  }
+  return result
+}
+
+function createInput(value: unknown): SandboxStart {
+  if (
+    !isRecord(value) ||
+    typeof value.name !== 'string' ||
+    typeof value.ttlSeconds !== 'number' ||
+    typeof value.idempotencyKey !== 'string' ||
+    (value.snapshotName !== undefined && typeof value.snapshotName !== 'string')
+  )
+    throw new Error('Invalid stored create payload')
+  return {
+    name: value.name,
+    snapshotName: value.snapshotName,
+    ttlSeconds: value.ttlSeconds,
+    idempotencyKey: value.idempotencyKey,
+    env: strings(value.env),
+    labels: strings(value.labels),
+  }
+}
+
+/** Pin the encrypted body before allocation. A lost reply replays the same body/key. */
+export async function allocateWorkspace(
+  env: AppEnv,
+  provider: SandboxProvider,
+  storage: StartJobStorage,
+  job: WorkspaceStartJob,
+  input: () => Promise<SandboxStart>,
+): Promise<string | null> {
+  const context = JSON.stringify([
+    'workspace-create-payload',
+    job.workspaceId,
+    job.attempt,
+  ])
+  let payload: SandboxStart
+  if (job.createPayloadCiphertext)
+    payload = createInput(
+      JSON.parse(
+        await decrypt(
+          job.createPayloadCiphertext,
+          context,
+          env.BOAT_KEY_ENCRYPTION_KEY,
+        ),
+      ),
+    )
+  else {
+    payload = await input()
+    job.createPayloadCiphertext = await encrypt(
+      JSON.stringify(payload),
+      context,
+      env.BOAT_KEY_ENCRYPTION_KEY,
+    )
+    await storage.update(job)
+  }
+  try {
+    if (!job.allocatedSandboxId) {
+      const sandbox = await provider.create(payload)
+      job.allocatedSandboxId = sandbox.id
+      await storage.update(job)
+    }
+    await assignSandbox(
+      env.DB,
+      job.orgId,
+      job.workspaceId,
+      job.allocatedSandboxId,
+    )
+    return job.allocatedSandboxId
+  } catch (error) {
+    if (
+      error instanceof ProviderError &&
+      !['unavailable', 'invalid_response', 'conflict', 'rate_limited'].includes(
+        error.kind,
+      )
+    )
+      throw error
+    return null
+  }
+}

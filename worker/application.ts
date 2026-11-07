@@ -3,7 +3,10 @@ import { HEALTH_PATH, type HealthResponse } from '../src/shared/health'
 import type { AppDependencies, AppEnv } from './env'
 import { hostStub, hostSurface, marketingResponse } from './hosts'
 import { errorResponse, HttpError, privateResponse } from './http'
-import { route } from './routes'
+import { requestBodyEntry } from './http/request-body'
+import { route, routeDevice } from './routes'
+import { isDeviceAppPath, isDeviceMachinePath } from './devices/paths'
+import { routeMacCommand } from './tools/mac-command'
 import { finishSignIn, startSignIn } from './security/auth'
 import { appContentSecurityPolicy } from './security/content-security'
 import { cookie, OAUTH_COOKIE } from './security/cookies'
@@ -20,7 +23,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
     randomToken,
     ...overrides,
   }
-  return {
+  const application = {
     async fetch(request: Request, env?: AppEnv): Promise<Response> {
       const path = new URL(request.url).pathname
       const upgrade = request.headers.has('Upgrade')
@@ -64,6 +67,9 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             return response
           }
         }
+        if (surface === 'machine' && isDeviceMachinePath(path)) {
+          return respond(await routeMacCommand(request, env))
+        }
         if (surface !== 'app' || !path.startsWith('/api/')) {
           return privateResponse(hostStub(surface))
         }
@@ -86,6 +92,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         ) {
           return respond(await finishDesktopSignIn(request, env, dependencies))
         }
+        if (isDeviceAppPath(path))
+          return respond(await routeDevice(request, env))
         const context = await gate(request, env, dependencies.now())
         return respond(await route(request, env, context, dependencies))
       } catch (error) {
@@ -97,6 +105,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       }
     },
   }
+  return { fetch: requestBodyEntry(application.fetch) }
 }
 
 function healthResponse(): Response {

@@ -36,6 +36,7 @@ describe('PreviewFrame', () => {
     expect(frame.referrerpolicy).toBe('no-referrer')
     expect(flags).toContain('allow-scripts')
     expect(flags).toContain('allow-same-origin')
+    expect(flags).toContain('allow-forms')
     expect(flags.filter((flag) => flag.includes('top-navigation'))).toEqual([])
     expect(link.href).toBe(preview.url)
     expect(link.target).toBe('_blank')

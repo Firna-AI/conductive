@@ -115,7 +115,11 @@ it('installs working CLI and MCP tools under a root with spaces and apostrophes'
       },
       tools: {
         result: {
-          tools: [{ name: 'create_workspace' }, { name: 'list_workspaces' }],
+          tools: [
+            { name: 'run_mac_command' },
+            { name: 'create_workspace' },
+            { name: 'list_workspaces' },
+          ],
         },
       },
     })

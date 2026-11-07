@@ -5,7 +5,8 @@ import type {
 } from '../../src/shared/runner'
 import type { FakeRunner } from '../test-support/fake-runner'
 import { TEST_TIME } from '../test-support/harness'
-import { CLAUDE, type ChatFixture } from './harness.test-support'
+import { CLAUDE, WORKSPACE_ID, type ChatFixture } from './harness.test-support'
+import { TurnLifecycle } from './turn-lifecycle'
 
 export function messageCommands(
   runner: FakeRunner,
@@ -65,4 +66,37 @@ export function terminalEvent(
         omittedFileCount: 0,
         userMessageIds: [turn.message.id],
       }
+}
+
+export function endTurn(
+  fixture: ChatFixture,
+  turn: RunnerTurn,
+  state: 'stopped' | 'failed' = 'stopped',
+): Promise<void> {
+  return fixture.chat.store.run(() =>
+    fixture.chat.store.change(
+      WORKSPACE_ID,
+      async (transaction) => {
+        const session = await transaction.session(turn.sessionId)
+        const stored = await transaction.turn(turn.turnId)
+        if (!session || !stored) throw new Error('The turn is missing.')
+        await new TurnLifecycle(transaction, session).finish(stored, { state })
+      },
+      () => undefined,
+    ),
+  )
+}
+
+export function lifecycleSnapshot(fixture: ChatFixture) {
+  return fixture.chat.store.read(WORKSPACE_ID, async (view) => {
+    const turns = await view.turns()
+    return {
+      sessions: await view.sessions(),
+      turns,
+      commands: await view.pending(),
+      messages: await Promise.all(
+        turns.flatMap((turn) => turn.messageIds.map((id) => view.message(id))),
+      ),
+    }
+  })
 }

@@ -61,3 +61,20 @@ it('fails credential generation without installing an empty password when the en
   )
   expect(result.stdout).toBe('')
 })
+
+it('loads the workspace environment and opens the terminal in its repository', async () => {
+  const fixture = await scriptFixture()
+  await writeFile(
+    fixture.terminal,
+    `#!/bin/sh
+printf '%s\\n' "$PWD" "$CONDUCTIVE_LAUNCH_TEST"
+`,
+  )
+  expect((await runScript(credentialScript(fixture.options))).code).toBe(0)
+  const result = await runScript(launcherScript(fixture.options))
+  expect(result).toEqual({
+    code: 0,
+    stdout: `${fixture.repository}\nworkspace environment\n`,
+    stderr: '',
+  })
+})

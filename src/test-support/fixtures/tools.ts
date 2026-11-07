@@ -20,9 +20,13 @@ import type {
   GitHubCheck,
   GitHubChecksResponse,
 } from '../../shared/github'
-import type { PreviewResponse, PreviewsResponse } from '../../shared/previews'
+import {
+  previewPath,
+  type PreviewResponse,
+  type PreviewsResponse,
+} from '../../shared/previews'
 import { terminalPaths, type TerminalResponse } from '../../shared/terminal'
-import { FAKE_IDS, FAKE_TIME } from './core'
+import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME } from './core'
 
 export const FAKE_FILE_PATH = 'src/app/checkout/AddressForm.tsx'
 export const fakeTerminalOutput =
@@ -120,7 +124,10 @@ export function toolFixtures(bannerState: BannerState = 'ready-to-merge') {
     preview: {
       id: FAKE_IDS.preview,
       port: 3000,
-      url: 'https://a4826b97d1c04f15802c7e9bb2546d30.conductive-previews.test',
+      url: new URL(
+        previewPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.preview),
+        FAKE_ORIGIN,
+      ).href,
       expiresAt: FAKE_TIME + 86_400_000,
     },
   }

@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { Archive, ChevronLeft, FolderGit2, GitBranch } from 'lucide-react'
+import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
 import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
 import owner from '../../../docs/mockups/src/components/workspace/OwnerPicker.module.css'
@@ -9,6 +10,7 @@ import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import type { Workspace } from '../../shared/workspaces'
 import { useOrgModel } from '../context'
+import { useMacBar } from '../mac/mac-app'
 import { IconButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { PersonAvatar } from '../ui/Avatars'
@@ -52,6 +54,7 @@ export function WorkspaceHeader(props: {
   const model = useOrgModel(org.id)
   const repositories = valueOf(useStore(model.repositories))
   const go = useGo()
+  const bar = useMacBar()
   useEffect(() => model.watch('repositories'), [model])
   const repository =
     repositories?.find((item) => item.id === workspace.repositoryId)
@@ -84,7 +87,7 @@ export function WorkspaceHeader(props: {
     )
   }
   return (
-    <header className={styles.bar}>
+    <header className={classes(styles.bar, bar)}>
       <h1 className={styles.title}>{workspace.name}</h1>
       <span className={styles.meta}>
         <FolderGit2 aria-hidden className={styles.icon} size={13} />

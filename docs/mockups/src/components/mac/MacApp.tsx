@@ -6,12 +6,28 @@ import { createContext, useContext, type ReactNode } from 'react'
  */
 export type WindowMode = 'window' | 'full-screen'
 
+/**
+ * The result of the last change of the Mac's settings: Remove of the
+ * always-allowed `npm run lint`, or Stop of the 15 minutes of the
+ * workspace. The Mac made and saved it, made it but did not save it, or did
+ * not make it.
+ */
+export type MacChange =
+  | 'removed'
+  | 'remove-not-saved'
+  | 'remove-failed'
+  | 'stopped'
+  | 'stop-not-saved'
+  | 'stop-failed'
+
 export type MacAppState = {
   mode: WindowMode
   /** A bar at the top of the main area, such as the 15-minute window. */
   banner?: ReactNode
   /** The other ways to allow a waiting command are drawn open. */
   choicesOpen?: boolean
+  /** The result of the last change of the Mac's settings. */
+  change?: MacChange
   /** The workspace whose agent waits for the user, which the list marks. */
   needsInput?: string
 }

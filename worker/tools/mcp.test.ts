@@ -76,6 +76,7 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
       id: 1,
       result: {
         tools: [
+          { name: 'run_mac_command' },
           {
             name: 'create_workspace',
             inputSchema: { required: ['repositoryId', 'firstMessage'] },

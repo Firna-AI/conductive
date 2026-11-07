@@ -15,7 +15,7 @@ import { readyWorkspace, type WorkspaceState } from './workspaceState'
 export const macAppSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['window', 'page', 'command'],
+  required: ['window', 'page', 'command', 'change'],
   properties: {
     /** A normal window, or full screen, where macOS hides the buttons. */
     window: { enum: ['window', 'full-screen'] },
@@ -24,8 +24,9 @@ export const macAppSchema = {
     /**
      * A command that an agent asks to run on this Mac: none, the request
      * above the composer, the request of a longer time limit, the request
-     * with the other ways to allow open, the notification while the app is
-     * in the background, or the 15 minutes that allow every command.
+     * with the other ways to allow open, four requests with a long script,
+     * the notification while the app is in the background, or the 15
+     * minutes that allow every command.
      */
     command: {
       enum: [
@@ -33,8 +34,26 @@ export const macAppSchema = {
         'prompt',
         'prompt-long',
         'choices',
+        'many',
         'notification',
         'allow-all',
+      ],
+    },
+    /**
+     * The result of the last change of the Mac's settings: none, Remove of
+     * an always-allowed command in This Mac, or Stop in the bar of the 15
+     * minutes. The Mac made and saved it, made it but did not save it, or
+     * did not make it.
+     */
+    change: {
+      enum: [
+        'none',
+        'removed',
+        'remove-not-saved',
+        'remove-failed',
+        'stopped',
+        'stop-not-saved',
+        'stop-failed',
       ],
     },
   },
@@ -48,6 +67,7 @@ const conversations = {
   prompt: 'mac-waiting',
   'prompt-long': 'mac-waiting-suite',
   choices: 'mac-waiting',
+  many: 'mac-waiting-many',
   notification: 'mac-waiting',
   'allow-all': 'mac-done',
 } as const satisfies Record<
@@ -91,12 +111,13 @@ function pageFor(state: MacAppState): ReactNode {
  * phone view shows the same screen, smaller.
  */
 export function MacAppScreen(props: { state: MacAppState }) {
-  const { command } = props.state
+  const { command, change } = props.state
   const waits = chats[conversations[command]].some(isPendingCommand)
   return (
     <MacScreen
       active={command !== 'notification'}
       banner={command === 'allow-all' ? <AllowAllBar /> : undefined}
+      change={change === 'none' ? undefined : change}
       choicesOpen={command === 'choices'}
       mode={props.state.window}
       needsInput={waits ? checkoutAutocomplete.key : undefined}
