@@ -3,13 +3,13 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import process from 'node:process'
-import { URL } from 'node:url'
 
 import { onTestFinished } from 'vitest'
 
 import { imageTestProcess } from '../tools/image-test-process'
 import { shellQuote } from './commands'
-import { imageNodeExecutable, imageRuntimeScript } from './image-runtime'
+import { imageNodeExecutable } from './image-runtime'
+import { stagedImageSoftware } from './image-software-staging-test-support'
 
 export async function imageSoftwareFixture() {
   const root = await mkdtemp(join(tmpdir(), "conductive software's "))
@@ -80,31 +80,8 @@ cp ${shellQuote(archive)} "$output"
     'runner',
   ])
   if (packed.exitCode !== 0) throw new Error(packed.stderr)
-  const roots = [
-    '/opt/conductive',
-    '/usr/local/bin',
-    '/etc/systemd/system',
-    '/run/ascii-secrets',
-    '/run/conductive',
-  ]
-  for (const file of [
-    'install.sh',
-    'runner-start.sh',
-    'git-credential-helper.sh',
-    'git-credential-helper.mjs',
-    'conductive-runner.service',
-  ]) {
-    let source = await readFile(
-      new URL(`../../image/${file}`, import.meta.url),
-      'utf8',
-    )
-    if (file.endsWith('.sh')) {
-      for (const prefix of roots) {
-        source = source.replaceAll(prefix, shellQuote(join(root, prefix)))
-      }
-      source = imageRuntimeScript(source, root)
-    }
-    await writeFile(join(staged, file), source)
+  for (const [name, source] of stagedImageSoftware(root)) {
+    await writeFile(join(staged, name), source)
   }
   const sha256 = createHash('sha256')
     .update(await readFile(archive))

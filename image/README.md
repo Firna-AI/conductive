@@ -250,6 +250,8 @@ file, in a temporary folder under `.context/`. It maps only
 `/opt/conductive` and `/run/ascii-secrets` to that folder, and it refuses
 a launcher that uses any other absolute path. It runs the launcher with
 `/bin/sh`, and checks the outgoing credential request and its turn ID.
+Both shell fixtures decode their files from the command of
+`installImageSoftware` through one shared test helper.
 
 Run the installer tests with
 `npm run test -- worker/lifecycle/image-runtime.test.ts worker/lifecycle/image-software.test.ts`.

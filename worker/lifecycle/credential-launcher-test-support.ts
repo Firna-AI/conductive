@@ -1,7 +1,6 @@
 import { Buffer } from 'node:buffer'
 import { execFile } from 'node:child_process'
 import {
-  copyFile,
   mkdir,
   mkdtemp,
   readFile,
@@ -12,41 +11,14 @@ import {
   symlink,
   writeFile,
 } from 'node:fs/promises'
-import { dirname, join, posix, relative, resolve } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import process from 'node:process'
-import { URL } from 'node:url'
 
 import type { CommandResult } from '../sandbox/provider'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { shellQuote } from './commands'
-import { imageNodeExecutable, imageRuntimeScript } from './image-runtime'
-
-const installedRoots = ['/opt/conductive', '/run/ascii-secrets']
-
-/** Map only the launcher's approved absolute paths before executing it. */
-function mappedLauncher(source: string, root: string): string {
-  if (
-    !source.startsWith('#!/bin/sh\n') ||
-    /[`\\]/.test(source) ||
-    source.includes('$(')
-  )
-    throw new Error('Unsafe credential launcher script')
-  return source.replace(
-    /(?<![\w./-])\/[\w./-]+/g,
-    (path: string, offset: number) => {
-      if (offset === 2 && path === '/bin/sh') return path
-      if (
-        !installedRoots.some(
-          (prefix) => path === prefix || path.startsWith(`${prefix}/`),
-        ) ||
-        posix.normalize(path) !== path ||
-        !/^[\s;"')]*$/.test(source[offset + path.length] ?? '')
-      )
-        throw new Error(`Unmapped credential launcher path: ${path}`)
-      return shellQuote(join(root, path.slice(1)))
-    },
-  )
-}
+import { imageNodeExecutable } from './image-runtime'
+import { stagedImageSoftware } from './image-software-staging-test-support'
 
 async function diskFiles(root: string): Promise<Record<string, string>> {
   const entries = await readdir(root, { recursive: true, withFileTypes: true })
@@ -81,22 +53,19 @@ export async function credentialLauncher(
   const commands = join(root, 'caller-bin')
   const node = imageNodeExecutable(root)
   try {
-    const source = await readFile(
-      new URL('../../image/git-credential-helper.sh', import.meta.url),
-      'utf8',
-    )
-    const mapped = imageRuntimeScript(mappedLauncher(source, root), root)
+    const files = stagedImageSoftware(root)
+    const source = files.get('git-credential-helper.sh')
+    const program = files.get('git-credential-helper.mjs')
+    if (source === undefined || program === undefined)
+      throw new Error('The staged credential helper is missing.')
     await mkdir(dirname(node), { recursive: true })
     await mkdir(secrets, { recursive: true })
     await mkdir(commands, { recursive: true })
     await writeFile(join(commands, 'node'), '#!/bin/sh\nexit 73\n', {
       mode: 0o755,
     })
-    await writeFile(launcher, mapped)
-    await copyFile(
-      new URL('../../image/git-credential-helper.mjs', import.meta.url),
-      join(installation, 'git-credential-helper.mjs'),
-    )
+    await writeFile(launcher, source)
+    await writeFile(join(installation, 'git-credential-helper.mjs'), program)
     await symlink(process.execPath, node)
     await writeFile(
       join(secrets, 'env.sh'),
