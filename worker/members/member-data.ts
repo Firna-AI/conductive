@@ -105,12 +105,3 @@ export async function removeMembership(
   ])
   return result[1].meta.changes > 0
 }
-
-export function hasOtherAdmin(db: D1Database, orgId: string, userId: string) {
-  return db
-    .prepare(
-      "SELECT user_id FROM org_members WHERE org_id = ? AND role = 'admin' AND user_id <> ? LIMIT 1",
-    )
-    .bind(orgId, userId)
-    .first<{ user_id: string }>()
-}

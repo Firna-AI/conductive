@@ -154,6 +154,14 @@ most 16 levels deep, and deeper content shows as text. The parse runs in
 the worker, off the thread of the page, so a long or crafted file cannot
 stop the page.
 
+Emphasis and strong emphasis pair their `*` and `_` markers by the
+CommonMark rules. A marker in the text of a link, an image, or a
+strikethrough pairs only inside that text. Code spans and link addresses
+do not supply markers. The parser keeps escaped `*` and `_` characters as
+text. Emphasis, strong emphasis, strikethrough, and links nest at most 12
+levels deep. Deeper emphasis markers show as text. Deeper links, images,
+and strikethrough show their source as text.
+
 A run of more than 256 characters without a space renders as adjacent
 text nodes that end between whole graphemes. The text and its lines stay
 the same, and the browser lays the run out in linear time. Text with
@@ -256,6 +264,10 @@ tests keep their static markup checks in Node.
   the lists, with the mockups' `LostUpdateRow` and their ages.
 - `markdown/markdown-document.ts`: `parseMarkdown`, the whole parse of a
   file: its blocks, then the inline content of each block.
+- `markdown/markdown-inline.ts`: `parseInline`, the inline content of one
+  block. `pairRuns` in `markdown/markdown-delimiters.ts` pairs its `*` and
+  `_` markers by the CommonMark rules. `nestParts` in
+  `markdown/markdown-nesting.ts` builds the nested content from the pairs.
 - `markdown/markdown-worker.ts` and `markdown/worker-parse.ts`: the module
   worker that runs the parse, and its start from the view, which ends it.
 - `markdown/MarkdownView.tsx`: the safe renderer of a parsed document.

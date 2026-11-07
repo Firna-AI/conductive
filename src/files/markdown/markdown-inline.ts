@@ -1,4 +1,11 @@
 import {
+  delimiterRun,
+  pairRuns,
+  type DelimiterRun,
+  type Edges,
+} from './markdown-delimiters'
+import { nestParts, type InlinePart } from './markdown-nesting'
+import {
   bracketPairs,
   codeSpans,
   runLength,
@@ -19,10 +26,15 @@ export type MdInline =
 type Definitions = ReadonlyMap<string, string>
 
 const punctuation = /[!-/:-@[-`{-~]/
-const wordChar = /[\p{L}\p{N}]/u
-const maxDepth = 12
 const urlLink = /<([a-zA-Z][a-zA-Z\d+.-]{1,31}:[^\s<>]{1,2000})>/y
 const emailLink = /<([^\s<>@]{1,256}@[^\s<>@]{1,256})>/y
+
+/** The start and the end of a block count as whitespace next to a run. */
+const blockEdges: Edges = { before: '', after: '' }
+/** The text of a link or an image stands between its brackets. */
+const labelEdges: Edges = { before: '[', after: ']' }
+/** The text of a strikethrough stands between its tildes. */
+const strikeEdges: Edges = { before: '~', after: '~' }
 
 /** The plain text of inline content, as for the alt text of an image. */
 export function plainText(nodes: readonly MdInline[]): string {
@@ -35,19 +47,29 @@ export function plainText(nodes: readonly MdInline[]): string {
     .join('')
 }
 
-function isDelimiter(char: string): boolean {
-  return char === '*' || char === '_' || char === '~'
+/** Where a text stands: inside how many containers, and between what. */
+interface Place {
+  depth: number
+  /** The text of a link or an image, which holds no link. */
+  inLink: boolean
+  edges: Edges
 }
 
+/**
+ * The scan of one inline text into parts, in text order. Code spans,
+ * escapes, autolinks, links, and strikethrough group their text first.
+ * Then the runs of `*` and `_` pair, and the parts nest into the tree.
+ */
 class InlineScanner {
   readonly text: string
   readonly definitions: Definitions
-  private readonly depth: number
-  private readonly inLink: boolean
-  private readonly spans: Map<number, CodeSpan>
   readonly brackets: BracketPairs
-  private readonly closerless = new Map<string, number>()
-  private readonly nodes: MdInline[] = []
+  private readonly place: Place
+  private readonly spans: Map<number, CodeSpan>
+  /** For each size of tilde closer, a start from which no closer follows. */
+  private readonly closerless = new Map<number, number>()
+  private readonly parts: InlinePart[] = []
+  private readonly runs: DelimiterRun[] = []
   private buffer = ''
   /**
    * The spaces after the buffer. A line end drops them, or makes two or
@@ -55,16 +77,10 @@ class InlineScanner {
    */
   private spaces = 0
 
-  constructor(
-    text: string,
-    definitions: Definitions,
-    depth: number,
-    inLink: boolean,
-  ) {
+  constructor(text: string, definitions: Definitions, place: Place) {
     this.text = text
     this.definitions = definitions
-    this.depth = depth
-    this.inLink = inLink
+    this.place = place
     this.spans = codeSpans(text)
     this.brackets = bracketPairs(text, this.spans)
   }
@@ -72,17 +88,17 @@ class InlineScanner {
   run(): MdInline[] {
     for (let index = 0; index < this.text.length;) index = this.step(index)
     this.flush()
-    return this.nodes
+    pairRuns(this.runs)
+    return nestParts(this.parts, this.place.depth)
   }
 
-  private nested(text: string, inLink: boolean): MdInline[] {
-    if (this.depth >= maxDepth) return [{ kind: 'text', text }]
-    return new InlineScanner(
-      text,
-      this.definitions,
-      this.depth + 1,
-      inLink,
-    ).run()
+  /**
+   * The content of a group as a text of its own, `depth` containers deep.
+   * The tree builds a group only below the depth limit, so these scans
+   * nest no deeper than the limit.
+   */
+  private nested(text: string, place: Place): MdInline[] {
+    return new InlineScanner(text, this.definitions, place).run()
   }
 
   /** Adds text after the waiting spaces. */
@@ -97,26 +113,20 @@ class InlineScanner {
     if (this.spaces > 0) this.buffer += ' '.repeat(this.spaces)
     this.spaces = 0
     if (this.buffer === '') return
-    this.nodes.push({ kind: 'text', text: decodeEntities(this.buffer) })
+    this.parts.push({ kind: 'text', text: decodeEntities(this.buffer) })
     this.buffer = ''
   }
 
-  private push(node: MdInline): void {
+  private push(part: InlinePart): void {
     this.flush()
-    this.nodes.push(node)
-  }
-
-  /** Adds each node in turn. A spread of a long list into a call overflows the stack. */
-  private pushAll(nodes: readonly MdInline[]): void {
-    this.flush()
-    for (const node of nodes) this.nodes.push(node)
+    this.parts.push(part)
   }
 
   private step(index: number): number {
     const { text } = this
     const span = this.spans.get(index)
     if (span) {
-      this.push({ kind: 'code', text: span.code })
+      this.push({ kind: 'node', node: { kind: 'code', text: span.code } })
       return span.end
     }
     const char = text[index]
@@ -124,7 +134,7 @@ class InlineScanner {
     if (char === '\n') {
       const hard = this.spaces >= 2
       this.spaces = 0
-      if (hard) this.push({ kind: 'break' })
+      if (hard) this.push({ kind: 'node', node: { kind: 'break' } })
       else this.add('\n')
       return index + 1
     }
@@ -132,13 +142,14 @@ class InlineScanner {
       this.spaces += 1
       return index + 1
     }
+    if (char === '*' || char === '_') return this.delimiters(index, char)
     let end = -1
     if (char === '<') end = this.autolink(index)
     else if (char === '[' || (char === '!' && text[index + 1] === '[')) {
       end = this.link(index)
-    } else if (isDelimiter(char)) end = this.emphasis(index, char)
+    } else if (char === '~') end = this.strike(index)
     if (end > index) return end
-    const run = isDelimiter(char) ? runLength(text, index, char) : 1
+    const run = char === '~' ? runLength(text, index, char) : 1
     this.add(text.slice(index, index + run))
     return index + run
   }
@@ -146,7 +157,7 @@ class InlineScanner {
   /** A backslash keeps the punctuation after it as text, or ends a line. */
   private escape(index: number): number {
     const next = this.text[index + 1] ?? ''
-    if (next === '\n') this.push({ kind: 'break' })
+    if (next === '\n') this.push({ kind: 'node', node: { kind: 'break' } })
     else if (punctuation.test(next)) this.push({ kind: 'text', text: next })
     else {
       this.add('\\')
@@ -155,17 +166,31 @@ class InlineScanner {
     return index + 2
   }
 
+  /** A run of `*` or `_`: a part that pairs after the scan, or text. */
+  private delimiters(index: number, char: string): number {
+    const end = index + runLength(this.text, index, char)
+    const run = delimiterRun(this.text, index, end, this.place.edges)
+    if (run === null) this.add(this.text.slice(index, end))
+    else {
+      this.push({ kind: 'run', run })
+      this.runs.push(run)
+    }
+    return end
+  }
+
   private autolink(index: number): number {
     for (const pattern of [urlLink, emailLink]) {
       pattern.lastIndex = index
       const match = pattern.exec(this.text)
       if (!match) continue
       const address = pattern === emailLink ? `mailto:${match[1]}` : match[1]
-      const href = safeHref(address)
-      const label: MdInline = { kind: 'text', text: match[1] }
-      const link: MdInline | null =
-        href && !this.inLink ? { kind: 'link', href, children: [label] } : null
-      this.push(link ?? label)
+      const href = this.place.inLink ? null : safeHref(address)
+      const label = { kind: 'text', text: match[1] } as const
+      if (href === null) this.push(label)
+      else {
+        const link: MdInline = { kind: 'link', href, children: [label] }
+        this.push({ kind: 'group', source: match[0], nodes: () => [link] })
+      }
       return index + match[0].length
     }
     return -1
@@ -179,57 +204,69 @@ class InlineScanner {
     if (close === undefined) return -1
     const target = linkTarget(this, open, close)
     if (!target) return -1
-    const children = this.nested(this.text.slice(open + 1, close), true)
-    const href = image || this.inLink ? null : safeHref(target.destination)
-    if (image) this.push({ kind: 'text', text: plainText(children) })
-    else if (href) this.push({ kind: 'link', href, children })
-    else this.pushAll(children)
+    const label = this.text.slice(open + 1, close)
+    const href =
+      image || this.place.inLink ? null : safeHref(target.destination)
+    this.push({
+      kind: 'group',
+      source: this.text.slice(index, target.end),
+      nodes: (depth) => {
+        const place = { depth: depth + 1, inLink: true, edges: labelEdges }
+        const children = this.nested(label, place)
+        if (image) return [{ kind: 'text', text: plainText(children) }]
+        return href ? [{ kind: 'link', href, children }] : children
+      },
+    })
     return target.end
   }
 
-  private emphasis(index: number, char: string): number {
+  /**
+   * A strikethrough: a run of tildes before text, closed by the first later
+   * run of two tildes after text, or else of one. The extra tildes of the
+   * opening run show as text.
+   */
+  private strike(index: number): number {
     const { text } = this
-    const run = runLength(text, index, char)
+    const run = runLength(text, index, '~')
     const after = text[index + run] ?? ''
     if (after === '' || /\s/.test(after)) return -1
-    if (char === '_' && wordChar.test(text[index - 1] ?? '')) return -1
-    const sizes = (char === '~' ? [2, 1] : [3, 2, 1]).filter(
-      (size) => size <= run,
-    )
-    for (const size of sizes) {
-      const closer = this.closer(char, size, index + run)
+    for (const size of [2, 1]) {
+      if (size > run) continue
+      const closer = this.tildeCloser(size, index + run)
       if (closer < 0) continue
       this.add(text.slice(index, index + run - size))
-      const inner = text.slice(index + run, closer)
-      // Three delimiters are strong text around emphasised text.
-      const content = size === 3 ? `${char}${inner}${char}` : inner
-      const kind = char === '~' ? 'strike' : size === 1 ? 'emphasis' : 'strong'
-      this.push({ kind, children: this.nested(content, this.inLink) })
+      const content = text.slice(index + run, closer)
+      const { inLink } = this.place
+      this.push({
+        kind: 'group',
+        source: text.slice(index + run - size, closer + size),
+        nodes: (depth) => {
+          const place = { depth: depth + 1, inLink, edges: strikeEdges }
+          return [{ kind: 'strike', children: this.nested(content, place) }]
+        },
+      })
       return closer + size
     }
     return -1
   }
 
-  /** The next run of exactly `size` that can close, or -1. Misses are cached. */
-  private closer(char: string, size: number, from: number): number {
+  /** The next run of exactly `size` tildes after text, or -1. Misses are cached. */
+  private tildeCloser(size: number, from: number): number {
     const { text } = this
-    const key = `${char}${size}`
-    if ((this.closerless.get(key) ?? Infinity) <= from) return -1
+    if ((this.closerless.get(size) ?? Infinity) <= from) return -1
     for (let index = from; index < text.length;) {
       const span = this.spans.get(index)
       if (span) index = span.end
       else if (text[index] === '\\') index += 2
-      else if (text[index] !== char) index += 1
+      else if (text[index] !== '~') index += 1
       else {
-        const run = runLength(text, index, char)
+        const run = runLength(text, index, '~')
         const before = text[index - 1] ?? ''
-        const flanks = before !== '' && !/\s/.test(before)
-        const intraword = char === '_' && wordChar.test(text[index + run] ?? '')
-        if (run === size && flanks && !intraword) return index
+        if (run === size && before !== '' && !/\s/.test(before)) return index
         index += run
       }
     }
-    this.closerless.set(key, from)
+    this.closerless.set(size, from)
     return -1
   }
 }
@@ -239,5 +276,6 @@ export function parseInline(
   text: string,
   definitions: Definitions,
 ): MdInline[] {
-  return new InlineScanner(text, definitions, 0, false).run()
+  const place = { depth: 0, inLink: false, edges: blockEdges }
+  return new InlineScanner(text, definitions, place).run()
 }
