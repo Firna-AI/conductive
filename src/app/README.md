@@ -104,6 +104,11 @@ and removal are not wired into this tab yet.
   before a later remove of the same repository.
 - A Resume reply keeps each newer field change that arrived while its
   request ran. A reply after close changes no workspace state.
+- An admitted create stays in `OrgModel.creations` until its start ends.
+  A failed start takes the workspace out of the list, and gives the first
+  message back in a form of its own. A sign-out, or a sign-in of another
+  person, forgets every create.
+  [Creation recovery](creation-recovery.md) gives the rules.
 - The tab keeps the `WorkspaceModel` of each workspace that it showed, for
   the signed-in user, as
   [The kept workspace](../shell/workspace/README.md#the-kept-workspace)
@@ -185,6 +190,10 @@ and removal are not wired into this tab yet.
   files, and the paperclip is off while the create runs. Send and Try
   again read one readiness: the text, the files, the agent login, the
   repository, and the model.
+- A create whose sandbox did not start gets its own New workspace form in
+  the tab that sent it. The address of that workspace shows the form, with
+  "The workspace wasn't created". Try again sends the same message ID, as
+  [Creation recovery](creation-recovery.md#the-returned-form) says.
 
 ## Rules for this code
 
@@ -245,6 +254,8 @@ clicks, types, and lets the answers of the fake API settle.
   writes, their changes, moves, and the Archived group.
 - `workspace-model.ts` and `archive-model.ts`: an open workspace and Archive.
 - `new-workspace-model.ts`: the first message that creates a workspace.
+  `creations.ts`: `Creations`, the admitted creates of an org in this tab,
+  and `failedCreate`, which tells a create whose start failed.
 - `computer-model.ts`: the scripts, the env vars, the builds, and the log.
 - `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
   the log of one build.

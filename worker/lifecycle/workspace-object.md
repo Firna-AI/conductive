@@ -2,8 +2,8 @@
 
 This page belongs to the [workspace lifecycle README](README.md). It
 describes the Durable Object of each workspace and of each image
-coordinator: its names, its lifecycle steps, its alarm, its start logs,
-its event socket, and the publication of its events.
+coordinator. It gives their names, the lifecycle steps, the alarm, the
+start logs, the event socket, the event publication, and the shown state.
 
 `Workspace` in [`worker/workspace.ts`](../workspace.ts) is the Durable
 Object class of the `WORKSPACES` binding. [`runtime.ts`](runtime.ts) gets
@@ -70,7 +70,8 @@ After a failed create removes its records, `failedCreationEvents` in
 only to the sender of the first message, after the browser gate. It sends
 the stored public history once, with the `message.accepted` event of the
 first message, and then closes. The browser does not restore the composer
-from it yet. The owner of `src/app/` and `src/shell/` adds that recovery.
+from this replay. The tab that sent the create keeps its first message in
+memory, as [Creation recovery](../../src/app/creation-recovery.md) says.
 
 `WorkspaceEventJournal` in [`durable-journal.ts`](durable-journal.ts) keeps
 ordered lifecycle publication and suppresses unchanged updates. The
@@ -78,3 +79,26 @@ production `Workspace` sends each `workspace.updated` and `start.updated`
 event to `WorkspaceChat`, through `commitWorkspaceEvent` or the `publish`
 argument of a chat hook. Chat stores and numbers the only workspace event
 history, with chat and lifecycle events.
+
+## The shown state
+
+`WorkspaceStateProjection` in
+[`workspace-state-projection.ts`](workspace-state-projection.ts) is the
+one writer of the shown state of a workspace: the state in D1 and its
+`workspace.updated` event. The `changed` hook of the lifecycle and each
+change of a Mac request call it while they hold the chat queue. It adds no
+queue of its own.
+
+- It reads the raw lifecycle state with `lifecycle.read`, and the waiting
+  Mac requests through the `deviceWaiting` hook of `WorkspacePlatform`.
+  Neither read enters a queue again.
+- A waiting request shows `input` over `starting`, `working`, `ready`, and
+  `unread`. `stopped`, `error`, and `archived` show over a waiting request.
+- The raw lifecycle state, and its idle and activity times, stay as they
+  are. The `updatedAt` in D1 never moves behind a later stored update.
+- A lifecycle change publishes through `WorkspaceEventJournal`. A change of
+  a Mac request publishes one `workspace.updated`, also when the state
+  stays `input`. The event has the model choice of the stored chat
+  session.
+- Without a lifecycle state, the device feature keeps its own fallback, as
+  the [Mac device README](../devices/README.md#workspace-state) says.

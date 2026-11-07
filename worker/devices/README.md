@@ -82,21 +82,6 @@ Large allowed values use chunks below durable KV value limits.
 Retries with the same ID and command return the existing request.
 A different command needs another ID.
 
-A durable publication marker retries an interrupted state/event update.
-The feature publishes numbered `workspace.updated` events through `WorkspaceChat`.
-The UI then reads the separate device records.
-It needs no new member of the shared workspace event union.
-The existing stored chat session supplies the workspace's real agent choice.
-
-Each waiting request contributes to the workspace's `input` state.
-An answer clears this request's wait.
-The feature restores the prior state only when no request still waits.
-Metadata changes do not prevent restoration.
-Restoration changes only a current `input` state.
-It preserves newer stopped, archived, or error states.
-The durable marker also repairs a restart before the D1 input transition.
-An accepted request also sets input while the workspace still shows starting.
-
 Stopping or ending the active turn cancels its pending/running local commands.
 The durable record becomes `failed` with error code `turn_ended`.
 A late decision or result cannot revive a terminal request.
@@ -104,6 +89,36 @@ Chat writes and terminal runner events schedule this cleanup with `waitUntil`.
 Device cleanup therefore does not delay or fail an otherwise successful chat response.
 Command socket references include both workspace ID and request ID.
 A result from another connection or workspace cannot complete that request.
+
+## Workspace state
+
+A durable publication marker retries an interrupted state/event update.
+Each request change publishes one numbered `workspace.updated` event through `WorkspaceChat`, also when the shown state stays `input`.
+The UI then reads the separate device records.
+It needs no new member of the shared workspace event union.
+The existing stored chat session supplies the workspace's real agent choice.
+
+Each waiting request contributes to the workspace's `input` state.
+An answer clears this request's wait.
+`input` shows over starting, working, ready, and unread.
+Newer stopped, archived, or error states show over a waiting request.
+The durable marker also repairs a restart before the D1 input transition.
+
+`publishDeviceState` in `state.ts` enters `authorizedWorkspaceOperation` of the chat once.
+Inside it, the injected `DeviceStateProjection` calls the shared writer of the workspace object, as [The shown state](../lifecycle/workspace-object.md#the-shown-state) says.
+That writer reads the current lifecycle state and the current waiting requests.
+So lifecycle activity, a heartbeat, or a start-step update cannot hide a waiting request.
+When the last wait ends, the current lifecycle state supplies the shown state, and the feature keeps no previous-state baseline.
+`DeviceRuntime.waiting` reads the durable records directly, so the writer never waits for the record queue.
+The record queue still owns the request changes.
+
+`DeviceRuntime`, `WorkspaceDevices`, and `DeviceRecords` take the projection as an optional last constructor argument.
+`createWorkspaceIntegration` in `worker/chat/workspace-integration.ts` supplies it.
+Without it, or without a lifecycle state, the device-only fallback runs in the same queue-owned operation:
+
+- The feature restores the prior state only when no request still waits.
+- Metadata changes do not prevent restoration.
+- Restoration changes only a current `input` state, and it preserves newer stopped, archived, or error states.
 
 ## Permission policy and limits
 
@@ -132,7 +147,8 @@ The Worker watchdog allows the command time limit plus one heartbeat for result 
 ## Composition and checks
 
 `worker/application.ts` dispatches this feature inside its request budget, before the machine stub or app JSON gate.
-`worker/workspace.ts` composes gated device handling with the existing chat class.
+`worker/workspace.ts` serves gated device handling before chat.
+`createWorkspaceIntegration` builds the `DeviceRuntime` with the existing chat class and the shared state writer.
 Broker object names use the owned `devices:v1:user:` prefix.
 
 The workspace object and the device broker call each other through one RPC method, `Workspace.deviceOperation`.
@@ -161,6 +177,9 @@ Sender selection comes from messages stored through that real chat path.
 `DeviceRuntime` takes one clock for lease, watchdog, and command times.
 The fixture moves that clock and invokes the real Durable Object alarm through test-only routes.
 The publication recovery test interrupts real D1 with a temporary trigger and replays through a browser route.
+`worker/chat/integration/workspace-device-projection.test.ts` runs the composed workspace object with a real waiting request.
+D1, the list, and a reopen keep `input` through lifecycle activity, a start-step update, and a heartbeat.
+When the turn ends, the request fails with `turn_ended`, and D1 shows `ready`.
 
 ## Key code
 
@@ -168,7 +187,8 @@ The publication recovery test interrupts real D1 with a temporary trigger and re
 - `access.ts`: stored-turn sender lookup and current access checks.
 - `workspace-commands.ts`, `workspace-browser.ts`: machine commands and scoped app records/approvals.
 - `broker.ts`, `broker-routes.ts`, `broker-messages.ts`: the authenticated device socket and relays.
-- `records.ts`, `state.ts`, `storage.ts`: durable requests, state publication, and chunked values.
+- `records.ts`, `storage.ts`: durable requests and chunked values.
+- `state.ts`: `publishDeviceState`, the queue-owned call of the shared state writer, and the device-only fallback.
 - `body.ts`: browser gates that preserve the unread request body.
 - `internal.ts`, `socket.ts`: the RPC client with its plain reply types, and wire bounds.
 

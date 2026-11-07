@@ -8,6 +8,7 @@ import {
 import type { ApiError } from './api/client'
 import { nested, record } from './api/parse'
 import { readAttachment, readCreated } from './api/read-workspaces'
+import type { Submission } from './creations'
 import type { OrgModel } from './org-model'
 import { asApiError, Store } from './store'
 
@@ -34,6 +35,8 @@ export type CreateState =
   | { state: 'idle' }
   | { state: 'sending' }
   | { state: 'failed'; error: ApiError }
+  /** The server took the message, and the sandbox of its workspace did not start. */
+  | { state: 'not-started' }
 
 /**
  * Whether the draft can go: it has text, and none of its files still
@@ -57,18 +60,33 @@ async function base64(file: Blob): Promise<string> {
  * When the create fails, the draft stays, so Try again sends it again. A
  * create and an upload never run together: the create waits for the files,
  * and a file that comes while the create runs does not upload.
+ *
+ * The server can take the message and then fail to start its sandbox. The
+ * message then comes back in a form of its own, made from the `restored`
+ * submission. That form keeps the message until the server takes it for
+ * another workspace.
  */
 export class NewWorkspaceModel {
   readonly draft: Store<Draft>
-  readonly create = new Store<CreateState>({ state: 'idle' })
+  readonly create: Store<CreateState>
   /** `null` puts the workspace in General, the default section. */
   readonly sectionId: string | null
   private readonly org: OrgModel
+  /** The workspace whose start failed, for a form that brings it back. */
+  private readonly restoredFrom: string | null
 
-  constructor(org: OrgModel, sectionId: string | null) {
+  constructor(org: OrgModel, sectionId: string | null, restored?: Submission) {
     this.org = org
     this.sectionId = sectionId
-    this.draft = new Store<Draft>(this.emptyDraft())
+    this.restoredFrom = restored?.workspaceId ?? null
+    this.draft = new Store<Draft>(
+      restored
+        ? { ...restored.draft, upload: { pending: 0, error: null } }
+        : this.emptyDraft(),
+    )
+    this.create = new Store<CreateState>(
+      restored ? { state: 'not-started' } : { state: 'idle' },
+    )
   }
 
   private emptyDraft(keep?: Draft): Draft {
@@ -146,12 +164,21 @@ export class NewWorkspaceModel {
   /**
    * Sends the first message, which creates the workspace. It returns the
    * new workspace, or `null` when the create failed and the draft stays. It
-   * sends nothing while the draft is not ready or a create runs.
+   * sends nothing while the draft is not ready or a create runs. The app
+   * keeps each sent message until the start of its workspace ends. A form
+   * that brings a message back keeps it until the server answers with
+   * another workspace than the one that failed. `opened` runs at once when
+   * the server admits the message, before that form lets go of it, so the
+   * app can leave the address of the failed workspace first.
+   *
+   * A sign-out, or a sign-in of another person, ends the send at once. The
+   * form is then free and empty. The late answer changes nothing, and
+   * `send` gives `null`.
    */
-  async send(defaults: {
-    repositoryId: string
-    choice: AgentChoice
-  }): Promise<CreateWorkspaceResponse | null> {
+  async send(
+    defaults: { repositoryId: string; choice: AgentChoice },
+    opened?: (created: CreateWorkspaceResponse) => void,
+  ): Promise<CreateWorkspaceResponse | null> {
     const draft = this.draft.get()
     if (!draftReady(draft) || this.create.get().state === 'sending') {
       return null
@@ -166,6 +193,11 @@ export class NewWorkspaceModel {
         choice: draft.choice ?? defaults.choice,
       },
     }
+    const life = this.org.creations.lifetime
+    const unfollow = life.onEnd(() => {
+      this.draft.set(this.emptyDraft())
+      this.create.set({ state: 'idle' })
+    })
     this.create.set({ state: 'sending' })
     try {
       const created = await this.org.services.api.send(
@@ -174,13 +206,36 @@ export class NewWorkspaceModel {
         request,
         readCreated,
       )
+      if (!life.live) return null
+      const workspaceId = created.workspace.id
+      if (workspaceId === this.restoredFrom) {
+        this.create.set({ state: 'not-started' })
+        return null
+      }
       this.org.putWorkspace(created.workspace)
+      this.org.creations.admit({
+        workspaceId,
+        sectionId: this.sectionId,
+        draft: {
+          ...draft,
+          repositoryId: request.repositoryId,
+          choice: request.firstMessage.choice,
+        },
+      })
+      opened?.(created)
+      if (this.restoredFrom !== null) {
+        this.org.creations.forget(this.restoredFrom)
+      }
       this.draft.set(this.emptyDraft(draft))
       this.create.set({ state: 'idle' })
       return created
     } catch (error) {
-      this.create.set({ state: 'failed', error: asApiError(error) })
+      if (life.live) {
+        this.create.set({ state: 'failed', error: asApiError(error) })
+      }
       return null
+    } finally {
+      unfollow()
     }
   }
 }

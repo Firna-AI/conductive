@@ -70,6 +70,14 @@ refresh reads the archive variables. It gives `acceptFirstMessage` to
   Admission makes the workspace, its token, and the first message durable.
   The sandbox can still be starting. `waitCreationLifecycle` waits for the
   end of a create, and `waitLifecycleStart` for the end of a resume.
+- Open and resume answer when the start is queued, with the workspace in
+  `starting`. No browser route waits for the end of a start. The events of
+  the workspace carry the start steps and the result. A failed resume
+  keeps the workspace and its chat, with an error and a valid Try again.
+- A test that needs the end of a resume uses `resumeCompletedWorkspace` or
+  `openCompletedWorkspace` in
+  [`completed-resume-test-support.ts`](completed-resume-test-support.ts).
+  Each waits for the job that its call queued, and reads the real result.
 - The write that ends the `records` phase stores the admission in the start
   job. The end of the create moves it to the completed creation record. A
   repeat with other content still gets the admitted first message.
@@ -178,7 +186,10 @@ object holds the lifecycle state, the turn records, and the events.
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
 - [`workspace-resume.ts`](workspace-resume.ts): `openWorkspace` and
-  `resumeWorkspace`.
+  `resumeWorkspace`, which answer once the start is queued.
+- [`workspace-state-projection.ts`](workspace-state-projection.ts):
+  `WorkspaceStateProjection`, the one writer of the shown state, as
+  [Workspace Durable Object](workspace-object.md#the-shown-state) says.
 - [`workspace-controller.ts`](workspace-controller.ts):
   `createWorkspaceController`, the lifecycle methods of the workspace
   object. [`lifecycle-admission.ts`](lifecycle-admission.ts) checks a create

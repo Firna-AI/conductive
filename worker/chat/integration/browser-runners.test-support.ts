@@ -4,6 +4,7 @@ import { sandboxProvider } from '../../sandbox/client'
 import type { OuterRuntime } from './outer-runtime.test-support'
 import { BrowserRunnerAgent } from './browser-runner-agent.test-support'
 import { BrowserRunnerTransport } from './browser-runner-transport.test-support'
+import { BrowserStartControl } from './browser-start-control.test-support'
 import { OUTER_ORG } from './outer-seed.test-support'
 
 interface Runtime {
@@ -18,6 +19,12 @@ export function browserRunners(fixture: OuterRuntime) {
   const runtimes = new Map<string, Runtime>()
   const errors: string[] = []
   const fetch = fixture.boat.fetch
+  const starts = new BrowserStartControl(
+    fixture,
+    (sandboxId) =>
+      [...runtimes.values()].find((runtime) => runtime.sandboxId === sandboxId)
+        ?.workspaceId,
+  )
   const fail = (error: unknown) => {
     errors.push(
       error instanceof Error ? error.message : 'The fake runner failed.',
@@ -72,13 +79,14 @@ export function browserRunners(fixture: OuterRuntime) {
   }
   fixture.boat.fetch = async (request) => {
     const input = request.clone()
-    const response = await fetch(request)
+    const response = await starts.fetch(request, fetch)
     await capture(input, response.clone())
     return response
   }
   return {
     status: () => ({
       errors,
+      starts: starts.status(),
       workspaces: [...runtimes.values()].map((runtime) => ({
         workspaceId: runtime.workspaceId,
         sandboxId: runtime.sandboxId,
@@ -88,6 +96,18 @@ export function browserRunners(fixture: OuterRuntime) {
         ...runtime.agent.status(),
       })),
     }),
+    holdStart: () => starts.holdNext(),
+    heldStart: () => starts.waitHeld(),
+    async failStart() {
+      const held = await starts.waitHeld()
+      const runtime = runtimes.get(held.workspaceId)
+      if (!runtime) throw new Error('The held fake workspace is not available.')
+      runtime.agent.stop()
+      await runtime.transport.stop()
+      return starts.failHeld()
+    },
+    succeedStart: () => starts.allowSuccess(),
+    creationResult: (workspaceId: string) => starts.creationResult(workspaceId),
     async stop(workspaceId: string) {
       const runtime = runtimes.get(workspaceId)
       if (!runtime) throw new Error('The fake workspace is not available.')

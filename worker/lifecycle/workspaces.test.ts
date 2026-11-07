@@ -7,7 +7,7 @@ import { retrySandboxCleanup } from './cleanup'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { orgEnvironmentContext } from './settings-data'
 import { createCompletedWorkspace } from './completed-creation-test-support'
-import { resumeWorkspace } from './workspace-resume'
+import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 
 const backendFixture = setupBackendTests()
 

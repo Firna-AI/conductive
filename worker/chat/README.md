@@ -219,8 +219,8 @@ tests through the production Worker entry.
 - `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
   owner can replace. The login resolver always wraps an override.
 - `workspace-integration.ts`: `createWorkspaceIntegration`, which joins
-  chat, the lifecycle, and the Mac devices in the workspace object and sets
-  the hooks.
+  chat, the lifecycle, and the Mac devices in the workspace object. It
+  sets the hooks, and gives the Mac devices the shared state writer.
 - `workspace-operations.ts`: `WorkspaceOperations`, the queue-owned work of
   the lifecycle: the first message, the stop, the summary, and the
   lifecycle events.

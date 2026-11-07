@@ -26,7 +26,10 @@ import {
 } from './outer-runtime.test-support'
 import { OUTER_ORG, OUTER_REPOSITORY } from './outer-seed.test-support'
 import { connectShellRunner } from './shell-runner.test-support'
-import { driveWorkspaceStart } from './workspace-start.test-support'
+import {
+  driveWorkspaceStart,
+  completeWorkspaceResume,
+} from './workspace-start.test-support'
 
 let bundle: string
 let fixture: OuterRuntime | undefined
@@ -184,7 +187,7 @@ it('boots the production shell and delivers the durable first message through st
   expect(await (await active.request(detailPath)).json()).toMatchObject({
     workspace: { state: 'stopped' },
   })
-  const resumed = await driveWorkspaceStart(
+  const resumed = await completeWorkspaceResume(
     actor(),
     active.request(workspacePaths.resume(OUTER_ORG, created.workspace.id), {
       method: 'POST',

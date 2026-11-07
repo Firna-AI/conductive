@@ -59,9 +59,13 @@ export class BrowserRunnerTransport {
     this.stopped = false
     if (this.socket?.readyState === WebSocket.READY_STATE_OPEN)
       return Promise.resolve()
-    this.connecting ??= this.connect().finally(() => {
-      this.connecting = undefined
-    })
+    this.connecting ??= this.connect()
+      .catch((error: unknown) => {
+        if (!this.stopped) throw error
+      })
+      .finally(() => {
+        this.connecting = undefined
+      })
     return this.connecting
   }
 
@@ -69,6 +73,7 @@ export class BrowserRunnerTransport {
     const response = await requestRunner(this.fixture, this.token)
     const socket = response.webSocket
     if (response.status !== 101 || !socket) {
+      if (this.stopped) return
       this.error = `The fake runner connection returned ${response.status}.`
       throw new Error(this.error)
     }
@@ -92,6 +97,7 @@ export class BrowserRunnerTransport {
       )
     })
     socket.addEventListener('message', (event) => {
+      if (this.stopped) return
       try {
         if (typeof event.data !== 'string')
           throw new Error('Expected a text runner command.')

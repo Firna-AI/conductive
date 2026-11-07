@@ -39,7 +39,7 @@ export function createWorkspaceController(
   })
   const journal = new WorkspaceEventJournal(platform.storage, platform.publish)
   const images = new ImageCoordinator(platform.storage, env, dependencies)
-  const lifecycle = createWorkspaceLifecycle(
+  const { lifecycle, projection } = createWorkspaceLifecycle(
     platform,
     env,
     dependencies,
@@ -51,6 +51,8 @@ export function createWorkspaceController(
     put: (key, value) => platform.storage.put('draft', key, value),
   }
   const controller: WorkspaceController = {
+    projectDeviceState: (id, choice, now, publish) =>
+      projection.deviceChanged(id, choice, now, publish),
     async queueLifecycleStart(job: WorkspaceStartJob): Promise<boolean> {
       const enqueued = starts.enqueue(job)
       platform.waitUntil(enqueued)

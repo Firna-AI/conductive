@@ -1,53 +1,81 @@
-# A failed or held read mark is never sent again
+# Output that the user saw stays unread
 
-- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-06, from PR #16, branch `conductor/boat-native-remote-workspaces-milestone-6`, round 2 finding 53. Updated on 2026-11-07, from branch `conductor/boat-native-remote-workspaces-milestone-8i`, review item 3 and its finding check.
-- **Location:** `src/app/workspace-model.ts:188`, `:199`, and `:205`, `src/app/events.ts:122`, and `src/shell/workspace/shown-workspaces.ts:75`.
-- **Reason:** Only a read request that fails, or that stays in flight across a leave and a return, causes it.
+- **Added:** 2026-11-06, from PR #16, branch `conductor/boat-native-remote-workspaces-milestone-6`, round 2 finding 53. Updated on 2026-11-07, from branch `conductor/boat-native-remote-workspaces-milestone-8i`, review item 3 and its finding check. Updated again on 2026-11-07, from PR #42 on the same branch, round 3 finding 6 and its finding check.
+- **Location:** `src/app/workspace-model.ts:188`, `:189`, `:199`, and `:205`, `src/app/events.ts:116-141`, `src/shell/workspace/shown-workspaces.ts:76`, and `worker/app-api/workspace-state.ts:31-46`.
+- **Reason:** The primary orchestrator gave the read-mark code to Milestone 8m, which starts after `conductor/boat-native-remote-workspaces-milestone-8i` merges.
 
 - **Terms:**
   - **Read mark:** the request that tells the Worker the last event number that the user saw in a workspace, so that the list stops showing it as unread.
   - **Kept model:** the `WorkspaceModel` that a browser tab keeps for each workspace that it showed. `src/shell/workspace/shown-workspaces.ts` keeps it, and each visit opens and closes the same object.
+  - **Shown number:** the newest event number that an open tab applied, `stream.last` of `WorkspaceModel`.
+  - **Unread:** the list state "finished with unread output". The Worker derives it for each member from the last output event number and the read mark of that member.
 - **Background:**
-  - The output that an open, visible workspace shows counts as read, as `src/app/README.md:119-123` and `src/app/workspace-model.ts:177-183` say. The list shows a workspace that finished with unread output in bold.
-  - `markRead()` at `src/app/workspace-model.ts:184-214` sends the read mark with the newest event number. It runs when the applied state, the newest event number, or the visibility of the page changes.
+  - Owner and timing: Milestone 8m, "Chat fixes from the reviews", of the Boat-native remote workspaces project owns the fix. It starts after `conductor/boat-native-remote-workspaces-milestone-8i` merges. The fix must land before the first deployment, and before that project completes.
+  - The output that an open, visible workspace shows counts as read, as `src/app/README.md:131-135` and `src/app/workspace-model.ts:177-183` say. The list shows Unread in bold, as `docs/protocol/workspaces-and-sandboxes.md:157-163` requires.
+  - `workspaceForViewer` at `worker/app-api/workspace-state.ts:16-47` gives `unread` only when the last output event number passes the read mark of the member. Only HTTP replies use it: the list at `worker/app-api/shell.ts:50-63`, and the detail, open, and resume replies through `projectWorkspace` at `worker/app-api/lifecycle.ts:63-70`.
+  - The event stream never carries `unread`. At each turn start and end, `worker/chat/workspace-integration.ts:76-83` reports to the lifecycle. `DurableLifecycle.turn` at `worker/lifecycle/durable.ts:167-186` sets `working` or `ready`. The `changed` hook at `worker/lifecycle/create-workspace-lifecycle.ts:33-37` calls `WorkspaceStateProjection.changed` at `worker/lifecycle/workspace-state-projection.ts:65-70`. That writer stores the shown state in D1 and publishes the row as `workspace.updated`. A change of a Mac request publishes through the same writer, or through the device-only fallback in `worker/devices/state.ts`. None of them sends `unread`.
+  - `markRead()` at `src/app/workspace-model.ts:184-214` sends the read mark with the newest event number. It runs when the applied state, the newest event number, or the visibility of the page changes. It returns at `:189` unless the detail of the model says `unread`, and its answer check at `:205` also needs `unread`.
+  - `markRead()` is the only browser caller of the read route. A list read changes only `OrgModel`, at `src/app/org-model.ts:117-125`.
   - One `reading` flag at `src/app/workspace-model.ts:35` lets one read request run at a time, for every open of the model. `close()` at `:102-108` counts the generation up and ends the subscriptions, but it does not clear `reading`.
   - Since 2026-11-07, the tab keeps one model for each workspace that it showed, and opens and closes it at each visit. Before, each visit made a new model, and its history replay sent a new mark.
-- **Problem:** Three scenarios lose the newest read mark.
-  1. A failed read request schedules no other attempt: `markRead()` returns at `:199`. A reconnect at the same event number sends no read mark. One HTTP 503 followed by a good reconnect reproduced it.
-  2. A held mark across a return:
+  - The read route at `worker/app-api/shell.ts:88-101` keeps the highest mark and stops at the newest event. Each mark runs the request gate, two D1 statements, and a Durable Object call.
+  - The read route refuses an archived workspace with `409 workspace_archived`, through `requireWritableWorkspace` at `worker/app-api/workspace-state.ts:49-59`. An archived workspace never says `unread`, so `markRead()` sends it no mark today.
+- **Problem:** Five scenarios lose the newest read mark. The first two happen in normal use.
+  1. Normal live output in a visible workspace:
+     - The open workspace says `ready`, and the agent finishes a normal turn.
+     - The stream brings the output, and `workspace.updated` with `working` and then `ready`. No event says `unread`.
+     - So `markRead()` returns at `src/app/workspace-model.ts:189` and sends nothing. Each finished answer in a visible workspace meets this.
+  2. A new tab:
+     - `open()` sets the HTTP detail, with `unread`, at `src/app/workspace-model.ts:83`.
+     - The history replay calls `accept` for each event. `accept` sets the event number before the event applies, at `src/app/events.ts:135-141`. So the first mark covers only the first replayed event.
+     - The replayed lifecycle `workspace.updated` then replaces `unread`, and the answer check at `:205` sends no newer mark.
+  3. A failed read request schedules no other attempt: `markRead()` returns at `:199`. A reconnect at the same event number sends no read mark. One HTTP 503 followed by a good reconnect reproduced it.
+  4. A held mark across a return:
      - Open an unread workspace, and hold its read request through event 4.
      - Close and reopen the same kept model.
      - Deliver event 5 with the state unread, then let the held request succeed.
      - The Worker gets only the mark through event 4, and the model stays unread. A Node proof reproduced this.
      - The shared `reading` flag at `:188` blocked the newer mark. The generation check at `:205` then dropped the old answer, so it sent no newer mark.
-  3. A return at the same event number:
+  5. A return at the same event number:
      - A return asks only for the events after the last number of the kept model.
      - `open()` sets the detail before it subscribes, at `:83-96`. `Store.subscribe` at `src/app/store.ts:34-37` does not call the listener at once.
      - A history without a new event keeps the number, at `src/app/events.ts:122`.
      - So a return after a failed or held mark sends no mark. Only a new event, or a page that shows again, sends it.
-- **Impact if no action:** The workspace list keeps showing unread output that the user already read. The row can stay bold across later returns, because a return at the same event number sends no mark.
-- **Root question:** How does the newest event number that an open, visible workspace shows reach the Worker, whatever happened to an earlier read request, also one from an earlier open of the kept model?
+- **Impact if no action:** The next list read shows output that the user already saw as unread, in bold. In normal use, a visible chat seldom clears Unread. The row can stay bold across later returns, because a return at the same event number sends no mark.
+- **Root question:** How does output that an open, visible tab shows become read for its user, whatever the state updates and the earlier read requests did?
 - **Options:**
-  - **A.** Schedule another read request after a failure. Keep the pending number across a close, and check the mark once at each open, in place of a cancel at close. Effort: Small.
-  - **B.** Give read marks one owner in `src/app/` that stays with the kept model. Effort: Medium, for all three scenarios.
-    - The owner keeps the newest shown event number and the newest number that the Worker confirmed, across a close and an open.
-    - It sends one request at a time. After each answer, and once after each open applies its detail, it sends again when the workspace is open, visible, and unread, and the shown number is higher.
+  - **A.** Schedule another read request after a failure. Keep the pending number across a close, and check the mark once at each open, in place of a cancel at close. It keeps the `unread` checks, so it fixes neither normal live output nor a new tab. Effort: Small.
+  - **B.** Give read marks one owner in `src/app/` that stays with the kept model. Effort: Medium, for all five scenarios.
+    - The owner follows the shown number, not the state of the workspace. It keeps the newest shown number and the newest number that the Worker confirmed, across a close and an open.
+    - It sends one request at a time, and it joins the numbers that arrive meanwhile into the next request. It sends again after each answer, and once after each open applies its detail. It sends only when the workspace is open and visible, and the shown number is above the confirmed number.
+    - Delta and file events raise the number often. So after an answer, it waits briefly through `AppServices.delay` before the next request.
     - A failure tries again later through `AppServices.delay`. `close()` stops that timer and keeps both numbers.
-    - Apply the confirmed read through `apply`, so that the list row updates too.
+    - When the answer covers the newest number and the state is `unread`, set the detail to `ready` through `apply`. Then the list row updates too.
+    - It keeps the read state of each member and the shared event stream as they are. It needs no change in `worker/`, `src/shared/`, `src/shell/`, or `src/app/dev/`.
+    - Open and resume answer when the server queued the start, with the state `starting`, before the start ends. The stream then brings the start steps, the running state, and the output. So a visit can begin in `starting`, and the owner must still mark the output that follows.
+    - Keep the read-only rule of an archived workspace. The owner sends no read mark, and schedules no retry, while the workspace is archived. The rule must also hold through the history replay of a new tab, where older `workspace.updated` events show the workspace before its archive.
     - Move the owner out of `src/app/workspace-model.ts`, which has 215 lines.
-    - Add regressions to `src/app/workspace-model.test.ts` for the three scenarios. Its read tests at `:151`, `:184`, and `:221` use one open only.
-    - Update `src/app/README.md:119-123` and `:193-197`, because an answer after a close can then send the mark of a newer open.
+    - Add regressions for the five scenarios, in `src/app/workspace-model.test.ts` or beside the owner. In the finished turn, output arrives, then `working` and `ready`. The new tab replays its history over an HTTP `unread`. `HeldRequests`, `RecordingEvents`, and `ManualVisibility` in `src/app/test-kit.ts` cover the cases.
+    - The read tests at `src/app/workspace-model.test.ts:151`, `:184`, and `:221` use one open only, and they send `unread` themselves.
+    - Update `src/app/README.md:131-135` and `:209-213`: the mark follows the shown number, not the state. An answer after a close can then send the mark of a newer open.
     - Risk: a request that never answers holds back the next mark. The API client at `src/app/api/client.ts:58-81` has no timeout.
   - **C.** Send the seen event numbers as socket acknowledgements, and let the server save them. This changes the browser and backend contracts. Effort: Medium.
+  - **D.** Change `markRead()` in place. Replace the `unread` checks at `:189` and `:205` with one check: the shown number is above the highest number sent. Keep one request at a time, and send again after an answer when the number rose. It needs the same archive rule as B. It leaves the failed, held, and same-number scenarios. Effort: Small.
+  - **E.** Publish an `unread` workspace update when finished or late output needs a mark. The journal at `worker/lifecycle/durable-journal.ts:27-32` drops a second `unread` with the same state, so late output after a mark needs another rule. The update must also keep a waiting Mac approval first. Effort: Medium.
 - **Left out:**
   - A new `WorkspaceModel` for each visit, made in `src/shell/workspace/` with the kept event number and detail copied in: it fails the goal, because a return at the same event number still sends no mark. The shell would also change the stores of another owner, against the rule at `src/app/store.ts:4`.
   - One visit object in `WorkspaceModel` for all the state of one open: B covers it, because `close()` already ends the other state of an open.
   - An abort of the pending request at close: the API client has no abort, and the Worker can still apply the aborted mark. So it needs the same one-request rule as B.
+  - A read state for each tab on its socket, outside the stored history: B is better on every point. It needs a new message in `src/shared/events.ts`, a read of the mark of each viewer for each output event, and Large effort.
+  - One shared Unread state for all members: it breaks the read state of each member. The view of one member would clear Unread for the others.
+  - A stored history for each viewer: it breaks the rule at `docs/protocol/chat-and-events.md:146` that every open tab gets the same events in the same order.
+  - A mark that the server infers when it sends output to an open socket: it fails the goal. A hidden tab did not show the output.
+  - A mark only at the end of a visit: it fails the goal, because list reads during the visit show the seen output as unread.
   - Change nothing: it leaves seen output unread.
-- **Wider fix:** B. One owner keeps the newest shown number until the Worker confirms it, whatever happened to an earlier request.
-- **Previous examples:** `plans/follow-ups/chat-stop-after-failed-history.md`, a failed history read with the same shape.
-- **Related:** None. The other change to `WorkspaceModel.open()` and `close()` from the same review is merged: the open workspace owns its input subscription through `AppServices.onInput`.
-- **Recommendation:** B. One owner fixes the three scenarios in one pass over the same lines. It sends one request at a time, as `src/app/README.md:98-101` asks for the saves of one value.
-- **Action:** fix after merge, apply B, because only a read request that fails, or that stays in flight across a leave and a return, causes it.
+- **Wider fix:** B. One owner keeps the newest shown number until the Worker confirms it, whatever the state labels, the replay order, or an earlier request did.
+- **Previous examples:** `plans/follow-ups/chat-stop-after-failed-history.md`, a failed history read with the same shape. Commit `2ce9adc` kept unread output and settings saves in order.
+- **Related:** `plans/follow-ups/confirmed-runner-projection-retry.md`, the same milestone and the same turn-end path. Its failure can keep the lifecycle at `working` after a turn ends. B follows only the event number, so it does not wait for that fix. The other change to `WorkspaceModel.open()` and `close()` from the review that found the held mark is merged. The open workspace owns its input subscription through `AppServices.onInput`.
+- **Recommendation:** B. One owner that follows the shown number fixes the five scenarios in one pass over the same lines, with no Worker or contract change. It sends one request at a time, as `src/app/README.md:98-101` asks for the saves of one value. D is the direct fix if the owner splits the work.
+- **Action:** fix after merge, apply B, because the primary orchestrator gave the read-mark code to Milestone 8m, which starts after `conductor/boat-native-remote-workspaces-milestone-8i` merges.

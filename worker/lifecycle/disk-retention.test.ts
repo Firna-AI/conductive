@@ -5,7 +5,7 @@ import { setupBackendTests } from './backend-test-hooks'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { readRetention } from './retention-data'
 import { createCompletedWorkspace } from './completed-creation-test-support'
-import { openWorkspace } from './workspace-resume'
+import { openCompletedWorkspace as openWorkspace } from './completed-resume-test-support'
 import { reconcileWorkspaceSandbox } from './workspace-actions'
 
 const backendFixture = setupBackendTests()

@@ -39,6 +39,17 @@ the `AppModel` of the tab, for the signed-in user.
   next mount.
 - A sign-out, or a sign-in of another user, stops every kept workspace and
   forgets it.
+- Each kept workspace gives the events of its stream and a 404 of its open
+  to the creates of its org, as
+  [Creation recovery](../../app/creation-recovery.md) says. A failed create
+  of this tab forgets its kept model, notices, and chat, so its streams
+  never open again.
+- In a tab without its form, a workspace whose create start failed shows
+  the unavailable view. It says "This workspace is not available" and "Its
+  sandbox didn't start.", with All workspaces. It offers no Resume, and the
+  list drops its row.
+- A create that started keeps its start record. So a later error of its
+  sandbox shows the sandbox bar with Try again, as a failed resume does.
 - Nothing goes to browser storage. So a reload or a new tab starts empty,
   and reads the stored history again.
 - The memory has no size limit. It keeps each workspace that the tab
@@ -54,6 +65,10 @@ says.
 - The shell draws the start steps, with the time of each step, and the
   sandbox bar, with Resume. It draws them from its own record of the
   workspace, and gives them to the chat as `host`. The chat places them.
+- An open or a Resume answers when the server queued the start, with the
+  state `starting`. The stored chat shows during the start. The stream
+  then brings the start steps and the result. A failed resume keeps the
+  workspace and its chat, with Try again.
 - Connect, on the notice of a missing agent login, opens the Connect form
   of the account.
 - The shell gives the chat no `onOpenDiff` or `extraTabs` yet. So a file
@@ -185,10 +200,12 @@ Run the tests with `npm run test -- src/shell/workspace`.
 
 - `WorkspaceScreen.tsx`: the screen of one open workspace. It takes the
   kept parts of the workspace, shows and hides them, and places the
-  header, the notices, the columns, and the features.
+  header, the notices, the columns, and the features. Its `Unavailable`
+  view shows a 404 and a failed create.
 - `shown-workspaces.ts`: `ShownWorkspaces`, the kept workspaces of one tab
   and one user, and `shownWorkspaces`, which clears them at a sign-out or a
-  sign-in of another user.
+  sign-in of another user. It gives the events and a 404 of each kept
+  workspace to the creates of its org, and forgets a failed create.
 - `ChatArea.tsx`: the chat of the centre, with the start steps and the
   sandbox bar of the shell, or the shell's own column for the chat slots.
 - `header-notices.ts`: `HeaderNotices`, the failed repairs of the name and

@@ -20,6 +20,7 @@ export interface WorkspacePlatform {
     input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
   ): Promise<void>
   stopped?(workspaceId: string): Promise<void>
+  deviceWaiting?(workspaceId: string): Promise<boolean>
 }
 
 export function nativeWorkspacePlatform(

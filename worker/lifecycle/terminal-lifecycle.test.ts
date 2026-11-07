@@ -6,7 +6,7 @@ import { setupBackendTests } from './backend-test-hooks'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { DISK_KEEPALIVE_MS } from './durable-types'
 import { stopWorkspaceSandbox } from './workspace-actions'
-import { openWorkspace } from './workspace-resume'
+import { openCompletedWorkspace as openWorkspace } from './completed-resume-test-support'
 import { createWorkspace } from './workspaces'
 
 const backendFixture = setupBackendTests()

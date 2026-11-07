@@ -9,7 +9,7 @@ import { FIRST_MESSAGE } from './durable-test-support'
 import { seedPublishedImage } from './published-image-test-support'
 import { workspaceEnvironment } from './settings-data'
 import { runningEnvironment } from './start-environment'
-import { resumeWorkspace } from './workspace-resume'
+import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 
 const backendFixture = setupBackendTests()
 

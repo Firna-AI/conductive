@@ -1,4 +1,5 @@
 import type { RunnerEvent } from '../../src/shared/runner'
+import type { AgentChoice } from '../../src/shared/agents'
 import type {
   WorkspaceLifecycleEndpoint,
   PendingTurn,
@@ -8,6 +9,12 @@ import type { ImageCoordinatorState } from './image-timers'
 import type { LifecyclePublisher } from './durable-types'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
+  projectDeviceState(
+    workspaceId: string,
+    choice: AgentChoice | undefined,
+    now: number,
+    publish: LifecyclePublisher,
+  ): Promise<boolean>
   failedLifecycleCreation(
     orgId: string,
     senderUserId: string,

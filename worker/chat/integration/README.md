@@ -125,6 +125,13 @@ methods of `Workspace`.
   `workspaceSummary` enters the queue.
 - `waitCreationAdmission`, `waitCreationLifecycle`, and `waitLifecycleStart`
   do not hold the queue. So they cannot block the alarm that they wait for.
+- A change of a Mac request enters `authorizedWorkspaceOperation` once.
+  Inside it, the projection callback of `createWorkspaceIntegration` reads
+  the stored session with `chat.store.read`, then calls
+  `projectDeviceState` of the controller. The lifecycle reads the waiting
+  requests through `deviceWaiting`. Neither read enters the queue again.
+  [The shown state](../../lifecycle/workspace-object.md#the-shown-state)
+  gives the one writer of the D1 state and its event.
 - Keep the lifecycle records outside the `chat:v1:` key prefix.
 
 ### The first message

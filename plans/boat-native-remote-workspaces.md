@@ -5468,6 +5468,12 @@ Depends on: 5, 6, 7, 7r, 8, 8j
   - [x] Load the runner artifact and runtime settings. Document each
         deployment variable and secret for the first deployment.
         Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Restore the first message of an admitted create when its start
+      fails, through one owner in the sending tab. Preserve attachments,
+      the message ID, newer drafts, and other pending submissions. Retry
+      with a new workspace ID. Check a failure after admission with a
+      leave and return in the production browser journey.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
 - [x] Keep the chat of each workspace that the tab showed in memory, as
       decision 87 says. A return to the workspace shows the chat at once,
       then gets only the events after its last event number. A reload or a

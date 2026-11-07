@@ -18,6 +18,7 @@ import {
 } from './paths'
 import { workspaceBrowserRoute } from './workspace-browser'
 import { WorkspaceDevices } from './workspace-commands'
+import type { DeviceStateProjection } from './state'
 
 /** The existing Durable Object class composes this feature without a new binding. */
 export class DeviceRuntime {
@@ -32,11 +33,19 @@ export class DeviceRuntime {
     matches: (name: string) => boolean,
     alarm: (when: number) => Promise<void>,
     now: () => number = Date.now,
+    projection?: DeviceStateProjection,
   ) {
     this.env = env
     this.matches = matches
     this.broker = new DeviceBroker(storage, env, alarm, now)
-    this.workspace = new WorkspaceDevices(chat, env, storage, matches, now)
+    this.workspace = new WorkspaceDevices(
+      chat,
+      env,
+      storage,
+      matches,
+      now,
+      projection,
+    )
   }
   async fetch(request: Request): Promise<Response | null> {
     const path = new URL(request.url).pathname
@@ -100,6 +109,13 @@ export class DeviceRuntime {
   }
   reconcile(): Promise<void> {
     return this.workspace.reconcile()
+  }
+
+  async waiting(workspaceId: string): Promise<boolean> {
+    return (await this.workspace.records.list()).some(
+      (record) =>
+        record.workspaceId === workspaceId && record.state === 'waiting',
+    )
   }
 }
 

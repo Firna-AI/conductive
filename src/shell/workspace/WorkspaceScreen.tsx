@@ -5,6 +5,7 @@ import { CircleAlert, SearchX } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
+import { failedCreate } from '../../app/creations'
 import { mayArchive } from '../../app/permissions'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
@@ -24,6 +25,29 @@ import { shownWorkspaces } from './shown-workspaces'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import workspaceStyles from './workspace.module.css'
+
+/**
+ * A workspace that the app cannot show: a 404, or a create whose sandbox did
+ * not start, which the server removes. The way out is the list of the org.
+ */
+function Unavailable(props: { orgId: string; body: string }) {
+  const go = useGo()
+  return (
+    <EmptyState
+      action={
+        <ActionButton
+          onPress={() => go(routes.org(props.orgId))}
+          tone="primary"
+        >
+          All workspaces
+        </ActionButton>
+      }
+      body={props.body}
+      icon={SearchX}
+      title="This workspace is not available"
+    />
+  )
+}
 
 /**
  * An open workspace. Desktop shows the chat column beside the right column;
@@ -56,7 +80,6 @@ export function WorkspaceScreen(props: {
   const features = useFeatures()
   const viewport = useViewport()
   const theme = useSharedUiTheme()
-  const go = useGo()
   const resume = useAction(() => model.resume(), "The sandbox didn't start.")
   useEffect(() => {
     let current = true
@@ -84,30 +107,31 @@ export function WorkspaceScreen(props: {
     )
   }
   if (detail.state === 'failed') {
-    const missing = detail.error.status === 404
+    if (detail.error.status === 404) {
+      return (
+        <Unavailable
+          body="It may have moved to another org."
+          orgId={props.org.id}
+        />
+      )
+    }
     return (
       <EmptyState
         action={
-          <ActionButton
-            onPress={() =>
-              missing ? go(routes.org(props.org.id)) : void model.open()
-            }
-            tone="primary"
-          >
-            {missing ? 'All workspaces' : 'Try again'}
+          <ActionButton onPress={() => void model.open()} tone="primary">
+            Try again
           </ActionButton>
         }
-        body={
-          missing ? 'It may have moved to another org.' : detail.error.message
-        }
-        icon={missing ? SearchX : CircleAlert}
-        title={
-          missing
-            ? 'This workspace is not available'
-            : "The workspace didn't open"
-        }
+        body={detail.error.message}
+        icon={CircleAlert}
+        title="The workspace didn't open"
       />
     )
+  }
+  // The server removes a create whose sandbox did not start: it has no
+  // Resume, and no files stay. The tab that sent it shows its form instead.
+  if (failedCreate(detail.value)) {
+    return <Unavailable body="Its sandbox didn't start." orgId={props.org.id} />
   }
   const { workspace, start } = detail.value
   const sandbox = sandboxState(workspace)

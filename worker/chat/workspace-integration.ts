@@ -105,6 +105,17 @@ export function createWorkspaceIntegration(
     matches,
     (when) => context.storage.setAlarm(when),
     now,
+    async (request, at, publish) => {
+      const session = await chat.store.read(request.workspaceId, (view) =>
+        view.session(request.sessionId),
+      )
+      return controller.projectDeviceState(
+        request.workspaceId,
+        session?.choice,
+        at,
+        callbackPublisher(publish),
+      )
+    },
   )
   const platform = nativeWorkspacePlatform(
     context,
@@ -116,6 +127,7 @@ export function createWorkspaceIntegration(
     dependencies,
     {
       ...platform,
+      deviceWaiting: (id) => devices.waiting(id),
       admitFirstMessage: async (input) => {
         const identity = await firstMessageIdentity(env, input.workspaceId)
         if (

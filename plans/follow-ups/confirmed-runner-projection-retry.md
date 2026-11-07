@@ -1,0 +1,74 @@
+# Confirmed runner events can lose lifecycle updates
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-07, from PR #42, branch `conductor/boat-native-remote-workspaces-milestone-8i`, round 3 finding 8 and its finding check.
+- **Location:** `worker/chat/runner-channel.ts:160-198`, `worker/chat/workspace-integration.ts:66-98`, `worker/lifecycle/runner-lifecycle.ts:25-27`, `worker/lifecycle/durable.ts:167-186`, and `worker/lifecycle/durable-alarm.ts:36-41`.
+- **Reason:** Milestone 8m owns the repair after `conductor/boat-native-remote-workspaces-milestone-8i` merges, and the loss needs a rare temporary failure or restart.
+
+- **Terms:**
+  - **Confirm:** the socket message that lets the runner discard its events through one stored event number.
+  - **Running sessions:** the `runningSessions` list in the stored lifecycle state. While it is not empty, the lifecycle alarm keeps the cloud computer awake.
+  - **Chat summary:** `WorkspaceSummaryProjection` in `worker/chat/workspace-summary.ts`. It commits the running turns and the last output number in the same transaction as each runner receipt.
+  - **Runner hello:** the first message of each runner connection. The chat answers with `welcome` and the confirmed event number.
+  - **Shared state writer:** `WorkspaceStateProjection` in `worker/lifecycle/workspace-state-projection.ts`. In one serial step, it reads the current lifecycle state and the waiting Mac approvals. It then writes the workspace state to D1 and publishes `workspace.updated`, so that lifecycle updates cannot hide a waiting approval.
+- **Background:**
+  - Owner and timing: Milestone 8m, "Chat fixes from the reviews", of the Boat-native remote workspaces project owns the fix. It starts after `conductor/boat-native-remote-workspaces-milestone-8i` merges. The fix is required before that project completes.
+  - In each workspace Durable Object, the chat stores each runner event and its cursor in one transaction, at `worker/chat/runner-channel.ts:160-178`. It sends the confirm at `:188-192`. Only then does it await the `runnerEventStored` hook, at `:198`.
+  - That hook, at `worker/chat/workspace-integration.ts:66-98`, reports turn starts and ends to the lifecycle, writes the title of the agent to D1, and starts device cleanup last. These updates have no stored retry.
+  - `docs/protocol/workspaces-and-sandboxes.md:170-171` requires a stop after 30 minutes without user activity and without a running agent turn. `docs/protocol/chat-and-events.md:117` says that the workspace takes the title of the agent as its name.
+  - The alarm stops an idle cloud computer when `lastActivityAt` plus 30 minutes has passed, at `worker/lifecycle/durable-alarm.ts:38-41`. `DurableLifecycle.turn` sets `lastActivityAt` to the current time at each turn start and end, at `worker/lifecycle/durable.ts:183`.
+- **Problem:**
+  - At a turn end, `applyRunnerLifecycle` at `worker/lifecycle/runner-lifecycle.ts:25-27` removes the turn scope first. Then `DurableLifecycle.turn` at `worker/lifecycle/durable.ts:172-178` awaits `extendDeadline` before it builds the new session set.
+  - `extendDeadline` makes three D1 reads and one Boat request, in `worker/lifecycle/workspace-actions.ts`. `replyOrCurrentState` at `:97-110` throws the first error again when its fallback read still shows an active cloud computer.
+  - On that error, the stored set keeps the finished session. The hook error closes the runner, at `worker/chat/runner-channel.ts:81-87`. The `welcome` cursor covers the event, so the runner never sends it again.
+  - `runnerDisconnected` and the hello replay of `runnerReady` keep the set, at `worker/lifecycle/durable.ts:102-131` and `worker/chat/runner-channel.ts:126-130`. `runnerReady` then shows `working`.
+  - The alarm then extends the Boat deadline every five minutes, at `worker/lifecycle/durable-alarm.ts:36-37`, and never reaches the idle stop.
+  - `turnDispatchFailed` and a refused turn end call `finishLifecycleTurn` at `worker/lifecycle/workspace-controller.ts:149-152`, with the same order and the same loss. A restart inside the hook has the same effect.
+  - A failed `updateWorkspaceTitle` has no retry. The runner sends its title again only after a refusal repair. Each later `workspace.updated` publishes the D1 row, at `worker/lifecycle/durable-journal.ts:33-37`. The browser replaces the whole workspace from that event, name included, at `src/app/workspace-model.ts:113-114` and `src/chat/state/context.ts:164-165`. So the older name comes back.
+  - The same lifecycle error also skips the device cleanup of that turn end. Only the next chat request that is not a GET runs it again, at `worker/workspace.ts:227-228`.
+  - No test catches it. `worker/chat/integration/workspace-lifecycle.test.ts` has no failure. `worker/lifecycle/runtime-state.test.ts:57` fails the deadline only in the alarm, which Cloudflare retries. `worker/lifecycle/durable.test.ts:145` uses hooks that always succeed. No test fails the D1 title write.
+- **Impact if no action:** After one temporary D1 or Boat error at a turn end, the cloud computer stays awake. It stays awake until a later turn of that session ends, or until the user stops or archives the workspace. The open header keeps showing Working, while the list shows Ready or Unread. The workspace name can go back to an older title.
+- **Root question:** How does a workspace keep a correct idle stop and agent-given name after a failure or restart interrupts the updates of a confirmed runner event?
+- **Options:**
+  - **A.** Clear finished turns locally before the provider call, and repair the workspace title from the stored history on read. These targeted fixes keep separate recovery rules. Effort: Medium.
+  - **B.** Commit pending projection work with each runner receipt. Replay it with idempotent handlers until the lifecycle state and D1 agree, also after a restart. Make the local turn cleanup atomic or recoverable in that handler. Effort: Medium, at the top of that grade.
+    - Its replay must work by turn ID and check the current turn of the chat. Otherwise a late turn end removes a newer turn of the same session, and an idle stop can come during real work.
+    - It needs a limit for a lasting error, such as a missing org admin.
+    - It needs the same tests as D.
+  - **C.** Derive the running sessions and the latest title from the committed chat state at every use, and remove those callback projections. It changes the D1 name readers in `worker/app-api/workspace-state.ts`, `worker/app-api/shell.ts`, and `worker/lifecycle/workspace-data.ts`. Effort: Large.
+  - **D.** Repair the state from the committed chat at the existing recovery points. It needs no new stored retry queue. Effort: Medium.
+    - At each runner hello, and in the lifecycle alarm before its deadline step, rebuild the running sessions. Take them from the committed running or stopping turns of the chat.
+    - A late end of an old turn never removes a newer turn of the same session.
+    - Store the latest agent title in the chat summary record. It commits in the same transaction as its receipt, its event, and the cursor.
+    - Before each lifecycle publication, write that title to D1 when the row still holds an older name. So no `workspace.updated` carries an older title. The title repair at hello is best effort.
+    - Write each repaired state and name through the shared state writer, so that a repaired `ready` cannot hide a waiting Mac approval.
+    - The hello hook and the alarm already hold the chat queue. There, read the committed chat directly through the store, and do not enter the queue again.
+    - Start device cleanup also when the lifecycle step throws.
+    - Keep the original idle time. Take it from the stored time of the turn end and from `lastActivityAt`. A repair, a hello, a heartbeat, or a restart never starts a new 30-minute period.
+    - Recovery can wait for an existing hello, heartbeat, or alarm, but the idle stop keeps its original time. The chat stores each event with its time, `occurredAt`. A repair cannot call `DurableLifecycle.turn` as it is, because that method sets `lastActivityAt` to the current time.
+    - Keep all targeting, permission, and login rules.
+    - It also covers a restart inside the hook, `turnDispatchFailed`, and a refused turn end, with no record on each path. The local turn end of A can go in too, which saves one dropped connection.
+    - Cost: recovery waits for the next runner connection or one five-minute heartbeat. The lifecycle gets a read-only hook into the stored chat.
+    - Files: `worker/chat/workspace-summary.ts` and `worker/chat/workspace-integration.ts`, and `worker/chat/store.ts` only for a new reader. In `worker/lifecycle/`: `durable-types.ts`, `workspace-platform.ts`, `durable.ts`, `durable-alarm.ts`, `create-workspace-lifecycle.ts`, `workspace-state-projection.ts`, `runner-lifecycle.ts`, `workspace-controller.ts`, and `workspace-controller-types.ts`. `updateWorkspaceTitle` in `worker/chat/queries.ts` stays as it is. Nothing in `src/` or in the protocol docs changes.
+    - Tests: use `worker/chat/integration/workspace-lifecycle.test.ts` with its support file, `worker/lifecycle/durable.test.ts`, and the `failDeadline` switch of `worker/lifecycle/lifecycle-boat-test-support.ts`. Add these cases:
+      - A deadline call fails once after a confirmed turn end. After recovery, no running session stays.
+      - A restart and a hello, with a newer turn of the same session and a late end of the old turn. The newer turn stays running.
+      - On a manual clock, the idle stop comes 30 minutes after the original turn end or activity, not after the repair.
+      - A D1 title write fails. Then D1 and the next `workspace.updated` hold the latest title.
+      - Device cleanup runs after a lifecycle error.
+    - Docs: the hooks in `worker/chat/integration/README.md`, the alarm list in `worker/lifecycle/workspace-object.md`, and `worker/lifecycle/README.md`.
+- **Left out:**
+  - A reconnect alone: the stored cursor already covers the event.
+  - A retry only in memory: it fails after a restart, and it would hold the chat queue.
+  - Hold back the confirm, or the `welcome` cursor, until the updates succeed: during a Boat or D1 outage, each reconnect fails on the same event. Live agent text then stops, against `docs/protocol/chat-and-events.md:127-128`.
+  - A fix in the browser: the idle stop and the D1 name are server state, and the browser already shows the stored chat correctly.
+  - Change nothing: it breaks the idle-stop requirement.
+- **Wider fix:** D. It repairs the state whatever the failing call, the failing path, or the cause, because it reads the stored result, not the lost update.
+- **Previous examples:** `plans/follow-ups/image-build-transient-errors.md`, another gap in the recovery from a provider error.
+- **Related:** `plans/follow-ups/workspace-read-mark-retry.md`, the same milestone and the same turn-end path. Its B follows only the event number, so this failure does not affect it.
+- **Recommendation:** D, as the primary orchestrator chose on 2026-11-07. The review first recommended B, and the finding check changed the recommendation.
+  - All current updates are stored state that the chat already commits with each receipt: the running turns, the latest title, and the device cleanup.
+  - So D repairs a loss from any cause without a new queue, and it reuses the replay at hello.
+  - B stays the alternative. It is better only for a future update that the stored state cannot rebuild, such as a notification. No current update is like that.
+- **Action:** fix after merge, apply D, because Milestone 8m owns the repair after `conductor/boat-native-remote-workspaces-milestone-8i` merges, and the loss needs a rare temporary failure or restart.
