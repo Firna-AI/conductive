@@ -17,9 +17,9 @@ import styles from './OwnerPicker.module.css'
 
 /**
  * The members whom an admin can make the owner of a workspace, with the
- * current owner marked. Each message runs on the agent login of the person
- * who sends it (decision 49), so a new owner changes no login, and the
- * cloud computer keeps running.
+ * current owner marked. Each session runs on the agent login of its
+ * starter, the member who started it, so a new owner changes no login, and
+ * the cloud computer keeps running.
  */
 export function reassignMenu(owner: PersonKey): MenuEntry[] {
   return [
@@ -35,7 +35,7 @@ export function reassignMenu(owner: PersonKey): MenuEntry[] {
     { kind: 'divider' },
     {
       kind: 'note',
-      text: "Each message runs on its sender's own agent login.",
+      text: 'Each session runs on the agent login of the member who started it.',
     },
   ]
 }

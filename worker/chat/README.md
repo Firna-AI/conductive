@@ -23,12 +23,12 @@ which serves these routes. The path helpers live in
 | Route | Path helper | What it does |
 | --- | --- | --- |
 | `GET` sessions | `sessionsPath` | Lists the open sessions and the session history |
-| `POST` sessions | `sessionsPath` | Creates a session |
+| `POST` sessions | `sessionsPath` | Creates a session. The requester becomes its starter |
 | `PATCH` session | `sessionPath` | Renames a session |
-| `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn |
-| `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
+| `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn. When the starter's login cannot be used, a new linked session takes it, as [Session logins](integration/README.md#session-logins) says |
+| `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again, also to a new linked session. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
 | `POST` interrupt | `sessionPaths.interrupt` | Stops a turn |
-| `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session |
+| `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session that the requester starts |
 | `POST` close, reopen | `sessionPaths.close`, `sessionPaths.reopen` | Moves a session to the session history, and back |
 | `GET` history | `chatHistoryPath` | Reads the stored events of one session |
 | `GET` events socket | `workspaceEventsPath` | Sends the stored history, then each new event |
@@ -81,15 +81,19 @@ The Durable Object runs the gates itself.
   other workspace gets `404 workspace_not_found`. So does a workspace that
   `matchesObject` refuses, because `WORKSPACES.idFromName` names another
   object.
-- `resolveLogin` first checks that the sender is still a member and that
-  the workspace is not archived. Then it reads the login. An override
-  replaces only the read.
-- Before dispatch, the same D1 read also checks the token hash of the live
-  runner connection. A revoked or replaced token closes that connection
-  without sending a login. The command stays queued.
-- The Durable Object reads the login when it accepts a message. It reads
-  it again for each `turn` and `message` command that it sends. Its
-  storage never holds a login.
+- Every login lookup goes through `SessionLogins`. Its credential path uses
+  `readLogin` in `login-access.ts`, the only caller of `resolveLogin`. It
+  reads the agent login of a starter or of a linked-session member, for one
+  agent. `resolveLogin` first checks the workspace, that user, the sender,
+  and the runner token in one D1 read. An override replaces only the login
+  read.
+- Its metadata path reads only the membership and the stored login kind of
+  each starter, in one D1 query. It reads no ciphertext.
+- A revoked or replaced runner token closes that connection without a
+  login, and the command stays queued. A sender who left the org gets no
+  login either. [Session logins](integration/README.md#session-logins) says
+  when the workspace checks the starter's login. The storage never holds a
+  login.
 
 ## History and event order
 
@@ -221,45 +225,15 @@ npm run test -- worker/chat
 npm run typecheck
 ```
 
-- `createChatFixture` in `harness.test-support.ts` builds on
-  `createHarness`. It adds an owner, a member, a workspace with a token,
-  and a stored login for each agent.
-- Its helpers send messages, open tabs, connect a `FakeRunner`, and
-  restart `WorkspaceChat` on the same storage.
-- `MemoryChatStorage` keeps the records in memory. Set `failCommit` or
-  `beforeCommit` to test a failed or a late commit.
-- Its key order and `startAfter` comparison use UTF-8 bytes, like real storage.
-- Set `crashAfterCommit` to commit the next transaction, then throw once.
-  The restart tests cover retry permission, report repairs, turn cleanup,
-  and file assembly after a commit crash.
-- `createRunnerLimitsFixture` in `runner-limits.test-support.ts` runs one
-  `RunnerChannel` for the refusal, cap, and file part tests.
-- `runner-repairs.test-support.ts` builds a full and an oversized report of
-  each kind, and reads the requests and markers of the repair tests.
-- `late-events.test.ts` and `never-started.test.ts` cover replay after a
-  workspace stop and the queued-turn eligibility rules.
-- `retry.test.ts`, `retry-queue.test.ts`, and `retry-crash.test.ts` cover
-  the newest failed turn: stale tabs, refused ends, waiting work, rollback,
-  and commit crashes. `retry.test-support.ts` sends retries and reads the
-  session records.
-- `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
-  end. It also checks that late ends preserve the next turn and its commands.
-- `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,
-  D1, and real WebSockets. `createAdapterRuntime` sets up that runtime.
-- It closes every socket before Miniflare evicts the real object. Restart
-  keeps SQLite history, queued messages, and the runner cursor. Event numbers
-  continue. The resumed queued turn fails. Its message can retry after a
-  second eviction.
-- `createAdapterRuntime` can bundle another Durable Object entry for
-  another workspace ID. The [GitHub store tests](../github/README.md#verification)
-  use it to run `WorkspaceChat` with the GitHub state on SQLite.
+[Test fixtures](integration/README.md#test-fixtures) names the test
+support files and what each group of tests covers.
 
 ## Seams for other milestones
 
 [Chat backend integration](integration/README.md) gives the seams for other
 features. It covers the hooks, the trusted workspace calls and the workspace
 events, the outer Worker, the lifecycle, the files, the GitHub state, the
-agent runner, and the logins and attachments.
+agent runner, the logins and attachments, and the test fixtures.
 
 ## Key code
 
@@ -267,8 +241,10 @@ agent runner, and the logins and attachments.
   tabs, and the one publisher of committed events.
 - `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
   owner can replace. The login resolver always wraps an override.
-- `http-routes.ts`, `messages.ts`, and `sessions.ts`: the routes, the turns,
-  and the session state.
+- `operation.ts`: `ChatOperation`, the reads and changes of one route, tab
+  subscription, or dispatch, in the serial queue that its caller holds.
+- `http-routes.ts`, `send-message.ts`, `messages.ts`, and `sessions.ts`: the
+  routes, Send and Retry with linked sessions, the turns, and session state.
 - `model-changes.ts`: client session IDs, the creation records that repeated
   requests match, and ID conflicts.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
@@ -297,8 +273,12 @@ agent runner, and the logins and attachments.
   `WorkspaceChat` gives it `readConnectionAccess` from
   [`worker/security/connection-access.ts`](../security/connection-access.ts).
 - `queries.ts`: the D1 reads of workspaces, tokens, members, and logins.
-- `login-access.ts`: the combined sender and runner-token access check
-  before login dispatch.
+- `login-access.ts`, `login-availability.ts`, and `login-kind.ts`:
+  `readLogin` and the access checks, the metadata query, and the valid
+  login kinds.
+- `session-login.ts` and `session-storage.ts`: the two login paths of
+  `SessionLogins`, and the defaults of older session records.
+- `session-record.ts`: `sessionFor`, the read of one session record.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
   and the peer types.
 

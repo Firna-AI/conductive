@@ -18,8 +18,9 @@ describes the structure that the [protocol docs](#protocol-docs) require.
   one sandbox, and one or more sessions.
 - **Workspace owner:** the person who is responsible for a workspace. It is
   the person who created the workspace, until an admin reassigns it.
-- **Sender:** the person who sent the message of a turn. The turn runs on
-  the agent login of its sender.
+- **Sender:** the person who sent the message of a turn. The GitHub token
+  and the Mac requests of the turn belong to its sender. The agent login
+  belongs to the starter of the session, the member who started it.
 - **Boat key:** the one key of the app's own Boat account, where every
   sandbox and every org image of every org runs. It is a Worker secret.
 - **Sandbox:** the Boat sandbox of one workspace. The product calls it a
@@ -135,7 +136,7 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
 - **GitHub App:** one app gives the sign-in, the repository access, and the
   webhooks of every org.
 - **Anthropic and OpenAI:** the model use of each turn bills to the own
-  Claude or OpenAI account of its sender.
+  Claude or OpenAI account of the starter of its session.
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. The app is free, with no limits (decision 81).
 
@@ -169,7 +170,7 @@ the app (decision 6).
 ### Chat
 
 1. A tab sends a message to the Worker. The Durable Object forwards it to
-   the agent runner, with the agent login of its sender.
+   the agent runner, with the agent login of the starter of its session.
 2. The runner gives it to the agent through the SDK. It numbers each agent
    event and sends it to the Durable Object.
 3. The Durable Object stores each event, confirms it to the runner, and
@@ -227,8 +228,8 @@ the app (decision 6).
   only on the preview domain.
 - A sandbox gets none of the secrets of the app's Boat account. At a
   start, it gets only the secrets of its workspace and its org.
-- During a turn, the sandbox also holds the agent login of the sender. The
-  members of one org can reach that login, as
+- During a turn, the sandbox also holds the agent login of the starter of
+  its session. The members of one org can reach that login, as
   [Access and security](protocol/access-and-security.md#agent-logins-in-a-sandbox)
   says.
 

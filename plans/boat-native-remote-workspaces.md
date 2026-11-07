@@ -2109,6 +2109,20 @@ from C to D.
 - **Action:** ask the user, because D changes decision 24, and each
   option adds behaviour that no requirement covers.
 - **Chosen:** D, by the user on 6 November 2026. It changes decision 24.
+- **Changed on 7 November 2026:** decision 105 F changes this decision for
+  sessions:
+  - Each session runs on the agent login of its starter, the member who
+    started the session. A session never moves to the login of another
+    member.
+  - A message of any member during a turn joins that turn at once, and the
+    other members spend the login of the starter. So the runner no longer
+    starts the agent again when the sender changes.
+  - When the login of the starter cannot be used, a message of another
+    member opens a new, empty session on that member's own login. This
+    happens, for example, after the starter leaves the org or removes the
+    login. The new session links to the first session (decision 115 A).
+  - A member cannot refuse the use of their login by others for now
+    (decision 116 A).
 
 ### 50. Decide the reach of a cloud computer's GitHub token
 
@@ -3799,6 +3813,113 @@ Added on 8 November 2026 from the `futex-ai/ui` workspace of decision 119.
 - **Chosen:** A, by the user on 8 November 2026. The orchestrator merged
   #180 as `3cc857c` in `futex-ai/ui`.
 
+### 123. Decide who may receive a workspace when admins are suspended
+
+Added on 8 November 2026 from finding 12 of PR #45 (Milestone 15m).
+
+- **Background:** A member's workspaces move to the earliest admin when the
+  member leaves, and the last-admin check counts suspended admins. A
+  workspace whose owner is suspended cannot start, and it gets no disk
+  restart near day 14.
+- **Options:**
+  - **A.** Keep the rules, and state that the workspace stays blocked.
+  - **B.** Never give a workspace to a suspended member. Block the leave
+    when no active admin exists.
+  - **C.** Skip suspended admins in the automatic move. Confirm a manual
+    move to a suspended member.
+  - **D.** Skip suspended admins when an active admin exists. A manual
+    move to a suspended member fails.
+  - **E.** One shared rule of an active admin: the automatic move picks
+    the earliest active admin, the last-admin check counts only active
+    admins, an org with no active admin gives the workspaces to the
+    earliest member who is not suspended, and a manual move to a
+    suspended member fails.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 8 November 2026. Milestone 15m applies it
+  in PR #45.
+
+### 124. Accept that a copied workspace token outlives access
+
+Added on 8 November 2026 from the check of finding 5 of PR #45.
+
+- **Background:** Each member with a terminal in a cloud computer can read
+  its workspace token. A copied token keeps the runner connection, the git
+  credential route, and the agent tools after its member is removed or
+  suspended. So that member can collect the agent logins and GitHub tokens
+  of later turns.
+- **Options:**
+  - **A.** State the risk in the access protocol.
+  - **B.** Replace the tokens of the org's workspaces when a member loses
+    access.
+  - **C.** A machine identity that a copied token cannot reuse.
+- **Recommendation:** B.
+- **Chosen:** A now, by the user on 8 November 2026. Milestone 15m states
+  the risk. The user asked to review the other approaches later:
+  `plans/follow-ups/workspace-token-after-access-loss.md`.
+
+### 125. Decide the disk restart of a suspended owner's workspaces
+
+Added on 8 November 2026 from the check of finding 10 of PR #45.
+
+- **Background:** Milestone 15m skips the disk restart near day 14 for the
+  workspaces of a suspended owner, so their disks can be deleted with the
+  members' unpushed work.
+- **Options:**
+  - **A.** Keep the disk restart.
+  - **B.** Skip it, and tell the members that an admin can move the
+    workspace.
+  - **C.** Skip it, and keep the disk with a saved snapshot.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 8 November 2026, after an explanation.
+  Milestone 15m states the rule in the protocol, and the error of such a
+  workspace says that an admin can give it to another member.
+
+### 126. Decide when a changed Terms revision applies
+
+Added on 8 November 2026 from the check of finding 7 of PR #45.
+
+- **Options:**
+  - **A.** At the next sign-in, within 7 days.
+  - **B.** At once, with a consent page that blocks the app.
+  - **C.** At the next sign-in, with an email about the change.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026. Milestone 15m states the
+  rule in the Sign-in section of the access protocol.
+
+### 127. Keep the marketing pictures fresh by hand
+
+Added on 8 November 2026 from the check of finding 8 of PR #46
+(Milestone 7w).
+
+- **Background:** The marketing site shows 26 stored pictures of mockup
+  screens. Nothing finds a stale picture.
+- **Options:**
+  - **A.** Keep the README rule, and capture again by hand.
+  - **D.** A picture drift check in the gate.
+  - **E.** Make the pictures in the build.
+  - **F.** Draw the screens on the site as HTML.
+- **Recommendation:** D.
+- **Chosen:** A, by the user on 8 November 2026.
+
+### 128. Give each build and start a time limit
+
+Added on 8 November 2026 from the check of finding 2 of PR #47
+(Milestone 5c).
+
+- **Background:** Builds and starts run as saved jobs that alarms move
+  forward. A script that never exits, or a cloud computer that never
+  becomes ready, keeps a job running forever, and an org's first build
+  then blocks every new workspace.
+- **Options:**
+  - **A.** Change nothing beyond the retry limit of Milestone 5c.
+  - **B.** A Cancel action for a running build and start.
+  - **C.** A time limit for each whole job from its start, for example 60
+    minutes for a build and 20 minutes for a start.
+  - **D.** A time limit for each script.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 8 November 2026, who also asked that the
+  app tell the user of the limit. Milestone 5d applies it.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4863,6 +4984,25 @@ polls of saved processes can resume.
 
 Verification evidence: `.context/boat-native-remote-workspaces/5c-checks/summary.md`.
 
+
+## Milestone 5d: Time limits for builds and starts
+
+Tags: ui
+
+Depends on: 5c
+
+Apply decision 128 C. Added on 8 November 2026.
+
+- [ ] Draw the limits in the mockups: the build screen and the workspace
+      start screen say how long a build and a start can run, and a failed
+      build or start says that it passed its limit. Then build both
+      screens, and compare each with its mockup.
+- [ ] Apply the recorded option of
+      `plans/follow-ups/lifecycle-job-time-limit.md`: a time limit for each
+      whole build and start, from its start, with the existing failure
+      handling. State the limits in
+      `docs/protocol/workspaces-and-sandboxes.md`, and delete that item.
+
 ## Milestone 6: App shell and workspaces
 
 Tags: ui
@@ -5191,22 +5331,43 @@ Depends on: 7t
 Apply decision 105 F. Added on 7 November 2026. Merge the primary
 branch after Milestone 8k merges, before the chat changes.
 
-- [ ] Run each turn of a session on the login of the member who started
+- [x] Run each turn of a session on the login of the member who started
       the session, whoever sends the message. A message of any member
       during a running turn joins that turn at once. Update the chat
       protocol and the section "Agent logins in a sandbox" of the access
       protocol, and add a note to decision 49.
-- [ ] Remove the login switch inside a turn from the runner, so that a
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+- [x] Remove the login switch inside a turn from the runner, so that a
       session never changes its login.
-- [ ] Show in the composer whose login the session uses. When the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+- [x] Show in the composer whose login the session uses. When the
       starter's login cannot be used, such as after the starter leaves the
       org or removes the login, a member's message opens a new, empty
       session on the member's own login, with a link to the first session
       (decision 115 A). Draw it in the chat mockups first, and compare the
       screens with them.
-- [ ] Test a second member's message during a turn, and a starter whose
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+- [x] Test a second member's message during a turn, and a starter whose
       login cannot be used, in two tabs. Delete
       `plans/follow-ups/one-sender-per-turn.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+
+Agent calls, 7 November 2026:
+
+- Store the starter from session creation, separate from message senders.
+- Return the target session with each Send or Retry reply. This lets the
+  browser open a linked session before its events arrive.
+- Treat an older session with no known starter as having no usable login.
+  Keep its history. Its next message starts a linked session. The first
+  message cannot prove who created an empty session.
+- Keep accepted input in its session after a later login removal. Use the
+  existing queued failure and running hold. Retry can start a linked
+  session later.
+- Move the request draft with automatic linked-session navigation.
+  Preserve a newer source draft and existing target work. This keeps
+  typing with the accepted message.
+
+Evidence: `.context/boat-native-remote-workspaces/7w/verification.md`.
 
 ## Milestone 7v: Reports after a failed file read
 

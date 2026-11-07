@@ -4,7 +4,8 @@ import {
   workspaceSessions,
 } from '../../../docs/mockups/src/fixtures/sessions'
 import { workspaceList } from '../../../docs/mockups/src/fixtures/workspaces'
-import type { UserMessage } from '../../shared/messages'
+import type { User } from '../../shared/api'
+import type { MessageSender, UserMessage } from '../../shared/messages'
 import type { SessionsResponse } from '../../shared/sessions'
 import type { WorkspaceViewResponse } from '../../shared/workspace-view'
 import type {
@@ -15,6 +16,18 @@ import type {
   WorkspacesResponse,
 } from '../../shared/workspaces'
 import { FAKE_IDS, FAKE_TIME, fakeUser, fakeUsers } from './core'
+
+/**
+ * The snapshot of a person that a session keeps as its starter: the member
+ * who created it. It stays as it was when the person leaves the org.
+ */
+export function senderSnapshot(person: MessageSender): MessageSender {
+  const { id, githubLogin, displayName, avatarUrl } = person
+  return { id, githubLogin, displayName, avatarUrl }
+}
+
+const personNamed = (key: string): User =>
+  fakeUsers.find((user) => user.id === key) ?? fakeUser
 
 export function workspaceFixtures(state: WorkspaceState = 'ready') {
   const workspaces: WorkspacesResponse = {
@@ -77,6 +90,9 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
       closedAt: null,
       activeTurnId: state === 'working' ? 'turn-1' : null,
       retryMessageId: null,
+      startedBy: senderSnapshot(personNamed(session.starter)),
+      sourceSessionId: null,
+      loginAvailable: true,
     })),
     history: closedSessions.map((session, index) => ({
       id: session.key,
@@ -90,6 +106,10 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
       closedAt: FAKE_TIME - (index + 1) * 86_400_000,
       activeTurnId: null,
       retryMessageId: null,
+      // The mockups name no starter of a closed session: the owner started it.
+      startedBy: senderSnapshot(workspace.owner),
+      sourceSessionId: null,
+      loginAvailable: true,
     })),
   }
   const message: UserMessage = {

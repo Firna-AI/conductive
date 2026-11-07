@@ -21,12 +21,22 @@ says.
   SDK when that SDK can interrupt a turn and stream partial text. Otherwise
   Codex runs through the Codex App Server.
 - Every member of the org can send messages in each of its workspaces.
-- Each turn runs on the agent login of its sender, the person who sent the
-  message (decision 49).
-- A turn on the login of the workspace owner was rejected, because one
-  member could then spend the login of another member.
-- When the next turn has another sender, the agent runs with the login of
-  that sender. The session keeps its history.
+- Each session runs on the agent login of its starter, the member who
+  started the session (decision 105). The starter of a session never
+  changes, so a session never moves to the login of another member.
+- A member starts a session in one of these ways:
+  - with "+"
+  - with a model of the other agent
+  - with the first message of a new workspace
+  - with a message that starts a new session, as [Messages](#messages) says
+- The session record names its starter in `startedBy`. A session without a
+  known starter has no login that can be used.
+- The messages of the other members run on the login of the starter too.
+  So the other members spend the login of the starter.
+- Reason: each change of login rewrites the prompt cache of the
+  conversation. A login for each sender was rejected for that reason.
+- The login of the workspace owner for all sessions was rejected. Reason:
+  each member who starts a session spends their own login.
 - [Access and security](access-and-security.md#agent-logins-in-a-sandbox)
   states how a login reaches the sandbox, and its risk.
 - A session keeps its memory across a stop and a resume of the sandbox.
@@ -75,18 +85,46 @@ says.
 - Reason: neither SDK can switch agents inside one session. A hand-over of
   the transcript to the other agent was rejected. The user chose the way
   that Conductor works.
+- When the login of the starter cannot be used, a message of another member
+  starts a new session on that member's own login (decision 115). A Try
+  again of another member does the same. This happens, for example, after
+  the starter leaves the org or removes the login.
+- The workspace checks the login of the starter again when it accepts each
+  message. When the member has no login for the agent either, the workspace
+  refuses the message and starts no session.
+- The new session has none of the earlier history. Its record names the
+  first session in `sourceSessionId`, and the chat links to it. The first
+  session keeps its history and its login.
+- A copy of the first conversation, and a move of the first session to
+  the login of the member, were rejected.
+- The reply to a message or a Try again carries the record of the session
+  that took it. A repeat of the same message gets the same session.
+- The session record shows the result of the last login check in
+  `loginAvailable`. Each tab gets a changed result. The check does not ask
+  the provider whether it accepts the login.
+- The workspace does not watch the logins for changes. So a tab can show an
+  old result until the next check.
+- When the record already shows a login that cannot be used, the composer
+  says before the send that the message starts a new session.
+- The composer names the member whose login its message runs on, such as
+  "Uses Priya's Claude login", or "Uses your Claude login" to Priya.
 - The composer attaches files to a message.
 - The composer shows a notice when the user has no login for the agent of
-  the chosen model (decision 33).
+  the chosen model (decision 33). It shows no such notice when the message
+  runs on the login of another member.
 - The app accepts a message before the sandbox is ready. The workspace
   keeps the message, and gives it to the agent when the sandbox is ready
   (decision 14).
 - A message that waits for the sandbox shows that it waits. A queue in the
   browser was rejected, because a closed tab would lose the message.
-- A message sent during a turn goes to the agent at once. The agent reads it
-  at its next tool call.
+- While the login of the starter can be used, a message that any member
+  sends during a turn joins that turn. It goes to the agent at once, and the
+  agent reads it at its next tool call.
 - In a turn without tool calls, the agent reads such a message when the
   turn ends.
+- A message that the workspace accepted stays in its session, also when the
+  login of the starter is gone later. A turn that needs that login then
+  fails and names the cause. Try again can then start a new session.
 - Stop interrupts the running turn. The chat shows an interrupted turn as
   stopped, not as an error.
 - The chat names the member who pressed Stop: "Priya stopped the agent",
@@ -95,7 +133,8 @@ says.
   set it, because agent code runs on the same cloud computer.
 - A turn that stops with no Stop request, such as when the cloud
   computer stops, shows "The agent stopped".
-- The next message after a stop continues the same session.
+- While the login of the starter can be used, the next message after a stop
+  continues the same session.
 - A turn that fails names the cause, and Try again retries the turn.
 - Try again can retry only the newest turn of a session, and only when that
   turn failed (decision 97). It sends the retry message that the failure
@@ -103,6 +142,8 @@ says.
 - The session record names that message in `retryMessageId`. In every
   other case, the field holds null, also after a refused end. Each tab gets
   the record from the session routes and the `session.updated` events.
+- A message or a Try again that starts a new session also sets
+  `retryMessageId` of the first session to null.
 - The chat shows Try again only on the failed turn whose retry message the
   record names.
 - The retry route refuses each other message of the session with HTTP 409
@@ -216,7 +257,7 @@ says.
   It remains retryable. It never becomes a permanent refusal.
 - The Durable Object forwards each message, each message during a turn,
   each interrupt, and each change of the model or the effort to the runner.
-- Each turn also brings the login of its sender, as
+- Each turn also brings the agent login of the starter of its session, as
   [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox)
   says.
 - The runner also reports the file tree and the changes of its workspace,

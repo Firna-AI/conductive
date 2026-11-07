@@ -1,0 +1,58 @@
+import type { SessionLogin } from '../components/chat/SessionLogin'
+import { agents } from '../fixtures/agents'
+import { memberViewer, people, you, type PersonKey } from '../fixtures/members'
+import { linkedSession, workspaceSessions } from '../fixtures/sessions'
+import type { Workspace } from '../fixtures/workspaces'
+import { isNew } from './workspaceTabs'
+import type { WorkspaceState } from './workspaceState'
+
+/** The person signed in: Cal, an admin, or Priya, a member who is not. */
+export function viewerOf(state: WorkspaceState): PersonKey {
+  return state.viewer === 'admin' ? you : memberViewer
+}
+
+/**
+ * The starter of the open session. The viewer starts a new session with +,
+ * and the creator of a new workspace started its one session.
+ */
+function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
+  switch (state.tab) {
+    case 'new-session':
+      return viewerOf(state)
+    case 'linked-session':
+      return linkedSession.starter
+    case 'session':
+    case 'code':
+    case 'markdown':
+    case 'diff':
+      return isNew(state) ? workspace.owner : workspaceSessions[0].starter
+  }
+}
+
+/**
+ * The starter of the open session when that starter is another member, so
+ * that a message of the viewer runs on the login of that member. In the
+ * session of the viewer, there is none.
+ */
+export function otherStarter(
+  state: WorkspaceState,
+  workspace: Workspace,
+): PersonKey | undefined {
+  const starter = starterOf(state, workspace)
+  return starter === viewerOf(state) ? undefined : starter
+}
+
+/**
+ * The display props of the login line under the composer. `member` is the
+ * starter when that starter is another member. Without it, the line names
+ * the own login of the viewer: in a session of the viewer, or when a
+ * message opens a linked session on that login.
+ */
+export function sessionLoginFor(
+  workspace: Workspace,
+  member: PersonKey | undefined,
+): SessionLogin {
+  const agent = agents[workspace.choice.agent].name
+  if (member === undefined) return { owner: { kind: 'viewer' }, agent }
+  return { owner: { kind: 'member', name: people[member].name }, agent }
+}

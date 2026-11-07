@@ -49,6 +49,7 @@ export async function createRunnerLimitsFixture() {
     scheduleBrowserCheck: () => () => undefined,
     readConnectionAccess: async () => [],
     randomId: () => `command-${++commandSequence}`,
+    readLoginAvailability: async () => new Set<string>(),
     resolveLogin: async () => null,
     resolveAttachments: async () => ({ attachments: [], paths: [] }),
     receiveFileResult: async () => undefined,
@@ -104,6 +105,14 @@ export async function createRunnerLimitsFixture() {
         closedAt: null,
         activeTurnId: context.turnId,
         retryMessageId: null,
+        startedBy: {
+          id: 'sender',
+          githubLogin: 'sender',
+          displayName: null,
+          avatarUrl: null,
+        },
+        sourceSessionId: null,
+        loginAvailable: false,
       })
       await transaction.saveTurn({
         id: context.turnId,

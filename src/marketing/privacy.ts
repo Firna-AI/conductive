@@ -50,7 +50,8 @@ export const privacyDocument: LegalDocument = {
           <li>
             Keys and logins: the env var values of each org, and your Claude or
             OpenAI logins. ${productName} stores them encrypted. It uses your
-            login only for the turns that you send.
+            login only for the turns of the sessions that you start, also for
+            the messages of other members.
           </li>
           <li>
             Your work: ${productName} keeps your messages and the answers of the
@@ -90,13 +91,18 @@ export const privacyDocument: LegalDocument = {
           </li>
           <li>
             Anthropic and OpenAI get your messages, your files, and your code
-            when an agent works on them, on your own login. The terms of that
+            when an agent works on them. Each session uses the login of the
+            member who started it, also for your messages. The terms of that
             provider apply.
           </li>
           <li>
             The members of your orgs see the workspaces of the org and their
             chats. A member with a terminal in a cloud computer can read the
             agent login of a turn that runs there.
+          </li>
+          <li>
+            The members of your orgs also see who started each session, whose
+            login it uses, and whether it can use that login.
           </li>
         </ul>
         <p>
