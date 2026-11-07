@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { onTestFinished, vi } from 'vitest'
 
 import type {
   DeviceCommandRecord,
@@ -52,6 +52,10 @@ export function sessionFixture() {
     notify,
     invalid,
     warn,
+  })
+  onTestFinished(() => {
+    session.dispose()
+    permissions.dispose()
   })
   return {
     ...time,

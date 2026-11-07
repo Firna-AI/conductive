@@ -1,8 +1,7 @@
 import { expect, it } from 'vitest'
 
 import type { DeviceSettingsAction } from '../../../src/shared/device.ts'
-import { deviceSettingsFixture } from '../../tests/device-settings-support.js'
-import { command } from '../../tests/device-support.js'
+import { deviceLifecycleFixture } from '../../tests/device-lifecycle-support.js'
 import type { PermissionStore } from './permissions.js'
 
 const cases: {
@@ -29,13 +28,16 @@ const cases: {
 it.each(cases)(
   '$action revokes before a failed save and keeps other permissions and commands working',
   async ({ operation, revokedCommand, allow }) => {
-    const test = deviceSettingsFixture()
-    allow(test.permissions)
-    test.permissions.allowCommand('printf hello')
-    test.permissions.allowWorkspace('workspace-two', 'Other workspace')
+    const test = deviceLifecycleFixture()
+    const saved = test.openPermissions()
+    allow(saved)
+    saved.allowCommand('printf hello')
+    saved.allowWorkspace('workspace-two', 'Other workspace')
+    saved.dispose()
+    await test.start()
     test.receive({
       type: 'command.request',
-      request: command({
+      request: test.command({
         requestId: 'already-running',
         command: revokedCommand,
       }),
@@ -43,8 +45,15 @@ it.each(cases)(
     expect(test.processes).toHaveLength(1)
     const atSave: { permitted: boolean; timers: number }[] = []
     test.files.write = () => {
+      test.receive({
+        type: 'command.request',
+        request: test.command({
+          requestId: 'at-save',
+          command: revokedCommand,
+        }),
+      })
       atSave.push({
-        permitted: test.permissions.permits(revokedCommand, 'workspace-one'),
+        permitted: test.processes.length !== 1,
         timers: test.timers.size,
       })
       throw new Error('/private/account/permission-file: disk full')
@@ -75,7 +84,7 @@ it.each(cases)(
           'This permission change is active, but the Mac could not save it. Try again.',
       },
     })
-    expect(atSave).toEqual([{ permitted: false, timers: 2 }])
+    expect(atSave).toEqual([{ permitted: false, timers: 4 }])
     expect(test.warn).toHaveBeenCalledOnce()
     expect(test.processes[0].kill).not.toHaveBeenCalled()
     const restored = test.openPermissions()
@@ -95,20 +104,23 @@ it.each(cases)(
     })
     test.receive({
       type: 'command.request',
-      request: command({
+      request: test.command({
         requestId: 'needs-new-approval',
         command: revokedCommand,
       }),
     })
-    expect(test.notify).toHaveBeenCalledOnce()
+    expect(test.notify).toHaveBeenCalledTimes(2)
     expect(test.processes).toHaveLength(1)
     test.receive({
       type: 'command.request',
-      request: command({ requestId: 'still-allowed', command: 'printf hello' }),
+      request: test.command({
+        requestId: 'still-allowed',
+        command: 'printf hello',
+      }),
     })
     test.receive({
       type: 'command.request',
-      request: command({
+      request: test.command({
         requestId: 'other-workspace',
         workspaceId: 'workspace-two',
         command: 'printf other',
@@ -139,5 +151,31 @@ it.each(cases)(
     expect(test.processes[2].kill).not.toHaveBeenCalled()
     expect(test.invalid).not.toHaveBeenCalled()
     expect(test.closed).not.toHaveBeenCalled()
+
+    test.connection.sleep()
+    expect(test.processes[2].kill).toHaveBeenCalledOnce()
+    await test.connection.wake()
+    test.pair()
+    const reconnected = test.command({
+      requestId: 'after-reconnect',
+      command: revokedCommand,
+    })
+    test.receive({ type: 'command.request', request: reconnected })
+    expect(test.processes).toHaveLength(3)
+    expect(test.notify).toHaveBeenLastCalledWith(reconnected)
+    expect(test.notify).toHaveBeenCalledTimes(3)
+    test.receive({
+      type: 'settings.operation',
+      operationId: 'read-after-reconnect',
+      operation: { action: 'read' },
+    })
+    expect(test.messages().at(-1)).toEqual({
+      type: 'settings.result',
+      operationId: 'read-after-reconnect',
+      settings,
+      outcome: { status: 'done' },
+    })
+    expect(test.closed.mock.calls).toEqual([[false]])
+    expect(test.invalid).not.toHaveBeenCalled()
   },
 )

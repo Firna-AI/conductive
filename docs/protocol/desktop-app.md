@@ -262,6 +262,9 @@ limits, their results, and what the chat shows.
 - After Remove, the next request with that command text asks again.
 - Remove and Stop revoke their permission in the current Mac app even if
   saving the change fails.
+- The revocation stays in force for the rest of the app run, including a
+  reconnect. A failed save can still restore an earlier permission after
+  a full app restart.
 - A failed save does not keep the revoked permission active in memory.
   Reason: a disk error must not leave a permission active after the user
   revokes it.

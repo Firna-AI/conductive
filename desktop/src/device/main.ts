@@ -10,10 +10,8 @@ import { createDeviceConnection } from './connection.js'
 import { desktopCredential, deviceAccount } from './credentials.js'
 import { privateDeviceFiles, stableDeviceId } from './files.js'
 import { notifyCommand } from './notification.js'
-import { createPermissionStore } from './permissions.js'
 import { localCommandLauncher } from './process.js'
-import { runCommand } from './runner.js'
-import { createDeviceSession } from './session.js'
+import { createDeviceSessionFactory } from './session-factory.js'
 import { connectDevice } from './transport.js'
 
 interface MainDeviceDependencies {
@@ -31,7 +29,21 @@ export function startMacDevice(dependencies: MainDeviceDependencies): void {
     const { appOrigin, rendererSession, warn } = dependencies
     const files = privateDeviceFiles(resolve(dependencies.userData, 'device'))
     const deviceId = stableDeviceId(files)
-    const launch = localCommandLauncher()
+    const sessions = createDeviceSessionFactory({
+      files,
+      deviceName: hostname(),
+      clock: deviceClock,
+      launch: localCommandLauncher(),
+      warn,
+      notify: (request) =>
+        notifyCommand(request, {
+          foreground: dependencies.foreground,
+          create: (options) =>
+            Notification.isSupported() ? new Notification(options) : undefined,
+          open: dependencies.openWorkspace,
+          warn,
+        }),
+    })
     const connection = createDeviceConnection({
       deviceId,
       clock: deviceClock,
@@ -54,32 +66,7 @@ export function startMacDevice(dependencies: MainDeviceDependencies): void {
           credential,
           events,
         }),
-      session: (userId, pairing, send, invalid) =>
-        createDeviceSession({
-          userId,
-          pairing,
-          send,
-          invalid,
-          warn,
-          permissions: createPermissionStore({
-            userId,
-            files,
-            deviceName: hostname(),
-            clock: deviceClock,
-            warn,
-          }),
-          run: (request) => runCommand(request, { clock: deviceClock, launch }),
-          notify: (request) =>
-            notifyCommand(request, {
-              foreground: dependencies.foreground,
-              create: (options) =>
-                Notification.isSupported()
-                  ? new Notification(options)
-                  : undefined,
-              open: dependencies.openWorkspace,
-              warn,
-            }),
-        }),
+      session: sessions.session,
       warn,
     })
     const changed = (_event: unknown, cookie: Cookie) => {
@@ -100,6 +87,7 @@ export function startMacDevice(dependencies: MainDeviceDependencies): void {
       powerMonitor.removeListener('suspend', connection.sleep)
       powerMonitor.removeListener('resume', wake)
       connection.stop()
+      sessions.dispose()
     })
     void connection.start()
   } catch {

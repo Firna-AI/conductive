@@ -175,7 +175,6 @@ export function createDeviceSession(dependencies: SessionDependencies) {
       })
       requests.clear()
       operations.clear()
-      dependencies.permissions.dispose()
     },
   }
 }

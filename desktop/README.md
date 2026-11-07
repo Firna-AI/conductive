@@ -70,6 +70,8 @@ The app keeps exact allowed commands and workspace deadlines under its private u
 The settings name comes from the OS hostname.
 The connection sends that hostname as display metadata for command requests.
 Remove and Stop revoke permissions in memory even when saving fails.
+The revocation stays in force for the rest of the app run, including reconnects.
+A failed save can restore the old permission after a full app restart.
 Settings replies report whether the change was saved.
 A settings reply that is too large fails its own operation and keeps commands connected.
 Commands run in the user's shell with bounded output and time.
@@ -202,6 +204,7 @@ It offers Restart now or Later once for each downloaded version.
 - [Window](src/window.ts) owns native controls and saved bounds.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.
 - [Device composition](src/device/main.ts) connects cookie, power, notification, and app-exit hooks.
+- [Device session factory](src/device/session-factory.ts) keeps each account's permission store across connections and disposes all stores at app exit.
 - [Device connection](src/device/connection.ts) owns authentication, pairing, heartbeat, and reconnect state.
 - [Device session](src/device/session.ts) owns pending requests, scoped approvals, settings operations, and cancellation.
 - [Device settings](src/device/settings.ts) reports change outcomes and checks settings replies against the device message budget.

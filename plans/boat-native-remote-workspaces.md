@@ -5134,6 +5134,16 @@ Milestone 4g merged on 7 November 2026. Public device requests use its
 default entry budget. New private device HTTP bodies keep the existing
 1 MB budget at their own entry. JSON parsing uses the shared helper.
 
+Fix round 2, approved by the user on 7 November 2026, is the last round.
+Finding 34 B keeps one permission store for each user for the app run.
+Sessions share that user's store, and app exit disposes every store.
+The registry and session factory live outside the Electron composition.
+A failed initial file read can retry at the next connection if no change
+has happened since. A reconnect never reverses a revocation whose save failed.
+The regression keeps its separate full-app-restart assertion.
+Findings 10 and 11 remain in their follow-up items after the merge.
+The orchestrator merges after this round. No further review runs here.
+
 Implementation calls, 6 November 2026:
 
 - Keep one current authenticated Mac connection for each sender. A new

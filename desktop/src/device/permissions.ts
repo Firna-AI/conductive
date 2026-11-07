@@ -38,37 +38,7 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
   let commands = new Set<string>()
   let windows = new Map<string, DeviceWorkspaceWindow>()
   const timers = new Map<string, () => void>()
-  try {
-    const contents = files.read(name)
-    if (contents !== undefined) {
-      const value: unknown = JSON.parse(contents)
-      if (
-        typeof value !== 'object' ||
-        value === null ||
-        !('alwaysAllowedCommands' in value) ||
-        !Array.isArray(value.alwaysAllowedCommands) ||
-        !value.alwaysAllowedCommands.every(
-          (command: unknown) => typeof command === 'string',
-        ) ||
-        !('workspaceWindows' in value) ||
-        !Array.isArray(value.workspaceWindows) ||
-        !value.workspaceWindows.every(isWindow)
-      )
-        throw new Error('Invalid local permissions')
-      commands = new Set(value.alwaysAllowedCommands)
-      windows = new Map(
-        value.workspaceWindows
-          .filter(
-            (window) =>
-              window.expiresAt > clock.now() &&
-              window.expiresAt <= clock.now() + WINDOW_MS,
-          )
-          .map((window) => [window.workspaceId, window]),
-      )
-    }
-  } catch {
-    dependencies.warn()
-  }
+  let readState: 'pending' | 'loaded' | 'changed' = 'pending'
   const save = (
     nextCommands: Set<string>,
     nextWindows: Map<string, DeviceWorkspaceWindow>,
@@ -80,6 +50,7 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
         workspaceWindows: [...nextWindows.values()],
       }),
     )
+    readState = 'changed'
     commands = nextCommands
     windows = nextWindows
   }
@@ -97,6 +68,7 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
     }
   }
   const stopWorkspace = (workspaceId: string): DeviceSettingsOutcome => {
+    readState = 'changed'
     windows.delete(workspaceId)
     timers.get(workspaceId)?.()
     timers.delete(workspaceId)
@@ -111,8 +83,45 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       }),
     )
   }
-  windows.forEach(schedule)
+  const retryRead = () => {
+    if (readState !== 'pending') return
+    try {
+      const contents = files.read(name)
+      if (contents !== undefined) {
+        const value: unknown = JSON.parse(contents)
+        if (
+          typeof value !== 'object' ||
+          value === null ||
+          !('alwaysAllowedCommands' in value) ||
+          !Array.isArray(value.alwaysAllowedCommands) ||
+          !value.alwaysAllowedCommands.every(
+            (command: unknown) => typeof command === 'string',
+          ) ||
+          !('workspaceWindows' in value) ||
+          !Array.isArray(value.workspaceWindows) ||
+          !value.workspaceWindows.every(isWindow)
+        )
+          throw new Error('Invalid local permissions')
+        commands = new Set(value.alwaysAllowedCommands)
+        windows = new Map(
+          value.workspaceWindows
+            .filter(
+              (window) =>
+                window.expiresAt > clock.now() &&
+                window.expiresAt <= clock.now() + WINDOW_MS,
+            )
+            .map((window) => [window.workspaceId, window]),
+        )
+      }
+      readState = 'loaded'
+      windows.forEach(schedule)
+    } catch {
+      dependencies.warn()
+    }
+  }
+  retryRead()
   return {
+    retryRead,
     permits(command: string, workspaceId: string): boolean {
       return (
         commands.has(command) ||
@@ -123,6 +132,7 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       save(new Set([...commands, command]), windows)
     },
     removeCommand(command: string): DeviceSettingsOutcome {
+      readState = 'changed'
       commands.delete(command)
       return saveRevocation()
     },

@@ -77,7 +77,10 @@ export function deviceSettingsFixture() {
         },
       }),
   })
-  onTestFinished(() => socket.close())
+  onTestFinished(() => {
+    socket.close()
+    permissions.dispose()
+  })
   return {
     ...time,
     files,
