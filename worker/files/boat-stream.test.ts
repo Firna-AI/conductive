@@ -81,7 +81,7 @@ it('cancels oversized fallback bodies early and returns the exact file metadata 
     expect(upstream.headers.get('Authorization')).toBe('Bearer boat-first')
     expect(upstream.headers.get('X-Boat-Org')).toBe('team-one')
     expect(upstream.headers.get('Cookie')).toBe(null)
-    expect(upstream.redirect).toBe('error')
+    expect(upstream.redirect).toBe('manual')
   }
 })
 

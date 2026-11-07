@@ -1,9 +1,14 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
+import type { WorkspaceEvent } from '../../shared/events'
 import { filePaths } from '../../shared/files'
 import type { WorkspaceTab } from '../../shared/workspace-view'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import {
+  nextEnvelope,
+  refusedReport,
+} from '../../test-support/recorded-repairs'
 import type { FileListKind } from '../navigation'
 import { filesFor, slow, startFiles, testNavigation } from '../files-test-kit'
 import { FilesPanel } from './FilesPanel'
@@ -20,6 +25,7 @@ async function panel(
   list: FileListKind,
   activeTab: WorkspaceTab | null = null,
   replay = false,
+  now?: () => number,
 ) {
   const files = replay
     ? filesFor(server)
@@ -37,6 +43,7 @@ async function panel(
       layout="desktop"
       list={list}
       navigation={testNavigation()}
+      now={now}
     />,
   )
 }
@@ -155,5 +162,28 @@ it(
     expect(mark(html, 'Modified')).toContain('lucide-square-dot')
     expect(mark(html, 'Untracked')).toContain('lucide-square-plus')
     expect(mark(html, 'Added')).toContain('lucide-square-plus')
+  },
+)
+
+it(
+  'shows a notice of each list whose fresh report was lost too, under the lists',
+  slow,
+  async () => {
+    const server = new FakeApiServer()
+    const minute = 60_000
+    const emit = (event: WorkspaceEvent, at: number) =>
+      server.events.emit(nextEnvelope(server.events, event, at))
+    const now = () => FAKE_TIME
+    // The first loss asks for a fresh report, and nothing shows.
+    emit(refusedReport('changes.updated', false), FAKE_TIME - 9 * minute)
+    const quiet = await panel(server, 'changes', null, true, now)
+    expect(text(quiet)).not.toContain('unavailable')
+    emit(refusedReport('changes.updated', true), FAKE_TIME - 4 * minute)
+    emit(refusedReport('files.snapshot', true), FAKE_TIME - 3 * minute)
+    const html = await panel(server, 'changes', null, true, now)
+    expect(text(html)).toMatch(
+      / files changed .* The latest list of all files is unavailable 3m ago The latest list of changes is unavailable 4m ago$/,
+    )
+    expect(html.match(/role="status"/g)).toHaveLength(2)
   },
 )

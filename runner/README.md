@@ -7,7 +7,7 @@ repository.
 
 The runner opens one outbound WebSocket to the workspace Durable Object.
 It sends numbered events. It gets turns, messages, interrupts, model
-changes, and file requests.
+changes, file requests, and report requests.
 [Chat and events](../docs/protocol/chat-and-events.md#the-agent-runner)
 states its requirements, and the
 [shared contracts](../src/shared/README.md) define its messages.
@@ -63,9 +63,11 @@ These facts belong to this implementation, not to the protocol docs.
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, the
-  conversation references, and `turns` records of started turns. It holds no
-  command and no login. The saves of `turn.started` and its end write that
-  record, and the confirm of the end removes it.
+  conversation references, and `turns` records of started turns. It also
+  holds the last `start.updated` and `workspace.title` events, and the ID of
+  each answered [report request](#report-requests). It holds no other
+  command data and no login. The saves of `turn.started` and its end write
+  that record, and the confirm of the end removes it.
 - A failed save rejects only its own call, and later saves and events
   continue. Each save writes the whole state from memory, so a later save
   includes the change of the failed call. A send and a resend use only saved
@@ -107,8 +109,8 @@ byte budget measures the event or field after the output filter.
   large tree update goes as deltas of at most `FILE_TREE_DELTA_MAX_CHANGES`
   changes, with consecutive revisions.
 - Tree and changes reports have separate revision counters, which survive
-  a reconnect or a restart. Each forced refresh, such as the one after each
-  connect, sends a full tree and a full changes report with newer revisions.
+  a reconnect or a restart. The refresh after each connect sends a full tree
+  and a full changes report with newer revisions.
 - Before the outbox takes an event number, it checks the complete envelope
   against [`RUNNER_EVENT_MAX_BYTES`](../src/shared/runner.ts). An event
   that does not fit gets a local warning and no number, so later events
@@ -116,6 +118,42 @@ byte budget measures the event or field after the output filter.
 - A confirm can also cover a refusal marker that the workspace stored for
   an event. The runner then removes that event from its outbox and does
   not send it again. The runner never sends a refusal marker.
+
+## Report requests
+
+The workspace sends a `report.refresh` command when it needs a fresh full
+report of one kind.
+[Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates)
+states the requirements.
+
+- The runner takes a request without a session or a login. The agents never
+  get it. So a running turn keeps its agent process and its input.
+- After the `welcome`, the runner takes commands while the refresh after the
+  connect still runs. So a request does not wait for `runner.ready`.
+- A `files.snapshot` or `changes.updated` request scans the repository again.
+  It sends a full report of that kind only, in numbered parts.
+- The repository watcher, the refresh after each connect, and these two
+  report requests share one scan queue. So such a report request waits for
+  each earlier scan. The events of two scans never interleave. File reads
+  and diffs do not use this queue.
+- A watcher scan compares each kind with the last scan of that kind. So a
+  request for one kind hides no later update of the other kind.
+- The runner keeps the latest `start.updated` and `workspace.title`
+  reports in memory. Each saved state includes them. A confirm does not
+  remove them. They stay after a restart.
+- A `start.updated` or `workspace.title` request selects the current
+  report and appends its filtered copy in one store operation. It saves
+  the copy before it sends it, with a new event number.
+- Until the runner accepts an event of that kind, such a request sends
+  nothing. The runner has no source of new start steps or new workspace
+  names yet.
+- The runner skips a command ID that it has seen. When the runner answers
+  with a report, the save of the last report event also saves the ID. So a
+  repeat of that ID after a reconnect or a restart sends nothing. If the
+  runner process ends before that save, a repeat after the restart gets a
+  new answer. The outbox still resends an unconfirmed answer.
+- A state file from an older runner has no saved events of these two kinds
+  and no saved IDs. The runner still reads it.
 
 ## Commands
 
@@ -134,60 +172,15 @@ The build writes `runner.mjs`, `measure.mjs`, and `compare.mjs` into
 links `dist/runner/node_modules` to `runner/node_modules`, so that the
 bundles find them.
 
-The root `npm run check` does not run the runner typecheck or the runner
-tests. Run both after each change to the runner. The root lint, format,
-and file-length checks do cover the runner files.
+The complete gate, the root `npm run check`, runs the runner typecheck and
+the runner tests. Run `npm ci --prefix runner` once before the gate, as CI
+does. The root lint, format, and file-length checks also cover the runner
+files.
 
 ## Service
 
-Each build of the org image installs the runner as a systemd service. The
-install script needs root, because it writes a systemd unit.
-
-1. Get the private Node 24 path from the image builder. Its `npm` command
-   must sit beside it. The runner also needs Git.
-2. Install the runner packages and build the bundles with the commands
-   above.
-3. Set `CONDUCTING_NODE` to that full executable path. As root, run
-   `sh runner/scripts/install.sh <user> [<folder>]`. The user runs the
-   agents. The folder is `/opt/conducting-runner` by default.
-
-The install script does these steps:
-
-- It requires the service user and the explicit private Node path.
-- It copies the three bundles, `runner/package.json`,
-  `runner/package-lock.json`, and `runner/service/start.sh` into the
-  folder.
-- It runs the adjacent npm command with the configured Node and
-  `ci --omit=dev --ignore-scripts`. The runtime packages sit beside the
-  bundles.
-- It writes `/etc/systemd/system/conducting-runner.service` with the user,
-  the folder, and the configured private Node path.
-- It reloads systemd and enables the service. It does not start the
-  service.
-
-Boat restarts the enabled services after each resume and fork. So the
-runner starts in each sandbox that starts from the org image.
-
-The unit has these settings:
-
-- The service runs as the user, in the home folder of the user, after
-  `network-online.target`.
-- The unit passes the private Node path to the startup wrapper as an
-  argument. Sandbox env changes keep that argument unchanged.
-- systemd starts the service again 2 seconds after it ends, for any
-  reason.
-- `UMask=0077` makes the new files of the runner and its agents private to
-  the user.
-- A stop sends `SIGTERM` to the runner and its agent processes. The runner
-  closes its agents, ends its running turns, and closes its connection. Then
-  it exits with code 0. After 15 seconds, systemd ends each remaining
-  process.
-
-`service/start.sh` exports each variable of `/run/ascii-secrets/env.sh`,
-the file where Boat writes the variables of the sandbox. Then it starts
-`runner.mjs` from the folder with the full Node path in its service
-argument. The image builder owns that path and its download. When the
-secrets file is missing, the start fails, and systemd tries again.
+The [service guide](service/README.md) describes how each build of the org
+image installs the runner as a systemd service, and how that service starts.
 
 ## Configuration
 
@@ -259,15 +252,20 @@ tools that time the first agent start after a resume.
 - `src/main.ts` and `src/config.ts`: the service entry point, the variables
   and their defaults, the state file, and the reconnect after each drop.
 - `src/runner.ts` and `src/output-sanitizer.ts`: `Runner` joins the
-  connection, the agents, and the file reports. The shared output filter
-  removes known secrets from complete and streamed text before each save.
+  connection, the agents, the file reports, and the report requests. The
+  shared output filter removes known secrets from complete and streamed text
+  before each save.
 - `src/event-limits.ts`: byte accounting and tool and turn-summary caps.
 - `src/file-parts.ts`: full report parts and bounded tree deltas.
+- `src/file-updates.ts`: the full tree or the tree delta of each scan, and
+  the check for a new changes report.
 - `src/link.ts`, `src/state.ts`, `src/socket.ts`, `src/commands.ts`, and
   `src/stored-events.ts`: the hello, welcome, confirm, and resend rules, the
   state file, the WebSocket, and checks of messages and saved events.
 - `src/serial-queue.ts`: the ordered queue of the saves and the events. A
   failed step rejects only its own call, and later steps still run.
+- `src/report-state.ts`: the saved `start.updated` and `workspace.title`
+  events and the answered report request IDs of the state file.
 - `src/engine.ts`, `src/engine-runtime.ts`, and `src/turn-output.ts`:
   session queues, cancelable turns, sender changes, controls, and text deltas.
 - `src/engine-disposal.ts`: one close path for sender changes, turn ends,
@@ -275,8 +273,9 @@ tools that time the first agent start after a resume.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
-- `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the file
-  tree, the branch changes, bounded reads, and the files of one turn.
+- `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
+  queue, the file tree, the branch changes, bounded reads, and the files of
+  one turn.
 - `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary
   indexes and objects for Git comparisons. The real index stays unchanged.
 - `src/git-paths.ts`: shared Git namespace states for paths and parents.
@@ -288,6 +287,7 @@ tools that time the first agent start after a resume.
 
 - [Architecture: sandbox software](../docs/architecture.md#sandbox-software)
 - [Chat and events: the agent runner](../docs/protocol/chat-and-events.md#the-agent-runner)
+- [Chat and events: lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates)
 - [Access and security: agent logins in a sandbox](../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
 - [Workspaces and sandboxes: files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
 - [Agent tools: computer tools](../docs/protocol/agent-tools.md#computer-tools)

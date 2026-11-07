@@ -18,6 +18,8 @@ import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
 import { ArchiveDialog } from './ArchiveDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
+import { HeaderNotices } from './header-notices'
+import { HeaderNoticeBars } from './HeaderNoticeBars'
 import { SandboxBar, SandboxPanel } from './SandboxNotice'
 import { StartingCard } from './StartingCard'
 import {
@@ -43,12 +45,16 @@ export function WorkspaceScreen(props: {
 }) {
   const org = useOrgModel(props.org.id)
   const [model] = useState(() => new WorkspaceModel(org, props.workspaceId))
+  const [notices] = useState(() => new HeaderNotices())
   const detail = useStore(model.detail)
   const features = useFeatures()
   const viewport = useViewport()
   const theme = useSharedUiTheme()
   const go = useGo()
   const resume = useAction(() => model.resume(), "The sandbox didn't start.")
+  // The notices follow the stream before `open` starts it, so that they
+  // also read the stored history.
+  useEffect(() => notices.follow(model.stream), [notices, model])
   useEffect(() => {
     void model.open()
     return () => model.close()
@@ -155,6 +161,7 @@ export function WorkspaceScreen(props: {
     return (
       <div className={page.mobileBody}>
         {header}
+        <HeaderNoticeBars notices={notices} />
         {features.pullRequest?.(context)}
         <div className={page.mobileBody}>
           {archived || view === 'chat'
@@ -172,6 +179,7 @@ export function WorkspaceScreen(props: {
     <div className={body.body}>
       <div className={body.chat}>
         {header}
+        <HeaderNoticeBars notices={notices} />
         {features.tabs?.(context)}
         {chat}
       </div>

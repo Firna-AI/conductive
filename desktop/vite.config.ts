@@ -19,13 +19,10 @@ export default defineConfig({
       transformIndexHtml: {
         order: 'pre',
         handler: (html) =>
-          html
-            .replace('src="/src/main.tsx"', 'src="/desktop/renderer/main.tsx"')
-            .replace('<body>', '<body><div data-desktop-chrome-slot></div>')
-            .replace(
-              '</body>',
-              '<script type="module" src="/desktop/renderer/chrome.ts"></script></body>',
-            ),
+          html.replace(
+            'src="/src/main.tsx"',
+            'src="/desktop/renderer/main.tsx"',
+          ),
       },
     },
   ],

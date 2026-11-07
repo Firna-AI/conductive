@@ -11,7 +11,8 @@ import { TERMINAL_RUNTIME } from './scripts'
 
 export const TERMINAL_PORT = 7681
 
-const installScript = `set -eu
+export function terminalInstallCommand(): string {
+  return privilegedCommand(`set -eu
 apt-get update
 apt-get install -y ttyd
 install -d -m 755 /usr/local/lib/conducting
@@ -46,17 +47,15 @@ RestartSec=1
 WantedBy=multi-user.target
 CONDUCTING_SERVICE
 systemctl daemon-reload
-systemctl enable conducting-terminal.service`
+systemctl enable conducting-terminal.service`)
+}
 
 /** Call during each org image build. It enables the service without a credential. */
 export async function installTerminalService(
   provider: Pick<SandboxProvider, 'runCommand'>,
   sandboxId: string,
 ): Promise<void> {
-  const result = await provider.runCommand(
-    sandboxId,
-    privilegedCommand(installScript),
-  )
+  const result = await provider.runCommand(sandboxId, terminalInstallCommand())
   if (result.exitCode !== 0 || result.timedOut)
     throw new ProviderError('unavailable', 502)
 }

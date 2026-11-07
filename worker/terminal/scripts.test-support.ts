@@ -3,10 +3,11 @@ import { chmod, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import type { TerminalScriptOptions } from './scripts'
+import { shellArgument } from './privileged'
 
 export async function scriptFixture() {
   const parent = resolve(
-    '.context/boat-native-remote-workspaces/owner-fix-round-2/script-runs',
+    '.context/boat-native-remote-workspaces/milestone-5/orchestrator-round-1/terminal-state/script-runs',
   )
   await mkdir(parent, { recursive: true })
   const root = await mkdtemp(`${parent}/run-`)
@@ -33,8 +34,16 @@ printf 'started\\n' > '${root}/started'
 `,
   )
   await chmod(terminal, 0o700)
+  const repository = `${root}/workspace repository`
+  const environmentFile = `${root}/environment.sh`
+  await mkdir(repository)
+  await writeFile(
+    environmentFile,
+    `CONDUCTING_REPOSITORY_DIR=${shellArgument(repository)}\nCONDUCTING_LAUNCH_TEST='workspace environment'\n`,
+  )
   const options: TerminalScriptOptions = {
     runtimeDirectory: `${root}/runtime folder`,
+    environmentFile,
     owner: String(process.getuid?.()),
     group: String(process.getgid?.()),
     entropyCommand: [entropy, '-An', '-v', '-N32', '-tx1', entropyInput],
@@ -46,6 +55,8 @@ printf 'started\\n' > '${root}/started'
     calls,
     entropyInput,
     capturedEntropy,
+    repository,
+    terminal,
     readPassword: () =>
       readFile(`${options.runtimeDirectory}/password`, 'utf8'),
   }

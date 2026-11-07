@@ -27,6 +27,10 @@ export class BoatTransport {
     idempotencyKey?: string,
   ): Promise<Record<string, unknown>> {
     const { method, path } = boatRoute(route)
+    const command =
+      route.operation === 'command' ||
+      route.operation === 'startCommand' ||
+      route.operation === 'commandStatus'
     const headers = new Headers({
       Authorization: `Bearer ${this.key}`,
       Accept: 'application/json',
@@ -49,7 +53,7 @@ export class BoatTransport {
           method,
           headers,
           body: body === undefined ? undefined : JSON.stringify(body),
-          redirect: 'error',
+          redirect: 'manual',
           signal: AbortSignal.timeout(
             route.operation === 'command'
               ? 610_000
@@ -67,14 +71,13 @@ export class BoatTransport {
       let budget = RESPONSE_BUDGET
       if (response.ok && route.operation === 'readFile') {
         budget = fileResponseBudget(route.path, route.maxBytes)
-      } else if (response.ok && route.operation === 'command') {
+      } else if (response.ok && command) {
         budget = COMMAND_RESPONSE_BUDGET
       }
       value = await readBoundedJson(response.body, budget)
     } catch (error) {
       if (error instanceof BodyBudgetExceeded) {
         if (response.ok && route.operation === 'readFile') throw error
-        const command = route.operation === 'command'
         throw new HttpError(
           502,
           command ? 'command_output_too_large' : 'sandbox_response_too_large',

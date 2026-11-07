@@ -16,6 +16,6 @@
   - A retry of the test or a skip, because it hides a possible defect of the keyboard scroll, and only the user can approve it.
   - A longer wait, because the top did not move at all, so more time does not help.
 - **Wider fix:** None. The testing rules already say how to handle a flaky test.
-- **Previous examples:** None found.
+- **Previous examples:** the first Mac CI run of PR #31 on 7 November 2026 failed the same test, and its rerun passed.
 - **Recommendation:** A. Only the cause tells whether the test or the product is wrong.
 - **Action:** fix after merge, apply A, because the test is outside the diff of the branch that met it.

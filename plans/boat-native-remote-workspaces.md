@@ -3088,6 +3088,8 @@ Added on 6 November 2026 from the merge of Milestone 15a.
 - **Recommendation:** A now, and C as a follow-up item.
 - **Chosen:** C, by the user on 6 November 2026. The Milestone 15a branch
   makes the change before it merges. The time limit stays at 5 seconds.
+  Decision 113 replaced the 5-second limit with 15 seconds on 7 November
+  2026.
 
 ### 86. Decide whether a preview ID can come back
 
@@ -3193,6 +3195,18 @@ Added on 6 November 2026 from finding 6 of the Milestone 5 work.
   writes it nowhere. The Worker revokes it right after the clone, before
   any repository code runs. Milestone 5 applies it, and the access
   protocol states it.
+- **Risk accepted by the user on 7 November 2026:** the user chose D for
+  item 107, from finding 21. The native Git copy stays, and the code does
+  not change. The user accepts this remaining risk:
+  - A build sandbox starts from the last org image. A program with root
+    access that an earlier install left in that image can read the clone
+    token of a later copy.
+  - That token can only read its own repository, which the image already
+    holds. The Worker revokes it when the copy ends.
+  - So the record of the choice above covers only what the Worker, Git,
+    and the build do.
+  - The access protocol, the image README, and the lifecycle README now
+    state this risk.
 
 ### 91. Show the live start steps of a new workspace
 
@@ -3442,6 +3456,210 @@ review, and the user's question "why do we reject these events?".
   Working state, no Stop, and a tool that was running shows as stopped.
   The workspace refuses only an event of a turn that never started.
   Milestone 7s builds the workspace side, and Milestone 8j the chat side.
+
+### 105. Decide whose login runs a shared session
+
+Added on 7 November 2026 from round 2 finding 36 of the Milestone 7r
+review.
+
+- **Background:** Each turn runs on its sender's login (decision 49).
+  Another member's message during a turn waits inside that turn, and the
+  runner then continues the same turn on the other member's login. The
+  turn ends with one result, so one member's failure or Stop drops the
+  other member's waiting message. Each change of login also rewrites the
+  prompt cache, unless both keys belong to one Anthropic workspace or
+  OpenAI organization. Conductor runs each chat on the workspace owner's
+  credentials.
+- **Options:**
+  - **A.** Keep mixed turns.
+  - **D.** One sender per turn: another member's message becomes their own
+    queued turn.
+  - **E.** Keep mixed turns, and queue the messages that never reached the
+    agent after a failure or a Stop.
+  - **F.** One login per session, the login of the member who started it.
+    Every member's message joins the running turn.
+  - **G.** F for a starter with an API key, and D for a starter with a
+    Claude subscription.
+  - **H.** One login per workspace, the owner's, as Conductor does, with a
+    choice to steer or queue each message.
+- **Recommendation:** D.
+- **Chosen:** D first, then F, by the user on 7 November 2026, after the
+  questions about the cache and about Conductor. Each session runs on the
+  login of its starter, so the login never changes inside a session, and
+  other members spend the starter's login. This changes decision 49 for
+  sessions. Anthropic's rules for hosted products ask each end user to
+  sign in with their own credentials, so sharing a Claude subscription
+  stays a risk. The user proposed a later flag: when the starter's login
+  cannot be used, or the starter does not allow its re-use, a member's
+  message opens a new session on the member's own login, with a link to
+  the first session. Milestone 7w builds F.
+
+### 106. Run the runner checks in the complete gate
+
+Added on 7 November 2026 from the merge of Milestone 7r.
+
+- **Background:** The complete gate did not run the runner typecheck and
+  tests. The Milestone 7s merge then broke the runner typecheck, and no
+  gate reported it.
+- **Options:**
+  - **A.** Add them to `npm run check`, so CI runs them too.
+  - **B.** A separate CI job for the runner.
+  - **C.** Change nothing.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 7 November 2026. Milestone 7t adds the
+  checks, because it makes the runner typecheck pass again.
+
+### 107. Accept the clone token risk of refresh builds
+
+Added on 6 November 2026 from round 3 finding 21 of the Milestone 5
+review.
+
+- **Background:** A refresh build starts from the last org image. A
+  program that an earlier install left there can read the clone token of
+  a later copy (decision 90).
+- **Options:**
+  - **D.** Keep the design, and state the risk.
+  - **E.** Start every build and refresh from the clean base image.
+  - **A.** Copy the repositories in a second, clean cloud computer.
+  - **F.** A Git proxy in the Worker.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 7 November 2026. Milestone 5 states the
+  risk in the access protocol. The user asked to keep E for later:
+  `plans/follow-ups/org-image-clean-builds.md`.
+
+### 108. Merge Milestone 5 without a third fix round
+
+Added on 6 November 2026 from round 3 of the Milestone 5 review.
+
+- **Options:**
+  - **A.** A third fix round for findings 22, 23, and 24.
+  - **B.** Merge now, and record the three as follow-up items.
+- **Recommendation:** A.
+- **Chosen:** B, by the user on 7 November 2026. The follow-up items are
+  `creation-admission-restart`, `completed-retry-first-message`, and
+  `lifecycle-race-tests-storage`.
+
+### 109. Report a file read or a save that fails
+
+Added on 7 November 2026 from the review of Milestone 7r.
+
+- **Background:** A failed file read or save stops its runner step. A
+  turn can then stay running with no agent, and a new connection gets no
+  ready signal.
+- **Options:**
+  - **A.** Exit the runner after such an error.
+  - **B.** End each step with the events that exist now.
+  - **C.** As B, and a failed end sends a failure.
+  - **D.** As B, and the runner contract marks data that the runner could
+    not read.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 7 November 2026. Milestone 7v builds it.
+
+### 110. Limit the size of the always-allowed Mac commands
+
+Added on 7 November 2026 from the review of Milestone 15f.
+
+- **Background:** The Mac saves each always-allowed command. This Mac
+  reads the list through the Worker in one device message of at most
+  1,000,000 bytes, so a longer list cannot load.
+- **Options:**
+  - **A.** Change nothing more.
+  - **C.** Refuse a save above a fixed limit.
+  - **B.** Split the reply into several messages, and join them in the
+    Worker.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 7 November 2026. The user asked whether
+  the limit can be 10 MB, because the list lives on the Mac. One device
+  message carries the list, so C allows at most about 900,000 bytes, and
+  10 MB needs option B. Milestone 15k builds C with about 900,000 bytes,
+  unless the user chooses B.
+
+### 111. Keep one recovery test for device commands
+
+Added on 7 November 2026 from the review of Milestone 15f.
+
+- **Options:**
+  - **A.** Keep the one recovery test.
+  - **D.** Fail each step of the publication path in turn.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 7 November 2026.
+
+### 112. Find unused exports later
+
+Added on 7 November 2026 from the review of Milestone 15f.
+
+- **Options:**
+  - **A.** Change nothing now.
+  - **C.** Add an unused-export check, such as knip, to the gate.
+- **Recommendation:** A.
+- **Chosen:** A now, and C as a later follow-up, by the user on 7 November
+  2026: `plans/follow-ups/unused-export-check.md`.
+
+### 113. Give the Worker tests a longer hang guard
+
+Added on 7 November 2026.
+
+- **Background:** Worker harness tests take about 2.5 seconds alone. In
+  the complete gate, they passed the 5-second limit of decision 85.
+- **Options:**
+  - **A.** Fix each slow test when it fails.
+  - **B.** A 15-second limit in one setting.
+  - **C.** Keep 5 seconds, and speed up each test over about 1.7 seconds.
+  - **D.** A faster harness reset.
+- **Recommendation:** C.
+- **Chosen:** B now, and C as a later follow-up, by the user on 7 November
+  2026. `vitest.config.ts` sets 15 seconds for each test of the root
+  config. Follow-up item: `plans/follow-ups/harness-test-speed.md`.
+
+### 114. Accept that tool processes keep a login after the turn
+
+Added on 7 November 2026 from the review of Milestone 7u.
+
+- **Background:** A program that a tool of the agent starts gets a copy
+  of the login of its turn, and a server keeps it after the turn ends.
+- **Options:**
+  - **A.** Accept the risk, and state it in the access protocol.
+  - **B.** Turn on the Claude program's setting that removes the login
+    from tool processes.
+  - **C.** Give the Claude agent its login through a private channel, not
+    the environment.
+  - **D.** Stop all of the agent's programs at the end of each turn.
+- **Recommendation:** C.
+- **Chosen:** A now, and C as a later follow-up, by the user on 7 November
+  2026. The access protocol states the risk. Follow-up item:
+  `plans/follow-ups/agent-login-in-tool-processes.md`.
+
+### 115. Decide what a member's linked session contains
+
+Added on 7 November 2026 from the user's proposal for decision 105 F.
+
+- **Background:** With decision 105 F, a session runs on its starter's
+  login. When that login cannot be used, or the starter does not allow
+  its re-use, a member's message opens a new session tab on the member's
+  own login, with a link to the first session.
+- **Options:**
+  - **A.** A new, empty session with a link to the first session.
+  - **B.** As A, but a fork that continues the first conversation.
+  - **C.** The first session continues on the member's login.
+- **Recommendation:** B.
+- **Chosen:** A, by the user on 7 November 2026. Milestone 7w builds it.
+
+### 116. Decide when "no re-use" arrives, and its default
+
+Added on 7 November 2026 from the user's proposal for decision 105 F.
+
+- **Background:** With decision 105 F, other members spend the starter's
+  login. Anthropic's consumer terms forbid making a Claude account
+  available to anyone else. An API key owner may let their own team use
+  the key.
+- **Options:**
+  - **A.** Add the setting later, off by default.
+  - **B.** Add it now: on by default for a Claude subscription, off for an
+    API key.
+  - **C.** Add it now, off by default for every login.
+- **Recommendation:** B.
+- **Chosen:** A now, and B as a later follow-up, by the user on 7 November
+  2026: `plans/follow-ups/login-reuse-setting.md`.
 
 ## Design
 
@@ -4384,25 +4602,33 @@ Verification evidence: `.context/boat-native-remote-workspaces/milestone-4h/veri
 
 Depends on: 4a
 
-- [ ] Build the org image from the install script and the chosen
+- [x] Build the org image from the install script and the chosen
       repositories, keep the build history, and refresh the image after
-      pushes.
-- [ ] Create a workspace: fork, labels, branch, and workspace token.
-- [ ] Add the workspace Durable Object: tabs, idle stop, and resume on
-      open.
-- [ ] Record each start step with its time in the workspace Durable
+      pushes. Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Create a workspace: fork, labels, branch, and workspace token.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Add the workspace Durable Object: tabs, idle stop, and resume on
+      open. Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Record each start step with its time in the workspace Durable
       Object, and push it to the open tabs, as decision 20 says.
-- [ ] Update the workspace state from the runner's reports, and read the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Update the workspace state from the runner's reports, and read the
       sandbox state from Boat's API when the runner does not report.
-- [ ] Add the daily refresh timer and the 30-minute push limit.
-- [ ] Test the lifecycle against the fake Boat server.
-- [ ] Near day 14 of a stop, start the cloud computer briefly and stop it
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Add the daily refresh timer and the 30-minute push limit.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Test the lifecycle against the fake Boat server.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Near day 14 of a stop, start the cloud computer briefly and stop it
       again, as decision 43 says.
-- [ ] Count user activity as decision 29 says, and stop after 30 minutes
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Count user activity as decision 29 says, and stop after 30 minutes
       without activity or a running agent turn.
-- [ ] Add the git credential helper to the org image, and the Worker's
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
+- [x] Add the git credential helper to the org image, and the Worker's
       token route behind the workspace token. The route returns a fresh
       GitHub user token of the current turn's sender, as decision 50 says.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5`.
 
 ## Milestone 5a: Pinned Node runtime
 
@@ -4420,6 +4646,28 @@ Apply decision 69 C.
 - [ ] Test with a stand-in runtime under the root folder and a failing
       `node` first on the search path. Say in the README how to update the
       version and the checksum.
+
+## Milestone 5b: Lifecycle fixes from the reviews
+
+Depends on: 5
+
+Apply the `fix after merge` items of the Milestone 5 review and of the
+build logs. Added on 7 November 2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/creation-admission-restart.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/completed-retry-first-message.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-race-tests-storage.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-resource-intents.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/build-log-total-size.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/build-log-follower.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/script-command-type.md`, and
+      delete that item.
 
 ## Milestone 6: App shell and workspaces
 
@@ -4638,10 +4886,41 @@ Depends on: 7r, 7s
 
 Apply the runner half of decision 96 E.
 
-- [ ] Answer the fresh-report command of Milestone 7s with a full report
+Agent calls on 7 November 2026, within decision 96 E:
+
+- Run refresh reports in the existing file scan queue. Reason: full parts
+  and tree deltas must keep their revision order.
+- Keep separate tree and changes comparison states. Reason: a refresh of
+  one kind must not hide a later update of the other kind.
+- Save the last actual start and name reports. Reason: confirmations and
+  restarts must not remove the data that a replacement needs.
+- Save each completed refresh ID with its last response event. Reason:
+  a restart after that save must not answer the same request twice.
+- Process commands after the welcome while the initial scan runs.
+  Reason: a refresh request can arrive before `runner.ready`.
+- Select the current start or name report and append its filtered copy
+  in one store operation. Reason: a pending new report must not be
+  replaced by an older copy.
+
+User choice on 7 November 2026, item 106 A: add the runner typecheck and
+tests to the complete gate, and install the runner packages in CI.
+The alternatives were a separate CI job for runner or shared-contract
+changes, or no gate change. Reason for A: a shared-contract change in any
+milestone can break the runner. Delete the completed follow-up item.
+
+Verification evidence: `.context/boat-native-remote-workspaces/7t/verification.md`.
+
+- [x] Answer the fresh-report command of Milestone 7s with a full report
       of the asked kind: the file list and the changes list in numbered
       parts, the start steps, or the last workspace name.
-- [ ] Test each kind, and a command during a running turn.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7t`.
+- [x] Test each kind, a command during a running turn, and a command
+      before `runner.ready`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7t`.
+- [x] Apply item 106 A to the gate and CI. Update its command docs,
+      delete `plans/follow-ups/runner-checks-in-gate.md`, and compare
+      the gate time before and after the change.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7t`.
 
 ## Milestone 7u: Runner fixes from the review
 
@@ -4708,6 +4987,57 @@ long after `SIGTERM` gets `SIGKILL`. Reason: the pinned SDK also waits 5
 seconds between `SIGTERM` and `SIGKILL`. The value also leaves time to save
 the turn ends within the 15-second stop window of the service. The owner
 chose one fixed kill limit in review finding 2 B of PR #30.
+
+## Milestone 7w: One login per session
+
+Tags: ui
+
+Depends on: 7t
+
+Apply decision 105 F. Added on 7 November 2026. Merge the primary
+branch after Milestone 8k merges, before the chat changes.
+
+- [ ] Run each turn of a session on the login of the member who started
+      the session, whoever sends the message. A message of any member
+      during a running turn joins that turn at once. Update the chat
+      protocol and the section "Agent logins in a sandbox" of the access
+      protocol, and add a note to decision 49.
+- [ ] Remove the login switch inside a turn from the runner, so that a
+      session never changes its login.
+- [ ] Show in the composer whose login the session uses. When the
+      starter's login cannot be used, such as after the starter leaves the
+      org or removes the login, a member's message opens a new, empty
+      session on the member's own login, with a link to the first session
+      (decision 115 A). Draw it in the chat mockups first, and compare the
+      screens with them.
+- [ ] Test a second member's message during a turn, and a starter whose
+      login cannot be used, in two tabs. Delete
+      `plans/follow-ups/one-sender-per-turn.md`.
+
+## Milestone 7v: Reports after a failed file read
+
+Tags: ui
+
+Depends on: 7w
+
+Apply decision 109 D, and the shutdown fix that the review of Milestone
+7u deferred. Added on 7 November 2026.
+
+- [ ] End each runner step after a failed file read or save: a failed
+      turn start sends `turn.failed` with a cause, a failed turn end sends
+      its end with a mark that the runner could not read the changed
+      files, and a failed scan after a connect still sends `runner.ready`
+      with a mark that the tree could not be read. A later scan sends the
+      tree. Add the mark to `src/shared/runner.ts`, the fakes, the
+      workspace, and the chat and files protocol docs.
+- [ ] Draw the mark in the mockups: a finished turn whose changed files
+      could not be read, and a Files panel whose tree could not be read.
+      Then build both screens, and compare each with its mockup.
+- [ ] Save each turn when the runner accepts its command, so that a
+      shutdown, Stop, and the next start end it once, as option D of
+      `plans/follow-ups/runner-shutdown-pending-turn.md` says. Delete that
+      item.
+- [ ] Delete `plans/follow-ups/runner-file-and-save-errors.md`.
 
 ## Milestone 8: Chat UI
 
@@ -4871,13 +5201,47 @@ Depends on: 7s, 8j
 
 Apply the browser half of decision 96 E.
 
-- [ ] Show a notice beside the affected data only for a failed repair: in
+Agent design calls on 7 November 2026, within decision 96 E:
+
+- Keep each notice with the existing owner of its data. The Files store
+  keeps All files and Changes. The workspace screen, which shows the name
+  and the start steps, keeps theirs in a separate `HeaderNotices` store.
+  Reason: each owner reads the full report that clears its notice in the
+  same stream order as its data.
+- Rebuild the notices from the stored history of the workspace stream,
+  not from the history of a session. Reason: these markers belong to no
+  session, and the chat keeps no marker without a session.
+- Dismiss hides a header notice in the mounted view only. It neither
+  clears nor acknowledges the failed repair, so a new view or a new tab
+  shows the notice again. Reason: only a newer complete report clears a
+  failure, and a Dismiss for every tab would need a new route.
+- Only a later complete report of the same kind in the stream clears its
+  notice. A tree delta, a report of another kind, `workspace.updated`, and
+  a route reply clear nothing. Reason: only the stream order shows that a
+  report is newer, and `workspace.updated` can carry the name from before
+  the loss.
+- A further failure of a failed kind is the same failure. It keeps the age
+  of the first failure, and a dismissed notice stays hidden, until a
+  complete report of that kind. A failure after that report shows again.
+  Reason: the data stays out of date from the first failure, and the
+  notice does not come back after each failure.
+- Add two kinds to `UnavailableData` in `lostCopy.ts`: "The latest list of
+  all files is unavailable" and "The latest start steps are unavailable".
+  Reason: the mockups had words only for the changes list and the name.
+
+Evidence: `.context/boat-native-remote-workspaces/8l/ui-report.md` and
+`.context/boat-native-remote-workspaces/8l/browser-behavior.json`.
+
+- [x] Show a notice beside the affected data only for a failed repair: in
       the Files panel for the file list and the changes list, and below
       the workspace header for the start steps and the workspace name. A
       newer complete report clears it.
-- [ ] Keep the notices in the memory of the tab. A tab that opens later
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8l`.
+- [x] Keep the notices in the memory of the tab. A tab that opens later
       reads them from the stored history.
-- [ ] Compare each screen with its mockup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8l`.
+- [x] Compare each screen with its mockup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8l`.
 
 ## Milestone 8i: Chat path wiring
 
@@ -4896,6 +5260,28 @@ Depends on: 5, 6, 7, 7r, 8, 8j
       place.
       Moved from Milestone 7r on 6 November 2026, because it needs a real sandbox and real logins.
       Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+
+## Milestone 8m: Chat fixes from the reviews
+
+Depends on: 7w, 8i, 8k
+
+Apply the `fix after merge` items of the chat. Added on 7 November
+2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/chat-late-event-mark.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/chat-refused-turn-end.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/agent-event-rollback-test.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/chat-client-stale-records.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/chat-history-read-memory.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/chat-stop-after-failed-history.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/workspace-read-mark-retry.md`, and
+      delete that item.
 
 ## Milestone 16a: First deployment
 
@@ -4934,6 +5320,18 @@ Milestone 8i or 15i wires it to its backend.
 - [x] Build the All and Changes lists, the Markdown and code preview,
       and the diff of a changed file. Branch: `conductor/boat-native-remote-workspaces-milestone-10`.
 - [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-10`.
+
+## Milestone 10a: Files fixes from the reviews
+
+Depends on: 9, 10
+
+Apply the `fix after merge` items of the files area. Added on
+7 November 2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/file-read-size-refusals.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/markdown-emphasis-delimiters.md`, and
+      delete that item.
 
 ## Milestone 11: Terminal, previews, and desktop backend
 
@@ -5019,6 +5417,17 @@ Agent design calls on 6 November 2026:
 
 Verification evidence: `.context/boat-native-remote-workspaces/verification.md`.
 
+## Milestone 11b: One access check for open connections
+
+Depends on: 7, 11
+
+Apply option B of the follow-up item. Added on 7 November 2026. Its
+option C, the desktop proxy and the shell that survives its socket,
+waits for the user.
+
+- [ ] Apply the recorded option of `plans/follow-ups/shared-session-check-for-connections.md`, and
+      delete that item.
+
 ## Milestone 12: Terminal, previews, and desktop UI
 
 Tags: ui
@@ -5054,6 +5463,20 @@ Milestone 8i or 15i wires it to its backend.
 - [x] Build the pull request bar of the right column, the compact pull
       request row on phones, and the Checks tab. Branch: `conductor/boat-native-remote-workspaces-milestone-14`.
 - [x] Compare it with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-14`.
+
+## Milestone 13a: GitHub fixes from the reviews
+
+Depends on: 13, 14
+
+Apply the `fix after merge` items of the GitHub banner. Added on
+7 November 2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/github-banner-freshness.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/github-delivery-receipt-size.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/shared-hook-for-workspace-stores.md`, and
+      delete that item.
 
 ## Milestone 15: Agent tools
 
@@ -5099,6 +5522,20 @@ Milestone 8i or 15i wires it to its backend.
       as decision 57 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
 - [x] Build the org members page and workspace reassignment. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
 - [x] Compare each screen with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-15c`.
+
+## Milestone 15l: Members fixes from the reviews
+
+Depends on: 15a, 15c
+
+Apply the `fix after merge` items of the members area. Added on
+7 November 2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/members-guarded-write-helper.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/members-tab-shared-dialog-state.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/members-yesterday-label-clock-changes.md`, and
+      delete that item.
 
 ## Milestone 15g: Email invitations
 
@@ -5187,6 +5624,39 @@ starts, and rename each name that they add.
 - [ ] Merge the primary branch last, and rename each new occurrence. Then
       a search for "conducting" finds only decision records and history.
 
+## Milestone 15k: Mac app follow-ups
+
+Depends on: 15j
+
+Apply decision 110 C and the fix-after-merge items of the Mac app. Added
+on 7 November 2026.
+
+- [ ] Before the Mac saves "Always allow", measure the saved list with
+      the new command. Above about 900,000 bytes, refuse the save with a
+      message, and still let Allow run the command once (decision 110).
+      Delete `plans/follow-ups/always-allow-size-limit.md`.
+- [ ] Apply the recorded option of each of these follow-up items, and
+      delete each item: `mac-command-result-after-stop`,
+      `mac-command-watchdog-alarm`, `mac-command-internal-payload-budget`,
+      `mac-approval-scroll-flake`, `desktop-renderer-tests-in-gate`, and
+      `local-dev-origin`.
+
+## Milestone 15m: Marketing and mockup fixes
+
+Depends on: 4f, 15j
+
+Apply the `fix after merge` items of the marketing site and the
+mockups. Added on 7 November 2026.
+
+- [ ] Apply the recorded option of `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/marketing-pictures-one-list.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/marketing-mockup-gaps.md`, and
+      delete that item.
+- [ ] Apply the recorded option of `plans/follow-ups/firna-ui-missing-parts.md`, and
+      delete that item.
+
 ## Milestone 15d: Marketing site
 
 Tags: ui
@@ -5217,9 +5687,9 @@ Build the Mac app as decision 62 says. No other milestone waits for it.
 - [x] Add `desktop/`, an Electron shell for macOS, as Mokly's
       `ts/desktop` does. It bundles the built web app and serves it from
       `conducting-app://desktop`. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
-- [ ] Give the window a hidden title bar with the native window buttons
+- [x] Give the window a hidden title bar with the native window buttons
       inset in the app's top bar, drag regions on the top bars, and the
-      reserved space that full screen drops, as decision 62 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+      reserved space that full screen drops, as decision 62 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15e-window`.
 - [x] Let the Worker accept the desktop origin in the `Origin` check, in
       CORS for the API, and for the session cookie. Hand off the GitHub
       sign-in from the browser to the app through the `conducting://`

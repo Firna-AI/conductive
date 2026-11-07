@@ -2,6 +2,7 @@ import { productName } from '../../docs/mockups/src/brand'
 import type { GitHubIdentity } from '../data/users'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError, isRecord } from '../http'
+import { parseGitHubTokens, type GitHubTokenBundle } from './github-token-data'
 
 const SIGN_IN_FAILED = 'GitHub sign-in failed. Start sign-in again.'
 
@@ -21,10 +22,19 @@ export class GitHubClient {
     verifier: string,
     env: AppEnv,
   ): Promise<AuthorizedGitHubIdentity> {
-    const token = await this.request(
+    return (await this.authorizeWithTokens(code, verifier, env)).profile
+  }
+
+  async authorizeWithTokens(
+    code: string,
+    verifier: string,
+    env: AppEnv,
+    now = Date.now(),
+  ): Promise<{ profile: AuthorizedGitHubIdentity; tokens: GitHubTokenBundle }> {
+    const value = await this.request(
       new Request('https://github.com/login/oauth/access_token', {
         method: 'POST',
-        redirect: 'error',
+        redirect: 'manual',
         signal: AbortSignal.timeout(30_000),
         headers: {
           Accept: 'application/json',
@@ -39,19 +49,16 @@ export class GitHubClient {
         }),
       }),
     )
-    if (
-      !isRecord(token) ||
-      typeof token.access_token !== 'string' ||
-      !token.access_token
-    ) {
+    const tokens = parseGitHubTokens(value, now)
+    if (!tokens) {
       throw new HttpError(502, 'github_sign_in_failed', SIGN_IN_FAILED)
     }
     const profile = await this.request(
       new Request('https://api.github.com/user', {
-        redirect: 'error',
+        redirect: 'manual',
         signal: AbortSignal.timeout(30_000),
         headers: {
-          Authorization: `Bearer ${token.access_token}`,
+          Authorization: `Bearer ${tokens.accessToken}`,
           Accept: 'application/vnd.github+json',
           'User-Agent': productName,
           'X-GitHub-Api-Version': '2022-11-28',
@@ -69,12 +76,15 @@ export class GitHubClient {
       throw new HttpError(502, 'github_sign_in_failed', SIGN_IN_FAILED)
     }
     return {
-      githubId: profile.id,
-      githubLogin: profile.login,
-      displayName: typeof profile.name === 'string' ? profile.name : null,
-      avatarUrl:
-        typeof profile.avatar_url === 'string' ? profile.avatar_url : null,
-      verifiedEmails: await this.verifiedEmails(token.access_token),
+      profile: {
+        githubId: profile.id,
+        githubLogin: profile.login,
+        displayName: typeof profile.name === 'string' ? profile.name : null,
+        avatarUrl:
+          typeof profile.avatar_url === 'string' ? profile.avatar_url : null,
+        verifiedEmails: await this.verifiedEmails(tokens.accessToken),
+      },
+      tokens,
     }
   }
 
@@ -88,7 +98,7 @@ export class GitHubClient {
         new Request(
           `https://api.github.com/user/emails?per_page=100&page=${page}`,
           {
-            redirect: 'error',
+            redirect: 'manual',
             signal: AbortSignal.timeout(30_000),
             headers: {
               Authorization: `Bearer ${accessToken}`,

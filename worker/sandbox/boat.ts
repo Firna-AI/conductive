@@ -1,15 +1,25 @@
 import type { HttpFetch } from '../env'
+import { ProviderError } from './errors'
 import { readSandboxFile } from './file-read'
-import { readAccount, readCommand, readSandbox, readSnapshot } from './parsers'
+import {
+  readAccount,
+  readCommand,
+  readCommandStatus,
+  readSandbox,
+  readSnapshot,
+  readStartedCommand,
+} from './parsers'
 import type {
   BoatAccount,
-  SandboxProvider,
-  SandboxStart,
+  CommandOffsets,
+  CommandStatus,
   PrivatePort,
   PortMode,
   SandboxDesktop,
+  SandboxProvider,
+  SandboxStart,
+  StartedCommand,
 } from './provider'
-import { ProviderError } from './errors'
 import { BoatTransport } from './transport'
 
 export class BoatClient implements SandboxProvider {
@@ -124,6 +134,7 @@ export class BoatClient implements SandboxProvider {
           type: 'default',
           noEnv: true,
           env: input.env ?? {},
+          labels: input.labels,
           ttlSeconds: input.ttlSeconds,
         },
         input.idempotencyKey,
@@ -165,6 +176,7 @@ export class BoatClient implements SandboxProvider {
           type: 'default',
           noEnv: true,
           env: input.env ?? {},
+          labels: input.labels,
           ttlSeconds: input.ttlSeconds,
         },
         input.idempotencyKey,
@@ -210,6 +222,34 @@ export class BoatClient implements SandboxProvider {
         { operation: 'command', sandboxId },
         { command, timeoutSeconds: 600 },
       ),
+    )
+  }
+
+  async startCommand(
+    sandboxId: string,
+    command: string,
+  ): Promise<StartedCommand> {
+    return readStartedCommand(
+      await this.transport.request(
+        { operation: 'startCommand', sandboxId },
+        { command, detached: true },
+      ),
+    )
+  }
+
+  async getCommandStatus(
+    sandboxId: string,
+    processId: number,
+    offsets: CommandOffsets,
+  ): Promise<CommandStatus> {
+    return readCommandStatus(
+      await this.transport.request({
+        operation: 'commandStatus',
+        sandboxId,
+        processId,
+        offsets,
+      }),
+      processId,
     )
   }
 }

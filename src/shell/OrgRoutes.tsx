@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { SearchX } from 'lucide-react'
 import { EmptyState } from '../../docs/mockups/src/components/common/EmptyState'
 import type { Route } from '../app/router'
@@ -12,6 +12,7 @@ import { OrgRail, type RailCurrent } from './layout/OrgRail'
 import { DeletedOrg, OrgHome } from './list/OrgHome'
 import { HomeList, ListHeader } from './list/HomeList'
 import { Sidebar, type ListCurrent } from './list/Sidebar'
+import { useMacApp } from './mac/mac-app'
 import { NewWorkspaceScreen } from './new-workspace/NewWorkspaceScreen'
 import { OrgSettingsScreen } from './settings/OrgSettingsScreen'
 import { ActionButton } from './ui/actions'
@@ -108,9 +109,14 @@ function listCurrent(route: OrgRoute): ListCurrent {
 /** The screens of one org, in the desktop frame or the phone frame. */
 export function OrgRoutes(props: { route: OrgRoute; user: User }) {
   const app = useApp()
+  const chrome = useMacApp()
   const phone = useViewport() === 'phone'
   const org = useStore(app.orgs).find((item) => item.id === props.route.orgId)
   const current: RailCurrent = { org: props.route.orgId }
+  // The account of the Mac app keeps the sidebar of the last org.
+  useEffect(() => {
+    chrome?.openOrg(props.route.orgId)
+  }, [chrome, props.route.orgId])
   if (!org) {
     const page = <NotAvailable title="This org is not available" />
     if (phone) return <PhoneFrame>{page}</PhoneFrame>

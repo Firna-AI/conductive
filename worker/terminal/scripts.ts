@@ -4,6 +4,7 @@ export const TERMINAL_RUNTIME = '/run/conducting-terminal'
 
 export interface TerminalScriptOptions {
   runtimeDirectory: string
+  environmentFile: string
   owner: string
   group: string
   entropyCommand: readonly string[]
@@ -12,6 +13,7 @@ export interface TerminalScriptOptions {
 
 export const terminalScriptDefaults: TerminalScriptOptions = {
   runtimeDirectory: TERMINAL_RUNTIME,
+  environmentFile: '/run/ascii-secrets/env.sh',
   owner: 'user',
   group: 'user',
   entropyCommand: ['od', '-An', '-v', '-N32', '-tx1', '/dev/urandom'],
@@ -59,6 +61,10 @@ export function launcherScript(
 ): string {
   return `#!/bin/sh
 set -eu
+set -a
+. ${shellArgument(options.environmentFile)}
+set +a
+cd "$CONDUCTING_REPOSITORY_DIR"
 password_file=${shellArgument(`${options.runtimeDirectory}/password`)}
 ${validation}
 valid_password || exit 1

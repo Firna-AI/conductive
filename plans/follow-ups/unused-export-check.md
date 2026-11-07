@@ -1,7 +1,7 @@
 # Unused exports reach the merged code
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-07, from PR #23, branch `conductor/boat-native-remote-workspaces-milestone-15f`, the wider fix C of round 1 finding 9. The user sees it as item 112.
 - **Location:** the complete gate in `package.json`.
 - **Reason:** the fix adds a check to the gate and a dependency.
@@ -17,4 +17,4 @@
 - **Wider fix:** C.
 - **Previous examples:** PR #23 finding 9.
 - **Recommendation:** A, until a second case shows that name searches miss more.
-- **Action:** ask the user, because C adds a gate and a dependency.
+- **Action:** fix after merge, apply C, because the user chose A now and C as a later follow-up on 7 November 2026 (decision 112).

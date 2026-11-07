@@ -112,6 +112,18 @@ export function parseWorkspaceMessage(value: unknown): WorkspaceToRunner {
     }
   }
   const commandId = string(input.commandId)
+  if (type === 'report.refresh') {
+    return {
+      type,
+      commandId,
+      kind: oneOf(input.kind, [
+        'files.snapshot',
+        'changes.updated',
+        'start.updated',
+        'workspace.title',
+      ]),
+    }
+  }
   const sessionId = string(input.sessionId)
   if (type === 'model') {
     return { type, commandId, sessionId, choice: parseChoice(input.choice) }

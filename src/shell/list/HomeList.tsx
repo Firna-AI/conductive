@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Check, ChevronDown, Plus } from 'lucide-react'
+import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/screens/WorkspaceListScreen.module.css'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp } from '../context'
+import { useMacBar } from '../mac/mac-app'
 import { AppLink } from '../ui/AppLink'
 import { OrgTile, PersonAvatar } from '../ui/Avatars'
 import { Sheet } from '../ui/Sheet'
@@ -83,8 +85,9 @@ export function ListHeader(props: {
   settings: boolean
 }) {
   const [open, setOpen] = useState(false)
+  const bar = useMacBar()
   return (
-    <header className={styles.header}>
+    <header className={classes(styles.header, bar)}>
       <button
         aria-expanded={open}
         aria-haspopup="dialog"

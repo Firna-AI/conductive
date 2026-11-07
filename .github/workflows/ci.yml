@@ -33,6 +33,7 @@ jobs:
         run: |
           npm ci
           ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm --prefix desktop ci
+          npm ci --prefix runner
 
       - name: Run complete gate
         run: npm run check
