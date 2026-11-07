@@ -5,7 +5,8 @@ import type { ChatTransaction } from './store'
 import type { PendingCommand, StoredTurn } from './types'
 
 type TurnEnd =
-  | { state: 'stopped' | 'failed' }
+  | { state: 'stopped' }
+  | { state: 'failed'; retryMessageId?: string }
   | { state: 'finished'; randomId: () => string }
 
 /** Owns the active turn and its stored chain of waiting turns. */
@@ -68,6 +69,11 @@ export class TurnLifecycle {
       if (continuation) {
         continuation.nextTurnId = following
         await this.transaction.saveTurn(continuation)
+        if ((await this.transaction.newestTurn(this.session.id)) === turn.id)
+          await this.transaction.saveNewestTurn(
+            this.session.id,
+            continuation.id,
+          )
         following = continuation.id
       }
     }
@@ -76,6 +82,11 @@ export class TurnLifecycle {
     await this.removeCommands(turn.id)
     await this.transaction.saveTurn(turn)
     if (this.session.activeTurnId === turn.id) {
+      this.session.retryMessageId =
+        end.state === 'failed' &&
+        (await this.transaction.newestTurn(this.session.id)) === turn.id
+          ? (end.retryMessageId ?? null)
+          : null
       this.session.activeTurnId = turn.closeAfterStop ? null : following
       if (turn.closeAfterStop) {
         this.session.closedAt = this.transaction.now

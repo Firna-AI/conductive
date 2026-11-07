@@ -55,7 +55,7 @@ official `node-v<version>-linux-x64.tar.gz` archive. The
 gives that digest. The module derives these values from `version`:
 
 - The download URL: `https://nodejs.org/dist/v<version>/node-v<version>-linux-x64.tar.gz`.
-- The version folder: `/opt/conducting/runtime/node-v<version>-linux-x64`.
+- The version folder: `/opt/conductive/runtime/node-v<version>-linux-x64`.
 - The Node executable: `bin/node` in the version folder.
 
 `install-runtime.sh` downloads nothing when the version folder already
@@ -103,13 +103,13 @@ when the copy ends, as
 says.
 
 The software step of a build calls `installImageSoftware`. It writes the
-scripts and the runner unit of this folder to `/opt/conducting/staged/`.
+scripts and the runner unit of this folder to `/opt/conductive/staged/`.
 Each staged script holds the quoted full path of the private Node in place
-of `@CONDUCTING_NODE@`. Then the step runs these commands, in this order:
+of `@CONDUCTIVE_NODE@`. Then the step runs these commands, in this order:
 
 ```sh
-sudo -n sh /opt/conducting/staged/install-runtime.sh '<Node URL>' '<Node digest>' '<version folder>'
-sudo -n sh /opt/conducting/staged/install.sh '<archive URL>' '<SHA-256 digest>'
+sudo -n sh /opt/conductive/staged/install-runtime.sh '<Node URL>' '<Node digest>' '<version folder>'
+sudo -n sh /opt/conductive/staged/install.sh '<archive URL>' '<SHA-256 digest>'
 ```
 
 Boat runs commands as `user`, with passwordless sudo. The installers need
@@ -121,11 +121,11 @@ system permissions. The installed runner service runs as `user`.
    `sha256sum`.
 2. It unpacks the archive into a new folder, and checks `runner/main.mjs`.
    It writes the version of the private Node to the build log.
-3. It replaces `/opt/conducting/software` with the new folder, so no file
+3. It replaces `/opt/conductive/software` with the new folder, so no file
    of an older archive stays.
 4. It installs the runner start script, the git credential helper, and the
    runner's systemd unit.
-5. It makes `conducting-git-credential` the system credential helper of
+5. It makes `conductive-git-credential` the system credential helper of
    git, and sets `credential.useHttpPath`.
 6. It enables the runner service. It does not start it.
 
@@ -141,12 +141,12 @@ each resume, together with the org's env vars:
 | Name | Value |
 | --- | --- |
 | `WORKSPACE_TOKEN` | The workspace token. |
-| `CONDUCTING_WORKSPACE_ID` | The workspace ID. |
-| `CONDUCTING_MACHINE_ORIGIN` | The origin of the machine hostname. |
-| `CONDUCTING_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
-| `CONDUCTING_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
-| `CONDUCTING_TURN_ID` | Empty. The runner sets it for each agent process. |
-| `CONDUCTING_DISK_KEEPALIVE` | `1` in a disk retention restart, and `0` otherwise. |
+| `CONDUCTIVE_WORKSPACE_ID` | The workspace ID. |
+| `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
+| `CONDUCTIVE_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
+| `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
+| `CONDUCTIVE_TURN_ID` | Empty. The runner sets it for each agent process. |
+| `CONDUCTIVE_DISK_KEEPALIVE` | `1` in a disk retention restart, and `0` otherwise. |
 
 [Repository folders](../docs/protocol/repository-folders.md) gives the
 folder names and the variable names. The
@@ -167,12 +167,12 @@ its token from the [git credential helper](#git-credentials), as every
 other git operation does. At each create and each resume, the Worker then
 runs the command of `workspaceStartupCommand`:
 
-1. It writes the org's startup script to `/run/conducting/startup.sh`, with
+1. It writes the org's startup script to `/run/conductive/startup.sh`, with
    mode 600.
 2. It runs the script with Bash in the repository folder, with the
    variables.
 3. When the script succeeds, it writes the marker
-   `/run/conducting/workspace-ready`, and restarts the runner service.
+   `/run/conductive/workspace-ready`, and restarts the runner service.
 
 After that command succeeds, the Worker calls the terminal backend's start
 hook. That hook starts the terminal service. It caches the locally generated
@@ -181,9 +181,9 @@ password in encrypted form before the workspace becomes ready.
 The runner start script exits with success, and starts nothing, in these
 cases:
 
-- `CONDUCTING_DISK_KEEPALIVE` is `1`.
-- `WORKSPACE_TOKEN` or `CONDUCTING_WORKSPACE_ID` is empty.
-- The marker `/run/conducting/workspace-ready` does not exist.
+- `CONDUCTIVE_DISK_KEEPALIVE` is `1`.
+- `WORKSPACE_TOKEN` or `CONDUCTIVE_WORKSPACE_ID` is empty.
+- The marker `/run/conductive/workspace-ready` does not exist.
 
 So a build sandbox and a disk retention restart start no runner. The
 terminal backend needs its own marker under `/run`, which only its
@@ -201,15 +201,15 @@ automatic restart in its [README](../worker/terminal/README.md).
 ## Git credentials
 
 `install.sh` installs `git-credential-helper.sh` as
-`/usr/local/bin/conducting-git-credential`. This wrapper keeps the
-caller's `CONDUCTING_TURN_ID`, loads the sandbox variables, and runs
+`/usr/local/bin/conductive-git-credential`. This wrapper keeps the
+caller's `CONDUCTIVE_TURN_ID`, loads the sandbox variables, and runs
 `git-credential-helper.mjs` with the private Node.
 
 - The helper answers only a `get` request for `https` on `github.com`. It
   ignores every other request.
-- It posts to the git credential route at `CONDUCTING_MACHINE_ORIGIN`,
-  with the workspace token as a bearer token. It sends the turn ID in the
-  `X-Conducting-Turn-Id` header. It sends no request body. It refuses
+- It posts to the git credential route, `/v1/git/credential`, at
+  `CONDUCTIVE_MACHINE_ORIGIN`, with the workspace token as a bearer token. It sends the turn ID in the
+  `X-Conductive-Turn-Id` header. It sends no request body. It refuses
   redirects, and it stops after 30 seconds.
 - It gives git the token as the password of the user `x-access-token`.
 - The Worker returns a fresh GitHub user token of the sender of that turn.
@@ -234,7 +234,7 @@ The Worker's route is not wired to the machine hostname yet, as the
   only in encrypted form. Before it returns a start log, it masks the
   complete joined stdout and stderr with the saved env values. This hides
   a value across chunks and across the stdout and stderr boundary.
-- The terminal password stays in `/run/conducting-terminal/password`, with
+- The terminal password stays in `/run/conductive-terminal/password`, with
   mode 600. The terminal backend checks that it has 64 lowercase
   hexadecimal characters.
   The readiness command writes no password to output or command history.
@@ -247,7 +247,7 @@ Run the credential helper test with
 `npm run test -- worker/lifecycle/git-credential-helper.test.ts`. It
 installs copies of the shipped launcher and helper, with a saved variables
 file, in a temporary folder under `.context/`. It maps only
-`/opt/conducting` and `/run/ascii-secrets` to that folder, and it refuses
+`/opt/conductive` and `/run/ascii-secrets` to that folder, and it refuses
 a launcher that uses any other absolute path. It runs the launcher with
 `/bin/sh`, and checks the outgoing credential request and its turn ID.
 
@@ -258,7 +258,7 @@ They run the shipped scripts with local archives and a fake `curl`.
 - The Worker imports each file with Vite's `?raw` suffix. When you add a
   file here, also add it to `installImageSoftware`. Add it to `install.sh`
   too when a sandbox uses it after the build.
-- Start Node in a script only as `@CONDUCTING_NODE@`.
+- Start Node in a script only as `@CONDUCTIVE_NODE@`.
 - Keep each start script safe to run in a build sandbox. Of the variables
   in the table, a build sandbox has only the folder variables.
 
@@ -269,7 +269,7 @@ They run the shipped scripts with local archives and a fake `curl`.
 - [`install.sh`](install.sh): installs the runner archive, its service,
   and the git helper. Its arguments are the archive URL and the digest.
 - [`runner-start.sh`](runner-start.sh) and
-  [`conducting-runner.service`](conducting-runner.service): start the agent
+  [`conductive-runner.service`](conductive-runner.service): start the agent
   runner.
 - [The terminal backend](../worker/terminal/service.ts): owns the terminal
   install command, its service, and its workspace start hook.

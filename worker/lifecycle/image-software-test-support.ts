@@ -12,9 +12,9 @@ import { shellQuote } from './commands'
 import { imageNodeExecutable, imageRuntimeScript } from './image-runtime'
 
 export async function imageSoftwareFixture() {
-  const root = await mkdtemp(join(tmpdir(), "conducting software's "))
+  const root = await mkdtemp(join(tmpdir(), "conductive software's "))
   onTestFinished(() => rm(root, { recursive: true, force: true }))
-  const installation = join(root, 'opt/conducting')
+  const installation = join(root, 'opt/conductive')
   const staged = join(installation, 'staged')
   const commands = join(root, 'commands')
   const node = imageNodeExecutable(root)
@@ -31,7 +31,7 @@ export async function imageSoftwareFixture() {
     join(root, 'usr/local/bin'),
     join(root, 'etc/systemd/system'),
     join(root, 'run/ascii-secrets'),
-    join(root, 'run/conducting'),
+    join(root, 'run/conductive'),
   ]) {
     await mkdir(directory, { recursive: true })
   }
@@ -68,8 +68,8 @@ cp ${shellQuote(archive)} "$output"
   const program = `process.stdout.write(JSON.stringify({
   node: process.execPath,
   cwd: process.cwd(),
-  workspace: process.env.CONDUCTING_WORKSPACE_ID,
-  configuredNode: process.env.CONDUCTING_NODE,
+  workspace: process.env.CONDUCTIVE_WORKSPACE_ID,
+  configuredNode: process.env.CONDUCTIVE_NODE,
 }))\n`
   await writeFile(join(payload, 'main.mjs'), program)
   const packed = await imageTestProcess('/usr/bin/tar', [
@@ -81,18 +81,18 @@ cp ${shellQuote(archive)} "$output"
   ])
   if (packed.exitCode !== 0) throw new Error(packed.stderr)
   const roots = [
-    '/opt/conducting',
+    '/opt/conductive',
     '/usr/local/bin',
     '/etc/systemd/system',
     '/run/ascii-secrets',
-    '/run/conducting',
+    '/run/conductive',
   ]
   for (const file of [
     'install.sh',
     'runner-start.sh',
     'git-credential-helper.sh',
     'git-credential-helper.mjs',
-    'conducting-runner.service',
+    'conductive-runner.service',
   ]) {
     let source = await readFile(
       new URL(`../../image/${file}`, import.meta.url),
@@ -114,7 +114,7 @@ cp ${shellQuote(archive)} "$output"
     repository,
     commands,
     installation,
-    credentialHelper: join(root, 'usr/local/bin/conducting-git-credential'),
+    credentialHelper: join(root, 'usr/local/bin/conductive-git-credential'),
     install: () =>
       imageTestProcess(
         '/bin/sh',
@@ -131,11 +131,11 @@ cp ${shellQuote(archive)} "$output"
     start: async (values: Readonly<Record<string, string>>, ready = true) => {
       await writeFile(
         join(root, 'run/ascii-secrets/env.sh'),
-        Object.entries({ CONDUCTING_REPOSITORY_DIR: repository, ...values })
+        Object.entries({ CONDUCTIVE_REPOSITORY_DIR: repository, ...values })
           .map(([name, value]) => `${name}=${shellQuote(value)}\n`)
           .join(''),
       )
-      const marker = join(root, 'run/conducting/workspace-ready')
+      const marker = join(root, 'run/conductive/workspace-ready')
       if (ready) await writeFile(marker, '')
       else await rm(marker, { force: true })
       return imageTestProcess(

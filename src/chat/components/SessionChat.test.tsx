@@ -146,6 +146,7 @@ describe('session parts', () => {
       workspaceId: 'w',
       createdAt: 0,
       activeTurnId: null,
+      retryMessageId: null,
       choice: { agent, model: 'Model', effort: 'high' as const },
     }))
     const html = renderToStaticMarkup(

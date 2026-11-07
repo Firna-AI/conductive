@@ -15,7 +15,7 @@ it('serves the bundle and SPA routes without exposing files outside the bundle',
       stat: async () => ({ isFile: () => true }),
       read: async (path) =>
         new TextEncoder().encode(
-          path === '/bundle/app.js' ? 'script' : '<main>Conducting</main>',
+          path === '/bundle/app.js' ? 'script' : '<main>Conductive</main>',
         ),
     },
     '/bundle',
@@ -23,7 +23,7 @@ it('serves the bundle and SPA routes without exposing files outside the bundle',
   )
   const page = await handler(new Request(`${DESKTOP_ORIGIN}/org/one`))
   expect(page.status).toBe(200)
-  expect(await page.text()).toBe('<main>Conducting</main>')
+  expect(await page.text()).toBe('<main>Conductive</main>')
   expect(page.headers.get('Content-Security-Policy')).toBe("default-src 'self'")
   const script = await handler(new Request(`${DESKTOP_ORIGIN}/app.js`))
   expect(script.headers.get('Content-Type')).toBe(

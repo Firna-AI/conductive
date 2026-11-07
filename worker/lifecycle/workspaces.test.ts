@@ -109,7 +109,7 @@ it('removes a failed create and its token while retaining the draft and cleanup 
       },
     })
     expect(boat.commands[1]).toContain(
-      `export CONDUCTING_TURN_ID='${created.first.turnId}'`,
+      `export CONDUCTIVE_TURN_ID='${created.first.turnId}'`,
     )
   } finally {
     await fixture.dispose()
@@ -123,8 +123,8 @@ it('resumes the same disk and retries a failed startup on its already running ma
     const ciphertext = await encrypt(
       JSON.stringify({
         APP_SECRET: 'org-secret',
-        CONDUCTING_USER_SETTING: 'keep-this',
-        CONDUCTING_MACHINE_ORIGIN: 'https://evil.test',
+        CONDUCTIVE_USER_SETTING: 'keep-this',
+        CONDUCTIVE_MACHINE_ORIGIN: 'https://evil.test',
       }),
       orgEnvironmentContext(org.id),
       runtime.env.BOAT_KEY_ENCRYPTION_KEY,
@@ -204,8 +204,8 @@ it('resumes the same disk and retries a failed startup on its already running ma
     ).toBe(true)
     expect(boat.starts[0]).toMatchObject({
       env: {
-        CONDUCTING_USER_SETTING: 'keep-this',
-        CONDUCTING_MACHINE_ORIGIN: 'https://machine.conducting.test',
+        CONDUCTIVE_USER_SETTING: 'keep-this',
+        CONDUCTIVE_MACHINE_ORIGIN: 'https://machine.conductive.test',
       },
     })
     expect(await endpoint.readLifecycle()).toMatchObject({

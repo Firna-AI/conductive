@@ -75,6 +75,12 @@ It includes two-part trees and changes and consecutive tree deltas at revisions 
 Both samples include file creation, a rename, a removal, and dirty branch work.
 Read replies also cover file content, a diff, and a size error.
 
+A test that starts a Node child process builds its environment with
+`isolatedProcessEnvironment` from [process-environment.ts](process-environment.ts).
+The child gets only the values that the test gives, and no value of the test process.
+The generated Worker types add the `vars` of `wrangler.jsonc` to `NodeJS.ProcessEnv`.
+So a plain object does not type-check as the environment of a child process.
+
 ## Key code
 
 - `harness.ts` owns D1 setup and the HTTP test app.
@@ -85,6 +91,7 @@ Read replies also cover file content, a diff, and a size error.
 - `fake-durable-object.ts` supplies the workspace endpoint without Cloudflare.
 - `fake-runner-files.ts` joins valid file report parts for the endpoint.
 - `runner-connection.ts` supplies the in-memory socket.
+- `process-environment.ts` builds an isolated environment for a Node child process in a test.
 
 See [the browser fakes](../../src/test-support/README.md),
 [the shared contracts](../../src/shared/README.md), and

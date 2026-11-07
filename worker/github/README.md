@@ -9,7 +9,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 
 ## Public boundaries
 
-- [handleGitHubWebhook](webhook.ts) accepts `POST /api/github/webhooks` on `MACHINE_ORIGIN`.
+- [handleGitHubWebhook](webhook.ts) accepts `POST /v1/github/webhooks` on `MACHINE_ORIGIN`.
   It verifies `X-Hub-Signature-256` against the raw body before parsing or D1 access.
   It authenticates machines with `GITHUB_WEBHOOK_SECRET`, without the app gate.
 - [handleGitHubRead](app-handler.ts) accepts GET and HEAD for both `githubPaths` routes.
@@ -39,7 +39,8 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 2. Populate `github_installations` and `repositories.installation_id` from trusted GitHub App installation setup.
    Keep suspension and repository access records current.
    No active installation means no read or webhook publication.
-3. Route the machine webhook path to `handleGitHubWebhook` before the machine stub.
+3. Route `MACHINE_PATHS.githubWebhook`, which is `/v1/github/webhooks`, to `handleGitHubWebhook` before the machine stub.
+   Set the webhook URL of the GitHub App to the address in [The GitHub App](../../docs/protocol/github-banner.md#the-github-app).
    Subscribe to `push`, `pull_request`, `pull_request_review`, `pull_request_review_thread`, `check_run`, `check_suite`, and `status`.
    Keep the raw request body intact.
 4. Route both app read paths to `handleGitHubRead` before the existing general app gate dispatch.

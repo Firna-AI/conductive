@@ -35,7 +35,7 @@ export async function wireFixture(
   settings: Partial<FakeDurableObjectOptions> = {},
   wrap: (connection: RunnerConnection) => RunnerConnection = (value) => value,
 ) {
-  const directory = await mkdtemp(join(tmpdir(), 'conducting-wire-'))
+  const directory = await mkdtemp(join(tmpdir(), 'conductive-wire-'))
   let runner: Runner | null = null
   onTestFinished(async () => {
     try {

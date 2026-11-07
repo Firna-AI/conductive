@@ -24,6 +24,9 @@ The `omitted-data` conversation has a Unicode tool excerpt and a capped turn fil
 Both records include positive omission counts.
 The `refused-events` conversation has one marker for each permanent refusal reason.
 The marker can have no turn context when the event is invalid.
+Each fake session record sets `retryMessageId`.
+In the `failed` conversation, each open session names the failed request `ask`, which the recorded failure names too.
+All other session records hold null.
 Browser file recordings contain complete reports.
 `recordedRunnerFileEvents` keeps four complete runner reports for current file readers.
 Each full report is explicitly part 1 of 1. Its tree ends at revision 2.

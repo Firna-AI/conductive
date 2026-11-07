@@ -1,3 +1,3 @@
 /// <reference types="vite/client" />
 
-declare const __CONDUCTING_APP_ORIGIN__: string
+declare const __CONDUCTIVE_APP_ORIGIN__: string

@@ -28,7 +28,7 @@ it('keeps the private device entry at 1 MB when a signed call bypasses the appli
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Conducting-Device-Proof': await createDeviceProof(
+        'X-Conductive-Device-Proof': await createDeviceProof(
           target,
           body,
           secret,

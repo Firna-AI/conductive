@@ -8,7 +8,7 @@ import { FakeBoat } from './fake-boat'
 import { FakeGitHub } from './fake-github'
 import { applyMigrations } from './migrations'
 
-export const TEST_ORIGIN = 'https://app.conducting.test'
+export const TEST_ORIGIN = 'https://app.conductive.test'
 export const TEST_TIME = 1_800_000_000_000
 
 export async function createHarness(

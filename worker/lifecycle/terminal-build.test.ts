@@ -32,7 +32,7 @@ it('runs terminal installation inside the detached software command and streams 
       sandboxId: 'bx_1',
       detached: true,
       command: expect.stringContaining(
-        '/usr/local/lib/conducting/terminal-password',
+        '/usr/local/lib/conductive/terminal-password',
       ),
     },
   ])
@@ -47,7 +47,7 @@ it('runs terminal installation inside the detached software command and streams 
       .join(' '),
   )
   expect(boat.commands[0]).not.toContain(
-    'systemctl start conducting-terminal.service',
+    'systemctl start conductive-terminal.service',
   )
   expect(boat.fileReads).toEqual([])
   boat.commandRunning = true

@@ -8,9 +8,21 @@ import { list, record, text } from '../api/json'
 import { readAttachment, readChoice } from '../api/read-chat'
 import type { DevBackend } from './dev-backend'
 import { requestStop, resume } from './dev-sandbox'
-import { place } from './dev-sessions'
+import { clearRetry, place } from './dev-sessions'
 
 const reply = (body: unknown, status = 200) => Response.json(body, { status })
+
+/** The Worker's answer to a retry of a message that the record does not name. */
+const RETRY_REFUSED = {
+  error: {
+    code: 'retry_not_available',
+    message:
+      'Only the newest failed request can run again. Send a new message.',
+  },
+}
+
+/** A message as a send gives it, before the page accepts it. */
+type Outgoing = Pick<UserMessage, 'id' | 'text' | 'attachments' | 'choice'>
 
 async function bodyOf(request: Request): Promise<Record<string, unknown>> {
   const value: unknown = await request.clone().json()
@@ -32,6 +44,7 @@ function newSession(
     createdAt: backend.clock.now(),
     closedAt: null,
     activeTurnId: null,
+    retryMessageId: null,
   }
   backend.server.json('GET', chatHistoryPath(orgId, workspaceId, session.id), {
     events: [],
@@ -45,25 +58,36 @@ const attachments = new Map<string, Attachment>()
 
 async function send(backend: DevBackend, session: Session, request: Request) {
   const body = await bodyOf(request)
-  const ready = ['ready', 'working', 'input', 'unread'].includes(
-    backend.workspace.state,
-  )
-  const message: UserMessage = {
+  return accept(backend, session, {
     id: text(body.id),
-    sessionId: session.id,
-    sender: backend.workspace.owner,
     text: text(body.text),
     attachments: list(text)(body.attachmentIds).flatMap(
       (id) => attachments.get(id) ?? [],
     ),
     choice: readChoice(body.choice),
+  })
+}
+
+/**
+ * Accepts a message, as the Worker does: it steers the running turn, waits
+ * for the sandbox, or starts a turn. The session then names no retry.
+ */
+function accept(backend: DevBackend, session: Session, outgoing: Outgoing) {
+  const ready = ['ready', 'working', 'input', 'unread'].includes(
+    backend.workspace.state,
+  )
+  const message: UserMessage = {
+    ...outgoing,
+    sessionId: session.id,
+    sender: backend.workspace.owner,
     createdAt: backend.clock.now(),
     state: ready ? 'sent' : 'queued',
   }
   backend.messages.set(message.id, message)
   const steered = backend.agent.steer(message)
+  if (!steered) backend.stream.emit({ type: 'message.accepted', message })
+  clearRetry(backend, session.id)
   if (steered) return reply({ message, turnId: steered }, 202)
-  backend.stream.emit({ type: 'message.accepted', message })
   const recorded = backend.recordedTurns.get(session.id)
   if (recorded) {
     backend.stream.emit({
@@ -122,12 +146,17 @@ async function sessionWrite(
     return reply({ turnId: running, state: 'stopping' })
   }
   if (method === 'POST' && action === 'retry' && messageId) {
-    const message = backend.messages.get(messageId)
-    if (!message) return null
-    return reply(
-      { message, turnId: backend.agent.start(session.id, [message]) },
-      202,
-    )
+    // As the Worker does, a retry sends the named message again as a new one.
+    const previous = backend.messages.get(messageId)
+    if (!previous) return null
+    if (session.retryMessageId !== messageId) return reply(RETRY_REFUSED, 409)
+    backend.count += 1
+    return accept(backend, session, {
+      id: `dev-retry-${backend.count}`,
+      text: previous.text,
+      attachments: previous.attachments,
+      choice: previous.choice,
+    })
   }
   if (method === 'PUT' && action === 'model') {
     const body = await bodyOf(request)

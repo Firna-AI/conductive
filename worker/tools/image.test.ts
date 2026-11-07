@@ -40,7 +40,7 @@ it('reports failed or incomplete image installation instead of accepting it', as
 })
 
 it('installs working CLI and MCP tools under a root with spaces and apostrophes', async () => {
-  const root = await mkdtemp(join(tmpdir(), "conducting image's "))
+  const root = await mkdtemp(join(tmpdir(), "conductive image's "))
   try {
     await installWorkspaceTools(
       WORKSPACE_TOOL_SOURCES,
@@ -68,7 +68,7 @@ it('installs working CLI and MCP tools under a root with spaces and apostrophes'
     await writeFile(
       secretsFile,
       [
-        `${TOOL_ENV.machineOrigin}='https://machine.conducting.test'`,
+        `${TOOL_ENV.machineOrigin}='https://machine.conductive.test'`,
         `${TOOL_ENV.workspaceToken}='fake-image-workspace-token'`,
         `${TOOL_ENV.turnId}='fake-image-turn'`,
         "NODE_OPTIONS='--require=/missing-org-preload.cjs'",
@@ -86,11 +86,11 @@ it('installs working CLI and MCP tools under a root with spaces and apostrophes'
     )
     expect(help.exitCode, help.stderr).toBe(0)
     expect(help.stderr).toBe('')
-    expect(help.stdout).toContain('conducting workspaces list')
+    expect(help.stdout).toContain('conductive workspaces list')
     expect(help.stdout).toContain(
-      'conducting workspaces create --repository ID --message TEXT',
+      'conductive workspaces create --repository ID --message TEXT',
     )
-    expect(help.stdout).toContain('conducting mcp')
+    expect(help.stdout).toContain('conductive mcp')
 
     const mcp = await imageTestProcess(
       executable,
@@ -130,7 +130,7 @@ it('installs working CLI and MCP tools under a root with spaces and apostrophes'
 })
 
 it('requires the private runtime and never falls back to system Node or PATH', async () => {
-  const root = await mkdtemp(join(tmpdir(), "conducting node's "))
+  const root = await mkdtemp(join(tmpdir(), "conductive node's "))
   try {
     await installWorkspaceTools(
       WORKSPACE_TOOL_SOURCES,

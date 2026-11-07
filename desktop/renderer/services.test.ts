@@ -26,13 +26,13 @@ it('uses the configured Worker for credentialed API requests and workspace socke
   vi.stubGlobal('WebSocket', Socket)
   const services = createDesktopServices(
     window,
-    'https://worker.conducting.test',
+    'https://worker.conductive.test',
   )
   expect(await services.api.get(API_PATHS.session, (body) => body)).toEqual({
     status: 'ready',
   })
   expect(fetch).toHaveBeenCalledWith(
-    'https://worker.conducting.test/api/session',
+    'https://worker.conductive.test/api/session',
     {
       method: 'GET',
       headers: { Accept: 'application/json' },
@@ -44,7 +44,7 @@ it('uses the configured Worker for credentialed API requests and workspace socke
     { message: () => {}, closed: () => {} },
   )
   expect(addresses).toEqual([
-    'wss://worker.conducting.test' +
+    'wss://worker.conductive.test' +
       workspaceEventsPath('org-one', 'workspace-one', 7),
   ])
   stop()

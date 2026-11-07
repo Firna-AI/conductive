@@ -49,6 +49,7 @@ export class WorkspaceRuntimeFixture extends Workspace {
             createdAt: message.createdAt,
             closedAt: null,
             activeTurnId: null,
+            retryMessageId: null,
           })
           await transaction.saveMessage(message)
           await transaction.emit({ type: 'message.accepted', message })

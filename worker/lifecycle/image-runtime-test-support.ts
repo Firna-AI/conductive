@@ -10,7 +10,7 @@ import { shellQuote } from './commands'
 import { IMAGE_NODE_RUNTIME, imageNodeExecutable } from './image-runtime'
 
 export async function imageRuntimeFixture() {
-  const root = await mkdtemp(join(tmpdir(), "conducting runtime's "))
+  const root = await mkdtemp(join(tmpdir(), "conductive runtime's "))
   onTestFinished(() => rm(root, { recursive: true, force: true }))
   const commands = join(root, 'commands')
   const archive = join(root, 'node.tar.gz')

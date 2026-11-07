@@ -13,12 +13,12 @@ it('installs a runner-only artifact and starts it with the private runtime after
     `git config --system --replace-all credential.helper ${fixture.credentialHelper}`,
     'git config --system credential.useHttpPath true',
     'systemctl daemon-reload',
-    'systemctl enable conducting-runner.service',
+    'systemctl enable conductive-runner.service',
   ])
   const started = await fixture.start({
     WORKSPACE_TOKEN: 'workspace-token',
-    CONDUCTING_WORKSPACE_ID: 'workspace-one',
-    CONDUCTING_NODE: `${fixture.commands}/node`,
+    CONDUCTIVE_WORKSPACE_ID: 'workspace-one',
+    CONDUCTIVE_NODE: `${fixture.commands}/node`,
   })
   expect(started.exitCode, started.stderr).toBe(0)
   expect(JSON.parse(started.stdout)).toEqual({
@@ -36,12 +36,12 @@ it('keeps the image runner stopped before workspace startup and during disk rete
   expect(installed.exitCode, installed.stderr).toBe(0)
   const workspace = {
     WORKSPACE_TOKEN: 'workspace-token',
-    CONDUCTING_WORKSPACE_ID: 'workspace-one',
+    CONDUCTIVE_WORKSPACE_ID: 'workspace-one',
   }
   const stoppedCases: Readonly<Record<string, string>>[] = [
     {},
     { WORKSPACE_TOKEN: 'workspace-token' },
-    { ...workspace, CONDUCTING_DISK_KEEPALIVE: '1' },
+    { ...workspace, CONDUCTIVE_DISK_KEEPALIVE: '1' },
   ]
   for (const values of stoppedCases) {
     const stopped = await fixture.start(values)

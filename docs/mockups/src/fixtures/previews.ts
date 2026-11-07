@@ -1,11 +1,21 @@
+import { previewPath } from '../../../../src/shared/previews'
+import { appDomain } from '../brand'
+import { orgs } from './orgs'
+import { checkoutAutocomplete } from './workspaces'
+
 /**
- * The port previews of the open workspace. A preview address is a random
- * hostname, so the screens show the port, not the address.
+ * The port previews of the open workspace. The API gives each preview a
+ * launch address on the app's hostname, never its private preview host.
+ * The screens show the port, not the address.
  */
 
 export const openPort = 3000
 
-export const previewUrl = 'https://k7q2m9x4p8w3zr5t.acme-previews.dev/checkout'
+/** The launch address of the open preview, which a new tab opens. */
+export const previewUrl = new URL(
+  previewPath(orgs.acme.key, checkoutAutocomplete.key, 'preview-1'),
+  `https://${appDomain}`,
+).href
 
 /** What the user types into the address field of the previewed shop. */
 export const addressQuery = '221B Baker St'

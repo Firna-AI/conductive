@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [
     react(),
     {
-      name: 'conducting-react-module-preamble',
+      name: 'conductive-react-module-preamble',
       apply: (_config, { command, isPreview }) =>
         command === 'serve' && !isPreview,
       configResolved(config) {

@@ -21,8 +21,8 @@ globalThis.fetch = async (url, options) => {
 }
 `
   const launcher = await credentialLauncher(preload, {
-    CONDUCTING_MACHINE_ORIGIN: 'https://machine.conducting.test',
-    CONDUCTING_TURN_ID: 'stale-saved-turn',
+    CONDUCTIVE_MACHINE_ORIGIN: 'https://machine.conductive.test',
+    CONDUCTIVE_TURN_ID: 'stale-saved-turn',
     WORKSPACE_TOKEN: 'workspace-token',
   })
   try {
@@ -36,7 +36,7 @@ globalThis.fetch = async (url, options) => {
       'username=x-access-token\npassword=fresh-github-token\n\n',
     )
     expect(JSON.parse(result.stderr)).toEqual({
-      url: `https://machine.conducting.test${MACHINE_PATHS.gitCredential}`,
+      url: `https://machine.conductive.test${MACHINE_PATHS.gitCredential}`,
       method: 'POST',
       authorization: 'Bearer workspace-token',
       turnId: 'current-turn',

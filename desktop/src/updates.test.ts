@@ -86,7 +86,7 @@ it('automatically updates packages and offers restart once per downloaded versio
   expect(updater.setFeedURL).toHaveBeenCalledWith({
     provider: 'github',
     owner: 'Firna-AI',
-    repo: 'conducting-desktop',
+    repo: 'conductive-desktop',
   })
   expect(updater.autoDownload).toBe(true)
   expect(updater.autoInstallOnAppQuit).toBe(true)

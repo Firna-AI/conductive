@@ -14,7 +14,7 @@ says.
 - A user installs the GitHub App on each GitHub account that owns
   repositories that the user wants to use.
 - The GitHub App sends pull request, check, status, and push webhooks to
-  the Worker.
+  the Worker, at `https://api.conductive.build/v1/github/webhooks`.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
 
 ## State of a branch

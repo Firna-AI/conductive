@@ -2,7 +2,7 @@ import { shellQuote } from './commands'
 
 const version = '24.22.2'
 const archive = `node-v${version}-linux-x64`
-const runtimeRoot = '/opt/conducting/runtime'
+const runtimeRoot = '/opt/conductive/runtime'
 
 export const IMAGE_NODE_RUNTIME = {
   version,
@@ -17,7 +17,7 @@ export function imageNodeExecutable(root = '/'): string {
 
 export function imageRuntimeScript(source: string, root = '/'): string {
   return source.replaceAll(
-    '@CONDUCTING_NODE@',
+    '@CONDUCTIVE_NODE@',
     shellQuote(imageNodeExecutable(root)),
   )
 }

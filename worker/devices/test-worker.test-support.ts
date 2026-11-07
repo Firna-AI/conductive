@@ -1,3 +1,4 @@
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { app } from '../app'
 import type { AppEnv } from '../env'
 import { Workspace as ProductWorkspace } from '../workspace'
@@ -48,7 +49,7 @@ export default {
     const workspaceId = url.pathname.match(/\/workspaces\/([^/]+)/)?.[1]
     if (
       (workspaceId && !url.pathname.includes('/device-commands')) ||
-      url.pathname === '/runner' ||
+      url.pathname === MACHINE_PATHS.runner ||
       url.pathname === '/__test/clear-device-records' ||
       deviceObject
     ) {

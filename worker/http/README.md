@@ -22,7 +22,7 @@ It returns an overflow as a private JSON error response.
 On an app API path, that response gets the same desktop CORS headers as other API responses.
 
 `requestBodyBudget` returns the default of 1,000,000 bytes, which is 1 MB in decimal units.
-It returns `GITHUB_WEBHOOK_BODY_BYTES`, 27,262,976 bytes, only for a `POST` to `GITHUB_WEBHOOK_PATH` on the machine origin.
+It returns `GITHUB_WEBHOOK_BODY_BYTES`, 27,262,976 bytes, only for a `POST` to `MACHINE_PATHS.githubWebhook`, which is `/v1/github/webhooks`, on the machine origin.
 A route that a later change adds gets the default without code of its own.
 A route that needs a higher limit declares it in `requestBodyBudget`.
 
