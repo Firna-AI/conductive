@@ -3870,8 +3870,9 @@ Added on 8 November 2026 from the check of finding 10 of PR #45.
     workspace.
   - **C.** Skip it, and keep the disk with a saved snapshot.
 - **Recommendation:** B.
-- **Open:** the user asked for an explanation on 8 November 2026.
-  `plans/follow-ups/suspended-owner-disk-restart.md` holds the item.
+- **Chosen:** B, by the user on 8 November 2026, after an explanation.
+  Milestone 15m states the rule in the protocol, and the error of such a
+  workspace says that an admin can give it to another member.
 
 ### 126. Decide when a changed Terms revision applies
 
@@ -3899,6 +3900,25 @@ Added on 8 November 2026 from the check of finding 8 of PR #46
   - **F.** Draw the screens on the site as HTML.
 - **Recommendation:** D.
 - **Chosen:** A, by the user on 8 November 2026.
+
+### 128. Give each build and start a time limit
+
+Added on 8 November 2026 from the check of finding 2 of PR #47
+(Milestone 5c).
+
+- **Background:** Builds and starts run as saved jobs that alarms move
+  forward. A script that never exits, or a cloud computer that never
+  becomes ready, keeps a job running forever, and an org's first build
+  then blocks every new workspace.
+- **Options:**
+  - **A.** Change nothing beyond the retry limit of Milestone 5c.
+  - **B.** A Cancel action for a running build and start.
+  - **C.** A time limit for each whole job from its start, for example 60
+    minutes for a build and 20 minutes for a start.
+  - **D.** A time limit for each script.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 8 November 2026, who also asked that the
+  app tell the user of the limit. Milestone 5d applies it.
 
 ## Design
 
@@ -4955,6 +4975,25 @@ Added on 8 November 2026.
       delete that item.
 - [ ] Apply the recorded option of `plans/follow-ups/members-late-role-failure-after-removal.md`, and
       delete that item.
+
+
+## Milestone 5d: Time limits for builds and starts
+
+Tags: ui
+
+Depends on: 5c
+
+Apply decision 128 C. Added on 8 November 2026.
+
+- [ ] Draw the limits in the mockups: the build screen and the workspace
+      start screen say how long a build and a start can run, and a failed
+      build or start says that it passed its limit. Then build both
+      screens, and compare each with its mockup.
+- [ ] Apply the recorded option of
+      `plans/follow-ups/lifecycle-job-time-limit.md`: a time limit for each
+      whole build and start, from its start, with the existing failure
+      handling. State the limits in
+      `docs/protocol/workspaces-and-sandboxes.md`, and delete that item.
 
 ## Milestone 6: App shell and workspaces
 

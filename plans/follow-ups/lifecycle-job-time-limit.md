@@ -1,7 +1,7 @@
 # A build or a start that makes no progress never ends
 
 - **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-08, the wider fix of finding 2 of PR #47, branch `conductor/boat-native-remote-workspaces-milestone-5c`, round 1, option C of its check, with two problems outside the scope of that review.
 - **Location:** `worker/lifecycle/build-execution.ts:57`, `worker/lifecycle/start-command-execution.ts:56`, `worker/lifecycle/start-allocation.ts:89`, and `startCommand` in `worker/sandbox/boat.ts:216`, which starts each script with no time limit.
 
@@ -21,4 +21,4 @@
 - **Wider fix:** C. It ends every job that makes no progress, whatever the cause.
 - **Previous examples:** finding 2 of PR #47, and `plans/follow-ups/runner-file-and-save-errors.md`, where repeated recovery leaves work stuck.
 - **Recommendation:** C. One limit for each job ends every hang, and the protocol states it.
-- **Action:** ask the user, because C adds a new failure for long jobs that no requirement covers.
+- **Action:** fix after merge, apply C, as the user chose on 8 November 2026 (decision 128). The app also tells the user of each limit, as the user asked. Milestone 5d applies it.
