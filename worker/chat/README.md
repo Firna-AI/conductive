@@ -40,8 +40,19 @@ says. `routeChat` in [`router.ts`](router.ts) forwards the browser routes.
 `routeRunner` forwards the runner socket of the machine hostname, by its
 bearer token.
 
-Trusted Worker code can also call six methods of `WorkspaceChat` that run no
-gate. [Trusted workspace calls](integration/README.md#trusted-workspace-calls) gives their rules.
+Trusted Worker code can also call methods of `WorkspaceChat` that run no
+gate. [Trusted workspace calls](integration/README.md#trusted-workspace-calls)
+gives their rules.
+
+`Workspace` has two trusted RPCs with no HTTP path:
+
+- `acceptLifecycleFirstMessage(first)` returns the stored first message of
+  a create. A repeat returns the same message and adds no history.
+- `readChatWorkspaceSummary()` returns the last event number, the last
+  event number with visible output, and whether a dispatched turn runs.
+
+[The workspace lifecycle](integration/README.md#the-workspace-lifecycle)
+says how the lifecycle and chat work together.
 
 A cross-agent model change uses the client's `newSessionId`. A repeated
 request gets the same session. An unrelated occupied ID is refused. A
@@ -190,50 +201,16 @@ npm run test -- worker/chat
 npm run typecheck
 ```
 
-- `createChatFixture` in `harness.test-support.ts` builds on
-  `createHarness`. It adds an owner, a member, a workspace with a token,
-  and a stored login for each agent.
-- Its helpers send messages, open tabs, connect a `FakeRunner`, and
-  restart `WorkspaceChat` on the same storage.
-- `MemoryChatStorage` keeps the records in memory. Set `failCommit` or
-  `beforeCommit` to test a failed or a late commit.
-- Its key order and `startAfter` comparison use UTF-8 bytes, like real storage.
-- Set `crashAfterCommit` to commit the next transaction, then throw once.
-  The restart tests cover retry permission, report repairs, turn cleanup,
-  and file assembly after a commit crash.
-- `createRunnerLimitsFixture` in `runner-limits.test-support.ts` runs one
-  `RunnerChannel` for the refusal, cap, and file part tests.
-- `runner-repairs.test-support.ts` builds a full and an oversized report of
-  each kind, and reads the requests and markers of the repair tests.
-- `late-events.test.ts` and `never-started.test.ts` cover replay after a
-  workspace stop and the queued-turn eligibility rules.
-- `retry.test.ts`, `retry-queue.test.ts`, and `retry-crash.test.ts` cover
-  the newest failed turn: stale tabs, refused ends, waiting work, rollback,
-  and commit crashes. `retry.test-support.ts` sends retries and reads the
-  session records.
-- `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
-  end. It also checks that late ends preserve the next turn and its commands.
-- `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,
-  D1, and real WebSockets. `createAdapterRuntime` sets up that runtime.
-- It closes every socket before Miniflare evicts the real object. Restart
-  keeps SQLite history, queued messages, and the runner cursor. Event numbers
-  continue. The resumed queued turn fails. Its message can retry after a
-  second eviction.
-- `createAdapterRuntime` can bundle another Durable Object entry for
-  another workspace ID. The [GitHub store tests](../github/README.md#verification)
-  use it to run `WorkspaceChat` with the GitHub state on SQLite.
-- `integration/forwarding.test.ts`, `integration/runner-forwarding.test.ts`,
-  and `integration/runner-access.test.ts` check the forwarding of the outer
-  Worker. `integration/run-browser-harness.mjs` serves a production app
-  build through it. [Outer Worker tests](integration/README.md#outer-worker-tests)
-  describes them.
+[Chat backend tests](tests.md) names the test helpers and the main tests.
 
 ## Seams for other milestones
 
 [Chat backend integration](integration/README.md) gives the seams for other
-features. It covers the hooks, the trusted workspace calls and the workspace
-events, the outer Worker, the lifecycle, the files, the GitHub state, the
-agent runner, and the logins and attachments.
+features. It covers the hooks, the trusted workspace calls, the workspace
+events, the outer Worker, and the lifecycle. It also covers the files, the
+GitHub state, the agent runner, and the logins and attachments. Its
+[Outer Worker tests](integration/outer-worker-tests.md) guide gives the
+tests through the production Worker entry.
 
 ## Key code
 
@@ -241,6 +218,20 @@ agent runner, and the logins and attachments.
   tabs, and the one publisher of committed events.
 - `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
   owner can replace. The login resolver always wraps an override.
+- `workspace-integration.ts`: `createWorkspaceIntegration`, which joins
+  chat, the lifecycle, and the Mac devices in the workspace object and sets
+  the hooks.
+- `workspace-operations.ts`: `WorkspaceOperations`, the queue-owned work of
+  the lifecycle: the first message, the stop, the summary, and the
+  lifecycle events.
+- `first-message.ts`: the checks and the admission of the first message of
+  a create.
+- `workspace-summary.ts`: `WorkspaceSummaryProjection`, the summary that
+  `readChatWorkspaceSummary` returns.
+- `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched
+  turns as stopped when the lifecycle state becomes stopped or error.
+- `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
+  the object.
 - `http-routes.ts`, `messages.ts`, and `sessions.ts`: the routes, the turns,
   and the session state.
 - `model-changes.ts`: client session IDs, the creation records that repeated
@@ -273,7 +264,8 @@ agent runner, and the logins and attachments.
 - `router.ts`: `routeChat`, `routeRunner`, and `forwardWorkspaceRequest`,
   which forward the browser chat routes and the runner socket from the
   outer Worker to the object.
-- `queries.ts`: the D1 reads of workspaces, tokens, members, and logins.
+- `queries.ts`: the D1 reads of workspaces, tokens, members, and logins,
+  and the title update of a workspace.
 - `login-access.ts`: the combined sender and runner-token access check
   before login dispatch.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,

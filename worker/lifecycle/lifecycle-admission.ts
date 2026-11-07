@@ -23,6 +23,8 @@ export async function initializeWorkspaceLifecycle(
       )
     await requireWorkspaceOrg(env.DB, input.orgId, input.workspaceId)
     await requireOrgMember(env.DB, input.orgId, input.firstTurn.senderUserId)
+    await ctx.admitFirstMessage?.(input)
+    if (await lifecycle.read()) return
     await turns.register(input.firstTurn)
     await lifecycle.initialize(input)
   })

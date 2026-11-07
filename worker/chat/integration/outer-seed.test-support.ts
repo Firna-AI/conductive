@@ -1,8 +1,6 @@
 import type { AppEnv } from '../../env'
-import { LifecycleBoat } from '../../lifecycle/lifecycle-boat-test-support'
 import { seedPublishedImage } from '../../lifecycle/published-image-test-support'
 import { storeWorkspaceToken } from '../../lifecycle/tokens'
-import { storeBoatKey } from '../../sandbox/keys'
 import { SESSION_COOKIE } from '../../security/cookies'
 import { encrypt, sign } from '../../security/crypto'
 import { agentLoginContext } from '../queries'
@@ -19,7 +17,7 @@ export const OUTER_SOFTWARE = {
   sha256: 'a'.repeat(64),
 }
 
-export async function seedOuterRuntime(env: AppEnv, boat: LifecycleBoat) {
+export async function seedOuterRuntime(env: AppEnv) {
   const now = Date.now()
   const db = env.DB
   await db.batch([
@@ -94,7 +92,6 @@ export async function seedOuterRuntime(env: AppEnv, boat: LifecycleBoat) {
     software: OUTER_SOFTWARE,
     now,
   })
-  await storeBoatKey(env, OUTER_ORG, 'owner', 'boat-first', boat.fetch, now)
   const cookieFor = async (userId: string) => {
     const sessionId = `outer-${userId}-session`
     const expiresAt = 4_000_000_000_000

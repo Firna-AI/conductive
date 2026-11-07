@@ -1,5 +1,4 @@
 import type { AppDependencies, AppEnv } from '../env'
-import type { RunnerEvent } from '../../src/shared/runner'
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
 import { requireWorkspaceOrg } from './access'
 import { runWorkspaceAlarm } from './workspace-alarm'
@@ -23,10 +22,7 @@ import { initializeWorkspaceLifecycle } from './lifecycle-admission'
 import { createWorkspaceLifecycle } from './create-workspace-lifecycle'
 import { finishDiskMaintenance } from './disk-retention'
 import { clearRetention } from './retention-data'
-import type {
-  PendingTurn,
-  WorkspaceLifecycleEndpoint,
-} from './workspace-runtime'
+import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { WorkspacePlatform } from './workspace-platform'
 import type { WorkspaceController } from './workspace-controller-types'
 
@@ -134,21 +130,23 @@ export function createWorkspaceController(
       await lifecycle.stopped()
     },
     async clearLifecycle(): Promise<void> {
+      const state = await lifecycle.read()
+      if (state) await platform.stopped?.(state.workspaceId)
       await turns.clear()
       await lifecycle.clear(
         Boolean(await platform.storage.get('job', 'lifecycle:start-job')),
       )
       await journal.clearFailedCreate()
     },
-    async acknowledgeLifecycleFirstMessage(): Promise<void> {
-      await lifecycle.acknowledgeFirstMessage()
+    async acknowledgeLifecycleFirstMessage(publish): Promise<void> {
+      await lifecycle.acknowledgeFirstMessage(publish)
     },
-    async registerLifecycleTurn(turn: PendingTurn): Promise<void> {
-      await registerTrustedTurn(env, lifecycle, turns, turn)
+    async registerLifecycleTurn(turn, publish): Promise<void> {
+      await registerTrustedTurn(env, lifecycle, turns, turn, publish)
     },
-    async finishLifecycleTurn(turnId: string): Promise<void> {
+    async finishLifecycleTurn(turnId, publish): Promise<void> {
       const turn = await turns.remove(turnId)
-      if (turn) await lifecycle.turn(turn.sessionId, false)
+      if (turn) await lifecycle.turn(turn.sessionId, false, publish)
     },
     async credentialSender(turnId: string): Promise<string | null> {
       const state = await lifecycle.read()
@@ -157,11 +155,11 @@ export function createWorkspaceController(
       await requireWorkspaceOrg(env.DB, state.orgId, state.workspaceId)
       return turns.sender(turnId)
     },
-    async reportRunnerLifecycle(event: RunnerEvent): Promise<void> {
-      await applyRunnerLifecycle(lifecycle, turns, event)
+    async reportRunnerLifecycle(event, publish): Promise<void> {
+      await applyRunnerLifecycle(lifecycle, turns, event, publish)
     },
-    async runnerLifecycleDisconnected(): Promise<void> {
-      await lifecycle.runnerDisconnected()
+    async runnerLifecycleDisconnected(publish): Promise<void> {
+      await lifecycle.runnerDisconnected(publish)
     },
     async scheduleImage(state: ImageCoordinatorState): Promise<void> {
       await images.schedule(state)

@@ -4,7 +4,6 @@ import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { createReadStream } from 'node:fs'
 import {
-  chmod,
   cp,
   mkdir,
   mkdtemp,
@@ -80,7 +79,6 @@ async function dependencies(destination) {
 async function packageRunner() {
   const { values } = parseArgs({
     options: {
-      node: { type: 'string' },
       url: { type: 'string' },
       output: {
         type: 'string',
@@ -91,7 +89,7 @@ async function packageRunner() {
   })
   if (values.help) {
     process.stdout.write(
-      'Usage: node image/package-runner.mjs --node /absolute/node24 --url https://host/runner.tar.gz [--output .context/runner-artifact/runner.tar.gz]\n',
+      'Usage: node image/package-runner.mjs --url https://host/runner.tar.gz [--output .context/runner-artifact/runner.tar.gz]\n',
     )
     return
   }
@@ -99,10 +97,7 @@ async function packageRunner() {
     throw new Error(
       'Package on Linux x64 with Linux x64 runner packages installed.',
     )
-  if (!values.node?.startsWith('/') || !values.url)
-    throw new Error(
-      'Pass an absolute Node 24 executable and the public archive URL.',
-    )
+  if (!values.url) throw new Error('Pass the public archive URL.')
   const url = new URL(values.url)
   if (
     url.protocol !== 'https:' ||
@@ -118,16 +113,11 @@ async function packageRunner() {
   const context = join(root, '.context')
   if (!output.startsWith(`${context}${sep}`))
     throw new Error('Save the archive under .context/.')
-  if (!/^v24\./.test(run(values.node, ['--version'])))
-    throw new Error('The archive needs Node 24.')
   await mkdir(dirname(output), { recursive: true, mode: 0o700 })
   const stage = await mkdtemp(join(context, 'runner-package-'))
   try {
     run(process.execPath, ['runner/scripts/build.mjs'])
-    await mkdir(join(stage, 'node/bin'), { recursive: true })
     await mkdir(join(stage, 'runner'), { recursive: true })
-    await cp(values.node, join(stage, 'node/bin/node'), { dereference: true })
-    await chmod(join(stage, 'node/bin/node'), 0o755)
     for (const [source, destination] of [
       ['dist/runner/runner.mjs', 'main.mjs'],
       ['dist/runner/measure.mjs', 'measure.mjs'],
@@ -150,7 +140,6 @@ async function packageRunner() {
       output,
       '-C',
       stage,
-      'node',
       'runner',
     ])
     const sha256 = await digest(output)

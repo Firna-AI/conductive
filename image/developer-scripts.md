@@ -18,24 +18,23 @@ packages on that host, so that their platform files match it.
 
 ```sh
 node image/package-runner.mjs \
-  --node /absolute/path/to/node24/bin/node \
   --url https://artifacts.example.com/runner-v1.tar.gz \
   --output .context/runner-artifact/runner.tar.gz
 ```
 
-- `--node` is the absolute path of a Linux x64 Node 24 program. The script
-  copies it into the archive. It downloads no Node.
 - `--url` is the public HTTPS URL of the archive after you publish it. It
   can hold no user name, password, query, or fragment.
 - `--output` is optional, and it must be under `.context/`. The default is
   `.context/runner-artifact/runner.tar.gz`.
+- `--help` prints the usage.
 
-The script builds the runner bundles. The archive then holds
-`node/bin/node` and a `runner/` folder. That folder holds `main.mjs`,
-`measure.mjs`, `compare.mjs`, the runner manifest and lockfile, and the
-production packages from `runner/node_modules`. The script fixes the
-order, the times, and the owners of the archive entries. So the same
-source, Node program, and installed packages give the same digest.
+The script builds the runner bundles. The archive then holds only a
+`runner/` folder: `main.mjs`, `measure.mjs`, `compare.mjs`, the runner
+manifest and lockfile, and the production packages from
+`runner/node_modules`, for Linux x64. It holds no Node. Each image installs
+its own private Node, as [the private Node runtime](runtime.md) says. The
+script fixes the order, the times, and the owners of the archive entries.
+So the same source and installed packages give the same digest.
 
 The script writes the archive and two files next to it:
 
@@ -67,24 +66,20 @@ node image/live-check.mjs
 
 ### What a real check needs
 
-- An externally reachable test Worker, with its app and machine origins.
-  Each sandbox must reach the machine origin.
+- An externally reachable test Worker, with its app and machine origins,
+  and the inputs of [Deployment inputs](../docs/deployment.md). Each
+  sandbox must reach the machine origin. The runner of each workspace needs
+  the Worker secret `CONDUCTIVE_COMPUTER_MCP_URL`.
 - A signed-in test account with a stored agent login for `LIVE_AGENT`.
-- An org with a Boat key and a good org image. A build with an archive from
-  `package-runner.mjs` must make that image.
+- An org with a published org image. A build with an archive from
+  `package-runner.mjs` must make that image. The check makes no image.
 - A repository of that org that the image holds.
 
-The Worker cannot meet these needs yet:
-
-- It routes no lifecycle route, no image build, and no agent login write.
-  The [Worker README](../worker/README.md#routes) lists the missing routes.
-- Chat and the lifecycle are not connected yet, as the
-  [chat backend integration](../worker/chat/integration/README.md) says.
-- The runner fails at its start in a workspace sandbox. No code supplies
-  its default branch or its `computer` MCP URL, as
-  [Start in a workspace](README.md#start-in-a-workspace) says.
-
-So a real run fails at its first app request until these parts exist.
+The app has no setup path for that image yet. The Worker routes no image
+build, as the [Worker README](../worker/README.md#routes) says. An
+operator can publish the image through trusted Worker code that calls the
+build entry points, as [Image builds](../worker/lifecycle/image-builds.md)
+says.
 
 ### Variables
 
@@ -97,8 +92,8 @@ These variables are required:
 | `LIVE_COOKIE` | The full `Cookie` header of a signed-in session of the test account. |
 | `LIVE_ORG_ID` | The app ID of the org. |
 | `LIVE_REPOSITORY_ID` | The app ID of a repository that the org image holds. |
-| `LIVE_BOAT_KEY` | A Boat key of the Boat account that runs the sandboxes of the org. |
-| `LIVE_BOAT_ORG` | `personal`, or the ID of the Boat org that the app saved with the key of the org. |
+| `LIVE_BOAT_KEY` | A Boat key of the app's Boat organization. |
+| `LIVE_BOAT_ORG` | The ID of that organization: the `BOAT_ORG_ID` of the test Worker. |
 | `LIVE_AGENT` | `claude` or `codex`. |
 | `LIVE_MODEL` | A model of that agent. |
 | `LIVE_AGENT_LOGIN` | A login of that agent, only for the measurement forks. The app uses the login that it stored for the account. |
@@ -136,10 +131,12 @@ Each wait for a state or an answer stops after 10 minutes.
    the same path.
 6. It forks the sandbox twice. The forks get none of its env, so their
    runner service starts nothing.
-7. It copies the software into a new folder of each fork: inside the home
-   folder in one, and under `/opt` in the other.
+7. It copies the runner files and their packages into a new folder of each
+   fork: inside the home folder in one, and under `/opt` in the other. Both
+   forks keep the private Node of the image in its place.
 8. It stops and resumes each fork `LIVE_RUNS` times. After each resume,
-   the `measure.mjs` of the copy times the first agent text.
+   the private Node runs the `measure.mjs` of the copy, which times the
+   first agent text.
 9. `dist/runner/compare.mjs` compares the two placements.
 10. It deletes the forks and stops the sandbox of the workspace. The
     workspace stays in the org.

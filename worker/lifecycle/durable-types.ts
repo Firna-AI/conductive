@@ -1,4 +1,7 @@
 import type { SendMessageRequest } from '../../src/shared/messages'
+import type { WorkspacePlatform } from './workspace-platform'
+
+export type LifecyclePublisher = WorkspacePlatform['publish']
 import type {
   WorkspaceStart,
   WorkspaceState,
@@ -32,7 +35,10 @@ export interface DurableLifecycleState {
 }
 
 export interface LifecycleHooks {
-  changed(state: DurableLifecycleState): void | Promise<void>
+  changed(
+    state: DurableLifecycleState,
+    publish?: LifecyclePublisher,
+  ): void | Promise<void>
   stop(): Promise<LifecycleStopResult | void>
   keepalive(): Promise<boolean | void>
   extendDeadline(): Promise<LifecycleReconciliation | void>

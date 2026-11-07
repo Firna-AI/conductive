@@ -5,15 +5,16 @@ This README gives the seams of the chat backend for other features. The
 A file name without a folder names a file in `worker/chat/`.
 
 `WorkspaceChat` takes `ChatDependencies` from `types.ts` as overrides.
-`Workspace` sets `matchesObject` and `runnerEventStored`. The latter starts
-device cleanup when a turn ends, including a refused turn end.
-A later handler must keep that call.
-The other hooks keep their defaults until their owners set them.
+`createWorkspaceIntegration` in `workspace-integration.ts` sets them for
+the workspace object, as [The workspace lifecycle](#the-workspace-lifecycle)
+says. Its `runnerEventStored` also starts device cleanup when a turn ends,
+including a refused turn end. A later handler must keep that call.
 
 ## Trusted workspace calls
 
-Trusted Worker code can call six methods of `WorkspaceChat`. They run no
-gate.
+Trusted Worker code can call these methods of `WorkspaceChat`. They run no
+gate. [The workspace lifecycle](#the-workspace-lifecycle) gives the methods
+that the workspace object adds for the lifecycle.
 
 - `appendWorkspaceEvent(workspaceId, event, occurredAt)` stores one
   `WorkspaceEvent` with the next workspace event number. Then it pushes
@@ -83,10 +84,11 @@ depends on where the code runs:
   response headers.
 - Do not run `gate` on a request that you forward. `gate` reads the JSON
   body of each write.
-- On the machine hostname, `createApp` gives each path other than the Mac
-  device routes to `routeRunner` in `router.ts`. `routeRunner` matches only
-  `MACHINE_PATHS.runner`, `/v1/runner`. Each other machine path gets a `501`
-  stub.
+- On the machine hostname, `createApp` serves the Mac command route, then
+  `MACHINE_PATHS.gitCredential` and `IMAGE_SOURCE_CREDENTIAL_PATH` through
+  their lifecycle handlers. It gives each other path to `routeRunner` in
+  `router.ts`. `routeRunner` matches only `MACHINE_PATHS.runner`,
+  `/v1/runner`. Each other machine path gets a `501` stub.
 - The runner request has only its bearer token. `routeRunner` reads only
   the `Authorization` header, and finds the workspace with `tokenWorkspace`.
   A missing, unknown, or revoked token gets `401 workspace_token_required`.
@@ -97,93 +99,96 @@ depends on where the code runs:
   token reaches only the object of its own workspace. A `hello` that names
   another workspace closes the connection before a welcome, a command, or a
   login goes out.
-- The outer Worker has no lifecycle route yet. So no browser request can
-  create a workspace or queue its first message. The
+- After the app request gate, `chatLifecycleRoute` in
+  `worker/app-api/lifecycle.ts` gives the create, read, open, resume, and
+  activity routes of a workspace to the lifecycle handler. It gives the
+  first message of a create to `acceptLifecycleFirstMessage` of the
+  workspace object. The
   [lifecycle README](../../lifecycle/README.md#browser-routes) gives the
   handler and its options.
 
-## Outer Worker tests
+[Outer Worker tests](outer-worker-tests.md) gives the tests of these
+routes through the production Worker entry, and the browser harness.
 
-The files of this section live in this folder, `worker/chat/integration/`.
+## The workspace lifecycle
 
-- `forwarding.test.ts` sends each request through `worker/index.ts`, the
-  production Worker entry, in Miniflare. It uses the real `Workspace`
-  class, SQLite storage, D1, and real WebSockets. Only Boat and GitHub are
-  fakes.
-- These tests check that an encoded workspace ID reaches its own object,
-  with the authenticated headers and the complete JSON body. They check the
-  gate of the object on forwarded routes. They also check the replay cursor
-  and the live events of the events socket.
-- `runner-forwarding.test.ts` uses the same runtime, and connects a fake
-  runner with only its bearer token. A member's queued message reaches the
-  runner with the member's login. Text streams to the browser, and Stop
-  goes out on the same path.
-- `runner-access.test.ts` checks that a missing, unknown, or revoked token
-  cannot upgrade, and that an unconfigured machine hostname stays
-  forbidden. It also checks that a token of another workspace cannot claim
-  this workspace or get its queued message.
-- `runner-socket.test-support.ts` holds that fake runner, on a real
-  WebSocket. `runner-launcher.test.ts` checks the runner start script, as
-  the [image README](../../../image/README.md#development) says.
-- `createOuterRuntime` in `outer-runtime.test-support.ts` bundles that
-  entry with Vite and starts it, with `https://api.conductive.test` as the
-  machine origin. `seedOuterRuntime` in `outer-seed.test-support.ts` adds
-  three users with sessions, two orgs, two workspaces with tokens, stored
-  agent logins, a Boat key, and a published org image.
+`createWorkspaceIntegration` joins chat, the lifecycle, and the Mac devices
+in the workspace object. The outer Worker calls the lifecycle through RPC
+methods of `Workspace`.
 
-`run-browser-harness.mjs` serves a production app build through the same
-runtime, over local HTTPS. Run it from the repository root, after
-`npm run build`:
-
-```sh
-node worker/chat/integration/run-browser-harness.mjs
-CHAT_HARNESS_ASSETS=path/to/client CHAT_HARNESS_PORT=5181 \
-  node worker/chat/integration/run-browser-harness.mjs
-```
-
-- It serves `https://127.0.0.1:5178`, with a self-signed certificate.
-  `CHAT_HARNESS_PORT` sets another port.
-- It reads the built app from `dist/client`. `CHAT_HARNESS_ASSETS` sets
-  another folder, which must hold `index.html`.
-- It writes the origin, the session cookie of the seeded owner, the
-  workspace URL, the machine origin, the workspace token, and the IDs to
-  `.context/chat-harness/browser-harness.json`.
-- `startBrowserHarness` in `browser-server.test-support.ts` starts the
-  runtime. SIGINT or SIGTERM stops it.
-- The harness bundles the Worker when it starts. So restart it after a
-  change of the Worker code.
-- The harness hides no missing route. The app API paths that the outer
-  Worker does not route still get `404` there. So the app shell fails to
-  start in it.
-
-## Milestone 5: workspace lifecycle
-
-- `Workspace` gives the lifecycle `appendWorkspaceEvent` for its workspace
-  events. No other production code connects the lifecycle and chat yet.
-  The [lifecycle README](../../lifecycle/README.md#workspace-durable-object)
-  lists the lifecycle hooks that wait for chat.
-- No chat code implements the `acceptFirstMessage` option of a create. It
-  must store the first message with the session and turn IDs that the
-  lifecycle chose. A repeat with the same IDs must return the same message
-  and store nothing new.
-- `ChatDependencies` has no hook for a sent turn or a closed runner
-  connection. `Workspace` does not give runner events to the lifecycle yet.
-- No code calls `closeRunner()` at a sandbox stop. `WorkspaceChat` has no
-  method that ends the active turns at a stop.
-- `Workspace.fetch` tries device routes, then gives the remaining requests
-  to chat. Match lifecycle routes before the chat call.
-- `authorizeBrowser` gives a lifecycle route the same gate and workspace
-  check. It reads the body, so do not pass that request on to `fetch`.
-- `runnerReady(workspaceId, publish)` runs after the Durable Object stores
-  each `runner.ready` event.
-- `runnerEventStored(envelope, publish)` runs after each other stored runner
-  event or refusal marker. Examples are `start.updated` and `workspace.title`.
-- Both hooks run after the commit and the confirm. A hook error closes the
-  runner connection, and the runner does not send that event again.
-- Add the start steps and `workspace.updated` with `appendWorkspaceEvent`.
-  Inside a hook, use its `publish` argument.
-- Call `closeRunner()` when the sandbox stops.
+- Chat and the lifecycle share the serial queue of `ChatStore`. Each
+  lifecycle change of `Workspace` runs in it through `runLifecycle`, then
+  calls `flushRunner`. So a waiting turn goes out when the lifecycle state
+  allows it.
+- `acceptFirstMessage`, `stopWorkspace`, `commitWorkspaceEvent`, and
+  `flushRunner` do not enter the queue. Call them only inside it.
+  `workspaceSummary` enters the queue.
+- `waitCreationAdmission`, `waitCreationLifecycle`, and `waitLifecycleStart`
+  do not hold the queue. So they cannot block the alarm that they wait for.
 - Keep the lifecycle records outside the `chat:v1:` key prefix.
+
+### The first message
+
+- `initializeLifecycle` checks the workspace and the org membership of the
+  sender. Then its admission hook gives the assigned first message to
+  `acceptFirstMessage`.
+- `requireFirstMessage` in `first-message.ts` checks the stored creator,
+  the session, the turn, the message ID, and the model choice. A mismatch
+  gets `404 workspace_not_found`, and nothing is stored.
+- `admitFirstMessage` of the same file needs a stored agent login of the
+  sender. One chat transaction stores the session, the message, its first
+  turn, and their events. It commits before `initializeLifecycle` returns.
+  So the first message is durable before a browser can lose the create
+  reply.
+- A repeat returns the stored message and adds no history. An archived
+  workspace can return its stored first message, but admits no new one.
+- The RPC `acceptLifecycleFirstMessage`, or a `runner.ready` event, clears
+  the pending first message of the lifecycle.
+
+### Hooks and events
+
+- Each hook passes its `publish` argument to the lifecycle. So the
+  lifecycle events of a hook commit in the task of that hook.
+- `runnerReady(workspaceId, publish)` runs after the Durable Object stores
+  each `runner.ready` event. It reports the event to the lifecycle. A
+  runner that is ready before the start is prepared gets its turns only
+  after that.
+- `runnerEventStored(envelope, publish)` runs after each other stored runner
+  event or refusal marker. It reports `turn.started`, `turn.completed`,
+  `turn.failed`, and `start.updated`. A refused `turn.completed` or
+  `turn.failed` ends its lifecycle turn.
+- A `workspace.title` updates the name of the workspace in D1. It is not
+  unread output.
+- Both runner hooks run after the commit and the confirm. A hook error
+  closes the runner connection, and the runner does not send that event
+  again.
+- `turnDispatching` registers the sender of a turn with the lifecycle
+  before the command goes out. While the lifecycle state allows no turn, it
+  returns `false`, and the turn waits. `turnDispatchFailed` removes that
+  turn after a failed send.
+- `runnerDisconnected` reports a closed runner connection. It runs later in
+  the queue, through `waitUntil`.
+- `browserOpened` and `browserClosed` give the open tab IDs to the
+  lifecycle. The access checks and the timers of each tab stay as they are.
+- The other lifecycle events go through `commitWorkspaceEvent`, with the
+  one chat publisher. No hook calls `appendWorkspaceEvent` while it holds
+  the queue.
+
+### Stop and summary
+
+- When the lifecycle state becomes `stopped` or `error`, or a failed create
+  clears the lifecycle, `stopWorkspace` closes the runner. It ends each
+  running or stopping turn as stopped. Queued turns stay for the resume.
+  Device cleanup starts too.
+- `workspaceSummary` gives the last event number, the last event number
+  with visible output, and whether a dispatched turn runs. Its record
+  commits with the events and the turns. Queued turns do not count as
+  working.
+- Known limit: `Workspace.alarm` holds the queue during one lifecycle
+  phase. A phase can make several provider requests. Each can take up to 30
+  seconds, 65 for a file read, or 610 for a command. So a slow phase
+  delays the chat reads, the messages, and the runner receipts of that
+  workspace.
 
 ## Milestone 9: files
 

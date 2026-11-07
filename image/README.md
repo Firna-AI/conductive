@@ -55,15 +55,16 @@ writes the URL and the digest of the archive to `<archive>.json`.
 To supply an archive:
 
 1. Publish the exact archive at its URL, on a public HTTPS host.
-2. Give that URL and the matching digest to the lifecycle routes as the
-   `software` option. `<archive>.json` holds both.
+2. Set the Worker variables `CONDUCTIVE_RUNNER_ARCHIVE_URL` and
+   `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` to that URL and the matching digest,
+   as [Deployment inputs](../docs/deployment.md#the-runner-archive) says.
+   `<archive>.json` holds both.
 
 A build fails when the file at the URL does not match the digest. So a
 versioned URL for each archive is a good choice.
 
-The Worker does not serve the archive. No Worker variable or binding holds
-its URL or its digest yet. No production code supplies the `software`
-option yet, because the root Worker does not call the lifecycle routes.
+The Worker does not serve the archive. No route reads the two variables
+yet, because the Worker does not route the image builds.
 
 ## The private Node runtime
 
@@ -72,51 +73,9 @@ paths, and its update steps.
 
 ## Install
 
-Before this step, Git in the build sandbox copies each chosen repository
-into its folder, as the
-[source loader](../worker/lifecycle/repository-layout.md#the-source-loader)
-says. That Git comes from the image that the build sandbox starts from.
-The first build starts as a new default sandbox. Each later build or
-refresh starts from the last org image, which holds everything that earlier
-builds installed. The copy uses no part of this folder's software.
-
-Risk: a program with root access that an earlier install left in that
-image can read the clone token of a later copy. That token can only read
-its own repository, which the image already holds. The Worker revokes it
-when the copy ends, as
-[GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
-says.
-
-The software step of a build calls `installImageSoftware`. It writes the
-scripts and the runner unit of this folder to `/opt/conductive/staged/`.
-Each staged script holds the quoted full path of the private Node in place
-of `@CONDUCTIVE_NODE@`. Then the step runs these commands, in this order:
-
-```sh
-sudo -n sh /opt/conductive/staged/install-runtime.sh '<Node URL>' '<Node digest>' '<version folder>'
-sudo -n sh /opt/conductive/staged/install.sh '<archive URL>' '<SHA-256 digest>'
-```
-
-Boat runs commands as `user`, with passwordless sudo. The installers need
-system permissions. The installed runner service runs as `user`.
-
-`install.sh` does these steps. A failure stops it, and the build fails.
-
-1. It downloads the archive with `curl`, and checks the digest with
-   `sha256sum`.
-2. It unpacks the archive into a new folder, and checks `runner/main.mjs`.
-   It writes the version of the private Node to the build log.
-3. It replaces `/opt/conductive/software` with the new folder, so no file
-   of an older archive stays.
-4. It installs the runner start script, the git credential helper, and the
-   runner's systemd unit.
-5. It makes `conductive-git-credential` the system credential helper of
-   git, and sets `credential.useHttpPath`.
-6. It enables the runner service. It does not start it.
-
-A refresh skips this step, and the terminal installer with it. So a change
-in this folder or in the terminal software reaches the new workspaces of an
-org only after its next build. A workspace that exists keeps its software.
+[Install in a build](install.md) describes the software step of each image
+build: the staged scripts, the private Node, and the steps of `install.sh`.
+A refresh skips that step.
 
 ## Start in a workspace
 
@@ -128,6 +87,8 @@ each resume, together with the org's env vars:
 | `WORKSPACE_TOKEN` | The workspace token. |
 | `CONDUCTIVE_WORKSPACE_ID` | The workspace ID. |
 | `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
+| `CONDUCTIVE_DEFAULT_BRANCH` | The default branch of the workspace's repository. |
+| `CONDUCTIVE_COMPUTER_MCP_URL` | The URL of the `computer` MCP server, from the Worker secret of the same name. It is empty when the Worker has no such secret. |
 | `CONDUCTIVE_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
 | `CONDUCTIVE_TURN_ID` | Empty. The runner sets it for each agent process. |
@@ -196,10 +157,9 @@ Each value replaces a saved variable of the same name.
 | `CONDUCTIVE_REPOSITORY` | `CONDUCTIVE_REPOSITORY_DIR` |
 | `CONDUCTIVE_RUNNER_URL` | `CONDUCTIVE_MACHINE_ORIGIN` without a trailing slash, then the path of `MACHINE_PATHS.runner` |
 
-The runner also needs `CONDUCTIVE_DEFAULT_BRANCH` and
-`CONDUCTIVE_COMPUTER_MCP_URL`. The start script does not set them, and the
-lifecycle does not supply them. Without them, the runner fails at its start
-in a workspace sandbox.
+Without `CONDUCTIVE_COMPUTER_MCP_URL`, the runner fails at its start.
+[Deployment inputs](../docs/deployment.md#the-mcp-url) says how the Worker
+protects that URL.
 
 ## Git credentials
 
@@ -220,7 +180,7 @@ caller's `CONDUCTIVE_TURN_ID`, loads the sandbox variables, and runs
 - Without a current turn, or when the Worker refuses, the helper writes one
   fixed message. Git then gets no credential from the helper.
 
-The Worker's route is not wired to the machine hostname yet, as the
+The Worker serves that route on the machine hostname, as the
 [lifecycle README](../worker/lifecycle/README.md#machine-route) says.
 
 ## Secrets
@@ -232,7 +192,6 @@ The Worker's route is not wired to the machine hostname yet, as the
   repository. The Worker revokes it before the build goes on, as
   [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
   says. The software step and the install script run only after that.
-- The archive URL can hold no user name, no password, and no query.
 - The workspace object keeps the env values and output chunks of a start
   only in encrypted form. Before it returns a start log, it masks the
   complete joined stdout and stderr with the saved env values. This hides
@@ -309,6 +268,8 @@ build, a disk retention restart, and an unfinished start start no runner.
 
 ### Related Docs
 
+- [Install in a build](install.md), [the private Node runtime](runtime.md),
+  and [developer scripts](developer-scripts.md): the guides of this folder.
 - [Workspace lifecycle](../worker/lifecycle/README.md): the builds, the
   start steps, and the git credential route.
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md):

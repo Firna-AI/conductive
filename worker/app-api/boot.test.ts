@@ -1,0 +1,185 @@
+import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+
+import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
+import { MODELS_PATH } from '../../src/shared/agents'
+import { API_PATHS } from '../../src/shared/api'
+import { GET_STARTED_PATH } from '../../src/shared/onboarding'
+import { readAccount } from '../../src/app/api/read-core'
+import { readAgentLogin } from '../chat/queries'
+import {
+  createHarness,
+  TEST_TIME,
+  type TestHarness,
+} from '../test-support/harness'
+
+const choice = { agent: 'claude', model: 'operator-claude', effort: 'high' }
+const otherChoice = { agent: 'codex', model: 'operator-codex', effort: 'low' }
+const models = [
+  {
+    agent: 'claude',
+    model: 'operator-claude',
+    label: 'Claude',
+    efforts: ['high'],
+  },
+  { agent: 'codex', model: 'operator-codex', label: 'Codex', efforts: ['low'] },
+]
+
+let harness: TestHarness
+beforeAll(async () => {
+  harness = await createHarness()
+})
+beforeEach(async () => {
+  await harness.reset()
+  harness.env.CONDUCTIVE_MODELS = JSON.stringify(models)
+  harness.env.CONDUCTIVE_DEFAULT_CHOICE = JSON.stringify(choice)
+})
+afterAll(async () => harness.dispose())
+
+it('boots from operator models and persists account preferences and encrypted sender logins', async () => {
+  const cookie = await harness.login()
+  const org = await harness.createOrg(cookie)
+  const account = await harness.request(ACCOUNT_PATHS.account, cookie)
+  expect(account.status).toBe(200)
+  const initial = readAccount(await account.json())
+  expect(initial).toMatchObject({
+    defaultChoice: choice,
+    agentLogins: [
+      { agent: 'claude', connected: false },
+      { agent: 'codex', connected: false },
+    ],
+  })
+  const catalog = await harness.request(MODELS_PATH, cookie)
+  expect(catalog.status).toBe(200)
+  expect(await catalog.json()).toEqual({ models })
+  const saved = await harness.request(agentLoginPath('claude'), cookie, {
+    method: 'PUT',
+    body: JSON.stringify({
+      agent: 'claude',
+      kind: 'token',
+      secret: 'private-login',
+    }),
+  })
+  expect(saved.status).toBe(200)
+  expect(await saved.json()).toEqual({
+    agent: 'claude',
+    connected: true,
+    kind: 'token',
+    updatedAt: TEST_TIME,
+  })
+  expect(await readAgentLogin(harness.env, initial.user.id, 'claude')).toEqual({
+    agent: 'claude',
+    kind: 'token',
+    secret: 'private-login',
+  })
+  const stored = await harness.env.DB.prepare(
+    'SELECT ciphertext FROM agent_logins WHERE user_id = ?',
+  )
+    .bind(initial.user.id)
+    .first<{ ciphertext: string }>()
+  expect(stored?.ciphertext).not.toContain('private-login')
+  const defaultModel = await harness.request(
+    ACCOUNT_PATHS.defaultModel,
+    cookie,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ choice: otherChoice }),
+    },
+  )
+  expect(defaultModel.status).toBe(200)
+  expect(await defaultModel.json()).toEqual({ choice: otherChoice })
+  const reloaded = await harness.request(ACCOUNT_PATHS.account, cookie)
+  const reloadedBody: unknown = await reloaded.json()
+  expect(reloadedBody).toMatchObject({
+    defaultChoice: otherChoice,
+    agentLogins: [
+      { agent: 'claude', connected: true, kind: 'token', updatedAt: TEST_TIME },
+      { agent: 'codex', connected: false },
+    ],
+  })
+  expect(JSON.stringify(reloadedBody)).not.toContain('private-login')
+  const started = await harness.request(GET_STARTED_PATH, cookie)
+  expect(started.status).toBe(200)
+  expect(await started.json()).toEqual({
+    orgId: org.id,
+    steps: [
+      { step: 'github-app', complete: false },
+      { step: 'org', complete: true },
+      { step: 'agent-login', complete: true },
+    ],
+  })
+  const removed = await harness.request(agentLoginPath('claude'), cookie, {
+    method: 'DELETE',
+    body: '{}',
+  })
+  expect(removed.status).toBe(204)
+  expect(
+    await readAgentLogin(harness.env, initial.user.id, 'claude'),
+  ).toBeNull()
+})
+
+it('keeps account data and Get started isolated from other users and deleted orgs', async () => {
+  const first = await harness.login()
+  const org = await harness.createOrg(first)
+  await harness.env.DB.prepare(
+    `INSERT INTO github_installations (id, account_login, account_type, created_at)
+    VALUES (91, 'octocat', 'User', 1)`,
+  ).run()
+  await harness.env.DB.prepare(
+    `INSERT INTO repositories
+    (id, org_id, github_repository_id, full_name, default_branch, installation_id)
+    VALUES ('repository', ?, 101, 'octocat/repository', 'main', 91)`,
+  )
+    .bind(org.id)
+    .run()
+  expect(
+    await (await harness.request(GET_STARTED_PATH, first)).json(),
+  ).toMatchObject({
+    steps: [
+      { step: 'github-app', complete: true },
+      { step: 'org', complete: true },
+      { step: 'agent-login', complete: false },
+    ],
+  })
+  harness.github.profile = {
+    id: 8,
+    login: 'other',
+    name: 'Other',
+    avatar_url: null,
+  }
+  const other = await harness.login()
+  expect(await (await harness.request(GET_STARTED_PATH, other)).json()).toEqual(
+    {
+      orgId: null,
+      steps: [
+        { step: 'github-app', complete: false },
+        { step: 'org', complete: false },
+        { step: 'agent-login', complete: false },
+      ],
+    },
+  )
+  await harness.env.DB.prepare('UPDATE orgs SET deleted_at = 1 WHERE id = ?')
+    .bind(org.id)
+    .run()
+  expect(
+    await (await harness.request(GET_STARTED_PATH, first)).json(),
+  ).toMatchObject({ orgId: null })
+  expect((await harness.request(ACCOUNT_PATHS.account, '')).status).toBe(401)
+})
+
+it('reports missing operator model configuration without blocking unrelated routes', async () => {
+  const cookie = await harness.login()
+  delete harness.env.CONDUCTIVE_MODELS
+  delete harness.env.CONDUCTIVE_DEFAULT_CHOICE
+  const modelsResponse = await harness.request(MODELS_PATH, cookie)
+  expect(modelsResponse.status).toBe(503)
+  expect(await modelsResponse.json()).toMatchObject({
+    error: { code: 'models_unavailable' },
+  })
+  const account = await harness.request(ACCOUNT_PATHS.account, cookie)
+  expect(account.status).toBe(503)
+  expect(await account.json()).toMatchObject({
+    error: { code: 'default_model_unavailable' },
+  })
+  expect((await harness.request(API_PATHS.orgs, cookie)).status).toBe(200)
+  expect((await harness.request(GET_STARTED_PATH, cookie)).status).toBe(200)
+})

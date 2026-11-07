@@ -8,6 +8,7 @@ import { expect, it } from 'vitest'
 import { MACHINE_PATHS } from '../../../src/shared/agent-tools'
 import { shellQuote } from '../../lifecycle/commands'
 import { installImageSoftware } from '../../lifecycle/image-software'
+import { imageNodeExecutable } from '../../lifecycle/image-runtime'
 import { isolatedProcessEnvironment } from '../../test-support/process-environment'
 
 const execute = promisify(execFile)
@@ -20,7 +21,7 @@ async function runnerLauncher() {
   const secrets = join(root, 'run/ascii-secrets')
   const runtime = join(root, 'run/conductive')
   const repository = join(root, "repository folder's")
-  const node = join(installation, 'software/node/bin/node')
+  const node = imageNodeExecutable(root)
   const binaryDirectory = join(root, 'bin')
   const environment = isolatedProcessEnvironment({
     PATH: `${binaryDirectory}:/usr/bin:/bin`,

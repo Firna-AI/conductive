@@ -5362,13 +5362,24 @@ Depends on: 5, 6, 7, 7r, 8, 8j
         resume measurements in both placements. Check it with local fake
         endpoints. Keep the real runs open.
         Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Connect durable first-message admission and the chat/lifecycle hooks.
+        Keep lifecycle publication in the chat event queue, and register
+        trusted turns before dispatch.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Serve the shell boot APIs and the workspace list, view, read, open,
+        create, and resume paths needed by chat.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Load the runner artifact and runtime settings. Document each
+        deployment variable and secret for the first deployment.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
 - [x] Keep the chat of each workspace that the tab showed in memory, as
       decision 87 says. A return to the workspace shows the chat at once,
       then gets only the events after its last event number. A reload or a
       new tab starts empty.
       Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
-- [ ] Test the chat end to end: create a workspace, send a message, stream
+- [x] Test the chat end to end: create a workspace, send a message, stream
       the answer, stop and resume, and send again.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
   - [x] Test unread chat writes, the object gate, and stored and live events
         through the production Worker and real local objects. Add a local
         browser harness with fake external services.
@@ -5393,15 +5404,27 @@ Agent calls on 7 November 2026:
 - Give kept chats the account, org, models, and members from their existing
   app owners. Reason: same-tab settings changes must reach the kept chat
   without a history reload or an older independent reply.
+- Use the same private Node for both measurement placements. Move only
+  the runner and its packages. Reason: the comparison changes runner
+  placement while the runtime stays fixed.
 
-Blocked: production first-message admission, lifecycle/chat hooks, runner
-startup settings, archive configuration, and the shell API handlers need
-ownership outside the assigned files. The local production browser stops
-at missing account, model, and Get started routes. The retry rules from
-primary commit `822f4bc` and the Conductive rename at `61ff6d8` are included.
-The runner route and launcher use the versioned machine paths. The
-default branch and computer MCP URL still need runtime inputs. No real
-sandbox or measurement run has completed here.
+Scope update on 7 November 2026: the primary orchestrator chose option A
+and assigned the production chat/lifecycle integration, shell boot APIs,
+runtime configuration, deployment inputs, and read-mark follow-up record
+to this workspace. This is an ownership call, not a new product decision.
+Milestone 15i still owns the other feature screens. Merge Milestones 4f
+and 7w from the primary branch when they land. Keep their current provider
+and sender-login paths until those merges.
+
+The retry rules from primary commit `822f4bc` and the Conductive rename at
+`61ff6d8` are included. The runner route and launcher use the versioned
+machine paths. No real sandbox or measurement run has completed here.
+
+The app-wide Boat account at `ac05a6c` and the private Node runtime at
+`03af6ce` are included. The archive holds the runner and its runtime
+packages. The image installs Node separately. The live measurement uses
+that same Node for both runner placements. Today's sender-login behavior
+stays until Milestone 7w merges.
 
 Review summary: finding 2 is addressed with app-owned inputs for each
 kept chat. The regression checks preserve the draft, current login and
@@ -5412,6 +5435,9 @@ Evidence: `.context/boat-native-remote-workspaces/8i/worker-report.md`,
 `browser-smoke.json` in the same folder.
 Final scoped reports: `worker-final-report.md`, `image-final-report.md`,
 `ui-fix-2-report.md`, and `docs-final-report.md` in that folder.
+Production completion reports are in its `completion/` folder:
+`workspace-report.md`, `boot-api-report.md`, `runtime-report.md`,
+`browser-report.md`, `browser-verified.md`, and `docs-report.md`.
 
 ## Milestone 8m: Chat fixes from the reviews
 
@@ -5441,6 +5467,9 @@ Depends on: 8i
 
 This milestone needs the prerequisites from the user.
 
+- [ ] Use [the deployment input guide](../docs/deployment.md) for each Worker
+      variable and secret, the public runner archive and digest, and the
+      runtime settings given to each workspace.
 - [ ] Deploy the chat path to the user's Cloudflare account, with GitHub
       sign-in, so that the user can work in Conductive.
 - [ ] Smoke-test it with a real Boat sandbox.

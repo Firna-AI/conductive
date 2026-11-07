@@ -22,6 +22,22 @@ export function findChatWorkspace(
     .first<WorkspaceRecord>()
 }
 
+export async function updateWorkspaceTitle(
+  db: D1Database,
+  workspaceId: string,
+  name: string,
+  now: number,
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE workspaces SET name = ?, updated_at = ?
+    WHERE id = ? AND archived_at IS NULL AND EXISTS
+    (SELECT 1 FROM orgs WHERE orgs.id = workspaces.org_id AND orgs.deleted_at IS NULL)`,
+    )
+    .bind(name, now, workspaceId)
+    .run()
+}
+
 export async function tokenWorkspace(
   db: D1Database,
   token: string,

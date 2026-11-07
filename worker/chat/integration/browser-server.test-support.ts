@@ -2,6 +2,8 @@ import { mkdir, stat, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import { routes } from '../../../src/app/router'
+import { browserControls } from './browser-controls.test-support'
+import { browserRunners } from './browser-runners.test-support'
 import {
   createOuterRuntime,
   outerWorkerBundle,
@@ -27,9 +29,33 @@ export async function startBrowserHarness(
     port,
     https: true,
     assetsDirectory,
+    configuration: {
+      CONDUCTIVE_MODELS: JSON.stringify([
+        {
+          agent: 'claude',
+          model: 'test-claude',
+          label: 'Example model',
+          efforts: ['high'],
+        },
+      ]),
+      CONDUCTIVE_DEFAULT_CHOICE: JSON.stringify({
+        agent: 'claude',
+        model: 'test-claude',
+        effort: 'high',
+      }),
+      CONDUCTIVE_COMPUTER_MCP_URL: 'https://computer.conductive.test/mcp',
+    },
   })
+  await fixture.env.DB.prepare(
+    `INSERT OR IGNORE INTO github_installations (id, account_login, account_type, created_at, suspended_at)
+     VALUES (91, 'owner', 'User', 1, NULL)`,
+  ).run()
+  const runners = browserRunners(fixture)
+  const controls = await browserControls(runners)
   await fixture.runtime.ready
-  const directory = resolve('.context/chat-harness')
+  const directory = resolve(
+    '.context/boat-native-remote-workspaces/8i/completion/browser',
+  )
   await mkdir(directory, { recursive: true })
   await writeFile(
     resolve(directory, 'browser-harness.json'),
@@ -37,11 +63,19 @@ export async function startBrowserHarness(
       {
         origin: fixture.env.APP_ORIGIN,
         workspaceUrl: `${fixture.env.APP_ORIGIN}${routes.workspace(OUTER_ORG, OUTER_WORKSPACE)}`,
+        newWorkspaceUrl: `${fixture.env.APP_ORIGIN}${routes.newWorkspace(OUTER_ORG)}`,
+        orgUrl: `${fixture.env.APP_ORIGIN}${routes.org(OUTER_ORG)}`,
         cookie: fixture.cookies.ownerCookie,
         machineOrigin: fixture.env.MACHINE_ORIGIN,
         workspaceToken: OUTER_TOKEN,
         orgId: OUTER_ORG,
         workspaceId: OUTER_WORKSPACE,
+        workerEntry: 'worker/index.ts',
+        normalTimers: true,
+        fakeProviderControls: {
+          origin: controls.origin,
+          token: controls.token,
+        },
       },
       null,
       2,
@@ -55,12 +89,21 @@ export async function startBrowserHarness(
   const closed = new Promise<void>((resolve) => {
     finish = resolve
   })
+  let closing: Promise<void> | undefined
   const close = () => {
-    process.off('SIGINT', close)
-    process.off('SIGTERM', close)
-    void fixture.dispose().finally(finish)
+    closing ??= (async () => {
+      process.off('SIGINT', shutdown)
+      process.off('SIGTERM', shutdown)
+      await runners.close()
+      await controls.close()
+      await fixture.dispose()
+    })().finally(finish)
+    return closing
   }
-  process.once('SIGINT', close)
-  process.once('SIGTERM', close)
-  return { ...fixture, closed, close }
+  const shutdown = () => {
+    void close().catch((error: unknown) => console.error(error))
+  }
+  process.once('SIGINT', shutdown)
+  process.once('SIGTERM', shutdown)
+  return { ...fixture, runners, controls, closed, close }
 }

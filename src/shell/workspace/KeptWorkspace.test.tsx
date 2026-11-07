@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { HeldRequests, requestLines } from '../../app/test-kit'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import type { AgentChoice } from '../../shared/agents'
-import { API_PATHS, boatKeyPath, orgPath } from '../../shared/api'
+import { API_PATHS, orgPath } from '../../shared/api'
 import { membersPath } from '../../shared/members'
 import { sessionsPath } from '../../shared/sessions'
 import { workspacePath, workspacePaths } from '../../shared/workspaces'
@@ -17,6 +17,7 @@ import {
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { coreFixtures, fakeUsers } from '../../test-support/fixtures/core'
+import { fakeMacRequest } from '../../test-support/fixtures/devices'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import {
   holdAnimationFrames,
@@ -230,18 +231,25 @@ describe('a workspace that the tab showed', () => {
 
   test('follows the default model, the org name, and the members that the app holds', async () => {
     holdAnimationFrames()
-    const server = new FakeApiServer({ conversation: 'interrupted' })
+    const server = new FakeApiServer({
+      conversation: 'interrupted',
+      macCommands: 'waiting',
+    })
     const { account, orgs } = coreFixtures()
     const [cal, priya] = fakeUsers
+    // The card of a waiting Mac command names the org of its workspace.
+    const { workspaceName } = fakeMacRequest()
     server.json('GET', API_PATHS.session, { user: priya })
     server.json('GET', ACCOUNT_PATHS.account, { ...account, user: priya })
-    server.json('GET', boatKeyPath(org), { configured: false })
     const app = await startedApp(server, {
       events: recordingSocket(server).source,
     })
     const { view, go } = mountTab(app)
     await settle()
     expect(view.textContent).toContain(`${cal.displayName} stopped the agent`)
+    expect(view.textContent).toContain(
+      `${workspaceName}, in ${orgs.orgs[0].name}`,
+    )
     go(away)
     await settle()
     const sonnet: AgentChoice = {
@@ -259,7 +267,7 @@ describe('a workspace that the tab showed', () => {
 
     go(here)
 
-    expect(view.textContent).toContain('cloud computers of Acme Labs')
+    expect(view.textContent).toContain(`${workspaceName}, in Acme Labs`)
     click(byLabel('New session', view))
     await settle()
     const created = await bodiesOf(

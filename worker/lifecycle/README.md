@@ -8,9 +8,10 @@ and its own Boat sandbox. The code reaches Boat only through the
 with the app's one Boat key, as the [sandbox area](../sandbox/README.md)
 says.
 
-The root Worker does not call these handlers yet. `worker/routes.ts` has no
-lifecycle route, and `worker/application.ts` serves a stub on the machine
-hostname. The composition root must add each route and wrapper below.
+`chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
+gives the create, read, open, resume, and activity routes of a workspace to
+`handleLifecycleRequest`. The root Worker also serves the
+[machine route](#machine-route). It routes no build route yet.
 
 ## Responsibilities
 
@@ -37,24 +38,26 @@ of the shared contracts:
 
 Run the browser gate first, and pass its `RequestContext`. The handler
 returns `null` for every other route. `env` is a `LifecycleEnvironment`
-from [`runtime.ts`](runtime.ts). The caller gives three options:
+from [`runtime.ts`](runtime.ts). The caller gives these options:
 
 - `software`: the runner archive for each new build and refresh, as the
   [image README](../../image/README.md#the-runner-archive) says.
-- `acceptFirstMessage`: the hook of the chat backend. It stores the queued
-  first message of a new workspace and returns it, after the admission and
-  for each repeat. So it must be idempotent for the message and session IDs.
+  `runnerSoftware` in [`configuration.ts`](../configuration.ts) reads it
+  from two Worker variables, as
+  [Deployment inputs](../../docs/deployment.md#the-runner-archive) says.
+- `acceptFirstMessage`: the hook of the chat backend. It returns the first
+  message of a new workspace after the admission, and for each repeat. The
+  admission has already stored that message, so a repeat adds nothing. It
+  must be idempotent for the message and session IDs.
+- `projectWorkspace`: optional. It changes the workspace record of each
+  reply, such as its state for the reader.
 - `waitUntil`: the `waitUntil` of the Worker's execution context. A create
   gives it its work, so the work continues when the browser closes.
 
-```ts
-const runtime = { ...workspaceRuntime(env), images: imageRuntime(env) }
-const response = await handleLifecycleRequest(request, context, runtime, {
-  software,
-  acceptFirstMessage,
-  waitUntil: (promise) => ctx.waitUntil(promise),
-})
-```
+`chatLifecycleRoute` makes the runtime with `workspaceRuntime` and
+`imageRuntime`. It gives `software` as a getter, so only a build or a
+refresh reads the archive variables. It gives `acceptFirstMessage` to
+`acceptLifecycleFirstMessage` of the workspace object.
 
 - A create needs a published org image and a repository that its build
   loaded. A change to the chosen repositories takes effect after the next
@@ -77,6 +80,10 @@ const response = await handleLifecycleRequest(request, context, runtime, {
 - Open and resume restart only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
+- Each start gives the sandbox the default branch of its repository and
+  the MCP URL of the Worker. The start keeps that URL only in its encrypted
+  settings, as [Deployment inputs](../../docs/deployment.md#the-mcp-url)
+  says.
 - After the startup script succeeds at create and each resume, the start
   calls the start hook of the [terminal backend](../terminal/README.md).
   The hook starts the terminal and caches its encrypted password before
@@ -108,12 +115,12 @@ The handler returns a fresh GitHub App user token of the sender, from
 `freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).
 It stores no token. A user without a stored GitHub token must sign in again.
 
-The composition root must route `MACHINE_PATHS.gitCredential` to this
-handler, and `IMAGE_SOURCE_CREDENTIAL_PATH` to `handleImageSourceCredential`
-in [`image-sources/credential.ts`](image-sources/credential.ts), on the
-machine hostname only, before any browser route, with the private error
-response wrapper. Until then, a create cannot fetch a private repository
-or push to an empty one, and a build cannot copy a repository.
+`createApp` in [`worker/application.ts`](../application.ts) routes
+`MACHINE_PATHS.gitCredential` to this handler, and
+`IMAGE_SOURCE_CREDENTIAL_PATH` to `handleImageSourceCredential` in
+[`image-sources/credential.ts`](image-sources/credential.ts). It does this
+on the machine hostname only, after the Mac command route and before the
+runner socket, with the private error response wrapper.
 
 ### Workspace Durable Object
 
@@ -127,8 +134,12 @@ one role:
 
 Its public methods are internal RPC, not HTTP routes. This folder uses the
 `WorkspaceLifecycleEndpoint` interface of
-[`workspace-runtime.ts`](workspace-runtime.ts). These hooks wait for the
-chat backend and the runner ingestion, and no code calls them yet:
+[`workspace-runtime.ts`](workspace-runtime.ts). Inside the object,
+`createWorkspaceIntegration` in
+[`workspace-integration.ts`](../chat/workspace-integration.ts) calls these
+lifecycle steps from the chat hooks, as
+[The workspace lifecycle](../chat/integration/README.md#the-workspace-lifecycle)
+says:
 
 - `registerLifecycleTurn` records the trusted sender of a turn before the
   turn goes out. `finishLifecycleTurn`, or a report that the turn ended,
@@ -137,6 +148,8 @@ chat backend and the runner ingestion, and no code calls them yet:
   ingestion accepts. `runnerLifecycleDisconnected` takes a disconnect.
 - `acknowledgeLifecycleFirstMessage` clears the first message that the
   object keeps from the create.
+- `openLifecycleTab` and `closeLifecycleTab` keep the IDs of the open tabs.
+  The open route also calls `openLifecycleTab`.
 
 The `alarm` of the class serves both roles. For an image coordinator, it
 advances the running build or refresh by one step, or starts the daily
@@ -180,9 +193,10 @@ from it yet. The owner of `src/app/` and `src/shell/` adds that recovery.
 
 `WorkspaceEventJournal` in [`durable-journal.ts`](durable-journal.ts) keeps
 ordered lifecycle publication and suppresses unchanged updates. The
-production `Workspace` must send each `workspace.updated` and
-`start.updated` event to `WorkspaceChat`. Chat stores and numbers the only
-workspace event history, with chat and lifecycle events.
+production `Workspace` sends each `workspace.updated` and `start.updated`
+event to `WorkspaceChat`, through `commitWorkspaceEvent` or the `publish`
+argument of a chat hook. Chat stores and numbers the only workspace event
+history, with chat and lifecycle events.
 
 ### Builds and refreshes
 
@@ -201,16 +215,11 @@ steps, the snapshot leases, and the refresh timers.
 ## Settings
 
 The lifecycle code reads `LifecycleEnvironment` from
-[`runtime.ts`](runtime.ts). It needs these values in addition to the
-[Get started](../../README.md#get-started) values:
-
-| Name | Value |
-| --- | --- |
-| `WORKSPACES` | The Durable Object binding in `wrangler.jsonc`. |
-| `MACHINE_ORIGIN` | The `https://` origin of the machine hostname. Each sandbox gets it as `CONDUCTIVE_MACHINE_ORIGIN`. Both credential routes refuse every request without it, and a build cannot copy a repository. |
-| `GITHUB_APP_PRIVATE_KEY` | The GitHub App's private key, as PEM. A build or refresh needs it when the org chose a repository. The PEM file from GitHub works as it is. |
-
-`BOAT_KEY_ENCRYPTION_KEY` also encrypts the workspace tokens.
+[`runtime.ts`](runtime.ts). [Deployment inputs](../../docs/deployment.md)
+gives each binding, variable, and secret that it reads, such as
+`WORKSPACES`, `MACHINE_ORIGIN`, `BOAT_API_KEY`, `BOAT_ORG_ID`,
+`GITHUB_APP_PRIVATE_KEY`, `CONDUCTIVE_COMPUTER_MCP_URL`, and the runner
+archive variables.
 
 ## Development
 
@@ -235,6 +244,10 @@ object holds the lifecycle state, the turn records, and the events.
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
 - [`workspace-resume.ts`](workspace-resume.ts): `openWorkspace` and
   `resumeWorkspace`.
+- [`workspace-controller.ts`](workspace-controller.ts):
+  `createWorkspaceController`, the lifecycle methods of the workspace
+  object. [`lifecycle-admission.ts`](lifecycle-admission.ts) checks a create
+  and calls the admission hook.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
   phases, process IDs, output offsets, and results.

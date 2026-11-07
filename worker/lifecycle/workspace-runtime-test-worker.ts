@@ -9,55 +9,32 @@ import type { LifecycleEnvironment } from './runtime'
 import type { WorkspaceStartJob } from './start-types'
 import { START_JOB_KEY } from './start-storage'
 import { IDLE_MS } from './durable-types'
-import { ChatStore } from '../chat/store'
 import type { FirstWorkspaceMessage } from './workspace-runtime'
 import type { UserMessage } from '../../src/shared/messages'
 
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
+  constructor(context: DurableObjectState, env: LifecycleEnvironment) {
+    super(context, env, Date.now, {
+      resolveAttachments: async (_userId, _workspaceId, ids) => ({
+        attachments: ids.map((id) => ({
+          id,
+          name: `${id}.txt`,
+          kind: 'file',
+          mediaType: 'text/plain',
+          sizeBytes: 7,
+        })),
+        paths: ids.map((id) => ({
+          attachmentId: id,
+          path: `/attachments/${id}.txt`,
+        })),
+      }),
+    })
+  }
   async acceptFirstFixtureMessage(
     first: FirstWorkspaceMessage,
   ): Promise<UserMessage> {
-    const store = new ChatStore(this.ctx.storage, Date.now)
-    return store.run(() =>
-      store.change(
-        first.workspaceId,
-        async (transaction) => {
-          const stored = await transaction.message(first.request.id)
-          if (stored) return stored
-          const message: UserMessage = {
-            id: first.request.id,
-            sessionId: first.sessionId,
-            sender: first.sender,
-            text: first.request.text,
-            attachments: first.request.attachmentIds.map((id) => ({
-              id,
-              name: `${id}.txt`,
-              kind: 'file',
-              mediaType: 'text/plain',
-              sizeBytes: 7,
-            })),
-            choice: first.request.choice,
-            createdAt: Date.now(),
-            state: 'queued',
-          }
-          await transaction.saveSession({
-            id: first.sessionId,
-            workspaceId: first.workspaceId,
-            title: 'Session',
-            choice: message.choice,
-            createdAt: message.createdAt,
-            closedAt: null,
-            activeTurnId: null,
-            retryMessageId: null,
-          })
-          await transaction.saveMessage(message)
-          await transaction.emit({ type: 'message.accepted', message })
-          return message
-        },
-        () => {},
-      ),
-    )
+    return this.acceptLifecycleFirstMessage(first)
   }
   async tick(): Promise<void> {
     await this.alarm()

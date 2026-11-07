@@ -11,10 +11,6 @@ The files, the tools, and the pull request bar plug in as features, as
 states of the cloud computer are in `app/shell`, and the notices are in
 `app/chat/lost-updates`.
 
-The production app cannot open a workspace yet. The Worker serves no
-lifecycle route, so the open of the screen gets `404`, as the
-[Worker routes](../../../worker/README.md#routes) say.
-
 ## The kept workspace
 
 The tab keeps a `ShownWorkspace` for each workspace that it showed: its
@@ -60,9 +56,8 @@ says.
   workspace, and gives them to the chat as `host`. The chat places them.
 - Connect, on the notice of a missing agent login, opens the Connect form
   of the account.
-- The shell gives the chat no `onOpenDiff`, `onAddBoatKey`, or `extraTabs`
-  yet. So a file of a finished turn opens no diff, the notice of a missing
-  Boat key shows no button, and the chat shows no file tabs.
+- The shell gives the chat no `onOpenDiff` or `extraTabs` yet. So a file
+  of a finished turn opens no diff, and the chat shows no file tabs.
 - A `center` part takes the place of the chat.
 - When the features give the `tabs`, `transcript`, or `composer` slot, the
   shell draws its own chat column with those slots, in place of the chat.

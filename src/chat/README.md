@@ -10,11 +10,6 @@ of the app shell mounts it by default, as
 says. It builds against the fake API and the recorded chat events of
 `src/test-support/`.
 
-The production app cannot show the chat yet. The Worker serves the
-sessions, the history, and the events of a workspace. It does not serve
-the workspace record that the chat load reads last, as the
-[Worker routes](../../worker/README.md#routes) say.
-
 ## Use it in the app
 
 The tab keeps one `ChatController` for each workspace that it showed. The

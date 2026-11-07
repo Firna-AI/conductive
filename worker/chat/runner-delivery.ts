@@ -67,12 +67,42 @@ export class RunnerDelivery {
           advanced = true
         continue
       }
+      const publish = async (
+        event: WorkspaceEventEnvelope['event'],
+        occurredAt?: number,
+      ) => {
+        await this.store.change(
+          active.workspace.id,
+          (transaction) => transaction.emit(event, occurredAt),
+          this.publish,
+        )
+      }
+      if (
+        outbound.type === 'turn' &&
+        !(await this.dependencies.turnDispatching(
+          active.workspace.id,
+          {
+            turnId: outbound.turnId,
+            sessionId: outbound.sessionId,
+            senderUserId: outbound.message.sender.id,
+          },
+          publish,
+        ))
+      )
+        continue
+      if (!isCurrent()) return false
       const beganTurn = await this.dispatch.begin(active.workspace.id, command)
       try {
         active.peer.send(outbound)
       } catch {
         detach()
         await this.dispatch.unsent(active.workspace.id, command, beganTurn)
+        if (beganTurn && 'turnId' in command)
+          await this.dependencies.turnDispatchFailed(
+            active.workspace.id,
+            command.turnId,
+            publish,
+          )
         return false
       }
       active.delivered.add(command.commandId)

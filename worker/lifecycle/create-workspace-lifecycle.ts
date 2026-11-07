@@ -33,7 +33,7 @@ export function createWorkspaceLifecycle(
     },
     dependencies.now,
     {
-      changed: async (state) => {
+      changed: async (state, publish) => {
         await persistLifecycleState(env.DB, state, dependencies.now())
         const row = await readWorkspace(env.DB, state.orgId, state.workspaceId)
         await journal.publishLifecycle(
@@ -43,7 +43,10 @@ export function createWorkspaceLifecycle(
             error: state.error,
           },
           dependencies.now(),
+          publish,
         )
+        if (state.state === 'stopped' || state.state === 'error')
+          await ctx.stopped?.(state.workspaceId)
       },
       stop: async () => {
         const result = await stopWorkspaceSandbox(

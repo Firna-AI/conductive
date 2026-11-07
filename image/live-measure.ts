@@ -4,6 +4,7 @@ import { appendFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { MACHINE_PATHS } from '../src/shared/agent-tools'
+import { imageNodeExecutable } from '../worker/lifecycle/image-runtime'
 import { LiveBoat } from './live-boat'
 import {
   CheckError,
@@ -49,6 +50,7 @@ export async function measurePlacements(
   root: string,
   cleanup: Set<string>,
 ) {
+  const node = imageNodeExecutable()
   const metadata = object(
     JSON.parse(
       await boat.command(
@@ -58,7 +60,7 @@ export async function measurePlacements(
           'set -a',
           '. /run/ascii-secrets/env.sh',
           'set +a',
-          `${shellQuote(`${config.software}/node/bin/node`)} -e ${shellQuote('process.stdout.write(JSON.stringify({repository:process.env.CONDUCTIVE_REPOSITORY_DIR,machineOrigin:process.env.CONDUCTIVE_MACHINE_ORIGIN}))')}`,
+          `${shellQuote(node)} -e ${shellQuote('process.stdout.write(JSON.stringify({repository:process.env.CONDUCTIVE_REPOSITORY_DIR,machineOrigin:process.env.CONDUCTIVE_MACHINE_ORIGIN}))')}`,
         ].join('\n'),
       ),
     ),
@@ -84,10 +86,10 @@ export async function measurePlacements(
             placement === 'home'
               ? 'measurement_dir="$HOME/.runner-first-start/software"'
               : 'measurement_dir=/opt/runner-first-start/software',
-            'sudo -n install -d -m 755 -o user -g user "$measurement_dir"',
-            `cp -R --preserve=mode,timestamps ${shellQuote(`${config.software}/.`)} "$measurement_dir/"`,
+            'sudo -n install -d -m 755 -o user -g user "$measurement_dir/runner"',
+            `cp -R --preserve=mode,timestamps ${shellQuote(`${config.software}/runner/.`)} "$measurement_dir/runner/"`,
             'test -f "$measurement_dir/runner/measure.mjs"',
-            'test -x "$measurement_dir/node/bin/node"',
+            `test -x ${shellQuote(node)}`,
             'printf \'%s\\n\' "$measurement_dir"',
           ].join('\n'),
         )
@@ -117,7 +119,7 @@ export async function measurePlacements(
           'set -a',
           '. /run/ascii-secrets/env.sh',
           'set +a',
-          `${shellQuote(`${destination}/node/bin/node`)} ${shellQuote(`${destination}/runner/measure.mjs`)}`,
+          `${shellQuote(node)} ${shellQuote(`${destination}/runner/measure.mjs`)}`,
         ].join('\n'),
       )
       if (

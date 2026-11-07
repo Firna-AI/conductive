@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer'
 import { join, posix } from 'node:path'
 
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { shellQuote } from './commands'
 import { imageNodeExecutable } from './image-runtime'
 import { installImageSoftware } from './image-software'
@@ -13,6 +14,8 @@ const softwareRoots = [
   '/run/conductive',
 ]
 const nodeMarker = '__CONDUCTIVE_STAGED_PRIVATE_NODE__'
+const runnerUrlMarker = '__CONDUCTIVE_STAGED_RUNNER_URL__'
+const runnerUrl = '${CONDUCTIVE_MACHINE_ORIGIN%/}' + MACHINE_PATHS.runner
 
 function rootedScript(source: string, name: string, root: string): string {
   const credential = name === 'git-credential-helper.sh'
@@ -23,10 +26,9 @@ function rootedScript(source: string, name: string, root: string): string {
     throw new Error(`Unsafe staged image script: ${name}`)
 
   // Protect the rendered Node path before mapping other production paths.
-  const protectedSource = source.replaceAll(
-    shellQuote(imageNodeExecutable()),
-    nodeMarker,
-  )
+  const protectedSource = source
+    .replaceAll(shellQuote(imageNodeExecutable()), nodeMarker)
+    .replaceAll(runnerUrl, runnerUrlMarker)
   const roots = credential ? credentialRoots : softwareRoots
   const mapped = protectedSource.replace(
     /(?<![\w./-])\/[\w./-]+/g,
@@ -43,7 +45,9 @@ function rootedScript(source: string, name: string, root: string): string {
       return shellQuote(join(root, path.slice(1)))
     },
   )
-  return mapped.replaceAll(nodeMarker, shellQuote(imageNodeExecutable(root)))
+  return mapped
+    .replaceAll(nodeMarker, shellQuote(imageNodeExecutable(root)))
+    .replaceAll(runnerUrlMarker, runnerUrl)
 }
 
 /** Read the files that the production image command stages for installation. */

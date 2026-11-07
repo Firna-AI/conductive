@@ -6,7 +6,7 @@ import { routes } from '../../app/router'
 import { requestLines } from '../../app/test-kit'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { MODELS_PATH } from '../../shared/agents'
-import { boatKeyPath, orgPath } from '../../shared/api'
+import { orgPath } from '../../shared/api'
 import type { WorkspaceEvent } from '../../shared/events'
 import { membersPath } from '../../shared/members'
 import { workspacePath } from '../../shared/workspaces'
@@ -74,7 +74,7 @@ export function mountTab(app: AppModel) {
 /** The reads and writes of the workspace and of the chat's other routes. */
 export function chatRequests(server: FakeApiServer, from: number): string[] {
   const shared = [MODELS_PATH, ACCOUNT_PATHS.account, orgPath(org)]
-  const others = [...shared, membersPath(org), boatKeyPath(org)]
+  const others = [...shared, membersPath(org)]
   return requestLines(server)
     .slice(from)
     .filter(

@@ -39,7 +39,7 @@ export class RunnerChannel {
   open(workspace: RunnerWorkspaceRecord, peer: RunnerPeer): Promise<void> {
     return this.store.run(async () => {
       await this.store.read(workspace.id, async () => undefined)
-      this.current?.peer.close()
+      this.close()
       this.current = {
         peer,
         workspace,
@@ -51,12 +51,22 @@ export class RunnerChannel {
   }
 
   disconnect(peer: RunnerPeer): void {
-    if (this.current?.peer === peer) this.current = null
+    const active = this.current
+    if (!active || active.peer !== peer) return
+    this.current = null
+    this.dependencies.waitUntil(
+      this.store.run(() =>
+        this.dependencies.runnerDisconnected(
+          active.workspace.id,
+          this.publisher(active.workspace.id),
+        ),
+      ),
+    )
   }
 
   close(): void {
     const active = this.current
-    this.current = null
+    if (active) this.disconnect(active.peer)
     try {
       active?.peer.close()
     } catch {
@@ -113,6 +123,11 @@ export class RunnerChannel {
         confirmedThrough: welcome.cursor,
       })
       await this.repairs.flush(active)
+      if (active.ready)
+        await this.dependencies.runnerReady(
+          active.workspace.id,
+          this.publisher(active.workspace.id),
+        )
       void this.store
         .run(() => this.flush())
         .catch(() => {
@@ -175,13 +190,7 @@ export class RunnerChannel {
       streamId: message.streamId,
       throughEventNumber: cursor,
     })
-    const publish: ChatCallbackPublisher = async (event, occurredAt) => {
-      await this.store.change(
-        active.workspace.id,
-        (transaction) => transaction.emit(event, occurredAt),
-        this.publish,
-      )
-    }
+    const publish = this.publisher(active.workspace.id)
     if (becameReady) {
       active.ready = true
       await this.dependencies.runnerReady(active.workspace.id, publish)
@@ -203,6 +212,16 @@ export class RunnerChannel {
         active,
         () => this.current === active,
         () => this.close(),
+      )
+    }
+  }
+
+  private publisher(workspaceId: string): ChatCallbackPublisher {
+    return async (event, occurredAt) => {
+      await this.store.change(
+        workspaceId,
+        (transaction) => transaction.emit(event, occurredAt),
+        this.publish,
       )
     }
   }

@@ -36,6 +36,14 @@ export function chatDependencies(
     receiveFileResult: async () => undefined,
     runnerEventStored: async () => undefined,
     runnerReady: async () => undefined,
+    runnerDisconnected: async () => undefined,
+    turnDispatching: async () => true,
+    turnDispatchFailed: async () => undefined,
+    browserOpened: async () => undefined,
+    browserClosed: async () => undefined,
+    waitUntil: (promise) => {
+      void promise.catch(() => undefined)
+    },
     matchesObject: () => true,
     ...overrides,
     resolveLogin: loginResolver(env, workspaceId, overrides.resolveLogin),

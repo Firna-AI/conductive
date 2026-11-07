@@ -9,8 +9,9 @@ import {
   workspacePaths,
   workspacesPath,
   type CreateWorkspaceResponse,
+  type WorkspaceResponse,
 } from '../../src/shared/workspaces'
-import { privateResponse } from '../http'
+import { HttpError, privateResponse } from '../http'
 import type { RequestContext } from '../security/gate'
 import { requireOrgMember } from './access'
 import { readBuild, readBuildHistory } from './build-data'
@@ -30,6 +31,7 @@ export interface LifecycleBrowserOptions {
   software: ImageSoftwareArtifact
   /** Milestone 7 stores this message/session and resolves real attachments. */
   acceptFirstMessage(first: FirstWorkspaceMessage): Promise<UserMessage>
+  projectWorkspace?(response: WorkspaceResponse): Promise<WorkspaceResponse>
   waitUntil(promise: Promise<unknown>): void
 }
 
@@ -43,6 +45,8 @@ export async function handleLifecycleRequest(
   if (!context.org) return null
   const orgId = context.org.id
   const path = new URL(request.url).pathname
+  const project = async (response: WorkspaceResponse) =>
+    options.projectWorkspace ? options.projectWorkspace(response) : response
   await requireOrgMember(runtime.env.DB, orgId, context.user.id)
   if (path === workspacesPath(orgId) && request.method === 'POST') {
     const provisioning = createWorkspace(
@@ -54,10 +58,13 @@ export async function handleLifecycleRequest(
     options.waitUntil(provisioning)
     const created = await provisioning
     const firstMessage = await options.acceptFirstMessage(created.first)
+    const projected = options.projectWorkspace
+      ? await options.projectWorkspace(created)
+      : created
     const result: CreateWorkspaceResponse = {
-      workspace: created.workspace,
-      start: created.start,
-      error: created.error,
+      workspace: projected.workspace,
+      start: projected.start,
+      error: projected.error,
       sessionId: created.first.sessionId,
       firstMessage,
     }
@@ -118,11 +125,25 @@ export async function handleLifecycleRequest(
       })
     }
   }
-  const workspaceId = path.slice(workspacesPath(orgId).length + 1).split('/')[0]
-  if (!workspaceId) return null
+  const prefix = `${workspacesPath(orgId)}/`
+  if (!path.startsWith(prefix)) return null
+  const encodedWorkspaceId = path.slice(prefix.length).split('/')[0]
+  if (!encodedWorkspaceId) return null
+  let workspaceId: string
+  try {
+    workspaceId = decodeURIComponent(encodedWorkspaceId)
+  } catch {
+    throw new HttpError(
+      404,
+      'workspace_not_found',
+      'The workspace is not available.',
+    )
+  }
   if (path === workspacePath(orgId, workspaceId) && request.method === 'GET')
     return privateResponse(
-      Response.json(await workspaceResponse(runtime, orgId, workspaceId)),
+      Response.json(
+        await project(await workspaceResponse(runtime, orgId, workspaceId)),
+      ),
     )
   if (
     path === workspacePaths.resume(orgId, workspaceId) &&
@@ -130,7 +151,9 @@ export async function handleLifecycleRequest(
   )
     return privateResponse(
       Response.json(
-        await resumeWorkspace(runtime, orgId, workspaceId, context.user.id),
+        await project(
+          await resumeWorkspace(runtime, orgId, workspaceId, context.user.id),
+        ),
       ),
     )
   if (
@@ -139,12 +162,14 @@ export async function handleLifecycleRequest(
   )
     return privateResponse(
       Response.json(
-        await openWorkspace(
-          runtime,
-          orgId,
-          workspaceId,
-          context.user.id,
-          runtime.dependencies.randomToken(),
+        await project(
+          await openWorkspace(
+            runtime,
+            orgId,
+            workspaceId,
+            context.user.id,
+            runtime.dependencies.randomToken(),
+          ),
         ),
       ),
     )
