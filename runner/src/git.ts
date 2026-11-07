@@ -7,9 +7,15 @@ export interface GitRunOptions {
 export class Git {
   readonly root: string
   private readonly environment: Record<string, string>
-  constructor(root: string, environment: Record<string, string> = {}) {
+  readonly signal: AbortSignal | undefined
+  constructor(
+    root: string,
+    environment: Record<string, string> = {},
+    signal?: AbortSignal,
+  ) {
     this.root = root
     this.environment = environment
+    this.signal = signal
   }
 
   run(args: readonly string[], options: GitRunOptions = {}): Promise<Buffer> {
@@ -26,6 +32,7 @@ export class Git {
           cwd: this.root,
           encoding: 'buffer',
           maxBuffer: 64 * 1024 * 1024,
+          signal: this.signal,
           env: { ...process.env, ...this.environment, GIT_OPTIONAL_LOCKS: '0' },
         },
         (error, stdout) => {

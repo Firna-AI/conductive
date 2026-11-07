@@ -2,10 +2,11 @@ import { onTestFinished } from 'vitest'
 
 import type { AgentChatEvent } from '../../src/shared/chat-events'
 import { AgentEngine } from '../src/engine'
+import type { EngineOptions } from '../src/engine-session'
 import { EventStore, type RunnerState } from '../src/state'
 import { FakeProviders } from './providers'
 
-export async function engineFixture() {
+export async function engineFixture(overrides: Partial<EngineOptions> = {}) {
   let saved: RunnerState = {
     streamId: 'engine-test-stream',
     nextEventNumber: 1,
@@ -24,7 +25,7 @@ export async function engineFixture() {
   const events: AgentChatEvent[] = []
   const warnings: string[] = []
   const store = await EventStore.open(storage)
-  const options = {
+  const options: EngineOptions = {
     cwd: '/repo',
     home: '/home/agent',
     computerMcpUrl: 'http://computer.test/mcp',
@@ -39,6 +40,7 @@ export async function engineFixture() {
     warn: (message: string) => {
       warnings.push(message)
     },
+    ...overrides,
   }
   const engine = new AgentEngine(options)
   onTestFinished(() => engine.close())

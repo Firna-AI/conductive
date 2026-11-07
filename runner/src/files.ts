@@ -106,6 +106,12 @@ export class FileReporter {
 
   private async scan(full: boolean): Promise<void> {
     const current = await this.repository.snapshot(this.branch)
+    const contentChanged =
+      this.previous === null ||
+      current.identities.size !== this.previous.identities.size ||
+      [...current.identities].some(
+        ([path, identity]) => this.previous?.identities.get(path) !== identity,
+      )
     const events: RunnerFileEvent[] = []
     if (full || this.previous === null) {
       events.push({
@@ -128,7 +134,10 @@ export class FileReporter {
       for (const [path] of previous)
         if (!entries.has(path)) changes.push({ operation: 'remove', path })
       for (const [path, entry] of entries) {
-        if (JSON.stringify(previous.get(path)) !== JSON.stringify(entry))
+        if (
+          JSON.stringify(previous.get(path)) !== JSON.stringify(entry) ||
+          this.previous.identities.get(path) !== current.identities.get(path)
+        )
           changes.push({ operation: 'upsert', entry })
       }
       if (changes.length)
@@ -139,6 +148,8 @@ export class FileReporter {
     }
     if (
       full ||
+      contentChanged ||
+      this.previous?.baseCommit !== current.baseCommit ||
       JSON.stringify(this.previous?.changes) !== JSON.stringify(current.changes)
     ) {
       events.push({

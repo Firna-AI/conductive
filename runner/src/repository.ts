@@ -5,6 +5,7 @@ import type {
   DiffResponse,
   FileEntry,
 } from '../../src/shared/files'
+import { checkpointFromIndex, type Checkpoint } from './checkpoint'
 import { readFileResponse } from './file-access'
 import { readGitDiff } from './git-diff'
 import { branchChanges, changesFromIndex } from './repository-changes'
@@ -14,13 +15,19 @@ import { withGitIndex } from './git-index'
 export interface RepositorySnapshot {
   entries: FileEntry[]
   changes: ChangesResponse
+  identities: Checkpoint
+  baseCommit: string
 }
 
 export class Repository {
   readonly git: Git
   private readonly warn: (message: string) => void
-  constructor(root: string, warn: (message: string) => void = () => {}) {
-    this.git = new Git(root)
+  constructor(
+    root: string,
+    warn: (message: string) => void = () => {},
+    signal?: AbortSignal,
+  ) {
+    this.git = new Git(root, {}, signal)
     this.warn = warn
   }
 
@@ -70,6 +77,8 @@ export class Repository {
             a.path.localeCompare(b.path, 'en'),
           ),
           changes,
+          identities: await checkpointFromIndex(index),
+          baseCommit: sha,
         }
       },
       sha,

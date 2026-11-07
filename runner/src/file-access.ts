@@ -2,8 +2,10 @@ import { constants } from 'node:fs'
 import { open, readlink, realpath } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 
+import { isFilePath } from '../../src/shared/file-path'
 import type { FileResponse } from '../../src/shared/files'
 import type { RunnerFileError } from '../../src/shared/runner-files'
+import { decodeUtf8 } from '../../src/shared/utf8'
 
 export class FileAccessError extends Error {
   readonly detail: RunnerFileError
@@ -21,13 +23,7 @@ export function unavailable(): FileAccessError {
 }
 
 export function safePath(path: string): void {
-  if (
-    !path ||
-    isAbsolute(path) ||
-    path.includes('\0') ||
-    path.split('/').some((part) => part === '..' || part === '.git')
-  )
-    throw unavailable()
+  if (!isFilePath(path) || path.split('/').includes('.git')) throw unavailable()
 }
 
 function inside(root: string, target: string): boolean {
@@ -46,11 +42,7 @@ function mediaType(path: string): string {
 
 export function textContent(bytes: Buffer): string | null {
   if (bytes.includes(0)) return null
-  try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(bytes)
-  } catch {
-    return null
-  }
+  return decodeUtf8(bytes)
 }
 
 /** Verify the opened descriptor too, so a moved parent cannot escape the root. */

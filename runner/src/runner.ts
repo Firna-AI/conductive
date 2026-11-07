@@ -58,9 +58,14 @@ export class Runner {
     )
     this.engine = new AgentEngine({
       ...options,
-      checkpoint: () => checkpoint(repository),
-      changedSince: (before) =>
-        changedSince(repository, options.defaultBranch, before),
+      checkpoint: (signal) =>
+        checkpoint(new Repository(options.cwd, options.warn, signal)),
+      changedSince: (before, signal) =>
+        changedSince(
+          new Repository(options.cwd, options.warn, signal),
+          options.defaultBranch,
+          before,
+        ),
       emit: (event) => this.emit(event),
     })
     this.link = new RunnerLink(options.store, {

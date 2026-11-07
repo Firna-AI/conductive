@@ -40,7 +40,10 @@ export type FileTreeChange =
 export interface FileTreeDelta {
   /** The next tree revision. Split large updates into consecutive revisions. */
   revision: number
-  /** At most FILE_TREE_DELTA_MAX_CHANGES, also within FILE_EVENT_MAX_BYTES. */
+  /**
+   * At most FILE_TREE_DELTA_MAX_CHANGES, also within FILE_EVENT_MAX_BYTES.
+   * An upsert of an unchanged entry reports a content change for that path.
+   */
   changes: readonly FileTreeChange[]
 }
 

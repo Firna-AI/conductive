@@ -28,7 +28,9 @@ export function createClaudeFactory(
   binary = claudeBinary,
 ): ProviderFactory {
   return async (options) => {
+    options.signal?.throwIfAborted()
     await prepareProviderHome(options.home)
+    options.signal?.throwIfAborted()
     const input = new InputQueue<SDKUserMessage>()
     const ids = new Map<string, string>()
     const mapper = new ClaudeEvents(ids, options.event)
@@ -68,10 +70,17 @@ export function createClaudeFactory(
       }
     })()
     const close = async () => {
+      options.signal?.removeEventListener('abort', abort)
+      if (closed) return
       closed = true
       input.discard()
       stream.close()
     }
+    const abort = () => {
+      void close().catch((error: unknown) => options.event(failureCause(error)))
+    }
+    options.signal?.addEventListener('abort', abort, { once: true })
+    if (options.signal?.aborted) abort()
     return {
       send: async (command) => {
         const uuid = randomUUID()

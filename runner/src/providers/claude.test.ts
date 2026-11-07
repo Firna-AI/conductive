@@ -125,6 +125,7 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
     sessionId: 'session-1',
     choice: { agent: 'claude', model: 'new-model', effort: 'max' },
   })
+  await runner.idle()
   h.endpoint.send({
     type: 'interrupt',
     commandId: 'stop',

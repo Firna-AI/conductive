@@ -1,3 +1,7 @@
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 import { onTestFinished, vi } from 'vitest'
 
 import type { ChangedFile } from '../../src/shared/files'
@@ -9,12 +13,14 @@ import {
 import * as checkpoints from '../src/checkpoint'
 import { Repository, type RepositorySnapshot } from '../src/repository'
 import { Runner } from '../src/runner'
-import { EventStore, type RunnerState } from '../src/state'
+import { DiskStorage, EventStore, type StateStorage } from '../src/state'
 import { FakeProviders } from './providers'
 
 export function emptySnapshot(): RepositorySnapshot {
   return {
     entries: [],
+    identities: new Map(),
+    baseCommit: 'base-commit',
     changes: {
       baseBranch: 'main',
       files: [],
@@ -27,7 +33,19 @@ export async function wireFixture(
   snapshot = emptySnapshot(),
   settings: Partial<FakeDurableObjectOptions> = {},
   wrap: (connection: RunnerConnection) => RunnerConnection = (value) => value,
+  storageOverride?: StateStorage,
 ) {
+  const directory = await mkdtemp(join(tmpdir(), 'conducting-wire-'))
+  let runner: Runner | null = null
+  onTestFinished(async () => {
+    try {
+      await runner?.close()
+      await runner?.link.idle()
+    } finally {
+      vi.restoreAllMocks()
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
   let current = snapshot
   let turnFiles: ChangedFile[] = []
   vi.spyOn(Repository.prototype, 'snapshot').mockImplementation(async () =>
@@ -37,13 +55,8 @@ export async function wireFixture(
   vi.spyOn(checkpoints, 'changedSince').mockImplementation(async () =>
     structuredClone(turnFiles),
   )
-  let saved: RunnerState | null = null
-  const storage = {
-    read: async () => structuredClone(saved),
-    write: async (state: RunnerState) => {
-      saved = structuredClone(state)
-    },
-  }
+  const storage =
+    storageOverride ?? new DiskStorage(join(directory, 'state.json'))
   const store = await EventStore.open(storage)
   const endpoint = new FakeDurableObjectEndpoint({
     workspaceId: 'workspace-1',
@@ -73,11 +86,7 @@ export async function wireFixture(
     },
     disconnected: () => {},
   }
-  const runner = new Runner(options)
-  onTestFinished(async () => {
-    await runner.close()
-    vi.restoreAllMocks()
-  })
+  runner = new Runner(options)
   return {
     runner,
     options,

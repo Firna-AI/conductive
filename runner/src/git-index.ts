@@ -40,13 +40,17 @@ export async function withGitIndex<T>(
     ])
     const indexPath = join(directory, 'index')
     await mkdir(join(directory, 'objects'))
-    const git = new Git(source.root, {
-      GIT_INDEX_FILE: indexPath,
-      GIT_OBJECT_DIRECTORY: join(directory, 'objects'),
-      GIT_ALTERNATE_OBJECT_DIRECTORIES: JSON.stringify(
-        objects.toString().replace(/\n$/, ''),
-      ),
-    })
+    const git = new Git(
+      source.root,
+      {
+        GIT_INDEX_FILE: indexPath,
+        GIT_OBJECT_DIRECTORY: join(directory, 'objects'),
+        GIT_ALTERNATE_OBJECT_DIRECTORIES: JSON.stringify(
+          objects.toString().replace(/\n$/, ''),
+        ),
+      },
+      source.signal,
+    )
     try {
       await copyFile(original.toString().replace(/\n$/, ''), indexPath)
     } catch (error) {

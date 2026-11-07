@@ -32,10 +32,11 @@ it('compares Git link, mode, and filter representations without changing stored 
     newContent: 'other.txt',
     patch: expect.stringContaining('-target.txt\n'),
   })
-  await expect(repository.diff('./link', 'main')).resolves.toMatchObject({
-    path: './link',
-    oldContent: 'target.txt',
-    newContent: 'other.txt',
+  await expect(repository.diff('./link', 'main')).rejects.toMatchObject({
+    detail: {
+      code: 'file_unavailable',
+      message: 'The file cannot be read.',
+    },
   })
   expect(
     (await changedSince(repository, 'main', before)).map((file) => file.path),

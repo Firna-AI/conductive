@@ -13,6 +13,7 @@ export interface ProcessRequest {
   args: readonly string[]
   cwd: string
   env: Record<string, string | undefined>
+  signal?: AbortSignal
 }
 
 export type StartProcess = (request: ProcessRequest) => ProcessPort
@@ -22,6 +23,7 @@ export const startProcess: StartProcess = (request) => {
     cwd: request.cwd,
     env: request.env,
     stdio: ['pipe', 'pipe', 'ignore'],
+    signal: request.signal,
   })
   const lines = createInterface({ input: child.stdout })
   const completion = new Promise<void>((resolve) => {

@@ -43,6 +43,7 @@ export interface ProviderOptions {
   choice: AgentChoice
   conversationId: string | null
   event: (event: ProviderEvent) => void
+  signal?: AbortSignal
 }
 
 export type ProviderFactory = (

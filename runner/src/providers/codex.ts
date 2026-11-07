@@ -2,6 +2,7 @@ import { object, string } from '../parse'
 import { codexBinary } from './binaries'
 import { codexNotification } from './codex-events'
 import { prepareProviderHome, providerEnvironment } from './environment'
+import { failureCause } from './failure'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
 import type { ProviderFactory, ProviderInput } from './types'
@@ -28,7 +29,9 @@ export function createCodexFactory(
   start: StartProcess = startProcess,
 ): ProviderFactory {
   return async (options) => {
+    options.signal?.throwIfAborted()
     await prepareProviderHome(options.home)
+    options.signal?.throwIfAborted()
     const configs = {
       model_provider: 'conducting',
       'model_providers.conducting.name': 'Conducting',
@@ -58,6 +61,7 @@ export function createCodexFactory(
         args,
         cwd: options.cwd,
         env: providerEnvironment(options.home, options.login),
+        signal: options.signal,
       }),
       (method, params) => {
         if (method === 'turn/started')
@@ -74,6 +78,20 @@ export function createCodexFactory(
           })
       },
     )
+    let closing: Promise<void> | null = null
+    const close = () => {
+      closed = true
+      activeTurn = null
+      userIds = []
+      options.signal?.removeEventListener('abort', abort)
+      closing ??= rpc.close()
+      return closing
+    }
+    const abort = () => {
+      void close().catch((error: unknown) => options.event(failureCause(error)))
+    }
+    options.signal?.addEventListener('abort', abort, { once: true })
+    if (options.signal?.aborted) abort()
     try {
       await rpc.request('initialize', {
         clientInfo: {
@@ -101,12 +119,6 @@ export function createCodexFactory(
       )
       const threadId = string(object(response.thread).id)
       options.event({ type: 'conversation', id: threadId })
-      const close = async () => {
-        closed = true
-        activeTurn = null
-        userIds = []
-        await rpc.close()
-      }
       return {
         send: async (command) => {
           if (activeTurn) {
@@ -157,8 +169,7 @@ export function createCodexFactory(
         close,
       }
     } catch (error) {
-      closed = true
-      await rpc.close()
+      await close()
       throw error
     }
   }

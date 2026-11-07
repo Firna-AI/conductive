@@ -1,6 +1,7 @@
 import { array, object, string } from '../parse'
 import { mapTool } from './tool'
 import { assistantError, claudeOutcome } from './claude-outcome'
+import { ClaudeMessages } from './claude-message'
 import type { ProviderEvent } from './types'
 
 export function synthetic(text: string): boolean {
@@ -15,11 +16,13 @@ export class ClaudeEvents {
   private errorKind: ReturnType<typeof assistantError> = null
   private readonly ids: Map<string, string>
   private readonly emit: (event: ProviderEvent) => void
+  private readonly messages: ClaudeMessages
   stopped = false
 
   constructor(ids: Map<string, string>, emit: (event: ProviderEvent) => void) {
     this.ids = ids
     this.emit = emit
+    this.messages = new ClaudeMessages(emit)
   }
 
   accept(value: unknown): void {
@@ -44,23 +47,15 @@ export class ClaudeEvents {
       const kind = assistantError(input.error)
       if (kind) {
         this.errorKind = kind
+        if (typeof object(input.message).id === 'string')
+          this.messages.discard(string(object(input.message).id))
         return
       }
       if (input.isSynthetic === true) return
       const message = object(input.message)
       const id = string(message.id)
       const blocks = array(message.content, object)
-      const text = blocks
-        .filter((block) => block.type === 'text')
-        .map((block) => string(block.text))
-        .join('')
-      if (text && !synthetic(text))
-        this.emit({
-          type: 'answer',
-          messageId: id,
-          text,
-          userMessageIds: this.userIds,
-        })
+      this.messages.frame(id, blocks, this.userIds)
       for (const block of blocks) {
         if (block.type === 'tool_use') this.beginTool(block)
       }
@@ -74,6 +69,7 @@ export class ClaudeEvents {
           typeof block.tool_use_id !== 'string'
         )
           continue
+        this.messages.finish()
         const tool = this.tools.get(block.tool_use_id)
         if (tool)
           this.emit({
@@ -86,6 +82,7 @@ export class ClaudeEvents {
       }
     }
     if (input.type === 'result') {
+      this.messages.finish()
       const outcome = claudeOutcome(input, this.errorKind, this.stopped)
       if (outcome.state === 'failed') this.emit(outcome.failure)
       else
@@ -100,10 +97,20 @@ export class ClaudeEvents {
   }
 
   private partial(event: Record<string, unknown>): void {
-    if (event.type === 'message_start')
+    if (event.type === 'message_start') {
       this.messageId = string(object(event.message).id)
+      this.messages.start(this.messageId, this.userIds)
+    }
+    if (event.type === 'message_stop') this.messages.finish(this.messageId)
     if (event.type === 'content_block_start') {
       const block = object(event.content_block)
+      if (typeof event.index === 'number')
+        this.messages.block(
+          this.messageId,
+          event.index,
+          typeof block.text === 'string' ? block.text : '',
+          this.userIds,
+        )
       if (block.type === 'tool_use') this.beginTool(block)
     }
     if (event.type === 'content_block_delta') {
@@ -114,6 +121,12 @@ export class ClaudeEvents {
         typeof delta.text === 'string' &&
         !synthetic(delta.text)
       ) {
+        this.messages.delta(
+          this.messageId,
+          typeof event.index === 'number' ? event.index : null,
+          delta.text,
+          this.userIds,
+        )
         this.emit({
           type: 'delta',
           messageId: this.messageId,
