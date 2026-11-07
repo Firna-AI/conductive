@@ -18,6 +18,7 @@ import { PanelBar } from '../ui/PanelBar'
 import { ChangeList } from './ChangeList'
 import { FileTree } from './FileTree'
 import styles from './FilesPanel.module.css'
+import { UnavailableLists } from './UnavailableLists'
 
 /** The live snapshot of the files of a workspace. */
 export function useFilesSnapshot(files: WorkspaceFiles): FilesSnapshot {
@@ -127,6 +128,11 @@ export function FilesPanel(props: {
   checks?: ReactNode
   /** Shows in place of All files and Changes, such as a sandbox state. */
   placeholder?: ReactNode
+  /**
+   * The time now, for the age of a notice under the lists. Give a stable
+   * function. The default is the clock of the browser.
+   */
+  now?: () => number
 }) {
   const { files, list, navigation } = props
   const snapshot = useFilesSnapshot(files)
@@ -159,10 +165,16 @@ export function FilesPanel(props: {
   }
   return (
     <LayoutRoot className={styles.files} layout={props.layout}>
-      <PanelBar>
-        <LinkTabs label="Files" navigation={navigation} tabs={tabs} />
-      </PanelBar>
-      {body}
+      <div className={styles.lists}>
+        <PanelBar>
+          <LinkTabs label="Files" navigation={navigation} tabs={tabs} />
+        </PanelBar>
+        {body}
+      </div>
+      <UnavailableLists
+        failed={snapshot.failedRepairs}
+        now={props.now ?? Date.now}
+      />
     </LayoutRoot>
   )
 }

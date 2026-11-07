@@ -4,6 +4,8 @@
   align-items: center;
   gap: 4px;
   height: var(--ui-bar-height);
+  /* On a phone the bar holds its 44 px tabs and its own border. */
+  min-height: calc(var(--ui-touch-min, 0px) + 1px);
   padding: 0 8px;
   border-bottom: 1px solid var(--ui-border);
   background: var(--ui-bar);
