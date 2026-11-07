@@ -23,6 +23,6 @@
   - **D.** Start each agent in its own process group, and end the whole group at the end of each turn. This also stops each server that the agent started, such as a dev server behind a port preview, which changes the product. A process can leave its group. Effort: Large.
 - **Left out:** A proxy that keeps every login out of the sandbox, because the user rejected it as a much larger build.
 - **Wider fix:** C.
-- **Previous examples:** `plans/follow-ups/idle-agent-login-lifetime.md`, fixed in PR #30, and PR #30 round 1 finding 2, an agent that ran after its turn ended.
+- **Previous examples:** the idle agent process that kept the login between turns, fixed by Milestone 7u in PR #30, and PR #30 round 1 finding 2, an agent that ran after its turn ended.
 - **Recommendation:** C. It keeps the login out of each tool process and changes nothing in how the tools and servers run. Milestone 8i runs real agents, so it can make the check.
 - **Action:** ask the user, because C needs a run in a real sandbox, and A, B, and D change a protocol rule or how the tools run.
