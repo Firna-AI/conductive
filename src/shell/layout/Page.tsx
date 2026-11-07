@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import { ChevronLeft } from 'lucide-react'
+import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/layout/Page.module.css'
+import { useMacBar } from '../mac/mac-app'
 import { IconButton } from '../ui/actions'
 import { AppLink, useGo } from '../ui/AppLink'
 import { useViewport } from '../ui/viewport'
@@ -67,11 +69,12 @@ function PhonePage(props: PageProps) {
 /** A page with a header and a scrolling body, in the layout of the window. */
 export function Page(props: PageProps) {
   const viewport = useViewport()
+  const bar = useMacBar()
   if (viewport === 'phone') return <PhonePage {...props} />
   const back = props.backOnDesktop ? props.back : undefined
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
+      <header className={classes(styles.header, bar)}>
         {back ? (
           <AppLink className={styles.back} to={back.to}>
             <ChevronLeft aria-hidden size={15} />
