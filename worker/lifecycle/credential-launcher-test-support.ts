@@ -18,6 +18,7 @@ import { URL } from 'node:url'
 
 import type { CommandResult } from '../sandbox/provider'
 import { shellQuote } from './commands'
+import { imageNodeExecutable, imageRuntimeScript } from './image-runtime'
 
 const installedRoots = ['/opt/conducting', '/run/ascii-secrets']
 
@@ -76,15 +77,20 @@ export async function credentialLauncher(
   const installation = join(root, 'opt/conducting')
   const secrets = join(root, 'run/ascii-secrets')
   const launcher = join(root, 'conducting-git-credential')
-  const node = join(installation, 'software/node/bin/node')
+  const commands = join(root, 'caller-bin')
+  const node = imageNodeExecutable(root)
   try {
     const source = await readFile(
       new URL('../../image/git-credential-helper.sh', import.meta.url),
       'utf8',
     )
-    const mapped = mappedLauncher(source, root)
+    const mapped = imageRuntimeScript(mappedLauncher(source, root), root)
     await mkdir(dirname(node), { recursive: true })
     await mkdir(secrets, { recursive: true })
+    await mkdir(commands, { recursive: true })
+    await writeFile(join(commands, 'node'), '#!/bin/sh\nexit 73\n', {
+      mode: 0o755,
+    })
     await writeFile(launcher, mapped)
     await copyFile(
       new URL('../../image/git-credential-helper.mjs', import.meta.url),
@@ -102,13 +108,14 @@ export async function credentialLauncher(
       files: () => diskFiles(root),
       run: (turnId: string, input: string): Promise<CommandResult> =>
         new Promise((resolve) => {
+          let stdinFailure = ''
           const child = execFile(
             '/bin/sh',
             [launcher, 'get'],
             {
               cwd: root,
               env: {
-                PATH: '/usr/bin:/bin',
+                PATH: `${commands}:/usr/bin:/bin`,
                 HOME: root,
                 TMPDIR: root,
                 LC_ALL: 'C',
@@ -126,11 +133,14 @@ export async function credentialLauncher(
                     : null
                   : 0,
                 stdout,
-                stderr: stderr || error?.message || '',
+                stderr: stderr || error?.message || stdinFailure,
                 timedOut: false,
               })
             },
           )
+          child.stdin?.on('error', (error: Error) => {
+            stdinFailure = error.message
+          })
           child.stdin?.end(input)
         }),
       dispose: () => rm(root, { recursive: true, force: true }),

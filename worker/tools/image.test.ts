@@ -7,6 +7,7 @@ import { expect, it } from 'vitest'
 
 import { TOOL_ENV } from '../../tools/context'
 import { MCP_PROTOCOL_VERSION } from '../../tools/mcp'
+import { imageNodeExecutable } from '../lifecycle/image-runtime'
 import {
   installWorkspaceTools,
   WORKSPACE_TOOLS_COMMAND,
@@ -50,9 +51,9 @@ it('installs working CLI and MCP tools under a root with spaces and apostrophes'
       },
       root,
     )
-    const systemNode = join(root, 'usr/bin/node')
-    await mkdir(dirname(systemNode), { recursive: true })
-    await symlink(process.execPath, systemNode)
+    const privateNode = imageNodeExecutable(root)
+    await mkdir(dirname(privateNode), { recursive: true })
+    await symlink(process.execPath, privateNode)
     const callerBin = join(root, 'caller bin')
     await mkdir(callerBin, { recursive: true })
     await writeFile(join(callerBin, 'node'), '#!/bin/sh\nexit 73\n', {
@@ -128,7 +129,7 @@ it('installs working CLI and MCP tools under a root with spaces and apostrophes'
   }
 })
 
-it('uses executable Node candidates in fixed folder order and never falls back to PATH', async () => {
+it('requires the private runtime and never falls back to system Node or PATH', async () => {
   const root = await mkdtemp(join(tmpdir(), "conducting node's "))
   try {
     await installWorkspaceTools(
@@ -140,34 +141,43 @@ it('uses executable Node candidates in fixed folder order and never falls back t
       },
       root,
     )
-    const candidates = [
-      { folder: 'usr/local/bin', exitCode: 31 },
-      { folder: 'usr/bin', exitCode: 32 },
-      { folder: 'bin', exitCode: 33 },
-    ]
-    for (const candidate of candidates) {
-      const folder = join(root, candidate.folder)
+    for (const folderName of ['usr/local/bin', 'usr/bin', 'bin']) {
+      const folder = join(root, folderName)
       await mkdir(folder, { recursive: true })
-      await writeFile(
-        join(folder, 'node'),
-        `#!/bin/sh\nexit ${candidate.exitCode}\n`,
-        { mode: 0o755 },
-      )
+      await writeFile(join(folder, 'node'), '#!/bin/sh\nexit 73\n', {
+        mode: 0o755,
+      })
     }
     const executable = join(root, WORKSPACE_TOOLS_COMMAND)
-    for (const candidate of candidates) {
-      const result = await imageTestProcess(executable, ['--help'])
-      expect(result.exitCode, result.stderr).toBe(candidate.exitCode)
-      expect(result.stdout).toBe('')
-      expect(result.stderr).toBe('')
-      await chmod(join(root, candidate.folder, 'node'), 0o644)
+    const environment = { PATH: join(root, 'bin') }
+    const node = imageNodeExecutable(root)
+    for (const installed of [false, true]) {
+      if (installed) {
+        await mkdir(dirname(node), { recursive: true })
+        await writeFile(node, '#!/bin/sh\nexit 41\n', { mode: 0o644 })
+      }
+      const unavailable = await imageTestProcess(
+        executable,
+        ['--help'],
+        '',
+        environment,
+      )
+      expect(unavailable.exitCode).toBe(1)
+      expect(unavailable.stdout).toBe('')
+      expect(unavailable.stderr).toBe(
+        'Node is not available for the workspace tools.\n',
+      )
     }
-    const unavailable = await imageTestProcess(executable, ['--help'])
-    expect(unavailable.exitCode).toBe(1)
-    expect(unavailable.stdout).toBe('')
-    expect(unavailable.stderr).toBe(
-      'Node is not available for the workspace tools.\n',
+    await chmod(node, 0o755)
+    const available = await imageTestProcess(
+      executable,
+      ['--help'],
+      '',
+      environment,
     )
+    expect(available.exitCode, available.stderr).toBe(41)
+    expect(available.stdout).toBe('')
+    expect(available.stderr).toBe('')
   } finally {
     await rm(root, { recursive: true, force: true })
   }

@@ -3,6 +3,7 @@ import {
   type WorkspaceToolSource,
 } from '../../tools/image-manifest'
 import type { CommandResult } from '../sandbox/provider'
+import { imageNodeExecutable } from '../lifecycle/image-runtime'
 
 export const WORKSPACE_TOOLS_DIRECTORY = '/opt/conducting/agent-tools'
 export const WORKSPACE_TOOLS_COMMAND = '/usr/local/bin/conducting'
@@ -24,9 +25,7 @@ export async function installWorkspaceTools(
   const directory = `${prefix}${WORKSPACE_TOOLS_DIRECTORY}`
   const executable = `${prefix}${WORKSPACE_TOOLS_COMMAND}`
   const secrets = `${prefix}${WORKSPACE_TOOLS_SECRETS_FILE}`
-  const nodeCandidates = ['/usr/local/bin/node', '/usr/bin/node', '/bin/node']
-    .map((path) => quote(`${prefix}${path}`))
-    .join(' ')
+  const node = quote(imageNodeExecutable(root))
   const launcher = `#!/bin/sh
 set -eu
 if [ -r ${quote(secrets)} ]; then
@@ -35,11 +34,9 @@ if [ -r ${quote(secrets)} ]; then
   set +a
 fi
 unset NODE_OPTIONS
-for conducting_node in ${nodeCandidates}; do
-  if [ -f "$conducting_node" ] && [ -x "$conducting_node" ]; then
-    exec "$conducting_node" ${quote(`${directory}/tools/main.ts`)} "$@"
-  fi
-done
+if [ -f ${node} ] && [ -x ${node} ]; then
+  exec ${node} ${quote(`${directory}/tools/main.ts`)} "$@"
+fi
 printf '%s\\n' 'Node is not available for the workspace tools.' >&2
 exit 1
 `

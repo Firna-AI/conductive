@@ -12,4 +12,4 @@ fi
 # Startup writes this marker only after branch preparation and the user script.
 test -f /run/conducting/workspace-ready || exit 0
 cd "$CONDUCTING_REPOSITORY_DIR"
-exec /opt/conducting/software/node/bin/node /opt/conducting/software/runner/main.mjs
+exec @CONDUCTING_NODE@ /opt/conducting/software/runner/main.mjs

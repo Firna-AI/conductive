@@ -8,4 +8,4 @@ if [ -f /run/ascii-secrets/env.sh ]; then
 fi
 # The runner sets this separately for each agent process.
 export CONDUCTING_TURN_ID=$current_turn
-exec /opt/conducting/software/node/bin/node /opt/conducting/git-credential-helper.mjs "$@"
+exec @CONDUCTING_NODE@ /opt/conducting/git-credential-helper.mjs "$@"

@@ -3,7 +3,9 @@ import { expect, it } from 'vitest'
 import { SOFTWARE } from './backend-test-support'
 import { setupBackendTests } from './backend-test-hooks'
 import { readBuild, readBuildJob } from './build-data'
+import { shellQuote } from './commands'
 import { advanceImageBuild, startImageBuild } from './image-builds'
+import { IMAGE_NODE_RUNTIME } from './image-runtime'
 
 const backendFixture = setupBackendTests()
 
@@ -35,6 +37,15 @@ it('runs terminal installation inside the detached software command and streams 
     },
   ])
   expect(boat.commands[0]).toContain('RuntimeDirectoryPreserve=yes')
+  expect(boat.commands[0]).toContain(
+    [
+      IMAGE_NODE_RUNTIME.url,
+      IMAGE_NODE_RUNTIME.sha256,
+      IMAGE_NODE_RUNTIME.directory,
+    ]
+      .map(shellQuote)
+      .join(' '),
+  )
   expect(boat.commands[0]).not.toContain(
     'systemctl start conducting-terminal.service',
   )

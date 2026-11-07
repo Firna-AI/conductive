@@ -258,6 +258,10 @@ object holds the lifecycle state, the turn records, and the events.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
 - [`image-software.ts`](image-software.ts): the runner archive check and
   install/start commands. [`savedScriptCommand`](saved-script.ts) runs Bash.
+- [`image-runtime.ts`](image-runtime.ts): `IMAGE_NODE_RUNTIME`, the pinned
+  private Node of the org image, and its paths. The
+  [image README](../../image/README.md#update-the-node-release) says how to
+  update it.
 - [Repository layout](repository-layout.md#key-code): the repository entries.
 - [`tokens.ts`](tokens.ts): the encrypted workspace token and
   `authenticateWorkspaceToken`.

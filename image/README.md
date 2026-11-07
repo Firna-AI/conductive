@@ -9,6 +9,8 @@ in this folder yet.
 
 ## Responsibilities
 
+- Install the pinned private Node after a check of its SHA-256 digest, or
+  reuse it when the image already holds it.
 - Install the runner archive after a check of its SHA-256 digest.
 - Install and enable the agent runner's systemd service.
 - Make the git credential helper the system credential helper of git.
@@ -32,13 +34,56 @@ No code in this repository builds the archive yet. `readImageSoftware` in
 with a user name, a password, a query, or a fragment. It also refuses a
 digest that is not 64 hexadecimal characters.
 
-The archive must hold these paths:
-
-- `node/bin/node`: an executable Node.
-- `runner/main.mjs`: the agent runner, with its SDK dependencies.
+The archive must hold `runner/main.mjs`: the agent runner, with its SDK
+dependencies. It needs no Node, because the runner runs on the
+[private Node runtime](#the-private-node-runtime).
 
 Put no credential in the URL or in the archive. Each saved snapshot keeps
 the unpacked archive.
+
+## The private Node runtime
+
+The runner, the git credential helper, and the agent tools start a private
+Node by its full path. They never use a Node from `PATH` or the system
+folders, because the org's install script can replace that Node.
+
+[`image-runtime.ts`](../worker/lifecycle/image-runtime.ts) pins one Node 24
+release for Linux x64, now 24.22.2. Its `version` constant names the
+release. `IMAGE_NODE_RUNTIME.sha256` holds the SHA-256 digest of the
+official `node-v<version>-linux-x64.tar.gz` archive. The
+[release page of Node 24.22.2](https://nodejs.org/en/blog/release/v24.22.2)
+gives that digest. The module derives these values from `version`:
+
+- The download URL: `https://nodejs.org/dist/v<version>/node-v<version>-linux-x64.tar.gz`.
+- The version folder: `/opt/conducting/runtime/node-v<version>-linux-x64`.
+- The Node executable: `bin/node` in the version folder.
+
+`install-runtime.sh` downloads nothing when the version folder already
+holds an executable `bin/node`. So a later build reuses the release from
+the last org image. Otherwise it downloads the archive, and checks its
+digest with `sha256sum`. A wrong digest fails the build. It unpacks the
+checked archive into a new folder, which then replaces the version folder.
+It keeps the folders of other releases.
+
+### Update the Node release
+
+1. Choose the new Node 24 release. Copy the digest of its
+   `node-v<version>-linux-x64.tar.gz` archive from its release page,
+   `https://nodejs.org/en/blog/release/v<version>`. Check that
+   `https://nodejs.org/dist/v<version>/SHASUMS256.txt` gives the same digest.
+2. In `image-runtime.ts`, change `version` and `IMAGE_NODE_RUNTIME.sha256`.
+   Change the release and its link in this section too.
+3. Run the installer into a new scratch folder to check the real download:
+
+   ```sh
+   sh image/install-runtime.sh '<download URL>' '<digest>' "$PWD/.context/node-check/node-v<version>-linux-x64"
+   ```
+
+4. Run the tests in [Development](#development).
+
+After you deploy the Worker, the next build of each org image installs the
+new release. A refresh does not install it. A workspace that exists keeps
+the Node of its image.
 
 ## Install
 
@@ -58,22 +103,24 @@ when the copy ends, as
 says.
 
 The software step of a build calls `installImageSoftware`. It writes the
-scripts and the runner unit of this folder to `/opt/conducting/staged/`, and
-then it runs this command:
+scripts and the runner unit of this folder to `/opt/conducting/staged/`.
+Each staged script holds the quoted full path of the private Node in place
+of `@CONDUCTING_NODE@`. Then the step runs these commands, in this order:
 
 ```sh
+sudo -n sh /opt/conducting/staged/install-runtime.sh '<Node URL>' '<Node digest>' '<version folder>'
 sudo -n sh /opt/conducting/staged/install.sh '<archive URL>' '<SHA-256 digest>'
 ```
 
-Boat runs commands as `user`, with passwordless sudo. The installer needs
+Boat runs commands as `user`, with passwordless sudo. The installers need
 system permissions. The installed runner service runs as `user`.
 
 `install.sh` does these steps. A failure stops it, and the build fails.
 
 1. It downloads the archive with `curl`, and checks the digest with
    `sha256sum`.
-2. It unpacks the archive into a new folder, checks both paths, and writes
-   the Node version to the build log.
+2. It unpacks the archive into a new folder, and checks `runner/main.mjs`.
+   It writes the version of the private Node to the build log.
 3. It replaces `/opt/conducting/software` with the new folder, so no file
    of an older archive stays.
 4. It installs the runner start script, the git credential helper, and the
@@ -146,7 +193,7 @@ call that hook and start no terminal. A disk retention restart runs
 startup script, but it writes no ready marker and does not restart the
 runner service.
 
-Otherwise, `runner-start.sh` runs `runner/main.mjs` with the archive's
+Otherwise, `runner-start.sh` runs `runner/main.mjs` with the private
 Node, in the repository folder. The runner unit restarts its service after
 a failure. The terminal backend describes its launcher, password, and
 automatic restart in its [README](../worker/terminal/README.md).
@@ -156,7 +203,7 @@ automatic restart in its [README](../worker/terminal/README.md).
 `install.sh` installs `git-credential-helper.sh` as
 `/usr/local/bin/conducting-git-credential`. This wrapper keeps the
 caller's `CONDUCTING_TURN_ID`, loads the sandbox variables, and runs
-`git-credential-helper.mjs` with the archive's Node.
+`git-credential-helper.mjs` with the private Node.
 
 - The helper answers only a `get` request for `https` on `github.com`. It
   ignores every other request.
@@ -204,13 +251,21 @@ file, in a temporary folder under `.context/`. It maps only
 a launcher that uses any other absolute path. It runs the launcher with
 `/bin/sh`, and checks the outgoing credential request and its turn ID.
 
+Run the installer tests with
+`npm run test -- worker/lifecycle/image-runtime.test.ts worker/lifecycle/image-software.test.ts`.
+They run the shipped scripts with local archives and a fake `curl`.
+
 - The Worker imports each file with Vite's `?raw` suffix. When you add a
-  file here, also add it to `installImageSoftware` and to `install.sh`.
+  file here, also add it to `installImageSoftware`. Add it to `install.sh`
+  too when a sandbox uses it after the build.
+- Start Node in a script only as `@CONDUCTING_NODE@`.
 - Keep each start script safe to run in a build sandbox. Of the variables
   in the table, a build sandbox has only the folder variables.
 
 ### Key Code
 
+- [`install-runtime.sh`](install-runtime.sh): installs the private Node.
+  Its arguments are the download URL, the digest, and the version folder.
 - [`install.sh`](install.sh): installs the runner archive, its service,
   and the git helper. Its arguments are the archive URL and the digest.
 - [`runner-start.sh`](runner-start.sh) and
@@ -221,6 +276,8 @@ a launcher that uses any other absolute path. It runs the launcher with
 - [`git-credential-helper.sh`](git-credential-helper.sh) and
   [`git-credential-helper.mjs`](git-credential-helper.mjs): the git
   credential helper.
+- [`image-runtime.ts`](../worker/lifecycle/image-runtime.ts): the pinned
+  Node release, its digest, and its paths.
 - [`image-software.ts`](../worker/lifecycle/image-software.ts): stages these
   files for a build, adds the terminal install command, and makes the
   startup command for a workspace start or a disk retention restart.
