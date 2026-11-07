@@ -2645,6 +2645,8 @@ Added on 6 November 2026 from finding 2 of the Milestone 15 review.
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 6 November 2026, in a workspace of
   `futex-ai/skills`. This repository changes nothing for it.
+- **Done:** `futex-ai/skills` pull request #91 added the rule to the
+  `documentation` skill. The user merged it on 7 November 2026.
 
 ### 67. Decide the content security policy of both apps
 
@@ -3254,6 +3256,31 @@ Added on 6 November 2026 from PR #20 round 1 finding 5.
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 6 November 2026. Milestone 11a applies it.
 
+### 96. Recover from a lost workspace update
+
+Added on 6 November 2026 from item 1 of Milestone 8j.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** The updates that belong to no chat session are the file
+  list, the changed-files list, the start steps, and the workspace name. A
+  later full update of the same kind replaces each of them.
+- **Options:**
+  - **A.** A notice in the Files panel only. Effort: Medium.
+  - **B.** A notice below the workspace header. Effort: Medium.
+  - **D.** A notice beside the affected data. Effort: Medium.
+  - **E.** After a lost update, the workspace asks the runner for a fresh
+    full report of that kind, and the browser shows nothing. A notice
+    shows beside the data, as in D, only when the fresh report is lost
+    too. Effort: Medium.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 6 November 2026, from the question "some
+  updates are basically replaced by a later update right, like the file
+  list, it doesn't matter so long as we have the latest one?". Milestone
+  7s adds the runner command and the failed repair to the contracts and
+  the workspace, Milestone 7t answers the command in the runner, and
+  Milestone 8l shows the notice of a failed repair.
+
 ### 97. Retry only the newest turn
 
 Added on 6 November 2026 from the check of PR #24 round 1 finding 2.
@@ -3318,6 +3345,51 @@ we can use for it".
   - Decision records keep the old name, because they are history.
   - Milestone 15j does the rename. It starts now and merges after the
     open milestones, so that it renames the names that they add.
+
+
+### 101. Decide who owns the GitHub App
+
+Added on 7 November 2026, when the user asked to set up the GitHub App and
+Cloudflare.
+
+- **Options:**
+  - **A.** The Firna-AI organization.
+  - **B.** The user's personal account.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 7 November 2026. The app is named
+  "Conductive".
+
+### 103. Let agents change GitHub workflow files
+
+Added on 7 November 2026, with decision 101.
+
+- **Background:** GitHub refuses a push that changes `.github/workflows/`
+  unless the app has the Workflows permission.
+- **Options:**
+  - **A.** No Workflows permission.
+  - **B.** The app asks for the Workflows permission, so agents can change
+    CI files.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 7 November 2026.
+
+### 102. Name the hostname for machines and version its paths
+
+Added on 7 November 2026, with decision 101.
+
+- **Background:** The runner, the agent tools, the git credential helper,
+  and GitHub's webhooks call the Worker on their own hostname. Its gate
+  checks a workspace token or a webhook signature, never a browser
+  cookie.
+- **Options:**
+  - **A.** `machines.conductive.build`.
+  - **B.** `api.conductive.build`.
+  - **C.** `m.conductive.build`.
+- **Recommendation:** A.
+- **Chosen:** B, by the user on 7 November 2026, with versioned paths: "sounds
+  like an api - so api.conductive.build - but also we should version it".
+  The machine routes live under `/v1/`, such as
+  `https://api.conductive.build/v1/github/webhooks`. The preview domain is
+  `conductive.page`, which the user bought. Milestone 15j applies both.
 
 ## Design
 
@@ -4357,6 +4429,22 @@ Apply decision 76 E in the workspace Durable Object.
 - [ ] Join the parts of a file tree and of a changes list before the
       files store takes them.
 - [ ] Test each refusal, a tree in parts, and a resend after a refusal.
+- [ ] Apply decision 96 E: add a runner command that asks for a fresh full
+      report of the file list, the changes list, the start steps, or the
+      workspace name. Send it once after the workspace refuses such an
+      update. When the fresh report is refused too, store the marker as a
+      failed repair. State both rules in the protocol.
+
+## Milestone 7t: Fresh reports from the runner
+
+Depends on: 7r, 7s
+
+Apply the runner half of decision 96 E.
+
+- [ ] Answer the fresh-report command of Milestone 7s with a full report
+      of the asked kind: the file list and the changes list in numbered
+      parts, the start steps, or the last workspace name.
+- [ ] Test each kind, and a command during a running turn.
 
 ## Milestone 8: Chat UI
 
@@ -4393,11 +4481,10 @@ finding 2 of the Milestone 4d review.
 - [ ] Draw in the chat mockups how much tool detail and how many files the
       runner left out, and the line of a refused event, which names what
       was lost.
-- [ ] Draw where a marker that belongs to no session shows, such as the
-      marker of a refused file event. No rule says where yet, so bring
-      the pictures to the user as a decision before you build it. That
-      decision must also choose where the browser keeps such a marker and
-      how a browser tab that opens later reads it.
+- [x] Draw where a marker that belongs to no session shows, and bring the
+      pictures to the user. The user chose decision 96 E: the workspace
+      repairs such a loss, and Milestone 8l shows a notice only for a
+      failed repair. Branch: `conductor/boat-native-remote-workspaces-milestone-8j`.
 - [ ] Show them in the chat screens.
 - [ ] Compare each screen with its mockup.
 
@@ -4414,6 +4501,22 @@ Apply decision 97 D.
       Try again only on the failed item that the record names.
 - [ ] Test an old Try again in a second tab, and update the chat protocol.
 - [ ] Delete `plans/follow-ups/chat-retry-newest-turn.md`.
+
+## Milestone 8l: Notices of a failed repair
+
+Tags: ui
+
+Depends on: 7s, 8j
+
+Apply the browser half of decision 96 E.
+
+- [ ] Show a notice beside the affected data only for a failed repair: in
+      the Files panel for the file list and the changes list, and below
+      the workspace header for the start steps and the workspace name. A
+      newer complete report clears it.
+- [ ] Keep the notices in the memory of the tab. A tab that opens later
+      reads them from the stored history.
+- [ ] Compare each screen with its mockup.
 
 ## Milestone 8i: Chat path wiring
 
@@ -4680,6 +4783,11 @@ Evidence: `.context/milestone-15j/visual-review.md`,
 - [x] Redraw the name in the brand lockups of `docs/brand/`, and make the
       marketing pictures and the screenshots that show the name again.
       Branch: `conductor/boat-native-remote-workspaces-milestone-15j`.
+- [ ] Serve the machine routes on `api.conductive.build` under `/v1/`: the
+      runner socket, the agent tools, the git credential helper, and the
+      GitHub webhooks, as decision 102 says. Use `conductive.page` as the
+      preview domain. Name both in the architecture doc and the protocol.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15j`.
 - [ ] Merge the primary branch last, and rename each new occurrence. Then
       a search for the old name finds only decision records and history.
       Branch: `conductor/boat-native-remote-workspaces-milestone-15j`.
@@ -4772,10 +4880,11 @@ This milestone needs the prerequisites from the user.
 
 - [ ] Deploy the Worker, D1, and the web app to the user's Cloudflare
       account, with GitHub sign-in.
-- [ ] Create the D1 database with the Western Europe location hint, near
+- [x] Create the D1 database with the Western Europe location hint, near
       the workspace Durable Objects and Boat's machines. Cloudflare fixes
       the place of the database when it creates it. Added on 6 November
-      2026.
+      2026. Done on 7 November 2026: `conductive`, in `WEUR`, with every
+      merged migration applied. Branch: `calummoore/conductor-alternative-architecture`.
 - [ ] Smoke-test with a real Boat sandbox: create a workspace, chat, open
       a file, use the terminal, open a preview, stop, and resume.
 - [ ] Check that a private Boat port does not answer on the public
