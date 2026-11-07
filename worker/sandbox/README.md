@@ -86,9 +86,11 @@ They contain no provider text.
 A successful file content overflow instead keeps the metadata fallback described below.
 An oversized file error reply gets the generic response error and does not start that fallback.
 An oversized metadata reply also gets the generic response error.
+
 An error reply within 1 MiB keeps the ordinary typed provider error, status, provider code, and retry metadata.
 Malformed success replies keep the `invalid_response` provider error with status 502.
 Malformed error replies keep their upstream status and retry metadata without a provider code.
+A typed provider error from a file content read also starts the metadata fallback.
 
 ## File reads
 
@@ -110,13 +112,21 @@ Its byte collector counts each `Uint8Array.byteLength` before keeping the chunk.
 When the next chunk crosses the budget, it cancels the stream and discards that chunk.
 The shared JSON reader decodes and parses only after the complete body fits.
 
-After overflow, the adapter calls `GET /sandboxes/{id}/files/info` with the same path.
-It checks Boat's flat metadata response and returns its file size.
+After a successful file content overflow or a typed provider error, the adapter calls `GET /sandboxes/{id}/files/info` with the same path.
+It checks Boat's flat metadata response.
 It checks the path in both file and metadata responses.
 The metadata request uses the 1 MiB response budget.
 The [primary file reference](https://docs.boat.dev/api/reference/agent/read-sandbox-file)
 and [metadata reference](https://docs.boat.dev/api/reference/agent/get-sandbox-file-info)
 define these two routes.
+
+The metadata fallback returns the size result only when valid metadata gives a size above `maxBytes`.
+Otherwise, the read fails with a safe error:
+
+- After a successful file content overflow, valid metadata with a size at or below `maxBytes` gives the `invalid_response` provider error with status 502.
+- After a successful file content overflow, a metadata failure gives its own safe error.
+- After a typed provider error, that error stays when the metadata is valid or the metadata failure is a typed provider error.
+- After a typed provider error, an oversized metadata reply gets the generic response error.
 
 The [Files backend](../files/README.md) checks decoded byte counts and converts file content for browser responses.
 Provider failures use safe typed errors.
@@ -139,7 +149,8 @@ The transport tests use counted streams to check exact budgets and early cancell
 - [transport-error-body.test.ts](transport-error-body.test.ts) checks the shared error budget and provider error mapping.
 - [file-response.ts](file-response.ts) calculates the file content budget.
 - [The shared readers](../http/bounded-body.ts) collect bounded bytes and decode and parse complete JSON bodies.
-- [file-read.ts](file-read.ts) parses file replies and reads metadata after overflow.
+- [file-read.ts](file-read.ts) parses file replies and runs the metadata fallback.
+- [file-read.test.ts](file-read.test.ts) checks size results and safe errors from the metadata fallback.
 
 See the [access requirements](../../docs/protocol/access-and-security.md#orgs-and-workspaces)
 and [file requirements](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes).
