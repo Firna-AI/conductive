@@ -22,7 +22,12 @@ import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { creationAdmissionResponse } from './creation-admission-response'
 import { StartWaiters } from './start-waiters'
 import { advanceStartCommand } from './start-command-execution'
-import { transientProviderError } from './provider-retry'
+import {
+  providerRetryPending,
+  providerRetryExpired,
+  ProviderRetryExhausted,
+} from './provider-retry'
+import { retryStartError } from './start-provider-retry'
 
 /** The actor's alarm owns progress. Waiting HTTP requests own no phase. */
 export class WorkspaceStartCoordinator {
@@ -98,6 +103,12 @@ export class WorkspaceStartCoordinator {
   private async advanceOwned(): Promise<boolean> {
     const job = await this.storage.job()
     if (!job) return publishCreationResult(this.env, this.storage)
+    if (
+      !job.cancelled &&
+      !job.failure &&
+      providerRetryPending(job.providerRetry, this.dependencies.now())
+    )
+      return false
     let provider: SandboxProvider | undefined
     try {
       if (job.phase === 'records' && !job.cancelled && !job.failure) {
@@ -116,6 +127,7 @@ export class WorkspaceStartCoordinator {
         await this.storage.update({
           ...job,
           phase: 'machine',
+          providerRetry: null,
           imageName,
           admission: created,
           processId: null,
@@ -146,6 +158,8 @@ export class WorkspaceStartCoordinator {
         if (result) await this.finish(result)
         return result !== null
       }
+      if (providerRetryExpired(job.providerRetry, this.dependencies.now()))
+        throw new ProviderRetryExhausted()
       const row = await readWorkspace(this.env.DB, job.orgId, job.workspaceId)
       if (row.archivedAt !== null || row.state === 'archived') {
         await this.cancel()
@@ -167,10 +181,12 @@ export class WorkspaceStartCoordinator {
           await this.storage.update({
             ...job,
             ...next,
+            providerRetry: null,
             processId: null,
             stdoutOffset: 0,
             stderrOffset: 0,
           })
+        else await this.storage.retry(job.attempt, 'progress')
         return false
       }
       if (
@@ -211,18 +227,21 @@ export class WorkspaceStartCoordinator {
       await this.finish({ ok: true })
       return true
     } catch (error) {
-      if (!job.cancelled && !job.failure && transientProviderError(error))
+      if (await retryStartError(this.storage, error, this.dependencies.now()))
         return false
+      const current = (await this.storage.job()) ?? job
       const failure =
         error instanceof HttpError ? error : new WorkspaceStartError(null)
-      const failedJob = {
-        ...job,
-        failure: job.failure ?? {
-          code: failure.code,
-          message: failure.message,
-          status: failure.status,
-        },
-      }
+      const failedJob = current.cancelled
+        ? current
+        : {
+            ...current,
+            failure: current.failure ?? {
+              code: failure.code,
+              message: failure.message,
+              status: failure.status,
+            },
+          }
       await this.storage.update(failedJob)
       const result = await finishFailedStart(
         this.env,
@@ -247,6 +266,7 @@ export class WorkspaceStartCoordinator {
     await this.storage.update({
       ...job,
       phase,
+      providerRetry: null,
       processId: null,
       stdoutOffset: 0,
       stderrOffset: 0,

@@ -41,7 +41,14 @@ it('resumes saved build progress on the next alarm after a transient provider er
     buildId: id,
     nextAt: TEST_TIME,
   })
-  expect(await readBuildJob(runtime.env.DB, org.id, id)).toEqual(checkpoint)
+  expect(await readBuildJob(runtime.env.DB, org.id, id)).toEqual({
+    ...checkpoint,
+    providerRetry: {
+      openedAt: TEST_TIME,
+      failures: 1,
+      retryAt: TEST_TIME + 1_000,
+    },
+  })
   expect(fixture.scheduled.at(-1)).toMatchObject({
     buildId: id,
     nextAt: TEST_TIME + IMAGE_POLL_MS,

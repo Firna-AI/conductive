@@ -143,8 +143,8 @@ chat backend and the runner ingestion, and no code calls them yet:
 
 The `alarm` of the class serves both roles. For an image coordinator, it
 advances the running build or refresh by one step, or starts the daily
-refresh. A transient Boat error keeps the job step for the next alarm,
-except a source command start. For a workspace object, it:
+refresh. A transient Boat error keeps the job step for the next alarm, within the
+[retry window](image-builds.md#provider-retries), except a source command start. For a workspace object, it:
 
 - runs the queued start of a create or a resume, one phase at a time
 - stops the sandbox after 30 minutes without activity or a running turn
@@ -199,8 +199,8 @@ workspace event history, with chat and lifecycle events.
   [GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens)
   says.
 
-[Image builds](image-builds.md) gives the build entry points, the build
-steps, the log limits, the snapshot leases, and the refresh timers.
+[Image builds](image-builds.md) gives the build entry points, the build steps, the provider retries,
+the log limits, the snapshot leases, and the refresh timers.
 
 ## Settings
 
@@ -241,7 +241,7 @@ object holds the lifecycle state, the turn records, and the events.
   `resumeWorkspace`.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
-  phases, admission, process IDs, output offsets, and results.
+  phases, admission, process IDs, output offsets, retry state, and results.
 - [`start-job-codec.ts`](start-job-codec.ts): `serializeStartJob` and
   `readStartJob`, which convert the start job for storage and internal RPC.
 - [`start-logs.ts`](start-logs.ts): `releasedStartLog`, which masks the

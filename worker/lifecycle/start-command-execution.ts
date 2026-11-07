@@ -46,6 +46,7 @@ export async function advanceStartCommand(
       ),
     )
     await storage.update({ ...job, processId: started.processId })
+    await storage.retry(job.attempt, 'progress')
     return false
   }
   const status = await provider.getCommandStatus(row.sandboxId, job.processId, {
@@ -53,6 +54,7 @@ export async function advanceStartCommand(
     stderrOffset: job.stderrOffset,
   })
   await storage.capture(job, status)
+  await storage.retry(job.attempt, 'progress')
   if (status.more || status.running) return false
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut)
     throw new WorkspaceStartError(null)

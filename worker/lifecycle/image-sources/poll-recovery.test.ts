@@ -3,7 +3,11 @@ import { generateKeyPairSync } from 'node:crypto'
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { ProviderError } from '../../sandbox/errors'
-import { createHarness, type TestHarness } from '../../test-support/harness'
+import {
+  createHarness,
+  TEST_TIME,
+  type TestHarness,
+} from '../../test-support/harness'
 import { readBuildJob } from '../build-data'
 import { advanceImageBuild } from '../image-builds'
 import { heldOperation } from '../platform-test-storage'
@@ -63,12 +67,20 @@ it('keeps a native source fetch after a temporary status error and resumes witho
     )
     expect(
       await readBuildJob(fixture.env.DB, fixture.org.id, fixture.input.buildId),
-    ).toEqual(imageCheckpoint)
+    ).toEqual({
+      ...imageCheckpoint,
+      providerRetry: {
+        openedAt: TEST_TIME,
+        failures: 1,
+        retryAt: TEST_TIME + 1_000,
+      },
+    })
     expect(completeAfterFailure).toBe(false)
     expect(boat.deletedIds).toEqual([])
     expect(fixture.provider.commands).toHaveLength(2)
     expect(fixture.access.activeTokens).toEqual([`${INSTALLATION_TOKEN}_1`])
     fixture.provider.beforeStatus = undefined
+    runtime.dependencies.now = () => TEST_TIME + 1_000
     const order: string[] = []
     boat.beforeCommand = async (command, detached) => {
       expect(fixture.access.activeTokens).toEqual([])

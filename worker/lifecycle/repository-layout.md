@@ -123,7 +123,7 @@ encrypted token stays owned until its revocation.
 A command succeeds only with exit code 0 and no reported timeout. A
 missing timeout flag is not a timeout. A missing process, or a start with
 no confirmed reply, fails closed, and the next alarm revokes the token. A
-transient Boat error of a poll keeps the source record for the next alarm.
+transient Boat error of a poll keeps the source record for the next alarm, within the [retry window](image-builds.md#provider-retries).
 
 `handleImageSourceCredential` in
 [`image-sources/credential.ts`](image-sources/credential.ts) accepts only a

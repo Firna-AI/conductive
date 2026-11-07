@@ -4972,6 +4972,9 @@ it remains a public API. Reuse the saved build phases and job identities,
 because they already record progress and command intent.
 Use a source command interface, because starts must fail closed and
 polls of saved processes can resume.
+The shared provider retry window lasts 10 minutes from the first error
+of an unfinished step. Only a completed step resets it. This bounds
+lasting faults without limiting a healthy build or start.
 
 - [x] Apply the recorded option of `plans/follow-ups/build-log-stream-format.md`, and
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.

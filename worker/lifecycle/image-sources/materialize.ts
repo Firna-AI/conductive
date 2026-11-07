@@ -23,6 +23,7 @@ import {
 import { cleanupBuildImageSources, revokeSourceToken } from './cleanup'
 import {
   insertSourceJob,
+  completeSourcePhase,
   nextSource,
   readSourceJob,
   saveSourceStatus,
@@ -109,7 +110,7 @@ export function createGitHubImageSourceMaterializer(
       if (job.phase === 'ready') {
         const repository = repositories[job.sourceIndex]
         if (!repository) {
-          await setSourcePhase(env.DB, input.buildId, 'done')
+          await completeSourcePhase(env.DB, input.buildId, 'done')
           return true
         }
         if (!env.GITHUB_APP_PRIVATE_KEY) {
@@ -167,7 +168,7 @@ export function createGitHubImageSourceMaterializer(
         if (!(await revokeSourceToken(env, dependencies.fetch, job)))
           return false
         if (job.failed) throw new Error('The source command failed')
-        await setSourcePhase(env.DB, job.buildId, 'finalize-ready')
+        await completeSourcePhase(env.DB, job.buildId, 'finalize-ready')
         return false
       }
       if (job.phase === 'finalize-ready') {
@@ -199,16 +200,18 @@ export function createGitHubImageSourceMaterializer(
         job = (await readSourceJob(env.DB, job.buildId)) ?? job
         if (!succeeded || job.grantHash)
           await invalidateSourceGrant(env.DB, job.buildId)
-        await setSourcePhase(env.DB, job.buildId, 'revoke')
+        if (succeeded && !job.grantHash)
+          await completeSourcePhase(env.DB, job.buildId, 'revoke')
+        else await setSourcePhase(env.DB, job.buildId, 'revoke')
         if (!(await revokeSourceToken(env, dependencies.fetch, job)))
           return false
         if (!succeeded || job.grantHash)
           throw new Error('The source command failed')
-        await setSourcePhase(env.DB, job.buildId, 'finalize-ready')
+        await completeSourcePhase(env.DB, job.buildId, 'finalize-ready')
       } else {
         if (!succeeded) throw new Error('The source command failed')
         if (job.phase === 'layout')
-          await setSourcePhase(env.DB, job.buildId, 'ready')
+          await completeSourcePhase(env.DB, job.buildId, 'ready')
         else await nextSource(env.DB, job.buildId)
       }
       return false

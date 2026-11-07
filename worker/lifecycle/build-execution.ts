@@ -15,6 +15,7 @@ import { deleteSandboxIfPresent, deleteSnapshotIfPresent } from './cleanup'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
 import { lifecycleCommand } from './command-intents'
 import { recordBuildCommand } from './build-command-data'
+import { completeBuildPhase } from './build-phase-data'
 
 export async function advanceBuildCommand(
   runtime: ImageRuntime,
@@ -58,7 +59,7 @@ export async function advanceBuildCommand(
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut)
     throw new Error('Image command failed')
   const next: BuildPhase = job.phase === 'software' ? 'install' : 'snapshot'
-  await updateBuildJob(runtime.env.DB, job.buildId, next)
+  await completeBuildPhase(runtime.env.DB, job.buildId, next)
   return false
 }
 
