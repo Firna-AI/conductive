@@ -100,6 +100,7 @@ it.each([
     const response: DeviceCommandResponse = {
       request: {
         requestId: 'mac-command',
+        requestKey: 'G2QJLwI-_oOH3DSJ4RHoThFqKvrqKoDvBh5TbwR3m2Y',
         orgId: 'org',
         workspaceId: 'workspace',
         workspaceName: 'Workspace',

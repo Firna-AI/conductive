@@ -21,16 +21,19 @@ export class WorkspaceDevices {
   readonly chat: WorkspaceChat
   readonly env: AppEnv
   readonly matches: (name: string) => boolean
+  readonly now: () => number
   constructor(
     chat: WorkspaceChat,
     env: AppEnv,
     storage: ChatStorage,
     matches: (name: string) => boolean,
+    now: () => number,
   ) {
     this.chat = chat
     this.env = env
     this.matches = matches
-    this.records = new DeviceRecords(storage, chat, env)
+    this.now = now
+    this.records = new DeviceRecords(storage, chat, env, now)
   }
   machine(request: Request): Promise<Response> {
     return workspaceMachine(this, request)
@@ -68,7 +71,7 @@ export class WorkspaceDevices {
         ? {
             ...record,
             state: reason === 'turn_ended' ? 'failed' : 'unavailable',
-            updatedAt: Date.now(),
+            updatedAt: this.now(),
             error: {
               code: reason,
               message:
@@ -174,7 +177,7 @@ export class WorkspaceDevices {
         this.env.DB,
         deviceRequired(operation.desktopSessionId),
         record.sender.id,
-        Date.now(),
+        this.now(),
       )
       return Response.json({
         claimed:
@@ -196,7 +199,7 @@ export class WorkspaceDevices {
               code: 'device_unavailable',
               message: 'The Mac is not available.',
             },
-            updatedAt: Date.now(),
+            updatedAt: this.now(),
           }
         const check = await this.validation(
           current,
@@ -206,13 +209,13 @@ export class WorkspaceDevices {
           this.env.DB,
           deviceRequired(operation.desktopSessionId),
           current.sender.id,
-          Date.now(),
+          this.now(),
         )
         if (!check.valid || !alive)
           return {
             ...current,
             state: check.reason === 'turn_ended' ? 'failed' : 'unavailable',
-            updatedAt: Date.now(),
+            updatedAt: this.now(),
             error: {
               code: check.valid ? 'device_unavailable' : check.reason,
               message:
@@ -235,7 +238,7 @@ export class WorkspaceDevices {
           state,
           startedAt:
             state === 'running'
-              ? (current.startedAt ?? Date.now())
+              ? (current.startedAt ?? this.now())
               : current.startedAt,
           result:
             operation.result === undefined
@@ -247,7 +250,7 @@ export class WorkspaceDevices {
                 message: deviceRequired(error.message),
               }
             : null,
-          updatedAt: Date.now(),
+          updatedAt: this.now(),
         }
       },
     )

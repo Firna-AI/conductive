@@ -1,10 +1,11 @@
 // @vitest-environment happy-dom
 import { act } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { DEVICE_SETTINGS_PATH } from '../../shared/device'
+import { DEVICE_CURRENT_PATH, DEVICE_SETTINGS_PATH } from '../../shared/device'
 import {
   byRole,
   queryByLabel,
+  queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
@@ -12,6 +13,7 @@ import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import {
   FAKE_PAIRING,
   fakeMacSettings,
+  fakeSettingsReply,
 } from '../../test-support/fixtures/devices'
 import {
   holdAnimationFrames,
@@ -22,7 +24,7 @@ import {
 } from '../../test-support/mount'
 import type { Clock } from '../ui/clock'
 import { AllowAllBar } from './AllowAllBar'
-import { useMacSettings } from './mac-settings'
+import { useMacSettings, type MacSettingsController } from './mac-settings'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -38,9 +40,18 @@ const tick = () =>
     vi.advanceTimersByTime(1_000)
   })
 
-/** The bar with the settings controller of the window, as the app gives it. */
-function Bar(props: { fetch: FakeApiServer['fetch']; clock: Clock }) {
+/**
+ * The bar with the settings controller of the window, as the app gives it.
+ * `found` gets the controller, which reads the settings again as the app
+ * does after an answer.
+ */
+function Bar(props: {
+  fetch: FakeApiServer['fetch']
+  clock: Clock
+  found?: (controller: MacSettingsController) => void
+}) {
   const { controller, state } = useMacSettings(props.fetch)
+  props.found?.(controller)
   return (
     <AllowAllBar
       clock={props.clock}
@@ -67,17 +78,27 @@ describe('AllowAllBar', () => {
     expect(queryByLabel(BAR)).toBeNull()
   })
 
-  it('stops the 15 minutes of the workspace through the Mac', async () => {
+  it('stops the 15 minutes of the workspace through the Mac, and says so after they end', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ onMac: true })
     await mount(<Bar clock={{ now: () => FAKE_TIME }} fetch={server.fetch} />)
     await waitFor(() => queryByLabel(BAR), 'the bar')
-    server.json('POST', DEVICE_SETTINGS_PATH, {
-      ...FAKE_PAIRING,
-      settings: { ...fakeMacSettings(), workspaceWindows: [] },
-    })
+    server.json(
+      'POST',
+      DEVICE_SETTINGS_PATH,
+      fakeSettingsReply({ ...fakeMacSettings(), workspaceWindows: [] }),
+    )
     await press(byRole('button', 'Stop'))
-    await waitFor(() => queryByLabel(BAR) === null, 'the stopped 15 minutes')
+    await waitFor(
+      () =>
+        queryByRole(
+          'status',
+          'Stopped Each command from this workspace asks first.',
+        ),
+      'the stopped 15 minutes',
+    )
+    expect(queryByRole('button', 'Stop')).toBeNull()
+    expect(queryByText('14:32 left')).toBeNull()
     const [sent] = server.requests.filter(
       (request) => request.method === 'POST',
     )
@@ -85,5 +106,84 @@ describe('AllowAllBar', () => {
       ...FAKE_PAIRING,
       operation: { action: 'stop-workspace', workspaceId: FAKE_IDS.workspace },
     })
+  })
+
+  it('keeps a failed Stop and a Stop that the Mac did not save, after the 15 minutes end and when a new pairing shows them again, until the next Stop', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ onMac: true })
+    let controller: MacSettingsController | undefined
+    await mount(
+      <Bar
+        clock={{ now: () => FAKE_TIME }}
+        fetch={server.fetch}
+        found={(found) => {
+          controller = found
+        }}
+      />,
+    )
+    await waitFor(() => queryByLabel(BAR), 'the bar')
+    const failed = 'The Mac could not change this permission. Try again.'
+    server.json(
+      'POST',
+      DEVICE_SETTINGS_PATH,
+      fakeSettingsReply(fakeMacSettings(), {
+        status: 'failed',
+        message: failed,
+      }),
+    )
+    await press(byRole('button', 'Stop'))
+    await waitFor(
+      () => queryByRole('alert', `Not stopped ${failed}`),
+      'the failed Stop',
+    )
+    expect(queryByText('14:32 left')).not.toBeNull()
+
+    const unsaved =
+      'This permission change is active, but the Mac could not save it. Try again.'
+    server.json(
+      'POST',
+      DEVICE_SETTINGS_PATH,
+      fakeSettingsReply(
+        { ...fakeMacSettings(), workspaceWindows: [] },
+        { status: 'done-not-saved', message: unsaved },
+      ),
+    )
+    await press(byRole('button', 'Stop'))
+    await waitFor(
+      () => queryByRole('alert', `Stopped, not saved ${unsaved}`),
+      'the Stop that the Mac did not save',
+    )
+    expect(queryByRole('alert', `Not stopped ${failed}`)).toBeNull()
+    expect(queryByRole('button', 'Stop')).toBeNull()
+    expect(queryByText('14:32 left')).toBeNull()
+    const retry = 'Try again to stop Checkout address autocomplete'
+    expect(queryByRole('button', retry)).not.toBeNull()
+
+    // The Mac connects again, and its saved settings still hold the grant.
+    const next = { ...FAKE_PAIRING, connectionId: 'connection-2' }
+    server.json('GET', DEVICE_CURRENT_PATH, { device: next })
+    server.json('GET', DEVICE_SETTINGS_PATH, {
+      ...fakeSettingsReply(fakeMacSettings()),
+      ...next,
+    })
+    await act(() => controller?.refresh())
+    expect(queryByText('14:32 left')).not.toBeNull()
+    expect(queryByRole('button', retry)).toBeNull()
+    expect(queryByRole('alert', `Stopped, not saved ${unsaved}`)).not.toBeNull()
+
+    server.json('POST', DEVICE_SETTINGS_PATH, {
+      ...fakeSettingsReply({ ...fakeMacSettings(), workspaceWindows: [] }),
+      ...next,
+    })
+    await press(byRole('button', 'Stop'))
+    await waitFor(
+      () =>
+        queryByRole(
+          'status',
+          'Stopped Each command from this workspace asks first.',
+        ),
+      'the Stop that the Mac saved',
+    )
+    expect(queryByRole('alert', `Stopped, not saved ${unsaved}`)).toBeNull()
   })
 })

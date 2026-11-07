@@ -12,7 +12,7 @@ const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
 const commands = deviceCommandsPath(org, ws)
 const request = fakeMacRequest()
-const approval = deviceApprovalPath(org, ws, request.requestId)
+const approval = deviceApprovalPath(org, ws, request.requestKey)
 const { workspace } = workspaceFixtures('input').detail
 
 describe('Mac commands in the chat controller', () => {

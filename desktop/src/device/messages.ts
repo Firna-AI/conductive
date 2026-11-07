@@ -45,6 +45,7 @@ function request(value: unknown): value is DeviceCommandRecord {
   return (
     [
       value.requestId,
+      value.requestKey,
       value.orgId,
       value.workspaceId,
       value.workspaceName,

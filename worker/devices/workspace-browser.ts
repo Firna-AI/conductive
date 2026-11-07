@@ -13,7 +13,7 @@ export async function workspaceBrowserRoute(
   devices: WorkspaceDevices,
   request: Request,
 ): Promise<Response> {
-  const context = await deviceBrowserGate(request, devices.env, Date.now())
+  const context = await deviceBrowserGate(request, devices.env, devices.now())
   const path = workspaceDeviceRoute(new URL(request.url).pathname)
   if (
     !path ||
@@ -32,14 +32,14 @@ export async function workspaceBrowserRoute(
   await devices.records.run(() => devices.records.flush())
   if (request.method === 'GET') {
     await devices.reconcile()
-    if (path.requestId)
+    if (path.requestKey)
       return Response.json({
-        request: await devices.records.require(path.requestId),
+        request: await devices.records.requireKey(path.requestKey),
       })
     return Response.json({ requests: await devices.records.list() })
   }
-  if (request.method === 'POST' && path.requestId && path.approval) {
-    const record = await devices.records.require(path.requestId)
+  if (request.method === 'POST' && path.requestKey && path.approval) {
+    const record = await devices.records.requireKey(path.requestKey)
     const body = await readJsonObject(request)
     const pairing = readDevicePairing(body)
     if (

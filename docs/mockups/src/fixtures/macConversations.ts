@@ -1,7 +1,9 @@
 import type { ChatItem } from './conversations'
 import {
+  safariByFile,
   safariSuite,
   safariTest,
+  waitingWithScript,
   type MacCommandRequest,
   type MacCommandState,
 } from './mac'
@@ -46,6 +48,35 @@ const withoutSafari: ChatItem = {
 }
 
 /**
+ * The finished turn, then a message that needs four commands on the Mac.
+ * The first is a long script, and every request waits for its answer.
+ */
+function manyOnMac(history: readonly ChatItem[]): readonly ChatItem[] {
+  return [
+    ...history,
+    {
+      kind: 'user',
+      id: 'ask-hang',
+      text: 'One checkout test hangs in Safari on my Mac. Find out which one.',
+    },
+    {
+      kind: 'agent',
+      id: 'plan-hang',
+      paragraphs: [
+        'I asked to run each checkout test file in Safari on your Mac, and to read the versions for the bug report.',
+      ],
+    },
+    ...[safariByFile, ...waitingWithScript].map((request, index): ChatItem => ({
+      kind: 'mac-command',
+      id: `mac-${index + 1}`,
+      request,
+      state: 'waiting',
+    })),
+    working,
+  ]
+}
+
+/**
  * The chats of a command on the Mac of the sender (decision 62), after the
  * finished turn of `history`: it waits for approval, for the checkout test
  * or for the whole suite, it was denied, it ran, or the Mac is not there.
@@ -53,6 +84,7 @@ const withoutSafari: ChatItem = {
 export function macConversations(history: readonly ChatItem[]) {
   return {
     'mac-waiting': onMac(history, 'waiting', [working]),
+    'mac-waiting-many': manyOnMac(history),
     'mac-waiting-suite': onMac(history, 'waiting', [working], {
       text: 'Run all the Safari tests on my Mac before we merge.',
       request: safariSuite,

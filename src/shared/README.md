@@ -51,6 +51,9 @@ The history response gives the point after which live events continue.
 `device.ts` defines Mac command paths, socket messages, pairing, and local settings relays.
 It has no imports and also serves the Mac app's NodeNext build.
 `device-read.ts` validates its wire values and preserves command text, timeouts, and truncation.
+Command records return `requestKey` for URLs and retain `requestId` for retries and device frames.
+Settings results distinguish applied and saved changes, applied but unsaved changes, and failed changes.
+The small settings failure frame identifies an oversized reply without closing the connection.
 The combined Mac output cap is 65,536 UTF-8 bytes.
 
 The machine and preview hostnames remain deployment settings.

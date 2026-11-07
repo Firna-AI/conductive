@@ -1,4 +1,3 @@
-export const DEVICE_BODY_LIMIT_BYTES = 1_000_000
 export const DEVICE_FRAME_LIMIT_BYTES = 1_000_000
 /** Combined UTF-8 bytes of stdout and stderr. */
 export const DEVICE_OUTPUT_LIMIT_BYTES = 65_536
@@ -20,8 +19,8 @@ export function deviceConnectionPath(
       : `&deviceName=${encodeURIComponent(deviceName)}`
   return `/api/devices/connect?deviceId=${encodeURIComponent(deviceId)}${name}`
 }
-export function machineDeviceCommandPath(requestId: string): string {
-  return `${DEVICE_COMMAND_PATH}/${encodeURIComponent(requestId)}`
+export function machineDeviceCommandPath(requestKey: string): string {
+  return `${DEVICE_COMMAND_PATH}/${encodeURIComponent(requestKey)}`
 }
 export function deviceCommandsPath(orgId: string, workspaceId: string): string {
   return `/api/orgs/${encodeURIComponent(orgId)}/workspaces/${encodeURIComponent(workspaceId)}/device-commands`
@@ -29,16 +28,16 @@ export function deviceCommandsPath(orgId: string, workspaceId: string): string {
 export function deviceCommandPath(
   orgId: string,
   workspaceId: string,
-  requestId: string,
+  requestKey: string,
 ): string {
-  return `${deviceCommandsPath(orgId, workspaceId)}/${encodeURIComponent(requestId)}`
+  return `${deviceCommandsPath(orgId, workspaceId)}/${encodeURIComponent(requestKey)}`
 }
 export function deviceApprovalPath(
   orgId: string,
   workspaceId: string,
-  requestId: string,
+  requestKey: string,
 ): string {
-  return `${deviceCommandPath(orgId, workspaceId, requestId)}/approval`
+  return `${deviceCommandPath(orgId, workspaceId, requestKey)}/approval`
 }
 
 /** No sender, owner, device, or host can be selected by a sandbox. */
@@ -83,6 +82,8 @@ export interface DeviceSender {
 }
 export interface DeviceCommandRecord {
   requestId: string
+  /** The base64url SHA-256 storage key. Use this value in command URLs. */
+  requestKey: string
   orgId: string
   workspaceId: string
   workspaceName: string
@@ -143,8 +144,14 @@ export type DeviceSettingsAction =
 export interface DeviceSettingsRequest extends DevicePairing {
   operation: Exclude<DeviceSettingsAction, { action: 'read' }>
 }
+export type DeviceSettingsOutcome =
+  | { status: 'done' }
+  | { status: 'done-not-saved'; message: string }
+  | { status: 'failed'; message: string }
 export interface DeviceSettingsResponse extends DevicePairing {
   settings: DeviceSettings
+  /** Reads return done. Changes report both application and persistence. */
+  outcome: DeviceSettingsOutcome
 }
 
 /** The main process authenticates with HTTP headers, never with a JSON frame. */
@@ -188,4 +195,10 @@ export type DeviceToWorker =
       type: 'settings.result'
       operationId: string
       settings: DeviceSettings
+      outcome: DeviceSettingsOutcome
+    }
+  | {
+      type: 'settings.failed'
+      operationId: string
+      code: 'settings_result_too_large'
     }

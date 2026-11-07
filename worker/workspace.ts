@@ -13,7 +13,11 @@ export class Workspace extends DurableObject<WorkspaceEnv> {
   private readonly devices: DeviceRuntime
   private readonly context: DurableObjectState
 
-  constructor(context: DurableObjectState, env: WorkspaceEnv) {
+  constructor(
+    context: DurableObjectState,
+    env: WorkspaceEnv,
+    now: () => number = Date.now,
+  ) {
     super(context, env)
     this.context = context
     this.chat = new WorkspaceChat(context.storage, env, {
@@ -33,6 +37,7 @@ export class Workspace extends DurableObject<WorkspaceEnv> {
       this.chat,
       (name) => env.WORKSPACES.idFromName(name).equals(context.id),
       (when) => context.storage.setAlarm(when),
+      now,
     )
   }
 

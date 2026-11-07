@@ -1,17 +1,30 @@
 import { app } from '../app'
 import type { AppEnv } from '../env'
 import { Workspace as ProductWorkspace } from '../workspace'
+import { deviceTestTarget, ManualDeviceClock } from './clock.test-support'
 
 export class Workspace extends ProductWorkspace {
   private readonly testStorage: DurableObjectStorage
+  private readonly testContext: DurableObjectState
+  private readonly clock: ManualDeviceClock
   constructor(
     context: DurableObjectState,
     env: AppEnv & { WORKSPACES: DurableObjectNamespace },
   ) {
-    super(context, env)
+    const clock = new ManualDeviceClock()
+    super(context, env, clock.now)
+    this.clock = clock
     this.testStorage = context.storage
+    this.testContext = context
+    context.blockConcurrencyWhile(() => clock.restore(context.storage))
   }
   async fetch(request: Request): Promise<Response> {
+    const clockResponse = await this.clock.route(
+      request,
+      this.testContext,
+      () => this.alarm(),
+    )
+    if (clockResponse) return clockResponse
     if (new URL(request.url).pathname === '/__test/clear-device-records') {
       const keys = [
         ...(await this.testStorage.list({ prefix: 'devices:v1:' })).keys(),
@@ -31,14 +44,18 @@ export default {
     env: AppEnv & { WORKSPACES: DurableObjectNamespace },
   ) {
     const url = new URL(request.url)
+    const deviceObject = deviceTestTarget(url)
     const workspaceId = url.pathname.match(/\/workspaces\/([^/]+)/)?.[1]
     if (
       (workspaceId && !url.pathname.includes('/device-commands')) ||
       url.pathname === '/runner' ||
-      url.pathname === '/__test/clear-device-records'
+      url.pathname === '/__test/clear-device-records' ||
+      deviceObject
     ) {
       return env.WORKSPACES.get(
-        env.WORKSPACES.idFromName(workspaceId ?? 'device-workspace'),
+        env.WORKSPACES.idFromName(
+          deviceObject ?? workspaceId ?? 'device-workspace',
+        ),
       ).fetch(request)
     }
     return app.fetch(request, env)

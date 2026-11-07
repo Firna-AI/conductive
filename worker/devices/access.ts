@@ -1,4 +1,4 @@
-import type { DeviceCommandRecord, DeviceSender } from '../../src/shared/device'
+import type { DeviceSender } from '../../src/shared/device'
 import { TOOL_TURN_HEADER } from '../../tools/context'
 import type { WorkspaceChat } from '../chat/backend'
 import { tokenWorkspace } from '../chat/queries'
@@ -109,28 +109,6 @@ export function desktopSessionAlive(
     )
     .bind(sessionId, userId, now)
     .first<{ id: string }>()
-}
-export async function validateRecord(
-  chat: WorkspaceChat,
-  env: AppEnv,
-  request: DeviceCommandRecord,
-  tokenHash: string,
-): Promise<boolean> {
-  try {
-    const active = await activeDeviceSender(
-      chat,
-      env,
-      request.workspaceId,
-      request.turnId,
-      tokenHash,
-    )
-    return (
-      active.sender.id === request.sender.id &&
-      active.sessionId === request.sessionId
-    )
-  } catch {
-    return false
-  }
 }
 export function callingTurnId(request: Request): string {
   const value = request.headers.get(TOOL_TURN_HEADER)

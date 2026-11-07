@@ -31,7 +31,7 @@ it.each(['cli', 'mcp'] as const)(
   async (mode) => {
     const mac = await connected(fixture)
     const output = toolOutput()
-    const input = fixture.input()
+    const input = fixture.input(mode === 'cli' ? '.' : '..')
     const task = runToolProcess(
       mode === 'cli'
         ? [
@@ -80,8 +80,12 @@ it.each(['cli', 'mcp'] as const)(
         command: input.command,
       },
     })
-    await sendFrame(mac, { type: 'command.approved', ...ref() })
-    await sendFrame(mac, { type: 'command.result', ...ref(), result })
+    await sendFrame(mac, { type: 'command.approved', ...ref(input.requestId) })
+    await sendFrame(mac, {
+      type: 'command.result',
+      ...ref(input.requestId),
+      result,
+    })
     expect(await task).toBe(0)
     expect(output.stderr).toEqual([])
     const expected = { request: { state: 'completed', result } }

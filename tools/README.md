@@ -74,6 +74,8 @@ The time limit defaults to 60 seconds.
 Limits through 1800 seconds require `--longer-timeout-reason`.
 `--request-id` supplies an optional stable retry ID.
 Without it, the tool creates an opaque ID.
+The Worker returns a hashed `requestKey` for polling URLs.
+The client uses that key and preserves the exact retry ID, including dot and dot-dot IDs.
 
 Approval and saved permission rules stay on the Mac.
 An offline Mac returns an unavailable result.
@@ -123,6 +125,7 @@ No root test or TypeScript configuration change is needed.
 - [cli.ts](cli.ts) parses the CLI and writes its result.
 - [mcp.ts](mcp.ts) serves the stdio protocol.
 - [client.ts](client.ts) sends authenticated requests and parses responses.
+- [device-client.ts](device-client.ts) creates Mac commands and polls their returned URL keys.
 - [input.ts](input.ts) parses the shared create request without changing message text.
 - [runtime.ts](runtime.ts) reads runtime configuration without storing credentials.
 

@@ -27,7 +27,8 @@ it('shows a background native notice that only opens the matching workspace and 
   notice.emit('click')
   expect(open).toHaveBeenCalledWith(request)
   expect(workspaceDeviceAddress(request)).toBe(
-    'conducting-app://desktop/orgs/org%20%2Fone/workspaces/workspace%20%2Fone?sessionId=session-one&deviceRequestId=request+%2Fone',
+    'conducting-app://desktop/orgs/org%20%2Fone/workspaces/workspace%20%2Fone?sessionId=session-one&deviceRequestId=' +
+      request.requestKey,
   )
   dismiss()
   notice.emit('click')

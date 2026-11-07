@@ -6,6 +6,8 @@ import {
   type DeviceCommandState,
   type DevicePairing,
   type DeviceSettings,
+  type DeviceSettingsOutcome,
+  type DeviceSettingsResponse,
 } from './device.ts'
 
 export class DeviceContractError extends Error {}
@@ -102,6 +104,27 @@ export function readDeviceSettings(value: unknown): DeviceSettings {
   }
 }
 
+export function readDeviceSettingsOutcome(
+  value: unknown,
+): DeviceSettingsOutcome {
+  const input = deviceObject(value)
+  if (input.status === 'done') return { status: 'done' }
+  if (input.status === 'done-not-saved' || input.status === 'failed')
+    return { status: input.status, message: deviceRequired(input.message) }
+  throw new DeviceContractError('Send a valid Mac settings outcome.')
+}
+
+export function readDeviceSettingsResponse(
+  value: unknown,
+): DeviceSettingsResponse {
+  const input = deviceObject(value)
+  return {
+    ...readDevicePairing(input),
+    settings: readDeviceSettings(input.settings),
+    outcome: readDeviceSettingsOutcome(input.outcome),
+  }
+}
+
 export function readDeviceResult(value: unknown): DeviceCommandResult {
   const input = deviceObject(value)
   const exitCode = input.exitCode === null ? null : deviceNumber(input.exitCode)
@@ -157,6 +180,7 @@ export function readDeviceRecord(value: unknown): DeviceCommandRecord {
   const error = input.error === null ? null : deviceObject(input.error)
   return {
     ...command,
+    requestKey: deviceRequired(input.requestKey),
     timeoutSeconds: command.timeoutSeconds ?? 60,
     longerTimeoutReason:
       input.longerTimeoutReason === null

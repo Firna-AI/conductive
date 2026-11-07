@@ -1,11 +1,14 @@
 import { safariOutput } from '../../../docs/mockups/src/fixtures/mac'
 import {
+  DEVICE_CURRENT_PATH,
   DEVICE_SETTINGS_PATH,
   deviceApprovalPath,
   deviceCommandsPath,
   type DeviceApprovalAction,
   type DeviceCommandRecord,
+  type DevicePairing,
   type DeviceSettings,
+  type DeviceSettingsOutcome,
 } from '../../shared/device'
 import {
   FAKE_PAIRING,
@@ -14,8 +17,9 @@ import {
   fakeMacSettings,
   type FakeMacScenario,
 } from '../../test-support/fixtures/devices'
-import { oneOf, record, text } from '../api/json'
+import { oneOf, record } from '../api/json'
 import type { DevBackend } from './dev-backend'
+import { changeMacSettings } from './dev-mac-settings'
 
 const readAction = oneOf<DeviceApprovalAction>({
   deny: true,
@@ -31,12 +35,22 @@ const readAction = oneOf<DeviceApprovalAction>({
  */
 export class DevMac {
   readonly onMac: boolean
+  /** The outcome of each change of the settings, from the `change` option. */
+  readonly outcome: DeviceSettingsOutcome['status']
   requests: DeviceCommandRecord[]
   settings: DeviceSettings
+  /** The pairing of the window with the current connection of the Mac. */
+  pairing: DevicePairing = FAKE_PAIRING
   private readonly listeners = new Set<() => void>()
 
-  constructor(scenario: FakeMacScenario, now: number, onMac: boolean) {
+  constructor(
+    scenario: FakeMacScenario,
+    now: number,
+    onMac: boolean,
+    outcome: DeviceSettingsOutcome['status'],
+  ) {
     this.onMac = onMac
+    this.outcome = outcome
     this.requests = [...fakeMacRequests(scenario)]
     const base = fakeMacSettings(now)
     const settings =
@@ -63,6 +77,16 @@ export class DevMac {
   changed(): void {
     for (const listener of this.listeners) listener()
   }
+
+  /**
+   * The Mac connects again, as after sleep, under a new connection. The
+   * window learns the new pairing at its next read, and the Worker refuses
+   * a change that names the old one.
+   */
+  reconnect(): void {
+    const count = Number(this.pairing.connectionId.split('-').at(-1)) + 1
+    this.pairing = { ...this.pairing, connectionId: `connection-${count}` }
+  }
 }
 
 /** Writes the replies of the Mac's records. A browser keeps its refusal of settings. */
@@ -74,9 +98,11 @@ export function writeMacReplies(backend: DevBackend): void {
     { requests: mac.requests },
   )
   if (!mac.onMac) return
+  backend.server.json('GET', DEVICE_CURRENT_PATH, { device: mac.pairing })
   backend.server.json('GET', DEVICE_SETTINGS_PATH, {
-    ...FAKE_PAIRING,
+    ...mac.pairing,
     settings: mac.settings,
+    outcome: { status: 'done' },
   })
 }
 
@@ -94,6 +120,16 @@ function publish(backend: DevBackend): void {
     workspace: backend.workspace,
   })
   backend.mac.changed()
+}
+
+/**
+ * The Mac connects again under a new connection, and the page reads it
+ * again. A change that the user made before that read names the old
+ * connection.
+ */
+export function reconnectMac(backend: DevBackend): void {
+  backend.mac.reconnect()
+  publish(backend)
 }
 
 function update(
@@ -165,34 +201,6 @@ function answer(
   )
 }
 
-/** Applies one change to the Mac's settings, as the Mac app does. */
-function changeSettings(
-  backend: DevBackend,
-  body: Record<string, unknown>,
-): Response {
-  const operation = record(body.operation)
-  const { mac } = backend
-  if (operation.action === 'remove-command') {
-    const command = text(operation.command)
-    mac.settings = {
-      ...mac.settings,
-      alwaysAllowedCommands: mac.settings.alwaysAllowedCommands.filter(
-        (item) => item !== command,
-      ),
-    }
-  } else if (operation.action === 'stop-workspace') {
-    const workspaceId = text(operation.workspaceId)
-    mac.settings = {
-      ...mac.settings,
-      workspaceWindows: mac.settings.workspaceWindows.filter(
-        (item) => item.workspaceId !== workspaceId,
-      ),
-    }
-  }
-  publish(backend)
-  return Response.json({ ...FAKE_PAIRING, settings: mac.settings })
-}
-
 /**
  * Answers the writes of Mac commands: an answer, which the Mac acts on a
  * moment later, and a change of the Mac's settings. Other writes go on.
@@ -210,9 +218,9 @@ export async function handleMacWrite(
       .json()
       .then((value: unknown) => record(value))
   if (path === DEVICE_SETTINGS_PATH)
-    return changeSettings(backend, await body())
+    return changeMacSettings(backend.mac, await body(), () => publish(backend))
   const target = backend.mac.requests.find(
-    (item) => path === deviceApprovalPath(orgId, workspaceId, item.requestId),
+    (item) => path === deviceApprovalPath(orgId, workspaceId, item.requestKey),
   )
   if (!target || target.state !== 'waiting') return null
   const action = readAction((await body()).action)

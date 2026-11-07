@@ -1,10 +1,3 @@
-/* The requests that wait, one compact message each, just above the composer. */
-.pinned {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
 /* On a phone, the arrow beside Allow is a 44 px touch target. */
 .arrow {
   min-width: max(22px, var(--ui-touch-min, 0px));
@@ -16,22 +9,6 @@
  */
 .choices {
   display: contents;
-}
-
-.end {
-  position: relative;
-}
-
-/*
- * A narrow card, such as on a phone, puts the actions under the command.
- * The menu then opens from the start of the actions and keeps inside them.
- * From the end of the arrow, it would cross the left edge of a phone.
- */
-@container (max-width: 440px) {
-  .menu {
-    left: 0;
-    max-width: 100%;
-  }
 }
 
 /* An always-allowed command keeps its exact text, and a long one wraps. */
@@ -68,6 +45,13 @@
   color: var(--ui-muted);
   font-size: var(--ui-text-sm);
   line-height: 1.45;
+}
+
+/* The results of the changes, the newest last. */
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 /* A phone raises every local touch target of the section to 44 px. */

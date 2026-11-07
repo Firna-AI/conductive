@@ -260,7 +260,40 @@ limits, their results, and what the chat shows.
   name of the Mac, whether the Mac is available, and each always-allowed
   command by its exact text, with Remove.
 - After Remove, the next request with that command text asks again.
+- Remove and Stop revoke their permission in the current Mac app even if
+  saving the change fails.
+- A failed save does not keep the revoked permission active in memory.
+  Reason: a disk error must not leave a permission active after the user
+  revokes it.
 - The web app in a browser has no This Mac section.
+
+### Settings results
+
+- Each settings result identifies its operation and includes the current
+  effective settings.
+- Each settings change reports one outcome: done, done but not saved, or
+  failed.
+- Done means the change took effect and was saved. Done but not saved
+  means the change took effect in memory and the save failed.
+- Failed means the change did not take effect. Both failure outcomes
+  explain the failure.
+- A successful settings read reports done.
+- This Mac shows the result of each control. The bar shows the result of
+  Stop even when the grant no longer runs.
+- A failure stays until the next change of that control, also after a
+  read or a new device connection.
+- When the original control is gone, Try again can repeat that change.
+  The current Mac gets this new explicit action.
+- A change that waited for an older connection reports failure after a
+  reconnect. It never goes to another connection by itself.
+- Reason: the user must see whether a permission changed and can try the
+  same action again without restarting the app.
+- If a full settings result exceeds the device message budget, the Mac
+  returns a small failure with the same operation ID and the size cause.
+- That failure keeps the connection, saved commands, and running commands
+  active. It adds no limit to saved settings.
+- Reason: a large settings list must not interrupt command execution or
+  cancel a command.
 
 ## Packages and updates
 

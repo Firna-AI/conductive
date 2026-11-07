@@ -98,6 +98,7 @@ test('main authenticates its device, executes an approved command, and cancels p
     expect(await first.take('settings.result')).toEqual({
       type: 'settings.result',
       operationId: 'real-device-name',
+      outcome: { status: 'done' },
       settings: {
         deviceName: hostname(),
         alwaysAllowedCommands: [],

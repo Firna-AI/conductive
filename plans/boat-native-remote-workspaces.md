@@ -5109,6 +5109,31 @@ Scope call, approved by the user on 7 November 2026: correct the four
 routing and hook statements in `worker/chat/README.md` for review item 5.
 The orchestrator owns the review after this branch's next push.
 
+Fix round 1, approved by the user on 7 November 2026:
+
+- Finding 31 B: bound the shared approval region, show its scroll edge,
+  and put the Allow menu in the top layer. Keep keyboard scrolling.
+- Finding 32 D, failure reply only: return a small settings failure when
+  a result exceeds one frame. Keep the connection and commands. Add no
+  save limit.
+- Finding 33 D: remove permissions from memory and cancel a stopped
+  window's timer before saving. Return done, done but not saved, or failed.
+  Keep each control's failure through refresh and a pairing change.
+- Finding 6 D: return the existing store key with each request. Use the
+  key in URLs, and keep the agent's exact stable retry ID.
+- Finding 7 C: inject one device clock. Test deadlines through the real
+  alarm, including a restarted broker, before and at each deadline.
+- Finding 8 C: fail the real D1 write with a temporary trigger. Restart
+  the object and test recovery through browser replay.
+- Finding 9 B: delete the three confirmed unused device helpers.
+
+The scope includes the shared approval CSS and the settings failure
+mockup states. The orchestrator owns review after the push.
+
+Milestone 4g merged on 7 November 2026. Public device requests use its
+default entry budget. New private device HTTP bodies keep the existing
+1 MB budget at their own entry. JSON parsing uses the shared helper.
+
 Implementation calls, 6 November 2026:
 
 - Keep one current authenticated Mac connection for each sender. A new

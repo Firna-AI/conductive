@@ -72,7 +72,7 @@ export function createMacCommandClient(
       reply.request.state === 'running'
     ) {
       await wait()
-      reply = await request(machineDeviceCommandPath(input.requestId))
+      reply = await request(machineDeviceCommandPath(reply.request.requestKey))
     }
     return reply
   }

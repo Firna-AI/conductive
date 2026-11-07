@@ -118,6 +118,7 @@ it('applies exact always-allow policy and returns matching settings operations',
   expect(test.sent.at(-1)).toEqual({
     type: 'settings.result',
     operationId: 'read-one',
+    outcome: { status: 'done' },
     settings: {
       deviceName: 'Cals-Mac.local',
       alwaysAllowedCommands: ['printf hello'],
@@ -132,6 +133,7 @@ it('applies exact always-allow policy and returns matching settings operations',
   expect(test.sent.at(-1)).toEqual({
     type: 'settings.result',
     operationId: 'remove-one',
+    outcome: { status: 'done' },
     settings: {
       deviceName: 'Cals-Mac.local',
       alwaysAllowedCommands: [],
@@ -182,6 +184,7 @@ it('does not extend expired workspace grants from approval replays and applies S
   expect(test.sent.at(-1)).toEqual({
     type: 'settings.result',
     operationId: 'stop-one',
+    outcome: { status: 'done' },
     settings: {
       deviceName: 'Cals-Mac.local',
       alwaysAllowedCommands: [],

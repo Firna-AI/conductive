@@ -76,8 +76,8 @@ it('relays all four approval choices only from the paired desktop session', asyn
     'allow-workspace-15-minutes',
   ] as const) {
     const id = `choice-${action}`
-    await command(fixture, mac, id)
-    const path = deviceApprovalPath('org', WID, id)
+    const request = await command(fixture, mac, id)
+    const path = deviceApprovalPath('org', WID, request.requestKey)
     const body = { ...mac.device, action }
     if (action === 'deny') {
       expect((await fixture.app(path, body)).status).toBe(403)
@@ -255,7 +255,7 @@ it('stores and publishes numbered workspace input changes on the real chat strea
 
 it('cleans missing workspace records after restart and allows a new Mac to connect', async () => {
   const old = await connected(fixture)
-  await command(fixture, old)
+  const request = await command(fixture, old)
   const erased = await fixture.runtime.dispatchFetch(
     APP + '/__test/clear-device-records',
   )
@@ -269,7 +269,7 @@ it('cleans missing workspace records after restart and allows a new Mac to conne
     name: WID,
   })
   const next = await connected(fixture, fixture.senderToken, 'new-mac')
-  expect((await fixture.machine(undefined, '/command-1')).status).toBe(404)
+  expect((await fixture.readCommand(request.requestKey)).status).toBe(404)
   await command(fixture, next, 'after-restart')
   await sendFrame(next, { type: 'command.denied', ...ref('after-restart') })
   expect((await stored(fixture, 'after-restart')).state).toBe('denied')

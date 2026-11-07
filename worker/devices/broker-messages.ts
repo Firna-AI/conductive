@@ -3,7 +3,9 @@ import {
   deviceRequired,
   readDeviceResult,
   readDeviceSettings,
+  readDeviceSettingsOutcome,
 } from '../../src/shared/device-read'
+import { HttpError } from '../http'
 import type { DeviceBroker } from './broker'
 import type { DeviceConnection } from './broker-types'
 
@@ -15,20 +17,38 @@ export async function receiveDeviceMessage(
   if (!(await broker.check())) return
   const message = deviceObject(value)
   if (message.type === 'device.ping') {
-    connection.lastSeen = Date.now()
+    connection.lastSeen = broker.now()
     connection.send({ type: 'device.pong' })
     return
   }
   if (message.type === 'device.sleep') return broker.drop()
-  if (message.type === 'settings.result') {
+  if (
+    message.type === 'settings.result' ||
+    message.type === 'settings.failed'
+  ) {
     const id = deviceRequired(message.operationId)
     const waiter = broker.settings.get(id)
     if (!waiter || waiter.connectionId !== connection.device.connectionId)
       return
+    if (message.type === 'settings.failed') {
+      if (message.code !== 'settings_result_too_large')
+        throw new Error('Unknown settings failure.')
+      broker.settings.delete(id)
+      waiter.cancel()
+      waiter.reject(
+        new HttpError(
+          502,
+          'settings_result_too_large',
+          'The Mac settings reply is too large.',
+        ),
+      )
+      return
+    }
     const settings = readDeviceSettings(message.settings)
+    const outcome = readDeviceSettingsOutcome(message.outcome)
     broker.settings.delete(id)
     waiter.cancel()
-    waiter.resolve({ ...connection.device, settings })
+    waiter.resolve({ ...connection.device, settings, outcome })
     return
   }
   const id = deviceRequired(message.requestId)
@@ -58,7 +78,7 @@ export async function receiveDeviceMessage(
     item.request = updated
     // Allow the execution limit and one transport heartbeat for the result.
     item.executionDeadline =
-      (updated.startedAt ?? Date.now()) +
+      (updated.startedAt ?? broker.now()) +
       item.request.timeoutSeconds * 1000 +
       10_000
     await broker.store(item)

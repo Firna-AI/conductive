@@ -16,8 +16,11 @@ it('reads nullable device names and start times from command records', () => {
   }
 })
 
-it('rejects malformed or missing device display fields before accepting a command record', () => {
+it('rejects malformed or missing command fields before accepting a command record', () => {
   for (const changes of [
+    { requestKey: undefined },
+    { requestKey: 7 },
+    { requestKey: '' },
     { deviceName: 7, startedAt: null },
     { deviceName: null, startedAt: 'not a timestamp' },
     { deviceName: undefined, startedAt: null },

@@ -69,6 +69,9 @@ Local permissions belong to the signed-in account on this Mac.
 The app keeps exact allowed commands and workspace deadlines under its private user-data directory.
 The settings name comes from the OS hostname.
 The connection sends that hostname as display metadata for command requests.
+Remove and Stop revoke permissions in memory even when saving fails.
+Settings replies report whether the change was saved.
+A settings reply that is too large fails its own operation and keeps commands connected.
 Commands run in the user's shell with bounded output and time.
 Folders `~` and `~/...` use the local OS account's home directory.
 Other folder values stay exact. The app does not expand shell variables in them.
@@ -86,6 +89,7 @@ Focused device checks use these commands:
 ```sh
 npm --prefix desktop run test:logic -- src/device
 npm --prefix desktop run test:electron -- tests/device-command.spec.ts
+npm --prefix desktop run test:electron -- tests/approval-region.spec.ts
 ```
 
 Build the desktop app before the Electron check.
@@ -200,6 +204,7 @@ It offers Restart now or Later once for each downloaded version.
 - [Device composition](src/device/main.ts) connects cookie, power, notification, and app-exit hooks.
 - [Device connection](src/device/connection.ts) owns authentication, pairing, heartbeat, and reconnect state.
 - [Device session](src/device/session.ts) owns pending requests, scoped approvals, settings operations, and cancellation.
+- [Device settings](src/device/settings.ts) reports change outcomes and checks settings replies against the device message budget.
 - [Local permissions](src/device/permissions.ts) owns exact command rules and workspace deadlines.
 - [Command runner](src/device/runner.ts) owns time and output limits through injected process and clock boundaries.
 - [Device contract](../src/shared/device.ts) supplies shared message types, routes, and wire limits.

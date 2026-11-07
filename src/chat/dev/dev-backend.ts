@@ -143,7 +143,12 @@ export class DevBackend {
       start: detail.start,
       open: [...list.sessions],
       closed: [...list.history],
-      mac: new DevMac(options.mac, clock.now(), options.app === 'mac'),
+      mac: new DevMac(
+        options.mac,
+        clock.now(),
+        options.app === 'mac',
+        options.change,
+      ),
     })
     backend.note(recorded.map((envelope) => envelope.event))
     writeMacReplies(backend)

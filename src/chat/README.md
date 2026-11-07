@@ -47,19 +47,9 @@ mounts it yet.
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position. A dialog or a sheet covers the nearest
   positioned frame: the app frame.
-- The Mac app shows two more parts of Mac commands outside the chat.
-  `ThisMacSection` goes in the account, and `AllowAllBar` goes at the top of
-  the workspace. Mount them only in the Mac app, because a browser has no
-  Mac. Both read the Mac's settings through `useMacSettings(fetch)`. Call
-  its `refresh` from `onWorkspaceChange`, which follows each change of a Mac
-  command, so the bar shows the 15 minutes that an answer started.
-
-  ```tsx
-  <ThisMacSection fetch={appFetch} viewport="desktop" />
-  const { controller, state } = useMacSettings(appFetch)
-  <AllowAllBar controller={controller} state={state} workspaceId={workspaceId} />
-  ```
-
+- The Mac app shows two more parts of Mac commands outside the chat:
+  `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)
+  say how to mount them.
 - `useChatController` gives the controller and its snapshot to an app that
   composes `SessionTabs` and `SessionChat` in its own layout. Such an app
   takes the tabs from `tabSessions`, and the session history from
@@ -144,41 +134,8 @@ mounts it yet.
   reads and the stream gets lost.
 - The chat writes no browser storage. The drafts stay in memory, and the
   server keeps the open tabs through the view route.
-- The Mac commands load after the stream starts, and again after each
-  `workspace.updated` event, because the Worker records one with each change
-  of a request. Only the reply of the latest read applies. A failed read
-  keeps the requests that show, takes away the choices, and shows Try again.
-- A request that waits leaves its place in the chat and stays just above the
-  composer, one compact message for each request. Once it has its answer, it
-  is a card in its turn: after the items of the turn that came before the
-  request, and before the end of the turn. The session log keeps the time of
-  the first event of each item for that place. A card names its Mac by the
-  name that the Mac app gave, or as the sender's Mac. A finished run shows
-  its time from its start on the Mac, so the wait for the answer does not
-  count.
-- Each command and folder that the Mac runs or keeps shows through
-  `LiteralText`, which owns its whitespace rules: line breaks, tabs, and
-  repeated spaces show as they are. A line feed, and each character that
-  does not draw as itself, such as U+00A0 or U+202E, shows a mark of its
-  code point that CSS draws. So a wrap looks different from a line break,
-  and the page text keeps the original characters. A hidden bidi control
-  is isolated in its mark. A copy of a selection inside the literal gives
-  the original text, because a native copy changes U+00A0 into a space.
-  Any other copy stays native.
-- Only a window whose pairing names the connection of the request gets Deny,
-  Allow, and the menu of the other ways to allow. A browser, the Mac app of
-  another Mac, and a replaced connection show the state only. The pairing
-  IDs name a connection, and the Worker checks the session of the window.
-- An answer stays marked, and every choice of its request stays blocked,
-  until the request changes or the pairing changes. A 202 reply only says
-  that the Worker passed the answer to the Mac. A failed answer names its
-  cause above the composer, except when the request no longer waits.
-- `ThisMacSection` and `AllowAllBar` show the settings that the Mac keeps.
-  One read or change of the settings runs at a time, in the order of the
-  user's actions, so the Mac gets them in that order and the last reply
-  holds every change. A failed change reads the settings again. A change of
-  an older pairing does not go. The countdowns read the clock and the Mac's
-  end time.
+- [The Mac commands](device/README.md) hold the rules of the requests,
+  their answers, and the settings of the Mac.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
   stateful fakes live in `dev/` and in test files only.
 - The parts reuse the mockup CSS modules and the mockup parts that are pure,
@@ -218,14 +175,16 @@ The address chooses the state. The first value of each option is the default:
 | `viewport` | `desktop`, `mobile` |
 | `scheme` | `dark`, `light` |
 | `clock` | `running`, `frozen` |
-| `mac` | `none`, `waiting`, `longer`, `several`, `running`, `denied`, `done`, `exit-code`, `cut`, `timed-out`, `failed`, `unavailable`, `literal` (a two-line command and a U+00A0 command, also saved) |
+| `mac` | `none`, `waiting`, `longer`, `several`, `many` (four requests, the first a long script), `running`, `denied`, `done`, `exit-code`, `cut`, `timed-out`, `failed`, `unavailable`, `literal` (a two-line command and a U+00A0 command, also saved) |
 | `app` | `browser`, `mac` (the Mac app on the Mac that got the requests) |
+| `change` | `done`, `done-not-saved`, `failed` (what the page's Mac does with a change of its settings) |
 | `page` | `chat`, `this-mac` (the This Mac section of the account) |
 
 The desktop page keeps the mockup's columns, so the chat column is 718 px wide
 in a 1440 px window. The buttons of the page make the sandbox ready, stop it,
 fail its start, write the title, drop the connection, resend the last event,
-and send two parts out of order. Writes of the page change the fake's state:
+send two parts out of order, and connect the Mac again under a new pairing,
+whose next read the page then makes. Writes of the page change the fake's state:
 new sessions, rename, close, reopen, messages, steer, Stop, Try again, model
 changes, uploads, Resume, and the view. A model change opens its session
 under the ID that the chat chose. Stop and the close of a running tab
@@ -233,13 +192,17 @@ record the member of the `role` option as the one who pressed Stop. Stop
 the sandbox ends a running turn with no Stop request. With `app=mac`, the
 page's Mac acts on each answer: Deny ends the request, and the other choices
 run the command and keep the choice. The bar of the 15 minutes shows above
-the header while they run.
+the header while they run. The Mac refuses a change of an older pairing, as
+the Worker does.
 
 ## Tests
 
 Run `npm run test -- src/chat`. The tests drive the controller and the stream
 on `FakeApiServer` and the recorded events, and render the chat with
 `react-dom/server`. `state/test-kit.ts` holds their helpers.
+
+The Mac commands have their own [tests](device/README.md#tests), and a
+check in the Mac app.
 
 ### Key code
 
@@ -276,13 +239,8 @@ on `FakeApiServer` and the recorded events, and render the chat with
   route builders, and the readers of their responses.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
-- `device/`: the Mac commands. `device-api.ts` holds the routes and the
-  readers, `device-actions.ts` the reads and the answers of the chat, and
-  `placement.ts` the place of each card in its turn. `PendingCommands.tsx`,
-  `CommandChoices.tsx`, and `CommandCard.tsx` draw the requests, and
-  `LiteralText.tsx` draws each command and folder exactly.
-  `mac-settings.ts` reads and changes the Mac's settings for
-  `ThisMacSection.tsx` and `AllowAllBar.tsx`.
+- `device/`: the Mac commands. Their [README](device/README.md) names
+  their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, and the `loss` scenario in `dev/dev-loss.ts`.
 

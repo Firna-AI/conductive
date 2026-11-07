@@ -7,14 +7,12 @@ import {
   type DeviceApprovalRequest,
   type DeviceCommandRecord,
   type DevicePairing,
-  type DeviceSettings,
-  type DeviceSettingsAction,
   type DeviceSettingsRequest,
 } from '../../shared/device'
 import {
   readDevicePairing,
   readDeviceRecord,
-  readDeviceSettings,
+  readDeviceSettingsResponse,
 } from '../../shared/device-read'
 import {
   requestJson,
@@ -29,14 +27,8 @@ import {
   type Reader,
 } from '../api/json'
 
-/** The settings of a Mac, with the pairing of the window that read them. */
-export interface PairedSettings {
-  pairing: DevicePairing
-  settings: DeviceSettings
-}
-
 /** A change that the Mac makes to its own settings. */
-export type SettingsChange = Exclude<DeviceSettingsAction, { action: 'read' }>
+export type SettingsChange = DeviceSettingsRequest['operation']
 
 export const readDeviceCommands: Reader<readonly DeviceCommandRecord[]> = (
   value,
@@ -44,14 +36,6 @@ export const readDeviceCommands: Reader<readonly DeviceCommandRecord[]> = (
 
 export const readDeviceCurrent: Reader<DevicePairing | null> = (value) =>
   nullable(readDevicePairing)(record(value).device)
-
-export const readPairedSettings: Reader<PairedSettings> = (value) => {
-  const body = record(value)
-  return {
-    pairing: readDevicePairing(body),
-    settings: readDeviceSettings(body.settings),
-  }
-}
 
 /** The Worker took the answer, to pass it to the Mac. It is not the result. */
 const readAccepted: Reader<true> = (value) => {
@@ -79,26 +63,38 @@ export function createDeviceApi(fetch: FetchLike) {
       ),
     current: () =>
       requestJson(fetch, 'GET', DEVICE_CURRENT_PATH, readDeviceCurrent),
+    /** The address names the request by its key, which the Worker gives. */
     answer: (
       target: WorkspaceTarget,
-      requestId: string,
+      requestKey: string,
       pairing: DevicePairing,
       action: DeviceApprovalAction,
     ) =>
       requestJson(
         fetch,
         'POST',
-        deviceApprovalPath(target.orgId, target.workspaceId, requestId),
+        deviceApprovalPath(target.orgId, target.workspaceId, requestKey),
         readAccepted,
         { ...pairingOf(pairing), action } satisfies DeviceApprovalRequest,
       ),
     settings: () =>
-      requestJson(fetch, 'GET', DEVICE_SETTINGS_PATH, readPairedSettings),
+      requestJson(
+        fetch,
+        'GET',
+        DEVICE_SETTINGS_PATH,
+        readDeviceSettingsResponse,
+      ),
     changeSettings: (pairing: DevicePairing, operation: SettingsChange) =>
-      requestJson(fetch, 'POST', DEVICE_SETTINGS_PATH, readPairedSettings, {
-        ...pairingOf(pairing),
-        operation,
-      } satisfies DeviceSettingsRequest),
+      requestJson(
+        fetch,
+        'POST',
+        DEVICE_SETTINGS_PATH,
+        readDeviceSettingsResponse,
+        {
+          ...pairingOf(pairing),
+          operation,
+        } satisfies DeviceSettingsRequest,
+      ),
   }
 }
 

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 
 import type {
   DeviceSettings,
+  DeviceSettingsOutcome,
   DeviceWorkspaceWindow,
 } from '../../../src/shared/device.ts'
 import type { DeviceClock } from './clock.js'
@@ -82,24 +83,31 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
     commands = nextCommands
     windows = nextWindows
   }
-  const stopWorkspace = (workspaceId: string) => {
-    const next = new Map(windows)
-    next.delete(workspaceId)
-    save(commands, next)
+  const saveRevocation = (): DeviceSettingsOutcome => {
+    try {
+      save(commands, windows)
+      return { status: 'done' }
+    } catch {
+      dependencies.warn()
+      return {
+        status: 'done-not-saved',
+        message:
+          'This permission change is active, but the Mac could not save it. Try again.',
+      }
+    }
+  }
+  const stopWorkspace = (workspaceId: string): DeviceSettingsOutcome => {
+    windows.delete(workspaceId)
     timers.get(workspaceId)?.()
     timers.delete(workspaceId)
+    return saveRevocation()
   }
   const schedule = (window: DeviceWorkspaceWindow) => {
     timers.set(
       window.workspaceId,
       clock.after(window.expiresAt - clock.now(), () => {
         timers.delete(window.workspaceId)
-        // The deadline applies even when writing the expired snapshot fails.
-        try {
-          stopWorkspace(window.workspaceId)
-        } catch {
-          dependencies.warn()
-        }
+        stopWorkspace(window.workspaceId)
       }),
     )
   }
@@ -114,10 +122,9 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
     allowCommand(command: string): void {
       save(new Set([...commands, command]), windows)
     },
-    removeCommand(command: string): void {
-      const next = new Set(commands)
-      next.delete(command)
-      save(next, windows)
+    removeCommand(command: string): DeviceSettingsOutcome {
+      commands.delete(command)
+      return saveRevocation()
     },
     allowWorkspace(workspaceId: string, workspaceName: string): void {
       if ((windows.get(workspaceId)?.expiresAt ?? 0) > clock.now()) return

@@ -1,9 +1,20 @@
 import { afterEach, beforeEach, expect, it } from 'vitest'
 
 import { DEVICE_SETTINGS_PATH } from '../../src/shared/device'
-import { deviceObject, deviceRequired } from '../../src/shared/device-read'
+import {
+  deviceObject,
+  deviceRequired,
+  readDeviceSettingsResponse,
+} from '../../src/shared/device-read'
 import { deviceFixture, WID, type DeviceFixture } from './runtime.test-support'
-import { connected } from './requests.test-support'
+import {
+  command,
+  connected,
+  ref,
+  result,
+  sendFrame,
+  stored,
+} from './requests.test-support'
 
 let fixture: DeviceFixture
 beforeEach(async () => {
@@ -45,6 +56,7 @@ it('relays local settings only to the paired Mac without applying permission rul
       type: 'settings.result',
       operationId: 'wrong-operation',
       settings,
+      outcome: { status: 'done' },
     }),
   )
   mac.socket.send(
@@ -52,11 +64,16 @@ it('relays local settings only to the paired Mac without applying permission rul
       type: 'settings.result',
       operationId: deviceRequired(message.operationId),
       settings,
+      outcome: { status: 'done' },
     }),
   )
   const response = await read
   expect(response.status).toBe(200)
-  expect(await response.json()).toEqual({ ...mac.device, settings })
+  expect(readDeviceSettingsResponse(await response.json())).toEqual({
+    ...mac.device,
+    settings,
+    outcome: { status: 'done' },
+  })
   const other = await fixture.tokenFor('sender', 'unpaired')
   expect(
     (
@@ -71,9 +88,21 @@ it('relays local settings only to the paired Mac without applying permission rul
       )
     ).status,
   ).toBe(409)
-  for (const operation of [
-    { action: 'remove-command', command: ' exact command ' },
-    { action: 'stop-workspace', workspaceId: WID },
+  for (const [operation, outcome] of [
+    [
+      { action: 'remove-command', command: ' exact command ' },
+      {
+        status: 'done-not-saved',
+        message: 'The settings file could not be saved.',
+      },
+    ],
+    [
+      { action: 'stop-workspace', workspaceId: WID },
+      {
+        status: 'failed',
+        message: 'The workspace permission could not be changed.',
+      },
+    ],
   ] as const) {
     const pending = fixture.app(
       DEVICE_SETTINGS_PATH,
@@ -92,8 +121,82 @@ it('relays local settings only to the paired Mac without applying permission rul
           alwaysAllowedCommands: [],
           workspaceWindows: [],
         },
+        outcome,
       }),
     )
-    expect((await pending).status).toBe(200)
+    const reply = await pending
+    expect(reply.status).toBe(200)
+    expect(readDeviceSettingsResponse(await reply.json())).toEqual({
+      ...mac.device,
+      settings: {
+        ...settings,
+        alwaysAllowedCommands: [],
+        workspaceWindows: [],
+      },
+      outcome,
+    })
   }
+})
+
+it('rejects only the oversized settings waiter and keeps commands and other settings operations alive', async () => {
+  const mac = await connected(fixture)
+  await command(fixture, mac)
+  await sendFrame(mac, { type: 'command.approved', ...ref() })
+  const oversized = fixture.app(
+    DEVICE_SETTINGS_PATH,
+    undefined,
+    fixture.senderToken,
+    true,
+  )
+  const first = deviceObject(await mac.inbox.next())
+  const other = fixture.app(
+    DEVICE_SETTINGS_PATH,
+    { ...mac.device, operation: { action: 'remove-command', command: 'pwd' } },
+    fixture.senderToken,
+    true,
+  )
+  const second = deviceObject(await mac.inbox.next())
+  mac.socket.send(
+    JSON.stringify({
+      type: 'settings.failed',
+      operationId: 'unrelated-operation',
+      code: 'settings_result_too_large',
+    }),
+  )
+  mac.socket.send(
+    JSON.stringify({
+      type: 'settings.failed',
+      operationId: first.operationId,
+      code: 'settings_result_too_large',
+    }),
+  )
+  const response = await oversized
+  expect(response.status).toBe(502)
+  expect(await response.json()).toEqual({
+    error: {
+      code: 'settings_result_too_large',
+      message: 'The Mac settings reply is too large.',
+    },
+  })
+  const settings = {
+    deviceName: 'Sender Mac',
+    alwaysAllowedCommands: [],
+    workspaceWindows: [],
+  }
+  await sendFrame(mac, {
+    type: 'settings.result',
+    operationId: deviceRequired(second.operationId),
+    settings,
+    outcome: { status: 'done' },
+  })
+  const reply = await other
+  expect(reply.status).toBe(200)
+  expect(readDeviceSettingsResponse(await reply.json())).toEqual({
+    ...mac.device,
+    settings,
+    outcome: { status: 'done' },
+  })
+  expect((await stored(fixture)).state).toBe('running')
+  await sendFrame(mac, { type: 'command.result', ...ref(), result })
+  expect(await stored(fixture)).toMatchObject({ state: 'completed', result })
 })

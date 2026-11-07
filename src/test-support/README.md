@@ -46,6 +46,9 @@ Options select the org role, workspace state, conversation, and GitHub banner st
 Replace a reply to draw a missing login, a missing key, a first run, or a deleted org.
 `macCommands` chooses the Mac commands of the fake workspace, and `onMac` makes the window the Mac app on the Mac of the fake user.
 Without `onMac`, the window is a browser: it has no pairing, and the Mac settings refuse it as the Worker does.
+Each fake record has a `requestKey` from `fakeRequestKey`, which differs from its `requestId` and is safe in an address.
+The answer routes use that key, as the Worker's do, so an address built from the raw ID finds no reply.
+`fakeSettingsReply` gives a settings reply with its pairing and outcome: done, done but not saved, or failed.
 The requests come after the tool call of the recorded turn, so the chat places a card after it.
 Preview and desktop URLs are recorded placeholders. Tests can replace them with local fixture URLs.
 

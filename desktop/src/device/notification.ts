@@ -28,7 +28,7 @@ export function workspaceDeviceAddress(request: DeviceCommandRecord): string {
     `${DESKTOP_ORIGIN}/orgs/${encodeURIComponent(request.orgId)}/workspaces/${encodeURIComponent(request.workspaceId)}`,
   )
   url.searchParams.set('sessionId', request.sessionId)
-  url.searchParams.set('deviceRequestId', request.requestId)
+  url.searchParams.set('deviceRequestId', request.requestKey)
   return url.href
 }
 

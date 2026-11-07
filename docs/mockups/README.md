@@ -321,11 +321,26 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   time limit, Deny, and Allow. A longer time limit shows its reason.
   Details opens the folder, the reason, the workspace, and the sender. The
   arrow beside Allow opens Always allow and Allow all commands for 15
-  minutes. A view runs no script, so both are native disclosures, and each
-  choice is a link. The header and the workspace list mark the workspace
-  with Needs input, so the request shows from every page. A notification
-  of macOS opens the workspace when the app is in the background. The 15
-  minutes show as an amber bar with the time left and Stop.
+  minutes. A view runs no script, so Details is a native disclosure, the
+  arrow opens a native popover in the top layer, and each choice is a
+  link. The header and the workspace list mark the workspace with Needs
+  input, so the request shows from every page. A notification of macOS
+  opens the workspace when the app is in the background. The 15 minutes
+  show as an amber bar with the time left and Stop.
+- The requests that wait share one region above the composer, from
+  `ChatPane.module.css`. It takes at most 40% of the window, so a long
+  command or many requests scroll inside it, and an edge that cuts a
+  request fades. `mac-app/requests` draws four requests with a long script.
+  A view cannot open a popover, so the chat draws an open menu with
+  `DrawnChoices` outside the region, at the actions of its request, and the
+  region keeps its bound.
+- Each change of the Mac's settings shows its result until the next change
+  of the same control: done, done but not saved, or failed, from
+  `ChangeOutcome` in `src/components/mac/`. This Mac lists the results of
+  Remove under its list, and the bar of the 15 minutes names the result of
+  Stop, also after the 15 minutes end. A change that the Mac made but did
+  not save took its row or its 15 minutes away, so its result offers Try
+  again. `mac-app/this-mac` and `mac-app/stop` draw them.
 - The web app shows a waiting request without the choices, because only
   the Mac app can allow a command on the Mac. Once answered, the command
   shows as a card at its place in the chat: denied, done with its output,

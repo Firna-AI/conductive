@@ -4,6 +4,7 @@ import { build } from 'vite'
 import {
   deviceConnectionPath,
   DEVICE_COMMAND_PATH,
+  machineDeviceCommandPath,
 } from '../../src/shared/device'
 import { sessionsPath, sessionPaths } from '../../src/shared/sessions'
 import { CLAUDE } from '../chat/harness.test-support'
@@ -237,6 +238,11 @@ export async function deviceFixture() {
     app,
     appHeaders,
     machine,
+    readCommand: (requestKey: string) =>
+      machine(
+        undefined,
+        machineDeviceCommandPath(requestKey).slice(DEVICE_COMMAND_PATH.length),
+      ),
     connect,
     tokenFor,
     senderToken,

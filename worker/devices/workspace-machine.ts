@@ -8,6 +8,7 @@ import {
   readDevicePairing,
 } from '../../src/shared/device-read'
 import { HttpError } from '../http'
+import { hash } from '../security/crypto'
 import { activeDeviceSender, callingTurnId, machineWorkspace } from './access'
 import { readJsonObject } from '../http/json-body'
 import { workspaceOrg } from './data'
@@ -47,9 +48,10 @@ export async function workspaceMachine(
     )
     const device =
       target.device === null ? null : readDevicePairing(target.device)
-    const now = Date.now()
+    const now = devices.now()
     const record: DeviceCommandRecord = {
       ...input,
+      requestKey: await hash(input.requestId),
       timeoutSeconds: input.timeoutSeconds ?? 60,
       longerTimeoutReason: input.longerTimeoutReason ?? null,
       orgId: await workspaceOrg(devices.env.DB, workspace.id),
@@ -97,7 +99,7 @@ export async function workspaceMachine(
     return machineResponse(stored)
   }
   if (request.method === 'GET' && path.startsWith(`${DEVICE_COMMAND_PATH}/`)) {
-    const stored = await devices.records.require(
+    const stored = await devices.records.requireKey(
       decodeURIComponent(path.slice(DEVICE_COMMAND_PATH.length + 1)),
     )
     if (stored.turnId !== turnId || stored.sender.id !== active.sender.id)

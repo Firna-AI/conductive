@@ -1,9 +1,11 @@
 import {
   alwaysAllowed,
+  safariByFile,
   safariOutput,
   safariSuite,
   safariTest,
   thisMac,
+  waitingWithScript,
 } from '../../../docs/mockups/src/fixtures/mac'
 import { checkoutAutocomplete } from '../../../docs/mockups/src/fixtures/workspaces'
 import type {
@@ -11,6 +13,8 @@ import type {
   DeviceCommandResult,
   DevicePairing,
   DeviceSettings,
+  DeviceSettingsOutcome,
+  DeviceSettingsResponse,
 } from '../../shared/device'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from './core'
 
@@ -26,6 +30,7 @@ export type FakeMacScenario =
   | 'waiting'
   | 'longer'
   | 'several'
+  | 'many'
   | 'running'
   | 'denied'
   | 'done'
@@ -62,14 +67,31 @@ const passed: DeviceCommandResult = {
 }
 
 /**
+ * A stand-in for the key that the Worker gives a request ID: the SHA-256 of
+ * the ID in unpadded base64url. The fake key is the ID itself in unpadded
+ * base64url, so it differs from the ID and is safe in an address, as the
+ * real key is. Addresses name a request by its key alone.
+ */
+export function fakeRequestKey(requestId: string): string {
+  const bytes = new TextEncoder().encode(requestId)
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replaceAll('=', '')
+}
+
+/**
  * A request of the recorded turn, after its tool call starts, as the
  * Worker records it. The sender is the fake user, whose Mac is paired.
+ * The key follows the request ID, unless `change` gives one.
  */
 export function fakeMacRequest(
   change: Partial<DeviceCommandRecord> = {},
 ): DeviceCommandRecord {
+  const requestId = change.requestId ?? 'mac-request-1'
   return {
-    requestId: 'mac-request-1',
+    requestId,
+    requestKey: fakeRequestKey(requestId),
     orgId: FAKE_IDS.org,
     workspaceId: FAKE_IDS.workspace,
     workspaceName: checkoutAutocomplete.name,
@@ -120,6 +142,18 @@ const scenarios: Readonly<
       createdAt: FAKE_TIME + 5_800,
     }),
   ],
+  many: () =>
+    [safariByFile, ...waitingWithScript].map((request, index) =>
+      fakeMacRequest({
+        requestId: `mac-many-${index + 1}`,
+        command: request.command,
+        folder: request.folder,
+        reason: request.reason,
+        timeoutSeconds: request.longerBecause ? 600 : 60,
+        longerTimeoutReason: request.longerBecause ?? null,
+        createdAt: FAKE_TIME + 5_500 + index * 100,
+      }),
+    ),
   running: () => [fakeMacRequest({ state: 'running', ...ran(0) })],
   denied: () => [fakeMacRequest({ state: 'denied' })],
   done: () => [
@@ -203,4 +237,16 @@ export function fakeMacSettings(now = FAKE_TIME): DeviceSettings {
       },
     ],
   }
+}
+
+/**
+ * The reply of the fake Mac to a read or a change of its settings: the
+ * pairing, the settings after the operation, and its outcome. A read is
+ * always done.
+ */
+export function fakeSettingsReply(
+  settings: DeviceSettings = fakeMacSettings(),
+  outcome: DeviceSettingsOutcome = { status: 'done' },
+): DeviceSettingsResponse {
+  return { ...FAKE_PAIRING, settings, outcome }
 }

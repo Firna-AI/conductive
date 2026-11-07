@@ -20,6 +20,7 @@ export async function publishDeviceState(
   env: AppEnv,
   request: DeviceCommandRecord,
   waiting: boolean,
+  now = Date.now(),
 ): Promise<void> {
   let row = await readDeviceWorkspace(env.DB, request.workspaceId)
   if (!row) return
@@ -28,12 +29,12 @@ export async function publishDeviceState(
     waiting &&
     ['working', 'ready', 'unread', 'starting'].includes(row.state)
   ) {
-    const updatedAt = Math.max(Date.now(), row.updatedAt + 1)
+    const updatedAt = Math.max(now, row.updatedAt + 1)
     // This marker also repairs a restart between the KV write and D1 update.
     await storage.put(INPUT_KEY, { previous: row.state })
     await enterDeviceInput(env.DB, row.id, row.state, updatedAt)
   } else if (!waiting && baseline) {
-    await restoreDeviceInput(env.DB, row.id, baseline.previous, Date.now())
+    await restoreDeviceInput(env.DB, row.id, baseline.previous, now)
     await storage.delete(INPUT_KEY)
   }
   row = await readDeviceWorkspace(env.DB, request.workspaceId)
@@ -62,8 +63,12 @@ export async function publishDeviceState(
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,
   }
-  await chat.appendWorkspaceEvent(request.workspaceId, {
-    type: 'workspace.updated',
-    workspace,
-  })
+  await chat.appendWorkspaceEvent(
+    request.workspaceId,
+    {
+      type: 'workspace.updated',
+      workspace,
+    },
+    now,
+  )
 }

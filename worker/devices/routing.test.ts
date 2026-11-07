@@ -81,13 +81,12 @@ it('keeps large allowed command records and opaque request IDs durably', async (
     command,
   })
   expect(response.status).toBe(200)
-  expect(await response.json()).toMatchObject({
+  const reply = await response.json()
+  expect(reply).toMatchObject({
     request: { requestId, command, state: 'unavailable' },
   })
-  const stored = await fixture.machine(
-    undefined,
-    `/${encodeURIComponent(requestId)}`,
-  )
+  const record = readDeviceRecord(deviceObject(reply).request)
+  const stored = await fixture.readCommand(record.requestKey)
   expect(stored.status).toBe(200)
   expect(await stored.json()).toMatchObject({ request: { requestId, command } })
 })

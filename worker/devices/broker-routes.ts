@@ -51,7 +51,7 @@ export async function brokerBrowserRoute(
   env: AppEnv,
   matches: (name: string) => boolean,
 ): Promise<Response> {
-  const context = await deviceBrowserGate(request, env, Date.now())
+  const context = await deviceBrowserGate(request, env, broker.now())
   if (!matches(deviceBrokerName(context.user.id)))
     throw new HttpError(
       403,
@@ -95,7 +95,7 @@ export async function brokerBrowserRoute(
         : null,
       userId: context.user.id,
       sessionId: context.sessionId,
-      lastSeen: Date.now(),
+      lastSeen: broker.now(),
       send: (message: import('../../src/shared/device').WorkerToDevice) =>
         server.send(deviceWire(message)),
       close: (code = 1000, reason = 'The Mac is not available.') =>

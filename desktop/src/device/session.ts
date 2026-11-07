@@ -8,6 +8,7 @@ import type {
 import type { PermissionStore } from './permissions.js'
 import { validCommand } from './runner.js'
 import type { CommandRun } from './runner.js'
+import { applyDeviceSettings } from './settings.js'
 
 interface SessionDependencies {
   userId: string
@@ -162,20 +163,7 @@ export function createDeviceSession(dependencies: SessionDependencies) {
       if (message.type === 'settings.operation') {
         if (operations.has(message.operationId)) return
         operations.add(message.operationId)
-        try {
-          const operation = message.operation
-          if (operation.action === 'remove-command')
-            dependencies.permissions.removeCommand(operation.command)
-          if (operation.action === 'stop-workspace')
-            dependencies.permissions.stopWorkspace(operation.workspaceId)
-        } catch {
-          dependencies.warn()
-        }
-        dependencies.send({
-          type: 'settings.result',
-          operationId: message.operationId,
-          settings: dependencies.permissions.settings(),
-        })
+        applyDeviceSettings(message, dependencies)
       }
     },
     dispose(): void {

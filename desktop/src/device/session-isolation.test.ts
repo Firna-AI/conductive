@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 
 import {
   sessionFixture,
@@ -145,4 +145,31 @@ it('reports a failed private permission write without executing or exposing its 
   ])
   expect(test.run).not.toHaveBeenCalled()
   expect(test.warn).toHaveBeenCalledWith()
+})
+
+it('reports a failed settings change with effective settings when the change cannot apply', () => {
+  const test = sessionFixture()
+  test.permissions.allowCommand('printf hello')
+  vi.spyOn(test.permissions, 'removeCommand').mockImplementationOnce(() => {
+    throw new Error('/private/account/permission-file')
+  })
+  test.session.receive({
+    type: 'settings.operation',
+    operationId: 'remove-failed',
+    operation: { action: 'remove-command', command: 'printf hello' },
+  })
+  expect(test.sent.at(-1)).toEqual({
+    type: 'settings.result',
+    operationId: 'remove-failed',
+    settings: {
+      deviceName: 'Cals-Mac.local',
+      alwaysAllowedCommands: ['printf hello'],
+      workspaceWindows: [],
+    },
+    outcome: {
+      status: 'failed',
+      message: 'The Mac could not change this permission. Try again.',
+    },
+  })
+  expect(test.warn).toHaveBeenCalledOnce()
 })

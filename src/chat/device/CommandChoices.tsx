@@ -1,4 +1,11 @@
-import { useCallback, useId, useRef, useState, type KeyboardEvent } from 'react'
+import {
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react'
 import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
 import type { DeviceApprovalAction } from '../../shared/device'
@@ -34,13 +41,22 @@ const choices = [
 
 const ITEM = '[role="menuitem"]'
 
-/** The menu of the other ways to allow. The arrow keys move between rows. */
+/**
+ * The menu of the other ways to allow. It is a popover in the top layer, so
+ * the scrolling region of the requests never cuts it, and the CSS keeps it
+ * at the actions of its request. The arrow keys move between rows.
+ */
 function ChoiceMenu(props: {
   onChoose: (action: DeviceApprovalAction) => void
   onClose: () => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const id = useId()
+  useLayoutEffect(() => {
+    const menu = ref.current
+    // A browser without the Popover API shows the menu in place.
+    if (menu && 'showPopover' in menu) menu.showPopover()
+  }, [])
   useFocusInside(ref, (node) => node.querySelector<HTMLElement>(ITEM))
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const items = [...(ref.current?.querySelectorAll<HTMLElement>(ITEM) ?? [])]
@@ -59,8 +75,9 @@ function ChoiceMenu(props: {
   return (
     <div
       aria-label="More ways to allow"
-      className={classes(styles.choices, local.menu)}
+      className={styles.choices}
       onKeyDown={onKeyDown}
+      popover="manual"
       ref={ref}
       role="menu"
     >
@@ -92,7 +109,8 @@ function ChoiceMenu(props: {
  * Allow that opens the other ways to allow. `answering` is the choice that
  * this window sent: every choice then waits for the Mac to act on it. The
  * menu opens from the actions that hold these choices, so a narrow card can
- * keep it inside its edges.
+ * keep it inside its edges. Escape, a press outside, and Tab close it, and
+ * the focus goes back to the arrow.
  */
 export function CommandChoices(props: {
   answering: DeviceApprovalAction | null

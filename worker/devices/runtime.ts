@@ -3,6 +3,7 @@ import type { WorkspaceChat } from '../chat/backend'
 import type { ChatStorage } from '../chat/types'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
+import { requestBodyEntry } from '../http/request-body'
 import { DeviceBroker } from './broker'
 import { brokerBrowserRoute, brokerOperation } from './broker-routes'
 import { deviceInternal } from './internal'
@@ -28,11 +29,12 @@ export class DeviceRuntime {
     chat: WorkspaceChat,
     matches: (name: string) => boolean,
     alarm: (when: number) => Promise<void>,
+    now: () => number = Date.now,
   ) {
     this.env = env
     this.matches = matches
-    this.broker = new DeviceBroker(storage, env, alarm)
-    this.workspace = new WorkspaceDevices(chat, env, storage, matches)
+    this.broker = new DeviceBroker(storage, env, alarm, now)
+    this.workspace = new WorkspaceDevices(chat, env, storage, matches, now)
   }
   async fetch(request: Request): Promise<Response | null> {
     const path = new URL(request.url).pathname
@@ -42,6 +44,14 @@ export class DeviceRuntime {
       !isDeviceAppPath(path)
     )
       return null
+    return path === DEVICE_INTERNAL_PATH
+      ? requestBodyEntry((bounded) => this.handle(bounded, path))(
+          request,
+          this.env,
+        )
+      : this.handle(request, path)
+  }
+  private async handle(request: Request, path: string): Promise<Response> {
     try {
       let response: Response
       if (path === DEVICE_INTERNAL_PATH) {

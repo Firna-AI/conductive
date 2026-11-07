@@ -20,10 +20,17 @@ export class DeviceRecords {
   private readonly storage: ChatStorage
   private readonly chat: WorkspaceChat
   private readonly env: AppEnv
-  constructor(storage: ChatStorage, chat: WorkspaceChat, env: AppEnv) {
+  private readonly now: () => number
+  constructor(
+    storage: ChatStorage,
+    chat: WorkspaceChat,
+    env: AppEnv,
+    now: () => number,
+  ) {
     this.storage = storage
     this.chat = chat
     this.env = env
+    this.now = now
   }
 
   run<T>(work: () => Promise<T>): Promise<T> {
@@ -32,10 +39,12 @@ export class DeviceRecords {
     return task
   }
   async get(id: string): Promise<DeviceCommandRecord | undefined> {
-    const value = await readDeviceValue(
-      this.storage,
-      RECORDS + (await hash(id)),
-    )
+    return this.getByKey(await hash(id))
+  }
+  private async getByKey(
+    key: string,
+  ): Promise<DeviceCommandRecord | undefined> {
+    const value = await readDeviceValue(this.storage, RECORDS + key)
     return value === undefined ? undefined : readDeviceRecord(value)
   }
   async tokenHash(id: string): Promise<string> {
@@ -52,11 +61,6 @@ export class DeviceRecords {
       (a, b) =>
         a.createdAt - b.createdAt || a.requestId.localeCompare(b.requestId),
     )
-  }
-  save(record: DeviceCommandRecord, tokenHash?: string): Promise<void> {
-    return this.run(async () => {
-      await this.write(record, tokenHash)
-    })
   }
   async desktopSession(id: string): Promise<string> {
     return (
@@ -153,13 +157,17 @@ export class DeviceRecords {
           this.env,
           record,
           waiting,
+          this.now(),
         )
       }
       await this.storage.delete(key)
     }
   }
   async require(id: string): Promise<DeviceCommandRecord> {
-    const record = await this.get(id)
+    return this.requireKey(await hash(id))
+  }
+  async requireKey(key: string): Promise<DeviceCommandRecord> {
+    const record = await this.getByKey(key)
     if (!record)
       throw new HttpError(
         404,

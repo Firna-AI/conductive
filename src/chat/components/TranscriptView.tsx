@@ -5,11 +5,7 @@ import type { UserMessage } from '../../shared/messages'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { formatDuration } from '../state/format'
 import { newestTurnId } from '../state/known-turns'
-import type {
-  RunningTurn,
-  Transcript,
-  TranscriptItem,
-} from '../state/transcript'
+import type { RunningTurn, Transcript } from '../state/transcript'
 import { ToolGroup } from './ToolGroup'
 import { ItemView, UserBubble, type ChatReaders } from './TranscriptItem'
 

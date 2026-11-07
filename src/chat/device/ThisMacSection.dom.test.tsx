@@ -14,6 +14,7 @@ import {
   FAKE_PAIRING,
   fakeLiteralCommands,
   fakeMacSettings,
+  fakeSettingsReply,
 } from '../../test-support/fixtures/devices'
 import {
   holdAnimationFrames,
@@ -59,10 +60,11 @@ describe('ThisMacSection', () => {
     expect(queryByText('14:32 left')).not.toBeNull()
 
     const kept = ['git status', 'sw_vers']
-    server.json('POST', DEVICE_SETTINGS_PATH, {
-      ...FAKE_PAIRING,
-      settings: { ...settings, alwaysAllowedCommands: kept },
-    })
+    server.json(
+      'POST',
+      DEVICE_SETTINGS_PATH,
+      fakeSettingsReply({ ...settings, alwaysAllowedCommands: kept }),
+    )
     await press(byRole('button', 'Remove npm run lint'))
     await waitFor(
       () => queryByRole('button', 'Remove npm run lint') === null,
@@ -70,14 +72,15 @@ describe('ThisMacSection', () => {
     )
     expect(commands()).toEqual(kept)
 
-    server.json('POST', DEVICE_SETTINGS_PATH, {
-      ...FAKE_PAIRING,
-      settings: {
+    server.json(
+      'POST',
+      DEVICE_SETTINGS_PATH,
+      fakeSettingsReply({
         ...settings,
         alwaysAllowedCommands: kept,
         workspaceWindows: [],
-      },
-    })
+      }),
+    )
     await press(byRole('button', 'Stop Checkout address autocomplete'))
     await waitFor(
       () =>
@@ -101,16 +104,72 @@ describe('ThisMacSection', () => {
     ])
   })
 
+  it('names a removal that the Mac made but did not save, after the command leaves the list, until Try again saves it', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ onMac: true })
+    await mount(
+      <ThisMacSection clock={clock} fetch={server.fetch} viewport="desktop" />,
+    )
+    await waitFor(() => queryByText("Cal's MacBook Pro"), 'the name of the Mac')
+    const unsaved =
+      'This permission change is active, but the Mac could not save it. Try again.'
+    server.json(
+      'POST',
+      DEVICE_SETTINGS_PATH,
+      fakeSettingsReply(
+        { ...settings, alwaysAllowedCommands: ['git status', 'sw_vers'] },
+        { status: 'done-not-saved', message: unsaved },
+      ),
+    )
+    await press(byRole('button', 'Remove npm run lint'))
+    await waitFor(
+      () => queryByRole('button', 'Remove npm run lint') === null,
+      'the list without the removed command',
+    )
+    const notSaved = `Removed, not saved npm run lint ${unsaved}`
+    expect(queryByRole('alert', notSaved)).not.toBeNull()
+
+    server.json(
+      'POST',
+      DEVICE_SETTINGS_PATH,
+      fakeSettingsReply({ ...settings, alwaysAllowedCommands: ['git status'] }),
+    )
+    await press(byRole('button', 'Remove sw_vers'))
+    await waitFor(
+      () => queryByRole('button', 'Remove sw_vers') === null,
+      'the list without sw_vers',
+    )
+    expect(queryByRole('status', 'Removed sw_vers')).not.toBeNull()
+    expect(queryByRole('alert', notSaved)).not.toBeNull()
+
+    server.json(
+      'POST',
+      DEVICE_SETTINGS_PATH,
+      fakeSettingsReply({ ...settings, alwaysAllowedCommands: ['git status'] }),
+    )
+    await press(byRole('button', 'Try again to remove npm run lint'))
+    await waitFor(
+      () => queryByRole('status', 'Removed npm run lint'),
+      'the removal that the Mac saved',
+    )
+    expect(queryByRole('alert', notSaved)).toBeNull()
+    expect((await changes(server)).at(-1)).toEqual({
+      ...FAKE_PAIRING,
+      operation: { action: 'remove-command', command: 'npm run lint' },
+    })
+  })
+
   it('shows each saved command literally, with a mark for each line feed and hidden character', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ onMac: true })
-    server.json('GET', DEVICE_SETTINGS_PATH, {
-      ...FAKE_PAIRING,
-      settings: {
+    server.json(
+      'GET',
+      DEVICE_SETTINGS_PATH,
+      fakeSettingsReply({
         ...settings,
         alwaysAllowedCommands: [...fakeLiteralCommands],
-      },
-    })
+      }),
+    )
     await mount(
       <ThisMacSection clock={clock} fetch={server.fetch} viewport="desktop" />,
     )
@@ -170,7 +229,7 @@ describe('ThisMacSection', () => {
     )
     await waitFor(() => queryByText('This Mac did not load'), 'the failed read')
     expect(queryByText('The Mac did not answer. Try again.')).not.toBeNull()
-    server.json('GET', DEVICE_SETTINGS_PATH, { ...FAKE_PAIRING, settings })
+    server.json('GET', DEVICE_SETTINGS_PATH, fakeSettingsReply(settings))
     await press(byRole('button', 'Try again'))
     await waitFor(
       () => queryByText("Cal's MacBook Pro"),

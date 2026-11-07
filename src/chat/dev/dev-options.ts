@@ -20,6 +20,11 @@ export interface DevOptions {
   mac: FakeMacScenario
   /** The window: a browser, or the Mac app on the Mac that got the requests. */
   app: 'browser' | 'mac'
+  /**
+   * What the Mac does with a change of its settings: makes and saves it,
+   * makes it but does not save it, or does not make it.
+   */
+  change: 'done' | 'done-not-saved' | 'failed'
   /** The chat, or the This Mac section of the Mac app's account. */
   page: 'chat' | 'this-mac'
 }
@@ -58,6 +63,7 @@ export const choices = {
     'waiting',
     'longer',
     'several',
+    'many',
     'running',
     'denied',
     'done',
@@ -69,6 +75,7 @@ export const choices = {
     'literal',
   ],
   app: ['browser', 'mac'],
+  change: ['done', 'done-not-saved', 'failed'],
   page: ['chat', 'this-mac'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 
@@ -86,6 +93,7 @@ export const optionNames = [
   'clock',
   'mac',
   'app',
+  'change',
   'page',
 ] as const satisfies readonly (keyof DevOptions)[]
 
@@ -112,6 +120,7 @@ export function readOptions(search: string): DevOptions {
     clock: pick(choices.clock, get('clock')),
     mac: pick(choices.mac, get('mac')),
     app: pick(choices.app, get('app')),
+    change: pick(choices.change, get('change')),
     page: pick(choices.page, get('page')),
   }
 }

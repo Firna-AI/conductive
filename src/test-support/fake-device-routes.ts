@@ -5,14 +5,13 @@ import {
   deviceCommandsPath,
   type DeviceCommandsResponse,
   type DeviceCurrentResponse,
-  type DeviceSettingsResponse,
 } from '../shared/device'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { FAKE_IDS } from './fixtures/core'
 import {
   FAKE_PAIRING,
   fakeMacRequests,
-  fakeMacSettings,
+  fakeSettingsReply,
   type FakeMacScenario,
 } from './fixtures/devices'
 
@@ -39,7 +38,7 @@ export function fakeDeviceRoutes(
   for (const request of requests) {
     routes.json(
       'POST',
-      deviceApprovalPath(org, request.workspaceId, request.requestId),
+      deviceApprovalPath(org, request.workspaceId, request.requestKey),
       { accepted: true },
       202,
     )
@@ -57,10 +56,6 @@ export function fakeDeviceRoutes(
     routes.json('POST', DEVICE_SETTINGS_PATH, error, 409)
     return
   }
-  const settings: DeviceSettingsResponse = {
-    ...FAKE_PAIRING,
-    settings: fakeMacSettings(),
-  }
-  routes.json('GET', DEVICE_SETTINGS_PATH, settings)
-  routes.json('POST', DEVICE_SETTINGS_PATH, settings)
+  routes.json('GET', DEVICE_SETTINGS_PATH, fakeSettingsReply())
+  routes.json('POST', DEVICE_SETTINGS_PATH, fakeSettingsReply())
 }

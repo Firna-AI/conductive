@@ -105,8 +105,9 @@ function find(
 }
 
 /**
- * Sends the answer of the user to the Mac that got the request. The Worker
- * passes it on, and the Mac decides. So the answer stays marked until the
+ * Sends the answer of the user to the Mac that got the request. The address
+ * names the request by the key of its record, and the chat keeps its raw ID.
+ * The Worker passes the answer on, and the Mac decides. So the answer stays marked until the
  * request changes. A failure clears the mark and names the cause, unless
  * the pairing changed in the meantime, which took the old choices away.
  */
@@ -127,7 +128,12 @@ export async function answerCommand(
     })),
   )
   try {
-    await context.devices.api.answer(context.target, requestId, pairing, action)
+    await context.devices.api.answer(
+      context.target,
+      request.requestKey,
+      pairing,
+      action,
+    )
   } catch (error) {
     if (!context.live()) return
     if (!equalPairing(context.store.get().devices.pairing, pairing)) return

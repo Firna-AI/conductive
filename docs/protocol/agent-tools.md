@@ -66,6 +66,9 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   reason, and the time limit (decision 62).
 - The workspace and the sender that a request shows come from the records
   of the Worker, never from the request.
+- A request can have a stable ID for retries. The Worker keeps that ID
+  exact. Each record also gives a key for its read and approval addresses.
+- Reason: an ID such as `.` or `..` can change the meaning of a URL path.
 - A request without a time limit gets 60 seconds.
 - A time limit can be at most 120 seconds. A longer limit, up to 30
   minutes, needs a reason for the longer limit.
@@ -109,6 +112,9 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   command, the Mac, and the time limit as a small label.
 - Details opens the folder, the reason, the workspace, and the sender.
 - A longer time limit shows its reason without a click.
+- The user can scroll through long commands and all waiting requests with
+  the keyboard. The composer stays reachable, and the Allow menu stays
+  visible outside the region that scrolls.
 - While a request waits, its workspace shows needs input, as
   [Workspace states](workspaces-and-sandboxes.md#workspace-states) says
   (decision 68). The workspace keeps needs input while any of its

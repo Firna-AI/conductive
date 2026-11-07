@@ -9,9 +9,12 @@ The [Mac command feature](../devices/README.md) also uses this area's machine en
 `mac-command.ts` forwards only its fixed paths to the token's exact workspace object.
 The real application dispatches those paths before the machine stub.
 The object resolves the stored active sender and selects that sender's connected Mac.
+Command reads use the returned `requestKey` in the URL.
+The raw request ID stays in retry input and device messages.
 The create handler and Mac command handler use `readJsonObject` from the [shared request reader](../http/README.md#json-request-objects).
-It owns the 1,000,000-byte cap and the media type policy.
-The create handler preserves its HTTP 413 and HTTP 415 responses.
+The entry owns the 1,000,000-byte cap, and the reader owns the media type policy.
+The entry preserves HTTP 413, and the handler preserves HTTP 415.
+Direct handler tests also use the shared entry policy before dispatch.
 
 ## Handler
 

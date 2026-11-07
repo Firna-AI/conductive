@@ -28,7 +28,7 @@ export function workspaceDeviceRoute(path: string) {
   return {
     orgId: decodeURIComponent(match[1]),
     workspaceId: decodeURIComponent(match[2]),
-    requestId: match[3] ? decodeURIComponent(match[3]) : null,
+    requestKey: match[3] ? decodeURIComponent(match[3]) : null,
     approval: Boolean(match[4]),
   }
 }

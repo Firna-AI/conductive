@@ -3,7 +3,7 @@ import type {
   DeviceApprovalAction,
   DeviceCommandRecord,
 } from '../../shared/device'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
+import pane from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import styles from '../../../docs/mockups/src/components/chat/PendingCommand.module.css'
 import { macLabel } from './command-text'
 import { CommandChoices } from './CommandChoices'
@@ -14,7 +14,6 @@ import {
   type RequestReaders,
 } from './CommandParts'
 import { answerOf, canAnswer, type DeviceSnapshot } from './device-snapshot'
-import local from './device.module.css'
 
 /**
  * A command that waits for its answer, as a compact message (decision 62):
@@ -41,7 +40,7 @@ function PendingCommand(props: {
         <span className={styles.command}>
           <CommandLine command={request.command} />
         </span>
-        <span className={classes(styles.end, local.end)}>
+        <span className={styles.end}>
           {choices ? (
             <CommandChoices
               answering={answerOf(devices, request.requestId)}
@@ -60,7 +59,8 @@ function PendingCommand(props: {
 /**
  * The requests of the session that wait for an answer, the oldest first,
  * just above the composer. Each one keeps its own choices, so every request
- * that waits has a way to answer it.
+ * that waits has a way to answer it. A long command or many requests scroll
+ * inside the region, so the composer stays in view.
  */
 export function PendingCommands(props: {
   requests: readonly DeviceCommandRecord[]
@@ -70,7 +70,11 @@ export function PendingCommands(props: {
 }) {
   if (props.requests.length === 0) return null
   return (
-    <div className={local.pinned}>
+    <div
+      aria-label="Commands that wait for an answer"
+      className={pane.requests}
+      role="group"
+    >
       {props.requests.map((request) => (
         <PendingCommand
           devices={props.devices}

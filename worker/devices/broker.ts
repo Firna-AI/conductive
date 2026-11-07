@@ -35,14 +35,17 @@ export class DeviceBroker {
   private tail: Promise<unknown> = Promise.resolve()
   private readonly requests: BrokerRequests
   readonly env: AppEnv
+  readonly now: () => number
   private readonly alarm: (when: number) => Promise<void>
 
   constructor(
     storage: ChatStorage,
     env: AppEnv,
     alarm: (when: number) => Promise<void>,
+    now: () => number = Date.now,
   ) {
     this.env = env
+    this.now = now
     this.alarm = alarm
     this.requests = new BrokerRequests(storage)
   }
@@ -158,12 +161,12 @@ export class DeviceBroker {
     const connection = this.connection
     if (
       !connection ||
-      Date.now() - connection.lastSeen >= DEVICE_LEASE_MS ||
+      this.now() - connection.lastSeen >= DEVICE_LEASE_MS ||
       !(await desktopSessionAlive(
         this.env.DB,
         connection.sessionId,
         connection.userId,
-        Date.now(),
+        this.now(),
       ))
     ) {
       await this.drop()
@@ -173,7 +176,7 @@ export class DeviceBroker {
       if (!(await this.valid(item))) await this.invalid(item)
       else if (
         item.executionDeadline !== null &&
-        item.executionDeadline <= Date.now()
+        item.executionDeadline <= this.now()
       ) {
         await expireDeviceCommand(this, connection, item)
       }
@@ -198,7 +201,7 @@ export class DeviceBroker {
       frameLimitBytes: DEVICE_FRAME_LIMIT_BYTES,
       heartbeatIntervalMs: DEVICE_HEARTBEAT_MS,
     })
-    await this.alarm(Date.now() + DEVICE_LEASE_MS)
+    await this.alarm(this.now() + DEVICE_LEASE_MS)
   }
   async current(
     userId: string,

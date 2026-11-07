@@ -7,8 +7,9 @@ export interface PlacedCommand {
   after: string | null
 }
 
+/** The turn of an item. A message and a lost line place no command. */
 const turnOf = (item: TranscriptItem): string | null =>
-  item.kind === 'user' ? null : item.turnId
+  item.kind === 'user' || item.kind === 'lost' ? null : item.turnId
 
 const endsTurn = (item: TranscriptItem) =>
   item.kind === 'turn-end' || item.kind === 'stopped' || item.kind === 'failed'

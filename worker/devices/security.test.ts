@@ -118,9 +118,9 @@ it('fails sleeping work and prevents a result from completing another request', 
 
 it('bounds device writes and preserves the original Origin gate', async () => {
   const mac = await connected(fixture)
-  await command(fixture, mac)
+  const request = await command(fixture, mac)
   const large = { ...mac.device, action: 'allow', extra: 'x'.repeat(1_000_001) }
-  const path = deviceApprovalPath('org', WID, 'command-1')
+  const path = deviceApprovalPath('org', WID, request.requestKey)
   expect(
     (await fixture.app(path, large, fixture.senderToken, true)).status,
   ).toBe(413)

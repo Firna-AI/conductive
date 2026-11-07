@@ -130,6 +130,7 @@ it('closes on invalid JSON, missing workspace references, binary data, or oversi
     test.socket.send({
       type: 'settings.result',
       operationId: 'one',
+      outcome: { status: 'done' },
       settings: {
         deviceName: 'Mac',
         alwaysAllowedCommands: ['\0'.repeat(DEVICE_FRAME_LIMIT_BYTES)],

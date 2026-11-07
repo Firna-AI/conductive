@@ -13,7 +13,7 @@ It has no imports and works in the Mac app's NodeNext build.
 The Worker never reads these fields from a sandbox request.
 
 - Machine POST `/tools/mac-command` creates a command request.
-- Machine GET `/tools/mac-command/:requestId` reads that request.
+- Machine GET `/tools/mac-command/:requestKey` reads that request.
 - Both require the workspace bearer token and `X-Conducting-Turn-Id`.
 - App GET of `deviceCommandsPath` lists a workspace's durable requests.
 - App GET of `deviceCommandPath` reads one request.
@@ -24,11 +24,14 @@ The Worker never reads these fields from a sandbox request.
 
 App reads use the existing host, Origin, session, and membership checks.
 New app writes run those same checks with a body-free request first.
-Their original bodies then pass through the bounded reader.
+The application entry bounds their bodies before dispatch.
 Each request handler calls [readJsonObject](../http/README.md#json-request-objects).
 The body-free gate keeps the forwarded request unread until its owning handler reads it.
-Each new JSON body has a 1,000,000-byte limit.
-The shared reader preserves HTTP 413 for overflow and HTTP 415 for an unsupported media type.
+The private Durable Object device entry also uses the [shared entry policy](../http/README.md#request-body-limit).
+Both entries keep the existing 1,000,000-byte limit.
+Public requests use the application's entry budget without a second device limit.
+The entry returns HTTP 413 for overflow.
+The JSON reader preserves HTTP 415 for an unsupported media type.
 Internal JSON replies use `readBoundedJson` with a 3,000,000-byte budget.
 That budget leaves room for the accepted request and a full device failure message.
 
@@ -72,7 +75,9 @@ It repeats these checks before device decisions and results.
 
 Command records remain outside the `chat:v1:` storage keys.
 They retain their sender, exact command/folder, selected connection, reasons, and outcome.
-Opaque request IDs use hashed keys.
+Each record returns `requestKey`, the existing base64url SHA-256 hash of its exact request ID.
+Command read and approval URLs use that key.
+Retries and device frames keep the raw request ID, including dot and dot-dot IDs.
 Large allowed values use chunks below durable KV value limits.
 Retries with the same ID and command return the existing request.
 A different command needs another ID.
@@ -111,6 +116,10 @@ The Worker never grants permission from a saved command rule or window.
 It never persists local permission settings.
 Settings reads and changes wait for a matching main-process operation result.
 A failed send or disconnected socket removes and rejects the matching waiter.
+Each result relays `done`, `done-not-saved`, or `failed` with the current settings.
+An oversized settings result uses a small `settings.failed` frame.
+It rejects only the matching waiter with `settings_result_too_large`.
+The socket, running commands, and other settings operations remain active.
 
 Commands default to 60 seconds.
 Limits above 120 through 1800 seconds require a visible non-empty longer-limit reason.
@@ -122,7 +131,7 @@ The Worker watchdog allows the command time limit plus one heartbeat for result 
 
 ## Composition and checks
 
-`worker/application.ts` dispatches this feature before the machine stub or app body gate.
+`worker/application.ts` dispatches this feature inside its request budget, before the machine stub or app JSON gate.
 `worker/workspace.ts` composes gated device handling with the existing chat class.
 Broker object names use the owned `devices:v1:user:` prefix.
 Internal calls carry a short-lived signature over their exact target and body hash.
@@ -139,6 +148,9 @@ The device tests use the real application, SQLite Durable Objects, D1, and authe
 Only the fixture mounts the pre-existing chat and runner paths for setup.
 Its Vite bundle uses `write: false`.
 Sender selection comes from messages stored through that real chat path.
+`DeviceRuntime` takes one clock for lease, watchdog, and command times.
+The fixture moves that clock and invokes the real Durable Object alarm through test-only routes.
+The publication recovery test interrupts real D1 with a temporary trigger and replays through a browser route.
 
 ## Key code
 

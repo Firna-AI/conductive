@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import type { DeviceCommandRecord } from '../../src/shared/device.ts'
 import type { DeviceClock } from '../src/device/clock.js'
 import type { DeviceFiles } from '../src/device/files.js'
@@ -43,8 +45,10 @@ export function memoryFiles() {
 export function command(
   changes: Partial<DeviceCommandRecord> = {},
 ): DeviceCommandRecord {
+  const requestId = changes.requestId ?? 'request-one'
   return {
-    requestId: 'request-one',
+    requestId,
+    requestKey: createHash('sha256').update(requestId).digest('base64url'),
     orgId: 'org-one',
     workspaceId: 'workspace-one',
     workspaceName: 'Checkout address',

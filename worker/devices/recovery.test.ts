@@ -1,11 +1,17 @@
 import { afterEach, expect, it, vi } from 'vitest'
 
-import { createChatFixture } from '../chat/harness.test-support'
 import { MemoryChatStorage } from '../chat/memory-storage.test-support'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { DeviceBroker } from './broker'
-import { readDeviceRecord, deviceObject } from '../../src/shared/device-read'
-import { publishDeviceState } from './state'
+import { deviceApprovalPath, deviceCommandsPath } from '../../src/shared/device'
+import { deviceObject, readDeviceRecord } from '../../src/shared/device-read'
+import { deviceFixture, WID } from './runtime.test-support'
+import {
+  connected,
+  ref,
+  sendFrame,
+  workspaceState,
+} from './requests.test-support'
 import type { DeviceConnection } from './broker-types'
 
 let harness: TestHarness | undefined
@@ -41,66 +47,60 @@ it('removes a failed settings send and handles its waiter rejection', async () =
   await vi.runAllTimersAsync()
 })
 
-it('repairs an input marker committed before the D1 state transition', async () => {
-  harness = await createHarness()
-  const fixture = await createChatFixture(harness)
-  const session = await fixture.createSession()
-  const response = await fixture.send(session.id)
-  const turn = await fixture.chat.store.read('workspace-chat', (view) =>
-    view.turn(response.turnId ?? ''),
-  )
-  // The public state publisher needs a real session choice and workspace data.
-  const request = readDeviceRecord({
-    requestId: 'request',
-    workspaceId: 'workspace-chat',
-    orgId: fixture.org.id,
-    workspaceName: 'Test',
-    sessionId: session.id,
-    turnId: turn?.id ?? 'queued',
-    sender: {
-      id: fixture.owner.id,
-      githubLogin: 'owner',
-      displayName: null,
-      avatarUrl: null,
-    },
-    device: null,
-    deviceName: null,
-    command: 'echo',
-    folder: '/',
-    reason: 'Check',
-    timeoutSeconds: 60,
-    longerTimeoutReason: null,
-    state: 'waiting',
-    result: null,
-    error: null,
-    createdAt: 1,
-    startedAt: null,
-    updatedAt: 1,
-  })
-  await harness.env.DB.prepare(
-    "UPDATE workspaces SET state = 'working' WHERE id = 'workspace-chat'",
-  ).run()
-  await fixture.storage.put('devices:v1:input-state', { previous: 'working' })
-  await publishDeviceState(
-    fixture.storage,
-    fixture.chat,
-    fixture.env,
-    request,
-    true,
-  )
-  const state = async () =>
-    deviceObject(
-      await harness?.env.DB.prepare(
-        "SELECT state FROM workspaces WHERE id = 'workspace-chat'",
-      ).first(),
-    ).state
-  expect(await state()).toBe('input')
-  await publishDeviceState(
-    fixture.storage,
-    fixture.chat,
-    fixture.env,
-    request,
-    false,
-  )
-  expect(await state()).toBe('working')
+it('repairs an interrupted publication through browser replay after a workspace restart', async () => {
+  const fixture = await deviceFixture()
+  try {
+    const mac = await connected(fixture)
+    await fixture.db
+      .prepare(
+        `CREATE TRIGGER fail_device_publication BEFORE UPDATE OF state ON workspaces
+       WHEN NEW.id = 'device-workspace' AND NEW.state = 'input'
+       BEGIN SELECT RAISE(ABORT, 'device publication failed'); END`,
+      )
+      .run()
+    try {
+      expect((await fixture.machine(fixture.input())).status).toBe(500)
+      expect(await workspaceState(fixture)).toBe('working')
+    } finally {
+      await fixture.db.prepare('DROP TRIGGER fail_device_publication').run()
+    }
+    const closed = new Promise<void>((resolve) =>
+      fixture.runner.addEventListener('close', () => resolve(), { once: true }),
+    )
+    fixture.runner.close(1000, 'Restart after publication failure')
+    await closed
+    await fixture.runtime.unsafeEvictDurableObject(
+      'device-tests',
+      'Workspace',
+      { name: WID },
+    )
+    const replay = await fixture.app(deviceCommandsPath('org', WID))
+    expect(replay.status).toBe(200)
+    expect(await workspaceState(fixture)).toBe('input')
+    const records = deviceObject(await replay.json()).requests
+    if (!Array.isArray(records)) throw new Error('Missing device records.')
+    expect(records).toHaveLength(1)
+    const request = readDeviceRecord(records[0])
+    expect(request.state).toBe('waiting')
+    expect(await mac.inbox.next()).toMatchObject({
+      type: 'command.request',
+      request: { requestId: 'command-1', requestKey: request.requestKey },
+    })
+    const denied = await fixture.app(
+      deviceApprovalPath('org', WID, request.requestKey),
+      { ...mac.device, action: 'deny' },
+      fixture.senderToken,
+      true,
+    )
+    expect(denied.status).toBe(202)
+    expect(await mac.inbox.next()).toMatchObject({
+      type: 'command.approval',
+      action: 'deny',
+      ...ref(),
+    })
+    await sendFrame(mac, { type: 'command.denied', ...ref() })
+    expect(await workspaceState(fixture)).toBe('working')
+  } finally {
+    await fixture.dispose()
+  }
 })
