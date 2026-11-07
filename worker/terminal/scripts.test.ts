@@ -67,7 +67,7 @@ it('loads the workspace environment and opens the terminal in its repository', a
   await writeFile(
     fixture.terminal,
     `#!/bin/sh
-printf '%s\\n' "$PWD" "$CONDUCTING_LAUNCH_TEST"
+printf '%s\\n' "$PWD" "$CONDUCTIVE_LAUNCH_TEST"
 `,
   )
   expect((await runScript(credentialScript(fixture.options))).code).toBe(0)

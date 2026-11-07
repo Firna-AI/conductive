@@ -3,7 +3,7 @@ import type { AgentChatEvent } from '../../shared/chat-events'
 import type { ChangedFile } from '../../shared/files'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import { count, refused, turn, update } from './event-kit'
+import { count, failed, recordNaming, refused, turn, update } from './event-kit'
 import { renderChat } from './render-kit'
 
 const { message } = workspaceFixtures()
@@ -48,17 +48,6 @@ function stoppedEnd(
     files,
     omittedFileCount,
     userMessageIds: [],
-  }
-}
-
-function failed(turnId: string, text: string, retry: string): AgentChatEvent {
-  return {
-    ...turn,
-    turnId,
-    type: 'turn.failed',
-    error: { code: 'agent_unavailable', message: text },
-    retryMessageId: retry,
-    durationMs: 1_000,
   }
 }
 
@@ -116,6 +105,7 @@ describe('accepted events of a turn that has ended', () => {
     )
 
     chat.emit(failed('turn-2', 'The second turn failed.', later.id))
+    chat.emit(recordNaming(chat.controller, later.id))
     chat.emit({
       ...turn,
       type: 'assistant.delta',
@@ -124,6 +114,30 @@ describe('accepted events of a turn that has ended', () => {
     })
     expect(text()).toContain('The second turn failed. Try again')
     expect(inOrder(text(), ['Late words of turn one.', later.text])).toBe(true)
+  })
+
+  it('shows one Try again, on the newer failure, when a late failure of an older turn names the same message', async () => {
+    const { chat, text } = await renderChat({ conversation: 'running' })
+    chat.emit({ type: 'message.accepted', message: later })
+    chat.emit({ ...turn, type: 'message.sent', messageId: later.id })
+    chat.emit({
+      ...turn,
+      type: 'turn.completed',
+      state: 'finished',
+      durationMs: 1_000,
+      files: [],
+      omittedFileCount: 0,
+      userMessageIds: [message.id],
+    })
+    // A new turn continues the message that the first turn left unanswered.
+    chat.emit(secondStarts)
+    chat.emit(failed('turn-2', 'The second turn failed.', later.id))
+    chat.emit(recordNaming(chat.controller, later.id))
+    chat.emit(failed('turn-1', 'The first turn failed.', later.id))
+    const shown = text()
+    expect(shown).toContain('The first turn failed.')
+    expect(shown).toContain('The second turn failed. Try again')
+    expect(count(shown, 'Try again')).toBe(1)
   })
 })
 
@@ -134,6 +148,7 @@ describe('refusal markers of other turns', () => {
     chat.emit(failed('turn-1', 'The first turn failed.', message.id))
     chat.emit(secondStarts)
     chat.emit(failed('turn-2', 'The second turn failed.', later.id))
+    chat.emit(recordNaming(chat.controller, later.id))
     expect(text()).toContain('The second turn failed. Try again')
 
     chat.emit(refused(50, 'turn.failed', 'too_large'))

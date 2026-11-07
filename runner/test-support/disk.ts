@@ -10,7 +10,7 @@ import { deferred } from './runtime'
 export async function diskFixture(
   beforeRemove: () => Promise<void> = async () => {},
 ) {
-  const directory = await mkdtemp(join(tmpdir(), 'conducting-state-'))
+  const directory = await mkdtemp(join(tmpdir(), 'conductive-state-'))
   const storage = new DiskStorage(join(directory, 'state.json'))
   const write = storage.write.bind(storage)
   const writes: RunnerState[] = []

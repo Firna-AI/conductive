@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 
 import type { CommandResult } from '../sandbox/provider'
+import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { isRecord } from '../http'
 import { shellQuote } from './commands'
 import { legacyRepositoryDirectory } from './repository-locations'
@@ -11,13 +12,13 @@ export const SAVED_BASH_SCRIPT = [
   'set -euo pipefail',
   '[[ ! -o posix ]]',
   `words=('saved script' "Bash's ✓")`,
-  `printf '%s|%s|%s|%s\\n' "\${words[*]}" "$PWD" "\${SAVED_TEXT-unset}" "\${CONDUCTING_DISK_KEEPALIVE-unset}"`,
+  `printf '%s|%s|%s|%s\\n' "\${words[*]}" "$PWD" "\${SAVED_TEXT-unset}" "\${CONDUCTIVE_DISK_KEEPALIVE-unset}"`,
 ].join('\n')
 
 const scriptPaths = {
-  install: '/tmp/conducting-install.sh',
-  startup: '/run/conducting/startup.sh',
-  retention: '/run/conducting/retention-startup.sh',
+  install: '/tmp/conductive-install.sh',
+  startup: '/run/conductive/startup.sh',
+  retention: '/run/conductive/retention-startup.sh',
 }
 type ScriptKind = keyof typeof scriptPaths
 
@@ -39,7 +40,7 @@ export async function localSavedScriptFixture(
   const install = join(directory, 'install.sh')
   const mappedPaths = new Map([
     [legacyRepositoryDirectory(repositoryId), repository],
-    ['/run/conducting', runtime],
+    ['/run/conductive', runtime],
     ['/run/ascii-secrets/env.sh', environment],
     [scriptPaths.install, install],
     ['/home/user/code', join(directory, 'code')],
@@ -50,8 +51,8 @@ export async function localSavedScriptFixture(
     mode === 'build'
       ? ''
       : [
-          `CONDUCTING_REPOSITORY_DIR=${shellQuote(repository)}`,
-          `CONDUCTING_DISK_KEEPALIVE=${shellQuote(mode === 'retention' ? '1' : '0')}`,
+          `CONDUCTIVE_REPOSITORY_DIR=${shellQuote(repository)}`,
+          `CONDUCTIVE_DISK_KEEPALIVE=${shellQuote(mode === 'retention' ? '1' : '0')}`,
           `SAVED_TEXT='loaded value'`,
         ].join('\n'),
     { mode: 0o600 },
@@ -92,11 +93,11 @@ export async function localSavedScriptFixture(
     run: async (command: string): Promise<CommandResult> => {
       let mapped = command
         .replaceAll(
-          'sudo -n install -d -m 700 -o user -g user /run/conducting',
-          'install -d -m 700 /run/conducting',
+          'sudo -n install -d -m 700 -o user -g user /run/conductive',
+          'install -d -m 700 /run/conductive',
         )
         .replaceAll(
-          'sudo -n systemctl restart conducting-runner.service',
+          'sudo -n systemctl restart conductive-runner.service',
           `printf '%s\\n' runner-restarted >> ${shellQuote(runnerCalls)}`,
         )
       for (const [source, target] of mappedPaths)
@@ -112,7 +113,7 @@ export async function localSavedScriptFixture(
           ['-c', mapped],
           {
             cwd: directory,
-            env: {
+            env: isolatedProcessEnvironment({
               PATH: '/usr/bin:/bin',
               HOME: directory,
               LC_ALL: 'C',
@@ -120,7 +121,7 @@ export async function localSavedScriptFixture(
               GIT_CONFIG_NOSYSTEM: '1',
               GIT_CONFIG_GLOBAL: '/dev/null',
               GIT_CEILING_DIRECTORIES: directory,
-            },
+            }),
           },
           (error, stdout, stderr) => {
             const exitCode = error ? error.code : 0

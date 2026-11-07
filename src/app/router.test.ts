@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { parseRoute, routes, SETTINGS_TABS, type Route } from './router'
 
 function parse(path: string): Route {
-  const url = new URL(path, 'https://app.conducting.test')
+  const url = new URL(path, 'https://app.conductive.test')
   return parseRoute(url.pathname, url.search)
 }
 

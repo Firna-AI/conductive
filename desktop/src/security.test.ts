@@ -8,7 +8,7 @@ it('keeps privileged schemes and remote pages out of the bundled main frame', ()
   expect(
     navigationTarget(
       'https://example.com/path',
-      'https://app.conducting.test',
+      'https://app.conductive.test',
       'trusted-main',
     ),
   ).toEqual({
@@ -17,8 +17,8 @@ it('keeps privileged schemes and remote pages out of the bundled main frame', ()
   })
   expect(
     navigationTarget(
-      'https://app.conducting.test/org/one?q=two#chat',
-      'https://app.conducting.test',
+      'https://app.conductive.test/org/one?q=two#chat',
+      'https://app.conductive.test',
       'trusted-main',
     ),
   ).toEqual({
@@ -28,7 +28,7 @@ it('keeps privileged schemes and remote pages out of the bundled main frame', ()
   expect(
     navigationTarget(
       `${DESKTOP_ORIGIN}/api/auth/github`,
-      'https://app.conducting.test',
+      'https://app.conductive.test',
       'trusted-main',
     ),
   ).toEqual({ action: 'sign-in' })
@@ -36,10 +36,10 @@ it('keeps privileged schemes and remote pages out of the bundled main frame', ()
     'file:///etc/passwd',
     'javascript:alert(1)',
     'https://user:pass@example.com/',
-    'conducting-app://other/',
+    'conductive-app://other/',
   ]) {
     expect(
-      navigationTarget(address, 'https://app.conducting.test', 'trusted-main'),
+      navigationTarget(address, 'https://app.conductive.test', 'trusted-main'),
       address,
     ).toEqual({ action: 'drop' })
   }
@@ -48,14 +48,14 @@ it('keeps privileged schemes and remote pages out of the bundled main frame', ()
 it('refuses app navigation and sign-in from child or unknown popup sources', () => {
   for (const address of [
     `${DESKTOP_ORIGIN}/frame-takeover`,
-    'https://app.conducting.test/frame-takeover',
+    'https://app.conductive.test/frame-takeover',
     `${DESKTOP_ORIGIN}/api/auth/github`,
-    'https://app.conducting.test/api/auth/github',
+    'https://app.conductive.test/api/auth/github',
   ]) {
     expect(
       navigationTarget(
         address,
-        'https://app.conducting.test',
+        'https://app.conductive.test',
         'untrusted',
         true,
       ),
@@ -65,7 +65,7 @@ it('refuses app navigation and sign-in from child or unknown popup sources', () 
   expect(
     navigationTarget(
       'https://example.com/review',
-      'https://app.conducting.test',
+      'https://app.conductive.test',
       'untrusted',
       true,
     ),
@@ -73,7 +73,7 @@ it('refuses app navigation and sign-in from child or unknown popup sources', () 
   expect(
     navigationTarget(
       `${DESKTOP_ORIGIN}/trusted-popup`,
-      'https://app.conducting.test',
+      'https://app.conductive.test',
       'trusted-main',
       true,
     ),

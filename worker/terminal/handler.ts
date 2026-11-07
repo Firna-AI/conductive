@@ -105,7 +105,7 @@ export function createTerminalHandler(
           workspaceId: target.workspaceId,
           sandboxId: target.sandboxId,
         })
-        const auth = btoa(`conducting:${password}`)
+        const auth = btoa(`conductive:${password}`)
         let upstream: Response
         try {
           upstream = await dependencies.fetch(portRequest(request, port, auth))

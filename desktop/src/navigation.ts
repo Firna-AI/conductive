@@ -135,7 +135,7 @@ export function installNavigation(
   contents.on('will-frame-navigate', (event) => {
     if (event.frame === contents.mainFrame) return
     // A frame may load its own content, but cannot replace the main document.
-    if (event.url.startsWith('conducting:')) event.preventDefault()
+    if (event.url.startsWith('conductive:')) event.preventDefault()
   })
   contents.on('will-attach-webview', (event) => event.preventDefault())
   contents.setWindowOpenHandler(({ url }) => {

@@ -55,6 +55,12 @@ states the rules of the request and of a failed repair.
 and runner connections of one workspace. A reconnect uses the last stored number.
 The history response gives the point after which live events continue.
 
+`sessions.ts` defines the session paths, their requests and replies, and the `Session` record.
+`Session.retryMessageId` names the one message that `retryMessagePath` accepts.
+It is the retry message of the newest turn when that turn failed, and null otherwise.
+Each other message of the session gets HTTP 409 with the code `retry_not_available`.
+[Messages](../../docs/protocol/chat-and-events.md#messages) states the rule.
+
 `device.ts` defines Mac command paths, socket messages, pairing, and local settings relays.
 It has no imports and also serves the Mac app's NodeNext build.
 `device-read.ts` validates its wire values and preserves command text, timeouts, and truncation.
@@ -63,7 +69,8 @@ Settings results distinguish applied and saved changes, applied but unsaved chan
 The small settings failure frame identifies an oversized reply without closing the connection.
 The combined Mac output cap is 65,536 UTF-8 bytes.
 
-The machine and preview hostnames remain deployment settings.
+`MACHINE_PATHS` in `agent-tools.ts` and `DEVICE_COMMAND_PATH` in `device.ts` put their machine routes under `/v1/`.
+The machine origin and the preview domain stay Worker settings.
 `Preview.url` is the absolute launch address of a preview on the app origin.
 It holds no secret. The browser loads it as it is, in the frame and in a new tab.
 In the Mac app, a new tab opens in the default browser through `PreviewLaunchResponse` instead.

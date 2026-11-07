@@ -13,7 +13,7 @@ import type { ProviderEvent, ProviderProcess } from './providers/types'
 async function measure(): Promise<void> {
   // performance.now starts with the Node process, before static SDK imports.
   const began = 0
-  const mode = oneOf(process.env.CONDUCTING_MEASURE_MODE ?? 'warm-only', [
+  const mode = oneOf(process.env.CONDUCTIVE_MEASURE_MODE ?? 'warm-only', [
     'warm-only',
     'agent',
   ])
@@ -26,22 +26,22 @@ async function measure(): Promise<void> {
     )
     return
   }
-  const placement = oneOf(process.env.CONDUCTING_MEASURE_PLACEMENT, [
+  const placement = oneOf(process.env.CONDUCTIVE_MEASURE_PLACEMENT, [
     'home',
     'system',
   ])
-  const resumeId = process.env.CONDUCTING_MEASURE_RESUME_ID
-  const secret = process.env.CONDUCTING_MEASURE_LOGIN
-  const computerMcpUrl = process.env.CONDUCTING_COMPUTER_MCP_URL
+  const resumeId = process.env.CONDUCTIVE_MEASURE_RESUME_ID
+  const secret = process.env.CONDUCTIVE_MEASURE_LOGIN
+  const computerMcpUrl = process.env.CONDUCTIVE_COMPUTER_MCP_URL
   if (!resumeId || !secret || !computerMcpUrl)
     throw new Error(
       'Set the resume ID, measurement login, and computer MCP URL.',
     )
-  const agent = oneOf(process.env.CONDUCTING_MEASURE_AGENT, ['claude', 'codex'])
+  const agent = oneOf(process.env.CONDUCTIVE_MEASURE_AGENT, ['claude', 'codex'])
   const kind =
     agent === 'codex'
       ? 'api-key'
-      : oneOf(process.env.CONDUCTING_MEASURE_LOGIN_KIND, ['token', 'api-key'])
+      : oneOf(process.env.CONDUCTIVE_MEASURE_LOGIN_KIND, ['token', 'api-key'])
   const login: RunnerLogin =
     agent === 'codex'
       ? { agent, kind: 'api-key', secret }
@@ -66,13 +66,13 @@ async function measure(): Promise<void> {
   try {
     const choice = {
       agent,
-      model: process.env.CONDUCTING_MEASURE_MODEL ?? '',
+      model: process.env.CONDUCTIVE_MEASURE_MODEL ?? '',
       effort: 'low' as const,
     }
     if (!choice.model) throw new Error('Set the measurement model.')
     provider = await factory({
-      cwd: process.env.CONDUCTING_REPOSITORY ?? process.cwd(),
-      home: process.env.CONDUCTING_HOME ?? homedir(),
+      cwd: process.env.CONDUCTIVE_REPOSITORY ?? process.cwd(),
+      home: process.env.CONDUCTIVE_HOME ?? homedir(),
       computerMcpUrl,
       login,
       choice,

@@ -8,21 +8,21 @@ function required(env: NodeJS.ProcessEnv, name: string): string {
 }
 
 export function configuration(env: NodeJS.ProcessEnv) {
-  const home = resolve(env.CONDUCTING_HOME ?? homedir())
-  const computerMcpUrl = required(env, 'CONDUCTING_COMPUTER_MCP_URL')
+  const home = resolve(env.CONDUCTIVE_HOME ?? homedir())
+  const computerMcpUrl = required(env, 'CONDUCTIVE_COMPUTER_MCP_URL')
   new URL(computerMcpUrl)
   return {
-    workspaceId: required(env, 'CONDUCTING_WORKSPACE_ID'),
+    workspaceId: required(env, 'CONDUCTIVE_WORKSPACE_ID'),
     request: {
-      url: required(env, 'CONDUCTING_RUNNER_URL'),
-      workspaceToken: required(env, 'CONDUCTING_WORKSPACE_TOKEN'),
+      url: required(env, 'CONDUCTIVE_RUNNER_URL'),
+      workspaceToken: required(env, 'CONDUCTIVE_WORKSPACE_TOKEN'),
     },
-    cwd: resolve(required(env, 'CONDUCTING_REPOSITORY')),
+    cwd: resolve(required(env, 'CONDUCTIVE_REPOSITORY')),
     home,
-    defaultBranch: required(env, 'CONDUCTING_DEFAULT_BRANCH'),
+    defaultBranch: required(env, 'CONDUCTIVE_DEFAULT_BRANCH'),
     computerMcpUrl,
     statePath:
-      env.CONDUCTING_STATE_PATH ??
-      join(home, '.conducting', 'runner-state.json'),
+      env.CONDUCTIVE_STATE_PATH ??
+      join(home, '.conductive', 'runner-state.json'),
   }
 }

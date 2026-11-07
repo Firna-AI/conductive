@@ -1,11 +1,11 @@
-# Conducting for Mac
+# Conductive for Mac
 
 This package bundles the web app in a small Electron shell.
 It targets macOS arm64 and x64.
 Agents still run in cloud computers.
 The desktop renderer composes the shared React app shell with desktop services.
 
-The shell uses `conducting-app://desktop`.
+The shell uses `conductive-app://desktop`.
 It has no preload script or privileged renderer bridge.
 Only the bundled main frame can use a sanitized clipboard write.
 All other permissions are denied.
@@ -26,17 +26,17 @@ npm --prefix desktop run build
 npm --prefix desktop start
 ```
 
-`CONDUCTING_APP_ORIGIN` selects the API origin at build time.
-It defaults to `https://app.conducting.build`.
+`CONDUCTIVE_APP_ORIGIN` selects the API origin at build time.
+It defaults to `https://app.conductive.build`.
 Local development can use an HTTP localhost origin.
-`CONDUCTING_FRAME_SOURCES` lists space-separated HTTPS frame origins.
+`CONDUCTIVE_FRAME_SOURCES` lists space-separated HTTPS frame origins.
 Set the same frame sources in the web policy.
-Include the preview domain and cloud desktop stream origin when those tools exist.
+Include the preview domain, `https://*.conductive.page`, and the cloud desktop stream origin when those tools exist.
 Packaged apps use their bundled configuration.
 They ignore runtime environment overrides.
 
 The application menu starts GitHub sign-in in the browser.
-The `conducting://` callback carries an expiring, one-use handoff.
+The `conductive://` callback carries an expiring, one-use handoff.
 The main process holds its verifier and installs a separate desktop session cookie.
 The renderer never receives that cookie or verifier.
 The browser keeps its existing session cookie.
@@ -205,8 +205,8 @@ npm --prefix desktop run package
 npm --prefix desktop run test:packaged
 ```
 
-`iconutil` compiles the unchanged [approved iconset](../docs/brand/conducting.iconset/).
-The build copies the [1024px PNG master](../docs/brand/conducting-icon-1024.png) unchanged for the Dock.
+`iconutil` compiles the unchanged [approved iconset](../docs/brand/conductive.iconset/).
+The build copies the [1024px PNG master](../docs/brand/conductive-icon-1024.png) unchanged for the Dock.
 electron-builder makes DMG and ZIP packages for both Mac architectures.
 It uses an ad-hoc signature.
 It does not notarize or publish.
@@ -222,10 +222,10 @@ Packages live in `dist/release/`.
 Playwright output lives in `dist/test-results/`.
 The package includes only `dist/app/` and `dist/bundle/`.
 
-electron-updater uses the public `Firna-AI/conducting-desktop` GitHub feed.
+electron-updater uses the public `Firna-AI/conductive-desktop` GitHub feed.
 The feed is unpublished and off by default.
 Development builds always keep it off.
-A published build can enable it with `CONDUCTING_DESKTOP_UPDATES=enabled`.
+A published build can enable it with `CONDUCTIVE_DESKTOP_UPDATES=enabled`.
 It downloads updates automatically and installs them when the app quits.
 It offers Restart now or Later once for each downloaded version.
 

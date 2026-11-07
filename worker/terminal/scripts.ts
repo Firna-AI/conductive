@@ -1,6 +1,6 @@
 import { shellArgument } from './privileged'
 
-export const TERMINAL_RUNTIME = '/run/conducting-terminal'
+export const TERMINAL_RUNTIME = '/run/conductive-terminal'
 
 export interface TerminalScriptOptions {
   runtimeDirectory: string
@@ -64,12 +64,12 @@ set -eu
 set -a
 . ${shellArgument(options.environmentFile)}
 set +a
-cd "$CONDUCTING_REPOSITORY_DIR"
+cd "$CONDUCTIVE_REPOSITORY_DIR"
 password_file=${shellArgument(`${options.runtimeDirectory}/password`)}
 ${validation}
 valid_password || exit 1
 password=$(cat -- "$password_file")
 [ -n "$password" ] || exit 1
-exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port 7681 --writable --credential "conducting:$password" /bin/bash -l
+exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port 7681 --writable --credential "conductive:$password" /bin/bash -l
 `
 }

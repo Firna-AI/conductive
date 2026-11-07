@@ -6,7 +6,7 @@ set -eu
 artifact_url=$1
 artifact_sha256=$2
 archive=$(mktemp)
-fresh_software=$(mktemp -d /opt/conducting/software.XXXXXX)
+fresh_software=$(mktemp -d /opt/conductive/software.XXXXXX)
 trap 'rm -f "$archive"; rm -rf "$fresh_software"' EXIT HUP INT TERM
 curl --fail --silent --show-error --location "$artifact_url" --output "$archive"
 printf '%s  %s\n' "$artifact_sha256" "$archive" | sha256sum --check --status
@@ -15,15 +15,15 @@ test -x "$fresh_software/node/bin/node"
 test -f "$fresh_software/runner/main.mjs"
 chmod -R a+rX "$fresh_software"
 "$fresh_software/node/bin/node" --version
-rm -rf /opt/conducting/software
-mv "$fresh_software" /opt/conducting/software
+rm -rf /opt/conductive/software
+mv "$fresh_software" /opt/conductive/software
 
-install -m 755 /opt/conducting/staged/runner-start.sh /opt/conducting/runner-start.sh
-install -m 755 /opt/conducting/staged/git-credential-helper.sh /usr/local/bin/conducting-git-credential
-install -m 644 /opt/conducting/staged/git-credential-helper.mjs /opt/conducting/git-credential-helper.mjs
-install -m 644 /opt/conducting/staged/conducting-runner.service /etc/systemd/system/conducting-runner.service
-git config --system --replace-all credential.helper /usr/local/bin/conducting-git-credential
+install -m 755 /opt/conductive/staged/runner-start.sh /opt/conductive/runner-start.sh
+install -m 755 /opt/conductive/staged/git-credential-helper.sh /usr/local/bin/conductive-git-credential
+install -m 644 /opt/conductive/staged/git-credential-helper.mjs /opt/conductive/git-credential-helper.mjs
+install -m 644 /opt/conductive/staged/conductive-runner.service /etc/systemd/system/conductive-runner.service
+git config --system --replace-all credential.helper /usr/local/bin/conductive-git-credential
 git config --system credential.useHttpPath true
 systemctl daemon-reload
-systemctl enable conducting-runner.service
+systemctl enable conductive-runner.service
 # Builds contain no workspace settings. Services start only in a workspace.

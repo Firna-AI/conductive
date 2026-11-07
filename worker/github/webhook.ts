@@ -1,3 +1,4 @@
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { BodyBudgetExceeded, readBoundedBody } from '../http/bounded-body'
 import type { GitHubRefreshWorkspace } from './contracts'
@@ -9,7 +10,6 @@ import {
 } from './data'
 import { webhookRoute } from './webhook-routing'
 
-export const GITHUB_WEBHOOK_PATH = '/api/github/webhooks'
 export const GITHUB_WEBHOOK_BODY_BYTES = 26 * 1024 * 1024
 
 export interface GitHubWebhookEnv {
@@ -85,7 +85,7 @@ export async function handleGitHubWebhook(
     const url = new URL(request.url)
     if (
       url.origin !== env.MACHINE_ORIGIN ||
-      url.pathname !== GITHUB_WEBHOOK_PATH ||
+      url.pathname !== MACHINE_PATHS.githubWebhook ||
       request.method !== 'POST' ||
       request.headers.has('Upgrade')
     ) {

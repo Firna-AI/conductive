@@ -10,7 +10,12 @@ import {
 import { workspacePath } from '../../src/shared/workspaces'
 import { FakeRunner } from '../test-support/fake-runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
-import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
+import {
+  CLAUDE,
+  createChatFixture,
+  MACHINE_ORIGIN,
+  WORKSPACE_ID,
+} from './harness.test-support'
 
 describe('workspace chat security', () => {
   let harness: TestHarness
@@ -116,6 +121,9 @@ describe('workspace chat security', () => {
   it('authenticates the runner token and validates its hello and neutral event type', async () => {
     const fixture = await createChatFixture(harness)
     await expect(
+      fixture.connect(undefined, { url: `${MACHINE_ORIGIN}/runner` }),
+    ).rejects.toMatchObject({ status: 403, code: 'machine_forbidden' })
+    await expect(
       fixture.connect(undefined, { workspaceToken: 'wrong-token' }),
     ).rejects.toMatchObject({ status: 401, code: 'workspace_token_required' })
     await expect(
@@ -196,12 +204,23 @@ describe('workspace chat security', () => {
     expect(response.status).toBe(202)
     expect(retry.message.sender.id).toBe(fixture.member.id)
     expect(retry.message.id).not.toBe('message-1')
-    expect(
-      await (await fixture.fetch(retryPath, {}, fixture.memberCookie)).json(),
-    ).toMatchObject({ message: { id: retry.message.id } })
+    const duplicate = await fixture.fetch(retryPath, {}, fixture.memberCookie)
+    expect(duplicate.status).toBe(409)
+    expect(await duplicate.json()).toEqual({
+      error: {
+        code: 'retry_not_available',
+        message:
+          'Only the newest failed request can run again. Send a new message.',
+      },
+    })
     expect(runner.commands).toHaveLength(2)
     const retried = runner.commands[1]
     if (retried?.type !== 'turn') throw new Error('Expected a retry turn.')
     expect(retried.login.secret).toBe(`secret-${fixture.member.id}-claude`)
+    expect(
+      (await fixture.history(session.id)).events.filter(
+        ({ event }) => event.type === 'message.accepted',
+      ),
+    ).toHaveLength(2)
   })
 })

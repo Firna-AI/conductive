@@ -4,7 +4,7 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import type { UserMessage } from '../../shared/messages'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { formatDuration } from '../state/format'
-import { newestTurnId } from '../state/known-turns'
+import { retryItemId } from '../state/known-turns'
 import type { RunningTurn, Transcript } from '../state/transcript'
 import { ToolGroup } from './ToolGroup'
 import { ItemView, UserBubble, type ChatReaders } from './TranscriptItem'
@@ -44,19 +44,9 @@ export function TranscriptView(props: {
   children?: ReactNode
 }) {
   const { transcript } = props
-  // Try again shows on the failed item of the newest turn, when no turn runs
-  // and no later event added an item other than a lost line or a late item of
-  // an ended turn. A message sent after the failure hides it.
-  const latest = transcript.items.find(
-    (item) => item.id === transcript.latestItemId,
-  )
-  const retryable =
-    !props.readOnly &&
-    !transcript.turn &&
-    latest?.kind === 'failed' &&
-    latest.turnId === newestTurnId(transcript)
-      ? latest
-      : null
+  // The newest session record gives the permission. The order of the items
+  // gives none. A read-only chat offers no Try again.
+  const retryable = props.readOnly ? null : retryItemId(transcript)
   return (
     <>
       {groupEntries(transcript.items, props.inserts ?? []).map((entry) =>
@@ -67,7 +57,7 @@ export function TranscriptView(props: {
         ) : (
           <ItemView
             actions={{
-              canRetry: entry.item === retryable,
+              canRetry: entry.item.id === retryable,
               retrying: props.retrying,
               onRetry: props.onRetry,
               onOpenDiff: props.onOpenDiff,

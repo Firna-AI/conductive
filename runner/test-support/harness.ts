@@ -50,7 +50,7 @@ export async function runnerHarness() {
     workspaceToken: 'workspace-secret',
   })
   const storage = new DiskStorage(
-    join(repository.home, '.conducting', 'runner-state.json'),
+    join(repository.home, '.conductive', 'runner-state.json'),
   )
   const store = await EventStore.open(storage)
   const providers = new FakeProviders()

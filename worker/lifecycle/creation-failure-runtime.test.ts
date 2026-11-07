@@ -33,7 +33,7 @@ it('replays the accepted first message and failed start to only its sender after
     const org = await findMembership(fixture.env.DB, 'runtime-org', user.id)
     if (!org) throw new Error('Missing runtime org')
     const software = {
-      url: 'https://software.conducting.test/runner.tar.gz',
+      url: 'https://software.conductive.test/runner.tar.gz',
       sha256: 'a'.repeat(64),
     }
     const dependencies = {

@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import { count, refused, streamId, turn, update } from './event-kit'
+import {
+  count,
+  recordNaming,
+  refused,
+  streamId,
+  turn,
+  update,
+} from './event-kit'
 import { renderChat, textOf } from './render-kit'
 
 /** The folded line of each run of tool calls, and whether the run is open. */
@@ -151,7 +158,7 @@ describe('runner events that the workspace refused', () => {
     expect(text()).not.toMatch(ended)
   })
 
-  it('keeps Try again on a failed turn when a later line follows it, not a later message', async () => {
+  it('keeps Try again on a failed turn when a later line follows it, until a later message clears the record', async () => {
     const { chat, text } = await renderChat({ conversation: 'failed' })
     chat.emit(refused(30, 'tool.updated', 'too_large'))
     expect(text()).toMatch(
@@ -164,13 +171,14 @@ describe('runner events that the workspace refused', () => {
       type: 'message.accepted',
       message: { ...next, state: 'queued' },
     })
+    chat.emit(recordNaming(chat.controller, null))
     // The recorded error says "Try again." itself, and no button follows it.
     expect(text()).toContain(
       'The agent is busy. Try again. A tool update was lost because it was too large Try the other proxy.',
     )
   })
 
-  it('takes Try again from a failed turn when a newer turn loses its end', async () => {
+  it('keeps Try again away from a failed turn when a newer turn loses its end', async () => {
     const { chat, text } = await renderChat({ conversation: 'running' })
     const { message } = workspaceFixtures()
     const queued = {
@@ -179,7 +187,6 @@ describe('runner events that the workspace refused', () => {
       text: 'Then add tests for the form.',
       state: 'queued' as const,
     }
-    chat.emit({ type: 'message.accepted', message: queued })
     chat.emit({
       ...turn,
       type: 'turn.failed',
@@ -187,8 +194,11 @@ describe('runner events that the workspace refused', () => {
       retryMessageId: message.id,
       durationMs: 1_000,
     })
-    expect(text()).toContain('Try again')
+    chat.emit(recordNaming(chat.controller, message.id))
+    expect(text()).toContain('The agent is busy. Try again')
 
+    chat.emit({ type: 'message.accepted', message: queued })
+    chat.emit(recordNaming(chat.controller, null))
     chat.emit({
       ...turn,
       turnId: 'turn-2',

@@ -8,13 +8,14 @@ import type {
   CommandResult,
   CommandStatus,
 } from '../../sandbox/provider'
+import { isolatedProcessEnvironment } from '../../test-support/process-environment'
 import { sourceRepositoryUrl } from './native-command'
 
 export function nativeEnvironment(
   home: string,
   root: string,
 ): NodeJS.ProcessEnv {
-  return {
+  return isolatedProcessEnvironment({
     PATH: '/usr/bin:/bin',
     HOME: home,
     TMPDIR: root,
@@ -30,7 +31,7 @@ export function nativeEnvironment(
     GIT_COMMITTER_EMAIL: 'source@example.test',
     GIT_AUTHOR_DATE: '2001-01-01T00:00:00Z',
     GIT_COMMITTER_DATE: '2001-01-01T00:00:00Z',
-  }
+  })
 }
 
 export function nativeGit(
@@ -88,7 +89,7 @@ export class NativeSourceProvider extends BoatClient {
     await this.beforeStart?.(command)
     const mapped = command
       .replaceAll('/home/user', this.home)
-      .replaceAll('https://machine.conducting.test', this.localOrigin)
+      .replaceAll('https://machine.conductive.test', this.localOrigin)
       .replaceAll('=https', '=http')
     const executable = command.includes('clone --bare')
       ? mapped.replaceAll(

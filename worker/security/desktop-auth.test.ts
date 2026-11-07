@@ -37,7 +37,7 @@ it('completes a verifier-bound GitHub desktop session and signs out without chan
   const callback = await desktopHandoff(harness, verifier)
   expect(callback.status).toBe(302)
   expect(callback.headers.get('Location')).toMatch(
-    /^conducting:\/\/auth\/github\/callback#token=/,
+    /^conductive:\/\/auth\/github\/callback#token=/,
   )
   expect(callback.headers.get('Set-Cookie')).not.toContain(
     DESKTOP_SESSION_COOKIE,
@@ -175,7 +175,7 @@ it('serves desktop preflights and API errors without admitting foreign origins o
     headers: { ...headers, Upgrade: 'websocket' },
   })
   expect(upgradedPreflight.status).toBe(401)
-  for (const origin of ['conducting-app://other', 'null']) {
+  for (const origin of ['conductive-app://other', 'null']) {
     const response = await harness.fetch(API_PATHS.session, {
       headers: { Origin: origin },
     })
@@ -188,12 +188,12 @@ it('serves desktop preflights and API errors without admitting foreign origins o
   const app = createApp()
   const env = {
     ...harness.env,
-    MACHINE_ORIGIN: 'https://machines.conducting.test',
-    PREVIEW_DOMAIN: 'conducting-previews.test',
+    MACHINE_ORIGIN: 'https://machines.conductive.test',
+    PREVIEW_DOMAIN: 'conductive-previews.test',
   }
   for (const input of [
-    { host: 'https://machines.conducting.test', status: 501 },
-    { host: 'https://unknown.conducting-previews.test', status: 404 },
+    { host: 'https://machines.conductive.test', status: 501 },
+    { host: 'https://unknown.conductive-previews.test', status: 404 },
     { host: 'https://untrusted.test', status: 403 },
   ]) {
     const response = await app.fetch(

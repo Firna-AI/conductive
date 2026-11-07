@@ -34,7 +34,7 @@ test('gives back native window-button space in full screen and restores it after
   const profile = await mkdtemp(
     resolve(evidence, 'desktop-window-space-profile-'),
   )
-  const packaged = process.env.CONDUCTING_PACKAGED_APP
+  const packaged = process.env.CONDUCTIVE_PACKAGED_APP
   const stages: {
     stage: 'normal' | 'full-screen' | 'restored'
     isFullScreen: boolean

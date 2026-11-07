@@ -61,7 +61,7 @@ export function createWindow(dependencies: WindowDependencies): BrowserWindow {
     trafficLightPosition: TRAFFIC_LIGHT_POSITION,
     backgroundColor: '#0b0c0e',
     webPreferences: {
-      partition: 'persist:conducting',
+      partition: 'persist:conductive',
       contextIsolation: true,
       sandbox: true,
       nodeIntegration: false,
