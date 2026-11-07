@@ -10,7 +10,7 @@ import {
 import { webhookRoute } from './webhook-routing'
 
 export const GITHUB_WEBHOOK_PATH = '/api/github/webhooks'
-const BODY_BUDGET = 26 * 1024 * 1024
+export const GITHUB_WEBHOOK_BODY_BYTES = 26 * 1024 * 1024
 
 export interface GitHubWebhookEnv {
   DB: D1Database
@@ -45,7 +45,7 @@ async function authenticatedBody(
     body =
       request.body === null
         ? new Uint8Array(0)
-        : await readBoundedBody(request.body, BODY_BUDGET)
+        : await readBoundedBody(request.body, GITHUB_WEBHOOK_BODY_BYTES)
   } catch (error) {
     if (error instanceof BodyBudgetExceeded)
       throw new HttpError(

@@ -40,7 +40,7 @@ it('stops the public exchange at its byte budget before sign-in and accepts an e
   expect(await refused.json()).toEqual({
     error: {
       code: 'body_too_large',
-      message: 'The request body is too large.',
+      message: 'The request is too large. Send less data.',
     },
   })
   expect(refused.headers.get('Access-Control-Allow-Origin')).toBe(

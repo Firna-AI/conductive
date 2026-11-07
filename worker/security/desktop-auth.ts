@@ -1,7 +1,7 @@
 import { saveOAuthState, saveSession, takeOAuthState } from '../data/users'
 import type { AppDependencies, AppEnv } from '../env'
-import { HttpError, isRecord } from '../http'
-import { BodyBudgetExceeded, readBoundedBody } from '../http/bounded-body'
+import { HttpError } from '../http'
+import { readJsonObject } from '../http/json-body'
 import { hash, sign, verify } from './crypto'
 import {
   DESKTOP_CALLBACK,
@@ -11,7 +11,6 @@ import {
 
 const HANDOFF_SECONDS = 60
 const SESSION_SECONDS = 7 * 24 * 60 * 60
-const EXCHANGE_BODY_BYTES = 1_000_000
 
 export function desktopChallenge(request?: Request): string | undefined {
   const value =
@@ -48,31 +47,15 @@ export async function finishDesktopSignIn(
   if (request.headers.get('Origin') !== DESKTOP_ORIGIN) {
     throw new HttpError(403, 'origin_forbidden', 'Open the app to continue.')
   }
-  const contentType = request.headers
-    .get('Content-Type')
-    ?.split(';')[0]
-    .trim()
-    .toLowerCase()
-  if (contentType !== 'application/json') {
-    throw new HttpError(415, 'json_required', 'Send the request as JSON.')
-  }
-  let body: unknown
+  let body: Record<string, unknown>
   try {
-    if (!request.body) throw invalidHandoff()
-    const bytes = await readBoundedBody(request.body, EXCHANGE_BODY_BYTES)
-    body = JSON.parse(new TextDecoder().decode(bytes))
+    body = await readJsonObject(request)
   } catch (error) {
-    if (error instanceof BodyBudgetExceeded) {
-      throw new HttpError(
-        413,
-        'body_too_large',
-        'The request body is too large.',
-      )
-    }
+    if (error instanceof HttpError && error.code === 'json_required')
+      throw error
     throw invalidHandoff()
   }
   if (
-    !isRecord(body) ||
     typeof body.token !== 'string' ||
     typeof body.verifier !== 'string' ||
     !/^[A-Za-z0-9_-]{43}$/.test(body.verifier)
