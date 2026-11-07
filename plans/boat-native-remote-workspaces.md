@@ -5440,6 +5440,8 @@ Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
 
 Depends on: none
 
+Completed on 7 November 2026 after the final primary sync.
+
 Apply decision 100. Merge it after the milestones that are open when it
 starts, and rename each name that they add.
 
@@ -5456,6 +5458,9 @@ Evidence: `.context/milestone-15j/visual-review.md`,
 Decision 102 evidence: `.context/milestone-15j/decision-102-code-report.md`,
 `.context/milestone-15j/decision-102-check.log`, and
 `.context/milestone-15j/decision-102-mockups-check.log`.
+Final sync evidence: `.context/milestone-15j/final-sync/visual-review.md`,
+`.context/milestone-15j/final-sync/check.log`, and
+`.context/milestone-15j/final-sync/mockups-check.log`.
 
 - [x] Change the name and the domain in `docs/mockups/src/brand.ts`, and
       in each text that names the product: `AGENTS.md`, the READMEs,
@@ -5475,7 +5480,7 @@ Decision 102 evidence: `.context/milestone-15j/decision-102-code-report.md`,
       GitHub webhooks, as decision 102 says. Use `conductive.page` as the
       preview domain. Name both in the architecture doc and the protocol.
       Branch: `conductor/boat-native-remote-workspaces-milestone-15j`.
-- [ ] Merge the primary branch last, and rename each new occurrence. Then
+- [x] Merge the primary branch last, and rename each new occurrence. Then
       a search for the old name finds only decision records and history.
       Branch: `conductor/boat-native-remote-workspaces-milestone-15j`.
 
