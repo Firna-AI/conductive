@@ -145,6 +145,7 @@ export class RunnerDelivery {
         })
         await new TurnLifecycle(transaction, session).finish(turn, {
           state: 'failed',
+          retryMessageId: command.messageId,
         })
       },
       this.publish,

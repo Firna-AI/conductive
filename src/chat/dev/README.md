@@ -40,8 +40,11 @@ fail its start, write the title, drop the connection, resend the last event,
 send two parts out of order, and connect the Mac again under a new pairing,
 whose next read the page then makes. Writes of the page change the fake's state:
 new sessions, rename, close, reopen, messages, steer, Stop, Try again, model
-changes, uploads, Resume, and the view. A model change opens its session
-under the ID that the chat chose. Stop and the close of a running tab
+changes, uploads, Resume, and the view. As in the Worker, Try again sends the
+message that the session record names again, as a new message. It refuses
+each other message with 409. Each accepted message sets that record's
+`retryMessageId` to null. A model change opens its session under the ID that
+the chat chose. Stop and the close of a running tab
 record the member of the `role` option as the one who pressed Stop. Stop
 the sandbox ends a running turn with no Stop request. With `app=mac`, the
 page's Mac acts on each answer: Deny ends the request, and the other choices

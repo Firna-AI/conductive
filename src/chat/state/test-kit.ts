@@ -23,6 +23,7 @@ export function newSessionRecord(
     createdAt: FAKE_TIME,
     closedAt,
     activeTurnId: null,
+    retryMessageId: null,
   }
 }
 

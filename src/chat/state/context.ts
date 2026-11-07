@@ -124,11 +124,13 @@ const changesWorkspace = (event: StreamEnvelope['event']) =>
 
 /**
  * Applies workspace stream events in order: chat events to the log of their
- * session, and records of the workspace, its start, and its sessions. A
- * record from the stream starts a new version of its session, and an event
- * of the workspace or its start a new version of the workspace record, so an
- * older reply no longer applies. The first record of a session that a model
- * change opens moves the draft in the same snapshot.
+ * session, and records of the workspace, its start, and its sessions. Each
+ * session record also goes to the log of its session, which keeps the retry
+ * message of the newest record. A record from the stream starts a new
+ * version of its session, and an event of the workspace or its start a new
+ * version of the workspace record, so an older reply no longer applies. The
+ * first record of a session that a model change opens moves the draft in the
+ * same snapshot.
  */
 export function applyEnvelopes(
   context: ChatContext,

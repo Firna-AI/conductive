@@ -129,10 +129,19 @@ the connection. The app makes the controller with a stable `client` and
 - A refusal marker starts no turn. A refused `turn.completed` or `turn.failed` ends its turn only while that turn runs.
   Its running calls show as stopped, its Stop request clears, and no time, files, or Try again appear.
   A marker of an ended turn, of a turn that never started, or without a turn ends nothing.
-- `Transcript.latestItemId` names the item that the latest event added or changed, other than a lost line or a late item of an ended turn.
-  Try again shows only on the failed item of the newest turn, when no turn runs and that item is the latest.
-  A later lost line, a late item of an older turn, and a message accepted before the failure keep it.
-  A message accepted after the failure, or a newer turn, takes it away, also when the end of that turn was lost.
+- Try again shows only on the failed item that names the retry message of the newest session record, as
+  [Messages](../../docs/protocol/chat-and-events.md#messages) says. The order of the transcript items gives no permission.
+  A read-only chat offers no Try again.
+- Each session log takes the `session.updated` records of its session with its other events.
+  It keeps the `retryMessageId` of the record with the highest event number as `Transcript.retryMessageId`.
+  So a record that arrives late, such as in a history load, never brings back an older Try again or hides a newer one.
+- `SessionLog.takeListed` takes the record of the session list that the chat reads after the history.
+  That record counts at the event number that the stream starts after.
+  When the log already holds a newer record, the listed record changes nothing. A later `session.updated` event replaces it.
+- `retryItemId` picks one failed item. A turn that continues the unanswered messages of a finished turn takes their IDs.
+  So a late failure of the older turn can name the same message. Then only the item of the newer known turn offers Try again.
+- The Worker refuses an old Try again, such as from a second tab that missed newer events, with `409 retry_not_available`.
+  The chat then shows the notice "The turn didn't restart" with the Worker's plain message.
 - Ordered history folding preserves these fields and lines across completion and failure events.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
@@ -167,7 +176,8 @@ the connection. The app makes the controller with a stable `client` and
   over an older reply or rollback. So a Resume reply never hides a newer
   state from the stream, such as a failed start with its Try again. The steps
   after an action, such as a view save, the focus, or a free Resume button,
-  still run when its reply is older.
+  still run when its reply is older. The retry message is the exception: the
+  session log orders its records by event number, as the rules above say.
 - The chat loads the session list and the view, then the full history of the
   shown session, then the workspace and the session list again. The stream
   starts after the history's `throughEventNumber`, so no change between the
@@ -206,6 +216,8 @@ on `FakeApiServer` and the recorded events, and render the chat with
 `react-dom/server`. `state/test-kit.ts` holds their helpers. The
 [workspace screen](../shell/workspace/README.md#key-code) tests the kept
 chat in the whole app.
+`components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
+It checks the plain message of a refused retry in a tab that missed newer events.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -221,8 +233,10 @@ check in the Mac app.
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
-- `state/session-log.ts`: the event log of each session.
-- `state/known-turns.ts`: the known turns, their order, and their ends.
+- `state/session-log.ts`: the event log of each session, with the retry
+  message of its newest record and `takeListed` for the session list.
+- `state/known-turns.ts`: the known turns, their order, their ends, and
+  `retryItemId`, the one failed item that offers Try again.
 - `state/placement.ts`: where an item goes in its turn, also a late one.
 - `state/late-events.ts`: accepted events of a turn that has ended.
 - `state/item-keys.ts`: the item IDs that later events of an item reuse.
