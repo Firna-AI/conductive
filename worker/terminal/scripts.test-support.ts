@@ -35,6 +35,14 @@ printf 'started\\n' > '${root}/started'
   )
   await chmod(terminal, 0o700)
   const repository = `${root}/workspace repository`
+  const multiplexer = `${root}/multiplexer`
+  await writeFile(
+    multiplexer,
+    `#!/bin/sh
+printf '%s\\0' "$PWD" "$CONDUCTIVE_LAUNCH_TEST" "$@"
+`,
+  )
+  await chmod(multiplexer, 0o700)
   const environmentFile = `${root}/environment.sh`
   await mkdir(repository)
   await writeFile(
@@ -48,6 +56,7 @@ printf 'started\\n' > '${root}/started'
     group: String(process.getgid?.()),
     entropyCommand: [entropy, '-An', '-v', '-N32', '-tx1', entropyInput],
     terminalCommand: [terminal],
+    multiplexerCommand: [multiplexer],
   }
   return {
     root,
@@ -57,23 +66,27 @@ printf 'started\\n' > '${root}/started'
     capturedEntropy,
     repository,
     terminal,
+    multiplexer,
+    sessionSocket: `${options.runtimeDirectory}/tmux.sock`,
     readPassword: () =>
       readFile(`${options.runtimeDirectory}/password`, 'utf8'),
   }
 }
 
-export function runScript(script: string, ordinaryPermissions = false) {
+export function runScript(
+  script: string,
+  ordinaryPermissions = false,
+  environment = process.env,
+) {
   return new Promise<{ code: number | null; stdout: string; stderr: string }>(
     (done, reject) => {
       const child = ordinaryPermissions
-        ? spawn('/usr/bin/setpriv', [
-            '--inh-caps=-all',
-            '--ambient-caps=-all',
-            '/bin/sh',
-            '-c',
-            script,
-          ])
-        : spawn('/bin/sh', ['-c', script])
+        ? spawn(
+            '/usr/bin/setpriv',
+            ['--inh-caps=-all', '--ambient-caps=-all', '/bin/sh', '-c', script],
+            { env: environment },
+          )
+        : spawn('/bin/sh', ['-c', script], { env: environment })
       let stdout = ''
       let stderr = ''
       child.stdout.on('data', (chunk) => {
