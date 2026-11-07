@@ -2,6 +2,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
+import { retryRequest, sessionRecord } from './retry.test-support'
+import { terminalEvent } from './turn-lifecycle.test-support'
 
 describe('workspace chat durability', () => {
   let harness: TestHarness
@@ -132,6 +134,14 @@ describe('workspace chat durability', () => {
     expect(next.message.id).toBe('waiting')
     expect(next.login.secret).toBe(`secret-${fixture.member.id}-claude`)
     expect(next.message.sender.id).toBe(fixture.member.id)
+    runner.emit(terminalEvent(next, 'failed'))
+    await fixture.drain()
+    expect((await sessionRecord(fixture, session.id)).retryMessageId).toBe(
+      'waiting',
+    )
+    expect((await retryRequest(fixture, session.id, 'waiting')).status).toBe(
+      202,
+    )
   })
 
   it('does not dispatch stale commands after a queued login fails', async () => {

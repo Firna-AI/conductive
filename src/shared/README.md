@@ -55,6 +55,12 @@ states the rules of the request and of a failed repair.
 and runner connections of one workspace. A reconnect uses the last stored number.
 The history response gives the point after which live events continue.
 
+`sessions.ts` defines the session paths, their requests and replies, and the `Session` record.
+`Session.retryMessageId` names the one message that `retryMessagePath` accepts.
+It is the retry message of the newest turn when that turn failed, and null otherwise.
+Each other message of the session gets HTTP 409 with the code `retry_not_available`.
+[Messages](../../docs/protocol/chat-and-events.md#messages) states the rule.
+
 `device.ts` defines Mac command paths, socket messages, pairing, and local settings relays.
 It has no imports and also serves the Mac app's NodeNext build.
 `device-read.ts` validates its wire values and preserves command text, timeouts, and truncation.

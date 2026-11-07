@@ -90,6 +90,8 @@ export async function acceptMessage(
     user.id,
     randomId,
   )
+  session.retryMessageId = null
+  await transaction.saveNewestTurn(sessionId, turn.id)
   const type = turn.messageIds.length === 0 ? 'turn' : 'message'
   turn.messageIds.push(message.id)
   await transaction.saveTurn(turn)

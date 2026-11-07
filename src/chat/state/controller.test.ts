@@ -105,6 +105,7 @@ describe('ChatController', () => {
           createdAt: FAKE_TIME,
           closedAt: null,
           activeTurnId: null,
+          retryMessageId: null,
         },
       ],
       history: [10, 30, 20].map((closedAt) => ({
@@ -115,6 +116,7 @@ describe('ChatController', () => {
         createdAt: 1,
         closedAt,
         activeTurnId: null,
+        retryMessageId: null,
       })),
     })
     await chat.controller.start()
@@ -129,6 +131,7 @@ describe('ChatController', () => {
       createdAt: FAKE_TIME,
       closedAt: null,
       activeTurnId: null,
+      retryMessageId: null,
     }
     chat.server.json('POST', sessionsPath(org, ws), { session: fresh }, 201)
     chat.server.json('GET', chatHistoryPath(org, ws, 'third'), {
