@@ -2,6 +2,7 @@ import { expect, it, vi } from 'vitest'
 
 import { engineFixture } from '../test-support/engine'
 import { deferred, sessionTurn, stop } from '../test-support/runtime'
+import { wireFixture } from '../test-support/wire'
 import { EventStore } from './state'
 
 it.each(['shutdown', 'Stop', 'crash'])(
@@ -126,3 +127,100 @@ it('keeps the active turn running when another accepted turn cannot be saved', a
     state: 'finished',
   })
 })
+
+it.each(['fresh Stop', 'shutdown'])(
+  'retries the original pending Stop end with %s while the session save still waits',
+  async (recovery) => {
+    const h = await wireFixture()
+    await h.runner.start(false)
+    h.endpoint.confirmEvents = false
+    const entered = deferred<void>()
+    const release = deferred<void>()
+    const remember = h.store.remember.bind(h.store)
+    let sessionSave = Promise.resolve()
+    let sessionSaved = false
+    vi.spyOn(h.store, 'remember').mockImplementation((session) => {
+      sessionSave = (async () => {
+        entered.resolve()
+        await release.promise
+        await remember(session)
+        sessionSaved = true
+      })()
+      return sessionSave
+    })
+    const command = sessionTurn('pending')
+    h.endpoint.send(command)
+    await entered.promise
+    const write = h.storage.write.bind(h.storage)
+    let terminalWrites = 0
+    vi.spyOn(h.storage, 'write').mockImplementation(async (state) => {
+      if (state.outbox.at(-1)?.event.type === 'turn.completed') {
+        terminalWrites++
+        if (terminalWrites <= 2)
+          throw new Error('The pending end cannot be saved.')
+      }
+      await write(state)
+    })
+    try {
+      const stopping = h.runner.engine.command(stop('pending'))
+      const concurrent = h.runner.engine.command(
+        stop('pending', command.turnId, 'concurrent'),
+      )
+      await expect(stopping).rejects.toThrow('The pending end cannot be saved.')
+      await concurrent
+      await h.runner.idle()
+      expect(terminalWrites).toBe(2)
+      expect(h.endpoint.runnerEvents.map(({ event }) => event.type)).toEqual([
+        'files.snapshot',
+        'changes.updated',
+        'runner.ready',
+      ])
+      expect(sessionSaved).toBe(false)
+      if (recovery === 'shutdown') await h.runner.close()
+      else {
+        h.endpoint.send(stop('pending', command.turnId, 'fresh'))
+        await h.runner.idle()
+      }
+      const ends = h.endpoint.runnerEvents.filter(
+        ({ event }) => event.type === 'turn.completed',
+      )
+      expect(ends).toHaveLength(1)
+      expect(ends).toEqual([
+        {
+          type: 'event',
+          streamId: h.store.snapshot.streamId,
+          eventNumber: 4,
+          occurredAt: 100,
+          event: {
+            type: 'turn.completed',
+            sessionId: 'pending',
+            turnId: command.turnId,
+            state: 'stopped',
+            durationMs: 0,
+            files: [],
+            omittedFileCount: 0,
+            userMessageIds: [],
+          },
+        },
+      ])
+      expect(terminalWrites).toBe(3)
+      expect(sessionSaved).toBe(false)
+      expect(h.providers.processes).toEqual([])
+      expect(h.store.snapshot.outbox).toEqual(ends)
+      expect(
+        h.store.snapshot.turns.map(({ startEventNumber, endEventNumber }) => [
+          startEventNumber,
+          endEventNumber,
+        ]),
+      ).toEqual([[null, 4]])
+    } finally {
+      release.resolve()
+      await sessionSave
+    }
+    await h.runner.idle()
+    expect(h.providers.processes).toEqual([])
+    expect(
+      h.endpoint.runnerEvents.map(({ eventNumber }) => eventNumber),
+    ).toEqual([1, 2, 3, 4])
+  },
+)

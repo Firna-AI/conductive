@@ -68,6 +68,9 @@ export class PendingTurns {
     if (end) return end
     const stopped = emit()
     this.ended.set(turnId, stopped)
+    void stopped.catch(() => {
+      if (this.ended.get(turnId) === stopped) this.ended.delete(turnId)
+    })
     return stopped
   }
 

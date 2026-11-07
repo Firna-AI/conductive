@@ -129,6 +129,7 @@ export class Runner {
     this.stopped = true
     this.stopWatching?.()
     await this.engine.close()
+    await this.link.persist()
     this.link.close()
   }
 
