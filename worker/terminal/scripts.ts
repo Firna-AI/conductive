@@ -9,6 +9,7 @@ export interface TerminalScriptOptions {
   group: string
   entropyCommand: readonly string[]
   terminalCommand: readonly string[]
+  multiplexerCommand: readonly string[]
 }
 
 export const terminalScriptDefaults: TerminalScriptOptions = {
@@ -18,6 +19,7 @@ export const terminalScriptDefaults: TerminalScriptOptions = {
   group: 'user',
   entropyCommand: ['od', '-An', '-v', '-N32', '-tx1', '/dev/urandom'],
   terminalCommand: ['/usr/bin/ttyd'],
+  multiplexerCommand: ['/usr/bin/tmux'],
 }
 
 const validation = `valid_password() {
@@ -70,6 +72,19 @@ ${validation}
 valid_password || exit 1
 password=$(cat -- "$password_file")
 [ -n "$password" ] || exit 1
-exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port 7681 --writable --credential "conductive:$password" /bin/bash -l
+exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port 7681 --writable --credential "conductive:$password" ${options.multiplexerCommand.map(shellArgument).join(' ')} -N -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} new-session -A -s workspace /bin/bash -l
+`
+}
+
+export function sessionServerScript(
+  options: TerminalScriptOptions = terminalScriptDefaults,
+): string {
+  return `#!/bin/sh
+set -eu
+set -a
+. ${shellArgument(options.environmentFile)}
+set +a
+cd "$CONDUCTIVE_REPOSITORY_DIR"
+exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off
 `
 }

@@ -78,3 +78,28 @@ printf '%s\\n' "$PWD" "$CONDUCTIVE_LAUNCH_TEST"
     stderr: '',
   })
 })
+
+it('attaches each terminal connection to the workspace shell without starting its own server', async () => {
+  const fixture = await scriptFixture()
+  await writeFile(
+    fixture.terminal,
+    `#!/bin/sh
+printf '%s\\0' "$@"
+`,
+  )
+  expect((await runScript(credentialScript(fixture.options))).code).toBe(0)
+  const result = await runScript(launcherScript(fixture.options))
+  expect(result.code).toBe(0)
+  expect(result.stdout.split('\0').slice(7, -1)).toEqual([
+    fixture.multiplexer,
+    '-N',
+    '-S',
+    fixture.sessionSocket,
+    'new-session',
+    '-A',
+    '-s',
+    'workspace',
+    '/bin/bash',
+    '-l',
+  ])
+})
