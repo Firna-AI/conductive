@@ -27,15 +27,18 @@ it('stores a detached status reply above two million output bytes in bounded row
   await advanceImageBuild(images, org.id, id)
   await advanceImageBuild(images, org.id, id)
   await advanceImageBuild(images, org.id, id)
+  const beforeOutput = await readBuild(runtime.env.DB, org.id, id)
+  const outputCursor = beforeOutput.log.at(-1)?.eventNumber ?? 0
   boat.commandRunning = true
   boat.commandOutput = 'x'.repeat(2_100_000)
   await advanceImageBuild(images, org.id, id)
 
   const running = await readBuild(runtime.env.DB, org.id, id)
   expect(running.build.state).toBe('running')
-  const output = running.log.slice(2)
-  expect(output.map((event) => event.eventNumber)).toEqual([
-    3, 4, 5, 6, 7, 8, 9, 10, 11,
+  const output = running.log.filter((event) => event.eventNumber > outputCursor)
+  const outputThrough = output.at(-1)?.eventNumber ?? outputCursor
+  expect(output.map((event) => event.eventNumber - outputCursor)).toEqual([
+    1, 2, 3, 4, 5, 6, 7, 8, 9,
   ])
   expect(
     output.map((event) => new TextEncoder().encode(event.text).byteLength),
@@ -56,10 +59,15 @@ it('stores a detached status reply above two million output bytes in bounded row
   expect(completed.build.state).toBe('succeeded')
   expect(
     completed.log
-      .slice(2, 11)
+      .filter(
+        (event) =>
+          event.eventNumber > outputCursor &&
+          event.eventNumber <= outputThrough,
+      )
       .map((event) => event.text)
       .join(''),
   ).toBe('x'.repeat(2_100_000))
+  expect(completed.log.at(-1)?.text).toBe('install done\n')
 })
 
 it('keeps UTF-8 characters and event order across all build log writers', async () => {
