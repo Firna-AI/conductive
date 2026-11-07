@@ -11,10 +11,11 @@ export const OUTER_ORG = 'chat-org'
 export const OUTER_WORKSPACE = 'workspace one'
 export const OTHER_WORKSPACE = 'workspace two'
 export const OUTER_TOKEN = 'outer-workspace-token'
+export const OTHER_TOKEN = 'other-workspace-token'
 export const OUTER_REPOSITORY = 'chat-repository'
 export const OUTER_SECTION = 'chat-section'
 export const OUTER_SOFTWARE = {
-  url: 'https://software.conducting.test/runner.tar.gz',
+  url: 'https://software.conductive.test/runner.tar.gz',
   sha256: 'a'.repeat(64),
 }
 
@@ -59,7 +60,7 @@ export async function seedOuterRuntime(env: AppEnv, boat: LifecycleBoat) {
     ),
   ])
   await storeWorkspaceToken(env, OUTER_WORKSPACE, OUTER_TOKEN, now)
-  await storeWorkspaceToken(env, OTHER_WORKSPACE, 'other-workspace-token', now)
+  await storeWorkspaceToken(env, OTHER_WORKSPACE, OTHER_TOKEN, now)
   for (const userId of ['owner', 'member']) {
     await db
       .prepare(

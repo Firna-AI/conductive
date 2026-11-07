@@ -50,9 +50,11 @@ stops its own controller:
   stored history first, and calls `listener.closed()` when the connection
   drops. The chat checks each message as `unknown`.
 - The chat reads the signed-in user from the account route and the members
-  of the org from the members route. A stopped turn then says "You stopped
-  the agent" to the member who pressed Stop, and names that member to the
-  others. When the members do not load, it names nobody but the reader.
+  of the org from the members route, or it takes both from its `sources`,
+  as [A chat that the app keeps](#a-chat-that-the-app-keeps) says. A
+  stopped turn then says "You stopped the agent" to the member who pressed
+  Stop, and names that member to the others. When the members do not load,
+  it names nobody but the reader.
 - `onWorkspaceChange` gets the workspace record after each change: its state,
   and the title that the agent writes through `workspace.title` and
   `workspace.updated` events. The header and the list of the app show it.
@@ -95,6 +97,19 @@ the connection. The app makes the controller with a stable `client` and
   `show`.
 - `stop` ends the controller, as at a sign-out. Late replies then change
   nothing.
+
+The app can also give the controller `sources`, a `ChatSources` from
+`state/sources.ts`. It gives the account, the org, the models, and the
+members from the models of the app.
+
+- With sources, the load sends none of these four reads and writes none of
+  these values. So no reply of an old read replaces a newer value of the
+  app. The view and the Boat key reads stay.
+- Each change of a source shows at once, also while the chat is hidden. So
+  a login that the account screen saves shows in a kept chat on a return.
+- `start` copies the sources into the snapshot and follows them. `stop`
+  ends the subscriptions. `hide` and `show` keep them.
+- A chat without sources reads the four values at each load.
 
 ## Rules for this code
 
@@ -232,6 +247,8 @@ check in the Mac app.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
 - `state/load.ts`: the order of the first reads and the stream start.
+- `state/sources.ts`: `ChatSources`, the app values that a kept chat
+  follows in place of its own reads.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
 - `state/session-log.ts`: the event log of each session, with the retry
   message of its newest record and `takeListed` for the session list.

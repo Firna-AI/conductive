@@ -116,7 +116,7 @@ export function liveConfiguration(env: NodeJS.ProcessEnv, root: string) {
     boatApi: boatApi.href,
     login: required(env, 'LIVE_AGENT_LOGIN'),
     computerMcpUrl: required(env, 'LIVE_COMPUTER_MCP_URL'),
-    software: env.LIVE_SOFTWARE_DIR ?? '/opt/conducting/software',
+    software: env.LIVE_SOFTWARE_DIR ?? '/opt/conductive/software',
   }
 }
 

@@ -80,8 +80,8 @@ The Worker cannot meet these needs yet:
   The [Worker README](../worker/README.md#routes) lists the missing routes.
 - Chat and the lifecycle are not connected yet, as the
   [chat backend integration](../worker/chat/integration/README.md) says.
-- Its machine hostname gives the runner socket a `501` stub.
-- The runner fails at its start in a workspace sandbox, as
+- The runner fails at its start in a workspace sandbox. No code supplies
+  its default branch or its `computer` MCP URL, as
   [Start in a workspace](README.md#start-in-a-workspace) says.
 
 So a real run fails at its first app request until these parts exist.
@@ -93,7 +93,7 @@ These variables are required:
 | Variable | Value |
 | --- | --- |
 | `LIVE_APP_ORIGIN` | The app origin of the test Worker. |
-| `LIVE_MACHINE_ORIGIN` | The `MACHINE_ORIGIN` of the test Worker. Each sandbox must reach it. The check compares it with the machine origin in the sandbox. |
+| `LIVE_MACHINE_ORIGIN` | The `MACHINE_ORIGIN` of the test Worker. Each sandbox must reach it. The runner URL that the check makes from the saved machine origin of the sandbox must match it. |
 | `LIVE_COOKIE` | The full `Cookie` header of a signed-in session of the test account. |
 | `LIVE_ORG_ID` | The app ID of the org. |
 | `LIVE_REPOSITORY_ID` | The app ID of a repository that the org image holds. |
@@ -111,7 +111,7 @@ These variables are optional:
 | `LIVE_AGENT_LOGIN_KIND` | `api-key`, the default, or `token` for Claude. |
 | `LIVE_RUNS` | The number of resumes of each placement. The default and the minimum are 3. |
 | `LIVE_OUTPUT` | The output folder. It must be under `.context/`. The default is `.context/chat-live-check/run-<time>`, with the start time in milliseconds. |
-| `LIVE_SOFTWARE_DIR` | The software folder in the sandbox. The default is `/opt/conducting/software`. |
+| `LIVE_SOFTWARE_DIR` | The software folder in the sandbox. The default is `/opt/conductive/software`. |
 | `LIVE_BOAT_API` | The Boat API. The default is `https://boat.dev/api/v1`. Only an HTTP endpoint on `localhost`, `127.0.0.1`, or `[::1]` can replace it. |
 
 Both origins must have no path, query, fragment, or credentials. Each
@@ -129,15 +129,20 @@ Each wait for a state or an answer stops after 10 minutes.
 3. It stops the sandbox through Boat, and waits until the app shows the
    workspace as stopped. Then it resumes the workspace through the app.
 4. It sends a third message. The answer must still hold the code.
-5. It forks the sandbox twice. The forks get none of its env, so their
+5. It reads `CONDUCTIVE_MACHINE_ORIGIN` from the saved variables of the
+   sandbox. It makes the runner URL from that origin and
+   `MACHINE_PATHS.runner`, as the start script does. It ignores a saved
+   `CONDUCTIVE_RUNNER_URL`. That URL must match `LIVE_MACHINE_ORIGIN` with
+   the same path.
+6. It forks the sandbox twice. The forks get none of its env, so their
    runner service starts nothing.
-6. It copies the software into a new folder of each fork: inside the home
+7. It copies the software into a new folder of each fork: inside the home
    folder in one, and under `/opt` in the other.
-7. It stops and resumes each fork `LIVE_RUNS` times. After each resume,
+8. It stops and resumes each fork `LIVE_RUNS` times. After each resume,
    the `measure.mjs` of the copy times the first agent text.
-8. `dist/runner/compare.mjs` compares the two placements.
-9. It deletes the forks and stops the sandbox of the workspace. The
-   workspace stays in the org.
+9. `dist/runner/compare.mjs` compares the two placements.
+10. It deletes the forks and stops the sandbox of the workspace. The
+    workspace stays in the org.
 
 The events must have consecutive numbers, with no gap and no duplicate.
 Each answer must stream text, and its turn must finish. The

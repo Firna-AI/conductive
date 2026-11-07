@@ -58,20 +58,15 @@ export async function measurePlacements(
           'set -a',
           '. /run/ascii-secrets/env.sh',
           'set +a',
-          `${shellQuote(`${config.software}/node/bin/node`)} -e ${shellQuote('process.stdout.write(JSON.stringify({repository:process.env.CONDUCTING_REPOSITORY_DIR,machineOrigin:process.env.CONDUCTING_MACHINE_ORIGIN,runnerUrl:process.env.CONDUCTING_RUNNER_URL}))')}`,
+          `${shellQuote(`${config.software}/node/bin/node`)} -e ${shellQuote('process.stdout.write(JSON.stringify({repository:process.env.CONDUCTIVE_REPOSITORY_DIR,machineOrigin:process.env.CONDUCTIVE_MACHINE_ORIGIN}))')}`,
         ].join('\n'),
       ),
     ),
   )
   const repository = text(metadata.repository)
   const machineOrigin = text(metadata.machineOrigin).replace(/\/$/, '')
-  const runnerUrl =
-    metadata.runnerUrl ?? `${machineOrigin}${MACHINE_PATHS.runner}`
-  if (
-    machineOrigin !== config.machineOrigin ||
-    text(runnerUrl).replace(/^wss:/, 'https:').replace(/^ws:/, 'http:') !==
-      `${config.machineOrigin}${MACHINE_PATHS.runner}`
-  )
+  const runnerUrl = `${machineOrigin}${MACHINE_PATHS.runner}`
+  if (runnerUrl !== `${config.machineOrigin}${MACHINE_PATHS.runner}`)
     throw new CheckError(
       'The runner URL does not match LIVE_MACHINE_ORIGIN and the shared runner route.',
     )
@@ -105,15 +100,15 @@ export async function measurePlacements(
       await boat.stop(id)
       const resumeId = `${placement}-${run}-${randomUUID()}`
       await boat.resume(id, {
-        CONDUCTING_MEASURE_MODE: 'agent',
-        CONDUCTING_MEASURE_AGENT: config.choice.agent,
-        CONDUCTING_MEASURE_MODEL: config.choice.model,
-        CONDUCTING_MEASURE_LOGIN: config.login,
-        CONDUCTING_MEASURE_LOGIN_KIND: config.loginKind,
-        CONDUCTING_MEASURE_PLACEMENT: placement,
-        CONDUCTING_MEASURE_RESUME_ID: resumeId,
-        CONDUCTING_COMPUTER_MCP_URL: config.computerMcpUrl,
-        CONDUCTING_REPOSITORY: repository,
+        CONDUCTIVE_MEASURE_MODE: 'agent',
+        CONDUCTIVE_MEASURE_AGENT: config.choice.agent,
+        CONDUCTIVE_MEASURE_MODEL: config.choice.model,
+        CONDUCTIVE_MEASURE_LOGIN: config.login,
+        CONDUCTIVE_MEASURE_LOGIN_KIND: config.loginKind,
+        CONDUCTIVE_MEASURE_PLACEMENT: placement,
+        CONDUCTIVE_MEASURE_RESUME_ID: resumeId,
+        CONDUCTIVE_COMPUTER_MCP_URL: config.computerMcpUrl,
+        CONDUCTIVE_REPOSITORY: repository,
       })
       const output = await boat.command(
         id,

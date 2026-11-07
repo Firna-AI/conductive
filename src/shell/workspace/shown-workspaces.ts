@@ -1,6 +1,9 @@
 import type { AppModel } from '../../app/app-model'
+import type { OrgModel } from '../../app/org-model'
+import { valueOf } from '../../app/store'
 import { WorkspaceModel } from '../../app/workspace-model'
 import { ChatController } from '../../chat/state/controller'
+import type { ChatSources } from '../../chat/state/sources'
 import type { SubscribeToWorkspace } from '../../chat/stream/workspace-stream'
 import type { User } from '../../shared/api'
 import { HeaderNotices } from './header-notices'
@@ -19,6 +22,26 @@ export interface ShownWorkspace {
 interface KeptWorkspace extends ShownWorkspace {
   /** Ends the subscription of the notices to the stream of the model. */
   readonly unfollow: () => void
+}
+
+/**
+ * The inputs of a kept chat from the app models that own them: the account,
+ * the org, the models, and the members. So a login that the account screen
+ * saves, or a new default model, shows in the kept chat at once.
+ */
+function chatSources(app: AppModel, org: OrgModel): ChatSources {
+  return {
+    account: app.account.account,
+    models: app.models,
+    org: {
+      get: () => app.orgs.get().find((item) => item.id === org.orgId) ?? null,
+      subscribe: app.orgs.subscribe,
+    },
+    members: {
+      get: () => valueOf(org.members.get()) ?? null,
+      subscribe: org.members.subscribe,
+    },
+  }
 }
 
 /**
@@ -48,8 +71,12 @@ export class ShownWorkspaces {
     const known = this.kept.get(key)
     if (known) return known
     const { services } = this.app
-    const model = new WorkspaceModel(this.app.org(orgId), workspaceId)
+    const org = this.app.org(orgId)
+    const model = new WorkspaceModel(org, workspaceId)
     const notices = new HeaderNotices()
+    // The chat names the members of the org. A first show reads them when
+    // no screen did, and a return reads them never again.
+    if (org.members.get().state !== 'ready') void org.reload('members')
     const shown: KeptWorkspace = {
       model,
       notices,
@@ -61,6 +88,7 @@ export class ShownWorkspaces {
         client: services.api,
         subscribe: this.subscribe,
         newId: services.newId,
+        sources: chatSources(this.app, org),
       }),
     }
     this.kept.set(key, shown)

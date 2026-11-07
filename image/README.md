@@ -173,11 +173,20 @@ Node, in the repository folder. The runner unit restarts its service after
 a failure. The terminal backend describes its launcher, password, and
 automatic restart in its [README](../worker/terminal/README.md).
 
-The runner reads its token, its runner URL, and its repository folder from
-other variables, as its [configuration](../runner/README.md#configuration)
-says. `runner-start.sh` does not set those variables from the table yet.
-The Worker also gives no default branch and no `computer` MCP URL. So the
-runner fails at its start in a workspace sandbox.
+Before it runs the runner, `runner-start.sh` sets three variables of the
+runner's [configuration](../runner/README.md#configuration) from the table.
+Each value replaces a saved variable of the same name.
+
+| Runner variable | Value |
+| --- | --- |
+| `CONDUCTIVE_WORKSPACE_TOKEN` | `WORKSPACE_TOKEN` |
+| `CONDUCTIVE_REPOSITORY` | `CONDUCTIVE_REPOSITORY_DIR` |
+| `CONDUCTIVE_RUNNER_URL` | `CONDUCTIVE_MACHINE_ORIGIN` without a trailing slash, then the path of `MACHINE_PATHS.runner` |
+
+The runner also needs `CONDUCTIVE_DEFAULT_BRANCH` and
+`CONDUCTIVE_COMPUTER_MCP_URL`. The start script does not set them, and the
+lifecycle does not supply them. Without them, the runner fails at its start
+in a workspace sandbox.
 
 ## Git credentials
 
@@ -232,9 +241,21 @@ file, in a temporary folder under `.context/`. It maps only
 a launcher that uses any other absolute path. It runs the launcher with
 `/bin/sh`, and checks the outgoing credential request and its turn ID.
 
+Run the start script test with
+`npm run test -- worker/chat/integration/runner-launcher.test.ts`. It stages
+the software with `installImageSoftware` in a temporary folder under
+`.context/`, and runs the staged `runner-start.sh` with `/bin/sh`. It checks
+the settings that the runner configuration reads, and that the script uses
+the Node of the archive, not a `node` on the path. It also checks that a
+build, a disk retention restart, and an unfinished start start no runner.
+
 - The Worker imports each file with Vite's `?raw` suffix. When you add a
   file that the sandbox needs, also add it to `installImageSoftware` and to
   `install.sh`. The developer scripts stay out of the sandbox.
+- `runner-start.sh` holds the placeholder `@RUNNER_PATH@`.
+  `installImageSoftware` replaces it with `MACHINE_PATHS.runner` when it
+  stages the script, so the runner path has one source. Run only the staged
+  copy.
 - Keep each start script safe to run in a build sandbox. Of the variables
   in the table, a build sandbox has only the folder variables.
 - [Developer scripts](developer-scripts.md#development) gives the checks of
@@ -246,7 +267,7 @@ a launcher that uses any other absolute path. It runs the launcher with
   and the git helper. Its arguments are the archive URL and the digest.
 - [`runner-start.sh`](runner-start.sh) and
   [`conductive-runner.service`](conductive-runner.service): start the agent
-  runner.
+  runner, and map the sandbox variables to the runner variables.
 - [The terminal backend](../worker/terminal/service.ts): owns the terminal
   install command, its service, and its workspace start hook.
 - [`git-credential-helper.sh`](git-credential-helper.sh) and

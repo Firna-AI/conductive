@@ -123,12 +123,22 @@ it('routes site, app, and machine hosts before dispatch', async () => {
   expect(site.status).toBe(404)
   expect(site.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
   for (const input of [
-    { host: TEST_ORIGIN, path: '/', status: 501, surface: 'app' },
+    {
+      host: TEST_ORIGIN,
+      path: '/',
+      status: 501,
+      body: { surface: 'app', status: 'not-implemented' },
+    },
     {
       host: env.MACHINE_ORIGIN,
       path: MACHINE_PATHS.runner,
-      status: 501,
-      surface: 'machine',
+      status: 401,
+      body: {
+        error: {
+          code: 'workspace_token_required',
+          message: 'The connection is not available.',
+        },
+      },
     },
   ]) {
     const response = await app.fetch(
@@ -136,10 +146,7 @@ it('routes site, app, and machine hosts before dispatch', async () => {
       env,
     )
     expect(response.status, input.host).toBe(input.status)
-    expect(await response.json()).toEqual({
-      surface: input.surface,
-      status: 'not-implemented',
-    })
+    expect(await response.json()).toEqual(input.body)
   }
   const unknown = await app.fetch(
     new Request('https://untrusted.test/api/session'),

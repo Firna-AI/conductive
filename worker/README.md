@@ -37,9 +37,11 @@ The missing paths also include these:
 
 The [lifecycle README](lifecycle/README.md#browser-routes) gives the lifecycle handler that waits for its routes.
 
-On the machine hostname, the Worker serves only the Mac device routes.
-Each other machine path gets a `501` stub.
-This includes the runner socket, the git credential route, and the image source credential route.
+On the machine hostname, the Worker serves the Mac device routes and the runner socket, `/v1/runner`.
+The runner socket needs the workspace token as a bearer token, and it skips the browser gate.
+The Worker forwards it to the Durable Object of the workspace of that token.
+A runner request without a current workspace token gets `401 workspace_token_required`.
+Each other machine path gets a `501` stub, such as the git credential route and the image source credential route.
 
 ## Development
 
@@ -47,7 +49,7 @@ Run commands from the repository root with Node 24.
 Run `npm run dev` to serve the app and local Worker.
 Run `npm run typecheck` to generate Worker types and check the package.
 Run `npm run test -- worker/security worker/http` to check the request gate and bounded reader.
-Run `npm run test -- worker/chat/integration` to check chat forwarding through the production Worker entry.
+Run `npm run test -- worker/chat/integration` to check the browser and runner forwarding through the production Worker entry, and the runner start script.
 Run `node worker/chat/integration/run-browser-harness.mjs` to serve a production app build through the local Worker, with fake Boat and GitHub.
 [Outer Worker tests](chat/integration/README.md#outer-worker-tests) gives its settings.
 The [test support area](test-support/README.md) supplies local D1 and fake providers.
@@ -55,9 +57,9 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 ### Key Code
 
 - [app.ts](app.ts) exports the Worker HTTP handler.
-- [application.ts](application.ts) selects the host surface, forwards the device and chat routes, and applies the request gate to the other app routes.
+- [application.ts](application.ts) selects the host surface, forwards the device, chat, and runner routes, and applies the request gate to the other app routes.
 - [routes.ts](routes.ts) dispatches protected app routes.
-- [chat/router.ts](chat/router.ts) forwards the browser chat routes to the Durable Object of their workspace.
+- [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) holds `Workspace`, the Durable Object class of each workspace.
 - [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
 - [http/request-body.ts](http/request-body.ts) applies the default and declared request body limits.

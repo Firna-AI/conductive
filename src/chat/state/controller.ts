@@ -24,6 +24,7 @@ import { closeArchived, isArchived, showArchived } from './archive-view'
 import { applyEnvelopes, viewWriter, type ChatContext } from './context'
 import { hydrate, watchShownSession } from './history'
 import { loadChat } from './load'
+import { followSources, withSources, type ChatSources } from './sources'
 import {
   attachFiles,
   interruptTurn,
@@ -51,6 +52,11 @@ export interface ChatControllerOptions {
   subscribe: SubscribeToWorkspace
   timers?: StreamTimers
   newId?: () => string
+  /**
+   * The inputs that app models own, as `ChatSources` says. Without them,
+   * the chat reads the account, the org, the models, and the members itself.
+   */
+  sources?: ChatSources
 }
 
 /** The Worker records a change of the workspace with each change of a Mac command. */
@@ -72,6 +78,7 @@ export class ChatController {
   private run = 0
   private started = false
   private unwatch: (() => void) | null = null
+  private unfollow: (() => void) | null = null
 
   constructor(options: ChatControllerOptions) {
     this.options = options
@@ -89,7 +96,12 @@ export class ChatController {
     this.stop()
     this.started = true
     this.context = this.createContext(this.run)
-    this.store.update(() => initialSnapshot)
+    const { sources } = this.options
+    // The values of the app replace the reset ones at once, then follow it.
+    this.store.update(() =>
+      sources ? withSources(initialSnapshot, sources) : initialSnapshot,
+    )
+    this.unfollow = sources ? followSources(this.store, sources) : null
     this.unwatch = watchShownSession(this.context)
     return loadChat(this.context)
   }
@@ -98,6 +110,8 @@ export class ChatController {
     this.run += 1
     this.unwatch?.()
     this.unwatch = null
+    this.unfollow?.()
+    this.unfollow = null
     this.context.stream.stop()
   }
 
@@ -145,6 +159,7 @@ export class ChatController {
       },
       saveView: viewWriter((view) => api.saveView(view)),
       live,
+      owned: this.options.sources !== undefined,
       devices: {
         api: createDeviceApi(this.options.client),
         reads: new DeviceReads(),

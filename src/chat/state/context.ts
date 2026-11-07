@@ -47,6 +47,11 @@ export interface ChatContext {
   readonly saveView: (view: WorkspaceView) => void
   /** The chat is still open. A response that arrives later changes nothing. */
   readonly live: () => boolean
+  /**
+   * App models own the account, the org, the models, and the members, so
+   * the load reads none of them, as `ChatSources` says.
+   */
+  readonly owned: boolean
   /** The routes of Mac commands, and the number of their latest read. */
   readonly devices: DeviceChannel
 }

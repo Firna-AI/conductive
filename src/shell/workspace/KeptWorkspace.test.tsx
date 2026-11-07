@@ -2,131 +2,52 @@
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import type { AppModel } from '../../app/app-model'
-import type { WorkspaceEventSource } from '../../app/events'
-import { memoryNavigation, NavigationContext } from '../../app/navigation'
-import { routes } from '../../app/router'
 import { HeldRequests, requestLines } from '../../app/test-kit'
 import { ACCOUNT_PATHS } from '../../shared/account'
-import { MODELS_PATH } from '../../shared/agents'
+import type { AgentChoice } from '../../shared/agents'
 import { API_PATHS, boatKeyPath, orgPath } from '../../shared/api'
-import type { WorkspaceEvent } from '../../shared/events'
 import { membersPath } from '../../shared/members'
+import { sessionsPath } from '../../shared/sessions'
 import { workspacePath, workspacePaths } from '../../shared/workspaces'
 import {
   byLabel,
+  byRole,
   queryByLabel,
   queryByRole,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import {
-  FAKE_IDS,
-  FAKE_TIME,
-  fakeUsers,
-} from '../../test-support/fixtures/core'
+import { coreFixtures, fakeUsers } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
-import {
-  nextEnvelope,
-  refusedReport,
-} from '../../test-support/recorded-repairs'
-import { Shell } from '../Shell'
-import { click, mountScreen, settle, typeText } from '../test-mount'
+import { refusedReport } from '../../test-support/recorded-repairs'
+import { click, settle, typeText } from '../test-mount'
 import { startedApp } from '../test-render'
+import {
+  answer,
+  away,
+  bodiesOf,
+  chatRequests,
+  draftOf,
+  emit,
+  fieldNamed,
+  headerName,
+  here,
+  id,
+  isOff,
+  lastEvent,
+  messageField,
+  mountTab,
+  notices,
+  org,
+  recordingSocket,
+} from './kept-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
-const { org, workspace: id } = FAKE_IDS
-const here = routes.workspace(org, id)
-const away = routes.org(org)
-const answer =
-  'The checkout form now suggests addresses. Manual entry still works.'
 const nameLost = 'The new workspace name is unavailable'
-
-/**
- * The event socket of the app over the fake server. It records the event
- * number after which each subscription of the workspace opened, and counts
- * the subscriptions that are open now.
- */
-function recordingSocket(server: FakeApiServer) {
-  const opens: number[] = []
-  let connected = 0
-  const source: WorkspaceEventSource = {
-    open: (target, handlers) => {
-      opens.push(target.afterEventNumber)
-      connected += 1
-      const close = server.events.subscribe(
-        target.afterEventNumber,
-        handlers.message,
-      )
-      return () => {
-        connected -= 1
-        close()
-      }
-    },
-  }
-  return { source, opens, connected: () => connected }
-}
-
-function emit(server: FakeApiServer, event: WorkspaceEvent) {
-  act(() => server.events.emit(nextEnvelope(server.events, event, FAKE_TIME)))
-}
-
-/** The number of the newest stored event of the workspace. */
-const lastEvent = (server: FakeApiServer) =>
-  server.events.history(Number.MAX_SAFE_INTEGER).throughEventNumber
-
-/** The whole app in a tab, on a memory address bar that the test moves. */
-function mountTab(app: AppModel) {
-  const navigation = memoryNavigation(here)
-  const view = mountScreen(
-    app,
-    <NavigationContext.Provider value={navigation}>
-      <Shell />
-    </NavigationContext.Provider>,
-  )
-  const go = (to: string) => act(() => navigation.push(to))
-  return { view, go }
-}
-
-/** The reads and writes of the workspace and of the chat's other routes. */
-function chatRequests(server: FakeApiServer, from: number): string[] {
-  const shared = [MODELS_PATH, ACCOUNT_PATHS.account, orgPath(org)]
-  const others = [...shared, membersPath(org), boatKeyPath(org)]
-  return requestLines(server)
-    .slice(from)
-    .filter(
-      (line) =>
-        line.includes(workspacePath(org, id)) ||
-        others.some((path) => line === `GET ${path}`),
-    )
-}
-
-/** The notices under the workspace header, each as its text and its age. */
-function notices(view: HTMLElement): string[] {
-  const bars = view.querySelectorAll('header ~ [role="status"]')
-  return Array.from(bars, (node) =>
-    Array.from(node.children, (part) => part.textContent ?? '')
-      .filter((text) => text !== '')
-      .join(' '),
-  )
-}
-
-/** The text field of the composer. */
-function messageField(view: HTMLElement): HTMLTextAreaElement {
-  const field = byLabel('Message', view)
-  if (!(field instanceof HTMLTextAreaElement)) {
-    throw new Error('The composer has no text field.')
-  }
-  return field
-}
-
-const draftOf = (view: HTMLElement) => messageField(view).value
-const headerName = (view: HTMLElement) =>
-  view.querySelector('header h1')?.textContent
 
 describe('a workspace that the tab showed', () => {
   test('shows at once on a return, and each socket asks only for the events after its last one', async () => {
@@ -265,5 +186,92 @@ describe('a workspace that the tab showed', () => {
     await act(() => app.start())
     await settle()
     expect(draftOf(view)).toBe('')
+  })
+
+  test('takes a login that the tab saves while away, and keeps its draft and Send', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const { account } = coreFixtures()
+    server.json('GET', ACCOUNT_PATHS.account, {
+      ...account,
+      agentLogins: account.agentLogins.map((login) =>
+        login.agent === 'claude'
+          ? { agent: 'claude', connected: false }
+          : login,
+      ),
+    })
+    const socket = recordingSocket(server)
+    const app = await startedApp(server, { events: socket.source })
+    const { view, go } = mountTab(app)
+    await settle()
+    typeText(messageField(view), 'Keep this draft')
+    expect(view.textContent).toContain('Connect Claude to use')
+    expect(isOff(byLabel('Send', view))).toBe(true)
+    click(byRole('button', 'Connect Claude', view))
+    await settle()
+    typeText(fieldNamed(view, 'Subscription token'), 'token-from-claude')
+    click(byRole('button', 'Connect', view))
+    await settle()
+    const first = socket.opens.length
+    const kept = lastEvent(server)
+    const before = server.requests.length
+
+    go(here)
+
+    expect(view.textContent).not.toContain('Connect Claude to use')
+    expect(draftOf(view)).toBe('Keep this draft')
+    expect(isOff(byLabel('Send', view))).toBe(false)
+    await settle()
+    expect(socket.opens.slice(first)).toEqual([kept, kept])
+    expect(chatRequests(server, before)).toEqual([
+      `POST ${workspacePaths.open(org, id)}`,
+    ])
+  })
+
+  test('follows the default model, the org name, and the members that the app holds', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ conversation: 'interrupted' })
+    const { account, orgs } = coreFixtures()
+    const [cal, priya] = fakeUsers
+    server.json('GET', API_PATHS.session, { user: priya })
+    server.json('GET', ACCOUNT_PATHS.account, { ...account, user: priya })
+    server.json('GET', boatKeyPath(org), { configured: false })
+    const app = await startedApp(server, {
+      events: recordingSocket(server).source,
+    })
+    const { view, go } = mountTab(app)
+    await settle()
+    expect(view.textContent).toContain(`${cal.displayName} stopped the agent`)
+    go(away)
+    await settle()
+    const sonnet: AgentChoice = {
+      agent: 'claude',
+      model: 'Sonnet 5.5',
+      effort: 'medium',
+    }
+    server.json('PUT', ACCOUNT_PATHS.defaultModel, { choice: sonnet })
+    server.json('PATCH', orgPath(org), {
+      org: { ...orgs.orgs[0], name: 'Acme Labs' },
+    })
+    await act(() => app.account.setDefaultChoice(sonnet))
+    await act(() => app.renameOrg(org, { name: 'Acme Labs' }))
+    const before = server.requests.length
+
+    go(here)
+
+    expect(view.textContent).toContain('cloud computers of Acme Labs')
+    click(byLabel('New session', view))
+    await settle()
+    const created = await bodiesOf(
+      server,
+      'POST',
+      sessionsPath(org, id),
+      before,
+    )
+    expect(created).toEqual([{ choice: sonnet }])
+    const memberReads = requestLines(server).filter(
+      (line) => line === `GET ${membersPath(org)}`,
+    )
+    expect(memberReads).toHaveLength(1)
   })
 })

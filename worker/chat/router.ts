@@ -1,5 +1,25 @@
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
+import { tokenWorkspace } from './queries'
+
+export async function routeRunner(
+  request: Request,
+  env: AppEnv,
+): Promise<Response | null> {
+  if (new URL(request.url).pathname !== MACHINE_PATHS.runner) return null
+  const bearer = request.headers
+    .get('Authorization')
+    ?.match(/^Bearer (.+)$/i)?.[1]
+  const workspace = bearer ? await tokenWorkspace(env.DB, bearer) : null
+  if (!workspace)
+    throw new HttpError(
+      401,
+      'workspace_token_required',
+      'The connection is not available.',
+    )
+  return forwardWorkspaceRequest(request, env, workspace.id)
+}
 
 export async function routeChat(
   request: Request,

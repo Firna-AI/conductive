@@ -44,12 +44,20 @@ depends on where the code runs:
   response headers.
 - Do not run `gate` on a request that you forward. `gate` reads the JSON
   body of each write.
-- The outer Worker does not forward the runner socket yet. On the machine
-  hostname, it serves only the Mac device routes. Each other machine path
-  gets a `501` stub.
-- The runner request has only its bearer token. Its route must find the
-  workspace with `tokenWorkspace`. Then it must forward the request without
+- On the machine hostname, `createApp` gives each path other than the Mac
+  device routes to `routeRunner` in `router.ts`. `routeRunner` matches only
+  `MACHINE_PATHS.runner`, `/v1/runner`. Each other machine path gets a `501`
+  stub.
+- The runner request has only its bearer token. `routeRunner` reads only
+  the `Authorization` header, and finds the workspace with `tokenWorkspace`.
+  A missing, unknown, or revoked token gets `401 workspace_token_required`.
+- `routeRunner` uses the workspace ID from D1 as the object name, with no
+  decode. It forwards the request with `forwardWorkspaceRequest`, without
   the browser gate.
+- The Durable Object checks the machine origin and the token again. So a
+  token reaches only the object of its own workspace. A `hello` that names
+  another workspace closes the connection before a welcome, a command, or a
+  login goes out.
 - The outer Worker has no lifecycle route yet. So no browser request can
   create a workspace or queue its first message. The
   [lifecycle README](../../lifecycle/README.md#browser-routes) gives the
@@ -67,11 +75,22 @@ The files of this section live in this folder, `worker/chat/integration/`.
   with the authenticated headers and the complete JSON body. They check the
   gate of the object on forwarded routes. They also check the replay cursor
   and the live events of the events socket.
+- `runner-forwarding.test.ts` uses the same runtime, and connects a fake
+  runner with only its bearer token. A member's queued message reaches the
+  runner with the member's login. Text streams to the browser, and Stop
+  goes out on the same path.
+- `runner-access.test.ts` checks that a missing, unknown, or revoked token
+  cannot upgrade, and that an unconfigured machine hostname stays
+  forbidden. It also checks that a token of another workspace cannot claim
+  this workspace or get its queued message.
+- `runner-socket.test-support.ts` holds that fake runner, on a real
+  WebSocket. `runner-launcher.test.ts` checks the runner start script, as
+  the [image README](../../../image/README.md#development) says.
 - `createOuterRuntime` in `outer-runtime.test-support.ts` bundles that
-  entry with Vite and starts it. `seedOuterRuntime` in
-  `outer-seed.test-support.ts` adds three users with sessions, two orgs,
-  two workspaces with tokens, stored agent logins, a Boat key, and a
-  published org image.
+  entry with Vite and starts it, with `https://api.conductive.test` as the
+  machine origin. `seedOuterRuntime` in `outer-seed.test-support.ts` adds
+  three users with sessions, two orgs, two workspaces with tokens, stored
+  agent logins, a Boat key, and a published org image.
 
 `run-browser-harness.mjs` serves a production app build through the same
 runtime, over local HTTPS. Run it from the repository root, after
@@ -92,6 +111,8 @@ CHAT_HARNESS_ASSETS=path/to/client CHAT_HARNESS_PORT=5181 \
   `.context/chat-harness/browser-harness.json`.
 - `startBrowserHarness` in `browser-server.test-support.ts` starts the
   runtime. SIGINT or SIGTERM stops it.
+- The harness bundles the Worker when it starts. So restart it after a
+  change of the Worker code.
 - The harness hides no missing route. The app API paths that the outer
   Worker does not route still get `404` there. So the app shell fails to
   start in it.

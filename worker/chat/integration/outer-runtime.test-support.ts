@@ -6,8 +6,9 @@ import { LifecycleBoat } from '../../lifecycle/lifecycle-boat-test-support'
 import { FakeGitHub } from '../../test-support/fake-github'
 import { TEST_ORIGIN } from '../../test-support/harness'
 import { applyMigrations } from '../../test-support/migrations'
-import { MACHINE_ORIGIN } from '../harness.test-support'
 import { seedOuterRuntime } from './outer-seed.test-support'
+
+export const OUTER_MACHINE_ORIGIN = 'https://api.conductive.test'
 
 export async function outerWorkerBundle(): Promise<string> {
   const bundle = await build({
@@ -67,7 +68,7 @@ export async function createOuterRuntime(
               exportName: 'Workspace',
             },
             APP_ORIGIN: text(appOrigin),
-            MACHINE_ORIGIN: text(MACHINE_ORIGIN),
+            MACHINE_ORIGIN: text(OUTER_MACHINE_ORIGIN),
             GITHUB_CLIENT_ID: text('outer-client'),
             GITHUB_CLIENT_SECRET: text('outer-client-secret'),
             SESSION_SIGNING_KEY: text(btoa('s'.repeat(32))),
@@ -125,7 +126,7 @@ export async function createOuterRuntime(
     const env: AppEnv = {
       DB: db,
       APP_ORIGIN: appOrigin,
-      MACHINE_ORIGIN,
+      MACHINE_ORIGIN: OUTER_MACHINE_ORIGIN,
       GITHUB_CLIENT_ID: 'outer-client',
       GITHUB_CLIENT_SECRET: 'outer-client-secret',
       SESSION_SIGNING_KEY: btoa('s'.repeat(32)),

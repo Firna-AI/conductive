@@ -5,7 +5,7 @@ import { hostStub, hostSurface, marketingResponse } from './hosts'
 import { errorResponse, HttpError, privateResponse } from './http'
 import { requestBodyEntry } from './http/request-body'
 import { route, routeDevice } from './routes'
-import { routeChat } from './chat/router'
+import { routeChat, routeRunner } from './chat/router'
 import { isDeviceAppPath, isDeviceMachinePath } from './devices/paths'
 import { routeMacCommand } from './tools/mac-command'
 import { finishSignIn, startSignIn } from './security/auth'
@@ -70,6 +70,10 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         }
         if (surface === 'machine' && isDeviceMachinePath(path)) {
           return respond(await routeMacCommand(request, env))
+        }
+        if (surface === 'machine') {
+          const runnerResponse = await routeRunner(request, env)
+          if (runnerResponse) return respond(runnerResponse)
         }
         if (surface !== 'app' || !path.startsWith('/api/')) {
           return privateResponse(hostStub(surface))

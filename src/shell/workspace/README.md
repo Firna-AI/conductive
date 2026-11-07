@@ -30,6 +30,13 @@ the `AppModel` of the tab, for the signed-in user.
   socket asks only for the events after its own last event number.
 - On a return, the model sends its open again, as at each open. The chat
   reads nothing again: no history, no session list, and no view.
+- Each kept chat takes the account, the models, its org, and the members of
+  the org from the app models, as its `sources`. So a login that the
+  account screen saves, a new default model, or a new org name shows in
+  the kept chat at once.
+- A first show reads the members of the org when they are not ready, such
+  as when no screen read them yet or an earlier read failed. A return reads
+  no members.
 - A kept detail that failed waits for the open of this view, with the
   spinner. So a return never shows an old failure.
 - A chat load that ends while the screen is away opens no socket until the
@@ -197,8 +204,9 @@ Run the tests with `npm run test -- src/shell/workspace`.
 - `HeaderNotices.test.tsx`: mounts the screen in happy-dom over the fake
   API and its event stream, and checks the notices.
 - `KeptWorkspace.test.tsx`: mounts the whole app over the fake API. It
-  checks a return, the event number of each socket, a new tab, and the
-  clear at a sign-out.
+  checks a return, the event number of each socket, a new tab, the clear at
+  a sign-out, and the app values that change while the tab is away.
+  `kept-test-kit.tsx` holds its helpers.
 - `features.ts`: `WorkspaceFeatures`, the parts that plug in, and
   `WorkspaceContext`, what each part gets.
 - `WorkspaceHeader.tsx` and `WorkspaceColumns.tsx`: the header, the

@@ -5252,6 +5252,10 @@ Depends on: 5, 6, 7, 7r, 8, 8j
   - [x] Forward the browser chat routes to the object named by the decoded
         workspace ID, before the outer browser gate.
         Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Forward the versioned runner route with bearer-token lookup and no
+        browser gate. Test queued dispatch, live output, Stop, and token
+        isolation through the production Worker.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
   - [x] Mount the chat in the workspace screen and use the app's JSON client
         for chat and Mac command requests. Move the components, development
         pages, and tests to that client, and remove the chat-only transport.
@@ -5259,6 +5263,10 @@ Depends on: 5, 6, 7, 7r, 8, 8j
   - [x] Add a runner archive packager for the existing URL and SHA-256
         artifact contract. Include the runtime packages and the measurement
         tools. Document the external archive supply that a build needs.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Map the sandbox token, repository directory, and machine origin to
+        the runner settings in the staged launcher. Insert the shared
+        runner path and keep build and retention starts idle.
         Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
   - [x] Add one script for the real app and sandbox check and the repeated
         resume measurements in both placements. Check it with local fake
@@ -5292,18 +5300,28 @@ Agent calls on 7 November 2026:
   open request finishes. A sign-out clears the memory.
 - Keep the shell's start card and sandbox bar in the mounted chat. Reason:
   the shell's start card shows the required step times.
+- Give kept chats the account, org, models, and members from their existing
+  app owners. Reason: same-tab settings changes must reach the kept chat
+  without a history reload or an older independent reply.
 
 Blocked: production first-message admission, lifecycle/chat hooks, runner
 startup settings, archive configuration, and the shell API handlers need
 ownership outside the assigned files. The local production browser stops
-at missing account, model, and Get started routes. Runner forwarding and
-the final launcher names also wait for the rename merge. The retry rules
-from primary commit `822f4bc` are included. No real sandbox or measurement
-run has completed here.
+at missing account, model, and Get started routes. The retry rules from
+primary commit `822f4bc` and the Conductive rename at `61ff6d8` are included.
+The runner route and launcher use the versioned machine paths. The
+default branch and computer MCP URL still need runtime inputs. No real
+sandbox or measurement run has completed here.
+
+Review summary: finding 2 is addressed with app-owned inputs for each
+kept chat. The regression checks preserve the draft, current login and
+default model, org and member data, and both event cursors.
 
 Evidence: `.context/boat-native-remote-workspaces/8i/worker-report.md`,
 `ui-report.md`, `image-report.md`, `docs-report.md`, `scope-gap.md`, and
 `browser-smoke.json` in the same folder.
+Final scoped reports: `worker-final-report.md`, `image-final-report.md`,
+`ui-fix-2-report.md`, and `docs-final-report.md` in that folder.
 
 ## Milestone 8m: Chat fixes from the reviews
 
