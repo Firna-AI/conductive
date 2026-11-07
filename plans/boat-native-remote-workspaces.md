@@ -3629,6 +3629,38 @@ Added on 7 November 2026 from the review of Milestone 7u.
   2026. The access protocol states the risk. Follow-up item:
   `plans/follow-ups/agent-login-in-tool-processes.md`.
 
+### 115. Decide what a member's linked session contains
+
+Added on 7 November 2026 from the user's proposal for decision 105 F.
+
+- **Background:** With decision 105 F, a session runs on its starter's
+  login. When that login cannot be used, or the starter does not allow
+  its re-use, a member's message opens a new session tab on the member's
+  own login, with a link to the first session.
+- **Options:**
+  - **A.** A new, empty session with a link to the first session.
+  - **B.** As A, but a fork that continues the first conversation.
+  - **C.** The first session continues on the member's login.
+- **Recommendation:** B.
+- **Chosen:** A, by the user on 7 November 2026. Milestone 7w builds it.
+
+### 116. Decide when "no re-use" arrives, and its default
+
+Added on 7 November 2026 from the user's proposal for decision 105 F.
+
+- **Background:** With decision 105 F, other members spend the starter's
+  login. Anthropic's consumer terms forbid making a Claude account
+  available to anyone else. An API key owner may let their own team use
+  the key.
+- **Options:**
+  - **A.** Add the setting later, off by default.
+  - **B.** Add it now: on by default for a Claude subscription, off for an
+    API key.
+  - **C.** Add it now, off by default for every login.
+- **Recommendation:** B.
+- **Chosen:** A now, and B as a later follow-up, by the user on 7 November
+  2026: `plans/follow-ups/login-reuse-setting.md`.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4951,9 +4983,10 @@ Apply decision 105 F. Added on 7 November 2026.
       session never changes its login.
 - [ ] Show in the composer whose login the session uses. When the
       starter's login cannot be used, such as after the starter leaves the
-      org or removes the login, show that the session cannot run and that a
-      new session runs on the member's own login. Compare it with the chat
-      mockups.
+      org or removes the login, a member's message opens a new, empty
+      session on the member's own login, with a link to the first session
+      (decision 115 A). Draw it in the chat mockups first, and compare the
+      screens with them.
 - [ ] Test a second member's message during a turn, and a starter whose
       login cannot be used, in two tabs. Delete
       `plans/follow-ups/one-sender-per-turn.md`.
