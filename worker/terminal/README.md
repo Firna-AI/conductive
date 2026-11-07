@@ -53,8 +53,14 @@ The handler also updates the D1 activity time. Only terminal input counts.
 The initial handshake, window changes, output, and idle sockets do not count.
 
 `TerminalConnections` owns each authenticated session and workspace/sandbox
-registration. One query checks its live registrations every 15 seconds.
-The grant expires after 30 seconds or at session expiry, whichever comes first.
+registration. Each registration holds a `sandbox` identity of the
+[shared connection reader](../security/README.md#open-connections).
+That kind binds the grant to the current sandbox of a running workspace that is not archived.
+Chat tabs use the `workspace` kind, which has no sandbox check.
+`add` reads the first grant before the handler connects to the ttyd port.
+The shared reader sets the deadline of each grant.
+
+One query checks its live registrations every 15 seconds.
 An independent deadline cancels idle connections if an access read stalls.
 Frame checks use only the live registration. They run no D1 access query.
 Cleanup removes the registration and its scheduled work.
@@ -70,7 +76,7 @@ before it executes ttyd. Tests execute both programs in isolated runtime folders
 
 - [handler.ts](handler.ts) exports `createTerminalHandler`.
 - [connections.ts](connections.ts) owns terminal registration, expiry, and scheduled access checks.
-- [access-store.ts](access-store.ts) reads each session, membership, and sandbox identity in one batch.
+- [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.
 - [service.ts](service.ts) exports `terminalInstallCommand`, the image and start hooks, and `TERMINAL_PORT`.
 - [scripts.ts](scripts.ts) builds the credential and launcher programs.
 - [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
