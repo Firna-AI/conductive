@@ -3747,6 +3747,25 @@ Conductor's sandbox worker.
   Claude subscription tokens, check that the permission of decision 37
   covers a proxy.
 
+### 121. Accept that the GitHub token can be read in the sandbox
+
+Added on 7 November 2026 from the options check of decision 120.
+
+- **Background:** The git credential helper gets the sender's GitHub user
+  token from the Worker during a turn, so each process and each member's
+  terminal in the sandbox can get it. The token works after the turn, on
+  that person's repositories.
+- **Options:**
+  - **A.** State the risk in the access doc and on the privacy page.
+  - **B.** Revoke each token at the end of its turn.
+  - **D.** A token for each turn, limited to the workspace's repositories.
+  - **C.** A Git proxy in the Worker.
+- **Recommendation:** D, then B.
+- **Chosen:** A now, by the user on 8 November 2026, after the question of
+  what Conductor does: Conductor also gives the sender's token to its
+  sandbox. Milestone 15m states the risk. The user asked to consider
+  another approach later: `plans/follow-ups/github-token-readable-in-sandbox.md`.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
