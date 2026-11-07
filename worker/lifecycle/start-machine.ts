@@ -45,14 +45,14 @@ export async function advanceStartMachine(
       ...environment,
       ...repositoryEnvironment(locations),
       WORKSPACE_TOKEN: token,
-      CONDUCTING_WORKSPACE_ID: job.workspaceId,
-      CONDUCTING_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
-      CONDUCTING_REPOSITORY_DIR: repositoryLocation(
+      CONDUCTIVE_WORKSPACE_ID: job.workspaceId,
+      CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
+      CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
         locations,
         row.repositoryId,
       ),
-      CONDUCTING_TURN_ID: '',
-      CONDUCTING_DISK_KEEPALIVE: '0',
+      CONDUCTIVE_TURN_ID: '',
+      CONDUCTIVE_DISK_KEEPALIVE: '0',
     }
     await endpoint.lifecycleStep(
       job.kind === 'create' ? 'image' : 'disk',

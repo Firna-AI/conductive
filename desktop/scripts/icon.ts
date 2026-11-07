@@ -12,9 +12,9 @@ const result = spawnSync(
   [
     '-c',
     'icns',
-    resolve(desktop, '../docs/brand/conducting.iconset'),
+    resolve(desktop, '../docs/brand/conductive.iconset'),
     '-o',
-    resolve(desktop, 'dist/bundle/conducting.icns'),
+    resolve(desktop, 'dist/bundle/conductive.icns'),
   ],
   { stdio: 'inherit' },
 )

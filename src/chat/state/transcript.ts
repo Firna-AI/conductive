@@ -7,14 +7,7 @@ import type {
 } from '../../shared/chat-events'
 import type { ChangedFile } from '../../shared/files'
 import type { UserMessage } from '../../shared/messages'
-import {
-  agentKey,
-  endKey,
-  failedKey,
-  stoppedKey,
-  toolKey,
-  userKey,
-} from './item-keys'
+import { userKey } from './item-keys'
 import { hasEnded, noteTurn, takeMessage, type KnownTurn } from './known-turns'
 import { foldLate } from './late-events'
 import { foldRefused } from './refused-events'
@@ -70,10 +63,11 @@ export interface Transcript {
    */
   turns: readonly KnownTurn[]
   /**
-   * The item that the latest event added or changed, other than a lost line
-   * or a late item of an ended turn. Try again needs it to be a failed item.
+   * The message that Try again may send again, as the newest record of the
+   * session names it, or null. Only the failed item of that message offers
+   * Try again. The session log sets it from the records in event order.
    */
-  latestItemId: string | null
+  retryMessageId: string | null
   /** Complete terminal data, including omitted files, without new rendering. */
   turnCompletions: Readonly<
     Record<string, Extract<AgentChatEvent, { type: 'turn.completed' }>>
@@ -89,34 +83,16 @@ export const emptyTranscript: Transcript = {
   items: [],
   turn: null,
   turns: [],
-  latestItemId: null,
+  retryMessageId: null,
   turnCompletions: {},
   stopRequests: {},
-}
-
-/** The item that an event of a running turn adds or changes, if any. */
-function itemOf(event: AgentChatEvent): string | null {
-  switch (event.type) {
-    case 'assistant.delta':
-    case 'assistant.completed':
-      return agentKey(event.turnId, event.messageId)
-    case 'tool.updated':
-      return toolKey(event.turnId, event.tool.id)
-    case 'turn.completed':
-      return event.state === 'stopped'
-        ? stoppedKey(event.turnId)
-        : endKey(event.turnId)
-    case 'turn.failed':
-      return failedKey(event.turnId)
-    default:
-      return null
-  }
 }
 
 /**
  * Applies one chat event of a session to its transcript. The chat shows only
  * the messages that people sent. A message ID that no accepted message has,
- * such as one that the agent SDK added, shows nothing.
+ * such as one that the agent SDK added, shows nothing. A session record
+ * changes nothing here: the session log keeps its retry message.
  */
 export function foldEvent(
   transcript: Transcript,
@@ -140,7 +116,7 @@ export function foldEvent(
         index < 0
           ? [...transcript.items, item]
           : replaceAt(transcript.items, index, item)
-      return { ...transcript, items, latestItemId: item.id }
+      return { ...transcript, items }
     }
     case 'message.sent':
       return {
@@ -161,13 +137,10 @@ export function foldEvent(
       }
     default:
       if (hasEnded(transcript, event.turnId)) return foldLate(transcript, event)
-      return {
-        ...foldTurn(
-          { ...transcript, turns: noteTurn(transcript.turns, event) },
-          event,
-          occurredAt,
-        ),
-        latestItemId: itemOf(event) ?? transcript.latestItemId,
-      }
+      return foldTurn(
+        { ...transcript, turns: noteTurn(transcript.turns, event) },
+        event,
+        occurredAt,
+      )
   }
 }

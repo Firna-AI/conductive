@@ -12,9 +12,9 @@ It has no imports and works in the Mac app's NodeNext build.
 `DeviceSender` contains the stored sender's ID and display labels.
 The Worker never reads these fields from a sandbox request.
 
-- Machine POST `/tools/mac-command` creates a command request.
-- Machine GET `/tools/mac-command/:requestKey` reads that request.
-- Both require the workspace bearer token and `X-Conducting-Turn-Id`.
+- Machine POST `/v1/tools/mac-command` creates a command request.
+- Machine GET `/v1/tools/mac-command/:requestKey` reads that request.
+- Both require the workspace bearer token and `X-Conductive-Turn-Id`.
 - App GET of `deviceCommandsPath` lists a workspace's durable requests.
 - App GET of `deviceCommandPath` reads one request.
 - App POST of `deviceApprovalPath` relays one approval choice.
@@ -37,7 +37,7 @@ That budget leaves room for the accepted request and a full device failure messa
 
 ## Main process and renderer
 
-The main-process socket requires `Origin: conducting-app://desktop`.
+The main-process socket requires `Origin: conductive-app://desktop`.
 It requires the desktop session cookie in `Cookie`.
 It also requires `Authorization: Bearer <the same cookie value>`.
 Only the main process can read that HttpOnly cookie and fill this header.

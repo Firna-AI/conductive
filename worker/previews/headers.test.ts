@@ -28,7 +28,7 @@ it('proxies HTTP with explicit headers and keeps only preview app cookies', asyn
       method: 'POST',
       body: 'cart=2',
       headers: {
-        Cookie: `_port_auth=forged; shop=blue; ${SESSION_COOKIE}=app-session; ${DESKTOP_SESSION_COOKIE}=mac-session; __Host-conducting-oauth=oauth`,
+        Cookie: `_port_auth=forged; shop=blue; ${SESSION_COOKIE}=app-session; ${DESKTOP_SESSION_COOKIE}=mac-session; __Host-conductive-oauth=oauth`,
         Authorization: 'Bearer app-secret',
         'X-Private': 'secret',
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -152,7 +152,7 @@ it('forwards authenticated OPTIONS and rejects browser preflights without a cred
   const setup = await openPreview(harness)
   expect(setup.response.status).toBe(201)
   const origin =
-    'https://fedcba9876543210fedcba9876543210.conducting-previews.test'
+    'https://fedcba9876543210fedcba9876543210.conductive-previews.test'
   const base = harness.dependencies.fetch
   const calls: Request[] = []
   let upstreamHeaders = new Headers()

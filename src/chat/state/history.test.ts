@@ -27,6 +27,7 @@ function record(id: string, closedAt: number | null): Session {
     createdAt: FAKE_TIME - 1_000,
     closedAt,
     activeTurnId: null,
+    retryMessageId: null,
   }
 }
 

@@ -139,7 +139,7 @@ export function LiteralText(props: {
   useLiteralCopy(root)
   return (
     <Root className={props.className} ref={root} style={LITERAL}>
-      <style href="conducting-literal-marks" precedence="default">
+      <style href="conductive-literal-marks" precedence="default">
         {MARK_CSS}
       </style>
       {props.lead}

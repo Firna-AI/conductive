@@ -39,7 +39,7 @@ export async function localSourceFixture(
   }
   const env = {
     ...harness.env,
-    MACHINE_ORIGIN: 'https://machine.conducting.test',
+    MACHINE_ORIGIN: 'https://machine.conductive.test',
     GITHUB_APP_PRIVATE_KEY: privateKey,
   }
   const evidence = resolve(

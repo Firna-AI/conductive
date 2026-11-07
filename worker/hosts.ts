@@ -5,7 +5,7 @@ import { HttpError } from './http'
 
 export type HostSurface = 'marketing' | 'app' | 'machine' | 'preview'
 
-/** Machine and preview names stay configurable until deployment chooses them. */
+/** Machine and preview hosts use the configured deployment settings. */
 export function hostSurface(request: Request, env: AppEnv): HostSurface {
   const url = new URL(request.url)
   const local =

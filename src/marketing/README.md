@@ -1,7 +1,7 @@
 # Marketing site
 
 The marketing site is the public site at the root of the product domain,
-`conducting.build`. It has the home page, the Terms page, the Privacy page,
+`conductive.build`. It has the home page, the Terms page, the Privacy page,
 and a page for an unknown address. Visitors need no sign-in. The pages run
 no script and set no cookie. Every sign-in link leads to the app, on the
 `app.` host.

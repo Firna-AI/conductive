@@ -40,6 +40,7 @@ export function fakeWorkspaceRoutes(
       sessions: data.sessions.sessions.map((session) => ({
         ...session,
         workspaceId: id,
+        retryMessageId: conversation === 'failed' ? data.message.id : null,
       })),
       history: data.sessions.history.map((session) => ({
         ...session,
@@ -52,6 +53,7 @@ export function fakeWorkspaceRoutes(
           ...sessions.sessions[0],
           id: data.created.sessionId,
           title: 'New session',
+          retryMessageId: null,
         },
       ]
       sessions.history = []

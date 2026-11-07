@@ -30,7 +30,7 @@ function setup() {
   const closed = vi.fn()
   const socket = connectDevice(
     {
-      appOrigin: 'https://app.conducting.test',
+      appOrigin: 'https://app.conductive.test',
       deviceId: 'local-device',
       deviceName: 'Cals Mac & Work.local',
       credential: 'fixture.signature',
@@ -45,7 +45,7 @@ it('puts the main-process cookie only in authenticated upgrade headers and uses 
   const test = setup()
   const [url, options] = test.create.mock.calls[0]
   expect(url.href).toBe(
-    'wss://app.conducting.test' +
+    'wss://app.conductive.test' +
       deviceConnectionPath('local-device', 'Cals Mac & Work.local'),
   )
   expect(url.searchParams.get('deviceName')).toBe('Cals Mac & Work.local')

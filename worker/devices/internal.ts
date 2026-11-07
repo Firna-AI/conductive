@@ -6,7 +6,7 @@ import { readBoundedJson } from '../http/bounded-body'
 import { DEVICE_INTERNAL_PATH } from './paths'
 import { createDeviceProof, verifyDeviceProof } from './proof'
 
-const PROOF_HEADER = 'X-Conducting-Device-Proof'
+const PROOF_HEADER = 'X-Conductive-Device-Proof'
 // A reply can include the accepted request and a full device failure message.
 const INTERNAL_REPLY_BYTES = 3_000_000
 export function deviceStub(env: AppEnv, name: string) {

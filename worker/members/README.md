@@ -162,7 +162,7 @@ The capability expires when its callback ends or its lease expires.
 An invitation names an email.
 The invite route sends it through `createInvitationMailer` in `worker/invitation-mailer.ts`.
 `AppDependencies.invitationMailer` replaces that mailer when it is set.
-The mailer posts to Resend with the `RESEND_API_KEY` Worker secret, from `invites@conducting.build`.
+The mailer posts to Resend with the `RESEND_API_KEY` Worker secret, from `invites@conductive.build`.
 With a local `APP_ORIGIN`, such as `http://127.0.0.1:5173`, the mailer always writes each invitation link to the log and sends no email.
 This is also true when the key is set.
 On every other origin, the mailer needs the key and fails each send without it.

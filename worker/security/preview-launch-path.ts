@@ -1,6 +1,6 @@
 import { API_PATHS } from '../../src/shared/api.js'
 
-export const PREVIEW_HANDOFF_PATH = '/.conducting/authorize'
+export const PREVIEW_HANDOFF_PATH = '/.conductive/authorize'
 
 /** Only the existing single-preview GET route can select a navigation cookie. */
 export function isPreviewLaunchPath(path: string): boolean {

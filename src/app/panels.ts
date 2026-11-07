@@ -15,8 +15,8 @@ export const panelRanges: Readonly<Record<Panel, PanelWidth>> = {
 }
 
 const storageKeys: Readonly<Record<Panel, string>> = {
-  sidebar: 'conducting.sidebar-width',
-  right: 'conducting.right-width',
+  sidebar: 'conductive.sidebar-width',
+  right: 'conductive.right-width',
 }
 
 /** `null` means that the user has not chosen a width, so the layout's own applies. */

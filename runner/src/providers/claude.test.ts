@@ -45,7 +45,7 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
     persistSession: true,
     env: {
       CLAUDE_CODE_OAUTH_TOKEN: 'secret-alice',
-      CLAUDE_CONFIG_DIR: `${h.home}/.conducting/claude`,
+      CLAUDE_CONFIG_DIR: `${h.home}/.conductive/claude`,
     },
     mcpServers: { computer: { type: 'http', url: 'http://computer.test/mcp' } },
   })

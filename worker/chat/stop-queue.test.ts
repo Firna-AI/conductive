@@ -180,6 +180,11 @@ describe('messages after Stop', () => {
       .filter((event) => event.type === 'turn.failed')
     expect(failures).toHaveLength(1)
     expect(failures[0]?.retryMessageId).toBe('older-unanswered')
+    expect(
+      await fixture.chat.store.read(WORKSPACE_ID, (view) =>
+        view.session(session.id),
+      ),
+    ).toMatchObject({ retryMessageId: null })
     expect(runner.pendingEvents()).toEqual([])
   })
 })

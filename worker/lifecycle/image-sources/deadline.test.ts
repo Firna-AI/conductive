@@ -79,7 +79,7 @@ it('returns each alarm while native Git runs and renews the builder before allow
           ?.tokenCiphertext,
       ).toBeNull()
       order.push(
-        command.includes('/tmp/conducting-install.sh') ? 'install' : 'software',
+        command.includes('/tmp/conductive-install.sh') ? 'install' : 'software',
       )
     }
     let complete = false

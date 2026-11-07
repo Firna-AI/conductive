@@ -125,6 +125,7 @@ describe('runner events for turns that never started', () => {
       },
     ])
     expect(before.sessions[0]?.activeTurnId).toBeNull()
+    expect(before.sessions[0]?.retryMessageId).toBe('login-message')
     expect(before.turns[0]).toMatchObject({ state: 'failed', started: false })
     runner.emit({
       type: 'assistant.delta',

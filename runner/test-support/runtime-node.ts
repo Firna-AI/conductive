@@ -27,14 +27,14 @@ function execute(command: string, args: string[], env: NodeJS.ProcessEnv) {
 }
 
 export async function runtimeNodeFixture() {
-  const root = await mkdtemp(join(tmpdir(), 'conducting runtime-'))
+  const root = await mkdtemp(join(tmpdir(), 'conductive runtime-'))
   onTestFinished(() => rm(root, { recursive: true, force: true }))
   const source = join(root, 'runner')
   const prefix = join(root, 'installed runner')
   const runtime = join(root, 'private runtime', 'bin')
   const commands = join(root, 'commands')
   const calls = join(root, 'calls.txt')
-  const unit = join(root, 'conducting-runner.service')
+  const unit = join(root, 'conductive-runner.service')
   const secrets = join(root, 'sandbox-env.sh')
   const node = join(runtime, 'node')
   const npm = join(runtime, 'npm')
@@ -94,20 +94,20 @@ appendFileSync(${JSON.stringify(calls)}, JSON.stringify(process.argv.slice(2)) +
   }
   await adapted(
     'scripts/install.sh',
-    '/etc/systemd/system/conducting-runner.service',
+    '/etc/systemd/system/conductive-runner.service',
     unit,
   )
   await adapted('service/start.sh', '/run/ascii-secrets/env.sh', secrets)
   await copyFile(
-    new URL('../service/conducting-runner.service', import.meta.url),
-    join(source, 'service', 'conducting-runner.service'),
+    new URL('../service/conductive-runner.service', import.meta.url),
+    join(source, 'service', 'conductive-runner.service'),
   )
   await writeFile(join(source, 'package.json'), '{"type":"module"}\n')
   await writeFile(join(source, 'package-lock.json'), '{}\n')
   const program = `process.stdout.write(JSON.stringify({
   node: process.execPath,
   marker: process.env.RUNTIME_TEST_MARKER,
-  envNode: process.env.CONDUCTING_NODE,
+  envNode: process.env.CONDUCTIVE_NODE,
   path: process.env.PATH,
 }))\n`
   for (const name of ['runner.mjs', 'measure.mjs', 'compare.mjs']) {
@@ -116,7 +116,7 @@ appendFileSync(${JSON.stringify(calls)}, JSON.stringify(process.argv.slice(2)) +
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     PATH: `${commands}:${process.env.PATH}`,
-    CONDUCTING_NODE: node,
+    CONDUCTIVE_NODE: node,
     TZ: 'UTC',
     LC_ALL: 'C',
   }
@@ -127,8 +127,8 @@ appendFileSync(${JSON.stringify(calls)}, JSON.stringify(process.argv.slice(2)) +
     commands,
     install: (setting: string | undefined) => {
       const configured = { ...env }
-      if (setting === undefined) delete configured.CONDUCTING_NODE
-      else configured.CONDUCTING_NODE = setting
+      if (setting === undefined) delete configured.CONDUCTIVE_NODE
+      else configured.CONDUCTIVE_NODE = setting
       return execute('/bin/sh', [installer, 'agent', prefix], configured)
     },
     calls: async () =>
@@ -137,7 +137,7 @@ appendFileSync(${JSON.stringify(calls)}, JSON.stringify(process.argv.slice(2)) +
     start: async (invocation: string) => {
       await writeFile(
         secrets,
-        `CONDUCTING_NODE=${shellQuote(join(commands, 'node'))}
+        `CONDUCTIVE_NODE=${shellQuote(join(commands, 'node'))}
 PATH=${shellQuote(`${commands}:/usr/bin:/bin`)}
 RUNTIME_TEST_MARKER=loaded
 `,

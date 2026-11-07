@@ -7,7 +7,7 @@ import { expect, it, onTestFinished, vi } from 'vitest'
 import { DiskStorage, EventStore } from './state'
 
 it('saves the complete pending state after one rejected write and keeps event numbers contiguous', async () => {
-  const directory = await mkdtemp(join(tmpdir(), 'conducting-state-'))
+  const directory = await mkdtemp(join(tmpdir(), 'conductive-state-'))
   onTestFinished(() => rm(directory, { recursive: true, force: true }))
   const storage = new DiskStorage(join(directory, 'state.json'))
   const write = storage.write.bind(storage)

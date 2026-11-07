@@ -1,9 +1,11 @@
 import type {
   AgentChatEvent,
+  ChatEvent,
   RunnerEventRefused,
   ToolCall,
 } from '../../shared/chat-events'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
+import type { ChatController } from '../state/controller'
 
 /** The session and the turn of the recorded chats that the tests extend. */
 export const turn = { sessionId: FAKE_IDS.session, turnId: 'turn-1' }
@@ -45,6 +47,38 @@ export function refused(
     reason,
     ...fields,
   }
+}
+
+/** The failure of a turn, which names the message that Try again sends. */
+export function failed(
+  turnId: string,
+  text: string,
+  retryMessageId: string,
+): AgentChatEvent {
+  return {
+    ...turn,
+    turnId,
+    type: 'turn.failed',
+    error: { code: 'agent_unavailable', message: text },
+    retryMessageId,
+    durationMs: 1_000,
+  }
+}
+
+/**
+ * The record of an open session, as the Worker sends it after a change. It
+ * names the message that Try again may send, or null.
+ */
+export function recordNaming(
+  controller: ChatController,
+  retryMessageId: string | null,
+  sessionId: string = turn.sessionId,
+): ChatEvent {
+  const session = controller
+    .getSnapshot()
+    .sessions.find((item) => item.id === sessionId)
+  if (!session) throw new Error(`The session ${sessionId} is not open.`)
+  return { type: 'session.updated', session: { ...session, retryMessageId } }
 }
 
 /** How many times a part shows in a text. */
