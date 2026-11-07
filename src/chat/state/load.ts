@@ -1,7 +1,8 @@
 import type { SessionsResponse } from '../../shared/sessions'
 import type { WorkspaceResponse } from '../../shared/workspaces'
 import { refreshDevices } from '../device/device-actions'
-import { messageOf, type ChatContext } from './context'
+import type { ChatSnapshot } from './chat-snapshot'
+import { logOf, messageOf, withTranscript, type ChatContext } from './context'
 import { hydrate } from './history'
 import { orderSessions, pickActive, sortHistory } from './sessions'
 
@@ -14,7 +15,9 @@ const orNull = <T>(request: Promise<T>): Promise<T | null> =>
  * 1. The session list and the view choose the session to show.
  * 2. Its full history gives the event number that the stream starts after.
  * 3. The workspace and the session list load again after that number, so no
- *    change between the reads and the stream gets lost.
+ *    change between the reads and the stream gets lost. Each record of that
+ *    list gives the retry message of its session after that number, until
+ *    a newer record from the stream or a history replaces it.
  *
  * Without an open session, the stream starts at the beginning, so its
  * history holds every session. The watch of the shown session, which the
@@ -80,10 +83,16 @@ export async function loadChat(context: ChatContext): Promise<void> {
     return
   }
   if (!context.live()) return
+  const listed: string[] = []
+  for (const session of [...sessions.sessions, ...sessions.history]) {
+    if (logOf(context, session.id).takeListed(session, after)) {
+      listed.push(session.id)
+    }
+  }
   store.update((snapshot) => {
     const open = orderSessions(sessions.sessions, snapshot.view)
     const shown = open.some((item) => item.id === snapshot.activeSessionId)
-    return {
+    let next: ChatSnapshot = {
       ...snapshot,
       load: { state: 'ready' },
       workspace: detail.workspace,
@@ -94,6 +103,11 @@ export async function loadChat(context: ChatContext): Promise<void> {
         ? snapshot.activeSessionId
         : pickActive(open, snapshot.view),
     }
+    for (const id of listed) {
+      const log = logOf(context, id)
+      next = withTranscript(next, id, log.transcript, log.times)
+    }
+    return next
   })
   context.stream.start(after)
   await refreshDevices(context)

@@ -16,6 +16,16 @@ export function place(backend: DevBackend, session: Session): void {
   backend.sync()
 }
 
+/** An accepted message ends the retry of its session, as the Worker does. */
+export function clearRetry(backend: DevBackend, sessionId: string): void {
+  const session = [...backend.open, ...backend.closed].find(
+    (item) => item.id === sessionId,
+  )
+  if (session && session.retryMessageId !== null) {
+    place(backend, { ...session, retryMessageId: null })
+  }
+}
+
 /**
  * The title that the agent writes after its first answer in a new
  * workspace. The workspace takes it as its name. The first session of the

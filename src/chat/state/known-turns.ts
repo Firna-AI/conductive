@@ -14,14 +14,6 @@ export interface KnownTurn {
 }
 
 /**
- * The newest known turn: the last turn that an accepted event named for the
- * first time. A late event or a refusal marker never makes another turn newest.
- */
-export function newestTurnId(transcript: Transcript): string | null {
-  return transcript.turns.at(-1)?.id ?? null
-}
-
-/**
  * A known turn has ended when its end arrived, or when a newer turn started,
  * because a session runs one turn at a time.
  */
@@ -29,6 +21,27 @@ export function hasEnded(transcript: Transcript, turnId: string): boolean {
   const { turns } = transcript
   const index = turns.findIndex((known) => known.id === turnId)
   return index >= 0 && (turns[index].ended || index < turns.length - 1)
+}
+
+/**
+ * The failed item that offers Try again: it names the message that the
+ * newest record of the session names. A turn that continues the unanswered
+ * messages of a finished turn takes their IDs, so a late failure of the
+ * older turn can name the same message. Then only the item of the newer
+ * turn offers it.
+ */
+export function retryItemId(transcript: Transcript): string | null {
+  const { retryMessageId, turns } = transcript
+  if (retryMessageId === null) return null
+  let chosen: { id: string; rank: number } | null = null
+  for (const item of transcript.items) {
+    if (item.kind !== 'failed' || item.retryMessageId !== retryMessageId) {
+      continue
+    }
+    const rank = turns.findIndex((turn) => turn.id === item.turnId)
+    if (!chosen || rank > chosen.rank) chosen = { id: item.id, rank }
+  }
+  return chosen?.id ?? null
 }
 
 /** The turn runs: it is the newest known turn, and its end has not arrived. */
