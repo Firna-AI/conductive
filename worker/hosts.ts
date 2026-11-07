@@ -2,16 +2,14 @@ import { productDomain } from '../docs/mockups/src/brand'
 import { siteResponse } from '../src/marketing/routes'
 import type { AppEnv } from './env'
 import { HttpError } from './http'
+import { appOrigin } from './security/app-origin'
 
 export type HostSurface = 'marketing' | 'app' | 'machine' | 'preview'
 
 /** Machine and preview hosts use the configured deployment settings. */
 export function hostSurface(request: Request, env: AppEnv): HostSurface {
   const url = new URL(request.url)
-  const local =
-    url.protocol === 'http:' &&
-    ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
-  if (url.origin === env.APP_ORIGIN || (!env.APP_ORIGIN && local)) return 'app'
+  if (url.origin === appOrigin(request, env)) return 'app'
   if (url.origin === (env.MARKETING_ORIGIN ?? `https://${productDomain}`))
     return 'marketing'
   if (env.MACHINE_ORIGIN && url.origin === env.MACHINE_ORIGIN) return 'machine'

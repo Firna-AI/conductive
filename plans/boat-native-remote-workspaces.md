@@ -5856,15 +5856,19 @@ Depends on: 15j
 Apply decision 110 C and the fix-after-merge items of the Mac app. Added
 on 7 November 2026.
 
-- [ ] Before the Mac saves "Always allow", measure the saved list with
+- [x] Before the Mac saves "Always allow", measure the saved list with
       the new command. Above about 900,000 bytes, refuse the save with a
       message, and still let Allow run the command once (decision 110).
       Delete `plans/follow-ups/always-allow-size-limit.md`.
-- [ ] Apply the recorded option of each of these follow-up items, and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15k`.
+- [x] Apply the recorded option of each of these follow-up items, and
       delete each item: `mac-command-result-after-stop`,
       `mac-command-watchdog-alarm`, `mac-command-internal-payload-budget`,
       `mac-approval-scroll-flake`, `desktop-renderer-tests-in-gate`, and
       `local-dev-origin`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15k`.
+
+Evidence: `.context/boat-native-remote-workspaces/ledger.md`.
 
 ## Milestone 15m: Marketing and mockup fixes
 

@@ -50,6 +50,36 @@ async function edges(locator: Locator) {
   return { top: box.y, bottom: box.y + box.height }
 }
 
+/**
+ * Presses a key that scrolls the region, then waits for the end of that
+ * scroll. Chromium animates a keyboard scroll. The page shows the end
+ * offset before the animation ends, and `scrollend` comes after that end.
+ * A press in this gap changes only the target of the old animation. The end
+ * of the old animation then drops that target, so the press does not
+ * scroll. The wait for `scrollend` keeps two key scrolls from overlapping.
+ */
+async function scrollWithKey(region: Locator, key: 'PageDown' | 'Home') {
+  // The listener starts before the press, so it cannot miss the end.
+  const scroll = await region.evaluateHandle((node) => {
+    const state = { ended: false }
+    node.addEventListener(
+      'scrollend',
+      () => {
+        state.ended = true
+      },
+      { once: true },
+    )
+    return state
+  })
+  await region.page().keyboard.press(key)
+  await expect
+    .poll(() => scroll.evaluate((state) => state.ended), {
+      message: `The region ends the scroll of ${key}`,
+    })
+    .toBe(true)
+  await scroll.dispose()
+}
+
 test('the Mac app keeps many waiting commands above a reachable composer, scrolls a long one from the keyboard, and opens Allow over the region', async () => {
   const evidence = resolve(repository, '.context/boat-native-remote-workspaces')
   await mkdir(evidence, { recursive: true })
@@ -101,13 +131,13 @@ test('the Mac app keeps many waiting commands above a reachable composer, scroll
     for (let press = 0; press < 20; press += 1) {
       const before = await edges(script)
       if (before.bottom <= bounds.bottom) break
-      await page.keyboard.press('PageDown')
+      await scrollWithKey(region, 'PageDown')
       await expect
         .poll(async () => (await edges(script)).top)
         .toBeLessThan(before.top)
     }
     expect((await edges(script)).bottom).toBeLessThanOrEqual(bounds.bottom)
-    await page.keyboard.press('Home')
+    await scrollWithKey(region, 'Home')
     await expect
       .poll(async () => (await edges(script)).top)
       .toBeGreaterThan(bounds.top)

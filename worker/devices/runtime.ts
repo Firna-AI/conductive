@@ -1,15 +1,17 @@
-import { DeviceContractError } from '../../src/shared/device-read'
+import {
+  DeviceContractError,
+  deviceObject,
+  deviceRequired,
+} from '../../src/shared/device-read'
 import type { WorkspaceChat } from '../chat/backend'
 import type { ChatStorage } from '../chat/types'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
-import { requestBodyEntry } from '../http/request-body'
 import { DeviceBroker } from './broker'
 import { brokerBrowserRoute, brokerOperation } from './broker-routes'
-import { deviceInternal } from './internal'
+import type { DeviceOperationResult } from './internal'
 import {
   DEVICE_BROKER_PREFIX,
-  DEVICE_INTERNAL_PATH,
   isDeviceAppPath,
   isDeviceMachinePath,
   workspaceDeviceRoute,
@@ -38,32 +40,46 @@ export class DeviceRuntime {
   }
   async fetch(request: Request): Promise<Response | null> {
     const path = new URL(request.url).pathname
-    if (
-      path !== DEVICE_INTERNAL_PATH &&
-      !isDeviceMachinePath(path) &&
-      !isDeviceAppPath(path)
-    )
-      return null
-    return path === DEVICE_INTERNAL_PATH
-      ? requestBodyEntry((bounded) => this.handle(bounded, path))(
-          request,
-          this.env,
+    if (!isDeviceMachinePath(path) && !isDeviceAppPath(path)) return null
+    return this.handle(request, path)
+  }
+  async operation(
+    target: string,
+    input: unknown,
+  ): Promise<DeviceOperationResult> {
+    try {
+      if (!this.matches(deviceRequired(target)))
+        throw new HttpError(
+          403,
+          'device_forbidden',
+          'The Mac request is not available.',
         )
-      : this.handle(request, path)
+      const operation = deviceObject(input)
+      const value = target.startsWith(DEVICE_BROKER_PREFIX)
+        ? await brokerOperation(this.broker, operation)
+        : await this.workspace.operation(operation)
+      return { ok: true, value }
+    } catch (error) {
+      const failure = deviceError(error)
+      return failure instanceof HttpError
+        ? {
+            ok: false,
+            status: failure.status,
+            code: failure.code,
+            message: failure.message,
+          }
+        : {
+            ok: false,
+            status: 500,
+            code: 'internal_error',
+            message: 'The request failed. Try again.',
+          }
+    }
   }
   private async handle(request: Request, path: string): Promise<Response> {
     try {
       let response: Response
-      if (path === DEVICE_INTERNAL_PATH) {
-        const { target, operation } = await deviceInternal(
-          request,
-          this.env,
-          this.matches,
-        )
-        response = target.startsWith(DEVICE_BROKER_PREFIX)
-          ? await brokerOperation(this.broker, operation)
-          : await this.workspace.operation(operation)
-      } else if (isDeviceMachinePath(path))
+      if (isDeviceMachinePath(path))
         response = await this.workspace.machine(request)
       else if (workspaceDeviceRoute(path))
         response = await workspaceBrowserRoute(this.workspace, request)
@@ -76,13 +92,7 @@ export class DeviceRuntime {
         )
       return privateResponse(response)
     } catch (error) {
-      return privateResponse(
-        errorResponse(
-          error instanceof DeviceContractError
-            ? new HttpError(400, 'invalid_input', error.message)
-            : error,
-        ),
-      )
+      return privateResponse(errorResponse(deviceError(error)))
     }
   }
   async alarm(): Promise<void> {
@@ -91,4 +101,10 @@ export class DeviceRuntime {
   reconcile(): Promise<void> {
     return this.workspace.reconcile()
   }
+}
+
+function deviceError(error: unknown): unknown {
+  return error instanceof DeviceContractError
+    ? new HttpError(400, 'invalid_input', error.message)
+    : error
 }
