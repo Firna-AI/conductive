@@ -1,12 +1,13 @@
 import { watch } from 'node:fs'
 
-import type { RunnerFileEvent, FileTreeChange } from '../../src/shared/files'
+import type { RunnerFileEvent } from '../../src/shared/files'
 import type {
   RunnerFileCommand,
   RunnerFileResponse,
 } from '../../src/shared/runner-files'
 import { FileAccessError } from './file-access'
 import { splitFileReport } from './file-parts'
+import { changesUpdated, treeUpdate } from './file-updates'
 import type { Repository, RepositorySnapshot } from './repository'
 import type { FileRevisions } from './state'
 
@@ -16,20 +17,26 @@ interface FileReporterOptions {
   warn?: (message: string) => void
 }
 
+type ReportKind = 'files.snapshot' | 'changes.updated'
+
 export class FileReporter {
   private readonly revisions: FileRevisions
-  private previous: RepositorySnapshot | null = null
+  private previousTree: RepositorySnapshot | null = null
+  private previousChanges: RepositorySnapshot | null = null
   private pending: Promise<void> = Promise.resolve()
   private readonly repository: Repository
   private readonly branch: string
-  private readonly emit: (event: RunnerFileEvent) => Promise<void>
+  private readonly emit: (
+    event: RunnerFileEvent,
+    reportCommandId?: string,
+  ) => Promise<void>
   private readonly prepare: (event: RunnerFileEvent) => RunnerFileEvent
   private readonly warn: (message: string) => void
 
   constructor(
     repository: Repository,
     branch: string,
-    emit: (event: RunnerFileEvent) => Promise<void>,
+    emit: (event: RunnerFileEvent, reportCommandId?: string) => Promise<void>,
     options: FileReporterOptions = {},
   ) {
     this.repository = repository
@@ -40,8 +47,14 @@ export class FileReporter {
     this.warn = options.warn ?? (() => {})
   }
 
-  refresh(full = false): Promise<void> {
-    this.pending = this.pending.catch(() => {}).then(() => this.scan(full))
+  refresh(
+    full = false,
+    kind?: ReportKind,
+    reportCommandId?: string,
+  ): Promise<void> {
+    this.pending = this.pending
+      .catch(() => {})
+      .then(() => this.scan(full, kind, reportCommandId))
     return this.pending
   }
 
@@ -104,55 +117,25 @@ export class FileReporter {
     }
   }
 
-  private async scan(full: boolean): Promise<void> {
+  private async scan(
+    full: boolean,
+    kind?: ReportKind,
+    reportCommandId?: string,
+  ): Promise<void> {
     const current = await this.repository.snapshot(this.branch)
-    const contentChanged =
-      this.previous === null ||
-      current.identities.size !== this.previous.identities.size ||
-      [...current.identities].some(
-        ([path, identity]) => this.previous?.identities.get(path) !== identity,
-      )
     const events: RunnerFileEvent[] = []
-    if (full || this.previous === null) {
-      events.push({
-        type: 'files.snapshot',
-        tree: {
-          revision: this.revisions.tree + 1,
-          partNumber: 1,
-          partCount: 1,
-          entries: current.entries,
-        },
-      })
-    } else {
-      const previous = new Map(
-        this.previous.entries.map((entry) => [entry.path, entry]),
+    if (kind !== 'changes.updated') {
+      const update = treeUpdate(
+        this.previousTree,
+        current,
+        this.revisions.tree + 1,
+        full,
       )
-      const entries = new Map(
-        current.entries.map((entry) => [entry.path, entry]),
-      )
-      const changes: FileTreeChange[] = []
-      for (const [path] of previous)
-        if (!entries.has(path)) changes.push({ operation: 'remove', path })
-      for (const [path, entry] of entries) {
-        if (
-          JSON.stringify(previous.get(path)) !== JSON.stringify(entry) ||
-          this.previous.identities.get(path) !== current.identities.get(path) ||
-          this.previous.readIdentities.get(path) !==
-            current.readIdentities.get(path)
-        )
-          changes.push({ operation: 'upsert', entry })
-      }
-      if (changes.length)
-        events.push({
-          type: 'files.changed',
-          delta: { revision: this.revisions.tree + 1, changes },
-        })
+      if (update) events.push(update)
     }
     if (
-      full ||
-      contentChanged ||
-      this.previous?.baseCommit !== current.baseCommit ||
-      JSON.stringify(this.previous?.changes) !== JSON.stringify(current.changes)
+      kind !== 'files.snapshot' &&
+      (full || changesUpdated(this.previousChanges, current))
     ) {
       events.push({
         type: 'changes.updated',
@@ -172,8 +155,11 @@ export class FileReporter {
         )
         return
       }
-      for (const part of parts) {
-        await this.emit(part)
+      for (const [index, part] of parts.entries()) {
+        await this.emit(
+          part,
+          index === parts.length - 1 ? reportCommandId : undefined,
+        )
         if (part.type === 'files.snapshot')
           this.revisions.tree = part.tree.revision
         if (part.type === 'files.changed')
@@ -182,6 +168,7 @@ export class FileReporter {
           this.revisions.changes = part.changes.revision
       }
     }
-    this.previous = current
+    if (kind !== 'changes.updated') this.previousTree = current
+    if (kind !== 'files.snapshot') this.previousChanges = current
   }
 }

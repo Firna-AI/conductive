@@ -2,6 +2,7 @@ import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type {
   RunnerCommand,
   RunnerEvent,
+  RunnerEventEnvelope,
   WorkspaceToRunner,
 } from '../../src/shared/runner'
 import type { RunnerFileResponse } from '../../src/shared/runner-files'
@@ -11,6 +12,7 @@ import type {
   RunnerConnector,
 } from '../../src/shared/runner-transport'
 import type { EventStore } from './state'
+import type { RetainedReport, RetainedReportKind } from './report-state'
 
 export interface LinkOptions {
   workspaceId: string
@@ -30,6 +32,7 @@ export class RunnerLink {
   private connection: RunnerConnection | null = null
   private welcomed = false
   private pending: Promise<void> = Promise.resolve()
+  private initializing: Promise<void> = Promise.resolve()
 
   constructor(store: EventStore, options: LinkOptions) {
     this.store = store
@@ -57,15 +60,31 @@ export class RunnerLink {
       streamId: this.store.snapshot.streamId,
     })
     await this.idle()
+    await this.initializing
+    await this.idle()
   }
 
-  async emit(event: RunnerEvent): Promise<void> {
-    const envelope = await this.store.append(event, this.options.now())
-    if (envelope === null) {
-      this.options.warn('The runner event exceeds its byte limit.')
-      return
-    }
-    if (this.welcomed) this.send(envelope)
+  async emit(event: RunnerEvent, reportCommandId?: string): Promise<void> {
+    const envelope = await this.store.append(
+      event,
+      this.options.now(),
+      reportCommandId,
+    )
+    this.sendSaved(envelope)
+  }
+
+  async refreshReport(
+    kind: RetainedReportKind,
+    commandId: string,
+    prepare: (report: RetainedReport) => RetainedReport,
+  ): Promise<void> {
+    const envelope = await this.store.refreshReport(
+      kind,
+      commandId,
+      this.options.now(),
+      prepare,
+    )
+    if (envelope !== undefined) this.sendSaved(envelope)
   }
 
   reply(response: RunnerFileResponse): void {
@@ -99,6 +118,14 @@ export class RunnerLink {
     }
   }
 
+  private sendSaved(envelope: RunnerEventEnvelope | null): void {
+    if (envelope === null) {
+      this.options.warn('The runner event exceeds its byte limit.')
+      return
+    }
+    if (this.welcomed) this.send(envelope)
+  }
+
   private async receive(
     message: WorkspaceToRunner,
     connection: RunnerConnection,
@@ -116,7 +143,10 @@ export class RunnerLink {
       await this.store.confirm(message.confirmedThrough)
       this.welcomed = true
       this.resend(message.confirmedThrough + 1)
-      await this.options.connected()
+      this.initializing = this.options.connected().catch(() => {
+        this.options.warn('The runner connection could not process a message.')
+        if (this.connection === connection) connection.close()
+      })
     } else if (message.type === 'confirm') {
       if (this.welcomed && message.streamId === stream)
         await this.store.confirm(message.throughEventNumber)

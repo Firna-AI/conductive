@@ -16,7 +16,9 @@ export class AgentEngine {
     this.turns = new EngineTurns(options)
   }
 
-  command(command: RunnerCommand): Promise<void> {
+  command(
+    command: Exclude<RunnerCommand, { type: 'report.refresh' }>,
+  ): Promise<void> {
     if (this.closing) return Promise.resolve()
     if (command.type === 'file.read' || command.type === 'file.diff')
       return Promise.resolve()

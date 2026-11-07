@@ -1,4 +1,4 @@
-import type { RunnerEvent } from '../../src/shared/runner'
+import type { RunnerEvent, RunnerReportRefresh } from '../../src/shared/runner'
 import type {
   RunnerConnectionRequest,
   RunnerConnector,
@@ -38,6 +38,7 @@ export class Runner {
   private readonly sanitizer = new OutputSanitizer()
   private readonly emitted = new SerialQueue()
   private readonly commands = new Set<Promise<void>>()
+  private readonly refreshed: Set<string>
   private stopWatching: (() => void) | null = null
   private stopped = false
   private warmed = false
@@ -45,12 +46,13 @@ export class Runner {
 
   constructor(options: RunnerOptions) {
     this.options = options
+    this.refreshed = new Set(options.store.snapshot.reports.commands)
     this.sanitizer.add(options.request.workspaceToken)
     const repository = new Repository(options.cwd, options.warn)
     this.files = new FileReporter(
       repository,
       options.defaultBranch,
-      (event) => this.emit(event, true),
+      (event, reportCommandId) => this.emit(event, true, reportCommandId),
       {
         revisions: options.store.snapshot.fileRevisions,
         prepare: (event) => this.sanitizer.fileReport(event),
@@ -85,7 +87,9 @@ export class Runner {
             ? this.files.request(command).then((response) => {
                 this.link.reply(response)
               })
-            : this.engine.command(command)
+            : command.type === 'report.refresh'
+              ? this.refresh(command)
+              : this.engine.command(command)
         this.commands.add(action)
         void action
           .finally(() => this.commands.delete(action))
@@ -123,17 +127,35 @@ export class Runner {
     this.link.close()
   }
 
-  private emit(event: RunnerEvent, prepared = false): Promise<void> {
+  private emit(
+    event: RunnerEvent,
+    prepared = false,
+    reportCommandId?: string,
+  ): Promise<void> {
     return this.emitted.run(async () => {
       const failures: unknown[] = []
       for (const safe of prepared ? [event] : this.sanitizer.accept(event)) {
         try {
-          await this.link.emit(boundChatEvent(safe))
+          await this.link.emit(boundChatEvent(safe), reportCommandId)
         } catch (error) {
           failures.push(error)
         }
       }
       if (failures.length) throw failures[0]
     })
+  }
+
+  private async refresh(command: RunnerReportRefresh): Promise<void> {
+    if (this.refreshed.has(command.commandId)) return
+    this.refreshed.add(command.commandId)
+    const kind = command.kind
+    if (kind === 'files.snapshot' || kind === 'changes.updated')
+      await this.files.refresh(true, kind, command.commandId)
+    else
+      await this.emitted.run(() =>
+        this.link.refreshReport(kind, command.commandId, (report) =>
+          this.sanitizer.retainedReport(report),
+        ),
+      )
   }
 }
