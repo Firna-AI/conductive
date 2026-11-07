@@ -23,6 +23,8 @@ export interface ActiveTurn {
   waiting: ProviderInput[]
   output: TurnOutput
   stopped: boolean
+  shutdown: boolean
+  closing: Promise<void>
   baseline: Checkpoint | null
   controller: AbortController
   files: readonly ChangedFile[] | null

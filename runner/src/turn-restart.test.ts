@@ -60,7 +60,7 @@ it('keeps DiskStorage turn records across restart and ends cutoff work without r
       endEventNumber: null,
     },
   ])
-  await h.runner.close()
+  await h.cutoff()
   const store = await EventStore.open(h.storage)
   expect(store.snapshot).toEqual(before)
   const processCount = h.providers.processes.length

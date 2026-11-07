@@ -97,6 +97,8 @@ export async function inputCommand(
     resolvedMessageIds: new Set(),
     waiting: [],
     stopped: controller.signal.aborted,
+    shutdown: false,
+    closing: Promise.resolve(),
     baseline: null,
     controller,
     files: null,

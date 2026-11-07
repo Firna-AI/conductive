@@ -27,12 +27,14 @@ export class SessionEngine {
   private readonly starts = new Map<string, AbortController>()
   private readonly stoppedBeforeStart = new Set<string>()
   private closed = false
+  private closing: Promise<void> | null = null
 
   constructor(options: EngineOptions) {
     this.options = options
   }
 
   command(command: Command): Promise<void> {
+    if (this.closed) return Promise.resolve()
     if (command.type === 'interrupt') {
       if (this.stoppedBeforeStart.has(command.turnId)) return Promise.resolve()
       const turn = this.session?.active
@@ -130,17 +132,32 @@ export class SessionEngine {
     await this.session?.active?.output.flush()
   }
 
-  async close(): Promise<void> {
+  close(): Promise<void> {
+    if (this.closing) return this.closing
     this.closed = true
     for (const start of this.starts.values()) start.abort()
     const session = this.session
-    if (session) {
+    const turn = session?.active
+    let provider: SessionRuntime['provider'] = null
+    if (turn) {
+      turn.shutdown = true
+      this.cancel(turn)
+    } else if (session) {
       session.generation++
-      session.active?.controller.abort()
-      const provider = session.provider
+      provider = session.provider
       session.provider = null
-      await Promise.all([this.pending, provider?.close()])
-    } else await this.pending
+    }
+    this.closing = this.pending.then(async () => {
+      if (turn && session?.active === turn)
+        await this.finish({
+          type: 'result',
+          state: 'stopped',
+          userMessageIds: turn.messageIds,
+        })
+      else await turn?.closing
+      await provider?.close()
+    })
+    return this.closing
   }
 
   private cancel(turn: ActiveTurn): void {
@@ -152,9 +169,12 @@ export class SessionEngine {
     session.generation++
     const provider = session.provider
     session.provider = null
-    void provider
-      ?.stop()
-      .catch(() => this.options.warn('The canceled agent could not close.'))
+    if (provider) {
+      turn.closing = provider.stop()
+      void turn.closing.catch(() =>
+        this.options.warn('The canceled agent could not close.'),
+      )
+    }
   }
 
   private enqueue(action: () => Promise<void>): Promise<void> {

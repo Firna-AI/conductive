@@ -4578,19 +4578,25 @@ Depends on: 7r
 Apply the `fix after merge` items that the review of Milestone 7r
 recorded. Added on 7 November 2026.
 
-- [ ] Close the agent process at the end of each turn, as option A of
+- [x] Close the agent process at the end of each turn, as option A of
       `plans/follow-ups/idle-agent-login-lifetime.md` says. Delete that
-      item.
-- [ ] Let each write chain of the runner continue after a failure, as
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Let each write chain of the runner continue after a failure, as
       option A of `plans/follow-ups/runner-rejected-write-chains.md` says.
-      Delete that item.
-- [ ] End each turn that a runner process leaves behind, at a shutdown
+      Delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] End each turn that a runner process leaves behind, at a shutdown
       and at the next start, as option D of
       `plans/follow-ups/runner-shutdown-turn-end.md` says. Delete that
-      item.
-- [ ] Run the runner session tests on `DiskStorage`, as option A of
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Run the runner session tests on `DiskStorage`, as option A of
       `plans/follow-ups/runner-session-tests-store.md` says. Delete that
-      item.
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+
+Evidence: `.context/boat-native-remote-workspaces/7u/verification.md`.
+
+Agent call, 7 November 2026: Move the first-start measurement guide to
+`runner/scripts/README.md`, and keep its heading link in `runner/README.md`.
+This keeps the runner README within the file size limit.
 
 ## Milestone 8: Chat UI
 

@@ -19,6 +19,16 @@ export async function finishTurn(
   await turn.output.finish(
     stopped ? 'stopped' : event.type === 'failed' ? 'failed' : 'done',
   )
+  session.generation++
+  const provider = session.provider
+  session.provider = null
+  if (provider) turn.closing = provider.close()
+  let closeFailure: { error: unknown } | null = null
+  try {
+    await turn.closing
+  } catch (error) {
+    closeFailure = { error }
+  }
   let result = event
   if (
     !turn.controller.signal.aborted &&
@@ -34,31 +44,36 @@ export async function finishTurn(
       if (!turn.controller.signal.aborted) result = failureCause(error)
     }
   }
+  if (turn.shutdown && turn.baseline !== null && turn.files === null) {
+    turn.files = await options.changedSince(
+      turn.baseline,
+      new AbortController().signal,
+    )
+  }
   if (turn.controller.signal.aborted && !turn.stopped) return
   stopped ||= turn.stopped
-  if (result.type === 'failed' && !stopped) {
-    await emit({
-      type: 'turn.failed',
-      ...context,
-      error: { code: result.code, message: result.message },
-      retryMessageId: turn.retryMessageId,
-      durationMs,
-    })
+  try {
+    if (result.type === 'failed' && !stopped) {
+      await emit({
+        type: 'turn.failed',
+        ...context,
+        error: { code: result.code, message: result.message },
+        retryMessageId: turn.retryMessageId,
+        durationMs,
+      })
+    } else {
+      await emit({
+        type: 'turn.completed',
+        ...context,
+        state: stopped ? 'stopped' : 'finished',
+        durationMs,
+        files: turn.files ?? [],
+        omittedFileCount: 0,
+        userMessageIds: turn.messageIds,
+      })
+    }
+  } finally {
     session.active = null
-    session.generation++
-    const provider = session.provider
-    session.provider = null
-    await provider?.close()
-  } else {
-    await emit({
-      type: 'turn.completed',
-      ...context,
-      state: stopped ? 'stopped' : 'finished',
-      durationMs,
-      files: turn.files ?? [],
-      omittedFileCount: 0,
-      userMessageIds: turn.messageIds,
-    })
   }
-  session.active = null
+  if (closeFailure) throw closeFailure.error
 }

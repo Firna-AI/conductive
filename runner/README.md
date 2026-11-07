@@ -28,19 +28,20 @@ These facts belong to this implementation, not to the protocol docs.
 - Both agents run without approval prompts, with the rights of the service
   user. Both get the `computer` MCP server of the sandbox.
 - The runner gives the login of a turn only to the agent process of its
-  sender. Another sender's turn, or part of a turn, starts a new agent
-  process on the same conversation. If a part fails, the turn fails, and its
-  retry names the first message of that part. Input that still waits does
-  not run, so the other member must send it again.
+  sender. Each end of a turn closes its agent process, so no idle agent
+  process keeps a login. The next turn starts a new agent process on the
+  saved conversation, when one exists. A part of a turn from another sender
+  also starts a new agent process on the same conversation. If a part fails,
+  the turn fails, and its retry names the first message of that part. Input
+  that still waits does not run, so the other member must send it again.
 - Each session owns its agent start, requests, scans, and shutdown. Stop
   closes the agent process of that session, discards its unread input, and
   cancels its pending work. Other sessions keep streaming and can stop. A
-  stopped running turn sends one end event, after its `turn.started`. The
-  next turn resumes its saved conversation when one exists.
+  stopped running turn sends one end event, after its `turn.started`.
 - Stop for a pending turn sends one stopped `turn.completed` at once. It
-  cancels the start and closes the idle agent. No `turn.started` follows,
-  also after a held save returns. A second Stop sends nothing. A saved end
-  suppresses another end. An unknown turn gets a stopped completion.
+  cancels the start. No `turn.started` follows, also after a held save
+  returns. A second Stop sends nothing. A saved end suppresses another end.
+  An unknown turn gets a stopped completion.
 - The workspace Durable Object creates the turn IDs and owns the waiting
   input. Only a `turn` command starts a turn. A `message` command reaches
   only the running turn that it names. Others get only a local warning. An
@@ -58,8 +59,20 @@ These facts belong to this implementation, not to the protocol docs.
   counter, the unconfirmed events, the tree and changes revisions, the
   conversation references, and `turns` records of started turns. It holds no
   command and no login. The saves of `turn.started` and its end write that
-  record, and the confirm of the end removes it. After a restart, an ended
-  turn never runs again, and an unfinished turn gets one stopped end.
+  record, and the confirm of the end removes it.
+- A failed save rejects only its own call, and later saves and events
+  continue. Each save writes the whole state from memory, so a later save
+  includes the change of the failed call. A send and a resend use only saved
+  events, so the event of a failed save goes out only after a later save
+  works. One event can leave the output filter as several events, because
+  the filter first releases its held text. The runner tries to save each of
+  them, also after an earlier one fails.
+- At a normal shutdown, the runner sends one stopped end for each running
+  turn, before it closes the connection. Each of these ends lists the files
+  that the turn changed. After a restart, an ended turn never runs again. An
+  unfinished turn, such as after a crash, gets one stopped end, and no agent
+  starts for it. That end lists no files, because the state file holds no
+  record of the files at the start of the turn.
 - File reads and diffs use the shared UTF-8 decoder and keep a leading byte
   order mark. A valid path can hold a tab, a newline, or a backslash. Each
   path must still resolve inside the repository and pass the `.git` check.
@@ -160,8 +173,9 @@ The unit has these settings:
 - `UMask=0077` makes the new files of the runner and its agents private to
   the user.
 - A stop sends `SIGTERM` to the runner and its agent processes. The runner
-  closes its agents and its connection, then exits with code 0. After 15
-  seconds, systemd ends each remaining process.
+  closes its agents, ends its running turns, and closes its connection. Then
+  it exits with code 0. After 15 seconds, systemd ends each remaining
+  process.
 
 `service/start.sh` exports each variable of `/run/ascii-secrets/env.sh`,
 the file where Boat writes the variables of the sandbox. Then it starts
@@ -218,8 +232,9 @@ The runner could not start. Check its configuration and saved state.
   checks no event sizes.
 - `test-support/` holds the runner fakes: a fake Claude SDK query, a fake
   Codex App Server, fake agent processes, and a temporary Git repository.
-  `harness.ts` starts a `Runner` with them. `wire.ts` uses the production
-  `DiskStorage` in a temporary folder, unless a test passes its own storage.
+  `harness.ts` starts a `Runner` with them. The session fixture in
+  `engine.ts` and the wire fixture in `wire.ts` use the production
+  `DiskStorage` in a temporary folder. A wire test can pass its own storage.
 - The tests need Git. They need no network, no agent login, no cloud
   account, and no cloud computer. No test starts a real agent program, a
   real Worker, or a real sandbox. So a passing run does not show that a
@@ -229,39 +244,8 @@ The runner could not start. Check its configuration and saved state.
 
 ## First-start measurements
 
-Two tools measure the time of the first agent start after a resume. The
-install script copies both into the install folder. The install folder is
-an argument of the install script, so a measurement can use a folder
-inside or outside the home folder.
-
-- `measure.mjs` reads the `claude` program once and prints one JSON line.
-  By default, it starts no agent, and the line says that it measured no
-  resume.
-- With `CONDUCTING_MEASURE_MODE=agent`, `measure.mjs` sends one prompt to
-  a real agent. It prints the time from its own start to the first agent
-  text. Run it once after each real resume.
-- Each agent sample has a placement. `home` is an install folder inside
-  the home folder. `system` is an install folder outside it.
-- `compare.mjs <file>...` reads the JSON lines of the agent samples. It
-  gives the median time of each placement. It names the faster placement
-  only when each placement has samples from three or more resumes.
-- Local runs cannot choose a placement. Only samples from real resumes,
-  with a real login, can.
-
-The agent mode needs these variables:
-
-| Variable                        | Value                                 |
-| ------------------------------- | ------------------------------------- |
-| `CONDUCTING_MEASURE_AGENT`      | `claude` or `codex`                   |
-| `CONDUCTING_MEASURE_MODEL`      | The model of the prompt               |
-| `CONDUCTING_MEASURE_LOGIN`      | A real login for that agent           |
-| `CONDUCTING_MEASURE_LOGIN_KIND` | `token` or `api-key`, for Claude only |
-| `CONDUCTING_MEASURE_PLACEMENT`  | `home` or `system`                    |
-| `CONDUCTING_MEASURE_RESUME_ID`  | A label of the real resume            |
-| `CONDUCTING_COMPUTER_MCP_URL`   | The URL of the `computer` MCP server  |
-
-`CONDUCTING_REPOSITORY` and `CONDUCTING_HOME` are optional. Their
-defaults are the current folder and the home folder of the user.
+The [first-start measurement guide](scripts/README.md) describes the two
+tools that time the first agent start after a resume.
 
 ## Key code
 
@@ -275,6 +259,8 @@ defaults are the current folder and the home folder of the user.
 - `src/link.ts`, `src/state.ts`, `src/socket.ts`, `src/commands.ts`, and
   `src/stored-events.ts`: the hello, welcome, confirm, and resend rules, the
   state file, the WebSocket, and checks of messages and saved events.
+- `src/serial-queue.ts`: the ordered queue of the saves and the events. A
+  failed step rejects only its own call, and later steps still run.
 - `src/engine.ts`, `src/engine-runtime.ts`, and `src/turn-output.ts`:
   session queues, cancelable turns, sender changes, controls, and text deltas.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and

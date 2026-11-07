@@ -13,6 +13,7 @@ import { jsonBytes } from './event-limits'
 import { parseEnvelope, parseEvent } from './stored-events'
 import { array, integer, object, oneOf, string } from './parse'
 import { parseSavedTurn, recordTurn, type SavedTurn } from './state-turns'
+import { SerialQueue } from './serial-queue'
 
 export interface SavedSession {
   sessionId: string
@@ -107,7 +108,7 @@ export class EventStore {
   private state: RunnerState
   private committed: RunnerState
   private readonly storage: StateStorage
-  private writes: Promise<void> = Promise.resolve()
+  private readonly writes = new SerialQueue()
 
   private constructor(storage: StateStorage, state: RunnerState) {
     this.storage = storage
@@ -195,10 +196,9 @@ export class EventStore {
 
   private save(): Promise<void> {
     const snapshot = structuredClone(this.state)
-    this.writes = this.writes.then(async () => {
+    return this.writes.run(async () => {
       await this.storage.write(snapshot)
       this.committed = structuredClone(snapshot)
     })
-    return this.writes
   }
 }

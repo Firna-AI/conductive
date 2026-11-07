@@ -1,27 +1,18 @@
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 import { onTestFinished } from 'vitest'
 
 import type { AgentChatEvent } from '../../src/shared/chat-events'
 import { AgentEngine } from '../src/engine'
 import type { EngineOptions } from '../src/engine-session'
-import { EventStore, type RunnerState } from '../src/state'
+import { DiskStorage, EventStore } from '../src/state'
 import { FakeProviders } from './providers'
 
 export async function engineFixture(overrides: Partial<EngineOptions> = {}) {
-  let saved: RunnerState = {
-    streamId: 'engine-test-stream',
-    nextEventNumber: 1,
-    confirmedThrough: 0,
-    outbox: [],
-    sessions: [],
-    fileRevisions: { tree: 0, changes: 0 },
-    turns: [],
-  }
-  const storage = {
-    read: async () => saved,
-    write: async (value: RunnerState) => {
-      saved = structuredClone(value)
-    },
-  }
+  const directory = await mkdtemp(join(tmpdir(), 'conducting-engine-'))
+  const storage = new DiskStorage(join(directory, 'state.json'))
   const providers = new FakeProviders()
   const events: AgentChatEvent[] = []
   const warnings: string[] = []
@@ -36,6 +27,7 @@ export async function engineFixture(overrides: Partial<EngineOptions> = {}) {
     checkpoint: async () => new Map<string, string>(),
     changedSince: async () => [],
     emit: async (event: AgentChatEvent) => {
+      await store.append(event, options.now())
       events.push(structuredClone(event))
     },
     warn: (message: string) => {
@@ -44,6 +36,12 @@ export async function engineFixture(overrides: Partial<EngineOptions> = {}) {
     ...overrides,
   }
   const engine = new AgentEngine(options)
-  onTestFinished(() => engine.close())
+  onTestFinished(async () => {
+    try {
+      await engine.close()
+    } finally {
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
   return { engine, providers, events, warnings, store, storage, options }
 }

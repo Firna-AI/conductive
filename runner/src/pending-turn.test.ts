@@ -28,15 +28,17 @@ it('keeps idle model changes local and applies them inside the next cancelable t
   const next = sessionTurn('model', 'next-model')
   next.message.choice = choice
   await h.engine.command(next)
-  expect(provider.choices).toEqual([choice])
-  expect(provider.messages.map((command) => command.message.id)).toEqual([
-    'message-model',
-    'message-next-model',
-  ])
+  expect(provider.closed).toBe(true)
+  expect(provider.choices).toEqual([])
+  expect(h.providers.processes).toHaveLength(2)
+  expect(h.providers.latest.options.choice).toEqual(choice)
+  expect(
+    h.providers.latest.messages.map((command) => command.message.id),
+  ).toEqual(['message-next-model'])
   expect(h.warnings).toEqual([])
 })
 
-it('stops a turn during its own session save and closes idle agents without a late start or duplicate end', async () => {
+it('stops a turn during its own session save without late starts or duplicate ends', async () => {
   const h = await engineFixture()
   const entered = deferred<void>()
   const release = deferred<void>()
@@ -53,6 +55,7 @@ it('stops a turn during its own session save and closes idle agents without a la
   try {
     const stopped = h.engine.command(stop('saving'))
     const repeated = h.engine.command(stop('saving', 'turn-saving', 'repeated'))
+    await Promise.all([starting, stopped, repeated])
     expect(h.events).toEqual([
       {
         type: 'turn.completed',
@@ -65,7 +68,6 @@ it('stops a turn during its own session save and closes idle agents without a la
         userMessageIds: [],
       },
     ])
-    await Promise.all([starting, stopped, repeated])
     expect(h.providers.processes).toEqual([])
     expect(h.store.snapshot.turns).toEqual([])
   } finally {
