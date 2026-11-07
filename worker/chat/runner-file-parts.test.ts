@@ -148,6 +148,7 @@ it('refuses inconsistent parts, duplicate paths, and gaps or interleaving in tre
       reason: 'invalid',
       sessionId: null,
       turnId: null,
+      ...(runnerEventNumber === 4 ? { repairFailed: true } : {}),
     })),
   ])
 })
@@ -265,6 +266,7 @@ it('refuses inconsistent changes metadata and empty multipart reports', async ()
         reason: 'invalid',
         sessionId: null,
         turnId: null,
+        ...(index > 0 ? { repairFailed: true } : {}),
       },
     ])
     expect(await files.changes()).toEqual(stored)

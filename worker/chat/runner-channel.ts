@@ -7,6 +7,7 @@ import { RunnerDelivery } from './runner-delivery'
 import { parseRunnerTransport } from './runner-input'
 import type { ChatStore } from './store'
 import { storeRunnerReceipt } from './runner-receipt'
+import { RepairDelivery } from './repair-delivery'
 import type {
   ChatDependencies,
   ChatCallbackPublisher,
@@ -18,6 +19,7 @@ import type {
 export class RunnerChannel {
   private current: ActiveRunner | null = null
   private readonly delivery: RunnerDelivery
+  private readonly repairs: RepairDelivery
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
   private readonly publish: (events: readonly WorkspaceEventEnvelope[]) => void
@@ -31,6 +33,7 @@ export class RunnerChannel {
     this.dependencies = dependencies
     this.publish = publish
     this.delivery = new RunnerDelivery(store, dependencies, publish)
+    this.repairs = new RepairDelivery(store, publish)
   }
 
   open(workspace: RunnerWorkspaceRecord, peer: RunnerPeer): Promise<void> {
@@ -92,7 +95,10 @@ export class RunnerChannel {
             message.streamId,
           )
           return {
-            cursor: await transaction.cursor(message.streamId),
+            cursor: await transaction.repairs.confirmedThrough(
+              message.streamId,
+              await transaction.cursor(message.streamId),
+            ),
             ready: await transaction.streamReady(message.streamId),
           }
         },
@@ -106,6 +112,7 @@ export class RunnerChannel {
         streamId: message.streamId,
         confirmedThrough: welcome.cursor,
       })
+      await this.repairs.flush(active)
       void this.store
         .run(() => this.flush())
         .catch(() => {
@@ -162,6 +169,7 @@ export class RunnerChannel {
       })
       return
     }
+    await this.repairs.flush(active)
     active.peer.send({
       type: 'confirm',
       streamId: message.streamId,
@@ -183,12 +191,19 @@ export class RunnerChannel {
 
   async flush(): Promise<void> {
     const active = this.current
-    if (active)
+    if (active) {
+      try {
+        await this.repairs.flush(active)
+      } catch (error) {
+        this.close()
+        throw error
+      }
       await this.delivery.flush(
         active,
         () => this.current === active,
         () => this.close(),
       )
+    }
   }
 
   sendFileCommand(workspaceId: string, command: RunnerFileCommand): boolean {

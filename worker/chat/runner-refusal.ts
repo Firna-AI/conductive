@@ -6,6 +6,7 @@ import { isRecord } from '../http'
 import { RunnerFileReports } from '../files/runner-reports'
 import type { IncomingRunnerEnvelope } from './runner-input'
 import type { ChatTransaction } from './store'
+import { refuseReportRepair } from './repair-refusal'
 import { TurnLifecycle } from './turn-lifecycle'
 
 export function runnerEventType(
@@ -57,6 +58,7 @@ export async function refuseRunnerEvent(
   transaction: ChatTransaction,
   message: IncomingRunnerEnvelope,
   reason: RunnerEventRefusalReason,
+  randomId: () => string,
 ): Promise<void> {
   const type = runnerEventType(message.event)
   const workspaceLevel =
@@ -77,6 +79,9 @@ export async function refuseRunnerEvent(
     reason,
     sessionId: target?.session.id ?? null,
     turnId: target?.turn.id ?? null,
+    ...((await refuseReportRepair(transaction, message, randomId))
+      ? { repairFailed: true as const }
+      : {}),
   }
   const occurredAt =
     typeof message.occurredAt === 'number' &&

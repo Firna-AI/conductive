@@ -9,6 +9,7 @@ import {
 import { refuseRunnerEvent } from './runner-refusal'
 import type { ChatTransaction } from './store'
 import { prepareAgentEvent } from './turn-events'
+import { observeRepairPart } from './repair-refusal'
 
 /** Only validation errors become permanent refusals. Storage and sends must retry. */
 export async function storeRunnerReceipt(
@@ -30,6 +31,7 @@ export async function storeRunnerReceipt(
       transaction,
       message,
       error.code === 'runner_event_too_large' ? 'too_large' : 'invalid',
+      randomId,
     )
     return { ready: false, stored: transaction.emitted[0] }
   }
@@ -59,6 +61,7 @@ export async function storeRunnerReceipt(
         transaction,
         message,
         inactive ? 'turn_not_active' : 'invalid',
+        randomId,
       )
       return { ready: false, stored: transaction.emitted[0] }
     }
@@ -76,15 +79,21 @@ export async function storeRunnerReceipt(
       const complete = await new RunnerFileReports(transaction.files).accept(
         event,
       )
-      if (complete) await transaction.emit(complete, parsed.occurredAt)
+      if (complete) {
+        await transaction.emit(complete, parsed.occurredAt)
+        if (complete.type !== 'files.changed')
+          await transaction.repairs.remove(complete.type)
+      } else await observeRepairPart(transaction, message.streamId, event)
     } catch (error) {
       if (!(error instanceof InvalidRunnerReport)) throw error
-      await refuseRunnerEvent(transaction, message, 'invalid')
+      await refuseRunnerEvent(transaction, message, 'invalid', randomId)
     }
   } else if (apply) {
     await apply()
   } else if (!('sessionId' in event)) {
     await transaction.emit(event, parsed.occurredAt)
+    if (event.type === 'start.updated' || event.type === 'workspace.title')
+      await transaction.repairs.remove(event.type)
   }
   return {
     ready: false,

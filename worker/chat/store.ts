@@ -12,6 +12,7 @@ import {
   type StoredWorkspaceEvent,
 } from './history-storage'
 import type { FilesStorage } from '../files/storage'
+import { ReportRepairs } from './report-repairs'
 import type {
   ChatData,
   ChatStorage,
@@ -38,6 +39,7 @@ export class ChatTransaction {
   readonly now: number
   readonly emitted: WorkspaceEventEnvelope[] = []
   readonly files: FilesStorage
+  readonly repairs: ReportRepairs
   private readonly data: ChatData
   private through: number
   private commandThrough: number
@@ -45,6 +47,7 @@ export class ChatTransaction {
   constructor(data: ChatData, metadata: ChatMetadata, now: number) {
     this.data = data
     this.files = chatFilesStorage(data)
+    this.repairs = new ReportRepairs(data)
     this.workspaceId = metadata.workspaceId
     this.through = metadata.through
     this.commandThrough = metadata.commandThrough

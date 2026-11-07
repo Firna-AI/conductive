@@ -42,12 +42,13 @@ export async function createRunnerLimitsFixture() {
   const hooks: WorkspaceEventEnvelope[] = []
   let closed = 0
   let failSend = false
+  let commandSequence = 0
   let store = new ChatStore(storage, () => 25)
   const dependencies: ChatDependencies = {
     now: () => 25,
     scheduleBrowserCheck: () => () => undefined,
     readBrowserAccess: async () => [],
-    randomId: () => 'next-turn',
+    randomId: () => `command-${++commandSequence}`,
     resolveLogin: async () => null,
     resolveAttachments: async () => ({ attachments: [], paths: [] }),
     receiveFileResult: async () => undefined,
