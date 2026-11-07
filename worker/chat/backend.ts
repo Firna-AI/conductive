@@ -9,16 +9,17 @@ import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { chatDependencies } from './dependencies'
-import { randomToken } from '../security/crypto'
 import {
   authorizeChatBrowser,
   type BrowserAccess,
 } from './browser-authorization'
+import { subscribeBrowser } from './browser-subscription'
 import { afterNumber, chatRoute } from './http-routes'
 import { BrowserTabs } from './browser-tabs'
 import { tokenWorkspace } from './queries'
 import { WorkspaceOperations } from './workspace-operations'
 import type { ChatWorkspaceSummary } from './workspace-summary'
+import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore, type ChatTransaction } from './store'
 import {
@@ -110,19 +111,14 @@ export class WorkspaceChat {
             'The archived chat is read-only.',
           )
         }
-        const response = await this.store.change(
-          access.workspace.id,
-          (transaction) =>
-            chatRoute(
-              request,
-              access.suffix,
-              access.context,
-              transaction,
-              this.dependencies,
-            ),
-          (events) => this.publish(events),
+        const response = await chatRoute(
+          request,
+          access.suffix,
+          access.context,
+          this.operation(access.workspace.id),
+          this.dependencies,
         )
-        await this.runner.flush()
+        if (write) await this.runner.flush()
         return privateResponse(response)
       })
     } catch (error) {
@@ -245,31 +241,23 @@ export class WorkspaceChat {
     after: number,
     peer: BrowserPeer,
   ): Promise<() => void> {
-    return this.store.run(async () => {
-      const tabId = randomToken()
-      const unsubscribe = await this.browsers.add(
-        peer,
-        {
-          kind: 'workspace',
-          workspaceId: access.workspace.id,
-          orgId: access.workspace.orgId,
-          userId: access.context.user.id,
-          sessionId: access.context.sessionId,
-        },
-        tabId,
-      )
-      try {
-        const history = await this.store.read(access.workspace.id, (view) =>
-          view.history(after),
-        )
-        this.browsers.check(peer)
-        peer.send({ type: 'history', history })
-        return unsubscribe
-      } catch (error) {
-        unsubscribe()
-        throw error
-      }
+    return subscribeBrowser({
+      store: this.store,
+      browsers: this.browsers,
+      operation: this.operation(access.workspace.id),
+      access,
+      after,
+      peer,
     })
+  }
+
+  private operation(workspaceId: string): ChatOperation {
+    return new ChatOperation(
+      this.store,
+      workspaceId,
+      this.dependencies,
+      this.publish,
+    )
   }
 
   private bind(workspaceId: string): void {

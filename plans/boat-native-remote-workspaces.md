@@ -2109,6 +2109,20 @@ from C to D.
 - **Action:** ask the user, because D changes decision 24, and each
   option adds behaviour that no requirement covers.
 - **Chosen:** D, by the user on 6 November 2026. It changes decision 24.
+- **Changed on 7 November 2026:** decision 105 F changes this decision for
+  sessions:
+  - Each session runs on the agent login of its starter, the member who
+    started the session. A session never moves to the login of another
+    member.
+  - A message of any member during a turn joins that turn at once, and the
+    other members spend the login of the starter. So the runner no longer
+    starts the agent again when the sender changes.
+  - When the login of the starter cannot be used, a message of another
+    member opens a new, empty session on that member's own login. This
+    happens, for example, after the starter leaves the org or removes the
+    login. The new session links to the first session (decision 115 A).
+  - A member cannot refuse the use of their login by others for now
+    (decision 116 A).
 
 ### 50. Decide the reach of a cloud computer's GitHub token
 
@@ -3856,8 +3870,9 @@ Added on 8 November 2026 from the check of finding 10 of PR #45.
     workspace.
   - **C.** Skip it, and keep the disk with a saved snapshot.
 - **Recommendation:** B.
-- **Open:** the user asked for an explanation on 8 November 2026.
-  `plans/follow-ups/suspended-owner-disk-restart.md` holds the item.
+- **Chosen:** B, by the user on 8 November 2026, after an explanation.
+  Milestone 15m states the rule in the protocol, and the error of such a
+  workspace says that an admin can give it to another member.
 
 ### 126. Decide when a changed Terms revision applies
 
@@ -3885,6 +3900,25 @@ Added on 8 November 2026 from the check of finding 8 of PR #46
   - **F.** Draw the screens on the site as HTML.
 - **Recommendation:** D.
 - **Chosen:** A, by the user on 8 November 2026.
+
+### 128. Give each build and start a time limit
+
+Added on 8 November 2026 from the check of finding 2 of PR #47
+(Milestone 5c).
+
+- **Background:** Builds and starts run as saved jobs that alarms move
+  forward. A script that never exits, or a cloud computer that never
+  becomes ready, keeps a job running forever, and an org's first build
+  then blocks every new workspace.
+- **Options:**
+  - **A.** Change nothing beyond the retry limit of Milestone 5c.
+  - **B.** A Cancel action for a running build and start.
+  - **C.** A time limit for each whole job from its start, for example 60
+    minutes for a build and 20 minutes for a start.
+  - **D.** A time limit for each script.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 8 November 2026, who also asked that the
+  app tell the user of the limit. Milestone 5d applies it.
 
 ## Design
 
@@ -4942,6 +4976,25 @@ Added on 8 November 2026.
 - [ ] Apply the recorded option of `plans/follow-ups/members-late-role-failure-after-removal.md`, and
       delete that item.
 
+
+## Milestone 5d: Time limits for builds and starts
+
+Tags: ui
+
+Depends on: 5c
+
+Apply decision 128 C. Added on 8 November 2026.
+
+- [ ] Draw the limits in the mockups: the build screen and the workspace
+      start screen say how long a build and a start can run, and a failed
+      build or start says that it passed its limit. Then build both
+      screens, and compare each with its mockup.
+- [ ] Apply the recorded option of
+      `plans/follow-ups/lifecycle-job-time-limit.md`: a time limit for each
+      whole build and start, from its start, with the existing failure
+      handling. State the limits in
+      `docs/protocol/workspaces-and-sandboxes.md`, and delete that item.
+
 ## Milestone 6: App shell and workspaces
 
 Tags: ui
@@ -5270,22 +5323,43 @@ Depends on: 7t
 Apply decision 105 F. Added on 7 November 2026. Merge the primary
 branch after Milestone 8k merges, before the chat changes.
 
-- [ ] Run each turn of a session on the login of the member who started
+- [x] Run each turn of a session on the login of the member who started
       the session, whoever sends the message. A message of any member
       during a running turn joins that turn at once. Update the chat
       protocol and the section "Agent logins in a sandbox" of the access
       protocol, and add a note to decision 49.
-- [ ] Remove the login switch inside a turn from the runner, so that a
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+- [x] Remove the login switch inside a turn from the runner, so that a
       session never changes its login.
-- [ ] Show in the composer whose login the session uses. When the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+- [x] Show in the composer whose login the session uses. When the
       starter's login cannot be used, such as after the starter leaves the
       org or removes the login, a member's message opens a new, empty
       session on the member's own login, with a link to the first session
       (decision 115 A). Draw it in the chat mockups first, and compare the
       screens with them.
-- [ ] Test a second member's message during a turn, and a starter whose
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+- [x] Test a second member's message during a turn, and a starter whose
       login cannot be used, in two tabs. Delete
       `plans/follow-ups/one-sender-per-turn.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+
+Agent calls, 7 November 2026:
+
+- Store the starter from session creation, separate from message senders.
+- Return the target session with each Send or Retry reply. This lets the
+  browser open a linked session before its events arrive.
+- Treat an older session with no known starter as having no usable login.
+  Keep its history. Its next message starts a linked session. The first
+  message cannot prove who created an empty session.
+- Keep accepted input in its session after a later login removal. Use the
+  existing queued failure and running hold. Retry can start a linked
+  session later.
+- Move the request draft with automatic linked-session navigation.
+  Preserve a newer source draft and existing target work. This keeps
+  typing with the accepted message.
+
+Evidence: `.context/boat-native-remote-workspaces/7w/verification.md`.
 
 ## Milestone 7v: Reports after a failed file read
 

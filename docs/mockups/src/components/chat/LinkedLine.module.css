@@ -1,0 +1,43 @@
+/*
+ * Centred and muted, as the other event lines of the chat. A narrow chat
+ * wraps the text into balanced lines, also a title without spaces, and the
+ * icon leads the first one.
+ */
+.line {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.icon {
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+
+/*
+ * The title of the first session is a link in the link colour, whether the
+ * caller gives an anchor, as the mockups do, or a button that opens the
+ * session, as the app does. On a phone the touch minimum of the frame makes
+ * it a 44 px target, and a long title wraps, centred, inside it. On desktop
+ * the minimum is zero, so the link keeps the height of its text.
+ */
+.line a,
+.line button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--ui-touch-min, 0px);
+  max-width: 100%;
+  color: var(--ui-link);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.line a:hover,
+.line button:hover {
+  text-decoration: underline;
+}

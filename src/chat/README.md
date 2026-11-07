@@ -112,51 +112,9 @@ members from the models of the app.
 
 ## Rules for this code
 
-- The stream cursor spans the whole workspace: every session, file, and
-  workspace event. It drops a resent event, holds an event after a gap until
-  the gap fills, and ignores the events of another workspace.
-- Each session keeps its own event log. A session that opens later loads its
-  full stored history, whose numbers can be older than the stream's cursor,
-  so a history never goes through the stream's duplicate check.
-- Browser readers preserve the required tool-detail and turn-file omission counts.
-  These new counts are non-negative safe integers. Missing counts make an event unreadable.
-- Tool transcript items keep `tool.omittedDetailBytes`.
-  `Transcript.turnCompletions` keeps each completion event by turn ID, including stopped completions and `omittedFileCount`.
-- A tool call shows the size of output that the runner left out, such as "1.2 MB left out".
-  A folded run of calls shows the total of its calls' current counts, so a finished run still names it.
-- A finished turn ends its file list with the files that the runner left out, such as "47 more files".
-  A stopped line adds the count of its stopped completion: "You stopped the agent · 5 changed files not listed".
-  The counts come from `turnCompletions`. A zero count shows nothing.
-- Each refusal marker of a session becomes one `lost` item at its place among the events, which shows one line.
-  The transcript keeps the marker only in that item. A repeat of the same marker replaces its item.
-  The line names the lost data and the reason in plain words, and never the stream, number, or event type.
-  No line says "this turn", because a line can follow a newer turn.
-  Nullable turn context stays intact. Markers without a session stay outside per-session logs.
-  The chat keeps no marker without a session, and shows nothing after such a loss.
-  A notice beside the data shows only when the fresh full report that repairs it is lost too. The chat builds no such notice.
-- `Transcript.turns` lists the turns that accepted events named, in the order of their first event, and whether each one ended.
-  The last one is the newest turn. A turn ends with its completion or failure, with a refused end while it runs, or when a newer turn starts.
-- Each item stays with its turn: before any request or item of a later turn, and before a message that no turn has taken yet.
-- An accepted event of a turn that has ended shows inside that turn, before the row where the turn ended.
-  It brings back no Working row and no Stop, and it changes neither a running turn nor the newest turn.
-  A running tool of an ended turn shows as stopped. The files of a late end show as a file row, and the stopped line keeps its member.
-- A refusal marker starts no turn. A refused `turn.completed` or `turn.failed` ends its turn only while that turn runs.
-  Its running calls show as stopped, its Stop request clears, and no time, files, or Try again appear.
-  A marker of an ended turn, of a turn that never started, or without a turn ends nothing.
-- Try again shows only on the failed item that names the retry message of the newest session record, as
-  [Messages](../../docs/protocol/chat-and-events.md#messages) says. The order of the transcript items gives no permission.
-  A read-only chat offers no Try again.
-- Each session log takes the `session.updated` records of its session with its other events.
-  It keeps the `retryMessageId` of the record with the highest event number as `Transcript.retryMessageId`.
-  So a record that arrives late, such as in a history load, never brings back an older Try again or hides a newer one.
-- `SessionLog.takeListed` takes the record of the session list that the chat reads after the history.
-  That record counts at the event number that the stream starts after.
-  When the log already holds a newer record, the listed record changes nothing. A later `session.updated` event replaces it.
-- `retryItemId` picks one failed item. A turn that continues the unanswered messages of a finished turn takes their IDs.
-  So a late failure of the older turn can name the same message. Then only the item of the newer known turn offers Try again.
-- The Worker refuses an old Try again, such as from a second tab that missed newer events, with `409 retry_not_available`.
-  The chat then shows the notice "The turn didn't restart" with the Worker's plain message.
-- Ordered history folding preserves these fields and lines across completion and failure events.
+- [Transcript rules](transcript.md) give the rules of the stream cursor,
+  the session logs, the transcript items and their counts, the lost lines,
+  the turns, and Try again.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
   stream. One load runs at a time for each session, and a failed load waits
@@ -173,14 +131,8 @@ members from the models of the app.
   change, so a closed session stays closed. The controller's `select`,
   `requestClose`, and `reopen` take this path while the workspace is
   archived, and the server path otherwise.
-- Each draft has an identity. When a model of the other agent moves the draft
-  to a new session, its files that still upload and its send in flight
-  finish on the draft there.
-- The chat chooses the ID of that new session, so the draft moves in the
-  same snapshot that first shows the session, from the stream or from the
-  reply. A later record or reply never moves a draft again, so a tab that
-  the user types in keeps its text. The reply then removes the sent files
-  that the backend did not keep from the draft that moved, wherever it is.
+- [Sessions, logins, and drafts](sessions.md) give the rules of the draft
+  moves, the login of each session, and the linked sessions.
 - A Stop request records the member who pressed Stop, and ends nothing. The
   turn ends when its end says stopped. A stop with no request names nobody:
   "The agent stopped".
@@ -218,10 +170,11 @@ members from the models of the app.
 
 ## Development page
 
-The [chat development page](dev/README.md) shows the chat on a fake API
-with state, with no Worker. Its address chooses the scenario, the state of
-the sandbox, the role, and the Mac. `npm run dev` also shows the chat, in
-the whole app, with the limits that [Run it](../app/README.md#run-it) gives.
+The [development page README](dev/README.md) gives the command that runs
+the page, the options of its address, and what the page does. The page
+shows the chat on a fake API with state, with no Worker. `npm run dev` also
+shows the chat, in the whole app, with the limits that
+[Run it](../app/README.md#run-it) gives.
 
 ## Tests
 
@@ -232,6 +185,13 @@ on `FakeApiServer` and the recorded events, and render the chat with
 chat in the whole app.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
+`state/linked-replies.test.tsx` drives replies of Send and Try again that
+name a linked session, in both orders, and two chats with different readers
+on one fake stream. `components/SessionLogin.test.tsx` renders the login
+line and its notices. `components/SourceLink.dom.test.tsx` presses the link
+of a linked session to its open and its closed source. In an archived
+workspace, it opens a linked session that closed before the archive from the
+session history. Its source link writes nothing.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -268,6 +228,12 @@ check in the Mac app.
   that first shows the new session.
 - `state/session-records.ts`: the local versions of the session records and
   of the workspace record.
+- `state/session-login.ts`: whose login a message uses, from the session
+  record and the reader, and the words of the line under the composer.
+- `state/linked-replies.ts`: the message and the focus of a reply that names
+  a linked session.
+- `components/SourceLine.tsx`: the line that links a linked session to its
+  source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
   event from the mockups' `lostCopy.ts`.
@@ -283,7 +249,8 @@ check in the Mac app.
 - `device/`: the Mac commands. Their [README](device/README.md) names
   their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its
-  Mac, and the `loss` scenario in `dev/dev-loss.ts`.
+  Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
+  in `dev/dev-logins.ts`.
 
 
 ### Related docs

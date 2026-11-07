@@ -15,6 +15,7 @@ import type { FilesStorage } from '../files/storage'
 import type { GitHubStateTransaction } from '../github/contracts'
 import { ReportRepairs } from './report-repairs'
 import { WorkspaceSummaryProjection } from './workspace-summary'
+import { normalizeSession, type StoredSession } from './session-storage'
 import type {
   ChatData,
   ChatStorage,
@@ -68,8 +69,9 @@ export class ChatTransaction {
     this.now = now
   }
 
-  session(id: string): Promise<Session | undefined> {
-    return this.data.get(key('session', id))
+  async session(id: string): Promise<Session | undefined> {
+    const session = await this.data.get<StoredSession>(key('session', id))
+    return session ? normalizeSession(session) : undefined
   }
   message(id: string): Promise<UserMessage | undefined> {
     return this.data.get(key('message', id))
@@ -86,9 +88,9 @@ export class ChatTransaction {
   async sessions(): Promise<Session[]> {
     return [
       ...(
-        await this.data.list<Session>({ prefix: `${ROOT}session:` })
+        await this.data.list<StoredSession>({ prefix: `${ROOT}session:` })
       ).values(),
-    ]
+    ].map(normalizeSession)
   }
   async turns(): Promise<StoredTurn[]> {
     return [
@@ -139,6 +141,12 @@ export class ChatTransaction {
   }
   saveMessage(message: UserMessage): Promise<void> {
     return this.data.put(key('message', message.id), message)
+  }
+  messageSource(messageId: string): Promise<string | undefined> {
+    return this.data.get(key('message-source', messageId))
+  }
+  saveMessageSource(messageId: string, sessionId: string): Promise<void> {
+    return this.data.put(key('message-source', messageId), sessionId)
   }
   saveTurn(turn: StoredTurn): Promise<void> {
     return this.summary

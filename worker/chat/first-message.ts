@@ -118,7 +118,13 @@ export async function admitFirstMessage(
     first.workspaceId,
     first.request.attachmentIds,
   )
-  await createSession(transaction, first.request.choice, first.sessionId)
+  await createSession(
+    transaction,
+    first.request.choice,
+    first.sessionId,
+    sender,
+    dependencies,
+  )
   let turnId = first.turnId
   const accepted = await acceptMessage(
     transaction,

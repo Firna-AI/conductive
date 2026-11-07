@@ -6,6 +6,7 @@ import {
   scheduleConnectionCheck,
 } from '../security/connection-access'
 import { loginResolver } from './login-access'
+import { readLoginAvailability } from './login-availability'
 import type { ChatDependencies } from './types'
 
 /**
@@ -24,6 +25,12 @@ export function chatDependencies(
     readConnectionAccess: (tabs, now) =>
       readConnectionAccess(env.DB, tabs, now),
     randomId: randomToken,
+    readLoginAvailability: (targets) => {
+      const id = workspaceId()
+      return id === null
+        ? Promise.resolve(new Set<string>())
+        : readLoginAvailability(env.DB, id, targets)
+    },
     resolveAttachments: async (_userId, _workspaceId, ids) => {
       if (ids.length)
         throw new HttpError(

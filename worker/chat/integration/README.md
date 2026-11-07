@@ -1,7 +1,8 @@
 # Chat backend integration
 
-This README gives the seams of the chat backend for other features. The
-[chat backend README](../README.md) names the code and its guarantees.
+This README gives the seams of the chat backend for other features, and
+its test fixtures. The [chat backend README](../README.md) names the code
+and its guarantees.
 A file name without a folder names a file in `worker/chat/`.
 
 `WorkspaceChat` takes `ChatDependencies` from `types.ts` as overrides.
@@ -250,8 +251,9 @@ methods of `Workspace`.
 - After a text-only turn, each unanswered message moves to a new turn. So
   one message can come first in a `message` command, then in a new `turn`
   command with a new command ID.
-- Each `turn` and `message` command carries the login of its message's
-  sender. When the sender of a turn changes, start the agent again.
+- Each `turn` and `message` command carries the agent login of the session
+  starter, whoever sent the message. The runner keeps the login of the
+  first command of a turn for the whole turn.
 - An interrupt for a turn that the runner does not run still gets
   `turn.completed` with state `stopped`.
 - A new stream gets each command other than `report.refresh` only after its
@@ -267,15 +269,28 @@ methods of `Workspace`.
   `agentLoginContext(userId, agent)`, and `BOAT_KEY_ENCRYPTION_KEY`.
 - `readAgentLogin` decrypts with the same context and key. It accepts the
   kinds `token` and `api-key` for Claude, and only `api-key` for Codex.
-- A message without a stored login gets `409 agent_login_required`.
-- When the login is gone as a command goes out, `turn.failed` ends the
-  turn only while it is queued.
+- A message whose login is missing gets `409 agent_login_required`, and no
+  session is created, as [Session logins](#session-logins) says.
+- When the starter's login, or the sender's access, is gone as a command
+  goes out, `turn.failed` ends the turn only while it is queued. The failure
+  names the cause. A lost starter login sets `loginAvailable` to false.
 - A running or stopping turn keeps the command, and the Durable Object does
   not send it. So the later runner events of that turn stay valid.
 - When that turn finishes, an unanswered message moves to a new queued
   turn. That turn then fails with `agent_login_required`.
-- `resolveAttachments(userId, workspaceId, ids)` returns the attachment
-  records and the sandbox path of each attachment. The command gives the
-  paths to the runner.
+- `resolveAttachments(userId, workspaceId, ids)` gets the ID of the sender,
+  not of the starter. It returns the attachment records and the sandbox path
+  of each attachment. The command gives the paths to the runner.
 - By default, a message with an attachment gets
   `503 attachments_unavailable`.
+
+## Session logins
+
+[Session logins](session-logins.md) gives the starter of each session, the
+two login paths of `SessionLogins`, and the linked sessions.
+
+## Test fixtures
+
+[Chat backend tests](../tests.md) names the test support files and what
+each group of tests covers. [Outer Worker tests](outer-worker-tests.md)
+gives the tests through the production Worker entry.

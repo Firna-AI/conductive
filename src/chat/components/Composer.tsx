@@ -5,6 +5,10 @@ import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
+import {
+  SessionLoginLine,
+  type SessionLogin,
+} from '../../../docs/mockups/src/components/chat/SessionLogin'
 import type { Draft } from '../state/chat-snapshot'
 import { ActionButton, IconButton } from '../ui/actions'
 import { DraftFiles } from './AttachmentChips'
@@ -26,6 +30,13 @@ export interface ComposerProps {
   attaching: boolean
   /** A notice says why a message cannot go yet, so Send is off. */
   blocked: boolean
+  /** Whose agent login the session uses, which a line under the box names. */
+  login?: SessionLogin
+  /**
+   * A message starts a new linked session, so it does not steer a running
+   * turn of this session. Stop still ends that turn.
+   */
+  startsSession?: boolean
   onChangeText: (text: string) => void
   onSend: () => void
   onStop: () => void
@@ -37,7 +48,8 @@ export interface ComposerProps {
 /**
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. While a turn runs, a message
- * steers the turn, and Stop sits beside Send. On desktop, Enter sends and
+ * steers the turn, and Stop sits beside Send. A line under the box names
+ * whose agent login the session uses. On desktop, Enter sends and
  * Shift+Enter starts a new line. The composer reads Enter before the text
  * field does, so Enter never adds a line to a message that it sends.
  */
@@ -48,6 +60,7 @@ export function Composer(props: ComposerProps) {
   const empty = draft.text.trim() === '' && draft.attachments.length === 0
   const off = empty || props.blocked || props.sending || props.attaching
   const touch = control.field === 'lg'
+  const steers = props.running && props.startsSession !== true
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (touch || event.key !== 'Enter' || event.shiftKey) return
     if (event.nativeEvent.isComposing) return
@@ -72,9 +85,7 @@ export function Composer(props: ComposerProps) {
           numberOfLines={2}
           onChangeText={props.onChangeText}
           placeholder={
-            props.running
-              ? 'Steer the agent while it works'
-              : 'Message the agent'
+            steers ? 'Steer the agent while it works' : 'Message the agent'
           }
           size={control.field}
           value={draft.text}
@@ -127,7 +138,8 @@ export function Composer(props: ComposerProps) {
           />
         </div>
       </div>
-      {props.running && draft.text !== '' ? (
+      {props.login ? <SessionLoginLine {...props.login} /> : null}
+      {steers && draft.text !== '' ? (
         <span className={styles.hint}>
           The agent reads this at its next step.
         </span>

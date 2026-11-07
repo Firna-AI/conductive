@@ -19,6 +19,9 @@ npm run typecheck
 - Set `crashAfterCommit` to commit the next transaction, then throw once.
   The restart tests cover retry permission, report repairs, turn cleanup,
   and file assembly after a commit crash.
+- Send and Retry can commit a changed login observation before acceptance.
+  So an acceptance crash test first makes the stored `loginAvailable` current,
+  then sets `crashAfterCommit`. The fault then hits the acceptance commit.
 - `createRunnerLimitsFixture` in `runner-limits.test-support.ts` runs one
   `RunnerChannel` for the refusal, cap, and file part tests.
 - `runner-repairs.test-support.ts` builds a full and an oversized report of
@@ -29,6 +32,17 @@ npm run typecheck
   the newest failed turn: stale tabs, refused ends, waiting work, rollback,
   and commit crashes. `retry.test-support.ts` sends retries and reads the
   session records.
+- `session-logins.test.ts`, `linked-sessions.test.ts`, `linked-retry.test.ts`,
+  and `legacy-sessions.test.ts` test starters, linked sessions, and old data.
+  `login-observation.test.ts` tests that an observed change stays after a
+  refused Send, and that a repeated message ID observes nothing.
+  `linked-retry.test.ts` also restarts after a crash at the acceptance of a
+  linked Retry. It checks each stored record, and a stale Retry gets 409.
+- `login-availability.test.ts` tests the metadata path. One query serves one
+  or four sessions and reads no credential. Reads check no login and flush
+  no runner. The list and a new tab still work with a damaged starter
+  ciphertext. Closed sessions and archived workspaces stay unchanged.
+  `login-queries.test-support.ts` records its D1 login queries.
 - `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
   end. It also checks that late ends preserve the next turn and its commands.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,

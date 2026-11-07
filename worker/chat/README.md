@@ -23,12 +23,12 @@ which serves these routes. The path helpers live in
 | Route | Path helper | What it does |
 | --- | --- | --- |
 | `GET` sessions | `sessionsPath` | Lists the open sessions and the session history |
-| `POST` sessions | `sessionsPath` | Creates a session |
+| `POST` sessions | `sessionsPath` | Creates a session. The requester becomes its starter |
 | `PATCH` session | `sessionPath` | Renames a session |
-| `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn |
-| `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
+| `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn. When the starter's login cannot be used, a new linked session takes it, as [Session logins](integration/README.md#session-logins) says |
+| `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again, also to a new linked session. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
 | `POST` interrupt | `sessionPaths.interrupt` | Stops a turn |
-| `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session |
+| `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session that the requester starts |
 | `POST` close, reopen | `sessionPaths.close`, `sessionPaths.reopen` | Moves a session to the session history, and back |
 | `GET` history | `chatHistoryPath` | Reads the stored events of one session |
 | `GET` events socket | `workspaceEventsPath` | Sends the stored history, then each new event |
@@ -101,15 +101,19 @@ The Durable Object runs the gates itself.
   other workspace gets `404 workspace_not_found`. So does a workspace that
   `matchesObject` refuses, because `WORKSPACES.idFromName` names another
   object.
-- `resolveLogin` first checks that the sender is still a member and that
-  the workspace is not archived. Then it reads the login. An override
-  replaces only the read.
-- Before dispatch, the same D1 read also checks the token hash of the live
-  runner connection. A revoked or replaced token closes that connection
-  without sending a login. The command stays queued.
-- The Durable Object reads the login when it accepts a message. It reads
-  it again for each `turn` and `message` command that it sends. Its
-  storage never holds a login.
+- Every login lookup goes through `SessionLogins`. Its credential path uses
+  `readLogin` in `login-access.ts`, the only caller of `resolveLogin`. It
+  reads the agent login of a starter or of a linked-session member, for one
+  agent. `resolveLogin` first checks the workspace, that user, the sender,
+  and the runner token in one D1 read. An override replaces only the login
+  read.
+- Its metadata path reads only the membership and the stored login kind of
+  each starter, in one D1 query. It reads no ciphertext.
+- A revoked or replaced runner token closes that connection without a
+  login, and the command stays queued. A sender who left the org gets no
+  login either. [Session logins](integration/README.md#session-logins) says
+  when the workspace checks the starter's login. The storage never holds a
+  login.
 
 ## History and event order
 
@@ -164,28 +168,8 @@ The Durable Object runs the gates itself.
 
 ## Retries
 
-[Messages](../../docs/protocol/chat-and-events.md#messages) states the
-rules. `Session.retryMessageId` names the one message that the retry route
-accepts. It is the only public part of the retry state.
-
-- `ChatTransaction.newestTurn` and `saveNewestTurn` keep the ID of the
-  newest turn of each session under the `chat:v1:newest-turn:` prefix. This
-  internal record never reaches a tab.
-- Each accepted message records its turn there, also a running turn that it
-  joins. It also sets `retryMessageId` to null.
-- The end of the active turn sets `retryMessageId` to the retry message of a
-  failed end. It does so only when that turn is still the newest turn. Every
-  other end sets null.
-- A refused end has no retry message, so it sets null.
-- A turn that waits counts as the newest turn, also after a Stop ends it
-  before it starts.
-- When the newest turn finishes, a continuation of its unanswered messages
-  becomes the newest turn.
-- The session record and its `session.updated` event commit in the same
-  transaction as the change that sets the field.
-- A missing message, or a message of another session, gets
-  `404 message_not_found`. Each other message that the record does not name
-  gets `409 retry_not_available`, and the route writes nothing.
+[Retries](retries.md) gives the stored retry state, and the rules of the
+retry route for `Session.retryMessageId`.
 
 ## Report repairs
 
@@ -201,14 +185,16 @@ npm run test -- worker/chat
 npm run typecheck
 ```
 
-[Chat backend tests](tests.md) names the test helpers and the main tests.
+[Chat backend tests](tests.md) names the test support files and what each
+group of tests covers.
 
 ## Seams for other milestones
 
 [Chat backend integration](integration/README.md) gives the seams for other
 features. It covers the hooks, the trusted workspace calls, the workspace
 events, the outer Worker, and the lifecycle. It also covers the files, the
-GitHub state, the agent runner, and the logins and attachments. Its
+GitHub state, the agent runner, the logins and attachments, the session
+logins, and the test fixtures. Its
 [Outer Worker tests](integration/outer-worker-tests.md) guide gives the
 tests through the production Worker entry.
 
@@ -218,6 +204,8 @@ tests through the production Worker entry.
   tabs, and the one publisher of committed events.
 - `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
   owner can replace. The login resolver always wraps an override.
+- `operation.ts`: `ChatOperation`, the reads and changes of one route, tab
+  subscription, or dispatch, in the serial queue that its caller holds.
 - `workspace-integration.ts`: `createWorkspaceIntegration`, which joins
   chat, the lifecycle, and the Mac devices in the workspace object. It
   sets the hooks, and gives the Mac devices the shared state writer.
@@ -232,8 +220,11 @@ tests through the production Worker entry.
   turns as stopped when the lifecycle state becomes stopped or error.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
   the object.
-- `http-routes.ts`, `messages.ts`, and `sessions.ts`: the routes, the turns,
-  and the session state.
+- `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
+  a browser tab: the login refresh, the tab with its lifecycle tab ID, the
+  close after a failed start, and the grant check before the history.
+- `http-routes.ts`, `send-message.ts`, `messages.ts`, and `sessions.ts`: the
+  routes, Send and Retry with linked sessions, the turns, and session state.
 - `model-changes.ts`: client session IDs, the creation records that repeated
   requests match, and ID conflicts.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
@@ -266,8 +257,12 @@ tests through the production Worker entry.
   outer Worker to the object.
 - `queries.ts`: the D1 reads of workspaces, tokens, members, and logins,
   and the title update of a workspace.
-- `login-access.ts`: the combined sender and runner-token access check
-  before login dispatch.
+- `login-access.ts`, `login-availability.ts`, and `login-kind.ts`:
+  `readLogin` and the access checks, the metadata query, and the valid
+  login kinds.
+- `session-login.ts` and `session-storage.ts`: the two login paths of
+  `SessionLogins`, and the defaults of older session records.
+- `session-record.ts`: `sessionFor`, the read of one session record.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
   and the peer types.
 

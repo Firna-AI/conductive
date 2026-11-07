@@ -6,8 +6,11 @@ import {
   coreFixtures,
   FAKE_IDS,
   FAKE_TIME,
+  fakeUser,
 } from '../../test-support/fixtures/core'
+import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { blankDraft } from '../state/chat-snapshot'
+import { loginGone, withSessions } from '../state/linked-kit'
 import { historyEntries } from './ChatOverlays'
 import { Composer } from './Composer'
 import { renderChat, textOf } from './render-kit'
@@ -78,12 +81,15 @@ describe('SessionChat', () => {
 
   it('names a missing login, also when the account lists no entry for the agent, and keeps Send off', async () => {
     const { account } = coreFixtures()
+    // The reader started these sessions, so their records say the same.
     const missing = await renderChat({
-      setup: (server) =>
+      setup: (server) => {
         server.json('GET', ACCOUNT_PATHS.account, {
           ...account,
           agentLogins: [],
-        }),
+        })
+        withSessions(server, loginGone)
+      },
     })
     missing.chat.controller.setDraft(FAKE_IDS.session, 'Add tests.')
     expect(missing.text()).toContain(
@@ -133,6 +139,9 @@ describe('session parts', () => {
       createdAt: 0,
       activeTurnId: null,
       retryMessageId: null,
+      startedBy: senderSnapshot(fakeUser),
+      sourceSessionId: null,
+      loginAvailable: true,
       choice: { agent, model: 'Model', effort: 'high' as const },
     }))
     const html = renderToStaticMarkup(

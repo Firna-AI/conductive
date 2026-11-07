@@ -32,6 +32,8 @@ export const paths = {
   chat: 'app/chat',
   sessions: 'app/sessions',
   sessionHistory: 'app/sessions/history',
+  noStarterLogin: 'app/sessions/no-starter-login',
+  linkedSession: 'app/sessions/linked',
   reassign: 'app/reassign',
   archive: 'app/archive',
   archivePushed: 'app/archive/pushed',

@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { chatHistoryPath } from '../../shared/events'
 import { sessionPaths, sessionsPath } from '../../shared/sessions'
 import { workspaceViewPath } from '../../shared/workspace-view'
-import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
+import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { chatFor, shown } from './test-kit'
 
 const org = FAKE_IDS.org
@@ -106,6 +107,9 @@ describe('ChatController', () => {
           closedAt: null,
           activeTurnId: null,
           retryMessageId: null,
+          startedBy: senderSnapshot(fakeUser),
+          sourceSessionId: null,
+          loginAvailable: true,
         },
       ],
       history: [10, 30, 20].map((closedAt) => ({
@@ -117,6 +121,9 @@ describe('ChatController', () => {
         closedAt,
         activeTurnId: null,
         retryMessageId: null,
+        startedBy: senderSnapshot(fakeUser),
+        sourceSessionId: null,
+        loginAvailable: true,
       })),
     })
     await chat.controller.start()
@@ -132,6 +139,9 @@ describe('ChatController', () => {
       closedAt: null,
       activeTurnId: null,
       retryMessageId: null,
+      startedBy: senderSnapshot(fakeUser),
+      sourceSessionId: null,
+      loginAvailable: true,
     }
     chat.server.json('POST', sessionsPath(org, ws), { session: fresh }, 201)
     chat.server.json('GET', chatHistoryPath(org, ws, 'third'), {

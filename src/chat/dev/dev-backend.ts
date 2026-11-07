@@ -1,9 +1,8 @@
 import { createApiClient } from '../../app/api/client'
-import { ACCOUNT_PATHS } from '../../shared/account'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import type { Session } from '../../shared/sessions'
 import { sessionsPath } from '../../shared/sessions'
-import type { UserMessage } from '../../shared/messages'
+import type { MessageSender, UserMessage } from '../../shared/messages'
 import {
   workspacePath,
   type Workspace,
@@ -15,12 +14,19 @@ import {
   FAKE_IDS,
   FAKE_ORIGIN,
 } from '../../test-support/fixtures/core'
+import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { recordedChatEvents } from '../../test-support/recorded-chat'
 import { recordedFileEvents } from '../../test-support/recorded-files'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
 import { endsTurn } from '../state/known-turns'
 import type { Clock } from '../ui/clock'
 import { DevAgent } from './dev-agent'
+import {
+  seedLinked,
+  withReaderLogin,
+  withStarter,
+  writeReaderLogin,
+} from './dev-logins'
 import { DevMac, handleMacWrite, writeMacReplies } from './dev-mac'
 import { lossEvents } from './dev-loss'
 import type { DevOptions } from './dev-options'
@@ -41,8 +47,10 @@ export class DevBackend {
   readonly server: FakeApiServer
   readonly clock: Clock
   readonly messages = new Map<string, UserMessage>()
-  /** The member who reads the page, who presses Stop in it. */
-  readonly viewerId: string
+  /** The member who reads the page, who sends, starts sessions, and presses Stop. */
+  readonly viewer: MessageSender
+  /** The reader has a Claude login, which a Claude session of the reader records. */
+  readonly claudeLogin: boolean
   /** The recorded turn that runs in a session, which Stop and steer reach. */
   readonly recordedTurns = new Map<string, string>()
   workspace: Workspace
@@ -57,7 +65,8 @@ export class DevBackend {
 
   private constructor(parts: {
     target: WorkspaceTarget
-    viewerId: string
+    viewer: MessageSender
+    claudeLogin: boolean
     server: FakeApiServer
     clock: Clock
     stream: DevStream
@@ -68,7 +77,8 @@ export class DevBackend {
     mac: DevMac
   }) {
     this.target = parts.target
-    this.viewerId = parts.viewerId
+    this.viewer = parts.viewer
+    this.claudeLogin = parts.claudeLogin
     this.server = parts.server
     this.clock = parts.clock
     this.stream = parts.stream
@@ -94,23 +104,23 @@ export class DevBackend {
     const workspaceId =
       options.workspace === 'new' ? NEW_WORKSPACE : FAKE_IDS.workspace
     const target = { orgId: org, workspaceId }
-    if (!options.login) {
-      const { account } = coreFixtures(options.role)
-      server.json('GET', ACCOUNT_PATHS.account, {
-        ...account,
-        agentLogins: [
-          { agent: 'claude', connected: false },
-          account.agentLogins[1],
-        ],
-      })
-    }
+    const claudeLogin = writeReaderLogin(server, options)
     const api = createChatApi(createApiClient(server.fetch), target)
-    const [detail, list] = await Promise.all([api.workspace(), api.sessions()])
+    const [detail, listed, view] = await Promise.all([
+      api.workspace(),
+      api.sessions(),
+      api.view(),
+    ])
+    const viewer = senderSnapshot(coreFixtures(options.role).account.user)
+    const list = withReaderLogin(
+      withStarter(listed, options.starter),
+      viewer.id,
+      claudeLogin,
+    )
     const shown = list.sessions[0]?.id ?? 'new'
-    const viewerId = coreFixtures(options.role).account.user.id
     const recorded =
       scenario === 'loss'
-        ? lossEvents(workspaceId, shown, viewerId)
+        ? lossEvents(workspaceId, shown, viewer.id)
         : recordedChatEvents(scenario, workspaceId, shown)
     const live = options.replay === 'live'
     const files = recordedFileEvents(
@@ -125,7 +135,8 @@ export class DevBackend {
     }
     const backend = new DevBackend({
       target,
-      viewerId,
+      viewer,
+      claudeLogin,
       server,
       clock,
       stream: new DevStream(
@@ -151,6 +162,8 @@ export class DevBackend {
       if (options.state !== 'starting') takeState(backend, options.state)
     }
     if (live) backend.replay(recorded.map((envelope) => envelope.event))
+    if (list !== listed) backend.sync()
+    if (options.starter === 'linked') seedLinked(backend, view)
     return backend
   }
 

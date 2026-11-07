@@ -1,4 +1,4 @@
-import { CircleAlert, Plug, X } from 'lucide-react'
+import { CircleAlert, MessageSquarePlus, Plug, X } from 'lucide-react'
 import type { Agent } from '../../shared/agents'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import type { SendBlock } from '../state/blockers'
@@ -28,6 +28,28 @@ export function BlockNotice(props: {
       }
       icon={Plug}
       title={`Connect ${name} to use ${props.model}`}
+    />
+  )
+}
+
+/**
+ * The notice over the composer when the login of the starter is not
+ * available, so the message starts a new session on the reader's own login.
+ * An older record names no starter, so the notice names nobody.
+ */
+export function LinkedSessionNotice(props: {
+  agent: Agent
+  starter: string | null
+}) {
+  const body =
+    props.starter === null
+      ? 'The login for this session is not available.'
+      : `${props.starter}'s ${agentNames[props.agent]} login is not available.`
+  return (
+    <Notice
+      body={body}
+      icon={MessageSquarePlus}
+      title="Your message starts a new session"
     />
   )
 }

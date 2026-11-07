@@ -18,7 +18,10 @@ import {
 import { FakeApiServer } from '../../test-support/fake-api'
 import { coreFixtures, fakeUsers } from '../../test-support/fixtures/core'
 import { fakeMacRequest } from '../../test-support/fixtures/devices'
-import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import {
+  senderSnapshot,
+  workspaceFixtures,
+} from '../../test-support/fixtures/workspaces'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
@@ -200,6 +203,15 @@ describe('a workspace that the tab showed', () => {
           ? { agent: 'claude', connected: false }
           : login,
       ),
+    })
+    // Priya started the session, and her login is not available. So a
+    // message of the reader needs the reader's own login, as the account says.
+    const { sessions } = workspaceFixtures()
+    const [shown, ...others] = sessions.sessions
+    const priyas = { ...shown, startedBy: senderSnapshot(fakeUsers[1]) }
+    server.json('GET', sessionsPath(org, id), {
+      ...sessions,
+      sessions: [{ ...priyas, loginAvailable: false }, ...others],
     })
     const socket = recordingSocket(server)
     const app = await startedApp(server, { events: socket.source })
