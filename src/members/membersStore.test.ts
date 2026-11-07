@@ -1,15 +1,25 @@
 import { describe, expect, it } from 'vitest'
 import { invitesPath, memberPath } from '../shared/members'
 import { FakeApiServer } from '../test-support/fake-api'
+import type { FakeMethod } from '../test-support/fake-api-routes'
 import { FAKE_IDS } from '../test-support/fixtures/core'
-import { createMembersApi } from './api/client'
-import { createMembersStore, type MembersStore } from './membersStore'
+import { deferred, type Deferred } from '../test-support/mount'
+import { createMembersApi, type FetchLike } from './api/client'
+import {
+  createMembersStore,
+  pendingKey,
+  type MembersAction,
+  type MembersStore,
+} from './membersStore'
 
 const org = FAKE_IDS.org
 
 /** The fake's org has Cal (admin), Priya, and Jonas, with 6, 2, and 1 workspaces. */
-async function loadedStore(server = new FakeApiServer()) {
-  const store = createMembersStore(createMembersApi(server.fetch), org, 'cal')
+async function loadedStore(
+  server = new FakeApiServer(),
+  fetch: FetchLike = server.fetch,
+) {
+  const store = createMembersStore(createMembersApi(fetch), org, 'cal')
   await store.load()
   return { server, store }
 }
@@ -25,6 +35,44 @@ function roles(store: MembersStore) {
     member.user.id,
     member.role,
   ])
+}
+
+/** The failures of the store, by pending key. */
+function failures(store: MembersStore) {
+  return Object.fromEntries(ready(store).failures)
+}
+
+/** One expected failure, by its pending key. */
+function failed(action: MembersAction, target: string, message: string) {
+  return { [pendingKey(action, target)]: { action, target, message } }
+}
+
+/** The fake's replies to this request fail with the message. */
+function fails(
+  server: FakeApiServer,
+  method: FakeMethod,
+  path: string,
+  message: string,
+) {
+  server.json(method, path, { error: { code: 'internal_error', message } }, 500)
+}
+
+/**
+ * A fetch that holds the replies to each held request until the test
+ * releases them, so the test chooses the order of the replies.
+ */
+function holdingFetch(server: FakeApiServer) {
+  const held = new Map<string, Deferred<void>>()
+  const fetch: FetchLike = async (path, init) => {
+    await held.get(`${init?.method} ${path}`)?.promise
+    return server.fetch(path, init)
+  }
+  function hold(method: FakeMethod, path: string): Deferred<void> {
+    const reply = deferred()
+    held.set(`${method} ${path}`, reply)
+    return reply
+  }
+  return { fetch, hold }
 }
 
 describe('createMembersStore', () => {
@@ -55,12 +103,7 @@ describe('createMembersStore', () => {
   it('keeps_the_member_and_gives_the_reason_when_a_removal_fails', async () => {
     const server = new FakeApiServer()
     const message = 'The request failed. Try again.'
-    server.json(
-      'DELETE',
-      memberPath(org, 'priya'),
-      { error: { code: 'internal_error', message } },
-      500,
-    )
+    fails(server, 'DELETE', memberPath(org, 'priya'), message)
     const { store } = await loadedStore(server)
     expect(await store.remove('priya')).toBe(false)
     expect(roles(store)).toEqual([
@@ -69,12 +112,92 @@ describe('createMembersStore', () => {
       ['jonas', 'member'],
     ])
     expect(ready(store).data.owned).toEqual({ cal: 6, priya: 2, jonas: 1 })
-    expect(ready(store).failure).toEqual({
-      action: 'remove',
-      target: 'priya',
-      message,
-    })
+    expect(failures(store)).toEqual(failed('remove', 'priya', message))
     expect(ready(store).pending).toEqual([])
+  })
+
+  it('a_removal_changes_only_its_own_member_in_either_reply_order', async () => {
+    const orders = [
+      ['priya', 'jonas'],
+      ['jonas', 'priya'],
+    ] as const
+    for (const order of orders) {
+      const server = new FakeApiServer()
+      fails(server, 'PATCH', memberPath(org, 'priya'), 'Priya keeps her role.')
+      fails(server, 'DELETE', memberPath(org, 'jonas'), 'Jonas stays.')
+      const { fetch, hold } = holdingFetch(server)
+      const replies = {
+        priya: hold('DELETE', memberPath(org, 'priya')),
+        jonas: hold('DELETE', memberPath(org, 'jonas')),
+      }
+      const { store } = await loadedStore(server, fetch)
+      expect(await store.changeRole('priya', 'admin')).toBe(false)
+      // Priya's question closes while her removal runs, and Jonas's question
+      // opens. A late close of Priya's question leaves his question open.
+      store.openRemoval('priya')
+      const priya = store.remove('priya')
+      store.closeRemoval('priya')
+      store.openRemoval('jonas')
+      store.closeRemoval('priya')
+      const removals = { priya, jonas: store.remove('jonas') }
+      const results: Record<string, boolean> = {}
+      for (const id of order) {
+        replies[id].resolve()
+        results[id] = await removals[id]
+      }
+      expect({
+        order,
+        results,
+        members: roles(store),
+        removing: ready(store).removing,
+        failures: failures(store),
+      }).toEqual({
+        order,
+        results: { priya: true, jonas: false },
+        members: [
+          ['cal', 'admin'],
+          ['jonas', 'member'],
+        ],
+        removing: 'jonas',
+        failures: failed('remove', 'jonas', 'Jonas stays.'),
+      })
+    }
+  })
+
+  it('other_changes_keep_the_failure_of_the_open_removal_question', async () => {
+    const server = new FakeApiServer()
+    fails(server, 'PATCH', memberPath(org, 'priya'), 'Priya keeps her role.')
+    fails(server, 'DELETE', memberPath(org, 'jonas'), 'Jonas stays.')
+    fails(server, 'POST', invitesPath(org), 'The invite did not go out.')
+    const { fetch, hold } = holdingFetch(server)
+    const roleReply = hold('PATCH', memberPath(org, 'priya'))
+    const { store } = await loadedStore(server, fetch)
+    // A role change runs while the removal of Jonas fails.
+    const roleChange = store.changeRole('priya', 'admin')
+    store.openRemoval('jonas')
+    expect(await store.remove('jonas')).toBe(false)
+    roleReply.resolve()
+    expect(await roleChange).toBe(false)
+    expect(await store.invite('ana@example.com')).toBe(false)
+    expect(await store.cancelInvite('invite-0')).toBe(true)
+    const others = {
+      ...failed('role', 'priya', 'Priya keeps her role.'),
+      ...failed('invite', 'ana@example.com', 'The invite did not go out.'),
+    }
+    expect({
+      removing: ready(store).removing,
+      failures: failures(store),
+    }).toEqual({
+      removing: 'jonas',
+      failures: { ...failed('remove', 'jonas', 'Jonas stays.'), ...others },
+    })
+    // The question opens again without its own failure. The others stay.
+    store.closeRemoval('jonas')
+    store.openRemoval('jonas')
+    expect({
+      removing: ready(store).removing,
+      failures: failures(store),
+    }).toEqual({ removing: 'jonas', failures: others })
   })
 
   it('invites_by_email_without_the_spaces_at_its_ends_and_lists_the_answer', async () => {

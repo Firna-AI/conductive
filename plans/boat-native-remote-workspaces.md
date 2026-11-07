@@ -5511,15 +5511,32 @@ Milestone 8i or 15i wires it to its backend.
 
 Depends on: 15a, 15c
 
+Status: Complete.
+
 Apply the `fix after merge` items of the members area. Added on
 7 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/members-guarded-write-helper.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/members-tab-shared-dialog-state.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/members-yesterday-label-clock-changes.md`, and
-      delete that item.
+- [x] Apply the recorded option of `plans/follow-ups/members-guarded-write-helper.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15l`.
+- [x] Apply the recorded option of `plans/follow-ups/members-tab-shared-dialog-state.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15l`.
+- [x] Apply the recorded option of `plans/follow-ups/members-yesterday-label-clock-changes.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15l`.
+
+Agent calls, 7 November 2026:
+
+- Keep invitation acceptance on its current verified-email SQL guard.
+  It has no earlier permission read.
+- Keep the invite notice on the last submitted email.
+  Keep each stored failure under its own pending key.
+- Remove a departed member's earlier role failure.
+  The admin cannot retry that role change after departure.
+- Key close requests to their member.
+  A late close request then keeps another member's question open.
+- Reuse the parsed local year for date labels.
+  It comes from the same calendar parts as the day number.
+
+Evidence: `.context/boat-native-remote-workspaces/orchestrator-checks.md`.
 
 ## Milestone 15g: Email invitations
 

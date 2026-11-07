@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useSyncExternalStore } from 'react'
 import { CircleAlert } from 'lucide-react'
 import type { Org } from '../shared/api'
 import type { OrgMember } from '../shared/members'
@@ -8,8 +8,9 @@ import { MemberList } from './MemberList'
 import {
   createMembersStore,
   pendingKey,
-  type MembersFailure,
   type MembersData,
+  type MembersFailure,
+  type MembersFailures,
   type MembersStore,
 } from './membersStore'
 import { personName } from './people'
@@ -57,25 +58,29 @@ function ReadyMembers(props: {
   store: MembersStore
   data: MembersData
   pending: readonly string[]
-  failure: MembersFailure | null
+  failures: MembersFailures
   viewerId: string
   canManage: boolean
   now: number
   onRemove: (member: OrgMember) => void
 }) {
-  const { failure, store } = props
-  const listFailure =
-    failure?.action === 'role' || failure?.action === 'cancel' ? failure : null
+  const { store } = props
+  // Each failed role change and cancel shows its own notice. The answer of
+  // another change keeps it.
+  const listFailures = [...props.failures.values()].filter(
+    (failure) => failure.action === 'role' || failure.action === 'cancel',
+  )
   return (
     <>
-      {listFailure ? (
+      {listFailures.map((failure) => (
         <Notice
-          body={listFailure.message}
+          body={failure.message}
           icon={CircleAlert}
-          title={failureTitle(props.data, listFailure)}
+          key={pendingKey(failure.action, failure.target)}
+          title={failureTitle(props.data, failure)}
           tone="danger"
         />
-      ) : null}
+      ))}
       <MemberList
         canManage={props.canManage}
         invites={props.data.invites}
@@ -124,18 +129,17 @@ export function MembersTab(props: MembersTabProps) {
 function OrgMembersTab(props: MembersTabProps) {
   const { store, state } = useMembers(props.api, props.org.id, props.viewerId)
   const mounted = useMountedRef()
-  const [removingId, setRemovingId] = useState<string | null>(null)
   const canManage = props.org.role === 'admin'
   const ready = state.status === 'ready' ? state : null
+  // The store holds the open question, so an answer for another member
+  // leaves it as it is.
   const removing =
-    ready?.data.members.find((member) => member.user.id === removingId) ?? null
+    ready?.data.members.find((member) => member.user.id === ready.removing) ??
+    null
 
   async function confirmRemove(member: OrgMember) {
     const removed = await store.remove(member.user.id)
-    if (removed && mounted.current) {
-      setRemovingId(null)
-      props.onMemberRemoved?.(member)
-    }
+    if (removed && mounted.current) props.onMemberRemoved?.(member)
   }
 
   return (
@@ -156,12 +160,9 @@ function OrgMembersTab(props: MembersTabProps) {
           <ReadyMembers
             canManage={canManage}
             data={ready.data}
-            failure={ready.failure}
+            failures={ready.failures}
             now={props.now}
-            onRemove={(member) => {
-              store.clearFailure()
-              setRemovingId(member.user.id)
-            }}
+            onRemove={(member) => store.openRemoval(member.user.id)}
             pending={ready.pending}
             store={store}
             viewerId={props.viewerId}
@@ -172,13 +173,11 @@ function OrgMembersTab(props: MembersTabProps) {
         <RemoveMemberDialog
           busy={ready.pending.includes(pendingKey('remove', removing.user.id))}
           error={
-            ready.failure?.action === 'remove' &&
-            ready.failure.target === removing.user.id
-              ? ready.failure.message
-              : null
+            ready.failures.get(pendingKey('remove', removing.user.id))
+              ?.message ?? null
           }
           member={removing}
-          onCancel={() => setRemovingId(null)}
+          onCancel={() => store.closeRemoval(removing.user.id)}
           onConfirm={() => void confirmRemove(removing)}
           orgName={props.org.name}
           owned={ready.data.owned[removing.user.id] ?? 0}

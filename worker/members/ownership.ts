@@ -1,5 +1,6 @@
 import type { MessageSender } from '../../src/shared/messages'
 import { HttpError } from '../http'
+import { guardedMembersWrite } from './guarded-write'
 import { requireMember } from './membership'
 import { updateWorkspaceOwner } from './ownership-data'
 import { requireOrgAdmin, requireOrgMember } from './permissions'
@@ -30,21 +31,19 @@ export async function reassignWorkspace(
   now: number,
   hooks: Pick<MembersHooks, 'readWorkspace'>,
 ) {
-  await requireOrgAdmin(db, orgId, actorId)
-  await requireMember(db, orgId, userId)
-  const changed = await updateWorkspaceOwner(
-    db,
-    orgId,
-    actorId,
-    workspaceId,
-    userId,
-    now,
-  )
-  if (!changed)
-    throw new HttpError(
-      404,
-      'workspace_not_found',
-      'The workspace is not available.',
-    )
+  await guardedMembersWrite({
+    checks: [
+      () => requireOrgAdmin(db, orgId, actorId),
+      () => requireMember(db, orgId, userId),
+    ],
+    write: () =>
+      updateWorkspaceOwner(db, orgId, actorId, workspaceId, userId, now),
+    refusal: () =>
+      new HttpError(
+        404,
+        'workspace_not_found',
+        'The workspace is not available.',
+      ),
+  })
   return hooks.readWorkspace(orgId, workspaceId, actorId)
 }

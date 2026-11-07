@@ -3,6 +3,7 @@ import { CircleAlert, Mail, UserPlus } from 'lucide-react'
 import { InputFrame, type InputFrameProps } from '@firna/ui/input'
 import {
   normalizeEmail,
+  pendingKey,
   runsAction,
   type MembersState,
   type MembersStore,
@@ -24,7 +25,8 @@ type InputHandle =
  * moves the focus to the field. One invite runs at a time: while it runs,
  * Enter and Invite send nothing, and the field stays open for the next
  * email. A sent invite joins the list, and it clears the field only when the
- * field still holds the email that went out.
+ * field still holds the email that went out. The notice shows only the
+ * failure of the last invite that the admin sent.
  */
 export function InviteSection(props: {
   store: MembersStore
@@ -32,22 +34,28 @@ export function InviteSection(props: {
 }) {
   const { field } = useControlSizes()
   const [email, setEmail] = useState('')
+  // The email of the last invite that the admin sent, as the store keys it.
+  const [latest, setLatest] = useState<string | null>(null)
   const input = useRef<InputHandle>(null)
   const { state } = props
   const ready = state.status === 'ready'
   const busy = ready && runsAction(state.pending, 'invite')
   const failure =
-    ready && state.failure?.action === 'invite' ? state.failure : null
+    ready && latest !== null
+      ? (state.failures.get(pendingKey('invite', latest)) ?? null)
+      : null
 
   async function submit() {
     // The store's state, not the last render, says whether an invite runs.
     const now = props.store.getState()
     if (now.status === 'ready' && runsAction(now.pending, 'invite')) return
     const sent = email
-    if (!normalizeEmail(sent)) {
+    const address = normalizeEmail(sent)
+    if (!address) {
       input.current?.focus()
       return
     }
+    setLatest(address)
     if (await props.store.invite(sent)) {
       setEmail((value) => (value === sent ? '' : value))
     }
