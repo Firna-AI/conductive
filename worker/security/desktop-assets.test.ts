@@ -27,7 +27,7 @@ function policyParts(value: string | null) {
 }
 
 it('serves app assets and same-origin local modules with the actual desktop policy while preserving host boundaries', async () => {
-  const previewDomain = 'conducting-previews.test'
+  const previewDomain = 'conductive-previews.test'
   for (const binding of ['configured', 'missing', 'empty'] as const) {
     const requestOrigin =
       binding === 'configured'
@@ -37,12 +37,12 @@ it('serves app assets and same-origin local modules with the actual desktop poli
     const env = {
       ...harness.env,
       APP_ORIGIN: binding === 'configured' ? harness.env.APP_ORIGIN : '',
-      MACHINE_ORIGIN: 'https://machines.conducting.test',
+      MACHINE_ORIGIN: 'https://machines.conductive.test',
       PREVIEW_DOMAIN: previewDomain,
       ASSETS: {
         fetch: async (request: Request) => {
           requests.push(request.url)
-          return new Response('<main>Conducting</main>', {
+          return new Response('<main>Conductive</main>', {
             headers: { 'Content-Type': 'text/html' },
           })
         },
@@ -52,7 +52,7 @@ it('serves app assets and same-origin local modules with the actual desktop poli
     const app = createApp()
     const response = await app.fetch(new Request(`${requestOrigin}/app`), env)
     expect(response.status, binding).toBe(200)
-    expect(await response.text(), binding).toBe('<main>Conducting</main>')
+    expect(await response.text(), binding).toBe('<main>Conductive</main>')
     expect(response.headers.get('Content-Type'), binding).toBe('text/html')
     expect(requests, binding).toEqual([`${requestOrigin}/app`])
     const desktopPolicy = contentSecurityPolicy(
@@ -104,7 +104,7 @@ it('serves app assets and same-origin local modules with the actual desktop poli
       expect(other.status, `${binding} ${input.origin}`).toBe(input.status)
     }
     const marketing = await app.fetch(
-      new Request('https://conducting.build/'),
+      new Request('https://conductive.build/'),
       { ...env, APP_ORIGIN: harness.env.APP_ORIGIN },
     )
     expect(marketing.status, binding).toBe(200)

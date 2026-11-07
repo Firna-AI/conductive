@@ -1,6 +1,6 @@
 # Worker backend
 
-This Cloudflare Worker serves the browser API for Conducting.
+This Cloudflare Worker serves the browser API for Conductive.
 It checks sign-in and org access before it dispatches protected app requests.
 It forwards the browser chat routes of a workspace to the Durable Object of that workspace.
 These requests keep the body limit of the Worker entry and the host and `Origin` checks.

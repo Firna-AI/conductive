@@ -9,7 +9,7 @@ import { onTestFinished } from 'vitest'
 const execute = promisify(execFile)
 
 export async function repositoryFixture() {
-  const home = await mkdtemp(join(tmpdir(), 'conducting-runner-'))
+  const home = await mkdtemp(join(tmpdir(), 'conductive-runner-'))
   const root = join(home, 'repository')
   await mkdir(root)
   const git = async (...args: string[]) =>

@@ -16,7 +16,7 @@ export function sourceRepositoryUrl(fullName: string): string {
 }
 
 export function sourceStagingDirectory(buildId: string, index: number): string {
-  return `/home/user/conducting/source-fetch/${encodeURIComponent(buildId)}/${index}.git`
+  return `/home/user/conductive/source-fetch/${encodeURIComponent(buildId)}/${index}.git`
 }
 
 /** Source output never enters provider or build logs. The environment starts empty. */
@@ -34,14 +34,14 @@ export function fetchSourceCommand(input: {
 }): string {
   const directory = sourceStagingDirectory(input.buildId, input.index)
   const helper =
-    '!f() { if [ "$1" = get ]; then printf "username=x-access-token\\npassword=%s\\n\\n" "$CONDUCTING_IMAGE_GIT_TOKEN"; fi; }; f'
+    '!f() { if [ "$1" = get ]; then printf "username=x-access-token\\npassword=%s\\n\\n" "$CONDUCTIVE_IMAGE_GIT_TOKEN"; fi; }; f'
   return isolatedSourceCommand(
     [
       `test ! -e ${shellQuote(directory)}`,
       `mkdir -p ${shellQuote(directory.slice(0, directory.lastIndexOf('/')))}`,
       `token=$(/usr/bin/curl --disable --proto '=https' --tlsv1.2 --max-redirs 0 --connect-timeout 10 --max-time 30 --silent --fail --request POST --header ${shellQuote(`Authorization: Bearer ${input.grant}`)} ${shellQuote(`${input.origin}${IMAGE_SOURCE_CREDENTIAL_PATH}`)})`,
       'test -n "$token"',
-      `CONDUCTING_IMAGE_GIT_TOKEN="$token" ${GIT} -c credential.helper=${shellQuote(helper)} clone --bare --quiet --no-recurse-submodules --template= -- ${shellQuote(sourceRepositoryUrl(input.repository.fullName))} ${shellQuote(directory)}`,
+      `CONDUCTIVE_IMAGE_GIT_TOKEN="$token" ${GIT} -c credential.helper=${shellQuote(helper)} clone --bare --quiet --no-recurse-submodules --template= -- ${shellQuote(sourceRepositoryUrl(input.repository.fullName))} ${shellQuote(directory)}`,
       'unset token',
     ].join('\n'),
   )

@@ -27,7 +27,7 @@ export async function advanceBuildCommand(
     if (job.phase === 'software')
       command = installImageSoftware(jobSoftware(job))
     else
-      command = `set -eu\n${savedScriptCommand('/tmp/conducting-install.sh', job.installScript, ['set -a', '. /run/ascii-secrets/env.sh', 'set +a'])}\nrm -f /tmp/conducting-install.sh`
+      command = `set -eu\n${savedScriptCommand('/tmp/conductive-install.sh', job.installScript, ['set -a', '. /run/ascii-secrets/env.sh', 'set +a'])}\nrm -f /tmp/conductive-install.sh`
     await writeBuildLog(
       runtime.env.DB,
       job.buildId,

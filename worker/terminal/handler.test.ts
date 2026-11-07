@@ -32,9 +32,9 @@ it('installs an enabled ttyd service without an image password and starts with a
   )
   expect(commands).toHaveLength(1)
   expect(commands[0].startsWith("sudo -n -- /bin/sh -c '")).toBe(true)
-  expect(commands[0]).toContain('systemctl enable conducting-terminal.service')
+  expect(commands[0]).toContain('systemctl enable conductive-terminal.service')
   expect(commands[0]).toContain(
-    'ExecStartPre=+/usr/local/lib/conducting/terminal-password',
+    'ExecStartPre=+/usr/local/lib/conductive/terminal-password',
   )
   expect(commands[0]).toContain('--writable')
   expect(commands[0]).toContain('User=user')
@@ -54,14 +54,14 @@ it('installs an enabled ttyd service without an image password and starts with a
     .first<{ ciphertext: string }>()
   expect(row?.ciphertext.startsWith('v1.')).toBe(true)
   const command: { command: string } = await harness.requests[0].json()
-  expect(command.command).not.toContain('/run/conducting-terminal/password')
+  expect(command.command).not.toContain('/run/conductive-terminal/password')
   expect(new URL(harness.requests[1].url).searchParams.get('path')).toBe(
-    '/run/conducting-terminal/password',
+    '/run/conductive-terminal/password',
   )
   expect(command.command).toContain(
-    'systemctl start conducting-terminal.service',
+    'systemctl start conductive-terminal.service',
   )
-  expect(command.command).not.toContain('/etc/conducting')
+  expect(command.command).not.toContain('/etc/conductive')
   expect(commands[0]).not.toContain(row?.ciphertext)
   await harness.env.DB.prepare(
     `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, name, branch,
@@ -154,7 +154,7 @@ it('authenticates the ttyd handshake on the server and counts only terminal inpu
     harness.env.BOAT_KEY_ENCRYPTION_KEY,
   )
   expect(upstreamRequest.headers.get('Authorization')).toBe(
-    `Basic ${btoa(`conducting:${password}`)}`,
+    `Basic ${btoa(`conductive:${password}`)}`,
   )
   const upstream = harness.upstreamSockets[0]
   const browser = harness.serverSockets[0]
@@ -169,7 +169,7 @@ it('authenticates the ttyd handshake on the server and counts only terminal inpu
   expect(JSON.parse(String(authenticated))).toEqual({
     columns: 80,
     rows: 24,
-    AuthToken: btoa(`conducting:${password}`),
+    AuthToken: btoa(`conductive:${password}`),
   })
   expect(await harness.status()).toEqual({ activity: TEST_TIME })
   const output = browser.nextMessage()

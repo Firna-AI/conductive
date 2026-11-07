@@ -23,7 +23,7 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
   const server = servers.latest
   expect(servers.requests[0].env.OPENAI_API_KEY).toBe('secret-alice')
   expect(servers.requests[0].args).toContain(
-    'model_providers.conducting.requires_openai_auth=false',
+    'model_providers.conductive.requires_openai_auth=false',
   )
   expect(servers.requests[0].args).toContain(
     'cli_auth_credentials_store="ephemeral"',

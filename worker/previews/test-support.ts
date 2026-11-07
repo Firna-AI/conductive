@@ -87,7 +87,7 @@ export function socketResponse(socket: ProxySocket, protocol = '') {
 
 export async function createToolsHarness() {
   const core = await createHarness()
-  core.env.PREVIEW_DOMAIN = 'conducting-previews.test'
+  core.env.PREVIEW_DOMAIN = 'conductive-previews.test'
   core.boat.accounts.set('boat-test-key', {
     id: 'test-wallet',
     type: 'personal',
@@ -168,7 +168,7 @@ export async function createToolsHarness() {
             })
           }
           if (
-            body.command.includes('systemctl start conducting-terminal.service')
+            body.command.includes('systemctl start conductive-terminal.service')
           ) {
             let password = passwords.get(url.pathname)
             if (!password) {

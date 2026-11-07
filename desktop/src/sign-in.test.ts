@@ -18,7 +18,7 @@ it('exchanges a verifier-bound handoff once and saves the cookie before loading 
     throw new Error('Exchange has not started')
   }
   const signIn = createSignIn({
-    appOrigin: 'https://app.conducting.test',
+    appOrigin: 'https://app.conductive.test',
     random: () => 'v'.repeat(43),
     now: () => 1_800_000_000_000,
     openExternal: async (url) => {
@@ -71,7 +71,7 @@ it('exchanges a verifier-bound handoff once and saves the cookie before loading 
   expect(await pending).toBe(true)
   expect(saved).toEqual([
     {
-      url: 'https://app.conducting.test',
+      url: 'https://app.conductive.test',
       name: DESKTOP_SESSION_COOKIE,
       value: 'session.signature',
       path: '/',

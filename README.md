@@ -1,6 +1,6 @@
-# Conducting
+# Conductive
 
-Conducting is a coding tool at `conducting.build`, in the browser and in a
+Conductive is a coding tool at `conductive.build`, in the browser and in a
 Mac app. Each workspace is one task with its own branch and its own cloud
 computer, where agents powered by Claude and Codex work. The agents run
 only in the cloud. It replaces Conductor Cloud, which shuts down on
@@ -70,7 +70,8 @@ how the app runs in development and in the production build.
 
 Local development needs no Cloudflare account. Wrangler provides local D1
 and Durable Object storage under `.wrangler/`. The D1 ID in
-`wrangler.jsonc` is a placeholder. Deployment must set a real database ID.
+`wrangler.jsonc` names the production database. Local commands, such as
+`npm run db:migrate` and `npm run dev`, use only the local storage.
 This setup creates no Cloudflare resources and includes no deploy command.
 Put local secrets in `.dev.vars`, which Git ignores.
 
@@ -85,8 +86,14 @@ GitHub sign-in also needs these values in `.dev.vars`:
 | `BOAT_KEY_ENCRYPTION_KEY` | A separate 32 random bytes, encoded as Base64 |
 
 Keep the client secret and both keys as Worker secrets when deployment is
-set up. Open `/api/auth/github` to start sign-in. No GitHub App is registered
-yet. Automated tests use fakes and need no credentials.
+set up. Open `/api/auth/github` to start sign-in. The GitHub App is
+"Conductive", in the Firna-AI organization. It sends its webhooks to the
+address in [The GitHub App](docs/protocol/github-banner.md#the-github-app).
+Automated tests use fakes and need no credentials.
+
+`wrangler.jsonc` also sets two production values: `MACHINE_ORIGIN` is
+`https://api.conductive.build`, and `PREVIEW_DOMAIN` is `conductive.page`.
+A value in `.dev.vars` replaces either one in local development.
 
 Worker types come from `wrangler.jsonc`. The type check generates them
 under `.wrangler/`, which Git also ignores.

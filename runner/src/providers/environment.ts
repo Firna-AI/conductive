@@ -6,7 +6,7 @@ import type { RunnerLogin } from '../../../src/shared/runner'
 export async function prepareProviderHome(home: string): Promise<void> {
   await Promise.all(
     ['claude', 'codex'].map((name) =>
-      mkdir(join(home, '.conducting', name), { recursive: true, mode: 0o700 }),
+      mkdir(join(home, '.conductive', name), { recursive: true, mode: 0o700 }),
     ),
   )
 }
@@ -22,8 +22,8 @@ export function providerEnvironment(
       delete env[key]
   }
   env.HOME = home
-  env.CLAUDE_CONFIG_DIR = `${home}/.conducting/claude`
-  env.CODEX_HOME = `${home}/.conducting/codex`
+  env.CLAUDE_CONFIG_DIR = `${home}/.conductive/claude`
+  env.CODEX_HOME = `${home}/.conductive/codex`
   env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = '1'
   env.DISABLE_AUTOUPDATER = '1'
   if (login?.agent === 'claude')

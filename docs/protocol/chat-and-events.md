@@ -161,8 +161,8 @@ says.
 
 - The runner starts with the sandbox, and starts again after each resume.
 - The runner opens one outbound WebSocket to the Durable Object of its
-  workspace, on the hostname for machines. It proves itself with the
-  workspace token.
+  workspace, at `/v1/runner` on `api.conductive.build`, the hostname for
+  machines. It proves itself with the workspace token.
 - The runner connection carries a protocol version. The Durable Object
   serves each version that a live org image or sandbox can hold.
 - Each build of the org image installs the newest runner. Reason: a stopped

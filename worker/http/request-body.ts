@@ -1,8 +1,6 @@
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AppEnv } from '../env'
-import {
-  GITHUB_WEBHOOK_BODY_BYTES,
-  GITHUB_WEBHOOK_PATH,
-} from '../github/webhook'
+import { GITHUB_WEBHOOK_BODY_BYTES } from '../github/webhook'
 import { hostSurface } from '../hosts'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { desktopCors } from '../security/desktop-origin'
@@ -11,7 +9,7 @@ function requestBodyBudget(request: Request, machineOrigin?: string): number {
   const url = new URL(request.url)
   return request.method === 'POST' &&
     url.origin === machineOrigin &&
-    url.pathname === GITHUB_WEBHOOK_PATH
+    url.pathname === MACHINE_PATHS.githubWebhook
     ? GITHUB_WEBHOOK_BODY_BYTES
     : 1_000_000
 }

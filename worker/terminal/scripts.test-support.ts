@@ -39,7 +39,7 @@ printf 'started\\n' > '${root}/started'
   await mkdir(repository)
   await writeFile(
     environmentFile,
-    `CONDUCTING_REPOSITORY_DIR=${shellArgument(repository)}\nCONDUCTING_LAUNCH_TEST='workspace environment'\n`,
+    `CONDUCTIVE_REPOSITORY_DIR=${shellArgument(repository)}\nCONDUCTIVE_LAUNCH_TEST='workspace environment'\n`,
   )
   const options: TerminalScriptOptions = {
     runtimeDirectory: `${root}/runtime folder`,

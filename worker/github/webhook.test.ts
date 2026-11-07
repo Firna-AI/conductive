@@ -10,7 +10,11 @@ import {
   recordedReview,
   recordedStatus,
 } from './recorded-webhooks'
-import { createGitHubHarness, type GitHubTestHarness } from './test-harness'
+import {
+  createGitHubHarness,
+  MACHINE_ORIGIN,
+  type GitHubTestHarness,
+} from './test-harness'
 
 let harness: GitHubTestHarness
 beforeAll(async () => {
@@ -40,6 +44,21 @@ it('authenticates the exact raw bytes before parsing or accessing storage', asyn
     (await harness.webhook('push', recordedPush, 'wrong-host', {}, TEST_ORIGIN))
       .status,
   ).toBe(404)
+  for (const path of ['/api/github/webhooks', '/webhooks/github']) {
+    expect(
+      (
+        await harness.webhook(
+          'push',
+          recordedPush,
+          'old-path',
+          {},
+          MACHINE_ORIGIN,
+          path,
+        )
+      ).status,
+      path,
+    ).toBe(404)
+  }
   expect(
     await harness.env.DB.prepare(
       'SELECT count(*) AS count FROM github_webhook_deliveries',

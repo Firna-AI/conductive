@@ -1,6 +1,6 @@
 # Architecture
 
-Conducting is a coding tool at `conducting.build`. Each workspace is one
+Conductive is a coding tool at `conductive.build`. Each workspace is one
 task with its own branch and its own cloud computer, a Boat sandbox.
 Agents powered by Claude and Codex work only in the sandbox. The user
 follows them in the browser or in the Mac app, which shows the web app.
@@ -47,7 +47,7 @@ describes the structure that the [protocol docs](#protocol-docs) require.
 
 ### Marketing site
 
-- A few static pages at the root of `conducting.build`, with the Terms and
+- A few static pages at the root of `conductive.build`, with the Terms and
   Privacy pages. Visitors see them without a sign-in.
 - [The marketing site README](../src/marketing/README.md) describes how the
   Worker serves them.
@@ -57,7 +57,7 @@ describes the structure that the [protocol docs](#protocol-docs) require.
 ### Web app
 
 - A React app, built with Vite, that uses the `@firna/ui` components.
-- It lives on `app.conducting.build`, behind the GitHub sign-in.
+- It lives on `app.conductive.build`, behind the GitHub sign-in.
 - It shows the orgs, the workspaces, the chat, the files, the tools, and
   the org settings. It follows the phone and the desktop layouts of the
   [mockups](mockups/README.md) (decision 15).
@@ -146,14 +146,15 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
 
 | Hostname                | What it serves                                                              |
 | ----------------------- | --------------------------------------------------------------------------- |
-| `conducting.build`      | The marketing site, with the Terms and Privacy pages                        |
-| `app.conducting.build`  | The web app, the API, the chat sockets, and the terminal                    |
-| A hostname for machines | The GitHub webhooks, the agent tools, the runner, and the credential helper |
-| The preview domain      | One random hostname for each open port preview, one level deep              |
+| `conductive.build`      | The marketing site, with the Terms and Privacy pages                        |
+| `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
+| `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper |
+| `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
 
-The preview domain is a separate registrable domain, so preview code is
-never same-site with the app (decision 6). The names of the machine
-hostname and of the preview domain are not chosen yet.
+`api.conductive.build` is the hostname for machines. Each of its routes has
+a path under `/v1/` (decision 102). The preview domain, `conductive.page`,
+is a separate registrable domain, so preview code is never same-site with
+the app (decision 6).
 
 ## Flows
 
@@ -180,7 +181,7 @@ hostname and of the preview domain are not chosen yet.
 ### Terminal, previews, and desktop
 
 - The terminal socket goes from the browser to the Worker on
-  `app.conducting.build`. The Worker connects it to the private terminal
+  `app.conductive.build`. The Worker connects it to the private terminal
   port.
 - A preview frame loads its preview hostname. The Worker proxies the
   request to the private port of the sandbox.

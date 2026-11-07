@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { workspaceEventsPath } from '../../src/shared/events'
 import { FILE_EVENT_MAX_BYTES } from '../../src/shared/files'
 import { TEST_ORIGIN } from '../test-support/harness'
@@ -37,12 +38,15 @@ it('restores confirmed parts and complete reports larger than one SQLite value a
       new TextEncoder().encode(JSON.stringify(part)).length,
     ).toBeLessThanOrEqual(FILE_EVENT_MAX_BYTES)
   const runnerSocket = async () => {
-    const response = await runtime.dispatchFetch(`${MACHINE_ORIGIN}/runner`, {
-      headers: {
-        Upgrade: 'websocket',
-        Authorization: `Bearer ${WORKSPACE_TOKEN}`,
+    const response = await runtime.dispatchFetch(
+      `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
+      {
+        headers: {
+          Upgrade: 'websocket',
+          Authorization: `Bearer ${WORKSPACE_TOKEN}`,
+        },
       },
-    })
+    )
     const socket = response.webSocket
     if (!socket) throw new Error('Missing runner socket')
     const inbox = new SocketInbox(socket)

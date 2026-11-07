@@ -22,7 +22,7 @@ export async function withGitIndex<T>(
   action: (index: TemporaryIndex) => Promise<T>,
   base?: string,
 ): Promise<T> {
-  const directory = await mkdtemp(join(tmpdir(), 'conducting-git-'))
+  const directory = await mkdtemp(join(tmpdir(), 'conductive-git-'))
   try {
     const [original, objects] = await Promise.all([
       source.run([

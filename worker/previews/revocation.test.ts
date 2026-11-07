@@ -51,13 +51,13 @@ it('keeps a foreign preview open when another authorized workspace closes its ID
     ).bind(org.id, TEST_TIME, TEST_TIME, org.id),
   ])
   const attack = new Request(
-    `https://app.conducting.test${previewPath(org.id, 'other-workspace', setup.preview.id)}`,
+    `https://app.conductive.test${previewPath(org.id, 'other-workspace', setup.preview.id)}`,
     {
       method: 'DELETE',
       body: '{}',
       headers: {
         Cookie: session,
-        Origin: 'https://app.conducting.test',
+        Origin: 'https://app.conductive.test',
         'Content-Type': 'application/json',
       },
     },

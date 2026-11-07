@@ -134,7 +134,7 @@ async function connect(url: string, signal: AbortSignal) {
 
 /** Launch headless Chrome with a private profile and Node's native WebSocket. */
 export async function launchChrome(signal: AbortSignal) {
-  const profile = await mkdtemp(join(tmpdir(), 'conducting-pictures-chrome-'))
+  const profile = await mkdtemp(join(tmpdir(), 'conductive-pictures-chrome-'))
   let child: ReturnType<typeof startProcess> | undefined
   try {
     const chrome = startProcess(

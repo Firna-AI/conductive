@@ -10,7 +10,7 @@ import { desktopCredential, deviceAccount } from './credentials.js'
 const cookie: Cookie = {
   name: DESKTOP_SESSION_COOKIE,
   value: 'fixture.signature',
-  domain: 'app.conducting.test',
+  domain: 'app.conductive.test',
   hostOnly: true,
   path: '/',
   secure: true,
@@ -19,7 +19,7 @@ const cookie: Cookie = {
   session: false,
   expirationDate: 1_800_000_100,
 }
-const origin = 'https://app.conducting.test'
+const origin = 'https://app.conductive.test'
 
 it('reads only one valid unexpired host-only HttpOnly desktop cookie', () => {
   expect(desktopCredential([cookie], origin, 1_800_000_000_000)).toEqual({

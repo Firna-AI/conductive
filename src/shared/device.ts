@@ -5,7 +5,7 @@ export const DEVICE_HEARTBEAT_MS = 10_000
 export const DEVICE_LEASE_MS = 30_000
 export const DEVICE_REPLACED_CLOSE_CODE = 4001
 export const DEVICE_REPLACED_CLOSE_REASON = 'This Mac connection was replaced.'
-export const DEVICE_COMMAND_PATH = '/tools/mac-command'
+export const DEVICE_COMMAND_PATH = '/v1/tools/mac-command'
 export const DEVICE_CURRENT_PATH = '/api/devices/current'
 export const DEVICE_SETTINGS_PATH = `${DEVICE_CURRENT_PATH}/settings`
 

@@ -1,6 +1,6 @@
-appId: build.conducting.desktop
-productName: Conducting
-artifactName: Conducting-${version}-mac-${arch}.${ext}
+appId: build.conductive.desktop
+productName: Conductive
+artifactName: Conductive-${version}-mac-${arch}.${ext}
 directories:
   output: dist/release
 files:
@@ -9,10 +9,10 @@ files:
   - package.json
 asar: true
 protocols:
-  - name: Conducting sign-in
-    schemes: [conducting]
+  - name: Conductive sign-in
+    schemes: [conductive]
 mac:
-  icon: dist/bundle/conducting.icns
+  icon: dist/bundle/conductive.icns
   category: public.app-category.developer-tools
   identity: '-'
   hardenedRuntime: false
@@ -25,6 +25,6 @@ mac:
 publish:
   provider: github
   owner: Firna-AI
-  repo: conducting-desktop
+  repo: conductive-desktop
   releaseType: prerelease
   tagNamePrefix: v

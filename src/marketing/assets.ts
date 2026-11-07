@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
-import lockupDark from '../../docs/brand/conducting-lockup-dark.svg'
-import lockupLight from '../../docs/brand/conducting-lockup-light.svg'
+import lockupDark from '../../docs/brand/conductive-lockup-dark.svg'
+import lockupLight from '../../docs/brand/conductive-lockup-light.svg'
 import appleTouchIcon from '../../docs/brand/web/apple-touch-icon.png?no-inline'
 import faviconIco from '../../docs/brand/web/favicon.ico?no-inline'
 import faviconSvg from '../../docs/brand/web/favicon.svg?no-inline'
@@ -21,7 +21,7 @@ export const siteFiles = {
 } as const
 
 /** The intrinsic size of the lockups, from their SVG files. */
-export const lockupSize = { width: 690, height: 127 } as const
+export const lockupSize = { width: 682, height: 127 } as const
 
 /** Browsers ask for this path when a page names no icon. */
 const faviconPath = '/favicon.ico'

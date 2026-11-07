@@ -24,7 +24,7 @@ The service requires a nonsecret enable marker under `/run`.
 An image build or refresh has no marker and creates no terminal password.
 The unit runs ttyd and its shell as `user`. The launcher loads the workspace
 variables from `/run/ascii-secrets/env.sh`. It then opens the shell in
-`CONDUCTING_REPOSITORY_DIR`, the repository folder.
+`CONDUCTIVE_REPOSITORY_DIR`, the repository folder.
 
 Call `startWorkspaceTerminal(env, orgId, workspaceId, dependencies)` after
 the workspace startup script succeeds. The lifecycle owner must store the
@@ -38,7 +38,7 @@ an existing valid password on service restarts. `RuntimeDirectoryPreserve=yes`
 keeps that password through an automatic restart. The readiness command
 returns no password in stdout or command history.
 
-The hook reads `/run/conducting-terminal/password` through the provider's
+The hook reads `/run/conductive-terminal/password` through the provider's
 bounded file API, with a 64-byte limit. It refuses a password that is not
 exactly 64 lowercase hexadecimal characters. It caches that password
 encrypted in D1. The cache update checks that the workspace still owns the

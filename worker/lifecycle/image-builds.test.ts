@@ -89,7 +89,7 @@ it('recovers scheduling and allocation replies while streaming a successful imag
       from: 'last-good-image',
       noEnv: true,
       env: {
-        CONDUCTING_REPOSITORY_REPOSITORY_DIR: '/home/user/code/repository',
+        CONDUCTIVE_REPOSITORY_REPOSITORY_DIR: '/home/user/code/repository',
       },
     })
     boat.commandRunning = false

@@ -1,8 +1,12 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "conducting",
+  "name": "conductive",
   "main": "./worker/index.ts",
   "compatibility_date": "2026-11-06",
+  "vars": {
+    "MACHINE_ORIGIN": "https://api.conductive.build",
+    "PREVIEW_DOMAIN": "conductive.page",
+  },
   "assets": {
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
