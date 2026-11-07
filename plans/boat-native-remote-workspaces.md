@@ -4259,12 +4259,19 @@ Depends on: none
 
 Apply decision 98 C.
 
-- [ ] Split `tsconfig.worker.json` into a production project without Node
+Status: Complete. The split found no Node-only use in production Worker code.
+
+Verification evidence: `.context/boat-native-remote-workspaces/milestone-4h/verification.md`.
+
+- [x] Split `tsconfig.worker.json` into a production project without Node
       types and a test project with them, and check both in
       `npm run typecheck`.
-- [ ] Fix each Node-only import or Node global that the split finds in
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4h`.
+- [x] Fix each Node-only import or Node global that the split finds in
       production Worker code.
-- [ ] Delete `plans/follow-ups/worker-typecheck-accepts-node-imports.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4h`.
+- [x] Delete `plans/follow-ups/worker-typecheck-accepts-node-imports.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-4h`.
 
 ## Milestone 5: Bases and workspace lifecycle
 
