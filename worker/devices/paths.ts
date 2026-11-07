@@ -4,7 +4,6 @@ import {
   DEVICE_SETTINGS_PATH,
 } from '../../src/shared/device'
 
-export const DEVICE_INTERNAL_PATH = '/__devices/operation'
 export const DEVICE_BROKER_PREFIX = 'devices:v1:user:'
 export const deviceBrokerName = (userId: string) =>
   `${DEVICE_BROKER_PREFIX}${userId}`

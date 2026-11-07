@@ -8,6 +8,7 @@ export default defineConfig({
       'src/**/*.test.{ts,tsx}',
       'worker/**/*.test.ts',
       'desktop/src/**/*.test.ts',
+      'desktop/renderer/**/*.test.ts',
     ],
     environment: 'node',
     // A hang guard, not a speed limit (decision 113 B). The slowest Worker

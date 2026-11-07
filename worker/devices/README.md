@@ -24,16 +24,15 @@ The Worker never reads these fields from a sandbox request.
 
 App reads use the existing host, Origin, session, and membership checks.
 New app writes run those same checks with a body-free request first.
-The application entry bounds their bodies before dispatch.
+The application entry bounds their bodies with the [shared entry policy](../http/README.md#request-body-limit) before dispatch.
 Each request handler calls [readJsonObject](../http/README.md#json-request-objects).
 The body-free gate keeps the forwarded request unread until its owning handler reads it.
-The private Durable Object device entry also uses the [shared entry policy](../http/README.md#request-body-limit).
-Both entries keep the existing 1,000,000-byte limit.
-Public requests use the application's entry budget without a second device limit.
+Public request bodies keep the existing 1,000,000-byte limit, with no second device limit.
 The entry returns HTTP 413 for overflow.
 The JSON reader preserves HTTP 415 for an unsupported media type.
-Internal JSON replies use `readBoundedJson` with a 3,000,000-byte budget.
-That budget leaves room for the accepted request and a full device failure message.
+Calls between the workspace object and the device broker use Durable Object RPC, as [Composition and checks](#composition-and-checks) says.
+They add no HTTP body or reply budget.
+Cloudflare [limits](https://developers.cloudflare.com/workers/runtime-apis/rpc/#limitations) one serialized RPC message to 32 MiB, far above one device frame.
 
 ## Main process and renderer
 
@@ -61,6 +60,7 @@ Replacement fails old work instead of sending it to the new Mac.
 The Mac sends `device.ping` every 10 seconds.
 Its lease lasts 30 seconds.
 A durable alarm checks the lease and the execution watchdog.
+Storing pending work schedules that alarm for the earliest execution deadline or lease end.
 Sleep, close, sign-out, or an expired session settles affected work as unavailable.
 A restored broker without its old socket also settles its durable pending work.
 
@@ -134,10 +134,20 @@ The Worker watchdog allows the command time limit plus one heartbeat for result 
 `worker/application.ts` dispatches this feature inside its request budget, before the machine stub or app JSON gate.
 `worker/workspace.ts` composes gated device handling with the existing chat class.
 Broker object names use the owned `devices:v1:user:` prefix.
-Internal calls carry a short-lived signature over their exact target and body hash.
-The device proof uses its own HMAC domain and cannot serve as a sign-in session.
-Each receiving object checks its own binding identity.
-These internal routes have no public app dispatch.
+
+The workspace object and the device broker call each other through one RPC method, `Workspace.deviceOperation`.
+The `WORKSPACES` binding is the capability for these calls.
+Only trusted Worker code may hold that binding or its stubs.
+The receiving object first checks that the target name maps to its own Durable Object ID.
+A mismatch fails with 403 `device_forbidden` before any record is read.
+The object then runs only its fixed broker or workspace operations, with the existing access checks.
+
+Each call returns a plain typed value.
+A failure returns its HTTP status, code, and message as data.
+`deviceCall` turns that failure into a local `HttpError`.
+Invalid operation values fail with 400 `invalid_input`.
+An unexpected error fails with 500 `internal_error` and a generic message.
+No HTTP route dispatches an internal operation directly.
 
 General app mounting, image-build installation, and runner MCP registration remain integration work.
 The existing installer embeds the new CLI/MCP modules and shared contract.
@@ -154,12 +164,12 @@ The publication recovery test interrupts real D1 with a temporary trigger and re
 
 ## Key code
 
-- `runtime.ts`, `router.ts`: feature dispatch and Durable Object composition.
+- `runtime.ts`, `router.ts`: feature dispatch, the RPC operation entry, and Durable Object composition.
 - `access.ts`: stored-turn sender lookup and current access checks.
 - `workspace-commands.ts`, `workspace-browser.ts`: machine commands and scoped app records/approvals.
 - `broker.ts`, `broker-routes.ts`, `broker-messages.ts`: the authenticated device socket and relays.
 - `records.ts`, `state.ts`, `storage.ts`: durable requests, state publication, and chunked values.
 - `body.ts`: browser gates that preserve the unread request body.
-- `internal.ts`, `proof.ts`, `socket.ts`: bounded internal replies, signatures, and wire bounds.
+- `internal.ts`, `socket.ts`: the RPC client with its plain reply types, and wire bounds.
 
 See [Agent tools](../../docs/protocol/agent-tools.md) and [Mac app](../../docs/protocol/desktop-app.md).

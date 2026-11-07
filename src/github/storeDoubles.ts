@@ -1,3 +1,5 @@
+import type { Delay } from '../app/events'
+import { ManualDelay } from '../app/test-kit'
 import type {
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
@@ -7,13 +9,14 @@ import type { FakeApiServer } from '../test-support/fake-api'
 import type { FakeWorkspaceEvents } from '../test-support/fake-events'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
 import { toolFixtures } from '../test-support/fixtures/tools'
-import type { FetchLike } from './githubClient'
+import type { FetchLike, WorkspaceTarget } from './githubClient'
 import { GitHubStore } from './githubStore'
 
 /*
  * Test doubles for the store tests: GitHub events, a fake API that answers
  * at once but delivers late, and a stream whose stored history comes late,
- * as a socket's does. Product code never imports this module.
+ * as a socket's does. A store's timer runs only through a `ManualDelay`
+ * that the test gives. Product code never imports this module.
  */
 
 export const target = { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace }
@@ -40,7 +43,7 @@ export function githubEvent(
 
 /** What the bar shows: the banner state, or loading, or error. */
 export function shown(store: GitHubStore): string {
-  const state = store.getState()
+  const state = store.getSnapshot()
   return state.status === 'ready' ? state.snapshot.banner.state : state.status
 }
 
@@ -48,10 +51,12 @@ export function connect(
   store: GitHubStore,
   fetch: FetchLike,
   events: FakeWorkspaceEvents,
+  delay: Delay = new ManualDelay().delay,
 ): () => void {
   return store.connect({
     fetch,
     subscribe: (after, listener) => events.subscribe(after, listener),
+    delay,
   })
 }
 
@@ -99,14 +104,17 @@ export function nextReadResult(
       stopRequest()
       resolve()
     }
-    const stopState = store.listen(finish)
+    const stopState = store.subscribe(finish)
     const stopRequest = replies.onRequest(finish)
   })
 }
 
-/** The number of reads of the banner route that the server answered. */
-export function readsOf(server: FakeApiServer): number {
-  const path = githubPaths.banner(target.orgId, target.workspaceId)
+/** The number of reads of a workspace's banner route that the server answered. */
+export function readsOf(
+  server: FakeApiServer,
+  workspace: WorkspaceTarget = target,
+): number {
+  const path = githubPaths.banner(workspace.orgId, workspace.workspaceId)
   return server.requests.filter(
     (request) => new URL(request.url).pathname === path,
   ).length
@@ -130,7 +138,7 @@ export function serveState(server: FakeApiServer, state: BannerState): void {
 /** Settles at the next state that the store shows. */
 export function nextChange(store: GitHubStore): Promise<void> {
   return new Promise((resolve) => {
-    const stop = store.listen(() => {
+    const stop = store.subscribe(() => {
       stop()
       resolve()
     })
@@ -156,6 +164,7 @@ export function lateHistory(
       if (initial) deliver(initial)
       return () => undefined
     },
+    delay: new ManualDelay().delay,
   })
   return deliver
 }

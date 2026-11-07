@@ -10,17 +10,56 @@ device cleanup when a turn ends, including a refused turn end.
 A later handler must keep that call.
 The other hooks keep their defaults until their owners set them.
 
+## Trusted workspace calls
+
+Trusted Worker code can call six methods of `WorkspaceChat`. They run no
+gate.
+
+- `appendWorkspaceEvent(workspaceId, event, occurredAt)` stores one
+  `WorkspaceEvent` with the next workspace event number. Then it pushes
+  the event to the open tabs.
+- `changeWorkspace(workspaceId, work)` runs `work` with a
+  `ChatTransaction` in one storage transaction. The events of `work` get
+  the next numbers. After the commit, the one chat publisher pushes them
+  to the open tabs. `appendWorkspaceEvent` uses it.
+- `readWorkspace(workspaceId, work)` runs `work` with a `ChatTransaction`
+  outside a storage transaction. Use it only for reads.
+- `authorizedWorkspaceOperation(workspaceId, authorize, work)` enters the
+  serial queue and awaits `authorize`. Only then does it run `work` in the
+  same task. `work` gets a `WorkspaceOperation` from
+  `workspace-operation.ts`. Its `change` runs one storage transaction, and
+  the one chat publisher pushes the new events after the commit. Its
+  `publish` pushes one committed envelope to the open tabs again. It
+  stores nothing, so the event keeps its number. Neither enters the queue
+  again.
+- `sendFileCommand(workspaceId, command)` sends one `file.read` or
+  `file.diff` command to the ready runner. It resolves to `false` when no
+  runner is ready or the send fails.
+- `sendFileCommand` adds nothing to the history or to the pending
+  commands. So a new runner connection does not get the command again.
+- `closeRunner()` closes the current runner connection, for example when
+  the sandbox stops.
+
 Other features can add events to the same numbered history. The method
 depends on where the code runs:
 
 - Outside the runner hooks, await `appendWorkspaceEvent`.
+- To commit feature records with their events, await `changeWorkspace`
+  outside the runner hooks.
 - Inside `runnerReady` or `runnerEventStored`, await the `publish`
   argument, a `ChatCallbackPublisher`. It commits the event in the task of
-  the hook, then pushes it to the open tabs.
-- Do not call `appendWorkspaceEvent` inside a runner hook. The hook runs in
-  the serial queue, so the call would wait for the hook itself.
-- `sendFileCommand` also waits in the serial queue. Do not await it inside
-  a runner hook.
+  the hook, then pushes it to the open tabs. Do not call
+  `appendWorkspaceEvent` inside a runner hook.
+- `appendWorkspaceEvent`, `changeWorkspace`, `readWorkspace`,
+  `authorizedWorkspaceOperation`, and `sendFileCommand` wait in the serial
+  queue. A runner hook and the work of `changeWorkspace` and
+  `authorizedWorkspaceOperation` also run in that queue. Do not await these
+  calls inside them. The call would wait for the running task itself.
+- Inside the work of `authorizedWorkspaceOperation`, use its `change` and
+  `publish`.
+- Do not add another event sequence or another publisher. To send a
+  committed event again, use the `publish` of
+  `authorizedWorkspaceOperation`.
 
 ## Milestone 8i: the outer Worker
 
@@ -67,6 +106,22 @@ depends on where the code runs:
   hook. File results never enter the history.
 - [The files integration](../../files/README.md#integration) says how to attach
   file reads. Do not call `WorkspaceFiles.connect` on this path.
+
+## GitHub state
+
+- `createGitHubStatePort` in `worker/github/chat-store.ts` builds the
+  GitHub state port from `readWorkspace` and
+  `authorizedWorkspaceOperation`. Its `run` checks access again after it
+  enters the queue, then commits or replays in that same task.
+- Its transaction is `ChatTransaction.github`. That view gives the GitHub
+  state its records and its `github.updated` events in the same chat
+  transaction. The GitHub records use the `github:` key prefix.
+- Use that port. Do not build another store or publisher for GitHub.
+- The port uses these queued calls, so the rules of
+  [Trusted workspace calls](#trusted-workspace-calls) apply to a GitHub
+  refresh.
+- [The GitHub server integration](../../github/README.md#server-integration)
+  gives the routes, the scheduled reads, and the refresh operation.
 
 ## Milestone 7r: the agent runner
 

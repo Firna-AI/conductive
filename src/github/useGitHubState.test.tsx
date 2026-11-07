@@ -3,6 +3,7 @@
 import { act, useLayoutEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { expect, it, onTestFinished, vi } from 'vitest'
+import { ManualDelay } from '../app/test-kit'
 import { githubPaths } from '../shared/github'
 import { FakeApiServer } from '../test-support/fake-api'
 import { toolFixtures } from '../test-support/fixtures/tools'
@@ -75,9 +76,11 @@ function mountProbe() {
 it('loads the API state without GitHub history and shows each live GitHub update', async () => {
   const server = new FakeApiServer({ banner: 'ready-to-merge' })
   const replies = heldReplies(server)
+  const timers = new ManualDelay()
   const source: GitHubSource = {
     fetch: replies.fetch,
     subscribe: (after, listener) => server.events.subscribe(after, listener),
+    delay: timers.delay,
   }
   const probe = mountProbe()
   probe.render(target, source)
@@ -106,7 +109,7 @@ it('loads the API state without GitHub history and shows each live GitHub update
   expect(probe.container.textContent).toBe('merged')
 })
 
-it('uses a new store after a workspace switch and shows loading until its API state arrives', async () => {
+it('uses a new store after a workspace switch, shows loading until its API state arrives, and re-reads only that workspace on the timer', async () => {
   const server = new FakeApiServer({ banner: 'ready-to-merge' })
   const other = { orgId: target.orgId, workspaceId: 'saved-carts' }
   const data = toolFixtures('checks-failed')
@@ -121,9 +124,11 @@ it('uses a new store after a workspace switch and shows loading until its API st
     data.checks,
   )
   const replies = heldReplies(server)
+  const timers = new ManualDelay()
   const source: GitHubSource = {
     fetch: replies.fetch,
     subscribe: (after, listener) => server.events.subscribe(after, listener),
+    delay: timers.delay,
   }
   const probe = mountProbe()
   probe.render(target, source)
@@ -152,6 +157,18 @@ it('uses a new store after a workspace switch and shows loading until its API st
     { status: 'ready', snapshot: snapshotOf('checks-failed') },
   ])
   expect(probe.container.textContent).toBe('checks-failed')
+  const waiting = timers.pending
+
+  await act(async () => {
+    const timed = timers.runAll()
+    await replies.release()
+    await timed
+  })
+
+  expect({
+    waiting,
+    reads: { first: readsOf(server), other: readsOf(server, other) },
+  }).toEqual({ waiting: 1, reads: { first: 1, other: 2 } })
 })
 
 it('retries a failed first read through an unbound feed callback and shows the ready reply', async () => {
@@ -165,9 +182,11 @@ it('retries a failed first read through an unbound feed callback and shows the r
     503,
   )
   const replies = heldReplies(server)
+  const timers = new ManualDelay()
   const source: GitHubSource = {
     fetch: replies.fetch,
     subscribe: (after, listener) => server.events.subscribe(after, listener),
+    delay: timers.delay,
   }
   const probe = mountProbe()
   probe.render(target, source)

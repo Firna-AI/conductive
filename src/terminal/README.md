@@ -97,10 +97,10 @@ The development page shows the three tools against the
 pages stand in for a previewed app and a desktop stream. The app build does
 not include it.
 
-1. Put `APP_ORIGIN=http://127.0.0.1:5173` in `.dev.vars`. Without it, the
-   Worker refuses the module scripts of the page.
-2. Run `npm run dev`.
-3. Open `http://127.0.0.1:5173/src/terminal/dev/tools`.
+After the [Get started](../../README.md#get-started) setup:
+
+1. Run `npm run dev`.
+2. Open `http://127.0.0.1:5173/src/terminal/dev/tools`.
 
 The address holds the settings: `tool` (`terminal`, `preview`, `desktop`),
 `state`, `layout` (`panel`, `phone`), `scheme` (`dark`, `light`), `workspace`,

@@ -5,7 +5,7 @@ import type {
   DeviceToWorker,
   WorkerToDevice,
 } from '../../../src/shared/device.ts'
-import type { PermissionStore } from './permissions.js'
+import { AlwaysAllowLimitError, type PermissionStore } from './permissions.js'
 import { validCommand } from './runner.js'
 import type { CommandRun } from './runner.js'
 import { applyDeviceSettings } from './settings.js'
@@ -150,13 +150,15 @@ export function createDeviceSession(dependencies: SessionDependencies) {
               entry.request.workspaceName,
             )
           execute(entry)
-        } catch {
+        } catch (error) {
           finish(entry)
-          dependencies.warn()
+          let message = 'The Mac could not save this permission. Try again.'
+          if (error instanceof AlwaysAllowLimitError) message = error.message
+          else dependencies.warn()
           dependencies.send({
             type: 'command.failed',
             ...reference(entry.request),
-            message: 'The Mac could not save this permission. Try again.',
+            message,
           })
         }
       }

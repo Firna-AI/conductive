@@ -10,7 +10,7 @@ export class Workspace extends ProductWorkspace {
   private readonly clock: ManualDeviceClock
   constructor(
     context: DurableObjectState,
-    env: AppEnv & { WORKSPACES: DurableObjectNamespace },
+    env: AppEnv & { WORKSPACES: DurableObjectNamespace<ProductWorkspace> },
   ) {
     const clock = new ManualDeviceClock()
     super(context, env, clock.now)
@@ -18,6 +18,9 @@ export class Workspace extends ProductWorkspace {
     this.testStorage = context.storage
     this.testContext = context
     context.blockConcurrencyWhile(() => clock.restore(context.storage))
+  }
+  fetchDeviceRequest(request: Request): Promise<Response> {
+    return super.fetch(request)
   }
   async fetch(request: Request): Promise<Response> {
     const clockResponse = await this.clock.route(
@@ -42,7 +45,7 @@ export class Workspace extends ProductWorkspace {
 export default {
   fetch(
     request: Request,
-    env: AppEnv & { WORKSPACES: DurableObjectNamespace },
+    env: AppEnv & { WORKSPACES: DurableObjectNamespace<ProductWorkspace> },
   ) {
     const url = new URL(request.url)
     const deviceObject = deviceTestTarget(url)

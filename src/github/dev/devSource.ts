@@ -1,3 +1,4 @@
+import { browserDelay } from '../../app/events'
 import { githubPaths, type BannerState } from '../../shared/github'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
@@ -53,6 +54,7 @@ export function createDevSource(
   return {
     fetch,
     subscribe: (after, listener) => server.events.subscribe(after, listener),
+    delay: browserDelay,
     emit: (next) => {
       eventNumber += 1
       const data = sampleReplies(sample, next)
