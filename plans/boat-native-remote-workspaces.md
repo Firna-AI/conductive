@@ -4409,24 +4409,107 @@ It builds against the fake API of Milestone 4a. Milestone 8i wires it.
 
 Depends on: 4a
 
-- [ ] Build the agent runner: a small Node program that runs the Claude
+- [x] Build the agent runner: a small Node program that runs the Claude
       Agent SDK and Codex, installed as an always-on systemd service in
-      every cloud computer.
-- [ ] Connect the runner to the workspace Durable Object over one
+      every cloud computer. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Connect the runner to the workspace Durable Object over one
       outbound WebSocket with the workspace token. Number the events,
-      and resend each one that the Durable Object has not confirmed.
-- [ ] Start each turn with the sender's agent login from the connection,
-      and warm Claude Code without a login when the service starts.
-- [ ] Test Codex streaming: the Codex SDK where it gives interrupt and
+      and resend each one that the Durable Object has not confirmed. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Start each turn with the sender's agent login from the connection,
+      and warm Claude Code without a login when the service starts. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Test Codex streaming: the Codex SDK where it gives interrupt and
       partial text, and the Codex App Server otherwise. Save the result
-      under `.context/`.
-- [ ] Measure the first agent start after a resume over several runs,
-      with the runner inside and outside the home folder. Keep the faster
-      place.
-- [ ] Watch the repository, and push the file tree and the changes summary
+      under `.context/`. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Watch the repository, and push the file tree and the changes summary
       against the default branch over the connection. Read one file or one
-      diff on request.
-- [ ] Test the runner against the fake Durable Object of Milestone 4a.
+      diff on request. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Test the runner against the fake Durable Object of Milestone 4a. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Match the turn ownership of the chat backend. Only a `turn` command
+      starts a turn, and the runner creates no turn ID. A `message`
+      command for an idle session or for another turn gets a local
+      warning and no event. An interrupt for a turn that the runner does
+      not run gets `turn.completed` with state `stopped`. Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+- [x] Adopt decision 76 E from the Milestone 4d contract, which merged at
+      `1a3cc19`. Split and cap outbound events with the shared contract.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+
+Agent calls, 6 November 2026:
+
+- Keep the runner package and its lockfile under `runner/`, so this
+  milestone changes no shared package configuration.
+- Write bundles under the existing ignored `dist/runner/`, so generated
+  code stays outside the source file-length check.
+- Take the private Node path from one install-time `CONDUCTING_NODE`
+  setting, and pass it to the service as an argument, as decision 69 says.
+  Milestone 5a owns the runtime download and path.
+- Use Codex App Server. The installed SDK can abort, but the local fake
+  API probe shows no partial assistant text from it.
+- Keep the outbox in an atomic JSON file. One runner owns its stream.
+- Expose only committed outbox state, so replays cannot publish pending
+  writes.
+- Let image integration supply the computer MCP URL. No provider endpoint
+  is fixed in this milestone.
+- Combine text deltas for 40 ms, so text stays live with fewer events.
+- Use one streaming secret filter before event persistence, so a secret
+  cannot cross stored text events.
+- Close the agent process on user Stop and resume its saved conversation
+  for the next turn, so queued SDK work cannot continue out of sight.
+- Resume the same provider conversation after a sender or deferred model
+  change, so each message uses its sender's login and its chosen model.
+- Select turn files by Git modes and object IDs from temporary indexes.
+  Git also computes untracked diffs and counts without changing the real
+  index. Turn line counts use the comparison against the default branch.
+- Keep the real resume comparison open. Local binary reads cannot choose
+  the faster placement after a Boat resume. On 6 November 2026 the owner
+  moved its TODO to Milestone 8i, which has a real sandbox.
+
+Owner instructions, 6 November 2026:
+
+- Review finding 5, late messages restart ended turns: apply option D,
+  the runner half. The merged chat backend already owns the turn IDs and
+  the waiting input.
+  - Only a `turn` command starts a turn. The runner creates no turn ID.
+  - A `message` command for an idle session or for another turn gets
+    only a local warning. The runner emits no event for the ended turn.
+  - An interrupt for a turn that the runner does not run still gets
+    `turn.completed` with state `stopped`.
+  - The backend continues unanswered messages only after a `finished`
+    turn, never after a `stopped` or a `failed` turn.
+- Move the first-start measurement TODO to Milestone 8i, because it needs
+  a real sandbox and real logins. Keep all measurement tools in `runner/`.
+- Record four open notes of the review checks as follow-up items. Do not
+  fix them in this branch:
+  - `plans/follow-ups/runner-file-and-save-errors.md`
+  - `plans/follow-ups/runner-shutdown-turn-end.md`
+  - `plans/follow-ups/idle-agent-login-lifetime.md`
+  - `plans/follow-ups/runner-rejected-write-chains.md`
+- Keep the decision 76 TODO unchecked until the owner confirms that
+  Milestone 4d has merged. The pull request stays a draft.
+
+Owner instructions, 6 November 2026, after the Milestone 4d merge:
+
+- The owner announced that Milestone 4d merged at `1a3cc19`. Adopt
+  decision 76 E in the runner now, with runner protocol version 1.
+- Run the complete gate, commit and push, and mark the pull request ready
+  for review.
+- This instruction supersedes the earlier wait for the Milestone 4d merge
+  notice and the draft state of the pull request.
+
+Agent calls on 6 November 2026, within decision 76 E:
+
+- Apply each cap after the output filter. Reason: the limits measure the
+  bytes that the runner sends, and the filter can change their length.
+- Keep the tree and changes revision counters in the state file with the
+  stream. Reason: the contract keeps revisions across reconnects. Each
+  full report also needs a newer revision than the last one of its kind,
+  after a restart too.
+- Check the complete envelope against the 1 MiB limit before the outbox
+  takes an event number. An event that does not fit gets a local warning
+  and no number. Reason: the workspace never moves its cursor past a gap,
+  so a number with no event would stop all later events.
+
+Evidence: `.context/boat-native-remote-workspaces/runner/handoff.md` and
+`.context/boat-native-remote-workspaces/adopt-76/runner/handoff.md`.
 
 ## Milestone 7: Chat backend
 
@@ -4644,6 +4727,11 @@ Depends on: 5, 6, 7, 7r, 8, 8j
       new tab starts empty.
 - [ ] Test the chat end to end: create a workspace, send a message, stream
       the answer, stop and resume, and send again.
+- [ ] Measure the first agent start after a resume over several runs,
+      with the runner inside and outside the home folder. Keep the faster
+      place.
+      Moved from Milestone 7r on 6 November 2026, because it needs a real sandbox and real logins.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
 
 ## Milestone 16a: First deployment
 

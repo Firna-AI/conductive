@@ -1,3 +1,4 @@
+import { isFilePath } from '../../src/shared/file-path'
 import type {
   BranchChangedFile,
   ChangeKind,
@@ -9,7 +10,6 @@ import type {
 } from '../../src/shared/files'
 import { isRecord } from '../http'
 import { invalidFileResponse } from './errors'
-import { isFilePath } from './paths'
 
 export function natural(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
