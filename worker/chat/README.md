@@ -223,25 +223,26 @@ npm run typecheck
   `beforeCommit` to test a failed or a late commit.
 - Its key order and `startAfter` comparison use UTF-8 bytes, like real storage.
 - Set `crashAfterCommit` to commit the next transaction, then throw once.
-  The restart tests use it to check repair requests, turn cleanup, and file
-  assembly after a crash immediately after the receipt commit.
+  The restart tests cover retry permission, report repairs, turn cleanup,
+  and file assembly after a commit crash.
 - `createRunnerLimitsFixture` in `runner-limits.test-support.ts` runs one
   `RunnerChannel` for the refusal, cap, and file part tests.
 - `runner-repairs.test-support.ts` builds a full and an oversized report of
   each kind, and reads the requests and markers of the repair tests.
 - `late-events.test.ts` and `never-started.test.ts` cover replay after a
   workspace stop and the queued-turn eligibility rules.
-- `retry.test.ts` and `retry-queue.test.ts` cover the retry of the newest
-  failed turn: a stale second tab, a refused end, waiting work, and a
-  failed commit. `retry.test-support.ts` sends retries and reads the
+- `retry.test.ts`, `retry-queue.test.ts`, and `retry-crash.test.ts` cover
+  the newest failed turn: stale tabs, refused ends, waiting work, rollback,
+  and commit crashes. `retry.test-support.ts` sends retries and reads the
   session records.
 - `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
   end. It also checks that late ends preserve the next turn and its commands.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,
   D1, and real WebSockets. `createAdapterRuntime` sets up that runtime.
-- It closes every socket before Miniflare evicts the real object. The
-  restarted object keeps its SQLite history, queued message, and runner
-  cursor. The test checks delivery and continued event numbers after restart.
+- It closes every socket before Miniflare evicts the real object. Restart
+  keeps SQLite history, queued messages, and the runner cursor. Event numbers
+  continue. The resumed queued turn fails. Its message can retry after a
+  second eviction.
 
 ## Seams for other milestones
 
