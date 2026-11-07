@@ -7,8 +7,18 @@ import type {
 } from '../../shared/chat-events'
 import type { ChangedFile } from '../../shared/files'
 import type { UserMessage } from '../../shared/messages'
+import {
+  agentKey,
+  endKey,
+  failedKey,
+  stoppedKey,
+  toolKey,
+  userKey,
+} from './item-keys'
+import { hasEnded, noteTurn, takeMessage, type KnownTurn } from './known-turns'
+import { foldLate } from './late-events'
 import { foldRefused } from './refused-events'
-import { foldTurn, markSent, replaceAt, userKey } from './turn-events'
+import { foldTurn, markSent, replaceAt } from './turn-events'
 
 /** One part of a chat transcript, in the order that the chat shows it. */
 export type TranscriptItem =
@@ -55,10 +65,15 @@ export interface Transcript {
   items: readonly TranscriptItem[]
   turn: RunningTurn | null
   /**
-   * The newest turn of the session, from its accepted turn events and from a
-   * refused end that names a turn. Try again shows only on its failed item.
+   * The turns that accepted events named, in the order of their first event,
+   * and whether each one ended. The last one is the newest turn.
    */
-  newestTurnId: string | null
+  turns: readonly KnownTurn[]
+  /**
+   * The item that the latest event added or changed, other than a lost line
+   * or a late item of an ended turn. Try again needs it to be a failed item.
+   */
+  latestItemId: string | null
   /** Complete terminal data, including omitted files, without new rendering. */
   turnCompletions: Readonly<
     Record<string, Extract<AgentChatEvent, { type: 'turn.completed' }>>
@@ -73,9 +88,29 @@ export interface Transcript {
 export const emptyTranscript: Transcript = {
   items: [],
   turn: null,
-  newestTurnId: null,
+  turns: [],
+  latestItemId: null,
   turnCompletions: {},
   stopRequests: {},
+}
+
+/** The item that an event of a running turn adds or changes, if any. */
+function itemOf(event: AgentChatEvent): string | null {
+  switch (event.type) {
+    case 'assistant.delta':
+    case 'assistant.completed':
+      return agentKey(event.turnId, event.messageId)
+    case 'tool.updated':
+      return toolKey(event.turnId, event.tool.id)
+    case 'turn.completed':
+      return event.state === 'stopped'
+        ? stoppedKey(event.turnId)
+        : endKey(event.turnId)
+    case 'turn.failed':
+      return failedKey(event.turnId)
+    default:
+      return null
+  }
 }
 
 /**
@@ -105,12 +140,13 @@ export function foldEvent(
         index < 0
           ? [...transcript.items, item]
           : replaceAt(transcript.items, index, item)
-      return { ...transcript, items }
+      return { ...transcript, items, latestItemId: item.id }
     }
     case 'message.sent':
       return {
         ...transcript,
         items: markSent(transcript.items, [event.messageId]),
+        turns: takeMessage(transcript.turns, event.turnId, event.messageId),
       }
     case 'turn.stop-requested':
       if (Object.hasOwn(transcript.stopRequests, event.turnId)) {
@@ -124,9 +160,14 @@ export function foldEvent(
         },
       }
     default:
+      if (hasEnded(transcript, event.turnId)) return foldLate(transcript, event)
       return {
-        ...foldTurn(transcript, event, occurredAt),
-        newestTurnId: event.turnId,
+        ...foldTurn(
+          { ...transcript, turns: noteTurn(transcript.turns, event) },
+          event,
+          occurredAt,
+        ),
+        latestItemId: itemOf(event) ?? transcript.latestItemId,
       }
   }
 }

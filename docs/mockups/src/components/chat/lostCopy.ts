@@ -1,8 +1,9 @@
 /**
- * The words of the chat for data that it does not have, from decision 76: a
- * runner event that the workspace refused, and the part of a tool's output or
- * of a turn's file list that the runner left out. The words name the lost
- * data in product terms, and never show the refused data itself.
+ * The words of the chat for data that it does not have: a runner event that
+ * the workspace refused, and the part of a tool's output or of a turn's file
+ * list that the runner left out. The words name the lost data in product
+ * terms, and never show the refused data itself. A line can follow a newer
+ * turn, so no words point at "this turn".
  */
 
 import { formatSize } from './sizes'
@@ -32,8 +33,8 @@ const subjects: Readonly<Record<LostWhat, string>> = {
   'reply-part': 'Part of a reply from the agent',
   reply: 'A reply from the agent',
   'tool-update': 'A tool update',
-  'turn-end': 'The summary of this turn',
-  'turn-error': 'The error of this turn',
+  'turn-end': 'The summary of a turn',
+  'turn-error': 'The error of a turn',
   'all-files': 'An update to All files',
   changes: 'An update to Changes',
   'start-steps': 'An update to the start steps',
@@ -45,7 +46,7 @@ const subjects: Readonly<Record<LostWhat, string>> = {
 const causes: Readonly<Record<LostReason, string>> = {
   too_large: 'it was too large',
   invalid: 'it could not be read',
-  turn_not_active: 'its turn was not running',
+  turn_not_active: 'its turn never started',
 }
 
 /**
@@ -80,9 +81,9 @@ export function unlistedFiles(count: number): string {
 }
 
 /**
- * Workspace data that stays unavailable after a failed repair (decision 96):
- * an update without a session was lost, and the fresh full report that should
- * replace it was lost too. The first loss shows nothing.
+ * Workspace data that stays unavailable after a failed repair: an update
+ * without a session was lost, and the fresh full report that should replace
+ * it was lost too. The first loss shows nothing.
  */
 export type UnavailableData = Extract<LostWhat, 'changes' | 'title'>
 

@@ -42,7 +42,7 @@ export const lostData = defineScreen({
       slug: 'refused',
       title: 'Lost runner events',
       description:
-        'The workspace refused three events of this turn, one for each reason: an update of a tool call that was too large, part of a reply that it could not read, and a tool update that came after Stop. Each one shows as one line at its place, which names what was lost and why. It never shows the lost data. The stopped turn changed more files than the runner lists, so its line ends with "5 changed files not listed", because a stopped turn shows no file list.',
+        'The workspace refused three events, one for each reason: an update of a tool call that was too large and part of a reply that it could not read, both of this turn, and a tool update of a turn that never started. Each one shows as one line at its place, which names what was lost and why. It never shows the lost data. The stopped turn changed more files than the runner lists, so its line ends with "5 changed files not listed", because a stopped turn shows no file list.',
       rationale:
         'The lines use the style of "You stopped the agent": centred, muted, and with an icon. A phone wraps a line into balanced lines. A resent event shows no second line.',
       props: { conversation: 'lost-lines', banner: 'none' },
@@ -51,7 +51,7 @@ export const lostData = defineScreen({
       slug: 'turn-end',
       title: 'Lost end of a turn',
       description:
-        'The event that ends the turn could not be read. The turn still ends, so the composer is ready, but its time and files are missing, and one line says so. A failed turn whose error is lost shows "The error of this turn was lost because it could not be read" in place of the error and Try again.',
+        'The event that ends the turn could not be read. The turn still ends, so the composer is ready, but its time and files are missing, and one line says so. A failed turn whose error is lost shows "The error of a turn was lost because it could not be read" in place of the error and Try again.',
       props: { conversation: 'lost-turn-end', banner: 'checks-running' },
     },
   ],

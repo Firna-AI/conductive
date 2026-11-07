@@ -1,54 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import type {
-  AgentChatEvent,
-  RunnerEventRefused,
-  ToolCall,
-} from '../../shared/chat-events'
-import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import { count, refused, streamId, turn, update } from './event-kit'
 import { renderChat, textOf } from './render-kit'
-
-const turn = { sessionId: FAKE_IDS.session, turnId: 'turn-1' }
-const streamId = 'stream-7f3a'
-
-/** A tool update of the turn, with the output that its detail left out. */
-function update(
-  id: string,
-  target: string,
-  omittedDetailBytes: number,
-  state: ToolCall['state'] = 'done',
-): AgentChatEvent {
-  const tool: ToolCall = {
-    id,
-    kind: 'run',
-    target,
-    detail: null,
-    omittedDetailBytes,
-    state,
-  }
-  return { ...turn, type: 'tool.updated', tool }
-}
-
-/** A refusal marker of the session, for the turn unless `fields` says. */
-function refused(
-  runnerEventNumber: number,
-  runnerEventType: RunnerEventRefused['runnerEventType'],
-  reason: RunnerEventRefused['reason'],
-  fields: Partial<RunnerEventRefused> = {},
-): RunnerEventRefused {
-  return {
-    ...turn,
-    type: 'runner.event-refused',
-    streamId,
-    runnerEventNumber,
-    runnerEventType,
-    reason,
-    ...fields,
-  }
-}
-
-/** How many times a part shows in a text. */
-const count = (text: string, part: string) => text.split(part).length - 1
 
 /** The folded line of each run of tool calls, and whether the run is open. */
 function runs(markup: string) {
@@ -176,13 +130,13 @@ describe('runner events that the workspace refused', () => {
       refused(20, 'turn.completed', 'turn_not_active', { turnId: 'turn-0' }),
     )
     const inactive =
-      'The summary of this turn was lost because its turn was not running'
+      'The summary of a turn was lost because its turn never started'
     expect(text()).toContain(`${inactive} Working 2m 41s`)
     const ended = /Working|Thinking|Try again|This turn stopped|\b\d+[smh]\b/
 
     chat.emit(refused(21, 'turn.completed', 'invalid'))
     expect(text()).toContain(
-      `Ran unit Stopped ${inactive} The summary of this turn was lost because it could not be read`,
+      `Ran unit Stopped ${inactive} The summary of a turn was lost because it could not be read`,
     )
     expect(text()).not.toMatch(ended)
 
@@ -192,16 +146,27 @@ describe('runner events that the workspace refused', () => {
     expect(text()).toContain('Running build Working 2m 41s')
     chat.emit(refused(22, 'turn.failed', 'too_large', { turnId: 'turn-2' }))
     expect(text()).toContain(
-      'Ran build Stopped The error of this turn was lost because it was too large',
+      'Ran build Stopped The error of a turn was lost because it was too large',
     )
     expect(text()).not.toMatch(ended)
   })
 
-  it('keeps Try again on a failed turn when a later line follows it', async () => {
+  it('keeps Try again on a failed turn when a later line follows it, not a later message', async () => {
     const { chat, text } = await renderChat({ conversation: 'failed' })
-    chat.emit(refused(30, 'tool.updated', 'turn_not_active'))
+    chat.emit(refused(30, 'tool.updated', 'too_large'))
     expect(text()).toMatch(
-      /Try again A tool update was lost because its turn was not running/,
+      /Try again A tool update was lost because it was too large/,
+    )
+
+    const { message } = workspaceFixtures()
+    const next = { ...message, id: 'ask-3', text: 'Try the other proxy.' }
+    chat.emit({
+      type: 'message.accepted',
+      message: { ...next, state: 'queued' },
+    })
+    // The recorded error says "Try again." itself, and no button follows it.
+    expect(text()).toContain(
+      'The agent is busy. Try again. A tool update was lost because it was too large Try the other proxy.',
     )
   })
 
@@ -236,7 +201,7 @@ describe('runner events that the workspace refused', () => {
     chat.emit(refused(40, 'turn.completed', 'invalid', { turnId: 'turn-2' }))
     expect(text()).not.toContain('Try again')
     expect(text()).toContain(
-      'The agent is busy. The summary of this turn was lost because it could not be read',
+      'The agent is busy. Then add tests for the form. The summary of a turn was lost because it could not be read',
     )
   })
 })

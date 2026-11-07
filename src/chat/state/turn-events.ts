@@ -1,7 +1,19 @@
 import type { AgentChatEvent } from '../../shared/chat-events'
+import {
+  agentKey,
+  endKey,
+  failedKey,
+  stoppedKey,
+  toolKey,
+  userKey,
+} from './item-keys'
+import { placeInTurn } from './placement'
 import type { RunningTurn, Transcript, TranscriptItem } from './transcript'
 
-export const userKey = (messageId: string) => `user:${messageId}`
+type AgentText = Extract<
+  AgentChatEvent,
+  { type: 'assistant.delta' | 'assistant.completed' }
+>
 
 export function replaceAt<T>(items: readonly T[], index: number, item: T): T[] {
   return items.map((current, position) => (position === index ? item : current))
@@ -19,7 +31,7 @@ export function markSent(
 }
 
 /** A turn that ends leaves no call running. */
-function settleTools(
+export function settleTools(
   items: readonly TranscriptItem[],
   turnId: string,
   state: 'done' | 'stopped',
@@ -63,13 +75,16 @@ function ending(transcript: Transcript, turnId: string): RunningTurn | null {
 }
 
 /** The member who first pressed Stop in a turn, or null. */
-function stopperOf(transcript: Transcript, turnId: string): string | null {
+export function stopperOf(
+  transcript: Transcript,
+  turnId: string,
+): string | null {
   const { stopRequests } = transcript
   return Object.hasOwn(stopRequests, turnId) ? stopRequests[turnId] : null
 }
 
 /** The Stop requests without the one of a turn that ended. */
-function settleStops(
+export function settleStops(
   transcript: Transcript,
   turnId: string,
 ): Transcript['stopRequests'] {
@@ -99,30 +114,35 @@ export function endLostTurn(
   }
 }
 
-function writeAgent(
+/** The text item of an agent message: a part adds to its earlier text. */
+export function agentItem(
   items: readonly TranscriptItem[],
-  event: Extract<
-    AgentChatEvent,
-    { type: 'assistant.delta' | 'assistant.completed' }
-  >,
-): TranscriptItem[] {
-  const id = `agent:${event.turnId}:${event.messageId}`
-  const index = items.findIndex((item) => item.id === id)
-  const current = items[index]
+  event: AgentText,
+): Extract<TranscriptItem, { kind: 'agent' }> {
+  const id = agentKey(event.turnId, event.messageId)
+  const current = items.find((item) => item.id === id)
   const previous = current?.kind === 'agent' ? current.text : ''
   const text =
     event.type === 'assistant.delta' ? previous + event.text : event.text
-  const item: TranscriptItem = { kind: 'agent', id, turnId: event.turnId, text }
-  const written = index < 0 ? [...items, item] : replaceAt(items, index, item)
+  return { kind: 'agent', id, turnId: event.turnId, text }
+}
+
+function writeAgent(
+  transcript: Transcript,
+  event: AgentText,
+): TranscriptItem[] {
+  const item = agentItem(transcript.items, event)
+  const written = placeInTurn(transcript, transcript.items, item, false)
   return event.type === 'assistant.completed'
-    ? placeAnswer(written, id, event.userMessageIds)
+    ? placeAnswer(written, item.id, event.userMessageIds)
     : written
 }
 
 /**
- * Applies one event of an agent turn: its start, thinking, text, tool calls,
- * and its end as finished, stopped, or failed. A stopped end names the
- * member who first pressed Stop in the turn, if one did.
+ * Applies one event of an agent turn that has not ended: its start,
+ * thinking, text, tool calls, and its end as finished, stopped, or failed.
+ * Each item stays with its turn, before a message that waits for a later
+ * turn. A stopped end names the member who first pressed Stop, if one did.
  */
 export function foldTurn(
   transcript: Transcript,
@@ -151,19 +171,21 @@ export function foldTurn(
       return { ...transcript, turn: { ...turn, thinking: true } }
     case 'assistant.delta':
     case 'assistant.completed':
-      return { ...transcript, items: writeAgent(items, event), turn: working }
-    case 'tool.updated': {
-      const id = `tool:${event.turnId}:${event.tool.id}`
-      const index = items.findIndex((item) => item.id === id)
-      const item: TranscriptItem = {
-        kind: 'tool',
-        id,
-        turnId: event.turnId,
-        tool: event.tool,
-      }
       return {
         ...transcript,
-        items: index < 0 ? [...items, item] : replaceAt(items, index, item),
+        items: writeAgent(transcript, event),
+        turn: working,
+      }
+    case 'tool.updated': {
+      const item = {
+        kind: 'tool',
+        id: toolKey(event.turnId, event.tool.id),
+        turnId: event.turnId,
+        tool: event.tool,
+      } as const
+      return {
+        ...transcript,
+        items: placeInTurn(transcript, items, item, false),
         turn: working,
       }
     }
@@ -174,23 +196,23 @@ export function foldTurn(
         event.turnId,
         stopped ? 'stopped' : 'done',
       )
-      const end: TranscriptItem = stopped
+      const end = stopped
         ? {
-            kind: 'stopped',
-            id: `stopped:${event.turnId}`,
+            kind: 'stopped' as const,
+            id: stoppedKey(event.turnId),
             turnId: event.turnId,
             by: stopperOf(transcript, event.turnId),
           }
         : {
-            kind: 'turn-end',
-            id: `end:${event.turnId}`,
+            kind: 'turn-end' as const,
+            id: endKey(event.turnId),
             turnId: event.turnId,
             durationMs: event.durationMs,
             files: event.files,
           }
       return {
         ...transcript,
-        items: [...ended.filter((item) => item.id !== end.id), end],
+        items: placeInTurn(transcript, ended, end, false),
         turn: ending(transcript, event.turnId),
         stopRequests: settleStops(transcript, event.turnId),
         turnCompletions: {
@@ -200,9 +222,9 @@ export function foldTurn(
       }
     }
     case 'turn.failed': {
-      const failed: TranscriptItem = {
-        kind: 'failed',
-        id: `failed:${event.turnId}`,
+      const failed = {
+        kind: 'failed' as const,
+        id: failedKey(event.turnId),
         turnId: event.turnId,
         error: event.error,
         retryMessageId: event.retryMessageId,
@@ -210,7 +232,7 @@ export function foldTurn(
       const ended = settleTools(items, event.turnId, 'stopped')
       return {
         ...transcript,
-        items: [...ended.filter((item) => item.id !== failed.id), failed],
+        items: placeInTurn(transcript, ended, failed, false),
         turn: ending(transcript, event.turnId),
         stopRequests: settleStops(transcript, event.turnId),
       }

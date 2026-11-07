@@ -5,6 +5,7 @@ import type { ToolCall } from '../../shared/chat-events'
 import type { UserMessage } from '../../shared/messages'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { formatDuration } from '../state/format'
+import { newestTurnId } from '../state/known-turns'
 import type {
   RunningTurn,
   Transcript,
@@ -62,14 +63,17 @@ export function TranscriptView(props: {
 }) {
   const { transcript } = props
   // Try again shows on the failed item of the newest turn, when no turn runs
-  // and nothing but lines of lost events follows it.
-  const last = transcript.items.findLast((item) => item.kind !== 'lost')
+  // and no later event added an item other than a lost line or a late item of
+  // an ended turn. A message sent after the failure hides it.
+  const latest = transcript.items.find(
+    (item) => item.id === transcript.latestItemId,
+  )
   const retryable =
     !props.readOnly &&
     !transcript.turn &&
-    last?.kind === 'failed' &&
-    last.turnId === transcript.newestTurnId
-      ? last
+    latest?.kind === 'failed' &&
+    latest.turnId === newestTurnId(transcript)
+      ? latest
       : null
   return (
     <>

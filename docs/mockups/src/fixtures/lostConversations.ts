@@ -104,7 +104,10 @@ const iconTurn: readonly ChatItem[] = [
   },
 ]
 
-/** A turn that loses three runner events, one for each reason. */
+/**
+ * A turn loses two runner events and stops, and then an update of a turn
+ * that never started is lost: one line for each reason.
+ */
 const lostLines: readonly ChatItem[] = [
   {
     kind: 'user',

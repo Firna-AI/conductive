@@ -43,7 +43,7 @@ export interface ChatReaders {
 }
 
 /**
- * The line of a stopped turn (decision 72): "You" to the member who pressed
+ * The line of a stopped turn: "You" to the member who pressed
  * Stop, and that member's name to the others. A stop without a request, or
  * by a member whom the chat cannot name, names nobody.
  */
@@ -62,8 +62,19 @@ function omittedFiles(transcript: Transcript, turnId: string): number {
     : 0
 }
 
+/**
+ * The files that a stopped line names. A turn with a file row, such as one
+ * from a late end, counts the rest after its files instead.
+ */
+function unlistedOf(transcript: Transcript, turnId: string): number {
+  const listed = transcript.items.some(
+    (item) => item.kind === 'turn-end' && item.turnId === turnId,
+  )
+  return listed ? 0 : omittedFiles(transcript, turnId)
+}
+
 export interface ItemActions {
-  /** Try again shows on a failed turn that is the last part of the chat. */
+  /** Whether this failed item may offer Try again. */
   canRetry: boolean
   retrying: boolean
   onRetry: (messageId: string) => void
@@ -95,7 +106,7 @@ export function ItemView(props: {
         />
       )
     case 'stopped': {
-      const files = omittedFiles(props.transcript, item.turnId)
+      const files = unlistedOf(props.transcript, item.turnId)
       return (
         <div className={styles.event}>
           <CircleStop size={13} />

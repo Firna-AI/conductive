@@ -5,8 +5,7 @@ chat of the open session with its composer. It shows messages, folded tool
 calls, the running turn, steer, Stop, failures with Try again, the start
 steps of the sandbox, and the bar that takes the composer's place while the
 sandbox does not run. It builds against the fake API and the recorded chat
-events of `src/test-support/`. Milestone 8i wires it to the Worker and the
-agent runner.
+events of `src/test-support/`. No app screen mounts it yet.
 
 ## Use it in the app
 
@@ -73,15 +72,23 @@ agent runner.
 - Each refusal marker of a session becomes one `lost` item at its place among the events, which shows one line.
   The transcript keeps the marker only in that item. A repeat of the same marker replaces its item.
   The line names the lost data and the reason in plain words, and never the stream, number, or event type.
+  No line says "this turn", because a line can follow a newer turn.
   Nullable turn context stays intact. Markers without a session stay outside per-session logs.
-  The chat keeps no marker without a session. The browser shows nothing after the first loss, as decision 96 requires.
+  The chat keeps no marker without a session, and shows nothing after such a loss.
   A notice beside the data shows only when the fresh full report that repairs it is lost too. The chat builds no such notice.
-- A refused `turn.completed` or `turn.failed` ends the turn that its marker names.
+- `Transcript.turns` lists the turns that accepted events named, in the order of their first event, and whether each one ended.
+  The last one is the newest turn. A turn ends with its completion or failure, with a refused end while it runs, or when a newer turn starts.
+- Each item stays with its turn: before any request or item of a later turn, and before a message that no turn has taken yet.
+- An accepted event of a turn that has ended shows inside that turn, before the row where the turn ended.
+  It brings back no Working row and no Stop, and it changes neither a running turn nor the newest turn.
+  A running tool of an ended turn shows as stopped. The files of a late end show as a file row, and the stopped line keeps its member.
+- A refusal marker starts no turn. A refused `turn.completed` or `turn.failed` ends its turn only while that turn runs.
   Its running calls show as stopped, its Stop request clears, and no time, files, or Try again appear.
-  A marker of a turn that was not running, or without a turn, ends nothing.
-- `Transcript.newestTurnId` names the newest turn, from its accepted turn events and from a refused end that names a turn.
-  Try again shows only on the failed item of that turn, when no turn runs.
-  A later line of a lost event keeps it. A newer turn takes it away, also when the end of that turn was lost.
+  A marker of an ended turn, of a turn that never started, or without a turn ends nothing.
+- `Transcript.latestItemId` names the item that the latest event added or changed, other than a lost line or a late item of an ended turn.
+  Try again shows only on the failed item of the newest turn, when no turn runs and that item is the latest.
+  A later lost line, a late item of an older turn, and a message accepted before the failure keep it.
+  A message accepted after the failure, or a newer turn, takes it away, also when the end of that turn was lost.
 - Ordered history folding preserves these fields and lines across completion and failure events.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
@@ -188,6 +195,10 @@ on `FakeApiServer` and the recorded events, and render the chat with
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
 - `state/session-log.ts`: the event log of each session.
+- `state/known-turns.ts`: the known turns, their order, and their ends.
+- `state/placement.ts`: where an item goes in its turn, also a late one.
+- `state/late-events.ts`: accepted events of a turn that has ended.
+- `state/item-keys.ts`: the item IDs that later events of an item reuse.
 - `state/refused-events.ts`: how a refusal marker becomes a line, and how a
   refused end ends its turn.
 - `state/history.ts`: the shared history load of each session, and the

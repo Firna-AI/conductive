@@ -91,9 +91,10 @@ function turnOf(sessionId: string, turnId: string) {
 
 /**
  * The `loss` scenario of the development page: one session with each state
- * of decision 76 that a session shows. A codemod lists 200 of its 247 files,
- * a test run left out output, a turn loses three events and stops with
- * files left out, and the last turn loses its end.
+ * of lost or left-out data that a session shows. A codemod lists 200 of its
+ * 247 files, a test run left out output, a turn loses two events and stops
+ * with files left out, an update of a turn that never started is lost, and
+ * the last turn loses its end.
  */
 export function lossEvents(
   workspaceId: string,
@@ -131,7 +132,10 @@ export function lossEvents(
       requestedById: viewerId,
     },
     profile.end('stopped', [], 5),
-    profile.refused(36, 'tool.updated', 'turn_not_active'),
+    {
+      ...profile.refused(36, 'tool.updated', 'turn_not_active'),
+      turnId: 'turn-never-started',
+    },
     ...spinner.ask('Show a loading state under the address line.'),
     spinner.tool({
       ...run('edit', 'src/AddressForm.tsx', null),

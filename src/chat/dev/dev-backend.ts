@@ -22,7 +22,7 @@ import {
   type FetchLike,
   type WorkspaceTarget,
 } from '../api/client'
-import { endsTurn } from '../state/refused-events'
+import { endsTurn } from '../state/known-turns'
 import type { Clock } from '../ui/clock'
 import { DevAgent } from './dev-agent'
 import { lossEvents } from './dev-loss'
@@ -174,15 +174,26 @@ export class DevBackend {
           break
         case 'turn.completed':
         case 'turn.failed':
-          this.recordedTurns.delete(event.sessionId)
+          this.endRecorded(event.sessionId, event.turnId)
           break
         case 'runner.event-refused':
           // A refused end still ends its turn, as the chat shows it.
           if (event.sessionId && event.turnId && endsTurn(event)) {
-            this.recordedTurns.delete(event.sessionId)
+            this.endRecorded(event.sessionId, event.turnId)
           }
           break
       }
+    }
+  }
+
+  /**
+   * Forgets the recorded turn of a session when this end names it. A late
+   * end of an older turn, or a marker of a turn that never started, leaves
+   * the running turn as it is.
+   */
+  private endRecorded(sessionId: string, turnId: string): void {
+    if (this.recordedTurns.get(sessionId) === turnId) {
+      this.recordedTurns.delete(sessionId)
     }
   }
 

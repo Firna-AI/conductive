@@ -4525,6 +4525,7 @@ Evidence: `.context/boat-native-remote-workspaces/8j-mockups-report.md` and
 `.context/boat-native-remote-workspaces/8j-options-check.md`.
 Per-session checks: `.context/boat-native-remote-workspaces/8j-app-report.md`.
 Decision 96 mockups: `.context/boat-native-remote-workspaces/decision-96/implementor-report.md`.
+Finding 5 and decision 104 E: `.context/boat-native-remote-workspaces/fix-2/implementor-report.md`.
 
 Design calls on 6 November 2026:
 
@@ -4561,6 +4562,37 @@ Design calls on 6 November 2026:
     the app shell.
   - **D.** File notices beside Files and the other notices below the
     header, with both owners.
+
+### Finding 5 and decision 104: late events of an ended turn
+
+- **Finding:** round 2 finding 5 of the review. A late event of an ended
+  turn reopened it with Working and Stop, could replace a running newer
+  turn, and showed under a later request. A refused end of an older turn
+  moved the newest turn back and took Try again from a newer failure.
+- **Chosen:** E of decision 104, by the user on 7 November 2026. The
+  workspace stores a late event of an ended turn in that turn, and refuses
+  only an event of a turn that never started. Milestone 7s builds the
+  workspace side. This milestone builds the chat side.
+- **Chat rules, design calls on 7 November 2026:**
+  - The chat knows each turn from its first accepted event, in that order.
+    The last one is the newest turn. A turn ends with its end, with a
+    refused end while it runs, or when a newer turn starts.
+  - A late accepted event shows inside its ended turn, before the row
+    where the turn ended and before any later request. It brings back no
+    Working and no Stop, and changes neither a running turn nor the newest
+    turn. A running tool of that turn shows as stopped. The files of a late
+    end show as a file row, and the stopped line keeps its member.
+  - Each item stays with its turn, before a message that no turn has
+    taken yet. So a turn's last row stays above a request that waited
+    during the turn.
+  - A refusal marker starts no turn and never changes the newest turn. A
+    refused end ends its turn only while that turn runs.
+  - Try again follows the latest event that added an item. A later lost
+    line, a late item of an older turn, or a message accepted before the
+    failure keeps it. A message accepted after the failure, or a newer
+    turn, takes it away.
+  - The lines say "The summary of a turn", "The error of a turn", and "its
+    turn never started", because a line can follow a newer turn.
 
 
 ## Milestone 8k: Retry only the newest turn
