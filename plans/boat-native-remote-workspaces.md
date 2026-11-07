@@ -3445,6 +3445,28 @@ review, and the user's question "why do we reject these events?".
   The workspace refuses only an event of a turn that never started.
   Milestone 7s builds the workspace side, and Milestone 8j the chat side.
 
+### 105. One sender per turn
+
+Added on 7 November 2026 from round 2 finding 36 of the Milestone 7r
+review.
+
+- **Background:** Each turn runs on its sender's login (decision 49).
+  Another member's message during a turn waits inside that turn, and the
+  runner then continues the same turn on the other member's login. The
+  turn ends with one result, so one member's failure or Stop drops the
+  other member's waiting message.
+- **Options:**
+  - **A.** Keep mixed turns.
+  - **D.** One sender per turn: another member's message becomes a queued
+    turn of that member.
+  - **E.** Keep mixed turns, and queue the messages that never reached the
+    agent after a failure or a Stop.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 7 November 2026, after the question
+  whether a login switch affects cost and caching. Each switch starts a
+  new prompt cache under the other login, as in every option, so cost
+  does not decide it. Milestone 7w builds it.
+
 ### 106. Run the runner checks in the complete gate
 
 Added on 7 November 2026 from the merge of Milestone 7r.
@@ -4846,11 +4868,32 @@ seconds between `SIGTERM` and `SIGKILL`. The value also leaves time to save
 the turn ends within the 15-second stop window of the service. The owner
 chose one fixed kill limit in review finding 2 B of PR #30.
 
+## Milestone 7w: One sender per turn
+
+Tags: ui
+
+Depends on: 7t, 8k
+
+Apply decision 105 D. Added on 7 November 2026.
+
+- [ ] A message from another member during a running turn becomes a
+      queued turn of that member. It runs on that member's login when the
+      running turn ends, whatever its result. A message from the same
+      sender still joins the running turn. Update the section "Messages"
+      of the chat protocol.
+- [ ] Remove the login switch inside a turn from the runner, so that a
+      turn holds only messages of its sender.
+- [ ] Show the queued turn of another member as its own turn, with its
+      own result, Stop, and Try again. Compare it with the chat mockups.
+- [ ] Test a second member's message during a turn, with a failure and
+      with a Stop of the first turn, in two tabs. Delete
+      `plans/follow-ups/one-sender-per-turn.md`.
+
 ## Milestone 7v: Reports after a failed file read
 
 Tags: ui
 
-Depends on: 7t
+Depends on: 7w
 
 Apply decision 109 D, and the shutdown fix that the review of Milestone
 7u deferred. Added on 7 November 2026.

@@ -1,7 +1,7 @@
 # One turn can mix the messages of several members
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** Yes.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-07, from PR #12, branch `conductor/boat-native-remote-workspaces-milestone-7r`, the wider fix D of round 2 finding 36. The user sees it as item 105.
 - **Location:** `docs/protocol/chat-and-events.md`, section "Messages", and the turn handling in `worker/chat/` and `runner/src/`.
 - **Reason:** the fix changes when another member's message reaches a running turn, which the protocol states.
@@ -18,4 +18,4 @@
 - **Wider fix:** D.
 - **Previous examples:** PR #12 round 2 finding 36, and the wrong retry target of a later sender's failure that its check found.
 - **Recommendation:** D.
-- **Action:** ask the user, because D changes the protocol rule that a message during a turn goes to the agent at once.
+- **Action:** fix after merge, apply D, as the user chose on 7 November 2026 (decision 105). Milestone 7w builds it.
