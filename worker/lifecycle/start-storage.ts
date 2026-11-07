@@ -7,14 +7,18 @@ import {
   type EncryptedStartLog,
 } from './start-logs'
 import type { MaskedStartLog } from './masked-start-log'
-import type { StartJobStorage } from './start-types'
+import { readStartJob, serializeStartJob } from './start-job-codec'
+import type {
+  StartJobStorage,
+  WorkspaceStartResult,
+  WorkspaceCreationAdmission,
+} from './start-types'
 
 export const START_JOB_KEY = 'lifecycle:start-job'
 const JOB = START_JOB_KEY
 export const START_RESULT_KEY = 'lifecycle:start-result'
 const RESULT = START_RESULT_KEY
 const CREATE_RESULT = 'lifecycle:create-result'
-export const CREATE_ADMISSION_KEY = 'lifecycle:create-admission'
 const PUBLICATION = 'lifecycle:create-publication'
 export const START_LOG_PREFIX = 'lifecycle:start-log:'
 const LOG = START_LOG_PREFIX
@@ -55,8 +59,7 @@ export function durableStartStorage(
   now: () => number,
   env: Pick<AppEnv, 'BOAT_KEY_ENCRYPTION_KEY'>,
 ): StartJobStorage {
-  async function storedResult(key: string) {
-    const result = await storage.get('result', key)
+  async function storedResult(result: WorkspaceStartResult | undefined) {
     if (!result || result.ok) return result
     const log = await readStartLog(storage, env)
     return {
@@ -65,7 +68,10 @@ export function durableStartStorage(
     }
   }
   return {
-    job: () => storage.get('job', JOB),
+    job: async () => {
+      const job = await storage.get('job', JOB)
+      return job ? readStartJob(job) : undefined
+    },
     epoch: async () =>
       (await storage.get('number', 'lifecycle:stop-epoch')) ?? 0,
     stop: async () =>
@@ -97,7 +103,7 @@ export function durableStartStorage(
           'lifecycle:start-log-context',
           startLogContext(job.workspaceId, job.attempt),
         )
-        await transaction.put('job', JOB, job)
+        await transaction.put('job', JOB, serializeStartJob(job))
         await transaction.setAlarm(now())
         return true
       })
@@ -107,19 +113,19 @@ export function durableStartStorage(
         const current = await transaction.get('job', JOB)
         if (current?.attempt === job.attempt)
           await transaction.put('job', JOB, {
-            ...job,
+            ...serializeStartJob(job),
             cancelled: current.cancelled || job.cancelled,
           })
       })
     },
-    result: () => storedResult(RESULT),
-    creationResult: () => storedResult(CREATE_RESULT),
-    admission: () => storage.get('admission', CREATE_ADMISSION_KEY),
-    admit: async (created) => {
-      await storage.put('admission', CREATE_ADMISSION_KEY, {
-        ok: true,
-        created,
-      })
+    result: async () => storedResult(await storage.get('result', RESULT)),
+    creationResult: async () =>
+      storedResult((await storage.get('creation', CREATE_RESULT))?.result),
+    admission: async () => {
+      const current = await storage.get('job', JOB)
+      if (current?.kind === 'create' && current.phase !== 'records')
+        return { ok: true, created: current.admission }
+      return (await storage.get('creation', CREATE_RESULT))?.admission
     },
     publication: () => storage.get('publication', PUBLICATION),
     clearPublication: async () => {
@@ -134,12 +140,16 @@ export function durableStartStorage(
           : { ...result, error: { ...result.error, log: null } }
         await transaction.put('result', RESULT, stored)
         if (current.kind === 'create') {
-          if (!(await transaction.get('admission', CREATE_ADMISSION_KEY))) {
+          let admission: WorkspaceCreationAdmission
+          if (current.phase === 'records') {
             if (stored.ok)
               throw new Error('A create completed before admission')
-            await transaction.put('admission', CREATE_ADMISSION_KEY, stored)
-          }
-          await transaction.put('result', CREATE_RESULT, stored)
+            admission = stored
+          } else admission = { ok: true, created: current.admission }
+          await transaction.put('creation', CREATE_RESULT, {
+            result: stored,
+            admission,
+          })
           await transaction.put('publication', PUBLICATION, {
             workspaceId: current.workspaceId,
             state: result.ok ? 'succeeded' : 'failed',
@@ -193,7 +203,7 @@ export function durableStartStorage(
           )
         await transaction.put('number', 'lifecycle:start-log-count', count)
         await transaction.put('job', JOB, {
-          ...job,
+          ...serializeStartJob(job),
           stdoutOffset: output.stdoutNextOffset,
           stderrOffset: output.stderrNextOffset,
         })

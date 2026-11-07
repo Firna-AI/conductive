@@ -40,9 +40,9 @@ from [`runtime.ts`](runtime.ts). The caller gives three options:
 
 - `software`: the runner archive for each new build and refresh, as the
   [image README](../../image/README.md#the-runner-archive) says.
-- `acceptFirstMessage`: the hook of the chat backend. It stores the queued
-  first message of a new workspace and returns it, after the admission and
-  for each repeat. So it must be idempotent for the message and session IDs.
+- `acceptFirstMessage`: the hook of the chat backend. After the admission
+  and for each repeat, it stores the queued first message of that admission
+  and returns it. So it must be idempotent for the message and session IDs.
 - `waitUntil`: the `waitUntil` of the Worker's execution context. A create
   gives it its work, so the work continues when the browser closes.
 
@@ -65,6 +65,9 @@ const response = await handleLifecycleRequest(request, context, runtime, {
   Admission makes the workspace, its token, and the first message durable.
   The sandbox can still be starting. `waitCreationLifecycle` waits for the
   end of a create, and `waitLifecycleStart` for the end of a resume.
+- The write that ends the `records` phase stores the admission in the start
+  job. The end of the create moves it to the completed creation record. A
+  repeat with other content still gets the admitted first message.
 - A failed create keeps the full first message, with its attachment IDs,
   as a hidden draft, and records the sandbox cleanup. It then releases the
   creation claim and publishes the failed `start.updated` and the error
@@ -134,8 +137,8 @@ chat backend and the runner ingestion, and no code calls them yet:
   removes it.
 - `reportRunnerLifecycle` takes each runner event that ordered runner
   ingestion accepts. `runnerLifecycleDisconnected` takes a disconnect.
-- `acknowledgeLifecycleFirstMessage` clears the first message that the
-  object keeps from the create.
+- `acknowledgeLifecycleFirstMessage` clears the pending first message of
+  the create. The admission keeps its own copy for repeats.
 
 The `alarm` of the class serves both roles. For an image coordinator, it
 advances the running build or refresh by one step, or starts the daily
@@ -193,6 +196,10 @@ workspace event history, with chat and lifecycle events.
   when the copy ends, as
   [GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens)
   says.
+- D1 keeps at most 4 MiB of each build log: the first and the last output.
+  A write that passes that budget removes whole rows from the middle. The
+  line `[N output bytes omitted]` takes their place in the event order.
+  [Build jobs](image-builds.md#build-jobs) gives the size limit of a row.
 
 [Image builds](image-builds.md) gives the build entry points, the build
 steps, the snapshot leases, and the refresh timers.
@@ -236,7 +243,9 @@ object holds the lifecycle state, the turn records, and the events.
   `resumeWorkspace`.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
-  phases, process IDs, output offsets, and results.
+  phases, admission, process IDs, output offsets, and results.
+- [`start-job-codec.ts`](start-job-codec.ts): `serializeStartJob` and
+  `readStartJob`, which convert the start job for storage and internal RPC.
 - [`start-logs.ts`](start-logs.ts): `releasedStartLog`, which masks the
   decrypted log as a [`MaskedStartLog`](masked-start-log.ts).
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
@@ -247,17 +256,26 @@ object holds the lifecycle state, the turn records, and the events.
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
 - [`workspace-actions.ts`](workspace-actions.ts): the stop, deadline, and
   state read actions on the sandbox.
+- [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
+  path to a Boat call that creates a sandbox or a snapshot. It stores the
+  request first, so the lifecycle finds the resource after a lost reply.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`.
+- [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,
+  which splits output into rows and adds the budget statements of
+  [`build-log-retention.ts`](build-log-retention.ts) to the same D1 batch.
 - [`build-log-reader.ts`](build-log-reader.ts): `readBuildSnapshot`, which
   reads the build state and its log in one D1 batch.
 - [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
   `runImageAlarm`.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
 - [`image-software.ts`](image-software.ts): the runner archive check and
-  install/start commands. [`savedScriptCommand`](saved-script.ts) runs Bash.
+  install/start commands.
+- [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text
+  of a saved install or startup script. Only `savedScriptCommand` turns it
+  into a Bash command.
 - [Repository layout](repository-layout.md#key-code): the repository entries.
 - [`tokens.ts`](tokens.ts): the encrypted workspace token and
   `authenticateWorkspaceToken`.

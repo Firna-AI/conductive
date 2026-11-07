@@ -22,6 +22,11 @@ import { advanceBuildCommand, cleanupBuild } from './build-execution'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { IMAGE_DAY_MS, scheduleIdleImage } from './image-schedule'
 import {
+  buildSandboxIntent,
+  buildSnapshotIntent,
+  createResource,
+} from './resource-intents'
+import {
   firstOrgAdmin,
   readImageSettings,
   readRepositories,
@@ -31,7 +36,6 @@ import {
 import {
   capturedRepositoryLocations,
   repositoryLocations,
-  repositoryEnvironment,
   readRepositoryLocations,
   type RepositoryLocation,
 } from './repository-locations'
@@ -184,19 +188,10 @@ export async function advanceImageBuild(
     if (job.phase === 'cleanup' || job.state !== 'running')
       return await cleanupBuild(runtime, provider, job)
     if (job.phase === 'create') {
-      const sandbox = await provider.create({
-        snapshotName: job.previousImageName ?? undefined,
-        name: `image-${job.buildId}`,
-        env: repositoryEnvironment(
-          capturedRepositoryLocations(
-            job.repositoryLocationsJson,
-            readRepositories(JSON.parse(job.repositoriesJson)),
-          ),
-        ),
-        ttlSeconds: 1_800,
-        idempotencyKey: `image-${job.buildId}`,
-        labels: { org: orgId, build: buildId },
-      })
+      const sandbox = await createResource(
+        provider,
+        buildSandboxIntent(env.DB, job),
+      )
       await assignBuildSandbox(env.DB, buildId, sandbox.id)
       await updateBuildJob(env.DB, buildId, 'sources')
       return false
@@ -212,7 +207,7 @@ export async function advanceImageBuild(
     if (job.phase === 'snapshot') {
       const snapshot = job.snapshotName
         ? await provider.getSnapshot(job.snapshotName)
-        : await provider.saveSnapshot(job.sandboxId, `image-${buildId}`)
+        : await createResource(provider, buildSnapshotIntent(env.DB, job))
       await assignBuildSnapshot(env.DB, buildId, snapshot.name)
       if (snapshot.status === 'failed') throw new Error('Image save failed')
       if (snapshot.status === 'ready')

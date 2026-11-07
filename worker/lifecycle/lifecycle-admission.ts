@@ -13,6 +13,8 @@ export async function initializeWorkspaceLifecycle(
   turns: TurnScopes,
   input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
 ): Promise<void> {
+  await requireWorkspaceOrg(env.DB, input.orgId, input.workspaceId)
+  await requireOrgMember(env.DB, input.orgId, input.firstTurn.senderUserId)
   await ctx.blockConcurrencyWhile(async () => {
     if ((await ctx.storage.get('job', 'lifecycle:start-job'))?.cancelled) return
     if (await ctx.storage.get('image', 'org-image:coordinator'))
@@ -21,8 +23,6 @@ export async function initializeWorkspaceLifecycle(
         'coordinator_conflict',
         'The workspace could not start. Try again.',
       )
-    await requireWorkspaceOrg(env.DB, input.orgId, input.workspaceId)
-    await requireOrgMember(env.DB, input.orgId, input.firstTurn.senderUserId)
     await turns.register(input.firstTurn)
     await lifecycle.initialize(input)
   })

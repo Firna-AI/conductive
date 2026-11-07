@@ -15,6 +15,7 @@ import {
   START_LOG_PREFIX,
 } from './start-storage'
 import type { WorkspaceStartJob, WorkspaceStartResult } from './start-types'
+import { readStartJob, type StoredWorkspaceStartJob } from './start-job-codec'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import type { ImageRuntime, PrepareImageSources } from './image-builds'
 import type { ImageCoordinatorState } from './image-timers'
@@ -64,7 +65,7 @@ export async function backendFixture(sharedHarness?: TestHarness) {
   let now = TEST_TIME
   let sequence = 0
   const actors = new Map<string, ReturnType<typeof backendPlatform>>()
-  const accepted = new Map<string, WorkspaceStartJob>()
+  const accepted = new Map<string, StoredWorkspaceStartJob>()
   const queuedIds: string[] = []
   const queueWaiters: ((id: string) => void)[] = []
   let wake: () => void = () => {}
@@ -164,11 +165,17 @@ export async function backendFixture(sharedHarness?: TestHarness) {
     if (!actor) throw new Error('Missing platform actor')
     if (!starts.has(id))
       starts.set(id, {
-        job: () => actor.storage.get('job', START_JOB_KEY),
+        job: async () => {
+          const job = await actor.storage.get('job', START_JOB_KEY)
+          return job ? readStartJob(job) : undefined
+        },
         advance: () => actor.endpoint().alarm(),
         wait: () => actor.endpoint().waitLifecycleStart(),
         restart: actor.restart,
-        lastAccepted: () => structuredClone(accepted.get(id)),
+        lastAccepted: () => {
+          const job = accepted.get(id)
+          return job ? readStartJob(structuredClone(job)) : undefined
+        },
         storedCiphertexts: async () => [
           ...(
             await actor.storage.list('text', { prefix: START_LOG_PREFIX })

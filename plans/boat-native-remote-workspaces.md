@@ -4654,20 +4654,26 @@ Depends on: 5
 Apply the `fix after merge` items of the Milestone 5 review and of the
 build logs. Added on 7 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/creation-admission-restart.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/completed-retry-first-message.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-race-tests-storage.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-resource-intents.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/build-log-total-size.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/build-log-follower.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/script-command-type.md`, and
-      delete that item.
+Design call, 7 November 2026: Each build log uses a 4 MiB budget, with
+space for its rows and omission line. Complete UTF-8 rows from each end
+share that budget.
+
+Evidence: `.context/milestone-5b/` holds the implementation reports and checks.
+
+- [x] Apply the recorded option of `plans/follow-ups/creation-admission-restart.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/completed-retry-first-message.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/lifecycle-race-tests-storage.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/lifecycle-resource-intents.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/build-log-total-size.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/build-log-follower.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/script-command-type.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
 
 ## Milestone 6: App shell and workspaces
 

@@ -3,6 +3,8 @@ import { claimCreation } from './creation-claims'
 import { readWorkspace } from './workspace-data'
 import type { WorkspaceStartJob } from './start-types'
 import type { realRuntimeFixture } from './real-runtime-test-support'
+import { readSavedScript } from './saved-script'
+import { serializeStartJob } from './start-job-codec'
 
 export async function runningRuntimeWorkspace(
   fixture: Awaited<ReturnType<typeof realRuntimeFixture>>,
@@ -20,7 +22,7 @@ export async function runningRuntimeWorkspace(
     orgId: 'runtime-org',
     kind: 'create',
     imageName: 'base-runtime-image',
-    startupScript: '',
+    startupScript: readSavedScript(''),
     environmentCiphertext: null,
     defaultBranch: 'main',
     turnId: 'turn-one',
@@ -50,7 +52,7 @@ export async function runningRuntimeWorkspace(
     job,
   )
   const actor = fixture.actor(workspaceId)
-  await actor.queueLifecycleStart(job)
+  await actor.queueLifecycleStart(serializeStartJob(job))
   for (let step = 0; step < 16 && (await actor.checkpoint()); step++)
     await actor.tick()
   const result = await actor.waitCreationLifecycle()

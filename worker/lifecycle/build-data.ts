@@ -11,6 +11,11 @@ import type { SelectedRepository } from './settings-data'
 import { readBuildSnapshot } from './build-log-reader'
 import { buildLogStatements } from './build-log-statements'
 import type { RepositoryLocation } from './repository-locations'
+import {
+  readSavedScript,
+  serializeSavedScript,
+  type SavedScript,
+} from './saved-script'
 
 export type BuildPhase =
   | 'create'
@@ -35,7 +40,7 @@ export interface BuildJob {
   processId: number | null
   stdoutOffset: number
   stderrOffset: number
-  installScript: string
+  installScript: SavedScript
   repositoriesJson: string
   repositoryLocationsJson: string | null
   previousRepositoryLocationsJson: string | null
@@ -68,10 +73,10 @@ export async function readBuildJob(
      WHERE b.org_id = ? AND b.id = ?`,
     )
     .bind(orgId, buildId)
-    .first<BuildJob>()
+    .first<Omit<BuildJob, 'installScript'> & { installScript: string }>()
   if (!job)
     throw new HttpError(404, 'build_not_found', 'The build is not available.')
-  return job
+  return { ...job, installScript: readSavedScript(job.installScript) }
 }
 
 export async function runningBuild(
@@ -95,7 +100,7 @@ export async function insertBuild(
     kind: ImageBuild['kind']
     userId: string | null
     settingsRevision: number
-    installScript: string
+    installScript: SavedScript
     repositories: readonly SelectedRepository[]
     repositoryLocations: readonly RepositoryLocation[]
     previousRepositoryLocations: readonly RepositoryLocation[]
@@ -129,7 +134,7 @@ export async function insertBuild(
       )
       .bind(
         input.id,
-        input.installScript,
+        serializeSavedScript(input.installScript),
         JSON.stringify(input.repositories),
         JSON.stringify(input.software),
         input.previousImageName,
