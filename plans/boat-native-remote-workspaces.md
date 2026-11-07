@@ -3372,6 +3372,25 @@ Added on 7 November 2026, with decision 101.
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 7 November 2026.
 
+### 102. Name the hostname for machines and version its paths
+
+Added on 7 November 2026, with decision 101.
+
+- **Background:** The runner, the agent tools, the git credential helper,
+  and GitHub's webhooks call the Worker on their own hostname. Its gate
+  checks a workspace token or a webhook signature, never a browser
+  cookie.
+- **Options:**
+  - **A.** `machines.conductive.build`.
+  - **B.** `api.conductive.build`.
+  - **C.** `m.conductive.build`.
+- **Recommendation:** A.
+- **Chosen:** B, by the user on 7 November 2026, with versioned paths: "sounds
+  like an api - so api.conductive.build - but also we should version it".
+  The machine routes live under `/v1/`, such as
+  `https://api.conductive.build/v1/github/webhooks`. The preview domain is
+  `conductive.page`, which the user bought. Milestone 15j applies both.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4751,6 +4770,10 @@ starts, and rename each name that they add.
       database name, the test domains, and the brand file names.
 - [ ] Redraw the name in the brand lockups of `docs/brand/`, and make the
       marketing pictures and the screenshots that show the name again.
+- [ ] Serve the machine routes on `api.conductive.build` under `/v1/`: the
+      runner socket, the agent tools, the git credential helper, and the
+      GitHub webhooks, as decision 102 says. Use `conductive.page` as the
+      preview domain. Name both in the architecture doc and the protocol.
 - [ ] Merge the primary branch last, and rename each new occurrence. Then
       a search for "conducting" finds only decision records and history.
 
