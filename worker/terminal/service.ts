@@ -6,15 +6,19 @@ import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
 import { cacheTerminalPassword } from './credentials'
 import { privilegedCommand } from './privileged'
-import { credentialScript, launcherScript } from './scripts'
-import { TERMINAL_RUNTIME } from './scripts'
+import {
+  credentialScript,
+  launcherScript,
+  sessionServerScript,
+  TERMINAL_RUNTIME,
+} from './scripts'
 
 export const TERMINAL_PORT = 7681
 
 export function terminalInstallCommand(): string {
   return privilegedCommand(`set -eu
 apt-get update
-apt-get install -y ttyd
+apt-get install -y ttyd tmux
 install -d -m 755 /usr/local/lib/conductive
 cat > /usr/local/lib/conductive/terminal <<'CONDUCTIVE_TERMINAL'
 ${launcherScript()}
@@ -24,10 +28,33 @@ cat > /usr/local/lib/conductive/terminal-password <<'CONDUCTIVE_PASSWORD'
 ${credentialScript()}
 CONDUCTIVE_PASSWORD
 chmod 755 /usr/local/lib/conductive/terminal-password
+cat > /usr/local/lib/conductive/terminal-sessions <<'CONDUCTIVE_SESSIONS'
+${sessionServerScript()}
+CONDUCTIVE_SESSIONS
+chmod 755 /usr/local/lib/conductive/terminal-sessions
+cat > /etc/systemd/system/conductive-terminal-sessions.service <<'CONDUCTIVE_SESSION_SERVICE'
+[Unit]
+Description=Conductive terminal shell server
+ConditionPathExists=/run/conductive-terminal/enabled
+
+[Service]
+Type=forking
+User=user
+Group=user
+WorkingDirectory=/home/user
+RuntimeDirectory=conductive-terminal
+RuntimeDirectoryMode=0700
+RuntimeDirectoryPreserve=yes
+ExecStart=/usr/local/lib/conductive/terminal-sessions
+Restart=on-failure
+RestartSec=1
+KillMode=control-group
+CONDUCTIVE_SESSION_SERVICE
 cat > /etc/systemd/system/conductive-terminal.service <<'CONDUCTIVE_SERVICE'
 [Unit]
 Description=Conductive terminal
-After=network.target
+After=network.target conductive-terminal-sessions.service
+Requires=conductive-terminal-sessions.service
 ConditionPathExists=/run/conductive-terminal/enabled
 
 [Service]
@@ -42,6 +69,7 @@ ExecStartPre=+/usr/local/lib/conductive/terminal-password
 ExecStart=/usr/local/lib/conductive/terminal
 Restart=on-failure
 RestartSec=1
+KillMode=control-group
 
 [Install]
 WantedBy=multi-user.target

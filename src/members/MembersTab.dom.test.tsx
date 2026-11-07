@@ -205,4 +205,33 @@ describe('MembersTab of an admin', () => {
       ],
     })
   })
+
+  it('shows_only_the_failure_of_the_last_invite_that_the_admin_sent', async () => {
+    const server = new FakeApiServer()
+    await mount(tab(server.fetch, []))
+    const list = await waitFor(
+      () => queryByRole('list', 'Members'),
+      'the list of members',
+    )
+    const path = invitesPath(org.id)
+    const failure = {
+      code: 'internal_error',
+      message: 'The request failed. Try again.',
+    }
+    server.json('POST', path, { error: failure }, 500)
+    await typeText(emailField(), 'ana@example.com')
+    await press(byRole('button', 'Invite'))
+    await waitFor(
+      () => queryByText('The invite to ana@example.com failed'),
+      'the failure of the invite to ana@example.com',
+    )
+    server.json('POST', path, inviteReply('ben@example.com'), 201)
+    await typeText(emailField(), 'ben@example.com')
+    await press(byRole('button', 'Invite'))
+    await waitFor(
+      () => queryByText('ben@example.com', list),
+      'the invite to ben@example.com in the list',
+    )
+    expect(queryByText('The invite to ana@example.com failed')).toBeNull()
+  })
 })

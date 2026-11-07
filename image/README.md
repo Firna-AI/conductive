@@ -19,11 +19,13 @@ archive packager and the live check.
 - Package the runner archive and its digest on a developer machine.
 - Check the chat path and time the first agent start in a real sandbox.
 
-The [terminal backend](../worker/terminal/README.md) owns ttyd, its service,
-its launcher, and its local password. The software step of each image build
-runs that area's `terminalInstallCommand()` after `install.sh`. The build log
-shows the output of both. The terminal installer enables its service and
-starts nothing.
+The [terminal backend](../worker/terminal/README.md) owns ttyd, tmux, their
+services, the terminal launcher, and the local password. It also owns the
+shell server, which keeps the workspace shell in tmux. The software step of
+each image build runs that area's `terminalInstallCommand()` after
+`install.sh`. The build log shows the output of both. The terminal
+installer installs the `ttyd` and `tmux` packages with `apt-get`. It
+enables the terminal service and starts nothing.
 
 ## The runner archive
 
@@ -104,9 +106,9 @@ system permissions. The installed runner service runs as `user`.
    git, and sets `credential.useHttpPath`.
 6. It enables the runner service. It does not start it.
 
-A refresh skips this step. So a change in this folder reaches the new
-workspaces of an org only after its next build. A workspace that exists
-keeps its software.
+A refresh skips this step, and the terminal installer with it. So a change
+in this folder or in the terminal software reaches the new workspaces of an
+org only after its next build. A workspace that exists keeps its software.
 
 ## Start in a workspace
 
@@ -128,12 +130,12 @@ folder names and the variable names. The
 [repository layout](../worker/lifecycle/repository-layout.md) says how the
 Worker makes and keeps the folder map.
 
-The runner and the terminal launcher read the variables from
-`/run/ascii-secrets/env.sh`, where Boat puts them. A systemd service does
-not get them in another way. A Boat command process does not get them
-either. So the install command of a build loads the same file, with
-automatic export, before Bash runs the org's install script. The install
-script then gets the folder variables.
+The runner, the terminal launcher, and the terminal's shell server read the
+variables from `/run/ascii-secrets/env.sh`, where Boat puts them. A systemd
+service does not get them in another way. A Boat command process does not
+get them either. So the install command of a build loads the same file,
+with automatic export, before Bash runs the org's install script. The
+install script then gets the folder variables.
 
 At a create, the Worker first fetches the default branch and creates the
 workspace branch. When the GitHub repository has no refs, the fetch step
@@ -150,8 +152,9 @@ runs the command of `workspaceStartupCommand`:
    `/run/conductive/workspace-ready`, and restarts the runner service.
 
 After that command succeeds, the Worker calls the terminal backend's start
-hook. That hook starts the terminal service. It caches the locally generated
-password in encrypted form before the workspace becomes ready.
+hook. That hook starts the terminal service and its shell server. It caches
+the locally generated password in encrypted form before the workspace
+becomes ready.
 
 The runner start script exits with success, and starts nothing, in these
 cases:
@@ -163,15 +166,17 @@ cases:
 So a build sandbox and a disk retention restart start no runner. The
 terminal backend needs its own marker under `/run`, which only its
 workspace start hook creates. Builds and disk retention restarts do not
-call that hook and start no terminal. A disk retention restart runs
-`workspaceStartupCommand` in its `retention` mode. That mode runs the
-startup script, but it writes no ready marker and does not restart the
-runner service.
+call that hook, so they start no terminal and no terminal shell. A disk
+retention restart runs `workspaceStartupCommand` in its `retention` mode.
+That mode runs the startup script, but it writes no ready marker and does
+not restart the runner service.
 
 Otherwise, `runner-start.sh` runs `runner/main.mjs` with the archive's
 Node, in the repository folder. The runner unit restarts its service after
-a failure. The terminal backend describes its launcher, password, and
-automatic restart in its [README](../worker/terminal/README.md).
+a failure. The terminal backend describes its launcher, its shell server,
+its password, and its automatic restart in its
+[README](../worker/terminal/README.md). That README also says how the
+workspace shell keeps running when a terminal connection drops.
 
 Before it runs the runner, `runner-start.sh` sets three variables of the
 runner's [configuration](../runner/README.md#configuration) from the table.
@@ -269,7 +274,7 @@ build, a disk retention restart, and an unfinished start start no runner.
   [`conductive-runner.service`](conductive-runner.service): start the agent
   runner, and map the sandbox variables to the runner variables.
 - [The terminal backend](../worker/terminal/service.ts): owns the terminal
-  install command, its service, and its workspace start hook.
+  install command, its two services, and its workspace start hook.
 - [`git-credential-helper.sh`](git-credential-helper.sh) and
   [`git-credential-helper.mjs`](git-credential-helper.mjs): the git
   credential helper.

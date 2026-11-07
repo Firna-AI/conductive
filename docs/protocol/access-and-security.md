@@ -368,3 +368,6 @@ Later screens add the frame and connection sources that they need.
 
 - The Worker asks Boat for a new desktop URL on each page load. The URL
   works for 10 minutes and carries its token in the fragment.
+- An open desktop stream does not pass through the Worker. So it can keep
+  playing after its user loses access, until the sandbox stops. This is
+  the one exception to the 30-second rule of decision 70 (decision 117).

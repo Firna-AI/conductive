@@ -13,14 +13,24 @@ function pad(value: number): string {
   return String(value).padStart(2, '0')
 }
 
-/** The calendar day of a time, such as "2027-01-15", in the time zone. */
-function calendarDay(at: number, timeZone: string | undefined): string {
-  return new Intl.DateTimeFormat('en-CA', {
+/** The local year and day number, independent of changes to the clock. */
+function calendarDay(
+  at: number,
+  timeZone: string | undefined,
+): { dayNumber: number; year: number } {
+  const parts = new Intl.DateTimeFormat('en-CA', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
     timeZone,
-  }).format(at)
+  }).formatToParts(at)
+  const value = (type: 'year' | 'month' | 'day'): number =>
+    Number(parts.find((part) => part.type === type)?.value)
+  const year = value('year')
+  return {
+    dayNumber: Date.UTC(year, value('month') - 1, value('day')) / DAY,
+    year,
+  }
 }
 
 /** The length of a build, such as "41s", "6m 02s", or "1h 05m". */
@@ -53,12 +63,12 @@ export function buildTime(at: number, now: number, timeZone?: string): string {
   if (elapsed < HOUR)
     return `${plural(Math.floor(elapsed / MINUTE), 'minute')} ago`
   if (elapsed < DAY) return `${plural(Math.floor(elapsed / HOUR), 'hour')} ago`
-  if (calendarDay(at, timeZone) === calendarDay(now - DAY, timeZone)) {
+  const atDay = calendarDay(at, timeZone)
+  const nowDay = calendarDay(now, timeZone)
+  if (nowDay.dayNumber - atDay.dayNumber === 1) {
     return 'Yesterday'
   }
-  const sameYear =
-    calendarDay(at, timeZone).slice(0, 4) ===
-    calendarDay(now, timeZone).slice(0, 4)
+  const sameYear = atDay.year === nowDay.year
   return new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
     month: 'short',

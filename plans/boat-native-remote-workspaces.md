@@ -3661,6 +3661,38 @@ Added on 7 November 2026 from the user's proposal for decision 105 F.
 - **Chosen:** A now, and B as a later follow-up, by the user on 7 November
   2026: `plans/follow-ups/login-reuse-setting.md`.
 
+### 117. Accept that an open desktop stream outlives access
+
+Added on 7 November 2026 from option C of the follow-up item
+`shared-session-check-for-connections`.
+
+- **Background:** Decision 70 ends an open connection within 30 seconds
+  after its user loses access. The desktop stream goes from the browser
+  straight to Boat, so no check of the Worker can end it.
+- **Options:**
+  - **A.** Accept it, and state the exception in the access protocol.
+  - **B.** Ask Boat to end the desktop session, if Boat offers that.
+  - **C.** Send the desktop stream through the Worker.
+- **Recommendation:** A.
+- **Chosen:** A now, and C as a later follow-up, by the user on 7 November
+  2026. The access protocol states the exception. Follow-up item:
+  `plans/follow-ups/desktop-stream-after-access-loss.md`.
+
+### 118. Keep a shell running across a dropped connection
+
+Added on 7 November 2026 from option C of the follow-up item
+`shared-session-check-for-connections`.
+
+- **Background:** ttyd ends the shell of the Terminal tab when its socket
+  closes, and Cloudflare closes open Worker sockets at most 20 minutes
+  after each runtime update.
+- **Options:**
+  - **A.** Accept it, and state that a dropped connection ends the shell.
+  - **B.** Run each shell inside a terminal multiplexer, such as tmux, so
+    that a new connection attaches to the same shell.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 7 November 2026. Milestone 11c builds it.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -5390,10 +5422,23 @@ Depends on: 9, 10
 Apply the `fix after merge` items of the files area. Added on
 7 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/file-read-size-refusals.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/markdown-emphasis-delimiters.md`, and
-      delete that item.
+Agent implementation calls on 7 November 2026:
+
+- Keep terminal HTTP 502 errors for oversized content error replies and
+  metadata replies. The file-read item predates the response-budget rule.
+- Keep the existing tilde matcher. The emphasis item defines its markers
+  as `*` and `_`.
+- Keep the outer 12 inline containers when the delimiter stack builds the
+  tree. This preserves the parser's depth bound.
+- Use CommonMark 0.31.2 for the delimiter rules and the one-time comparison.
+
+- [x] Apply the recorded option of `plans/follow-ups/file-read-size-refusals.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-10a`.
+- [x] Apply the recorded option of `plans/follow-ups/markdown-emphasis-delimiters.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-10a`.
+
+Evidence: `.context/milestone-10a/file-read-report.md` and
+`.context/milestone-10a/markdown-report.md`.
 
 ## Milestone 11: Terminal, previews, and desktop backend
 
@@ -5489,6 +5534,32 @@ waits for the user.
 
 - [ ] Apply the recorded option of `plans/follow-ups/shared-session-check-for-connections.md`, and
       delete that item.
+
+## Milestone 11c: Shells that survive a reconnect
+
+Depends on: 5, 11
+
+Apply decision 118 B. Added on 7 November 2026.
+
+Agent calls of 7 November 2026: each workspace uses one tmux session that
+concurrent tabs share. A separate service owns the server, so a ttyd
+restart keeps its shells. The server ignores external configuration and
+stays up when no shell exists. A new connection can then create a shell
+after an explicit shell exit. Its socket stays under the workspace's
+private `/run` directory.
+
+- [x] Run each shell of the Terminal tab inside a terminal multiplexer,
+      such as tmux, installed by the org image. A new connection attaches
+      to the same shell, with its running commands and its screen.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11c`.
+- [x] Test a dropped terminal socket during a running command, and a new
+      socket that sees the same command still running. Update the section
+      "Terminal" of the workspaces protocol. Delete
+      `plans/follow-ups/terminal-shell-survives-reconnect.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-11c`.
+
+Evidence: `.context/terminal-11c/implementor-report.md` and
+`.context/terminal-11c/orchestrator-smoke.log`.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 
@@ -5589,15 +5660,32 @@ Milestone 8i or 15i wires it to its backend.
 
 Depends on: 15a, 15c
 
+Status: Complete.
+
 Apply the `fix after merge` items of the members area. Added on
 7 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/members-guarded-write-helper.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/members-tab-shared-dialog-state.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/members-yesterday-label-clock-changes.md`, and
-      delete that item.
+- [x] Apply the recorded option of `plans/follow-ups/members-guarded-write-helper.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15l`.
+- [x] Apply the recorded option of `plans/follow-ups/members-tab-shared-dialog-state.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15l`.
+- [x] Apply the recorded option of `plans/follow-ups/members-yesterday-label-clock-changes.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15l`.
+
+Agent calls, 7 November 2026:
+
+- Keep invitation acceptance on its current verified-email SQL guard.
+  It has no earlier permission read.
+- Keep the invite notice on the last submitted email.
+  Keep each stored failure under its own pending key.
+- Remove a departed member's earlier role failure.
+  The admin cannot retry that role change after departure.
+- Key close requests to their member.
+  A late close request then keeps another member's question open.
+- Reuse the parsed local year for date labels.
+  It comes from the same calendar parts as the day number.
+
+Evidence: `.context/boat-native-remote-workspaces/orchestrator-checks.md`.
 
 ## Milestone 15g: Email invitations
 
