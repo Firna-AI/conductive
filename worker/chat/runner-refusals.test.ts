@@ -106,7 +106,7 @@ it('commits refusal and verified terminal cleanup together and retries storage o
         ...context,
       }),
     )
-    fixture.storage.failCommit = true
+    fixture.failCursorCommit(1)
     await expect(fixture.receive(1, terminal)).rejects.toThrow(
       'Injected storage failure',
     )
@@ -116,7 +116,7 @@ it('commits refusal and verified terminal cleanup together and retries storage o
     expect(
       (await fixture.read((view) => view.turn(context.turnId)))?.state,
     ).toBe('running')
-    fixture.storage.failCommit = false
+    fixture.storage.beforeCommit = null
     await fixture.connect('stream', true)
     fixture.failSend = true
     await expect(fixture.receive(1, terminal)).rejects.toThrow(

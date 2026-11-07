@@ -155,13 +155,13 @@ it('refuses inconsistent parts, duplicate paths, and gaps or interleaving in tre
 it('rolls back file part assembly and projection when the receipt commit fails', async () => {
   const fixture = await createRunnerLimitsFixture()
   await fixture.receive(1, snapshot(1, 1, 2, ['first']))
-  fixture.storage.failCommit = true
+  fixture.failCursorCommit(2)
   await expect(fixture.receive(2, snapshot(1, 2, 2, ['last']))).rejects.toThrow(
     'Injected storage failure',
   )
   expect(fixture.published).toEqual([])
   expect(await new FilesState(fileStorage(fixture)).tree()).toBeNull()
-  fixture.storage.failCommit = false
+  fixture.storage.beforeCommit = null
   await fixture.connect('stream', true)
   await fixture.receive(2, snapshot(1, 2, 2, ['last']))
   expect(

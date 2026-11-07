@@ -120,6 +120,15 @@ export async function createRunnerLimitsFixture() {
     published,
     hooks,
     connect,
+    failCursorCommit: (eventNumber: number) => {
+      storage.beforeCommit = async (staged) => {
+        const stagedStore = new ChatStore(staged, dependencies.now)
+        const cursor = await stagedStore.read('workspace', (view) =>
+          view.cursor(streamId),
+        )
+        if (cursor === eventNumber) throw new Error('Injected storage failure')
+      }
+    },
     receive: (eventNumber: number, event: unknown, extra = {}) =>
       channel.receive(peer, {
         type: 'event',
