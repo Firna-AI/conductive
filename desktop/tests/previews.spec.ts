@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { _electron, chromium, expect, test } from '@playwright/test'
 import type { Browser, ElectronApplication } from '@playwright/test'
@@ -11,12 +11,12 @@ import { previewHost } from './preview-host.js'
 import { createPreviewServer } from './preview-server.js'
 
 test('opens a Mac preview frame and hands its new tab to a browser without a sign-in session', async () => {
-  const directory = await mkdtemp(
-    resolve(
-      import.meta.dirname,
-      '../../.context/boat-native-remote-workspaces/mac-preview-',
-    ),
+  const parent = resolve(
+    import.meta.dirname,
+    '../../.context/boat-native-remote-workspaces',
   )
+  await mkdir(parent, { recursive: true })
+  const directory = await mkdtemp(resolve(parent, 'mac-preview-'))
   const server = await createPreviewServer(directory)
   let electron: ElectronApplication | undefined
   let browser: Browser | undefined
