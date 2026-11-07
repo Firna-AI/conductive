@@ -33,9 +33,7 @@ function TabBody(props: { org: OrgSummary; tab: SettingsTab; user: User }) {
 /**
  * The settings of an org: its name, its repositories, its cloud computer,
  * and its members. Each tab is a link with its own address. A member sees
- * every tab without its edit actions (decision 57). The app runs every
- * cloud computer on its own Boat account, so no tab asks for a key
- * (decision 80).
+ * every tab without its edit actions.
  */
 export function OrgSettingsScreen(props: {
   org: OrgSummary

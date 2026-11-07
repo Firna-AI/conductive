@@ -56,10 +56,7 @@ export function countedReply(
   return {
     observed,
     server,
-    client: new BoatClient('boat-first', server.fetch, {
-      id: 'team-one',
-      type: 'org',
-    }),
+    client: new BoatClient('boat-first', server.fetch, 'app-org'),
   }
 }
 

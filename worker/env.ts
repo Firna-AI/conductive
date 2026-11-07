@@ -11,6 +11,8 @@ export interface AppEnv {
   GITHUB_CLIENT_ID: string
   GITHUB_CLIENT_SECRET: string
   SESSION_SIGNING_KEY: string
+  BOAT_API_KEY: string
+  BOAT_ORG_ID: string
   BOAT_KEY_ENCRYPTION_KEY: string
   RESEND_API_KEY?: string
 }

@@ -22,7 +22,7 @@ export const createOrg = defineScreen({
       slug: 'first',
       title: 'First org',
       description:
-        'The first org of a new user, from the second step of Get started. Create org and Cancel both return to Get started, because the user has no org to go back to. The next step adds the Boat key of the new org.',
+        'The first org of a new user, from the second step of Get started. Create org and Cancel both return to Get started, because the user has no org to go back to. The next step connects Claude or Codex.',
       props: { kind: 'first' },
       useCasePaths: ['user-flows/sign-up'],
     },

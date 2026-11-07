@@ -91,13 +91,6 @@
   margin-top: 10px;
 }
 
-/* The two actions, and the note about the Boat account under them. */
-.hero-start {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
 .hero-picture {
   display: flex;
   justify-content: center;

@@ -16,7 +16,6 @@ export async function purgeOrgRecords(
     'DELETE FROM sections WHERE org_id = ?',
     'DELETE FROM org_invites WHERE org_id = ?',
     'DELETE FROM org_members WHERE org_id = ?',
-    'DELETE FROM boat_keys WHERE org_id = ?',
     'DELETE FROM orgs WHERE id = ?',
   ]
   const results = await db.batch(

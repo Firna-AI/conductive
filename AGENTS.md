@@ -105,10 +105,11 @@ plan. A push to another branch runs no CI until its pull request opens.
   Write "agents powered by Claude and Codex", as
   [Names in the product](docs/protocol/chat-and-events.md#names-in-the-product)
   says.
-- Name Boat in user-facing text only on the Boat key screen and its tab, on
-  the marketing site, and in Get started. Elsewhere, write "cloud computer" or
+- Never name Boat in user-facing text: the app, the Mac app, the marketing
+  site, Get started, and the legal pages. Write "cloud computer" or
   "sandbox", as [The provider](docs/protocol/workspaces-and-sandboxes.md#the-provider)
-  says.
+  says. Identifiers, comments, developer docs, and the deployment setup can
+  name Boat.
 
 ## Product
 

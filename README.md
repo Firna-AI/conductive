@@ -26,8 +26,8 @@ The app has no deployment yet.
 These features are planned. The protocol docs state each one.
 
 - Sign in with GitHub. The product is free.
-- Each org runs on its own Boat account, with a Boat key that an org admin
-  adds.
+- Every cloud computer runs in the app's own Boat account, so users need no
+  Boat account.
 - A new workspace starts as an empty chat. The first message creates it,
   with its own cloud computer and branch.
 - Chat with agents powered by Claude and Codex. A workspace holds several
@@ -46,7 +46,6 @@ These features are planned. The protocol docs state each one.
 ## What a user needs
 
 - a GitHub account
-- a Boat account, with a key for each org
 - a Claude subscription token or an Anthropic API key, or an OpenAI API key
   for Codex
 
@@ -83,13 +82,30 @@ GitHub sign-in also needs these values in `.dev.vars`:
 | `GITHUB_CLIENT_ID` | The GitHub App's client ID |
 | `GITHUB_CLIENT_SECRET` | The GitHub App's client secret |
 | `SESSION_SIGNING_KEY` | 32 random bytes, encoded as Base64 |
-| `BOAT_KEY_ENCRYPTION_KEY` | A separate 32 random bytes, encoded as Base64 |
+| `BOAT_KEY_ENCRYPTION_KEY` | A separate 32 random bytes, encoded as Base64. It encrypts the stored secrets, such as the agent logins and the workspace tokens. |
 
 Keep the client secret and both keys as Worker secrets when deployment is
 set up. Open `/api/auth/github` to start sign-in. The GitHub App is
 "Conductive", in the Firna-AI organization. It sends its webhooks to the
 address in [The GitHub App](docs/protocol/github-banner.md#the-github-app).
 Automated tests use fakes and need no credentials.
+
+Every cloud computer of every org runs in the app's own Boat organization.
+That organization holds only the app's sandboxes and saved snapshots, and
+no other Boat work. The Worker needs two values to start cloud computers:
+
+| Name | Value |
+| --- | --- |
+| `BOAT_API_KEY` | An API key for the app's Boat organization, and the only Boat credential. It is a secret. |
+| `BOAT_ORG_ID` | The ID of the app's Boat organization. It is not a secret. The Worker names it on every Boat call. |
+
+[The app's Boat account](worker/sandbox/README.md#the-apps-boat-account)
+says how to make the key. Put both values in `.dev.vars` to start real cloud
+computers in local development. In a deployment, keep `BOAT_API_KEY` as a
+Worker secret, and add `BOAT_ORG_ID` to the `vars` of `wrangler.jsonc`, next
+to `MACHINE_ORIGIN`.
+[Access and security](docs/protocol/access-and-security.md#the-apps-boat-key)
+states how the Worker keeps them away from the browser and the sandboxes.
 
 `wrangler.jsonc` also sets two production values: `MACHINE_ORIGIN` is
 `https://api.conductive.build`, and `PREVIEW_DOMAIN` is `conductive.page`.
@@ -153,8 +169,9 @@ complete yet:
 - `worker/security/`: GitHub sign-in, signed sessions, the request gate,
   the Mac app's sign-in handoff and origin rules, and the shared content
   security policy of the web app and the Mac app.
-- `worker/data/`: D1 queries for users, orgs, sessions, and encrypted keys.
-- `worker/sandbox/`: the typed Boat adapter and the encrypted key store.
+- `worker/data/`: D1 queries for users, orgs, and sessions.
+- `worker/sandbox/`: the typed Boat adapter, which uses the app's one Boat
+  key.
 - `src/app/`: the data of the web app, such as the typed API client, the
   models that the screens read, the router, and the event stream. Its
   [README](src/app/README.md) gives the rules and the key code of the

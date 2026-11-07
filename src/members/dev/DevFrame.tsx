@@ -29,7 +29,6 @@ const settingsTabs: readonly { view: DevView; label: string }[] = [
   { view: 'general', label: 'General' },
   { view: 'repositories', label: 'Repositories' },
   { view: 'computer', label: 'Cloud computer' },
-  { view: 'boat-key', label: 'Boat key' },
   { view: 'members', label: 'Members' },
 ]
 
@@ -45,9 +44,6 @@ export function DevSettingsFrame(props: {
 }) {
   const { options } = props
   const mobile = options.viewport === 'mobile'
-  const tabs = settingsTabs.filter(
-    (tab) => options.role === 'admin' || tab.view !== 'boat-key',
-  )
   return (
     <Shell options={options}>
       <div className={mobile ? styles.mobile : styles.frame}>
@@ -64,7 +60,7 @@ export function DevSettingsFrame(props: {
           aria-label="Org settings"
           className={mobile ? styles.mobileTabs : styles.tabs}
         >
-          {tabs.map((tab) => (
+          {settingsTabs.map((tab) => (
             <a
               aria-current={tab.view === options.view ? 'page' : undefined}
               className={

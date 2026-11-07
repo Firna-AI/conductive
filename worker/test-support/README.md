@@ -12,8 +12,10 @@ Each members test file creates one harness in `beforeAll` and disposes it in `af
 Its `beforeEach` calls `reset` to delete all application rows in a fixed child-first order.
 The reset also restores the clock, token sequence, and fake services.
 Each test creates its own members client and lifecycle hooks.
-Members files set `resetBoatAccounts: true` to restore default fake accounts before each test.
-Other harnesses keep their configured accounts across resets.
+The harness gives the Worker a test `BOAT_API_KEY` and `BOAT_ORG_ID`.
+`FakeBoat` serves only requests for its `orgId`. A request without
+`X-Boat-Org` goes to `activeOrgId`, another organization, and gets 404.
+`FakeBoat` also refuses each request without its `apiKey`.
 
 `memberFixture` prepares three users, signed sessions, an org, memberships, and settings in one D1 batch.
 Signed sessions use the real signer and the seven-day expiry.

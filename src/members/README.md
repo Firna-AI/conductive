@@ -26,7 +26,7 @@ The query string chooses the state:
 
 | Option     | Values                                                                                                     |
 | ---------- | ---------------------------------------------------------------------------------------------------------- |
-| `view`     | `members` (default), `general`, `repositories`, `computer`, `boat-key`, `deleted`, `workspace`, `menu-lab` |
+| `view`     | `members` (default), `general`, `repositories`, `computer`, `deleted`, `workspace`, `menu-lab`             |
 | `org`      | `acme` (default), `futex`. Futex has other members, which makes stale data easy to find                    |
 | `role`     | `admin` (default, Cal), `member` (Priya)                                                                   |
 | `viewport` | `desktop` (default), `mobile`                                                                              |

@@ -19,12 +19,6 @@
   font-weight: var(--ui-weight-strong);
 }
 
-.mono {
-  color: var(--ui-ink);
-  font-family: var(--ui-font-mono);
-  font-size: var(--ui-text-sm);
-}
-
 /* The way into the first org, after the last step. */
 .finish {
   display: flex;

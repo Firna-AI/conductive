@@ -5,10 +5,7 @@ import { BoatClient } from './boat'
 
 it('starts a detached build and continues logs from provider byte offsets', async () => {
   const server = new FakeBoat()
-  const client = new BoatClient('boat-first', server.fetch, {
-    id: 'team-one',
-    type: 'org',
-  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
   server.responseOverride = Response.json({
     ok: true,
     type: 'command.started',
@@ -110,7 +107,7 @@ it('starts a detached build and continues logs from provider byte offsets', asyn
   })
   for (const request of server.requests) {
     expect(request.headers.get('Authorization')).toBe('Bearer boat-first')
-    expect(request.headers.get('X-Boat-Org')).toBe('team-one')
+    expect(request.headers.get('X-Boat-Org')).toBe('app-org')
     expect(request.headers.get('Cookie')).toBeNull()
     expect(request.redirect).toBe('manual')
   }
@@ -118,10 +115,7 @@ it('starts a detached build and continues logs from provider byte offsets', asyn
 
 it('preserves a lost process and reset offsets after an agent restart', async () => {
   const server = new FakeBoat()
-  const client = new BoatClient('boat-first', server.fetch, {
-    id: 'team-one',
-    type: 'org',
-  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
   server.responseOverride = Response.json({
     ok: true,
     type: 'command.status',

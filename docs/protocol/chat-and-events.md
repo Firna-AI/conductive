@@ -76,10 +76,8 @@ says.
   the transcript to the other agent was rejected. The user chose the way
   that Conductor works.
 - The composer attaches files to a message.
-- The composer shows a notice when the org has no Boat key (decision 33).
-  A Boat key that Boat refuses counts as no key.
 - The composer shows a notice when the user has no login for the agent of
-  the chosen model.
+  the chosen model (decision 33).
 - The app accepts a message before the sandbox is ready. The workspace
   keeps the message, and gives it to the agent when the sandbox is ready
   (decision 14).

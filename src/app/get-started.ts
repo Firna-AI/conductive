@@ -4,9 +4,7 @@ export type StepState = 'done' | 'next' | 'later'
 
 /**
  * The three steps of Get started in their fixed order: the GitHub App, the
- * first org, then Claude or Codex. The app runs every cloud computer on its
- * own Boat account, so Get started asks for no key (decision 80). A reply
- * that still lists the key step does not hold the first run open.
+ * first org, then Claude or Codex. A reply of the API names only these.
  */
 export const getStartedOrder: readonly GetStartedStep[] = [
   'github-app',
