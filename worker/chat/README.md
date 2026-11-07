@@ -265,6 +265,8 @@ agent runner, and the logins and attachments.
 
 - `backend.ts`: `WorkspaceChat`, its gates, its trusted methods, the open
   tabs, and the one publisher of committed events.
+- `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
+  owner can replace. The login resolver always wraps an override.
 - `http-routes.ts`, `messages.ts`, and `sessions.ts`: the routes, the turns,
   and the session state.
 - `model-changes.ts`: client session IDs, the creation records that repeated

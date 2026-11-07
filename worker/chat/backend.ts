@@ -7,16 +7,11 @@ import { workspacePath } from '../../src/shared/workspaces'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
-import { randomToken } from '../security/crypto'
 import { gate, type RequestContext } from '../security/gate'
-import {
-  readConnectionAccess,
-  scheduleConnectionCheck,
-} from '../security/connection-access'
 import { afterNumber, chatRoute } from './http-routes'
 import { BrowserTabs } from './browser-tabs'
 import { findChatWorkspace, tokenWorkspace } from './queries'
-import { loginResolver } from './login-access'
+import { chatDependencies } from './dependencies'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore, type ChatTransaction } from './store'
 import {
@@ -53,32 +48,7 @@ export class WorkspaceChat {
     overrides: Partial<ChatDependencies> = {},
   ) {
     this.env = env
-    this.dependencies = {
-      now: Date.now,
-      scheduleBrowserCheck: scheduleConnectionCheck,
-      readConnectionAccess: (tabs, now) =>
-        readConnectionAccess(env.DB, tabs, now),
-      randomId: randomToken,
-      resolveAttachments: async (_userId, _workspaceId, ids) => {
-        if (ids.length)
-          throw new HttpError(
-            503,
-            'attachments_unavailable',
-            'Attachments are not available. Try again.',
-          )
-        return { attachments: [], paths: [] }
-      },
-      receiveFileResult: async () => undefined,
-      runnerEventStored: async () => undefined,
-      runnerReady: async () => undefined,
-      matchesObject: () => true,
-      ...overrides,
-      resolveLogin: loginResolver(
-        env,
-        () => this.workspaceId,
-        overrides.resolveLogin,
-      ),
-    }
+    this.dependencies = chatDependencies(env, () => this.workspaceId, overrides)
     this.store = new ChatStore(storage, this.dependencies.now)
     this.browsers = new BrowserTabs(this.dependencies)
     this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>
