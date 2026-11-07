@@ -103,7 +103,7 @@ It installs `/usr/local/bin/conductive` as an executable launcher.
 The launcher reads `/run/ascii-secrets/env.sh` at runtime when that file exists.
 It then removes `NODE_OPTIONS` from the environment.
 It starts the image's private Node 24 by its full path.
-[The private Node runtime](../image/README.md#the-private-node-runtime) gives that path and its update steps.
+[The private Node runtime](../image/runtime.md) gives that path and its update steps.
 It never uses the caller's `PATH` or a system Node.
 It reports an error when the private Node is not an executable file.
 The installation root prefixes the Node path, the program path, and the secrets path.

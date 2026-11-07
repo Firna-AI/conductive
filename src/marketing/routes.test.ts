@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
+import { sitePaths } from './links'
 import { siteResponse } from './routes'
 
 const SITE = 'https://conductive.test'
@@ -57,7 +58,7 @@ async function sha256(text: string) {
 }
 
 describe('marketing site', () => {
-  it('sends every sign-in to the app and names the Boat account under each main action', async () => {
+  it('sends every sign-in to the app', async () => {
     const { response } = await get('/')
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe(
@@ -69,17 +70,6 @@ describe('marketing site', () => {
     )
     expect(signIns).toHaveLength(8)
     for (const link of signIns) expect(link.href).toBe(`${APP_ORIGIN}/`)
-    const actions = [
-      ...html.matchAll(
-        /<div class="actions">[\s\S]*?<\/div>\s*<p class="boat-note">([\s\S]*?)<\/p>/g,
-      ),
-    ]
-    expect(actions).toHaveLength(2)
-    for (const [, note] of actions) {
-      expect(links(note)).toEqual([
-        { href: 'https://boat.dev', text: 'Boat account' },
-      ])
-    }
     expect(html).toContain(`© 2027 ${productName}`)
   })
 
@@ -95,6 +85,17 @@ describe('marketing site', () => {
       const page = await response.text()
       expect(page, name).toContain('Draft for lawyer review')
       expect(page, name).toContain('<mark class="draft-field">')
+    }
+  })
+
+  it('names no sandbox provider on the home, Terms, and Privacy pages', async () => {
+    for (const path of [sitePaths.home, sitePaths.terms, sitePaths.privacy]) {
+      const { response } = await get(path)
+      expect(response.status, path).toBe(200)
+      const page = await response.text()
+      // The text, the links, and the labels of the page, without its styles.
+      const markup = page.replace(/<style>[\s\S]*?<\/style>/g, '')
+      expect(markup, path).not.toMatch(/\bboat/i)
     }
   })
 

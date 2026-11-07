@@ -1,7 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { boatKeyPath } from '../../shared/api'
 import type { FakeApiOptions, FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { chatFor } from '../state/test-kit'
 import { SessionChat } from './SessionChat'
 
@@ -20,20 +19,16 @@ export function textOf(html: string): string {
 
 /**
  * A chat on the fake API, loaded, with its open session rendered on demand.
- * `key: false` removes the Boat key, `setup` changes the fake's replies
- * before the load, and `hold` keeps the requests that it picks waiting.
+ * `setup` changes the fake's replies before the load, and `hold` keeps the
+ * requests that it picks waiting.
  */
 export async function renderChat(
   options: FakeApiOptions & {
-    key?: boolean
     setup?: (server: FakeApiServer) => void
     hold?: (request: Request) => boolean
   },
 ) {
   const chat = chatFor(options)
-  if (options.key === false) {
-    chat.server.json('GET', boatKeyPath(FAKE_IDS.org), { configured: false })
-  }
   options.setup?.(chat.server)
   await chat.controller.start()
   const markup = () =>
@@ -42,7 +37,6 @@ export async function renderChat(
         controller={chat.controller}
         mobile={false}
         now={now}
-        onAddBoatKey={() => {}}
         onConnectAgent={() => {}}
         snapshot={chat.controller.getSnapshot()}
       />,

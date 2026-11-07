@@ -1,11 +1,12 @@
-import { scheduleBrowserCheck } from '../chat/browser-access'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import type { ToolDependencies } from '../previews/types'
-import { readTerminalAccess, type TerminalIdentity } from './access-store'
-
-const CHECK_MS = 15_000
-const GRANT_MS = 30_000
+import {
+  CONNECTION_CHECK_MS,
+  readConnectionAccess,
+  scheduleConnectionCheck,
+  type SandboxConnectionIdentity,
+} from '../security/connection-access'
 
 function accessLost() {
   return new HttpError(
@@ -16,7 +17,7 @@ function accessLost() {
 }
 
 export class TerminalRegistration {
-  readonly identity: TerminalIdentity
+  readonly identity: SandboxConnectionIdentity
   deadline: number
   private live = true
   private close: (() => void) | null = null
@@ -24,7 +25,7 @@ export class TerminalRegistration {
   private readonly remove: () => void
 
   constructor(
-    identity: TerminalIdentity,
+    identity: SandboxConnectionIdentity,
     deadline: number,
     now: () => number,
     remove: () => void,
@@ -77,11 +78,17 @@ export class TerminalConnections {
     this.dependencies = dependencies
   }
 
-  async add(identity: TerminalIdentity): Promise<TerminalRegistration> {
+  async add(
+    identity: SandboxConnectionIdentity,
+  ): Promise<TerminalRegistration> {
     const started = this.dependencies.now()
-    const [access] = await readTerminalAccess(this.env.DB, [identity], started)
+    const [access] = await readConnectionAccess(
+      this.env.DB,
+      [identity],
+      started,
+    )
     if (!access) throw accessLost()
-    const deadline = Math.min(started + GRANT_MS, access.expiresAt)
+    const deadline = access.deadline
     if (deadline <= this.dependencies.now()) throw accessLost()
     const registration = new TerminalRegistration(
       identity,
@@ -90,13 +97,13 @@ export class TerminalConnections {
       () => this.remove(registration),
     )
     this.registrations.add(registration)
-    this.schedulePoll(CHECK_MS)
+    this.schedulePoll(CONNECTION_CHECK_MS)
     this.scheduleExpiry()
     return registration
   }
 
   private schedule(work: () => Promise<void>, delay: number) {
-    return (this.dependencies.terminalSchedule ?? scheduleBrowserCheck)(
+    return (this.dependencies.terminalSchedule ?? scheduleConnectionCheck)(
       work,
       delay,
     )
@@ -142,18 +149,17 @@ export class TerminalConnections {
     const started = this.dependencies.now()
     const snapshot = [...this.registrations]
     try {
-      const result = await readTerminalAccess(
+      const result = await readConnectionAccess(
         this.env.DB,
         snapshot.map((value) => value.identity),
         started,
       )
       const allowed = new Map(
-        result.map((value) => [value.connectionNumber, value.expiresAt]),
+        result.map((value) => [value.connectionNumber, value.deadline]),
       )
       snapshot.forEach((registration, index) => {
         if (!this.registrations.has(registration)) return
-        const expiresAt = allowed.get(index)
-        const deadline = Math.min(started + GRANT_MS, expiresAt ?? 0)
+        const deadline = allowed.get(index) ?? 0
         if (deadline <= this.dependencies.now()) registration.cancel()
         else registration.deadline = deadline
       })
@@ -163,7 +169,7 @@ export class TerminalConnections {
       this.checking = false
       this.scheduleExpiry()
       this.schedulePoll(
-        Math.max(0, CHECK_MS - (this.dependencies.now() - started)),
+        Math.max(0, CONNECTION_CHECK_MS - (this.dependencies.now() - started)),
       )
     }
   }

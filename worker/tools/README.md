@@ -77,7 +77,7 @@ The default root gives the production paths in [Image assets](../../tools/README
 The installer writes only program source and the launcher.
 It writes no credentials into the image.
 The launcher starts Node only by the full path from [`imageNodeExecutable`](../lifecycle/image-runtime.ts).
-That path names the private Node that each image build installs, as [The private Node runtime](../../image/README.md#the-private-node-runtime) says.
+That path names the private Node that each image build installs, as [The private Node runtime](../../image/runtime.md) says.
 The launcher reports an error when no executable file is at that path.
 It never uses `PATH` or a system Node folder.
 It removes `NODE_OPTIONS` after it reads the rooted secrets file and before it starts Node.

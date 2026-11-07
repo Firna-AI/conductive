@@ -21,7 +21,7 @@ import { seedWorkspace, write } from './members-test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
-  harness = await createHarness({ resetBoatAccounts: true })
+  harness = await createHarness()
 })
 beforeEach(async () => {
   await harness.reset()
@@ -114,11 +114,11 @@ it('performs only due retention under a temporary lease capability and retries f
     admin.session,
     write({ name: org.name }),
   )
-  expect(refused.status).toBe(409)
+  expect(refused.status).toBe(502)
   expect(await refused.json()).toEqual({
     error: {
-      code: 'boat_key_required',
-      message: 'Replace the cloud computer key to continue.',
+      code: 'org_cleanup_failed',
+      message: 'The org cleanup could not finish. Try again.',
     },
   })
   harness.boat.failure = null

@@ -7,7 +7,7 @@ Each build of the org image installs the runner as a systemd service. The
 install script needs root, because it writes a systemd unit.
 
 1. Get the full path of the private Node 24 from
-   [the image software](../../image/README.md#the-private-node-runtime).
+   [the image software](../../image/runtime.md).
    Its `npm` command must sit beside it, as in the official Node archive.
    The runner also needs Git.
 2. Install the runner packages and build the bundles with the

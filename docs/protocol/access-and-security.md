@@ -16,8 +16,11 @@ says.
   cannot sign in inside a frame.
 - Anyone with a GitHub account can sign up (decisions 22 and 48).
 - The sign-up check on the age and the email of a GitHub account was
-  dropped (decision 48). Each user's sandboxes run on their own Boat
-  account, so the check no longer protects a shared account.
+  dropped (decision 48).
+- Risk: all users share the app's Boat account (decision 80). Misuse by
+  one user can get that account suspended, and that stops the sandboxes
+  of every user. Terms at sign-up, an operator suspension, and an address
+  for abuse reports wait for a later change (decision 82).
 - The session lives in a signed cookie that is HttpOnly, Secure, and
   SameSite=Lax.
 - The [Mac app](desktop-app.md#the-sign-in-session) has a separate session
@@ -105,6 +108,9 @@ Later screens add the frame and connection sources that they need.
 
 ## Orgs and workspaces
 
+- One Boat key reaches the sandboxes and the saved snapshots of all orgs
+  (decision 80). So the key does not keep the orgs apart. The checks in
+  this section do.
 - A request reaches an org, its workspaces, and their sandboxes only for a
   member of that org.
 - An open tab loses its workspace connection within 30 seconds after its
@@ -113,12 +119,15 @@ Later screens add the frame and connection sources that they need.
   again at most every 30 seconds, and closes each tab that fails.
 - A runner connection gets no agent login after its workspace token is
   revoked. The workspace checks the token again before each login.
+- No request names a sandbox or a saved snapshot. The Worker takes each
+  one from its own records, and only from the records of an org that the
+  request may reach.
 - Before each sandbox call, the Worker checks in its records that the
-  sandbox belongs to a workspace of that org.
+  sandbox belongs to a workspace or a build of that org.
 - The Worker calls only a fixed list of Boat routes. It has no general
   pass-through to Boat.
-- Account, lifecycle, saved snapshot, file metadata, and error replies
-  from Boat can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
+- Lifecycle, saved snapshot, file metadata, and error replies from Boat
+  can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
 - A successful command reply from Boat can contain at most 18 MiB, or
   18,874,368 bytes. The limit includes the whole JSON body.
 - A reply above these budgets gets HTTP 502, even when Boat permits it.
@@ -126,21 +135,24 @@ Later screens add the frame and connection sources that they need.
 - [Orgs and members](orgs-and-members.md#members-and-roles) states the
   rules of each role.
 
-## Boat keys
+## The app's Boat key
 
-- The Worker stores each Boat key encrypted, with an encryption key that
-  is a Worker secret (decision 44).
-- The Worker uses a Boat key only for the sandboxes of its own org.
-- A Boat key never goes to the browser and never goes into a sandbox.
-  Reason: a Boat key gives access to a whole Boat account.
-- The Boat key screen asks for a key that is limited to one Boat
-  environment and to the actions that the app uses.
-- The app tests a Boat key once, when an admin saves it.
+- One Boat key, the app's own, runs every sandbox and every org image
+  (decision 80). The Worker holds it as a Worker secret.
+- The key never goes to the browser, into a sandbox, into a log, or into
+  a saved snapshot. Reason: the key reaches the sandboxes of every org.
+- The key is limited to one Boat environment and to the actions that the
+  app uses.
+- The app's Boat account is a Boat organization of its own. It holds no
+  other Boat work of the operator (decisions 5 and 80).
+- Every Boat call names that organization. A Boat user can reach several
+  organizations, so a change of the active one in Boat moves no work of
+  the app.
 
 ## What a sandbox holds
 
 - Every sandbox starts with Boat's `noEnv` setting, so it gets none of the
-  secrets of its Boat account.
+  secrets of the app's Boat account.
 - At a start, a sandbox gets only two secrets: its workspace token and the
   env vars of its org.
 - The sandbox gets them at create and at each resume. A changed secret
@@ -236,8 +248,7 @@ Later screens add the frame and connection sources that they need.
 
 ## Secrets that users enter
 
-- The app stores the Boat keys, the env var values, and the agent logins
-  encrypted.
+- The app stores the env var values and the agent logins encrypted.
 - The values of env vars are write-only. The browser never gets a stored
   value back.
 
@@ -368,3 +379,6 @@ Later screens add the frame and connection sources that they need.
 
 - The Worker asks Boat for a new desktop URL on each page load. The URL
   works for 10 minutes and carries its token in the fragment.
+- An open desktop stream does not pass through the Worker. So it can keep
+  playing after its user loses access, until the sandbox stops. This is
+  the one exception to the 30-second rule of decision 70 (decision 117).

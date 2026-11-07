@@ -86,6 +86,22 @@ describe('workspace chat security', () => {
       .run()
     expect((await fixture.fetch(path, { choice: CLAUDE })).status).toBe(409)
     expect((await fixture.fetch(path)).status).toBe(200)
+    const archived = await fixture.tab()
+    await harness.env.DB.prepare('UPDATE workspaces SET state = ? WHERE id = ?')
+      .bind('stopped', WORKSPACE_ID)
+      .run()
+    await fixture.clock.advance(30_000)
+    expect(archived.closed).toBe(0)
+    expect(archived.messages[0]).toMatchObject({ type: 'history' })
+    await fixture.chat.appendWorkspaceEvent(WORKSPACE_ID, {
+      type: 'workspace.title',
+      name: 'Archived history remains available',
+    })
+    expect(archived.messages.at(-1)).toMatchObject({
+      type: 'event',
+      envelope: { event: { type: 'workspace.title' } },
+    })
+    archived.close()
     await expect(
       fixture.chat.appendWorkspaceEvent('other-workspace', {
         type: 'workspace.title',

@@ -3,14 +3,14 @@ import { defineUseCase } from '@mokly/mokly'
 export const signUp = defineUseCase({
   title: 'Sign up',
   description:
-    'A visitor of the home page signs up with GitHub, installs the GitHub App, creates the first org, adds its Boat key, and connects an agent.',
+    'A visitor of the home page signs up with GitHub, installs the GitHub App, creates the first org, and connects an agent.',
   relatedDocs: [],
   steps: [
     {
       screenPath: 'marketing',
       title: 'Start free with GitHub',
       description:
-        'The home page shows the app and its features, and says that users need their own Boat account, which runs the cloud computers. Both actions lead to the GitHub sign-in.',
+        'The home page shows the app and its features. Both actions lead to the GitHub sign-in.',
     },
     {
       screenPath: 'app/sign-in',
@@ -38,15 +38,9 @@ export const signUp = defineUseCase({
     },
     {
       screenPath: 'app/sign-in/get-started/org-created',
-      title: 'Add the Boat key',
-      description:
-        'The user makes an API key in their own Boat account and pastes it. The app tests it once.',
-    },
-    {
-      screenPath: 'app/sign-in/get-started/key-saved',
       title: 'Connect Claude or Codex',
       description:
-        'The key passed its test. The user pastes a Claude subscription token, or connects Codex.',
+        'The org is created. The user pastes a Claude subscription token, or connects Codex.',
     },
     {
       screenPath: 'app/sign-in/get-started/connected',

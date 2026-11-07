@@ -9,8 +9,11 @@ import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { randomToken } from '../security/crypto'
 import { gate, type RequestContext } from '../security/gate'
+import {
+  readConnectionAccess,
+  scheduleConnectionCheck,
+} from '../security/connection-access'
 import { afterNumber, chatRoute } from './http-routes'
-import { readBrowserAccess, scheduleBrowserCheck } from './browser-access'
 import { BrowserTabs } from './browser-tabs'
 import { findChatWorkspace, tokenWorkspace } from './queries'
 import { loginResolver } from './login-access'
@@ -48,8 +51,9 @@ export class WorkspaceChat {
     this.env = env
     this.dependencies = {
       now: Date.now,
-      scheduleBrowserCheck,
-      readBrowserAccess: (tabs, now) => readBrowserAccess(env.DB, tabs, now),
+      scheduleBrowserCheck: scheduleConnectionCheck,
+      readConnectionAccess: (tabs, now) =>
+        readConnectionAccess(env.DB, tabs, now),
       randomId: randomToken,
       resolveAttachments: async (_userId, _workspaceId, ids) => {
         if (ids.length)
@@ -230,16 +234,24 @@ export class WorkspaceChat {
     peer: BrowserPeer,
   ): Promise<() => void> {
     return this.store.run(async () => {
-      const history = await this.store.read(access.workspace.id, (view) =>
-        view.history(after),
-      )
-      peer.send({ type: 'history', history })
-      return this.browsers.add(peer, {
+      const unsubscribe = await this.browsers.add(peer, {
+        kind: 'workspace',
         workspaceId: access.workspace.id,
         orgId: access.workspace.orgId,
         userId: access.context.user.id,
         sessionId: access.context.sessionId,
       })
+      try {
+        const history = await this.store.read(access.workspace.id, (view) =>
+          view.history(after),
+        )
+        this.browsers.check(peer)
+        peer.send({ type: 'history', history })
+        return unsubscribe
+      } catch (error) {
+        unsubscribe()
+        throw error
+      }
     })
   }
 

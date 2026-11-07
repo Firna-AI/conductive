@@ -1,7 +1,7 @@
 import { providerState } from './provider-state'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import { lifecycleProvider } from './lifecycle-provider'
+import { orgSandboxProvider } from '../sandbox/client'
 import { readWorkspace, revokeWorkspacePreviews } from './workspace-data'
 import { firstOrgAdmin } from './settings-data'
 import type { DurableLifecycle } from './durable'
@@ -53,7 +53,7 @@ export async function actionResources(context: WorkspaceActionContext) {
   const admin = await firstOrgAdmin(context.env.DB, context.orgId)
   if (!admin)
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
-  const provider = await lifecycleProvider(
+  const provider = await orgSandboxProvider(
     context.env,
     admin.userId,
     context.orgId,

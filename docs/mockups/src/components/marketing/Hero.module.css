@@ -90,13 +90,6 @@
   margin-top: 10px;
 }
 
-/* The two actions, and the note about the Boat account under them. */
-.start {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
 .picture {
   display: flex;
   justify-content: center;

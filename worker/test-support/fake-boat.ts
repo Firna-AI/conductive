@@ -1,17 +1,17 @@
 import type { HttpFetch } from '../env'
-import type { BoatAccount } from '../sandbox/provider'
 
 export class FakeBoat {
   requests: Request[] = []
-  accounts = defaultAccounts()
+  apiKey = 'boat-first'
+  orgId = 'app-org'
+  activeOrgId = 'other-org'
   failure: { status: number; code: string } | null = null
   responseOverride: Response | null = null
   /** One-shot factories return fresh bodies without clone/tee buffering. */
   responseFactories: ((request: Request) => Response)[] = []
 
-  reset(options: { accounts?: boolean } = {}) {
+  reset() {
     this.requests = []
-    if (options.accounts) this.accounts = defaultAccounts()
     this.failure = null
     this.responseOverride = null
     this.responseFactories = []
@@ -19,6 +19,9 @@ export class FakeBoat {
 
   fetch: HttpFetch = async (request) => {
     this.requests.push(request.clone())
+    const destination = request.headers.get('X-Boat-Org') ?? this.activeOrgId
+    if (destination !== this.orgId)
+      return Response.json({ ok: false, code: 'not_found' }, { status: 404 })
     const factory = this.responseFactories.shift()
     if (factory) return factory(request)
     if (this.responseOverride) return this.responseOverride.clone()
@@ -32,18 +35,9 @@ export class FakeBoat {
         { status: this.failure.status, headers: { 'Retry-After': '3' } },
       )
     }
-    const key = request.headers.get('Authorization')?.replace('Bearer ', '')
-    const account = key ? this.accounts.get(key) : null
-    if (!account)
+    if (request.headers.get('Authorization') !== `Bearer ${this.apiKey}`)
       return Response.json({ ok: false, code: 'unauthorized' }, { status: 401 })
     const path = new URL(request.url).pathname.replace('/api/v1', '')
-    if (path === '/orgs') {
-      return Response.json({
-        ok: true,
-        type: 'org.list',
-        orgs: [{ ...account, active: true }],
-      })
-    }
     if (path.startsWith('/saved-snapshots')) {
       return Response.json({
         ok: true,
@@ -71,13 +65,4 @@ export class FakeBoat {
       sandbox: { id: 'bx_one', state: 'ready' },
     })
   }
-}
-
-function defaultAccounts() {
-  return new Map<string, BoatAccount>([
-    ['boat-first', { id: 'team-one', type: 'org' }],
-    ['boat-rotated', { id: 'team-one', type: 'org' }],
-    ['boat-other', { id: 'team-two', type: 'org' }],
-    ['boat-personal', { id: 'user-one', type: 'personal' }],
-  ])
 }

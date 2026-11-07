@@ -50,7 +50,7 @@ it('persists an unpredictable preview hostname and lists it with a 24-hour expir
     localhost: false,
   })
   expect(upstream.headers.get('Authorization')).toBe('Bearer boat-test-key')
-  expect(upstream.headers.get('X-Boat-Org')).toBe('personal')
+  expect(upstream.headers.get('X-Boat-Org')).toBe('app-org')
 })
 
 it('blocks unknown, closed, stopped, and expired preview hostnames before upstream access', async () => {

@@ -32,12 +32,11 @@ afterAll(async () => {
 })
 
 it('cancels oversized fallback bodies early and returns the exact file metadata size', async () => {
-  const { org, workspaceId, request, saveKey } = await setupFilesHttp(
+  const { org, workspaceId, request } = await setupFilesHttp(
     harness,
     runtime,
     3,
   )
-  await saveKey()
   const stream = oversizedFileStream()
   harness.boat.responseFactories = [stream.response, () => fileInfoResponse()]
   const response = await request(
@@ -79,19 +78,18 @@ it('cancels oversized fallback bodies early and returns the exact file metadata 
     expect(upstream.method).toBe('GET')
     expect(new URL(upstream.url).origin).toBe('https://boat.dev')
     expect(upstream.headers.get('Authorization')).toBe('Bearer boat-first')
-    expect(upstream.headers.get('X-Boat-Org')).toBe('team-one')
+    expect(upstream.headers.get('X-Boat-Org')).toBe('app-org')
     expect(upstream.headers.get('Cookie')).toBe(null)
     expect(upstream.redirect).toBe('manual')
   }
 })
 
 it('keeps file metadata failures safe after cancelling an oversized fallback body', async () => {
-  const { org, workspaceId, request, saveKey } = await setupFilesHttp(
+  const { org, workspaceId, request } = await setupFilesHttp(
     harness,
     runtime,
     3,
   )
-  await saveKey()
   const cases = [
     {
       name: 'refused metadata',

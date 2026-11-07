@@ -1,7 +1,6 @@
 import { expect, it } from 'vitest'
 
 import { TEST_TIME } from '../test-support/harness'
-import { storeBoatKey } from '../sandbox/keys'
 import { SOFTWARE } from './backend-test-support'
 import { setupBackendTests } from './backend-test-hooks'
 import { readBuild, readBuildHistory } from './build-data'
@@ -11,7 +10,7 @@ import { refreshImagesForPush } from './image-timers'
 
 const backendFixture = setupBackendTests()
 
-it('keeps the good image across build and key failures and publishes a successful retry', async () => {
+it('keeps the good image across build and provider failures and publishes a successful retry', async () => {
   const fixture = await backendFixture()
   try {
     const { images, org, user, boat, runtime } = fixture
@@ -38,10 +37,10 @@ it('keeps the good image across build and key failures and publishes a successfu
       (await readBuild(runtime.env.DB, org.id, failed)).build,
     ).toMatchObject({ state: 'failed', completedAt: TEST_TIME + 50 })
     const allocated = boat.starts.length
-    await runtime.env.DB.prepare('DELETE FROM boat_keys WHERE org_id = ?')
-      .bind(org.id)
-      .run()
-    const missingKey = await startImageBuild(images, {
+    const providerFetch = images.dependencies.fetch
+    images.dependencies.fetch = async () =>
+      Response.json({ ok: false, code: 'unauthorized' }, { status: 401 })
+    const refusedBuild = await startImageBuild(images, {
       orgId: org.id,
       userId: user.id,
       kind: 'build',
@@ -54,26 +53,20 @@ it('keeps the good image across build and key failures and publishes a successfu
         software: SOFTWARE,
       }),
     ).toEqual([])
-    await finish(fixture, missingKey)
+    await finish(fixture, refusedBuild)
     expect(fixture.scheduled.at(-1)).toMatchObject({
       buildId: null,
       nextAt: TEST_TIME + 50,
     })
     expect(
-      (await readBuild(runtime.env.DB, org.id, missingKey)).build,
+      (await readBuild(runtime.env.DB, org.id, refusedBuild)).build,
     ).toMatchObject({
       state: 'failed',
-      error: 'Ask an org admin to add the cloud computer key.',
+      error:
+        'The cloud computer image could not build. Check the log and try again.',
     })
     expect(boat.starts).toHaveLength(allocated)
-    await storeBoatKey(
-      runtime.env,
-      org.id,
-      user.id,
-      'boat-first',
-      boat.fetch,
-      runtime.dependencies.now(),
-    )
+    images.dependencies.fetch = providerFetch
     boat.commandExitCode = 0
     const retried = await startImageBuild(images, {
       orgId: org.id,

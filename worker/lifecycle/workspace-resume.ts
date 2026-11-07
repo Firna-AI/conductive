@@ -1,6 +1,5 @@
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
-import { lifecycleProvider } from './lifecycle-provider'
 import { requireOrgMember } from './access'
 import { readImageSettings, workspaceRepository } from './settings-data'
 import { readWorkspace } from './workspace-data'
@@ -29,7 +28,6 @@ export async function resumeWorkspace(
       'sandbox_unavailable',
       'The cloud computer is not available. Try again.',
     )
-  await lifecycleProvider(env, userId, orgId, dependencies.fetch)
   const settings = await readImageSettings(env.DB, orgId)
   const repository = await workspaceRepository(env.DB, orgId, row.repositoryId)
   const accepted = await endpoint.queueLifecycleStart({

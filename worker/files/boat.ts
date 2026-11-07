@@ -3,7 +3,7 @@ import { decodeUtf8 } from '../../src/shared/utf8'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
-import { orgSandboxProvider } from '../sandbox/keys'
+import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxFileRead } from '../sandbox/provider'
 import type { FilesWorkspace } from './data'
 import { fileBytes, parseFile } from './content'
@@ -46,8 +46,6 @@ export async function readBoatFile(
       maxBytes,
     )
   } catch (error) {
-    if (error instanceof HttpError && error.code === 'boat_key_required')
-      throw fileUnavailable()
     if (error instanceof ProviderError) {
       if (error.kind === 'not_found')
         throw new HttpError(404, 'file_not_found', 'The file is not available.')

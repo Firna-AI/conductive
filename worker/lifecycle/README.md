@@ -5,7 +5,8 @@ life of each workspace. The org image is the saved snapshot that every new
 sandbox of an org starts from. A workspace is one task with its own branch
 and its own Boat sandbox. The code reaches Boat only through the
 `SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
-with the org's own Boat key.
+with the app's one Boat key, as the [sandbox area](../sandbox/README.md)
+says.
 
 The root Worker does not call these handlers yet. `worker/routes.ts` has no
 lifecycle route, and `worker/application.ts` serves a stub on the machine
@@ -260,7 +261,7 @@ object holds the lifecycle state, the turn records, and the events.
   install/start commands. [`savedScriptCommand`](saved-script.ts) runs Bash.
 - [`image-runtime.ts`](image-runtime.ts): `IMAGE_NODE_RUNTIME`, the pinned
   private Node of the org image, and its paths. The
-  [image README](../../image/README.md#update-the-node-release) says how to
+  [runtime guide](../../image/runtime.md#update-the-node-release) says how to
   update it.
 - [Repository layout](repository-layout.md#key-code): the repository entries.
 - [`tokens.ts`](tokens.ts): the encrypted workspace token and

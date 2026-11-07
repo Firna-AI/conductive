@@ -19,12 +19,23 @@ export type MembersFailure = {
   message: string
 }
 
+/** The changes that failed, by `pendingKey`, in the order that they failed. */
+export type MembersFailures = ReadonlyMap<string, MembersFailure>
+
 type Ready = {
   status: 'ready'
   data: MembersData
   /** The changes that run now, as `pendingKey` gives them. */
   pending: readonly string[]
-  failure: MembersFailure | null
+  /**
+   * Each change sets and drops only its own failure, so the answer of
+   * another change keeps it. A failure goes when the same change runs
+   * again, when its removal question opens again, or when its member
+   * leaves the org.
+   */
+  failures: MembersFailures
+  /** The member whose removal question is open, by user ID. */
+  removing: string | null
 }
 
 export type MembersState =
@@ -39,9 +50,15 @@ export type MembersStore = {
   invite(email: string): Promise<boolean>
   cancelInvite(inviteId: string): Promise<boolean>
   changeRole(userId: string, role: OrgRole): Promise<boolean>
-  /** Resolves to true when the member left the org. */
+  /** Opens the removal question of the member, without its last failure. */
+  openRemoval(userId: string): void
+  /** Closes the removal question of the member when it is the open one. */
+  closeRemoval(userId: string): void
+  /**
+   * Resolves to true when the member left the org. Then the question and
+   * the failures of that member go, and those of another member stay.
+   */
   remove(userId: string): Promise<boolean>
-  clearFailure(): void
 }
 
 /** The key of a change that runs, such as "remove:priya". */
@@ -66,23 +83,34 @@ export function normalizeEmail(value: string): string {
   return value.trim()
 }
 
+/** The failures without the failure of one change. */
+function without(failures: MembersFailures, key: string): MembersFailures {
+  if (!failures.has(key)) return failures
+  const next = new Map(failures)
+  next.delete(key)
+  return next
+}
+
 /**
- * Removes a member. Their workspaces move to the admin who removes them,
- * as decision 39 says, so the count of that admin grows.
+ * Removes a member. Their workspaces move to the admin who removes them, so
+ * the count of that admin grows. Their question closes, and their failed
+ * role change goes with them. The question and the failures of another
+ * member stay.
  */
-function withoutMember(
-  data: MembersData,
-  userId: string,
-  adminId: string,
-): MembersData {
-  const owned: Record<string, number> = { ...data.owned }
+function withoutMember(ready: Ready, userId: string, adminId: string): Ready {
+  const owned: Record<string, number> = { ...ready.data.owned }
   const moved = owned[userId] ?? 0
   delete owned[userId]
   if (moved > 0) owned[adminId] = (owned[adminId] ?? 0) + moved
   return {
-    ...data,
-    members: data.members.filter((member) => member.user.id !== userId),
-    owned,
+    ...ready,
+    data: {
+      ...ready.data,
+      members: ready.data.members.filter((member) => member.user.id !== userId),
+      owned,
+    },
+    removing: ready.removing === userId ? null : ready.removing,
+    failures: without(ready.failures, pendingKey('role', userId)),
   }
 }
 
@@ -112,30 +140,30 @@ export function createMembersStore(
     action: MembersAction,
     target: string,
     request: () => Promise<T>,
-    apply: (data: MembersData, result: T) => MembersData,
+    apply: (ready: Ready, result: T) => Ready,
   ): Promise<boolean> {
     const key = pendingKey(action, target)
     if (state.status !== 'ready' || state.pending.includes(key)) return false
     update((ready) => ({
       ...ready,
       pending: [...ready.pending, key],
-      failure: null,
+      failures: without(ready.failures, key),
     }))
     const done = (pending: readonly string[]) =>
       pending.filter((item) => item !== key)
     try {
       const result = await request()
       update((ready) => ({
-        ...ready,
-        data: apply(ready.data, result),
+        ...apply(ready, result),
         pending: done(ready.pending),
       }))
       return true
     } catch (error) {
+      const failure = { action, target, message: errorMessage(error) }
       update((ready) => ({
         ...ready,
         pending: done(ready.pending),
-        failure: { action, target, message: errorMessage(error) },
+        failures: new Map(ready.failures).set(key, failure),
       }))
       return false
     }
@@ -166,7 +194,8 @@ export function createMembersStore(
             owned: countOwners(workspaces.workspaces),
           },
           pending: [],
-          failure: null,
+          failures: new Map(),
+          removing: null,
         })
       } catch (error) {
         if (current === loads)
@@ -180,12 +209,15 @@ export function createMembersStore(
         'invite',
         email,
         () => api.invite(orgId, { email }),
-        (data, invite) => ({
-          ...data,
-          invites: [
-            ...data.invites.filter((item) => item.id !== invite.id),
-            invite,
-          ],
+        (ready, invite) => ({
+          ...ready,
+          data: {
+            ...ready.data,
+            invites: [
+              ...ready.data.invites.filter((item) => item.id !== invite.id),
+              invite,
+            ],
+          },
         }),
       )
     },
@@ -194,9 +226,12 @@ export function createMembersStore(
         'cancel',
         inviteId,
         () => api.cancelInvite(orgId, inviteId),
-        (data) => ({
-          ...data,
-          invites: data.invites.filter((item) => item.id !== inviteId),
+        (ready) => ({
+          ...ready,
+          data: {
+            ...ready.data,
+            invites: ready.data.invites.filter((item) => item.id !== inviteId),
+          },
         }),
       ),
     changeRole: (userId, role) =>
@@ -204,22 +239,34 @@ export function createMembersStore(
         'role',
         userId,
         () => api.changeRole(orgId, userId, { role }),
-        (data, changed) => ({
-          ...data,
-          members: data.members.map((member) =>
-            member.user.id === changed.user.id ? changed : member,
-          ),
+        (ready, changed) => ({
+          ...ready,
+          data: {
+            ...ready.data,
+            members: ready.data.members.map((member) =>
+              member.user.id === changed.user.id ? changed : member,
+            ),
+          },
         }),
       ),
+    openRemoval(userId) {
+      update((ready) => ({
+        ...ready,
+        removing: userId,
+        failures: without(ready.failures, pendingKey('remove', userId)),
+      }))
+    },
+    closeRemoval(userId) {
+      update((ready) =>
+        ready.removing === userId ? { ...ready, removing: null } : ready,
+      )
+    },
     remove: (userId) =>
       run(
         'remove',
         userId,
         () => api.removeMember(orgId, userId),
-        (data) => withoutMember(data, userId, viewerId),
+        (ready) => withoutMember(ready, userId, viewerId),
       ),
-    clearFailure() {
-      update((ready) => ({ ...ready, failure: null }))
-    },
   }
 }

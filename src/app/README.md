@@ -104,12 +104,11 @@ the invite, the roles, and the removal there.
 
 ## Screens
 
-- The app runs every cloud computer on its own Boat account, so no org has
-  a Boat key (decision 80). The app has no key screen, tab, notice, or Get
-  started step.
+- The app runs every cloud computer in its own Boat account, so no org has
+  a Boat key. The app has no key screen, tab, notice, or Get started step,
+  and no text of the app names Boat.
 - Get started has three steps: the GitHub App, the first org, and Claude or
-  Codex. An older reply that still lists the key step does not hold the
-  first run open.
+  Codex. A reply of the API names only these steps.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
   `AccountModel.repositories`, before the org exists. The create sends the

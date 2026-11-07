@@ -17,11 +17,13 @@ in this folder yet.
 - Start no runner in a build sandbox. The service runs it only in a
   workspace sandbox.
 
-The [terminal backend](../worker/terminal/README.md) owns ttyd, its service,
-its launcher, and its local password. The software step of each image build
-runs that area's `terminalInstallCommand()` after `install.sh`. The build log
-shows the output of both. The terminal installer enables its service and
-starts nothing.
+The [terminal backend](../worker/terminal/README.md) owns ttyd, tmux, their
+services, the terminal launcher, and the local password. It also owns the
+shell server, which keeps the workspace shell in tmux. The software step of
+each image build runs that area's `terminalInstallCommand()` after
+`install.sh`. The build log shows the output of both. The terminal
+installer installs the `ttyd` and `tmux` packages with `apt-get`. It
+enables the terminal service and starts nothing.
 
 ## The runner archive
 
@@ -36,54 +38,15 @@ digest that is not 64 hexadecimal characters.
 
 The archive must hold `runner/main.mjs`: the agent runner, with its SDK
 dependencies. It needs no Node, because the runner runs on the
-[private Node runtime](#the-private-node-runtime).
+[private Node runtime](runtime.md).
 
 Put no credential in the URL or in the archive. Each saved snapshot keeps
 the unpacked archive.
 
 ## The private Node runtime
 
-The runner, the git credential helper, and the agent tools start a private
-Node by its full path. They never use a Node from `PATH` or the system
-folders, because the org's install script can replace that Node.
-
-[`image-runtime.ts`](../worker/lifecycle/image-runtime.ts) pins one Node 24
-release for Linux x64, now 24.22.2. Its `version` constant names the
-release. `IMAGE_NODE_RUNTIME.sha256` holds the SHA-256 digest of the
-official `node-v<version>-linux-x64.tar.gz` archive. The
-[release page of Node 24.22.2](https://nodejs.org/en/blog/release/v24.22.2)
-gives that digest. The module derives these values from `version`:
-
-- The download URL: `https://nodejs.org/dist/v<version>/node-v<version>-linux-x64.tar.gz`.
-- The version folder: `/opt/conductive/runtime/node-v<version>-linux-x64`.
-- The Node executable: `bin/node` in the version folder.
-
-`install-runtime.sh` downloads nothing when the version folder already
-holds an executable `bin/node`. So a later build reuses the release from
-the last org image. Otherwise it downloads the archive, and checks its
-digest with `sha256sum`. A wrong digest fails the build. It unpacks the
-checked archive into a new folder, which then replaces the version folder.
-It keeps the folders of other releases.
-
-### Update the Node release
-
-1. Choose the new Node 24 release. Copy the digest of its
-   `node-v<version>-linux-x64.tar.gz` archive from its release page,
-   `https://nodejs.org/en/blog/release/v<version>`. Check that
-   `https://nodejs.org/dist/v<version>/SHASUMS256.txt` gives the same digest.
-2. In `image-runtime.ts`, change `version` and `IMAGE_NODE_RUNTIME.sha256`.
-   Change the release and its link in this section too.
-3. Run the installer into a new scratch folder to check the real download:
-
-   ```sh
-   sh image/install-runtime.sh '<download URL>' '<digest>' "$PWD/.context/node-check/node-v<version>-linux-x64"
-   ```
-
-4. Run the tests in [Development](#development).
-
-After you deploy the Worker, the next build of each org image installs the
-new release. A refresh does not install it. A workspace that exists keeps
-the Node of its image.
+[The private Node runtime](runtime.md) gives the pinned Node release, its
+paths, and its update steps.
 
 ## Install
 
@@ -129,9 +92,9 @@ system permissions. The installed runner service runs as `user`.
    git, and sets `credential.useHttpPath`.
 6. It enables the runner service. It does not start it.
 
-A refresh skips this step. So a change in this folder reaches the new
-workspaces of an org only after its next build. A workspace that exists
-keeps its software.
+A refresh skips this step, and the terminal installer with it. So a change
+in this folder or in the terminal software reaches the new workspaces of an
+org only after its next build. A workspace that exists keeps its software.
 
 ## Start in a workspace
 
@@ -153,12 +116,12 @@ folder names and the variable names. The
 [repository layout](../worker/lifecycle/repository-layout.md) says how the
 Worker makes and keeps the folder map.
 
-The runner and the terminal launcher read the variables from
-`/run/ascii-secrets/env.sh`, where Boat puts them. A systemd service does
-not get them in another way. A Boat command process does not get them
-either. So the install command of a build loads the same file, with
-automatic export, before Bash runs the org's install script. The install
-script then gets the folder variables.
+The runner, the terminal launcher, and the terminal's shell server read the
+variables from `/run/ascii-secrets/env.sh`, where Boat puts them. A systemd
+service does not get them in another way. A Boat command process does not
+get them either. So the install command of a build loads the same file,
+with automatic export, before Bash runs the org's install script. The
+install script then gets the folder variables.
 
 At a create, the Worker first fetches the default branch and creates the
 workspace branch. When the GitHub repository has no refs, the fetch step
@@ -175,8 +138,9 @@ runs the command of `workspaceStartupCommand`:
    `/run/conductive/workspace-ready`, and restarts the runner service.
 
 After that command succeeds, the Worker calls the terminal backend's start
-hook. That hook starts the terminal service. It caches the locally generated
-password in encrypted form before the workspace becomes ready.
+hook. That hook starts the terminal service and its shell server. It caches
+the locally generated password in encrypted form before the workspace
+becomes ready.
 
 The runner start script exits with success, and starts nothing, in these
 cases:
@@ -188,15 +152,17 @@ cases:
 So a build sandbox and a disk retention restart start no runner. The
 terminal backend needs its own marker under `/run`, which only its
 workspace start hook creates. Builds and disk retention restarts do not
-call that hook and start no terminal. A disk retention restart runs
-`workspaceStartupCommand` in its `retention` mode. That mode runs the
-startup script, but it writes no ready marker and does not restart the
-runner service.
+call that hook, so they start no terminal and no terminal shell. A disk
+retention restart runs `workspaceStartupCommand` in its `retention` mode.
+That mode runs the startup script, but it writes no ready marker and does
+not restart the runner service.
 
 Otherwise, `runner-start.sh` runs `runner/main.mjs` with the private
 Node, in the repository folder. The runner unit restarts its service after
-a failure. The terminal backend describes its launcher, password, and
-automatic restart in its [README](../worker/terminal/README.md).
+a failure. The terminal backend describes its launcher, its shell server,
+its password, and its automatic restart in its
+[README](../worker/terminal/README.md). That README also says how the
+workspace shell keeps running when a terminal connection drops.
 
 ## Git credentials
 
@@ -274,7 +240,7 @@ They run the shipped scripts with local archives and a fake `curl`.
   [`conductive-runner.service`](conductive-runner.service): start the agent
   runner.
 - [The terminal backend](../worker/terminal/service.ts): owns the terminal
-  install command, its service, and its workspace start hook.
+  install command, its two services, and its workspace start hook.
 - [`git-credential-helper.sh`](git-credential-helper.sh) and
   [`git-credential-helper.mjs`](git-credential-helper.mjs): the git
   credential helper.

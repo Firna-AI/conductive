@@ -98,6 +98,7 @@ export function createTerminalHandler(
             'The terminal is starting. Try again.',
           )
         registration = await connections.add({
+          kind: 'sandbox',
           sessionId: context.sessionId,
           userId: context.user.id,
           orgId: target.orgId,

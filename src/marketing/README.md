@@ -76,9 +76,11 @@ Sources for the review:
   It lists the identity and the contact, the purposes and the lawful
   basis, the recipients, transfers to other countries, retention, the
   rights, and complaints. The Privacy page has a section for each.
-- Boat's terms: <https://boat.dev/terms>. They cover the allowed use and
-  the responsibility for the Boat account. The Terms page links to them
-  and copies none of their clauses.
+- Boat's terms: <https://boat.dev/terms>. They cover the allowed use of
+  the app's Boat organization, and they make the operator answer for what
+  users do in it. The Terms and Privacy pages name no provider and link to
+  no provider terms. The acceptable use draft field of the Terms page
+  includes the rules of the cloud computer provider.
 - The suspension of accounts and an address for abuse reports wait for a
   later change. The Terms page marks them as draft fields.
 
@@ -96,8 +98,7 @@ Sources for the review:
   domain.
 - `site.ts`: the pages of the site and their heads.
 - `home.ts`, `features.ts`: the home page and its copy.
-- `chrome.ts`, `actions.ts`: the header, the footer, the actions, and the
-  Boat account note.
+- `chrome.ts`, `actions.ts`: the header, the footer, and the actions.
 - `legal.ts`, `terms.ts`, `privacy.ts`: the legal pages and their drafts.
 - `pictures.ts`, `frames.ts`, `picture-files.ts`: the pictures, their
   frames, and their files.

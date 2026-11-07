@@ -77,7 +77,7 @@ export class NativeSourceProvider extends BoatClient {
     localOrigin: string,
     fetch: HttpFetch,
   ) {
-    super('boat-first', fetch, { id: 'team-one', type: 'org' })
+    super('boat-first', fetch, 'app-org')
     this.home = home
     this.root = root
     this.localOrigin = localOrigin

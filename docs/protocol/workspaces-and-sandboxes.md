@@ -10,14 +10,20 @@ says.
 ## The provider
 
 - Boat runs every sandbox (decision 2).
-- Every sandbox of an org runs on the Boat account of the org's Boat key
-  (decision 46). [Orgs and members](orgs-and-members.md#the-boat-key) says
-  who adds the key.
-- User-facing text names Boat only on the Boat key screen and its tab, on
-  the marketing site, and in Get started (decision 47). Everywhere else it
-  says "cloud computer" or "sandbox".
-- Reason: users learn before the sign-up that they need a Boat account,
-  and the rest of the app can move to another provider later.
+- Every sandbox and every org image of every org runs in the app's own
+  Boat account (decision 80). That account pays for all use.
+- No user needs a Boat account or a Boat key.
+- A Boat key for each org was rejected. Users then needed their own Boat
+  account, and the app had to name Boat to them.
+- All orgs share the plan limits of the app's Boat account, such as the
+  number of sandboxes at once and of starts in a day.
+- [Access and security](access-and-security.md#the-apps-boat-key) states
+  how the Worker keeps the app's Boat key.
+- User-facing text never names Boat (decision 80). It says "cloud
+  computer" or "sandbox". This holds in the app, the Mac app, the
+  marketing site, Get started, and the legal pages.
+- Reason: the user asked that the provider stays hidden, so that the app
+  can move to another provider later.
 - Each workspace has its own sandbox with its own clone of its repository
   (decision 4). One worktree for each workspace in a shared sandbox was
   rejected, because each workspace gets its own sandbox.
@@ -185,7 +191,7 @@ says.
   again, so that Boat keeps its disk (decision 43).
 - Reason: Boat can delete the disk of a sandbox that is stopped for more
   than 14 days, and a resume then fails.
-- Each such restart uses a start and some minutes of the org's Boat
+- Each such restart uses a start and some minutes of the app's Boat
   account.
 - An archive near day 14 was rejected, because it loses unpushed work. A
   copy of the disk in the app's own storage was rejected, because the app
@@ -279,6 +285,18 @@ says.
 
 - The Terminal tab opens a shell in the sandbox, in the folder of the
   workspace's repository (decision 94).
+- The Terminal shell of a workspace keeps running when its connection
+  drops. Each new connection attaches to that shell, with its running
+  commands and its current screen (decision 118).
+- Reason: a connection can drop at any time, such as at a network change
+  or when Cloudflare updates the runtime of the Worker. A shell that ends
+  with its connection was rejected, because the user then loses a running
+  command, such as a dev server.
+- When the user ends the shell, such as with `exit`, the next connection
+  opens a new shell.
+- A stop of the sandbox ends the shell and its commands, as
+  [Stop and resume](#stop-and-resume) says. The first connection after the
+  resume opens a new shell.
 - On a phone, a row of keys adds the keys that a phone keyboard lacks.
 
 ### Port previews

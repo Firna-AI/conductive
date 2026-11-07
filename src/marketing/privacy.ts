@@ -48,10 +48,9 @@ export const privacyDocument: LegalDocument = {
             team make. They run the service.
           </li>
           <li>
-            Keys and logins: the Boat key and the env var values of each org,
-            and your Claude or OpenAI logins. ${productName} stores them
-            encrypted. It uses a Boat key only for the cloud computers of its
-            org, and your login only for the turns that you send.
+            Keys and logins: the env var values of each org, and your Claude or
+            OpenAI logins. ${productName} stores them encrypted. It uses your
+            login only for the turns that you send.
           </li>
           <li>
             Your work: ${productName} keeps your messages and the answers of the
@@ -60,9 +59,9 @@ export const privacyDocument: LegalDocument = {
             files that you attach go to the cloud computer of the workspace.
           </li>
           <li>
-            Your code: it stays in the cloud computers of your org's Boat
-            account. ${productName} reads a file or a diff when you open it, to
-            show it to you.
+            Your code: it stays in the cloud computers that ${productName} runs
+            for your org. ${productName} reads a file or a diff when you open
+            it, to show it to you.
           </li>
           <li>
             GitHub events: the state of the pull requests and the checks of your
@@ -84,10 +83,10 @@ export const privacyDocument: LegalDocument = {
             repositories through its GitHub App.
           </li>
           <li>
-            Boat runs the cloud computers of each org in the org's own Boat
-            account. ${productName} sends Boat the requests that start, stop,
-            and use them. Boat's own terms and privacy notice apply to that
-            account.
+            A cloud computer provider runs the cloud computers of every org for
+            ${productName}, in the account of ${productName}. Your code, your
+            files, and your agent sessions are in them. ${productName} sends the
+            provider the requests that start, stop, and use them.
           </li>
           <li>
             Anthropic and OpenAI get your messages, your files, and your code
@@ -124,11 +123,11 @@ export const privacyDocument: LegalDocument = {
       title: 'Security',
       body: html`<ul>
         <li>
-          ${productName} stores each Boat key, env var value, and agent login
-          encrypted.
+          ${productName} stores each env var value and agent login encrypted.
         </li>
         <li>
-          It does not send a Boat key to your browser or into a cloud computer.
+          It does not send the key of its cloud computer provider to your
+          browser or into a cloud computer.
         </li>
         <li>Your browser does not get a stored secret back.</li>
       </ul>`,
