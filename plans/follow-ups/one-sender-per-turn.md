@@ -18,4 +18,4 @@
 - **Wider fix:** D.
 - **Previous examples:** PR #12 round 2 finding 36, and the wrong retry target of a later sender's failure that its check found.
 - **Recommendation:** D.
-- **Action:** fix after merge, apply D, as the user chose on 7 November 2026 (decision 105). Milestone 7w builds it.
+- **Action:** fix after merge, apply the session-login option F of decision 105, which the user chose on 7 November 2026 in place of D. Milestone 7w builds it.

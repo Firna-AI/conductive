@@ -3457,7 +3457,7 @@ review, and the user's question "why do we reject these events?".
   The workspace refuses only an event of a turn that never started.
   Milestone 7s builds the workspace side, and Milestone 8j the chat side.
 
-### 105. One sender per turn
+### 105. Decide whose login runs a shared session
 
 Added on 7 November 2026 from round 2 finding 36 of the Milestone 7r
 review.
@@ -3466,18 +3466,33 @@ review.
   Another member's message during a turn waits inside that turn, and the
   runner then continues the same turn on the other member's login. The
   turn ends with one result, so one member's failure or Stop drops the
-  other member's waiting message.
+  other member's waiting message. Each change of login also rewrites the
+  prompt cache, unless both keys belong to one Anthropic workspace or
+  OpenAI organization. Conductor runs each chat on the workspace owner's
+  credentials.
 - **Options:**
   - **A.** Keep mixed turns.
-  - **D.** One sender per turn: another member's message becomes a queued
-    turn of that member.
+  - **D.** One sender per turn: another member's message becomes their own
+    queued turn.
   - **E.** Keep mixed turns, and queue the messages that never reached the
     agent after a failure or a Stop.
+  - **F.** One login per session, the login of the member who started it.
+    Every member's message joins the running turn.
+  - **G.** F for a starter with an API key, and D for a starter with a
+    Claude subscription.
+  - **H.** One login per workspace, the owner's, as Conductor does, with a
+    choice to steer or queue each message.
 - **Recommendation:** D.
-- **Chosen:** D, by the user on 7 November 2026, after the question
-  whether a login switch affects cost and caching. Each switch starts a
-  new prompt cache under the other login, as in every option, so cost
-  does not decide it. Milestone 7w builds it.
+- **Chosen:** D first, then F, by the user on 7 November 2026, after the
+  questions about the cache and about Conductor. Each session runs on the
+  login of its starter, so the login never changes inside a session, and
+  other members spend the starter's login. This changes decision 49 for
+  sessions. Anthropic's rules for hosted products ask each end user to
+  sign in with their own credentials, so sharing a Claude subscription
+  stays a risk. The user proposed a later flag: when the starter's login
+  cannot be used, or the starter does not allow its re-use, a member's
+  message opens a new session on the member's own login, with a link to
+  the first session. Milestone 7w builds F.
 
 ### 106. Run the runner checks in the complete gate
 
@@ -4919,25 +4934,28 @@ seconds between `SIGTERM` and `SIGKILL`. The value also leaves time to save
 the turn ends within the 15-second stop window of the service. The owner
 chose one fixed kill limit in review finding 2 B of PR #30.
 
-## Milestone 7w: One sender per turn
+## Milestone 7w: One login per session
 
 Tags: ui
 
 Depends on: 7t, 8k
 
-Apply decision 105 D. Added on 7 November 2026.
+Apply decision 105 F. Added on 7 November 2026.
 
-- [ ] A message from another member during a running turn becomes a
-      queued turn of that member. It runs on that member's login when the
-      running turn ends, whatever its result. A message from the same
-      sender still joins the running turn. Update the section "Messages"
-      of the chat protocol.
+- [ ] Run each turn of a session on the login of the member who started
+      the session, whoever sends the message. A message of any member
+      during a running turn joins that turn at once. Update the chat
+      protocol and the section "Agent logins in a sandbox" of the access
+      protocol, and add a note to decision 49.
 - [ ] Remove the login switch inside a turn from the runner, so that a
-      turn holds only messages of its sender.
-- [ ] Show the queued turn of another member as its own turn, with its
-      own result, Stop, and Try again. Compare it with the chat mockups.
-- [ ] Test a second member's message during a turn, with a failure and
-      with a Stop of the first turn, in two tabs. Delete
+      session never changes its login.
+- [ ] Show in the composer whose login the session uses. When the
+      starter's login cannot be used, such as after the starter leaves the
+      org or removes the login, show that the session cannot run and that a
+      new session runs on the member's own login. Compare it with the chat
+      mockups.
+- [ ] Test a second member's message during a turn, and a starter whose
+      login cannot be used, in two tabs. Delete
       `plans/follow-ups/one-sender-per-turn.md`.
 
 ## Milestone 7v: Reports after a failed file read
