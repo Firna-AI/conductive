@@ -5,8 +5,8 @@ Status: Active. On branch `calummoore/conductor-alternative-architecture`, no pu
 Conductor Cloud goes read-only on 13 November 2026 and shuts down on
 20 November 2026. This change builds Conductive, a browser-only replacement, at
 `conductive.build`. Users
-sign in with GitHub and bring their own Boat key: one Boat
-sandbox per workspace, chat with coding agents, a
+sign in with GitHub. Each workspace gets one sandbox in the app's own Boat
+account (decision 80), with chat with coding agents, a
 file list and preview, a terminal, port previews, a GitHub banner, one
 prepared cloud computer image per org, and agent tools that create
 workspaces.
@@ -3807,17 +3807,19 @@ and 1b, and the orchestrator accepted them on 5 November 2026:
 
 **Users and sign-in.** The user decided these on 5 November 2026:
 
-- Users bring their own Boat key, as decision 44 says. This reverses the
-  earlier call that users run on the app's own Boat subscription.
+- Every cloud computer runs in the app's own Boat account, with one key
+  from a Worker secret, as decision 80 says. Decision 80 reversed
+  decision 44, which had each user bring their own Boat key.
 - Users sign in with GitHub. No other sign-in method is offered.
 
 **Orgs and members.** The user decided these on 5 and 6 November 2026,
 in the answers to decisions 22, 24, 30, 39, 42, 44 to 49, 54, and 55:
 
-- Each org runs on one Boat key, which an admin adds, as decisions 44, 46,
-  and 54 say.
+- Every org runs in the app's own Boat account, as decision 80 says. No
+  org has a Boat key.
 - The product is free for now, without billing or plan limits, as
-  decision 45 says. Each Boat account's own plan limits apply.
+  decision 45 says. Decisions 81 and 82 ask again about cost and abuse,
+  because the app now pays for every cloud computer.
 - Anyone with a GitHub account can sign up, as decisions 22 and 48 say.
 - Each workspace belongs to the user who created it, until it is
   reassigned. Each turn runs on the agent login of the person who sent
@@ -3852,13 +3854,9 @@ Agent calls of 5 November 2026:
   and decision 49 runs each turn on its sender's login.
 - The app offers one machine size for now, Boat's default size of
   4 vCPU and 8 GB.
-- A Boat key that Boat refuses counts as no key, so the composer notice of
-  decision 33 shows.
-- Only admins see the Boat key tab of the org settings. Its label names
-  Boat, because it leads to the key screen, and a move to another
-  provider renames both together.
-- Get started has four steps: the GitHub App, the first org, the org's
-  Boat key, and Claude or Codex. Reason: the key belongs to the org.
+- Get started has three steps: the GitHub App, the first org, and Claude
+  or Codex. Decision 80 removed the Boat key tab, its composer notice, and
+  the key step of Get started.
 - Agent call, 6 November 2026, from Milestone 4: the Boat key needs the
   actions `account.read`, `sandbox.create`, `sandbox.read`,
   `sandbox.update`, `sandbox.stop`, `sandbox.resume`, `sandbox.fork`,
@@ -3898,9 +3896,9 @@ The user added these requirements later on 5 November 2026:
   column, as in Conductor. "+" starts a new agent session in the same
   workspace, on the same branch and cloud computer. The right column keeps
   the pull request bar, the file lists, and the tool panel.
-- The app names Boat only on the Boat key screen, on the marketing site,
-  and in Get started, as decision 47 says. Everywhere else it says "cloud
-  computer", so that it can move to another provider later.
+- The app names Boat to no user, as decision 80 says, which replaces
+  decision 47. User-facing text says "cloud computer", so that the app can
+  move to another provider later.
 - A new workspace starts as an empty chat window. The first message
   creates it. The branch is generated from a city name with a random
   suffix. The name is generated too.
@@ -3926,9 +3924,8 @@ the app domain, served from the Worker's static assets. The app moves to
 an `app.` subdomain with GitHub sign-in. Reason: visitors must see the
 site without signing in, and the app keeps one sign-in boundary.
 Agent call, 5 November 2026: the main action keeps "Start free with
-GitHub", and the site says that users need their own Boat account.
-Reason: the app is free, as decision 45 says, and decision 47 names Boat
-on the site.
+GitHub". Since decision 80, the site names no provider and asks users for
+no Boat account.
 
 Agent call, 5 November 2026: the copy says "agents powered by Claude and
 Codex", not "Claude Code and Codex". Reason: Anthropic forbids "Claude
@@ -3945,10 +3942,8 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
   is HttpOnly, Secure, and SameSite=Lax. This replaces Cloudflare Access.
 - Agent call: each request checks that the signed-in user is a member of
   the org that owns the workspace that it names. Decision 22 decides who may sign in.
-- Each Boat key is the user's own, as decision 44 says. The Worker
-  stores it encrypted, uses it only for the cloud computers that it
-  belongs to, and never sends it to the browser or into a cloud
-  computer.
+- The app's one Boat key is a Worker secret, as decision 80 says. The
+  Worker never sends it to the browser or into a cloud computer.
 - Agent call: a git credential helper in the org image asks the Worker
   for a fresh GitHub token on each git operation, signed with the
   workspace token. Reason: GitHub App user tokens expire after 8 hours,
@@ -4098,8 +4093,8 @@ check state from the GitHub API.
 
 **Prerequisites from the user.** A Cloudflare account on Workers Paid.
 Two domains on that account: one for the app, and a separate registrable
-domain for port previews. A Boat key for development and tests, as
-decision 44 says. For signed public Mac builds, later: an Apple Developer
+domain for port previews. The app's Boat key and its organization ID for
+development and tests, as decision 80 says. For signed public Mac builds, later: an Apple Developer
 ID with a notarization key, and a public repository for the release feed,
 as decision 62 says. A GitHub App with its key. Anthropic's Commercial Terms, accepted
 through an Anthropic Console account, because they govern products that
