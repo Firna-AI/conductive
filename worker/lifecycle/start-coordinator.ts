@@ -15,9 +15,7 @@ import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { readWorkspace } from './workspace-data'
 import { finishFailedStart } from './start-failure'
-import { workspacePhaseCommand } from './start-command'
-import { firstOrgAdmin, workspaceEnvironment } from './settings-data'
-import { readWorkspaceToken } from './tokens'
+import { firstOrgAdmin } from './settings-data'
 import { WorkspaceStartError } from './workspace-start'
 import { advanceStartMachine } from './start-machine'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
@@ -25,6 +23,13 @@ import { creationAdmissionResponse } from './creation-admission-response'
 import { StartWaiters } from './start-waiters'
 import { requireActiveStartUsers } from './start-access'
 import { stepLabel } from './start-step-label'
+import { advanceStartCommand } from './start-command-execution'
+import {
+  providerRetryPending,
+  providerRetryExpired,
+  ProviderRetryExhausted,
+} from './provider-retry'
+import { retryStartError } from './start-provider-retry'
 
 /** The actor's alarm owns progress. Waiting HTTP requests own no phase. */
 export class WorkspaceStartCoordinator {
@@ -103,6 +108,11 @@ export class WorkspaceStartCoordinator {
     if (!job) return publishCreationResult(this.env, this.storage)
     let provider: SandboxProvider | undefined
     try {
+      if (!job.cancelled && !job.failure) {
+        await requireActiveStartUsers(this.env.DB, job)
+        if (providerRetryPending(job.providerRetry, this.dependencies.now()))
+          return false
+      }
       if (job.phase === 'records' && !job.cancelled && !job.failure) {
         await requireActiveStartUsers(this.env.DB, job)
         const imageName = await prepareWorkspaceRecords(
@@ -120,6 +130,7 @@ export class WorkspaceStartCoordinator {
         await this.storage.update({
           ...job,
           phase: 'machine',
+          providerRetry: null,
           imageName,
           admission: created,
           processId: null,
@@ -151,6 +162,8 @@ export class WorkspaceStartCoordinator {
         return result !== null
       }
       await requireActiveStartUsers(this.env.DB, job)
+      if (providerRetryExpired(job.providerRetry, this.dependencies.now()))
+        throw new ProviderRetryExhausted()
       const row = await readWorkspace(this.env.DB, job.orgId, job.workspaceId)
       if (row.archivedAt !== null || row.state === 'archived') {
         await this.cancel()
@@ -173,45 +186,26 @@ export class WorkspaceStartCoordinator {
           await this.storage.update({
             ...job,
             ...next,
+            providerRetry: null,
             processId: null,
             stdoutOffset: 0,
             stderrOffset: 0,
           })
+        else await this.storage.retry(job.attempt, 'progress')
         return false
       }
-      if (!row.sandboxId) throw new WorkspaceStartError(null)
-      await provider.setAutoStop(row.sandboxId, 1_800)
-      if (job.processId === null) {
-        const values = await workspaceEnvironment(
+      if (
+        !(await advanceStartCommand(
           this.env,
-          job.orgId,
-          job.environmentCiphertext,
-        )
-        await this.storage.secrets([
-          await readWorkspaceToken(this.env, job.workspaceId),
-          ...Object.values(values),
-        ])
-        await this.endpoint.lifecycleStep(
-          job.phase,
+          this.endpoint,
+          this.storage,
+          provider,
+          row,
+          job,
           stepLabel(job.phase),
-          'running',
-        )
-        const started = await provider.startCommand(
-          row.sandboxId,
-          workspacePhaseCommand(row, job),
-        )
-        await this.storage.update({ ...job, processId: started.processId })
-        return false
-      }
-      const status = await provider.getCommandStatus(
-        row.sandboxId,
-        job.processId,
-        { stdoutOffset: job.stdoutOffset, stderrOffset: job.stderrOffset },
+        ))
       )
-      await this.storage.capture(job, status)
-      if (status.more || status.running) return false
-      if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut)
-        throw new WorkspaceStartError(null)
+        return false
       if (job.phase === 'startup')
         await startWorkspaceTerminal(
           this.env,
@@ -238,17 +232,23 @@ export class WorkspaceStartCoordinator {
       await this.finish({ ok: true })
       return true
     } catch (error) {
+      if (await retryStartError(this.storage, error, this.dependencies.now()))
+        return false
+      const current = (await this.storage.job()) ?? job
       const failure =
         error instanceof HttpError ? error : new WorkspaceStartError(null)
-      const failedJob = {
-        ...job,
-        cancelled: job.cancelled || failure.code === 'user_suspended',
-        failure: job.failure ?? {
-          code: failure.code,
-          message: failure.message,
-          status: failure.status,
-        },
-      }
+      const failedJob =
+        current.cancelled && failure.code !== 'user_suspended'
+          ? current
+          : {
+              ...current,
+              cancelled: current.cancelled || failure.code === 'user_suspended',
+              failure: current.failure ?? {
+                code: failure.code,
+                message: failure.message,
+                status: failure.status,
+              },
+            }
       await this.storage.update(failedJob)
       const result = await finishFailedStart(
         this.env,
@@ -273,6 +273,7 @@ export class WorkspaceStartCoordinator {
     await this.storage.update({
       ...job,
       phase,
+      providerRetry: null,
       processId: null,
       stdoutOffset: 0,
       stderrOffset: 0,

@@ -16,6 +16,7 @@ import {
   readImageSettings,
 } from './settings-data'
 import { cleanupOrgImageSources } from './image-sources/cleanup'
+import { imageRetryAt } from './image-retry-data'
 
 export { IMAGE_DAY_MS, IMAGE_POLL_MS } from './image-schedule'
 
@@ -116,7 +117,11 @@ export async function runImageAlarm(
       await runtime.scheduler.schedule(
         state.orgId,
         state.software,
-        runtime.dependencies.now() + IMAGE_POLL_MS,
+        await imageRetryAt(
+          runtime.env.DB,
+          next.buildId,
+          runtime.dependencies.now() + IMAGE_POLL_MS,
+        ),
         next.buildId,
       )
     return

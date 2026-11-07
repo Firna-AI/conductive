@@ -4,6 +4,7 @@ import { access } from 'node:fs/promises'
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { createHarness, type TestHarness } from '../../test-support/harness'
+import { ProviderError } from '../../sandbox/errors'
 import { localSourceFixture } from './local-source-test-support'
 import { createGitHubImageSourceMaterializer } from './materialize'
 import { INSTALLATION_TOKEN } from './native-github-test-support'
@@ -184,7 +185,7 @@ it('fails closed after an uncertain native start and revokes the retained token 
   try {
     await fixture.step()
     await fixture.step()
-    fixture.provider.loseStartReply = true
+    fixture.provider.loseStartReply = new ProviderError('unavailable', 503)
     fixture.access.revokeFailures = 1
     await expect(fixture.prepare()).resolves.toBe(false)
     expect(

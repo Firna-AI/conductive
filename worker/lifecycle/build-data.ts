@@ -11,11 +11,9 @@ import type { SelectedRepository } from './settings-data'
 import { readBuildSnapshot } from './build-log-reader'
 import { buildLogStatements } from './build-log-statements'
 import type { RepositoryLocation } from './repository-locations'
-import {
-  readSavedScript,
-  serializeSavedScript,
-  type SavedScript,
-} from './saved-script'
+import { decodeBuildJob, type StoredBuildJob } from './build-job-codec'
+import type { ProviderRetryState } from './provider-retry'
+import { serializeSavedScript, type SavedScript } from './saved-script'
 
 export type BuildPhase =
   | 'create'
@@ -29,6 +27,7 @@ export type BuildPhase =
   | 'done'
 
 export interface BuildJob {
+  providerRetry: ProviderRetryState | null
   buildId: string
   orgId: string
   kind: ImageBuild['kind']
@@ -57,7 +56,7 @@ const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state,
   j.repositories_json AS repositoriesJson, j.software_json AS softwareJson,
   j.repository_locations_json AS repositoryLocationsJson,
   j.previous_repository_locations_json AS previousRepositoryLocationsJson,
-  j.previous_image_name AS previousImageName`
+  j.previous_image_name AS previousImageName, b.provider_retry_json AS providerRetryJson`
 
 const buildColumns = `id, org_id AS orgId, kind, state, started_at AS startedAt,
   completed_at AS completedAt, CASE WHEN completed_at IS NULL THEN NULL
@@ -74,10 +73,10 @@ export async function readBuildJob(
      WHERE b.org_id = ? AND b.id = ?`,
     )
     .bind(orgId, buildId)
-    .first<Omit<BuildJob, 'installScript'> & { installScript: string }>()
+    .first<StoredBuildJob>()
   if (!job)
     throw new HttpError(404, 'build_not_found', 'The build is not available.')
-  return { ...job, installScript: readSavedScript(job.installScript) }
+  return decodeBuildJob(job)
 }
 
 export async function runningBuild(
@@ -226,7 +225,7 @@ export async function failBuild(
   await db.batch([
     db
       .prepare(
-        "UPDATE image_builds SET state = 'failed', completed_at = ?, error = ? WHERE id = ? AND state = 'running'",
+        "UPDATE image_builds SET state = 'failed', completed_at = ?, error = ?, provider_retry_json = NULL WHERE id = ? AND state = 'running'",
       )
       .bind(now, message, buildId),
     ...buildLogStatements(db, buildId, message, now),
@@ -247,7 +246,7 @@ export async function publishBuild(
       .bind(job.snapshotName, job.buildId, now, now + 86_400_000, job.orgId),
     db
       .prepare(
-        "UPDATE image_builds SET state = 'succeeded', completed_at = ?, error = NULL WHERE id = ?",
+        "UPDATE image_builds SET state = 'succeeded', completed_at = ?, error = NULL, provider_retry_json = NULL WHERE id = ?",
       )
       .bind(now, job.buildId),
     db

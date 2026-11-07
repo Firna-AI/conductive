@@ -6,6 +6,7 @@ import type { ImageCoordinator } from './image-coordinator'
 import type { WorkspaceStartCoordinator } from './start-coordinator'
 import type { TurnScopes } from './turns'
 import { suspendWorkspaceLifecycle } from './workspace-suspension'
+import { START_JOB_KEY } from './start-storage'
 
 export async function runWorkspaceAlarm(input: {
   storage: WorkspaceStorage
@@ -25,7 +26,12 @@ export async function runWorkspaceAlarm(input: {
   if (await input.starts.pending()) {
     try {
       if (!(await input.starts.advance())) {
-        await storage.setAlarm(dependencies.now() + 1_000)
+        const job = await storage.get('job', START_JOB_KEY)
+        const retryAt =
+          job && !job.cancelled && !job.failure
+            ? (job.providerRetry?.retryAt ?? 0)
+            : 0
+        await storage.setAlarm(Math.max(dependencies.now() + 1_000, retryAt))
         return
       }
       advancedStart = true

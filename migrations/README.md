@@ -7,6 +7,9 @@ Never change a migration that has merged or has been applied to a shared databas
 `202611060000_worker_core.sql` creates sign-in and the first org records.
 `202611060100_contracts.sql` adds the tables used by the feature backends.
 It keeps existing rows and gives each existing org its General section.
+`202611070007_lifecycle_provider_retry.sql` adds the nullable `image_builds.provider_retry_json` column.
+It saves the provider retry window of a running image build, as [Image builds](../worker/lifecycle/image-builds.md#provider-retries) says.
+A workspace start keeps the same state in its Durable Object storage.
 `202611072100_email_invitations.sql` discards the pending invitations by GitHub login.
 It then adds invitations by email, each user's verified emails, and the durable matches of invitations to users.
 `202611072200_user_terms_and_suspension.sql` adds four columns to `users`: the accepted revision of the Terms and its time, and the time of a suspension and the operator who suspended the user.

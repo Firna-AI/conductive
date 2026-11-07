@@ -72,14 +72,18 @@ it('returns each alarm while native Git runs and renews the builder before allow
     expect(boat.commands).toEqual([])
     expect(fixture.access.activeTokens).toHaveLength(1)
     const order: string[] = []
-    boat.beforeCommand = async (command) => {
+    boat.beforeCommand = async (command, detached) => {
       expect(fixture.access.activeTokens).toEqual([])
       expect(
         (await readSourceJob(fixture.env.DB, fixture.input.buildId))
           ?.tokenCiphertext,
       ).toBeNull()
       order.push(
-        command.includes('/tmp/conductive-install.sh') ? 'install' : 'software',
+        !detached
+          ? 'cleanup'
+          : command.includes('/tmp/conductive-install.sh')
+            ? 'install'
+            : 'software',
       )
     }
     let complete = false
@@ -88,7 +92,7 @@ it('returns each alarm while native Git runs and renews the builder before allow
       complete = await advance()
     }
     expect(complete).toBe(true)
-    expect(order).toEqual(['software', 'install'])
+    expect(order).toEqual(['software', 'install', 'cleanup'])
     expect(
       (await readBuild(fixture.env.DB, fixture.org.id, fixture.input.buildId))
         .build.state,
