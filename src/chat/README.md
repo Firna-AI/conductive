@@ -147,9 +147,18 @@ mounts it yet.
   The message waits as pending there until the stream or the history shows
   it, and a second reply with the same message adds nothing.
 - Only the tab that sent moves to the linked session, and only while it
-  still shows the session of the request. A user who opened another tab, or
-  typed more, during the send keeps that tab and that text. The linked
-  session then loads its own history.
+  still shows the session of the request. A user who opened another tab
+  during the send keeps that tab.
+- The draft of the request moves with the view, in the same snapshot, with
+  its identity, its text, its files, and its uploads. So a user who typed
+  more during the send types on in the same box, and the next message goes
+  to the session that holds the accepted one. The source gets a new empty
+  draft.
+- The draft stays when the source holds another draft now, when another
+  send of the draft still waits, or when the linked session holds
+  unfinished work. Then a source with unfinished work stays shown, and each
+  draft keeps its work. The linked session loads its own history when it
+  shows.
 - A linked session starts with a line that links back to its source
   session. The link selects an open source, and reopens a closed one, with
   the actions of the tabs and the session history.

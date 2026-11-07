@@ -12,8 +12,9 @@ import {
   senderSnapshot,
   workspaceFixtures,
 } from '../../test-support/fixtures/workspaces'
+import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { record, text } from '../api/json'
-import { newSessionRecord } from './test-kit'
+import { chatFor, newSessionRecord } from './test-kit'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -103,4 +104,57 @@ export function opensLinked(server: FakeApiServer) {
     }
     return Response.json(reply, { status: 202 })
   }
+}
+
+/** The message of Priya in the tests of linked sessions. */
+export const askedText = 'Show a loading state under the address line.'
+
+export const isSend = (request: Request) =>
+  request.method === 'POST' && request.url.endsWith('/messages')
+
+export type MemberChat = ReturnType<typeof chatFor>
+type Answer = (request: Request) => Promise<Response | null>
+
+/**
+ * The chat of Priya, a member, in sessions that Cal started, whose login is
+ * not available. Each Send and Try again opens the linked session, unless
+ * `wrap` answers otherwise.
+ */
+export function memberChat(
+  options: {
+    conversation?: RecordedChatScenario
+    change?: (session: Session) => Session
+    hold?: (request: Request) => boolean
+    wrap?: (opens: Answer) => Answer
+  } = {},
+): MemberChat {
+  let answer: Answer = async () => null
+  const chat = chatFor({
+    role: 'member',
+    conversation: options.conversation ?? 'history',
+    hold: options.hold,
+    answer: (request) => answer(request),
+  })
+  withSessions(chat.server, options.change ?? loginGone)
+  const opens = opensLinked(chat.server)
+  answer = options.wrap?.(opens) ?? opens
+  return chat
+}
+
+/** The texts of the sent messages that a session holds until it shows them. */
+export function pendingIn(chat: MemberChat, sessionId: string): string[] {
+  const state = chat.controller.getSnapshot().sessionStates[sessionId]
+  return (state?.pending ?? []).map((message) => message.text)
+}
+
+/** The Worker's events after it opened the linked session with the message. */
+export function streamLinked(
+  chat: MemberChat,
+  more: Partial<Session> = {},
+): void {
+  chat.emit({ type: 'session.updated', session: linkedRecord(more) })
+  chat.emit({
+    type: 'message.accepted',
+    message: acceptedIn(LINKED, 'client-1', askedText),
+  })
 }

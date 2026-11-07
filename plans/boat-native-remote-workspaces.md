@@ -5075,6 +5075,9 @@ Agent calls, 7 November 2026:
 - Keep accepted input in its session after a later login removal. Use the
   existing queued failure and running hold. Retry can start a linked
   session later.
+- Move the request draft with automatic linked-session navigation.
+  Preserve a newer source draft and existing target work. This keeps
+  typing with the accepted message.
 
 Evidence: `.context/boat-native-remote-workspaces/7w/verification.md`.
 

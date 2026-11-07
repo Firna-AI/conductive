@@ -132,7 +132,7 @@ export async function sendDraft(
     const holder = holderOf(context.store.get(), draftId) ?? sessionId
     showNotice(context, holder, "Your message didn't send", error)
   }
-  await showTarget(context, sessionId, target)
+  await showTarget(context, sessionId, target, draftId)
 }
 
 /**
@@ -145,6 +145,7 @@ export async function retryTurn(
   sessionId: string,
   messageId: string,
 ): Promise<void> {
+  const draftId = draftIdOf(context, sessionId)
   change(context, sessionId, (state) => ({ ...state, retrying: true }))
   let target: string | null = null
   try {
@@ -156,7 +157,7 @@ export async function retryTurn(
     showNotice(context, sessionId, "The turn didn't restart", error)
   }
   change(context, sessionId, (state) => ({ ...state, retrying: false }))
-  await showTarget(context, sessionId, target)
+  await showTarget(context, sessionId, target, draftId)
 }
 
 /** Stop interrupts the running turn. The turn shows as stopped when it ends. */
