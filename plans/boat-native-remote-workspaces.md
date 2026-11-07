@@ -3727,6 +3727,63 @@ Added on 7 November 2026 from option C of the follow-up item
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 7 November 2026. Milestone 11c builds it.
 
+### 119. Move the missing parts into the shared UI library
+
+Added on 7 November 2026 from Milestone 15m and the follow-up item
+`firna-ui-missing-parts`.
+
+- **Background:** `@firna/ui` lacks parts that the Graphite design needs,
+  so this app keeps local copies. A library change and its release happen
+  in the `futex-ai/ui` repository.
+- **Options:**
+  - **A.** Keep the local copies in this app for now.
+  - **B.** Add the parts to `@firna/ui`, publish a new version, and then
+    replace the local copies.
+- **Recommendation:** A now, and B after the first deployment.
+- **Chosen:** A now, and B in parallel, by the user on 8 November 2026.
+  The orchestrator starts a workspace on `futex-ai/ui`, merges its pull
+  request and its release when they are ready, and Milestone 15n then
+  replaces the local copies.
+
+### 120. Keep agent logins out of the sandbox
+
+Added on 7 November 2026 from the user's request after a read of
+Conductor's sandbox worker.
+
+- **Background:** The runner puts the real login into the agent program's
+  environment, so each process and each member's terminal in the sandbox
+  can read it while a turn runs.
+- **Options:**
+  - **A.** A model proxy in the Worker, with a turn token in the sandbox.
+  - **B.** An HTTPS proxy on a new server outside the sandbox.
+  - **C.** Boat's AI credentials proxy.
+  - **D.** Run the agent programs outside the sandbox.
+- **Recommendation:** A.
+- **Chosen:** A, as a later follow-up, by the user on 8 November 2026:
+  `plans/follow-ups/agent-logins-readable-in-sandbox.md`. It reverses the
+  earlier rejection of a login proxy when it lands. Before it covers
+  Claude subscription tokens, check that the permission of decision 37
+  covers a proxy.
+
+### 121. Accept that the GitHub token can be read in the sandbox
+
+Added on 7 November 2026 from the options check of decision 120.
+
+- **Background:** The git credential helper gets the sender's GitHub user
+  token from the Worker during a turn, so each process and each member's
+  terminal in the sandbox can get it. The token works after the turn, on
+  that person's repositories.
+- **Options:**
+  - **A.** State the risk in the access doc and on the privacy page.
+  - **B.** Revoke each token at the end of its turn.
+  - **D.** A token for each turn, limited to the workspace's repositories.
+  - **C.** A Git proxy in the Worker.
+- **Recommendation:** D, then B.
+- **Chosen:** A now, by the user on 8 November 2026, after the question of
+  what Conductor does: Conductor also gives the sender's token to its
+  sandbox. Milestone 15m states the risk. The user asked to consider
+  another approach later: `plans/follow-ups/github-token-readable-in-sandbox.md`.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -5941,6 +5998,20 @@ Evidence: `.context/milestone-15m/reports/`,
 `.context/milestone-15m/preview-smoke.json`, and
 `.context/milestone-15m/check.log`.
 
+## Milestone 15n: Use the new shared UI parts
+
+Depends on: 15m
+
+Apply option B of decision 119 in this app. It starts when `@firna/ui`
+publishes the parts. Added on 8 November 2026.
+
+- [ ] Update `@firna/ui` to the version that adds the parts of
+      `plans/follow-ups/firna-ui-missing-parts.md`.
+- [ ] Replace the local copies in `docs/mockups/src/components/common/`,
+      `docs/mockups/src/design/`, and the app under `src/` with the
+      library's parts. Keep each screen as its mockup draws it, and compare
+      each changed screen. Delete the follow-up item.
+
 ## Milestone 15d: Marketing site
 
 Tags: ui
@@ -6126,7 +6197,7 @@ This milestone needs the prerequisites from the user.
 
 ## Milestone 17: Verification, commit, review, and pull request
 
-Depends on: every other milestone except 15e and 15f
+Depends on: every other milestone except 15e, 15f, and 15n. Milestone 15n waits for a release of `@firna/ui`, so it blocks nothing (the user, 8 November 2026).
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
