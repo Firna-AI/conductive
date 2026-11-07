@@ -72,6 +72,57 @@ function openTab(server: FakeApiServer) {
 }
 
 describe('the build log of the Cloud computer tab', () => {
+  test('a poll shares one detail read with a manual reload and keeps the final failure lines', async () => {
+    const server = new FakeApiServer()
+    const { held, delay, computer } = openTab(server)
+    server.json('GET', buildsPath, {
+      builds: [buildA],
+      currentImageBuildId: null,
+    })
+    server.json('GET', buildPath(org, buildA.id), {
+      build: buildA,
+      log: [finalLogA[0]],
+    })
+    server.response(
+      'GET',
+      buildEventsPath(org, buildA.id),
+      new Response(`event: log\ndata: ${JSON.stringify(finalLogA[0])}\n\n`, {
+        headers: { 'Content-Type': 'text/event-stream' },
+      }),
+    )
+    computer.start()
+    await flushMicrotasks()
+    server.json('GET', buildsPath, {
+      builds: [endedA],
+      currentImageBuildId: null,
+    })
+    server.json('GET', buildPath(org, buildA.id), {
+      build: endedA,
+      log: finalLogA,
+    })
+    held.holdAnswer('GET', buildPath(org, buildA.id))
+    const before = server.requests.length
+    const poll = delay.runAll()
+    const reload = computer.reloadLog()
+    held.release('GET', buildPath(org, buildA.id))
+    await Promise.all([poll, reload])
+    await flushMicrotasks()
+    expect({
+      log: computer.log.get(),
+      timers: delay.pending,
+      reads: requestLines(server)
+        .slice(before)
+        .filter((request) =>
+          request.startsWith(`GET ${buildPath(org, buildA.id)}`),
+        ),
+    }).toEqual({
+      log: { buildId: buildA.id, events: finalLogA, error: null },
+      timers: 0,
+      reads: [`GET ${buildPath(org, buildA.id)}`],
+    })
+    computer.stop()
+  })
+
   test('a late answer for an older build keeps the log and the timer of the newer build', async () => {
     const server = new FakeApiServer()
     const { held, delay, computer } = openTab(server)
@@ -81,23 +132,19 @@ describe('the build log of the Cloud computer tab', () => {
       currentImageBuildId: null,
     })
     server.json('GET', buildPath(org, buildA.id), { build: buildA, log: logA })
-    server.json('GET', buildEventsPath(org, buildA.id), {
-      events: [...logA, line(2, 'Running the install script\n')],
-    })
     // The tab follows the log of A, and reads it on its timer.
     computer.start()
     await flushMicrotasks()
     // The poll of A goes out while A still runs, and its answer comes late.
-    held.holdAnswer('GET', buildEventsPath(org, buildA.id))
+    held.holdAnswer('GET', buildPath(org, buildA.id))
     const late = delay.runAll()
     // A fails, and Try again starts build B.
     const logB = [line(1, 'Cloning 2 repositories into ~/code\n')]
     server.json('POST', buildsPath, { build: buildB, log: logB }, 202)
     server.json('GET', buildPath(org, buildB.id), { build: buildB, log: logB })
-    server.json('GET', buildEventsPath(org, buildB.id), { events: logB })
     await computer.startBuild()
     await flushMicrotasks()
-    held.release('GET', buildEventsPath(org, buildA.id))
+    held.release('GET', buildPath(org, buildA.id))
     await late
     await flushMicrotasks()
     const shown = computer.log.get()
@@ -105,10 +152,7 @@ describe('the build log of the Cloud computer tab', () => {
     await delay.runAll()
     expect({ shown, next: requestLines(server).slice(before) }).toEqual({
       shown: { buildId: buildB.id, events: logB, error: null },
-      next: [
-        `GET ${buildEventsPath(org, buildB.id)}`,
-        `GET ${buildPath(org, buildB.id)}`,
-      ],
+      next: [`GET ${buildPath(org, buildB.id)}`],
     })
     computer.stop()
   })

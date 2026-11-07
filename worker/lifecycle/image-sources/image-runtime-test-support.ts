@@ -2,6 +2,7 @@ import { TEST_TIME } from '../../test-support/harness'
 import { LifecycleBoat } from '../lifecycle-boat-test-support'
 import type { ImageRuntime } from '../image-builds'
 import { createGitHubImageSourceMaterializer } from './materialize'
+import { SourceCommandPort } from './source-commands'
 import type { localSourceFixture } from './local-source-test-support'
 
 /** Native sources use real Git. Other image operations keep the lifecycle provider boundary. */
@@ -24,7 +25,10 @@ export async function nativeImageRuntime(
       createGitHubImageSourceMaterializer(
         fixture.env,
         dependencies,
-      )({ ...input, provider: fixture.provider }),
+      )({
+        ...input,
+        commands: new SourceCommandPort(fixture.provider, input.sandboxId),
+      }),
     scheduler: { schedule: async () => {} },
   }
   return { runtime, boat }

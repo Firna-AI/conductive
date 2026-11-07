@@ -118,6 +118,28 @@ export function durableStartStorage(
           })
       })
     },
+    retry: async (attempt, state) =>
+      storage.transaction(async (transaction) => {
+        const current = await transaction.get('job', JOB)
+        if (
+          !current ||
+          current.attempt !== attempt ||
+          current.cancelled ||
+          current.failure
+        )
+          return false
+        if (state === 'progress' && !current.providerRetry) return true
+        await transaction.put('job', JOB, {
+          ...current,
+          providerRetry:
+            state === 'progress'
+              ? current.providerRetry
+                ? { ...current.providerRetry, retryAt: null }
+                : null
+              : state,
+        })
+        return true
+      }),
     result: async () => storedResult(await storage.get('result', RESULT)),
     creationResult: async () =>
       storedResult((await storage.get('creation', CREATE_RESULT))?.result),

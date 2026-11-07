@@ -1,5 +1,6 @@
 import type { OrgRole } from '../shared/api'
 import type { OrgInvite, OrgMember } from '../shared/members'
+import { keepExistingOwners } from './actionOwners'
 import { errorMessage, type MembersApi } from './api/client'
 import { countOwners } from './people'
 
@@ -28,10 +29,11 @@ type Ready = {
   /** The changes that run now, as `pendingKey` gives them. */
   pending: readonly string[]
   /**
-   * Each change sets and drops only its own failure, so the answer of
-   * another change keeps it. A failure goes when the same change runs
-   * again, when its removal question opens again, or when its member
-   * leaves the org.
+   * Each change sets and drops only its own failure. Another change's
+   * answer keeps it. Running the same change or opening its removal
+   * question drops its failure. A failure also goes when its member
+   * or invite leaves the loaded list. New invitations have no existing
+   * owner, so their failures stay.
    */
   failures: MembersFailures
   /** The member whose removal question is open, by user ID. */
@@ -92,10 +94,8 @@ function without(failures: MembersFailures, key: string): MembersFailures {
 }
 
 /**
- * Removes a member. Their workspaces move to the admin who removes them, so
- * the count of that admin grows. Their question closes, and their failed
- * role change goes with them. The question and the failures of another
- * member stay.
+ * Removes a member and moves their workspace count to the admin who
+ * removes them.
  */
 function withoutMember(ready: Ready, userId: string, adminId: string): Ready {
   const owned: Record<string, number> = { ...ready.data.owned }
@@ -109,8 +109,6 @@ function withoutMember(ready: Ready, userId: string, adminId: string): Ready {
       members: ready.data.members.filter((member) => member.user.id !== userId),
       owned,
     },
-    removing: ready.removing === userId ? null : ready.removing,
-    failures: without(ready.failures, pendingKey('role', userId)),
   }
 }
 
@@ -133,7 +131,12 @@ export function createMembersStore(
     for (const listener of listeners) listener()
   }
   function update(change: (ready: Ready) => Ready) {
-    if (state.status === 'ready') set(change(state))
+    if (state.status !== 'ready') return
+    const next = change(state)
+    set({
+      ...next,
+      ...keepExistingOwners(next.data, next.failures, next.removing),
+    })
   }
 
   async function run<T>(

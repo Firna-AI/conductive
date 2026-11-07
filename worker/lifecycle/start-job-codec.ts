@@ -1,5 +1,6 @@
 import { readSavedScript, serializeSavedScript } from './saved-script'
 import type { WorkspaceStartJob } from './start-types'
+import { readProviderRetry } from './provider-retry'
 
 type StoredJob<Job> = Job extends WorkspaceStartJob
   ? Omit<Job, 'startupScript'> & { startupScript: string }
@@ -15,5 +16,12 @@ export function serializeStartJob(
 }
 
 export function readStartJob(job: StoredWorkspaceStartJob): WorkspaceStartJob {
-  return { ...job, startupScript: readSavedScript(job.startupScript) }
+  return {
+    ...job,
+    startupScript: readSavedScript(job.startupScript),
+    providerRetry:
+      job.providerRetry === undefined
+        ? undefined
+        : readProviderRetry(job.providerRetry),
+  }
 }

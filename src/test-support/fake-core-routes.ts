@@ -10,7 +10,6 @@ import {
 } from '../shared/members'
 import { GET_STARTED_PATH } from '../shared/onboarding'
 import {
-  buildEventsPath,
   buildPath,
   orgSettingsPaths,
   repositoryPath,
@@ -88,9 +87,6 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   routes.json('POST', orgSettingsPaths.builds(id), data.build, 202)
   routes.json('POST', orgSettingsPaths.refresh(id), data.build, 202)
   routes.json('GET', buildPath(id, FAKE_IDS.build), data.build)
-  routes.json('GET', buildEventsPath(id, FAKE_IDS.build), {
-    events: data.build.log,
-  })
   routes.json('GET', membersPath(id), data.members)
   routes.json('POST', invitesPath(id), { invite: data.members.invites[0] }, 201)
   for (const member of data.members.members) {

@@ -66,10 +66,11 @@ export class NativeSourceProvider extends BoatClient {
     promise: Promise<CommandResult>
     result?: CommandResult
   }[] = []
-  loseStartReply = false
+  loseStartReply: Error | undefined
   lostProcess = false
   reportedError: string | undefined
   beforeStart?: (command: string) => Promise<void>
+  beforeStatus?: (processId: number) => Promise<void>
 
   constructor(
     home: string,
@@ -135,9 +136,10 @@ export class NativeSourceProvider extends BoatClient {
       this.results.push(result)
     })
     if (this.loseStartReply) {
-      this.loseStartReply = false
+      const error = this.loseStartReply
+      this.loseStartReply = undefined
       await process.promise
-      throw new Error('The native start reply was lost')
+      throw error
     }
     return { processId: this.processes.length }
   }
@@ -149,6 +151,7 @@ export class NativeSourceProvider extends BoatClient {
   ): Promise<CommandStatus> {
     if (sandboxId !== 'builder-one') throw new Error('Unknown local builder')
     this.statusIds.push(id)
+    await this.beforeStatus?.(id)
     const result = this.processes[id - 1]?.result
     return readCommandStatus(
       {

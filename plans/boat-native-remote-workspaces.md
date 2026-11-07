@@ -3969,10 +3969,16 @@ first called it decision 123, which the plan uses for another question.
 - **Left out:** C, which returned another sender's messages only to an
   open tab, because a reload loses them.
 - **Recommendation:** A. D is the wider fix.
-- **Open:** waits for the user. Records:
+- **Chosen:** A now, by the user on 8 November 2026, with D as a later
+  follow-up: `plans/follow-ups/failed-first-start-keeps-workspace.md`. The
+  user first chose D, after the question "can't we store the messages in
+  a queue for that workspace, and then replay them when the server
+  starts?", and then changed to A now. Milestone 8n applies A in
+  parallel with Milestone 8i, so that it does not block PR #42, as the
+  user asked.
+  Records:
   `.context/boat-native-remote-workspaces/initial-create-decision-130.md`
-  and `initial-create-final-report.md`. The 8i orchestrator applies the
-  answer.
+  and `initial-create-final-report.md`.
 
 ## Design
 
@@ -5021,14 +5027,25 @@ Depends on: 5b
 Apply the `fix after merge` items of the Milestone 5b and 15l reviews.
 Added on 8 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/build-log-stream-format.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/image-build-transient-errors.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-command-repeat-after-restart.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/members-late-role-failure-after-removal.md`, and
-      delete that item.
+Agent calls, 7 November 2026: keep the Worker build event route, because
+it remains a public API. Reuse the saved build phases and job identities,
+because they already record progress and command intent.
+Use a source command interface, because starts must fail closed and
+polls of saved processes can resume.
+The shared provider retry window lasts 10 minutes from the first error
+of an unfinished step. Only a completed step resets it. This bounds
+lasting faults without limiting a healthy build or start.
+
+- [x] Apply the recorded option of `plans/follow-ups/build-log-stream-format.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.
+- [x] Apply the recorded option of `plans/follow-ups/image-build-transient-errors.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.
+- [x] Apply the recorded option of `plans/follow-ups/lifecycle-command-repeat-after-restart.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.
+- [x] Apply the recorded option of `plans/follow-ups/members-late-role-failure-after-removal.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.
+
+Verification evidence: `.context/boat-native-remote-workspaces/5c-checks/summary.md`.
 
 
 ## Milestone 5d: Time limits for builds and starts
@@ -5700,6 +5717,31 @@ Apply the `fix after merge` items of the chat. Added on 7 November
 - [ ] After Milestone 8i merges, apply option D of the
       [confirmed runner projection follow-up](https://github.com/Firna-AI/remote-code/blob/d0faa9422c83cab6d7e08ad55dc7cef08d26c4b5/plans/follow-ups/confirmed-runner-projection-retry.md),
       and delete `plans/follow-ups/confirmed-runner-projection-retry.md`.
+
+
+## Milestone 8n: Hold messages during a first start
+
+Tags: ui
+
+Depends on: none. It runs in parallel with Milestone 8i (PR #42), as the
+user asked on 8 November 2026, and merges the primary branch when 8i
+lands.
+
+Apply decision 130 A. Added on 8 November 2026. A failed first start
+removes the new workspace (decision 91 D), so a message that a member
+sends during the first start must not be accepted before it succeeds.
+
+- [ ] Draw the waiting composer in the mockups: during the first start of
+      a new workspace, the composer keeps its text, and Send waits with a
+      short reason. Then build it, and compare it with its mockup.
+- [ ] Hold the later messages: the server refuses a new message to a
+      workspace whose first start has not succeeded, in every session,
+      with a clear 409 error. A repeat of an accepted request with the
+      same message ID still succeeds. Normal resumes keep their queue
+      (decision 14 A). The user sends the held text when the start
+      succeeds. The app does not send it automatically.
+- [ ] Update `docs/protocol/chat-and-events.md` and the failed-create rules
+      in `docs/protocol/workspaces-and-sandboxes.md`, with "(decision 130)".
 
 ## Milestone 16a: First deployment
 
