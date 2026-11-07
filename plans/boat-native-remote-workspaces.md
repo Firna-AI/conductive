@@ -4881,6 +4881,10 @@ existing bounded reader until Milestone 4c supplies its JSON helper.
 Milestone 4c merged on 6 November 2026. The device routes and the agent
 tools handler now use its shared `readJsonObject` helper.
 
+Scope call, approved by the user on 7 November 2026: correct the four
+routing and hook statements in `worker/chat/README.md` for review item 5.
+The orchestrator owns the review after this branch's next push.
+
 Implementation calls, 6 November 2026:
 
 - Keep one current authenticated Mac connection for each sender. A new
