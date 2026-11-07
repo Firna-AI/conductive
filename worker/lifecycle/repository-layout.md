@@ -63,7 +63,7 @@ the folder map:
   first, then the folder variables of the workspace map, and then the
   app's own variables, such as `WORKSPACE_TOKEN`. A later value wins on a
   name collision.
-- `repositoryLocation` gives `CONDUCTING_REPOSITORY_DIR`, the folder of
+- `repositoryLocation` gives `CONDUCTIVE_REPOSITORY_DIR`, the folder of
   the workspace's repository in the workspace map. The
   [image README](../../image/README.md#start-in-a-workspace) says which
   commands start in that folder.
@@ -126,7 +126,7 @@ no confirmed reply, fails closed, and the next alarm revokes the token.
 
 `handleImageSourceCredential` in
 [`image-sources/credential.ts`](image-sources/credential.ts) accepts only a
-`POST` to `IMAGE_SOURCE_CREDENTIAL_PATH`, `/internal/image-source/credential`,
+`POST` to `IMAGE_SOURCE_CREDENTIAL_PATH`, `/v1/internal/image-source/credential`,
 on the HTTPS machine origin, with no cookie and no `Origin` header. One D1
 statement consumes the grant and checks that the build still runs, that the
 org exists, and that the repository is the captured one. The handler then
@@ -166,7 +166,7 @@ command compares the previous map with the new map. It acts only on each
 repository whose folder changes, or that the new map does not hold:
 
 1. It moves each old folder to a staging folder under
-   `/home/user/conducting/source-relocation/<build ID>/`, and writes a
+   `/home/user/conductive/source-relocation/<build ID>/`, and writes a
    marker for each move. It stages all old folders before it writes any
    new folder, so two repositories can swap their names.
 2. It moves each staged folder to its new folder. When the new folder
@@ -182,7 +182,7 @@ command safe.
 
 Image jobs and creation plans from before the migration have no map. They
 use the older layout: `legacyRepositoryDirectory` gives
-`/home/user/conducting/repositories/<encoded repository ID>`. The folder
+`/home/user/conductive/repositories/<encoded repository ID>`. The folder
 variables still get the names of the new layout, and they point to the
 older folders.
 
@@ -203,7 +203,7 @@ the repository folder of the workspace map, the captured default branch,
 the ID of the first turn, and the trusted sender of the create. Without
 that sender, the step fails.
 
-The command exports the turn ID as `CONDUCTING_TURN_ID`. So the
+The command exports the turn ID as `CONDUCTIVE_TURN_ID`. So the
 [git credential route](README.md#machine-route) gives each Git request a
 fresh GitHub user token of that sender. The command holds no token, and
 it writes no token to a Git config or a file. It needs the `origin` remote

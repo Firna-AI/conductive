@@ -3,8 +3,8 @@
 Status: Active. On branch `calummoore/conductor-alternative-architecture`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Conductor Cloud goes read-only on 13 November 2026 and shuts down on
-20 November 2026. This change builds Conducting, a browser-only replacement, at
-`conducting.build`. Users
+20 November 2026. This change builds Conductive, a browser-only replacement, at
+`conductive.build`. Users
 sign in with GitHub and bring their own Boat key: one Boat
 sandbox per workspace, chat with coding agents, a
 file list and preview, a terminal, port previews, a GitHub banner, one
@@ -3675,6 +3675,38 @@ Added on 7 November 2026 from the user's proposal for decision 105 F.
 - **Chosen:** A now, and B as a later follow-up, by the user on 7 November
   2026: `plans/follow-ups/login-reuse-setting.md`.
 
+### 117. Accept that an open desktop stream outlives access
+
+Added on 7 November 2026 from option C of the follow-up item
+`shared-session-check-for-connections`.
+
+- **Background:** Decision 70 ends an open connection within 30 seconds
+  after its user loses access. The desktop stream goes from the browser
+  straight to Boat, so no check of the Worker can end it.
+- **Options:**
+  - **A.** Accept it, and state the exception in the access protocol.
+  - **B.** Ask Boat to end the desktop session, if Boat offers that.
+  - **C.** Send the desktop stream through the Worker.
+- **Recommendation:** A.
+- **Chosen:** A now, and C as a later follow-up, by the user on 7 November
+  2026. The access protocol states the exception. Follow-up item:
+  `plans/follow-ups/desktop-stream-after-access-loss.md`.
+
+### 118. Keep a shell running across a dropped connection
+
+Added on 7 November 2026 from option C of the follow-up item
+`shared-session-check-for-connections`.
+
+- **Background:** ttyd ends the shell of the Terminal tab when its socket
+  closes, and Cloudflare closes open Worker sockets at most 20 minutes
+  after each runtime update.
+- **Options:**
+  - **A.** Accept it, and state that a dropped connection ends the shell.
+  - **B.** Run each shell inside a terminal multiplexer, such as tmux, so
+    that a new connection attaches to the same shell.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 7 November 2026. Milestone 11c builds it.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4652,7 +4684,7 @@ Apply decision 69 C.
 
 - [ ] In each org image build, download one pinned Node 24 release, check
       its SHA-256 against a constant in the code, and extract it to a
-      folder named for its version under `/opt/conducting/runtime/`. Skip
+      folder named for its version under `/opt/conductive/runtime/`. Skip
       the download when that release is already there.
 - [ ] Start the workspace tools and the agent runner with that Node by its
       full path. The root folder of the tools installer also prefixes the
@@ -5305,7 +5337,7 @@ Depends on: 8i
 This milestone needs the prerequisites from the user.
 
 - [ ] Deploy the chat path to the user's Cloudflare account, with GitHub
-      sign-in, so that the user can work in Conducting.
+      sign-in, so that the user can work in Conductive.
 - [ ] Smoke-test it with a real Boat sandbox.
 - [ ] Check that chat survives a restart: send a message before the
       runner connects, deploy again, then check the history, the event
@@ -5442,6 +5474,20 @@ waits for the user.
 
 - [ ] Apply the recorded option of `plans/follow-ups/shared-session-check-for-connections.md`, and
       delete that item.
+
+## Milestone 11c: Shells that survive a reconnect
+
+Depends on: 5, 11
+
+Apply decision 118 B. Added on 7 November 2026.
+
+- [ ] Run each shell of the Terminal tab inside a terminal multiplexer,
+      such as tmux, installed by the org image. A new connection attaches
+      to the same shell, with its running commands and its screen.
+- [ ] Test a dropped terminal socket during a running command, and a new
+      socket that sees the same command still running. Update the section
+      "Terminal" of the workspaces protocol. Delete
+      `plans/follow-ups/terminal-shell-survives-reconnect.md`.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 
@@ -5618,26 +5664,49 @@ Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
 
 Depends on: none
 
+Completed on 7 November 2026 after the final primary sync.
+
 Apply decision 100. Merge it after the milestones that are open when it
 starts, and rename each name that they add.
 
-- [ ] Change the name and the domain in `docs/mockups/src/brand.ts`, and
+Agent calls on 7 November 2026:
+
+- Use Inter's normal kerning for the new outlined name. This keeps the
+  font's own spacing.
+- Read the marketing rationale's name and domain from the brand
+  constants. This keeps its text aligned with the name.
+
+Evidence: `.context/milestone-15j/visual-review.md`,
+`.context/milestone-15j/check.log`, and
+`.context/milestone-15j/mockups-check.log`.
+Decision 102 evidence: `.context/milestone-15j/decision-102-code-report.md`,
+`.context/milestone-15j/decision-102-check.log`, and
+`.context/milestone-15j/decision-102-mockups-check.log`.
+Final sync evidence: `.context/milestone-15j/final-sync/visual-review.md`,
+`.context/milestone-15j/final-sync/check.log`, and
+`.context/milestone-15j/final-sync/mockups-check.log`.
+
+- [x] Change the name and the domain in `docs/mockups/src/brand.ts`, and
       in each text that names the product: `AGENTS.md`, the READMEs,
       `docs/`, the marketing site, the legal pages, the mockups, and the
       present-tense lines of the plan. Keep the decision records as they
-      are.
-- [ ] Rename the internal names: the `CONDUCTING_*` environment
-      variables, the `X-Conducting-Turn-Id` header, the `conducting-*`
-      services, the Mac app's name, bundle ID, and URL scheme, the D1
-      database name, the test domains, and the brand file names.
-- [ ] Redraw the name in the brand lockups of `docs/brand/`, and make the
+      are. Branch: `conductor/boat-native-remote-workspaces-milestone-15j`.
+- [x] Rename the internal names to their new forms: the `CONDUCTIVE_*`
+      environment variables, the `X-Conductive-Turn-Id` header, the
+      `conductive-*` services, the Mac app's name, bundle ID, and URL
+      scheme, the D1 database name, the test domains, and the brand file
+      names. Branch: `conductor/boat-native-remote-workspaces-milestone-15j`.
+- [x] Redraw the name in the brand lockups of `docs/brand/`, and make the
       marketing pictures and the screenshots that show the name again.
-- [ ] Serve the machine routes on `api.conductive.build` under `/v1/`: the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15j`.
+- [x] Serve the machine routes on `api.conductive.build` under `/v1/`: the
       runner socket, the agent tools, the git credential helper, and the
       GitHub webhooks, as decision 102 says. Use `conductive.page` as the
       preview domain. Name both in the architecture doc and the protocol.
-- [ ] Merge the primary branch last, and rename each new occurrence. Then
-      a search for "conducting" finds only decision records and history.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15j`.
+- [x] Merge the primary branch last, and rename each new occurrence. Then
+      a search for the old name finds only decision records and history.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15j`.
 
 ## Milestone 15k: Mac app follow-ups
 
@@ -5847,7 +5916,7 @@ This milestone needs the prerequisites from the user.
       a file, use the terminal, open a preview, stop, and resume.
 - [ ] Check that a private Boat port does not answer on the public
       address of the sandbox without its token.
-- [ ] In a real workspace, run `conducting workspaces list` and an MCP
+- [ ] In a real workspace, run `conductive workspaces list` and an MCP
       `tools/list` request, so that the installed agent tools start on
       the image's Node.
 - [ ] Kill ttyd once, and check that systemd restarts it with the same

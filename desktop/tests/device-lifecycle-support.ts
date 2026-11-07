@@ -76,7 +76,7 @@ export function deviceLifecycleFixture() {
       wires.push(wire)
       return connectDevice(
         {
-          appOrigin: 'https://app.conducting.test',
+          appOrigin: 'https://app.conductive.test',
           deviceId: 'local-device',
           credential,
           events: {

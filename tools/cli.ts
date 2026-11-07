@@ -5,13 +5,13 @@ import { createWorkspaceInput, ToolInputError } from './input.ts'
 import { DeviceContractError } from '../src/shared/device-read.ts'
 import { runMacCli } from './device-cli.ts'
 
-export const CLI_HELP = `Conducting workspace tools
+export const CLI_HELP = `Conductive workspace tools
 
-conducting workspaces list
-conducting workspaces create --repository ID --message TEXT
+conductive workspaces list
+conductive workspaces create --repository ID --message TEXT
   [--agent claude|codex --model NAME] [--effort LEVEL] [--section ID]
-conducting mcp
-conducting mac run --command TEXT --folder PATH --reason TEXT
+conductive mcp
+conductive mac run --command TEXT --folder PATH --reason TEXT
   [--timeout-seconds SECONDS] [--longer-timeout-reason TEXT] [--request-id ID]
 
 Create starts a workspace in the calling workspace's org, with its owner.

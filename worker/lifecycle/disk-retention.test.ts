@@ -57,7 +57,7 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
       error: 'The startup script failed during disk retention.',
     })
     expect(boat.commands.at(-1)).toContain(
-      '/run/conducting/retention-startup.sh',
+      '/run/conductive/retention-startup.sh',
     )
     boat.failStop = true
     await actor.alarm()

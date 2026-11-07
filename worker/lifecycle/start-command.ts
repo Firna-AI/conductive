@@ -24,5 +24,5 @@ export function workspacePhaseCommand(
       sender: job.creation.sender,
     })
   }
-  return `set -eu\nexport CONDUCTING_TURN_ID=${shellQuote(job.turnId)}\ncd ${shellQuote(directory)}\ngit checkout -b ${shellQuote(row.branch)} FETCH_HEAD`
+  return `set -eu\nexport CONDUCTIVE_TURN_ID=${shellQuote(job.turnId)}\ncd ${shellQuote(directory)}\ngit checkout -b ${shellQuote(row.branch)} FETCH_HEAD`
 }

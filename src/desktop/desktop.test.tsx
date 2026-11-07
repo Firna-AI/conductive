@@ -6,7 +6,7 @@ import { FAKE_IDS } from '../test-support/fixtures/core'
 import { DesktopFrame } from './DesktopFrame'
 import { loadDesktop } from './desktopApi'
 
-const url = 'https://desktop.conducting.test/stream?session=7#token=k7q2m9x4'
+const url = 'https://desktop.conductive.test/stream?session=7#token=k7q2m9x4'
 
 describe('desktop', () => {
   it('asks for each desktop address past the browser cache, and opens it with its fragment', async () => {

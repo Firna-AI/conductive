@@ -1,6 +1,7 @@
 import { Miniflare, type WebSocket } from 'miniflare'
 import { build } from 'vite'
 
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import {
   deviceConnectionPath,
   DEVICE_COMMAND_PATH,
@@ -20,8 +21,8 @@ import { encrypt, hash, sign } from '../security/crypto'
 import { applyMigrations } from '../test-support/migrations'
 import { TOOL_TURN_HEADER } from '../../tools/context'
 
-export const APP = 'https://app.conducting.test'
-export const MACHINE = 'https://machine.conducting.test'
+export const APP = 'https://app.conductive.test'
+export const MACHINE = 'https://machine.conductive.test'
 export const WID = 'device-workspace'
 export const TOKEN = 'device-workspace-token'
 const KEY = btoa('s'.repeat(32))
@@ -162,9 +163,12 @@ export async function deviceFixture() {
     choice: CLAUDE,
     attachmentIds: [],
   })
-  const runnerResponse = await runtime.dispatchFetch(MACHINE + '/runner', {
-    headers: { Authorization: `Bearer ${TOKEN}`, Upgrade: 'websocket' },
-  })
+  const runnerResponse = await runtime.dispatchFetch(
+    MACHINE + MACHINE_PATHS.runner,
+    {
+      headers: { Authorization: `Bearer ${TOKEN}`, Upgrade: 'websocket' },
+    },
+  )
   const runner = runnerResponse.webSocket
   if (!runner) throw new Error('Missing runner socket.')
   remember(runner)

@@ -29,7 +29,7 @@ says.
 
 - Each hostname has one gate. It runs before every route and every
   WebSocket upgrade.
-- The gate of `app.conducting.build` checks the sign-in, a matching
+- The gate of `app.conductive.build` checks the sign-in, a matching
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
@@ -41,13 +41,21 @@ says.
   browsers send none on a read from the same site. A present `Origin`
   must match. Every write and every socket upgrade needs a matching
   `Origin` (decision 60).
-- The hostname for machines serves the GitHub webhooks, the agent tools,
-  the agent runner, and the git credential helper. Its gate checks a
-  webhook signature or a workspace token in place of the sign-in.
-- The gate also accepts a one-use build grant, but only on the route that
-  gives the Git command of a build its read token (decision 90).
+- The hostname for machines is `api.conductive.build`. It serves the
+  GitHub webhooks, the agent tools, the agent runner, and the git
+  credential helper. Its gate checks a webhook signature or a workspace
+  token in place of the sign-in.
+- The gate also accepts a one-use build grant, but only on
+  `/v1/internal/image-source/credential`, the route that gives the Git
+  command of a build its read token (decision 90).
+- Each route of `api.conductive.build` has a path under `/v1/`
+  (decision 102).
+- Paths without a version were rejected. Reason: a later change to the
+  API can then use a new version.
+- `machines.conductive.build` and `m.conductive.build` were rejected.
+  Reason: these routes form an API, so their hostname starts with `api`.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
-- The marketing site at `conducting.build` needs no sign-in.
+- The marketing site at `conductive.build` needs no sign-in.
 
 The [Mac app](desktop-app.md#the-worker-and-the-desktop-origin) states the
 additional origin that the app gate accepts.
@@ -201,7 +209,8 @@ Later screens add the frame and connection sources that they need.
 ## GitHub tokens
 
 - The git credential helper asks the Worker for a fresh GitHub token for
-  each git operation. It proves itself with the workspace token.
+  each git operation, at `/v1/git/credential` on `api.conductive.build`.
+  It proves itself with the workspace token.
 - Reason: a GitHub App user token expires after 8 hours, and the secrets
   of a sandbox change only at a resume.
 - The token is a GitHub App user token of the person who sent the current
@@ -264,7 +273,7 @@ Later screens add the frame and connection sources that they need.
 
 ## Terminal
 
-- The terminal socket runs on `app.conducting.build`, behind its gate.
+- The terminal socket runs on `app.conductive.build`, behind its gate.
 - The terminal listens on a private port of the sandbox. The Worker
   connects to it with Boat's port cookie and a password for each
   workspace.
@@ -273,7 +282,8 @@ Later screens add the frame and connection sources that they need.
 
 ## Port previews
 
-- Previews live on a separate registrable domain (decision 6).
+- Previews live on `conductive.page`, a separate registrable domain
+  (decisions 6 and 102).
 - Each preview gets a random hostname one level under that domain, with at
   least 128 random bits. The hostname gives each preview its own origin.
   It is not a credential.
@@ -370,3 +380,6 @@ Later screens add the frame and connection sources that they need.
 
 - The Worker asks Boat for a new desktop URL on each page load. The URL
   works for 10 minutes and carries its token in the fragment.
+- An open desktop stream does not pass through the Worker. So it can keep
+  playing after its user loses access, until the sandbox stops. This is
+  the one exception to the 30-second rule of decision 70 (decision 117).

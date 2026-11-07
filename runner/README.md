@@ -1,6 +1,6 @@
 # Agent runner
 
-The agent runner is the program of Conducting in each cloud computer, a
+The agent runner is the program of Conductive in each cloud computer, a
 Boat sandbox. It runs the agents powered by Claude and Codex for one
 workspace. It also reports the files and the changes of the workspace
 repository.
@@ -192,28 +192,28 @@ The runner reads these variables when the service starts.
 
 | Variable                      | Required | Value                                                                 |
 | ----------------------------- | -------- | --------------------------------------------------------------------- |
-| `CONDUCTING_WORKSPACE_ID`     | Yes      | The workspace ID. The runner sends it in `hello`.                     |
-| `CONDUCTING_WORKSPACE_TOKEN`  | Yes      | The workspace token. The runner sends it as a bearer token.           |
-| `CONDUCTING_RUNNER_URL`       | Yes      | The `https:` or `wss:` URL of the runner route.                       |
-| `CONDUCTING_REPOSITORY`       | Yes      | The folder of the workspace repository.                               |
-| `CONDUCTING_DEFAULT_BRANCH`   | Yes      | The default branch, as a name that Git resolves in that folder.       |
-| `CONDUCTING_COMPUTER_MCP_URL` | Yes      | The absolute URL of the `computer` MCP server of the sandbox.         |
-| `CONDUCTING_HOME`             | No       | The home folder of the agents. The default is the home of the user.   |
-| `CONDUCTING_STATE_PATH`       | No       | The state file. The default is `.conducting/runner-state.json` there. |
+| `CONDUCTIVE_WORKSPACE_ID`     | Yes      | The workspace ID. The runner sends it in `hello`.                     |
+| `CONDUCTIVE_WORKSPACE_TOKEN`  | Yes      | The workspace token. The runner sends it as a bearer token.           |
+| `CONDUCTIVE_RUNNER_URL`       | Yes      | The `https:` or `wss:` URL of the runner route.                       |
+| `CONDUCTIVE_REPOSITORY`       | Yes      | The folder of the workspace repository.                               |
+| `CONDUCTIVE_DEFAULT_BRANCH`   | Yes      | The default branch, as a name that Git resolves in that folder.       |
+| `CONDUCTIVE_COMPUTER_MCP_URL` | Yes      | The absolute URL of the `computer` MCP server of the sandbox.         |
+| `CONDUCTIVE_HOME`             | No       | The home folder of the agents. The default is the home of the user.   |
+| `CONDUCTIVE_STATE_PATH`       | No       | The state file. The default is `.conductive/runner-state.json` there. |
 
-- The runner route is the path `MACHINE_PATHS.runner` from
-  [`agent-tools.ts`](../src/shared/agent-tools.ts) on the hostname for
-  machines. The name of that hostname is not chosen yet.
+- The runner route is the path `MACHINE_PATHS.runner`, which is
+  `/v1/runner`, from [`agent-tools.ts`](../src/shared/agent-tools.ts) on
+  the hostname for machines, `api.conductive.build`.
 - This repository does not record the URL of the `computer` MCP server.
   The image integration must supply it.
-- `CONDUCTING_DEFAULT_BRANCH` is the base of the file marks, the Changes
+- `CONDUCTIVE_DEFAULT_BRANCH` is the base of the file marks, the Changes
   list, and the changed files of each turn. Each diff request names its own
   base branch. File reports compare the commit of that branch, the Git ID
   of each file, and a streamed hash of the bytes that a read returns. That
   hash uses the same path checks as a read, and a fixed value for a refused
   or missing target. So an edit, a link into an ignored folder, or a clean
   filter cannot hide a change from the open files and diffs.
-- The home folder also holds `.conducting/claude` and `.conducting/codex`,
+- The home folder also holds `.conductive/claude` and `.conductive/codex`,
   where the agents keep their sessions. Boat keeps the disk across a stop
   and a resume, so the sessions stay.
 - The state file belongs to one workspace. Keep it out of the org image.

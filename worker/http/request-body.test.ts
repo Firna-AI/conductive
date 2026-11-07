@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, expect, it } from 'vitest'
 
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { API_PATHS } from '../../src/shared/api'
 import { createApp } from '../application'
-import { GITHUB_WEBHOOK_PATH, handleGitHubWebhook } from '../github/webhook'
+import { handleGitHubWebhook } from '../github/webhook'
 import {
   DESKTOP_EXCHANGE_PATH,
   DESKTOP_ORIGIN,
@@ -36,7 +37,7 @@ function appRequest(
 }
 
 const assetUrl = `${TEST_ORIGIN}/new-body-reader`
-const machineOrigin = 'https://machine.conducting.test'
+const machineOrigin = 'https://machine.conductive.test'
 
 it('rejects an unsigned oversized API write before pulling body bytes', async () => {
   const stream = streamedBody([new Uint8Array(1_000_000), new Uint8Array(1)])
@@ -160,7 +161,7 @@ it('keeps the existing webhook capacity and rejects its first extra byte at the 
       ...(extra ? [new Uint8Array(1), new Uint8Array(1)] : []),
     ])
     const request = streamedRequest(
-      `${machineOrigin}${GITHUB_WEBHOOK_PATH}`,
+      `${machineOrigin}${MACHINE_PATHS.githubWebhook}`,
       stream.body,
       {
         'X-Hub-Signature-256': `sha256=${'0'.repeat(64)}`,
@@ -233,12 +234,12 @@ it('applies a raised JSON budget only to the declared host, method, and path', a
       MACHINE_ORIGIN: machineOrigin,
     })
   }
-  const raised = await send(`${machineOrigin}${GITHUB_WEBHOOK_PATH}`)
+  const raised = await send(`${machineOrigin}${MACHINE_PATHS.githubWebhook}`)
   expect(raised.status).toBe(200)
   expect(await raised.json()).toEqual({ value: 'accepted' })
   for (const [url, method] of [
-    [`${TEST_ORIGIN}${GITHUB_WEBHOOK_PATH}`, 'POST'],
-    [`${machineOrigin}${GITHUB_WEBHOOK_PATH}`, 'PUT'],
+    [`${TEST_ORIGIN}${MACHINE_PATHS.githubWebhook}`, 'POST'],
+    [`${machineOrigin}${MACHINE_PATHS.githubWebhook}`, 'PUT'],
     [`${machineOrigin}/new-machine-route`, 'POST'],
   ]) {
     const response = await send(url, method)

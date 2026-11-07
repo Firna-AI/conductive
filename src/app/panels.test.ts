@@ -82,7 +82,7 @@ describe('PanelWidths', () => {
 
   test('a stored value that is not a width falls back to the default', () => {
     const storage = new MemoryStorage()
-    storage.setItem('conducting.right-width', 'wide')
+    storage.setItem('conductive.right-width', 'wide')
     expect(new PanelWidths(storage).width('right')).toBe(440)
   })
 })

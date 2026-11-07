@@ -51,7 +51,7 @@ export async function installationToken(
           Accept: 'application/vnd.github+json',
           'Content-Type': 'application/json',
           'X-GitHub-Api-Version': '2026-03-10',
-          'User-Agent': 'Conducting',
+          'User-Agent': 'Conductive',
         },
         body: JSON.stringify({
           repository_ids: [repository.githubRepositoryId],
@@ -84,7 +84,7 @@ export async function revokeInstallationToken(
         Authorization: `Bearer ${token}`,
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2026-03-10',
-        'User-Agent': 'Conducting',
+        'User-Agent': 'Conductive',
       },
     }),
   )

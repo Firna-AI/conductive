@@ -23,7 +23,7 @@ test('opens a Mac preview frame and hands its new tab to a browser without a sig
   const args = [
     '--ignore-certificate-errors',
     '--no-proxy-server',
-    '--host-resolver-rules=MAP app.conducting.test 127.0.0.1,MAP *.conducting-previews.test 127.0.0.1',
+    '--host-resolver-rules=MAP app.conductive.test 127.0.0.1,MAP *.conductive-previews.test 127.0.0.1',
   ]
   try {
     const host = await previewHost(directory, server)
@@ -40,7 +40,7 @@ test('opens a Mac preview frame and hands its new tab to a browser without a sig
         .getByRole('heading', { name: 'Preview ready' }),
     ).toBeVisible()
     expect(
-      server.requests.find((request) => request.host === 'app.conducting.test'),
+      server.requests.find((request) => request.host === 'app.conductive.test'),
     ).toMatchObject({
       origin: undefined,
       cookie: `${DESKTOP_SESSION_COOKIE}=mac-session`,
@@ -57,8 +57,8 @@ test('opens a Mac preview frame and hands its new tab to a browser without a sig
       .click()
     const opened = async () => {
       const result = await electron!.evaluate(() => ({
-        url: process.env.CONDUCTING_TEST_PREVIEW_EXTERNAL,
-        error: process.env.CONDUCTING_TEST_PREVIEW_ERROR,
+        url: process.env.CONDUCTIVE_TEST_PREVIEW_EXTERNAL,
+        error: process.env.CONDUCTIVE_TEST_PREVIEW_ERROR,
       }))
       if (result.error) throw new Error(result.error)
       return result.url
@@ -68,7 +68,7 @@ test('opens a Mac preview frame and hands its new tab to a browser without a sig
       server.requests.filter(
         (request) =>
           request.accept === 'application/json' &&
-          request.host === 'app.conducting.test',
+          request.host === 'app.conductive.test',
       ),
     ).toHaveLength(0)
     await page
@@ -80,7 +80,7 @@ test('opens a Mac preview frame and hands its new tab to a browser without a sig
     expect(
       server.requests.filter(
         (request) =>
-          request.host === 'app.conducting.test' &&
+          request.host === 'app.conductive.test' &&
           request.accept === 'application/json',
       ),
     ).toEqual([
@@ -112,7 +112,7 @@ test('opens a Mac preview frame and hands its new tab to a browser without a sig
     expect(await context.cookies(server.appOrigin)).toEqual([])
     expect(
       server.requests
-        .filter((request) => request.host !== 'app.conducting.test')
+        .filter((request) => request.host !== 'app.conductive.test')
         .every((request) => !request.cookie.includes(DESKTOP_SESSION_COOKIE)),
     ).toBe(true)
     expect(

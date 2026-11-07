@@ -12,6 +12,7 @@ import process from 'node:process'
 
 import { TOOL_TURN_HEADER } from '../../tools/context'
 import type { CommandResult } from '../sandbox/provider'
+import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import type { backendFixture } from './backend-test-support'
 import { shellQuote } from './commands'
 import { defaultBranchCommand } from './default-branch-command'
@@ -62,7 +63,7 @@ export async function defaultBranchFixture(
   const directory = join(root, "sender's working repository")
   const remote = join(root, 'repository.git')
   const home = join(root, 'home')
-  const environment = {
+  const environment = isolatedProcessEnvironment({
     PATH: '/usr/bin:/bin',
     HOME: home,
     TMPDIR: root,
@@ -72,7 +73,7 @@ export async function defaultBranchFixture(
     GIT_CONFIG_GLOBAL: '/dev/null',
     GIT_CEILING_DIRECTORIES: root,
     GIT_TERMINAL_PROMPT: '0',
-  }
+  })
   let github: FakeGitHubGit | undefined
   try {
     await mkdir(directory)
@@ -102,7 +103,7 @@ export async function defaultBranchFixture(
       `if (process.argv[2] === 'get') {
   const response = await fetch(new URL('/credential', process.env.LOCAL_CREDENTIAL_ORIGIN), {
     method: 'POST',
-    headers: { ${JSON.stringify(TOOL_TURN_HEADER)}: process.env.CONDUCTING_TURN_ID ?? '' },
+    headers: { ${JSON.stringify(TOOL_TURN_HEADER)}: process.env.CONDUCTIVE_TURN_ID ?? '' },
   })
   if (!response.ok) process.exit(1)
   const value = await response.json()

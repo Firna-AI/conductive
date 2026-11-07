@@ -24,7 +24,7 @@ number names a dated record, as
 
 ## Folder variables
 
-- Each folder has a shell variable, `CONDUCTING_REPOSITORY_<FOLDER>_DIR`.
+- Each folder has a shell variable, `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR`.
   `<FOLDER>` is the folder name in uppercase, with an underscore in place
   of each character that is not an ASCII letter, a digit, or an
   underscore.
@@ -32,7 +32,7 @@ number names a dated record, as
   `_DIR`, in the same order. Such a collision does not change the folder
   name.
 - The install script and the startup script get the folder variable of
-  each repository. A workspace also gets `CONDUCTING_REPOSITORY_DIR`, with
+  each repository. A workspace also gets `CONDUCTIVE_REPOSITORY_DIR`, with
   the folder of its own repository.
 - The sandbox of a build or a refresh gets only the folder variables, which
   hold no secret. Only the Git command that copies a repository gets a read

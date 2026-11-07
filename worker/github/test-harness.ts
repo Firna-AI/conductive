@@ -1,5 +1,6 @@
 import { createHmac } from 'node:crypto'
 
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AppEnv } from '../env'
 import {
   createHarness,
@@ -11,11 +12,11 @@ import { handleGitHubRead } from './app-handler'
 import type { GitHubRefresh, GitHubWorkspace } from './contracts'
 import { activeWorkspace } from './data'
 import { RepositoryGitHub } from './fake-repository'
-import { GITHUB_WEBHOOK_PATH, handleGitHubWebhook } from './webhook'
+import { handleGitHubWebhook } from './webhook'
 import { refreshWorkspace } from './refresh'
 import { MemoryWorkspace } from './memory-workspace'
 
-export const MACHINE_ORIGIN = 'https://machines.conducting.test'
+export const MACHINE_ORIGIN = 'https://machines.conductive.test'
 export const WEBHOOK_SECRET = 'test-only-webhook-secret'
 
 export class GitHubTestHarness {
@@ -116,6 +117,7 @@ export class GitHubTestHarness {
     deliveryId = 'delivery-1',
     init: RequestInit = {},
     origin = MACHINE_ORIGIN,
+    path: string = MACHINE_PATHS.githubWebhook,
   ) {
     const body = typeof payload === 'string' ? payload : JSON.stringify(payload)
     const headers = new Headers({
@@ -125,7 +127,7 @@ export class GitHubTestHarness {
       ...Object.fromEntries(new Headers(init.headers)),
     })
     return handleGitHubWebhook(
-      new Request(`${origin}${GITHUB_WEBHOOK_PATH}`, {
+      new Request(`${origin}${path}`, {
         method: 'POST',
         body,
         ...init,

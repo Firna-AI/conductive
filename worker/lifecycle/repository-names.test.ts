@@ -33,26 +33,26 @@ it('keeps safe repository names and resolves folder and shell variable collision
     ).toEqual([
       [
         '/home/user/code/acme-storefront',
-        'CONDUCTING_REPOSITORY_ACME_STOREFRONT_DIR',
+        'CONDUCTIVE_REPOSITORY_ACME_STOREFRONT_DIR',
       ],
       [
         '/home/user/code/other-storefront',
-        'CONDUCTING_REPOSITORY_OTHER_STOREFRONT_DIR',
+        'CONDUCTIVE_REPOSITORY_OTHER_STOREFRONT_DIR',
       ],
       [
         '/home/user/code/acme-storefront-2',
-        'CONDUCTING_REPOSITORY_ACME_STOREFRONT_2_DIR',
+        'CONDUCTIVE_REPOSITORY_ACME_STOREFRONT_2_DIR',
       ],
-      ['/home/user/code/Foo_Bar', 'CONDUCTING_REPOSITORY_FOO_BAR_DIR'],
-      ['/home/user/code/foo-bar', 'CONDUCTING_REPOSITORY_FOO_BAR_2_DIR'],
-      ['/home/user/code/acme-UPPER', 'CONDUCTING_REPOSITORY_ACME_UPPER_DIR'],
+      ['/home/user/code/Foo_Bar', 'CONDUCTIVE_REPOSITORY_FOO_BAR_DIR'],
+      ['/home/user/code/foo-bar', 'CONDUCTIVE_REPOSITORY_FOO_BAR_2_DIR'],
+      ['/home/user/code/acme-UPPER', 'CONDUCTIVE_REPOSITORY_ACME_UPPER_DIR'],
       [
         '/home/user/code/acme-upper-2',
-        'CONDUCTING_REPOSITORY_ACME_UPPER_2_DIR',
+        'CONDUCTIVE_REPOSITORY_ACME_UPPER_2_DIR',
       ],
       [
         '/home/user/code/bad-name---touch-PWNED',
-        'CONDUCTING_REPOSITORY_BAD_NAME___TOUCH_PWNED_DIR',
+        'CONDUCTIVE_REPOSITORY_BAD_NAME___TOUCH_PWNED_DIR',
       ],
     ])
     expect(repositoryLocations([...repositories].reverse())).toEqual(locations)

@@ -25,11 +25,11 @@ it('admits native app actions only from the trusted main initiator', () => {
     preview: vi.fn(async () => {}),
     warn: vi.fn(),
   }
-  installNavigation(contents, 'https://app.conducting.test', dependencies)
+  installNavigation(contents, 'https://app.conductive.test', dependencies)
   for (const eventName of ['will-navigate', 'will-redirect']) {
     for (const initiator of [child, null, undefined]) {
       const event = {
-        url: 'https://app.conducting.test/frame-takeover',
+        url: 'https://app.conductive.test/frame-takeover',
         frame: main,
         initiator,
         isMainFrame: true,
@@ -45,7 +45,7 @@ it('admits native app actions only from the trusted main initiator', () => {
   }
   for (const url of [
     `${DESKTOP_ORIGIN}/frame-takeover`,
-    'https://app.conducting.test/frame-takeover',
+    'https://app.conductive.test/frame-takeover',
     `${DESKTOP_ORIGIN}/api/auth/github`,
   ]) {
     expect(popup({ url, referrer: { url: `${DESKTOP_ORIGIN}/` } })).toEqual({
@@ -64,7 +64,7 @@ it('admits native app actions only from the trusted main initiator', () => {
   expect(dependencies.load).not.toHaveBeenCalled()
   main.url = `${DESKTOP_ORIGIN}/`
   const trusted = {
-    url: 'https://app.conducting.test/trusted',
+    url: 'https://app.conductive.test/trusted',
     frame: main,
     initiator: main,
     preventDefault: vi.fn(),
@@ -83,7 +83,7 @@ it('admits native app actions only from the trusted main initiator', () => {
 })
 
 it('hands trusted preview popups to native navigation and rejects child launcher requests', () => {
-  const appOrigin = 'https://app.conducting.test'
+  const appOrigin = 'https://app.conductive.test'
   const launcher =
     appOrigin + '/api/orgs/org/workspaces/workspace/previews/preview'
   expect(navigationTarget(launcher, appOrigin, 'trusted-main', true)).toEqual({

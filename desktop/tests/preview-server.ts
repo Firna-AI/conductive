@@ -28,7 +28,7 @@ export async function createPreviewServer(directory: string) {
       '-out',
       cert,
       '-subj',
-      '/CN=app.conducting.test',
+      '/CN=app.conductive.test',
       '-days',
       '1',
     ],
@@ -42,7 +42,7 @@ export async function createPreviewServer(directory: string) {
     authorization: string | undefined
     accept: string | undefined
   }[] = []
-  const hostname = '0123456789abcdef0123456789abcdef.conducting-previews.test'
+  const hostname = '0123456789abcdef0123456789abcdef.conductive-previews.test'
   let appOrigin = ''
   let authorizer = ''
   let preview = ''
@@ -139,7 +139,7 @@ export async function createPreviewServer(directory: string) {
             return json(404, {})
           outgoing.setHeader(
             'Set-Cookie',
-            '__Secure-conducting-preview-preview=preview-cookie; Domain=conducting-previews.test; Path=/; HttpOnly; Secure; SameSite=None; Partitioned',
+            '__Secure-conductive-preview-preview=preview-cookie; Domain=conductive-previews.test; Path=/; HttpOnly; Secure; SameSite=None; Partitioned',
           )
           if (header) return json(200, { url: preview })
           outgoing.writeHead(303, { Location: preview })
@@ -148,7 +148,7 @@ export async function createPreviewServer(directory: string) {
         }
         if (
           url.hostname === hostname &&
-          cookie.includes('__Secure-conducting-preview-preview=preview-cookie')
+          cookie.includes('__Secure-conductive-preview-preview=preview-cookie')
         ) {
           outgoing.writeHead(200, { 'Content-Type': 'text/html' })
           outgoing.end(
@@ -168,8 +168,8 @@ export async function createPreviewServer(directory: string) {
   const address = server.address()
   if (!address || typeof address === 'string')
     throw new Error('Preview server has no TCP port')
-  appOrigin = `https://app.conducting.test:${address.port}`
-  authorizer = `https://authorize.conducting-previews.test:${address.port}${PREVIEW_HANDOFF_PATH}`
+  appOrigin = `https://app.conductive.test:${address.port}`
+  authorizer = `https://authorize.conductive-previews.test:${address.port}${PREVIEW_HANDOFF_PATH}`
   preview = `https://${hostname}:${address.port}/`
   return {
     appOrigin,
@@ -177,7 +177,7 @@ export async function createPreviewServer(directory: string) {
     preview,
     requests,
     launcher: appOrigin + launcherPath,
-    frames: [`https://*.conducting-previews.test:${address.port}`],
+    frames: [`https://*.conductive-previews.test:${address.port}`],
     reject: () => {
       reject = true
     },

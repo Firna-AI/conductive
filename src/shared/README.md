@@ -69,7 +69,8 @@ Settings results distinguish applied and saved changes, applied but unsaved chan
 The small settings failure frame identifies an oversized reply without closing the connection.
 The combined Mac output cap is 65,536 UTF-8 bytes.
 
-The machine and preview hostnames remain deployment settings.
+`MACHINE_PATHS` in `agent-tools.ts` and `DEVICE_COMMAND_PATH` in `device.ts` put their machine routes under `/v1/`.
+The machine origin and the preview domain stay Worker settings.
 `Preview.url` is the absolute launch address of a preview on the app origin.
 It holds no secret. The browser loads it as it is, in the frame and in a new tab.
 In the Mac app, a new tab opens in the default browser through `PreviewLaunchResponse` instead.

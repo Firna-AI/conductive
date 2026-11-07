@@ -4,8 +4,8 @@ import {
 } from '../../tools/image-manifest'
 import type { CommandResult } from '../sandbox/provider'
 
-export const WORKSPACE_TOOLS_DIRECTORY = '/opt/conducting/agent-tools'
-export const WORKSPACE_TOOLS_COMMAND = '/usr/local/bin/conducting'
+export const WORKSPACE_TOOLS_DIRECTORY = '/opt/conductive/agent-tools'
+export const WORKSPACE_TOOLS_COMMAND = '/usr/local/bin/conductive'
 export const WORKSPACE_TOOLS_SECRETS_FILE = '/run/ascii-secrets/env.sh'
 
 /** Merge this server into each agent's MCP configuration at runtime. */
@@ -35,9 +35,9 @@ if [ -r ${quote(secrets)} ]; then
   set +a
 fi
 unset NODE_OPTIONS
-for conducting_node in ${nodeCandidates}; do
-  if [ -f "$conducting_node" ] && [ -x "$conducting_node" ]; then
-    exec "$conducting_node" ${quote(`${directory}/tools/main.ts`)} "$@"
+for conductive_node in ${nodeCandidates}; do
+  if [ -f "$conductive_node" ] && [ -x "$conductive_node" ]; then
+    exec "$conductive_node" ${quote(`${directory}/tools/main.ts`)} "$@"
   fi
 done
 printf '%s\\n' 'Node is not available for the workspace tools.' >&2

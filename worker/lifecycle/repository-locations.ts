@@ -9,7 +9,7 @@ export interface RepositoryLocation {
 
 /** Old snapshots keep their original folders until a build moves all contents. */
 export function legacyRepositoryDirectory(id: string): string {
-  return `/home/user/conducting/repositories/${encodeURIComponent(id)}`
+  return `/home/user/conductive/repositories/${encodeURIComponent(id)}`
 }
 
 function safeFolder(value: string): string {
@@ -58,7 +58,7 @@ export function repositoryLocations(
       return {
         repositoryId: repository.repositoryId,
         directory: `/home/user/code/${name}`,
-        variable: `CONDUCTING_REPOSITORY_${variable}_DIR`,
+        variable: `CONDUCTIVE_REPOSITORY_${variable}_DIR`,
       }
     })
 }
@@ -83,7 +83,7 @@ export function readRepositoryLocations(value: unknown): RepositoryLocation[] {
       typeof entry.repositoryId !== 'string' ||
       typeof entry.directory !== 'string' ||
       typeof entry.variable !== 'string' ||
-      !/^CONDUCTING_REPOSITORY_[A-Z0-9_]+_DIR$/u.test(entry.variable) ||
+      !/^CONDUCTIVE_REPOSITORY_[A-Z0-9_]+_DIR$/u.test(entry.variable) ||
       ((!/^\/home\/user\/code\/[a-zA-Z0-9._-]+$/u.test(entry.directory) ||
         ['.', '..'].includes(
           entry.directory.slice(entry.directory.lastIndexOf('/') + 1),

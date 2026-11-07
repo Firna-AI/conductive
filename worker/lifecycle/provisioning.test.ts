@@ -68,7 +68,7 @@ it('recovers an accepted create after its caller closes and the actor restarts',
     expect(fixture.boat.commandRequests.at(-1)).toMatchObject({
       detached: false,
       command: expect.stringContaining(
-        'systemctl start conducting-terminal.service',
+        'systemctl start conductive-terminal.service',
       ),
     })
     expect(await fixture.runtime.workspace(id).readLifecycle()).toMatchObject({
