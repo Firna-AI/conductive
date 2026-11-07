@@ -1,7 +1,7 @@
 # The always-allowed commands of a Mac have no size limit
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-07, from PR #23, branch `conductor/boat-native-remote-workspaces-milestone-15f`, the wider fix D of round 1 finding 32. The user sees it as item 110.
 - **Location:** the permission store of the Mac app in `desktop/src/`.
 - **Reason:** the fix refuses a save, and a new refusal is the user's choice.
@@ -18,4 +18,4 @@
 - **Wider fix:** C.
 - **Previous examples:** None found.
 - **Recommendation:** C.
-- **Action:** ask the user, because C refuses a save.
+- **Action:** fix after merge, apply C with a limit of about 900,000 bytes, as the user chose on 7 November 2026 (decision 110). One device message of at most 1,000,000 bytes carries the list, so a 10 MB limit needs option B. Milestone 15k builds it.

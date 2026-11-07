@@ -3088,6 +3088,8 @@ Added on 6 November 2026 from the merge of Milestone 15a.
 - **Recommendation:** A now, and C as a follow-up item.
 - **Chosen:** C, by the user on 6 November 2026. The Milestone 15a branch
   makes the change before it merges. The time limit stays at 5 seconds.
+  Decision 113 replaced the 5-second limit with 15 seconds on 7 November
+  2026.
 
 ### 86. Decide whether a preview ID can come back
 
@@ -3442,6 +3444,141 @@ review, and the user's question "why do we reject these events?".
   Working state, no Stop, and a tool that was running shows as stopped.
   The workspace refuses only an event of a turn that never started.
   Milestone 7s builds the workspace side, and Milestone 8j the chat side.
+
+### 106. Run the runner checks in the complete gate
+
+Added on 7 November 2026 from the merge of Milestone 7r.
+
+- **Background:** The complete gate did not run the runner typecheck and
+  tests. The Milestone 7s merge then broke the runner typecheck, and no
+  gate reported it.
+- **Options:**
+  - **A.** Add them to `npm run check`, so CI runs them too.
+  - **B.** A separate CI job for the runner.
+  - **C.** Change nothing.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 7 November 2026. Milestone 7t adds the
+  checks, because it makes the runner typecheck pass again.
+
+### 107. Accept the clone token risk of refresh builds
+
+Added on 6 November 2026 from round 3 finding 21 of the Milestone 5
+review.
+
+- **Background:** A refresh build starts from the last org image. A
+  program that an earlier install left there can read the clone token of
+  a later copy (decision 90).
+- **Options:**
+  - **D.** Keep the design, and state the risk.
+  - **E.** Start every build and refresh from the clean base image.
+  - **A.** Copy the repositories in a second, clean cloud computer.
+  - **F.** A Git proxy in the Worker.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 7 November 2026. Milestone 5 states the
+  risk in the access protocol. The user asked to keep E for later:
+  `plans/follow-ups/org-image-clean-builds.md`.
+
+### 108. Merge Milestone 5 without a third fix round
+
+Added on 6 November 2026 from round 3 of the Milestone 5 review.
+
+- **Options:**
+  - **A.** A third fix round for findings 22, 23, and 24.
+  - **B.** Merge now, and record the three as follow-up items.
+- **Recommendation:** A.
+- **Chosen:** B, by the user on 7 November 2026. The follow-up items are
+  `creation-admission-restart`, `completed-retry-first-message`, and
+  `lifecycle-race-tests-storage`.
+
+### 109. Report a file read or a save that fails
+
+Added on 7 November 2026 from the review of Milestone 7r.
+
+- **Background:** A failed file read or save stops its runner step. A
+  turn can then stay running with no agent, and a new connection gets no
+  ready signal.
+- **Options:**
+  - **A.** Exit the runner after such an error.
+  - **B.** End each step with the events that exist now.
+  - **C.** As B, and a failed end sends a failure.
+  - **D.** As B, and the runner contract marks data that the runner could
+    not read.
+- **Recommendation:** D.
+- **Chosen:** D, by the user on 7 November 2026. Milestone 7v builds it.
+
+### 110. Limit the size of the always-allowed Mac commands
+
+Added on 7 November 2026 from the review of Milestone 15f.
+
+- **Background:** The Mac saves each always-allowed command. This Mac
+  reads the list through the Worker in one device message of at most
+  1,000,000 bytes, so a longer list cannot load.
+- **Options:**
+  - **A.** Change nothing more.
+  - **C.** Refuse a save above a fixed limit.
+  - **B.** Split the reply into several messages, and join them in the
+    Worker.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 7 November 2026. The user asked whether
+  the limit can be 10 MB, because the list lives on the Mac. One device
+  message carries the list, so C allows at most about 900,000 bytes, and
+  10 MB needs option B. Milestone 15k builds C with about 900,000 bytes,
+  unless the user chooses B.
+
+### 111. Keep one recovery test for device commands
+
+Added on 7 November 2026 from the review of Milestone 15f.
+
+- **Options:**
+  - **A.** Keep the one recovery test.
+  - **D.** Fail each step of the publication path in turn.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 7 November 2026.
+
+### 112. Find unused exports later
+
+Added on 7 November 2026 from the review of Milestone 15f.
+
+- **Options:**
+  - **A.** Change nothing now.
+  - **C.** Add an unused-export check, such as knip, to the gate.
+- **Recommendation:** A.
+- **Chosen:** A now, and C as a later follow-up, by the user on 7 November
+  2026: `plans/follow-ups/unused-export-check.md`.
+
+### 113. Give the Worker tests a longer hang guard
+
+Added on 7 November 2026.
+
+- **Background:** Worker harness tests take about 2.5 seconds alone. In
+  the complete gate, they passed the 5-second limit of decision 85.
+- **Options:**
+  - **A.** Fix each slow test when it fails.
+  - **B.** A 15-second limit in one setting.
+  - **C.** Keep 5 seconds, and speed up each test over about 1.7 seconds.
+  - **D.** A faster harness reset.
+- **Recommendation:** C.
+- **Chosen:** B now, and C as a later follow-up, by the user on 7 November
+  2026. `vitest.config.ts` sets 15 seconds for each test of the root
+  config. Follow-up item: `plans/follow-ups/harness-test-speed.md`.
+
+### 114. Accept that tool processes keep a login after the turn
+
+Added on 7 November 2026 from the review of Milestone 7u.
+
+- **Background:** A program that a tool of the agent starts gets a copy
+  of the login of its turn, and a server keeps it after the turn ends.
+- **Options:**
+  - **A.** Accept the risk, and state it in the access protocol.
+  - **B.** Turn on the Claude program's setting that removes the login
+    from tool processes.
+  - **C.** Give the Claude agent its login through a private channel, not
+    the environment.
+  - **D.** Stop all of the agent's programs at the end of each turn.
+- **Recommendation:** C.
+- **Chosen:** A now, and C as a later follow-up, by the user on 7 November
+  2026. The access protocol states the risk. Follow-up item:
+  `plans/follow-ups/agent-login-in-tool-processes.md`.
 
 ## Design
 
@@ -4709,6 +4846,31 @@ seconds between `SIGTERM` and `SIGKILL`. The value also leaves time to save
 the turn ends within the 15-second stop window of the service. The owner
 chose one fixed kill limit in review finding 2 B of PR #30.
 
+## Milestone 7v: Reports after a failed file read
+
+Tags: ui
+
+Depends on: 7t
+
+Apply decision 109 D, and the shutdown fix that the review of Milestone
+7u deferred. Added on 7 November 2026.
+
+- [ ] End each runner step after a failed file read or save: a failed
+      turn start sends `turn.failed` with a cause, a failed turn end sends
+      its end with a mark that the runner could not read the changed
+      files, and a failed scan after a connect still sends `runner.ready`
+      with a mark that the tree could not be read. A later scan sends the
+      tree. Add the mark to `src/shared/runner.ts`, the fakes, the
+      workspace, and the chat and files protocol docs.
+- [ ] Draw the mark in the mockups: a finished turn whose changed files
+      could not be read, and a Files panel whose tree could not be read.
+      Then build both screens, and compare each with its mockup.
+- [ ] Save each turn when the runner accepts its command, so that a
+      shutdown, Stop, and the next start end it once, as option D of
+      `plans/follow-ups/runner-shutdown-pending-turn.md` says. Delete that
+      item.
+- [ ] Delete `plans/follow-ups/runner-file-and-save-errors.md`.
+
 ## Milestone 8: Chat UI
 
 Tags: ui
@@ -5170,6 +5332,23 @@ starts, and rename each name that they add.
       preview domain. Name both in the architecture doc and the protocol.
 - [ ] Merge the primary branch last, and rename each new occurrence. Then
       a search for "conducting" finds only decision records and history.
+
+## Milestone 15k: Mac app follow-ups
+
+Depends on: 15j
+
+Apply decision 110 C and the fix-after-merge items of the Mac app. Added
+on 7 November 2026.
+
+- [ ] Before the Mac saves "Always allow", measure the saved list with
+      the new command. Above about 900,000 bytes, refuse the save with a
+      message, and still let Allow run the command once (decision 110).
+      Delete `plans/follow-ups/always-allow-size-limit.md`.
+- [ ] Apply the recorded option of each of these follow-up items, and
+      delete each item: `mac-command-result-after-stop`,
+      `mac-command-watchdog-alarm`, `mac-command-internal-payload-budget`,
+      `mac-approval-scroll-flake`, `desktop-renderer-tests-in-gate`, and
+      `local-dev-origin`.
 
 ## Milestone 15d: Marketing site
 

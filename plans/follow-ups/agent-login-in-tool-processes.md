@@ -1,9 +1,9 @@
 # Tool processes keep the sender's login after the turn
 
 - **Severity:** High. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-07, from PR #30, branch `conductor/boat-native-remote-workspaces-milestone-7u`, a problem outside the scope that the check of round 1 finding 2 found. The user sees it as item 114.
-- **Location:** `providerEnvironment` in `runner/src/providers/environment.ts:29`, and the section "Agent logins in a sandbox" of `docs/protocol/access-and-security.md`.
+- **Location:** `providerEnvironment` in `runner/src/providers/environment.ts:31`, and the section "Agent logins in a sandbox" of `docs/protocol/access-and-security.md`.
 - **Reason:** each fix changes a protocol rule, how the tools run, or needs a run in a real sandbox.
 
 - **Terms:**
@@ -25,4 +25,4 @@
 - **Wider fix:** C.
 - **Previous examples:** the idle agent process that kept the login between turns, fixed by Milestone 7u in PR #30, and PR #30 round 1 finding 2, an agent that ran after its turn ended.
 - **Recommendation:** C. It keeps the login out of each tool process and changes nothing in how the tools and servers run. Milestone 8i runs real agents, so it can make the check.
-- **Action:** ask the user, because C needs a run in a real sandbox, and A, B, and D change a protocol rule or how the tools run.
+- **Action:** fix after merge, apply C, because the user chose A now and C as a later follow-up on 7 November 2026 (decision 114). The access protocol states the risk until C lands. C needs a run with real logins in a real sandbox, so it fits Milestone 8i or later.
