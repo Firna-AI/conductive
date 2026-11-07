@@ -9,6 +9,7 @@ import {
 import {
   byRole,
   queryAllByRole,
+  queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
@@ -128,5 +129,71 @@ describe('the link of a linked session to its source', () => {
         request.method === 'POST' && new URL(request.url).pathname === reopen,
     )
     expect(reopened).toHaveLength(1)
+  })
+
+  it('keeps the line of a linked session closed before the archive, and opens its source with no write', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({
+      role: 'member',
+      workspaceState: 'archived',
+    })
+    const { sessions } = workspaceFixtures('archived')
+    const closedLinked = linkedRecord({
+      id: 'linked-closed',
+      title: 'Loading state follow-up',
+      closedAt: FAKE_TIME - 3_600_000,
+    })
+    server.json('GET', sessionsPath(org, ws), {
+      sessions: sessions.sessions,
+      history: [closedLinked, ...sessions.history],
+    })
+    const words = 'Continue the loading state.'
+    const message = acceptedIn(closedLinked.id, 'ask-closed', words)
+    server.json('GET', chatHistoryPath(org, ws, closedLinked.id), {
+      events: [
+        {
+          workspaceId: ws,
+          eventNumber: 1_000,
+          occurredAt: FAKE_TIME,
+          event: { type: 'message.accepted', message },
+        },
+      ],
+      throughEventNumber: 1_000,
+    })
+    const subscribe: SubscribeToWorkspace = (_target, after, listener) =>
+      server.events.subscribe(after, (item) => listener.message(item))
+    await mount(
+      <WorkspaceChat
+        fetch={server.fetch}
+        orgId={org}
+        subscribe={subscribe}
+        viewport="desktop"
+        workspaceId={ws}
+      />,
+    )
+
+    await press(
+      await waitFor(
+        () => queryByRole('button', 'Session history'),
+        'the session history',
+      ),
+    )
+    const entry = await waitFor(
+      () => queryByText(closedLinked.title)?.closest('button'),
+      'the closed linked session in the session history',
+    )
+    await press(entry)
+    await waitFor(() => queryByText(words), 'the stored linked session')
+    const line = queryByText('This session started from Address autocomplete')
+    expect(line).not.toBeNull()
+    await press(byRole('button', 'Address autocomplete', line ?? document))
+    await waitFor(
+      () => isShownTab('Address autocomplete'),
+      'the source session as the shown tab',
+    )
+    const writes = server.requests
+      .filter((request) => request.method !== 'GET')
+      .map((request) => `${request.method} ${new URL(request.url).pathname}`)
+    expect(writes).toEqual([])
   })
 })

@@ -2,6 +2,7 @@ import type { Agent } from '../../shared/agents'
 import type { WorkspaceState } from '../../shared/workspaces'
 import { PendingCommands } from '../device/PendingCommands'
 import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
+import { tabSessions } from '../state/archive-view'
 import { sendBlock } from '../state/blockers'
 import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
@@ -43,13 +44,15 @@ export interface SessionChatProps {
  * takes the composer's place while the sandbox does not run. The status of
  * the stored history comes from its load alone, so content never hides a
  * failed load. The composer names whose login the session uses. A linked
- * session starts with a link to the session that it started from.
+ * session starts with a link to the session that it started from. The
+ * shown record comes from the tabs, so a closed session that an archived
+ * workspace shows keeps its link too.
  */
 export function SessionChat(props: SessionChatProps) {
   const { snapshot, controller, now } = props
   const { workspace } = snapshot
   const id = snapshot.activeSessionId
-  const session = snapshot.sessions.find((item) => item.id === id) ?? null
+  const session = tabSessions(snapshot).find((item) => item.id === id) ?? null
   const state = sessionState(snapshot, id ?? '')
   const problem = problemOf(workspace?.state)
   const block = sendBlock(snapshot, id)

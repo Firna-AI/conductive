@@ -215,7 +215,9 @@ It checks the plain message of a refused retry in a tab that missed newer events
 name a linked session, in both orders, and two chats with different readers
 on one fake stream. `components/SessionLogin.test.tsx` renders the login
 line and its notices. `components/SourceLink.dom.test.tsx` presses the link
-of a linked session to its open and its closed source.
+of a linked session to its open and its closed source. In an archived
+workspace, it opens a linked session that closed before the archive from the
+session history. Its source link writes nothing.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
