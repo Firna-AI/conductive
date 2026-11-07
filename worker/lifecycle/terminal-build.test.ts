@@ -6,6 +6,7 @@ import { readBuild, readBuildJob } from './build-data'
 import { shellQuote } from './commands'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { IMAGE_NODE_RUNTIME } from './image-runtime'
+import { lifecycleCommandBody } from './command-test-support'
 
 const backendFixture = setupBackendTests()
 
@@ -36,8 +37,10 @@ it('runs terminal installation inside the detached software command and streams 
       ),
     },
   ])
-  expect(boat.commands[0]).toContain('RuntimeDirectoryPreserve=yes')
-  expect(boat.commands[0]).toContain(
+  expect(lifecycleCommandBody(boat.commands[0])).toContain(
+    'RuntimeDirectoryPreserve=yes',
+  )
+  expect(lifecycleCommandBody(boat.commands[0])).toContain(
     [
       IMAGE_NODE_RUNTIME.url,
       IMAGE_NODE_RUNTIME.sha256,
@@ -46,7 +49,7 @@ it('runs terminal installation inside the detached software command and streams 
       .map(shellQuote)
       .join(' '),
   )
-  expect(boat.commands[0]).not.toContain(
+  expect(lifecycleCommandBody(boat.commands[0])).not.toContain(
     'systemctl start conductive-terminal.service',
   )
   expect(boat.fileReads).toEqual([])

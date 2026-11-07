@@ -5,6 +5,8 @@ import { HttpError } from '../http'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
+import { clearBuildCommands } from './command-intents'
+import { transientProviderError } from './provider-retry'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
 import { requireOrgMember } from './access'
 import {
@@ -205,6 +207,8 @@ export async function advanceImageBuild(
     // A long build receives the same safety deadline as other active work.
     await provider.setAutoStop(job.sandboxId, 1_800)
     if (job.phase === 'snapshot') {
+      if (job.kind === 'build' && job.snapshotName === null)
+        await clearBuildCommands(provider, job.sandboxId, job.buildId)
       const snapshot = await createResource(
         provider,
         buildSnapshotIntent(env.DB, job),
@@ -249,6 +253,7 @@ export async function advanceImageBuild(
     return await advanceBuildCommand(runtime, provider, job)
   } catch (error) {
     if (job.phase === 'cleanup' || job.state !== 'running') throw error
+    if (transientProviderError(error)) return false
     if (
       provider &&
       job.phase === 'create' &&

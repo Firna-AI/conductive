@@ -1,5 +1,4 @@
 import {
-  buildEventsPath,
   buildPath,
   orgSettingsPaths,
   type BuildLogEvent,
@@ -184,14 +183,6 @@ export function buildRoutes(backend: DevBackend): Route[] {
       path: buildPath(ID.org, ID.build),
       answer: ({ params }) =>
         json(requireBuild(orgOf(params), params.build) satisfies BuildResponse),
-    },
-    {
-      method: 'GET',
-      path: buildEventsPath(ID.org, ID.build),
-      answer: ({ params }) =>
-        json({
-          events: requireBuild(orgOf(params), params.build).log,
-        } satisfies { events: readonly BuildLogEvent[] }),
     },
   ]
 }

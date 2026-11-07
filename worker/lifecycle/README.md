@@ -143,7 +143,8 @@ chat backend and the runner ingestion, and no code calls them yet:
 
 The `alarm` of the class serves both roles. For an image coordinator, it
 advances the running build or refresh by one step, or starts the daily
-refresh. For a workspace object, it:
+refresh. A transient Boat error keeps the step of a build, a refresh, or a
+start for the next alarm. For a workspace object, it:
 
 - runs the queued start of a create or a resume, one phase at a time
 - stops the sandbox after 30 minutes without activity or a running turn
@@ -259,7 +260,7 @@ object holds the lifecycle state, the turn records, and the events.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
-  `advanceImageBuild`.
+  `advanceImageBuild`, which removes the command journals before a snapshot.
 - [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,
   which splits output into rows and adds the budget statements of
   [`build-log-retention.ts`](build-log-retention.ts) to the same D1 batch.
@@ -272,7 +273,7 @@ object holds the lifecycle state, the turn records, and the events.
   install/start commands.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text
   of a saved install or startup script. Only `savedScriptCommand` turns it
-  into a Bash command.
+  into a Bash command. [`lifecycleCommand`](command-intents.ts) runs each step once.
 - [`image-runtime.ts`](image-runtime.ts): `IMAGE_NODE_RUNTIME`, the pinned
   private Node of the org image, and its paths. The
   [runtime guide](../../image/runtime.md#update-the-node-release) says how to

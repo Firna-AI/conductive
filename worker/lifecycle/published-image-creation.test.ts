@@ -11,6 +11,7 @@ import { seedPublishedImage } from './published-image-test-support'
 import { orgEnvironmentContext } from './settings-data'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { readSavedScript } from './saved-script'
+import { lifecycleCommandBody } from './command-test-support'
 
 const fixtureForTest = setupBackendTests()
 
@@ -46,7 +47,9 @@ it('creates from captured image repositories while current settings and selectio
     from: 'last-good-image',
     env: { CURRENT_ENV: 'current-value' },
   })
-  expect(boat.commands[0]).toContain("git fetch origin 'main'")
+  expect(lifecycleCommandBody(boat.commands[0])).toContain(
+    "git fetch origin 'main'",
+  )
   const accepted = fixture.starts.get(created.workspace.id)?.lastAccepted()
   expect(accepted).toMatchObject({
     imageName: 'last-good-image',
@@ -164,7 +167,9 @@ it('leases the image and captured branch from the same publication at claim admi
   expect(duplicate.workspace.id).toBe(id)
   expect(boat.starts).toHaveLength(1)
   expect(boat.starts[0]).toMatchObject({ from: 'next-image' })
-  expect(boat.commands[0]).toContain("git fetch origin 'published-next'")
+  expect(lifecycleCommandBody(boat.commands[0])).toContain(
+    "git fetch origin 'published-next'",
+  )
   expect(
     await db
       .prepare('SELECT COUNT(*) AS count FROM image_leases')

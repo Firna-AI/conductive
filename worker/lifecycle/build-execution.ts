@@ -3,7 +3,6 @@ import {
   jobSoftware,
   saveBuildOutput,
   updateBuildJob,
-  writeBuildLog,
   type BuildJob,
   type BuildPhase,
 } from './build-data'
@@ -14,6 +13,8 @@ import { scheduleIdleImage } from './image-schedule'
 import type { ImageRuntime } from './image-builds'
 import { deleteSandboxIfPresent, deleteSnapshotIfPresent } from './cleanup'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
+import { lifecycleCommand } from './command-intents'
+import { recordBuildCommand } from './build-command-data'
 
 export async function advanceBuildCommand(
   runtime: ImageRuntime,
@@ -28,18 +29,18 @@ export async function advanceBuildCommand(
       command = installImageSoftware(jobSoftware(job))
     else
       command = `set -eu\n${savedScriptCommand('/tmp/conductive-install.sh', job.installScript, ['set -a', '. /run/ascii-secrets/env.sh', 'set +a'])}\nrm -f /tmp/conductive-install.sh`
-    await writeBuildLog(
+    if (job.phase !== 'software' && job.phase !== 'install')
+      throw new Error('Invalid image command phase')
+    const started = await provider.startCommand(
+      sandboxId,
+      lifecycleCommand({ kind: 'build', id: job.buildId }, job.phase, command),
+    )
+    await recordBuildCommand(
       runtime.env.DB,
       job.buildId,
+      started.processId,
       phaseLabel(job.phase),
       runtime.dependencies.now(),
-    )
-    const started = await provider.startCommand(sandboxId, command)
-    await updateBuildJob(
-      runtime.env.DB,
-      job.buildId,
-      job.phase,
-      started.processId,
     )
     return false
   }

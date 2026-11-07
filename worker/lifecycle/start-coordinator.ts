@@ -15,14 +15,14 @@ import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { readWorkspace } from './workspace-data'
 import { finishFailedStart } from './start-failure'
-import { workspacePhaseCommand } from './start-command'
-import { firstOrgAdmin, workspaceEnvironment } from './settings-data'
-import { readWorkspaceToken } from './tokens'
+import { firstOrgAdmin } from './settings-data'
 import { WorkspaceStartError } from './workspace-start'
 import { advanceStartMachine } from './start-machine'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { creationAdmissionResponse } from './creation-admission-response'
 import { StartWaiters } from './start-waiters'
+import { advanceStartCommand } from './start-command-execution'
+import { transientProviderError } from './provider-retry'
 
 /** The actor's alarm owns progress. Waiting HTTP requests own no phase. */
 export class WorkspaceStartCoordinator {
@@ -173,39 +173,18 @@ export class WorkspaceStartCoordinator {
           })
         return false
       }
-      if (!row.sandboxId) throw new WorkspaceStartError(null)
-      await provider.setAutoStop(row.sandboxId, 1_800)
-      if (job.processId === null) {
-        const values = await workspaceEnvironment(
+      if (
+        !(await advanceStartCommand(
           this.env,
-          job.orgId,
-          job.environmentCiphertext,
-        )
-        await this.storage.secrets([
-          await readWorkspaceToken(this.env, job.workspaceId),
-          ...Object.values(values),
-        ])
-        await this.endpoint.lifecycleStep(
-          job.phase,
+          this.endpoint,
+          this.storage,
+          provider,
+          row,
+          job,
           stepLabel(job.phase),
-          'running',
-        )
-        const started = await provider.startCommand(
-          row.sandboxId,
-          workspacePhaseCommand(row, job),
-        )
-        await this.storage.update({ ...job, processId: started.processId })
-        return false
-      }
-      const status = await provider.getCommandStatus(
-        row.sandboxId,
-        job.processId,
-        { stdoutOffset: job.stdoutOffset, stderrOffset: job.stderrOffset },
+        ))
       )
-      await this.storage.capture(job, status)
-      if (status.more || status.running) return false
-      if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut)
-        throw new WorkspaceStartError(null)
+        return false
       if (job.phase === 'startup')
         await startWorkspaceTerminal(
           this.env,
@@ -232,6 +211,8 @@ export class WorkspaceStartCoordinator {
       await this.finish({ ok: true })
       return true
     } catch (error) {
+      if (!job.cancelled && !job.failure && transientProviderError(error))
+        return false
       const failure =
         error instanceof HttpError ? error : new WorkspaceStartError(null)
       const failedJob = {

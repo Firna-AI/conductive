@@ -36,6 +36,10 @@ export async function repositoryShellFixture() {
   const mapped = (text: string) =>
     text
       .replaceAll('/home/user', home)
+      .replaceAll(
+        '/tmp/conductive-lifecycle',
+        join(directory, 'command-journal'),
+      )
       .replaceAll('/tmp/conductive-install.sh', join(directory, 'install.sh'))
       .replaceAll('/run/ascii-secrets/env.sh', environment)
   return {
