@@ -1,11 +1,11 @@
+/*
+ * The page before the app draws, in the colour of the window, so that no
+ * flash shows. The shell draws the window controls.
+ */
 :root {
   color-scheme: dark light;
-  --desktop-bar-height: 34px;
-  --desktop-window-space: 64px;
-  --desktop-sidebar-width: 232px;
   --desktop-bg: #0b0c0e;
   --desktop-ink: #e7e9ec;
-  --desktop-border: #1f2226;
 }
 
 body {
@@ -19,75 +19,9 @@ body {
     sans-serif;
 }
 
-[data-desktop-titlebar] {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  height: var(--desktop-bar-height);
-  width: calc(48px + var(--desktop-sidebar-width));
-  padding: 0 6px 0 8px;
-  box-sizing: border-box;
-  background: var(--desktop-bg);
-  border-bottom: 1px solid var(--desktop-border);
-  -webkit-app-region: drag;
-}
-
-@media (max-width: 1279px) {
-  :root {
-    --desktop-sidebar-width: 208px;
-  }
-}
-
-[data-desktop-window-space] {
-  flex: 0 0 var(--desktop-window-space);
-}
-
-[data-desktop-fullscreen='true'] {
-  --desktop-window-space: 0px;
-}
-
-[data-desktop-spacer] {
-  flex: 1;
-}
-
-[data-desktop-titlebar] button {
-  -webkit-app-region: no-drag;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 0;
-  border-radius: 3px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-[data-desktop-titlebar] button:hover {
-  background: #20242a;
-}
-
-[data-desktop-titlebar] button:disabled {
-  color: #5b626b;
-  cursor: default;
-}
-
-[data-desktop-titlebar] button svg {
-  vertical-align: middle;
-}
-
-[data-desktop-titlebar] button:focus-visible {
-  outline: 2px solid #5cc8ff;
-}
-
 @media (prefers-color-scheme: light) {
   :root {
     --desktop-bg: #f3f5f7;
     --desktop-ink: #121519;
-    --desktop-border: #e1e5ea;
-  }
-
-  [data-desktop-titlebar] button:hover {
-    background: #dfe3e8;
   }
 }

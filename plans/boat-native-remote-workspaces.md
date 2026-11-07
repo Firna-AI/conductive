@@ -5084,9 +5084,9 @@ Build the Mac app as decision 62 says. No other milestone waits for it.
 - [x] Add `desktop/`, an Electron shell for macOS, as Mokly's
       `ts/desktop` does. It bundles the built web app and serves it from
       `conducting-app://desktop`. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
-- [ ] Give the window a hidden title bar with the native window buttons
+- [x] Give the window a hidden title bar with the native window buttons
       inset in the app's top bar, drag regions on the top bars, and the
-      reserved space that full screen drops, as decision 62 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15e`.
+      reserved space that full screen drops, as decision 62 says. Branch: `conductor/boat-native-remote-workspaces-milestone-15e-window`.
 - [x] Let the Worker accept the desktop origin in the `Origin` check, in
       CORS for the API, and for the session cookie. Hand off the GitHub
       sign-in from the browser to the app through the `conducting://`
