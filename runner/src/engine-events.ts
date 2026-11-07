@@ -39,9 +39,9 @@ export async function providerEvent(
     event.type === 'tool' &&
     event.tool.state === 'running' &&
     turn.waiting.length &&
-    session.provider
+    turn.provider
   ) {
-    const provider = session.provider
+    const provider = turn.provider
     await cancelable(signal, () => provider.interrupt())
   }
   if (event.type === 'failed') {
@@ -71,14 +71,14 @@ async function continueResult(
   }
   await turn.output.finish('stopped')
   session.generation++
-  const closing = disposeProvider(session)
+  const closing = disposeProvider(turn)
   await cancelable(signal, () => closing)
   turn.messageIds.push(next.message.id)
   turn.retryMessageId = next.message.id
   await actions.start(next)
   while (
     turn.waiting.length &&
-    senderIdentity(turn.waiting[0]) === session.identity
+    senderIdentity(turn.waiting[0]) === turn.identity
   ) {
     const message = turn.waiting.shift()
     if (!message) continue

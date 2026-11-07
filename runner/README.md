@@ -21,7 +21,9 @@ These facts belong to this implementation, not to the protocol docs.
 
 - Claude runs through the Claude Agent SDK, with the `claude` program from
   the platform package of the SDK. The SDK version in `package.json` pins
-  that program. The runner turns off its automatic updates.
+  that program. The runner turns off its automatic updates. It starts the
+  program through the SDK option `spawnClaudeCodeProcess`, so the runner
+  owns the child process.
 - Codex runs through the Codex App Server. The runner starts
   `codex app-server` from the `@openai/codex` package, which
   `@openai/codex-sdk` installs.
@@ -34,6 +36,10 @@ These facts belong to this implementation, not to the protocol docs.
   also starts a new agent process on the same conversation. If a part fails,
   the turn fails, and its retry names the first message of that part. Input
   that still waits does not run, so the other member must send it again.
+- To close an agent process, the runner sends `SIGTERM` and waits until the
+  process exits. A process that still runs 5 seconds after `SIGTERM` gets
+  `SIGKILL`. The end of a turn goes out only after its agent process exits,
+  also when Stop or a shutdown cancels the start of that process.
 - Each session owns its agent start, requests, scans, and shutdown. Stop
   closes the agent process of that session, discards its unread input, and
   cancels its pending work. Other sessions keep streaming and can stop. A
@@ -234,7 +240,8 @@ The runner could not start. Check its configuration and saved state.
   Codex App Server, fake agent processes, and a temporary Git repository.
   `harness.ts` starts a `Runner` with them. The session fixture in
   `engine.ts` and the wire fixture in `wire.ts` use the production
-  `DiskStorage` in a temporary folder. A wire test can pass its own storage.
+  `DiskStorage` in a temporary folder. `disk.ts` supplies the controlled
+  disk fixture for the recovery tests, and it can hold one chosen write.
 - The tests need Git. They need no network, no agent login, no cloud
   account, and no cloud computer. No test starts a real agent program, a
   real Worker, or a real sandbox. So a passing run does not show that a
@@ -267,6 +274,7 @@ tools that time the first agent start after a resume.
   Stop, and shutdown.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
+  `lifetime.ts` owns each agent process until it exits, with its kill delay.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the file
   tree, the branch changes, bounded reads, and the files of one turn.
 - `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary

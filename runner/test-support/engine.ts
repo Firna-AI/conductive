@@ -16,7 +16,7 @@ export async function engineFixture(overrides: Partial<EngineOptions> = {}) {
   const providers = new FakeProviders()
   const events: AgentChatEvent[] = []
   const warnings: string[] = []
-  const store = await EventStore.open(storage)
+  const store = overrides.store ?? (await EventStore.open(storage))
   const options: EngineOptions = {
     cwd: '/repo',
     home: '/home/agent',
@@ -27,7 +27,7 @@ export async function engineFixture(overrides: Partial<EngineOptions> = {}) {
     checkpoint: async () => new Map<string, string>(),
     changedSince: async () => [],
     emit: async (event: AgentChatEvent) => {
-      await store.append(event, options.now())
+      await options.store.append(event, options.now())
       events.push(structuredClone(event))
     },
     warn: (message: string) => {

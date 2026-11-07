@@ -36,12 +36,7 @@ export interface FileRevisions {
   changes: number
 }
 
-export interface StateStorage {
-  read(): Promise<unknown | null>
-  write(value: RunnerState): Promise<void>
-}
-
-export class DiskStorage implements StateStorage {
+export class DiskStorage {
   private readonly path: string
   constructor(path: string) {
     this.path = path
@@ -107,16 +102,16 @@ function parseState(value: unknown): RunnerState {
 export class EventStore {
   private state: RunnerState
   private committed: RunnerState
-  private readonly storage: StateStorage
+  private readonly storage: DiskStorage
   private readonly writes = new SerialQueue()
 
-  private constructor(storage: StateStorage, state: RunnerState) {
+  private constructor(storage: DiskStorage, state: RunnerState) {
     this.storage = storage
     this.state = state
     this.committed = structuredClone(state)
   }
 
-  static async open(storage: StateStorage): Promise<EventStore> {
+  static async open(storage: DiskStorage): Promise<EventStore> {
     const saved = await storage.read()
     const state =
       saved === null

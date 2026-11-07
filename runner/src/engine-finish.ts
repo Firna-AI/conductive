@@ -21,7 +21,7 @@ export async function finishTurn(
     stopped ? 'stopped' : event.type === 'failed' ? 'failed' : 'done',
   )
   session.generation++
-  const closing = disposeProvider(session)
+  const closing = disposeProvider(turn)
   let closeFailure: { error: unknown } | null = null
   try {
     await closing

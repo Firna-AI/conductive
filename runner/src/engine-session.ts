@@ -12,7 +12,7 @@ import type { EventStore } from './state'
 import type { TurnOutput } from './turn-output'
 import { failureCause } from './providers/failure'
 import { cancelable } from './engine-cancel'
-import { disposeProvider } from './engine-disposal'
+import { ProviderLifetime } from './providers/lifetime'
 
 export interface ActiveTurn {
   first: ProviderInput
@@ -25,6 +25,9 @@ export interface ActiveTurn {
   output: TurnOutput
   stopped: boolean
   shutdown: boolean
+  provider: ProviderProcess | null
+  identity: string | null
+  lifetime: ProviderLifetime | null
   closing: Promise<void>
   baseline: Checkpoint | null
   controller: AbortController
@@ -36,8 +39,6 @@ export interface SessionRuntime {
   agent: Agent
   choice: AgentChoice
   conversationId: string | null
-  provider: ProviderProcess | null
-  identity: string | null
   generation: number
   active: ActiveTurn | null
 }
@@ -88,45 +89,36 @@ export async function startProvider(
   if (!turn) return
   const signal = turn.controller.signal
   signal.throwIfAborted()
-  if (session.provider && session.identity !== senderIdentity(command)) {
-    const closing = disposeProvider(session)
-    await cancelable(signal, () => closing)
-  }
   session.choice = command.message.choice
-  if (!session.provider) {
-    session.identity = senderIdentity(command)
-    const dispose = (provider: ProviderProcess) => {
-      void provider
-        .close()
-        .catch(() => options.warn('The canceled agent could not close.'))
-    }
-    const provider = await cancelable(
-      signal,
-      () =>
-        options.providers[session.agent]({
-          cwd: options.cwd,
-          home: options.home,
-          computerMcpUrl: options.computerMcpUrl,
-          login: command.login,
-          choice: session.choice,
-          conversationId: session.conversationId,
-          event,
-          signal,
-        }),
-      dispose,
-    )
-    if (signal.aborted) {
-      dispose(provider)
-      signal.throwIfAborted()
-    }
-    session.provider = provider
-  } else
-    await cancelable(
-      signal,
-      () =>
-        session.provider?.model(session.choice) ?? Promise.resolve('applied'),
-    )
-  const provider = session.provider
+  turn.identity = senderIdentity(command)
+  const lifetime = new ProviderLifetime()
+  turn.lifetime = lifetime
+  const dispose = (provider: ProviderProcess) => {
+    void provider
+      .close()
+      .catch(() => options.warn('The canceled agent could not close.'))
+  }
+  const provider = await cancelable(
+    signal,
+    () =>
+      options.providers[session.agent]({
+        cwd: options.cwd,
+        home: options.home,
+        computerMcpUrl: options.computerMcpUrl,
+        login: command.login,
+        choice: session.choice,
+        conversationId: session.conversationId,
+        event,
+        signal,
+        lifetime,
+      }),
+    dispose,
+  )
+  if (signal.aborted) {
+    dispose(provider)
+    signal.throwIfAborted()
+  }
+  turn.provider = provider
   await cancelable(signal, () => provider.send(command))
 }
 
@@ -138,7 +130,7 @@ export async function deliverInput(
   const turn = session.active
   if (!turn) return 'failed'
   try {
-    const provider = session.provider
+    const provider = turn.provider
     if (!provider) throw new Error('The agent is unavailable. Try again.')
     session.choice = command.message.choice
     const signal = turn.controller.signal

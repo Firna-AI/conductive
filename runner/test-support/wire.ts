@@ -13,7 +13,7 @@ import {
 import * as checkpoints from '../src/checkpoint'
 import { Repository, type RepositorySnapshot } from '../src/repository'
 import { Runner } from '../src/runner'
-import { DiskStorage, EventStore, type StateStorage } from '../src/state'
+import { DiskStorage, EventStore } from '../src/state'
 import { FakeProviders } from './providers'
 
 export function emptySnapshot(): RepositorySnapshot {
@@ -34,7 +34,6 @@ export async function wireFixture(
   snapshot = emptySnapshot(),
   settings: Partial<FakeDurableObjectOptions> = {},
   wrap: (connection: RunnerConnection) => RunnerConnection = (value) => value,
-  storageOverride?: StateStorage,
 ) {
   const directory = await mkdtemp(join(tmpdir(), 'conducting-wire-'))
   let runner: Runner | null = null
@@ -56,8 +55,7 @@ export async function wireFixture(
   vi.spyOn(checkpoints, 'changedSince').mockImplementation(async () =>
     structuredClone(turnFiles),
   )
-  const storage =
-    storageOverride ?? new DiskStorage(join(directory, 'state.json'))
+  const storage = new DiskStorage(join(directory, 'state.json'))
   const store = await EventStore.open(storage)
   const endpoint = new FakeDurableObjectEndpoint({
     workspaceId: 'workspace-1',

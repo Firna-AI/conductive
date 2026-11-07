@@ -1,21 +1,23 @@
-import type { SessionRuntime } from './engine-session'
+import type { ActiveTurn } from './engine-session'
 
 export function disposeProvider(
-  session: SessionRuntime,
+  turn: ActiveTurn,
   method: 'close' | 'stop' = 'close',
 ): Promise<void> {
-  const turn = session.active
-  const previous = turn?.closing ?? Promise.resolve()
-  const provider = session.provider
-  if (!provider) return previous
+  const previous = turn.closing
+  const provider = turn.provider
+  const lifetime = turn.lifetime
+  if (!provider && !lifetime) return previous
   const closing = Promise.allSettled([
     previous,
-    Promise.resolve().then(() => provider[method]()),
+    Promise.resolve().then(() => provider?.[method]()),
+    Promise.resolve().then(() => lifetime?.close()),
   ]).then((results) => {
     const failed = results.find((result) => result.status === 'rejected')
     if (failed) throw failed.reason
   })
-  if (turn) turn.closing = closing
-  session.provider = null
+  turn.closing = closing
+  turn.provider = null
+  turn.lifetime = null
   return closing
 }
