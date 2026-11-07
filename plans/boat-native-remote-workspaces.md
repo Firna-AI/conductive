@@ -6172,7 +6172,7 @@ This milestone needs the prerequisites from the user.
 
 ## Milestone 17: Verification, commit, review, and pull request
 
-Depends on: every other milestone except 15e and 15f
+Depends on: every other milestone except 15e, 15f, and 15n. Milestone 15n waits for a release of `@firna/ui`, so it blocks nothing (the user, 8 November 2026).
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
