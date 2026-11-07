@@ -28,6 +28,57 @@ export async function expectDraggableHeader(heading: Locator) {
     .toEqual({ top: 0, height: 34, drag: 'drag' })
 }
 
+export async function expectCornerLayout(page: Page, heading: Locator) {
+  const controls = page.getByRole('navigation', { name: 'Window controls' })
+  const rail = page.getByRole('navigation', { name: 'Orgs', exact: true })
+  await expect
+    .poll(async () => {
+      const bar = await box(controls)
+      const orgs = await box(rail)
+      // The main header has no accessible role inside its page.
+      const header = await heading.evaluate((element) => {
+        const header = element.closest('header')
+        if (!header) throw new Error('The page has no top bar')
+        const { x, y } = header.getBoundingClientRect()
+        return { x, y }
+      })
+      return {
+        left: bar.x,
+        top: bar.y,
+        height: bar.height,
+        railGap: orgs.y - bar.y - bar.height,
+        headerGap: header.x - bar.x - bar.width,
+        headerTop: header.y,
+      }
+    })
+    .toEqual({
+      left: 0,
+      top: 0,
+      height: 34,
+      railGap: 0,
+      headerGap: 0,
+      headerTop: 0,
+    })
+  const bar = await box(controls)
+  for (const name of ['Back', 'Forward']) {
+    const button = await box(
+      controls.getByRole('button', { name, exact: true }),
+    )
+    expect(button.x, `${name} left edge`).toBeGreaterThanOrEqual(bar.x)
+    expect(button.y, `${name} top edge`).toBeGreaterThanOrEqual(bar.y)
+    expect(button.x + button.width, `${name} right edge`).toBeLessThanOrEqual(
+      bar.x + bar.width,
+    )
+    expect(button.y + button.height, `${name} bottom edge`).toBeLessThanOrEqual(
+      bar.y + bar.height,
+    )
+  }
+  const forward = await box(
+    controls.getByRole('button', { name: 'Forward', exact: true }),
+  )
+  expect(bar.x + bar.width - forward.x - forward.width).toBeLessThanOrEqual(8)
+}
+
 export async function expectWindowLayout(page: Page) {
   const controls = page.getByRole('navigation', { name: 'Window controls' })
   const sidebar = page.getByRole('complementary', { name: 'Workspaces' })

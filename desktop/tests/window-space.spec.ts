@@ -3,8 +3,13 @@ import { resolve } from 'node:path'
 import { expect, test } from '@playwright/test'
 import type { ElectronApplication } from '@playwright/test'
 
-import { box, expectWindowLayout } from './window-layout.js'
-import { evidence, launchWindow, openWindowWorkspace } from './window-shell.js'
+import { box, expectCornerLayout, expectWindowLayout } from './window-layout.js'
+import {
+  evidence,
+  launchWindow,
+  openWindowWorkspace,
+  workspaceTitle,
+} from './window-shell.js'
 
 test.skip(process.platform !== 'darwin', 'Native window buttons require macOS.')
 
@@ -87,6 +92,17 @@ test('gives back native window-button space in full screen and restores it after
     transitions.push(entered)
     expect(entered.isFullScreen).toBe(true)
     await measure('full-screen', entered.isFullScreen, 0, 8)
+    const controls = page.getByRole('navigation', { name: 'Window controls' })
+    const sidebar = page.getByRole('complementary', { name: 'Workspaces' })
+    await controls.getByRole('button', { name: 'Hide the sidebar' }).click()
+    await expect(sidebar).toBeHidden()
+    await expectCornerLayout(
+      page,
+      page.getByRole('heading', { name: workspaceTitle, exact: true }),
+    )
+    await controls.getByRole('button', { name: 'Show the sidebar' }).click()
+    await expect(sidebar).toBeVisible()
+    await expectWindowLayout(page)
     const left = await setFullScreen(electron, false)
     transitions.push(left)
     expect(left.isFullScreen).toBe(false)

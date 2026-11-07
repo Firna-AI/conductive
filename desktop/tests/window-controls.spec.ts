@@ -8,6 +8,7 @@ import { FAKE_IDS } from '../../src/test-support/fixtures/core.ts'
 import { DESKTOP_ORIGIN } from '../../worker/security/desktop-contract.js'
 import {
   box,
+  expectCornerLayout,
   expectDraggableHeader,
   expectWindowLayout,
 } from './window-layout.js'
@@ -29,6 +30,10 @@ test('the bundled workspace aligns its draggable bars and keeps sidebar, resize,
     await expectWindowLayout(page)
     const controls = page.getByRole('navigation', { name: 'Window controls' })
     const sidebar = page.getByRole('complementary', { name: 'Workspaces' })
+    const workspaceHeading = page.getByRole('heading', {
+      name: workspaceTitle,
+      exact: true,
+    })
     const before = await box(controls)
     await page.getByRole('separator', { name: 'Resize the sidebar' }).focus()
     await page.keyboard.press('ArrowRight')
@@ -39,6 +44,7 @@ test('the bundled workspace aligns its draggable bars and keeps sidebar, resize,
 
     await controls.getByRole('button', { name: 'Hide the sidebar' }).click()
     await expect(sidebar).toBeHidden()
+    await expectCornerLayout(page, workspaceHeading)
     await controls.getByRole('button', { name: 'Show the sidebar' }).click()
     await expect(sidebar).toBeVisible()
     await expectWindowLayout(page)
@@ -83,6 +89,34 @@ test('the bundled workspace aligns its draggable bars and keeps sidebar, resize,
         `desktop-window-controls-${process.platform}-${process.arch}.png`,
       ),
     })
+
+    await electron.evaluate(({ BrowserWindow }) => {
+      BrowserWindow.getAllWindows()[0].setContentSize(860, 740)
+    })
+    await expect.poll(() => page.evaluate(() => innerWidth)).toBe(860)
+    await expect(sidebar).toBeHidden()
+    await expect(
+      controls.getByRole('button', { name: 'Hide the sidebar' }),
+    ).toBeDisabled()
+    await expectCornerLayout(page, workspaceHeading)
+
+    await electron.evaluate(({ BrowserWindow }) => {
+      BrowserWindow.getAllWindows()[0].setContentSize(1000, 740)
+    })
+    await expect.poll(() => page.evaluate(() => innerWidth)).toBe(1000)
+    await expectWindowLayout(page)
+    await page.goto(DESKTOP_ORIGIN + routes.getStarted())
+    const getStarted = page.getByRole('heading', {
+      name: 'Get started',
+      level: 1,
+      exact: true,
+    })
+    await expect(getStarted).toBeVisible()
+    await expect(sidebar).toHaveCount(0)
+    await expect(
+      controls.getByRole('button', { name: 'Hide the sidebar' }),
+    ).toBeDisabled()
+    await expectCornerLayout(page, getStarted)
   } finally {
     await electron?.close()
     await rm(profile, { recursive: true, force: true })
