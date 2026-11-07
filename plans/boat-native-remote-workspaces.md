@@ -2645,6 +2645,8 @@ Added on 6 November 2026 from finding 2 of the Milestone 15 review.
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 6 November 2026, in a workspace of
   `futex-ai/skills`. This repository changes nothing for it.
+- **Done:** `futex-ai/skills` pull request #91 added the rule to the
+  `documentation` skill. The user merged it on 7 November 2026.
 
 ### 67. Decide the content security policy of both apps
 
@@ -3254,6 +3256,31 @@ Added on 6 November 2026 from PR #20 round 1 finding 5.
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 6 November 2026. Milestone 11a applies it.
 
+### 96. Recover from a lost workspace update
+
+Added on 6 November 2026 from item 1 of Milestone 8j.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design. **Category:** Docs or spec.
+- **Background:** The updates that belong to no chat session are the file
+  list, the changed-files list, the start steps, and the workspace name. A
+  later full update of the same kind replaces each of them.
+- **Options:**
+  - **A.** A notice in the Files panel only. Effort: Medium.
+  - **B.** A notice below the workspace header. Effort: Medium.
+  - **D.** A notice beside the affected data. Effort: Medium.
+  - **E.** After a lost update, the workspace asks the runner for a fresh
+    full report of that kind, and the browser shows nothing. A notice
+    shows beside the data, as in D, only when the fresh report is lost
+    too. Effort: Medium.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 6 November 2026, from the question "some
+  updates are basically replaced by a later update right, like the file
+  list, it doesn't matter so long as we have the latest one?". Milestone
+  7s adds the runner command and the failed repair to the contracts and
+  the workspace, Milestone 7t answers the command in the runner, and
+  Milestone 8l shows the notice of a failed repair.
+
 ### 97. Retry only the newest turn
 
 Added on 6 November 2026 from the check of PR #24 round 1 finding 2.
@@ -3297,6 +3324,27 @@ Added on 6 November 2026 from PR #14 round 2 finding 9, wider fix D.
   - **D.** Build the switch from two links. Effort: Medium.
 - **Recommendation:** A.
 - **Chosen:** A, by the user on 6 November 2026. Nothing changes.
+
+
+### 100. Rename the product to Conductive
+
+Added on 6 November 2026 from the user's request: "can we change the name
+from conducting to conductive - I have purchased conductive.build domain
+we can use for it".
+
+- **Chosen:** by the user on 6 November 2026. The product is
+  "Conductive", on `conductive.build`, with the app on
+  `app.conductive.build`. This replaces the name of decision 32.
+- **Agent calls on 6 November 2026,** which the user can override:
+  - Every form of the name changes, also the internal ones: the
+    environment variables, the request header, the service names, the
+    Mac app's name, bundle ID, and URL scheme, the D1 database name, the
+    test domains, and the brand file names. Reason: nothing is deployed
+    yet, and each internal name costs more to change after the first
+    release.
+  - Decision records keep the old name, because they are history.
+  - Milestone 15j does the rename. It starts now and merges after the
+    open milestones, so that it renames the names that they add.
 
 ## Design
 
@@ -4336,6 +4384,22 @@ Apply decision 76 E in the workspace Durable Object.
 - [ ] Join the parts of a file tree and of a changes list before the
       files store takes them.
 - [ ] Test each refusal, a tree in parts, and a resend after a refusal.
+- [ ] Apply decision 96 E: add a runner command that asks for a fresh full
+      report of the file list, the changes list, the start steps, or the
+      workspace name. Send it once after the workspace refuses such an
+      update. When the fresh report is refused too, store the marker as a
+      failed repair. State both rules in the protocol.
+
+## Milestone 7t: Fresh reports from the runner
+
+Depends on: 7r, 7s
+
+Apply the runner half of decision 96 E.
+
+- [ ] Answer the fresh-report command of Milestone 7s with a full report
+      of the asked kind: the file list and the changes list in numbered
+      parts, the start steps, or the last workspace name.
+- [ ] Test each kind, and a command during a running turn.
 
 ## Milestone 8: Chat UI
 
@@ -4372,11 +4436,10 @@ finding 2 of the Milestone 4d review.
 - [ ] Draw in the chat mockups how much tool detail and how many files the
       runner left out, and the line of a refused event, which names what
       was lost.
-- [ ] Draw where a marker that belongs to no session shows, such as the
-      marker of a refused file event. No rule says where yet, so bring
-      the pictures to the user as a decision before you build it. That
-      decision must also choose where the browser keeps such a marker and
-      how a browser tab that opens later reads it.
+- [x] Draw where a marker that belongs to no session shows, and bring the
+      pictures to the user. The user chose decision 96 E: the workspace
+      repairs such a loss, and Milestone 8l shows a notice only for a
+      failed repair. Branch: `conductor/boat-native-remote-workspaces-milestone-8j`.
 - [ ] Show them in the chat screens.
 - [ ] Compare each screen with its mockup.
 
@@ -4393,6 +4456,22 @@ Apply decision 97 D.
       Try again only on the failed item that the record names.
 - [ ] Test an old Try again in a second tab, and update the chat protocol.
 - [ ] Delete `plans/follow-ups/chat-retry-newest-turn.md`.
+
+## Milestone 8l: Notices of a failed repair
+
+Tags: ui
+
+Depends on: 7s, 8j
+
+Apply the browser half of decision 96 E.
+
+- [ ] Show a notice beside the affected data only for a failed repair: in
+      the Files panel for the file list and the changes list, and below
+      the workspace header for the start steps and the workspace name. A
+      newer complete report clears it.
+- [ ] Keep the notices in the memory of the tab. A tab that opens later
+      reads them from the stored history.
+- [ ] Compare each screen with its mockup.
 
 ## Milestone 8i: Chat path wiring
 
@@ -4671,6 +4750,27 @@ Depends on: 8i, 9, 10, 11, 12, 13, 14, 15, 15a, 15c, 15g
       everything of the org after 7 days, as the orgs protocol says.
       Added on 6 November 2026, because no milestone connected these hooks.
 - [ ] Run the complete gate, and compare each screen with its mockup.
+
+## Milestone 15j: Rename to Conductive
+
+Depends on: none
+
+Apply decision 100. Merge it after the milestones that are open when it
+starts, and rename each name that they add.
+
+- [ ] Change the name and the domain in `docs/mockups/src/brand.ts`, and
+      in each text that names the product: `AGENTS.md`, the READMEs,
+      `docs/`, the marketing site, the legal pages, the mockups, and the
+      present-tense lines of the plan. Keep the decision records as they
+      are.
+- [ ] Rename the internal names: the `CONDUCTING_*` environment
+      variables, the `X-Conducting-Turn-Id` header, the `conducting-*`
+      services, the Mac app's name, bundle ID, and URL scheme, the D1
+      database name, the test domains, and the brand file names.
+- [ ] Redraw the name in the brand lockups of `docs/brand/`, and make the
+      marketing pictures and the screenshots that show the name again.
+- [ ] Merge the primary branch last, and rename each new occurrence. Then
+      a search for "conducting" finds only decision records and history.
 
 ## Milestone 15d: Marketing site
 
