@@ -2645,6 +2645,8 @@ Added on 6 November 2026 from finding 2 of the Milestone 15 review.
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 6 November 2026, in a workspace of
   `futex-ai/skills`. This repository changes nothing for it.
+- **Done:** `futex-ai/skills` pull request #91 added the rule to the
+  `documentation` skill. The user merged it on 7 November 2026.
 
 ### 67. Decide the content security policy of both apps
 
