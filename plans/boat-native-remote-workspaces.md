@@ -5017,13 +5017,47 @@ Depends on: 7s, 8j
 
 Apply the browser half of decision 96 E.
 
-- [ ] Show a notice beside the affected data only for a failed repair: in
+Agent design calls on 7 November 2026, within decision 96 E:
+
+- Keep each notice with the existing owner of its data. The Files store
+  keeps All files and Changes. The workspace screen, which shows the name
+  and the start steps, keeps theirs in a separate `HeaderNotices` store.
+  Reason: each owner reads the full report that clears its notice in the
+  same stream order as its data.
+- Rebuild the notices from the stored history of the workspace stream,
+  not from the history of a session. Reason: these markers belong to no
+  session, and the chat keeps no marker without a session.
+- Dismiss hides a header notice in the mounted view only. It neither
+  clears nor acknowledges the failed repair, so a new view or a new tab
+  shows the notice again. Reason: only a newer complete report clears a
+  failure, and a Dismiss for every tab would need a new route.
+- Only a later complete report of the same kind in the stream clears its
+  notice. A tree delta, a report of another kind, `workspace.updated`, and
+  a route reply clear nothing. Reason: only the stream order shows that a
+  report is newer, and `workspace.updated` can carry the name from before
+  the loss.
+- A further failure of a failed kind is the same failure. It keeps the age
+  of the first failure, and a dismissed notice stays hidden, until a
+  complete report of that kind. A failure after that report shows again.
+  Reason: the data stays out of date from the first failure, and the
+  notice does not come back after each failure.
+- Add two kinds to `UnavailableData` in `lostCopy.ts`: "The latest list of
+  all files is unavailable" and "The latest start steps are unavailable".
+  Reason: the mockups had words only for the changes list and the name.
+
+Evidence: `.context/boat-native-remote-workspaces/8l/ui-report.md` and
+`.context/boat-native-remote-workspaces/8l/browser-behavior.json`.
+
+- [x] Show a notice beside the affected data only for a failed repair: in
       the Files panel for the file list and the changes list, and below
       the workspace header for the start steps and the workspace name. A
       newer complete report clears it.
-- [ ] Keep the notices in the memory of the tab. A tab that opens later
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8l`.
+- [x] Keep the notices in the memory of the tab. A tab that opens later
       reads them from the stored history.
-- [ ] Compare each screen with its mockup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8l`.
+- [x] Compare each screen with its mockup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8l`.
 
 ## Milestone 8i: Chat path wiring
 

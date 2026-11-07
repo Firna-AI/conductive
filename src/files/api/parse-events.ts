@@ -1,5 +1,12 @@
 import type { FileEvent } from '../../shared/files'
-import { isObject, parseItems, readArray, readCount } from './guards'
+import type { RunnerReportKind } from '../../shared/runner'
+import {
+  isObject,
+  parseItems,
+  readArray,
+  readCount,
+  type JsonObject,
+} from './guards'
 import { parseChanges } from './parse-changes'
 import { parseFileTree, parseTreeDelta } from './parse-tree'
 
@@ -24,13 +31,46 @@ export function parseFileEvent(value: unknown): FileEvent | null {
   }
 }
 
+/** A full report of a file list, which the workspace can ask for again. */
+export type FileReportKind = Extract<
+  RunnerReportKind,
+  'files.snapshot' | 'changes.updated'
+>
+
+/**
+ * A failed repair of a file list. The workspace refused an update, asked
+ * the runner for a fresh full report, and refused that report too. Only the
+ * marker of the refused fresh report says `repairFailed`, so the first loss
+ * gives no failed repair. A file list belongs to no session, so a marker
+ * with a session is never a failed repair of a file list.
+ */
+export interface FailedFileRepair {
+  report: FileReportKind
+  /** When the workspace refused the fresh report, in Unix milliseconds. */
+  at: number
+}
+
+function parseFailedRepair(envelope: JsonObject): FailedFileRepair | null {
+  const event = envelope.event
+  if (!isObject(event) || event.type !== 'runner.event-refused') return null
+  const at = readCount(envelope, 'occurredAt')
+  if (event.repairFailed !== true || event.sessionId !== null) return null
+  if (at === null) return null
+  const report = event.runnerEventType
+  return report === 'files.snapshot' || report === 'changes.updated'
+    ? { report, at }
+    : null
+}
+
 /**
  * One numbered event of the workspace. Every event keeps its number, so the
- * reader can find duplicates and gaps. Only file events keep their content.
+ * reader can find duplicates and gaps. Only file events keep their content,
+ * and a marker keeps only the failed repair of a file list.
  */
 export interface StreamEnvelope {
   eventNumber: number
   event: FileEvent | null
+  failedRepair: FailedFileRepair | null
 }
 
 export type StreamMessage =
@@ -45,7 +85,11 @@ function parseEnvelope(value: unknown): StreamEnvelope | null {
   if (!isObject(value)) return null
   const eventNumber = readCount(value, 'eventNumber')
   if (eventNumber === null || eventNumber < 1) return null
-  return { eventNumber, event: parseFileEvent(value.event) }
+  return {
+    eventNumber,
+    event: parseFileEvent(value.event),
+    failedRepair: parseFailedRepair(value),
+  }
 }
 
 /** A message of the workspace event stream, from its JSON value. */

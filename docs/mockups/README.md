@@ -191,7 +191,7 @@ report is lost too does a notice name the data that stays unavailable,
 beside that data: under the file lists for a file list, and under the
 header for other data, such as the workspace name. The `failed-repair`
 value of the `lostUpdate` state draws it, and every other screen stays
-silent. The app shows no such notice yet.
+silent.
 
 ## Folder layout
 

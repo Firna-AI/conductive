@@ -11,6 +11,7 @@ import { FilePage } from '../page/FilePage'
 import { FilesPanel } from '../panel/FilesPanel'
 import { FileTabItem } from '../tabs/FileTabItem'
 import { editOpenTab, playRecordedUpdates } from './dev-events'
+import { devNow, RepairControls } from './RepairControls'
 import {
   readView,
   sameTab,
@@ -105,6 +106,7 @@ export function DevApp(props: {
       layout={view.layout}
       list={view.list}
       navigation={navigation}
+      now={devNow}
     />
   )
   const page = view.active ? (
@@ -186,6 +188,7 @@ export function DevApp(props: {
           <button onClick={() => playRecordedUpdates(server)} type="button">
             Play the recorded updates
           </button>
+          <RepairControls files={files} server={server} />
           {view.active ? (
             <button
               onClick={() => {

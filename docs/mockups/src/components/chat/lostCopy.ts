@@ -85,10 +85,15 @@ export function unlistedFiles(count: number): string {
  * without a session was lost, and the fresh full report that should replace
  * it was lost too. The first loss shows nothing.
  */
-export type UnavailableData = Extract<LostWhat, 'changes' | 'title'>
+export type UnavailableData = Extract<
+  LostWhat,
+  'all-files' | 'changes' | 'start-steps' | 'title'
+>
 
 const unavailable: Readonly<Record<UnavailableData, string>> = {
+  'all-files': 'The latest list of all files is unavailable',
   changes: 'The latest list of changes is unavailable',
+  'start-steps': 'The latest start steps are unavailable',
   title: 'The new workspace name is unavailable',
 }
 

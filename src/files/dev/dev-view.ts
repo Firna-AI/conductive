@@ -18,7 +18,14 @@ export interface DevView {
   list: FileListKind
   active: FilesTab | null
   controls: boolean
+  /** The lists whose repair failed before the page opened. */
+  repair: readonly DevRepair[]
 }
+
+/** A list whose fresh full report the stored history lost: `?repair=`. */
+export type DevRepair = 'all-files' | 'changes'
+
+const repairs: readonly DevRepair[] = ['all-files', 'changes']
 
 const lists: readonly FileListKind[] = ['all', 'changes', 'checks']
 
@@ -47,6 +54,9 @@ export function readView(search: string): DevView {
     list,
     active: parseTab(query.get('tab')),
     controls: query.get('controls') !== 'off',
+    repair: repairs.filter((repair) =>
+      (query.get('repair') ?? '').split(',').includes(repair),
+    ),
   }
 }
 
@@ -58,6 +68,7 @@ export function viewQuery(view: DevView): string {
   query.set('list', view.list)
   if (view.active) query.set('tab', formatTab(view.active))
   if (!view.controls) query.set('controls', 'off')
+  if (view.repair.length > 0) query.set('repair', view.repair.join(','))
   return `?${query}`
 }
 
