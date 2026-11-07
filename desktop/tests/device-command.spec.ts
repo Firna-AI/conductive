@@ -11,10 +11,13 @@ import {
   DESKTOP_SESSION_COOKIE,
 } from '../../worker/security/desktop-contract.js'
 import { readConfiguration } from '../src/config.js'
-import { installDeviceNetwork } from './device-network.js'
+import {
+  deviceSessionEndpoint,
+  installDeviceNetwork,
+} from './device-network.js'
 import { deviceRelay } from './device-relay.js'
 import { command } from './device-support.js'
-import { sessionEndpoint, signInThroughMain } from './sign-in-journey.js'
+import { signInThroughMain } from './sign-in-journey.js'
 
 function processReady(path: string) {
   const watcher = watch(dirname(path))
@@ -70,7 +73,7 @@ test('main authenticates its device, executes an approved command, and cancels p
       await readFile(resolve(desktop, 'dist/bundle/build-config.json'), 'utf8'),
     )
     const { appOrigin } = readConfiguration(configuration)
-    const shellSession = await sessionEndpoint(page, appOrigin)
+    const shellSession = await deviceSessionEndpoint(page, appOrigin)
     await shellSession(false)
     await installDeviceNetwork(electron, appOrigin, relay.port)
     await signInThroughMain(electron, appOrigin)

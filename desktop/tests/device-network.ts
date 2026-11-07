@@ -1,12 +1,76 @@
 import type { ClientRequest, IncomingMessage, RequestOptions } from 'node:http'
-import type { ElectronApplication } from '@playwright/test'
+import { expect } from '@playwright/test'
+import type { ElectronApplication, Page } from '@playwright/test'
 
 import { API_PATHS } from '../../src/shared/api.ts'
 import { deviceConnectionPath } from '../../src/shared/device.ts'
+import { FakeApiServer } from '../../src/test-support/fake-api.js'
+import { fakeUser } from '../../src/test-support/fixtures/core.js'
 import {
   DESKTOP_ORIGIN,
   DESKTOP_SESSION_COOKIE,
 } from '../../worker/security/desktop-contract.js'
+
+/** Serve the bundled product through HTTP, including notification-created windows. */
+export async function deviceSessionEndpoint(page: Page, appOrigin: string) {
+  const server = new FakeApiServer()
+  const signedOut = {
+    error: { code: 'unauthorized', message: 'Sign in to continue.' },
+  }
+  const requests: { origin: string | undefined; credentialPresent: boolean }[] =
+    []
+  await page.context().route(appOrigin + '/api/**', async (route) => {
+    const request = route.request()
+    const headers = await request.allHeaders()
+    const credentialPresent =
+      headers.cookie === `${DESKTOP_SESSION_COOKIE}=session.signature`
+    const cors = {
+      'Access-Control-Allow-Origin': DESKTOP_ORIGIN,
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
+      Vary: 'Origin',
+    }
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: cors })
+      return
+    }
+    if (new URL(request.url()).pathname === API_PATHS.session)
+      requests.push({ origin: headers.origin, credentialPresent })
+    const response = credentialPresent
+      ? await server.fetch(
+          new Request(request.url(), {
+            method: request.method(),
+            headers,
+            body: request.postData(),
+          }),
+        )
+      : Response.json(signedOut, { status: 401 })
+    await route.fulfill({
+      status: response.status,
+      headers: { ...Object.fromEntries(response.headers), ...cors },
+      body: await response.text(),
+    })
+  })
+  return async (signedIn: boolean) => {
+    // Read Chromium's outgoing credentials without replacing renderer fetch.
+    const result = await page.evaluate(async (url) => {
+      const response = await fetch(url, { credentials: 'include' })
+      const body: unknown = await response.json()
+      return { status: response.status, body }
+    }, appOrigin + API_PATHS.session)
+    expect(result).toEqual({
+      status: signedIn ? 200 : 401,
+      body: signedIn ? { user: fakeUser } : signedOut,
+    })
+    const outgoing = requests.at(-1)
+    expect(outgoing).toEqual({
+      origin: DESKTOP_ORIGIN,
+      credentialPresent: signedIn,
+    })
+    return { response: result, outgoing }
+  }
+}
 
 /** Redirect only the device upgrade to this test's real, isolated relay. */
 export async function installDeviceNetwork(

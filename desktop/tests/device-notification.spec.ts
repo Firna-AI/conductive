@@ -7,10 +7,13 @@ import type { Notification as NativeNotification } from 'electron'
 
 import { readConfiguration } from '../src/config.js'
 import { workspaceDeviceAddress } from '../src/device/notification.js'
-import { installDeviceNetwork } from './device-network.js'
+import {
+  deviceSessionEndpoint,
+  installDeviceNetwork,
+} from './device-network.js'
 import { deviceRelay } from './device-relay.js'
 import { command } from './device-support.js'
-import { sessionEndpoint, signInThroughMain } from './sign-in-journey.js'
+import { signInThroughMain } from './sign-in-journey.js'
 
 test('a notification reopens one Mac window and keeps the request after Dock activation', async () => {
   test.skip(
@@ -35,7 +38,7 @@ test('a notification reopens one Mac window and keeps the request after Dock act
       await readFile(resolve(desktop, 'dist/bundle/build-config.json'), 'utf8'),
     )
     const { appOrigin } = readConfiguration(configuration)
-    const shellSession = await sessionEndpoint(firstPage, appOrigin)
+    const shellSession = await deviceSessionEndpoint(firstPage, appOrigin)
     await shellSession(false)
     await installDeviceNetwork(electron, appOrigin, relay.port)
     await signInThroughMain(electron, appOrigin)
