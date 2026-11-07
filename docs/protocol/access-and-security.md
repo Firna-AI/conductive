@@ -152,9 +152,13 @@ Later screens add the frame and connection sources that they need.
   the turn that runs now. Every other process in the sandbox can read it
   too, such as a tool of the agent or a server that the startup script
   started.
+- Risk: a program that a tool of the agent starts gets a copy of the login
+  of its turn. A program that keeps running after the turn, such as a dev
+  server, keeps that login, and each member with a terminal in the sandbox
+  can read it (decision 114).
 - So the members of one org trust each other with the logins of their
-  running turns. A proxy that keeps every login out of the sandbox was
-  rejected, because it is a much larger build.
+  turns, also after a turn ends. A proxy that keeps every login out of the
+  sandbox was rejected, because it is a much larger build.
 
 ## The workspace token
 

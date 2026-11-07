@@ -1,9 +1,9 @@
 # File and save errors strand turns and readiness
 
 - **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-06, from PR #12, branch `conductor/boat-native-remote-workspaces-milestone-7r`, two new problems of the round 2 check of finding 6, and the lifecycle note of that review. The user sees it as item 109.
-- **Location:** the turn start in `AgentEngine.command` in `runner/src/engine.ts`, `finishTurn` in `runner/src/engine-finish.ts:37`, the `connected` callback in `runner/src/runner.ts:60`, and `RunnerLink.enqueue` in `runner/src/link.ts:83`.
+- **Location:** the turn start in `AgentEngine.command` in `runner/src/engine.ts`, `finishTurn` in `runner/src/engine-finish.ts:40`, the `connected` callback in `runner/src/runner.ts:74`, and `RunnerLink.enqueue` in `runner/src/link.ts:89`.
 - **Reason:** on 6 November 2026 the owner told the branch that built the runner to record this note without a fix.
 
 - **Terms:**
@@ -40,4 +40,4 @@
   - [Milestone 7u](../boat-native-remote-workspaces.md#milestone-7u-runner-fixes-from-the-review), same code for a failed save. That milestone makes later saves work again after one failed save. This item decides what the failed step reports. A failed save can end its step only with that fix.
   - [Milestone 7u](../boat-native-remote-workspaces.md#milestone-7u-runner-fixes-from-the-review), the same symptom from another cause: a turn that stays active in the workspace after a runner shutdown. That milestone ends such a turn at the shutdown and at the next start.
 - **Recommendation:** D. It ends every step and keeps the chat output true.
-- **Action:** ask the user, because D changes the shared runner contract, and no requirement says what the runner reports after a failed file read.
+- **Action:** fix after merge, apply D, as the user chose on 7 November 2026 (decision 109). Milestone 7v builds it.

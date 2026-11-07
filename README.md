@@ -119,9 +119,11 @@ Macs. It bundles the built web app, shows it in its own window, and calls
 the same Worker. The agents still run only in the cloud. The shell is not
 complete yet:
 
-- It shows the minimal page of the web app. The top bars and the sidebar of
-  the product are not built yet, so the window does not match the mockups
-  yet.
+- It shows the shared web app screens. The window has no title bar of its
+  own. The native window buttons sit at the top left of the app's left
+  panel. The sidebar toggle, Back, and Forward share that bar. The top bars
+  move the window, and their controls do not. Full screen gives back the
+  space of the window buttons.
 - The Worker routes the browser-to-app GitHub sign-in handoff. The Mac
   workflow builds and tests desktop changes on Apple silicon and Intel.
 - Builds have an ad-hoc signature, because no Apple Developer ID exists
