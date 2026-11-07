@@ -13,7 +13,7 @@ const omittedRows = `WITH log_rows AS (
       OVER (ORDER BY event_number) AS prefix_cost,
     SUM(LENGTH(CAST(text AS BLOB)) + ${LOG_ROW_COST})
       OVER (ORDER BY event_number DESC) AS suffix_cost
-  FROM image_build_logs WHERE build_id = ? AND event_number > 0
+  FROM image_build_logs WHERE build_id = ? AND omitted_bytes IS NULL
 ), omitted AS (
   SELECT event_number, bytes FROM log_rows
   WHERE (SELECT SUM(bytes + ${LOG_ROW_COST}) FROM log_rows)
@@ -33,27 +33,39 @@ export function buildLogRetentionStatements(
   buildId: string,
   now: number,
 ): D1PreparedStatement[] {
+  // Hold the replacement at a negative key until its public number is free.
+  // The enclosing batch keeps this move atomic with output and job state.
   return [
     db
       .prepare(
-        `${omittedRows}
-        INSERT INTO image_build_logs (build_id, event_number, occurred_at, text)
-        SELECT ?, 0, ?, CHAR(10) || '[' || (
-          COALESCE((SELECT CAST(SUBSTR(text, 3) AS INTEGER)
-            FROM image_build_logs WHERE build_id = ? AND event_number = 0), 0)
-          + SUM(bytes)
-        ) || ' output bytes omitted]' || CHAR(10)
-        FROM omitted HAVING COUNT(*) > 0
-        ON CONFLICT (build_id, event_number) DO UPDATE SET
-          occurred_at = excluded.occurred_at, text = excluded.text`,
+        `${omittedRows}, omission AS (
+          SELECT -MAX(event_number) AS temporary_key,
+            COALESCE((SELECT omitted_bytes FROM image_build_logs
+              WHERE build_id = ? AND omitted_bytes IS NOT NULL), 0)
+              + SUM(bytes) AS bytes
+          FROM omitted HAVING COUNT(*) > 0
+        )
+        INSERT INTO image_build_logs
+          (build_id, event_number, occurred_at, text, omitted_bytes)
+        SELECT ?, temporary_key, ?,
+          CHAR(10) || '[' || bytes || ' output bytes omitted]' || CHAR(10), bytes
+        FROM omission`,
       )
-      .bind(buildId, buildId, now, buildId),
+      .bind(buildId, buildId, buildId, now),
     db
       .prepare(
         `${omittedRows}
         DELETE FROM image_build_logs WHERE build_id = ?
-          AND event_number IN (SELECT event_number FROM omitted)`,
+          AND (event_number IN (SELECT event_number FROM omitted)
+            OR (omitted_bytes IS NOT NULL AND event_number > 0
+              AND EXISTS (SELECT 1 FROM omitted)))`,
       )
       .bind(buildId, buildId),
+    db
+      .prepare(
+        `UPDATE image_build_logs SET event_number = -event_number
+        WHERE build_id = ? AND event_number < 0 AND omitted_bytes IS NOT NULL`,
+      )
+      .bind(buildId),
   ]
 }

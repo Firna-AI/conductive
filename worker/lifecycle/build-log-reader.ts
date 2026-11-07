@@ -23,21 +23,11 @@ export async function readBuildSnapshot(
       .bind(orgId, buildId),
     db
       .prepare(
-        `WITH ordered_logs AS (
-          SELECT event_number, occurred_at, text,
-            LAG(event_number, 1, 0) OVER (ORDER BY event_number) AS previous
-          FROM image_build_logs WHERE build_id = ? AND event_number > 0
-        ), public_logs AS (
-          SELECT event_number, occurred_at, text FROM ordered_logs
-          UNION ALL
-          SELECT (SELECT MIN(event_number) - 1 FROM ordered_logs
-            WHERE event_number > previous + 1), occurred_at, text
-          FROM image_build_logs WHERE build_id = ? AND event_number = 0
-        )
-        SELECT event_number AS eventNumber, occurred_at AS occurredAt, text
-        FROM public_logs WHERE event_number > ? ORDER BY event_number LIMIT ?`,
+        `SELECT event_number AS eventNumber, occurred_at AS occurredAt, text
+        FROM image_build_logs WHERE build_id = ? AND event_number > ?
+        ORDER BY event_number LIMIT ?`,
       )
-      .bind(buildId, buildId, after, limit),
+      .bind(buildId, after, limit),
   ])
   const build = header.results[0]
   if (!build || !('state' in build))
