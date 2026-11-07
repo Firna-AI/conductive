@@ -5,6 +5,7 @@ import { FilesState } from '../files/state'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { chatFilesStorage } from './files-storage'
+import { snapshot } from './runner-limits.test-support'
 import {
   fullReport,
   oversizedReport,
@@ -24,69 +25,75 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('keeps deltas, old tails, and partial or repeated full reports from resolving a tree repair', async () => {
-  const fixture = await createChatFixture(harness)
-  const runner = await fixture.connect()
-  runner.emit(fullReport('files.snapshot'))
-  runner.emit(fullReport('changes.updated'))
-  runner.emit(oversizedReport('files.snapshot', 3, 1, 2))
-  await fixture.drain()
-  const request = refreshCommands(runner)[0]
-  expect(request).toMatchObject({
-    type: 'report.refresh',
-    kind: 'files.snapshot',
-  })
-  runner.emit(fullReport('files.snapshot', 3, 2, 2))
-  runner.emit({ type: 'files.changed', delta: { revision: 2, changes: [] } })
-  runner.emit(fullReport('files.snapshot', 4, 1, 2))
-  runner.emit(fullReport('files.snapshot', 4, 1, 2))
-  await fixture.drain()
-  expect(
-    (await refusedEvents(fixture)).map((event) => event.repairFailed),
-  ).toEqual([undefined, undefined])
-  expect(refreshCommands(runner)).toEqual([request])
-  fixture.restart()
-  await fixture.connect(runner)
-  expect(refreshCommands(runner)).toEqual([request, request])
-  runner.emit(
-    Object.assign(oversizedReport('files.snapshot', 4, 2, 2), {
-      tree: { partNumber: 2, partCount: 2 },
-    }),
-  )
-  await fixture.drain()
-  expect((await refusedEvents(fixture)).at(-1)).toMatchObject({
-    runnerEventType: 'files.snapshot',
-    repairFailed: true,
-  })
-  expect(
-    (await workspaceEvents(fixture)).filter(
-      (event) => event.type === 'files.snapshot',
-    ),
-  ).toHaveLength(1)
-  const files = new FilesState(chatFilesStorage(fixture.storage))
-  expect(await files.tree()).toEqual({
-    revision: 2,
-    entries: [{ path: 'file-1', name: 'file-1', kind: 'file', change: null }],
-  })
-  await fixture.connect(runner)
-  expect(refreshCommands(runner)).toEqual([request, request])
-  runner.emit(fullReport('files.snapshot', 5))
-  runner.emit({ type: 'files.changed', delta: { revision: 7, changes: [] } })
-  await fixture.drain()
-  const later = refreshCommands(runner)[2]
-  expect(later).toMatchObject({
-    type: 'report.refresh',
-    kind: 'files.snapshot',
-  })
-  expect(later?.commandId).not.toBe(request?.commandId)
-  runner.emit(fullReport('files.snapshot', 5))
-  runner.emit(oversizedReport('files.snapshot', 6))
-  await fixture.drain()
-  expect((await refusedEvents(fixture)).at(-1)).toMatchObject({
-    repairFailed: true,
-  })
-  expect(refreshCommands(runner)).toEqual([request, request, later])
-})
+it.each([
+  { count: 'valid', partCount: 2 },
+  { count: 'missing', partCount: undefined },
+  { count: 'below the part number', partCount: 1 },
+])(
+  'keeps deltas, old tails with $count counts, and partial or repeated full reports from resolving a tree repair',
+  async ({ partCount }) => {
+    const fixture = await createChatFixture(harness)
+    const runner = await fixture.connect()
+    runner.emit(fullReport('files.snapshot'))
+    runner.emit(fullReport('changes.updated'))
+    runner.emit(oversizedReport('files.snapshot', 3, 1, 2))
+    await fixture.drain()
+    const request = refreshCommands(runner)[0]
+    expect(request).toMatchObject({
+      type: 'report.refresh',
+      kind: 'files.snapshot',
+    })
+    const tail = snapshot(3, 2, 2, ['file-2'])
+    runner.emit(
+      Object.assign({ ...tail }, { tree: { ...tail.tree, partCount } }),
+    )
+    runner.emit({ type: 'files.changed', delta: { revision: 2, changes: [] } })
+    runner.emit(fullReport('files.snapshot', 4, 1, 2))
+    runner.emit(fullReport('files.snapshot', 4, 1, 2))
+    await fixture.drain()
+    expect(
+      (await refusedEvents(fixture)).map((event) => event.repairFailed),
+    ).toEqual([undefined, undefined])
+    expect(refreshCommands(runner)).toEqual([request])
+    fixture.restart()
+    await fixture.connect(runner)
+    expect(refreshCommands(runner)).toEqual([request, request])
+    runner.emit(oversizedReport('files.snapshot', 4, 2, 2))
+    await fixture.drain()
+    expect((await refusedEvents(fixture)).at(-1)).toMatchObject({
+      runnerEventType: 'files.snapshot',
+      repairFailed: true,
+    })
+    expect(
+      (await workspaceEvents(fixture)).filter(
+        (event) => event.type === 'files.snapshot',
+      ),
+    ).toHaveLength(1)
+    const files = new FilesState(chatFilesStorage(fixture.storage))
+    expect(await files.tree()).toEqual({
+      revision: 2,
+      entries: [{ path: 'file-1', name: 'file-1', kind: 'file', change: null }],
+    })
+    await fixture.connect(runner)
+    expect(refreshCommands(runner)).toEqual([request, request])
+    runner.emit(fullReport('files.snapshot', 5))
+    runner.emit({ type: 'files.changed', delta: { revision: 7, changes: [] } })
+    await fixture.drain()
+    const later = refreshCommands(runner)[2]
+    expect(later).toMatchObject({
+      type: 'report.refresh',
+      kind: 'files.snapshot',
+    })
+    expect(later?.commandId).not.toBe(request?.commandId)
+    runner.emit(fullReport('files.snapshot', 5))
+    runner.emit(oversizedReport('files.snapshot', 6))
+    await fixture.drain()
+    expect((await refusedEvents(fixture)).at(-1)).toMatchObject({
+      repairFailed: true,
+    })
+    expect(refreshCommands(runner)).toEqual([request, request, later])
+  },
+)
 
 it('treats a full replacement from a new stream as a repair without joining old parts', async () => {
   const fixture = await createChatFixture(harness)

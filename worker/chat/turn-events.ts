@@ -1,6 +1,7 @@
 import type { AgentChatEvent } from '../../src/shared/chat-events'
 import { HttpError } from '../http'
 import { markSent } from './messages'
+import { readRunnerEventIdentity } from './runner-event-identity'
 import { sameAgent } from './sessions'
 import type { ChatTransaction } from './store'
 import { verifiedTurn } from './turn-context'
@@ -13,7 +14,7 @@ export async function prepareAgentEvent(
   occurredAt: number,
   randomId: () => string,
 ): Promise<() => Promise<void>> {
-  const target = await verifiedTurn(transaction, event)
+  const target = await verifiedTurn(transaction, readRunnerEventIdentity(event))
   if (
     !target ||
     target.started === false ||

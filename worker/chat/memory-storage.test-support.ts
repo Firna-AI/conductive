@@ -5,6 +5,7 @@ export class MemoryChatStorage implements ChatStorage {
   records = new Map<string, unknown>()
   writes: string[] = []
   failCommit = false
+  crashAfterCommit = false
   beforeCommit: ((staged: MemoryChatStorage) => Promise<void>) | null = null
 
   async get<T>(key: string): Promise<T | undefined> {
@@ -43,6 +44,10 @@ export class MemoryChatStorage implements ChatStorage {
     if (this.failCommit) throw new Error('Injected storage failure')
     this.records = transaction.records
     this.writes.push(...transaction.writes)
+    if (this.crashAfterCommit) {
+      this.crashAfterCommit = false
+      throw new Error('Injected post-commit crash')
+    }
     return result
   }
 }

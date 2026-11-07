@@ -143,6 +143,11 @@ one `RunnerReportKind`.
 
 - `ReportRepairs` on `ChatTransaction.repairs` keeps one record for each kind
   under the `chat:v1:report-repair:` prefix.
+- Refusal checks use one identity reader. It reads only the event type,
+  session and turn IDs, and the revision and part number of a full file report.
+  Each unreadable field is null. The checks use this identity, the envelope
+  stream, and the stored records. Part count and payload contents do not
+  identify an old tail.
 - A record holds its command, its cause, its state, a `sent` flag, and a
   `replacementRevision`. The cause is the stream and the event number of the
   first refusal. For a file kind, it also holds the newest applied,
@@ -191,6 +196,11 @@ npm run typecheck
   restart `WorkspaceChat` on the same storage.
 - `MemoryChatStorage` keeps the records in memory. Set `failCommit` or
   `beforeCommit` to test a failed or a late commit.
+- Set `crashAfterCommit` to commit the next transaction, then throw once.
+  The restart tests use it to check repair requests, turn cleanup, and file
+  assembly after a crash immediately after the receipt commit.
+- `runner-receipt-crash.test.ts` checks terminal cleanup and pending file
+  assembly after this crash and a restart.
 - Its key order and `startAfter` comparison use UTF-8 bytes, like real storage.
 - `createRunnerLimitsFixture` in `runner-limits.test-support.ts` runs one
   `RunnerChannel` for the refusal, cap, and file part tests.
@@ -223,6 +233,8 @@ lifecycle, the files, the agent runner, and the logins and attachments.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event.
+- `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
+  fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
 - `runner-delivery.ts`: the sends of pending commands, with the login
   check.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the

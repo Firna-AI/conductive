@@ -23,6 +23,56 @@ afterAll(async () => {
   await harness.dispose()
 })
 
+it('keeps one repair and refusal after a post-commit crash before the first send', async () => {
+  const fixture = await createChatFixture(harness)
+  const runner = await fixture.connect()
+  fixture.storage.crashAfterCommit = true
+  runner.emit(oversizedReport('workspace.title'))
+  await expect(fixture.drain()).rejects.toThrow('Injected post-commit crash')
+  expect(refreshCommands(runner)).toEqual([])
+  expect(runner.pendingEvents().map((event) => event.eventNumber)).toEqual([1])
+  fixture.restart()
+  expect(
+    await fixture.chat.store.read(WORKSPACE_ID, (view) => view.repairs.all()),
+  ).toEqual([
+    {
+      command: {
+        type: 'report.refresh',
+        commandId: 'chat-0001',
+        kind: 'workspace.title',
+      },
+      cause: {
+        streamId: 'fake-stream-1',
+        eventNumber: 1,
+        revision: null,
+      },
+      state: 'pending',
+      sent: false,
+      replacementRevision: null,
+    },
+  ])
+  await fixture.connect(runner)
+  expect(refreshCommands(runner)).toEqual([
+    {
+      type: 'report.refresh',
+      commandId: 'chat-0001',
+      kind: 'workspace.title',
+    },
+  ])
+  expect(await refusedEvents(fixture)).toEqual([
+    {
+      type: 'runner.event-refused',
+      streamId: 'fake-stream-1',
+      runnerEventNumber: 1,
+      runnerEventType: 'workspace.title',
+      reason: 'too_large',
+      sessionId: null,
+      turnId: null,
+    },
+  ])
+  expect(runner.pendingEvents()).toEqual([])
+})
+
 it('commits a repair with its refusal and cursor before any send and retries a failed commit', async () => {
   const fixture = await createChatFixture(harness)
   const runner = await fixture.connect()

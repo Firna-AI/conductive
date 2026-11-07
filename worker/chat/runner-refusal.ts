@@ -2,37 +2,13 @@ import type {
   RunnerEventRefused,
   RunnerEventRefusalReason,
 } from '../../src/shared/chat-events'
-import { isRecord } from '../http'
 import { RunnerFileReports } from '../files/runner-reports'
+import { readRunnerEventIdentity } from './runner-event-identity'
 import type { IncomingRunnerEnvelope } from './runner-input'
 import type { ChatTransaction } from './store'
 import { refuseReportRepair } from './repair-refusal'
 import { verifiedTurn } from './turn-context'
 import { TurnLifecycle } from './turn-lifecycle'
-
-export function runnerEventType(
-  value: unknown,
-): RunnerEventRefused['runnerEventType'] {
-  if (!isRecord(value)) return 'unknown'
-  switch (value.type) {
-    case 'turn.started':
-    case 'turn.thinking':
-    case 'assistant.delta':
-    case 'assistant.completed':
-    case 'tool.updated':
-    case 'turn.completed':
-    case 'turn.failed':
-    case 'runner.ready':
-    case 'start.updated':
-    case 'workspace.title':
-    case 'files.snapshot':
-    case 'files.changed':
-    case 'changes.updated':
-      return value.type
-    default:
-      return 'unknown'
-  }
-}
 
 export async function refuseRunnerEvent(
   transaction: ChatTransaction,
@@ -40,7 +16,8 @@ export async function refuseRunnerEvent(
   reason: RunnerEventRefusalReason,
   randomId: () => string,
 ): Promise<void> {
-  const type = runnerEventType(message.event)
+  const identity = readRunnerEventIdentity(message.event)
+  const type = identity.type ?? 'unknown'
   const workspaceLevel =
     type === 'runner.ready' ||
     type === 'start.updated' ||
@@ -50,7 +27,7 @@ export async function refuseRunnerEvent(
     type === 'changes.updated'
   const target = workspaceLevel
     ? null
-    : await verifiedTurn(transaction, message.event)
+    : await verifiedTurn(transaction, identity)
   const marker: RunnerEventRefused = {
     type: 'runner.event-refused',
     streamId: message.streamId,
@@ -59,7 +36,7 @@ export async function refuseRunnerEvent(
     reason,
     sessionId: target?.session.id ?? null,
     turnId: target?.turn.id ?? null,
-    ...((await refuseReportRepair(transaction, message, randomId))
+    ...((await refuseReportRepair(transaction, message, identity, randomId))
       ? { repairFailed: true as const }
       : {}),
   }

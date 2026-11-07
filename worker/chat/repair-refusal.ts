@@ -1,24 +1,21 @@
 import type { RunnerReportKind } from '../../src/shared/runner'
 import type { RunnerFileEvent } from '../../src/shared/files'
-import {
-  fullReportRevision,
-  isMultipartTail,
-  storedReportGenerations,
-} from '../files/report-generation'
-import { isRecord } from '../http'
+import { storedReportGenerations } from '../files/report-generation'
+import type { RunnerEventIdentity } from './runner-event-identity'
 import type { IncomingRunnerEnvelope } from './runner-input'
 import type { ChatTransaction } from './store'
 
-function reportKind(value: unknown): RunnerReportKind | null {
-  if (!isRecord(value)) return null
-  switch (value.type) {
+function reportKind(
+  type: RunnerEventIdentity['type'],
+): RunnerReportKind | null {
+  switch (type) {
     case 'files.changed':
       return 'files.snapshot'
     case 'files.snapshot':
     case 'changes.updated':
     case 'start.updated':
     case 'workspace.title':
-      return value.type
+      return type
     default:
       return null
   }
@@ -26,14 +23,15 @@ function reportKind(value: unknown): RunnerReportKind | null {
 
 export async function refuseReportRepair(
   transaction: ChatTransaction,
-  message: IncomingRunnerEnvelope,
+  message: Pick<IncomingRunnerEnvelope, 'streamId' | 'eventNumber'>,
+  identity: RunnerEventIdentity,
   randomId: () => string,
 ): Promise<boolean> {
-  const kind = reportKind(message.event)
+  const kind = reportKind(identity.type)
   if (!kind) return false
   const repair = await transaction.repairs.get(kind)
   const fileKind = kind === 'files.snapshot' || kind === 'changes.updated'
-  const revision = fileKind ? fullReportRevision(message.event, kind) : null
+  const revision = fileKind ? identity.revision : null
   if (!repair) {
     const generations = fileKind
       ? await storedReportGenerations(transaction.files, kind)
@@ -54,11 +52,12 @@ export async function refuseReportRepair(
     return false
   }
   if (fileKind) {
-    if (!isRecord(message.event) || message.event.type !== kind) return false
+    if (identity.type !== kind) return false
     const currentReplacement = repair.replacementRevision === revision
     const oldTail =
       revision !== null &&
-      isMultipartTail(message.event, kind) &&
+      identity.partNumber !== null &&
+      identity.partNumber > 1 &&
       message.streamId === repair.cause.streamId &&
       revision <= (repair.cause.revision ?? 0) &&
       !currentReplacement

@@ -1,4 +1,4 @@
-import { isRecord } from '../http'
+import type { RunnerEventIdentity } from './runner-event-identity'
 import type { ChatTransaction } from './store'
 import type { StoredTurn } from './types'
 
@@ -22,26 +22,21 @@ async function startedEvidence(
   return undefined
 }
 
-/** Verify raw context against stored records before using IDs in storage keys. */
+/** Verify identity against stored records before using IDs in storage keys. */
 export async function verifiedTurn(
   transaction: ChatTransaction,
-  value: unknown,
+  identity: RunnerEventIdentity,
 ) {
-  if (
-    !isRecord(value) ||
-    typeof value.sessionId !== 'string' ||
-    typeof value.turnId !== 'string'
-  )
-    return null
+  if (identity.sessionId === null || identity.turnId === null) return null
   const session = (await transaction.sessions()).find(
-    (session) => session.id === value.sessionId,
+    (session) => session.id === identity.sessionId,
   )
   if (!session) return null
   const turn =
-    session.activeTurnId === value.turnId
+    session.activeTurnId === identity.turnId
       ? await transaction.turn(session.activeTurnId)
-      : (await transaction.turns()).find((turn) => turn.id === value.turnId)
-  if (!turn || turn.id !== value.turnId || turn.sessionId !== session.id)
+      : (await transaction.turns()).find((turn) => turn.id === identity.turnId)
+  if (!turn || turn.id !== identity.turnId || turn.sessionId !== session.id)
     return null
   return {
     session,
