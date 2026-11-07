@@ -91,38 +91,52 @@ function failure(status: number, body: unknown): ChatApiError {
   return new ChatApiError(status, 'request_failed', RETRY_MESSAGE)
 }
 
+export type JsonMethod = 'GET' | 'POST' | 'PUT' | 'PATCH'
+
+/**
+ * One JSON call of the API. A failure throws `ChatApiError` with the
+ * Worker's code and message, and a body that `read` refuses throws a
+ * retryable error.
+ */
+export async function requestJson<T>(
+  fetch: FetchLike,
+  method: JsonMethod,
+  path: string,
+  read: Reader<T>,
+  body?: object,
+): Promise<T> {
+  let response: Response
+  try {
+    response = await fetch(path, {
+      method,
+      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    })
+  } catch {
+    throw new ChatApiError(0, 'network_error', RETRY_MESSAGE)
+  }
+  const value = await readBody(response)
+  if (!response.ok) throw failure(response.status, value)
+  try {
+    return read(value)
+  } catch {
+    throw new ChatApiError(
+      response.status,
+      'unreadable_response',
+      RETRY_MESSAGE,
+    )
+  }
+}
+
 /** The chat routes of one workspace, through the shared route builders. */
 export function createChatApi(fetch: FetchLike, target: WorkspaceTarget) {
   const { orgId, workspaceId } = target
-
-  async function call<T>(
-    method: 'GET' | 'POST' | 'PUT' | 'PATCH',
+  const call = <T>(
+    method: JsonMethod,
     path: string,
     read: Reader<T>,
     body?: object,
-  ): Promise<T> {
-    let response: Response
-    try {
-      response = await fetch(path, {
-        method,
-        headers: body ? { 'Content-Type': 'application/json' } : undefined,
-        body: body ? JSON.stringify(body) : undefined,
-      })
-    } catch {
-      throw new ChatApiError(0, 'network_error', RETRY_MESSAGE)
-    }
-    const value = await readBody(response)
-    if (!response.ok) throw failure(response.status, value)
-    try {
-      return read(value)
-    } catch {
-      throw new ChatApiError(
-        response.status,
-        'unreadable_response',
-        RETRY_MESSAGE,
-      )
-    }
-  }
+  ): Promise<T> => requestJson(fetch, method, path, read, body)
 
   const session = (id: string) => sessionPath(orgId, workspaceId, id)
   const routes = (id: string) => ({

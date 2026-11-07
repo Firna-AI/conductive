@@ -104,6 +104,21 @@ chat, and five tabs at the bottom.
   panel gets an accent edge.
 - A state tints a whole bar or box, and its edges stay neutral. No box has
   an accent strip on any edge.
+- `sizes.ts` in `src/components/chat/` holds the one size formatter.
+  The mockups, chat, and composer of a new workspace share it.
+  The attachment fixtures hold byte counts.
+  The formatter shows sizes such as "12 KB" and "1.2 MB".
+- Data that the chat does not have shows in plain words, from decision 76.
+  `lostCopy.ts` in `src/components/chat/` holds the words. A tool call whose
+  output the runner shortened shows the size that it left out, such as "1.2 MB left out", and
+  its folded group shows the total. A turn with more than 200 files ends its
+  list with plain text, such as "47 more files". A stopped turn shows no
+  file list, so its line ends with the count, such as
+  "You stopped the agent · 5 changed files not listed".
+  `LostLine` draws a refused runner event as one centred, muted line at its
+  place, which names the lost data and why, such as "A tool update was lost
+  because it was too large". It never shows the lost data, and a phone wraps
+  it into balanced lines.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
@@ -126,7 +141,7 @@ chat, and five tabs at the bottom.
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn       |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, Boat key, Members |
-| `app/chat`          | Messages and tool calls, a running turn, steer, interrupt, a failure          |
+| `app/chat`          | A finished turn, then running turns, lost data, and lost updates              |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the session history, and closing a session while it works      |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -140,7 +155,7 @@ chat, and five tabs at the bottom.
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `app`, `app/sign-in`,
-`app/orgs`, `app/org-settings`, and `app/banner` do. `app/org-settings/cloud-computer` and its building
+`app/orgs`, `app/org-settings`, `app/banner`, and `app/chat` do. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. `app/sign-in/get-started`
 moved into its own folder and kept its path. Get started is the only first
@@ -162,6 +177,21 @@ changes, a draft, and a pull request closed without a merge. A conflict and
 requested changes tint the bar amber. `app/banner/no-commits` has a branch
 without commits, whose bar offers no Create pull request, as in
 `app/new-workspace/creating` and `first-turn`.
+
+`app/chat` shows a finished turn. Its child pages: `app/chat/turns` has the
+running turn, steer, interrupt, and a failure, which moved from
+`app/chat/running`, `steer`, `interrupted`, and `failed` and declare
+`movedFrom`. `app/chat/lost-data` draws the data that the chat does not
+have, from decision 76: tool output and turn files that the runner left out,
+and the lines of runner events that the workspace refused.
+`app/chat/lost-updates` draws a failed repair, from decision 96. After a
+refused update that belongs to no session, such as a file update, the
+workspace asks for a fresh full report, and nothing shows. Only when that
+report is lost too does a notice name the data that stays unavailable,
+beside that data: under the file lists for a file list, and under the
+header for other data, such as the workspace name. The `failed-repair`
+value of the `lostUpdate` state draws it, and every other screen stays
+silent. The app shows no such notice yet.
 
 ## Folder layout
 
@@ -222,7 +252,7 @@ plan limits.
   running.
 - A stopped turn names the member who pressed Stop, from decision 72,
   because all members of an org see the same chat. That member sees "You
-  stopped the agent", as `app/chat/interrupted` shows. The other members
+  stopped the agent", as `app/chat/turns/interrupted` shows. The other members
   see the name of that member, such as "Cal stopped the agent" in
   `app/reassign/member-stop`. When no member pressed Stop, such as when
   the cloud computer stopped during the turn, the chat says "The agent
@@ -291,11 +321,26 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   time limit, Deny, and Allow. A longer time limit shows its reason.
   Details opens the folder, the reason, the workspace, and the sender. The
   arrow beside Allow opens Always allow and Allow all commands for 15
-  minutes. A view runs no script, so both are native disclosures, and each
-  choice is a link. The header and the workspace list mark the workspace
-  with Needs input, so the request shows from every page. A notification
-  of macOS opens the workspace when the app is in the background. The 15
-  minutes show as an amber bar with the time left and Stop.
+  minutes. A view runs no script, so Details is a native disclosure, the
+  arrow opens a native popover in the top layer, and each choice is a
+  link. The header and the workspace list mark the workspace with Needs
+  input, so the request shows from every page. A notification of macOS
+  opens the workspace when the app is in the background. The 15 minutes
+  show as an amber bar with the time left and Stop.
+- The requests that wait share one region above the composer, from
+  `ChatPane.module.css`. It takes at most 40% of the window, so a long
+  command or many requests scroll inside it, and an edge that cuts a
+  request fades. `mac-app/requests` draws four requests with a long script.
+  A view cannot open a popover, so the chat draws an open menu with
+  `DrawnChoices` outside the region, at the actions of its request, and the
+  region keeps its bound.
+- Each change of the Mac's settings shows its result until the next change
+  of the same control: done, done but not saved, or failed, from
+  `ChangeOutcome` in `src/components/mac/`. This Mac lists the results of
+  Remove under its list, and the bar of the 15 minutes names the result of
+  Stop, also after the 15 minutes end. A change that the Mac made but did
+  not save took its row or its 15 minutes away, so its result offers Try
+  again. `mac-app/this-mac` and `mac-app/stop` draw them.
 - The web app shows a waiting request without the choices, because only
   the Mac app can allow a command on the Mac. Once answered, the command
   shows as a card at its place in the chat: denied, done with its output,

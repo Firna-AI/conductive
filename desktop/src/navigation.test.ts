@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events'
 import { expect, it, vi } from 'vitest'
 
 import { DESKTOP_ORIGIN } from '../../worker/security/desktop-contract.js'
-import { installNavigation } from './navigation.js'
+import { installNavigation, navigationTarget } from './navigation.js'
 
 it('admits native app actions only from the trusted main initiator', () => {
   const main = { url: `${DESKTOP_ORIGIN}/` }
@@ -22,6 +22,7 @@ it('admits native app actions only from the trusted main initiator', () => {
     load: vi.fn(async () => {}),
     external: vi.fn(async () => {}),
     signIn: vi.fn(async () => {}),
+    preview: vi.fn(async () => {}),
     warn: vi.fn(),
   }
   installNavigation(contents, 'https://app.conducting.test', dependencies)
@@ -79,4 +80,50 @@ it('admits native app actions only from the trusted main initiator', () => {
   expect(dependencies.external).toHaveBeenCalledExactlyOnceWith(
     'https://example.com/review',
   )
+})
+
+it('hands trusted preview popups to native navigation and rejects child launcher requests', () => {
+  const appOrigin = 'https://app.conducting.test'
+  const launcher =
+    appOrigin + '/api/orgs/org/workspaces/workspace/previews/preview'
+  expect(navigationTarget(launcher, appOrigin, 'trusted-main', true)).toEqual({
+    action: 'load',
+    url: launcher,
+  })
+  const main = { url: `${DESKTOP_ORIGIN}/` }
+  const child = { url: 'https://preview.test/' }
+  let popup: (details: { url: string }) => { action: 'deny' } = () => ({
+    action: 'deny',
+  })
+  const contents = Object.assign(new EventEmitter(), {
+    mainFrame: main,
+    setWindowOpenHandler: (handler: typeof popup) => {
+      popup = handler
+    },
+  })
+  const dependencies = {
+    load: vi.fn(async () => {}),
+    external: vi.fn(async () => {}),
+    signIn: vi.fn(async () => {}),
+    preview: vi.fn(async () => {}),
+    warn: vi.fn(),
+  }
+  installNavigation(contents, appOrigin, dependencies)
+  const trusted = {
+    url: launcher,
+    frame: main,
+    initiator: main,
+    preventDefault: vi.fn(),
+  }
+  contents.emit('will-navigate', trusted)
+  expect(trusted.preventDefault).toHaveBeenCalledTimes(1)
+  expect(dependencies.preview).toHaveBeenCalledExactlyOnceWith(launcher)
+  for (const initiator of [child, undefined]) {
+    contents.emit('will-navigate', { ...trusted, initiator })
+    expect(dependencies.preview).toHaveBeenCalledTimes(1)
+  }
+  expect(popup({ url: launcher })).toEqual({ action: 'deny' })
+  expect(dependencies.preview).toHaveBeenCalledTimes(1)
+  expect(dependencies.load).not.toHaveBeenCalled()
+  expect(dependencies.external).not.toHaveBeenCalled()
 })

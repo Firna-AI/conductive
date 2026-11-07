@@ -4,6 +4,7 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AgentChoice } from '../../src/shared/agents'
 import { createWorkspaceToolClient } from '../../tools/client'
 import { TOOL_ENV, TOOL_TURN_HEADER } from '../../tools/context'
+import { requestBodyEntry } from '../http/request-body'
 import { hash } from '../security/crypto'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
 import { createAgentToolsHandler } from './handler'
@@ -160,10 +161,9 @@ export async function toolFixture(harness: TestHarness) {
     sessionId: 'created-session',
   }))
   const services = { callingTurn, ownerDefaultChoice, createWorkspace }
-  const handler = createAgentToolsHandler(
-    { DB: db, MACHINE_ORIGIN: TOOL_TEST_ORIGIN },
-    services,
-  )
+  const env = { ...harness.env, MACHINE_ORIGIN: TOOL_TEST_ORIGIN }
+  const entry = requestBodyEntry(createAgentToolsHandler(env, services))
+  const handler = (request: Request) => entry(request, env)
   const requests: Request[] = []
   const send = async (request: Request) => {
     requests.push(request.clone())

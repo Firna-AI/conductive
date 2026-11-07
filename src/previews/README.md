@@ -21,8 +21,11 @@ as the Preview page. Milestone 15i mounts it and wires it to the backend.
   event of another workspace changes nothing. The preview reducer takes the
   event itself, through the
   [tool store](../terminal/README.md#workspace-events).
-- The frame and the link send no referrer, because the address is the
-  credential. The frame may not navigate the app's page.
+- The frame and the link load the launch address of the preview. Each
+  load, also a reload, gives that frame or tab its own access to the
+  preview. The address holds no secret.
+- The frame and the link send no referrer. The frame may not navigate the
+  app's page.
 - A failed request shows its message and leaves the tool usable.
 
 ## Mount the tool

@@ -18,7 +18,7 @@ export interface Preview {
   /** New for each open. The API never gives out a revoked ID again. */
   id: string
   port: number
-  /** An opaque credential on a separate registrable domain. */
+  /** Authenticated app launch URL. Each navigation grants its browser partition access. */
   url: string
   expiresAt: Timestamp
 }
@@ -27,4 +27,10 @@ export interface PreviewResponse {
 }
 export interface PreviewsResponse {
   previews: readonly Preview[]
+}
+
+/** Native-only launcher reply. The short preview grant appears only in the URL fragment. */
+export interface PreviewLaunchResponse {
+  url: string
+  expiresAt: Timestamp
 }

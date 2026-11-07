@@ -1,20 +1,111 @@
 # Preview backend
 
-This area issues preview hostnames and proxies private sandbox ports.
-The production route dispatcher does not call these handlers yet.
+This area issues preview hostnames, launches previews, and proxies private
+sandbox ports. The production route dispatcher does not call these handlers yet.
 The browser uses the [shared preview contract](../../src/shared/previews.ts).
 
 Create one `createPreviewHandler(env, dependencies)` for the route owner.
-Send app API requests to its `fetch(request)` method.
+Send app API requests to its `fetch(request)` method. They include the
+launch GET of `previewPath(orgId, workspaceId, previewId)`.
 Send preview domain HTTP requests and WebSocket upgrades to `proxy(request)`.
-The proxy uses the hostname as its credential. It requires no app cookie.
+They include the authorizer at `https://authorize.<PREVIEW_DOMAIN>/.conducting/authorize`.
 
 Set `PREVIEW_DOMAIN` to a separate registrable domain from `APP_ORIGIN`.
+Do not add it to the Public Suffix List. The authorizer sets a cookie for the
+whole domain, so the authorizer and each preview must share one site.
 Use a wildcard DNS record and certificate for its one-level hostnames.
+The wildcard also covers `authorize`. A preview label is 32 hex characters,
+so it never matches `authorize`.
+
 Each hostname holds 128 random bits. D1 stores its workspace, port, and expiry.
 The server keeps private port descriptors in memory for each workspace,
 sandbox, and port. It sends each token only in its upstream `_port_auth` cookie.
 D1 stores the listener mode and sandbox ID. D1 stores no plaintext port token.
+
+`Preview.url` is the absolute app address from `previewPath`. It holds no secret.
+Each frame load, reload, and new tab starts there, because a frame under the
+app and a top-level tab use different cookie partitions. The app gate checks
+the session. The handler then checks the membership, the running workspace,
+and the active preview. The GET returns trusted HTML that posts the preview
+hostname and a 60-second grant to the authorizer.
+
+The Mac app frames the same launch page from its desktop origin,
+`conducting-app://desktop`. Its frame load has no `Origin` header. On a GET of
+the exact launch path without `Origin` and `Upgrade` headers, the app gate then
+reads the Mac session cookie when the request carries it. The shared launch
+path matcher defines that path for the gate and the Mac app. Every other
+request keeps the gate rules.
+
+A GET with `Accept: application/json` gets a `PreviewLaunchResponse` instead.
+Its `url` is the authorizer address, with the hostname and a new grant only in
+the fragment. Its `expiresAt` ends that grant. The Mac app fetches it with its
+own session and the desktop Origin. It then opens `url` in the default browser.
+
+The launch page has a nonce-based CSP. Its `form-action` allows only the
+authorizer and the exact preview origin, because a browser can also check the
+303 target. Its `frame-ancestors` allows only `APP_ORIGIN` and the desktop
+origin. It sends `Referrer-Policy: origin`, because a form POST under
+`no-referrer` sends `Origin: null`.
+
+The authorizer has two POST modes. Each needs one hostname and one valid grant
+for an active preview. Each failure gets the same 404, also for the desktop
+Origin.
+
+- Form mode accepts a form POST with `Origin: APP_ORIGIN`. It answers with a
+  303 to `https://<hostname>/`.
+- Header mode accepts a POST with the authorizer's own Origin, the hostname in
+  the query, and `Authorization: Bearer <grant>`. It answers with JSON that
+  holds the clean preview address `https://<hostname>/`.
+
+Both modes set `__Secure-conducting-preview-<preview ID>` with
+`Domain=<PREVIEW_DOMAIN>; Path=/; Secure; HttpOnly; SameSite=None; Partitioned`.
+Its `Max-Age` is the remaining preview life. The `__Host-` prefix would forbid
+the `Domain` attribute.
+
+Form mode uses the [bounded body reader](../http/README.md) before parsing
+the form. Decision 65 gives client bodies a limit of 1,000,000 bytes.
+It counts stream bytes and cancels on overflow. Missing, failed, and oversized
+bodies get the same 404 as an invalid grant. Header mode cancels any body
+without reading or buffering it.
+
+A GET of the exact authorizer address without a query serves the authorizer
+page for a browser launch. Its CSP allows only its nonce script and requests
+to its own origin. Its `frame-ancestors 'none'` keeps it at the browser's top
+level. Its script removes the fragment from the address before any request.
+It then sends the header mode POST. It follows only the clean address of the
+same preview hostname. On a failure, it asks the user to open the preview
+again from the workspace.
+
+The `authorize` hostname never serves sandbox content. So no service worker of
+a previewed app can see a grant.
+
+Grants and cookies use AES-GCM with `BOAT_KEY_ENCRYPTION_KEY`. The authenticated
+data binds the app origin, the hostname, the preview ID, and the purpose.
+So a grant cannot act as a cookie, and a cookie cannot move to another preview.
+
+Each grant works once.
+`launchGrant` saves a SHA-256 hash of `preview:<grant>` with `saveOAuthState`
+from [users.ts](../data/users.ts). The record goes into `oauth_states`, the
+one-use D1 table that GitHub sign-in and the Mac handoff also use. The
+`preview:` prefix keeps the record apart from the sign-in and handoff records.
+Each record expires with its grant, and each save deletes the expired records.
+D1 is shared, so a grant works once across isolates and restarts.
+
+Both POST modes call `redeemLaunchGrant`, the one redemption operation.
+It first checks the grant against the active preview.
+It then deletes the record of the grant with `takeOAuthState`.
+It returns the credential cookie only when that delete finds the record.
+The delete is atomic, so only one request can use a grant.
+Every other request with that grant gets the same 404, with no cookie.
+
+Only `redeemLaunchGrant` returns a credential cookie, so no mode can skip the
+one-use check. The POST handler in `launch.ts` checks the method, the Origin,
+the form body, and the hostname before the redemption. So a request that fails
+a check leaves its grant unused. Keep each new check before the redemption.
+
+The proxy reads only the cookie of the requested preview ID. A duplicate of
+that cookie counts as no cookie. The proxy checks the D1 record and the cookie
+before any sandbox call. A leaked hostname alone gets a 404.
 
 Preview open, document loads, iframe loads, and cache misses resolve the listener.
 The resolver checks `ss` output for loopback and wildcard addresses.
@@ -32,8 +123,13 @@ For an Origin header with `Sec-Fetch-Site:same-origin`, the proxy sends the
 private port origin. This includes a form's literal `Origin:null`.
 When fetch metadata is absent, only the preview's own Origin is mapped.
 Foreign Origins and a missing Origin keep their meaning. The shared origin
-helper also owns redirect mapping and the terminal's private port Origin.
-The application still owns its CORS policy.
+helper also maps `http` and `https` private redirects to the preview origin.
+It also owns the terminal's private port Origin. The application owns the
+CORS policy of requests that carry a valid preview cookie.
+
+Browser preflights carry no cookie, so the proxy rejects them before any sandbox
+call. A default cross-origin fetch also carries no cookie and gets the same 404.
+Use a same-origin proxy in the previewed app's dev server to reach a separate API.
 
 The workspace lifecycle owner must call `revokeWorkspace(workspaceId)` on
 stop and archive. Call it before stopping the sandbox. The close API
@@ -44,39 +140,49 @@ hooks also cancel its fetches, HTTP streams, and sockets.
 Each data batch waits for a D1 check that starts after the data arrives.
 This also blocks data after another instance revokes the preview.
 The request and response streams read only when their consumer requests data.
-They read one chunk at a time. No cached grant or time window permits data.
+They read one chunk at a time. No cached authorization or time window permits data.
 Completed HTTP connections release their registry entries.
 
 Set `dependencies.onActivity` to notify the workspace lifecycle owner.
 The proxy also updates the D1 activity time. Each preview HTTP request and
 WebSocket handshake counts. Socket frames and idle connections do not count.
 
-The header allowlists live in `headers.ts`. The cookie allowlist accepts
-valid app cookie names and excludes the port and Conducting session cookies.
-Responses keep app cookies with their domain removed. This makes them
-specific to the preview hostname. The proxy follows no upstream redirect.
+The header allowlists live in `headers.ts`. The cookie allowlist filters
+request and response cookies. It accepts valid app cookie names. It excludes
+the port cookie, the browser and Mac session cookies, the sign-in cookie, and
+each name under `__Secure-conducting-preview-`. Responses keep app cookies
+with their domain removed. This makes them specific to the preview hostname.
+The proxy follows no upstream redirect.
 
 ### Key Code
 
-- [handler.ts](handler.ts) exports API, proxy, revocation, and expiry entry points.
-- [proxy.ts](proxy.ts) checks preview credentials and owns its request flow.
+- [handler.ts](handler.ts) exports the API, launch, proxy, revocation, and expiry entry points.
+- [launch.ts](launch.ts) builds the launch replies and the authorizer page response, and handles both authorizer POST modes.
+- [launch-document.ts](launch-document.ts) builds the launch page markup and its CSP.
+- [browser-launch.ts](browser-launch.ts) builds the authorizer page for a browser launch.
+- [preview-launch-path.ts](../security/preview-launch-path.ts) matches the exact launch path for the gate and the Mac app.
+- [credentials.ts](credentials.ts) issues grants with `launchGrant`, redeems each grant once with `redeemLaunchGrant`, and checks the credential cookies.
+- [proxy.ts](proxy.ts) routes the authorizer page and POST, checks the credential cookie, and owns the request flow.
 - [registry.ts](registry.ts) scopes HTTP and socket cancellation by workspace and preview.
 - [connection.ts](connection.ts) wraps both HTTP directions with authorization and backpressure.
 - [authorization.ts](authorization.ts) shares fresh reads across queued data.
 - [ports.ts](ports.ts) caches private port descriptors and refreshes their listener modes.
 - [listeners.ts](listeners.ts) resolves explicit localhost or network exposure.
 - [store.ts](store.ts) and [workspace-store.ts](workspace-store.ts) hold the D1 queries.
+  `publicPreview` in `store.ts` builds `Preview.url`.
 - [provider.ts](provider.ts) exports the typed `WorkspaceTools` adapter.
 - [headers.ts](headers.ts) builds private upstream requests and safe responses.
 - [origins.ts](origins.ts) maps request Origins and private redirects.
 - [socket.ts](socket.ts) selects binary frames and drains queued data before forwarding a normal close with its code and reason.
 - [types.ts](types.ts) defines the fetch, activity, and socket boundaries.
+- [launch-test-support.ts](launch-test-support.ts) runs the real launch GET and authorizer POST in tests.
 
 The feature adapter checks workspace access before each provider operation.
 The [sandbox provider](../sandbox/README.md) owns the fixed `host` and `desktop`
 routes, key factory, account pinning, parsers, transport, commands, and file reads.
 The feature adapter holds a `SandboxProvider`. It holds no plaintext key.
 
-See [access and security](../../docs/protocol/access-and-security.md#port-previews)
+See [access and security](../../docs/protocol/access-and-security.md#port-previews),
+the [Mac app](../../docs/protocol/desktop-app.md#port-previews),
 and the official [port API](https://docs.boat.dev/api/reference/agent/expose-a-port)
 and [port cookie rules](https://docs.boat.dev/hosting#who-can-open-a-protected-url).

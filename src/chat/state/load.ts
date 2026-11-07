@@ -1,5 +1,6 @@
 import type { SessionsResponse } from '../../shared/sessions'
 import type { WorkspaceResponse } from '../../shared/workspaces'
+import { refreshDevices } from '../device/device-actions'
 import { messageOf, type ChatContext } from './context'
 import { hydrate } from './history'
 import { orderSessions, pickActive, sortHistory } from './sessions'
@@ -18,6 +19,9 @@ const orNull = <T>(request: Promise<T>): Promise<T | null> =>
  * Without an open session, the stream starts at the beginning, so its
  * history holds every session. The watch of the shown session, which the
  * controller starts, loads the history of each later shown session.
+ *
+ * The Mac commands load after the stream starts. A request that changes
+ * after that read comes with a workspace event that the stream delivers.
  */
 export async function loadChat(context: ChatContext): Promise<void> {
   const { api, store } = context
@@ -92,4 +96,5 @@ export async function loadChat(context: ChatContext): Promise<void> {
     }
   })
   context.stream.start(after)
+  await refreshDevices(context)
 }

@@ -43,5 +43,8 @@ export function readConfiguration(value: unknown): BuildConfig {
 }
 
 export function contentSecurityPolicy(config: BuildConfig): string {
-  return appContentSecurityPolicy(config.appOrigin, config.frameSources)
+  return appContentSecurityPolicy(config.appOrigin, [
+    config.appOrigin,
+    ...config.frameSources,
+  ])
 }

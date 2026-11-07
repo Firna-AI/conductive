@@ -6,6 +6,8 @@ import { people, type PersonKey } from '../../fixtures/members'
 import { ActionButton } from '../common/actions'
 import { InlineText } from '../common/InlineText'
 import { Notice } from '../common/Notice'
+import { LostLine } from './LostLine'
+import { unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
 import { ToolGroup } from './ToolGroup'
 import { TurnEnd } from './TurnEnd'
@@ -68,12 +70,21 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
     case 'mac-command':
       return <MacCommand request={item.request} state={item.state} />
     case 'turn-end':
-      return <TurnEnd duration={item.duration} files={item.files} />
+      return (
+        <TurnEnd
+          duration={item.duration}
+          files={item.files}
+          omittedFiles={item.omittedFiles}
+        />
+      )
+    case 'lost':
+      return <LostLine reason={item.reason} what={item.what} />
     case 'stopped':
       return (
         <div className={styles.event}>
           <CircleStop size={13} />
           {stoppedLine(item.by, viewer)}
+          {item.omittedFiles ? ` · ${unlistedFiles(item.omittedFiles)}` : null}
         </div>
       )
     case 'error':

@@ -36,12 +36,26 @@
   padding-top: 4px;
 }
 
+/*
+ * The actions, or the state. The menu of the actions opens from them. Each
+ * request scopes the name, so a menu keeps to the actions of its request.
+ */
 .end {
   display: flex;
   flex-shrink: 0;
   align-items: center;
   gap: 6px;
   min-height: var(--ui-control-height);
+  anchor-name: --command-actions;
+  anchor-scope: --command-actions;
+}
+
+/*
+ * The actions of the request that draws its menu open also name the menu
+ * that the chat draws outside the region of the requests.
+ */
+.endDrawn {
+  anchor-name: --command-actions, --drawn-choices;
 }
 
 /* The Mac, the time limit, and Details, under the command. */

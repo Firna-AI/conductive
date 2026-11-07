@@ -14,8 +14,9 @@ for other milestones.
 ## Entry points
 
 `Workspace` in [`worker/workspace.ts`](../workspace.ts) is the Durable
-Object class. Its `fetch` gives each request to `WorkspaceChat.fetch` in
-`backend.ts`, which serves these routes. The path helpers live in
+Object class. Its `fetch` gives device paths to the device feature first.
+It gives each other request to `WorkspaceChat.fetch` in `backend.ts`,
+which serves these routes. The path helpers live in
 `src/shared/sessions.ts`, `src/shared/events.ts`, and
 `src/shared/agent-tools.ts`.
 

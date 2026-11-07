@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { API_PATHS } from '../../src/shared/api'
+import { streamedBody } from '../http/request-body.test-support'
 import { createHarness, type TestHarness } from '../test-support/harness'
 
 let harness: TestHarness
@@ -20,34 +21,11 @@ function messageBytes(): Uint8Array {
   )
 }
 
-function bodyStream(chunks: Uint8Array[]) {
-  const observed = { pulled: 0, bytes: 0, cancelled: 0 }
-  const body = new ReadableStream<Uint8Array>(
-    {
-      pull(controller) {
-        const chunk = chunks[observed.pulled]
-        if (!chunk) {
-          controller.close()
-          return
-        }
-        observed.pulled++
-        observed.bytes += chunk.byteLength
-        controller.enqueue(chunk)
-      },
-      cancel() {
-        observed.cancelled++
-      },
-    },
-    { highWaterMark: 0 },
-  )
-  return { body, observed }
-}
-
 it('accepts a JSON message at exactly 1 MB of UTF-8 bytes', async () => {
   const session = await harness.login()
   const bytes = messageBytes()
   expect(bytes.byteLength).toBe(1_000_000)
-  const stream = bodyStream([
+  const stream = streamedBody([
     bytes.subarray(0, 500_001),
     bytes.subarray(500_001),
   ])
@@ -69,7 +47,7 @@ it('accepts a JSON message at exactly 1 MB of UTF-8 bytes', async () => {
 
 it('cancels a JSON message on the first byte above 1 MB before dispatch', async () => {
   const session = await harness.login()
-  const stream = bodyStream([
+  const stream = streamedBody([
     messageBytes(),
     new Uint8Array([32]),
     new Uint8Array([32]),

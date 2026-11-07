@@ -41,7 +41,10 @@ export function previewLocation(
   const url = new URL(location, portUrl(request, port, false))
   url.searchParams.delete('_token')
   url.searchParams.delete('_port_auth')
-  if (url.origin === privateOrigin(port)) {
+  if (
+    ['http:', 'https:'].includes(url.protocol) &&
+    url.host === new URL(privateOrigin(port)).host
+  ) {
     const preview = new URL(request.url)
     url.protocol = preview.protocol
     url.host = preview.host

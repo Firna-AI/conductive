@@ -7,12 +7,18 @@ import {
 import { TOOL_TURN_HEADER } from './context.ts'
 import { createWorkspaceInput } from './input.ts'
 import { createdWorkspace, listedWorkspaces } from './responses.ts'
+import {
+  createMacCommandClient,
+  type MacCommandOptions,
+} from './device-client.ts'
+import type { DeviceCommandResponse } from '../src/shared/device.ts'
 
 export interface WorkspaceToolClient {
   create(
     input: AgentCreateWorkspaceRequest,
   ): Promise<AgentCreateWorkspaceResponse>
   list(): Promise<AgentListWorkspacesResponse>
+  runMacCommand(input: MacCommandOptions): Promise<DeviceCommandResponse>
 }
 
 export interface WorkspaceToolConfiguration {
@@ -78,6 +84,7 @@ export function createWorkspaceToolClient(
     }
   }
   return {
+    runMacCommand: createMacCommandClient(configuration, send),
     async create(input) {
       const value = await request(createWorkspaceInput(input))
       try {

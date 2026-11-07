@@ -7,6 +7,8 @@ import { storeBoatKey } from './sandbox/keys'
 import { signOut } from './security/auth'
 import type { RequestContext } from './security/gate'
 
+export { routeDevice } from './devices/router'
+
 export async function route(
   request: Request,
   env: AppEnv,

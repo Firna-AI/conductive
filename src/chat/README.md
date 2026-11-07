@@ -3,10 +3,10 @@
 The chat of a workspace: the session tabs with the session history, and the
 chat of the open session with its composer. It shows messages, folded tool
 calls, the running turn, steer, Stop, failures with Try again, the start
-steps of the sandbox, and the bar that takes the composer's place while the
-sandbox does not run. It builds against the fake API and the recorded chat
-events of `src/test-support/`. Milestone 8i wires it to the Worker and the
-agent runner.
+steps of the sandbox, the Mac commands of each turn, and the bar that takes
+the composer's place while the sandbox does not run. It builds against the
+fake API and the recorded chat events of `src/test-support/`. No app screen
+mounts it yet.
 
 ## Use it in the app
 
@@ -47,6 +47,9 @@ agent runner.
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position. A dialog or a sheet covers the nearest
   positioned frame: the app frame.
+- The Mac app shows two more parts of Mac commands outside the chat:
+  `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)
+  say how to mount them.
 - `useChatController` gives the controller and its snapshot to an app that
   composes `SessionTabs` and `SessionChat` in its own layout. Such an app
   takes the tabs from `tabSessions`, and the session history from
@@ -65,11 +68,32 @@ agent runner.
   These new counts are non-negative safe integers. Missing counts make an event unreadable.
 - Tool transcript items keep `tool.omittedDetailBytes`.
   `Transcript.turnCompletions` keeps each completion event by turn ID, including stopped completions and `omittedFileCount`.
-- `Transcript.refusedEvents` keeps each session's refusal markers outside rendered items.
+- A tool call shows the size of output that the runner left out, such as "1.2 MB left out".
+  A folded run of calls shows the total of its calls' current counts, so a finished run still names it.
+- A finished turn ends its file list with the files that the runner left out, such as "47 more files".
+  A stopped line adds the count of its stopped completion: "You stopped the agent · 5 changed files not listed".
+  The counts come from `turnCompletions`. A zero count shows nothing.
+- Each refusal marker of a session becomes one `lost` item at its place among the events, which shows one line.
+  The transcript keeps the marker only in that item. A repeat of the same marker replaces its item.
+  The line names the lost data and the reason in plain words, and never the stream, number, or event type.
+  No line says "this turn", because a line can follow a newer turn.
   Nullable turn context stays intact. Markers without a session stay outside per-session logs.
-  The chat state keeps no marker without a session yet.
-- Ordered history folding preserves these fields across completion and failure events.
-  Their visible presentation remains work for Milestone 8j.
+  The chat keeps no marker without a session, and shows nothing after such a loss.
+  A notice beside the data shows only when the fresh full report that repairs it is lost too. The chat builds no such notice.
+- `Transcript.turns` lists the turns that accepted events named, in the order of their first event, and whether each one ended.
+  The last one is the newest turn. A turn ends with its completion or failure, with a refused end while it runs, or when a newer turn starts.
+- Each item stays with its turn: before any request or item of a later turn, and before a message that no turn has taken yet.
+- An accepted event of a turn that has ended shows inside that turn, before the row where the turn ended.
+  It brings back no Working row and no Stop, and it changes neither a running turn nor the newest turn.
+  A running tool of an ended turn shows as stopped. The files of a late end show as a file row, and the stopped line keeps its member.
+- A refusal marker starts no turn. A refused `turn.completed` or `turn.failed` ends its turn only while that turn runs.
+  Its running calls show as stopped, its Stop request clears, and no time, files, or Try again appear.
+  A marker of an ended turn, of a turn that never started, or without a turn ends nothing.
+- `Transcript.latestItemId` names the item that the latest event added or changed, other than a lost line or a late item of an ended turn.
+  Try again shows only on the failed item of the newest turn, when no turn runs and that item is the latest.
+  A later lost line, a late item of an older turn, and a message accepted before the failure keep it.
+  A message accepted after the failure, or a newer turn, takes it away, also when the end of that turn was lost.
+- Ordered history folding preserves these fields and lines across completion and failure events.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
   stream. One load runs at a time for each session, and a failed load waits
@@ -110,12 +134,18 @@ agent runner.
   reads and the stream gets lost.
 - The chat writes no browser storage. The drafts stay in memory, and the
   server keeps the open tabs through the view route.
+- [The Mac commands](device/README.md) hold the rules of the requests,
+  their answers, and the settings of the Mac.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
   stateful fakes live in `dev/` and in test files only.
 - The parts reuse the mockup CSS modules and the mockup parts that are pure,
   so the app and the mockups look the same. The shared CSS also limits a
   long menu or sheet, which then scrolls. A mockup part that imports
   fixture data or has no handlers has an interactive version here.
+- Sizes, such as "12 KB" or "1.2 MB", come from `formatSize` in the mockups'
+  `src/components/chat/sizes.ts`. The attached files, the left-out output,
+  the mockups, and the composer of a new workspace share it. The chat keeps
+  no size formatter of its own.
 - User-facing text follows the
   [names in the product](../../docs/protocol/chat-and-events.md#names-in-the-product):
   no "Claude Code", and no provider name.
@@ -136,7 +166,7 @@ The address chooses the state. The first value of each option is the default:
 
 | Option | Values |
 | --- | --- |
-| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn` |
+| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `loss` (left-out output and files, lost events, and a lost turn end) |
 | `workspace` | `existing`, `new` (Lisbon, which starts) |
 | `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
 | `role` | `admin`, `member` |
@@ -145,22 +175,34 @@ The address chooses the state. The first value of each option is the default:
 | `viewport` | `desktop`, `mobile` |
 | `scheme` | `dark`, `light` |
 | `clock` | `running`, `frozen` |
+| `mac` | `none`, `waiting`, `longer`, `several`, `many` (four requests, the first a long script), `running`, `denied`, `done`, `exit-code`, `cut`, `timed-out`, `failed`, `unavailable`, `literal` (a two-line command and a U+00A0 command, also saved) |
+| `app` | `browser`, `mac` (the Mac app on the Mac that got the requests) |
+| `change` | `done`, `done-not-saved`, `failed` (what the page's Mac does with a change of its settings) |
+| `page` | `chat`, `this-mac` (the This Mac section of the account) |
 
 The desktop page keeps the mockup's columns, so the chat column is 718 px wide
 in a 1440 px window. The buttons of the page make the sandbox ready, stop it,
 fail its start, write the title, drop the connection, resend the last event,
-and send two parts out of order. Writes of the page change the fake's state:
+send two parts out of order, and connect the Mac again under a new pairing,
+whose next read the page then makes. Writes of the page change the fake's state:
 new sessions, rename, close, reopen, messages, steer, Stop, Try again, model
 changes, uploads, Resume, and the view. A model change opens its session
 under the ID that the chat chose. Stop and the close of a running tab
 record the member of the `role` option as the one who pressed Stop. Stop
-the sandbox ends a running turn with no Stop request.
+the sandbox ends a running turn with no Stop request. With `app=mac`, the
+page's Mac acts on each answer: Deny ends the request, and the other choices
+run the command and keep the choice. The bar of the 15 minutes shows above
+the header while they run. The Mac refuses a change of an older pairing, as
+the Worker does.
 
 ## Tests
 
 Run `npm run test -- src/chat`. The tests drive the controller and the stream
 on `FakeApiServer` and the recorded events, and render the chat with
 `react-dom/server`. `state/test-kit.ts` holds their helpers.
+
+The Mac commands have their own [tests](device/README.md#tests), and a
+check in the Mac app.
 
 ### Key code
 
@@ -171,6 +213,12 @@ on `FakeApiServer` and the recorded events, and render the chat with
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
 - `state/session-log.ts`: the event log of each session.
+- `state/known-turns.ts`: the known turns, their order, and their ends.
+- `state/placement.ts`: where an item goes in its turn, also a late one.
+- `state/late-events.ts`: accepted events of a turn that has ended.
+- `state/item-keys.ts`: the item IDs that later events of an item reuse.
+- `state/refused-events.ts`: how a refusal marker becomes a line, and how a
+  refused end ends its turn.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
@@ -180,6 +228,9 @@ on `FakeApiServer` and the recorded events, and render the chat with
   that first shows the new session.
 - `state/session-records.ts`: the local versions of the session records and
   of the workspace record.
+- `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
+  part of the chat, with the left-out counts and the plain words of a lost
+  event from the mockups' `lostCopy.ts`.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
@@ -188,7 +239,11 @@ on `FakeApiServer` and the recorded events, and render the chat with
   route builders, and the readers of their responses.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
-- `dev/`: the development page, its fake writes, and its scripted agent.
+- `device/`: the Mac commands. Their [README](device/README.md) names
+  their key code.
+- `dev/`: the development page, its fake writes, its scripted agent, its
+  Mac, and the `loss` scenario in `dev/dev-loss.ts`.
+
 
 ### Related docs
 
