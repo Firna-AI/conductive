@@ -14,6 +14,7 @@ import type { RepositoryLocation } from './repository-locations'
 
 export type BuildPhase =
   | 'create'
+  | 'allocating'
   | 'sources'
   | 'software'
   | 'install'

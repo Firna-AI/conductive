@@ -198,6 +198,55 @@ workspace event history, with chat and lifecycle events.
 [Image builds](image-builds.md) gives the build entry points, the build
 steps, the snapshot leases, and the refresh timers.
 
+### Suspended users
+
+The [operator action](../operator/README.md) records a suspension on a
+user in D1. The lifecycle code reads it before each start and each build
+step, with `requireActiveUser` from
+[`user-access.ts`](../data/user-access.ts). A refusal is 403
+`user_suspended`.
+
+- `requireOrgMember` refuses a suspended user. So that user cannot
+  create, resume, or build.
+- An open or a resume that would start the sandbox also needs an owner
+  who is not suspended. So no member can start a workspace of a suspended
+  owner. A member who is not suspended can still open that workspace and
+  read its history, also when it is archived.
+- The start coordinator checks the users of a queued start before each
+  phase: the owner and the sender of a create, the owner of a resume, and
+  the member who asked for the resume. A refusal cancels the start. A
+  cancelled resume stops its sandbox again. A cancelled create fails as
+  [Browser routes](#browser-routes) says.
+- `advanceImageBuild` stops each unfinished build that a suspended user
+  started, also before its build sandbox exists, and marks it failed. A
+  build whose create reply was lost first repeats its create to find that
+  sandbox. The build then retries its cleanup until no build sandbox of
+  that build is left.
+- `keepWorkspaceDisk` makes no disk retention restart for a suspended
+  owner. The [deleted-org retention](../members/README.md) skips such a
+  workspace too.
+
+`suspendLifecycle(workspaceId, ownerUserId)` of the workspace object stops
+one workspace of a suspended owner. The operator action calls it for each
+workspace that the user owns.
+
+1. It cancels the active start, and it revokes the preview hostnames of
+   the workspace.
+2. While a start still runs, it sets an alarm one second later and
+   reports that the stop is pending.
+3. Otherwise it stops the sandbox with the app's Boat key, also when the
+   org is deleted. A confirmed stop clears the turn records and sets the
+   `stopped` state. A sandbox that Boat no longer has counts as stopped. A
+   Boat `error` state sets the error state with `user_suspended`.
+4. A stop that Boat has not confirmed, or a failed stop, sets an alarm 30
+   seconds later and reports that the stop is pending.
+
+While the owner stays suspended, each alarm of the workspace object runs
+this stop again. So the stop continues without the operator.
+`suspendLifecycle` returns `true` when the stop is complete. It also
+returns `true` when the workspace has no suspended owner, or when another
+user owns it now.
+
 ## Settings
 
 The lifecycle code reads `LifecycleEnvironment` from
@@ -215,7 +264,9 @@ The lifecycle code reads `LifecycleEnvironment` from
 ## Development
 
 Run the lifecycle tests with `npm run test -- worker/lifecycle`. They run in
-Node with local D1 and fakes. Node cannot load `worker/workspace.ts`,
+Node with local D1 and fakes. The tests of the suspension of a user live in
+`worker/operator/`, so run `npm run test -- worker/operator` too after a
+change to the suspension checks. Node cannot load `worker/workspace.ts`,
 because it imports `cloudflare:workers`. So the logic of the class lives in
 this folder, where the tests can reach it.
 
@@ -248,6 +299,10 @@ object holds the lifecycle state, the turn records, and the events.
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
 - [`workspace-actions.ts`](workspace-actions.ts): the stop, deadline, and
   state read actions on the sandbox.
+- [`workspace-suspension.ts`](workspace-suspension.ts):
+  `suspendWorkspaceLifecycle`, the stop of a workspace of a suspended
+  owner. [`start-access.ts`](start-access.ts): `requireActiveStartUsers`,
+  the user check of a queued start.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
@@ -283,3 +338,4 @@ object holds the lifecycle state, the turn records, and the events.
 - [Shared contracts](../../src/shared/README.md): the browser and runner
   payloads.
 - [Migrations](../../migrations/README.md): the D1 tables.
+- [Operator actions](../operator/README.md): the suspension of a user.

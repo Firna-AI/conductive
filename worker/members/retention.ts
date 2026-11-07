@@ -1,4 +1,5 @@
 import type { AppDependencies, AppEnv } from '../env'
+import { suspendedWorkspace, suspendedUserError } from '../data/user-access'
 import { cleanupBusy } from './cleanup-lease'
 import { deletedOrgProvider, ignoreAlreadyRemoved } from './cleanup-provider'
 import { markResourceStopped } from './deletion-data'
@@ -76,6 +77,8 @@ export function deletedOrgRetention(
         throw cleanupBusy()
       let resumeFailure: { error: unknown } | null = null
       try {
+        if (await suspendedWorkspace(env.DB, workspaceId))
+          throw suspendedUserError()
         await provider.resume(disk.sandboxId, {}, ttlSeconds)
         await ownership.renew()
         if (

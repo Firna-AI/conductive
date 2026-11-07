@@ -10,11 +10,12 @@ export async function saveUser(
   id: string,
   profile: GitHubIdentity,
   now: number,
+  termsVersion?: string,
 ): Promise<User> {
   const user = await db
     .prepare(
-      `INSERT INTO users (id, github_id, github_login, display_name, avatar_url, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO users (id, github_id, github_login, display_name, avatar_url, created_at, updated_at, terms_version, terms_accepted_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (github_id) DO UPDATE SET
          github_login = excluded.github_login, display_name = excluded.display_name,
          avatar_url = excluded.avatar_url, updated_at = excluded.updated_at
@@ -28,6 +29,8 @@ export async function saveUser(
       profile.avatarUrl,
       now,
       now,
+      termsVersion ?? null,
+      termsVersion ? now : null,
     )
     .first<User>()
   if (!user) throw new Error('The user record was not saved')
@@ -61,7 +64,7 @@ export function sessionUser(
       `SELECT users.id, users.github_id AS githubId, users.github_login AS githubLogin,
       users.display_name AS displayName, users.avatar_url AS avatarUrl
      FROM users JOIN sessions ON sessions.user_id = users.id
-     WHERE sessions.id = ? AND sessions.expires_at > ?`,
+     WHERE sessions.id = ? AND sessions.expires_at > ? AND users.suspended_at IS NULL`,
     )
     .bind(sessionId, now)
     .first<User>()

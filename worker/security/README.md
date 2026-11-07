@@ -4,6 +4,7 @@ This area checks browser sign-in, request origins, and org membership.
 Protected app requests pass through `gate` before route dispatch.
 The gate checks access before it reads a write body.
 Open chat tabs and terminal sockets check their access again through the [shared connection reader](#open-connections).
+Sign-in also asks for the [terms consent](#terms-consent) and refuses [suspended users](#suspended-users).
 
 ## JSON request bodies
 
@@ -26,6 +27,7 @@ Each identity holds a session ID, a user ID, an org ID, and a workspace ID.
 Every identity passes only when all of these are true:
 
 - The session belongs to that user and is not expired.
+- The user is not suspended.
 - The user is a member of the org.
 - The org is not deleted.
 - The workspace belongs to that org.
@@ -55,6 +57,33 @@ Each caller also follows these rules:
 `scheduleConnectionCheck` is the default timer of both callers.
 Tests replace it with their own `ConnectionScheduler`.
 
+## Terms consent
+
+Each GitHub sign-in starts after an agreement to the current Terms.
+`TERMS_VERSION` in [`src/shared/terms.ts`](../../src/shared/terms.ts) names the current revision.
+
+- `startSignIn` sends the browser to GitHub only when the address of `API_PATHS.githubSignIn` has the current revision as its `terms_version` value.
+- The sign-in screen of the app shows the agreement, and its button opens `acceptedTermsSignInPath()`, which adds that value.
+- Without the current revision, as in the browser sign-in of the Mac app, the Worker answers with an HTML agreement page.
+  `termsConsentPage` in [`src/marketing/sign-in-consent.ts`](../../src/marketing/sign-in-consent.ts) makes it.
+  Its Continue with GitHub link adds the current revision and keeps the `desktop_challenge` of the Mac app.
+  Its links lead to the Terms and Privacy pages on `MARKETING_ORIGIN`, or on the product domain without that setting.
+- The signed OAuth state cookie carries the revision to the callback. A `terms_version` value in the callback address counts for nothing.
+- The callback creates a new account only when its signed state carries the current revision.
+  Otherwise it answers 403 `terms_acceptance_required`, and it saves no user and no session.
+- A new account saves the revision and the time in the `terms_version` and `terms_accepted_at` columns of `users`.
+  A later sign-in changes neither value. An account from before the Terms keeps both values empty.
+
+## Suspended users
+
+The [operator action](../operator/README.md) records a suspension on a user and deletes all of their sessions.
+After that, each entry of this area refuses that user:
+
+- The GitHub callback answers 403 `user_suspended`, and it saves no session.
+- The sign-in exchange of the Mac app answers 403 `user_suspended`, and it sets no cookie.
+- `sessionUser` finds no user for a suspended account. So the gate answers 401 `sign_in_required` to each session of that user.
+- `readConnectionAccess` gives a suspended user no grant. So their open chat tabs and terminal sockets close at the next refresh.
+
 ## Development
 
 Run `npm run test -- worker/security/gate.test.ts worker/security/gate-body.test.ts worker/http/bounded-body.test.ts` from the repository root.
@@ -67,13 +96,16 @@ The connection reader has no test file in this folder.
 The tests of its callers check it.
 After a change to the reader, run `npm run test -- worker/chat/tab-access.test.ts worker/chat/tab-deadlines.test.ts worker/chat/security.test.ts worker/terminal/access.test.ts`.
 
+After a change to the terms consent or to the suspension checks of sign-in, run `npm run test -- worker/security/terms.test.ts worker/security/auth.test.ts worker/operator/route.test.ts`.
+
 ### Key Code
 
 - [gate.ts](gate.ts) checks the host, origin, session, membership, and JSON body.
 - [connection-access.ts](connection-access.ts) exports `readConnectionAccess`, the identity and grant types, `CONNECTION_CHECK_MS`, and `scheduleConnectionCheck`.
 - [gate-body.test.ts](gate-body.test.ts) checks the exact body limit and early cancellation through HTTP routes.
 - [gate.test.ts](gate.test.ts) checks access, dispatch order, and JSON errors.
-- [auth.ts](auth.ts) starts and finishes GitHub sign-in.
+- [auth.ts](auth.ts) starts and finishes GitHub sign-in, with the terms consent and the suspension check.
+- [terms.test.ts](terms.test.ts) checks the consent at the start of sign-in and the consent record of new and existing accounts.
 - [cookies.ts](cookies.ts) builds and reads the session cookies.
 - [crypto.ts](crypto.ts) signs and verifies tokens.
 
@@ -82,3 +114,4 @@ After a change to the reader, run `npm run test -- worker/chat/tab-access.test.t
 - [Access requirements](../../docs/protocol/access-and-security.md#hostnames-and-gates)
 - [Access of open tabs](../../docs/protocol/access-and-security.md#orgs-and-workspaces)
 - [Worker backend](../README.md)
+- [Operator actions](../operator/README.md)

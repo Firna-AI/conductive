@@ -37,6 +37,7 @@ export interface WorkspaceLifecycleEndpoint {
     error: NonNullable<DurableLifecycleState['error']>,
   ): Promise<void>
   lifecycleStopped(): Promise<void>
+  suspendLifecycle(workspaceId: string, ownerUserId: string): Promise<boolean>
   clearLifecycle(): Promise<void>
   lifecycleActivity(): Promise<void>
   openLifecycleTab(tabId: string): Promise<void>

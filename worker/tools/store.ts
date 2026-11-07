@@ -24,9 +24,10 @@ export async function callingWorkspace(
        JOIN workspaces w ON w.id = t.workspace_id
        JOIN orgs o ON o.id = w.org_id
        JOIN org_members m ON m.org_id = w.org_id AND m.user_id = w.owner_user_id
+       JOIN users owner ON owner.id = w.owner_user_id
        WHERE t.token_hash = ? AND t.revoked_at IS NULL
        AND w.archived_at IS NULL AND w.state != 'archived'
-       AND o.deleted_at IS NULL`,
+       AND o.deleted_at IS NULL AND owner.suspended_at IS NULL`,
     )
     .bind(await hash(token))
     .first<unknown>()
@@ -71,7 +72,7 @@ export async function memberSender(
       `SELECT u.id, u.github_login AS githubLogin,
        u.display_name AS displayName, u.avatar_url AS avatarUrl
        FROM users u JOIN org_members m ON m.user_id = u.id
-       WHERE m.org_id = ? AND u.id = ?`,
+       WHERE m.org_id = ? AND u.id = ? AND u.suspended_at IS NULL`,
     )
     .bind(orgId, userId)
     .first<unknown>()

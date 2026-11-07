@@ -132,8 +132,12 @@ chat, and five tabs at the bottom.
 | Path                | What it shows                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- |
 | `marketing`         | The home page of the site: the app, its features, and sign-up                 |
+| `marketing/terms`   | The Terms of use, a draft for lawyer review, with suspension and abuse reports |
+| `marketing/privacy` | The Privacy notice, a draft for lawyer review                                 |
+| `marketing/not-found` | The page of the site for an address that it does not have                   |
+| `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
-| `app/sign-in`       | The GitHub sign-in, and Get started, the only first run, in three steps       |
+| `app/sign-in`       | The GitHub sign-in with the agreement to the Terms, the page before GitHub, and Get started, the only first run, in three steps |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, and with an error      |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted     |
@@ -154,8 +158,11 @@ chat, and five tabs at the bottom.
 | `user-flows`        | Sign up, create a workspace, reopen it, create an org, run a Mac command      |
 
 A folder page shows at most five screens, saved states included. A folder
-with child folders shows only its canonical screen, as `app`, `app/sign-in`,
-`app/orgs`, `app/org-settings`, `app/banner`, and `app/chat` do. `app/org-settings/cloud-computer` and its building
+with child folders shows only its canonical screen, as `marketing`, `app`,
+`app/sign-in`, `app/orgs`, `app/org-settings`, `app/banner`, and `app/chat`
+do. `marketing/pictures` has no screen of its own. Each picture's capture
+page is its own entry at `marketing/pictures/<picture>`, so each page shows
+one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. `app/sign-in/get-started`
 moved into its own folder and kept its path. Get started is the only first
@@ -351,9 +358,19 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
 - Every picture is a real screen of the catalogue, not a drawing of one.
   `ScreenFrame` lays the screen out at its own size, 1440 × 900 on desktop
   and 390 × 800 on a phone, then scales it and crops it to one part.
-  `src/screens/marketingPictures.tsx` chooses the screen, its state, and the
-  part, in px of the screen. When a layout of the app changes, look at the
-  pictures again.
+  `src/screens/marketingPictureList.ts` is the one list of the pictures. It
+  gives the frame of each picture. For each layout, it gives the label, the
+  screen, the part in px of the screen, and the scale. The site and the
+  capture command read the same list, and the list imports nothing.
+  `src/screens/marketingPictures.tsx` chooses the screen and its state.
+  When a layout of the app changes, look at the pictures again.
+- Each picture has a capture page at `marketing/pictures/<picture>`.
+  `PictureCapture` in `src/screens/marketingPictures.tsx` draws the part of
+  the screen of one layout at its own size, at scale 1 and without a frame,
+  from the top left corner of the page. The
+  [capture command](../../src/marketing/README.md#pictures) opens each page
+  at the size of the screen, and saves that part as the file of the
+  picture.
 - A picture is `inert`, so a visitor cannot focus or press anything in it.
   It also sets `StillLinks`: a `ScreenLink` in it is plain content, and an
   outside link has no address. So a picture never links into the catalogue.
@@ -369,6 +386,29 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
 - The product is "Conductive", on `conductive.build`.
   `src/brand.ts` holds the name and the domains, so that one change renames
   the product.
-- The footer and the sign-in page link to Terms and Privacy, from
-  `LegalLinks` and decision 35. The pages are not drawn yet, so the links
-  have no address.
+- The footer and the sign-in page link to `marketing/terms` and
+  `marketing/privacy` through `LegalLinks`. The agreement of the sign-in
+  page links to the same pages in its text.
+- The Terms, Privacy, and not-found pages draw the documents that the site
+  serves: `termsDocument`, `privacyDocument`, and `notFoundText` from the
+  code of the [marketing site](../../src/marketing/README.md#legal-drafts).
+  Their words are text without markup, in the model of
+  [`legal-text.ts`](../../src/marketing/legal-text.ts). The site renders
+  that text as HTML. The mockups render it with `LegalDocumentView` and
+  `CatalogueText`, through `RunningText`, which the app also uses. So the
+  site, the app, and the mockups show the same words. Each legal page keeps
+  the notice of the draft and its marked draft fields.
+- The footer has a Report abuse column with `abuseAddress` from
+  [`legal-text.ts`](../../src/marketing/legal-text.ts), which is `abuse@`
+  and the product domain. The Terms page gives the same address.
+- `SitePage` gives a page of the site its header and its footer, and
+  `TextPage` gives a text page its label, title, and lead. A `bare` page
+  has only the wordmark in its header, and no footer.
+- `marketing/not-found` keeps the header and the footer of the site, with a
+  link to the home page.
+- `app/sign-in/terms` draws the page that the Worker shows before GitHub
+  when a sign-in starts without the agreement, such as the browser sign-in
+  of the Mac app. It has the words of the sign-in page from
+  `src/screens/signInCopy.ts`, and the agreement with its links. It runs
+  no script, so it has the look of the site, with only the wordmark in its
+  header and no footer.

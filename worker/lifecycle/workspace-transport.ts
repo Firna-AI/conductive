@@ -59,6 +59,7 @@ export function workspaceLifecycleEndpoint(
     lifecyclePrepared: () => transport.lifecyclePrepared(),
     lifecycleFailed: (error) => transport.lifecycleFailed(error),
     lifecycleStopped: () => transport.lifecycleStopped(),
+    suspendLifecycle: (id, ownerId) => transport.suspendLifecycle(id, ownerId),
     clearLifecycle: () => transport.clearLifecycle(),
     lifecycleActivity: () => transport.lifecycleActivity(),
     openLifecycleTab: (tabId) => transport.openLifecycleTab(tabId),

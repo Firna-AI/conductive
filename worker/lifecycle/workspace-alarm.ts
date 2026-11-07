@@ -4,6 +4,8 @@ import { retrySandboxCleanup } from './cleanup'
 import type { DurableLifecycle } from './durable'
 import type { ImageCoordinator } from './image-coordinator'
 import type { WorkspaceStartCoordinator } from './start-coordinator'
+import type { TurnScopes } from './turns'
+import { suspendWorkspaceLifecycle } from './workspace-suspension'
 
 export async function runWorkspaceAlarm(input: {
   storage: WorkspaceStorage
@@ -12,21 +14,33 @@ export async function runWorkspaceAlarm(input: {
   images: ImageCoordinator
   starts: WorkspaceStartCoordinator
   lifecycle: DurableLifecycle
+  turns: TurnScopes
 }): Promise<void> {
   const { storage, env, dependencies } = input
   if (await input.images.read()) {
     await input.images.alarm()
     return
   }
+  let advancedStart = false
   if (await input.starts.pending()) {
     try {
-      if (!(await input.starts.advance()))
+      if (!(await input.starts.advance())) {
         await storage.setAlarm(dependencies.now() + 1_000)
+        return
+      }
+      advancedStart = true
     } catch {
       await storage.setAlarm(dependencies.now() + 30_000)
+      return
     }
-    return
   }
+  const state = await input.lifecycle.read()
+  if (
+    state &&
+    (await suspendWorkspaceLifecycle(input, state.workspaceId)) !== undefined
+  )
+    return
+  if (advancedStart) return
   const cleanupId = await storage.get('text', 'lifecycle:cleanup')
   if (cleanupId) {
     try {

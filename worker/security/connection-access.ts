@@ -48,6 +48,7 @@ export async function readConnectionAccess(
      SELECT requested.connectionNumber, sessions.expires_at AS expiresAt FROM requested
      JOIN sessions ON sessions.id = requested.sessionId AND sessions.user_id = requested.userId
        AND sessions.expires_at > ?
+     JOIN users u ON u.id = requested.userId AND u.suspended_at IS NULL
      JOIN org_members m ON m.org_id = requested.orgId AND m.user_id = requested.userId
      JOIN orgs o ON o.id = m.org_id AND o.deleted_at IS NULL
      JOIN workspaces w ON w.org_id = o.id AND w.id = requested.workspaceId

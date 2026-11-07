@@ -1,0 +1,54 @@
+import type { UserSuspensionResponse } from '../../src/shared/operator'
+import type { WorkspaceRuntime } from '../lifecycle/workspace-runtime'
+import { jobSoftware, readBuildJob } from '../lifecycle/build-data'
+import { ownedBuilds, ownedWorkspaces, recordUserSuspension } from './data'
+
+export async function suspendUser(
+  runtime: WorkspaceRuntime,
+  githubId: number,
+  operatorId: string,
+): Promise<UserSuspensionResponse> {
+  const { env, dependencies } = runtime
+  const user = await recordUserSuspension(
+    env.DB,
+    githubId,
+    operatorId,
+    dependencies.now(),
+  )
+  const pendingWorkspaceIds: string[] = []
+  for (const workspace of await ownedWorkspaces(env.DB, user.userId)) {
+    try {
+      if (
+        await runtime
+          .workspace(workspace.id)
+          .suspendLifecycle(workspace.id, user.userId)
+      )
+        continue
+    } catch {
+      // The persistent suspension also blocks the next alarm and start.
+    }
+    pendingWorkspaceIds.push(workspace.id)
+  }
+  const pendingBuildIds: string[] = []
+  for (const build of await ownedBuilds(env.DB, user.userId)) {
+    pendingBuildIds.push(build.id)
+    try {
+      const job = await readBuildJob(env.DB, build.orgId, build.id)
+      await env.WORKSPACES?.getByName(`org-image:${build.orgId}`, {
+        locationHint: 'weur',
+      }).scheduleImage({
+        orgId: build.orgId,
+        buildId: build.id,
+        software: jobSoftware(job),
+        nextAt: dependencies.now(),
+      })
+    } catch {
+      // The existing image alarm also checks the persistent suspension.
+    }
+  }
+  return {
+    ...user,
+    pendingWorkspaceIds,
+    pendingBuildIds,
+  }
+}

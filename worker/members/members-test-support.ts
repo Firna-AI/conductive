@@ -113,6 +113,7 @@ export async function seedWorkspace(
   org: Org,
   owner: User,
   id = 'workspace-one',
+  repositoryId = `repository-${org.id}`,
 ) {
   const db = harness.env.DB
   const creator = await workspaceCreator(db, org.id, owner.id)
@@ -128,7 +129,7 @@ export async function seedWorkspace(
         `INSERT OR IGNORE INTO repositories (id, org_id, github_repository_id, full_name, default_branch)
        VALUES (?, ?, 1, 'example/repository', 'main')`,
       )
-      .bind(`repository-${org.id}`, org.id),
+      .bind(repositoryId, org.id),
     db
       .prepare(
         `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
@@ -138,7 +139,7 @@ export async function seedWorkspace(
       .bind(
         id,
         org.id,
-        `repository-${org.id}`,
+        repositoryId,
         creator.id,
         `general-${org.id}`,
         `sandbox-${id}`,

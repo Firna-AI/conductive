@@ -139,6 +139,8 @@ An expired lease permits a later attempt after a worker stops.
 
 The maintenance capability accepts only workspace IDs from its callback.
 It checks the current lease before every operation.
+The disk lists of maintenance, retention, and Restore leave out each workspace whose owner the [operator suspended](../operator/README.md).
+The capability also refuses to restart such a workspace, so retention starts no cloud computer of a suspended user.
 A restart must be due at its stored keepalive date.
 It resumes with `noEnv` and empty env vars, then stops the sandbox.
 It supplies no workspace token, agent login, or org secret.

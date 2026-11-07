@@ -24,6 +24,7 @@ export interface WorkspaceStartJob {
   allocatedSandboxId?: string
   cancelled?: boolean
   failure?: { code: string; message: string; status: number }
+  requestedByUserId?: string
 }
 
 export interface WorkspaceCreation {

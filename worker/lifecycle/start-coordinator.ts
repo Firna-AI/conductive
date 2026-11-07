@@ -21,6 +21,7 @@ import { advanceStartMachine } from './start-machine'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { creationAdmissionResponse } from './creation-admission-response'
 import { StartWaiters } from './start-waiters'
+import { requireActiveStartUsers } from './start-access'
 
 /** The actor's alarm owns progress. Waiting HTTP requests own no phase. */
 export class WorkspaceStartCoordinator {
@@ -51,6 +52,7 @@ export class WorkspaceStartCoordinator {
       if (job.kind === 'create' && (await this.storage.creationResult()))
         return false
       if (await this.storage.job()) return false
+      await requireActiveStartUsers(this.env.DB, job)
       const epoch = await this.storage.epoch()
       const state = await this.endpoint.readLifecycle()
       if (
@@ -99,6 +101,7 @@ export class WorkspaceStartCoordinator {
     let provider: SandboxProvider | undefined
     try {
       if (job.phase === 'records' && !job.cancelled && !job.failure) {
+        await requireActiveStartUsers(this.env.DB, job)
         const imageName = await prepareWorkspaceRecords(
           this.env,
           this.dependencies,
@@ -135,6 +138,7 @@ export class WorkspaceStartCoordinator {
         if (result) await this.finish(result)
         return result !== null
       }
+      await requireActiveStartUsers(this.env.DB, job)
       const row = await readWorkspace(this.env.DB, job.orgId, job.workspaceId)
       if (row.archivedAt !== null || row.state === 'archived') {
         await this.cancel()
@@ -225,6 +229,7 @@ export class WorkspaceStartCoordinator {
         error instanceof HttpError ? error : new WorkspaceStartError(null)
       const failedJob = {
         ...job,
+        cancelled: job.cancelled || failure.code === 'user_suspended',
         failure: job.failure ?? {
           code: failure.code,
           message: failure.message,

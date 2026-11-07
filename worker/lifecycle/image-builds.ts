@@ -2,13 +2,17 @@ import { providerState } from './provider-state'
 import type { ImageBuild } from '../../src/shared/org-settings'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import {
+  requireActiveUser,
+  userSuspended,
+  suspendedUserError,
+} from '../data/user-access'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
 import { requireOrgMember } from './access'
 import {
-  assignBuildSandbox,
   assignBuildSnapshot,
   failBuild,
   insertBuild,
@@ -21,6 +25,7 @@ import {
 import { advanceBuildCommand, cleanupBuild } from './build-execution'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { IMAGE_DAY_MS, scheduleIdleImage } from './image-schedule'
+import { allocateImageBuild } from './image-allocation'
 import {
   firstOrgAdmin,
   readImageSettings,
@@ -31,7 +36,6 @@ import {
 import {
   capturedRepositoryLocations,
   repositoryLocations,
-  repositoryEnvironment,
   readRepositoryLocations,
   type RepositoryLocation,
 } from './repository-locations'
@@ -183,22 +187,21 @@ export async function advanceImageBuild(
     )
     if (job.phase === 'cleanup' || job.state !== 'running')
       return await cleanupBuild(runtime, provider, job)
+    const recoveringAllocation = job.phase === 'allocating' && !job.sandboxId
+    if (
+      !recoveringAllocation &&
+      job.startedByUserId &&
+      (await userSuspended(env.DB, job.startedByUserId))
+    )
+      throw suspendedUserError()
     if (job.phase === 'create') {
-      const sandbox = await provider.create({
-        snapshotName: job.previousImageName ?? undefined,
-        name: `image-${job.buildId}`,
-        env: repositoryEnvironment(
-          capturedRepositoryLocations(
-            job.repositoryLocationsJson,
-            readRepositories(JSON.parse(job.repositoriesJson)),
-          ),
-        ),
-        ttlSeconds: 1_800,
-        idempotencyKey: `image-${job.buildId}`,
-        labels: { org: orgId, build: buildId },
-      })
-      await assignBuildSandbox(env.DB, buildId, sandbox.id)
-      await updateBuildJob(env.DB, buildId, 'sources')
+      await updateBuildJob(env.DB, buildId, 'allocating')
+      job = { ...job, phase: 'allocating' }
+    }
+    if (job.phase === 'allocating') {
+      if (!recoveringAllocation && job.startedByUserId)
+        await requireActiveUser(env.DB, job.startedByUserId)
+      await allocateImageBuild(env.DB, provider, job)
       return false
     }
     if (!job.sandboxId) throw new Error('Missing build sandbox')
@@ -255,8 +258,9 @@ export async function advanceImageBuild(
     if (job.phase === 'cleanup' || job.state !== 'running') throw error
     if (
       provider &&
-      job.phase === 'create' &&
+      job.phase === 'allocating' &&
       !job.sandboxId &&
+      !(error instanceof HttpError && error.code === 'user_suspended') &&
       (!(error instanceof ProviderError) ||
         [
           'unavailable',

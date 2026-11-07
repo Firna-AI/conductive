@@ -1,5 +1,6 @@
 import { providerState, type ProviderState } from './provider-state'
 import type { SandboxProvider } from '../sandbox/provider'
+import { requireActiveUser } from '../data/user-access'
 import { WorkspaceStartError } from './workspace-start'
 import { DISK_KEEPALIVE_MS } from './durable-types'
 import {
@@ -47,6 +48,7 @@ export async function keepWorkspaceDisk(
     await setRetention(env.DB, workspaceId, 'resume')
     if (status === 'stopping') return false
     if (status === 'stopped') {
+      await requireActiveUser(env.DB, row.ownerUserId)
       const environment = await workspaceEnvironment(env, orgId)
       const token = await readWorkspaceToken(env, workspaceId)
       const locations = await workspaceRepositoryLocations(env.DB, workspaceId)

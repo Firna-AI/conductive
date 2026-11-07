@@ -3,7 +3,8 @@ import { siteFooter, siteHeader } from './chrome'
 import { pageDocument, type PageHead } from './document'
 import { homeContent } from './home'
 import { html, type Html } from './html'
-import { legalContent, notFoundContent, type LegalDocument } from './legal'
+import { legalContent, notFoundContent } from './legal'
+import type { LegalDocument } from './legal-text'
 import { siteLinks, sitePaths, type SiteLinks } from './links'
 import { privacyDocument } from './privacy'
 import { contentSecurityPolicy } from './styles'
@@ -60,7 +61,7 @@ const notFoundPage: PageDefinition = {
     title: `Page not found – ${productName}`,
     description: `This address is not a page of ${productName}.`,
   },
-  content: () => notFoundContent(sitePaths.home),
+  content: () => notFoundContent(),
 }
 
 /**

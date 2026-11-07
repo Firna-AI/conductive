@@ -23,6 +23,7 @@ import { initializeWorkspaceLifecycle } from './lifecycle-admission'
 import { createWorkspaceLifecycle } from './create-workspace-lifecycle'
 import { finishDiskMaintenance } from './disk-retention'
 import { clearRetention } from './retention-data'
+import { suspendWorkspaceLifecycle } from './workspace-suspension'
 import type {
   PendingTurn,
   WorkspaceLifecycleEndpoint,
@@ -133,6 +134,25 @@ export function createWorkspaceController(
       await turns.clear()
       await lifecycle.stopped()
     },
+    async suspendLifecycle(
+      workspaceId: string,
+      ownerUserId: string,
+    ): Promise<boolean> {
+      return (
+        (await suspendWorkspaceLifecycle(
+          {
+            env,
+            dependencies,
+            storage: platform.storage,
+            lifecycle,
+            starts,
+            turns,
+          },
+          workspaceId,
+          ownerUserId,
+        )) ?? true
+      )
+    },
     async clearLifecycle(): Promise<void> {
       await turns.clear()
       await lifecycle.clear(
@@ -184,6 +204,7 @@ export function createWorkspaceController(
         images: images,
         starts: starts,
         lifecycle: lifecycle,
+        turns,
       })
     },
   }

@@ -76,8 +76,10 @@ export async function authenticateWorkspaceToken(
      FROM workspace_tokens JOIN workspaces
        ON workspaces.id = workspace_tokens.workspace_id
      JOIN orgs ON orgs.id = workspaces.org_id
+     JOIN users owner ON owner.id = workspaces.owner_user_id
      WHERE token_hash = ? AND revoked_at IS NULL
-       AND workspaces.archived_at IS NULL AND orgs.deleted_at IS NULL`,
+       AND workspaces.archived_at IS NULL AND orgs.deleted_at IS NULL
+       AND owner.suspended_at IS NULL`,
   )
     .bind(await hash(token))
     .first<{ workspaceId: string; orgId: string }>()

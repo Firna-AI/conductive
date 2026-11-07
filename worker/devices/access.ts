@@ -89,6 +89,8 @@ export function currentCommandAccess(
       `SELECT w.org_id AS orgId, w.name FROM workspaces w
     JOIN orgs o ON o.id = w.org_id
     JOIN org_members m ON m.org_id = w.org_id AND m.user_id = ?
+    JOIN users sender ON sender.id = m.user_id AND sender.suspended_at IS NULL
+    JOIN users owner ON owner.id = w.owner_user_id AND owner.suspended_at IS NULL
     JOIN workspace_tokens t ON t.workspace_id = w.id
     WHERE w.id = ? AND w.archived_at IS NULL AND o.deleted_at IS NULL
     AND w.state NOT IN ('archived', 'stopped', 'error')

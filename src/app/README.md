@@ -120,6 +120,13 @@ the invite, the roles, and the removal there.
   and no text of the app names Boat.
 - Get started has three steps: the GitHub App, the first org, and Claude or
   Codex. A reply of the API names only these steps.
+- The sign-in screen shows the agreement to the Terms and the Privacy
+  notice above Continue with GitHub. Its words come from `termsAgreement`
+  in `src/marketing/legal-text.ts`, and its links lead to the marketing
+  site. Continue with GitHub opens `acceptedTermsSignInPath()`, which
+  carries the current revision of the Terms, as
+  [Terms consent](../../worker/security/README.md#terms-consent) says.
+  `../shell/auth/SignInScreen.test.tsx` checks that address.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
   `AccountModel.repositories`, before the org exists. The create sends the

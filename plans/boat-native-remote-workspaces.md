@@ -5883,14 +5883,32 @@ Depends on: 4f, 15j
 Apply the `fix after merge` items of the marketing site and the
 mockups. Added on 7 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/marketing-pictures-one-list.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/marketing-mockup-gaps.md`, and
-      delete that item.
+User choice, 7 November 2026: complete the first three items here. Keep the
+shared UI item open. Its change and release belong to `futex-ai/ui` and
+need the user's go-ahead.
+
+Agent calls, 7 November 2026: record consent only for new accounts, without
+inventing consent for existing users. Identify operators by configured,
+immutable GitHub IDs. Keep allocation intent until cleanup can recover a
+lost reply. Capture each picture at its source screen viewport, then clip
+the shared crop, so viewport units keep the screen's layout. Keep the
+desktop agents crop and correct its label, because the screen's menu
+covers one attachment.
+
+- [x] Apply the recorded option of `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply the recorded option of `plans/follow-ups/marketing-pictures-one-list.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply the recorded option of `plans/follow-ups/marketing-mockup-gaps.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
 - [ ] Apply the recorded option of `plans/follow-ups/firna-ui-missing-parts.md`, and
       delete that item.
+
+Evidence: `.context/milestone-15m/reports/`,
+`.context/milestone-15m/marketing-pictures.log`,
+`.context/milestone-15m/picture-dimensions.json`,
+`.context/milestone-15m/preview-smoke.json`, and
+`.context/milestone-15m/check.log`.
 
 ## Milestone 15d: Marketing site
 

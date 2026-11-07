@@ -169,6 +169,13 @@ export class Workspace
     return this.controller.lifecycleStopped()
   }
 
+  async suspendLifecycle(
+    workspaceId: string,
+    ownerUserId: string,
+  ): Promise<boolean> {
+    return this.controller.suspendLifecycle(workspaceId, ownerUserId)
+  }
+
   async clearLifecycle(): Promise<void> {
     return this.controller.clearLifecycle()
   }
