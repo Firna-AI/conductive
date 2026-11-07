@@ -5721,17 +5721,26 @@ Apply decision 130 A. Added on 8 November 2026. A failed first start
 removes the new workspace (decision 91 D), so a message that a member
 sends during the first start must not be accepted before it succeeds.
 
-- [ ] Draw the waiting composer in the mockups: during the first start of
+Implementation calls, 7 November 2026: use the existing creation result
+for server admission. This keeps the resume queue. The chat remembers
+observed start success, so later resume events do not hold its composer.
+
+- [x] Draw the waiting composer in the mockups: during the first start of
       a new workspace, the composer keeps its text, and Send waits with a
       short reason. Then build it, and compare it with its mockup.
-- [ ] Hold the later messages: the server refuses a new message to a
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8n`.
+- [x] Hold the later messages: the server refuses a new message to a
       workspace whose first start has not succeeded, in every session,
       with a clear 409 error. A repeat of an accepted request with the
       same message ID still succeeds. Normal resumes keep their queue
       (decision 14 A). The user sends the held text when the start
       succeeds. The app does not send it automatically.
-- [ ] Update `docs/protocol/chat-and-events.md` and the failed-create rules
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8n`.
+- [x] Update `docs/protocol/chat-and-events.md` and the failed-create rules
       in `docs/protocol/workspaces-and-sandboxes.md`, with "(decision 130)".
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8n`.
+
+Evidence: `.context/boat-native-remote-workspaces/8n-report.md`.
 
 ## Milestone 16a: First deployment
 

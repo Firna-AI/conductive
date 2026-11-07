@@ -23,6 +23,20 @@ export function findChatWorkspace(
     .first<WorkspaceRecord>()
 }
 
+export async function firstStartIncomplete(
+  db: D1Database,
+  workspaceId: string,
+): Promise<boolean> {
+  return Boolean(
+    await db
+      .prepare(
+        "SELECT 1 FROM workspace_creation_attempts WHERE workspace_id = ? AND state != 'succeeded'",
+      )
+      .bind(workspaceId)
+      .first(),
+  )
+}
+
 export async function tokenWorkspace(
   db: D1Database,
   token: string,

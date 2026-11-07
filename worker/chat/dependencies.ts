@@ -7,6 +7,7 @@ import {
 } from '../security/connection-access'
 import { loginResolver } from './login-access'
 import { readLoginAvailability } from './login-availability'
+import { firstStartIncomplete } from './queries'
 import type { ChatDependencies } from './types'
 
 /**
@@ -24,6 +25,7 @@ export function chatDependencies(
     scheduleBrowserCheck: scheduleConnectionCheck,
     readConnectionAccess: (tabs, now) =>
       readConnectionAccess(env.DB, tabs, now),
+    firstStartIncomplete: (id) => firstStartIncomplete(env.DB, id),
     randomId: randomToken,
     readLoginAvailability: (targets) => {
       const id = workspaceId()

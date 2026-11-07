@@ -25,6 +25,12 @@ export const createWorkspace = defineUseCase({
         'The workspace opens at once as Lisbon, on a new branch, and joins General. The first message waits for the sandbox.',
     },
     {
+      screenPath: 'app/new-workspace/waiting',
+      title: 'Write more',
+      description:
+        'The user writes a second message. The composer keeps it, and Send waits until the sandbox is ready. The user then sends it.',
+    },
+    {
       screenPath: 'app/new-workspace/first-turn',
       title: 'The agent starts',
       description:
