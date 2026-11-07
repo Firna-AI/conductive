@@ -80,8 +80,9 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
 
 ## CI
 
-GitHub Actions runs `npm run check` on each push and pull request, from
-`.github/workflows/ci.yml`.
+GitHub Actions runs `npm run check` from `.github/workflows/ci.yml` on each
+pull request, and on each push to `main` and to the primary branch of the
+plan. A push to another branch runs no CI until its pull request opens.
 
 - Agent merges: off
 
