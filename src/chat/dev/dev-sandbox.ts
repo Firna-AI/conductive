@@ -125,7 +125,7 @@ export function requestStop(backend: DevBackend, sessionId: string): void {
     type: 'turn.stop-requested',
     sessionId,
     turnId,
-    requestedById: backend.viewerId,
+    requestedById: backend.viewer.id,
   })
   endTurn(backend, sessionId)
 }

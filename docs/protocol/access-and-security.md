@@ -168,11 +168,30 @@ Later screens add the frame and connection sources that they need.
 
 ## Agent logins in a sandbox
 
-- Each turn runs on the agent login of its sender (decision 49).
-- With each turn, the agent runner gets the login of the sender over its
+- Each session runs on the agent login of its starter, the member who
+  started the session (decision 105). Each turn of the session uses that
+  login, whoever sends its messages.
+- The GitHub token of a turn and its Mac requests still follow its sender,
+  as [GitHub tokens](#github-tokens) and
+  [Mac commands](agent-tools.md#mac-commands) say.
+- With each turn, the agent runner gets the login of the starter over its
   connection to the Durable Object. Reason: the sandbox gets its secrets
-  only at a start, and each turn can have another sender.
+  only at a start, and the sessions of one sandbox can have different
+  starters.
+- The workspace gives the login of a starter to the runner only while the
+  starter is a member of the org.
+  [Messages](chat-and-events.md#messages) says what a message of another
+  member does when the login of the starter cannot be used.
+- A message of a sender who left the org never reaches the agent, also
+  while the login of the starter works.
+- The session record shows whether the login of its starter can be used. It
+  holds no part of the login.
 - The runner never writes a login to disk.
+- Risk: the other members of a session spend the login of its starter.
+  Anthropic's rules for hosted products ask each end user to sign in with
+  their own credentials. So the shared use of a Claude subscription stays a
+  risk (decision 105).
+- The starter cannot refuse this use of their login (decision 116).
 - Risk: a member with a terminal in the same sandbox can read the login of
   the turn that runs now. Every other process in the sandbox can read it
   too, such as a tool of the agent or a server that the startup script
@@ -181,9 +200,9 @@ Later screens add the frame and connection sources that they need.
   of its turn. A program that keeps running after the turn, such as a dev
   server, keeps that login, and each member with a terminal in the sandbox
   can read it (decision 114).
-- So the members of one org trust each other with the logins of their
-  turns, also after a turn ends. A proxy that keeps every login out of the
-  sandbox was rejected, because it is a much larger build.
+- So the members of one org trust each other with their logins, also after
+  a turn ends. A proxy that keeps every login out of the sandbox was
+  rejected, because it is a much larger build.
 - Risk: while a turn runs, each process in the sandbox can get the
   sender's GitHub App user token. Each member with a terminal there can
   get it too, for example with `git credential fill`. A copied token keeps
@@ -272,8 +291,9 @@ Later screens add the frame and connection sources that they need.
 - A sign-in inside a sandbox was rejected, because the login would stay on
   the disk of one workspace.
 - A user's agent logins serve all of that user's orgs (decision 21).
-- The app gives a user's login to a sandbox only for a turn that the user
-  sent.
+- The app gives a user's agent login to a sandbox only for a turn of a
+  session that the user started. The GitHub token of a turn still belongs
+  to its sender, as [GitHub tokens](#github-tokens) says.
 
 ## Terminal
 

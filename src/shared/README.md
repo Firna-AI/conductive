@@ -21,7 +21,7 @@ After a refused file tree, changes list, start steps, or workspace name,
 `RunnerReportRefresh` asks for one fresh full report of that `RunnerReportKind`.
 It carries no login. A redelivery keeps its command ID.
 `runner-transport.ts` defines the injectable socket boundary.
-Runner commands carry each message sender's login. Browser response types do not.
+Runner commands carry the agent login of the session starter, whoever sent the message. Browser response types do not.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
 
 `files.ts` defines full trees, tree updates, and branch changes.
@@ -58,8 +58,17 @@ The history response gives the point after which live events continue.
 `sessions.ts` defines the session paths, their requests and replies, and the `Session` record.
 `Session.retryMessageId` names the one message that `retryMessagePath` accepts.
 It is the retry message of the newest turn when that turn failed, and null otherwise.
+A message or a retry that opens a linked session sets it to null on the source.
 Each other message of the session gets HTTP 409 with the code `retry_not_available`.
 [Messages](../../docs/protocol/chat-and-events.md#messages) states the rule.
+`Session.startedBy` names the member who started the session.
+It is null only for an older record whose starter is not known.
+`Session.sourceSessionId` names the session where a message opened this linked session, and null otherwise.
+`Session.loginAvailable` is the result of the last server check of the starter's login.
+Each member reads the same value. None of these fields holds a login.
+`SendMessageResponse.session` in `messages.ts` is the record of the session that took the message.
+It can differ from the session of the request.
+[Agents](../../docs/protocol/chat-and-events.md#agents) states the starter rule.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
 `acceptedTermsSignInPath()` gives the sign-in path that carries that revision.

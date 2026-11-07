@@ -14,6 +14,7 @@ import type {
 import type { Session } from '../../shared/sessions'
 import {
   count,
+  flag,
   list,
   nullable,
   oneOf,
@@ -144,6 +145,9 @@ export function readSession(value: unknown): Session {
     closedAt: nullable(count)(source.closedAt),
     activeTurnId: nullable(text)(source.activeTurnId),
     retryMessageId: nullable(text)(source.retryMessageId),
+    startedBy: nullable(readSender)(source.startedBy),
+    sourceSessionId: nullable(text)(source.sourceSessionId),
+    loginAvailable: flag(source.loginAvailable),
   }
 }
 

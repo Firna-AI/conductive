@@ -1,6 +1,6 @@
 import type { AgentChoice } from './agents'
 import type { Timestamp } from './api'
-import type { MessageDraft } from './messages'
+import type { MessageDraft, MessageSender } from './messages'
 import { workspacePath } from './workspaces'
 
 export function sessionsPath(orgId: string, workspaceId: string): string {
@@ -45,6 +45,9 @@ export interface Session {
   closedAt: Timestamp | null
   activeTurnId: string | null
   retryMessageId: string | null
+  startedBy: MessageSender | null
+  sourceSessionId: string | null
+  loginAvailable: boolean
 }
 export interface SessionsResponse {
   sessions: readonly Session[]

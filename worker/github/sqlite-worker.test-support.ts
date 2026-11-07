@@ -5,8 +5,10 @@ import {
   type WorkspaceSocketMessage,
 } from '../../src/shared/events'
 import { WorkspaceChat } from '../chat/backend'
+import { chatDependencies } from '../chat/dependencies'
 import { createSession } from '../chat/sessions'
 import type { ChatData, ChatStorage } from '../chat/types'
+import { sessionUser } from '../data/users'
 import type { AppEnv } from '../env'
 import { createGitHubStatePort } from './chat-store'
 import { queuedAccessRace } from './queued-access.test-support'
@@ -31,6 +33,7 @@ export class Workspace extends DurableObject<AppEnv> {
 
   constructor(ctx: DurableObjectState, env: AppEnv) {
     super(ctx, env)
+    const dependencies = chatDependencies(env, () => SQLITE_WORKSPACE_ID)
     const storage: ChatStorage = {
       ...this.data(ctx.storage),
       transaction: (work) =>
@@ -48,8 +51,22 @@ export class Workspace extends DurableObject<AppEnv> {
               this.interleave = false
               this.interleaved = this.chat.changeWorkspace(
                 SQLITE_WORKSPACE_ID,
-                (transaction) =>
-                  createSession(transaction, SQLITE_CHOICE, 'interleaved'),
+                async (transaction) => {
+                  const startedBy = await sessionUser(
+                    env.DB,
+                    'session',
+                    this.now,
+                  )
+                  if (!startedBy)
+                    throw new Error('The fixture session is missing.')
+                  return createSession(
+                    transaction,
+                    SQLITE_CHOICE,
+                    'interleaved',
+                    startedBy,
+                    dependencies,
+                  )
+                },
               )
             }
           }

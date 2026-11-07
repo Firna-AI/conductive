@@ -2,6 +2,7 @@ import type { Agent } from '../../src/shared/agents'
 import type { RunnerLogin } from '../../src/shared/runner'
 import type { AppEnv } from '../env'
 import { decrypt, hash } from '../security/crypto'
+import { agentLoginKind } from './login-kind'
 import type { RunnerWorkspaceRecord, WorkspaceRecord } from './types'
 
 const workspaceColumns = `workspaces.id, workspaces.org_id AS orgId,
@@ -55,27 +56,27 @@ export async function readAgentLogin(
   )
     .bind(userId, agent)
     .first<{ kind: string; ciphertext: string }>()
-  if (!row) return null
+  const loginKind = row ? agentLoginKind(agent, row.kind) : null
+  if (!row || !loginKind) return null
   const secret = await decrypt(
     row.ciphertext,
     agentLoginContext(userId, agent),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
-  if (agent === 'codex' && row.kind === 'api-key') {
-    return { agent, kind: 'api-key', secret }
-  }
-  if (agent === 'claude' && (row.kind === 'token' || row.kind === 'api-key')) {
-    return { agent, kind: row.kind, secret }
-  }
-  return null
+  return { ...loginKind, secret }
 }
 
 export async function senderLoginAccess(
   db: D1Database,
   workspaceId: string,
-  senderId: string,
+  loginOwnerId: string | null,
   runnerTokenHash?: string,
-): Promise<{ senderAllowed: boolean; runnerAllowed: boolean }> {
+  senderId?: string,
+): Promise<{
+  senderAllowed: boolean
+  loginOwnerAllowed: boolean
+  runnerAllowed: boolean
+}> {
   const row = await db
     .prepare(
       `SELECT
@@ -83,6 +84,8 @@ export async function senderLoginAccess(
          AND owner.suspended_at IS NULL THEN 1 ELSE 0 END AS workspaceAllowed,
        EXISTS(SELECT 1 FROM org_members JOIN users sender ON sender.id = org_members.user_id
          WHERE org_id = workspaces.org_id AND user_id = ? AND sender.suspended_at IS NULL) AS senderAllowed,
+       EXISTS(SELECT 1 FROM org_members JOIN users login_owner ON login_owner.id = org_members.user_id
+         WHERE org_id = workspaces.org_id AND user_id = ? AND login_owner.suspended_at IS NULL) AS loginOwnerAllowed,
        EXISTS(SELECT 1 FROM workspace_tokens WHERE workspace_id = workspaces.id
          AND token_hash = ? AND revoked_at IS NULL) AS runnerAllowed
      FROM workspaces
@@ -90,14 +93,22 @@ export async function senderLoginAccess(
      JOIN users owner ON owner.id = workspaces.owner_user_id
      WHERE workspaces.id = ?`,
     )
-    .bind(senderId, runnerTokenHash ?? null, workspaceId)
+    .bind(
+      senderId ?? loginOwnerId,
+      loginOwnerId,
+      runnerTokenHash ?? null,
+      workspaceId,
+    )
     .first<{
       workspaceAllowed: number
       senderAllowed: number
+      loginOwnerAllowed: number
       runnerAllowed: number
     }>()
   return {
     senderAllowed: row?.workspaceAllowed === 1 && row.senderAllowed === 1,
+    loginOwnerAllowed:
+      row?.workspaceAllowed === 1 && row.loginOwnerAllowed === 1,
     runnerAllowed: row?.workspaceAllowed === 1 && row.runnerAllowed === 1,
   }
 }

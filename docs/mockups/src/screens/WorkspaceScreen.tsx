@@ -16,7 +16,7 @@ import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { conversations } from '../fixtures/conversations'
-import { memberViewer, people, you } from '../fixtures/members'
+import { memberViewer, people } from '../fixtures/members'
 import {
   openableWorkspaceRecords,
   type ActivityStatus,
@@ -24,6 +24,7 @@ import {
 import { composerFor, isRunning } from './composerFor'
 import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
+import { viewerOf } from './sessionStarter'
 import {
   FilesContent,
   openFile,
@@ -65,7 +66,7 @@ export function WorkspaceScreen(props: {
   const status = activityOf(state)
   const archived = state.sandbox === 'archived'
   const admin = state.viewer === 'admin'
-  const viewer = admin ? you : memberViewer
+  const viewer = viewerOf(state)
   // Decision 42: the workspace's owner and the org's admins archive it.
   const archivable = !archived && (admin || workspace.owner === viewer)
   const problem =
@@ -86,7 +87,7 @@ export function WorkspaceScreen(props: {
         />
       }
       items={fresh ? [] : conversations[state.conversation]}
-      notice={composerNotice(state, workspace.choice)}
+      notice={composerNotice(state, workspace)}
       problem={problem}
       starting={startingLogFor(state)}
       viewer={viewer}

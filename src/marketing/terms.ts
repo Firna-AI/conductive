@@ -60,8 +60,8 @@ export const termsDocument: LegalDocument = {
             own account with its cloud computer provider. You need no
             account or key of your own for them.`,
           text`The agents run on the Claude or OpenAI login that you connect.
-            The model use of each message bills to the account of the person
-            who sent the message, under the terms of Anthropic or OpenAI.`,
+            The model use of each message bills to the account of the member
+            who started its session, under the terms of Anthropic or OpenAI.`,
           text`Keep your keys and logins safe.
             ${draft('To write: your duties for the use of your keys and logins')}`,
         ),
@@ -73,12 +73,16 @@ export const termsDocument: LegalDocument = {
         list(
           text`Every member of an org sees all of its workspaces, and can send
             messages in each of them.`,
-          text`Each message runs on the agent login of the person who sends
-            it. Its git calls use a GitHub token of that person, so pushes and
-            pull requests show as that person.`,
+          text`Each session runs on the agent login of the member who started
+            it, also for the messages of other members. Each turn's git calls
+            use a GitHub token of the member whose message started the turn.
+            Pushes and pull requests show as that member.`,
           text`That GitHub token reaches every repository where that person
             installed the GitHub App and has access, not only the
             repositories of the org.`,
+          text`While your login is connected, you cannot stop other members
+            from using it in the sessions that you started.
+            ${draft("Do Anthropic's terms let other members use a member's Claude subscription?")}`,
           text`While a turn runs, its agent login is in the cloud computer of
             the workspace. A member with a terminal in that cloud computer can
             read it. Work in an org only with people whom you trust with your

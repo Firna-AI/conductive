@@ -2,7 +2,6 @@ import type { AgentChatEvent } from '../../src/shared/chat-events'
 import { cancelable } from './engine-cancel'
 import {
   rememberSession,
-  senderIdentity,
   type EngineOptions,
   type SessionRuntime,
   type ActiveTurn,
@@ -75,11 +74,7 @@ export async function inputCommand(
       return
     }
     if (session.active.stopped) return
-    if (
-      session.active.waiting.length ||
-      session.active.identity !== senderIdentity(command)
-    )
-      session.active.waiting.push(command)
+    if (session.active.waiting.length) session.active.waiting.push(command)
     else if ((await actions.deliver(command)) === 'deferred')
       session.active?.waiting.push(command)
     return
@@ -97,7 +92,6 @@ export async function inputCommand(
     stopped: controller.signal.aborted,
     shutdown: false,
     provider: null,
-    identity: null,
     lifetime: null,
     closing: Promise.resolve(),
     baseline: null,

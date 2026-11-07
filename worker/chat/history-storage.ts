@@ -2,6 +2,7 @@ import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import { RUNNER_EVENT_MAX_BYTES } from '../../src/shared/runner'
 import { parseFileEvent } from '../files/parsers'
 import { jsonBytes } from './runner-event-limits'
+import { normalizeSession } from './session-storage'
 import type { ChatData } from './types'
 
 interface StoredFileEvent {
@@ -48,7 +49,17 @@ export async function loadHistoryEvent(
   data: ChatData,
   stored: StoredWorkspaceEvent,
 ): Promise<WorkspaceEventEnvelope> {
-  if ('event' in stored) return stored
+  if ('event' in stored) {
+    return stored.event.type === 'session.updated'
+      ? {
+          ...stored,
+          event: {
+            ...stored.event,
+            session: normalizeSession(stored.event.session),
+          },
+        }
+      : stored
+  }
   const chunks: string[] = []
   for (let part = 0; part < stored.fileEventChunks; part++) {
     const text = await data.get<unknown>(chunkKey(stored.eventNumber, part))

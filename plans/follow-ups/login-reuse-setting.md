@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-07, option B of decision 116. The user chose A now and B as a later follow-up.
-- **Location:** the login settings of the account page under `src/shell/account/`, the login resolver in `worker/chat/login-access.ts`, and the section "Agent logins in a sandbox" of `docs/protocol/access-and-security.md`.
+- **Location:** the login settings of the account page under `src/shell/account/`, the login resolver in `worker/chat/login-access.ts`, the section "Agent logins in a sandbox" of `docs/protocol/access-and-security.md`, and the login text of the Terms page in `src/marketing/terms.ts` and of the Privacy page in `src/marketing/privacy.ts`.
 - **Reason:** the user chose to add the setting later.
 
 - **Terms:**

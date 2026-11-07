@@ -140,8 +140,12 @@ export async function createChatFixture(
     await drain()
     return runner
   }
-  const createSession = async (choice = CLAUDE) => {
-    const response = await fetch(sessionsPath(org.id, WORKSPACE_ID), { choice })
+  const createSession = async (choice = CLAUDE, cookie = ownerCookie) => {
+    const response = await fetch(
+      sessionsPath(org.id, WORKSPACE_ID),
+      { choice },
+      cookie,
+    )
     if (response.status !== 201)
       throw new Error(
         `Create returned ${response.status}: ${await response.text()}`,

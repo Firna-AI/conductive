@@ -4,7 +4,7 @@ import { runnerHarness, turn } from '../test-support/harness'
 import { Runner } from './runner'
 import { EventStore } from './state'
 
-it('changes sender credentials at a tool boundary and resumes stored conversation memory', async () => {
+it('delivers every member message on the running login and resumes stored conversation memory', async () => {
   const h = await runnerHarness()
   h.endpoint.send(turn())
   await h.runner.idle()
@@ -20,6 +20,13 @@ it('changes sender credentials at a tool boundary and resumes stored conversatio
   await h.runner.idle()
   expect(alice.messages.map((message) => message.message.id)).toEqual([
     'message-1',
+    'message-2',
+    'message-queued',
+  ])
+  expect(alice.messages.map(({ message }) => message.sender.id)).toEqual([
+    'alice',
+    'bob',
+    'bob',
   ])
   alice.emit({
     type: 'tool',
@@ -33,32 +40,27 @@ it('changes sender credentials at a tool boundary and resumes stored conversatio
     },
   })
   await h.runner.idle()
-  expect(alice.interrupts).toBe(1)
+  expect(alice.interrupts).toBe(0)
   alice.emit({
     type: 'result',
     state: 'stopped',
     userMessageIds: ['message-1'],
   })
   await h.runner.idle()
-  const bob = h.providers.latest
-  expect(alice.closed).toBe(true)
-  expect(bob.options.login).toEqual({
+  expect(h.providers.processes).toHaveLength(1)
+  expect(alice.closed).toBe(false)
+  expect(alice.options.login).toEqual({
     agent: 'claude',
     kind: 'token',
-    secret: 'secret-bob',
+    secret: 'secret-alice',
   })
-  expect(bob.options.conversationId).toBe('conversation-1')
-  expect(bob.messages.map((message) => message.message.id)).toEqual([
-    'message-2',
-    'message-queued',
-  ])
-  expect(bob.choices.at(-1)).toEqual({
+  expect(h.store.snapshot.sessions[0]?.providerSessionId).toBe('conversation-1')
+  expect(alice.choices.at(-1)).toEqual({
     agent: 'claude',
     model: 'bob-model',
     effort: 'medium',
   })
-  alice.emit({ type: 'delta', messageId: 'late', text: 'stale process output' })
-  bob.emit({
+  alice.emit({
     type: 'result',
     state: 'finished',
     userMessageIds: ['message-2', 'message-queued'],
@@ -69,13 +71,24 @@ it('changes sender credentials at a tool boundary and resumes stored conversatio
     state: 'finished',
     userMessageIds: ['message-1', 'message-2', 'message-queued'],
   })
+  expect(alice.closed).toBe(true)
+  const next = turn('3', 'bob')
+  next.login = turn().login
+  h.endpoint.send(next)
+  await h.runner.idle()
+  alice.emit({ type: 'delta', messageId: 'late', text: 'stale process output' })
+  await h.runner.idle()
   expect(JSON.stringify(h.endpoint.events)).not.toContain(
     'stale process output',
   )
-  h.endpoint.send(turn('3', 'alice'))
-  await h.runner.idle()
+  expect(h.providers.processes).toHaveLength(2)
   expect(h.providers.latest.options.login.secret).toBe('secret-alice')
   expect(h.providers.latest.options.conversationId).toBe('conversation-1')
+  expect(h.endpoint.runnerEvents.at(-1)?.event).toMatchObject({
+    type: 'turn.started',
+    senderId: 'bob',
+    turnId: 'turn-3',
+  })
   h.providers.latest.emit({
     type: 'result',
     state: 'finished',
@@ -89,7 +102,9 @@ it('changes sender credentials at a tool boundary and resumes stored conversatio
   })
   onTestFinished(() => restored.close())
   await restored.start(false)
-  h.endpoint.send(turn('restart', 'alice'))
+  const resumed = turn('restart', 'bob')
+  resumed.login = turn().login
+  h.endpoint.send(resumed)
   await restored.idle()
   const firstPart = h.providers.latest
   h.endpoint.send({
@@ -104,8 +119,10 @@ it('changes sender credentials at a tool boundary and resumes stored conversatio
     userMessageIds: ['message-restart'],
   })
   await restored.idle()
+  expect(h.providers.latest).toBe(firstPart)
+  expect(firstPart.closed).toBe(false)
   expect(h.providers.latest.options.conversationId).toBe('conversation-1')
-  expect(h.providers.latest.options.login.secret).toBe('secret-bob')
+  expect(h.providers.latest.options.login.secret).toBe('secret-alice')
   expect(JSON.stringify(await h.storage.read())).not.toContain('secret-bob')
   const failed = h.providers.latest
   h.endpoint.send({
@@ -114,6 +131,11 @@ it('changes sender credentials at a tool boundary and resumes stored conversatio
     turnId: 'turn-restart',
   })
   await restored.idle()
+  expect(failed.messages.map(({ message }) => message.id)).toEqual([
+    'message-restart',
+    'message-4',
+    'message-failure-next',
+  ])
   const processCount = h.providers.processes.length
   failed.emit({
     type: 'failed',
@@ -134,7 +156,7 @@ it('changes sender credentials at a tool boundary and resumes stored conversatio
     type: 'turn.failed',
     turnId: 'turn-restart',
     error: { code: 'provider_failed', message: 'The provider failed.' },
-    retryMessageId: 'message-4',
+    retryMessageId: 'message-restart',
   })
   expect(h.warnings).toEqual([])
 })

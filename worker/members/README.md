@@ -183,7 +183,7 @@ It runs in the same statement as the membership delete, so the removal and the c
 Call `workspaceCreator` when the lifecycle creates a workspace.
 Store its ID in `owner_user_id` in the creation transaction.
 Reassignment changes the owner and update time only.
-The sender's agent login stays with the turn runner.
+Each session keeps the agent login of its starter.
 
 Account deletion must call `assertCanDeleteAccount` first.
 Its final D1 mutation must also use `accountDeletionAllowedPredicate`.

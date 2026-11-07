@@ -1,22 +1,24 @@
 import type { Session, ChangeModelResponse } from '../../src/shared/sessions'
+import type { User } from '../../src/shared/api'
 import { HttpError } from '../http'
 import { choice, draft, identifier } from './inputs'
 import { createSession, queueModel } from './sessions'
 import type { ChatTransaction } from './store'
+import type { ChatDependencies } from './types'
 
 export async function changeModel(
   transaction: ChatTransaction,
   session: Session,
   body: Record<string, unknown> | null,
-  requestedById: string,
-  randomId: () => string,
+  user: User,
+  dependencies: ChatDependencies,
 ): Promise<ChangeModelResponse> {
   const next = choice(body?.choice)
   const savedDraft = draft(body?.draft)
   if (next.agent === session.choice.agent) {
     session.choice = next
     await transaction.saveSession(session)
-    await queueModel(transaction, session, randomId())
+    await queueModel(transaction, session, dependencies.randomId())
     await transaction.emit({ type: 'session.updated', session })
     return { session, created: false, draft: savedDraft }
   }
@@ -24,7 +26,7 @@ export async function changeModel(
   const existing = await transaction.session(id)
   const creation = {
     sourceSessionId: session.id,
-    requestedById,
+    requestedById: user.id,
     choice: next,
     draft: savedDraft,
   }
@@ -33,7 +35,7 @@ export async function changeModel(
     if (
       !original ||
       original.sourceSessionId !== creation.sourceSessionId ||
-      original.requestedById !== requestedById ||
+      original.requestedById !== user.id ||
       original.choice.agent !== next.agent ||
       original.choice.model !== next.model ||
       original.choice.effort !== next.effort ||
@@ -49,7 +51,7 @@ export async function changeModel(
     }
     return { session: existing, created: true, draft: savedDraft }
   }
-  const created = await createSession(transaction, next, id)
+  const created = await createSession(transaction, next, id, user, dependencies)
   await transaction.saveModelSessionCreation(id, creation)
   return { session: created, created: true, draft: savedDraft }
 }

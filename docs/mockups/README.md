@@ -147,10 +147,10 @@ chat, and five tabs at the bottom.
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
 | `app/chat`          | A finished turn, then running turns, lost data, and lost updates              |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
-| `app/sessions`      | A new session, the session history, and closing a session while it works      |
+| `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
-| `app/composer`      | Attached files, the model and effort picker, and a missing agent              |
+| `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge                     |
@@ -254,9 +254,18 @@ plan limits.
   fields, Save, or Build computer. The General tab of a member is the child
   page `app/org-settings/member`, because `app/org-settings` has child
   pages. `DetailList` in `src/components/settings/` shows such values.
-- Each message runs on the agent login of the person who sends it, from
-  decision 49. So a reassign changes no login, and the cloud computer keeps
-  running.
+- Each session runs on the agent login of the member who started it, also
+  for the messages of other members. So a reassign changes no login, and
+  the cloud computer keeps running.
+- The line under the composer names the login that a message uses, such
+  as "Uses Cal's Claude login" in `app/composer/login`, or "Uses your Claude
+  login". When the login of the member who started a session is not
+  available, a message of another member starts a new session. The notice
+  over the composer of the first session says so, and its chat stays as it
+  was, as `app/sessions/no-starter-login` shows. The new session starts
+  with a line that links back to the first session, then the new message,
+  as `app/sessions/linked` shows. The parts live in
+  `src/components/chat/SessionLogin.tsx` and `LinkedLine.tsx`.
 - A stopped turn names the member who pressed Stop, from decision 72,
   because all members of an org see the same chat. That member sees "You
   stopped the agent", as `app/chat/turns/interrupted` shows. The other members
@@ -294,7 +303,8 @@ plan limits.
   org, and connect Claude or Codex, from decision 33. The next step opens
   its form.
 - The composer shows a notice when the agent of the chosen model is not
-  connected.
+  connected. In a session that another member started, a message uses the
+  available login of that member, so no agent notice shows.
 
 ## The Mac app
 

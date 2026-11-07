@@ -82,8 +82,8 @@ says.
 - Changes by every member were rejected, because a changed script reaches
   every new sandbox of the org and runs during other members' turns.
 - Every member of the org sees all of its workspaces (decision 39).
-- Every member can send messages in every workspace of the org. Each turn
-  runs on the login of its sender, as
+- Every member can send messages in every workspace of the org. Each
+  session runs on the agent login of its starter, as
   [Chat and events](chat-and-events.md#agents) says.
 - A member who is not an admin sees the Members tab and the owner of each
   workspace, without the actions of an admin.
@@ -99,8 +99,8 @@ says.
 - Each workspace belongs to the person who created it, until an admin
   reassigns it.
 - The header of a workspace names its workspace owner.
-- Model use on an account of the app was rejected. Each turn runs on the
-  own login of its sender.
+- Model use on an account of the app was rejected. Each session runs on
+  the own agent login of its starter.
 
 ## When a member leaves
 

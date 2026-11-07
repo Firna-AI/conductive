@@ -4,6 +4,7 @@
 
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import { changedFiles, type ChangedFile } from './files'
+import { linkedConversations } from './linkedConversations'
 import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
@@ -67,6 +68,17 @@ export type ChatItem =
       what: LostWhat
       reason: LostReason
     }
+  | {
+      /**
+       * The first line of a linked session. A member's message in another
+       * session opened it, because the login of the starter of that session
+       * was not available. `from` is the title of that session, which the
+       * line links to.
+       */
+      kind: 'linked'
+      id: string
+      from: string
+    }
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
@@ -91,6 +103,7 @@ export const conversationKeys = [
   'files-left-out',
   'lost-lines',
   'lost-turn-end',
+  'linked',
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -192,6 +205,13 @@ const cutOffTurn: readonly ChatItem[] = [
   { ...e2eRunning, status: 'stopped' },
 ]
 
+/**
+ * The next message that a user writes after the turn ends. In the linked
+ * session, it is the message of the member who opened that session.
+ */
+export const followUpDraft =
+  'Show a loading state under the address line while the lookup runs.'
+
 export const conversations: Readonly<
   Record<ConversationKey, readonly ChatItem[]>
 > = {
@@ -240,12 +260,9 @@ export const conversations: Readonly<
   ],
   ...macConversations(history),
   ...lostConversations(history),
+  ...linkedConversations(followUpDraft),
 }
 
 /** The steer message that the user types while a turn runs. */
 export const steerDraft =
   'Also debounce the lookups to 250 ms, so we stay under the rate limit.'
-
-/** The next message that the user writes after the turn ends. */
-export const followUpDraft =
-  'Show a loading state under the address line while the lookup runs.'

@@ -1,5 +1,6 @@
 import type { AgentChoice } from './agents'
 import type { Timestamp } from './api'
+import type { Session } from './sessions'
 
 /** Uploads can precede the first message that creates a workspace. */
 export const DRAFT_ATTACHMENTS_PATH = '/api/attachments'
@@ -44,6 +45,7 @@ export interface UserMessage {
 export interface SendMessageResponse {
   message: UserMessage
   turnId: string | null
+  session: Session
 }
 
 /** The app gate requires JSON, including writes that carry attachments. */

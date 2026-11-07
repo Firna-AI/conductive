@@ -118,7 +118,7 @@ describe('messages after Stop', () => {
         type: 'turn',
         sessionId: session.id,
         message: { id: afterId, sender: { id: fixture.member.id } },
-        login: { secret: `secret-${fixture.member.id}-claude` },
+        login: { secret: `secret-${fixture.owner.id}-claude` },
       })
       expect(next[0]?.turnId, state).not.toBe(active.turnId)
       expect(messageCommands(runner, laterId), state).toMatchObject([
@@ -168,23 +168,18 @@ describe('messages after Stop', () => {
         (command) => command.type,
       ),
     ).toEqual(['message'])
-    expect(messageCommands(runner, 'after-stop')).toMatchObject([
-      {
-        type: 'turn',
-        sessionId: session.id,
-        login: { secret: `secret-${fixture.member.id}-claude` },
-      },
-    ])
+    expect(messageCommands(runner, 'after-stop')).toEqual([])
     const failures = (await fixture.history(session.id)).events
       .map(({ event }) => event)
       .filter((event) => event.type === 'turn.failed')
-    expect(failures).toHaveLength(1)
+    expect(failures).toHaveLength(2)
     expect(failures[0]?.retryMessageId).toBe('older-unanswered')
+    expect(failures[1]?.retryMessageId).toBe('after-stop')
     expect(
       await fixture.chat.store.read(WORKSPACE_ID, (view) =>
         view.session(session.id),
       ),
-    ).toMatchObject({ retryMessageId: null })
+    ).toMatchObject({ retryMessageId: 'after-stop', activeTurnId: null })
     expect(runner.pendingEvents()).toEqual([])
   })
 })
