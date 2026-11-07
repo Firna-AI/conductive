@@ -5,6 +5,7 @@ import type {
   RunnerMessageDuringTurn,
   RunnerTurn,
 } from '../../../src/shared/runner'
+import type { ProviderLifetime } from './lifetime'
 
 export type ProviderInput = RunnerTurn | RunnerMessageDuringTurn
 export type ProviderEvent =
@@ -44,6 +45,7 @@ export interface ProviderOptions {
   conversationId: string | null
   event: (event: ProviderEvent) => void
   signal?: AbortSignal
+  lifetime?: ProviderLifetime
 }
 
 export type ProviderFactory = (

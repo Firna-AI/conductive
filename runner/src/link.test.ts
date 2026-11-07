@@ -6,17 +6,12 @@ import type {
 } from '../../src/shared/runner'
 import type { RunnerConnector } from '../../src/shared/runner-transport'
 import { FakeDurableObjectEndpoint } from '../../worker/test-support/fake-durable-object'
+import { diskFixture } from '../test-support/disk'
 import { RunnerLink } from './link'
-import { EventStore, type RunnerState } from './state'
+import { EventStore } from './state'
 
 it('retains numbered events across gaps, wrong confirms, reconnect, and restart', async () => {
-  let saved: RunnerState | null = null
-  const storage = {
-    read: async () => saved,
-    write: async (value: RunnerState) => {
-      saved = structuredClone(value)
-    },
-  }
+  const { storage } = await diskFixture()
   const endpoint = new FakeDurableObjectEndpoint({
     workspaceId: 'workspace-1',
     workspaceToken: 'fake-token',
@@ -102,26 +97,8 @@ it('retains numbered events across gaps, wrong confirms, reconnect, and restart'
 })
 
 it('replays only saved events while another append write is held', async () => {
-  let saved: RunnerState | null = null
-  let hold = false
-  let started: () => void = () => {}
-  let release: () => void = () => {}
-  const writing = new Promise<void>((resolve) => {
-    started = resolve
-  })
-  const gate = new Promise<void>((resolve) => {
-    release = resolve
-  })
-  const store = await EventStore.open({
-    read: async () => saved,
-    write: async (value) => {
-      if (hold && value.nextEventNumber === 4) {
-        started()
-        await gate
-      }
-      saved = structuredClone(value)
-    },
-  })
+  const { storage, holdNextWrite } = await diskFixture()
+  const store = await EventStore.open(storage)
   const endpoint = new FakeDurableObjectEndpoint({
     workspaceId: 'workspace-1',
     workspaceToken: 'fake-token',
@@ -167,7 +144,9 @@ it('replays only saved events while another append write is held', async () => {
     tree: { revision: 1, partNumber: 1, partCount: 1, entries: [] },
   })
   await link.emit({ type: 'workspace.title', name: 'two' })
-  hold = true
+  const { arrived: writing, release } = holdNextWrite(
+    (value) => value.nextEventNumber === 4,
+  )
   const third = link.emit({
     type: 'changes.updated',
     changes: {
@@ -206,5 +185,6 @@ it('replays only saved events while another append write is held', async () => {
   ])
   expect(store.snapshot.nextEventNumber).toBe(4)
   expect(store.snapshot.fileRevisions).toEqual({ tree: 1, changes: 1 })
+  const saved = await storage.read()
   expect(await store.snapshot).toEqual(saved)
 })

@@ -37,7 +37,7 @@
 - **Wider fix:** D. Every step gets an end, and the chat shows no wrong file list.
 - **Previous examples:** the directory replacement case above, fixed for that cause only in `5a22dd5`.
 - **Related:**
-  - `plans/follow-ups/runner-rejected-write-chains.md`, same code for a failed save. That item makes later saves work again after one failed save. This item decides what the failed step reports. A failed save can end its step only after that item is fixed.
-  - `plans/follow-ups/runner-shutdown-turn-end.md`, the same symptom from another cause: a turn that stays active in the workspace.
+  - [Milestone 7u](../boat-native-remote-workspaces.md#milestone-7u-runner-fixes-from-the-review), same code for a failed save. That milestone makes later saves work again after one failed save. This item decides what the failed step reports. A failed save can end its step only with that fix.
+  - [Milestone 7u](../boat-native-remote-workspaces.md#milestone-7u-runner-fixes-from-the-review), the same symptom from another cause: a turn that stays active in the workspace after a runner shutdown. That milestone ends such a turn at the shutdown and at the next start.
 - **Recommendation:** D. It ends every step and keeps the chat output true.
 - **Action:** ask the user, because D changes the shared runner contract, and no requirement says what the runner reports after a failed file read.

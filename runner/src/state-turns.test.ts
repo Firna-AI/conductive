@@ -1,34 +1,19 @@
-import { expect, it, onTestFinished } from 'vitest'
+import { expect, it } from 'vitest'
 
-import type { AgentChatEvent } from '../../src/shared/chat-events'
+import { diskFixture } from '../test-support/disk'
 import { engineFixture } from '../test-support/engine'
 import {
-  deferred,
   sessionTurn,
   startEvent,
   stoppedEvent,
   stop,
 } from '../test-support/runtime'
-import { AgentEngine } from './engine'
-import { EventStore, type RunnerState } from './state'
+import type { AgentEngine } from './engine'
+import { EventStore } from './state'
 
 it('commits each turn record with its start and end envelope and drops it only with the end confirmation', async () => {
-  let saved: RunnerState | null = null
-  let hold = false
-  let arrived = deferred<RunnerState>()
-  let release = deferred<void>()
-  const writes: RunnerState[] = []
-  const store = await EventStore.open({
-    read: async () => saved,
-    write: async (value) => {
-      writes.push(structuredClone(value))
-      if (hold) {
-        arrived.resolve(value)
-        await release.promise
-      }
-      saved = structuredClone(value)
-    },
-  })
+  const { storage, writes, holdNextWrite } = await diskFixture()
+  const store = await EventStore.open(storage)
   const record = {
     sessionId: 'saved',
     turnId: 'turn-saved',
@@ -37,9 +22,9 @@ it('commits each turn record with its start and end envelope and drops it only w
     startEventNumber: 1,
     endEventNumber: null,
   }
-  hold = true
+  const startWrite = holdNextWrite()
   const started = store.append(startEvent(), 100)
-  const pendingStart = await arrived.promise
+  const pendingStart = await startWrite.arrived
   try {
     expect(store.snapshot.turns).toEqual([])
     expect(store.snapshot.outbox).toEqual([])
@@ -48,19 +33,16 @@ it('commits each turn record with its start and end envelope and drops it only w
       startEvent(),
     ])
   } finally {
-    release.resolve()
+    startWrite.release()
     await started
-    hold = false
   }
   expect(writes).toHaveLength(2)
   await store.confirm(1)
   expect(store.snapshot.turns).toEqual([record])
   expect(store.snapshot.outbox).toEqual([])
-  arrived = deferred()
-  release = deferred()
-  hold = true
+  const endWrite = holdNextWrite()
   const ended = store.append(stoppedEvent(), 100)
-  const pendingEnd = await arrived.promise
+  const pendingEnd = await endWrite.arrived
   try {
     expect(store.snapshot.turns).toEqual([record])
     expect(store.snapshot.outbox).toEqual([])
@@ -69,16 +51,13 @@ it('commits each turn record with its start and end envelope and drops it only w
       stoppedEvent(),
     ])
   } finally {
-    release.resolve()
+    endWrite.release()
     await ended
-    hold = false
   }
   expect(writes).toHaveLength(4)
-  arrived = deferred()
-  release = deferred()
-  hold = true
+  const confirmWrite = holdNextWrite()
   const confirming = store.confirm(2)
-  const pendingConfirm = await arrived.promise
+  const pendingConfirm = await confirmWrite.arrived
   try {
     expect(store.snapshot.turns).toEqual([{ ...record, endEventNumber: 2 }])
     expect(store.snapshot.outbox.map(({ event }) => event)).toEqual([
@@ -87,9 +66,8 @@ it('commits each turn record with its start and end envelope and drops it only w
     expect(pendingConfirm.turns).toEqual([])
     expect(pendingConfirm.outbox).toEqual([])
   } finally {
-    release.resolve()
+    confirmWrite.release()
     await confirming
-    hold = false
   }
   expect(store.snapshot.turns).toEqual([])
   expect(store.snapshot.outbox).toEqual([])
@@ -133,37 +111,19 @@ it('commits each turn record with its start and end envelope and drops it only w
 })
 
 it('prevents duplicate replay and interrupt ends while a recovered completion save is pending', async () => {
-  let saved: RunnerState | null = null
-  let hold = false
-  const arrived = deferred<void>()
-  const release = deferred<void>()
-  const storage = {
-    read: async () => saved,
-    write: async (state: RunnerState) => {
-      if (hold) {
-        arrived.resolve()
-        await release.promise
-      }
-      saved = structuredClone(state)
-    },
-  }
+  let engine: AgentEngine | null = null
+  const { storage, holdNextWrite } = await diskFixture(async () => {
+    await engine?.close()
+  })
   const previous = await EventStore.open(storage)
   await previous.append(startEvent(), 100)
   const store = await EventStore.open(storage)
-  const h = await engineFixture()
-  const events: AgentChatEvent[] = []
-  const engine = new AgentEngine({
-    ...h.options,
-    store,
-    emit: async (event) => {
-      await store.append(event, 100)
-      events.push(event)
-    },
-  })
-  onTestFinished(() => engine.close())
-  hold = true
+  const held = holdNextWrite()
+  const h = await engineFixture({ store })
+  engine = h.engine
+  const events = h.events
   const replay = engine.command(sessionTurn('saved'))
-  await arrived.promise
+  await held.arrived
   const duplicate = engine.command({
     ...sessionTurn('saved'),
     commandId: 'other-replay',
@@ -177,8 +137,7 @@ it('prevents duplicate replay and interrupt ends while a recovered completion sa
     expect(h.providers.processes).toEqual([])
     expect(events).toEqual([])
   } finally {
-    release.resolve()
-    hold = false
+    held.release()
     await Promise.all([replay, duplicate, interrupted, repeatedStop])
   }
   await engine.idle()

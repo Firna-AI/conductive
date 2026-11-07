@@ -32,6 +32,37 @@ Contract owners. Milestone 2 creates them:
   other doc covers orgs, sections, members, and Boat keys.
 - `README.md`.
 
+## Replaced ways
+
+- An agent process that stays open between turns → an agent process that
+  each turn owns until the process exits. `ActiveTurn` holds the process
+  and its sender identity, next to its pending close. Each turn, and each
+  part of a turn from another sender, starts a new process. Milestone 7u
+  moves each consumer and then deletes the old way. Consumers:
+  - `SessionRuntime`, which holds the process and its sender identity
+    between turns.
+  - `startProvider` and `SessionEngine.start`, which reuse the process and
+    its generation for the next turn of the same sender.
+  - The two paths that release an idle process: Stop for a pending turn,
+    and a shutdown with no running turn.
+  - The Claude and Codex provider adapters. The Claude close returns before
+    the process exits. The Codex close waits for the exit with no limit.
+  - The provider fakes in `runner/test-support/`, and the tests that use
+    them.
+- Handwritten `StateStorage` adapters in recovery and storage tests → a
+  temporary production `DiskStorage`. The five handwritten stores get it
+  from `diskFixture` in `runner/test-support/disk.ts`, which can hold one
+  chosen write. `EventStore.open` takes `DiskStorage`, and the engine and
+  wire fixtures create one directly. Milestone 7u moves each consumer and
+  then deletes `StateStorage` and the unused wire override. Consumers:
+  - `EventStore.open`, which takes any `StateStorage`.
+  - The five handwritten stores: two in `runner/src/state-turns.test.ts`,
+    two in `runner/src/link.test.ts`, and one in
+    `runner/src/envelope-limits.test.ts`.
+  - The session fixture in `runner/test-support/engine.ts`, and the wire
+    fixture in `runner/test-support/wire.ts` with its unused
+    `storageOverride` parameter.
+
 ## Decisions
 
 The user answered each decision on 5 November 2026, in the brainstorm of
@@ -4542,23 +4573,64 @@ Depends on: 4d, 7, 9
 
 Apply decision 76 E in the workspace Durable Object.
 
-- [ ] Check the byte limit with the other event checks.
-- [ ] Store a marker for each event that the workspace refuses for a
+Agent calls on 6 November 2026, within decision 76 E:
+
+- Commit file parts, complete file reports, chat events, refusal markers,
+  turn state, and the runner cursor in one transaction. Reason: a confirm
+  must cover every stored effect of the event.
+- Store large complete file events in bounded history chunks. Reason:
+  each browser report stays complete and can exceed one storage value.
+- End a refused active terminal event as failed through the existing
+  turn lifecycle. Reason: the refused result cannot prove success.
+- Check every agent acknowledgement before changing messages or commands.
+  Reason: a refusal must leave no partial message changes.
+- Verify refusal context against stored sessions and turns. Reason:
+  untrusted IDs must not become arbitrary storage keys.
+- Keep the parts of the last complete report for repeat comparison.
+  Reason: an identical repeated part must produce no second report.
+- Compute accepted changes totals from the joined files after checking
+  the runner summary. Reason: stored totals must come from stored files.
+
+Agent calls on 7 November 2026, within decisions 96 E and 104 E:
+
+- Use `report.refresh` with the four full-report event types as its kinds.
+  Reason: the command names the same data that the runner reports.
+- Keep one durable command ID for each open repair. Reconnects reuse that
+  ID. A failed repair sends no more requests until a complete report
+  clears its kind. Reason: transport recovery must not create a repair loop.
+- Record the first successful request send before confirming its loss.
+  Bound a welcome only for an unsent trigger on its own stream. Reason:
+  reconnects must not confirm an update before its required first send.
+- Keep accepted replacement part-one evidence across restart. Reason:
+  fresh reports can reuse refused unapplied revisions, while old tails
+  must not show a failed-repair notice.
+- Keep valid late data from old ended turns when their start evidence is
+  incomplete. Reason: missing old metadata does not prove that a turn
+  never started, and the late path changes no lifecycle state.
+
+Verification evidence: `.context/boat-native-remote-workspaces/7s/verification.md`.
+
+- [x] Check the byte limit with the other event checks.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Store a marker for each event that the workspace refuses for a
       fixed reason, confirm it, and move the cursor on. A refused end of
       turn still ends the turn. A storage or network failure still closes
-      the connection.
-- [ ] Join the parts of a file tree and of a changes list before the
-      files store takes them.
-- [ ] Test each refusal, a tree in parts, and a resend after a refusal.
-- [ ] Apply decision 104 E: store a late event of an ended turn in that
+      the connection. Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Join the parts of a file tree and of a changes list before the
+      files store takes them. Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Test each refusal, a tree in parts, and a resend after a refusal.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Apply decision 104 E: store a late event of an ended turn in that
       turn, and never reopen the turn. Refuse only an event of a turn that
       never started. State the rule in the protocol, in place of the old
       refusal of every event of a turn that is not active.
-- [ ] Apply decision 96 E: add a runner command that asks for a fresh full
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Apply decision 96 E: add a runner command that asks for a fresh full
       report of the file list, the changes list, the start steps, or the
       workspace name. Send it once after the workspace refuses such an
       update. When the fresh report is refused too, store the marker as a
       failed repair. State both rules in the protocol.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
 
 ## Milestone 7t: Fresh reports from the runner
 
@@ -4578,19 +4650,64 @@ Depends on: 7r
 Apply the `fix after merge` items that the review of Milestone 7r
 recorded. Added on 7 November 2026.
 
-- [ ] Close the agent process at the end of each turn, as option A of
+- [x] Close the agent process at the end of each turn, as option A of
       `plans/follow-ups/idle-agent-login-lifetime.md` says. Delete that
-      item.
-- [ ] Let each write chain of the runner continue after a failure, as
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Let each write chain of the runner continue after a failure, as
       option A of `plans/follow-ups/runner-rejected-write-chains.md` says.
-      Delete that item.
-- [ ] End each turn that a runner process leaves behind, at a shutdown
+      Delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] End each turn that a runner process leaves behind, at a shutdown
       and at the next start, as option D of
       `plans/follow-ups/runner-shutdown-turn-end.md` says. Delete that
-      item.
-- [ ] Run the runner session tests on `DiskStorage`, as option A of
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Run the runner session tests on `DiskStorage`, as option A of
       `plans/follow-ups/runner-session-tests-store.md` says. Delete that
-      item.
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Move `provider` and `identity` from `SessionRuntime` to
+      `ActiveTurn`, next to `closing`. `SessionRuntime` keeps the
+      generation. Make `startProvider` start a new process each time, and
+      make `SessionEngine.start` increment the generation each time. PR #30
+      review finding 4 C chose this.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Give each provider one process lifetime handle from
+      `runner/src/providers/lifetime.ts`. Claude starts its child through
+      the SDK option `spawnClaudeCodeProcess`. A close sends `SIGTERM`,
+      sends `SIGKILL` after `PROCESS_KILL_DELAY_MS`, and resolves only when
+      the child exits. A canceled start waits for each child that it
+      created. PR #30 review finding 2 B chose this.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Move the provider fakes and their tests to the new process lifetime.
+      Keep every assertion. Keep `engine-handoff.test.ts`,
+      `engine-shutdown.test.ts`, `turn-shutdown-race.test.ts`,
+      `pending-turn.test.ts`, and `senders.test.ts` unchanged.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Delete the agent process that stays open between turns: the
+      same-sender reuse branches and the two paths that release an idle
+      process.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Move the five handwritten test stores to the temporary production
+      `DiskStorage` of `diskFixture`. Make `EventStore.open` take
+      `DiskStorage`, and make the engine and wire fixtures create one
+      directly. Keep every assertion. Delete `StateStorage` and the unused
+      `storageOverride` parameter of `wireFixture`. PR #30 review finding
+      5 D chose this.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+
+Evidence: `.context/boat-native-remote-workspaces/7u/verification.md`.
+
+Agent call, 7 November 2026: Move the first-start measurement guide to
+`runner/scripts/README.md`, and keep its heading link in `runner/README.md`.
+This keeps the runner README within the file size limit.
+
+Review fix, 7 November 2026: Share process disposal across sender changes,
+turn ends, Stop, and shutdown. Keep each pending close until it finishes.
+
+Agent call, 7 November 2026: Set `PROCESS_KILL_DELAY_MS` to `5_000` in
+`runner/src/providers/lifetime.ts`. An agent process that still runs that
+long after `SIGTERM` gets `SIGKILL`. Reason: the pinned SDK also waits 5
+seconds between `SIGTERM` and `SIGKILL`. The value also leaves time to save
+the turn ends within the 15-second stop window of the service. The owner
+chose one fixed kill limit in review finding 2 B of PR #30.
 
 ## Milestone 8: Chat UI
 

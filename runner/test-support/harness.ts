@@ -74,7 +74,10 @@ export async function runnerHarness() {
     disconnected: () => {},
   }
   const runner = new Runner(options)
-  onTestFinished(() => runner.close())
+  let cutoff = false
+  onTestFinished(async () => {
+    if (!cutoff) await runner.close()
+  })
   await runner.start(false)
   return {
     ...repository,
@@ -85,6 +88,11 @@ export async function runnerHarness() {
     storage,
     options,
     warnings,
+    cutoff: async () => {
+      cutoff = true
+      runner.link.close()
+      await Promise.all(providers.processes.map((provider) => provider.close()))
+    },
     advance: (time: number) => {
       now += time
     },

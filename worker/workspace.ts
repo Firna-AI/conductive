@@ -24,9 +24,13 @@ export class Workspace extends DurableObject<WorkspaceEnv> {
       matchesObject: (workspaceId) =>
         env.WORKSPACES.idFromName(workspaceId).equals(context.id),
       runnerEventStored: async (envelope) => {
+        const event = envelope.event
         if (
-          envelope.event.type === 'turn.completed' ||
-          envelope.event.type === 'turn.failed'
+          event.type === 'turn.completed' ||
+          event.type === 'turn.failed' ||
+          (event.type === 'runner.event-refused' &&
+            (event.runnerEventType === 'turn.completed' ||
+              event.runnerEventType === 'turn.failed'))
         )
           context.waitUntil(this.devices.reconcile())
       },

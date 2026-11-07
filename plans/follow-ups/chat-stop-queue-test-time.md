@@ -16,5 +16,6 @@
 - **Left out:** A longer time limit, because it hides a slow test, and a raised limit needs the user.
 - **Wider fix:** None. The `testing` skill already sets the rules for slow tests.
 - **Previous examples:** Decision 85, the members tests that passed their limit under load.
+- **Related:** `plans/follow-ups/harness-test-time-limit.md`, the wider fix for this class, which waits for the user as item 113.
 - **Recommendation:** A.
 - **Action:** fix after merge, apply A, because only a slower or busier machine meets it.

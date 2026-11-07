@@ -38,7 +38,7 @@ it('ignores input after completion and accepts its explicit continuation turn', 
   await h.engine.idle()
   expect(
     h.providers.latest.messages.map((command) => command.message.id),
-  ).toEqual(['message-1', 'message-late'])
+  ).toEqual(['message-late'])
   expect(h.events.at(-1)).toMatchObject({
     type: 'turn.started',
     turnId: 'turn-2',
@@ -54,7 +54,7 @@ it('ignores input after completion and accepts its explicit continuation turn', 
   await h.engine.idle()
   expect(
     h.providers.latest.messages.map((command) => command.message.id),
-  ).toEqual(['message-1', 'message-late', 'message-followup'])
+  ).toEqual(['message-late', 'message-followup'])
   h.providers.latest.emit({
     type: 'result',
     state: 'finished',
@@ -83,7 +83,7 @@ it('ignores input after completion and accepts its explicit continuation turn', 
   })
   await restarted.idle()
   expect(h.events).toEqual(beforeRestartInput)
-  expect(h.providers.processes).toHaveLength(1)
+  expect(h.providers.processes).toHaveLength(2)
   expect(h.warnings).toHaveLength(3)
 })
 

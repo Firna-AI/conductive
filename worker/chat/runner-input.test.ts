@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest'
 
-import { parseRunnerMessage } from './runner-input'
+import { parseRunnerEnvelope } from './runner-input'
+import { numberedRunnerInput } from './runner-limits.test-support'
 
 const context = { sessionId: 'session-1', turnId: 'turn-1' }
 const tool = {
@@ -53,7 +54,9 @@ function envelope(event: unknown) {
 it('preserves positive omission counts in runner chat events', () => {
   for (const event of [tool, completed]) {
     expect(
-      parseRunnerMessage(envelope({ ...event, sdkOnly: 'discard' })),
+      parseRunnerEnvelope(
+        numberedRunnerInput(envelope({ ...event, sdkOnly: 'discard' })),
+      ),
     ).toEqual(envelope(event))
   }
 })
@@ -61,7 +64,9 @@ it('preserves positive omission counts in runner chat events', () => {
 it('preserves numbered file report parts in runner messages', () => {
   for (const event of [snapshot, changes]) {
     expect(
-      parseRunnerMessage(envelope({ ...event, sdkOnly: 'discard' })),
+      parseRunnerEnvelope(
+        numberedRunnerInput(envelope({ ...event, sdkOnly: 'discard' })),
+      ),
     ).toEqual(envelope(event))
   }
 })
@@ -94,7 +99,9 @@ it('rejects missing or invalid new fields and workspace refusal markers', () => 
     reason: 'invalid',
   }
   for (const event of [...missing, ...invalidCounts, ...invalidParts, marker]) {
-    expect(() => parseRunnerMessage(envelope(event))).toThrowError(
+    expect(() =>
+      parseRunnerEnvelope(numberedRunnerInput(envelope(event))),
+    ).toThrowError(
       expect.objectContaining({ status: 400, code: 'invalid_input' }),
     )
   }

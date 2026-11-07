@@ -24,6 +24,7 @@ export class DeliveryState {
         const turn = await transaction.turn(command.turnId)
         if (!turn || turn.state !== 'queued') return false
         turn.state = 'running'
+        turn.started = true
         await transaction.saveTurn(turn)
         return true
       },
@@ -43,6 +44,7 @@ export class DeliveryState {
         const turn = await transaction.turn(command.turnId)
         if (turn?.state === 'running') {
           turn.state = 'queued'
+          turn.started = false
           await transaction.saveTurn(turn)
         }
       },

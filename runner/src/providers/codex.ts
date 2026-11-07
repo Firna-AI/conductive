@@ -3,6 +3,7 @@ import { codexBinary } from './binaries'
 import { codexNotification } from './codex-events'
 import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
+import { ProviderLifetime } from './lifetime'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
 import type { ProviderFactory, ProviderInput } from './types'
@@ -30,6 +31,7 @@ export function createCodexFactory(
 ): ProviderFactory {
   return async (options) => {
     options.signal?.throwIfAborted()
+    const lifetime = options.lifetime ?? new ProviderLifetime()
     await prepareProviderHome(options.home)
     options.signal?.throwIfAborted()
     const configs = {
@@ -62,6 +64,7 @@ export function createCodexFactory(
         cwd: options.cwd,
         env: providerEnvironment(options.home, options.login),
         signal: options.signal,
+        lifetime,
       }),
       (method, params) => {
         if (method === 'turn/started')
@@ -84,7 +87,7 @@ export function createCodexFactory(
       activeTurn = null
       userIds = []
       options.signal?.removeEventListener('abort', abort)
-      closing ??= rpc.close()
+      closing ??= rpc.close().finally(() => lifetime.close())
       return closing
     }
     const abort = () => {

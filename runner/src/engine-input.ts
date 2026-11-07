@@ -54,8 +54,6 @@ export async function inputCommand(
       agent: command.message.choice.agent,
       choice: command.message.choice,
       conversationId: saved?.providerSessionId ?? null,
-      provider: null,
-      identity: null,
       generation: 0,
       active: null,
     }
@@ -79,7 +77,7 @@ export async function inputCommand(
     if (session.active.stopped) return
     if (
       session.active.waiting.length ||
-      session.identity !== senderIdentity(command)
+      session.active.identity !== senderIdentity(command)
     )
       session.active.waiting.push(command)
     else if ((await actions.deliver(command)) === 'deferred')
@@ -97,6 +95,11 @@ export async function inputCommand(
     resolvedMessageIds: new Set(),
     waiting: [],
     stopped: controller.signal.aborted,
+    shutdown: false,
+    provider: null,
+    identity: null,
+    lifetime: null,
+    closing: Promise.resolve(),
     baseline: null,
     controller,
     files: null,

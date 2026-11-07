@@ -13,6 +13,7 @@ import { jsonBytes } from './event-limits'
 import { parseEnvelope, parseEvent } from './stored-events'
 import { array, integer, object, oneOf, string } from './parse'
 import { parseSavedTurn, recordTurn, type SavedTurn } from './state-turns'
+import { SerialQueue } from './serial-queue'
 
 export interface SavedSession {
   sessionId: string
@@ -35,12 +36,7 @@ export interface FileRevisions {
   changes: number
 }
 
-export interface StateStorage {
-  read(): Promise<unknown | null>
-  write(value: RunnerState): Promise<void>
-}
-
-export class DiskStorage implements StateStorage {
+export class DiskStorage {
   private readonly path: string
   constructor(path: string) {
     this.path = path
@@ -106,16 +102,16 @@ function parseState(value: unknown): RunnerState {
 export class EventStore {
   private state: RunnerState
   private committed: RunnerState
-  private readonly storage: StateStorage
-  private writes: Promise<void> = Promise.resolve()
+  private readonly storage: DiskStorage
+  private readonly writes = new SerialQueue()
 
-  private constructor(storage: StateStorage, state: RunnerState) {
+  private constructor(storage: DiskStorage, state: RunnerState) {
     this.storage = storage
     this.state = state
     this.committed = structuredClone(state)
   }
 
-  static async open(storage: StateStorage): Promise<EventStore> {
+  static async open(storage: DiskStorage): Promise<EventStore> {
     const saved = await storage.read()
     const state =
       saved === null
@@ -195,10 +191,9 @@ export class EventStore {
 
   private save(): Promise<void> {
     const snapshot = structuredClone(this.state)
-    this.writes = this.writes.then(async () => {
+    return this.writes.run(async () => {
       await this.storage.write(snapshot)
       this.committed = structuredClone(snapshot)
     })
-    return this.writes
   }
 }

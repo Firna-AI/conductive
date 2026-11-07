@@ -2,21 +2,16 @@ import { expect, it, onTestFinished } from 'vitest'
 
 import type { RunnerEventEnvelope } from '../../src/shared/runner'
 import { FakeDurableObjectEndpoint } from '../../worker/test-support/fake-durable-object'
+import { diskFixture } from '../test-support/disk'
 import { turn } from '../test-support/harness'
 import { emptySnapshot, wireFixture } from '../test-support/wire'
 import { RunnerLink } from './link'
 import { Runner } from './runner'
 import { mapTool } from './providers/tool'
-import { EventStore, type RunnerState } from './state'
+import { EventStore } from './state'
 
 it('bounds the exact complete JSON envelope and continues without a number gap after oversize input', async () => {
-  let saved: RunnerState | null = null
-  const storage = {
-    read: async () => saved,
-    write: async (state: RunnerState) => {
-      saved = structuredClone(state)
-    },
-  }
+  const { storage } = await diskFixture()
   const store = await EventStore.open(storage)
   const endpoint = new FakeDurableObjectEndpoint({
     workspaceId: 'workspace-1',

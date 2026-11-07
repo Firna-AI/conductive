@@ -1,3 +1,4 @@
+import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 
 import { query } from '@anthropic-ai/claude-agent-sdk'
@@ -7,6 +8,7 @@ import { ClaudeEvents } from './claude-events'
 import { ClaudeInputWindow } from './claude-input-window'
 import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
+import { ProviderLifetime } from './lifetime'
 import type { ProviderFactory } from './types'
 
 export interface ClaudeQuery extends AsyncIterable<unknown> {
@@ -29,6 +31,7 @@ export function createClaudeFactory(
 ): ProviderFactory {
   return async (options) => {
     options.signal?.throwIfAborted()
+    const lifetime = options.lifetime ?? new ProviderLifetime()
     await prepareProviderHome(options.home)
     options.signal?.throwIfAborted()
     const input = new ClaudeInputWindow()
@@ -55,6 +58,16 @@ export function createClaudeFactory(
         persistSession: true,
         settingSources: ['project'],
         mcpServers: { computer: { type: 'http', url: options.computerMcpUrl } },
+        spawnClaudeCodeProcess: (request) => {
+          options.signal?.throwIfAborted()
+          const child = spawn(request.command, request.args, {
+            cwd: request.cwd,
+            env: request.env,
+            stdio: ['pipe', 'pipe', 'ignore'],
+          })
+          lifetime.register(child)
+          return child
+        },
       },
     })
     void (async () => {
@@ -75,12 +88,21 @@ export function createClaudeFactory(
         if (!closed) options.event(failureCause(error))
       }
     })()
-    const close = async () => {
+    let closing: Promise<void> | null = null
+    const close = () => {
       options.signal?.removeEventListener('abort', abort)
-      if (closed) return
+      if (closed) return closing ?? lifetime.close()
       closed = true
       input.discard()
-      stream.close()
+      closing = (async () => {
+        const exited = lifetime.close()
+        try {
+          stream.close()
+        } finally {
+          await exited
+        }
+      })()
+      return closing
     }
     const abort = () => {
       void close().catch((error: unknown) => options.event(failureCause(error)))
