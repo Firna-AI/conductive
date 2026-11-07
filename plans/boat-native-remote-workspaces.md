@@ -4598,6 +4598,9 @@ Agent call, 7 November 2026: Move the first-start measurement guide to
 `runner/scripts/README.md`, and keep its heading link in `runner/README.md`.
 This keeps the runner README within the file size limit.
 
+Review fix, 7 November 2026: Share process disposal across sender changes,
+turn ends, Stop, and shutdown. Keep each pending close until it finishes.
+
 ## Milestone 8: Chat UI
 
 Tags: ui

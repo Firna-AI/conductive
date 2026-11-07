@@ -2,6 +2,7 @@ import type { AgentChatEvent } from '../../src/shared/chat-events'
 import type { EngineOptions, SessionRuntime } from './engine-session'
 import type { ProviderEvent } from './providers/types'
 import { cancelable } from './engine-cancel'
+import { disposeProvider } from './engine-disposal'
 import { failureCause } from './providers/failure'
 
 export async function finishTurn(
@@ -20,12 +21,10 @@ export async function finishTurn(
     stopped ? 'stopped' : event.type === 'failed' ? 'failed' : 'done',
   )
   session.generation++
-  const provider = session.provider
-  session.provider = null
-  if (provider) turn.closing = provider.close()
+  const closing = disposeProvider(session)
   let closeFailure: { error: unknown } | null = null
   try {
-    await turn.closing
+    await closing
   } catch (error) {
     closeFailure = { error }
   }

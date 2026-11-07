@@ -1,4 +1,5 @@
 import { cancelable } from './engine-cancel'
+import { disposeProvider } from './engine-disposal'
 import {
   rememberSession,
   senderIdentity,
@@ -70,9 +71,8 @@ async function continueResult(
   }
   await turn.output.finish('stopped')
   session.generation++
-  const provider = session.provider
-  session.provider = null
-  if (provider) await cancelable(signal, () => provider.close())
+  const closing = disposeProvider(session)
+  await cancelable(signal, () => closing)
   turn.messageIds.push(next.message.id)
   turn.retryMessageId = next.message.id
   await actions.start(next)

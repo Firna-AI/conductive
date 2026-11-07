@@ -263,6 +263,8 @@ tools that time the first agent start after a resume.
   failed step rejects only its own call, and later steps still run.
 - `src/engine.ts`, `src/engine-runtime.ts`, and `src/turn-output.ts`:
   session queues, cancelable turns, sender changes, controls, and text deltas.
+- `src/engine-disposal.ts`: one close path for sender changes, turn ends,
+  Stop, and shutdown.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the file

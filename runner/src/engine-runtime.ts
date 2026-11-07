@@ -5,6 +5,7 @@ import type {
 } from '../../src/shared/runner'
 import type { ProviderEvent, ProviderInput } from './providers/types'
 import { cancelable } from './engine-cancel'
+import { disposeProvider } from './engine-disposal'
 import { providerEvent } from './engine-events'
 import { finishTurn } from './engine-finish'
 import { inputCommand } from './engine-input'
@@ -56,13 +57,9 @@ export class SessionEngine {
         const session = this.session
         if (session && !session.active) {
           session.generation++
-          const provider = session.provider
-          session.provider = null
-          void provider
-            ?.close()
-            .catch(() =>
-              this.options.warn('The canceled agent could not close.'),
-            )
+          void disposeProvider(session).catch(() =>
+            this.options.warn('The canceled agent could not close.'),
+          )
         }
         return this.emit({
           type: 'turn.completed',
@@ -138,16 +135,15 @@ export class SessionEngine {
     for (const start of this.starts.values()) start.abort()
     const session = this.session
     const turn = session?.active
-    let provider: SessionRuntime['provider'] = null
+    let disposal = Promise.resolve()
     if (turn) {
       turn.shutdown = true
       this.cancel(turn)
     } else if (session) {
       session.generation++
-      provider = session.provider
-      session.provider = null
+      disposal = disposeProvider(session)
     }
-    this.closing = this.pending.then(async () => {
+    this.closing = Promise.all([this.pending, disposal]).then(async () => {
       if (turn && session?.active === turn)
         await this.finish({
           type: 'result',
@@ -155,7 +151,6 @@ export class SessionEngine {
           userMessageIds: turn.messageIds,
         })
       else await turn?.closing
-      await provider?.close()
     })
     return this.closing
   }
@@ -167,14 +162,9 @@ export class SessionEngine {
     const session = this.session
     if (!session) return
     session.generation++
-    const provider = session.provider
-    session.provider = null
-    if (provider) {
-      turn.closing = provider.stop()
-      void turn.closing.catch(() =>
-        this.options.warn('The canceled agent could not close.'),
-      )
-    }
+    void disposeProvider(session, 'stop').catch(() =>
+      this.options.warn('The canceled agent could not close.'),
+    )
   }
 
   private enqueue(action: () => Promise<void>): Promise<void> {

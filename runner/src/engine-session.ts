@@ -12,6 +12,7 @@ import type { EventStore } from './state'
 import type { TurnOutput } from './turn-output'
 import { failureCause } from './providers/failure'
 import { cancelable } from './engine-cancel'
+import { disposeProvider } from './engine-disposal'
 
 export interface ActiveTurn {
   first: ProviderInput
@@ -88,11 +89,8 @@ export async function startProvider(
   const signal = turn.controller.signal
   signal.throwIfAborted()
   if (session.provider && session.identity !== senderIdentity(command)) {
-    await cancelable(
-      signal,
-      () => session.provider?.close() ?? Promise.resolve(),
-    )
-    session.provider = null
+    const closing = disposeProvider(session)
+    await cancelable(signal, () => closing)
   }
   session.choice = command.message.choice
   if (!session.provider) {
