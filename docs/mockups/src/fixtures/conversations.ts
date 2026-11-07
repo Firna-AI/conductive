@@ -2,7 +2,9 @@
  * Chat transcripts. Text in backticks renders as inline code.
  */
 
+import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import { changedFiles, type ChangedFile } from './files'
+import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
@@ -25,6 +27,8 @@ export type ChatItem =
       tool: ToolKind
       target: string
       detail?: string
+      /** The size of output that the runner left out of `detail`. */
+      omittedDetailBytes?: number
       status: ToolCallStatus
     }
   | {
@@ -43,6 +47,8 @@ export type ChatItem =
       kind: 'stopped'
       id: string
       by?: PersonKey
+      /** The changed files of the turn past the 200 that the runner lists. */
+      omittedFiles?: number
     }
   | { kind: 'error'; id: string; text: string }
   | { kind: 'working'; id: string; elapsed: string }
@@ -51,6 +57,15 @@ export type ChatItem =
       id: string
       duration: string
       files: readonly ChangedFile[]
+      /** The files of the turn past the 200 that the runner lists. */
+      omittedFiles?: number
+    }
+  | {
+      /** A runner event that the workspace refused (decision 76). */
+      kind: 'lost'
+      id: string
+      what: LostWhat
+      reason: LostReason
     }
 
 /** One tool call of an agent turn. */
@@ -70,6 +85,11 @@ export const conversationKeys = [
   'mac-denied',
   'mac-done',
   'mac-unavailable',
+  'output-left-out',
+  'output-left-out-running',
+  'files-left-out',
+  'lost-lines',
+  'lost-turn-end',
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -218,6 +238,7 @@ export const conversations: Readonly<
     { kind: 'working', id: 'working', elapsed: '24s' },
   ],
   ...macConversations(history),
+  ...lostConversations(history),
 }
 
 /** The steer message that the user types while a turn runs. */

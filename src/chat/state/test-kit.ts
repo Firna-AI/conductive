@@ -194,6 +194,8 @@ export function shown(controller: ChatController, sessionId: string): string[] {
         return `stopped by ${item.by ?? 'nobody'}`
       case 'failed':
         return `failed: ${item.error.message}`
+      case 'lost':
+        return `lost: ${item.marker.runnerEventType} ${item.marker.reason}`
     }
   })
 }
