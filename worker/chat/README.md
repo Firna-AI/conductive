@@ -196,12 +196,10 @@ npm run typecheck
   restart `WorkspaceChat` on the same storage.
 - `MemoryChatStorage` keeps the records in memory. Set `failCommit` or
   `beforeCommit` to test a failed or a late commit.
+- Its key order and `startAfter` comparison use UTF-8 bytes, like real storage.
 - Set `crashAfterCommit` to commit the next transaction, then throw once.
   The restart tests use it to check repair requests, turn cleanup, and file
   assembly after a crash immediately after the receipt commit.
-- `runner-receipt-crash.test.ts` checks terminal cleanup and pending file
-  assembly after this crash and a restart.
-- Its key order and `startAfter` comparison use UTF-8 bytes, like real storage.
 - `createRunnerLimitsFixture` in `runner-limits.test-support.ts` runs one
   `RunnerChannel` for the refusal, cap, and file part tests.
 - `runner-repairs.test-support.ts` builds a full and an oversized report of
