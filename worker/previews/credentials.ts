@@ -1,7 +1,8 @@
+import { saveOAuthState, takeOAuthState } from '../data/users'
 import type { AppEnv } from '../env'
 import { isRecord } from '../http'
 import { readCookie } from '../security/cookies'
-import { decrypt, encrypt } from '../security/crypto'
+import { decrypt, encrypt, hash } from '../security/crypto'
 import type { PreviewRecord } from './store'
 
 export const PREVIEW_COOKIE_PREFIX = '__Secure-conducting-preview-'
@@ -58,16 +59,23 @@ export async function launchGrant(
   now: number,
 ) {
   const expiresAt = Math.min(row.expiresAt, now + launchLifetime)
-  return { token: await issue(env, row, 'launch', expiresAt), expiresAt }
+  const token = await issue(env, row, 'launch', expiresAt)
+  await saveOAuthState(env.DB, await hash(`preview:${token}`), expiresAt, now)
+  return { token, expiresAt }
 }
 
-export function launchGranted(
+export async function redeemLaunchGrant(
   token: string | null,
   env: AppEnv,
   row: PreviewRecord,
   now: number,
-) {
-  return valid(token, env, row, 'launch', now)
+): Promise<string | null> {
+  if (!token || !(await valid(token, env, row, 'launch', now))) return null
+  if (!(await takeOAuthState(env.DB, await hash(`preview:${token}`), now)))
+    return null
+  const credential = await issue(env, row, 'cookie', row.expiresAt)
+  const maxAge = Math.max(0, Math.floor((row.expiresAt - now) / 1000))
+  return `${PREVIEW_COOKIE_PREFIX}${row.id}=${credential}; Domain=${env.PREVIEW_DOMAIN?.toLowerCase()}; Path=/; HttpOnly; Secure; SameSite=None; Partitioned; Max-Age=${maxAge}`
 }
 
 export function previewAuthorized(
@@ -83,14 +91,4 @@ export function previewAuthorized(
     'cookie',
     now,
   )
-}
-
-export async function previewCookie(
-  env: AppEnv,
-  row: PreviewRecord,
-  now: number,
-) {
-  const token = await issue(env, row, 'cookie', row.expiresAt)
-  const maxAge = Math.max(0, Math.floor((row.expiresAt - now) / 1000))
-  return `${PREVIEW_COOKIE_PREFIX}${row.id}=${token}; Domain=${env.PREVIEW_DOMAIN?.toLowerCase()}; Path=/; HttpOnly; Secure; SameSite=None; Partitioned; Max-Age=${maxAge}`
 }

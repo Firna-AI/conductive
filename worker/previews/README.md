@@ -82,8 +82,26 @@ a previewed app can see a grant.
 Grants and cookies use AES-GCM with `BOAT_KEY_ENCRYPTION_KEY`. The authenticated
 data binds the app origin, the hostname, the preview ID, and the purpose.
 So a grant cannot act as a cookie, and a cookie cannot move to another preview.
-Grants keep no server state, so they work across isolates and restarts.
-A grant is not one-use. It can work more than once in its 60 seconds.
+
+Each grant works once.
+`launchGrant` saves a SHA-256 hash of `preview:<grant>` with `saveOAuthState`
+from [users.ts](../data/users.ts). The record goes into `oauth_states`, the
+one-use D1 table that GitHub sign-in and the Mac handoff also use. The
+`preview:` prefix keeps the record apart from the sign-in and handoff records.
+Each record expires with its grant, and each save deletes the expired records.
+D1 is shared, so a grant works once across isolates and restarts.
+
+Both POST modes call `redeemLaunchGrant`, the one redemption operation.
+It first checks the grant against the active preview.
+It then deletes the record of the grant with `takeOAuthState`.
+It returns the credential cookie only when that delete finds the record.
+The delete is atomic, so only one request can use a grant.
+Every other request with that grant gets the same 404, with no cookie.
+
+Only `redeemLaunchGrant` returns a credential cookie, so no mode can skip the
+one-use check. The POST handler in `launch.ts` checks the method, the Origin,
+the form body, and the hostname before the redemption. So a request that fails
+a check leaves its grant unused. Keep each new check before the redemption.
 
 The proxy reads only the cookie of the requested preview ID. A duplicate of
 that cookie counts as no cookie. The proxy checks the D1 record and the cookie
@@ -143,7 +161,7 @@ The proxy follows no upstream redirect.
 - [launch-document.ts](launch-document.ts) builds the launch page markup and its CSP.
 - [browser-launch.ts](browser-launch.ts) builds the authorizer page for a browser launch.
 - [preview-launch-path.ts](../security/preview-launch-path.ts) matches the exact launch path for the gate and the Mac app.
-- [credentials.ts](credentials.ts) issues and checks the encrypted grants and credential cookies.
+- [credentials.ts](credentials.ts) issues grants with `launchGrant`, redeems each grant once with `redeemLaunchGrant`, and checks the credential cookies.
 - [proxy.ts](proxy.ts) routes the authorizer page and POST, checks the credential cookie, and owns the request flow.
 - [registry.ts](registry.ts) scopes HTTP and socket cancellation by workspace and preview.
 - [connection.ts](connection.ts) wraps both HTTP directions with authorization and backpressure.

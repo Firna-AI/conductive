@@ -214,9 +214,13 @@ Later screens add the frame and connection sources that they need.
 - Only pages on the app origin and on the desktop origin of the
   [Mac app](desktop-app.md#the-page) can frame the launch page.
 - A grant works for 60 seconds at most, and only for its own preview. It
-  is not one-use, so it can work more than once in that time. Reason: it
-  needs no stored state, and only the launch page, the Mac app, and the
-  authorizer's own page carry it to the authorizer.
+  works only once (decision 95). A reusable grant was rejected, because a
+  copy of a used grant could give a second browser access for the life of
+  the preview.
+- A used grant gets the same 404 as an invalid grant. The reply sets no
+  cookie, and no sandbox gets a request.
+- A request that fails any other check, such as a wrong `Origin` or the
+  hostname of another preview, leaves its grant unused.
 - A grant never goes to a sandbox or into a log. It never goes into the
   path or the query of a URL. A grant in a query was rejected, because
   the browser sends the query to the server.
@@ -224,7 +228,7 @@ Later screens add the frame and connection sources that they need.
   a URL. The grant and the preview hostname go in the fragment of an
   authorizer address, because a browser sends no fragment to a server.
 - Risk: the browser can keep that address in its history. The grant in it
-  stops working within 60 seconds.
+  works only once, and it stops working within 60 seconds.
 - At that address, the authorizer serves its own page, the authorizer
   page. No page can frame it. Before any request or navigation, the page
   removes the fragment from its address.

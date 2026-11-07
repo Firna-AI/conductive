@@ -6,7 +6,7 @@ import { randomToken } from '../security/crypto'
 import { DESKTOP_ORIGIN } from '../security/desktop-contract'
 import { PREVIEW_HANDOFF_PATH } from '../security/preview-launch-path'
 import { previewBrowserDocument } from './browser-launch'
-import { launchGrant, launchGranted, previewCookie } from './credentials'
+import { launchGrant, redeemLaunchGrant } from './credentials'
 import { previewLaunchDocument } from './launch-document'
 import { activePreview, type PreviewRecord } from './store'
 
@@ -72,7 +72,7 @@ export function previewBrowserLaunch(): Response {
   )
 }
 
-/** Stateless grants remain valid for at most 60 seconds, including across isolates. */
+/** Grants can be exchanged once for at most 60 seconds, including across isolates. */
 export async function previewHandoff(
   request: Request,
   env: AppEnv,
@@ -135,11 +135,11 @@ export async function previewHandoff(
           ?.match(/^Bearer ([A-Za-z0-9_.-]+)$/)?.[1] ?? '',
       ]
     : form.getAll('grant')
-  if (
-    !row ||
-    grants.length !== 1 ||
-    !(await launchGranted(grants[0], env, row, now))
-  ) {
+  const cookie =
+    row && grants.length === 1
+      ? await redeemLaunchGrant(grants[0], env, row, now)
+      : null
+  if (!row || !cookie) {
     throw new HttpError(
       404,
       'preview_not_found',
@@ -150,7 +150,7 @@ export async function previewHandoff(
     return privateResponse(
       Response.json(
         { url: `https://${row.hostname}/` },
-        { headers: { 'Set-Cookie': await previewCookie(env, row, now) } },
+        { headers: { 'Set-Cookie': cookie } },
       ),
     )
   return privateResponse(
@@ -158,7 +158,7 @@ export async function previewHandoff(
       status: 303,
       headers: {
         Location: `https://${row.hostname}/`,
-        'Set-Cookie': await previewCookie(env, row, now),
+        'Set-Cookie': cookie,
       },
     }),
   )
