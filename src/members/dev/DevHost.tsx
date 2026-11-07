@@ -72,8 +72,6 @@ function SettingsBody(props: {
           viewport={options.viewport}
         />
       )
-    case 'boat-key':
-      return <DevNote>Milestone 6 builds the Boat key tab.</DevNote>
     default:
       return (
         <MembersTab

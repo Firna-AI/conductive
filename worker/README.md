@@ -9,7 +9,9 @@ The Durable Object runs the complete request gate.
 Durable Objects hold workspace state, and D1 holds shared records.
 The [security area](security/README.md) owns the app request gate.
 The [HTTP area](http/README.md) owns the request body limit at the Worker entry.
-The [sandbox area](sandbox/README.md) owns the Boat adapter and encrypted org keys.
+The [sandbox area](sandbox/README.md) owns the Boat adapter and the use of the app's one Boat key.
+The Worker reads that key from the Worker secret `BOAT_API_KEY`.
+The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
 
 ## Routes
@@ -17,7 +19,7 @@ The [chat backend](chat/README.md) owns the sessions, the messages, and the even
 On the app hostname, the Worker serves these API routes:
 
 - The health check, GitHub sign-in and its callback, and the sign-in exchange of the Mac app.
-- The session, sign-out, the org list, a new org, one org, and the Boat key of an org.
+- The session, sign-out, the org list, a new org, and one org.
 - The Mac device routes.
 - The chat routes of a workspace: its sessions and their actions, the chat history, and the events socket.
 

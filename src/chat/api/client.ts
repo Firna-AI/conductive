@@ -1,7 +1,7 @@
 import type { ApiClient } from '../../app/api/client'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { MODELS_PATH, type AgentChoice } from '../../shared/agents'
-import { boatKeyPath, orgPath, type EmptyRequest } from '../../shared/api'
+import { orgPath, type EmptyRequest } from '../../shared/api'
 import { chatHistoryPath } from '../../shared/events'
 import { filePaths } from '../../shared/files'
 import { membersPath } from '../../shared/members'
@@ -28,7 +28,6 @@ import { workspacePath, workspacePaths } from '../../shared/workspaces'
 import {
   readAccount,
   readAttachmentResponse,
-  readBoatKey,
   readChangeModel,
   readInterrupt,
   readMembers,
@@ -89,7 +88,6 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
     org: () => client.get(orgPath(orgId), readOrg),
     /** The members of the org, so the chat names the member who pressed Stop. */
     members: () => client.get(membersPath(orgId), readMembers),
-    boatKey: () => client.get(boatKeyPath(orgId), readBoatKey),
     createSession: (choice: AgentChoice) =>
       client.send(
         'POST',

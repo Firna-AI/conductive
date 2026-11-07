@@ -1,6 +1,6 @@
 import type { WorkspaceState } from '../../src/shared/workspaces'
 import type { HttpFetch } from '../env'
-import type { ChatScheduler } from '../chat/types'
+import type { ConnectionScheduler } from '../security/connection-access'
 
 export interface ProxySocket {
   binaryType: 'blob' | 'arraybuffer'
@@ -18,7 +18,7 @@ export interface SocketRuntime {
 }
 
 export interface ToolDependencies {
-  terminalSchedule?: ChatScheduler
+  terminalSchedule?: ConnectionScheduler
   fetch: HttpFetch
   now: () => number
   sockets?: SocketRuntime

@@ -1,6 +1,6 @@
 import { ACCOUNT_PATHS, agentLoginPath } from '../shared/account'
 import { MODELS_PATH } from '../shared/agents'
-import { API_PATHS, boatKeyPath, orgPath, type OrgRole } from '../shared/api'
+import { API_PATHS, orgPath, type OrgRole } from '../shared/api'
 import { HEALTH_PATH } from '../shared/health'
 import {
   invitePath,
@@ -91,8 +91,6 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   routes.json('GET', buildEventsPath(id, FAKE_IDS.build), {
     events: data.build.log,
   })
-  routes.json('GET', boatKeyPath(id), data.boatKey)
-  routes.json('PUT', boatKeyPath(id), data.boatKey)
   routes.json('GET', membersPath(id), data.members)
   routes.json('POST', invitesPath(id), { invite: data.members.invites[0] }, 201)
   for (const member of data.members.members) {

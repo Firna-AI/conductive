@@ -24,7 +24,7 @@ The address chooses the state. The first value of each option is the default:
 | `workspace` | `existing`, `new` (Lisbon, which starts) |
 | `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
 | `role` | `admin`, `member` |
-| `key`, `login` | `on`, `off` |
+| `login` | `on`, `off` |
 | `replay` | `stored`, `live` (the recorded chat arrives event by event) |
 | `viewport` | `desktop`, `mobile` |
 | `scheme` | `dark`, `light` |

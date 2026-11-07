@@ -1,5 +1,4 @@
 import { createApiClient } from '../../app/api/client'
-import { boatKeyPath } from '../../shared/api'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import type { Session } from '../../shared/sessions'
@@ -95,8 +94,6 @@ export class DevBackend {
     const workspaceId =
       options.workspace === 'new' ? NEW_WORKSPACE : FAKE_IDS.workspace
     const target = { orgId: org, workspaceId }
-    if (!options.key)
-      server.json('GET', boatKeyPath(org), { configured: false })
     if (!options.login) {
       const { account } = coreFixtures(options.role)
       server.json('GET', ACCOUNT_PATHS.account, {

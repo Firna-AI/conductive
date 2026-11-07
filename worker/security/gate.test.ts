@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import { API_PATHS, boatKeyPath, orgPath } from '../../src/shared/api'
+import { API_PATHS, orgPath } from '../../src/shared/api'
 import { createApp } from '../application'
 import {
   createHarness,
@@ -223,18 +223,14 @@ it('creates the org and admin together and lists only the user’s orgs', async 
   expect(await (await harness.request(API_PATHS.orgs, other)).json()).toEqual({
     orgs: [],
   })
-  for (const path of [
-    orgPath(org.id),
-    boatKeyPath(org.id),
-    `${orgPath(org.id)}/unknown`,
-  ]) {
+  for (const path of [orgPath(org.id), `${orgPath(org.id)}/unknown`]) {
     expect((await harness.request(path, other)).status, path).toBe(404)
   }
   expect(
     (
-      await harness.request(boatKeyPath(org.id), other, {
+      await harness.request(orgPath(org.id), other, {
         method: 'PUT',
-        body: '{"key":"boat-first"}',
+        body: '{"name":"Changed"}',
       })
     ).status,
   ).toBe(404)

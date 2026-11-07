@@ -1,10 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { API_PATHS } from '../../src/shared/api'
+import {
+  readConnectionAccess,
+  type ConnectionIdentity,
+} from '../security/connection-access'
 import { createHarness, type TestHarness } from '../test-support/harness'
-import { readBrowserAccess } from './browser-access'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
-import type { BrowserIdentity } from './types'
 
 describe('open workspace tab access', () => {
   let harness: TestHarness
@@ -19,7 +21,7 @@ describe('open workspace tab access', () => {
   })
 
   it('rechecks all tabs in one batch within 30 seconds and clears the timer when access ends', async () => {
-    const snapshots: BrowserIdentity[][] = []
+    const snapshots: ConnectionIdentity[][] = []
     let reads = 0
     const database = {
       prepare: (query: string) => {
@@ -28,9 +30,9 @@ describe('open workspace tab access', () => {
       },
     }
     const fixture = await createChatFixture(harness, {
-      readBrowserAccess: async (tabs, now) => {
+      readConnectionAccess: async (tabs, now) => {
         snapshots.push(structuredClone([...tabs]))
-        return readBrowserAccess(database, tabs, now)
+        return readConnectionAccess(database, tabs, now)
       },
     })
     const owner = await fixture.tab()
@@ -41,14 +43,14 @@ describe('open workspace tab access', () => {
     )
       .bind(fixture.org.id, fixture.member.id)
       .run()
-    await fixture.clock.advance(29_999)
+    await fixture.clock.advance(14_999)
     expect([owner.closed, removedA.closed, removedB.closed]).toEqual([0, 0, 0])
-    expect(snapshots).toEqual([])
+    expect(snapshots.map((tabs) => tabs.length)).toEqual([1, 1, 1])
     await fixture.clock.advance(1)
     expect([owner.closed, removedA.closed, removedB.closed]).toEqual([0, 1, 1])
-    expect(snapshots.map((tabs) => tabs.length)).toEqual([3])
-    expect(reads).toBe(1)
-    expect(snapshots[0]?.map((tab) => tab.userId)).toEqual([
+    expect(snapshots.map((tabs) => tabs.length)).toEqual([1, 1, 1, 3])
+    expect(reads).toBe(4)
+    expect(snapshots[3]?.map((tab) => tab.userId)).toEqual([
       fixture.owner.id,
       fixture.member.id,
       fixture.member.id,
@@ -75,13 +77,13 @@ describe('open workspace tab access', () => {
       method: 'POST',
       body: '{}',
     })
-    await fixture.clock.advance(29_999)
+    await fixture.clock.advance(14_999)
     expect([owner.closed, fresh.closed]).toEqual([0, 0])
     await fixture.clock.advance(1)
     expect([owner.closed, fresh.closed]).toEqual([1, 0])
-    expect(snapshots.map((tabs) => tabs.length)).toEqual([3, 2])
-    const survivingIdentity = snapshots[1]?.find(
-      (tab) => tab.sessionId !== snapshots[0]?.[0]?.sessionId,
+    expect(snapshots.map((tabs) => tabs.length)).toEqual([1, 1, 1, 3, 1, 2])
+    const survivingIdentity = snapshots[5]?.find(
+      (tab) => tab.sessionId !== snapshots[3]?.[0]?.sessionId,
     )
     if (!survivingIdentity)
       throw new Error('The newly authenticated session was not checked.')
@@ -90,9 +92,9 @@ describe('open workspace tab access', () => {
     await harness.env.DB.prepare(
       'UPDATE sessions SET expires_at = ? WHERE id = ?',
     )
-      .bind(fixture.clock.now() + 30_000, survivingIdentity.sessionId)
+      .bind(fixture.clock.now() + 15_000, survivingIdentity.sessionId)
       .run()
-    await fixture.clock.advance(29_999)
+    await fixture.clock.advance(14_999)
     expect([fresh.closed, another.closed]).toEqual([0, 0])
     await fixture.clock.advance(1)
     expect([fresh.closed, another.closed]).toEqual([1, 0])
@@ -100,12 +102,14 @@ describe('open workspace tab access', () => {
     await harness.env.DB.prepare('UPDATE orgs SET deleted_at = ? WHERE id = ?')
       .bind(fixture.clock.now(), fixture.org.id)
       .run()
-    await fixture.clock.advance(29_999)
+    await fixture.clock.advance(14_999)
     expect([another.closed, sameSessionTab.closed]).toEqual([0, 0])
     await fixture.clock.advance(1)
     expect([another.closed, sameSessionTab.closed]).toEqual([1, 1])
-    expect(snapshots.map((tabs) => tabs.length)).toEqual([3, 2, 2, 2])
-    expect(reads).toBe(4)
+    expect(snapshots.map((tabs) => tabs.length)).toEqual([
+      1, 1, 1, 3, 1, 2, 1, 2, 1, 2,
+    ])
+    expect(reads).toBe(10)
     expect(fixture.clock.scheduledCount).toBe(0)
     const afterClosure = another.messages.length
     await fixture.chat.appendWorkspaceEvent(WORKSPACE_ID, {
@@ -114,7 +118,7 @@ describe('open workspace tab access', () => {
     })
     expect(another.messages).toHaveLength(afterClosure)
     await fixture.clock.advance(90_000)
-    expect(snapshots).toHaveLength(4)
+    expect(snapshots).toHaveLength(10)
     owner.close()
     removedA.close()
     removedB.close()
@@ -127,10 +131,13 @@ describe('open workspace tab access', () => {
     const entered = signal()
     const release = signal()
     let reads = 0
+    let holdNextRead = false
     const fixture = await createChatFixture(harness, {
-      readBrowserAccess: async (tabs, now) => {
-        const allowed = await readBrowserAccess(harness.env.DB, tabs, now)
-        if (++reads === 1) {
+      readConnectionAccess: async (tabs, now) => {
+        const allowed = await readConnectionAccess(harness.env.DB, tabs, now)
+        reads++
+        if (holdNextRead) {
+          holdNextRead = false
           entered.resolve()
           await release.promise
         }
@@ -138,7 +145,8 @@ describe('open workspace tab access', () => {
       },
     })
     const first = await fixture.tab()
-    const boundary = fixture.clock.advance(30_000)
+    holdNextRead = true
+    const boundary = fixture.clock.advance(15_000)
     await entered.promise
     await fixture.clock.advance(10_000)
     const second = await fixture.tab()
@@ -147,12 +155,12 @@ describe('open workspace tab access', () => {
     await harness.env.DB.prepare('UPDATE orgs SET deleted_at = ? WHERE id = ?')
       .bind(fixture.clock.now(), fixture.org.id)
       .run()
-    await fixture.clock.advance(19_999)
-    expect(reads).toBe(1)
+    await fixture.clock.advance(4_999)
+    expect(reads).toBe(3)
     expect([first.closed, second.closed]).toEqual([0, 0])
     await fixture.clock.advance(1)
     expect([first.closed, second.closed]).toEqual([1, 1])
-    expect(reads).toBe(2)
+    expect(reads).toBe(4)
     expect(fixture.clock.scheduledCount).toBe(0)
     first.close()
     second.close()

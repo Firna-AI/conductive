@@ -34,8 +34,6 @@ export interface ChatViewProps {
   onOpenDiff?: (path: string) => void
   /** The notice of an agent with no login leads to its Connect form. */
   onConnectAgent?: (agent: Agent) => void
-  /** The notice of an org with no key leads an admin to the key screen. */
-  onAddBoatKey?: () => void
   /** The start steps and the sandbox bar that the app draws, as `ChatHost` says. */
   host?: ChatHost
 }
@@ -101,7 +99,6 @@ function ChatBody(
         host={props.host}
         mobile={mobile}
         now={now}
-        onAddBoatKey={props.onAddBoatKey}
         onConnectAgent={props.onConnectAgent}
         onOpenDiff={props.onOpenDiff}
         snapshot={snapshot}

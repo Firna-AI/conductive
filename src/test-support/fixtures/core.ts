@@ -20,7 +20,7 @@ import type {
   GitHubInstallationsResponse,
 } from '../../shared/account'
 import type { ModelsResponse } from '../../shared/agents'
-import type { BoatKeyStatus, OrgRole, User } from '../../shared/api'
+import type { OrgRole, User } from '../../shared/api'
 import { BASE_IMAGE } from '../../shared/base-image'
 import type { MembersResponse } from '../../shared/members'
 import type { GetStartedResponse } from '../../shared/onboarding'
@@ -164,14 +164,8 @@ export function coreFixtures(role: OrgRole = 'admin') {
     steps: [
       { step: 'github-app', complete: true },
       { step: 'org', complete: true },
-      { step: 'boat-key', complete: true },
       { step: 'agent-login', complete: true },
     ],
-  }
-  const boatKey: BoatKeyStatus = {
-    configured: true,
-    updatedAt: FAKE_TIME,
-    lastFour: '7k2q',
   }
   return {
     account,
@@ -187,6 +181,5 @@ export function coreFixtures(role: OrgRole = 'admin') {
     builds,
     githubInstallations,
     getStarted,
-    boatKey,
   }
 }

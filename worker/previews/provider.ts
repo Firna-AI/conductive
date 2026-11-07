@@ -1,6 +1,6 @@
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
-import { authorizedOrgSandboxProvider } from '../sandbox/keys'
+import { sandboxProvider } from '../sandbox/client'
 import type { PortMode, SandboxProvider } from '../sandbox/provider'
 import { verifyTarget } from './access'
 import type { WorkspaceTarget } from './types'
@@ -31,12 +31,7 @@ export class WorkspaceTools {
     userId?: string,
   ) {
     await verifyTarget(env, target, userId, false)
-    return new WorkspaceTools(
-      env,
-      target,
-      await authorizedOrgSandboxProvider(env, target.orgId, fetch),
-      userId,
-    )
+    return new WorkspaceTools(env, target, sandboxProvider(env, fetch), userId)
   }
 
   async privatePort(port: number, mode: PortMode) {

@@ -49,7 +49,6 @@ export async function loadChat(context: ChatContext): Promise<void> {
     owned ? none : orNull(api.models()),
     owned ? none : orNull(api.account()),
     owned ? none : orNull(api.org()),
-    orNull(api.boatKey()),
     owned ? none : orNull(api.members()),
   ])
   let first: SessionsResponse
@@ -59,7 +58,7 @@ export async function loadChat(context: ChatContext): Promise<void> {
     fail(error)
     return
   }
-  const [view, models, account, org, boatKey, members] = await extras
+  const [view, models, account, org, members] = await extras
   if (!context.live()) return
   const active = pickActive(orderSessions(first.sessions, view), view)
   // An input that an app model owns keeps the value of its source.
@@ -70,7 +69,6 @@ export async function loadChat(context: ChatContext): Promise<void> {
     ...snapshot,
     ...read,
     view,
-    boatKey,
     activeSessionId: active,
   }))
   let after = 0

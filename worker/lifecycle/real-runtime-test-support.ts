@@ -8,7 +8,6 @@ import { closeSockets, SocketInbox } from '../chat/adapter-sockets.test-support'
 import type { AppEnv } from '../env'
 import { LifecycleBoat } from './lifecycle-boat-test-support'
 import type { WorkspaceRuntimeFixture } from './workspace-runtime-test-worker'
-import { storeBoatKey } from '../sandbox/keys'
 import { SESSION_COOKIE } from '../security/cookies'
 import { sign } from '../security/crypto'
 import { applyMigrations } from '../test-support/migrations'
@@ -77,6 +76,8 @@ export async function realRuntimeFixture(bundle: string) {
               GITHUB_CLIENT_ID: text('runtime-client'),
               GITHUB_CLIENT_SECRET: text('runtime-client-secret'),
               SESSION_SIGNING_KEY: text(btoa('s'.repeat(32))),
+              BOAT_API_KEY: text('boat-first'),
+              BOAT_ORG_ID: text('app-org'),
               BOAT_KEY_ENCRYPTION_KEY: text(btoa('e'.repeat(32))),
             },
             manifest: {
@@ -126,6 +127,8 @@ export async function realRuntimeFixture(bundle: string) {
     GITHUB_CLIENT_ID: 'runtime-client',
     GITHUB_CLIENT_SECRET: 'runtime-client-secret',
     SESSION_SIGNING_KEY: btoa('s'.repeat(32)),
+    BOAT_API_KEY: 'boat-first',
+    BOAT_ORG_ID: 'app-org',
     BOAT_KEY_ENCRYPTION_KEY: btoa('e'.repeat(32)),
   }
   await database.batch([
@@ -166,14 +169,6 @@ export async function realRuntimeFixture(bundle: string) {
     },
     now: Date.now(),
   })
-  await storeBoatKey(
-    env,
-    'runtime-org',
-    'runtime-user',
-    'boat-first',
-    boat.fetch,
-    Date.now(),
-  )
   const sessionToken = await sign(
     { sessionId: 'runtime-browser-session', expiresAt: 4_000_000_000_000 },
     'session',

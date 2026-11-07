@@ -1,4 +1,4 @@
-import { boatNote, siteActions } from './actions'
+import { siteActions } from './actions'
 import { features, smallerFeatures, type Feature } from './features'
 import { pictureFrame } from './frames'
 import { html, type Html } from './html'
@@ -24,7 +24,7 @@ function hero(links: SiteLinks): Html {
         clone of your repository. You follow along and review the work from any
         browser.
       </p>
-      <div class="hero-start">${siteActions(links)}${boatNote()}</div>
+      ${siteActions(links)}
     </div>
     <div class="hero-picture">${pictureFrame(pictures.hero, 'eager')}</div>
   </section>`
@@ -63,7 +63,7 @@ function closingCall(links: SiteLinks): Html {
     <p class="closing-text">
       Sign up with GitHub, connect your repositories, and send the first task.
     </p>
-    ${siteActions(links)}${boatNote()}
+    ${siteActions(links)}
   </section>`
 }
 

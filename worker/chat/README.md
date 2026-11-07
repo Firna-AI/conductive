@@ -72,10 +72,24 @@ The Durable Object runs the gates itself.
   header, the session cookie, the org membership, and the body of writes.
 - `findChatWorkspace` then reads the workspace from D1. The workspace must
   belong to that org, and the org must not be deleted.
-- Each open tab keeps its authenticated session and membership identity.
-  Every 30 seconds, one D1 query rechecks all open tabs. A failed check
-  closes the tab after sign-out, membership removal, or org deletion.
-- The access timer stops when the last tab closes.
+- Each open tab holds a `workspace` identity. The
+  [shared connection reader](../security/README.md#open-connections) of
+  the security area gives it a grant with a deadline. The `workspace` kind
+  needs no running sandbox. So the tabs of a stopped or archived workspace
+  stay open.
+- The Durable Object reads the first grant of a new tab before the
+  history read. It checks the grant again before it sends the history. A
+  tab without a valid grant gets no history and `404 workspace_not_found`.
+- Each event send checks the grant first, without a D1 read. A tab with
+  an expired grant closes and gets no event.
+- Every 15 seconds, one D1 query refreshes the grants of all open tabs.
+  The refresh closes each tab without a new grant. Sign-out, membership
+  removal, session expiry, and org deletion end access. A failed read
+  closes each tab of its batch.
+- A separate expiry timer closes each tab at its grant deadline, also
+  while a refresh read waits. A late read result cannot reopen a closed
+  tab.
+- Both timers stop when the last tab closes.
 - An archived workspace still serves its history and its events socket.
   Each write gets `409 workspace_archived`.
 - `connectRunner` accepts only `/v1/runner` on `MACHINE_ORIGIN`, with
@@ -251,8 +265,10 @@ lifecycle, the files, the agent runner, and the logins and attachments.
   end, safe turn context, late data, terminal events, and unanswered
   messages.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
-- `browser-tabs.ts` and `browser-access.ts`: open tabs, the scheduled access
-  check, and its batched D1 query.
+- `browser-tabs.ts`: open tabs, their grants, the refresh and expiry
+  timers, and the grant check before each send. By default,
+  `WorkspaceChat` gives it `readConnectionAccess` from
+  [`worker/security/connection-access.ts`](../security/connection-access.ts).
 - `router.ts`: `routeChat`, `routeRunner`, and `forwardWorkspaceRequest`,
   which forward the browser chat routes and the runner socket from the
   outer Worker to the object.

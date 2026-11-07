@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { API_PATHS, boatKeyPath, orgPath } from '../../src/shared/api'
+import { API_PATHS, orgPath } from '../../src/shared/api'
 import { orgSettingsPaths } from '../../src/shared/org-settings'
 import {
   invitesPath,
@@ -28,7 +28,7 @@ import { assertCanChangeSharedSettings } from './permissions'
 
 let harness: TestHarness
 beforeAll(async () => {
-  harness = await createHarness({ resetBoatAccounts: true })
+  harness = await createHarness()
 })
 beforeEach(async () => {
   await harness.reset()
@@ -218,7 +218,6 @@ it('allows shared settings and rename only for a current admin of that org', asy
     assertCanChangeSharedSettings(harness.env.DB, org.id, admin.user.id),
   ).resolves.toBeUndefined()
   for (const [path, method] of [
-    [boatKeyPath(org.id), 'PUT'],
     [orgSettingsPaths.repositories(org.id), 'PUT'],
     [orgSettingsPaths.settings(org.id), 'PATCH'],
     [orgSettingsPaths.builds(org.id), 'POST'],

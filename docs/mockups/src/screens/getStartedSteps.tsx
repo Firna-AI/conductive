@@ -1,4 +1,4 @@
-import { ArrowUpRight, KeyRound, Plus } from 'lucide-react'
+import { ArrowUpRight, Plus } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { StatusText } from '../components/common/StatusText'
@@ -6,15 +6,8 @@ import {
   AgentList,
   type OpenAgentForm,
 } from '../components/settings/AccountSections'
-import {
-  BoatKeyActions,
-  BoatKeyField,
-  BoatLinks,
-  makeKeyText,
-} from '../components/settings/BoatKey'
 import { Section, SectionText } from '../components/settings/Section'
 import { defaultChoice } from '../fixtures/agents'
-import { firnaKey } from '../fixtures/boatKey'
 import type { AgentLogins } from '../fixtures/logins'
 import { firstInstallation } from '../fixtures/orgs'
 import { newOrg } from '../fixtures/repositories'
@@ -22,13 +15,7 @@ import { paths } from '../paths'
 import styles from './GetStartedScreen.module.css'
 
 /** The steps of Get started in their order, then `done` after the last. */
-export const getStartedSteps = [
-  'install',
-  'org',
-  'key',
-  'agent',
-  'done',
-] as const
+export const getStartedSteps = ['install', 'org', 'agent', 'done'] as const
 
 export type GetStartedStep = (typeof getStartedSteps)[number]
 
@@ -112,45 +99,6 @@ export function OrgStep(props: { step: GetStartedStep }) {
 }
 
 /**
- * The Boat key of the first org. Get started names Boat, and says that
- * users need their own Boat account, as decision 47 B says. The field
- * opens once the org exists, because the key belongs to the org.
- */
-export function KeyStep(props: { step: GetStartedStep }) {
-  const title = '3. Add your Boat key'
-  if (isPast(props.step, 'key')) {
-    return (
-      <Section status={done('Tested')} title={title}>
-        <SectionText>
-          Saved for <span className={styles.strong}>{newOrg.name}</span>, ending
-          in <span className={styles.mono}>{firnaKey.tail}</span>.
-        </SectionText>
-      </Section>
-    )
-  }
-  const next = props.step === 'key'
-  return (
-    <Section
-      actions={
-        next ? (
-          <ScreenLink asChild to={paths.getStartedKeySaved}>
-            <ActionButton icon={KeyRound} tone="primary">
-              Save and test
-            </ActionButton>
-          </ScreenLink>
-        ) : undefined
-      }
-      description={`You need your own Boat account, because your cloud computers run on it. ${makeKeyText}`}
-      title={title}
-    >
-      <BoatLinks />
-      <BoatKeyActions />
-      {next ? <BoatKeyField /> : null}
-    </Section>
-  )
-}
-
-/**
  * Connect Claude or Codex, from decision 33 D. The default model is
  * Claude's, so the form of Claude opens when the step is next, and Claude
  * is connected with a subscription token when the step is done.
@@ -170,7 +118,7 @@ export function AgentStep(props: { step: GetStartedStep }) {
     <Section
       description="Your agents run on your own Claude or OpenAI account. Connect at least one now, and the other at any time in your account."
       status={finished ? done('Connected') : undefined}
-      title="4. Connect Claude or Codex"
+      title="3. Connect Claude or Codex"
     >
       <AgentList form={form} logins={logins} />
     </Section>

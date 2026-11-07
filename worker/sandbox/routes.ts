@@ -2,7 +2,7 @@ import { ProviderError } from './errors'
 import type { CommandOffsets } from './provider'
 
 export type BoatRoute =
-  | { operation: 'account' | 'create' | 'saveSnapshot' }
+  | { operation: 'create' | 'saveSnapshot' }
   | {
       operation:
         | 'get'
@@ -39,8 +39,6 @@ export function boatRoute(route: BoatRoute): { method: string; path: string } {
         method: 'GET',
         path: `/sandboxes/${segment(route.sandboxId)}/files/info?${new URLSearchParams({ path: route.path })}`,
       }
-    case 'account':
-      return { method: 'GET', path: '/orgs' }
     case 'create':
       return { method: 'POST', path: '/sandboxes' }
     case 'saveSnapshot':

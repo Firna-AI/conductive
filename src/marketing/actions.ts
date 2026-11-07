@@ -1,6 +1,6 @@
 import { html, type Html } from './html'
 import { gitHubMark } from './icons'
-import { boatSignUpUrl, type SiteLinks } from './links'
+import type { SiteLinks } from './links'
 
 /** The main action of the site. The app starts the GitHub sign-up. */
 export function startButton(
@@ -29,21 +29,4 @@ export function siteActions(links: SiteLinks): Html {
       ><span>Sign in</span></a
     >
   </div>`
-}
-
-/**
- * The line under each main action: a user needs their own Boat account, as
- * decision 47 says. The link opens the Boat sign-up in a new tab.
- */
-export function boatNote(): Html {
-  return html`<p class="boat-note">
-    You need your own
-    <a
-      class="text-link"
-      href="${boatSignUpUrl}"
-      rel="noreferrer"
-      target="_blank"
-      >Boat account</a
-    >, which runs your cloud computers.
-  </p>`
 }

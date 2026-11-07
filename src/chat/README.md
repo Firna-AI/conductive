@@ -34,7 +34,6 @@ stops its own controller:
   onViewChange={(view) => keepTabs(view)}
   onOpenDiff={(path) => openDiffTab(path)}
   onConnectAgent={(agent) => openAccount(agent)}
-  onAddBoatKey={() => openBoatKeyTab()}
 />
 ```
 
@@ -104,7 +103,7 @@ members from the models of the app.
 
 - With sources, the load sends none of these four reads and writes none of
   these values. So no reply of an old read replaces a newer value of the
-  app. The view and the Boat key reads stay.
+  app. The view read stays.
 - Each change of a source shows at once, also while the chat is hidden. So
   a login that the account screen saves shows in a kept chat on a return.
 - `start` copies the sources into the snapshot and follows them. `stop`

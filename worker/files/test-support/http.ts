@@ -1,6 +1,5 @@
 import { vi } from 'vitest'
 
-import { boatKeyPath } from '../../../src/shared/api'
 import {
   TEST_ORIGIN,
   TEST_TIME,
@@ -75,13 +74,5 @@ export async function setupFilesHttp(
     handler,
     request,
     workspaceFiles,
-    async saveKey(key = 'boat-first') {
-      const response = await harness.request(boatKeyPath(org.id), session, {
-        method: 'PUT',
-        body: JSON.stringify({ key }),
-      })
-      if (response.status !== 200) throw new Error('Test key save failed')
-      harness.boat.requests = []
-    },
   }
 }

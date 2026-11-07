@@ -11,7 +11,7 @@ describes the structure that the [protocol docs](#protocol-docs) require.
 ## Terms
 
 - **Org:** a group of people that owns workspaces, sections,
-  repositories, an org image, and one Boat key.
+  repositories, and an org image.
 - **Admin** and **member:** the two roles in an org. Each person in an org
   has one of them.
 - **Workspace:** one task in an org. It has one repository, one branch,
@@ -20,8 +20,8 @@ describes the structure that the [protocol docs](#protocol-docs) require.
   the person who created the workspace, until an admin reassigns it.
 - **Sender:** the person who sent the message of a turn. The turn runs on
   the agent login of its sender.
-- **Boat key:** the key of one Boat account. Each org has one, and every
-  sandbox of the org runs on that account.
+- **Boat key:** the one key of the app's own Boat account, where every
+  sandbox and every org image of every org runs. It is a Worker secret.
 - **Sandbox:** the Boat sandbox of one workspace. The product calls it a
   cloud computer or a sandbox.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
@@ -41,7 +41,7 @@ describes the structure that the [protocol docs](#protocol-docs) require.
 - **Preview hostname:** a random hostname on the preview domain. It shows
   one port of one sandbox.
 - **Start:** each create or resume of a sandbox, also the sandbox of a
-  build or a refresh. The Boat account of the org limits its starts.
+  build or a refresh. The app's Boat account limits the starts of all orgs.
 
 ## Components
 
@@ -51,8 +51,8 @@ describes the structure that the [protocol docs](#protocol-docs) require.
   Privacy pages. Visitors see them without a sign-in.
 - [The marketing site README](../src/marketing/README.md) describes how the
   Worker serves them.
-- The main action is "Start free with GitHub". The site says that users
-  need their own Boat account (decision 47).
+- The main action is "Start free with GitHub". The site does not name
+  Boat, and users need no Boat account (decision 80).
 
 ### Web app
 
@@ -74,10 +74,9 @@ describes the structure that the [protocol docs](#protocol-docs) require.
 
 - One Cloudflare Worker serves the web app, the marketing site, the API,
   the proxies to sandboxes, and the GitHub webhook endpoint.
-- It holds the GitHub App key, the key that signs the session cookies, and
-  the key that encrypts the stored secrets. The browser never holds them.
-- It stores the Boat key of each org, encrypted. It uses that key only for
-  the sandboxes of that org (decision 44).
+- It holds the GitHub App key, the Boat key, the key that signs the session
+  cookies, and the key that encrypts the stored secrets. The browser never
+  holds them.
 - It reaches Boat through one provider adapter, so that a later change can
   add another provider. It calls only a fixed list of Boat routes.
 - It runs one gate for each hostname before every route and every
@@ -107,16 +106,14 @@ describes the structure that the [protocol docs](#protocol-docs) require.
 - Boat runs the sandboxes and keeps the saved snapshots (decision 2).
   Sprites on Fly.io was the other option. Boat costs less, and it already
   has forks, saved snapshots, port URLs, desktop streams, and environments.
-- Each org runs on the Boat account of its own Boat key (decision 46). That
-  account holds the org image and every sandbox of the org, and its plan
-  limits apply.
-- The app does not depend on Boat webhooks, because each Boat account would
-  need its own (decision 44). The agent runner reports when a sandbox is
-  ready. The Worker reads the state of a sandbox from Boat's API when it
-  needs it.
+- Every org runs in the app's Boat account (decision 80). That account
+  holds every org image and every sandbox of every org. Its plan limits
+  apply to all orgs together.
+- The app does not depend on Boat webhooks. The agent runner reports when
+  a sandbox is ready. The Worker reads the state of a sandbox from Boat's
+  API when it needs it.
 - A stop ends every process. Boat keeps the disk and the enabled system
   services, and restarts those services after each resume and fork.
-- The app's own Boat organization serves only development and tests.
 
 ### Sandbox software
 
@@ -139,8 +136,8 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
   webhooks of every org.
 - **Anthropic and OpenAI:** the model use of each turn bills to the own
   Claude or OpenAI account of its sender.
-- **Boat:** the Boat account of each org pays for its sandboxes and its
-  saved snapshots. The app itself is free (decision 45).
+- **Boat:** the app's Boat account pays for every sandbox and every saved
+  snapshot. The app is free, with no limits (decision 81).
 
 ## Hostnames
 
@@ -162,8 +159,8 @@ the app (decision 6).
 
 1. The user sends the first message of a new workspace. The Worker records
    the workspace, and its Durable Object keeps the message.
-2. With the org's Boat key, the Worker asks Boat for a sandbox from the
-   newest good org image. The sandbox gets the workspace token and the
+2. With the Boat key, the Worker asks Boat for a sandbox from the newest
+   good org image of the org. The sandbox gets the workspace token and the
    org's env vars, but no agent login.
 3. The Durable Object pushes each start step to the open tabs.
 4. The agent runner starts and connects to the Durable Object. The Durable
@@ -208,22 +205,28 @@ the app (decision 6).
 | Data                                                     | Home                                     |
 | -------------------------------------------------------- | ---------------------------------------- |
 | Users, orgs, members, sections, workspaces, and settings | D1                                       |
-| Boat keys, env var values, and agent logins              | The Worker's storage, encrypted          |
+| The org of each sandbox and each saved snapshot          | D1                                       |
+| Env var values and agent logins                          | The Worker's storage, encrypted          |
+| The Boat key and the other keys of the Worker            | Worker secrets                           |
 | Chat history and banner state                            | The workspace Durable Object             |
 | The repository, the files, and the agent sessions        | The home folder of the sandbox           |
-| The prepared repositories and the installed software     | The org image, in the org's Boat account |
+| The prepared repositories and the installed software     | The org image, in the app's Boat account |
 | Panel widths                                             | The browser, or the Mac app              |
 
 ## Trust boundaries
 
 - The org is the boundary between tenants. A request reaches an org only
   for a member of that org.
-- A Boat key reaches only the sandboxes of its own org. It never goes into
-  a sandbox or to the browser.
+- The one Boat key reaches the sandboxes and the saved snapshots of every
+  org (decision 80). So the Worker's own records keep the orgs apart, as
+  [Access and security](protocol/access-and-security.md#orgs-and-workspaces)
+  says.
+- The Boat key never goes to the browser, into a sandbox, into a log, or
+  into a saved snapshot.
 - Sandbox code is untrusted. Agents write and run it, and previews show it
   only on the preview domain.
-- A sandbox gets none of the secrets of its Boat account. At a start, it
-  gets only the secrets of its workspace and its org.
+- A sandbox gets none of the secrets of the app's Boat account. At a
+  start, it gets only the secrets of its workspace and its org.
 - During a turn, the sandbox also holds the agent login of the sender. The
   members of one org can reach that login, as
   [Access and security](protocol/access-and-security.md#agent-logins-in-a-sandbox)
@@ -248,6 +251,6 @@ the merge.
   events.
 - [Agent tools](protocol/agent-tools.md): the tools that agents use in a
   sandbox.
-- [Orgs and members](protocol/orgs-and-members.md): orgs, Boat keys,
-  sections, roles, and the end of an org.
+- [Orgs and members](protocol/orgs-and-members.md): orgs, sections,
+  roles, the first run, and the end of an org.
 - [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.

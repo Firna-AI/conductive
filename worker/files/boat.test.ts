@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { filePaths } from '../../src/shared/files'
-import { readBoatKey } from '../data/boat-keys'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { setupFilesHttp } from './test-support/http'
 import {
@@ -35,12 +34,8 @@ function recordedBoatFile(content: string, size: number, path = 'note.txt') {
   })
 }
 
-it('falls back to the fixed Boat file route with the saved account and server-side key', async () => {
-  const { org, workspaceId, request, saveKey } = await setupFilesHttp(
-    harness,
-    runtime,
-  )
-  await saveKey()
+it('falls back to the fixed Boat file route with the app secret', async () => {
+  const { org, workspaceId, request } = await setupFilesHttp(harness, runtime)
   harness.boat.responseOverride = recordedBoatFile('aGkK', 3)
   const response = await request(
     filePaths.content(org.id, workspaceId, 'note.txt'),
@@ -64,20 +59,16 @@ it('falls back to the fixed Boat file route with the saved account and server-si
     ['encoding', 'base64'],
   ])
   expect(upstream.headers.get('Authorization')).toBe('Bearer boat-first')
-  expect(upstream.headers.get('X-Boat-Org')).toBe('team-one')
+  expect(upstream.headers.get('X-Boat-Org')).toBe('app-org')
   expect(upstream.headers.get('Cookie')).toBe(null)
-  expect((await readBoatKey(harness.env.DB, org.id))?.ciphertext).not.toContain(
-    'boat-first',
-  )
 })
 
-it('returns actual fallback binary bytes on download under a personal account', async () => {
-  const { org, workspaceId, request, saveKey } = await setupFilesHttp(
+it('returns actual fallback binary bytes on download', async () => {
+  const { org, workspaceId, request } = await setupFilesHttp(
     harness,
     runtime,
     3,
   )
-  await saveKey('boat-personal')
   harness.boat.responseOverride = recordedBoatFile('AAH/', 3, 'image.bin')
   const response = await request(
     filePaths.download(org.id, workspaceId, 'image.bin'),
@@ -86,16 +77,15 @@ it('returns actual fallback binary bytes on download under a personal account', 
   expect([...new Uint8Array(await response.arrayBuffer())]).toEqual([0, 1, 255])
   expect(response.headers.get('Content-Type')).toBe('application/octet-stream')
   expect(response.headers.get('Content-Length')).toBe('3')
-  expect(harness.boat.requests[0].headers.get('X-Boat-Org')).toBe('personal')
+  expect(harness.boat.requests[0].headers.get('X-Boat-Org')).toBe('app-org')
 })
 
 it('enforces the fallback byte limit and hides malformed responses and provider secrets', async () => {
-  const { org, workspaceId, request, saveKey } = await setupFilesHttp(
+  const { org, workspaceId, request } = await setupFilesHttp(
     harness,
     runtime,
     3,
   )
-  await saveKey()
   harness.boat.responseOverride = recordedBoatFile('w6nDqQ==', 4)
   const large = await request(
     filePaths.content(org.id, workspaceId, 'note.txt'),
@@ -146,17 +136,8 @@ it('enforces the fallback byte limit and hides malformed responses and provider 
   })
 })
 
-it('keeps disconnected diffs unavailable and avoids Boat when no sandbox or key exists', async () => {
-  const { org, workspaceId, request, saveKey } = await setupFilesHttp(
-    harness,
-    runtime,
-  )
-  const noKey = await request(
-    filePaths.content(org.id, workspaceId, 'note.txt'),
-  )
-  expect(noKey.status).toBe(503)
-  expect(harness.boat.requests).toHaveLength(0)
-  await saveKey()
+it('keeps disconnected diffs unavailable and avoids the provider when no sandbox exists', async () => {
+  const { org, workspaceId, request } = await setupFilesHttp(harness, runtime)
   const diff = await request(filePaths.diff(org.id, workspaceId, 'note.txt'))
   expect(diff.status).toBe(503)
   expect(await diff.json()).toMatchObject({

@@ -143,7 +143,7 @@ it('keeps the last good image and deletes the builder after native source failur
   }
 })
 
-it('revokes an active source token when the provider key is unavailable during cleanup', async () => {
+it('revokes an active source token when provider access fails during cleanup', async () => {
   const fixture = await localSourceFixture(harness, privateKey)
   try {
     const { runtime, boat } = await nativeImageRuntime(fixture)
@@ -155,10 +155,17 @@ it('revokes an active source token when the provider key is unavailable during c
     await advance()
     await fixture.provider.settle()
     expect(fixture.access.activeTokens).toHaveLength(1)
-    await fixture.env.DB.prepare('DELETE FROM boat_keys WHERE org_id = ?')
-      .bind(fixture.org.id)
-      .run()
-    expect(await advance()).toBe(false)
+    const fetch = runtime.dependencies.fetch
+    runtime.dependencies.fetch = (request) =>
+      new URL(request.url).hostname === 'boat.dev'
+        ? Promise.resolve(
+            Response.json({ ok: false, code: 'unauthorized' }, { status: 401 }),
+          )
+        : fetch(request)
+    await expect(advance()).rejects.toMatchObject({
+      kind: 'unauthorized',
+      status: 401,
+    })
     expect(fixture.access.activeTokens).toEqual([])
     expect(
       await readSourceJob(fixture.env.DB, fixture.input.buildId),
@@ -169,7 +176,8 @@ it('revokes an active source token when the provider key is unavailable during c
         .build,
     ).toMatchObject({
       state: 'failed',
-      error: 'Ask an org admin to add the cloud computer key.',
+      error:
+        'The cloud computer image could not build. Check the log and try again.',
     })
   } finally {
     await fixture.dispose()
