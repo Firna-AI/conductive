@@ -1,6 +1,7 @@
 import type { Session } from '../../shared/sessions'
 import type { WorkspaceResponse } from '../../shared/workspaces'
 import type { ChatContext } from './context'
+import { withFirstStart } from './first-start'
 import { placeSession } from './sessions'
 
 /**
@@ -43,11 +44,13 @@ export function applyWorkspaceIfNewest(
   if (!context.live() || versionOf(context, WORKSPACE_RECORD) !== version) {
     return false
   }
-  context.store.update((snapshot) => ({
-    ...snapshot,
-    workspace: reply.workspace,
-    start: reply.start,
-  }))
+  context.store.update((snapshot) =>
+    withFirstStart({
+      ...snapshot,
+      workspace: reply.workspace,
+      start: reply.start,
+    }),
+  )
   return true
 }
 

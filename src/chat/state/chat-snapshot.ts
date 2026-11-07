@@ -63,6 +63,11 @@ export interface ChatSnapshot {
   load: LoadState
   workspace: Workspace | null
   start: WorkspaceStart | null
+  /**
+   * The records showed that the first start of the workspace succeeded, as
+   * `first-start.ts` says. Until then, Send waits.
+   */
+  firstStartDone: boolean
   org: OrgSummary | null
   account: AccountSummary | null
   /** The members of the org, which name the member who stopped a turn. */
@@ -113,6 +118,7 @@ export const initialSnapshot: ChatSnapshot = {
   load: { state: 'loading' },
   workspace: null,
   start: null,
+  firstStartDone: false,
   org: null,
   account: null,
   members: [],

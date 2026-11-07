@@ -1,9 +1,11 @@
 import type { ComposerState } from '../components/chat/Composer'
 import { attachmentDraft, draftAttachments } from '../fixtures/attachments'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
+import { heldDraft } from '../fixtures/starting'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { otherStarter, sessionLoginFor } from './sessionStarter'
+import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
 const runningConversations = new Set([
@@ -33,6 +35,10 @@ export function isRunning(state: WorkspaceState): boolean {
  * the viewer does not matter. When the login of that starter is not
  * available, Send opens a new linked session on the own login of the
  * viewer.
+ *
+ * While the sandbox of a new workspace starts for the first time, Send
+ * waits in every session, and the box keeps the message. A resume of a
+ * stopped workspace takes messages, which wait for the sandbox.
  */
 export function composerFor(
   state: WorkspaceState,
@@ -42,7 +48,7 @@ export function composerFor(
   const starter = otherStarter(state, workspace)
   const noLogin =
     state.composer === 'no-agent' || state.composer === 'no-starter-login'
-  const waits = !fresh && noLogin && starter === undefined
+  const needsLogin = !fresh && noLogin && starter === undefined
   const opensLinked =
     !fresh && state.composer === 'no-starter-login' && starter !== undefined
   const withFiles =
@@ -51,6 +57,9 @@ export function composerFor(
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (withFiles) draft = attachmentDraft
   else if (!fresh && noLogin) draft = followUpDraft
+  else if (!fresh && state.composer === 'draft') {
+    draft = isNew(state) ? heldDraft : followUpDraft
+  }
   return {
     choice: workspace.choice,
     running: !fresh && isRunning(state),
@@ -59,7 +68,8 @@ export function composerFor(
     picker: state.composer === 'picker',
     sessionAgent: fresh ? undefined : workspace.choice.agent,
     sendTo: opensLinked ? paths.linkedSession : undefined,
-    blocked: waits,
+    blocked: needsLogin,
+    waits: isNew(state) && state.sandbox === 'starting',
     sessionLogin: sessionLoginFor(workspace, opensLinked ? undefined : starter),
   }
 }
