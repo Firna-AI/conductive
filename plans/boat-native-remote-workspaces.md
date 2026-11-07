@@ -3784,6 +3784,21 @@ Added on 7 November 2026 from the options check of decision 120.
   sandbox. Milestone 15m states the risk. The user asked to consider
   another approach later: `plans/follow-ups/github-token-readable-in-sandbox.md`.
 
+### 122. Publish the pending 5.0.0 library release first
+
+Added on 8 November 2026 from the `futex-ai/ui` workspace of decision 119.
+
+- **Background:** `futex-ai/ui` had an open release pull request, #180, for
+  5.0.0, with a breaking drag-select change. If the new parts merged
+  first, release-please would put them into that release.
+- **Options:**
+  - **A.** Merge #180 first, so that the new parts ship as 5.1.0.
+  - **B.** Ship the new parts inside 5.0.0.
+  - **C.** Hold the new parts until the user publishes 5.0.0.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026. The orchestrator merged
+  #180 as `3cc857c` in `futex-ai/ui`.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
