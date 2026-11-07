@@ -27,6 +27,10 @@ The marker can have no turn context when the event is invalid.
 Each fake session record sets `retryMessageId`.
 In the `failed` conversation, each open session names the failed request `ask`, which the recorded failure names too.
 All other session records hold null.
+Each session record names its starter in `startedBy`, as `senderSnapshot` copies a person.
+An open session takes the starter that the mockups name, and a closed one the workspace owner.
+Each record has `sourceSessionId: null` and `loginAvailable: true`.
+The replies of Send and Try again name the session that took the message, with its record.
 Browser file recordings contain complete reports.
 `recordedRunnerFileEvents` keeps four complete runner reports for current file readers.
 Each full report is explicitly part 1 of 1. Its tree ends at revision 2.
@@ -135,7 +139,7 @@ Replies, timers, and `waitFor` go on.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
-- `fixtures/workspaces.ts` maps workspace and session samples.
+- `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples.
 - `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings.
 - `fake-device-routes.ts` records the Mac command, pairing, answer, and Mac settings replies.

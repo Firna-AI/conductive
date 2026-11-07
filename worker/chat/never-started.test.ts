@@ -118,7 +118,8 @@ describe('runner events for turns that never started', () => {
         turnId: queued.id,
         error: {
           code: 'agent_login_required',
-          message: 'Connect your agent login and try again.',
+          message:
+            "Octocat's Claude login is not available. Try again or send a new message.",
         },
         retryMessageId: 'login-message',
         durationMs: 0,

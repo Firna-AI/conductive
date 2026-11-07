@@ -159,6 +159,9 @@ Later screens add the frame and connection sources that they need.
 - Each session runs on the agent login of its starter, the member who
   started the session (decision 105). Each turn of the session uses that
   login, whoever sends its messages.
+- The GitHub token of a turn and its Mac requests still follow its sender,
+  as [GitHub tokens](#github-tokens) and
+  [Mac commands](agent-tools.md#mac-commands) say.
 - With each turn, the agent runner gets the login of the starter over its
   connection to the Durable Object. Reason: the sandbox gets its secrets
   only at a start, and the sessions of one sandbox can have different
@@ -167,6 +170,10 @@ Later screens add the frame and connection sources that they need.
   starter is a member of the org.
   [Messages](chat-and-events.md#messages) says what a message of another
   member does when the login of the starter cannot be used.
+- A message of a sender who left the org never reaches the agent, also
+  while the login of the starter works.
+- The session record shows whether the login of its starter can be used. It
+  holds no part of the login.
 - The runner never writes a login to disk.
 - Risk: the other members of a session spend the login of its starter.
   Anthropic's rules for hosted products ask each end user to sign in with
@@ -268,8 +275,9 @@ Later screens add the frame and connection sources that they need.
 - A sign-in inside a sandbox was rejected, because the login would stay on
   the disk of one workspace.
 - A user's agent logins serve all of that user's orgs (decision 21).
-- The app gives a user's login to a sandbox only for a turn that the user
-  sent.
+- The app gives a user's agent login to a sandbox only for a turn of a
+  session that the user started. The GitHub token of a turn still belongs
+  to its sender, as [GitHub tokens](#github-tokens) says.
 
 ## Terminal
 

@@ -5043,23 +5043,40 @@ Depends on: 7t
 Apply decision 105 F. Added on 7 November 2026. Merge the primary
 branch after Milestone 8k merges, before the chat changes.
 
-- [ ] Run each turn of a session on the login of the member who started
+- [x] Run each turn of a session on the login of the member who started
       the session, whoever sends the message. A message of any member
       during a running turn joins that turn at once. Update the chat
       protocol and the section "Agent logins in a sandbox" of the access
       protocol, and add a note to decision 49.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
 - [x] Remove the login switch inside a turn from the runner, so that a
       session never changes its login.
       Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
-- [ ] Show in the composer whose login the session uses. When the
+- [x] Show in the composer whose login the session uses. When the
       starter's login cannot be used, such as after the starter leaves the
       org or removes the login, a member's message opens a new, empty
       session on the member's own login, with a link to the first session
       (decision 115 A). Draw it in the chat mockups first, and compare the
       screens with them.
-- [ ] Test a second member's message during a turn, and a starter whose
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+- [x] Test a second member's message during a turn, and a starter whose
       login cannot be used, in two tabs. Delete
       `plans/follow-ups/one-sender-per-turn.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+
+Agent calls, 7 November 2026:
+
+- Store the starter from session creation, separate from message senders.
+- Return the target session with each Send or Retry reply. This lets the
+  browser open a linked session before its events arrive.
+- Treat an older session with no known starter as having no usable login.
+  Keep its history. Its next message starts a linked session. The first
+  message cannot prove who created an empty session.
+- Keep accepted input in its session after a later login removal. Use the
+  existing queued failure and running hold. Retry can start a linked
+  session later.
+
+Evidence: `.context/boat-native-remote-workspaces/7w/verification.md`.
 
 ## Milestone 7v: Reports after a failed file read
 

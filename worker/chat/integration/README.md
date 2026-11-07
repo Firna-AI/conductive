@@ -91,8 +91,9 @@ depends on where the code runs:
 - After a text-only turn, each unanswered message moves to a new turn. So
   one message can come first in a `message` command, then in a new `turn`
   command with a new command ID.
-- Each `turn` and `message` command carries the login of its message's
-  sender. When the sender of a turn changes, start the agent again.
+- Each `turn` and `message` command carries the agent login of the session
+  starter, whoever sent the message. The runner keeps the login of the
+  first command of a turn for the whole turn.
 - An interrupt for a turn that the runner does not run still gets
   `turn.completed` with state `stopped`.
 - A new stream gets each command other than `report.refresh` only after its
@@ -108,15 +109,58 @@ depends on where the code runs:
   `agentLoginContext(userId, agent)`, and `BOAT_KEY_ENCRYPTION_KEY`.
 - `readAgentLogin` decrypts with the same context and key. It accepts the
   kinds `token` and `api-key` for Claude, and only `api-key` for Codex.
-- A message without a stored login gets `409 agent_login_required`.
-- When the login is gone as a command goes out, `turn.failed` ends the
-  turn only while it is queued.
+- A message whose login is missing gets `409 agent_login_required`, and no
+  session is created, as [Session logins](#session-logins) says.
+- When the starter's login, or the sender's access, is gone as a command
+  goes out, `turn.failed` ends the turn only while it is queued. The failure
+  names the cause. A lost starter login sets `loginAvailable` to false.
 - A running or stopping turn keeps the command, and the Durable Object does
   not send it. So the later runner events of that turn stay valid.
 - When that turn finishes, an unanswered message moves to a new queued
   turn. That turn then fails with `agent_login_required`.
-- `resolveAttachments(userId, workspaceId, ids)` returns the attachment
-  records and the sandbox path of each attachment. The command gives the
-  paths to the runner.
+- `resolveAttachments(userId, workspaceId, ids)` gets the ID of the sender,
+  not of the starter. It returns the attachment records and the sandbox path
+  of each attachment. The command gives the paths to the runner.
 - By default, a message with an attachment gets
   `503 attachments_unavailable`.
+
+## Session logins
+
+[Agents](../../../docs/protocol/chat-and-events.md#agents),
+[Messages](../../../docs/protocol/chat-and-events.md#messages), and
+[Agent logins in a sandbox](../../../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
+state the rules.
+
+- Each creation path stores its authenticated user as `Session.startedBy`:
+  the sessions route, a model of the other agent, and a linked session.
+- The first message of a new workspace must create its session with
+  `FirstWorkspaceMessage.sender` as the starter, never the workspace owner.
+  The outer Worker does not wire that hook yet.
+- `sessionLogin` in `session-login.ts` reads the starter's login for the
+  agent of the session through `resolveLogin`. It stores a changed
+  `loginAvailable` with a `session.updated` event.
+- The check runs at these points, in the serial queue:
+  - the creation of a session, the session list, and a history read
+  - the other routes of one session: rename, interrupt, model, close, and
+    reopen
+  - a new tab subscription
+  - each new message that Send or Retry accepts
+  - each `turn` or `message` command, before it goes to the runner
+- A repeated message ID returns its stored target with no new check. A
+  `model` or `interrupt` command carries no login, so its dispatch reads no
+  login. No timer watches logins.
+- `send` in `send-message.ts` checks the starter's login before it accepts
+  a message. When that login cannot be used, another member with a login
+  gets a new linked session with `sourceSessionId`. Only the new message
+  goes there.
+- While the starter's login cannot be used, the starter's own message gets
+  `409 agent_login_required`. So does the message of another member who
+  has no login either. No session is created.
+- The `chat:v1:message-source:` record keeps the requested session of each
+  linked message. A repeat through either session returns the same message
+  and session record.
+- The same transaction sets `retryMessageId` of the source to null.
+- A message that was accepted earlier never moves to another session.
+- `normalizeSession` in `session-storage.ts` reads an older record without
+  these fields as `null`, `null`, and `false`. Stored `session.updated`
+  events get the same values. No history is removed.

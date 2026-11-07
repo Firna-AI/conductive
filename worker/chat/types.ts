@@ -121,9 +121,10 @@ export interface ChatDependencies {
   ) => Promise<readonly number[]>
   randomId: () => string
   resolveLogin: (
-    userId: string,
+    userId: string | null,
     agent: Agent,
     runnerTokenHash?: string,
+    senderId?: string,
   ) => Promise<RunnerLogin | null>
   resolveAttachments: (
     userId: string,

@@ -156,7 +156,7 @@ describe('workspace chat security', () => {
     ).not.toContain('turn.thinking')
   })
 
-  it('retries a failed turn with the requesting member login once', async () => {
+  it('retries a failed turn with the starter login and requesting member attribution', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
     const runner = await fixture.connect()
@@ -200,7 +200,7 @@ describe('workspace chat security', () => {
     expect(runner.commands).toHaveLength(2)
     const retried = runner.commands[1]
     if (retried?.type !== 'turn') throw new Error('Expected a retry turn.')
-    expect(retried.login.secret).toBe(`secret-${fixture.member.id}-claude`)
+    expect(retried.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
     expect(
       (await fixture.history(session.id)).events.filter(
         ({ event }) => event.type === 'message.accepted',

@@ -104,6 +104,14 @@ export async function createRunnerLimitsFixture() {
         closedAt: null,
         activeTurnId: context.turnId,
         retryMessageId: null,
+        startedBy: {
+          id: 'sender',
+          githubLogin: 'sender',
+          displayName: null,
+          avatarUrl: null,
+        },
+        sourceSessionId: null,
+        loginAvailable: false,
       })
       await transaction.saveTurn({
         id: context.turnId,

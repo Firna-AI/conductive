@@ -52,6 +52,7 @@ export function readSendResponse(value: unknown): SendMessageResponse {
   return {
     message: readUserMessage(source.message),
     turnId: nullable(text)(source.turnId),
+    session: readSession(source.session),
   }
 }
 

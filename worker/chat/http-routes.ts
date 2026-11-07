@@ -1,16 +1,10 @@
-import type { SendMessageResponse } from '../../src/shared/messages'
 import type { SessionsResponse } from '../../src/shared/sessions'
 import { HttpError, requiredString } from '../http'
 import type { RequestContext } from '../security/gate'
-import {
-  choice,
-  counter,
-  identifier,
-  invalidInput,
-  sendMessage,
-} from './inputs'
-import { acceptMessage, existingMessage } from './messages'
+import { choice, counter, identifier, invalidInput } from './inputs'
+import { send, retryMessage } from './send-message'
 import { changeModel } from './model-changes'
+import { refreshSessionLogins, sessionLogin } from './session-login'
 import { closeSession, createSession, sessionFor, stopTurn } from './sessions'
 import type { ChatTransaction } from './store'
 import type { ChatDependencies } from './types'
@@ -38,7 +32,11 @@ export async function chatRoute(
   const url = new URL(request.url)
   if (suffix === '/history' && request.method === 'GET') {
     const sessionId = identifier(url.searchParams.get('sessionId'))
-    await sessionFor(transaction, sessionId)
+    await sessionLogin(
+      transaction,
+      await sessionFor(transaction, sessionId),
+      dependencies,
+    )
     const history = await transaction.history(afterNumber(url))
     history.events = history.events.filter(
       ({ event }) =>
@@ -51,6 +49,7 @@ export async function chatRoute(
   }
   if (suffix === '/sessions') {
     if (request.method === 'GET') {
+      await refreshSessionLogins(transaction, dependencies)
       const sessions = await transaction.sessions()
       return Response.json({
         sessions: sessions
@@ -68,6 +67,8 @@ export async function chatRoute(
             transaction,
             choice(context.body?.choice),
             dependencies.randomId(),
+            context.user,
+            dependencies,
           ),
         },
         { status: 201 },
@@ -81,6 +82,8 @@ export async function chatRoute(
     throw new HttpError(404, 'not_found', 'The page is not available.')
   const session = await sessionFor(transaction, decode(match[1]))
   const action = match[2]
+  if (action !== 'messages')
+    await sessionLogin(transaction, session, dependencies)
   if (!action && request.method === 'PATCH') {
     session.title = requiredString(context.body?.title)
     await transaction.saveSession(session)
@@ -136,88 +139,10 @@ export async function chatRoute(
         transaction,
         session,
         context.body,
-        context.user.id,
-        dependencies.randomId,
+        context.user,
+        dependencies,
       ),
     )
   }
   throw new HttpError(404, 'not_found', 'The page is not available.')
-}
-
-async function send(
-  transaction: ChatTransaction,
-  sessionId: string,
-  context: RequestContext,
-  dependencies: ChatDependencies,
-): Promise<SendMessageResponse> {
-  const input = sendMessage(context.body)
-  const existing = await existingMessage(
-    transaction,
-    sessionId,
-    input,
-    context.user,
-  )
-  if (existing) return existing
-  const login = await dependencies.resolveLogin(
-    context.user.id,
-    input.choice.agent,
-  )
-  if (!login || login.agent !== input.choice.agent) {
-    throw new HttpError(
-      409,
-      'agent_login_required',
-      'Connect your agent login to send a message.',
-    )
-  }
-  const attachments = await dependencies.resolveAttachments(
-    context.user.id,
-    transaction.workspaceId,
-    input.attachmentIds,
-  )
-  return acceptMessage(
-    transaction,
-    sessionId,
-    input,
-    context.user,
-    attachments,
-    dependencies.randomId,
-  )
-}
-
-async function retryMessage(
-  transaction: ChatTransaction,
-  sessionId: string,
-  messageId: string,
-  context: RequestContext,
-  dependencies: ChatDependencies,
-): Promise<SendMessageResponse> {
-  const previous = await transaction.message(messageId)
-  if (!previous || previous.sessionId !== sessionId)
-    throw new HttpError(
-      404,
-      'message_not_found',
-      'The message is not available.',
-    )
-  const session = await sessionFor(transaction, sessionId)
-  if (session.retryMessageId !== messageId)
-    throw new HttpError(
-      409,
-      'retry_not_available',
-      'Only the newest failed request can run again. Send a new message.',
-    )
-  const newId = dependencies.randomId()
-  return send(
-    transaction,
-    sessionId,
-    {
-      ...context,
-      body: {
-        id: newId,
-        text: previous.text,
-        attachmentIds: previous.attachments.map((attachment) => attachment.id),
-        choice: previous.choice,
-      },
-    },
-    dependencies,
-  )
 }

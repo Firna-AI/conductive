@@ -3,6 +3,7 @@ import { sendBlock } from './blockers'
 import { sessionState, withSession, type SessionState } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { afterSend, changeDraft, draftIdOf, holderOf } from './drafts'
+import { showTarget, takeReply } from './linked-replies'
 import {
   applyWorkspaceIfNewest,
   beginChange,
@@ -87,7 +88,9 @@ export function removeAttachment(
  * Sends the draft of a session. Before the sandbox is ready the workspace
  * queues it, and during a turn it steers the turn. A failed send keeps the
  * draft and its client ID, so that Send again is the same message. The send
- * finishes on its draft, also after the draft moved to another session.
+ * finishes on its draft, also after the draft moved to another session. When
+ * the reply names a linked session, the message shows there, and the tab
+ * that sent shows that session, as `linked-replies.ts` says.
  */
 export async function sendDraft(
   context: ChatContext,
@@ -111,16 +114,13 @@ export async function sendDraft(
     sendId: request.id,
     sending: true,
   }))
+  let target: string | null = null
   try {
-    const { message } = await context.api.send(sessionId, request)
-    change(context, sessionId, (current) => {
-      const shown = current.transcript.items.some(
-        (item) => item.id === `user:${message.id}`,
-      )
-      return shown
-        ? current
-        : { ...current, pending: [...current.pending, message] }
-    })
+    target = takeReply(
+      context,
+      sessionId,
+      await context.api.send(sessionId, request),
+    )
     changeDraft(context, draftId, (current) => afterSend(current, request))
     const holder = holderOf(context.store.get(), draftId)
     const owner = context.store.get().notice?.sessionId
@@ -132,20 +132,31 @@ export async function sendDraft(
     const holder = holderOf(context.store.get(), draftId) ?? sessionId
     showNotice(context, holder, "Your message didn't send", error)
   }
+  await showTarget(context, sessionId, target)
 }
 
+/**
+ * Try again sends the message of a failed turn again. The stream shows a
+ * retry in the same session. A reply that names a linked session shows its
+ * message there, as a send does.
+ */
 export async function retryTurn(
   context: ChatContext,
   sessionId: string,
   messageId: string,
 ): Promise<void> {
   change(context, sessionId, (state) => ({ ...state, retrying: true }))
+  let target: string | null = null
   try {
-    await context.api.retry(sessionId, messageId)
+    const reply = await context.api.retry(sessionId, messageId)
+    if (reply.message.sessionId !== sessionId) {
+      target = takeReply(context, sessionId, reply)
+    }
   } catch (error) {
     showNotice(context, sessionId, "The turn didn't restart", error)
   }
   change(context, sessionId, (state) => ({ ...state, retrying: false }))
+  await showTarget(context, sessionId, target)
 }
 
 /** Stop interrupts the running turn. The turn shows as stopped when it ends. */

@@ -14,6 +14,7 @@ import { readBrowserAccess, scheduleBrowserCheck } from './browser-access'
 import { BrowserTabs } from './browser-tabs'
 import { findChatWorkspace, tokenWorkspace } from './queries'
 import { loginResolver } from './login-access'
+import { refreshSessionLogins } from './session-login'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore } from './store'
 import { browserUpgrade, runnerUpgrade } from './sockets'
@@ -230,6 +231,11 @@ export class WorkspaceChat {
     peer: BrowserPeer,
   ): Promise<() => void> {
     return this.store.run(async () => {
+      await this.store.change(
+        access.workspace.id,
+        (transaction) => refreshSessionLogins(transaction, this.dependencies),
+        (events) => this.publish(events),
+      )
       const history = await this.store.read(access.workspace.id, (view) =>
         view.history(after),
       )

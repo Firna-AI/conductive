@@ -19,7 +19,8 @@ export async function existingMessage(
   const existing = await transaction.message(input.id)
   if (!existing) return null
   if (
-    existing.sessionId !== sessionId ||
+    (existing.sessionId !== sessionId &&
+      (await transaction.messageSource(input.id)) !== sessionId) ||
     existing.sender.id !== user.id ||
     existing.text !== input.text ||
     existing.choice.agent !== input.choice.agent ||
@@ -43,7 +44,11 @@ export async function responseFor(
 ): Promise<SendMessageResponse> {
   const turnId = await transaction.messageTurn(message.id)
   const turn = turnId ? await transaction.turn(turnId) : undefined
-  return { message, turnId: turn && turn.state !== 'queued' ? turn.id : null }
+  return {
+    message,
+    turnId: turn && turn.state !== 'queued' ? turn.id : null,
+    session: await sessionFor(transaction, message.sessionId),
+  }
 }
 
 export async function acceptMessage(

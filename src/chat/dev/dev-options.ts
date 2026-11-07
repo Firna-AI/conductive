@@ -12,6 +12,12 @@ export interface DevOptions {
   role: OrgRole
   key: boolean
   login: boolean
+  /**
+   * The login of the member who started each session: it works, it is not
+   * available, older records name no starter, or the reader's message has
+   * opened a linked session from the first session.
+   */
+  starter: 'on' | 'off' | 'none' | 'linked'
   replay: 'stored' | 'live'
   viewport: 'desktop' | 'mobile'
   scheme: 'dark' | 'light'
@@ -54,6 +60,7 @@ export const choices = {
   role: ['admin', 'member'],
   key: ['on', 'off'],
   login: ['on', 'off'],
+  starter: ['on', 'off', 'none', 'linked'],
   replay: ['stored', 'live'],
   viewport: ['desktop', 'mobile'],
   scheme: ['dark', 'light'],
@@ -87,6 +94,7 @@ export const optionNames = [
   'role',
   'key',
   'login',
+  'starter',
   'replay',
   'viewport',
   'scheme',
@@ -114,6 +122,7 @@ export function readOptions(search: string): DevOptions {
     role: pick(choices.role, get('role')),
     key: pick(choices.key, get('key')) === 'on',
     login: pick(choices.login, get('login')) === 'on',
+    starter: pick(choices.starter, get('starter')),
     replay: pick(choices.replay, get('replay')),
     viewport: pick(choices.viewport, get('viewport')),
     scheme: pick(choices.scheme, get('scheme')),

@@ -1,8 +1,10 @@
 import type { AgentChoice } from '../../src/shared/agents'
+import type { MessageSender } from '../../src/shared/messages'
 import type { Session } from '../../src/shared/sessions'
 import { HttpError } from '../http'
 import type { ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
+import type { ChatDependencies } from './types'
 
 export async function sessionFor(
   transaction: ChatTransaction,
@@ -22,7 +24,11 @@ export async function createSession(
   transaction: ChatTransaction,
   choice: AgentChoice,
   id: string,
+  startedBy: MessageSender,
+  dependencies: ChatDependencies,
+  sourceSessionId: string | null = null,
 ): Promise<Session> {
+  const login = await dependencies.resolveLogin(startedBy.id, choice.agent)
   const session: Session = {
     id,
     workspaceId: transaction.workspaceId,
@@ -32,6 +38,14 @@ export async function createSession(
     closedAt: null,
     activeTurnId: null,
     retryMessageId: null,
+    startedBy: {
+      id: startedBy.id,
+      githubLogin: startedBy.githubLogin,
+      displayName: startedBy.displayName,
+      avatarUrl: startedBy.avatarUrl,
+    },
+    sourceSessionId,
+    loginAvailable: login !== null && login.agent === choice.agent,
   }
   await transaction.saveSession(session)
   await transaction.emit({ type: 'session.updated', session })

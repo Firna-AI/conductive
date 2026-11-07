@@ -23,10 +23,11 @@ export type SessionLogin = {
 export function SessionLoginLine(props: SessionLogin) {
   const { owner } = props
   const whose = owner.kind === 'viewer' ? 'your' : `${owner.name}'s`
+  const words = `Uses ${whose} ${props.agent} login`
   return (
     <p className={styles.line}>
       <Plug aria-hidden className={styles.icon} size={12} />
-      <span>{`Uses ${whose} ${props.agent} login`}</span>
+      <span className={styles.text}>{words}</span>
     </p>
   )
 }

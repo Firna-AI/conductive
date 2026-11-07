@@ -49,6 +49,9 @@ export class WorkspaceRuntimeFixture extends Workspace {
             createdAt: message.createdAt,
             closedAt: null,
             activeTurnId: null,
+            startedBy: first.sender,
+            sourceSessionId: null,
+            loginAvailable: false,
             retryMessageId: null,
           })
           await transaction.saveMessage(message)

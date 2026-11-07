@@ -1,7 +1,8 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
-import type { RunnerCommand } from '../../src/shared/runner'
+import type { RunnerCommand, RunnerLogin } from '../../src/shared/runner'
 import { DeliveryState } from './delivery-state'
-import { RunnerAccessDenied } from './login-access'
+import { RunnerAccessDenied, SenderAccessDenied } from './login-access'
+import { sessionLogin, unavailableLoginMessage } from './session-login'
 import type { ChatStore, ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
 import type { ActiveRunner, ChatDependencies, PendingCommand } from './types'
@@ -101,11 +102,29 @@ export class RunnerDelivery {
       view.message(command.messageId),
     )
     if (!message) return null
-    const login = await this.dependencies.resolveLogin(
-      message.sender.id,
-      message.choice.agent,
-      active.workspace.tokenHash,
-    )
+    let login: RunnerLogin | null
+    try {
+      login = await this.store.change(
+        active.workspace.id,
+        async (transaction) => {
+          const session = await transaction.session(command.sessionId)
+          return session
+            ? sessionLogin(
+                transaction,
+                session,
+                this.dependencies,
+                active.workspace.tokenHash,
+                message.sender.id,
+              )
+            : null
+        },
+        this.publish,
+      )
+    } catch (error) {
+      if (!(error instanceof SenderAccessDenied)) throw error
+      await this.failLogin(active.workspace.id, command, error.message)
+      return null
+    }
     if (!login || login.agent !== message.choice.agent) {
       await this.failLogin(active.workspace.id, command)
       return null
@@ -124,6 +143,7 @@ export class RunnerDelivery {
   private async failLogin(
     workspaceId: string,
     command: Extract<PendingCommand, { messageId: string }>,
+    reason?: string,
   ): Promise<void> {
     await this.store.change(
       workspaceId,
@@ -138,7 +158,7 @@ export class RunnerDelivery {
           turnId: turn.id,
           error: {
             code: 'agent_login_required',
-            message: 'Connect your agent login and try again.',
+            message: reason ?? unavailableLoginMessage(session),
           },
           retryMessageId: command.messageId,
           durationMs: 0,

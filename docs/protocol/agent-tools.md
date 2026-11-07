@@ -48,9 +48,10 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 ### Who gets a request
 
 - A request goes only to the Mac of the sender of the turn that asks.
-- Reason: each turn runs on the login of its sender (decision 49). A
-  request to the Mac of the workspace owner was rejected, because one
-  member could then ask for commands on the Mac of another member.
+- The agent login belongs to the starter of the session (decision 105). A
+  request still goes to the Mac of the sender of the turn. A request to the
+  Mac of the workspace owner was rejected, because one member could then ask
+  for commands on the Mac of another member.
 - A request names its turn. The Worker accepts it only while that turn
   runs in the calling workspace.
 - [The workspace token](access-and-security.md#the-workspace-token) states

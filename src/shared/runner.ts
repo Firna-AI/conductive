@@ -102,7 +102,7 @@ export interface RunnerTurn {
   turnId: string
   message: UserMessage
   attachments: readonly RunnerAttachment[]
-  /** The sender owns this login. The workspace owner does not supply it. */
+  /** The session starter owns this login, whoever sent the message. */
   login: RunnerLogin
 }
 

@@ -6,8 +6,10 @@ import { sendBlock } from '../state/blockers'
 import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { modelLabel } from '../state/format'
+import { loginLineOf, sessionLoginOf } from '../state/session-login'
+import { agentNames } from './AgentMark'
 import { ChatPane } from './ChatPane'
-import { ActionNotice, BlockNotice } from './ChatNotices'
+import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer } from './Composer'
 import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
 import {
@@ -17,6 +19,7 @@ import {
   HistoryFailure,
   showsContent,
 } from './SessionStatus'
+import { sourceInsert } from './SourceLine'
 import { TranscriptView } from './TranscriptView'
 
 function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
@@ -40,7 +43,8 @@ export interface SessionChatProps {
  * sandbox starts, and under it the notices and the composer, or the bar that
  * takes the composer's place while the sandbox does not run. The status of
  * the stored history comes from its load alone, so content never hides a
- * failed load.
+ * failed load. The composer names whose login the session uses. A linked
+ * session starts with a link to the session that it started from.
  */
 export function SessionChat(props: SessionChatProps) {
   const { snapshot, controller, now } = props
@@ -62,6 +66,12 @@ export function SessionChat(props: SessionChatProps) {
   const content = showsContent(state, workspace)
   const viewerId = snapshot.account?.user.id ?? null
   const commands = sessionCommands(snapshot, id, state)
+  const login = session ? sessionLoginOf(session, viewerId) : null
+  const openSession = (sessionId: string) => {
+    const open = snapshot.sessions.some((item) => item.id === sessionId)
+    void (open ? controller.select(sessionId) : controller.reopen(sessionId))
+  }
+  const source = sourceInsert(snapshot, session, openSession)
   const footer = (
     <>
       {id && content && status === 'failed' ? (
@@ -83,6 +93,12 @@ export function SessionChat(props: SessionChatProps) {
           onAddBoatKey={props.onAddBoatKey}
           onConnectAgent={props.onConnectAgent}
           org={snapshot.org}
+        />
+      ) : null}
+      {!problem && session && !block && login?.kind === 'linked' ? (
+        <LinkedSessionNotice
+          agent={session.choice.agent}
+          starter={login.starter}
         />
       ) : null}
       {snapshot.devices.load === 'failed' ? (
@@ -110,6 +126,7 @@ export function SessionChat(props: SessionChatProps) {
           blocked={block !== null}
           choice={session.choice}
           draft={state.draft}
+          login={loginLineOf(login, agentNames[session.choice.agent])}
           models={snapshot.models}
           onAttach={(files) => void controller.attachFiles(session.id, files)}
           onChangeText={(text) => controller.setDraft(session.id, text)}
@@ -124,6 +141,7 @@ export function SessionChat(props: SessionChatProps) {
           running={state.transcript.turn !== null}
           sending={state.draft.sending}
           sessionAgent={hasMessages ? session.choice.agent : undefined}
+          startsSession={login?.kind === 'linked'}
           stopping={state.stopping}
         />
       ) : null}
@@ -133,7 +151,7 @@ export function SessionChat(props: SessionChatProps) {
     <ChatPane empty={emptyView(props)} footer={footer} mobile={props.mobile}>
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView
-        inserts={commands.inserts}
+        inserts={source ? [source, ...commands.inserts] : commands.inserts}
         now={now}
         onOpenDiff={props.onOpenDiff}
         onRetry={(messageId) => id && void controller.retry(id, messageId)}

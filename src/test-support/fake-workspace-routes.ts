@@ -98,16 +98,17 @@ export function fakeWorkspaceRoutes(
         created: false,
         draft: { text: '', attachmentIds: [] },
       })
+      // A reply names the session where the message went: here its own.
       routes.json(
         'POST',
         sessionPaths.messages(org, id, session.id),
-        { message, turnId: 'turn-1' },
+        { message, turnId: 'turn-1', session },
         202,
       )
       routes.json(
         'POST',
         retryMessagePath(org, id, session.id, data.message.id),
-        { message, turnId: 'turn-1' },
+        { message, turnId: 'turn-1', session },
         202,
       )
       routes.json('POST', sessionPaths.interrupt(org, id, session.id), {
