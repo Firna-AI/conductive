@@ -1,6 +1,6 @@
 # Chat commit tests can miss a split commit
 
-- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-07, from PR #29, branch `conductor/boat-native-remote-workspaces-milestone-7s`, a problem outside the scope that the round 2 check of finding 3 found.
 - **Location:** `worker/chat/durability.test.ts:57`, `worker/chat/retry-queue.test.ts:105`, and the `failCommit` fault of `worker/chat/memory-storage.test-support.ts:44`.
