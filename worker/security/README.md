@@ -8,8 +8,8 @@ The gate checks access before it reads a write body.
 
 The gate calls `readJsonObject(request)` once for each write.
 The call follows the session and org access checks.
-The [shared JSON request reader](../http/README.md#json-request-objects) owns content type normalization, the byte limit, parsing, and object checks.
-That page states the exact budget and each HTTP error response.
+The [shared JSON request reader](../http/README.md#json-request-objects) owns content type normalization, parsing, and object checks.
+The [Worker entry](../http/README.md#request-body-limit) owns the byte limit and the HTTP 413 response.
 A body error prevents route dispatch.
 
 ## Development

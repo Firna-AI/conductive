@@ -3,6 +3,7 @@ import { HEALTH_PATH, type HealthResponse } from '../src/shared/health'
 import type { AppDependencies, AppEnv } from './env'
 import { hostStub, hostSurface, marketingResponse } from './hosts'
 import { errorResponse, HttpError, privateResponse } from './http'
+import { requestBodyEntry } from './http/request-body'
 import { route } from './routes'
 import { finishSignIn, startSignIn } from './security/auth'
 import { appContentSecurityPolicy } from './security/content-security'
@@ -20,7 +21,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
     randomToken,
     ...overrides,
   }
-  return {
+  const application = {
     async fetch(request: Request, env?: AppEnv): Promise<Response> {
       const path = new URL(request.url).pathname
       const upgrade = request.headers.has('Upgrade')
@@ -97,6 +98,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       }
     },
   }
+  return { fetch: requestBodyEntry(application.fetch) }
 }
 
 function healthResponse(): Response {

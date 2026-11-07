@@ -33,14 +33,10 @@ says.
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
-- Each JSON body at the app gate can contain at most 1 MB, or 1,000,000
-  UTF-8 bytes. A larger body gets HTTP 413 (decision 65).
 - The health check and GitHub sign-in with its callback need no sign-in.
   The callback checks its `state` value instead.
 - The Mac app's public sign-in exchange also needs no sign-in.
   It checks the one-use handoff and its secret instead.
-  Its JSON body can contain at most 1,000,000 bytes, which is 1 MB.
-  The Worker stops reading a larger body and returns HTTP 413 before sign-in.
 - A GET or HEAD read may come without an `Origin` header, because
   browsers send none on a read from the same site. A present `Origin`
   must match. Every write and every socket upgrade needs a matching
@@ -53,6 +49,31 @@ says.
 
 The [Mac app](desktop-app.md#the-worker-and-the-desktop-origin) states the
 additional origin that the app gate accepts.
+
+## Request bodies
+
+Decision 93 applies the limit where each request enters the Worker,
+before any route reads the body. A limit that each route sets itself was
+rejected, because a new route can forget it. A lint against direct body
+reads was rejected, because a read through another name escapes it.
+
+- Every request body that the Worker reads or forwards has a byte limit.
+  The limit covers every route on every hostname, also without sign-in.
+- By default, a request body can contain at most 1 MB, or 1,000,000 bytes
+  (decisions 65 and 93).
+- A route that needs a higher limit must declare it at the Worker entry.
+  Every other route gets the default, also a route that a later change
+  adds.
+- The GitHub webhook route declares 26 MiB, or 27,262,976 bytes, because
+  GitHub sends webhook payloads of up to
+  [25 MB](https://docs.github.com/en/webhooks/webhook-events-and-payloads#payload-cap).
+- The Worker counts the bytes that arrive. It does not use the
+  `Content-Length` header for the limit.
+- The Worker stops reading a body as soon as the body passes its limit.
+- A body above its limit gets HTTP 413 with the error code
+  `body_too_large`. The error says "The request is too large. Send less
+  data."
+- A WebSocket upgrade has no body. The Worker drops a body sent with one.
 
 ## Content security policy
 
