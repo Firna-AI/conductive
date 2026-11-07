@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, expect, it } from 'vitest'
 
+import { API_PATHS } from '../../src/shared/api'
 import { createApp } from '../application'
 import { errorResponse } from '../http'
 import { GITHUB_WEBHOOK_PATH, handleGitHubWebhook } from '../github/webhook'
@@ -37,6 +38,26 @@ function appRequest(
 
 const assetUrl = `${TEST_ORIGIN}/new-body-reader`
 const machineOrigin = 'https://machine.conducting.test'
+
+it('rejects an unsigned oversized API write before pulling body bytes', async () => {
+  const stream = streamedBody([new Uint8Array(1_000_000), new Uint8Array(1)])
+  const response = await createApp().fetch(
+    streamedRequest(`${TEST_ORIGIN}${API_PATHS.orgs}`, stream.body, {
+      Origin: TEST_ORIGIN,
+      'Content-Type': 'application/json',
+    }),
+    harness.env,
+  )
+  expect(response.status).toBe(401)
+  expect(await response.json()).toEqual({
+    error: {
+      code: 'sign_in_required',
+      message: 'Sign in with GitHub to continue.',
+    },
+  })
+  expect(stream.observed.pulled).toBe(0)
+  expect(stream.observed.bytes).toBe(0)
+})
 
 it('accepts exactly 1 MB and cancels the first extra byte despite declared lengths', async () => {
   const bytes = new TextEncoder().encode('é'.repeat(500_000))

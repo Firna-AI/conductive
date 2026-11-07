@@ -52,21 +52,21 @@ additional origin that the app gate accepts.
 
 ## Request bodies
 
-Decision 93 applies the limit where each request enters the Worker,
-before any route reads the body. A limit that each route sets itself was
-rejected, because a new route can forget it. A lint against direct body
-reads was rejected, because a read through another name escapes it.
+Decision 93 puts the default body limit at the Worker entry.
+A limit in every route was rejected because a new route can forget it.
+A lint was rejected because a read through another name escapes it.
 
 - Every request body that the Worker reads or forwards has a byte limit.
   The limit covers every route on every hostname, also without sign-in.
 - By default, a request body can contain at most 1 MB, or 1,000,000 bytes
   (decisions 65 and 93).
-- A route that needs a higher limit must declare it at the Worker entry.
-  Every other route gets the default, also a route that a later change
-  adds.
-- The GitHub webhook route declares 26 MiB, or 27,262,976 bytes, because
-  GitHub sends webhook payloads of up to
-  [25 MB](https://docs.github.com/en/webhooks/webhook-events-and-payloads#payload-cap).
+- The app gate answers an access rejection before a body read or size check.
+  A protected app write with a valid `Origin` but no sign-in gets HTTP 401
+  with `sign_in_required`, even when its body exceeds the limit.
+- A route that needs more declares its limit at the Worker entry.
+  All other routes get the default, also routes added later.
+- The GitHub webhook limit is 26 MiB, or 27,262,976 bytes.
+  GitHub's [25 MB payload maximum](https://docs.github.com/en/webhooks/webhook-events-and-payloads#payload-cap) is the reason.
 - The Worker counts the bytes that arrive. It does not use the
   `Content-Length` header for the limit.
 - The Worker stops reading a body as soon as the body passes its limit.
