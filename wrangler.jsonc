@@ -15,9 +15,9 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "conducting",
-      // Local development only. Set a real ID when deployment is added.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_name": "conductive",
+      // The production database, created in Western Europe.
+      "database_id": "50e387ff-2b37-4221-a0dc-fe999703e559",
       "migrations_dir": "migrations",
     },
   ],
