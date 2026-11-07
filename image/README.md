@@ -45,7 +45,17 @@ the unpacked archive.
 Before this step, Git in the build sandbox copies each chosen repository
 into its folder, as the
 [source loader](../worker/lifecycle/repository-layout.md#the-source-loader)
-says. That Git uses the base image, not this folder's software.
+says. That Git comes from the image that the build sandbox starts from.
+The first build starts as a new default sandbox. Each later build or
+refresh starts from the last org image, which holds everything that earlier
+builds installed. The copy uses no part of this folder's software.
+
+Risk: a program with root access that an earlier install left in that
+image can read the clone token of a later copy. That token can only read
+its own repository, which the image already holds. The Worker revokes it
+when the copy ends, as
+[GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
+says.
 
 The software step of a build calls `installImageSoftware`. It writes the
 scripts and the runner unit of this folder to `/opt/conducting/staged/`, and
@@ -168,7 +178,7 @@ The Worker's route is not wired to the machine hostname yet, as the
 - A build sandbox starts with no org env vars and no workspace token. It
   gets only the folder variables, which hold no secret. So no saved
   snapshot holds a secret of a workspace.
-- Only the Git command that copies a repository gets a read token for that
+- The Worker gives each read token only to the Git command that copies its
   repository. The Worker revokes it before the build goes on, as
   [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
   says. The software step and the install script run only after that.

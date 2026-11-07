@@ -118,3 +118,10 @@
   flex-shrink: 0;
   width: 44px;
 }
+
+/* The This Mac section, as the account of the Mac app places it. */
+.account {
+  overflow: auto;
+  flex: 1;
+  padding: 24px;
+}

@@ -61,15 +61,23 @@ const byNumber = (left: ChatEnvelope, right: ChatEnvelope) =>
  * The stored and live events of one session, in event-number order. The
  * numbers belong to this session's log only, so a history that loads after
  * the workspace stream moved on still applies in full. Each number applies
- * once, and an older event folds the transcript again in order.
+ * once, and an older event folds the transcript again in order. The log
+ * also keeps the time of the first event of each item, so a part that is
+ * not an event, such as a Mac command, can take its place among them.
  */
 export class SessionLog {
   private readonly events: ChatEnvelope[] = []
   private readonly numbers = new Set<number>()
   private folded: Transcript = emptyTranscript
+  private firstTimes: ReadonlyMap<string, number> = new Map()
 
   get transcript(): Transcript {
     return this.folded
+  }
+
+  /** The time of the first event of each item of the transcript, by its ID. */
+  get times(): ReadonlyMap<string, number> {
+    return this.firstTimes
   }
 
   /** Adds the events that are new, and says whether the transcript changed. */
@@ -84,20 +92,40 @@ export class SessionLog {
     fresh.sort(byNumber)
     const last = this.events.at(-1)?.eventNumber ?? 0
     this.events.push(...fresh)
-    if (fresh[0].eventNumber > last) {
-      this.folded = fold(this.folded, fresh)
-    } else {
-      this.events.sort(byNumber)
-      this.folded = fold(emptyTranscript, this.events)
-    }
+    const appends = fresh[0].eventNumber > last
+    if (!appends) this.events.sort(byNumber)
+    const folded = appends
+      ? fold(this.folded, fresh, this.firstTimes)
+      : fold(emptyTranscript, this.events, new Map())
+    this.folded = folded.transcript
+    this.firstTimes = folded.times
     return true
   }
 }
 
-function fold(start: Transcript, events: readonly ChatEnvelope[]): Transcript {
+/**
+ * Folds events in order, and notes the time of each item that an event
+ * adds. The map of times is copied only when an event adds an item.
+ */
+function fold(
+  start: Transcript,
+  events: readonly ChatEnvelope[],
+  known: ReadonlyMap<string, number>,
+): { transcript: Transcript; times: ReadonlyMap<string, number> } {
   let transcript = start
+  let times = known
+  let copy: Map<string, number> | null = null
   for (const { event, occurredAt } of events) {
-    transcript = foldEvent(transcript, event, occurredAt)
+    const next = foldEvent(transcript, event, occurredAt)
+    if (next.items.length > transcript.items.length) {
+      for (const item of next.items) {
+        if (times.has(item.id)) continue
+        copy ??= new Map(times)
+        copy.set(item.id, occurredAt)
+        times = copy
+      }
+    }
+    transcript = next
   }
-  return transcript
+  return { transcript, times }
 }

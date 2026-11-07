@@ -6,20 +6,28 @@ import {
 import { parseAgentEvent } from './agent-events'
 import { counter, identifier, invalidInput, number, record } from './inputs'
 import { parseOtherEvent } from './other-events'
+import {
+  checkRunnerEnvelopeBytes,
+  checkRunnerEventLimits,
+} from './runner-event-limits'
 
-export type IncomingRunnerMessage =
+export interface IncomingRunnerEnvelope {
+  type: 'event'
+  streamId: string
+  eventNumber: number
+  occurredAt: unknown
+  event: unknown
+  raw: unknown
+}
+
+/** Validate identity before payload checks, so duplicates and gaps remain harmless. */
+export function parseRunnerTransport(
+  value: unknown,
+):
   | RunnerHello
-  | RunnerEventEnvelope
-  | {
-      type: 'file.read.result'
-      value: unknown
-    }
-  | {
-      type: 'file.diff.result'
-      value: unknown
-    }
-
-export function parseRunnerMessage(value: unknown): IncomingRunnerMessage {
+  | IncomingRunnerEnvelope
+  | { type: 'file.read.result'; value: unknown }
+  | { type: 'file.diff.result'; value: unknown } {
   const input = record(value)
   if (input.type === 'hello') {
     if (input.protocolVersion !== RUNNER_PROTOCOL_VERSION) return invalidInput()
@@ -40,7 +48,23 @@ export function parseRunnerMessage(value: unknown): IncomingRunnerMessage {
     type: input.type,
     streamId: identifier(input.streamId),
     eventNumber,
+    occurredAt: input.occurredAt,
+    event: input.event,
+    raw: value,
+  }
+}
+
+export function parseRunnerEnvelope(
+  input: IncomingRunnerEnvelope,
+): RunnerEventEnvelope {
+  checkRunnerEnvelopeBytes(input.raw)
+  const event = parseOtherEvent(input.event) ?? parseAgentEvent(input.event)
+  checkRunnerEventLimits(event)
+  return {
+    type: 'event',
+    streamId: input.streamId,
+    eventNumber: input.eventNumber,
     occurredAt: number(input.occurredAt),
-    event: parseOtherEvent(input.event) ?? parseAgentEvent(input.event),
+    event,
   }
 }

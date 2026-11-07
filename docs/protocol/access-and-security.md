@@ -33,14 +33,10 @@ says.
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
-- Each JSON body at the app gate can contain at most 1 MB, or 1,000,000
-  UTF-8 bytes. A larger body gets HTTP 413 (decision 65).
 - The health check and GitHub sign-in with its callback need no sign-in.
   The callback checks its `state` value instead.
 - The Mac app's public sign-in exchange also needs no sign-in.
   It checks the one-use handoff and its secret instead.
-  Its JSON body can contain at most 1,000,000 bytes, which is 1 MB.
-  The Worker stops reading a larger body and returns HTTP 413 before sign-in.
 - A GET or HEAD read may come without an `Origin` header, because
   browsers send none on a read from the same site. A present `Origin`
   must match. Every write and every socket upgrade needs a matching
@@ -56,6 +52,31 @@ says.
 The [Mac app](desktop-app.md#the-worker-and-the-desktop-origin) states the
 additional origin that the app gate accepts.
 
+## Request bodies
+
+Decision 93 puts the default body limit at the Worker entry.
+A limit in every route was rejected because a new route can forget it.
+A lint was rejected because a read through another name escapes it.
+
+- Every request body that the Worker reads or forwards has a byte limit.
+  The limit covers every route on every hostname, also without sign-in.
+- By default, a request body can contain at most 1 MB, or 1,000,000 bytes
+  (decisions 65 and 93).
+- The app gate answers an access rejection before a body read or size check.
+  A protected app write with a valid `Origin` but no sign-in gets HTTP 401
+  with `sign_in_required`, even when its body exceeds the limit.
+- A route that needs more declares its limit at the Worker entry.
+  All other routes get the default, also routes added later.
+- The GitHub webhook limit is 26 MiB, or 27,262,976 bytes.
+  GitHub's [25 MB payload maximum](https://docs.github.com/en/webhooks/webhook-events-and-payloads#payload-cap) is the reason.
+- The Worker counts the bytes that arrive. It does not use the
+  `Content-Length` header for the limit.
+- The Worker stops reading a body as soon as the body passes its limit.
+- A body above its limit gets HTTP 413 with the error code
+  `body_too_large`. The error says "The request is too large. Send less
+  data."
+- A WebSocket upgrade has no body. The Worker drops a body sent with one.
+
 ## Content security policy
 
 Decision 67 applies the prepared policy to both apps now.
@@ -68,8 +89,8 @@ Later screens add the frame and connection sources that they need.
 - Images can also use data URLs and `https://avatars.githubusercontent.com`.
 - Network calls reach only the page's own origin and the configured app
   origin, with its matching WebSocket origin.
-- Frames load only from the page's own origin and the configured HTTPS
-  frame origins.
+- Frames load only from the page's own origin, the configured app origin,
+  and the configured HTTPS frame origins.
 - Pages use no plugin objects or base elements.
 - Other pages cannot frame the app.
 - Forms submit only to the page's own origin.
@@ -136,18 +157,34 @@ Later screens add the frame and connection sources that they need.
   the turn that runs now. Every other process in the sandbox can read it
   too, such as a tool of the agent or a server that the startup script
   started.
+- Risk: a program that a tool of the agent starts gets a copy of the login
+  of its turn. A program that keeps running after the turn, such as a dev
+  server, keeps that login, and each member with a terminal in the sandbox
+  can read it (decision 114).
 - So the members of one org trust each other with the logins of their
-  running turns. A proxy that keeps every login out of the sandbox was
-  rejected, because it is a much larger build.
+  turns, also after a turn ends. A proxy that keeps every login out of the
+  sandbox was rejected, because it is a much larger build.
 
 ## The workspace token
 
 - Each workspace has its own workspace token.
-- With the token, the sandbox of the workspace can do three things:
+- With the token, the sandbox of the workspace can do four things:
   - connect its agent runner to the Durable Object of its own workspace
   - get a GitHub token for its own workspace
   - create and list workspaces through the agent tools
-- The token allows nothing else.
+  - ask for a command on the Mac of the sender of a turn that runs now,
+    through the agent tools
+- The token allows nothing else. It can never answer a request for a Mac
+  command, and it can never choose the Mac that gets the request.
+- The Worker reads the sender of each Mac command request from its own
+  record of the turn that runs now. It never takes a sender from the
+  sandbox, and it never uses the workspace owner in place of the sender.
+- Reason: agent code runs in the sandbox, so a sender that the sandbox
+  names can be false.
+- At each Mac command request, the Worker checks that the sender is still
+  a member of the org of the workspace.
+- [Agent tools](agent-tools.md#mac-commands) states the Mac command
+  requests.
 
 ## GitHub tokens
 
@@ -166,15 +203,19 @@ Later screens add the frame and connection sources that they need.
   build sandbox (decision 90). Each copy uses its own GitHub App
   installation token, which can only read the contents of that one
   repository.
-- Only the Git command of that copy gets the token, and Git writes it
-  nowhere. No command text, command history, remote URL, Git config, file,
-  or saved snapshot holds it.
+- The Worker gives the token only to the Git command of that copy. The
+  Worker and Git do not write it to command text, command history, a
+  remote URL, a Git config, a file, or a saved snapshot.
 - The Git command gets the token with a one-use build grant. The grant
   works once, and only for its own build and repository.
 - The Worker revokes the token as soon as the Git command ends, also when
   the command fails. The build goes on only after GitHub confirms the
-  revocation. No checkout, software step, install script, snapshot, or
-  other repository code runs before that.
+  revocation. The build starts no checkout, software step, install script,
+  snapshot, or other repository code before that.
+- Risk: a build sandbox starts from the last org image. A program with root
+  access that an earlier install left in that image can read the clone
+  token of a later copy. That token can only read its own repository, which
+  the image already holds. The Worker revokes it when the copy ends.
 - Reason: Git in the build sandbox copies a repository of any size, and the
   Git data does not pass through the Worker. Larger uploads and stored
   progress were rejected, because one repository or one Git response must
@@ -222,18 +263,82 @@ Later screens add the frame and connection sources that they need.
 
 - Previews live on a separate registrable domain (decision 6).
 - Each preview gets a random hostname one level under that domain, with at
-  least 128 random bits. The hostname is the credential, so a frame needs
-  no cookie.
-- The Durable Object of the workspace revokes the hostname when the sandbox
-  stops, when the user closes the preview, and after 24 hours. Reason: a
-  leaked hostname then stops working soon.
+  least 128 random bits. The hostname gives each preview its own origin.
+  It is not a credential.
+- A request to a preview hostname reaches the sandbox only with the valid
+  credential cookie of that preview (decision 83).
+- Reason: browsers send the preview origin in the `Origin` header of
+  cross-site requests and sockets, also under `no-referrer`. A hostname as
+  the credential was rejected, because a preview page then leaks it to
+  each site that it calls.
+- The API gives each preview a launch address on the app's hostname. The
+  address holds no secret, because each load needs the sign-in and access
+  to the workspace.
+- Each load of the launch address, in a frame or in a tab, gets a new
+  grant. A form on the launch page posts the grant to the authorizer, a
+  fixed hostname on the preview domain. The authorizer sets the credential
+  cookie, then sends the browser to the preview hostname.
+- Only pages on the app origin and on the desktop origin of the
+  [Mac app](desktop-app.md#the-page) can frame the launch page.
+- A grant works for 60 seconds at most, and only for its own preview. It
+  works only once (decision 95). A reusable grant was rejected, because a
+  copy of a used grant could give a second browser access for the life of
+  the preview.
+- A used grant gets the same 404 as an invalid grant. The reply sets no
+  cookie, and no sandbox gets a request.
+- A request that fails any other check, such as a wrong `Origin` or the
+  hostname of another preview, leaves its grant unused.
+- A grant never goes to a sandbox or into a log. It never goes into the
+  path or the query of a URL. A grant in a query was rejected, because
+  the browser sends the query to the server.
+- Only a [browser launch](desktop-app.md#port-previews) carries a grant in
+  a URL. The grant and the preview hostname go in the fragment of an
+  authorizer address, because a browser sends no fragment to a server.
+- Risk: the browser can keep that address in its history. The grant in it
+  works only once, and it stops working within 60 seconds.
+- At that address, the authorizer serves its own page, the authorizer
+  page. No page can frame it. Before any request or navigation, the page
+  removes the fragment from its address.
+- The authorizer accepts a grant in two ways. Each needs one preview
+  hostname and one valid grant for an active preview:
+  - a form POST with the app's `Origin`, from the launch page. The
+    authorizer then sends the browser to the preview hostname.
+  - a POST with the authorizer's own `Origin` and the grant in its
+    `Authorization` header, from the authorizer page. The authorizer then
+    returns the address of the preview hostname, and the page goes there.
+- Both ways set the same credential cookie. The authorizer never serves
+  sandbox content.
+- Reason: a service worker of a previewed app can read a form that the
+  browser posts to the origin of that preview. A handoff on the preview
+  hostname was rejected for that reason.
+- Authorizer form bodies have a size limit of 1,000,000 bytes under decision 65.
+  The authorizer cancels an oversized body and returns 404.
+- The authorizer never reads or buffers the body of a POST with an
+  `Authorization` header.
+- The launch page sends only the app's origin as its referrer. Reason:
+  under `no-referrer`, the form sends `Origin: null`, and the authorizer
+  refuses it.
+- The credential cookie is HttpOnly, Secure, SameSite=None, and
+  Partitioned. It expires no later than its preview.
+- Reason: a frame under the app is a third-party context, where browsers
+  can block a cookie that is not partitioned. A partitioned cookie works
+  there, but only under the top-level site that set it. So a frame and a
+  tab each get their own cookie, and another site that frames a preview
+  gets none.
+- The Durable Object of the workspace revokes the preview when the sandbox
+  stops, when the user closes the preview, and after 24 hours. Reason: the
+  cookies and the grants of a revoked preview stop working at once.
 - A revoked or an unknown hostname gets no answer from any sandbox.
 - The preview proxy adds Boat's `_port_auth` cookie on the server side. It
   drops any `_port_auth` cookie that the browser sends.
-- The preview proxy forwards the cookies of the previewed app.
-- Each preview response carries `Referrer-Policy: no-referrer`. Reason: the
-  default policy sends the preview origin, which is the credential, to
-  other sites.
+- The preview proxy forwards the cookies of the previewed app. It never
+  sends a credential cookie to a sandbox. It drops each credential cookie
+  that a sandbox response sets.
+- A redirect to the private address of the port, with `http` or `https`,
+  reaches the browser as a redirect to the preview hostname. Reason: only
+  the proxy can open the private address.
+- Each response on the preview domain carries `Referrer-Policy:
+  no-referrer`. Reason: other sites have no need for the preview address.
 - These approaches were rejected:
   - previews behind Cloudflare Access, because Access cannot sign in
     inside a frame

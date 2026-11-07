@@ -2,6 +2,7 @@ import { DurableObject } from 'cloudflare:workers'
 import type { RunnerEvent } from '../src/shared/runner'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
 import { WorkspaceChat } from './chat/backend'
+import { DeviceRuntime } from './devices/runtime'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
 import type { FailedCreationDraft } from './lifecycle/failed-creations'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
@@ -25,19 +26,49 @@ import type { WorkspaceController } from './lifecycle/workspace-controller-types
 import { nativeWorkspacePlatform } from './lifecycle/workspace-platform'
 import { failedCreationEvents } from './lifecycle/failed-creation-events'
 
+interface WorkspaceEnv extends Omit<LifecycleEnvironment, 'WORKSPACES'> {
+  WORKSPACES: DurableObjectNamespace
+}
+
 export class Workspace
-  extends DurableObject<LifecycleEnvironment>
+  extends DurableObject<WorkspaceEnv>
   implements WorkspaceLifecycleTransport
 {
   private readonly chat: WorkspaceChat
   private readonly controller: WorkspaceController
+  private readonly devices: DeviceRuntime
+  private readonly context: DurableObjectState
 
-  constructor(context: DurableObjectState, env: LifecycleEnvironment) {
+  constructor(
+    context: DurableObjectState,
+    env: WorkspaceEnv,
+    now: () => number = Date.now,
+  ) {
     super(context, env)
+    this.context = context
     this.chat = new WorkspaceChat(context.storage, env, {
       matchesObject: (workspaceId) =>
         env.WORKSPACES.idFromName(workspaceId).equals(context.id),
+      runnerEventStored: async (envelope) => {
+        const event = envelope.event
+        if (
+          event.type === 'turn.completed' ||
+          event.type === 'turn.failed' ||
+          (event.type === 'runner.event-refused' &&
+            (event.runnerEventType === 'turn.completed' ||
+              event.runnerEventType === 'turn.failed'))
+        )
+          context.waitUntil(this.devices.reconcile())
+      },
     })
+    this.devices = new DeviceRuntime(
+      env,
+      context.storage,
+      this.chat,
+      (name) => env.WORKSPACES.idFromName(name).equals(context.id),
+      (when) => context.storage.setAlarm(when),
+      now,
+    )
     this.controller = createWorkspaceController(
       env,
       lifecycleDependencies(),
@@ -178,11 +209,16 @@ export class Workspace
   }
 
   async alarm(): Promise<void> {
-    return this.controller.alarm()
+    await this.controller.alarm()
+    await this.devices.alarm()
   }
 
   async fetch(request: Request): Promise<Response> {
+    const deviceResponse = await this.devices.fetch(request)
+    if (deviceResponse) return deviceResponse
     const response = await this.chat.fetch(request)
+    if (request.method !== 'GET' && request.method !== 'HEAD')
+      this.context.waitUntil(this.devices.reconcile())
     if (response.status !== 404) return response
     return (
       (await failedCreationEvents(

@@ -8,6 +8,10 @@ export const WORKSPACE_TOOL_SOURCE_PATHS = [
   'tools/mcp.ts',
   'tools/mcp-tools.ts',
   'tools/runtime.ts',
+  'tools/device-client.ts',
+  'tools/device-cli.ts',
+  'src/shared/device.ts',
+  'src/shared/device-read.ts',
   'src/shared/agent-tools.ts',
 ] as const
 

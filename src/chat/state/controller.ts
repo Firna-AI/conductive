@@ -1,9 +1,17 @@
 import type { AgentChoice } from '../../shared/agents'
+import type { DeviceApprovalAction } from '../../shared/device'
 import {
   createChatApi,
   type FetchLike,
   type WorkspaceTarget,
 } from '../api/client'
+import type { StreamEnvelope } from '../api/read-workspace'
+import {
+  answerCommand,
+  DeviceReads,
+  refreshDevices,
+} from '../device/device-actions'
+import { createDeviceApi } from '../device/device-api'
 import {
   WorkspaceStream,
   type StreamTimers,
@@ -47,6 +55,10 @@ export interface ChatControllerOptions {
   timers?: StreamTimers
   newId?: () => string
 }
+
+/** The Worker records a change of the workspace with each change of a Mac command. */
+const changesWorkspace = (envelopes: readonly StreamEnvelope[]) =>
+  envelopes.some(({ event }) => event?.type === 'workspace.updated')
 
 /**
  * The chat of one workspace. It loads the sessions and the history of the
@@ -110,12 +122,18 @@ export class ChatController {
       },
       saveView: viewWriter((view) => api.saveView(view)),
       live,
+      devices: {
+        api: createDeviceApi(this.options.fetch),
+        reads: new DeviceReads(),
+      },
       stream: new WorkspaceStream({
         target,
         subscribe,
         timers,
         deliver: (envelopes) => {
-          if (live()) applyEnvelopes(context, envelopes)
+          if (!live()) return
+          applyEnvelopes(context, envelopes)
+          if (changesWorkspace(envelopes)) void refreshDevices(context)
         },
       }),
     }
@@ -169,6 +187,11 @@ export class ChatController {
   readonly chooseModel = (sessionId: string, choice: AgentChoice) =>
     chooseModel(this.context, sessionId, choice)
   readonly resume = () => resumeWorkspace(this.context)
+  /** Sends the answer to a Mac command, from the Mac app on that Mac. */
+  readonly answerCommand = (requestId: string, action: DeviceApprovalAction) =>
+    answerCommand(this.context, requestId, action)
+  /** Reads the Mac commands and the pairing again, such as after a failure. */
+  readonly loadDevices = () => refreshDevices(this.context)
   readonly dismissNotice = () =>
     this.store.update((snapshot) => ({ ...snapshot, notice: null }))
 }

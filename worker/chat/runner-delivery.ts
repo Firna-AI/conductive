@@ -3,7 +3,6 @@ import type { RunnerCommand } from '../../src/shared/runner'
 import { DeliveryState } from './delivery-state'
 import { RunnerAccessDenied } from './login-access'
 import type { ChatStore, ChatTransaction } from './store'
-import { storeAgentEvent } from './turn-events'
 import { TurnLifecycle } from './turn-lifecycle'
 import type { ActiveRunner, ChatDependencies, PendingCommand } from './types'
 
@@ -131,22 +130,22 @@ export class RunnerDelivery {
       async (transaction: ChatTransaction) => {
         const turn = await transaction.turn(command.turnId)
         if (!turn || turn.state !== 'queued') return
-        await storeAgentEvent(
-          transaction,
-          {
-            type: 'turn.failed',
-            sessionId: command.sessionId,
-            turnId: command.turnId,
-            error: {
-              code: 'agent_login_required',
-              message: 'Connect your agent login and try again.',
-            },
-            retryMessageId: command.messageId,
-            durationMs: 0,
+        const session = await transaction.session(turn.sessionId)
+        if (!session || session.activeTurnId !== turn.id) return
+        await transaction.emit({
+          type: 'turn.failed',
+          sessionId: session.id,
+          turnId: turn.id,
+          error: {
+            code: 'agent_login_required',
+            message: 'Connect your agent login and try again.',
           },
-          transaction.now,
-          this.dependencies.randomId,
-        )
+          retryMessageId: command.messageId,
+          durationMs: 0,
+        })
+        await new TurnLifecycle(transaction, session).finish(turn, {
+          state: 'failed',
+        })
       },
       this.publish,
     )

@@ -38,7 +38,12 @@ revisions, it reads the tree route again.
 
 The stored history and the live events change the open pages in the same
 way. An event names the paths whose file or diff it may change, and the
-open page of such a path reads again. Some events cannot name their paths:
+open page of such a path reads again.
+
+An add-or-replace (`upsert`) with unchanged entry fields reports a content
+change, so the open file and diff read again.
+
+Some events cannot name their paths:
 
 - a new full tree
 - a tree update that waits for a tree, or that the tree already holds

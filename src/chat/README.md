@@ -3,9 +3,10 @@
 The chat of a workspace: the session tabs with the session history, and the
 chat of the open session with its composer. It shows messages, folded tool
 calls, the running turn, steer, Stop, failures with Try again, the start
-steps of the sandbox, and the bar that takes the composer's place while the
-sandbox does not run. It builds against the fake API and the recorded chat
-events of `src/test-support/`. No app screen mounts it yet.
+steps of the sandbox, the Mac commands of each turn, and the bar that takes
+the composer's place while the sandbox does not run. It builds against the
+fake API and the recorded chat events of `src/test-support/`. No app screen
+mounts it yet.
 
 ## Use it in the app
 
@@ -46,6 +47,9 @@ events of `src/test-support/`. No app screen mounts it yet.
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position. A dialog or a sheet covers the nearest
   positioned frame: the app frame.
+- The Mac app shows two more parts of Mac commands outside the chat:
+  `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)
+  say how to mount them.
 - `useChatController` gives the controller and its snapshot to an app that
   composes `SessionTabs` and `SessionChat` in its own layout. Such an app
   takes the tabs from `tabSessions`, and the session history from
@@ -130,6 +134,8 @@ events of `src/test-support/`. No app screen mounts it yet.
   reads and the stream gets lost.
 - The chat writes no browser storage. The drafts stay in memory, and the
   server keeps the open tabs through the view route.
+- [The Mac commands](device/README.md) hold the rules of the requests,
+  their answers, and the settings of the Mac.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
   stateful fakes live in `dev/` and in test files only.
 - The parts reuse the mockup CSS modules and the mockup parts that are pure,
@@ -169,22 +175,34 @@ The address chooses the state. The first value of each option is the default:
 | `viewport` | `desktop`, `mobile` |
 | `scheme` | `dark`, `light` |
 | `clock` | `running`, `frozen` |
+| `mac` | `none`, `waiting`, `longer`, `several`, `many` (four requests, the first a long script), `running`, `denied`, `done`, `exit-code`, `cut`, `timed-out`, `failed`, `unavailable`, `literal` (a two-line command and a U+00A0 command, also saved) |
+| `app` | `browser`, `mac` (the Mac app on the Mac that got the requests) |
+| `change` | `done`, `done-not-saved`, `failed` (what the page's Mac does with a change of its settings) |
+| `page` | `chat`, `this-mac` (the This Mac section of the account) |
 
 The desktop page keeps the mockup's columns, so the chat column is 718 px wide
 in a 1440 px window. The buttons of the page make the sandbox ready, stop it,
 fail its start, write the title, drop the connection, resend the last event,
-and send two parts out of order. Writes of the page change the fake's state:
+send two parts out of order, and connect the Mac again under a new pairing,
+whose next read the page then makes. Writes of the page change the fake's state:
 new sessions, rename, close, reopen, messages, steer, Stop, Try again, model
 changes, uploads, Resume, and the view. A model change opens its session
 under the ID that the chat chose. Stop and the close of a running tab
 record the member of the `role` option as the one who pressed Stop. Stop
-the sandbox ends a running turn with no Stop request.
+the sandbox ends a running turn with no Stop request. With `app=mac`, the
+page's Mac acts on each answer: Deny ends the request, and the other choices
+run the command and keep the choice. The bar of the 15 minutes shows above
+the header while they run. The Mac refuses a change of an older pairing, as
+the Worker does.
 
 ## Tests
 
 Run `npm run test -- src/chat`. The tests drive the controller and the stream
 on `FakeApiServer` and the recorded events, and render the chat with
 `react-dom/server`. `state/test-kit.ts` holds their helpers.
+
+The Mac commands have their own [tests](device/README.md#tests), and a
+check in the Mac app.
 
 ### Key code
 
@@ -221,8 +239,11 @@ on `FakeApiServer` and the recorded events, and render the chat with
   route builders, and the readers of their responses.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
-- `dev/`: the development page, its fake writes, its scripted agent, and the
-  `loss` scenario in `dev/dev-loss.ts`.
+- `device/`: the Mac commands. Their [README](device/README.md) names
+  their key code.
+- `dev/`: the development page, its fake writes, its scripted agent, its
+  Mac, and the `loss` scenario in `dev/dev-loss.ts`.
+
 
 ### Related docs
 
