@@ -92,7 +92,15 @@ export class RunnerDelivery {
         ))
       )
         continue
-      if (!isCurrent()) return false
+      if (!isCurrent()) {
+        if (outbound.type === 'turn')
+          await this.dependencies.turnDispatchFailed(
+            active.workspace.id,
+            outbound.turnId,
+            publish,
+          )
+        return false
+      }
       const beganTurn = await this.dispatch.begin(active.workspace.id, command)
       try {
         active.peer.send(outbound)
@@ -117,7 +125,6 @@ export class RunnerDelivery {
     active: ActiveRunner,
     command: PendingCommand,
   ): Promise<RunnerCommand | null> {
-    if (command.type === 'model') return command
     const canDispatch = await this.store.read(
       active.workspace.id,
       async (view) => {
@@ -128,7 +135,7 @@ export class RunnerDelivery {
       },
     )
     if (!canDispatch) return null
-    if (command.type === 'interrupt') return command
+    if (command.type === 'interrupt' || command.type === 'model') return command
     const message = await this.store.read(active.workspace.id, (view) =>
       view.message(command.messageId),
     )

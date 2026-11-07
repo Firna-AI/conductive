@@ -10,7 +10,7 @@ Each handler returns `null` for a path that it does not own. The
 
 | Handler | Routes |
 | --- | --- |
-| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `GET /api/account/agent-logins`, `PUT /api/account/default-model`, and `PUT` and `DELETE` of `/api/account/agent-logins/:agent` |
+| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, and `PUT` and `DELETE` of `/api/account/agent-logins/:agent` |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, and `POST` of its `open`, `resume`, and `activity` |
 
@@ -46,7 +46,10 @@ repository root. The integration tests use the production Worker entry,
 local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 
 - `boot.test.ts` checks the boot routes, the saved preferences, the
-  encrypted logins, and a missing model list.
+  encrypted logins, and a missing model list. Two users save different
+  defaults and logins, both with a Claude login. After each save and a
+  delete, each reads only their own account and Get started step.
+  `boot-account.test-support.ts` holds the account helpers of that test.
 - `shell-resources.test.ts` and `chat-read-state.test.ts` check the lists,
   the private views, the encoded workspace IDs, the archived writes, and
   the read marks.

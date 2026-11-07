@@ -160,7 +160,7 @@ methods of `Workspace`.
 - `runnerReady(workspaceId, publish)` runs after the Durable Object stores
   each `runner.ready` event. It reports the event to the lifecycle. A
   runner that is ready before the start is prepared gets its turns only
-  after that.
+  after that. Their messages and model changes wait behind them.
 - `runnerEventStored(envelope, publish)` runs after each other stored runner
   event or refusal marker. It reports `turn.started`, `turn.completed`,
   `turn.failed`, and `start.updated`. A refused `turn.completed` or
@@ -173,7 +173,8 @@ methods of `Workspace`.
 - `turnDispatching` registers the sender of a turn with the lifecycle
   before the command goes out. While the lifecycle state allows no turn, it
   returns `false`, and the turn waits. `turnDispatchFailed` removes that
-  turn after a failed send.
+  turn after a failed send. It also removes it when the runner disconnects
+  while `turnDispatching` registers the turn, before the send.
 - `runnerDisconnected` reports a closed runner connection. It runs later in
   the queue, through `waitUntil`.
 - `browserOpened` and `browserClosed` give the open tab IDs to the

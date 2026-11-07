@@ -36,8 +36,6 @@ export async function bootRoute(
       return Response.json({ models: configuredModels(env) })
     if (path === GET_STARTED_PATH)
       return Response.json(await getStartedData(env.DB, userId))
-    if (path === ACCOUNT_PATHS.agentLogins)
-      return Response.json({ agentLogins: await accountLogins(env.DB, userId) })
     if (path === ACCOUNT_PATHS.account) {
       return Response.json({
         user: context.user,

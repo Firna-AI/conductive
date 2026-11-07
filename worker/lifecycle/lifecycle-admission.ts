@@ -3,14 +3,12 @@ import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { requireOrgMember, requireWorkspaceOrg } from './access'
 import type { DurableLifecycle } from './durable'
-import type { TurnScopes } from './turns'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 
 export async function initializeWorkspaceLifecycle(
   ctx: WorkspacePlatform,
   env: AppEnv,
   lifecycle: DurableLifecycle,
-  turns: TurnScopes,
   input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
 ): Promise<void> {
   await requireWorkspaceOrg(env.DB, input.orgId, input.workspaceId)
@@ -25,7 +23,6 @@ export async function initializeWorkspaceLifecycle(
       )
     await ctx.admitFirstMessage?.(input)
     if (await lifecycle.read()) return
-    await turns.register(input.firstTurn)
     await lifecycle.initialize(input)
   })
 }

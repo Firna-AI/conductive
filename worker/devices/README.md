@@ -70,6 +70,9 @@ The machine token selects the exact workspace object.
 That object reads the selected turn and its session from `ChatStore`.
 The turn must run, remain active, and belong to an open chat session.
 The stored turn selects the sender.
+`activeStoredTurn` in `access.ts` is that read, and it does not enter the chat queue.
+So only a caller that already holds the queue uses it, such as the git credential route.
+`activeDeviceSender` enters the queue, calls it, and keeps the token and membership checks.
 The Worker checks current sender membership, token revocation, and workspace/org state.
 It repeats these checks before device decisions and results.
 
@@ -184,7 +187,7 @@ When the turn ends, the request fails with `turn_ended`, and D1 shows `ready`.
 ## Key code
 
 - `runtime.ts`, `router.ts`: feature dispatch, the RPC operation entry, and Durable Object composition.
-- `access.ts`: stored-turn sender lookup and current access checks.
+- `access.ts`: `activeStoredTurn`, the shared read of the running stored turn, and `activeDeviceSender` with the current access checks.
 - `workspace-commands.ts`, `workspace-browser.ts`: machine commands and scoped app records/approvals.
 - `broker.ts`, `broker-routes.ts`, `broker-messages.ts`: the authenticated device socket and relays.
 - `records.ts`, `storage.ts`: durable requests and chunked values.

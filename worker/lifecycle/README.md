@@ -119,9 +119,23 @@ turn and the branch step use the sender.
 [git credential helper](../../image/README.md#git-credentials) sends the
 workspace token as a bearer token, and the current turn ID in the
 `X-Conductive-Turn-Id` header. The handler reads no request body and needs
-no content type. The workspace object maps that turn to its sender. Only
-trusted turn records give a sender: the first turn of a create, and each
-turn that the chat backend registers. A stop clears them.
+no content type. `Workspace.credentialSender` maps that turn to a sender,
+in the chat queue:
+
+- A create that prepares its repository has its own grant. The start job
+  is a create in the `fetch` or `branch` phase, not cancelled or failed,
+  and its `turnId` matches. The grant gives the sender of the admitted
+  first message.
+- Otherwise the turn must be the running stored chat turn: the active
+  turn of an open session. `activeStoredTurn` in
+  [`access.ts`](../devices/access.ts) reads it. So access ends with the
+  turn, also after a queued Stop, a session close, or a login failure.
+- A stopped or archived workspace gives no sender. The lifecycle admission
+  keeps no turn record for the queued first message.
+
+`machine.test.ts` runs the route with `machineCredentialFixture` in
+[`machine-test-support.ts`](machine-test-support.ts), over the production
+chat and runner boundaries.
 
 The handler returns a fresh GitHub App user token of the sender, from
 `freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).

@@ -148,6 +148,12 @@ The Durable Object runs the gates itself.
 - A refused `turn.completed` or `turn.failed` ends its started active turn as `failed`.
 - A message and its command commit together. The Durable Object sends the
   commands in order when the runner is ready.
+- `TurnLifecycle.canDispatch` keeps each command behind its turn. A `turn`
+  command needs a queued or running turn, and a `message` command needs a
+  running turn. A `model` command waits while the active turn of its
+  session is queued. An `interrupt` command needs a stopping turn.
+- Only a `turn` command starts a turn, in `DeliveryState.begin`. So a
+  follow-up message or model change never overtakes a held turn.
 - After the login checks, delivery commits the turn state before sending.
   If sending a newly dispatched turn throws, delivery restores its queued
   state. `message.sent` follows a successful send.
@@ -244,9 +250,9 @@ tests through the production Worker entry.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
 - `turn-lifecycle.ts`, `turn-events.ts`, `turn-context.ts`, and
-  `continuation.ts`: active and waiting turns, the retry message of a turn
-  end, safe turn context, late data, terminal events, and unanswered
-  messages.
+  `continuation.ts`: active and waiting turns, the dispatch rule of each
+  command, the retry message of a turn end, safe turn context, late data,
+  terminal events, and unanswered messages.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-tabs.ts`: open tabs, their grants, the refresh and expiry
   timers, and the grant check before each send. By default,

@@ -5718,6 +5718,11 @@ Depends on: 5, 6, 7, 7r, 8, 8j
         through the production Worker and real local objects. Add a local
         browser harness with fake external services.
         Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Apply the checked production review fixes 9 B, 10 D, and 11 A.
+      Authorize GitHub from stored running turns and separate preparation
+      access. Keep commands behind their turn. Test account isolation with
+      two signed-in users.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
 - [ ] Measure the first agent start after a resume over several runs,
       with the runner inside and outside the home folder. Keep the faster
       place.

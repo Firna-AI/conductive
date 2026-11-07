@@ -98,7 +98,7 @@ it('removes a failed create and its token while retaining the draft and cleanup 
       await runtime
         .workspace(created.workspace.id)
         .credentialSender(created.first.turnId),
-    ).toBe(user.id)
+    ).toBeNull()
     expect(boat.starts.at(-1)).toMatchObject({
       from: 'last-good-image',
       noEnv: true,

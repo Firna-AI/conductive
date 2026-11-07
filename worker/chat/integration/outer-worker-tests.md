@@ -32,7 +32,8 @@ npm run test -- worker/chat/integration
   after a restart, and a repeat adds no history.
 - `workspace-lifecycle.test.ts` joins runner readiness, a reconnect, a
   confirmed stop, and the next queued turn. No hook enters the chat queue
-  again.
+  again. A follow-up message with a model change, queued before the start
+  is prepared, goes out as the turn, then the model, then the message.
 - `shell-resources.test.ts` and `chat-read-state.test.ts` check the lists,
   the private views, the archived writes, and the read marks of the
   [app API](../../app-api/README.md).
@@ -47,7 +48,12 @@ npm run test -- worker/chat/integration
   heartbeat, and a reopen. When the turn ends, D1 shows `ready`.
 - `machine-credentials.test.ts` checks that each machine credential route
   needs its own token. It also checks that a git credential uses the sender
-  of the turn.
+  of the running stored turn. A queued Stop, a session close, or a queued
+  login failure ends that access.
+- `workspace-preparation-credentials.test.ts` keeps the GitHub access of a
+  private repository fetch after a member stops the queued first turn.
+  `preparation-entry.test-support.ts` gives the production `Workspace` a
+  read of the start phase and `advanceStartAlarm`.
 
 ## Test helpers
 

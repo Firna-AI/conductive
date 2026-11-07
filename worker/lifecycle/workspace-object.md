@@ -22,9 +22,11 @@ lifecycle steps from the chat hooks, as
 [The workspace lifecycle](../chat/integration/README.md#the-workspace-lifecycle)
 says:
 
-- `registerLifecycleTurn` records the trusted sender of a turn before the
-  turn goes out. `finishLifecycleTurn`, or a report that the turn ended,
-  removes it.
+- `registerLifecycleTurn` records a turn and its sender before the turn
+  goes out, after a check of the org membership, and marks its session as
+  running. `finishLifecycleTurn`, or a report that the turn ended, removes
+  it. These records keep the running sessions. They give no GitHub access,
+  as the [machine route](README.md#machine-route) says.
 - `reportRunnerLifecycle` takes each runner event that ordered runner
   ingestion accepts. `runnerLifecycleDisconnected` takes a disconnect.
 - `acknowledgeLifecycleFirstMessage` clears the pending first message of

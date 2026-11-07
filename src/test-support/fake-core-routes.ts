@@ -28,9 +28,6 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   routes.empty('POST', API_PATHS.signOut)
   routes.json('GET', ACCOUNT_PATHS.account, data.account)
   routes.json('GET', MODELS_PATH, data.models)
-  routes.json('GET', ACCOUNT_PATHS.agentLogins, {
-    agentLogins: data.account.agentLogins,
-  })
   routes.json(
     'GET',
     ACCOUNT_PATHS.githubInstallations,

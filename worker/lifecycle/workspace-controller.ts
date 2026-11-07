@@ -10,7 +10,11 @@ import { TurnScopes } from './turns'
 import { applyRunnerLifecycle, registerTrustedTurn } from './runner-lifecycle'
 import { WorkspaceStartCoordinator } from './start-coordinator'
 import type { WorkspaceStartJob } from './start-types'
-import { durableStartStorage, readStartLog } from './start-storage'
+import {
+  durableStartStorage,
+  readStartLog,
+  START_JOB_KEY,
+} from './start-storage'
 import {
   retainFailedCreation,
   failedCreationForSender,
@@ -94,7 +98,7 @@ export function createWorkspaceController(
     async initializeLifecycle(
       input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
     ): Promise<void> {
-      await initializeWorkspaceLifecycle(platform, env, lifecycle, turns, input)
+      await initializeWorkspaceLifecycle(platform, env, lifecycle, input)
     },
     readLifecycle() {
       return lifecycle.read()
@@ -155,7 +159,14 @@ export function createWorkspaceController(
       if (!state || state.state === 'stopped' || state.state === 'archived')
         return null
       await requireWorkspaceOrg(env.DB, state.orgId, state.workspaceId)
-      return turns.sender(turnId)
+      const job = await platform.storage.get('job', START_JOB_KEY)
+      return job?.kind === 'create' &&
+        (job.phase === 'fetch' || job.phase === 'branch') &&
+        !job.cancelled &&
+        !job.failure &&
+        job.turnId === turnId
+        ? job.admission.first.sender.id
+        : null
     },
     async reportRunnerLifecycle(event, publish): Promise<void> {
       await applyRunnerLifecycle(lifecycle, turns, event, publish)

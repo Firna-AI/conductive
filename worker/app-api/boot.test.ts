@@ -1,7 +1,11 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
-import { MODELS_PATH } from '../../src/shared/agents'
+import {
+  ACCOUNT_PATHS,
+  agentLoginPath,
+  type AgentLoginStatus,
+} from '../../src/shared/account'
+import { MODELS_PATH, type AgentChoice } from '../../src/shared/agents'
 import { API_PATHS } from '../../src/shared/api'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import { readAccount } from '../../src/app/api/read-core'
@@ -11,9 +15,22 @@ import {
   TEST_TIME,
   type TestHarness,
 } from '../test-support/harness'
+import {
+  expectAccountState,
+  putAccountValue,
+  type AccountState,
+} from './boot-account.test-support'
 
-const choice = { agent: 'claude', model: 'operator-claude', effort: 'high' }
-const otherChoice = { agent: 'codex', model: 'operator-codex', effort: 'low' }
+const choice: AgentChoice = {
+  agent: 'claude',
+  model: 'operator-claude',
+  effort: 'high',
+}
+const otherChoice: AgentChoice = {
+  agent: 'codex',
+  model: 'operator-codex',
+  effort: 'low',
+}
 const models = [
   {
     agent: 'claude',
@@ -157,6 +174,91 @@ it('keeps account data and Get started isolated from other users and deleted org
       ],
     },
   )
+  const noLogins: readonly AgentLoginStatus[] = [
+    { agent: 'claude', connected: false },
+    { agent: 'codex', connected: false },
+  ]
+  const firstLogins: readonly AgentLoginStatus[] = [
+    { agent: 'claude', connected: true, kind: 'token', updatedAt: TEST_TIME },
+    { agent: 'codex', connected: false },
+  ]
+  const otherClaudeLogin: readonly AgentLoginStatus[] = [
+    { agent: 'claude', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
+    { agent: 'codex', connected: false },
+  ]
+  const otherLogins: readonly AgentLoginStatus[] = [
+    { agent: 'claude', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
+    { agent: 'codex', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
+  ]
+  const expectBoth = async (
+    firstState: AccountState,
+    otherState: AccountState,
+  ) => {
+    await expectAccountState(harness, first, firstState, {
+      githubLogin: 'octocat',
+      orgId: org.id,
+      githubComplete: true,
+    })
+    await expectAccountState(harness, other, otherState, {
+      githubLogin: 'other',
+      orgId: null,
+      githubComplete: false,
+    })
+  }
+  const empty: AccountState = {
+    defaultChoice: choice,
+    agentLogins: noLogins,
+    agentLoginComplete: false,
+  }
+  const firstConnected: AccountState = {
+    defaultChoice: choice,
+    agentLogins: firstLogins,
+    agentLoginComplete: true,
+  }
+  const firstSaved: AccountState = {
+    ...firstConnected,
+    defaultChoice: otherChoice,
+  }
+  const otherConnected: AccountState = {
+    defaultChoice: choice,
+    agentLogins: otherClaudeLogin,
+    agentLoginComplete: true,
+  }
+  const otherSaved: AccountState = {
+    ...otherConnected,
+    agentLogins: otherLogins,
+  }
+  await expectBoth(empty, empty)
+  await putAccountValue(harness, first, agentLoginPath('claude'), {
+    agent: 'claude',
+    kind: 'token',
+    secret: 'first-claude-token',
+  })
+  await expectBoth(firstConnected, empty)
+  await putAccountValue(harness, first, ACCOUNT_PATHS.defaultModel, {
+    choice: otherChoice,
+  })
+  await expectBoth(firstSaved, empty)
+  await putAccountValue(harness, other, agentLoginPath('claude'), {
+    agent: 'claude',
+    kind: 'api-key',
+    secret: 'other-claude-key',
+  })
+  await expectBoth(firstSaved, otherConnected)
+  await putAccountValue(harness, other, agentLoginPath('codex'), {
+    agent: 'codex',
+    kind: 'api-key',
+    secret: 'other-codex-key',
+  })
+  await expectBoth(firstSaved, otherSaved)
+  await putAccountValue(harness, other, ACCOUNT_PATHS.defaultModel, { choice })
+  await expectBoth(firstSaved, otherSaved)
+  const removed = await harness.request(agentLoginPath('claude'), first, {
+    method: 'DELETE',
+    body: '{}',
+  })
+  expect(removed.status).toBe(204)
+  await expectBoth({ ...empty, defaultChoice: otherChoice }, otherSaved)
   await harness.env.DB.prepare('UPDATE orgs SET deleted_at = 1 WHERE id = ?')
     .bind(org.id)
     .run()

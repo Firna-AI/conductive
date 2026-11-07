@@ -28,6 +28,23 @@ it('joins runner readiness, reconnect, confirmed stop and the next queued turn w
   const active = (fixture = await createLifecycleChatFixture(bundle))
   await active.initialize()
   await active.actor().beginLifecycleStart('create')
+  const followUp = await active.request(
+    sessionPaths.messages(OUTER_ORG, OUTER_WORKSPACE, 'first-session'),
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        id: 'follow-up',
+        text: 'Keep this instruction after the first message',
+        choice: { ...CLAUDE, model: 'queued-model' },
+        attachmentIds: [],
+      }),
+    },
+  )
+  expect(followUp.status).toBe(202)
+  expect(await followUp.json()).toMatchObject({
+    message: { id: 'follow-up', state: 'queued' },
+    turnId: null,
+  })
   const connected = await requestRunner(active)
   expect(connected.status).toBe(101)
   const socket = connected.webSocket
@@ -51,6 +68,10 @@ it('joins runner readiness, reconnect, confirmed stop and the next queued turn w
   expect(await active.actor().readChatWorkspaceSummary()).toMatchObject({
     working: false,
   })
+  expect(runner.received.map((message) => record(message).type)).toEqual([
+    'welcome',
+    'confirm',
+  ])
   await active.actor().lifecyclePrepared()
   expect(await active.actor().readLifecycle()).toMatchObject({
     state: 'working',
@@ -65,6 +86,17 @@ it('joins runner readiness, reconnect, confirmed stop and the next queued turn w
     turnId: 'first-turn',
     message: { id: 'first-message' },
     login: { secret: 'outer-secret-owner' },
+  })
+  expect(await runner.inbox.next()).toMatchObject({
+    type: 'model',
+    sessionId: 'first-session',
+    choice: { ...CLAUDE, model: 'queued-model' },
+  })
+  expect(await runner.inbox.next()).toMatchObject({
+    type: 'message',
+    sessionId: 'first-session',
+    turnId: 'first-turn',
+    message: { id: 'follow-up', state: 'sent' },
   })
   expect(await active.actor().credentialSender('first-turn')).toBe('owner')
   await closeSockets(socket)

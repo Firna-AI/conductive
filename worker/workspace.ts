@@ -11,6 +11,7 @@ import {
   type WorkspaceChatResolvers,
 } from './chat/workspace-integration'
 import { DeviceRuntime } from './devices/runtime'
+import { activeStoredTurn } from './devices/access'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
 import type { FailedCreationDraft } from './lifecycle/failed-creations'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
@@ -183,9 +184,17 @@ export class Workspace
   }
 
   async credentialSender(turnId: string): Promise<string | null> {
-    return this.chat.runLifecycle(() =>
-      this.controller.credentialSender(turnId),
-    )
+    return this.chat.runLifecycle(async () => {
+      const preparing = await this.controller.credentialSender(turnId)
+      if (preparing) return preparing
+      const state = await this.controller.readLifecycle()
+      if (!state || state.state === 'stopped' || state.state === 'archived')
+        return null
+      return (
+        (await activeStoredTurn(this.chat, state.workspaceId, turnId))
+          ?.senderId ?? null
+      )
+    })
   }
 
   async reportRunnerLifecycle(event: RunnerEvent): Promise<void> {

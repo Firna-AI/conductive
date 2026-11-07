@@ -31,6 +31,7 @@ export function requestRunner(
 export class OuterFakeRunner {
   readonly socket: WebSocket
   readonly inbox: SocketInbox
+  readonly received: unknown[] = []
   readonly closed: Promise<{ code: number; reason: string }>
   private eventNumber = 0
   private readonly streamId = 'outer-runner-stream'
@@ -38,6 +39,12 @@ export class OuterFakeRunner {
   constructor(socket: WebSocket, workspaceId = OUTER_WORKSPACE) {
     this.socket = socket
     this.inbox = new SocketInbox(socket)
+    socket.addEventListener('message', (event) => {
+      if (typeof event.data !== 'string')
+        throw new Error('Expected a text socket message.')
+      const message: unknown = JSON.parse(event.data)
+      this.received.push(message)
+    })
     this.closed = new Promise((resolve) => {
       socket.addEventListener(
         'close',
