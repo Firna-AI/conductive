@@ -1,12 +1,11 @@
 import {
-  buildEventsPath,
   buildPath,
   type BuildLogEvent,
   type BuildResponse,
   type ImageBuild,
 } from '../shared/org-settings'
 import type { ApiError } from './api/client'
-import { readBuildEvents, readBuildResponse } from './api/read-settings'
+import { readBuildResponse } from './api/read-settings'
 import type { Delay } from './events'
 import type { OrgModel } from './org-model'
 import { asApiError, Store, type Readable } from './store'
@@ -62,11 +61,8 @@ export class BuildLogFollower {
    * failure shows its error until a read answers.
    */
   read(): Promise<void> {
-    const { api } = this.org.services
-    return this.run(
-      () => api.get(buildPath(this.org.orgId, this.buildId), readBuildResponse),
-      (error) =>
-        this.shown.change((log) => ({ ...log, error: asApiError(error) })),
+    return this.run((error) =>
+      this.shown.change((log) => ({ ...log, error: asApiError(error) })),
     )
   }
 
@@ -88,34 +84,22 @@ export class BuildLogFollower {
     this.clearTimer()
   }
 
-  /** The read of the timer: the new lines and the state. A failure waits again. */
+  /** The timer reads the full log and state. A failure waits again. */
   private poll(): Promise<void> {
-    const { api } = this.org.services
-    const orgId = this.org.orgId
-    return this.run(
-      async () => {
-        const [log, detail] = await Promise.all([
-          api.get(buildEventsPath(orgId, this.buildId), readBuildEvents),
-          api.get(buildPath(orgId, this.buildId), readBuildResponse),
-        ])
-        return { build: detail.build, log }
-      },
-      () => this.schedule(),
-    )
+    return this.run(() => this.schedule())
   }
 
-  /** Sends one read while no other runs, in place of the timer. */
-  private run(
-    send: () => Promise<BuildResponse>,
-    failed: (error: unknown) => void,
-  ): Promise<void> {
+  /** Reads one build snapshot while no other read runs, in place of the timer. */
+  private run(failed: (error: unknown) => void): Promise<void> {
     if (this.stopped) return Promise.resolve()
     if (this.reading) return this.reading
     this.clearTimer()
-    const reading = send().then(
-      (answer) => this.settle(() => this.answered(answer)),
-      (error: unknown) => this.settle(() => failed(error)),
-    )
+    const reading = this.org.services.api
+      .get(buildPath(this.org.orgId, this.buildId), readBuildResponse)
+      .then(
+        (answer) => this.settle(() => this.answered(answer)),
+        (error: unknown) => this.settle(() => failed(error)),
+      )
     this.reading = reading
     return reading
   }

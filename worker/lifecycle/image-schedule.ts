@@ -3,6 +3,7 @@ import type { ImageRuntime } from './image-builds'
 import { pendingImageCleanup } from './image-maintenance-data'
 import type { ImageSoftwareArtifact } from './image-software'
 import { readImageSettings } from './settings-data'
+import { imageRetryAt } from './image-retry-data'
 
 export const IMAGE_DAY_MS = 86_400_000
 export const IMAGE_POLL_MS = 1_000
@@ -30,7 +31,11 @@ export async function readImageSchedule(
   if (active)
     return {
       buildId: active,
-      nextAt: active === requested.buildId ? requested.nextAt : now,
+      nextAt: await imageRetryAt(
+        db,
+        active,
+        active === requested.buildId ? requested.nextAt : now,
+      ),
     }
   const settings = await readImageSettings(db, orgId)
   const dailyAt =

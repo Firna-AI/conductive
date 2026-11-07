@@ -4,6 +4,7 @@ import type { MaskedStartLog } from './masked-start-log'
 import type { ProvisionedWorkspace } from './workspace-response'
 import type { RepositoryLocation } from './repository-locations'
 import type { SavedScript } from './saved-script'
+import type { ProviderRetryState } from './provider-retry'
 
 interface WorkspaceStartData {
   workspaceId: string
@@ -23,6 +24,7 @@ interface WorkspaceStartData {
   allocatedSandboxId?: string
   cancelled?: boolean
   failure?: { code: string; message: string; status: number }
+  providerRetry?: ProviderRetryState | null
 }
 
 export type WorkspaceMachinePhase =
@@ -82,6 +84,10 @@ export interface StartJobStorage {
   begin(job: WorkspaceStartJob, epoch: number): Promise<boolean>
   stop(): Promise<boolean>
   update(job: WorkspaceStartJob): Promise<void>
+  retry(
+    attempt: string,
+    state: ProviderRetryState | null | 'progress',
+  ): Promise<boolean>
   result(): Promise<WorkspaceStartResult | undefined>
   creationResult(): Promise<WorkspaceStartResult | undefined>
   admission(): Promise<WorkspaceCreationAdmission | undefined>

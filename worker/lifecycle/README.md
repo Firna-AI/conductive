@@ -152,8 +152,8 @@ publication of its events.
   [GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens)
   says.
 
-[Image builds](image-builds.md) gives the build entry points, the build
-steps, the log limits, the snapshot leases, and the refresh timers.
+[Image builds](image-builds.md) gives the build entry points, the build steps, the provider retries,
+the log limits, the snapshot leases, and the refresh timers.
 
 ## Settings
 
@@ -196,7 +196,7 @@ object holds the lifecycle state, the turn records, and the events.
   and calls the admission hook.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
-  phases, admission, process IDs, output offsets, and results.
+  phases, admission, process IDs, output offsets, retry state, and results.
 - [`start-job-codec.ts`](start-job-codec.ts): `serializeStartJob` and
   `readStartJob`, which convert the start job for storage and internal RPC.
 - [`start-logs.ts`](start-logs.ts): `releasedStartLog`, which masks the
@@ -215,7 +215,7 @@ object holds the lifecycle state, the turn records, and the events.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
-  `advanceImageBuild`.
+  `advanceImageBuild`, which removes the command journals before a snapshot.
 - [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,
   which splits output into rows and adds the budget statements of
   [`build-log-retention.ts`](build-log-retention.ts) to the same D1 batch.
@@ -228,7 +228,7 @@ object holds the lifecycle state, the turn records, and the events.
   install/start commands.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text
   of a saved install or startup script. Only `savedScriptCommand` turns it
-  into a Bash command.
+  into a Bash command. [`lifecycleCommand`](command-intents.ts) runs each step once.
 - [`image-runtime.ts`](image-runtime.ts): `IMAGE_NODE_RUNTIME`, the pinned
   private Node of the org image, and its paths. The
   [runtime guide](../../image/runtime.md#update-the-node-release) says how to

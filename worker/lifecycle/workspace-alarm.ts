@@ -4,6 +4,7 @@ import { retrySandboxCleanup } from './cleanup'
 import type { DurableLifecycle } from './durable'
 import type { ImageCoordinator } from './image-coordinator'
 import type { WorkspaceStartCoordinator } from './start-coordinator'
+import { START_JOB_KEY } from './start-storage'
 
 export async function runWorkspaceAlarm(input: {
   storage: WorkspaceStorage
@@ -20,8 +21,14 @@ export async function runWorkspaceAlarm(input: {
   }
   if (await input.starts.pending()) {
     try {
-      if (!(await input.starts.advance()))
-        await storage.setAlarm(dependencies.now() + 1_000)
+      if (!(await input.starts.advance())) {
+        const job = await storage.get('job', START_JOB_KEY)
+        const retryAt =
+          job && !job.cancelled && !job.failure
+            ? (job.providerRetry?.retryAt ?? 0)
+            : 0
+        await storage.setAlarm(Math.max(dependencies.now() + 1_000, retryAt))
+      }
     } catch {
       await storage.setAlarm(dependencies.now() + 30_000)
     }

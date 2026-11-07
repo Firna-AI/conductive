@@ -8,6 +8,7 @@ import { FIRST_MESSAGE } from './durable-test-support'
 import { orgEnvironmentContext } from './settings-data'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
+import { lifecycleCommandBody } from './command-test-support'
 
 const backendFixture = setupBackendTests()
 
@@ -108,7 +109,7 @@ it('removes a failed create and its token while retaining the draft and cleanup 
         org: org.id,
       },
     })
-    expect(boat.commands[1]).toContain(
+    expect(lifecycleCommandBody(boat.commands[1])).toContain(
       `export CONDUCTIVE_TURN_ID='${created.first.turnId}'`,
     )
   } finally {

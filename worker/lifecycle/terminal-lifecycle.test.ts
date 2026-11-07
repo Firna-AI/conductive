@@ -8,6 +8,7 @@ import { DISK_KEEPALIVE_MS } from './durable-types'
 import { stopWorkspaceSandbox } from './workspace-actions'
 import { openCompletedWorkspace as openWorkspace } from './completed-resume-test-support'
 import { createWorkspace } from './workspaces'
+import { lifecycleCommandBody } from './command-test-support'
 
 const backendFixture = setupBackendTests()
 
@@ -48,8 +49,10 @@ it('starts and caches the terminal after startup at create and resume while rete
     })
     expect(boat.commandRequests.at(-2)).toMatchObject({
       detached: true,
-      command: expect.stringContaining("bash '/run/conductive/startup.sh'"),
     })
+    expect(
+      lifecycleCommandBody(boat.commandRequests.at(-2)?.command),
+    ).toContain("bash '/run/conductive/startup.sh'")
   }
   for (let step = 0; step < 16; step++) {
     const job = await coordinator.job()
