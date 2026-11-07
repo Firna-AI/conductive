@@ -3727,6 +3727,24 @@ Added on 7 November 2026 from option C of the follow-up item
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 7 November 2026. Milestone 11c builds it.
 
+### 119. Move the missing parts into the shared UI library
+
+Added on 7 November 2026 from Milestone 15m and the follow-up item
+`firna-ui-missing-parts`.
+
+- **Background:** `@firna/ui` lacks parts that the Graphite design needs,
+  so this app keeps local copies. A library change and its release happen
+  in the `futex-ai/ui` repository.
+- **Options:**
+  - **A.** Keep the local copies in this app for now.
+  - **B.** Add the parts to `@firna/ui`, publish a new version, and then
+    replace the local copies.
+- **Recommendation:** A now, and B after the first deployment.
+- **Chosen:** A now, and B in parallel, by the user on 8 November 2026.
+  The orchestrator starts a workspace on `futex-ai/ui`, merges its pull
+  request and its release when they are ready, and Milestone 15n then
+  replaces the local copies.
+
 ### 120. Keep agent logins out of the sandbox
 
 Added on 7 November 2026 from the user's request after a read of
@@ -5954,6 +5972,20 @@ mockups. Added on 7 November 2026.
       delete that item.
 - [ ] Apply the recorded option of `plans/follow-ups/firna-ui-missing-parts.md`, and
       delete that item.
+
+## Milestone 15n: Use the new shared UI parts
+
+Depends on: 15m
+
+Apply option B of decision 119 in this app. It starts when `@firna/ui`
+publishes the parts. Added on 8 November 2026.
+
+- [ ] Update `@firna/ui` to the version that adds the parts of
+      `plans/follow-ups/firna-ui-missing-parts.md`.
+- [ ] Replace the local copies in `docs/mockups/src/components/common/`,
+      `docs/mockups/src/design/`, and the app under `src/` with the
+      library's parts. Keep each screen as its mockup draws it, and compare
+      each changed screen. Delete the follow-up item.
 
 ## Milestone 15d: Marketing site
 
