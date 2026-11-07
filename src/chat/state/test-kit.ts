@@ -2,18 +2,25 @@ import type { AgentChoice } from '../../shared/agents'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import type { ChangeModelResponse, Session } from '../../shared/sessions'
 import { FakeApiServer, type FakeApiOptions } from '../../test-support/fake-api'
-import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import type { FakeWorkspaceEvents } from '../../test-support/fake-events'
+import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
+import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import type { FetchLike } from '../api/client'
 import { record, text } from '../api/json'
 import { readDraft } from '../api/read-chat'
 import type { StreamTimers } from '../stream/workspace-stream'
 import { ChatController } from './controller'
 
-/** The record of a new session of the workspace, as the backend writes it. */
+/**
+ * The record of a new session of the workspace, as the backend writes it.
+ * The admin of the fake, who reads the chat by default, started it, unless
+ * `more` says otherwise.
+ */
 export function newSessionRecord(
   sessionId: string,
   choice: AgentChoice,
   closedAt: number | null = null,
+  more: Partial<Session> = {},
 ): Session {
   return {
     id: sessionId,
@@ -24,6 +31,10 @@ export function newSessionRecord(
     closedAt,
     activeTurnId: null,
     retryMessageId: null,
+    startedBy: senderSnapshot(fakeUser),
+    sourceSessionId: null,
+    loginAvailable: true,
+    ...more,
   }
 }
 
@@ -84,6 +95,11 @@ export function chatFor(
      * answer keeps the fake's recorded reply. The fake records each request.
      */
     answer?: (request: Request) => Promise<Response | null>
+    /**
+     * The workspace stream of another chat, so that two chats with their
+     * own readers, such as two tabs, get the same events.
+     */
+    stream?: FakeWorkspaceEvents
   } = {},
 ) {
   const server = new FakeApiServer(options)
@@ -110,7 +126,7 @@ export function chatFor(
     fetch,
     subscribe: (_target, from, listener) => {
       after.push(from)
-      return server.events.subscribe(from, (message) =>
+      return (options.stream ?? server.events).subscribe(from, (message) =>
         listener.message(message),
       )
     },

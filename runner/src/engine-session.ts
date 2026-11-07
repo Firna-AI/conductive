@@ -26,7 +26,6 @@ export interface ActiveTurn {
   stopped: boolean
   shutdown: boolean
   provider: ProviderProcess | null
-  identity: string | null
   lifetime: ProviderLifetime | null
   closing: Promise<void>
   baseline: Checkpoint | null
@@ -59,15 +58,6 @@ export interface EngineOptions {
   warn: (message: string) => void
 }
 
-export function senderIdentity(command: ProviderInput): string {
-  return JSON.stringify([
-    command.message.sender.id,
-    command.login.agent,
-    command.login.kind,
-    command.login.secret,
-  ])
-}
-
 export function rememberSession(
   store: EventStore,
   session: SessionRuntime,
@@ -90,7 +80,6 @@ export async function startProvider(
   const signal = turn.controller.signal
   signal.throwIfAborted()
   session.choice = command.message.choice
-  turn.identity = senderIdentity(command)
   const lifetime = new ProviderLifetime()
   turn.lifetime = lifetime
   const dispose = (provider: ProviderProcess) => {
@@ -105,7 +94,7 @@ export async function startProvider(
         cwd: options.cwd,
         home: options.home,
         computerMcpUrl: options.computerMcpUrl,
-        login: command.login,
+        login: turn.first.login,
         choice: session.choice,
         conversationId: session.conversationId,
         event,

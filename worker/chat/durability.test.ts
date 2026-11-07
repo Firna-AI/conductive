@@ -132,7 +132,7 @@ describe('workspace chat durability', () => {
     if (next?.type !== 'turn') throw new Error('Expected a continuation turn.')
     expect(next.turnId).not.toBe(initial.turnId)
     expect(next.message.id).toBe('waiting')
-    expect(next.login.secret).toBe(`secret-${fixture.member.id}-claude`)
+    expect(next.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
     expect(next.message.sender.id).toBe(fixture.member.id)
     runner.emit(terminalEvent(next, 'failed'))
     await fixture.drain()
@@ -147,7 +147,7 @@ describe('workspace chat durability', () => {
   it('does not dispatch stale commands after a queued login fails', async () => {
     const fixture = await createChatFixture(harness)
     const first = await fixture.createSession()
-    const second = await fixture.createSession()
+    const second = await fixture.createSession(CLAUDE, fixture.memberCookie)
     await fixture.send(first.id)
     await fixture.send(first.id, 'old-snapshot', fixture.memberCookie)
     await fixture.send(second.id, 'separate-turn', fixture.memberCookie)

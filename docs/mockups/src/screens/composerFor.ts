@@ -2,6 +2,8 @@ import type { ComposerState } from '../components/chat/Composer'
 import { attachmentDraft, draftAttachments } from '../fixtures/attachments'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import type { Workspace } from '../fixtures/workspaces'
+import { paths } from '../paths'
+import { otherStarter, sessionLoginFor } from './sessionStarter'
 import type { WorkspaceState } from './workspaceState'
 
 const runningConversations = new Set([
@@ -9,6 +11,7 @@ const runningConversations = new Set([
   'steer',
   'first-turn',
   'output-left-out-running',
+  'linked',
 ])
 
 /** An agent turn runs on a ready sandbox. */
@@ -24,19 +27,30 @@ export function isRunning(state: WorkspaceState): boolean {
  * asks for it. A new session starts empty. In a session with messages,
  * the picker marks the models of the other agent as opening a new session.
  * A message for an agent that is not connected waits, and Send is off.
+ *
+ * A session runs on the login of its starter, and a line under the box
+ * names that login. When the starter is another member, the own login of
+ * the viewer does not matter. When the login of that starter is not
+ * available, Send opens a new linked session on the own login of the
+ * viewer.
  */
 export function composerFor(
   state: WorkspaceState,
   workspace: Workspace,
 ): ComposerState {
   const fresh = state.tab === 'new-session'
-  const waits = !fresh && state.composer === 'no-agent'
+  const starter = otherStarter(state, workspace)
+  const noLogin =
+    state.composer === 'no-agent' || state.composer === 'no-starter-login'
+  const waits = !fresh && noLogin && starter === undefined
+  const opensLinked =
+    !fresh && state.composer === 'no-starter-login' && starter !== undefined
   const withFiles =
     !fresh && (state.composer === 'attachments' || state.composer === 'picker')
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (withFiles) draft = attachmentDraft
-  else if (waits) draft = followUpDraft
+  else if (!fresh && noLogin) draft = followUpDraft
   return {
     choice: workspace.choice,
     running: !fresh && isRunning(state),
@@ -44,6 +58,8 @@ export function composerFor(
     attachments: withFiles ? draftAttachments : [],
     picker: state.composer === 'picker',
     sessionAgent: fresh ? undefined : workspace.choice.agent,
+    sendTo: opensLinked ? paths.linkedSession : undefined,
     blocked: waits,
+    sessionLogin: sessionLoginFor(workspace, opensLinked ? undefined : starter),
   }
 }

@@ -36,7 +36,11 @@ describe('connected runner access', () => {
     )
       .bind(TEST_TIME, WORKSPACE_ID)
       .run()
-    const accepted = await fixture.send(session.id, 'after-revocation')
+    const accepted = await fixture.send(
+      session.id,
+      'after-revocation',
+      fixture.memberCookie,
+    )
     expect(accepted.message.state).toBe('queued')
     expect(runner.commands).toEqual([])
     expect(fixture.transport.closedConnections).toBe(1)
@@ -69,7 +73,7 @@ describe('connected runner access', () => {
       type: 'turn.started',
       sessionId: session.id,
       turnId: first.turnId,
-      senderId: fixture.owner.id,
+      senderId: fixture.member.id,
       choice: CLAUDE,
       startedAt: TEST_TIME,
       messageIds: ['after-revocation'],

@@ -42,15 +42,29 @@ export const workspaceStateSchema = {
     /** What a phone shows: the chat, the files, or the tool. */
     focus: { enum: ['chat', 'files', 'tool'] },
     /**
-     * The tab of the centre column: the first session, a new session, or a
-     * file, a Markdown preview, or a diff. A phone shows a file in Files.
+     * The tab of the centre column: the first session, a new session, the
+     * linked session that a member's message opened from the first session,
+     * or a file, a Markdown preview, or a diff. A phone shows a file in
+     * Files.
      */
-    tab: { enum: ['session', 'new-session', 'code', 'markdown', 'diff'] },
+    tab: {
+      enum: [
+        'session',
+        'new-session',
+        'linked-session',
+        'code',
+        'markdown',
+        'diff',
+      ],
+    },
     /**
      * The composer: empty, with attached files, with its picker open, or
-     * with a message for an agent that is not connected.
+     * with a message for an agent that is not connected, or in a session
+     * whose starter's login is not available.
      */
-    composer: { enum: ['empty', 'attachments', 'picker', 'no-agent'] },
+    composer: {
+      enum: ['empty', 'attachments', 'picker', 'no-agent', 'no-starter-login'],
+    },
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },
     /**

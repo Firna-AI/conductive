@@ -3,7 +3,8 @@ import type { AgentChoice } from '../../shared/agents'
 import { chatHistoryPath } from '../../shared/events'
 import type { Session } from '../../shared/sessions'
 import { sessionsPath } from '../../shared/sessions'
-import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
+import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { recordedChatEvents } from '../../test-support/recorded-chat'
 import { chatFor, shown } from './test-kit'
 
@@ -28,6 +29,9 @@ function record(id: string, closedAt: number | null): Session {
     closedAt,
     activeTurnId: null,
     retryMessageId: null,
+    startedBy: senderSnapshot(fakeUser),
+    sourceSessionId: null,
+    loginAvailable: true,
   }
 }
 

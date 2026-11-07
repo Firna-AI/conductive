@@ -97,7 +97,7 @@ describe('workspace chat queue', () => {
     })
   })
 
-  it('uses each sender login during a turn and on the next turn', async () => {
+  it('uses the starter login during a shared turn and on the next turn', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
     const runner = await fixture.connect()
@@ -126,7 +126,7 @@ describe('workspace chat queue', () => {
     expect(steer.login).toEqual({
       agent: 'claude',
       kind: 'api-key',
-      secret: `secret-${fixture.member.id}-claude`,
+      secret: `secret-${fixture.owner.id}-claude`,
     })
     runner.emit({
       type: 'turn.completed',
@@ -145,7 +145,7 @@ describe('workspace chat queue', () => {
     if (next?.type !== 'turn') throw new Error('Expected the next turn.')
     expect(next.sessionId).toBe(session.id)
     expect(next.turnId).not.toBe(initial.turnId)
-    expect(next.login.secret).toBe(`secret-${fixture.member.id}-claude`)
+    expect(next.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
     expect(JSON.stringify(await fixture.history(session.id))).not.toContain(
       'secret-',
     )

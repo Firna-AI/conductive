@@ -11,7 +11,7 @@ export async function prepareProviderHome(home: string): Promise<void> {
   )
 }
 
-/** Remove inherited provider accounts before adding exactly one sender's login. */
+/** Remove inherited provider accounts before adding the session starter's login. */
 export function providerEnvironment(
   home: string,
   login?: RunnerLogin,

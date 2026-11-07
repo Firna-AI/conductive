@@ -11,6 +11,7 @@ import { gate, type RequestContext } from '../security/gate'
 import { afterNumber, chatRoute } from './http-routes'
 import { BrowserTabs } from './browser-tabs'
 import { findChatWorkspace, tokenWorkspace } from './queries'
+import { ChatOperation } from './operation'
 import { chatDependencies } from './dependencies'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore, type ChatTransaction } from './store'
@@ -72,19 +73,14 @@ export class WorkspaceChat {
             'The archived chat is read-only.',
           )
         }
-        const response = await this.store.change(
-          access.workspace.id,
-          (transaction) =>
-            chatRoute(
-              request,
-              access.suffix,
-              access.context,
-              transaction,
-              this.dependencies,
-            ),
-          (events) => this.publish(events),
+        const response = await chatRoute(
+          request,
+          access.suffix,
+          access.context,
+          this.operation(access.workspace.id),
+          this.dependencies,
         )
-        await this.runner.flush()
+        if (write) await this.runner.flush()
         return privateResponse(response)
       })
     } catch (error) {
@@ -237,13 +233,24 @@ export class WorkspaceChat {
     peer: BrowserPeer,
   ): Promise<() => void> {
     return this.store.run(async () => {
-      const unsubscribe = await this.browsers.add(peer, {
-        kind: 'workspace',
-        workspaceId: access.workspace.id,
-        orgId: access.workspace.orgId,
-        userId: access.context.user.id,
-        sessionId: access.context.sessionId,
-      })
+      if (access.workspace.archivedAt === null)
+        await this.operation(access.workspace.id).logins.refresh()
+      const unsubscribe = await this.browsers
+        .add(peer, {
+          kind: 'workspace',
+          workspaceId: access.workspace.id,
+          orgId: access.workspace.orgId,
+          userId: access.context.user.id,
+          sessionId: access.context.sessionId,
+        })
+        .catch((error: unknown) => {
+          try {
+            peer.close()
+          } catch {
+            // The peer has already disconnected.
+          }
+          throw error
+        })
       try {
         const history = await this.store.read(access.workspace.id, (view) =>
           view.history(after),
@@ -256,6 +263,15 @@ export class WorkspaceChat {
         throw error
       }
     })
+  }
+
+  private operation(workspaceId: string): ChatOperation {
+    return new ChatOperation(
+      this.store,
+      workspaceId,
+      this.dependencies,
+      this.publish,
+    )
   }
 
   private bind(workspaceId: string): void {

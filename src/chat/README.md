@@ -131,6 +131,41 @@ mounts it yet.
   reply. A later record or reply never moves a draft again, so a tab that
   the user types in keeps its text. The reply then removes the sent files
   that the backend did not keep from the draft that moved, wherever it is.
+- Each session runs on the agent login of its starter, the member who
+  started it, as [Messages](../../docs/protocol/chat-and-events.md#messages)
+  says. The line under the composer names that login: "Uses your Claude
+  login", or "Uses Cal's Claude login" to another member. The name comes from
+  the session record, so a starter who left the org keeps a name.
+- A message in the reader's own session needs that session's login. The
+  record's `loginAvailable` decides, because the account that the chat read
+  can be older. A message in the session of another member, whose login
+  works, needs no login of the reader, so no Connect notice shows.
+- While the login of another starter is not available, or an older record
+  names no starter, a message starts a new linked session on the reader's
+  own login. The notice over the composer says so before Send, and the
+  composer offers no steering. Without an own login, the Connect notice
+  shows in its place, and Send is off.
+- The reply of Send and of Try again names the session that took the
+  message. The record of a linked session from the reply shows only while no
+  other record of it came, so a record from the stream or an action wins.
+  The message waits as pending there until the stream or the history shows
+  it, and a second reply with the same message adds nothing.
+- Only the tab that sent moves to the linked session, and only while it
+  still shows the session of the request. A user who opened another tab
+  during the send keeps that tab.
+- The draft of the request moves with the view, in the same snapshot, with
+  its identity, its text, its files, and its uploads. So a user who typed
+  more during the send types on in the same box, and the next message goes
+  to the session that holds the accepted one. The source gets a new empty
+  draft.
+- The draft stays when the source holds another draft now, when another
+  send of the draft still waits, or when the linked session holds
+  unfinished work. Then a source with unfinished work stays shown, and each
+  draft keeps its work. The linked session loads its own history when it
+  shows.
+- A linked session starts with a line that links back to its source
+  session. The link selects an open source, and reopens a closed one, with
+  the actions of the tabs and the session history.
 - A Stop request records the member who pressed Stop, and ends nothing. The
   turn ends when its end says stopped. A stop with no request names nobody:
   "The agent stopped".
@@ -166,51 +201,8 @@ mounts it yet.
 
 ## Development page
 
-Run the page from the repository root:
-
-```sh
-npx vite --config src/chat/dev/vite.config.js --port 5181 --strictPort
-```
-
-Then open `http://127.0.0.1:5181/src/chat/dev/`. This Vite configuration
-serves the page with React on the fake API alone, without the Worker and its
-sign-in gate.
-
-The address chooses the state. The first value of each option is the default:
-
-| Option | Values |
-| --- | --- |
-| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `loss` (left-out output and files, lost events, and a lost turn end) |
-| `workspace` | `existing`, `new` (Lisbon, which starts) |
-| `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
-| `role` | `admin`, `member` |
-| `login` | `on`, `off` |
-| `replay` | `stored`, `live` (the recorded chat arrives event by event) |
-| `viewport` | `desktop`, `mobile` |
-| `scheme` | `dark`, `light` |
-| `clock` | `running`, `frozen` |
-| `mac` | `none`, `waiting`, `longer`, `several`, `many` (four requests, the first a long script), `running`, `denied`, `done`, `exit-code`, `cut`, `timed-out`, `failed`, `unavailable`, `literal` (a two-line command and a U+00A0 command, also saved) |
-| `app` | `browser`, `mac` (the Mac app on the Mac that got the requests) |
-| `change` | `done`, `done-not-saved`, `failed` (what the page's Mac does with a change of its settings) |
-| `page` | `chat`, `this-mac` (the This Mac section of the account) |
-
-The desktop page keeps the mockup's columns, so the chat column is 718 px wide
-in a 1440 px window. The buttons of the page make the sandbox ready, stop it,
-fail its start, write the title, drop the connection, resend the last event,
-send two parts out of order, and connect the Mac again under a new pairing,
-whose next read the page then makes. Writes of the page change the fake's state:
-new sessions, rename, close, reopen, messages, steer, Stop, Try again, model
-changes, uploads, Resume, and the view. As in the Worker, Try again sends the
-message that the session record names again, as a new message. It refuses
-each other message with 409. Each accepted message sets that record's
-`retryMessageId` to null. A model change opens its session under the ID that
-the chat chose. Stop and the close of a running tab
-record the member of the `role` option as the one who pressed Stop. Stop
-the sandbox ends a running turn with no Stop request. With `app=mac`, the
-page's Mac acts on each answer: Deny ends the request, and the other choices
-run the command and keep the choice. The bar of the 15 minutes shows above
-the header while they run. The Mac refuses a change of an older pairing, as
-the Worker does.
+The [development page README](dev/README.md) gives the command that runs
+the page, the options of its address, and what the page does.
 
 ## Tests
 
@@ -219,6 +211,13 @@ on `FakeApiServer` and the recorded events, and render the chat with
 `react-dom/server`. `state/test-kit.ts` holds their helpers.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
+`state/linked-replies.test.tsx` drives replies of Send and Try again that
+name a linked session, in both orders, and two chats with different readers
+on one fake stream. `components/SessionLogin.test.tsx` renders the login
+line and its notices. `components/SourceLink.dom.test.tsx` presses the link
+of a linked session to its open and its closed source. In an archived
+workspace, it opens a linked session that closed before the archive from the
+session history. Its source link writes nothing.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -250,6 +249,12 @@ check in the Mac app.
   that first shows the new session.
 - `state/session-records.ts`: the local versions of the session records and
   of the workspace record.
+- `state/session-login.ts`: whose login a message uses, from the session
+  record and the reader, and the words of the line under the composer.
+- `state/linked-replies.ts`: the message and the focus of a reply that names
+  a linked session.
+- `components/SourceLine.tsx`: the line that links a linked session to its
+  source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
   event from the mockups' `lostCopy.ts`.
@@ -264,7 +269,8 @@ check in the Mac app.
 - `device/`: the Mac commands. Their [README](device/README.md) names
   their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its
-  Mac, and the `loss` scenario in `dev/dev-loss.ts`.
+  Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
+  in `dev/dev-logins.ts`.
 
 
 ### Related docs
