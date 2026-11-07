@@ -23,6 +23,7 @@ import {
 } from '../fixtures/workspaces'
 import { composerFor, isRunning } from './composerFor'
 import { composerNotice } from './composerNotice'
+import { placeLostUpdate } from './lostUpdates'
 import {
   FilesContent,
   openFile,
@@ -92,7 +93,7 @@ export function WorkspaceScreen(props: {
       viewport={viewport}
     />
   )
-  const header = (
+  const workspaceHeader = (
     <WorkspaceHeader
       archivable={archivable}
       canReassign={admin && !archived}
@@ -108,7 +109,10 @@ export function WorkspaceScreen(props: {
   const tabs = tabsFor(state, workspace).filter(
     (tab) => !archived || tab.kind === 'session',
   )
-  const files = <FilesContent state={state} viewport={viewport} />
+  const { header, files } = placeLostUpdate(state, {
+    header: workspaceHeader,
+    files: <FilesContent state={state} viewport={viewport} />,
+  })
   const tool = <ToolContent state={state} viewport={viewport} />
   if (viewport === 'mobile') {
     const sessions = tabs.filter((tab) => tab.kind === 'session')

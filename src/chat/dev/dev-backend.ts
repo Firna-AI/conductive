@@ -22,9 +22,11 @@ import {
   type FetchLike,
   type WorkspaceTarget,
 } from '../api/client'
+import { endsTurn } from '../state/known-turns'
 import type { Clock } from '../ui/clock'
 import { DevAgent } from './dev-agent'
 import { DevMac, handleMacWrite, writeMacReplies } from './dev-mac'
+import { lossEvents } from './dev-loss'
 import type { DevOptions } from './dev-options'
 import { handleWrite } from './dev-routes'
 import { takeState } from './dev-sandbox'
@@ -83,10 +85,12 @@ export class DevBackend {
   }
 
   static async create(options: DevOptions, clock: Clock): Promise<DevBackend> {
+    const { scenario } = options
+    const loss = scenario === 'loss'
     const server = new FakeApiServer({
       role: options.role,
       workspaceState: options.state,
-      conversation: options.scenario,
+      conversation: scenario === 'loss' ? 'history' : scenario,
       macCommands: options.mac,
       onMac: options.app === 'mac',
     })
@@ -109,21 +113,25 @@ export class DevBackend {
     const api = createChatApi(server.fetch, target)
     const [detail, list] = await Promise.all([api.workspace(), api.sessions()])
     const shown = list.sessions[0]?.id ?? 'new'
-    const recorded = recordedChatEvents(options.scenario, workspaceId, shown)
+    const viewerId = coreFixtures(options.role).account.user.id
+    const recorded =
+      scenario === 'loss'
+        ? lossEvents(workspaceId, shown, viewerId)
+        : recordedChatEvents(scenario, workspaceId, shown)
     const live = options.replay === 'live'
     const files = recordedFileEvents(
       workspaceId,
       live ? 1 : recorded.length + 1,
     )
-    if (live) {
+    if (live || loss) {
       server.json('GET', chatHistoryPath(org, workspaceId, shown), {
-        events: [],
-        throughEventNumber: 0,
+        events: live ? [] : recorded,
+        throughEventNumber: live ? 0 : recorded.length,
       })
     }
     const backend = new DevBackend({
       target,
-      viewerId: coreFixtures(options.role).account.user.id,
+      viewerId,
       server,
       clock,
       stream: new DevStream(
@@ -177,9 +185,26 @@ export class DevBackend {
           break
         case 'turn.completed':
         case 'turn.failed':
-          this.recordedTurns.delete(event.sessionId)
+          this.endRecorded(event.sessionId, event.turnId)
+          break
+        case 'runner.event-refused':
+          // A refused end still ends its turn, as the chat shows it.
+          if (event.sessionId && event.turnId && endsTurn(event)) {
+            this.endRecorded(event.sessionId, event.turnId)
+          }
           break
       }
+    }
+  }
+
+  /**
+   * Forgets the recorded turn of a session when this end names it. A late
+   * end of an older turn, or a marker of a turn that never started, leaves
+   * the running turn as it is.
+   */
+  private endRecorded(sessionId: string, turnId: string): void {
+    if (this.recordedTurns.get(sessionId) === turnId) {
+      this.recordedTurns.delete(sessionId)
     }
   }
 

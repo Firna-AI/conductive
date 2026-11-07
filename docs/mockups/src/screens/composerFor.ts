@@ -4,7 +4,12 @@ import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import type { Workspace } from '../fixtures/workspaces'
 import type { WorkspaceState } from './workspaceState'
 
-const runningConversations = new Set(['running', 'steer', 'first-turn'])
+const runningConversations = new Set([
+  'running',
+  'steer',
+  'first-turn',
+  'output-left-out-running',
+])
 
 /** An agent turn runs on a ready sandbox. */
 export function isRunning(state: WorkspaceState): boolean {

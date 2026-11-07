@@ -4,6 +4,7 @@ import { InputFrame } from '@firna/ui/input'
 import { ArrowUp, FileText, ImageIcon, Paperclip, X } from 'lucide-react'
 import chips from '../../../docs/mockups/src/components/chat/AttachmentChips.module.css'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
+import { formatSize } from '../../../docs/mockups/src/components/chat/sizes'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { useStore } from '../../app/store'
@@ -12,12 +13,6 @@ import type { Attachment } from '../../shared/messages'
 import { IconButton } from '../ui/actions'
 import { ModelPicker } from '../ui/ModelPicker'
 import ui from '../ui/ui.module.css'
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
 
 /** The files attached to the first message, each with a way to remove it. */
 function AttachmentList(props: {

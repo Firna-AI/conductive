@@ -54,6 +54,12 @@ It has no imports and also serves the Mac app's NodeNext build.
 The combined Mac output cap is 65,536 UTF-8 bytes.
 
 The machine and preview hostnames remain deployment settings.
+`Preview.url` is the absolute launch address of a preview on the app origin.
+It holds no secret. The browser loads it as it is, in the frame and in a new tab.
+In the Mac app, a new tab opens in the default browser through `PreviewLaunchResponse` instead.
+That JSON reply of `Preview.url` holds an authorizer `url` and the `expiresAt` of its grant.
+The `url` carries the preview hostname and a 60-second grant only in its fragment.
+[Port previews](../../docs/protocol/access-and-security.md#port-previews) states its access rules.
 Each open of a port preview gets a new preview ID, and the API never gives out
 a revoked ID again (decision 86). The Preview tool hides revoked previews by their ID.
 The git credential payload is not defined yet.

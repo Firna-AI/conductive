@@ -1,0 +1,36 @@
+# An idle agent process keeps the sender's login
+
+- **Severity:** High. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-06, from PR #12, branch `conductor/boat-native-remote-workspaces-milestone-7r`, a new problem of the round 2 check of finding 5.
+- **Location:** `finishTurn` in `runner/src/engine-finish.ts:31`, `startProvider` in `runner/src/engine-session.ts:71`, `providerEnvironment` in `runner/src/providers/environment.ts:15`, and `docs/protocol/access-and-security.md`, section "Agent logins in a sandbox".
+- **Reason:** on 6 November 2026 the owner told the Milestone 7r branch to record this note without a fix.
+
+- **Terms:**
+  - **Agent login:** the Claude subscription token, the Anthropic API key, or the OpenAI API key of the member who sent a turn.
+  - **Agent process:** the `claude` program that the Claude Agent SDK starts, or `codex app-server`. The runner starts one for each session and sender.
+  - **Idle agent process:** an agent process that stays open while its session runs no turn.
+- **Background:**
+  - Each `turn` and `message` command brings the login of its sender. `providerEnvironment` puts that login in the environment of a new agent process.
+  - A running process keeps its environment. So the agent process holds the login until it ends.
+  - The runner closes the agent process on Stop, after a failed turn, and when the next turn has another sender.
+  - After a finished turn, `finishTurn` keeps the agent process open. So the next turn of the same sender needs no new process.
+  - The access doc says that the app gives a user's login to a sandbox only for a turn that the user sent.
+  - The access doc names the risk: each process in the sandbox can read the login of the turn that runs now. A member with a terminal can too. The members of one org trust each other with the logins of their running turns.
+  - The comment on `RunnerLogin` in `src/shared/runner.ts` says that the runner keeps the login in memory for this turn.
+  - Nobody has measured the start time of an agent process in a real sandbox yet.
+- **Problem:** After a finished turn, the idle agent process keeps the sender's login in its environment. Each process and member that can read the login of a running turn can then read it with no turn running.
+- **Impact if no action:** A member's login stays readable in the sandbox after the member's turn, for longer than the access doc allows. It stays until the process closes, the runner stops, or the sandbox stops.
+- **Root question:** How long may a member's login stay in the sandbox after the member's turn ends?
+- **Options:**
+  - **A.** Close the agent process at the end of each turn, as Stop and a failure do now. The next turn starts a new process on the saved conversation, so each turn pays the start time. Effort: Small.
+  - **B.** Close an idle agent process after a set time with no turn. Quick follow-up turns stay fast. The login stays for that time, and the access doc must state the time. Effort: Small.
+  - **C.** Keep the idle agent process, and change the access doc so that it accepts the login of the last turn in that process. This keeps the speed and widens the accepted risk. Effort: Small.
+  - **D.** Keep the idle agent process, and give it the login only during a turn, through a credential helper instead of the environment. Both agent programs must support such a helper, and nobody has checked that support. Effort: Large.
+- **Left out:**
+  - Remove the login from the environment of the running process: a parent process cannot change the environment of a running child.
+  - Forget each login in the runner's output filter after its turn: the filter must still replace that login with `[redacted]` when later output repeats it.
+- **Wider fix:** A. One rule closes the agent process at every end of a turn, through the close path that Stop and a failure already use.
+- **Previous examples:** None found.
+- **Recommendation:** A. It meets the access doc as written, with the smallest change.
+- **Action:** fix after merge, apply A. The access doc already limits login use to running turns, and the owner deferred this fix.

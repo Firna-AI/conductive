@@ -5,7 +5,8 @@ import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 
 /** The state that the development page draws, read from its address. */
 export interface DevOptions {
-  scenario: RecordedChatScenario
+  /** A recorded chat, or `loss`: the data that the chat does not have. */
+  scenario: RecordedChatScenario | 'loss'
   workspace: 'existing' | 'new'
   state: WorkspaceState
   role: OrgRole
@@ -32,6 +33,7 @@ export const choices = {
     'failed',
     'queued',
     'first-turn',
+    'loss',
   ],
   workspace: ['existing', 'new'],
   state: [
