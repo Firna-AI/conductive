@@ -5,6 +5,7 @@ import {
   type FileEntry,
   type FileResponse,
   type FileTooLargeResponse,
+  type FileTreeResponse,
 } from '../../shared/files'
 import { decodeUtf8 } from '../../shared/utf8'
 import type { FakeApiServer } from '../../test-support/fake-api'
@@ -139,17 +140,22 @@ const extraEntries: readonly FileEntry[] = [
   },
 ]
 
+/** The tree of the development page: the mockup files and the samples. */
+export function devTree(): FileTreeResponse {
+  const tree = toolFixtures().files
+  return {
+    revision: tree.revision,
+    entries: [...tree.entries, ...extraEntries],
+  }
+}
+
 /**
  * Sets the development replies of the file routes on the fake server:
  * file texts, downloads, diffs, a binary file, a file over the read limit,
  * and a file whose read and download fail.
  */
 export function registerDevFiles(server: FakeApiServer): void {
-  const tree = toolFixtures().files
-  server.json('GET', filePaths.tree(org, id), {
-    revision: tree.revision,
-    entries: [...tree.entries, ...extraEntries],
-  })
+  server.json('GET', filePaths.tree(org, id), devTree())
   const encoder = new TextEncoder()
   for (const [path, text] of devTextFiles) {
     registerFile(server, path, encoder.encode(text))

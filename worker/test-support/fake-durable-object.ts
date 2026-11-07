@@ -165,6 +165,7 @@ export class FakeDurableObjectEndpoint {
     if (event.type === 'runner.ready') return null
     if (
       event.type === 'files.snapshot' ||
+      event.type === 'files.unavailable' ||
       event.type === 'files.changed' ||
       event.type === 'changes.updated'
     ) {

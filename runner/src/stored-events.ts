@@ -106,6 +106,7 @@ export function parseEvent(value: unknown): RunnerEvent {
   const input = object(value)
   const type = string(input.type)
   if (type === 'runner.ready') return { type }
+  if (type === 'files.unavailable') return { type }
   if (type === 'workspace.title') return { type, name: string(input.name) }
   if (type === 'start.updated') return { type, start: start(input.start) }
   if (type === 'files.snapshot') {
@@ -190,6 +191,7 @@ export function parseEvent(value: unknown): RunnerEvent {
       state: oneOf(input.state, ['finished', 'stopped']),
       durationMs: integer(input.durationMs),
       files: array(input.files, changed),
+      ...(input.filesUnavailable === true ? { filesUnavailable: true } : {}),
       omittedFileCount: integer(input.omittedFileCount),
       userMessageIds: array(input.userMessageIds, string),
     }

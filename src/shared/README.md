@@ -28,7 +28,7 @@ An uploaded attachment reaches the runner as a path, after the backend puts it t
 A full tree contains paths relative to the repository root.
 A move names its old path and its new entry.
 A directory move includes updates for its descendants.
-`FileEvent` contains complete browser reports.
+`FileEvent` contains complete browser reports and unavailable-tree marks.
 `RunnerFileEvent` sends full reports as numbered parts of one revision.
 Each part has a 256 KiB event payload budget.
 Tree deltas have the same byte budget and at most 512 changes.

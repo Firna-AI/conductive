@@ -67,11 +67,13 @@ These facts belong to this implementation, not to the protocol docs.
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, the
-  conversation references, and `turns` records of started turns. It also
+  conversation references, and `turns` records of accepted turns. It also
   holds the last `start.updated` and `workspace.title` events, and the ID of
   each answered [report request](#report-requests). It holds no other
-  command data and no login. The saves of `turn.started` and its end write
-  that record, and the confirm of the end removes it.
+  command data and no login. The runner saves a turn record before the
+  session save. The saves of `turn.started` and its end update that record.
+  A turn stopped before its start also has a saved end record.
+  The confirm of the end removes the record.
 - A failed save rejects only its own call, and later saves and events
   continue. Each save writes the whole state from memory, so a later save
   includes the change of the failed call. A send and a resend use only saved
@@ -79,12 +81,18 @@ These facts belong to this implementation, not to the protocol docs.
   works. One event can leave the output filter as several events, because
   the filter first releases its held text. The runner tries to save each of
   them, also after an earlier one fails.
+  A failed turn-end, ready, or unavailable-tree event save gets one more
+  save of the pending state. That save sends the same numbered event.
+  A failed start step ends the turn with its cause.
 - At a normal shutdown, the runner sends one stopped end for each running
-  turn, before it closes the connection. Each of these ends lists the files
-  that the turn changed. After a restart, an ended turn never runs again. An
+  turn, before it closes the connection. Each end lists the changed files
+  when the runner can read them. Otherwise, it marks them as unavailable.
+  After a restart, a turn with a saved end never runs again. An
   unfinished turn, such as after a crash, gets one stopped end, and no agent
-  starts for it. That end lists no files, because the state file holds no
-  record of the files at the start of the turn.
+  starts for it. A recovered started turn marks its changed files as
+  unavailable. The state file holds no record of its initial files.
+  A changed-file read failure also keeps the turn's completed state and
+  marks its files as unavailable.
 - File reads and diffs use the shared UTF-8 decoder and keep a leading byte
   order mark. A valid path can hold a tab, a newline, or a backslash. Each
   path must still resolve inside the repository and pass the `.git` check.
@@ -115,6 +123,8 @@ byte budget measures the event or field after the output filter.
 - Tree and changes reports have separate revision counters, which survive
   a reconnect or a restart. The refresh after each connect sends a full tree
   and a full changes report with newer revisions.
+- A failed repository scan sends `files.unavailable` and still permits
+  `runner.ready`. The next successful tree scan sends a full snapshot.
 - Before the outbox takes an event number, it checks the complete envelope
   against [`RUNNER_EVENT_MAX_BYTES`](../src/shared/runner.ts). An event
   that does not fit gets a local warning and no number, so later events
@@ -274,6 +284,7 @@ tools that time the first agent start after a resume.
   session queues, cancelable turns, message delivery, controls, and text deltas.
 - `src/engine-disposal.ts`: one close path for deferred model changes, turn
   ends, Stop, and shutdown.
+- `src/engine-pending.ts`: accepted turn saves and the ends of pending starts.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.

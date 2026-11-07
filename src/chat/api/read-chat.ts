@@ -64,6 +64,7 @@ const readRunnerEventType = oneOf<RunnerEventRefused['runnerEventType']>({
   'turn.completed': true,
   'turn.failed': true,
   'files.snapshot': true,
+  'files.unavailable': true,
   'files.changed': true,
   'changes.updated': true,
   'runner.ready': true,
@@ -253,6 +254,8 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
         state: oneOf({ finished: true, stopped: true })(source.state),
         durationMs: count(source.durationMs),
         files: list(readChangedFile)(source.files),
+        // Only the value true marks files that the runner could not read.
+        ...(source.filesUnavailable === true ? { filesUnavailable: true } : {}),
         omittedFileCount: safeCount(source.omittedFileCount),
         userMessageIds: list(text)(source.userMessageIds),
       }

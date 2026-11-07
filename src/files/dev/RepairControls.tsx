@@ -20,7 +20,8 @@ function emit(server: FakeApiServer, event: WorkspaceEvent): void {
 /**
  * The controls of a lost update of each list: the first loss, which shows
  * nothing, the loss of its fresh full report, which shows the notice, and a
- * full report, which clears it. A tree update leaves the notice.
+ * full report, which clears it. A tree update leaves the notice. A failed
+ * read of the files marks the tree, until a full report of the tree.
  */
 export function RepairControls(props: {
   server: FakeApiServer
@@ -43,6 +44,9 @@ export function RepairControls(props: {
       {button('Send a tree update', () =>
         treeUpdate((files.getSnapshot().tree?.revision ?? 0) + 1),
       )}
+      {button('Fail a read of the files', () => ({
+        type: 'files.unavailable',
+      }))}
       <span>Changes:</span>
       {button('Lose an update', () => firstLoss('changes.updated'))}
       {button('Lose its fresh report', () =>

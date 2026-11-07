@@ -72,6 +72,7 @@ export async function storeRunnerReceipt(
   }
   if (
     event.type === 'files.snapshot' ||
+    event.type === 'files.unavailable' ||
     event.type === 'files.changed' ||
     event.type === 'changes.updated'
   ) {
@@ -81,7 +82,10 @@ export async function storeRunnerReceipt(
       )
       if (complete) {
         await transaction.emit(complete, parsed.occurredAt)
-        if (complete.type !== 'files.changed')
+        if (
+          complete.type === 'files.snapshot' ||
+          complete.type === 'changes.updated'
+        )
           await transaction.repairs.remove(complete.type)
       } else await observeRepairPart(transaction, message.streamId, event)
     } catch (error) {

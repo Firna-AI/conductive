@@ -33,7 +33,12 @@ export class FilesState {
       const state = await this.load()
       if (state.connectionId !== connectionId) return false
       const event = parseFileEvent(value)
-      if (event.type === 'changes.updated') {
+      if (event.type === 'files.unavailable') {
+        state.tree = {
+          ...(state.tree ?? { revision: 0, entries: [] }),
+          unavailable: true,
+        }
+      } else if (event.type === 'changes.updated') {
         state.changes = event.changes
       } else if (event.type === 'files.snapshot') {
         if (
@@ -68,6 +73,7 @@ export class FilesState {
         state.tree = {
           revision: event.delta.revision,
           entries: [...entries.values()],
+          ...(state.tree.unavailable ? { unavailable: true } : {}),
         }
       }
       await saveFiles(this.storage, state)

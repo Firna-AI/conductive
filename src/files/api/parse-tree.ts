@@ -23,13 +23,21 @@ export function parseFileEntry(value: unknown): FileEntry | null {
   return { path, name, kind, change: parseChangeKind(value.change) }
 }
 
-/** A full tree. Entries that do not parse are left out. */
+/**
+ * A full tree. Entries that do not parse are left out. Only the value true
+ * of `unavailable` marks a tree that the cloud computer could not read: its
+ * entries are the saved tree, or none when no tree was saved.
+ */
 export function parseFileTree(value: unknown): FileTreeResponse | null {
   if (!isObject(value)) return null
   const revision = readCount(value, 'revision')
   const entries = readArray(value, 'entries')
   if (revision === null || entries === null) return null
-  return { revision, entries: parseItems(entries, parseFileEntry) }
+  return {
+    revision,
+    entries: parseItems(entries, parseFileEntry),
+    ...(value.unavailable === true ? { unavailable: true } : {}),
+  }
 }
 
 function parseTreeChange(value: unknown): FileTreeChange | null {

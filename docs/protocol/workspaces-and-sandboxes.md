@@ -280,6 +280,26 @@ says.
   still show them while the sandbox sleeps.
 - Reason: Boat's API can run `git` and read files only while the sandbox
   runs, one request at a time, and with no live updates.
+- When the runner cannot read the repository, it sends `files.unavailable`
+  (decision 109). The event holds no other data. A failed scan after a
+  connect does not stop `runner.ready`, as
+  [The agent runner](chat-and-events.md#the-agent-runner) says.
+- The workspace then marks the file tree as unavailable, and each open tab
+  gets the mark. The changes list keeps its last complete report.
+- The tree that the workspace serves then carries `unavailable: true`. It
+  keeps the entries and the revision of the last tree. Before the first
+  complete tree, it has revision 0 and no entries.
+- These empty entries mean an unknown tree, not an empty branch.
+- Only a complete full tree clears the mark. A tree delta and an incomplete
+  full tree keep it.
+- After a failed scan, the next scan that succeeds sends a full tree.
+- The mark is never a replacement, and it never ends or fails a repair.
+- All files then keeps the last tree, and a notice says that the latest list
+  is unavailable. Before the first complete tree, All files says that the
+  list is unavailable, in place of the tree.
+- Reason: the user can tell an old or unknown tree from the latest one. A
+  failed scan with no mark was rejected, because the tab then shows an old
+  tree as the latest one.
 
 ### Terminal
 

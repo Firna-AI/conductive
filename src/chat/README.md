@@ -77,6 +77,11 @@ mounts it yet.
 - A finished turn ends its file list with the files that the runner left out, such as "47 more files".
   A stopped line adds the count of its stopped completion: "You stopped the agent · 5 changed files not listed".
   The counts come from `turnCompletions`. A zero count shows nothing.
+- A completion can say that the cloud computer could not read the changed files: `filesUnavailable` is true, with no files and no omitted count.
+  The reader keeps only the value true, and it refuses nothing new. `turnCompletions` keeps the mark with the completion.
+  A finished turn then ends with its duration and "Changed files unavailable" in place of its files.
+  A stopped line ends with " · Changed files unavailable". The turn stays finished or stopped, with no failure and no Try again.
+  A late end shows the mark in its file row, or on the stopped line when its turn has no file row. A row that lists files shows no mark.
 - Each refusal marker of a session becomes one `lost` item at its place among the events, which shows one line.
   The transcript keeps the marker only in that item. A repeat of the same marker replaces its item.
   The line names the lost data and the reason in plain words, and never the stream, number, or event type.

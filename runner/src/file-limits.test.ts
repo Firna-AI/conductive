@@ -195,7 +195,7 @@ it('keeps independent file revisions on full refresh, reconnect, and persistent-
   onTestFinished(() => restarted.close())
   await restarted.start(false)
   const reports = h.endpoint.runnerEvents.flatMap(
-    ({ event }): RunnerFileEvent[] =>
+    ({ event }): Exclude<RunnerFileEvent, { type: 'files.unavailable' }>[] =>
       event.type === 'files.snapshot' ||
       event.type === 'files.changed' ||
       event.type === 'changes.updated'

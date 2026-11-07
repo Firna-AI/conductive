@@ -170,6 +170,14 @@ says.
 - While a turn runs, the chat shows the time since the turn started, and
   Stop sits beside Send.
 - A finished turn ends with its duration and the files that it changed.
+- When the runner cannot tell which files a turn changed, its end shows
+  "Changed files unavailable" in place of the files (decision 109). The
+  turn still shows as finished or stopped, not as failed.
+- The chat never says that such a turn changed no files.
+- Reason: the agent finished its work, and only the list of its files is
+  missing. An empty list was rejected, because it says that the turn
+  changed no files. A failed turn was rejected, because it shows a failure
+  for finished work.
 - A tool detail and a turn file list give a count of data that their limits omit.
 - A refused runner event shows one chat line that names the lost data,
   unless it is a [lost workspace update](#lost-workspace-updates).
@@ -234,6 +242,13 @@ says.
   Each entry stays whole. The omitted file count equals the full count minus the kept count.
 - Both omission counts are non-negative safe integers.
   Reason: bounded excerpts keep tool output and turn summaries within the event budget.
+- A `turn.completed` event carries `filesUnavailable: true` when the runner
+  cannot tell which files the turn changed (decision 109). Examples are a
+  failed read of the repository, and a restart that ends a started turn.
+- With the mark, `files` is empty and `omittedFileCount` is 0. These values
+  then mean an unknown list. Without the mark, the same values mean that
+  the turn changed no files.
+- The mark never changes the state of the end, `finished` or `stopped`.
 - A permanent refusal has one of three reasons: too large, invalid, or turn not active.
   The workspace stores one small refusal marker before it confirms that runner event.
 - The marker names the runner stream, runner event number, event type, and reason.
@@ -260,6 +275,35 @@ says.
 - Each turn also brings the agent login of the starter of its session, as
   [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox)
   says.
+- Each turn that the runner accepts gets exactly one end: `turn.completed`
+  or `turn.failed`. This holds also when Stop, a shutdown, or a crash of
+  the runner comes before the agent starts.
+- The runner keeps a record of each accepted turn across a crash and a
+  restart, until the workspace confirms the end of the turn. The workspace
+  sends no command for a turn after it stores the end of that turn.
+- At a shutdown, the runner sends a stopped end for each accepted turn that
+  has no end. After a restart, it does the same for each turn that it
+  accepted before the restart. It starts no agent for such a turn.
+- A resent turn command or Stop that finds the record of its turn starts
+  nothing and sends no second end.
+- A Stop of a turn that the runner does not know gets one stopped end. The
+  runner keeps a record of that turn too.
+- Reason: work that Stop or a shutdown ended must not run later. A list of
+  waiting turns only in memory was rejected, because a crash loses it, and
+  the resent turn then runs.
+- When a read of the repository or a save by the runner fails during a
+  step, the runner still ends that step (decision 109):
+  - A turn that cannot start ends with `turn.failed` and its cause.
+  - A turn whose changed files the runner cannot read ends with
+    `filesUnavailable: true`.
+  - After a connect, a failed scan of the repository does not stop
+    `runner.ready`. The runner sends `files.unavailable` first, as
+    [Files and changes](workspaces-and-sandboxes.md#files-and-changes)
+    says. It then accepts commands.
+- Reason: one failed read must not leave a turn running with no agent, or
+  the chat in its starting state. An exit of the runner after such a
+  failure was rejected, because it loses each running turn, and a lasting
+  failure repeats the exit.
 - The runner also reports the file tree and the changes of its workspace,
   and reads files and diffs on request, as
   [Files and changes](workspaces-and-sandboxes.md#files-and-changes) says.
@@ -304,4 +348,6 @@ says.
 - The workspace sends a request after the `welcome`, also before
   `runner.ready` and during a running turn. A request needs no agent login.
 - The runner answers each request with a full report of its kind, also
-  during a running turn.
+  during a running turn. When it cannot read the repository, it answers a
+  request for a file tree or a changes list with `files.unavailable`, as
+  [Files and changes](workspaces-and-sandboxes.md#files-and-changes) says.

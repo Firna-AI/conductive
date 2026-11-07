@@ -1,9 +1,10 @@
 /**
- * The words of the chat for data that it does not have: a runner event that
- * the workspace refused, and the part of a tool's output or of a turn's file
- * list that the runner left out. The words name the lost data in product
- * terms, and never show the refused data itself. A line can follow a newer
- * turn, so no words point at "this turn".
+ * The words of the chat and the file lists for data that they do not have: a
+ * runner event that the workspace refused, the part of a tool's output or of
+ * a turn's file list that the runner left out, and files that the cloud
+ * computer could not read. The words name the lost data in product terms,
+ * and never show the refused data itself. A line can follow a newer turn, so
+ * no words point at "this turn".
  */
 
 import { formatSize } from './sizes'
@@ -101,3 +102,20 @@ const unavailable: Readonly<Record<UnavailableData, string>> = {
 export function unavailableText(data: UnavailableData): string {
   return unavailable[data]
 }
+
+/**
+ * The end of a finished turn whose changed files the cloud computer could
+ * not read. The turn still finished, and only its list of files is missing,
+ * so the words never say that the turn changed no files.
+ */
+export const turnFilesUnavailable = 'Changed files unavailable'
+
+/**
+ * All files when the cloud computer could not read the files and no list was
+ * saved before. It replaces the tree, so that no one reads an empty branch.
+ * With a saved list, the tree stays under the notice of `all-files` above.
+ */
+export const allFilesUnavailable = {
+  title: 'The list of all files is unavailable',
+  body: 'The list shows after a successful read.',
+} as const

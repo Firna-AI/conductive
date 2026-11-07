@@ -119,6 +119,13 @@ chat, and five tabs at the bottom.
   place, which names the lost data and why, such as "A tool update was lost
   because it was too large". It never shows the lost data, and a phone wraps
   it into balanced lines.
+- Files that the cloud computer could not read never show as an empty list.
+  A finished turn still ends with its duration, then "Changed files
+  unavailable" in muted text in place of its files. A stopped turn ends its
+  line with the same words. All files keeps the list that it saved before,
+  under the notice "The latest list of all files is unavailable", which has
+  no time. With no saved list, All files says "The list of all files is
+  unavailable" in place of the tree. `lostCopy.ts` holds these words too.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
@@ -141,7 +148,7 @@ chat, and five tabs at the bottom.
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn       |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
-| `app/chat`          | A finished turn, then running turns, lost data, and lost updates              |
+| `app/chat`          | A finished turn, then running turns, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -190,8 +197,12 @@ workspace asks for a fresh full report, and nothing shows. Only when that
 report is lost too does a notice name the data that stays unavailable,
 beside that data: under the file lists for a file list, and under the
 header for other data, such as the workspace name. The `failed-repair`
-value of the `lostUpdate` state draws it, and every other screen stays
-silent.
+value of the `lostUpdate` state draws it, and no other screen shows a
+notice for a lost update. `app/chat/unavailable-files` draws the files that
+the cloud computer could not read: a finished turn and a stopped turn
+without their changed files, All files with its saved list under a notice,
+and a new workspace with no list. The `tree` state draws the two states of
+All files.
 
 ## Folder layout
 

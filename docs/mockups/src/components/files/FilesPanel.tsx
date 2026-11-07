@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react'
+import { CircleSlash } from 'lucide-react'
 import { changedFiles, fileTree } from '../../fixtures/files'
 import type { BannerState } from '../../fixtures/pullRequests'
 import { checksPaths, paths } from '../../paths'
+import { allFilesUnavailable } from '../chat/lostCopy'
+import { LostUpdateRow } from '../chat/LostUpdate'
+import { EmptyState } from '../common/EmptyState'
 import { LinkTabs } from '../common/LinkTabs'
 import { PanelBar } from '../workspace/PanelBar'
 import { ChangeList } from './ChangeList'
@@ -13,6 +17,14 @@ import styles from './FilesPanel.module.css'
 export const fileLists = ['all', 'changes', 'checks'] as const
 
 export type FileList = (typeof fileLists)[number]
+
+/**
+ * The list of All files: the latest one, the one saved before the cloud
+ * computer could not read the files, or none when it saved none before.
+ */
+export const treeStates = ['latest', 'saved', 'none'] as const
+
+export type TreeState = (typeof treeStates)[number]
 
 /** The kinds of file that open as a tab in the centre column. */
 export type FileTabView = 'code' | 'markdown' | 'diff'
@@ -55,12 +67,14 @@ function FileTabs(props: {
  * file opens as a tab in the centre column, and `open` marks its row. A
  * branch without edits has no changes yet. While the sandbox does not run,
  * `placeholder` replaces the file lists; the checks come from GitHub and
- * still show.
+ * still show. When the cloud computer could not read the files, `tree` keeps
+ * the saved list under a notice, or says that no list is available.
  */
 export function FilesPanel(props: {
   view: FileList
   edited: boolean
   banner: BannerState
+  tree: TreeState
   open?: FileTabView
   placeholder?: ReactNode
 }) {
@@ -70,18 +84,29 @@ export function FilesPanel(props: {
     ? fileTree
     : fileTree.map((entry) => ({ ...entry, change: undefined }))
   const treeOpen = open === 'code' || open === 'markdown' ? open : undefined
+  const lists = !props.placeholder
   return (
     <div className={styles.files}>
       <FileTabs banner={props.banner} changes={changes.length} view={view} />
       {view === 'checks' ? <ChecksList state={props.banner} /> : null}
       {view !== 'checks' && props.placeholder ? props.placeholder : null}
-      {view === 'all' && !props.placeholder ? (
+      {view === 'all' && lists && props.tree === 'none' ? (
+        <EmptyState
+          body={allFilesUnavailable.body}
+          icon={CircleSlash}
+          title={allFilesUnavailable.title}
+        />
+      ) : null}
+      {view === 'all' && lists && props.tree !== 'none' ? (
         <div className={styles.scroll} data-mokly-scroll="file-tree">
           <FileTree entries={tree} open={treeOpen} />
         </div>
       ) : null}
-      {view === 'changes' && !props.placeholder ? (
+      {view === 'changes' && lists ? (
         <ChangeList diffOpen={open === 'diff'} files={changes} />
+      ) : null}
+      {props.tree === 'saved' ? (
+        <LostUpdateRow repair={{ data: 'all-files' }} />
       ) : null}
     </div>
   )
