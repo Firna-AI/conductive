@@ -5,12 +5,12 @@ import type {
 } from '../../src/shared/runner'
 import type { ProviderEvent, ProviderInput } from './providers/types'
 import { cancelable } from './engine-cancel'
+import { disposeProvider } from './engine-disposal'
 import { providerEvent } from './engine-events'
 import { finishTurn } from './engine-finish'
 import { inputCommand } from './engine-input'
 import {
   deliverInput,
-  senderIdentity,
   startProvider,
   type ActiveTurn,
   type EngineOptions,
@@ -27,12 +27,14 @@ export class SessionEngine {
   private readonly starts = new Map<string, AbortController>()
   private readonly stoppedBeforeStart = new Set<string>()
   private closed = false
+  private closing: Promise<void> | null = null
 
   constructor(options: EngineOptions) {
     this.options = options
   }
 
   command(command: Command): Promise<void> {
+    if (this.closed) return Promise.resolve()
     if (command.type === 'interrupt') {
       if (this.stoppedBeforeStart.has(command.turnId)) return Promise.resolve()
       const turn = this.session?.active
@@ -51,17 +53,6 @@ export class SessionEngine {
       if (start) {
         this.stoppedBeforeStart.add(command.turnId)
         start.abort()
-        const session = this.session
-        if (session && !session.active) {
-          session.generation++
-          const provider = session.provider
-          session.provider = null
-          void provider
-            ?.close()
-            .catch(() =>
-              this.options.warn('The canceled agent could not close.'),
-            )
-        }
         return this.emit({
           type: 'turn.completed',
           sessionId: command.sessionId,
@@ -96,9 +87,10 @@ export class SessionEngine {
           const session = this.session
           if (session?.agent === command.choice.agent) {
             session.choice = command.choice
-            if (session.provider && session.active) {
-              const provider = session.provider
-              await cancelable(session.active.controller.signal, () =>
+            const turn = session.active
+            if (turn?.provider) {
+              const provider = turn.provider
+              await cancelable(turn.controller.signal, () =>
                 provider.model(command.choice),
               )
             }
@@ -130,17 +122,26 @@ export class SessionEngine {
     await this.session?.active?.output.flush()
   }
 
-  async close(): Promise<void> {
+  close(): Promise<void> {
+    if (this.closing) return this.closing
     this.closed = true
     for (const start of this.starts.values()) start.abort()
     const session = this.session
-    if (session) {
-      session.generation++
-      session.active?.controller.abort()
-      const provider = session.provider
-      session.provider = null
-      await Promise.all([this.pending, provider?.close()])
-    } else await this.pending
+    const turn = session?.active
+    if (turn) {
+      turn.shutdown = true
+      this.cancel(turn)
+    }
+    this.closing = this.pending.then(async () => {
+      if (turn && session?.active === turn)
+        await this.finish({
+          type: 'result',
+          state: 'stopped',
+          userMessageIds: turn.messageIds,
+        })
+      else await turn?.closing
+    })
+    return this.closing
   }
 
   private cancel(turn: ActiveTurn): void {
@@ -150,11 +151,9 @@ export class SessionEngine {
     const session = this.session
     if (!session) return
     session.generation++
-    const provider = session.provider
-    session.provider = null
-    void provider
-      ?.stop()
-      .catch(() => this.options.warn('The canceled agent could not close.'))
+    void disposeProvider(turn, 'stop').catch(() =>
+      this.options.warn('The canceled agent could not close.'),
+    )
   }
 
   private enqueue(action: () => Promise<void>): Promise<void> {
@@ -185,10 +184,7 @@ export class SessionEngine {
   private async start(command: ProviderInput): Promise<void> {
     const session = this.session
     if (!session) return
-    const generation =
-      session.provider && session.identity === senderIdentity(command)
-        ? session.generation
-        : ++session.generation
+    const generation = ++session.generation
     await startProvider(this.options, session, command, (event) => {
       const turn = session.active
       if (this.closed || generation !== session.generation) return

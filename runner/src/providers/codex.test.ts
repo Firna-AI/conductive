@@ -89,12 +89,14 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     text: 'Hello world',
     userMessageIds: ['message-1', 'message-2'],
   })
+  expect(server.closed).toBe(true)
   const next = turn('3', 'alice', 'codex')
   next.message.choice = { agent: 'codex', model: 'next-model', effort: 'max' }
   h.endpoint.send(next)
   await runner.idle()
+  const nextServer = servers.latest
   expect(
-    server.writes.findLast((write) => write.method === 'turn/start'),
+    nextServer.writes.findLast((write) => write.method === 'turn/start'),
   ).toMatchObject({ params: { model: 'next-model', effort: 'max' } })
   h.endpoint.send({
     type: 'interrupt',
@@ -103,9 +105,9 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     turnId: 'turn-3',
   })
   await runner.idle()
-  expect(server.closed).toBe(true)
-  server.notify('turn/completed', {
-    turn: { id: 'codex-turn-2', status: 'interrupted' },
+  expect(nextServer.closed).toBe(true)
+  nextServer.notify('turn/completed', {
+    turn: { id: 'codex-turn-1', status: 'interrupted' },
   })
   await runner.idle()
   expect(h.endpoint.runnerEvents.at(-1)?.event).toMatchObject({
@@ -114,8 +116,8 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
   })
   h.endpoint.send(turn('4', 'bob', 'codex'))
   await runner.idle()
-  expect(servers.processes).toHaveLength(2)
-  expect(servers.requests[1].env.OPENAI_API_KEY).toBe('secret-bob')
+  expect(servers.processes).toHaveLength(3)
+  expect(servers.requests[2].env.OPENAI_API_KEY).toBe('secret-bob')
   expect(
     servers.latest.writes.find((write) => write.method === 'thread/resume'),
   ).toMatchObject({ params: { threadId: 'codex-conversation' } })
@@ -150,7 +152,7 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     turn: { id: 'codex-turn-1', status: 'interrupted' },
   })
   await runner.idle()
-  expect(servers.processes).toHaveLength(3)
+  expect(servers.processes).toHaveLength(4)
   expect(
     servers.latest.writes.find((write) => write.method === 'thread/resume'),
   ).toMatchObject({ params: { threadId: 'codex-conversation' } })

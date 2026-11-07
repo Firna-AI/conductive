@@ -32,6 +32,37 @@ Contract owners. Milestone 2 creates them:
   other doc covers orgs, sections, members, and Boat keys.
 - `README.md`.
 
+## Replaced ways
+
+- An agent process that stays open between turns → an agent process that
+  each turn owns until the process exits. `ActiveTurn` holds the process
+  and its sender identity, next to its pending close. Each turn, and each
+  part of a turn from another sender, starts a new process. Milestone 7u
+  moves each consumer and then deletes the old way. Consumers:
+  - `SessionRuntime`, which holds the process and its sender identity
+    between turns.
+  - `startProvider` and `SessionEngine.start`, which reuse the process and
+    its generation for the next turn of the same sender.
+  - The two paths that release an idle process: Stop for a pending turn,
+    and a shutdown with no running turn.
+  - The Claude and Codex provider adapters. The Claude close returns before
+    the process exits. The Codex close waits for the exit with no limit.
+  - The provider fakes in `runner/test-support/`, and the tests that use
+    them.
+- Handwritten `StateStorage` adapters in recovery and storage tests → a
+  temporary production `DiskStorage`. The five handwritten stores get it
+  from `diskFixture` in `runner/test-support/disk.ts`, which can hold one
+  chosen write. `EventStore.open` takes `DiskStorage`, and the engine and
+  wire fixtures create one directly. Milestone 7u moves each consumer and
+  then deletes `StateStorage` and the unused wire override. Consumers:
+  - `EventStore.open`, which takes any `StateStorage`.
+  - The five handwritten stores: two in `runner/src/state-turns.test.ts`,
+    two in `runner/src/link.test.ts`, and one in
+    `runner/src/envelope-limits.test.ts`.
+  - The session fixture in `runner/test-support/engine.ts`, and the wire
+    fixture in `runner/test-support/wire.ts` with its unused
+    `storageOverride` parameter.
+
 ## Decisions
 
 The user answered each decision on 5 November 2026, in the brainstorm of
@@ -4619,19 +4650,64 @@ Depends on: 7r
 Apply the `fix after merge` items that the review of Milestone 7r
 recorded. Added on 7 November 2026.
 
-- [ ] Close the agent process at the end of each turn, as option A of
+- [x] Close the agent process at the end of each turn, as option A of
       `plans/follow-ups/idle-agent-login-lifetime.md` says. Delete that
-      item.
-- [ ] Let each write chain of the runner continue after a failure, as
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Let each write chain of the runner continue after a failure, as
       option A of `plans/follow-ups/runner-rejected-write-chains.md` says.
-      Delete that item.
-- [ ] End each turn that a runner process leaves behind, at a shutdown
+      Delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] End each turn that a runner process leaves behind, at a shutdown
       and at the next start, as option D of
       `plans/follow-ups/runner-shutdown-turn-end.md` says. Delete that
-      item.
-- [ ] Run the runner session tests on `DiskStorage`, as option A of
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Run the runner session tests on `DiskStorage`, as option A of
       `plans/follow-ups/runner-session-tests-store.md` says. Delete that
-      item.
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Move `provider` and `identity` from `SessionRuntime` to
+      `ActiveTurn`, next to `closing`. `SessionRuntime` keeps the
+      generation. Make `startProvider` start a new process each time, and
+      make `SessionEngine.start` increment the generation each time. PR #30
+      review finding 4 C chose this.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Give each provider one process lifetime handle from
+      `runner/src/providers/lifetime.ts`. Claude starts its child through
+      the SDK option `spawnClaudeCodeProcess`. A close sends `SIGTERM`,
+      sends `SIGKILL` after `PROCESS_KILL_DELAY_MS`, and resolves only when
+      the child exits. A canceled start waits for each child that it
+      created. PR #30 review finding 2 B chose this.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Move the provider fakes and their tests to the new process lifetime.
+      Keep every assertion. Keep `engine-handoff.test.ts`,
+      `engine-shutdown.test.ts`, `turn-shutdown-race.test.ts`,
+      `pending-turn.test.ts`, and `senders.test.ts` unchanged.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Delete the agent process that stays open between turns: the
+      same-sender reuse branches and the two paths that release an idle
+      process.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+- [x] Move the five handwritten test stores to the temporary production
+      `DiskStorage` of `diskFixture`. Make `EventStore.open` take
+      `DiskStorage`, and make the engine and wire fixtures create one
+      directly. Keep every assertion. Delete `StateStorage` and the unused
+      `storageOverride` parameter of `wireFixture`. PR #30 review finding
+      5 D chose this.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7u`.
+
+Evidence: `.context/boat-native-remote-workspaces/7u/verification.md`.
+
+Agent call, 7 November 2026: Move the first-start measurement guide to
+`runner/scripts/README.md`, and keep its heading link in `runner/README.md`.
+This keeps the runner README within the file size limit.
+
+Review fix, 7 November 2026: Share process disposal across sender changes,
+turn ends, Stop, and shutdown. Keep each pending close until it finishes.
+
+Agent call, 7 November 2026: Set `PROCESS_KILL_DELAY_MS` to `5_000` in
+`runner/src/providers/lifetime.ts`. An agent process that still runs that
+long after `SIGTERM` gets `SIGKILL`. Reason: the pinned SDK also waits 5
+seconds between `SIGTERM` and `SIGKILL`. The value also leaves time to save
+the turn ends within the 15-second stop window of the service. The owner
+chose one fixed kill limit in review finding 2 B of PR #30.
 
 ## Milestone 8: Chat UI
 

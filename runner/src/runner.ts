@@ -10,6 +10,7 @@ import { FileReporter } from './files'
 import { RunnerLink } from './link'
 import { OutputSanitizer } from './output-sanitizer'
 import { Repository } from './repository'
+import { SerialQueue } from './serial-queue'
 import type { EngineOptions } from './engine-session'
 import type { EventStore } from './state'
 
@@ -35,7 +36,7 @@ export class Runner {
   readonly engine: AgentEngine
   private readonly options: RunnerOptions
   private readonly sanitizer = new OutputSanitizer()
-  private emitted: Promise<void> = Promise.resolve()
+  private readonly emitted = new SerialQueue()
   private readonly commands = new Set<Promise<void>>()
   private stopWatching: (() => void) | null = null
   private stopped = false
@@ -123,11 +124,16 @@ export class Runner {
   }
 
   private emit(event: RunnerEvent, prepared = false): Promise<void> {
-    const emitted = this.emitted.then(async () => {
-      for (const safe of prepared ? [event] : this.sanitizer.accept(event))
-        await this.link.emit(boundChatEvent(safe))
+    return this.emitted.run(async () => {
+      const failures: unknown[] = []
+      for (const safe of prepared ? [event] : this.sanitizer.accept(event)) {
+        try {
+          await this.link.emit(boundChatEvent(safe))
+        } catch (error) {
+          failures.push(error)
+        }
+      }
+      if (failures.length) throw failures[0]
     })
-    this.emitted = emitted
-    return emitted
   }
 }

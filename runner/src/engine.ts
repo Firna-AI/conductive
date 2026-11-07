@@ -9,6 +9,7 @@ export class AgentEngine {
   private readonly sessions = new Map<string, SessionEngine>()
   private readonly commands = new Set<string>()
   private readonly turns: EngineTurns
+  private closing: Promise<void> | null = null
 
   constructor(options: EngineOptions) {
     this.options = options
@@ -16,6 +17,7 @@ export class AgentEngine {
   }
 
   command(command: RunnerCommand): Promise<void> {
+    if (this.closing) return Promise.resolve()
     if (command.type === 'file.read' || command.type === 'file.diff')
       return Promise.resolve()
     if (this.commands.has(command.commandId)) return Promise.resolve()
@@ -42,10 +44,15 @@ export class AgentEngine {
     )
   }
 
-  async close(): Promise<void> {
-    await this.turns.idle()
-    await Promise.all(
-      [...this.sessions.values()].map((session) => session.close()),
-    )
+  close(): Promise<void> {
+    this.closing ??= this.shutdown()
+    return this.closing
+  }
+
+  private async shutdown(): Promise<void> {
+    await Promise.all([
+      this.turns.idle(),
+      ...[...this.sessions.values()].map((session) => session.close()),
+    ])
   }
 }
