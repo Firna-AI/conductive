@@ -3920,6 +3920,56 @@ Added on 8 November 2026 from the check of finding 2 of PR #47
 - **Chosen:** C, by the user on 8 November 2026, who also asked that the
   app tell the user of the limit. Milestone 5d applies it.
 
+### 129. Choose what the operator turns off after an abuse report
+
+Added on 8 November 2026 from the user's question about Milestone 15m:
+"we would probably disable the entire workspace rather than an
+individual user?"
+
+- **Background:** Milestone 15m suspends one user: the user's sign-in
+  ends, and the workspaces that the user owns stop. An abuse report names
+  a cloud computer or a preview address, not a person, and every member
+  can run code in a shared workspace. Orgs are free with no limits.
+- **Options:**
+  - **A.** Suspend a user, as Milestone 15m builds.
+  - **B.** Disable one workspace only.
+  - **C.** Disable an org only.
+  - **D.** Two separate actions: disable a workspace or an org, which
+    stops the cloud computers, and ban a user, which only ends the
+    sign-in.
+  - **E.** A, plus the workspace disable of B.
+- **Recommendation:** D.
+- **Open:** waits for the user. Notes:
+  `.context/suspension-unit/brainstorm.md`.
+
+### 130. Recover messages after a failed first start
+
+Added on 8 November 2026 from the 8i review of PR #42. The progress chat
+first called it decision 123, which the plan uses for another question.
+
+- **Background:** The first message creates a workspace, and the server
+  accepts later messages before the first start finishes (decisions 14 A
+  and 91 D). A failed first start removes the workspace and returns only
+  the first message to its sender. Later accepted messages stay in the
+  chat storage, but no product path returns them, and other members lose
+  access.
+- **Options:**
+  - **A.** Hold later sends until the first start succeeds. The composer
+    keeps the text, and the server refuses such sends.
+  - **B.** Archive a failed create, and keep its chat read-only for the
+    members.
+  - **D.** Keep the failed workspace in its error state. Try again starts
+    the create again in the same workspace, with the stored messages.
+  - **E.** Keep undelivered messages in a lasting list for each sender,
+    outside the removed workspace.
+- **Left out:** C, which returned another sender's messages only to an
+  open tab, because a reload loses them.
+- **Recommendation:** A. D is the wider fix.
+- **Open:** waits for the user. Records:
+  `.context/boat-native-remote-workspaces/initial-create-decision-123.md`
+  and `initial-create-final-report.md`. The 8i orchestrator applies the
+  answer.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -5629,10 +5679,17 @@ Apply the `fix after merge` items of the chat. Added on 7 November
       delete that item.
 - [ ] Apply the recorded option of `plans/follow-ups/workspace-read-mark-retry.md`, and
       delete that item.
+- [ ] After Milestone 8i merges, apply option D of the
+      [confirmed runner projection follow-up](https://github.com/Firna-AI/remote-code/blob/d0faa9422c83cab6d7e08ad55dc7cef08d26c4b5/plans/follow-ups/confirmed-runner-projection-retry.md),
+      and delete `plans/follow-ups/confirmed-runner-projection-retry.md`.
 
 ## Milestone 16a: First deployment
 
-Depends on: 8i
+Depends on: 8i, 8m
+
+Orchestrator call: finish the chat recovery fixes before the first
+deployment. The confirmed read-mark failure affects normal live output
+and replay in a new tab.
 
 This milestone needs the prerequisites from the user.
 
