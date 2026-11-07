@@ -1,21 +1,14 @@
-import { boatKeyPath } from '../../src/shared/api'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
 import {
   memberFixture,
   membersClient,
   seedWorkspace,
-  write,
 } from './members-test-support'
 
 export async function deletionFixture(harness: TestHarness) {
   const fixture = await memberFixture(harness)
   const { org, admin, member } = fixture
   await seedWorkspace(harness, org, member.user)
-  await harness.request(
-    boatKeyPath(org.id),
-    admin.session,
-    write({ key: 'boat-first' }, 'PUT'),
-  )
   await harness.env.DB.batch([
     harness.env.DB.prepare(
       `INSERT INTO image_builds (id, org_id, kind, state, sandbox_id, snapshot_name,

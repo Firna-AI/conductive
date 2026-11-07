@@ -10,36 +10,28 @@ import { DetailList } from './DetailList'
 import { Section } from './Section'
 import styles from './OrgSections.module.css'
 
-export type SettingsTab =
-  'general' | 'repositories' | 'computer' | 'boat-key' | 'members'
+export type SettingsTab = 'general' | 'repositories' | 'computer' | 'members'
 
 /**
- * The parts of the org settings, as tabs that link to each part. Only an
- * admin sees the Boat key tab. `wrap` puts the tabs on two lines, for a
- * phone, where they do not fit on one.
+ * The parts of the org settings, as tabs that link to each part. Every
+ * person of the org sees the same tabs. `wrap` puts the tabs on two lines,
+ * for a phone, where they do not fit on one.
  */
-export function SettingsTabs(props: {
-  tab: SettingsTab
-  admin: boolean
-  wrap?: boolean
-}) {
+export function SettingsTabs(props: { tab: SettingsTab; wrap?: boolean }) {
   const tabs = [
     { label: 'General', to: paths.orgSettings, tab: 'general' },
     { label: 'Repositories', to: paths.repositories, tab: 'repositories' },
     { label: 'Cloud computer', to: paths.cloudComputer, tab: 'computer' },
-    { label: 'Boat key', to: paths.boatKey, tab: 'boat-key' },
     { label: 'Members', to: paths.members, tab: 'members' },
   ] satisfies readonly { label: string; to: string; tab: SettingsTab }[]
   return (
     <LinkTabs
       label="Org settings"
-      tabs={tabs
-        .filter((item) => props.admin || item.tab !== 'boat-key')
-        .map((item) => ({
-          label: item.label,
-          to: item.to,
-          selected: props.tab === item.tab,
-        }))}
+      tabs={tabs.map((item) => ({
+        label: item.label,
+        to: item.to,
+        selected: props.tab === item.tab,
+      }))}
       wrap={props.wrap}
     />
   )

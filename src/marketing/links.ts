@@ -5,12 +5,6 @@ export const sitePaths = {
   privacy: '/privacy',
 } as const
 
-/** The page of Boat where a visitor makes an account, as decision 47 allows. */
-export const boatSignUpUrl = 'https://boat.dev'
-
-/** Boat's terms, which apply to the Boat account of each org. */
-export const boatTermsUrl = 'https://boat.dev/terms'
-
 /** Where the actions of the site lead. */
 export type SiteLinks = {
   /** The app, which signs a visitor in with GitHub. */

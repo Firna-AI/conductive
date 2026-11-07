@@ -17,6 +17,9 @@ The git credential helper uses the GitHub user token of the turn's sender, as
 [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens) says.
 The older comment on `github_connections` in `202611060100_contracts.sql`
 stays, because a merged migration does not change.
+The `boat_keys` table of `202611060000_worker_core.sql` stays for the same
+reason. No code reads or writes it, because the app keeps its one Boat key
+as a Worker secret.
 
 ## Reserved ranges
 

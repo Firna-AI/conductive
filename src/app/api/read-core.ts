@@ -14,12 +14,10 @@ import type {
 } from '../../shared/agents'
 import type { OrgRole, User } from '../../shared/api'
 import type { MessageSender } from '../../shared/messages'
-import type {
-  GetStartedResponse,
-  GetStartedStep,
-} from '../../shared/onboarding'
+import type { GetStartedResponse } from '../../shared/onboarding'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Section } from '../../shared/sections'
+import { getStartedOrder } from '../get-started'
 import {
   choice,
   count,
@@ -42,17 +40,6 @@ export const EFFORTS = [
   'max',
 ] as const satisfies readonly Effort[]
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
-/**
- * The step names that a reply of Get started can hold. An older reply also
- * lists `boat-key`, which decision 80 made obsolete: the app reads it, and
- * shows and waits for only the steps of `getStartedOrder`.
- */
-export const GET_STARTED_STEPS = [
-  'github-app',
-  'org',
-  'boat-key',
-  'agent-login',
-] as const satisfies readonly GetStartedStep[]
 
 export function readUser(value: unknown): User {
   const user = record(value, 'user')
@@ -201,7 +188,7 @@ export function readGetStarted(value: unknown): GetStartedResponse {
     steps: items(body, 'steps', (item) => {
       const step = record(item, 'step')
       return {
-        step: choice(step, 'step', GET_STARTED_STEPS),
+        step: choice(step, 'step', getStartedOrder),
         complete: flag(step, 'complete'),
       }
     }),

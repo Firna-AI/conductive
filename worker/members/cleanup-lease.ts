@@ -1,6 +1,5 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import { ProviderError } from '../sandbox/errors'
 import {
   acquireCleanupLease,
   releaseCleanupLease,
@@ -25,16 +24,6 @@ export async function withCleanupLease<T>(
     return await action(token, lease.suspendedAt !== null)
   } catch (error) {
     if (error instanceof HttpError) throw error
-    if (
-      error instanceof ProviderError &&
-      (error.kind === 'unauthorized' || error.kind === 'forbidden')
-    ) {
-      throw new HttpError(
-        409,
-        'boat_key_required',
-        'Replace the cloud computer key to continue.',
-      )
-    }
     throw new HttpError(
       502,
       'org_cleanup_failed',

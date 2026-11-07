@@ -20,7 +20,8 @@ says.
 - Create and list calls use `/v1/tools/workspaces`. Mac command requests
   use `/v1/tools/mac-command` and the addresses under it.
 - The app sets no limit of its own on the workspaces that agents create
-  (decision 8). The plan limits of the org's Boat account apply.
+  (decision 8). The plan limits of the app's Boat account apply, as
+  [The provider](workspaces-and-sandboxes.md#the-provider) says.
 - A workspace that an agent creates starts with no approval step in the
   app.
 

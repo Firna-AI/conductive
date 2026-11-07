@@ -5,7 +5,6 @@ import {
 } from '../../docs/mockups/src/brand'
 import { html } from './html'
 import { draftField, type LegalDocument } from './legal'
-import { boatTermsUrl } from './links'
 
 /**
  * The terms of use, as a draft for a lawyer, as decision 35 asks. The facts
@@ -49,15 +48,9 @@ export const termsDocument: LegalDocument = {
           have access.
         </li>
         <li>
-          Each org runs its cloud computers on its own Boat account. An admin of
-          the org adds the Boat key.
-          <a
-            class="text-link"
-            href="${boatTermsUrl}"
-            rel="noreferrer"
-            target="_blank"
-            >Boat's terms</a
-          >, plan limits, and prices apply to that account.
+          ${productName} runs the cloud computers of every org in its own
+          account with its cloud computer provider. You need no account or key
+          of your own for them.
         </li>
         <li>
           The agents run on the Claude or OpenAI login that you connect. The
@@ -92,8 +85,8 @@ export const termsDocument: LegalDocument = {
           it. Work in an org only with people whom you trust with your logins.
         </li>
         <li>
-          Admins manage the members, the Boat key, the repositories, the
-          scripts, and the env vars of the org.
+          Admins manage the members, the repositories, the scripts, and the env
+          vars of the org.
         </li>
       </ul>`,
     },
@@ -101,10 +94,10 @@ export const termsDocument: LegalDocument = {
       title: 'Acceptable use',
       body: html`<p>
           Use ${productName} only within the law, and within the terms of
-          GitHub, Boat, Anthropic, and OpenAI.
+          GitHub, Anthropic, and OpenAI.
         </p>
         <p>
-          ${draftField(`To write: the rules of acceptable use of ${productName}`)}
+          ${draftField(`To write: the rules of acceptable use of ${productName}, which include the rules of its cloud computer provider`)}
         </p>
         <p>
           ${draftField('To write: how the operator suspends an account, and where to report abuse')}
@@ -114,9 +107,9 @@ export const termsDocument: LegalDocument = {
       title: 'Your work',
       body: html`<p>
           Your repositories, files, and agent sessions live in the cloud
-          computers of your org's Boat account. ${productName} keeps the chat
-          history of each workspace, so that you can read it while the cloud
-          computer is stopped.
+          computers that ${productName} runs for your org. ${productName} keeps
+          the chat history of each workspace, so that you can read it while the
+          cloud computer is stopped.
         </p>
         <p>
           ${draftField('To write: the rights in your content, and the permission that the operator needs to run the service')}

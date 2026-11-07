@@ -16,7 +16,6 @@ function installedServer(): FakeApiServer {
     steps: [
       { step: 'github-app', complete: true },
       { step: 'org', complete: false },
-      { step: 'boat-key', complete: false },
       { step: 'agent-login', complete: false },
     ],
   })
@@ -55,14 +54,13 @@ describe('GetStartedScreen', () => {
     expect(html).not.toContain('<input')
   })
 
-  test('ends after its three steps, also when an older reply still lists the Boat key step', async () => {
+  test('ends after its three steps with the way into the first org', async () => {
     const server = new FakeApiServer()
     server.json('GET', GET_STARTED_PATH, {
       orgId: 'acme',
       steps: [
         { step: 'github-app', complete: true },
         { step: 'org', complete: true },
-        { step: 'boat-key', complete: false },
         { step: 'agent-login', complete: true },
       ],
     })

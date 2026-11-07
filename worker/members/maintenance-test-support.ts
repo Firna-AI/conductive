@@ -1,12 +1,5 @@
 import type { WorkspaceState } from '../../src/shared/workspaces'
-import { errorResponse } from '../http'
-import { route } from '../routes'
-import {
-  TEST_ORIGIN,
-  TEST_TIME,
-  type TestHarness,
-} from '../test-support/harness'
-import { membersGate } from './gate'
+import { TEST_TIME, type TestHarness } from '../test-support/harness'
 import type {
   DeletedOrgMaintenance,
   RestoreOrgMaintenance,
@@ -68,29 +61,4 @@ export function readDisk(harness: TestHarness, id = 'workspace-one') {
       nextKeepaliveAt: number | null
       state: WorkspaceState
     }>()
-}
-
-/** Use the real core route and key store after the extended Members gate. */
-export async function keyRequest(
-  harness: TestHarness,
-  client: MembersClient,
-  path: string,
-  session: string,
-  init: RequestInit = {},
-) {
-  const headers = new Headers(init.headers)
-  headers.set('Cookie', session)
-  headers.set('Origin', TEST_ORIGIN)
-  if (init.body) headers.set('Content-Type', 'application/json')
-  const request = new Request(`${TEST_ORIGIN}${path}`, { ...init, headers })
-  try {
-    const context = await membersGate(
-      request,
-      harness.env,
-      client.dependencies.now(),
-    )
-    return await route(request, harness.env, context, client.dependencies)
-  } catch (error) {
-    return errorResponse(error)
-  }
 }

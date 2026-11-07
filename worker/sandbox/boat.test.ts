@@ -3,35 +3,9 @@ import { expect, it } from 'vitest'
 import { FakeBoat } from '../test-support/fake-boat'
 import { BoatClient } from './boat'
 
-it('identifies the active Boat wallet with one read-only discovery call', async () => {
+it('starts sandboxes without inherited credentials', async () => {
   const server = new FakeBoat()
-  server.responseOverride = Response.json({
-    ok: true,
-    type: 'org.list',
-    orgs: [
-      { id: 'personal-user', type: 'personal', active: false },
-      { id: 'team-current', type: 'org', active: true },
-    ],
-  })
-  expect(await BoatClient.inspectAccount('boat-first', server.fetch)).toEqual({
-    id: 'team-current',
-    type: 'org',
-  })
-  expect(server.requests).toHaveLength(1)
-  expect(server.requests[0].method).toBe('GET')
-  expect(server.requests[0].url).toBe('https://boat.dev/api/v1/orgs')
-  expect(server.requests[0].headers.get('Authorization')).toBe(
-    'Bearer boat-first',
-  )
-  expect(server.requests[0].redirect).toBe('manual')
-})
-
-it('starts sandboxes without inherited credentials and pins the saved wallet', async () => {
-  const server = new FakeBoat()
-  const client = new BoatClient('boat-first', server.fetch, {
-    id: 'team-one',
-    type: 'org',
-  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
   const input = {
     name: 'Task',
     snapshotName: 'org-image',
@@ -66,7 +40,7 @@ it('starts sandboxes without inherited credentials and pins the saved wallet', a
   expect(created.headers.get('Idempotency-Key')).toBe('request-one')
   expect(forked.headers.get('Idempotency-Key')).toBe('request-two')
   for (const request of server.requests) {
-    expect(request.headers.get('X-Boat-Org')).toBe('team-one')
+    expect(request.headers.get('X-Boat-Org')).toBe('app-org')
     expect(request.headers.get('Cookie')).toBe(null)
     expect(await request.text()).not.toContain('boat-first')
   }
@@ -74,10 +48,7 @@ it('starts sandboxes without inherited credentials and pins the saved wallet', a
 
 it('uses fixed lifecycle routes and confirms deletion with the sandbox id', async () => {
   const server = new FakeBoat()
-  const client = new BoatClient('boat-personal', server.fetch, {
-    id: 'user-one',
-    type: 'personal',
-  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
   await client.get('bx_one')
   await client.stop('bx_one')
   await client.setAutoStop('bx_one', 1800)
@@ -96,16 +67,13 @@ it('uses fixed lifecycle routes and confirms deletion with the sandbox id', asyn
   expect(server.requests[3].headers.get('X-Ascii-Confirm-Delete')).toBe(
     'bx_one',
   )
-  expect(server.requests[0].headers.get('X-Boat-Org')).toBe('personal')
+  expect(server.requests[0].headers.get('X-Boat-Org')).toBe('app-org')
   expect(await server.requests[2].json()).toEqual({ ttlSeconds: 1800 })
 })
 
 it('reads typed snapshots and command results through their fixed routes', async () => {
   const server = new FakeBoat()
-  const client = new BoatClient('boat-first', server.fetch, {
-    id: 'team-one',
-    type: 'org',
-  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
   expect(await client.saveSnapshot('bx_one', 'org-image')).toEqual({
     name: 'org-image',
     sourceSandboxId: 'bx_one',
@@ -144,10 +112,7 @@ it('reads typed snapshots and command results through their fixed routes', async
 
 it('cannot turn an id into an unlisted Boat route', async () => {
   const server = new FakeBoat()
-  const client = new BoatClient('boat-first', server.fetch, {
-    id: 'team-one',
-    type: 'org',
-  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
   for (const sandboxId of [
     '..',
     '../me',

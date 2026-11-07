@@ -10,7 +10,6 @@ export interface DevOptions {
   workspace: 'existing' | 'new'
   state: WorkspaceState
   role: OrgRole
-  key: boolean
   login: boolean
   replay: 'stored' | 'live'
   viewport: 'desktop' | 'mobile'
@@ -52,7 +51,6 @@ export const choices = {
     'archived',
   ],
   role: ['admin', 'member'],
-  key: ['on', 'off'],
   login: ['on', 'off'],
   replay: ['stored', 'live'],
   viewport: ['desktop', 'mobile'],
@@ -85,7 +83,6 @@ export const optionNames = [
   'workspace',
   'state',
   'role',
-  'key',
   'login',
   'replay',
   'viewport',
@@ -112,7 +109,6 @@ export function readOptions(search: string): DevOptions {
     workspace: pick(choices.workspace, get('workspace')),
     state: pick(choices.state, get('state')),
     role: pick(choices.role, get('role')),
-    key: pick(choices.key, get('key')) === 'on',
     login: pick(choices.login, get('login')) === 'on',
     replay: pick(choices.replay, get('replay')),
     viewport: pick(choices.viewport, get('viewport')),

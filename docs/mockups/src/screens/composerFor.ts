@@ -23,16 +23,14 @@ export function isRunning(state: WorkspaceState): boolean {
  * a message with attached files, with the model picker open when the state
  * asks for it. A new session starts empty. In a session with messages,
  * the picker marks the models of the other agent as opening a new session.
- * A message for an agent that is not connected, or in an org without a key
- * for its cloud computers, waits, and Send is off.
+ * A message for an agent that is not connected waits, and Send is off.
  */
 export function composerFor(
   state: WorkspaceState,
   workspace: Workspace,
 ): ComposerState {
   const fresh = state.tab === 'new-session'
-  const waits =
-    !fresh && (state.composer === 'no-agent' || state.composer === 'no-key')
+  const waits = !fresh && state.composer === 'no-agent'
   const withFiles =
     !fresh && (state.composer === 'attachments' || state.composer === 'picker')
   let draft = ''

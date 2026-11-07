@@ -2,7 +2,6 @@ import { isRecord } from '../http'
 import { ProviderError } from './errors'
 import {
   SANDBOX_STATES,
-  type BoatAccount,
   type CommandResult,
   type CommandStatus,
   type Sandbox,
@@ -12,36 +11,6 @@ import {
 
 function invalid(): never {
   throw new ProviderError('invalid_response', 502)
-}
-
-export function readAccount(
-  value: Record<string, unknown>,
-  expected?: BoatAccount,
-): BoatAccount {
-  if (value.type !== 'org.list' || !Array.isArray(value.orgs)) return invalid()
-  // A replacement key can reach the saved wallet even when another wallet is active.
-  if (
-    expected &&
-    value.orgs.some(
-      (org: unknown) =>
-        isRecord(org) && org.id === expected.id && org.type === expected.type,
-    )
-  ) {
-    return expected
-  }
-  const active: unknown[] = value.orgs.filter(
-    (org: unknown) => isRecord(org) && org.active === true,
-  )
-  if (active.length !== 1) return invalid()
-  const account = active[0]
-  if (
-    !isRecord(account) ||
-    typeof account.id !== 'string' ||
-    !account.id ||
-    (account.type !== 'org' && account.type !== 'personal')
-  )
-    return invalid()
-  return { id: account.id, type: account.type }
 }
 
 export function readSandbox(value: Record<string, unknown>): Sandbox {

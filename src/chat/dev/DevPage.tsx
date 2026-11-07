@@ -89,7 +89,6 @@ export function DevPage(props: {
     <WorkspaceChat
       clock={props.clock}
       fetch={backend.fetch}
-      onAddBoatKey={() => note('The app opens the Boat key screen.')}
       onConnectAgent={(agent) =>
         note(`The app opens the Connect form of ${agent}.`)
       }

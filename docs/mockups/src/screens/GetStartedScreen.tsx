@@ -13,7 +13,6 @@ import {
   getStartedSteps,
   InstallStep,
   isPast,
-  KeyStep,
   OrgStep,
 } from './getStartedSteps'
 import styles from './GetStartedScreen.module.css'
@@ -25,7 +24,7 @@ export const getStartedSchema = {
   properties: {
     /**
      * The step that comes next: install the GitHub App, create the first
-     * org, add its Boat key, or connect an agent. `done` follows the last.
+     * org, or connect an agent. `done` follows the last.
      */
     step: { enum: getStartedSteps },
   },
@@ -52,8 +51,8 @@ function Finish() {
 /**
  * The only first run, after the GitHub sign-in: the user installs the
  * GitHub App on the account that owns their repositories, creates the
- * first org, adds its Boat key, and connects Claude or Codex. The rail
- * shows the org once it exists.
+ * first org, and connects Claude or Codex. The rail shows the org once it
+ * exists.
  */
 export function GetStartedScreen(props: {
   state: GetStartedState
@@ -67,7 +66,7 @@ export function GetStartedScreen(props: {
       viewport={props.viewport}
     >
       <p className={styles.intro}>
-        Welcome, {account.name}. Four steps before your first workspace.
+        Welcome, {account.name}. Three steps before your first workspace.
       </p>
       <ol className={styles.steps}>
         <li>
@@ -75,9 +74,6 @@ export function GetStartedScreen(props: {
         </li>
         <li>
           <OrgStep step={step} />
-        </li>
-        <li>
-          <KeyStep step={step} />
         </li>
         <li>
           <AgentStep step={step} />

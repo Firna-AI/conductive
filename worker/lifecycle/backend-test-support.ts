@@ -1,6 +1,5 @@
 import { API_PATHS, type User } from '../../src/shared/api'
 import type { AppDependencies } from '../env'
-import { storeBoatKey } from '../sandbox/keys'
 import {
   createHarness,
   TEST_TIME,
@@ -32,14 +31,7 @@ export async function backendFixture(sharedHarness?: TestHarness) {
   const response = await harness.request(API_PATHS.session, session)
   const { user }: { user: User } = await response.json()
   const boat = new LifecycleBoat()
-  await storeBoatKey(
-    harness.env,
-    org.id,
-    user.id,
-    'boat-first',
-    boat.fetch,
-    TEST_TIME,
-  )
+
   const repositoryId = 'repository-one'
   await harness.env.DB.prepare(
     'INSERT INTO repositories (id, org_id, github_repository_id, full_name, default_branch, installation_id) VALUES (?, ?, 1, ?, ?, 91)',

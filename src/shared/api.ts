@@ -10,10 +10,6 @@ export function orgPath(orgId: string): string {
   return `${API_PATHS.orgs}/${encodeURIComponent(orgId)}`
 }
 
-export function boatKeyPath(orgId: string): string {
-  return `${orgPath(orgId)}/boat-key`
-}
-
 export interface User {
   id: string
   githubId: number
@@ -29,10 +25,6 @@ export interface Org {
   name: string
   role: OrgRole
 }
-
-export type BoatKeyStatus =
-  | { configured: false }
-  | { configured: true; updatedAt: number; lastFour?: string }
 
 export interface ApiErrorBody {
   error: { code: string; message: string }

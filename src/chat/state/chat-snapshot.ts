@@ -1,5 +1,4 @@
 import type { AgentModel } from '../../shared/agents'
-import type { BoatKeyStatus } from '../../shared/api'
 import type { Attachment, UserMessage } from '../../shared/messages'
 import type { Session } from '../../shared/sessions'
 import type { WorkspaceView } from '../../shared/workspace-view'
@@ -65,7 +64,6 @@ export interface ChatSnapshot {
   workspace: Workspace | null
   start: WorkspaceStart | null
   org: OrgSummary | null
-  boatKey: Pick<BoatKeyStatus, 'configured'> | null
   account: AccountSummary | null
   /** The members of the org, which name the member who stopped a turn. */
   members: readonly MemberSummary[]
@@ -116,7 +114,6 @@ export const initialSnapshot: ChatSnapshot = {
   workspace: null,
   start: null,
   org: null,
-  boatKey: null,
   account: null,
   members: [],
   models: [],
