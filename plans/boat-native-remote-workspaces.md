@@ -4849,6 +4849,8 @@ Added on 8 November 2026.
 Agent calls, 7 November 2026: keep the Worker build event route, because
 it remains a public API. Reuse the saved build phases and job identities,
 because they already record progress and command intent.
+Use a source command interface, because starts must fail closed and
+polls of saved processes can resume.
 
 - [x] Apply the recorded option of `plans/follow-ups/build-log-stream-format.md`, and
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.

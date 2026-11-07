@@ -70,11 +70,11 @@ the folder map:
 
 ## The source loader
 
-`createGitHubImageSourceMaterializer` in
-[`image-sources/materialize.ts`](image-sources/materialize.ts) loads the
-repositories into the folders of the job's map, as the required
+`createGitHubImageSourceMaterializer` in [`image-sources/materialize.ts`](image-sources/materialize.ts)
+loads the repositories into the folders of the job's map, as the required
 `prepareSources` of `ImageRuntime`. Each call starts or polls one detached
-command in the build sandbox. It returns `false` while native work or a
+command in the build sandbox through `input.commands`, a [`SourceCommandPort`](image-sources/source-commands.ts)
+that has only `start` and `status`. It returns `false` while native work or a
 revocation is pending, and `true` when every repository is done. So the
 work continues across alarms, and each call reads its state from D1.
 
@@ -122,7 +122,8 @@ encrypted token stays owned until its revocation.
 
 A command succeeds only with exit code 0 and no reported timeout. A
 missing timeout flag is not a timeout. A missing process, or a start with
-no confirmed reply, fails closed, and the next alarm revokes the token.
+no confirmed reply, fails closed, and the next alarm revokes the token. A
+transient Boat error of a poll keeps the source record for the next alarm.
 
 `handleImageSourceCredential` in
 [`image-sources/credential.ts`](image-sources/credential.ts) accepts only a
@@ -135,15 +136,14 @@ header. A used, unknown, or invalidated grant gets HTTP 401. The handler
 throws an `HttpError` for each refusal, so its caller must use the private
 error response wrapper.
 
-After a failure, `cleanupBuildImageSources` in
-[`image-sources/cleanup.ts`](image-sources/cleanup.ts) invalidates the grant
-and revokes the token before it deletes the source record.
-[`image-sources/cleanup-data.ts`](image-sources/cleanup-data.ts) holds those
+After a terminal failure, `cleanupBuildImageSources` in [`image-sources/cleanup.ts`](image-sources/cleanup.ts)
+invalidates the grant and revokes the token before it deletes the source
+record. [`image-sources/cleanup-data.ts`](image-sources/cleanup-data.ts) holds those
 writes. The build cleanup runs it before it deletes the build sandbox, also
 when Boat refuses the app's Boat key. `cleanupOrgImageSources` does the
 same for each build of an org. The image coordinator calls it before it
-stops for an org that is gone. Each failure of the loader gives one fixed
-error, because Boat output and Git errors can hold a credential.
+stops for an org that is gone. Each terminal failure of the loader gives
+one fixed error, because Boat output and Git errors can hold a credential.
 
 The composition root passes the Members lifecycle hooks through
 `withImageSourceCleanup(env, fetch, hooks)` from
@@ -276,8 +276,8 @@ each token.
   `repositoryEnvironment`, and `legacyRepositoryDirectory`.
 - [`repository-location-data.ts`](repository-location-data.ts):
   `workspaceRepositoryLocations`, the map of one workspace.
-- [`image-sources/materialize.ts`](image-sources/materialize.ts):
-  `createGitHubImageSourceMaterializer`, one source phase for each call.
+- [`image-sources/materialize.ts`](image-sources/materialize.ts): `createGitHubImageSourceMaterializer`,
+  one source phase for each call, through [`SourceCommandPort`](image-sources/source-commands.ts).
 - [`image-sources/source-data.ts`](image-sources/source-data.ts): the
   durable source record and the one-use grant claim.
 - [`image-sources/native-command.ts`](image-sources/native-command.ts): the

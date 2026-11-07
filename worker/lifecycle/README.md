@@ -143,8 +143,8 @@ chat backend and the runner ingestion, and no code calls them yet:
 
 The `alarm` of the class serves both roles. For an image coordinator, it
 advances the running build or refresh by one step, or starts the daily
-refresh. A transient Boat error keeps the step of a build, a refresh, or a
-start for the next alarm. For a workspace object, it:
+refresh. A transient Boat error keeps the job step for the next alarm,
+except a source command start. For a workspace object, it:
 
 - runs the queued start of a create or a resume, one phase at a time
 - stops the sandbox after 30 minutes without activity or a running turn

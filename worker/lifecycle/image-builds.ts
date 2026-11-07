@@ -8,6 +8,7 @@ import { ProviderError } from '../sandbox/errors'
 import { clearBuildCommands } from './command-intents'
 import { transientProviderError } from './provider-retry'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
+import { SourceCommandPort } from './image-sources/source-commands'
 import { requireOrgMember } from './access'
 import {
   assignBuildSandbox,
@@ -59,7 +60,7 @@ export type PrepareImageSources = (input: {
   repositories: readonly SelectedRepository[]
   repositoryLocations?: readonly RepositoryLocation[]
   previousRepositoryLocations?: readonly RepositoryLocation[]
-  provider: SandboxProvider
+  commands: SourceCommandPort
 }) => Promise<boolean | void>
 
 export interface ImageRuntime {
@@ -240,7 +241,7 @@ export async function advanceImageBuild(
             : readRepositoryLocations(
                 JSON.parse(job.previousRepositoryLocationsJson),
               ),
-        provider,
+        commands: new SourceCommandPort(provider, job.sandboxId),
       })
       if (prepared === false) return false
       await updateBuildJob(

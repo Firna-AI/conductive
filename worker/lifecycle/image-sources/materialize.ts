@@ -3,6 +3,7 @@ import { HttpError } from '../../http'
 import { encrypt, hash, randomToken } from '../../security/crypto'
 import type { PrepareImageSources } from '../image-builds'
 import { writeBuildLog } from '../build-data'
+import { transientProviderError } from '../provider-retry'
 import {
   legacyRepositoryLocations,
   repositoryLocation,
@@ -86,8 +87,7 @@ export function createGitHubImageSourceMaterializer(
           'Updating the repositories.\n',
           Date.now(),
         )
-        const started = await input.provider.startCommand(
-          input.sandboxId,
+        const started = await input.commands.start(
           isolatedSourceCommand(
             sourceLayoutCommand(
               input.buildId,
@@ -151,8 +151,7 @@ export function createGitHubImageSourceMaterializer(
           await revokeInstallationToken(dependencies.fetch, token)
           throw error
         }
-        const started = await input.provider.startCommand(
-          input.sandboxId,
+        const started = await input.commands.start(
           fetchSourceCommand({
             origin: origin.origin,
             grant,
@@ -177,8 +176,7 @@ export function createGitHubImageSourceMaterializer(
         const repository = repositories[job.sourceIndex]
         if (!repository) throw new Error('Missing captured repository')
         await setSourcePhase(env.DB, job.buildId, 'finalize-starting')
-        const started = await input.provider.startCommand(
-          input.sandboxId,
+        const started = await input.commands.start(
           finalizeSourceCommand({
             buildId: job.buildId,
             index: job.sourceIndex,
@@ -190,11 +188,7 @@ export function createGitHubImageSourceMaterializer(
         return false
       }
       if (job.processId === null) throw new Error('Missing source process')
-      const status = await input.provider.getCommandStatus(
-        input.sandboxId,
-        job.processId,
-        job,
-      )
+      const status = await input.commands.status(job.processId, job)
       await saveSourceStatus(env.DB, job.buildId, status)
       if (status.running) return false
       const succeeded =
@@ -218,7 +212,8 @@ export function createGitHubImageSourceMaterializer(
         else await nextSource(env.DB, job.buildId)
       }
       return false
-    } catch {
+    } catch (error) {
+      if (transientProviderError(error)) throw error
       if (
         ownsBuild &&
         !(await cleanupBuildImageSources(
