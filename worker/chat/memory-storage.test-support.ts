@@ -5,7 +5,8 @@ export class MemoryChatStorage implements ChatStorage {
   records = new Map<string, unknown>()
   writes: string[] = []
   failCommit = false
-  beforeCommit: (() => Promise<void>) | null = null
+  crashAfterCommit = false
+  beforeCommit: ((staged: MemoryChatStorage) => Promise<void>) | null = null
 
   async get<T>(key: string): Promise<T | undefined> {
     return structuredClone(this.records.get(key)) as T | undefined
@@ -39,10 +40,14 @@ export class MemoryChatStorage implements ChatStorage {
     const transaction = new MemoryChatStorage()
     transaction.records = structuredClone(this.records)
     const result = await work(transaction)
-    await this.beforeCommit?.()
+    await this.beforeCommit?.(transaction)
     if (this.failCommit) throw new Error('Injected storage failure')
     this.records = transaction.records
     this.writes.push(...transaction.writes)
+    if (this.crashAfterCommit) {
+      this.crashAfterCommit = false
+      throw new Error('Injected post-commit crash')
+    }
     return result
   }
 }

@@ -65,6 +65,11 @@ describe('durable runner dispatch', () => {
     const unsent = await fixture.chat.store.read(WORKSPACE_ID, (view) =>
       view.messageTurn('unsent-turn'),
     )
+    expect(
+      await fixture.chat.store.read(WORKSPACE_ID, (view) =>
+        unsent ? view.turn(unsent) : Promise.resolve(undefined),
+      ),
+    ).toMatchObject({ state: 'queued', started: false })
     const stopUnsent = await fixture.fetch(
       sessionPaths.interrupt(fixture.org.id, WORKSPACE_ID, session.id),
       { turnId: unsent },
@@ -74,5 +79,27 @@ describe('durable runner dispatch', () => {
       state: 'stopped',
     })
     expect(runner.commands).toEqual([])
+    fixture.transport.dropOutgoing = () => false
+    await fixture.connect(runner)
+    if (!unsent) throw new Error('The unsent turn is missing.')
+    runner.emit({
+      type: 'assistant.delta',
+      sessionId: session.id,
+      turnId: unsent,
+      messageId: 'not-an-answer',
+      text: 'The first send failed.',
+    })
+    await fixture.drain()
+    expect(
+      (await fixture.history(session.id)).events.at(-1)?.event,
+    ).toMatchObject({
+      type: 'runner.event-refused',
+      reason: 'turn_not_active',
+      turnId: unsent,
+    })
+    expect(
+      await fixture.chat.store.read(WORKSPACE_ID, (view) => view.turn(unsent)),
+    ).toMatchObject({ state: 'stopped', started: false })
+    expect(runner.pendingEvents()).toEqual([])
   })
 })

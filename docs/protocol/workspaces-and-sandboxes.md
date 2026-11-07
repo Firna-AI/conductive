@@ -183,8 +183,6 @@ says.
   they add and remove.
 - A changed file opens its diff against the default branch as a tab.
 - The agent runner watches the repository and reports both lists.
-  Each new runner stream starts with a full file tree.
-- Later tree updates use deltas or a newer full recovery report.
   Branch changes count uncommitted and untracked work too.
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
   This includes the event type, metadata, escapes, and delimiters. It excludes the runner envelope.
@@ -210,9 +208,16 @@ says.
 - A resend keeps its stream, runner event number, and payload.
   A reconnect keeps pending parts. Confirmation of a part includes its durable assembly state.
 - A refused part, a newer full report, or a new stream discards the incomplete report.
-  The last complete report stays available.
 - A new full report has a newer revision than the last applied report of its kind.
   It can skip unapplied revisions to recover missing or refused data.
+- After a refused tree report or tree delta, the workspace asks for one full file tree, as
+  [Lost workspace updates](chat-and-events.md#lost-workspace-updates) says (decision 96).
+  After a refused changes report, it asks for one full changes list.
+- After the refused update, each part of that kind belongs to a replacement.
+  The only exception is a remaining part of the refused report or of an earlier report.
+- A stored new part 1 after the refused update starts a replacement, also at the revision of the refused report.
+- An invalid part counts as a replacement unless its stream, revision, and part number show a remaining part.
+  A tree delta is never a replacement, and it never ends or fails an open tree repair.
 - Each tree delta holds at most 512 changes and meets the same 256 KiB event budget.
   A large update uses several deltas, each with the next consecutive tree revision.
 - Reason: the count cap also bounds the tree work of each event.

@@ -127,11 +127,22 @@ describe('workspace chat security', () => {
         { type: 'sdk.system' },
       ),
     })
-    await expect(fixture.drain()).rejects.toMatchObject({
-      status: 400,
-      code: 'invalid_input',
+    await fixture.drain()
+    expect(runner.received).toHaveLength(before + 1)
+    expect(runner.received.at(-1)).toEqual({
+      type: 'confirm',
+      streamId: 'fake-stream-1',
+      throughEventNumber: 2,
     })
-    expect(runner.received).toHaveLength(before)
+    expect((await fixture.history(session.id)).events.at(-1)?.event).toEqual({
+      type: 'runner.event-refused',
+      streamId: 'fake-stream-1',
+      runnerEventNumber: 2,
+      runnerEventType: 'unknown',
+      reason: 'invalid',
+      sessionId: session.id,
+      turnId: command.turnId,
+    })
     expect(
       (await fixture.history(session.id)).events.map(({ event }) => event.type),
     ).not.toContain('turn.thinking')

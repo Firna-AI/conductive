@@ -118,7 +118,8 @@ says.
   Stop sits beside Send.
 - A finished turn ends with its duration and the files that it changed.
 - A tool detail and a turn file list give a count of data that their limits omit.
-- A refused runner event shows one chat line that names the lost data.
+- A refused runner event shows one chat line that names the lost data,
+  unless it is a [lost workspace update](#lost-workspace-updates).
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One
@@ -189,12 +190,18 @@ says.
 - The marker belongs only to workspace chat events. The runner cannot send it.
 - A confirmed marker advances the runner cursor and removes that event from its outbox.
   A duplicate produces no second marker and no second chat line.
+- Reason: one bad event must not stop all later events (decision 76).
 - A refused end-of-turn event still ends its active turn.
   The marker shows that the terminal data was lost.
+- Turn not active means that the event names a turn that never started (decision 104).
+  The workspace stores each valid late event of a turn that started and has ended, in that turn.
+- A late event never reopens its turn or changes its end.
+  The active turn of its session stays the same.
+- The chat shows that turn as ended. A tool that was running in it shows as stopped.
+- Reason: after a resume, the runner sends the unconfirmed events of an ended turn again.
+  A refusal of these events was rejected, because it lost real agent text.
 - A storage or network failure closes the connection without a confirmation.
   It remains retryable. It never becomes a permanent refusal.
-- Permanent refusals store a marker and advance the stream (decision 76).
-  Reason: one bad event must not stop all later events.
 - The Durable Object forwards each message, each message during a turn,
   each interrupt, and each change of the model or the effort to the runner.
 - Each turn also brings the login of its sender, as
@@ -204,3 +211,44 @@ says.
   and reads files and diffs on request, as
   [Files and changes](workspaces-and-sandboxes.md#files-and-changes) says.
   File results are not part of the chat history.
+
+### Lost workspace updates
+
+- The file tree, the changes list, the start steps, and the workspace name
+  belong to no session. A later full report of the same kind replaces each
+  of them.
+- When the workspace refuses an update of one of these kinds, the update is
+  lost. The workspace stores its marker. Then it asks the runner once for a
+  fresh full report of that kind (decision 96).
+- The browser shows nothing for that marker. A notice shows beside the
+  affected data only when the repair fails. A newer complete report of that
+  kind clears the notice.
+- Reason: only the latest full report matters. A notice for each lost update
+  was rejected.
+- The request is a `report.refresh` command with a `commandId` and a `kind`.
+  The kind is `files.snapshot`, `changes.updated`, `start.updated`, or
+  `workspace.title`.
+- The workspace asks for a full file tree after a refused tree delta. It asks
+  for no report after a refused event of any other type.
+- Each kind has at most one open request. After a further refusal of that
+  kind, the workspace sends no second request.
+- A stored complete report of that kind ends the repair, also a failed one.
+  It ends no repair of another kind. After the next refusal of that kind, the
+  workspace asks for a new report, with a new command ID.
+- A replacement is a later full report of the same kind.
+  [Files and changes](workspaces-and-sandboxes.md#files-and-changes) says
+  which file reports count as replacements.
+- The repair fails when the workspace refuses a replacement too, for any
+  reason. Only the marker of such a replacement carries `repairFailed: true`.
+- Each new connection gets the open request again, with the same command ID.
+  A repeated command ID is the same request, not a new one.
+- After a failed repair, no new connection gets the request again.
+- The workspace stores the marker and the open request together. A storage
+  failure stores neither, and the update stays unconfirmed.
+- When a refusal makes a new request, the workspace confirms the refused
+  update only after the request goes out. Until then, no confirm and no
+  welcome covers that update.
+- The workspace sends a request after the `welcome`, also before
+  `runner.ready` and during a running turn. A request needs no agent login.
+- The runner answers each request with a full report of its kind, also
+  during a running turn.

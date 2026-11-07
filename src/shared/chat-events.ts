@@ -94,7 +94,8 @@ export type RunnerEventRefusalReason =
  * Its identity prevents a resend from making a second marker.
  * Keep a recognized discriminator, or use unknown for an invalid discriminator.
  * Include only verified turn context. A workspace-level refusal uses nulls.
- * The chat shows one line that names the lost data. Never copy raw lost data.
+ * Session refusals name lost data in chat. Workspace report losses request repair.
+ * A failed repair can show a notice beside its data. Never copy raw lost data.
  */
 export interface RunnerEventRefused {
   type: 'runner.event-refused'
@@ -104,6 +105,8 @@ export interface RunnerEventRefused {
   reason: RunnerEventRefusalReason
   sessionId: string | null
   turnId: string | null
+  /** Only the workspace sets this when a requested full replacement is refused. */
+  repairFailed?: true
 }
 
 export type ChatEvent =

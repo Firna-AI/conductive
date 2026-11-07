@@ -4542,23 +4542,64 @@ Depends on: 4d, 7, 9
 
 Apply decision 76 E in the workspace Durable Object.
 
-- [ ] Check the byte limit with the other event checks.
-- [ ] Store a marker for each event that the workspace refuses for a
+Agent calls on 6 November 2026, within decision 76 E:
+
+- Commit file parts, complete file reports, chat events, refusal markers,
+  turn state, and the runner cursor in one transaction. Reason: a confirm
+  must cover every stored effect of the event.
+- Store large complete file events in bounded history chunks. Reason:
+  each browser report stays complete and can exceed one storage value.
+- End a refused active terminal event as failed through the existing
+  turn lifecycle. Reason: the refused result cannot prove success.
+- Check every agent acknowledgement before changing messages or commands.
+  Reason: a refusal must leave no partial message changes.
+- Verify refusal context against stored sessions and turns. Reason:
+  untrusted IDs must not become arbitrary storage keys.
+- Keep the parts of the last complete report for repeat comparison.
+  Reason: an identical repeated part must produce no second report.
+- Compute accepted changes totals from the joined files after checking
+  the runner summary. Reason: stored totals must come from stored files.
+
+Agent calls on 7 November 2026, within decisions 96 E and 104 E:
+
+- Use `report.refresh` with the four full-report event types as its kinds.
+  Reason: the command names the same data that the runner reports.
+- Keep one durable command ID for each open repair. Reconnects reuse that
+  ID. A failed repair sends no more requests until a complete report
+  clears its kind. Reason: transport recovery must not create a repair loop.
+- Record the first successful request send before confirming its loss.
+  Bound a welcome only for an unsent trigger on its own stream. Reason:
+  reconnects must not confirm an update before its required first send.
+- Keep accepted replacement part-one evidence across restart. Reason:
+  fresh reports can reuse refused unapplied revisions, while old tails
+  must not show a failed-repair notice.
+- Keep valid late data from old ended turns when their start evidence is
+  incomplete. Reason: missing old metadata does not prove that a turn
+  never started, and the late path changes no lifecycle state.
+
+Verification evidence: `.context/boat-native-remote-workspaces/7s/verification.md`.
+
+- [x] Check the byte limit with the other event checks.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Store a marker for each event that the workspace refuses for a
       fixed reason, confirm it, and move the cursor on. A refused end of
       turn still ends the turn. A storage or network failure still closes
-      the connection.
-- [ ] Join the parts of a file tree and of a changes list before the
-      files store takes them.
-- [ ] Test each refusal, a tree in parts, and a resend after a refusal.
-- [ ] Apply decision 104 E: store a late event of an ended turn in that
+      the connection. Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Join the parts of a file tree and of a changes list before the
+      files store takes them. Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Test each refusal, a tree in parts, and a resend after a refusal.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Apply decision 104 E: store a late event of an ended turn in that
       turn, and never reopen the turn. Refuse only an event of a turn that
       never started. State the rule in the protocol, in place of the old
       refusal of every event of a turn that is not active.
-- [ ] Apply decision 96 E: add a runner command that asks for a fresh full
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
+- [x] Apply decision 96 E: add a runner command that asks for a fresh full
       report of the file list, the changes list, the start steps, or the
       workspace name. Send it once after the workspace refuses such an
       update. When the fresh report is refused too, store the marker as a
       failed repair. State both rules in the protocol.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7s`.
 
 ## Milestone 7t: Fresh reports from the runner
 

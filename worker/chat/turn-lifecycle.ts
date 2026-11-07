@@ -57,6 +57,7 @@ export class TurnLifecycle {
   }
 
   async finish(turn: StoredTurn, end: TurnEnd): Promise<void> {
+    turn.started ??= turn.state === 'running' || turn.state === 'stopping'
     let following = turn.nextTurnId ?? null
     if (end.state === 'finished' && !turn.closeAfterStop) {
       const continuation = await continueUnanswered(
