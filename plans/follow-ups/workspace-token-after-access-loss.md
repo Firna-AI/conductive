@@ -20,4 +20,4 @@
 - **Wider fix:** C. B narrows the window to one moment, and C removes the copy.
 - **Previous examples:** decision 114 (tool programs keep a login after the turn), decision 120 (agent logins readable in the sandbox), and decision 121 (the GitHub token readable in the sandbox).
 - **Recommendation:** B, in its own milestone after Milestone 15m merges. It closes the removal case too, and it needs no provider feature.
-- **Action:** ask the user, because B adds a rule for the life of a workspace token that no requirement covers.
+- **Action:** ask the user later, because the user chose A now on 8 November 2026 (decision 124), and asked to review the other approaches later. Milestone 15m states the risk. B and C stay open.
