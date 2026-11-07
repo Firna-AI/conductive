@@ -1,9 +1,9 @@
-# The agent event rollback test fails every commit
+# Chat commit tests can miss a split commit
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-07, from PR #29, branch `conductor/boat-native-remote-workspaces-milestone-7s`, a problem outside the scope that the round 2 check of finding 3 found.
-- **Location:** `worker/chat/durability.test.ts:57`.
+- **Location:** `worker/chat/durability.test.ts:57`, `worker/chat/retry-queue.test.ts:105`, and the `failCommit` fault of `worker/chat/memory-storage.test-support.ts:44`.
 - **Reason:** the test is outside the diff of PR #29.
 
 - **Terms:**
@@ -17,8 +17,9 @@
 - **Options:**
   - **A.** Use the crash fault that PR #29 adds to `MemoryChatStorage`: the commit lands, and then the call throws. Restart, and check the stored event and cursor. Prove that the test fails against a temporary split. Effort: Small.
   - **B.** Fail only the commit that holds the cursor, as the other receipt tests did before PR #29. It misses an event stored after the cursor. Effort: Small.
+  - **C.** Replace the `failCommit` flag with one fixture helper that checks both commit boundaries of an action: first the commit fails and the state equals literal values from before, then the commit lands, the call throws, and after a restart the state equals literal values from after. Use it for this test and for the retry permission test. Effort: Medium.
 - **Left out:** A test for each runner event type at once, because a test for the class needs the user. It is option E of PR #29 round 2 finding 3.
-- **Wider fix:** None. PR #29 brings the crash fault to the receipt tests of its diff, and the `testing` skill already asks for a test of each changed boundary.
-- **Previous examples:** PR #29 round 2 finding 3, the same gap in the repair, refusal, and file part receipt tests.
-- **Recommendation:** A. One crash fault catches a split in either direction.
-- **Action:** fix after merge, apply A, because the test is outside the diff of the branch that found it.
+- **Wider fix:** C. One fixture helper checks both commit boundaries, so no chat test can use the always-failing fault alone.
+- **Previous examples:** PR #29 round 2 finding 3, the same gap in the repair, refusal, and file part receipt tests, commit `353b478`, and PR #33 round 1 finding 1, the same gap in the retry permission test. Its check proposed option C.
+- **Recommendation:** C. It removes the always-failing fault as a tool that a test can use alone.
+- **Action:** fix after merge, apply C, because the helper changes a shared fixture and a test outside the diffs that found the class.
