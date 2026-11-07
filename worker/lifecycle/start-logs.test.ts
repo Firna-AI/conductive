@@ -3,6 +3,7 @@ import { expect, it } from 'vitest'
 import { MemoryWorkspaceStorage } from './platform-test-storage'
 import { durableStartStorage, readStartLog } from './start-storage'
 import type { WorkspaceStartJob } from './start-types'
+import { readSavedScript } from './saved-script'
 
 it('masks a secret split between stdout and stderr in the released start log', async () => {
   const env = { BOAT_KEY_ENCRYPTION_KEY: btoa('e'.repeat(32)) }
@@ -13,7 +14,7 @@ it('masks a secret split between stdout and stderr in the released start log', a
     orgId: 'log-org',
     kind: 'resume',
     imageName: null,
-    startupScript: '',
+    startupScript: readSavedScript(''),
     environmentCiphertext: null,
     defaultBranch: 'main',
     turnId: 'log-turn',

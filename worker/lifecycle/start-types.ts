@@ -3,19 +3,18 @@ import type { SendMessageRequest } from '../../src/shared/messages'
 import type { MaskedStartLog } from './masked-start-log'
 import type { ProvisionedWorkspace } from './workspace-response'
 import type { RepositoryLocation } from './repository-locations'
+import type { SavedScript } from './saved-script'
 
-export interface WorkspaceStartJob {
+interface WorkspaceStartData {
   workspaceId: string
   orgId: string
-  kind: 'create' | 'resume'
   imageName: string | null
-  startupScript: string
+  startupScript: SavedScript
   environmentCiphertext: string | null
   defaultBranch: string
   repositoryLocations?: readonly RepositoryLocation[]
   turnId: string
   attempt: string
-  phase: 'records' | 'machine' | 'ready' | 'fetch' | 'branch' | 'startup'
   creation?: WorkspaceCreation
   processId: number | null
   stdoutOffset: number
@@ -25,6 +24,27 @@ export interface WorkspaceStartJob {
   cancelled?: boolean
   failure?: { code: string; message: string; status: number }
 }
+
+export type WorkspaceMachinePhase =
+  'machine' | 'ready' | 'fetch' | 'branch' | 'startup'
+
+export type WorkspaceRunningStartJob = WorkspaceStartData &
+  (
+    | { kind: 'resume'; phase: WorkspaceMachinePhase; admission?: never }
+    | {
+        kind: 'create'
+        phase: WorkspaceMachinePhase
+        admission: ProvisionedWorkspace
+      }
+  )
+
+export type WorkspaceStartJob =
+  | WorkspaceRunningStartJob
+  | (WorkspaceStartData & {
+      kind: 'create'
+      phase: 'records'
+      admission?: never
+    })
 
 export interface WorkspaceCreation {
   user: User
@@ -46,6 +66,11 @@ export type WorkspaceCreationAdmission =
   | { ok: true; created: ProvisionedWorkspace }
   | Extract<WorkspaceStartResult<null>, { ok: false }>
 
+export interface CompletedWorkspaceCreation {
+  result: WorkspaceStartResult<null>
+  admission: WorkspaceCreationAdmission
+}
+
 export interface CreationPublication {
   workspaceId: string
   state: 'succeeded' | 'failed'
@@ -60,7 +85,6 @@ export interface StartJobStorage {
   result(): Promise<WorkspaceStartResult | undefined>
   creationResult(): Promise<WorkspaceStartResult | undefined>
   admission(): Promise<WorkspaceCreationAdmission | undefined>
-  admit(created: ProvisionedWorkspace): Promise<void>
   publication(): Promise<CreationPublication | undefined>
   clearPublication(): Promise<void>
   complete(result: WorkspaceStartResult): Promise<void>

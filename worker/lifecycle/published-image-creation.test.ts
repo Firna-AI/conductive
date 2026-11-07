@@ -10,6 +10,7 @@ import { leasedImage } from './image-leases'
 import { seedPublishedImage } from './published-image-test-support'
 import { orgEnvironmentContext } from './settings-data'
 import { createCompletedWorkspace } from './completed-creation-test-support'
+import { readSavedScript } from './saved-script'
 
 const fixtureForTest = setupBackendTests()
 
@@ -50,7 +51,7 @@ it('creates from captured image repositories while current settings and selectio
   expect(accepted).toMatchObject({
     imageName: 'last-good-image',
     defaultBranch: 'main',
-    startupScript: 'echo current-startup',
+    startupScript: readSavedScript('echo current-startup'),
     environmentCiphertext: ciphertext,
   })
   await expect(

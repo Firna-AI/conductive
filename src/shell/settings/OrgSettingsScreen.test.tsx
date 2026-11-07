@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { ComputerModel } from '../../app/computer-model'
 import type { SettingsTab } from '../../app/router'
-import { ManualDelay } from '../../app/test-kit'
+import { flushMicrotasks, ManualDelay } from '../../app/test-kit'
 import {
   buildPath,
   orgSettingsPaths,
@@ -170,10 +170,13 @@ describe('OrgSettingsScreen', () => {
     const { app, org, model } = await signedIn(server)
     await model.reload('builds')
     const computer = new ComputerModel(model, new ManualDelay().delay)
-    await computer.showLog(failed)
+    // The model follows the log of the newest build, which failed.
+    computer.start()
+    await flushMicrotasks()
     const text = textOf(
       renderScreen(app, <ComputerSettings computer={computer} org={org} />),
     )
+    computer.stop()
     expect(text).toContain(
       'Last build 12 minutes ago Failed after 2m 18s Try again Running the install script npm error code ERESOLVE The install script stopped with exit code 1. Workspaces still start from the build of 3 hours ago. History (2)',
     )

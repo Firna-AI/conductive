@@ -9,7 +9,7 @@ import { HttpError, isRecord } from '../http'
 import { terminalInstallCommand } from '../terminal/service'
 import { shellQuote, writeFileCommand } from './commands'
 import { IMAGE_NODE_RUNTIME, imageRuntimeScript } from './image-runtime'
-import { savedScriptCommand } from './saved-script'
+import { savedScriptCommand, type SavedScript } from './saved-script'
 
 export interface ImageSoftwareArtifact {
   url: string
@@ -84,7 +84,7 @@ export function installImageSoftware(artifact: ImageSoftwareArtifact): string {
 }
 
 export function workspaceStartupCommand(
-  script: string,
+  script: SavedScript,
   mode: 'workspace' | 'retention' = 'workspace',
 ): string {
   const path =

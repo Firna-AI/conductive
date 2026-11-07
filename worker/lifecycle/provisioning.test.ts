@@ -90,6 +90,7 @@ it('recovers an accepted create after its caller closes and the actor restarts',
     const resume: WorkspaceStartJob = {
       ...base,
       kind: 'resume',
+      admission: undefined,
       phase: 'machine',
       imageName: null,
       attempt: 'cancel-resume',

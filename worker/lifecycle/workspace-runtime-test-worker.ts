@@ -6,14 +6,17 @@ import { refreshGitHubTokens } from '../security/github-refresh'
 import { installationToken } from './image-sources/github-app'
 import { HttpError } from '../http'
 import type { LifecycleEnvironment } from './runtime'
-import type { WorkspaceStartJob } from './start-types'
+import type { StoredWorkspaceStartJob } from './start-job-codec'
 import { START_JOB_KEY } from './start-storage'
 import { IDLE_MS } from './durable-types'
 import type { FirstWorkspaceMessage } from './workspace-runtime'
 import type { UserMessage } from '../../src/shared/messages'
+import { holdMachineCheckpoint } from './runtime-checkpoint-test-support'
 
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
+  private heldMachine: ReturnType<typeof holdMachineCheckpoint> | undefined
+
   constructor(context: DurableObjectState, env: LifecycleEnvironment) {
     super(context, env, Date.now, {
       resolveAttachments: async (_userId, _workspaceId, ids) => ({
@@ -31,6 +34,13 @@ export class WorkspaceRuntimeFixture extends Workspace {
       }),
     })
   }
+  holdMachineCheckpoint(): void {
+    this.heldMachine = holdMachineCheckpoint(this.ctx.storage)
+  }
+  async machineCheckpointReached(): Promise<void> {
+    if (!this.heldMachine) throw new Error('No held machine checkpoint')
+    await this.heldMachine.entered
+  }
   async acceptFirstFixtureMessage(
     first: FirstWorkspaceMessage,
   ): Promise<UserMessage> {
@@ -39,7 +49,7 @@ export class WorkspaceRuntimeFixture extends Workspace {
   async tick(): Promise<void> {
     await this.alarm()
   }
-  checkpoint(): Promise<WorkspaceStartJob | undefined> {
+  checkpoint(): Promise<StoredWorkspaceStartJob | undefined> {
     return this.ctx.storage.get(START_JOB_KEY)
   }
   async becomeIdle(): Promise<void> {

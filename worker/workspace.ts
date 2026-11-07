@@ -19,7 +19,10 @@ import type {
   FirstWorkspaceMessage,
   WorkspaceLifecycleEndpoint,
 } from './lifecycle/workspace-runtime'
-import type { WorkspaceStartJob } from './lifecycle/start-types'
+import {
+  readStartJob,
+  type StoredWorkspaceStartJob,
+} from './lifecycle/start-job-codec'
 import { nativeWorkspaceStorage } from './lifecycle/platform-storage'
 import { readEncryptedStartLog } from './lifecycle/start-storage'
 import {
@@ -60,8 +63,9 @@ export class Workspace
     })
   }
 
-  async queueLifecycleStart(job: WorkspaceStartJob): Promise<boolean> {
-    return this.run(() => this.controller.queueLifecycleStart(job))
+  async queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean> {
+    const parsed = readStartJob(job)
+    return this.run(() => this.controller.queueLifecycleStart(parsed))
   }
 
   async acceptLifecycleFirstMessage(
