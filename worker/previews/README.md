@@ -28,6 +28,9 @@ app and a top-level tab use different cookie partitions. The app gate checks
 the session. The handler then checks the membership, the running workspace,
 and the active preview. The GET returns trusted HTML that posts the preview
 hostname and a 60-second grant to the authorizer.
+A create or a launch for a workspace whose owner is suspended gets 403
+`user_suspended`, as [Sandbox access](../operator/README.md#sandbox-access)
+says. The list and the close of previews stay open to members.
 
 The Mac app frames the same launch page from its desktop origin,
 `conductive-app://desktop`. Its frame load has no `Origin` header. On a GET of
@@ -106,6 +109,8 @@ a check leaves its grant unused. Keep each new check before the redemption.
 The proxy reads only the cookie of the requested preview ID. A duplicate of
 that cookie counts as no cookie. The proxy checks the D1 record and the cookie
 before any sandbox call. A leaked hostname alone gets a 404.
+The D1 reads of an active preview use the shared `sandboxAccessPredicate`.
+So a preview of a workspace whose owner is suspended gets the same 404.
 
 Preview open, document loads, iframe loads, and cache misses resolve the listener.
 The resolver checks `ss` output for loopback and wildcard addresses.
@@ -138,7 +143,8 @@ alarm after a preview opens. Call `expire()` from that alarm and schedule
 the next expiry. Keep the handler instance with its live connections so these
 hooks also cancel its fetches, HTTP streams, and sockets.
 Each data batch waits for a D1 check that starts after the data arrives.
-This also blocks data after another instance revokes the preview.
+This also blocks data after another instance revokes the preview, or after
+the owner of the workspace is suspended.
 The request and response streams read only when their consumer requests data.
 They read one chunk at a time. No cached authorization or time window permits data.
 Completed HTTP connections release their registry entries.
@@ -170,6 +176,8 @@ The proxy follows no upstream redirect.
 - [listeners.ts](listeners.ts) resolves explicit localhost or network exposure.
 - [store.ts](store.ts) and [workspace-store.ts](workspace-store.ts) hold the D1 queries.
   `publicPreview` in `store.ts` builds `Preview.url`.
+  `readWorkspaceTarget` returns a `WorkspaceAccessTarget` with the `ownerActive` and `sandboxAllowed` flags. It keeps the row of a suspended owner's workspace, so the metadata reads still work.
+- [sandbox-access.ts](../data/sandbox-access.ts) exports `sandboxAccessPredicate`, the shared rule of the preview, terminal, and desktop access.
 - [provider.ts](provider.ts) exports the typed `WorkspaceTools` adapter.
 - [headers.ts](headers.ts) builds private upstream requests and safe responses.
 - [origins.ts](origins.ts) maps request Origins and private redirects.
@@ -178,6 +186,7 @@ The proxy follows no upstream redirect.
 - [launch-test-support.ts](launch-test-support.ts) runs the real launch GET and authorizer POST in tests.
 
 The feature adapter checks workspace access before each provider operation.
+It refuses a workspace whose owner is suspended with 403 `user_suspended`.
 The [sandbox provider](../sandbox/README.md) owns the fixed `host` and `desktop`
 routes, provider factory, organization pin, parsers, transport, commands, and file reads.
 The feature adapter holds a `SandboxProvider`. It holds no plaintext key.

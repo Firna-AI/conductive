@@ -1,17 +1,22 @@
 import { API_PATHS } from '../../src/shared/api'
 import type { AppEnv } from '../env'
+import { suspendedUserError } from '../data/user-access'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { ProviderError } from '../sandbox/errors'
 import { gate } from '../security/gate'
 import type { ToolDependencies, WorkspaceTarget } from './types'
-import { readWorkspaceTarget, writeWorkspaceActivity } from './workspace-store'
+import {
+  readWorkspaceTarget,
+  writeWorkspaceActivity,
+  type WorkspaceAccessTarget,
+} from './workspace-store'
 
 export async function workspaceTarget(
   env: AppEnv,
   orgId: string,
   workspaceId: string,
   userId?: string,
-): Promise<WorkspaceTarget> {
+): Promise<WorkspaceAccessTarget> {
   const row = await readWorkspaceTarget(env.DB, orgId, workspaceId, userId)
   if (!row)
     throw new HttpError(
@@ -22,11 +27,9 @@ export async function workspaceTarget(
   return row
 }
 
-export function requireRunning(target: WorkspaceTarget): void {
-  if (
-    !target.sandboxId ||
-    !['ready', 'working', 'unread', 'input'].includes(target.state)
-  ) {
+export function requireRunning(target: WorkspaceAccessTarget): void {
+  if (target.ownerActive !== 1) throw suspendedUserError()
+  if (!target.sandboxId || target.sandboxAllowed !== 1) {
     throw new HttpError(
       409,
       'sandbox_not_ready',
@@ -54,6 +57,7 @@ export async function verifyTarget(
       'The workspace is not available.',
     )
   }
+  if (current.ownerActive !== 1) throw suspendedUserError()
   if (running) requireRunning(current)
 }
 

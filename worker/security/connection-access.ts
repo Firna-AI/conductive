@@ -1,3 +1,5 @@
+import { sandboxAccessPredicate } from '../data/sandbox-access'
+
 interface ConnectionSessionIdentity {
   sessionId: string
   userId: string
@@ -54,7 +56,7 @@ export async function readConnectionAccess(
      JOIN workspaces w ON w.org_id = o.id AND w.id = requested.workspaceId
      WHERE requested.kind = 'workspace' OR (
        requested.kind = 'sandbox' AND w.sandbox_id = requested.sandboxId
-       AND w.archived_at IS NULL AND w.state IN ('ready','working','unread','input')
+       AND ${sandboxAccessPredicate}
      )`,
     )
     .bind(JSON.stringify(identities), now)

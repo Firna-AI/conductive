@@ -10,7 +10,11 @@ import {
   IMAGE_PUSH_MS,
   readImageSchedule,
 } from './image-schedule'
-import { firstOrgAdmin, readImageSettings } from './settings-data'
+import {
+  firstActiveOrgAdmin,
+  firstOrgAdmin,
+  readImageSettings,
+} from './settings-data'
 import { cleanupOrgImageSources } from './image-sources/cleanup'
 
 export { IMAGE_DAY_MS, IMAGE_POLL_MS } from './image-schedule'
@@ -37,7 +41,7 @@ export async function refreshImagesForPush(
   const builds: string[] = []
   for (const repository of results) {
     if (input.ref !== `refs/heads/${repository.defaultBranch}`) continue
-    const admin = await firstOrgAdmin(runtime.env.DB, repository.orgId)
+    const admin = await firstActiveOrgAdmin(runtime.env.DB, repository.orgId)
     if (!admin) continue
     const settings = await readImageSettings(runtime.env.DB, repository.orgId)
     if (
@@ -126,7 +130,7 @@ export async function runImageAlarm(
     )
     return
   }
-  const admin = await firstOrgAdmin(runtime.env.DB, state.orgId)
+  const admin = await firstActiveOrgAdmin(runtime.env.DB, state.orgId)
   if (!admin || !next.imageName) return
   if (next.pendingAt <= runtime.dependencies.now()) {
     await runtime.env.DB.prepare(

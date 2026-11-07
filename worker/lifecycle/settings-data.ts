@@ -158,3 +158,20 @@ export function firstOrgAdmin(
     .bind(orgId)
     .first<{ userId: string }>()
 }
+
+export function firstActiveOrgAdmin(
+  db: D1Database,
+  orgId: string,
+): Promise<{ userId: string } | null> {
+  return db
+    .prepare(
+      `SELECT m.user_id AS userId FROM org_members m
+       JOIN orgs o ON o.id = m.org_id
+       JOIN users u ON u.id = m.user_id
+       WHERE m.org_id = ? AND m.role = 'admin' AND o.deleted_at IS NULL
+         AND u.suspended_at IS NULL
+       ORDER BY m.joined_at, m.user_id LIMIT 1`,
+    )
+    .bind(orgId)
+    .first<{ userId: string }>()
+}

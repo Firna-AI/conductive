@@ -4,7 +4,12 @@ import type {
 } from '../../src/shared/previews'
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
-import { requireRunning, toolError, toolRequest } from './access'
+import {
+  requireRunning,
+  toolError,
+  toolRequest,
+  workspaceTarget,
+} from './access'
 import { previewLaunchPage, previewNativeLaunch } from './launch'
 import { PrivatePorts } from './ports'
 import { PreviewProxy } from './proxy'
@@ -109,6 +114,14 @@ export function createPreviewHandler(
           if (
             !(await insertPreview(env.DB, target, row, context.user.id, now))
           ) {
+            requireRunning(
+              await workspaceTarget(
+                env,
+                target.orgId,
+                target.workspaceId,
+                context.user.id,
+              ),
+            )
             throw new HttpError(
               409,
               'sandbox_not_ready',

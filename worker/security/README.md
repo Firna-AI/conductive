@@ -35,7 +35,7 @@ Every identity passes only when all of these are true:
 Each identity also has one of two kinds:
 
 - `workspace`: chat tabs use it. It needs nothing more, because chat history stays readable after a stop or an archive.
-- `sandbox`: terminal sockets use it. It also holds a sandbox ID. That ID must still be the sandbox of the workspace. The workspace must also be in a running state and not archived. The running states are `ready`, `working`, `unread`, and `input`.
+- `sandbox`: terminal sockets use it. It also holds a sandbox ID. That ID must still be the sandbox of the workspace. The workspace must also be in a running state and not archived. The running states are `ready`, `working`, `unread`, and `input`. The owner of the workspace must not be suspended. `sandboxAccessPredicate` from [`sandbox-access.ts`](../data/sandbox-access.ts) holds these rules, as [Sandbox access](../operator/README.md#sandbox-access) says.
 
 The `connectionNumber` of a grant is the index of its identity in the input.
 The grant deadline is the earlier of the session expiry and `now` plus 30 seconds.

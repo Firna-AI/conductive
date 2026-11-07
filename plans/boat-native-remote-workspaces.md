@@ -5983,20 +5983,30 @@ the shared crop, so viewport units keep the screen's layout. Keep the
 desktop agents crop and correct its label, because the screen's menu
 covers one attachment.
 
+Review calls, 7 November 2026: use one persistent owner check for
+interactive sandbox access while a stop waits. Keep history and cleanup
+available. Select an active admin for automatic image starts, while
+cleanup keeps its membership-based admin selection.
+
 - [x] Apply the recorded option of `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`, and
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
 - [x] Apply the recorded option of `plans/follow-ups/marketing-pictures-one-list.md`, and
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
 - [x] Apply the recorded option of `plans/follow-ups/marketing-mockup-gaps.md`, and
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Fix the confirmed suspension review findings for interactive sandbox
+      access and automatic image refreshes.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
 - [x] Apply decision 121 A to the GitHub token risk disclosure and privacy
       text. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
 
 Evidence: `.context/milestone-15m/reports/`,
 `.context/milestone-15m/marketing-pictures.log`,
 `.context/milestone-15m/picture-dimensions.json`,
-`.context/milestone-15m/preview-smoke.json`, and
-`.context/milestone-15m/check.log`.
+`.context/milestone-15m/preview-smoke.json`,
+`.context/milestone-15m/check.log`,
+`.context/milestone-15m/check-review-fix.log`, and
+`.context/milestone-15m/check-final.log`.
 
 ## Milestone 15n: Use the new shared UI parts
 

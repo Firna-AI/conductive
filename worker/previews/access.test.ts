@@ -11,6 +11,7 @@ import { TEST_ORIGIN } from '../test-support/harness'
 import { createPreviewHandler } from './handler'
 import { launchPreview } from './launch-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
+import { activeMember, suspendWorkspaceOwner } from './suspension-test-support'
 
 let harness: ToolsHarness
 beforeAll(async () => {
@@ -124,6 +125,65 @@ it('checks current membership and workspace ownership before each tool upstream 
   )
   expect(denied.status).toBe(404)
   expect(harness.requests).toHaveLength(0)
+  await startWorkspaceTerminal(
+    harness.env,
+    seed.orgId,
+    seed.workspaceId,
+    harness.dependencies,
+  )
+  const member = await activeMember(harness, seed.orgId)
+  await suspendWorkspaceOwner(harness, seed.workspaceId)
+  harness.requests.length = 0
+  const suspendedRoutes = [
+    {
+      handler: routes[0].handler,
+      path: previewsPath(seed.orgId, seed.workspaceId),
+      method: 'POST',
+    },
+    {
+      handler: routes[1].handler,
+      path: previewPath(seed.orgId, seed.workspaceId, 'preview-one'),
+      method: 'GET',
+    },
+    {
+      handler: routes[2].handler,
+      path: terminalPaths.socket(seed.orgId, seed.workspaceId),
+      method: 'GET',
+    },
+    {
+      handler: routes[3].handler,
+      path: desktopPath(seed.orgId, seed.workspaceId),
+      method: 'GET',
+    },
+  ]
+  for (const route of suspendedRoutes) {
+    const response = await route.handler.fetch(
+      member.request(route.path, {
+        method: route.method,
+        body: route.method === 'POST' ? '{"port":3000}' : undefined,
+        headers: route.path.endsWith('/socket')
+          ? { Upgrade: 'websocket', 'Sec-WebSocket-Protocol': 'tty' }
+          : {},
+      }),
+    )
+    expect(response.status).toBe(403)
+    expect(await response.json()).toEqual({
+      error: { code: 'user_suspended', message: 'This account is suspended.' },
+    })
+  }
+  expect(harness.requests).toHaveLength(0)
+  expect(
+    (
+      await routes[0].handler.fetch(
+        member.request(previewsPath(seed.orgId, seed.workspaceId)),
+      )
+    ).status,
+  ).toBe(200)
+  const status = await routes[2].handler.fetch(
+    member.request(terminalPaths.connection(seed.orgId, seed.workspaceId)),
+  )
+  expect(status.status).toBe(200)
+  expect(await status.json()).toMatchObject({ state: 'ready' })
 })
 
 it('keeps the terminal, port preview, and desktop available while a workspace needs input', async () => {
@@ -177,4 +237,47 @@ it('keeps the terminal, port preview, and desktop available while a workspace ne
   expect(socket.status).toBe(101)
   harness.serverSockets[0].close(1000, 'finished')
   await harness.upstreamSockets[0].end
+  await harness.env.DB.prepare(
+    "UPDATE workspaces SET state = 'stopped' WHERE id = ?",
+  )
+    .bind(seed.workspaceId)
+    .run()
+  harness.requests.length = 0
+  const list = await preview.fetch(
+    seed.request(previewsPath(seed.orgId, seed.workspaceId)),
+  )
+  expect(list.status).toBe(200)
+  const stopped = await terminal.fetch(
+    seed.request(terminalPaths.connection(seed.orgId, seed.workspaceId)),
+  )
+  expect(stopped.status).toBe(200)
+  expect(await stopped.json()).toEqual({ state: 'stopped', socketPath: null })
+  const requests = [
+    {
+      handler: preview,
+      request: seed.request(previewsPath(seed.orgId, seed.workspaceId), {
+        method: 'POST',
+        body: '{"port":3000}',
+      }),
+    },
+    {
+      handler: desktop,
+      request: seed.request(desktopPath(seed.orgId, seed.workspaceId)),
+    },
+    {
+      handler: terminal,
+      request: seed.request(
+        terminalPaths.socket(seed.orgId, seed.workspaceId),
+        { headers: { Upgrade: 'websocket', 'Sec-WebSocket-Protocol': 'tty' } },
+      ),
+    },
+  ]
+  for (const entry of requests) {
+    const response = await entry.handler.fetch(entry.request)
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({
+      error: { code: 'sandbox_not_ready' },
+    })
+  }
+  expect(harness.requests).toHaveLength(0)
 })
