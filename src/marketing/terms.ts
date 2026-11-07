@@ -54,8 +54,8 @@ export const termsDocument: LegalDocument = {
         </li>
         <li>
           The agents run on the Claude or OpenAI login that you connect. The
-          model use of each message bills to the account of the person who sent
-          the message, under the terms of Anthropic or OpenAI.
+          model use of each message bills to the account of the member who
+          started its session, under the terms of Anthropic or OpenAI.
         </li>
         <li>
           Keep your keys and logins safe.
@@ -79,6 +79,11 @@ export const termsDocument: LegalDocument = {
         <li>
           That GitHub token reaches every repository where that person installed
           the GitHub App and has access, not only the repositories of the org.
+        </li>
+        <li>
+          While your login is connected, you cannot stop other members from
+          using it in the sessions that you started.
+          ${draftField("Do Anthropic's terms let other members use a member's Claude subscription?")}
         </li>
         <li>
           While a turn runs, its agent login is in the cloud computer of the
