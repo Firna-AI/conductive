@@ -20,6 +20,7 @@ export function emptySnapshot(): RepositorySnapshot {
   return {
     entries: [],
     identities: new Map(),
+    readIdentities: new Map(),
     baseCommit: 'base-commit',
     changes: {
       baseBranch: 'main',

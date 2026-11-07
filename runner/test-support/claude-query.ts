@@ -24,9 +24,14 @@ export class FakeClaudeQuery implements ClaudeQuery {
   }
 
   async nextUser(): Promise<SDKUserMessage> {
-    const next = await this.input?.next()
-    if (!next || next.done) throw new Error('The test did not submit a prompt.')
+    const next = await this.nextInput()
+    if (next.done) throw new Error('The test did not submit a prompt.')
     return next.value
+  }
+
+  nextInput(): Promise<IteratorResult<SDKUserMessage>> {
+    if (!this.input) throw new Error('The test did not open streamed input.')
+    return this.input.next()
   }
 
   raw(value: unknown): Promise<void> {

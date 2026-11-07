@@ -101,7 +101,7 @@ it('keeps another session live while one provider start waits and disposes a can
       h.events
         .filter((event) => event.sessionId === 'immediate')
         .map((event) => event.type),
-    ).toEqual(['turn.started', 'turn.completed'])
+    ).toEqual(['turn.completed'])
     expect(providers).toHaveLength(2)
   } finally {
     gate.resolve(late)

@@ -1,3 +1,4 @@
+import type { AgentChatEvent } from '../../src/shared/chat-events'
 import { turn } from './harness'
 
 export function deferred<T>() {
@@ -25,5 +26,35 @@ export function stop(
     sessionId,
     turnId,
     commandId: `stop-${id}`,
+  }
+}
+
+export function startEvent(
+  id = 'saved',
+): Extract<AgentChatEvent, { type: 'turn.started' }> {
+  const command = sessionTurn(id)
+  return {
+    type: 'turn.started',
+    sessionId: id,
+    turnId: command.turnId,
+    senderId: command.message.sender.id,
+    choice: command.message.choice,
+    startedAt: 100,
+    messageIds: [command.message.id],
+  }
+}
+
+export function stoppedEvent(
+  id = 'saved',
+): Extract<AgentChatEvent, { type: 'turn.completed' }> {
+  return {
+    type: 'turn.completed',
+    sessionId: id,
+    turnId: `turn-${id}`,
+    state: 'stopped',
+    durationMs: 0,
+    files: [],
+    omittedFileCount: 0,
+    userMessageIds: [`message-${id}`],
   }
 }

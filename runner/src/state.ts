@@ -12,6 +12,7 @@ import {
 import { jsonBytes } from './event-limits'
 import { parseEnvelope, parseEvent } from './stored-events'
 import { array, integer, object, oneOf, string } from './parse'
+import { parseSavedTurn, recordTurn, type SavedTurn } from './state-turns'
 
 export interface SavedSession {
   sessionId: string
@@ -26,6 +27,7 @@ export interface RunnerState {
   outbox: RunnerEventEnvelope[]
   sessions: SavedSession[]
   fileRevisions: FileRevisions
+  turns: SavedTurn[]
 }
 
 export interface FileRevisions {
@@ -76,6 +78,7 @@ function parseState(value: unknown): RunnerState {
       changes: integer(revisions.changes),
     },
     outbox: array(input.outbox, parseEnvelope),
+    turns: array(input.turns, parseSavedTurn),
     sessions: array(input.sessions, (value) => {
       const session = object(value)
       return {
@@ -123,6 +126,7 @@ export class EventStore {
             outbox: [],
             sessions: [],
             fileRevisions: { tree: 0, changes: 0 },
+            turns: [],
           }
         : parseState(saved)
     const store = new EventStore(storage, state)
@@ -162,6 +166,7 @@ export class EventStore {
     if (event.type === 'changes.updated')
       this.state.fileRevisions.changes = event.changes.revision
     this.state.outbox.push(envelope)
+    recordTurn(this.state.turns, envelope.event, envelope.eventNumber)
     await this.save()
     return structuredClone(envelope)
   }
@@ -173,6 +178,9 @@ export class EventStore {
     this.state.confirmedThrough = through
     this.state.outbox = this.state.outbox.filter(
       (item) => item.eventNumber > through,
+    )
+    this.state.turns = this.state.turns.filter(
+      (turn) => turn.endEventNumber === null || turn.endEventNumber > through,
     )
     await this.save()
   }

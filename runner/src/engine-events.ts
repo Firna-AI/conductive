@@ -43,16 +43,26 @@ export async function providerEvent(
     const provider = session.provider
     await cancelable(signal, () => provider.interrupt())
   }
-  if (event.type !== 'result' && event.type !== 'failed') return
-  if (event.type === 'result') {
-    const answered = event.userMessageIds.length
-      ? event.userMessageIds
-      : turn.messageIds
-    for (const id of answered) turn.resolvedMessageIds.add(id)
-    if (turn.messageIds.some((id) => !turn.resolvedMessageIds.has(id))) return
-  } else if (turn.waiting.length) {
-    for (const id of turn.messageIds) turn.resolvedMessageIds.add(id)
+  if (event.type === 'failed') {
+    await actions.finish(event)
+    return
   }
+  if (event.type === 'result') await continueResult(session, event, actions)
+}
+
+async function continueResult(
+  session: SessionRuntime,
+  event: Extract<ProviderEvent, { type: 'result' }>,
+  actions: EventActions,
+): Promise<void> {
+  const turn = session.active
+  if (!turn) return
+  const signal = turn.controller.signal
+  const answered = event.userMessageIds.length
+    ? event.userMessageIds
+    : turn.messageIds
+  for (const id of answered) turn.resolvedMessageIds.add(id)
+  if (turn.messageIds.some((id) => !turn.resolvedMessageIds.has(id))) return
   const next = turn.waiting.shift()
   if (!next) {
     await actions.finish(event)
@@ -64,6 +74,7 @@ export async function providerEvent(
   session.provider = null
   if (provider) await cancelable(signal, () => provider.close())
   turn.messageIds.push(next.message.id)
+  turn.retryMessageId = next.message.id
   await actions.start(next)
   while (
     turn.waiting.length &&

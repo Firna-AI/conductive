@@ -136,7 +136,9 @@ export class FileReporter {
       for (const [path, entry] of entries) {
         if (
           JSON.stringify(previous.get(path)) !== JSON.stringify(entry) ||
-          this.previous.identities.get(path) !== current.identities.get(path)
+          this.previous.identities.get(path) !== current.identities.get(path) ||
+          this.previous.readIdentities.get(path) !==
+            current.readIdentities.get(path)
         )
           changes.push({ operation: 'upsert', entry })
       }

@@ -17,8 +17,7 @@ This folder is a separate Node 24 package with its own lockfile. The root
 
 ## What it does
 
-These facts belong to this implementation. The protocol docs do not fix
-them.
+These facts belong to this implementation, not to the protocol docs.
 
 - Claude runs through the Claude Agent SDK, with the `claude` program from
   the platform package of the SDK. The SDK version in `package.json` pins
@@ -29,33 +28,43 @@ them.
 - Both agents run without approval prompts, with the rights of the service
   user. Both get the `computer` MCP server of the sandbox.
 - The runner gives the login of a turn only to the agent process of its
-  sender. A turn of another sender starts a new agent process on the same
-  conversation.
+  sender. Another sender's turn, or part of a turn, starts a new agent
+  process on the same conversation. If a part fails, the turn fails, and its
+  retry names the first message of that part. Input that still waits does
+  not run, so the other member must send it again.
 - Each session owns its agent start, requests, scans, and shutdown. Stop
   closes the agent process of that session, discards its unread input, and
   cancels its pending work. Other sessions keep streaming and can stop. A
   stopped running turn sends one end event, after its `turn.started`. The
   next turn resumes its saved conversation when one exists.
-- The workspace Durable Object owns the turn IDs and the waiting input.
-  Only a `turn` command starts a turn, and the runner creates no turn ID.
-- A `message` command reaches only the running turn that it names. Other
-  messages get a local warning and no event. An interrupt for a turn that
-  the runner does not run still gets `turn.completed` with state `stopped`.
+- Stop for a pending turn sends one stopped `turn.completed` at once. It
+  cancels the start and closes the idle agent. No `turn.started` follows,
+  also after a held save returns. A second Stop sends nothing. A saved end
+  suppresses another end. An unknown turn gets a stopped completion.
+- The workspace Durable Object creates the turn IDs and owns the waiting
+  input. Only a `turn` command starts a turn. A `message` command reaches
+  only the running turn that it names. Others get only a local warning. An
+  idle `model` command only saves the choice, and the next turn applies it.
 - One output filter replaces the workspace token and known logins with
   `[redacted]`. It holds possible secret prefixes across text events.
 - Claude text joins across SDK frames and text blocks until `message_stop`,
   or else the next `message_start`, a tool result, or the result. So a split
   login stays in one filtered message, and partial text still streams live.
+- The Claude adapter holds new input while 64 sent messages wait for a
+  result that lists them. Each result frees only the messages that it
+  lists. Closing discards held input. The engine matches result lists exactly.
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
-  counter, the unconfirmed events, the tree and changes revisions, and the
-  conversation references. It holds no command and no login.
+  counter, the unconfirmed events, the tree and changes revisions, the
+  conversation references, and `turns` records of started turns. It holds no
+  command and no login. The saves of `turn.started` and its end write that
+  record, and the confirm of the end removes it. After a restart, an ended
+  turn never runs again, and an unfinished turn gets one stopped end.
 - File reads and diffs use the shared UTF-8 decoder and keep a leading byte
   order mark. A valid path can hold a tab, a newline, or a backslash. Each
   path must still resolve inside the repository and pass the `.git` check.
 - Before it connects, the runner reads the `claude` program file once, so
-  that the disk loads it early. This step uses no login and starts no
-  agent.
+  that the disk loads it early. It uses no login and starts no agent.
 - The runner protocol carries no GitHub token.
   [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
   states how a sandbox gets GitHub access.
@@ -66,25 +75,21 @@ The runner keeps each event within the limits that
 [Chat and events](../docs/protocol/chat-and-events.md#the-agent-runner) and
 [Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
 state. The [shared contracts](../src/shared/README.md) hold the constants.
-No variable changes them, and the runner protocol stays at version 1.
+No variable changes them, and the runner protocol stays at version 1. Each
+byte budget measures the event or field after the output filter.
 
-- The runner applies each cap after the output filter. Each byte budget
-  measures the filtered event or field.
 - A tool detail keeps the longest prefix that fits
-  [`TOOL_DETAIL_MAX_BYTES`](../src/shared/chat-events.ts).
-  `omittedDetailBytes` gives the size of the rest.
-- A turn summary keeps the first whole files that fit
-  `TURN_COMPLETED_MAX_FILES` and `TURN_COMPLETED_FILES_MAX_BYTES`.
-  `omittedFileCount` counts the rest. The Changes report still lists every
-  file.
+  [`TOOL_DETAIL_MAX_BYTES`](../src/shared/chat-events.ts), and
+  `omittedDetailBytes` counts the rest. A turn summary keeps the first whole
+  files within `TURN_COMPLETED_MAX_FILES` and `TURN_COMPLETED_FILES_MAX_BYTES`.
+  `omittedFileCount` counts the rest, and the Changes report lists every file.
 - Each file event fits [`FILE_EVENT_MAX_BYTES`](../src/shared/files.ts). A
   full tree or changes report goes as numbered parts of one revision. A
   large tree update goes as deltas of at most `FILE_TREE_DELTA_MAX_CHANGES`
   changes, with consecutive revisions.
-- Tree reports and changes reports have separate revision counters. The
-  state file keeps both with the stream, so a reconnect or a restart
-  continues them. Each forced refresh, such as the one after each connect,
-  sends a full tree and a full changes report with newer revisions.
+- Tree and changes reports have separate revision counters, which survive
+  a reconnect or a restart. Each forced refresh, such as the one after each
+  connect, sends a full tree and a full changes report with newer revisions.
 - Before the outbox takes an event number, it checks the complete envelope
   against [`RUNNER_EVENT_MAX_BYTES`](../src/shared/runner.ts). An event
   that does not fit gets a local warning and no number, so later events
@@ -186,15 +191,16 @@ The runner reads these variables when the service starts.
   The image integration must supply it.
 - `CONDUCTING_DEFAULT_BRANCH` is the base of the file marks, the Changes
   list, and the changed files of each turn. Each diff request names its own
-  base branch. File reports compare content IDs and the commit of that
-  branch. So an edit with the same names, marks, and line counts still
-  updates the open files and diffs.
+  base branch. File reports compare the commit of that branch, the Git ID
+  of each file, and a streamed hash of the bytes that a read returns. That
+  hash uses the same path checks as a read, and a fixed value for a refused
+  or missing target. So an edit, a link into an ignored folder, or a clean
+  filter cannot hide a change from the open files and diffs.
 - The home folder also holds `.conducting/claude` and `.conducting/codex`,
   where the agents keep their sessions. Boat keeps the disk across a stop
   and a resume, so the sessions stay.
 - The state file belongs to one workspace. Keep it out of the org image.
-- After a failed or a dropped connection, the runner connects again after
-  1 second.
+- After a failed or dropped connection, the runner connects again in 1 second.
 
 When a required variable is missing, or the state file cannot be read,
 the runner exits with code 1. It writes this line to standard error:
@@ -207,22 +213,19 @@ The runner could not start. Check its configuration and saved state.
 
 - The tests live beside the code as `*.test.ts`. They connect the runner
   to `FakeDurableObjectEndpoint` from the
-  [backend and runner fakes](../worker/test-support/README.md).
-- That fake endpoint joins file parts before it reports a complete file
-  event. Its `refuseEvent` setting refuses an event with a marker. It does
-  not check event sizes.
+  [backend and runner fakes](../worker/test-support/README.md). It joins
+  file parts, refuses an event with a marker when `refuseEvent` is set, and
+  checks no event sizes.
 - `test-support/` holds the runner fakes: a fake Claude SDK query, a fake
   Codex App Server, fake agent processes, and a temporary Git repository.
-  `harness.ts` starts a `Runner` with them. `wire.ts` saves state with the
-  production `DiskStorage` in a temporary folder, unless a test passes its
-  own storage.
+  `harness.ts` starts a `Runner` with them. `wire.ts` uses the production
+  `DiskStorage` in a temporary folder, unless a test passes its own storage.
 - The tests need Git. They need no network, no agent login, no cloud
   account, and no cloud computer. No test starts a real agent program, a
   real Worker, or a real sandbox. So a passing run does not show that a
   real login works, or that the `computer` MCP server answers.
-- `scripts/codex-capabilities.mjs` checks what the Codex SDK streams, and
-  whether an abort stops it. It sends every model request to a local fake
-  server.
+- `scripts/codex-capabilities.mjs` checks what the Codex SDK streams and
+  whether an abort stops it. Each model request goes to a local fake server.
 
 ## First-start measurements
 
@@ -269,24 +272,21 @@ defaults are the current folder and the home folder of the user.
   removes known secrets from complete and streamed text before each save.
 - `src/event-limits.ts`: byte accounting and tool and turn-summary caps.
 - `src/file-parts.ts`: full report parts and bounded tree deltas.
-- `src/link.ts`, `src/state.ts`, and `src/socket.ts`: the hello, welcome,
-  confirm, and resend rules, the state file, and the WebSocket connector.
-- `src/commands.ts` and `src/stored-events.ts`: the checks of each
-  workspace message and each saved event.
+- `src/link.ts`, `src/state.ts`, `src/socket.ts`, `src/commands.ts`, and
+  `src/stored-events.ts`: the hello, welcome, confirm, and resend rules, the
+  state file, the WebSocket, and checks of messages and saved events.
 - `src/engine.ts`, `src/engine-runtime.ts`, and `src/turn-output.ts`:
   session queues, cancelable turns, sender changes, controls, and text deltas.
-- `src/providers/`: the Claude and Codex adapters, their event mapping,
-  and the environment of each agent process.
-- `src/providers/claude-message.ts`: whole Claude message assembly.
+- `src/providers/`: the Claude and Codex adapters, their event mapping, and
+  each agent environment. `claude-message.ts` joins whole Claude messages.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the file
   tree, the branch changes, bounded reads, and the files of one turn.
 - `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary
   indexes and objects for Git comparisons. The real index stays unchanged.
 - `src/git-paths.ts`: shared Git namespace states for paths and parents.
-- `src/measure.ts` and `src/compare.ts`: the first-start measurement and
-  the comparison of its samples.
-- `scripts/` and `service/`: the build, the install script, the Codex
-  check, and the systemd unit.
+- `src/measure.ts`, `src/compare.ts`, `scripts/`, and `service/`: the
+  first-start measurement and its comparison, the build, the install
+  script, the Codex check, and the systemd unit.
 
 ## Related docs
 

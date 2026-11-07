@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto'
 
-import { query, type SDKUserMessage } from '@anthropic-ai/claude-agent-sdk'
+import { query } from '@anthropic-ai/claude-agent-sdk'
 
 import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
+import { ClaudeInputWindow } from './claude-input-window'
 import { prepareProviderHome, providerEnvironment } from './environment'
-import { InputQueue } from './queue'
 import { failureCause } from './failure'
 import type { ProviderFactory } from './types'
 
@@ -31,9 +31,12 @@ export function createClaudeFactory(
     options.signal?.throwIfAborted()
     await prepareProviderHome(options.home)
     options.signal?.throwIfAborted()
-    const input = new InputQueue<SDKUserMessage>()
-    const ids = new Map<string, string>()
-    const mapper = new ClaudeEvents(ids, options.event)
+    const input = new ClaudeInputWindow()
+    let resultReceived = false
+    const mapper = new ClaudeEvents(input.ids, (event) => {
+      if (event.type === 'result') resultReceived = true
+      options.event(event)
+    })
     let closed = false
     const stream = start({
       prompt: input,
@@ -57,7 +60,10 @@ export function createClaudeFactory(
     void (async () => {
       try {
         for await (const message of stream) {
-          if (!closed) mapper.accept(message)
+          if (closed) continue
+          resultReceived = false
+          mapper.accept(message)
+          if (resultReceived) input.complete(message)
         }
         if (!closed)
           options.event({
@@ -84,11 +90,10 @@ export function createClaudeFactory(
     return {
       send: async (command) => {
         const uuid = randomUUID()
-        ids.set(uuid, command.message.id)
         const attached = command.attachments
           .map((item) => `\nAttached file: ${item.path}`)
           .join('')
-        input.push({
+        input.push(command.message.id, {
           type: 'user',
           uuid,
           session_id: options.conversationId ?? '',

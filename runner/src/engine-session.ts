@@ -15,6 +15,7 @@ import { cancelable } from './engine-cancel'
 
 export interface ActiveTurn {
   first: ProviderInput
+  retryMessageId: string
   startedAt: number
   messageIds: string[]
   /** Includes inputs consumed by an SDK result or closed by a failed segment. */

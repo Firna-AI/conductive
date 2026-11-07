@@ -1,5 +1,5 @@
 import { constants } from 'node:fs'
-import { open, readlink, realpath } from 'node:fs/promises'
+import { open, readlink, realpath, type FileHandle } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 
 import { isFilePath } from '../../src/shared/file-path'
@@ -46,11 +46,11 @@ export function textContent(bytes: Buffer): string | null {
 }
 
 /** Verify the opened descriptor too, so a moved parent cannot escape the root. */
-export async function readBytes(
+export async function withReadFile<T>(
   root: string,
   path: string,
-  maxBytes: number,
-): Promise<Buffer> {
+  read: (file: FileHandle, size: number) => Promise<T>,
+): Promise<T> {
   safePath(path)
   try {
     const canonicalRoot = await realpath(root)
@@ -73,34 +73,7 @@ export async function readBytes(
         throw unavailable()
       const info = await file.stat()
       if (!info.isFile()) throw unavailable()
-      if (info.size > maxBytes)
-        throw new FileAccessError({
-          code: 'file_too_large',
-          message: 'The file exceeds the read limit.',
-          sizeBytes: info.size,
-          limitBytes: maxBytes,
-        })
-      const bytes = Buffer.alloc(info.size + 1)
-      let length = 0
-      while (length < bytes.length) {
-        const result = await file.read(
-          bytes,
-          length,
-          bytes.length - length,
-          null,
-        )
-        if (result.bytesRead === 0) break
-        length += result.bytesRead
-      }
-      if (length > maxBytes)
-        throw new FileAccessError({
-          code: 'file_too_large',
-          message: 'The file exceeds the read limit.',
-          sizeBytes: length,
-          limitBytes: maxBytes,
-        })
-      if (length > info.size) throw unavailable()
-      return bytes.subarray(0, length)
+      return await read(file, info.size)
     } finally {
       await file.close()
     }
@@ -113,6 +86,38 @@ export async function readBytes(
       })
     throw unavailable()
   }
+}
+
+export async function readBytes(
+  root: string,
+  path: string,
+  maxBytes: number,
+): Promise<Buffer> {
+  return withReadFile(root, path, async (file, size) => {
+    if (size > maxBytes)
+      throw new FileAccessError({
+        code: 'file_too_large',
+        message: 'The file exceeds the read limit.',
+        sizeBytes: size,
+        limitBytes: maxBytes,
+      })
+    const bytes = Buffer.alloc(size + 1)
+    let length = 0
+    while (length < bytes.length) {
+      const result = await file.read(bytes, length, bytes.length - length, null)
+      if (result.bytesRead === 0) break
+      length += result.bytesRead
+    }
+    if (length > maxBytes)
+      throw new FileAccessError({
+        code: 'file_too_large',
+        message: 'The file exceeds the read limit.',
+        sizeBytes: length,
+        limitBytes: maxBytes,
+      })
+    if (length > size) throw unavailable()
+    return bytes.subarray(0, length)
+  })
 }
 
 /** Git stores link text. Its parent must still belong to this repository. */

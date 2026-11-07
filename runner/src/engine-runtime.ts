@@ -25,6 +25,7 @@ export class SessionEngine {
   private session: SessionRuntime | null = null
   private pending: Promise<void> = Promise.resolve()
   private readonly starts = new Map<string, AbortController>()
+  private readonly stoppedBeforeStart = new Set<string>()
   private closed = false
 
   constructor(options: EngineOptions) {
@@ -33,6 +34,7 @@ export class SessionEngine {
 
   command(command: Command): Promise<void> {
     if (command.type === 'interrupt') {
+      if (this.stoppedBeforeStart.has(command.turnId)) return Promise.resolve()
       const turn = this.session?.active
       if (turn?.first.turnId === command.turnId) {
         this.cancel(turn)
@@ -47,8 +49,29 @@ export class SessionEngine {
       }
       const start = this.starts.get(command.turnId)
       if (start) {
+        this.stoppedBeforeStart.add(command.turnId)
         start.abort()
-        return this.pending
+        const session = this.session
+        if (session && !session.active) {
+          session.generation++
+          const provider = session.provider
+          session.provider = null
+          void provider
+            ?.close()
+            .catch(() =>
+              this.options.warn('The canceled agent could not close.'),
+            )
+        }
+        return this.emit({
+          type: 'turn.completed',
+          sessionId: command.sessionId,
+          turnId: command.turnId,
+          state: 'stopped',
+          durationMs: 0,
+          files: [],
+          omittedFileCount: 0,
+          userMessageIds: [],
+        })
       }
       return this.enqueue(() =>
         this.emit({
@@ -65,23 +88,29 @@ export class SessionEngine {
     }
     if (command.type === 'turn')
       this.starts.set(command.turnId, new AbortController())
+    const controller =
+      command.type === 'turn' ? this.starts.get(command.turnId) : undefined
     return this.enqueue(async () => {
       try {
         if (command.type === 'model') {
           const session = this.session
           if (session?.agent === command.choice.agent) {
             session.choice = command.choice
-            if (session.provider) {
+            if (session.provider && session.active) {
               const provider = session.provider
-              if (session.active)
-                await cancelable(session.active.controller.signal, () =>
-                  provider.model(command.choice),
-                )
-              else await provider.model(command.choice)
+              await cancelable(session.active.controller.signal, () =>
+                provider.model(command.choice),
+              )
             }
           }
         } else await this.input(command)
       } catch (error) {
+        if (
+          command.type !== 'model' &&
+          controller?.signal.aborted &&
+          this.session?.active?.first.turnId !== command.turnId
+        )
+          return
         if (!this.closed && this.session?.active)
           await this.finish(failureCause(error))
         else if (!this.closed)
@@ -140,7 +169,10 @@ export class SessionEngine {
       created: (session) => {
         this.session = session
       },
-      controller: this.starts.get(command.turnId) ?? new AbortController(),
+      controller:
+        command.type === 'message' && this.session?.active
+          ? this.session.active.controller
+          : (this.starts.get(command.turnId) ?? new AbortController()),
       emit: (event) => this.emit(event),
       enqueue: (action) => {
         void this.enqueue(action)

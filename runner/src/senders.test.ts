@@ -89,7 +89,20 @@ it('changes sender credentials at a tool boundary and resumes stored conversatio
   })
   onTestFinished(() => restored.close())
   await restored.start(false)
-  h.endpoint.send(turn('4', 'bob'))
+  h.endpoint.send(turn('restart', 'alice'))
+  await restored.idle()
+  const firstPart = h.providers.latest
+  h.endpoint.send({
+    ...turn('4', 'bob'),
+    type: 'message',
+    turnId: 'turn-restart',
+  })
+  await restored.idle()
+  firstPart.emit({
+    type: 'result',
+    state: 'stopped',
+    userMessageIds: ['message-restart'],
+  })
   await restored.idle()
   expect(h.providers.latest.options.conversationId).toBe('conversation-1')
   expect(h.providers.latest.options.login.secret).toBe('secret-bob')
@@ -98,15 +111,19 @@ it('changes sender credentials at a tool boundary and resumes stored conversatio
   h.endpoint.send({
     ...turn('failure-next', 'charlie'),
     type: 'message',
-    turnId: 'turn-4',
+    turnId: 'turn-restart',
   })
   await restored.idle()
+  const processCount = h.providers.processes.length
   failed.emit({
     type: 'failed',
     code: 'provider_failed',
     message: 'The provider failed.',
   })
   await restored.idle()
+  expect(h.providers.processes).toHaveLength(processCount)
+  expect(h.providers.latest).toBe(failed)
+  expect(failed.closed).toBe(true)
   h.providers.latest.emit({
     type: 'result',
     state: 'finished',
@@ -114,10 +131,10 @@ it('changes sender credentials at a tool boundary and resumes stored conversatio
   })
   await restored.idle()
   expect(h.endpoint.runnerEvents.at(-1)?.event).toMatchObject({
-    type: 'turn.completed',
-    turnId: 'turn-4',
-    state: 'finished',
-    userMessageIds: ['message-4', 'message-failure-next'],
+    type: 'turn.failed',
+    turnId: 'turn-restart',
+    error: { code: 'provider_failed', message: 'The provider failed.' },
+    retryMessageId: 'message-4',
   })
   expect(h.warnings).toEqual([])
 })

@@ -41,7 +41,7 @@ export async function finishTurn(
       type: 'turn.failed',
       ...context,
       error: { code: result.code, message: result.message },
-      retryMessageId: turn.first.message.id,
+      retryMessageId: turn.retryMessageId,
       durationMs,
     })
     session.active = null

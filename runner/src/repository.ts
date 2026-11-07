@@ -11,11 +11,13 @@ import { readGitDiff } from './git-diff'
 import { branchChanges, changesFromIndex } from './repository-changes'
 import { Git } from './git'
 import { withGitIndex } from './git-index'
+import { readIdentity } from './read-identity'
 
 export interface RepositorySnapshot {
   entries: FileEntry[]
   changes: ChangesResponse
   identities: Checkpoint
+  readIdentities: Map<string, string>
   baseCommit: string
 }
 
@@ -72,12 +74,21 @@ export class Repository {
             })
           }
         }
+        const readIdentities = new Map<string, string>()
+        for (const entry of entries.values()) {
+          if (entry.kind === 'file')
+            readIdentities.set(
+              entry.path,
+              await readIdentity(this.git.root, entry.path),
+            )
+        }
         return {
           entries: [...entries.values()].sort((a, b) =>
             a.path.localeCompare(b.path, 'en'),
           ),
           changes,
           identities: await checkpointFromIndex(index),
+          readIdentities,
           baseCommit: sha,
         }
       },

@@ -25,6 +25,7 @@ export async function inputCommand(
   command: ProviderInput,
   actions: InputActions,
 ): Promise<void> {
+  actions.controller.signal.throwIfAborted()
   if (
     command.type === 'message' &&
     session?.active?.first.turnId !== command.turnId
@@ -40,7 +41,7 @@ export async function inputCommand(
     command.message.choice.agent
   ) {
     await fail(
-      options,
+      actions,
       command,
       'session_agent_mismatch',
       'Start a new session for this agent.',
@@ -58,13 +59,17 @@ export async function inputCommand(
       generation: 0,
       active: null,
     }
-    actions.created(session)
-    await rememberSession(options.store, session)
+    const created = session
+    actions.created(created)
+    await cancelable(actions.controller.signal, () =>
+      rememberSession(options.store, created),
+    )
   }
+  actions.controller.signal.throwIfAborted()
   if (session.active) {
     if (command.type === 'turn') {
       await fail(
-        options,
+        actions,
         command,
         'turn_running',
         'The session already has a running turn.',
@@ -86,6 +91,7 @@ export async function inputCommand(
   const { controller } = actions
   const turn: ActiveTurn = {
     first: command,
+    retryMessageId: command.message.id,
     startedAt: options.now(),
     messageIds: [command.message.id],
     resolvedMessageIds: new Set(),
@@ -97,6 +103,7 @@ export async function inputCommand(
     output: new TurnOutput(context, actions.emit, actions.enqueue),
   }
   session.active = turn
+  controller.signal.throwIfAborted()
   await actions.emit({
     type: 'turn.started',
     ...context,
@@ -112,12 +119,13 @@ export async function inputCommand(
 }
 
 function fail(
-  options: EngineOptions,
+  actions: InputActions,
   command: ProviderInput,
   code: string,
   message: string,
 ): Promise<void> {
-  return options.emit({
+  actions.controller.signal.throwIfAborted()
+  return actions.emit({
     type: 'turn.failed',
     sessionId: command.sessionId,
     turnId: command.turnId,

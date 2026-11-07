@@ -14,6 +14,7 @@ export async function engineFixture(overrides: Partial<EngineOptions> = {}) {
     outbox: [],
     sessions: [],
     fileRevisions: { tree: 0, changes: 0 },
+    turns: [],
   }
   const storage = {
     read: async () => saved,
