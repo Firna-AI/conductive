@@ -101,7 +101,7 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
 /**
  * The desktop app: the org rail, the sidebar of the org, and the main area.
  * Below 900 px the sidebar hides, and the org in the rail leads to its
- * list. A page outside an org, such as the account, has no sidebar.
+ * list. A page can leave out the sidebar.
  * Dialogs open over the whole frame.
  */
 export function AppFrame(props: FrameProps) {
