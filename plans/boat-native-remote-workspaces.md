@@ -5360,10 +5360,23 @@ Depends on: 9, 10
 Apply the `fix after merge` items of the files area. Added on
 7 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/file-read-size-refusals.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/markdown-emphasis-delimiters.md`, and
-      delete that item.
+Agent implementation calls on 7 November 2026:
+
+- Keep terminal HTTP 502 errors for oversized content error replies and
+  metadata replies. The file-read item predates the response-budget rule.
+- Keep the existing tilde matcher. The emphasis item defines its markers
+  as `*` and `_`.
+- Keep the outer 12 inline containers when the delimiter stack builds the
+  tree. This preserves the parser's depth bound.
+- Use CommonMark 0.31.2 for the delimiter rules and the one-time comparison.
+
+- [x] Apply the recorded option of `plans/follow-ups/file-read-size-refusals.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-10a`.
+- [x] Apply the recorded option of `plans/follow-ups/markdown-emphasis-delimiters.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-10a`.
+
+Evidence: `.context/milestone-10a/file-read-report.md` and
+`.context/milestone-10a/markdown-report.md`.
 
 ## Milestone 11: Terminal, previews, and desktop backend
 

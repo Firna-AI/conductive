@@ -5,19 +5,22 @@ import { ProviderError } from './errors'
 import type { BoatClient } from './boat'
 import { countedReply, paddedBody } from './transport.test-support'
 
+const filePath = '/home/user/note.txt'
+
 const cases = [
   {
     name: 'command error',
     request: (client: BoatClient) => client.runCommand('bx_one', 'npm test'),
     code: 'command_output_too_large',
     message: 'The command output is too large.',
+    requests: 1,
   },
   {
     name: 'file error',
-    request: (client: BoatClient) =>
-      client.readFile('bx_one', '/home/user/note.txt', 3),
+    request: (client: BoatClient) => client.readFile('bx_one', filePath, 3),
     code: 'sandbox_response_too_large',
     message: 'The cloud computer response is too large.',
+    requests: 2,
   },
 ]
 
@@ -50,7 +53,7 @@ it('maps command and file error replies at exactly 1 MiB without leaking provide
       bytes: 1_048_576,
       cancelled: 0,
     })
-    expect(reply.server.requests, scenario.name).toHaveLength(1)
+    expect(reply.server.requests, scenario.name).toHaveLength(scenario.requests)
   }
 })
 
@@ -60,6 +63,19 @@ it('cancels command and file error replies above 1 MiB without file metadata fal
       status: 429,
       overflow: true,
     })
+    reply.server.responseFactories.push(() =>
+      Response.json({
+        ok: true,
+        type: 'file.info',
+        name: 'note.txt',
+        path: filePath,
+        isDir: false,
+        isSymlink: false,
+        size: 6_291_456,
+        mode: '0644',
+        modifiedAt: '2026-11-07T00:00:00Z',
+      }),
+    )
     const error: unknown = await scenario
       .request(reply.client)
       .catch((error: unknown) => error)
