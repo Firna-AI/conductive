@@ -1,0 +1,20 @@
+/*
+ * A muted caption under the composer box, at the inset of its hint. A long
+ * name wraps the text, and the icon stays on the first line.
+ */
+.line {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 0;
+  padding-left: 14px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 16px;
+}
+
+.icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--ui-faint);
+}

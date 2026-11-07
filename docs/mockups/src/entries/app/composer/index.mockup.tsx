@@ -8,7 +8,7 @@ import {
 export const composer = defineScreen({
   title: 'Composer',
   description:
-    'A message with two attached files. The paperclip uploads files, which show as chips above the text. One picker sets the model and the effort of the next message, such as "Opus 5.5 High".',
+    'A message with two attached files. The paperclip uploads files, which show as chips above the text. One picker sets the model and the effort of the next message, such as "Opus 5.5 High". The line under the box names the agent login that the session uses.',
   rationale:
     'The picker names the model and shows the effort in a muted colour, without the names of the agents, so it stays short. The app offers the Claude and Codex models only for now. Each session has its own picker, as the user chose in decision 19. The sandbox keeps each file, and an image also goes to the model. Every composer uses the same controls, also the one of a new workspace.',
   relatedDocs: [],
@@ -44,6 +44,15 @@ export const composer = defineScreen({
       rationale:
         'The user chose option D of decision 33: Get started adds the Boat key, and this notice catches a key that is missing later. The notice says "cloud computers", because the app names Boat only on the key screen, the marketing site, and Get started (decision 47). Only an admin adds the key, so a member sees the notice without Add key.',
       props: { composer: 'no-key' },
+    },
+    {
+      slug: 'login',
+      title: "Another member's login",
+      description:
+        'Priya, a member of Acme, opens a session that Cal started. The line under the composer box says "Uses Cal\'s Claude login". So a message of Priya spends the login of Cal, also while a turn runs. In a session of Priya, the line says "Uses your Claude login".',
+      rationale:
+        'The user chose option F of decision 105 on 7 November 2026. Each session runs on the login of its starter, the member who started it. A message of any member uses that login. A message during a turn joins that turn at once. Every composer of a session names the login, so each member sees whose login a message spends. The message needs no Claude login of Priya, so the composer shows no Connect notice.',
+      props: { viewer: 'member' },
     },
   ],
 })

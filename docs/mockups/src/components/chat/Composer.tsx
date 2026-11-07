@@ -9,6 +9,7 @@ import { ActionButton, IconButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
 import { AttachmentChips } from './AttachmentChips'
 import { ModelPicker } from './ModelPicker'
+import { SessionLoginLine, type SessionLogin } from './SessionLogin'
 import styles from './Composer.module.css'
 
 export type ComposerState = {
@@ -31,6 +32,11 @@ export type ComposerState = {
   sendTo?: string
   /** The agent of the chosen model is not connected, so Send is off. */
   blocked?: boolean
+  /**
+   * Whose agent login the session uses: the login of its starter. The line
+   * under the box names it.
+   */
+  sessionLogin?: SessionLogin
 }
 
 function SendButton(props: { draft: string; blocked?: boolean }) {
@@ -53,7 +59,8 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
 /**
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. While a turn runs, a message
- * steers the turn, and Stop ends it.
+ * steers the turn, and Stop ends it. A line under the box names whose
+ * agent login the session uses.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const { field } = useControlSizes()
@@ -98,6 +105,7 @@ export function Composer(props: ComposerState & { lines?: number }) {
           )}
         </div>
       </div>
+      {props.sessionLogin ? <SessionLoginLine {...props.sessionLogin} /> : null}
       {props.running && props.draft !== '' ? (
         <span className={styles.hint}>
           The agent reads this at its next step.

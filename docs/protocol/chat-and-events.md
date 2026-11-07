@@ -21,12 +21,15 @@ says.
   SDK when that SDK can interrupt a turn and stream partial text. Otherwise
   Codex runs through the Codex App Server.
 - Every member of the org can send messages in each of its workspaces.
-- Each turn runs on the agent login of its sender, the person who sent the
-  message (decision 49).
-- A turn on the login of the workspace owner was rejected, because one
-  member could then spend the login of another member.
-- When the next turn has another sender, the agent runs with the login of
-  that sender. The session keeps its history.
+- Each session runs on the agent login of its starter, the member who
+  started the session (decision 105). A session never moves to the login of
+  another member.
+- The messages of the other members run on the login of the starter too.
+  So the other members spend the login of the starter.
+- Reason: each change of login rewrites the prompt cache of the
+  conversation. A login for each sender was rejected for that reason.
+- The login of the workspace owner for all sessions was rejected. Reason:
+  each member who starts a session spends their own login.
 - [Access and security](access-and-security.md#agent-logins-in-a-sandbox)
   states how a login reaches the sandbox, and its risk.
 - A session keeps its memory across a stop and a resume of the sandbox.
@@ -75,18 +78,30 @@ says.
 - Reason: neither SDK can switch agents inside one session. A hand-over of
   the transcript to the other agent was rejected. The user chose the way
   that Conductor works.
+- When the login of the starter cannot be used, a message of another
+  member starts a new session on that member's own login (decision 115).
+  This happens, for example, after the starter leaves the org or removes
+  the login. Before the member sends the message, the composer says that it
+  starts a new session.
+- The new session has none of the earlier history, and it links to the
+  first session. The first session keeps its history and its login.
+- A copy of the first conversation, and a move of the first session to
+  the login of the member, were rejected.
+- The composer names the member whose login its message runs on, such as
+  "Uses Priya's Claude login", or "Uses your Claude login" to Priya.
 - The composer attaches files to a message.
 - The composer shows a notice when the org has no Boat key (decision 33).
   A Boat key that Boat refuses counts as no key.
 - The composer shows a notice when the user has no login for the agent of
-  the chosen model.
+  the chosen model. It shows no such notice when the message runs on the
+  login of another member.
 - The app accepts a message before the sandbox is ready. The workspace
   keeps the message, and gives it to the agent when the sandbox is ready
   (decision 14).
 - A message that waits for the sandbox shows that it waits. A queue in the
   browser was rejected, because a closed tab would lose the message.
-- A message sent during a turn goes to the agent at once. The agent reads it
-  at its next tool call.
+- A message that any member sends during a turn joins that turn, and goes
+  to the agent at once. The agent reads it at its next tool call.
 - In a turn without tool calls, the agent reads such a message when the
   turn ends.
 - Stop interrupts the running turn. The chat shows an interrupted turn as

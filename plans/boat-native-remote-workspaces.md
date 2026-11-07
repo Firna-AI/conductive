@@ -2075,6 +2075,20 @@ from C to D.
 - **Action:** ask the user, because D changes decision 24, and each
   option adds behaviour that no requirement covers.
 - **Chosen:** D, by the user on 6 November 2026. It changes decision 24.
+- **Changed on 7 November 2026:** decision 105 F changes this decision for
+  sessions:
+  - Each session runs on the agent login of its starter, the member who
+    started the session. A session never moves to the login of another
+    member.
+  - A message of any member during a turn joins that turn at once, and the
+    other members spend the login of the starter. So the runner no longer
+    starts the agent again when the sender changes.
+  - When the login of the starter cannot be used, a message of another
+    member opens a new, empty session on that member's own login. This
+    happens, for example, after the starter leaves the org or removes the
+    login. The new session links to the first session (decision 115 A).
+  - A member cannot refuse the use of their login by others for now
+    (decision 116 A).
 
 ### 50. Decide the reach of a cloud computer's GitHub token
 
@@ -5002,8 +5016,9 @@ branch after Milestone 8k merges, before the chat changes.
       during a running turn joins that turn at once. Update the chat
       protocol and the section "Agent logins in a sandbox" of the access
       protocol, and add a note to decision 49.
-- [ ] Remove the login switch inside a turn from the runner, so that a
+- [x] Remove the login switch inside a turn from the runner, so that a
       session never changes its login.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
 - [ ] Show in the composer whose login the session uses. When the
       starter's login cannot be used, such as after the starter leaves the
       org or removes the login, a member's message opens a new, empty

@@ -29,13 +29,17 @@ These facts belong to this implementation, not to the protocol docs.
   `@openai/codex-sdk` installs.
 - Both agents run without approval prompts, with the rights of the service
   user. Both get the `computer` MCP server of the sandbox.
-- The runner gives the login of a turn only to the agent process of its
-  sender. Each end of a turn closes its agent process, so no idle agent
-  process keeps a login. The next turn starts a new agent process on the
-  saved conversation, when one exists. A part of a turn from another sender
-  also starts a new agent process on the same conversation. If a part fails,
-  the turn fails, and its retry names the first message of that part. Input
-  that still waits does not run, so the other member must send it again.
+- The runner starts each turn with the login of its `turn` command. That
+  login stays for the whole turn, also when a `message` command carries
+  another login. Each `message` command of the turn goes to the running
+  agent process at once, whoever sent it. Each end of a turn closes its
+  agent process, so no idle agent process keeps a login. The next turn
+  starts a new agent process on the saved conversation, when one exists.
+- When the running agent cannot take the model or the effort of a message
+  at once, that message waits for the result of the agent. A new agent
+  process then takes the waiting input on the same conversation and login.
+  If that process fails, the turn fails. Its retry names the first message
+  of that process, and the input that still waits does not run.
 - To close an agent process, the runner sends `SIGTERM` and waits until the
   process exits. A process that still runs 5 seconds after `SIGTERM` gets
   `SIGKILL`. The end of a turn goes out only after its agent process exits,
@@ -267,9 +271,9 @@ tools that time the first agent start after a resume.
 - `src/report-state.ts`: the saved `start.updated` and `workspace.title`
   events and the answered report request IDs of the state file.
 - `src/engine.ts`, `src/engine-runtime.ts`, and `src/turn-output.ts`:
-  session queues, cancelable turns, sender changes, controls, and text deltas.
-- `src/engine-disposal.ts`: one close path for sender changes, turn ends,
-  Stop, and shutdown.
+  session queues, cancelable turns, message delivery, controls, and text deltas.
+- `src/engine-disposal.ts`: one close path for deferred model changes, turn
+  ends, Stop, and shutdown.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.

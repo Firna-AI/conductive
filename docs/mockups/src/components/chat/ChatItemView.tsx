@@ -3,9 +3,12 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, CircleStop, Clock } from 'lucide-react'
 import type { ChatItem } from '../../fixtures/conversations'
 import { people, type PersonKey } from '../../fixtures/members'
+import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { InlineText } from '../common/InlineText'
 import { Notice } from '../common/Notice'
+import { ScreenLink } from '../common/ScreenLink'
+import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
 import { unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
@@ -79,6 +82,14 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
       )
     case 'lost':
       return <LostLine reason={item.reason} what={item.what} />
+    case 'linked':
+      // The mockups draw one linked session. Its link leads to the view of
+      // its first session that the member sees without the starter's login.
+      return (
+        <LinkedLine
+          link={<ScreenLink to={paths.noStarterLogin}>{item.from}</ScreenLink>}
+        />
+      )
     case 'stopped':
       return (
         <div className={styles.event}>

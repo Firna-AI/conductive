@@ -2,7 +2,6 @@ import { cancelable } from './engine-cancel'
 import { disposeProvider } from './engine-disposal'
 import {
   rememberSession,
-  senderIdentity,
   type EngineOptions,
   type SessionRuntime,
 } from './engine-session'
@@ -76,10 +75,7 @@ async function continueResult(
   turn.messageIds.push(next.message.id)
   turn.retryMessageId = next.message.id
   await actions.start(next)
-  while (
-    turn.waiting.length &&
-    senderIdentity(turn.waiting[0]) === turn.identity
-  ) {
+  while (turn.waiting.length) {
     const message = turn.waiting.shift()
     if (!message) continue
     const control = await actions.deliver(message)
