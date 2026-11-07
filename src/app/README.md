@@ -101,6 +101,13 @@ the invite, the roles, and the removal there.
   order does not count. A hidden page sends no read mark. When the page
   shows again, the mark goes through the newest event that arrived. A page
   without the focus still shows its output, so the focus does not count.
+- The chat and the GitHub views keep one store for each workspace through
+  `useWorkspaceStore`. The hook makes the store, connects it after
+  the render, and follows its snapshot. It stops the store at unmount. A
+  switch of workspace stops the old store and makes a new one.
+- The files store and the tool store keep their own lifecycle. The
+  [files integration](../files/README.md#integration) and the
+  [tool README](../terminal/README.md#workspace-events) give their rules.
 
 ## Screens
 
@@ -208,6 +215,14 @@ clicks, types, and lets the answers of the fake API settle.
 - `new-workspace-model.ts`: the first message that creates a workspace.
 - `computer-model.ts`: the scripts, the env vars, the builds, and the log.
 - `events.ts`: the ordered event stream and the event socket.
+- `workspace-store.ts`: `useWorkspaceStore`, which gives a connected view
+  the store of its workspace, and the `create` and `connect` functions that
+  the view supplies.
+- `workspace-store.test.tsx`: mounts the real hook with logged test stores in
+  happy-dom. It checks the connection after the render and the stop at
+  unmount. It checks that a switch stops the old store before the new one
+  connects, and shows only the new store. It also checks when the hook keeps
+  a store, connects it again, or makes a new one.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and

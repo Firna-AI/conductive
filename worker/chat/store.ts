@@ -12,6 +12,7 @@ import {
   type StoredWorkspaceEvent,
 } from './history-storage'
 import type { FilesStorage } from '../files/storage'
+import type { GitHubStateTransaction } from '../github/contracts'
 import { ReportRepairs } from './report-repairs'
 import type {
   ChatData,
@@ -39,6 +40,7 @@ export class ChatTransaction {
   readonly now: number
   readonly emitted: WorkspaceEventEnvelope[] = []
   readonly files: FilesStorage
+  readonly github: GitHubStateTransaction
   readonly repairs: ReportRepairs
   private readonly data: ChatData
   private through: number
@@ -47,6 +49,11 @@ export class ChatTransaction {
   constructor(data: ChatData, metadata: ChatMetadata, now: number) {
     this.data = data
     this.files = chatFilesStorage(data)
+    this.github = {
+      get: (key) => data.get(key),
+      put: (key, value) => data.put(key, value),
+      emit: (event) => this.emit(event),
+    }
     this.repairs = new ReportRepairs(data)
     this.workspaceId = metadata.workspaceId
     this.through = metadata.through
@@ -167,7 +174,10 @@ export class ChatTransaction {
     }
   }
 
-  async emit(event: WorkspaceEvent, occurredAt = this.now): Promise<void> {
+  async emit(
+    event: WorkspaceEvent,
+    occurredAt = this.now,
+  ): Promise<WorkspaceEventEnvelope> {
     const envelope: WorkspaceEventEnvelope = {
       workspaceId: this.workspaceId,
       eventNumber: ++this.through,
@@ -176,6 +186,7 @@ export class ChatTransaction {
     }
     await saveHistoryEvent(this.data, eventKey(envelope.eventNumber), envelope)
     this.emitted.push(envelope)
+    return envelope
   }
 
   async finish(): Promise<void> {

@@ -14,13 +14,21 @@ Other features can add events to the same numbered history. The method
 depends on where the code runs:
 
 - Outside the runner hooks, await `appendWorkspaceEvent`.
+- To commit feature records with their events, await `changeWorkspace`
+  outside the runner hooks. Its events get the next numbers, and the same
+  publisher pushes them after the commit.
 - Inside `runnerReady` or `runnerEventStored`, await the `publish`
   argument, a `ChatCallbackPublisher`. It commits the event in the task of
   the hook, then pushes it to the open tabs.
 - Do not call `appendWorkspaceEvent` inside a runner hook. The hook runs in
   the serial queue, so the call would wait for the hook itself.
-- `sendFileCommand` also waits in the serial queue. Do not await it inside
-  a runner hook.
+- `sendFileCommand`, `readWorkspace`, `changeWorkspace`, and
+  `republishWorkspaceEvent` also wait in the serial queue. Do not await
+  them inside a runner hook.
+- The work of `changeWorkspace` also runs in the serial queue. Do not await
+  `appendWorkspaceEvent` or the calls above inside it.
+- Do not add another event sequence or another publisher. To send a
+  committed event again, await `republishWorkspaceEvent`.
 
 ## Milestone 8i: the outer Worker
 
@@ -67,6 +75,17 @@ depends on where the code runs:
   hook. File results never enter the history.
 - [The files integration](../../files/README.md#integration) says how to attach
   file reads. Do not call `WorkspaceFiles.connect` on this path.
+
+## GitHub state
+
+- `createGitHubStatePort` in `worker/github/chat-store.ts` builds the
+  GitHub state port from `readWorkspace`, `changeWorkspace`, and
+  `republishWorkspaceEvent`. Its transaction is `ChatTransaction.github`.
+- Use that port. Do not build another store or publisher for GitHub.
+- The port uses these queued calls, so the rules above apply to a GitHub
+  refresh.
+- [The GitHub server integration](../../github/README.md#server-integration)
+  gives the routes, the scheduled reads, and the refresh operation.
 
 ## Milestone 7r: the agent runner
 

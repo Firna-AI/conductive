@@ -2,7 +2,8 @@
 
 This module reads GitHub branch state for the shared banner and checks API.
 It also verifies GitHub App webhooks and finds their workspace targets.
-A production consumer supplies the Worker routes and workspace Durable Object storage.
+It stores its state and events in the [chat store](../chat/README.md) of the workspace Durable Object.
+A production consumer supplies the Worker routes and the Durable Object wiring.
 
 The [banner protocol](../../docs/protocol/github-banner.md) states the requirements.
 The [shared contracts](../../src/shared/github.ts) define the response bodies.
@@ -20,10 +21,18 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   It repeats the access check before storage and publication.
 - [WorkspaceGitHubState](workspace-state.ts) serializes reads and commits within one workspace.
   Its port stores the snapshot, a common workspace stream event, and a delivery receipt in one transaction.
-  It publishes the committed envelope to every open tab.
-  A failed delivery retry republishes that same envelope and keeps its event number.
+  The port publishes that event to every open tab after the commit.
+  The receipt of a changed delivery keeps the snapshot and only the workspace ID, event number, and time of its event.
+  A retry of a committed delivery reads its receipt and does not read GitHub.
+  It republishes the event of a changed delivery with the same event number.
   A fresh read with unchanged banner and checks stores no snapshot and publishes no event.
   The comparison ignores `banner.updatedAt` and object-key order.
+- [createGitHubStatePort](chat-store.ts) builds that port on the `WorkspaceChat` of the workspace Durable Object.
+  The snapshot, the event, its event number, and the receipt commit in one chat store transaction.
+  The one chat publisher sends each new event after its commit, in commit order with the chat events.
+  The receipt read writes nothing.
+  A replay goes through the same publisher.
+  The caller implements only `scheduleRefresh`.
 - [installationTokenProvider](credentials.ts) signs the app JWT and gets an installation token for one repository.
   Its permissions allow repository content, pull request, check, and commit status reads only.
   The token stays on the server.
@@ -47,13 +56,12 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
    Use a refresh callback that calls the workspace Durable Object's internal refresh operation.
    Preserve its `userId` argument for the repeated membership check.
 5. Keep one `WorkspaceGitHubState` instance in each workspace Durable Object.
-   Implement `GitHubStatePort.transaction` with the object's storage transaction.
-   Implement `appendEvent` with the same stored event sequence that chat and files use.
-   Write the event and advance that common cursor inside the supplied transaction.
-   Do not create a separate GitHub event sequence.
-   Implement `publish` with the existing workspace tab broadcaster.
+   Build its port with `createGitHubStatePort` from the object's `WorkspaceChat` and workspace ID.
+   Do not implement another port, event sequence, or tab broadcaster.
    Implement `scheduleRefresh` by storing its plain request data and setting a Durable Object alarm.
    The alarm calls the same internal refresh operation with that request.
+   The port waits in the chat store's serial queue.
+   [Chat backend integration](../chat/integration/README.md) says where not to await a queued call.
 6. Have the Durable Object's internal refresh operation call `refreshWorkspace`.
    Pass D1, its workspace binding, the refresh signal, its state instance, and the read dependencies.
    Construct `installationTokenProvider` in the server's credential boundary.
@@ -61,7 +69,6 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 7. On tab open, read the banner and checks through the shared app routes.
    Read the stored workspace stream before subscribing after its common event number.
    Reconnect with that number, so a repeated publication shows only once.
-   Keep stored delivery receipts with the event stream for webhook retries.
 
 Example refresh operation inside the workspace Durable Object:
 
@@ -119,10 +126,14 @@ SHA-only events read current workspace state without relying on the payload's pu
 The event commit can be a test merge commit instead of the branch tip.
 A changed banner or check publishes one fresh event.
 A later identical read publishes none.
-Retrying an already committed delivery republishes its stored envelope without another GitHub read.
+Retrying an already committed delivery republishes its original event without another GitHub read.
 An unchanged delivery receipt has no envelope to publish.
 The handler marks a delivery processed only after all workspace refreshes succeed.
-Failed reads and broadcasts remain retryable.
+A failed read or commit leaves the delivery retryable.
+A failure after the commit also leaves it retryable.
+The retry then replays the receipt.
+A failed send to one tab does not fail the refresh.
+[History and event order](../chat/README.md#history-and-event-order) says how that tab gets the missed event.
 
 Pull request lookup prefers an open request for the exact repository and branch.
 It then considers merged and closed requests, in GitHub's newest-created order.
@@ -169,15 +180,25 @@ An unknown pull request number returns a GraphQL error.
 An unknown commit rollup returns `null`.
 The reader tests cover merge checks, head fallback, page order, and commit changes during paging.
 [MemoryWorkspace](memory-workspace.ts) is a unit-test port double.
-It does not replace the production Durable Object storage adapter.
+It does not replace [createGitHubStatePort](chat-store.ts), the production adapter.
 Its `failWritePrefix` injects a storage failure for matching keys.
 Its event list includes only committed events.
+Like the production adapter, it publishes each committed event after its transaction.
 The receipt-write test proves rollback with no stored state, event, receipt, or publication.
 Retry reads the snapshot once more and stores and publishes one event numbered 1.
 This test does not prove the shared production store's transaction behavior.
 Its `restart()` replaces the coordinator over the same stored records.
 Its `scheduled` queue captures plain requests and delays.
 [GitHubTestHarness.runScheduled](test-harness.ts) runs one captured request without a timer or sleep.
+[receipt-size.test.ts](receipt-size.test.ts) uses `MemoryWorkspace` for a check list that fits in one stored value once, but not twice.
+It commits and replays that delivery.
+It does not test the value limit of real storage.
+
+[chat-store.test.ts](chat-store.test.ts) proves the production store's transaction behavior.
+It runs `WorkspaceGitHubState` through `createGitHubStatePort` and `WorkspaceChat` on SQLite storage in Miniflare.
+[createGitHubSQLiteHarness](sqlite-harness.test-support.ts) starts the test Durable Object of [sqlite-worker.test-support.ts](sqlite-worker.test-support.ts).
+The tests cover a failed receipt write and its retry, and chat and GitHub events in one sequence.
+They also cover one transaction for the snapshot, event, and receipt, and a replay after eviction with one publisher.
 
 [Recorded routing fields](recorded-webhooks.ts) come from the MIT-licensed
 [Octokit webhook examples](https://github.com/octokit/webhooks/tree/main/payload-examples/api.github.com).
@@ -201,7 +222,9 @@ API references:
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
 - [webhook.ts](webhook.ts) verifies deliveries and starts workspace refreshes.
 - [app-handler.ts](app-handler.ts) serves protected banner and checks reads.
-- [workspace-state.ts](workspace-state.ts) coordinates storage and publication.
+- [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, and replays delivery receipts.
+- [chat-store.ts](chat-store.ts) adapts the state port to the workspace chat store and its publisher.
+- [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
 - [client.ts](client.ts) reads current GitHub state and follows pagination.
 - [check-rollup.ts](check-rollup.ts) selects and pages one commit's checks while checking commit IDs.

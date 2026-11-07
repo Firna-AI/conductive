@@ -15,7 +15,7 @@ import { BrowserTabs } from './browser-tabs'
 import { findChatWorkspace, tokenWorkspace } from './queries'
 import { loginResolver } from './login-access'
 import { RunnerChannel } from './runner-channel'
-import { ChatStore } from './store'
+import { ChatStore, type ChatTransaction } from './store'
 import { browserUpgrade, runnerUpgrade } from './sockets'
 import type {
   BrowserPeer,
@@ -197,14 +197,33 @@ export class WorkspaceChat {
     event: WorkspaceEvent,
     occurredAt = this.dependencies.now(),
   ): Promise<void> {
+    await this.changeWorkspace(workspaceId, (transaction) =>
+      transaction.emit(event, occurredAt),
+    )
+  }
+
+  readWorkspace<T>(
+    workspaceId: string,
+    work: (view: ChatTransaction) => Promise<T>,
+  ): Promise<T> {
+    this.bind(workspaceId)
+    return this.store.run(() => this.store.read(workspaceId, work))
+  }
+
+  /** Keep feature records, events, and publication in one serial task. */
+  changeWorkspace<T>(
+    workspaceId: string,
+    work: (transaction: ChatTransaction) => Promise<T>,
+  ): Promise<T> {
     this.bind(workspaceId)
     return this.store.run(() =>
-      this.store.change(
-        workspaceId,
-        (transaction) => transaction.emit(event, occurredAt),
-        (events) => this.publish(events),
-      ),
+      this.store.change(workspaceId, work, (events) => this.publish(events)),
     )
+  }
+
+  republishWorkspaceEvent(envelope: WorkspaceEventEnvelope): Promise<void> {
+    this.bind(envelope.workspaceId)
+    return this.store.run(async () => this.publish([envelope]))
   }
 
   async sendFileCommand(

@@ -1,0 +1,20 @@
+import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { GitHubSnapshot, GitHubUpdate } from './contracts'
+
+export type GitHubEnvelopeIdentity = Pick<
+  WorkspaceEventEnvelope,
+  'workspaceId' | 'eventNumber' | 'occurredAt'
+>
+
+export interface GitHubDeliveryReceipt {
+  snapshot: GitHubSnapshot
+  envelope: GitHubEnvelopeIdentity | null
+}
+
+export function githubUpdated(snapshot: GitHubSnapshot): GitHubUpdate {
+  return {
+    type: 'github.updated',
+    banner: snapshot.banner,
+    checks: snapshot.checks,
+  }
+}

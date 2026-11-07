@@ -5455,12 +5455,17 @@ Depends on: 13, 14
 Apply the `fix after merge` items of the GitHub banner. Added on
 7 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/github-banner-freshness.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/github-delivery-receipt-size.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/shared-hook-for-workspace-stores.md`, and
-      delete that item.
+Agent call, 7 November 2026: wait five minutes after a read before the
+next backup read. This limits GitHub calls while webhooks provide live
+updates. The shared hook serves the GitHub and chat stores. The files and
+tool stores keep their existing lifecycle.
+
+- [x] Apply the recorded option of `plans/follow-ups/github-banner-freshness.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-13a`.
+- [x] Apply the recorded option of `plans/follow-ups/github-delivery-receipt-size.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-13a`.
+- [x] Apply the recorded option of `plans/follow-ups/shared-hook-for-workspace-stores.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-13a`.
 
 ## Milestone 15: Agent tools
 
