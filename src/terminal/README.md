@@ -66,27 +66,46 @@ change can move the shared parts to the app's shared components.
 
 ## Workspace events
 
-The Terminal and Preview tools read the events of their workspace through
-one tool store, in `tool-parts/`. The Desktop tool reads no events.
+The Terminal and Preview tools read their data and the events of their
+workspace through a tool store, `ToolStore` in `tool-parts/`. The Desktop
+tool reads no events.
 
-- The store is plain TypeScript. It holds the state of one tool and gives
-  each action to the tool's reducer. React reads it with
-  `useSyncExternalStore`, through `useToolStore`.
-- The store subscribes to `workspace.subscribe` when React subscribes to the
-  store, after the render. It stops when React unsubscribes, at unmount.
-  A render starts no subscription.
+- The store is plain TypeScript. It holds the state of one tool of one
+  workspace, and gives each action to the tool's reducer. React reads it
+  with `useSyncExternalStore`, through `ToolStore.subscribe` and
+  `getSnapshot`.
+- `TerminalToolBody` and `PreviewToolBody` get their stores through
+  `useWorkspaceStore` of [the web app](../app/README.md#data-lifecycle).
+  The stable `create` is the factory of the tool: `createTerminalStore` in
+  `terminalStore.ts`, or `createPreviewsStore` in
+  `../previews/previewsStore.ts`. The stable `connect` calls
+  `ToolStore.connect` with the `fetch` and `subscribe` of the workspace.
+  Another workspace gets another store.
+- The hook connects the store after the render, and stops it at unmount.
+  The connection subscribes to `workspace.subscribe`, then reads the data
+  that the state needs. The stop ends that subscription and aborts a read
+  that has no answer. A late answer of that read changes nothing. A render
+  starts no read and no subscription.
 - The store passes each event of its own workspace to the reducer, as the
   `WorkspaceEvent` itself, in the order of the subscription. It drops the
   events of other workspaces. The tool's own actions, such as a request
   result, go to the same reducer.
 - A subscription can deliver its stored history at once, inside the
-  subscribe call. The store already listens then, so React hears each change.
-- React's StrictMode subscribes, stops, and subscribes again. The second
-  subscription can deliver the history again, and the reducers accept a
-  repeated event.
-- A new `workspace.subscribe` makes React subscribe again. The store keeps
-  its state, such as the revoked previews, and takes events only from the
-  new subscription.
+  subscribe call. The store is already connected then, so the reducer gets
+  each event of that history.
+- The state gives the number of the read that it needs. An action or an
+  event that changes the number, such as Try again, starts a new read and
+  aborts the older one. The store checks the read one microtask after a
+  change. So a burst of changes, such as a stored history, starts one read.
+  An answer counts only while the state still needs its read.
+- In React's StrictMode, the hook connects, stops, and connects again. The
+  second subscription can deliver the history again, and the reducers
+  accept a repeated event.
+- A new `workspace.subscribe` or `workspace.fetch` makes the hook stop the
+  store and connect it again. The store keeps its state, such as the
+  revoked previews, and takes events only from the new subscription. It
+  reads again only with a new `fetch`, or when the stop ended a read before
+  its answer.
 - The state stays the same object until an action or an event changes it,
   so React renders only after a change.
 
@@ -117,6 +136,8 @@ focus reports. These two buttons leave the keyboard on the terminal.
 ## Key code
 
 - `TerminalTool.tsx`: the tool and its states.
+- `terminalStore.ts`: `createTerminalStore`, which makes the tool store of
+  one workspace, with its reducer and its read of the terminal state.
 - `terminalReadiness.ts`: the states of the tool, its reads, and its events.
 - `TerminalScreen.tsx`: the xterm.js screen, its fit, and the key row.
 - `xtermScreen.ts`: splits the data of xterm.js into the user's input and
@@ -128,8 +149,8 @@ focus reports. These two buttons leave the keyboard on the terminal.
 - `tool-parts/request.ts`: JSON requests, response parsers, and errors.
 - `tool-parts/workspace.ts`: the workspace of a tool, its required event
   subscription, and the filter of its workspace's events.
-- `tool-parts/toolStore.ts`: the tool store, which owns that subscription.
-- `tool-parts/useToolStore.ts`: reads a tool store in React.
+- `tool-parts/toolStore.ts`: `ToolStore`, which owns that subscription and
+  the reads of a tool. Its `connect` starts both, and the result stops them.
 - `tool-parts/ToolRoot.tsx`, `ToolButtons.tsx`, `ToolStates.tsx`: the
   dense and touch controls, and the waiting and message states.
 - `dev/tools.html`: the development page. `dev/devTerminal.ts` holds its

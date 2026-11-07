@@ -95,7 +95,8 @@ Contract owners. Milestone 2 creates them:
     `src/previews/previewsState.test.ts`. Milestone 13b.
   - The docs that show the old code: the "Workspace events" section and the
     Key code of `src/terminal/README.md`, and the Integration section of
-    `src/shell/workspace/README.md`. Milestone 13b.
+    `src/shell/workspace/README.md`. The Data lifecycle lines of
+    `src/app/README.md` also move with their code. Milestone 13b.
 
 ## Decisions
 
@@ -5636,15 +5637,34 @@ Move the tool stores and the workspace screen to `useWorkspaceStore`, as
 Replaced ways lists. This is option C of finding 2 of the PR #37 review.
 It starts after PR #37 merges. Added on 7 November 2026.
 
-- [ ] Move `TerminalToolBody` in `src/terminal/TerminalTool.tsx` to
+The orchestrator extended the scope on 7 November 2026 to the old tool and
+workspace lifecycle lines of `src/app/README.md`. After Milestone 8i lands,
+the scope also covers the lifecycle lines of `shown-workspaces.ts` if its
+cache factory still starts reads or subscriptions. That change keeps the
+cache and the chat behaviour.
+
+Agent calls, 7 November 2026: one tool definition gives `ToolStore` the
+reducer and the read of each tool. This keeps the read and abort rules in
+one place. The store checks its read one microtask after a change, so a
+burst of events starts one read, as React batching did. A completed read
+stays on a new connection with the same fetch, as the old effect did.
+The preview reducer gives Try again a read number. The workspace keys and
+the preview writes stay in the views, to keep their current behaviour.
+
+Tool evidence: `.context/boat-native-remote-workspaces/reports/tools-ui.md`.
+
+- [x] Move `TerminalToolBody` in `src/terminal/TerminalTool.tsx` to
       `useWorkspaceStore`, with a stable `create` and `connect`. Move its
       `loadTerminal` read from its own effect into the store.
-- [ ] Move `PreviewToolBody` in `src/previews/PreviewTool.tsx` the same
+      Branch: `conductor/boat-native-remote-workspaces-milestone-13b`.
+- [x] Move `PreviewToolBody` in `src/previews/PreviewTool.tsx` the same
       way. Move its `listPreviews` read and its retry into the store.
-- [ ] Delete `useToolStore` and `ToolStore.listen` when no tool uses them.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-13b`.
+- [x] Delete `useToolStore` and `ToolStore.listen` when no tool uses them.
       Move `src/terminal/tool-parts/toolStore.test.ts` and
       `src/previews/previewsState.test.ts` to the new subscription, with
       every assertion.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-13b`.
 - [ ] Move `WorkspaceScreen` in `src/shell/workspace/WorkspaceScreen.tsx`
       to `useWorkspaceStore`. A stable `create` makes the `WorkspaceModel`
       and its `HeaderNotices`. A stable `connect` makes the notices follow
@@ -5653,7 +5673,8 @@ It starts after PR #37 merges. Added on 7 November 2026.
       and `getSnapshot`. They can read the `detail` store of the model.
 - [ ] Update the "Workspace events" section and the Key code of
       `src/terminal/README.md`, and the Integration section of
-      `src/shell/workspace/README.md`.
+      `src/shell/workspace/README.md`. Update the old lifecycle lines of
+      `src/app/README.md` with the code that they describe.
 - [ ] Compare each tool and the workspace screen with its mockup.
 
 ## Milestone 15: Agent tools

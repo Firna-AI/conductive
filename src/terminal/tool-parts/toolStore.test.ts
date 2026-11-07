@@ -27,18 +27,21 @@ function revoke(previewId: string): WorkspaceEvent {
 }
 
 describe('ToolStore', () => {
-  it('gives the reducer the events of its workspace in order, between its own actions, while React listens', () => {
+  it('gives the reducer the events of its workspace in order, between its own actions, while it is connected', () => {
     const server = new FakeApiServer()
     // An event before the subscription arrives with the stored history.
     emitDevEvent(server, FAKE_IDS.workspace, revoke('preview-1'))
     const store = new ToolStore<readonly string[], Note>(
-      record,
-      [],
-      FAKE_IDS.workspace,
+      { reducer: record, initialState: [] },
+      { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace },
     )
     const changes = vi.fn()
 
-    const stop = store.listen(changes, devSubscribe(server))
+    const unsubscribe = store.subscribe(changes)
+    const stop = store.connect({
+      fetch: server.fetch,
+      subscribe: devSubscribe(server),
+    })
     store.dispatch({ type: 'note', text: 'opened preview-2' })
     emitDevEvent(server, 'saved-carts', revoke('preview-2'))
     emitDevEvent(server, FAKE_IDS.workspace, revoke('preview-2'))
@@ -48,6 +51,7 @@ describe('ToolStore', () => {
       name: 'Address form',
     })
     stop()
+    unsubscribe()
     emitDevEvent(server, FAKE_IDS.workspace, revoke('preview-3'))
 
     expect(store.getSnapshot()).toEqual([
