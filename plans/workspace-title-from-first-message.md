@@ -126,6 +126,21 @@ assume its recommended option, and wait for its answer.
   agent opens, and a linked session that a message of another member
   opens. Reason: the user named only the first session and "other
   sessions".
+- The first session takes only the first title of the workspace, and only
+  while it still has the city name. Reason: this applies the user's rule
+  of decision 143 to the normal case, as the design above says. A rule
+  that compares with the name just before each title was rejected,
+  because the cases where the two differ need a second title or a name
+  from the workspace route, and decision 144 owns the route case. The docs
+  check of 8 November 2026 raised this.
+- A first message with no text starts no title request. The next turn
+  whose message has text then asks, from that text. Reason: decision 142
+  already says that the next turn asks again, and a later session follows
+  the same rule for a message with no text.
+- The protocol does not state the clean-up of the agent's answer. The
+  runner README keeps it. Reason: the protocol asks for a title of three
+  to five words, and the clean-up only guards an answer that ignores that
+  request.
 
 ## Decisions
 
@@ -372,6 +387,75 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   requirement covers, and A and C each override or remove a feature of the
   route on `origin/main`.
 
+### 145. The protocol sets no limits on the hidden title request
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. The docs milestone of 8 November 2026 found
+  it. An options check of the same day changed the root question, added D
+  and E, and changed the recommendation from B to D.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/chat-and-events.md`, the title bullets in
+  "Messages".
+- **Background:** The title request is a hidden conversation with the
+  agent. It runs beside the turn, on the login of the turn. The Claude
+  request has no tools. The Codex request runs in a read-only thread with
+  its shell tool off, but a probe of the pinned Codex version found five
+  built-in tools that stay: `request_user_input`, `view_image`,
+  `get_goal`, `create_goal`, and `update_goal`. None runs a command or
+  changes a file. Both requests end after 60 seconds or at a runner
+  shutdown. The runner README states these facts. The protocol states
+  none of them. "Sessions" gives the reason that no agent runs where the
+  user cannot see it.
+- **Problem:** A review cannot check the limits of the hidden request
+  against the protocol.
+- **Impact if no action:** A later change can give the hidden request
+  tools or a longer life, and no requirement stops it.
+- **Root question:** What may the hidden title request do, and how long
+  may it run, so that it is safe to hide?
+- **Options:**
+  - **A.** Change nothing. The runner README keeps the limits. Effort:
+    Small.
+  - **B.** Add one bullet to "Messages". The title request has no tools,
+    so it cannot change the files of the workspace, and it ends after at
+    most 60 seconds. The Codex request does not meet "no tools" today.
+    Effort: Small.
+  - **C.** B, and a Stop of the turn also ends the title request. The
+    runner code changes too. After a Stop, the name waits for the next
+    turn. Effort: Small.
+  - **D.** Add one bullet to "Messages" that states the limits as effects.
+    The title request cannot change the files of the workspace. It gets
+    none of the tools that the app gives the agents, so it cannot create a
+    workspace or ask for a Mac command. It ends at most 60 seconds after it
+    starts. Both requests meet these limits now, so the runner code does
+    not change. Each Codex update needs a new check of its tool list.
+    Effort: Small.
+  - **E.** B as written, and the runner makes the Codex request meet it.
+    The runner turns off the remaining Codex tools, if a probe shows that
+    this empties the list. If not, the runner calls the model service with
+    the API key of the turn and no agent program. Each Codex update needs a
+    new probe, or the direct call adds a second path to the model service.
+    Effort: Medium.
+- **Left out:**
+  - A title request that the chat or another screen shows. The chat
+    version breaks the rule that the chat does not show the request. A
+    sign on another screen fails the goal, because it shows that the
+    request runs, not what it can do.
+  - An end of the request together with its turn. It fails the goal of
+    decision 142 for a short first turn, which then gets no name until a
+    later turn.
+- **Wider fix:** D. It states the effect, so a harmless built-in tool does
+  not break it, and an option that must know the tool list of each agent
+  program is a direct fix.
+- **Previous examples:** None found.
+- **Related:** 142: this decision states limits of the request that 142
+  chose.
+- **Recommendation:** D. B states a mechanism that the Codex request does
+  not meet, while D states the same limits as effects that both requests
+  meet now. The options check of 8 November 2026 changed the
+  recommendation from B to D.
+- **Action:** ask the user, because D adds a requirement at a boundary
+  that no requirement covers, and the user reviews each new requirement.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -408,15 +492,19 @@ Evidence: `.context/workspace-title-from-first-message/reports/m1-mockups.md`,
 
 Depends on: 1
 
-The docs state the requirements of decisions 142, 143, and 144, as the
-user chose them.
+The docs state the requirements of decisions 142, 143, 144, and 145, as
+the user chose them.
 
-- [ ] In [Messages](../docs/protocol/chat-and-events.md#messages), state
+Evidence: `.context/workspace-title-from-first-message/reports/m2-docs.md`.
+
+- [x] In [Messages](../docs/protocol/chat-and-events.md#messages), state
       when the app asks for the title, from what, on which login, and what
       a failed request does (decision 142).
-- [ ] In [Sessions](../docs/protocol/chat-and-events.md#sessions), state
+- [x] In [Sessions](../docs/protocol/chat-and-events.md#sessions), state
       the name of the first session tab and when it takes the title, and
       the name of each later session tab (decision 143).
+- [ ] Waits for decision 145. State the limits of the hidden title request
+      in [Messages](../docs/protocol/chat-and-events.md#messages).
 - [ ] Waits for decision 144. In the same doc, state which name a
       workspace keeps when a member names it and the agent also titles it.
       Give the rule in
@@ -431,40 +519,44 @@ Depends on: 2
 The runner asks the agent of the first turn for a title, and sends it as
 `workspace.title`, as the design above says.
 
-- [ ] Add the title request for Claude, through the Claude Agent SDK and
+Evidence: `.context/workspace-title-from-first-message/reports/m3-runner-full.md`.
+
+- [x] Add the title request for Claude, through the Claude Agent SDK and
       the login route of the `claude` program.
-- [ ] Add the title request for Codex, through the Codex App Server and its
+- [x] Add the title request for Codex, through the Codex App Server and its
       login request. Share the start of the App Server with the Codex
       agent. Confirm in the pinned Codex version that the title thread has
       no tool that runs a command.
-- [ ] Start one title request when a turn starts and the runner has no
+- [x] Start one title request when a turn starts and the runner has no
       saved title. Clean the answer, and send it through the output filter
       as `workspace.title`.
-- [ ] Stop the title request at its time limit and at a runner shutdown.
-- [ ] Add runner tests with the fake SDK and the fake App Server:
-  - [ ] The first turn of each agent sends one `workspace.title` with the
+- [x] Stop the title request at its time limit and at a runner shutdown.
+- [x] Add runner tests with the fake SDK and the fake App Server:
+  - [x] The first turn of each agent sends one `workspace.title` with the
         cleaned answer. The request gets the text of the first message,
         the model of the turn, and the login of the turn.
-  - [ ] A runner with a saved title starts no title request at the next
+  - [x] A runner with a saved title starts no title request at the next
         turn.
-  - [ ] A failed request sends no event, and the next turn asks again.
-  - [ ] A shutdown during a request closes its agent process and sends no
+  - [x] A failed request sends no event, and the next turn asks again.
+  - [x] A shutdown during a request closes its agent process and sends no
         event.
-- [ ] Update the [agent runner README](../runner/README.md) and
+- [x] Update the [agent runner README](../runner/README.md) and
       [Agent logins](../runner/agent-logins.md).
 
 ## Milestone 4: Session and workspace names in the Worker
 
 Depends on: 2
 
-- [ ] Give the first session of a new workspace the workspace name.
-- [ ] When the Worker stores the first `workspace.title`, rename the first
+Evidence: `.context/workspace-title-from-first-message/reports/m4-worker-full.md`.
+
+- [x] Give the first session of a new workspace the workspace name.
+- [x] When the Worker stores the first `workspace.title`, rename the first
       session to the title while it still has the earlier workspace name.
       Send `session.updated` to each open tab.
-- [ ] When a later session accepts its first message, give it the first
+- [x] When a later session accepts its first message, give it the first
       line of that message as its title, while it still has the default
       title. Send `session.updated` to each open tab.
-- [ ] Add Worker tests: the title renames the first session, a session
+- [x] Add Worker tests: the title renames the first session, a session
       that a member renamed keeps its name, and a later session takes its
       first message.
 - [ ] Waits for decision 144. Apply the title to the workspace only while
@@ -474,7 +566,7 @@ Depends on: 2
       record with the name that the Worker kept to each open tab.
 - [ ] Waits for decision 144. Add a Worker test: a name from the workspace
       route stays after the title and after the next change of the state.
-- [ ] Update the [Worker chat README](../worker/chat/README.md).
+- [x] Update the [Worker chat README](../worker/chat/README.md).
 
 ## Milestone 5: The web app
 

@@ -136,8 +136,12 @@ Claude uses the model of the turn, with thinking off, no tools, no MCP
 servers, no project settings, and no saved session. Codex uses the model
 and effort of the turn in an ephemeral, read-only thread. Its shell tool,
 delegation, code mode, plugins, hooks, and memory are off. It has no MCP
-servers. Its process and thread use the agent home folder to avoid project
-settings. Both requests use the [login of their turn](agent-logins.md).
+servers. A probe of the pinned Codex version found that the model still
+gets five built-in tools: `request_user_input`, `view_image`, `get_goal`,
+`create_goal`, and `update_goal`. None of them runs a command or changes a
+file, and the runner refuses each request that the App Server sends it.
+Check this list again at each Codex update. Its process and thread use the
+agent home folder to avoid project settings. Both requests use the [login of their turn](agent-logins.md).
 
 The runner keeps the first line with text from the answer. It removes
 surrounding quotes, backticks, Markdown marks, a leading `Title:` label,
