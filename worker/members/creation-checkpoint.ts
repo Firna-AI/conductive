@@ -3,6 +3,7 @@ import { requireOrgMember } from '../lifecycle/access'
 import { requireActiveWorkspaceOwner } from '../data/user-access'
 import { readWorkspace } from '../lifecycle/workspace-data'
 import { leasedCreationImage } from '../lifecycle/image-leases'
+import { readImageSettings } from '../lifecycle/settings-data'
 import { ensureWorkspaceToken, readWorkspaceToken } from '../lifecycle/tokens'
 import {
   readStartJob,
@@ -51,9 +52,20 @@ export async function resumeCreationCheckpoint(
   job.stdoutOffset = 0
   job.stderrOffset = 0
   job.requestedByUserId = userId
+  job.commandAttempt = `${job.attempt}:restore:${generation}`
+  if (
+    job.phase === 'fetch' ||
+    job.phase === 'branch' ||
+    job.phase === 'startup'
+  )
+    job.afterReadyPhase = job.phase
   if (job.phase !== 'records') job.phase = 'machine'
   try {
-    if (!row.sandboxId) {
+    if (row.sandboxId)
+      job.environmentCiphertext = (
+        await readImageSettings(env.DB, orgId)
+      ).envVarsCiphertext
+    else {
       const image = await leasedCreationImage(
         env.DB,
         orgId,

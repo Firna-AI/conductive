@@ -16,6 +16,10 @@ interface WorkspaceStartData {
   repositoryLocations?: readonly RepositoryLocation[]
   turnId: string
   attempt: string
+  /** Restore changes only the command journal identity, not allocation. */
+  commandAttempt?: string
+  /** A retained create continues this phase after shared sandbox readiness. */
+  afterReadyPhase?: 'fetch' | 'branch' | 'startup'
   creation?: WorkspaceCreation
   processId: number | null
   stdoutOffset: number

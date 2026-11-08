@@ -45,7 +45,7 @@ it('shares chat history with GitHub reads, retries pending reads, and refreshes 
   const active = (fixture = await featureFixture(bundle, {
     configuration: {
       GITHUB_APP_PRIVATE_KEY: privateKey
-        .export({ type: 'pkcs8', format: 'pem' })
+        .export({ type: 'pkcs1', format: 'pem' })
         .toString(),
       GITHUB_WEBHOOK_SECRET: secret,
       CONDUCTIVE_RUNNER_ARCHIVE_URL: OUTER_SOFTWARE.url,
@@ -102,6 +102,14 @@ it('shares chat history with GitHub reads, retries pending reads, and refreshes 
   expect(banner.status).toBe(200)
   expect(await banner.json()).toMatchObject({
     banner: { state: 'ready-to-merge', branch: 'changes' },
+  })
+  const checks = await active.request(
+    githubPaths.checks(OUTER_ORG, OUTER_WORKSPACE),
+  )
+  expect(checks.status).toBe(200)
+  expect(await checks.json()).toMatchObject({
+    state: 'available',
+    checks: [{ state: 'passed' }],
   })
   const stream = await active.request(
     workspaceEventsPath(OUTER_ORG, OUTER_WORKSPACE),

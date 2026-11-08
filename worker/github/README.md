@@ -43,13 +43,14 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   Its permissions allow repository content, pull request, check, and commit status reads only.
   The token stays on the server.
   This module has no sandbox credential endpoint.
+- [appSigningKey](private-key.ts) imports `GITHUB_APP_PRIVATE_KEY` for each GitHub App feature: these reads and the repository copies of image builds.
+  It accepts each key text that the deployment guide allows.
 
 ## Server integration
 
 1. Add `GITHUB_WEBHOOK_SECRET` and `GITHUB_APP_PRIVATE_KEY` as Worker secrets.
    Keep `GITHUB_CLIENT_ID` as the app's client ID.
-   `GITHUB_APP_PRIVATE_KEY` must contain PKCS#8 PEM.
-   Convert a downloaded RSA key with `openssl pkcs8 -topk8 -nocrypt -in github-app.pem -out github-app-pkcs8.pem`.
+   [Secrets](../../docs/deployment.md#secrets) in the deployment guide gives the key text that `GITHUB_APP_PRIVATE_KEY` takes.
    `AppEnv` declares these secrets. Set their values through Worker secret configuration.
 2. Populate `github_installations` and `repositories.installation_id` from trusted GitHub App installation setup.
    Keep suspension and repository access records current.

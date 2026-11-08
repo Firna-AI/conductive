@@ -1,4 +1,5 @@
 import type { AppDependencies, AppEnv } from '../../env'
+import { appSigningKey } from '../../github/private-key'
 import { HttpError } from '../../http'
 import { encrypt, hash, randomToken } from '../../security/crypto'
 import type { PrepareImageSources } from '../image-builds'
@@ -9,11 +10,7 @@ import {
   repositoryLocation,
 } from '../repository-locations'
 import { authorizeImageBuilder, readSourceRepository } from './data'
-import {
-  appSigningKey,
-  installationToken,
-  revokeInstallationToken,
-} from './github-app'
+import { installationToken, revokeInstallationToken } from './github-app'
 import { sourceLayoutCommand } from './layout-command'
 import {
   fetchSourceCommand,

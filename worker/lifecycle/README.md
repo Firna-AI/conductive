@@ -88,9 +88,13 @@ refresh reads the archive variables. It gives `acceptFirstMessage` to
   and the org purge. Lifecycle cleanup leaves the attachments to their owner.
 - A retry gets a fresh workspace ID with the same first message ID. Its
   start waits until the records of the failed attempt are gone.
-- The [member checkpoint adapter](../members/creation-checkpoint.ts) retains a create that Delete interrupted before allocation.
-  The production resume route continues that create from its pinned image after Restore.
-  It keeps the first message and sender. It renews a revoked workspace token before a new allocation.
+- The [member checkpoint adapter](../members/creation-checkpoint.ts) retains a create that Delete interrupted, before or after allocation.
+  The production resume route continues that create when the workspace opens after Restore.
+  It keeps the allocation attempt, the first message, and the sender. It renews a revoked workspace token.
+  A create without a sandbox continues from its pinned image.
+  A create with a retained sandbox resumes that sandbox through the same readiness step as a resume, with the current env vars of the org.
+  It then continues at the saved creation step in `afterReadyPhase`. Its commands use a fresh journal key, `commandAttempt`, and the allocation keeps `attempt`.
+  The branch step uses the branch when it already exists.
 - Resume restarts only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.

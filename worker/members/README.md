@@ -67,10 +67,11 @@ Payload deletion must preserve its rejection of stale calls while older calls ca
 Purge reads and deletes small batches. Each batch checks the same generation and preserves the fence.
 The normal storage adapter rejects chat, device, feature, and alarm writes after that fence is purged.
 Late summary reads cannot recreate chat metadata. Suspended stop callbacks can still write their final events.
-The production receiver keeps a stopped create checkpoint after Delete.
+The production receiver keeps a stopped create checkpoint after Delete, before or after allocation.
 Restore starts no sandbox. The normal resume route requeues that create when the workspace opens.
-The checkpoint keeps its sender, first message, image pin, and allocation identity.
-A missing pin uses the existing failed-create draft and cleanup path.
+The checkpoint keeps its sender, first message, and allocation identity.
+A create without a sandbox also keeps its image pin. A missing pin uses the existing failed-create draft and cleanup path.
+A create with a retained sandbox resumes it and continues at its saved creation step, as the [lifecycle README](../lifecycle/README.md#browser-routes) says.
 Hidden attempts and pending lifecycle cleanup sandboxes also enter suspension and purge.
 
 A hook calls `ownership.renew()` as it makes progress.
@@ -236,7 +237,7 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - [workspace-receiver.ts](workspace-receiver.ts) preserves the receiver fence while it removes workspace payloads.
 - [receiver-fence.ts](receiver-fence.ts) checks generations in storage transactions.
 - [receiver-storage.ts](receiver-storage.ts) prevents normal data and alarm writes after purge.
-- [creation-checkpoint.ts](creation-checkpoint.ts) requeues a retained create only after current access, image, and token checks.
+- [creation-checkpoint.ts](creation-checkpoint.ts) requeues a retained create only after current access and token checks. A create without a sandbox also needs its image pin.
 - `gate.ts` extends the request gate for deleted-org access and shared writes.
 - `route.ts` defines HTTP dispatch and the required integration hooks.
 - `membership.ts` manages roles, removal, leave, and the last-admin rule.

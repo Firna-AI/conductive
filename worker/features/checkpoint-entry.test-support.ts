@@ -6,12 +6,7 @@ export class Workspace extends FeatureWorkspace {
     const job = await this.ctx.storage.get<StoredWorkspaceStartJob>(
       'lifecycle:start-job',
     )
-    if (
-      job?.kind === 'create' &&
-      job.phase === 'machine' &&
-      !job.allocatedSandboxId
-    )
-      return
+    if (job?.kind === 'create' && job.phase !== 'records') return
     return super.alarm()
   }
 

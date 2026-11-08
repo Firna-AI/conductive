@@ -40,7 +40,11 @@ export async function advanceStartCommand(
     const started = await provider.startCommand(
       row.sandboxId,
       lifecycleCommand(
-        { kind: 'workspace', id: job.workspaceId, attempt: job.attempt },
+        {
+          kind: 'workspace',
+          id: job.workspaceId,
+          attempt: job.commandAttempt ?? job.attempt,
+        },
         job.phase,
         workspacePhaseCommand(row, job),
       ),
