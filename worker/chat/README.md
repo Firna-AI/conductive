@@ -63,23 +63,9 @@ same-agent change ignores this field.
 
 ## Session names
 
-`first-message.ts` reads the assigned first session ID from
-`workspace_runtime.session_id` and the workspace name from D1. It saves
-both in chat storage when it accepts the first message. `sessions.ts`
-gives that session the workspace name, which starts as a city name.
-
-`session-titles.ts` applies the first stored `workspace.title` to that
-session while its title still equals the saved workspace name. It records
-the receipt in the same transaction. A member's name stays.
-A later workspace title leaves the session unchanged.
-
-Each other session starts as "New session". `messages.ts` uses
-`sessionTitleFrom` in `src/shared/session-title.ts` when it accepts text
-while the session still has that default title. The shared function makes
-a title from the first line with text and limits it to 60 Unicode code
-points. An attachment-only message leaves the title for the next text
-message. A member's name stays. Repeated message IDs change nothing.
-The numbered `session.updated` event sends each changed title to open tabs.
+[Workspace and session names](workspace-titles.md) gives the background
+model request, the shared title writer, the first session name, and the
+names of later sessions. It also gives the local development setup.
 
 ## Message admission
 
@@ -226,12 +212,16 @@ tests through the production Worker entry.
   a create.
 - `session-titles.ts`: the first session rename in the transaction that
   stores the workspace title.
+- `workspace-titles.ts`, `title-model.ts`, and `workspace-title.ts`: the
+  background model request and the shared title storage and D1 projection.
 - `workspace-summary.ts`: `WorkspaceSummaryProjection`, the summary that
   `readChatWorkspaceSummary` returns.
 - `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched
   turns as stopped when the lifecycle state becomes stopped or error.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
   the object.
+- `runner-authorization.ts`: `authorizeChatRunner`, the machine origin and
+  token checks before the runner connection opens.
 - `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
   a browser tab: the login refresh, the tab registration, the close after
   a failed start, and the grant check before the history.

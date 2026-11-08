@@ -20,6 +20,7 @@ import type {
 } from '../security/connection-access'
 import type { AuthenticatedRunner } from './authenticated-runner'
 import type { SessionLoginTarget } from './login-availability'
+import type { TitleModelCall } from './title-model'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -113,6 +114,7 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  runTitleModel?: TitleModelCall
   runnerAttached(
     workspaceId: string,
     connectionId: string,

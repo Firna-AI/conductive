@@ -8,6 +8,7 @@ const FIRST_SESSION_KEY = `${CHAT_ROOT}first-session`
 
 interface FirstSessionName {
   id: string
+  messageId?: string
   workspaceName: string
   titleReceived: boolean
 }

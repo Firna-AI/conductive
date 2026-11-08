@@ -124,6 +124,7 @@ export async function admitFirstMessage(
   )
   await transaction.saveFirstSession({
     id: first.sessionId,
+    messageId: first.request.id,
     workspaceName,
     titleReceived: false,
   })

@@ -9,6 +9,7 @@ import {
 import { loginResolver } from './login-access'
 import { readLoginAvailability } from './login-availability'
 import { firstStartIncomplete } from './queries'
+import { titleModelBinding } from './title-model'
 import type { ChatDependencies } from './types'
 
 /**
@@ -22,6 +23,7 @@ export function chatDependencies(
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
+    runTitleModel: titleModelBinding(env),
     now: Date.now,
     scheduleBrowserCheck: scheduleConnectionCheck,
     scheduleRunnerCheck: scheduleConnectionCheck,
