@@ -4,6 +4,10 @@ import { API_PATHS } from '../../src/shared/api'
 import { terminalPaths } from '../../src/shared/terminal'
 import { ManualChatClock } from '../chat/chat-clock.test-support'
 import { createToolsHarness, type ToolsHarness } from '../previews/test-support'
+import {
+  activeMember,
+  suspendWorkspaceOwner,
+} from '../previews/suspension-test-support'
 import { TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
 import { barrier } from '../previews/stream-test-support'
 import { createTerminalHandler } from './handler'
@@ -194,4 +198,15 @@ it('expires an idle terminal grant while an access read waits and cannot revive 
   peer.upstream.emit('late output')
   expect(peer.browser.sent).toEqual([])
   harness.env.DB = database
+})
+
+it('closes an active member terminal when the workspace owner is suspended', async () => {
+  const setup = await fixture()
+  const member = await activeMember(harness, setup.orgId)
+  const peer = await setup.open(member.session)
+  await suspendWorkspaceOwner(harness, setup.workspaceId)
+  await setup.clock.advance(15_000)
+  expect(peer.browser.closed?.code).toBe(1008)
+  expect(peer.upstream.closed?.code).toBe(1008)
+  expect(setup.clock.scheduledCount).toBe(0)
 })

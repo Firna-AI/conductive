@@ -11,7 +11,7 @@ import {
 } from './creation-claims'
 import { markCreationFailed } from './creation-attempt-data'
 import { prepareCreationRequest } from './create-request'
-import { WorkspaceStartError } from './workspace-start'
+import { workspaceStartFailure } from './workspace-start'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import {
   provisionedResponse,
@@ -93,7 +93,6 @@ async function joinCreation(
   const endpoint = runtime.workspace(claim.id)
   await endpoint.queueLifecycleStart(job)
   const result = await endpoint.waitCreationAdmission()
-  if (!result.ok)
-    throw Object.assign(new WorkspaceStartError(result.error.log), result.error)
+  if (!result.ok) throw workspaceStartFailure(result.error)
   return result.created
 }

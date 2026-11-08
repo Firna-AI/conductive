@@ -1,7 +1,11 @@
 /** The catalogue paths that screens link to. */
 export const paths = {
   marketing: 'marketing',
+  terms: 'marketing/terms',
+  privacy: 'marketing/privacy',
+  notFound: 'marketing/not-found',
   signIn: 'app/sign-in',
+  signInTerms: 'app/sign-in/terms',
   getStarted: 'app/sign-in/get-started',
   getStartedInstalled: 'app/sign-in/get-started/installed',
   getStartedOrgCreated: 'app/sign-in/get-started/org-created',

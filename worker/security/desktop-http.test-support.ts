@@ -4,6 +4,7 @@ import { API_PATHS } from '../../src/shared/api'
 import { responseCookie, type TestHarness } from '../test-support/harness'
 import { OAUTH_COOKIE } from './cookies'
 import { DESKTOP_EXCHANGE_PATH, DESKTOP_ORIGIN } from './desktop-contract'
+import { termsContinuation } from './terms-consent.test-support'
 
 export function desktopRequest(
   harness: TestHarness,
@@ -23,9 +24,10 @@ export async function desktopHandoff(
   verifier: string,
 ): Promise<Response> {
   const challenge = createHash('sha256').update(verifier).digest('base64url')
-  const start = await harness.fetch(
+  const consent = await harness.fetch(
     `${API_PATHS.githubSignIn}?desktop_challenge=${challenge}`,
   )
+  const start = await harness.fetch(await termsContinuation(consent))
   const state = new URL(start.headers.get('Location') ?? '').searchParams.get(
     'state',
   )

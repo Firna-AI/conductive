@@ -41,6 +41,7 @@ export async function finishFailedStart(
         if (!(error instanceof ProviderError && error.kind === 'not_found'))
           return null
       }
+      await endpoint.lifecycleStopped()
     }
     if (!job.cancelled)
       await endpoint.lifecycleFailed({

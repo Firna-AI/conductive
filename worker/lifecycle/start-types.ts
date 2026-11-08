@@ -24,6 +24,7 @@ interface WorkspaceStartData {
   allocatedSandboxId?: string
   cancelled?: boolean
   failure?: { code: string; message: string; status: number }
+  requestedByUserId?: string
   providerRetry?: ProviderRetryState | null
 }
 

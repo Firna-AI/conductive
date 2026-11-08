@@ -7,8 +7,10 @@
   background: var(--ui-sidebar);
 }
 
+/* A narrow desktop window wraps the last columns under the others. */
 .inner {
   display: flex;
+  flex-wrap: wrap;
   gap: 48px;
   width: 100%;
   max-width: 1184px;

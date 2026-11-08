@@ -21,6 +21,8 @@ import { advanceStartMachine } from './start-machine'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { creationAdmissionResponse } from './creation-admission-response'
 import { StartWaiters } from './start-waiters'
+import { requireActiveStartUsers } from './start-access'
+import { stepLabel } from './start-step-label'
 import { advanceStartCommand } from './start-command-execution'
 import {
   providerRetryPending,
@@ -58,6 +60,7 @@ export class WorkspaceStartCoordinator {
       if (job.kind === 'create' && (await this.storage.creationResult()))
         return false
       if (await this.storage.job()) return false
+      await requireActiveStartUsers(this.env.DB, job)
       const epoch = await this.storage.epoch()
       const state = await this.endpoint.readLifecycle()
       if (
@@ -103,15 +106,12 @@ export class WorkspaceStartCoordinator {
   private async advanceOwned(): Promise<boolean> {
     const job = await this.storage.job()
     if (!job) return publishCreationResult(this.env, this.storage)
-    if (
-      !job.cancelled &&
-      !job.failure &&
-      providerRetryPending(job.providerRetry, this.dependencies.now())
-    )
-      return false
     let provider: SandboxProvider | undefined
     try {
       if (job.phase === 'records' && !job.cancelled && !job.failure) {
+        await requireActiveStartUsers(this.env.DB, job)
+        if (providerRetryPending(job.providerRetry, this.dependencies.now()))
+          return false
         const imageName = await prepareWorkspaceRecords(
           this.env,
           this.dependencies,
@@ -158,6 +158,9 @@ export class WorkspaceStartCoordinator {
         if (result) await this.finish(result)
         return result !== null
       }
+      await requireActiveStartUsers(this.env.DB, job)
+      if (providerRetryPending(job.providerRetry, this.dependencies.now()))
+        return false
       if (providerRetryExpired(job.providerRetry, this.dependencies.now()))
         throw new ProviderRetryExhausted()
       const row = await readWorkspace(this.env.DB, job.orgId, job.workspaceId)
@@ -171,6 +174,7 @@ export class WorkspaceStartCoordinator {
       if (job.phase === 'machine' || job.phase === 'ready') {
         const next = await advanceStartMachine(
           this.env,
+          this.dependencies,
           this.endpoint,
           provider,
           row,
@@ -232,16 +236,18 @@ export class WorkspaceStartCoordinator {
       const current = (await this.storage.job()) ?? job
       const failure =
         error instanceof HttpError ? error : new WorkspaceStartError(null)
-      const failedJob = current.cancelled
-        ? current
-        : {
-            ...current,
-            failure: current.failure ?? {
-              code: failure.code,
-              message: failure.message,
-              status: failure.status,
-            },
-          }
+      const failedJob =
+        current.cancelled && failure.code !== 'user_suspended'
+          ? current
+          : {
+              ...current,
+              cancelled: current.cancelled || failure.code === 'user_suspended',
+              failure: current.failure ?? {
+                code: failure.code,
+                message: failure.message,
+                status: failure.status,
+              },
+            }
       await this.storage.update(failedJob)
       const result = await finishFailedStart(
         this.env,
@@ -287,12 +293,4 @@ export class WorkspaceStartCoordinator {
     }
     this.waiters.publish(stored)
   }
-}
-
-function stepLabel(phase: WorkspaceStartJob['phase']): string {
-  return phase === 'fetch'
-    ? 'Fetching the default branch'
-    : phase === 'branch'
-      ? 'Creating your branch'
-      : 'Applying your startup script'
 }

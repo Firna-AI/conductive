@@ -12,6 +12,12 @@ It saves the provider retry window of a running image build, as [Image builds](.
 A workspace start keeps the same state in its Durable Object storage.
 `202611072100_email_invitations.sql` discards the pending invitations by GitHub login.
 It then adds invitations by email, each user's verified emails, and the durable matches of invitations to users.
+`202611072200_user_terms_and_suspension.sql` adds four columns to `users`: the accepted revision of the Terms and its time, and the time of a suspension and the operator who suspended the user.
+Existing users get empty values in all four columns.
+[Terms consent](../worker/security/README.md#terms-consent) says how a new account fills the first two, and [Operator actions](../worker/operator/README.md) says how a suspension fills the other two.
+`202611072201_image_allocation_intent.sql` moves each image build job in the `create` phase to the new `allocating` phase.
+A build now records that phase before it asks for its build sandbox, and an older job in `create` may have sent that request already.
+So a build whose create reply was lost finds that sandbox again. When the user who started the build is suspended, the build then removes that sandbox.
 
 Chat history, sessions, runner event cursors, start steps, and banner state
 belong to workspace Durable Object storage. They have no D1 tables.
@@ -53,6 +59,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | 15i Feature wiring | `202611071600`–`202611071659` |
 | 15d Marketing | `202611071700`–`202611071759` |
 | 15e Mac app | `202611072000`–`202611072059` |
+| 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
 

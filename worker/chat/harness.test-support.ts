@@ -56,6 +56,7 @@ export async function createChatFixture(
   const dependencies = {
     now: clock.now,
     scheduleBrowserCheck: clock.schedule,
+    scheduleRunnerCheck: clock.schedule,
     randomId: () => `chat-${String(++sequence).padStart(4, '0')}`,
     ...overrides,
   }

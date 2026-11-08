@@ -6,9 +6,13 @@ import { randomToken } from '../security/crypto'
 import { DESKTOP_ORIGIN } from '../security/desktop-contract'
 import { PREVIEW_HANDOFF_PATH } from '../security/preview-launch-path'
 import { previewBrowserDocument } from './browser-launch'
-import { launchGrant, redeemLaunchGrant } from './credentials'
+import {
+  launchGrant,
+  redeemLaunchGrant,
+  type PreviewViewer,
+} from './credentials'
 import { previewLaunchDocument } from './launch-document'
-import { activePreview, type PreviewRecord } from './store'
+import type { PreviewRecord } from './store'
 
 export function previewHandoffUrl(env: AppEnv): string {
   return `https://authorize.${env.PREVIEW_DOMAIN?.toLowerCase()}${PREVIEW_HANDOFF_PATH}`
@@ -18,9 +22,10 @@ export function previewHandoffUrl(env: AppEnv): string {
 export async function previewLaunchPage(
   env: AppEnv,
   row: PreviewRecord,
+  viewer: PreviewViewer,
   now: number,
 ): Promise<Response> {
-  const { token: grant } = await launchGrant(env, row, now)
+  const { token: grant } = await launchGrant(env, row, viewer, now)
   const nonce = randomToken()
   const action = previewHandoffUrl(env)
   const { html, policy } = previewLaunchDocument({
@@ -47,9 +52,10 @@ export async function previewLaunchPage(
 export async function previewNativeLaunch(
   env: AppEnv,
   row: PreviewRecord,
+  viewer: PreviewViewer,
   now: number,
 ): Promise<Response> {
-  const { token, expiresAt } = await launchGrant(env, row, now)
+  const { token, expiresAt } = await launchGrant(env, row, viewer, now)
   const url = new URL(previewHandoffUrl(env))
   url.hash = new URLSearchParams({
     hostname: row.hostname,
@@ -127,7 +133,6 @@ export async function previewHandoff(
       'preview_not_found',
       'The preview is not available.',
     )
-  const row = await activePreview(env.DB, hostname, now)
   const grants = headerMode
     ? [
         request.headers
@@ -135,17 +140,18 @@ export async function previewHandoff(
           ?.match(/^Bearer ([A-Za-z0-9_.-]+)$/)?.[1] ?? '',
       ]
     : form.getAll('grant')
-  const cookie =
-    row && grants.length === 1
-      ? await redeemLaunchGrant(grants[0], env, row, now)
+  const redeemed =
+    grants.length === 1
+      ? await redeemLaunchGrant(grants[0], env, hostname, now)
       : null
-  if (!row || !cookie) {
+  if (!redeemed) {
     throw new HttpError(
       404,
       'preview_not_found',
       'The preview is not available.',
     )
   }
+  const { row, cookie } = redeemed
   if (headerMode)
     return privateResponse(
       Response.json(

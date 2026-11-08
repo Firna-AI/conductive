@@ -4,6 +4,7 @@ import type { AppDependencies, AppEnv } from './env'
 import { HttpError, requiredString } from './http'
 import { signOut } from './security/auth'
 import type { RequestContext } from './security/gate'
+import { handleOperatorRequest } from './operator/route'
 
 export { routeDevice } from './devices/router'
 
@@ -13,6 +14,13 @@ export async function route(
   context: RequestContext,
   dependencies: AppDependencies,
 ): Promise<Response> {
+  const operator = await handleOperatorRequest(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (operator) return operator
   const path = new URL(request.url).pathname
   if (path === API_PATHS.session && request.method === 'GET') {
     return Response.json({ user: context.user })

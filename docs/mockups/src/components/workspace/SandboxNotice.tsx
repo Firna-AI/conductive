@@ -1,14 +1,26 @@
 import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { Archive, CircleAlert, CirclePause } from 'lucide-react'
+import { Archive, Ban, CircleAlert, CirclePause } from 'lucide-react'
 import { archivedOn } from '../../fixtures/archive'
 import { ActionButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
 import { Notice } from '../common/Notice'
 import styles from './SandboxNotice.module.css'
 
-export type SandboxProblem = 'stopped' | 'error' | 'archived'
+/**
+ * Why the sandbox is not running. `refused` is a start that the app
+ * refuses, such as while the owner of the workspace is suspended.
+ */
+export type SandboxProblem = 'stopped' | 'error' | 'refused' | 'archived'
+
+/**
+ * What the bar in place of the composer shows. A refused start carries the
+ * words of the app's refusal, so one notice serves every reason.
+ */
+export type SandboxNoticeState =
+  | { problem: Exclude<SandboxProblem, 'refused'> }
+  | { problem: 'refused'; reason: string }
 
 type Problem = {
   icon: LucideIcon
@@ -23,6 +35,12 @@ type Problem = {
 }
 
 const saved = 'Your files and chat are saved.'
+
+/**
+ * A refused start can last until the disk of the sandbox is gone, so its
+ * notice promises only the chat history.
+ */
+const history = 'Your chat history is available.'
 
 const problems: Readonly<Record<SandboxProblem, Problem>> = {
   stopped: {
@@ -41,6 +59,13 @@ const problems: Readonly<Record<SandboxProblem, Problem>> = {
     action: 'Try again',
     tone: 'danger',
   },
+  refused: {
+    icon: Ban,
+    title: "The sandbox can't start",
+    body: history,
+    panelBody: history,
+    tone: 'neutral',
+  },
   archived: {
     icon: Archive,
     title: `Archived on ${archivedOn}`,
@@ -54,15 +79,19 @@ function RecoveryButton(props: { label: string }) {
   return <ActionButton tone="primary">{props.label}</ActionButton>
 }
 
-/** The bar that replaces the composer while the sandbox is not running. */
-export function SandboxBar(props: { problem: SandboxProblem }) {
+/**
+ * The bar that replaces the composer while the sandbox is not running. A
+ * refused start shows the words of the refusal, and no action, because the
+ * start stays refused until its cause changes.
+ */
+export function SandboxBar(props: SandboxNoticeState) {
   const problem = problems[props.problem]
   return (
     <Notice
       action={
         problem.action ? <RecoveryButton label={problem.action} /> : undefined
       }
-      body={problem.body}
+      body={props.problem === 'refused' ? props.reason : problem.body}
       icon={problem.icon}
       title={problem.title}
       tone={problem.tone}

@@ -17,6 +17,7 @@ import type {
   ConnectionIdentity,
   ConnectionScheduler,
 } from '../security/connection-access'
+import type { AuthenticatedRunner } from './authenticated-runner'
 import type { SessionLoginTarget } from './login-availability'
 
 export interface ChatData {
@@ -83,7 +84,7 @@ export interface RunnerPeer {
 }
 
 export interface ActiveRunner {
-  peer: RunnerPeer
+  peer: AuthenticatedRunner
   workspace: RunnerWorkspaceRecord
   streamId: string | null
   ready: boolean
@@ -109,6 +110,8 @@ export type ChatCallbackPublisher = (
 export interface ChatDependencies {
   now: () => number
   scheduleBrowserCheck: ConnectionScheduler
+  scheduleRunnerCheck: ConnectionScheduler
+  readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
   readConnectionAccess: (
     identities: readonly ConnectionIdentity[],
     now: number,

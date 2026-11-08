@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { API_PATHS, orgPath } from '../../src/shared/api'
+import { acceptedTermsSignInPath } from '../../src/shared/terms'
 import { createApp } from '../application'
 import {
   createHarness,
@@ -57,7 +58,7 @@ it('uses the local command origin for gated requests and GitHub sign-in', async 
       error: { code: 'sign_in_required' },
     })
     const signIn = await app.fetch(
-      new Request(`${input.origin}${API_PATHS.githubSignIn}`),
+      new Request(`${input.origin}${acceptedTermsSignInPath()}`),
       env,
     )
     expect(signIn.status, input.origin).toBe(302)

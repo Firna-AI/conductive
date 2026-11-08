@@ -89,6 +89,14 @@ the invite, the roles, and the removal there.
   before a later remove of the same repository.
 - A Resume reply keeps each newer field change that arrived while its
   request ran. A reply after close changes no workspace state.
+- An open reads the workspace detail, shows it, and starts the event
+  stream. Only then does a stopped or failed workspace get its Resume. So
+  a refused or failed start keeps the detail and the stream, and
+  `startError` of `WorkspaceModel` holds the error. A manual Resume still
+  rejects for its caller.
+- A `user_suspended` refusal holds only while the owner stays the same. A
+  new owner in the detail, or from `reassigned(workspace)`, clears it. A
+  late refusal for a former owner sets nothing.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.
@@ -135,6 +143,13 @@ the invite, the roles, and the removal there.
   and no text of the app names Boat.
 - Get started has three steps: the GitHub App, the first org, and Claude or
   Codex. A reply of the API names only these steps.
+- The sign-in screen shows the agreement to the Terms and the Privacy
+  notice above Continue with GitHub. Its words come from `termsAgreement`
+  in `src/marketing/legal-text.ts`, and its links lead to the marketing
+  site. Continue with GitHub opens `acceptedTermsSignInPath()`, which
+  carries the current revision of the Terms, as
+  [Terms consent](../../worker/security/README.md#terms-consent) says.
+  `../shell/auth/SignInScreen.test.tsx` checks that address.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
   `AccountModel.repositories`, before the org exists. The create sends the
@@ -230,7 +245,8 @@ clicks, types, and lets the answers of the fake API settle.
   while screens show it.
 - `section-actions.ts`, `list-changes.ts`, and `sections.ts`: the list
   writes, their changes, moves, and the Archived group.
-- `workspace-model.ts` and `archive-model.ts`: an open workspace and Archive.
+- `workspace-model.ts` and `archive-model.ts`: an open workspace, its
+  `startError` and `reassigned`, and Archive.
 - `new-workspace-model.ts`: the first message that creates a workspace.
 - `computer-model.ts`: the scripts, the env vars, the builds, and the log.
 - `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of

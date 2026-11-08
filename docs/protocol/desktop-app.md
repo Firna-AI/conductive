@@ -163,7 +163,8 @@ limits, their results, and what the chat shows.
   a frame in the window, such as a port preview, then cannot use the
   session of the Mac app for the API.
 - The sign-in session stays across launches of the Mac app, until it
-  expires or the user signs out.
+  expires or the user signs out. A suspension of the user ends it too, as
+  [Operator actions](operator-actions.md#sessions-and-sign-in) says.
 - Sign out ends the sign-in session of the Mac app, and removes its
   cookie.
 

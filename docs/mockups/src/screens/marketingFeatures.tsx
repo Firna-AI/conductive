@@ -9,14 +9,7 @@ import {
 } from 'lucide-react'
 import type { FeatureItem } from '../components/marketing/FeatureGrid'
 import type { Feature } from '../components/marketing/FeatureSection'
-import {
-  agentsPicture,
-  orgPicture,
-  phonePicture,
-  reviewPicture,
-  startingPicture,
-  toolsPicture,
-} from './marketingPictures'
+import { marketingPicture } from './marketingPictures'
 
 /**
  * The features of the home page, each with a real screen of the app. Each
@@ -29,48 +22,42 @@ export function features(viewport: Viewport): Feature[] {
       label: 'Cloud computers',
       title: 'A cloud computer for every workspace.',
       text: "Each workspace starts from your org's prepared image, so it is ready in seconds and fetches only the new commits. Send the task at once: it waits until the computer is ready.",
-      picture: startingPicture(viewport),
-      device: 'excerpt',
+      ...marketingPicture('starting', viewport),
     },
     {
       key: 'agents',
       label: 'Agents',
       title: 'Agents powered by Claude and Codex, on your own accounts.',
       text: 'Pick the model and the effort for each message, attach files, and run several sessions side by side in one workspace.',
-      picture: agentsPicture(viewport),
-      device: 'excerpt',
+      ...marketingPicture('agents', viewport),
     },
     {
       key: 'review',
       label: 'Review',
       title: 'Review every change.',
       text: 'Read the diff of each file, preview Markdown and code, and follow the GitHub checks and the pull request until it can merge.',
-      picture: reviewPicture(viewport),
-      device: 'excerpt',
+      ...marketingPicture('review', viewport),
     },
     {
       key: 'tools',
       label: 'Tools',
       title: 'A terminal, port previews, and a live desktop.',
       text: 'Run commands on the cloud computer, open any port in a preview, and watch the agent use a browser on the desktop.',
-      picture: toolsPicture(viewport),
-      device: 'excerpt',
+      ...marketingPicture('tools', viewport),
     },
     {
       key: 'orgs',
       label: 'Orgs',
       title: 'Set up once for the whole org.',
       text: 'Each org keeps its own repositories and settings. One cloud computer image holds them all, built from your install script, with a startup script and encrypted env vars.',
-      picture: orgPicture(viewport),
-      device: 'excerpt',
+      ...marketingPicture('org', viewport),
     },
     {
       key: 'phone',
       label: 'Phone',
       title: 'Check in from your phone.',
       text: 'The app works in the browser of your phone. See which agents work or are done, open a workspace, and send the next message.',
-      picture: phonePicture(viewport),
-      device: 'phone',
+      ...marketingPicture('phone', viewport),
       bleed: true,
     },
   ]

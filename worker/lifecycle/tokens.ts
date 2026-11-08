@@ -1,4 +1,5 @@
 import type { AppEnv } from '../env'
+import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
 import { HttpError } from '../http'
 import { decrypt, encrypt, hash } from '../security/crypto'
 
@@ -17,7 +18,7 @@ export async function ensureWorkspaceToken(
   now: number,
 ): Promise<void> {
   const existing = await env.DB.prepare(
-    'SELECT workspace_id FROM workspace_tokens WHERE workspace_id = ?',
+    'SELECT workspace_id FROM workspace_tokens WHERE workspace_id = ? AND revoked_at IS NULL',
   )
     .bind(workspaceId)
     .first()
@@ -37,7 +38,10 @@ export async function storeWorkspaceToken(
   )
   await env.DB.prepare(
     `INSERT INTO workspace_tokens
-       (workspace_id, token_hash, ciphertext, created_at) VALUES (?, ?, ?, ?)`,
+       (workspace_id, token_hash, ciphertext, created_at) VALUES (?, ?, ?, ?)
+     ON CONFLICT(workspace_id) DO UPDATE SET token_hash = excluded.token_hash,
+       ciphertext = excluded.ciphertext, created_at = excluded.created_at, revoked_at = NULL
+     WHERE workspace_tokens.revoked_at IS NOT NULL`,
   )
     .bind(workspaceId, await hash(token), ciphertext, now)
     .run()
@@ -72,12 +76,9 @@ export async function authenticateWorkspaceToken(
   token: string,
 ): Promise<{ workspaceId: string; orgId: string }> {
   const row = await env.DB.prepare(
-    `SELECT workspaces.id AS workspaceId, workspaces.org_id AS orgId
-     FROM workspace_tokens JOIN workspaces
-       ON workspaces.id = workspace_tokens.workspace_id
-     JOIN orgs ON orgs.id = workspaces.org_id
-     WHERE token_hash = ? AND revoked_at IS NULL
-       AND workspaces.archived_at IS NULL AND orgs.deleted_at IS NULL`,
+    `SELECT w.id AS workspaceId, w.org_id AS orgId
+     FROM workspace_tokens t JOIN workspaces w ON w.id = t.workspace_id
+     WHERE t.token_hash = ? AND ${workspaceTokenAccessPredicate}`,
   )
     .bind(await hash(token))
     .first<{ workspaceId: string; orgId: string }>()

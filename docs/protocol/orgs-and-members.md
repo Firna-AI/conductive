@@ -97,7 +97,8 @@ says.
 - The workspace owner is the person who is responsible for the workspace
   (decision 24).
 - Each workspace belongs to the person who created it, until an admin
-  reassigns it.
+  reassigns it. A move to a suspended member fails, as
+  [Owners and admins](operator-actions.md#owners-and-admins) says.
 - The header of a workspace names its workspace owner.
 - Model use on an account of the app was rejected. Each session runs on
   the own agent login of its starter.
@@ -107,12 +108,15 @@ says.
 - When a member leaves, or an admin removes them, their workspaces stay in
   the org (decision 39).
 - The workspaces move to the admin who removed the member. When the member
-  left alone, they move to the earliest admin of the org.
+  left alone, they move to the earliest admin of the org who is not
+  suspended. [Owners and admins](operator-actions.md#owners-and-admins)
+  states the choice when no such admin exists (decision 123).
 - Reason: each workspace keeps a person in the org who is responsible for
   it.
 - The last admin can leave only after they make another member an admin,
   or by deleting the org (decision 55). This also holds when the last
-  admin deletes their account.
+  admin deletes their account. For a leave and a change of role, only
+  admins who are not suspended count (decision 123).
 - Reason: the org always keeps someone who can manage it. The person who
   leaves chooses the next admin, so nobody gets the role by surprise.
 - An automatic admin role for the earliest member was rejected for that
@@ -134,4 +138,5 @@ says.
 - For 7 days, the deleted org stays faded in the rail of its admins, and
   its page offers Restore. Its other members cannot open it.
 - Restore brings the org back as it was. Its workspaces start again when
-  they open.
+  they open. A workspace whose owner is suspended does not start, as
+  [Operator actions](operator-actions.md#starts-stops-and-builds) says.

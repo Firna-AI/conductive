@@ -1,4 +1,12 @@
 import { API_PATHS } from '../../src/shared/api'
+import { productDomain } from '../../docs/mockups/src/brand'
+import { termsConsentPage } from '../../src/marketing/sign-in-consent'
+import {
+  TERMS_VERSION,
+  TERMS_VERSION_PARAMETER,
+  acceptedTermsSignInPath,
+} from '../../src/shared/terms'
+import { githubUserAccess, suspendedUserError } from '../data/user-access'
 import {
   deleteSession,
   saveOAuthState,
@@ -24,12 +32,29 @@ export async function startSignIn(
   dependencies: AppDependencies,
   request?: Request,
 ): Promise<Response> {
+  const challenge = desktopChallenge(request)
+  const termsVersion =
+    request && new URL(request.url).searchParams.get(TERMS_VERSION_PARAMETER)
+  if (termsVersion !== TERMS_VERSION) {
+    const continuation = new URL(acceptedTermsSignInPath(), env.APP_ORIGIN)
+    if (challenge) continuation.searchParams.set('desktop_challenge', challenge)
+    return await termsConsentPage(
+      continuation.pathname + continuation.search,
+      env.MARKETING_ORIGIN ?? `https://${productDomain}`,
+    )
+  }
   const state = dependencies.randomToken()
   const verifier = dependencies.randomToken()
   const now = dependencies.now()
   const expiresAt = now + OAUTH_SECONDS * 1000
   const token = await sign(
-    { state, verifier, expiresAt, desktopChallenge: desktopChallenge(request) },
+    {
+      state,
+      verifier,
+      expiresAt,
+      desktopChallenge: challenge,
+      termsVersion,
+    },
     'github-state',
     env.SESSION_SIGNING_KEY,
   )
@@ -87,7 +112,22 @@ export async function finishSignIn(
   const { profile, tokens } = await new GitHubClient(
     dependencies.fetch,
   ).authorizeWithTokens(code, stored.verifier, env, now)
-  const user = await saveUser(env.DB, dependencies.randomToken(), profile, now)
+  const existing = await githubUserAccess(env.DB, profile.githubId)
+  if (existing?.suspendedAt !== undefined && existing.suspendedAt !== null)
+    throw suspendedUserError()
+  if (!existing && stored.termsVersion !== TERMS_VERSION)
+    throw new HttpError(
+      403,
+      'terms_acceptance_required',
+      'Accept the Terms to create your account.',
+    )
+  const user = await saveUser(
+    env.DB,
+    dependencies.randomToken(),
+    profile,
+    now,
+    stored.termsVersion === TERMS_VERSION ? TERMS_VERSION : undefined,
+  )
   await saveGitHubTokens(env, user.id, tokens, now)
   await saveVerifiedEmails(env.DB, user.id, profile.verifiedEmails)
   if (typeof stored.desktopChallenge === 'string') {

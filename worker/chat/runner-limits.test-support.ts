@@ -47,6 +47,8 @@ export async function createRunnerLimitsFixture() {
   const dependencies: ChatDependencies = {
     now: () => 25,
     scheduleBrowserCheck: () => () => undefined,
+    scheduleRunnerCheck: () => () => undefined,
+    readRunnerAccess: async () => true,
     readConnectionAccess: async () => [],
     firstStartIncomplete: async () => false,
     randomId: () => `command-${++commandSequence}`,

@@ -1,5 +1,14 @@
-import { productName } from '../../docs/mockups/src/brand'
 import { html, type Html } from './html'
+import {
+  draftNotice,
+  legalLabel,
+  notFoundText,
+  type Block,
+  type LegalDocument,
+  type SitePage,
+  type Text,
+} from './legal-text'
+import { pageHrefs } from './links'
 
 /**
  * A fact that the operator or the lawyer still confirms or writes. It shows
@@ -9,28 +18,34 @@ export function draftField(text: string): Html {
   return html`<mark class="draft-field">${text}</mark>`
 }
 
-/** One section of a legal page: a heading, and its paragraphs and lists. */
-export type LegalSection = { title: string; body: Html }
+/** The address of each page of the site that running text links to. */
+export type PageHrefs = Readonly<Record<SitePage, string>>
 
-/** A legal page of the site, such as the terms or the privacy notice. */
-export type LegalDocument = {
-  title: string
-  description: string
-  lead: Html
-  sections: readonly LegalSection[]
+/** The pages of the site on the site itself. */
+const sitePageHrefs = pageHrefs()
+
+/** Running text as markup: its words, its draft fields, and its links. */
+export function textHtml(text: Text, hrefs: PageHrefs = sitePageHrefs): Html {
+  return html`${text.map((part) => {
+    if (typeof part === 'string') return part
+    if ('draft' in part) return draftField(part.draft)
+    const href = 'page' in part ? hrefs[part.page] : `mailto:${part.mail}`
+    return html`<a class="text-link" href="${href}">${part.text}</a>`
+  })}`
 }
 
-/**
- * The notice at the top of each legal page, as decision 35 asks: a lawyer
- * reviews the text before the app opens to other people.
- */
-function draftNotice(): Html {
+function blockHtml(block: Block): Html {
+  if (block.kind === 'paragraph') return html`<p>${textHtml(block.text)}</p>`
+  return html`<ul>
+    ${block.items.map((item) => html`<li>${textHtml(item)}</li>`)}
+  </ul>`
+}
+
+/** The notice at the top of each legal page: a lawyer reviews the text. */
+function draftNoticeHtml(): Html {
   return html`<div class="draft-notice" role="note">
-    <p class="draft-notice-title">Draft for lawyer review</p>
-    <p class="draft-notice-text">
-      A lawyer reviews this text before ${productName} opens to other people.
-      Each marked field waits for a fact that the operator confirms.
-    </p>
+    <p class="draft-notice-title">${draftNotice.title}</p>
+    <p class="draft-notice-text">${draftNotice.text}</p>
   </div>`
 }
 
@@ -40,32 +55,29 @@ export function legalContent(document: LegalDocument): Html {
     (section) =>
       html`<section class="legal-section">
         <h2 class="legal-heading">${section.title}</h2>
-        ${section.body}
+        ${section.blocks.map(blockHtml)}
       </section>`,
   )
   return html`<main class="main text-page">
     <article class="text-article">
       <header class="text-head">
-        <span class="intro-label">Legal</span>
+        <span class="intro-label">${legalLabel}</span>
         <h1 class="text-title">${document.title}</h1>
-        <p class="text-lead">${document.lead}</p>
+        <p class="text-lead">${textHtml(document.lead)}</p>
       </header>
-      ${draftNotice()}${sections}
+      ${draftNoticeHtml()}${sections}
     </article>
   </main>`
 }
 
 /** The main content of the page for an address that the site does not have. */
-export function notFoundContent(home: string): Html {
+export function notFoundContent(): Html {
   return html`<main class="main text-page">
     <article class="text-article">
       <header class="text-head">
-        <span class="intro-label">Not found</span>
-        <h1 class="text-title">Page not found</h1>
-        <p class="text-lead">
-          Check the address, or go to the
-          <a class="text-link" href="${home}">home page</a>.
-        </p>
+        <span class="intro-label">${notFoundText.label}</span>
+        <h1 class="text-title">${notFoundText.title}</h1>
+        <p class="text-lead">${textHtml(notFoundText.lead)}</p>
       </header>
     </article>
   </main>`

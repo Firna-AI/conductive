@@ -1,6 +1,7 @@
 import type { ImageBuild } from '../../src/shared/org-settings'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import { requireActiveUser, userSuspended } from '../data/user-access'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
@@ -175,6 +176,7 @@ export async function advanceImageBuild(
   const { env, dependencies } = runtime
   let job = await readBuildJob(env.DB, orgId, buildId)
   let provider: SandboxProvider | undefined
+  const recoveringAllocation = job.phase === 'allocating' && !job.sandboxId
   try {
     if (job.phase === 'sources' && job.state === 'running') {
       const source = await readSourceJob(env.DB, buildId)
@@ -185,9 +187,16 @@ export async function advanceImageBuild(
         throw imageSourceFailure()
       }
     }
+    const suspended =
+      !recoveringAllocation &&
+      job.state === 'running' &&
+      job.phase !== 'cleanup' &&
+      job.startedByUserId !== null &&
+      (await userSuspended(env.DB, job.startedByUserId))
     if (
       job.state === 'running' &&
       job.phase !== 'cleanup' &&
+      !suspended &&
       providerRetryPending(job.providerRetry, dependencies.now())
     )
       return false
@@ -207,6 +216,8 @@ export async function advanceImageBuild(
     )
     if (job.phase === 'cleanup' || job.state !== 'running')
       return await cleanupBuild(runtime, provider, job)
+    if (!recoveringAllocation && job.startedByUserId)
+      await requireActiveUser(env.DB, job.startedByUserId)
     if (providerRetryExpired(job.providerRetry, dependencies.now()))
       throw new ProviderRetryExhausted()
     const done = await advanceBuildStep(runtime, provider, job)
@@ -226,8 +237,9 @@ export async function advanceImageBuild(
     }
     if (
       provider &&
-      job.phase === 'create' &&
+      job.phase === 'allocating' &&
       !job.sandboxId &&
+      !(error instanceof HttpError && error.code === 'user_suspended') &&
       !(error instanceof ProviderRetryExhausted) &&
       !(error instanceof ProviderError)
     )

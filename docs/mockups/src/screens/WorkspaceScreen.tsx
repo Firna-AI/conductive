@@ -14,9 +14,14 @@ import {
 import { ToolsPanel } from '../components/workspace/ToolsPanel'
 import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
+import type { SandboxNoticeState } from '../components/workspace/SandboxNotice'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { conversations } from '../fixtures/conversations'
 import { memberViewer, people } from '../fixtures/members'
+import {
+  ownerSuspendedRefusal,
+  suspendedOwner,
+} from '../fixtures/startRefusals'
 import {
   openableWorkspaceRecords,
   type ActivityStatus,
@@ -46,9 +51,26 @@ const widenedRight = 560
  * user or works.
  */
 function activityOf(state: WorkspaceState): ActivityStatus {
+  // A refused start leaves the sandbox stopped.
+  if (state.sandbox === 'refused') return 'stopped'
   if (state.sandbox !== 'ready') return state.sandbox
   if (conversations[state.conversation].some(isPendingCommand)) return 'input'
   return isRunning(state) ? 'working' : 'ready'
+}
+
+/** The bar in place of the composer while the sandbox is not running. */
+function sandboxNotice(state: WorkspaceState): SandboxNoticeState | undefined {
+  switch (state.sandbox) {
+    case 'refused':
+      return { problem: 'refused', reason: ownerSuspendedRefusal }
+    case 'stopped':
+    case 'error':
+    case 'archived':
+      return { problem: state.sandbox }
+    case 'ready':
+    case 'starting':
+      return undefined
+  }
 }
 
 /**
@@ -62,19 +84,16 @@ export function WorkspaceScreen(props: {
 }) {
   const { state, viewport } = props
   const record = openableWorkspaceRecords[state.workspace]
-  const workspace = { ...record, name: workspaceName(state, record) }
+  // A refused start belongs to a suspended member, whom an active admin sees.
+  const owner = state.sandbox === 'refused' ? suspendedOwner : record.owner
+  const workspace = { ...record, owner, name: workspaceName(state, record) }
   const status = activityOf(state)
   const archived = state.sandbox === 'archived'
   const admin = state.viewer === 'admin'
   const viewer = viewerOf(state)
   // Decision 42: the workspace's owner and the org's admins archive it.
   const archivable = !archived && (admin || workspace.owner === viewer)
-  const problem =
-    state.sandbox === 'stopped' ||
-    state.sandbox === 'error' ||
-    state.sandbox === 'archived'
-      ? state.sandbox
-      : undefined
+  const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
   const chat = (
     <ChatPane

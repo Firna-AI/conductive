@@ -3,6 +3,7 @@ import { TOOL_TURN_HEADER } from '../../tools/context'
 import type { WorkspaceChat } from '../chat/backend'
 import { tokenWorkspace } from '../chat/queries'
 import type { AppEnv } from '../env'
+import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
 import { HttpError } from '../http'
 import { memberSender } from '../tools/store'
 
@@ -87,12 +88,12 @@ export function currentCommandAccess(
   return db
     .prepare(
       `SELECT w.org_id AS orgId, w.name FROM workspaces w
-    JOIN orgs o ON o.id = w.org_id
     JOIN org_members m ON m.org_id = w.org_id AND m.user_id = ?
+    JOIN users sender ON sender.id = m.user_id AND sender.suspended_at IS NULL
     JOIN workspace_tokens t ON t.workspace_id = w.id
-    WHERE w.id = ? AND w.archived_at IS NULL AND o.deleted_at IS NULL
+    WHERE w.id = ? AND ${workspaceTokenAccessPredicate}
     AND w.state NOT IN ('archived', 'stopped', 'error')
-    AND t.token_hash = ? AND t.revoked_at IS NULL`,
+    AND t.token_hash = ?`,
     )
     .bind(senderId, workspaceId, tokenHash)
     .first<{ orgId: string; name: string }>()

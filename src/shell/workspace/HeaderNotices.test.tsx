@@ -162,6 +162,9 @@ describe('the notices of a failed repair under the workspace header', () => {
     const server = new FakeApiServer({ workspaceState: 'stopped' })
     emit(server, refusedReport('workspace.title', true), FAKE_TIME)
     const view = await openWorkspace(await newTab(server))
+    expect(
+      server.requests.filter((request) => request.url.endsWith('/resume')),
+    ).toHaveLength(1)
     expect(notices(view)).toEqual([`${nameLost} now`])
     // The reply of Resume holds the stored name, older than the lost one.
     const resume = queryByRole('button', 'Resume', view)
@@ -170,7 +173,7 @@ describe('the notices of a failed repair under the workspace header', () => {
     await settle()
     expect(
       server.requests.filter((request) => request.url.endsWith('/resume')),
-    ).toHaveLength(1)
+    ).toHaveLength(2)
     expect(notices(view)).toEqual([`${nameLost} now`])
   })
 })

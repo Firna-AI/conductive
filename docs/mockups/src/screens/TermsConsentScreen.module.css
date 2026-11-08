@@ -1,0 +1,35 @@
+/* The agreement, and Continue with GitHub just under it. */
+.consent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.agreement {
+  max-width: 640px;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 16px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.mark {
+  color: var(--ui-on-solid);
+}
+
+.mobile .agreement {
+  font-size: 15px;
+}
+
+.mobile .actions {
+  flex-direction: column;
+  align-items: stretch;
+}

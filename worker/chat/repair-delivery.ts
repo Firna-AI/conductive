@@ -26,7 +26,7 @@ export class RepairDelivery {
         active.delivered.has(repair.command.commandId)
       )
         continue
-      active.peer.send(repair.command)
+      await active.peer.send(repair.command)
       active.delivered.add(repair.command.commandId)
       if (repair.sent) continue
       await this.store.change(
