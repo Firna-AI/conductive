@@ -37,6 +37,15 @@ export class DevAgent {
   private count = 0
   /** Called after the first answer of a turn, as the title request is. */
   onAnswer: (sessionId: string) => void = () => {}
+  /**
+   * Called when a turn of a session starts, with its start time, and after
+   * its end, with null, so the session record names its active turn.
+   */
+  onTurn: (
+    sessionId: string,
+    turnId: string | null,
+    at: number | null,
+  ) => void = () => {}
 
   constructor(stream: DevStream, clock: Clock) {
     this.stream = stream
@@ -64,6 +73,7 @@ export class DevAgent {
       startedAt: this.clock.now(),
     }
     this.turns.set(sessionId, turn)
+    this.onTurn(sessionId, turnId, turn.startedAt)
     const context = { sessionId, turnId }
     const answer = `dev-answer-${this.count}`
     const steps: [number, () => ChatEvent][] = [
@@ -157,7 +167,12 @@ export class DevAgent {
     ]
     for (const [delay, event] of steps) {
       turn.timers.push(
-        window.setTimeout(() => this.stream.emit(event()), delay),
+        window.setTimeout(() => {
+          const next = event()
+          this.stream.emit(next)
+          // The record names no active turn after the end, as the Worker does.
+          if (next.type === 'turn.completed') this.onTurn(sessionId, null, null)
+        }, delay),
       )
     }
     turn.timers.push(
@@ -236,6 +251,7 @@ export class DevAgent {
       omittedFileCount: 0,
       userMessageIds: turn.answers,
     })
+    this.onTurn(sessionId, null, null)
   }
 
   dispose(): void {

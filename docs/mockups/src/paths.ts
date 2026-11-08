@@ -10,6 +10,7 @@ export const paths = {
   getStartedInstalled: 'app/sign-in/get-started/installed',
   getStartedOrgCreated: 'app/sign-in/get-started/org-created',
   getStartedConnected: 'app/sign-in/get-started/connected',
+  getStartedNoOrg: 'app/sign-in/get-started/no-org',
   app: 'app',
   shell: 'app/shell',
   starting: 'app/shell/starting',

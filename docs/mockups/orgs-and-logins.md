@@ -78,9 +78,14 @@ plan limits.
   `claude setup-token` or an API key, and Codex with an OpenAI API key.
   `AgentConnectForm` opens under the row of the agent. A connected login
   shows its kind and Remove.
-- Get started has three steps: install the GitHub App, create the first
-  org, and connect Claude or Codex, from decision 33. The next step opens
-  its form.
+- Get started has three steps: install the GitHub App, create an org, and
+  connect Claude or Codex, from decision 33. The next step opens its form.
+- A login belongs to the person, so the agent step has its own state. A
+  person who leaves the last org returns to Get started with the agent
+  still connected, as `app/sign-in/get-started/no-org` shows.
+- The app and the mockups take the words of Get started from
+  `src/screens/getStartedCopy.ts`. The words make no claim about earlier
+  use.
 - The composer shows a notice when the agent of the chosen model is not
   connected. In a session that another member started, a message uses the
   available login of that member, so no agent notice shows.

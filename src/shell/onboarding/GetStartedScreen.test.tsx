@@ -42,7 +42,7 @@ describe('GetStartedScreen', () => {
     const html = renderScreen(app, <GetStartedScreen user={fakeUser} />)
     expect(titlesOf(html)).toEqual([
       '1. Install the GitHub App',
-      '2. Create your first org',
+      '2. Create an org',
       '3. Connect Claude or Codex',
     ])
     expect(buttonsOf(html)).toEqual([
@@ -54,7 +54,7 @@ describe('GetStartedScreen', () => {
     expect(html).not.toContain('<input')
   })
 
-  test('ends after its three steps with the way into the first org', async () => {
+  test('ends after its three steps with the way into the org', async () => {
     const server = new FakeApiServer()
     server.json('GET', GET_STARTED_PATH, {
       orgId: 'acme',
@@ -66,7 +66,9 @@ describe('GetStartedScreen', () => {
     })
     const app = await startedApp(server)
     const text = textOf(renderScreen(app, <GetStartedScreen user={fakeUser} />))
-    expect(text).toContain('Three steps before your first workspace.')
-    expect(text).toContain('Acme is ready for its first workspace. Open Acme')
+    expect(text).toContain(
+      'Welcome, Cal. Finish these steps to create a workspace.',
+    )
+    expect(text).toContain('Acme is ready for a new workspace. Open Acme')
   })
 })

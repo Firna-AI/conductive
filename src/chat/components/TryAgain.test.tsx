@@ -89,7 +89,11 @@ describe('Try again on a failed turn', () => {
     const { text } = await renderChat({
       conversation: 'failed',
       setup: (server) => {
-        server.json('GET', sessionsPath(org, ws), fixtures.sessions)
+        // The list holds the state after that message, which is newer.
+        server.json('GET', sessionsPath(org, ws), {
+          ...fixtures.sessions,
+          eventNumber: through + 1,
+        })
         server.json('GET', chatHistoryPath(org, ws, shown.id), {
           events,
           throughEventNumber: through,

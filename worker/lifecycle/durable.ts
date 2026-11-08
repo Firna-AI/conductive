@@ -10,6 +10,7 @@ import { advanceDiskRetentionState } from './disk-retention-state'
 import { writeLifecycleState } from './durable-scheduling'
 import { failedStartStop } from './durable-start-stop'
 import { advanceLifecycleAlarm } from './durable-alarm'
+import { applyLifecycleTurn, recoverLifecycleTurns } from './durable-turns'
 import { isConfirmedStopped } from './confirmed-stop'
 import {
   LIFECYCLE_STATE_KEY,
@@ -120,10 +121,11 @@ export class DurableLifecycle {
   }
 
   runnerDisconnected(publish?: LifecyclePublisher): Promise<void> {
-    return this.update(
-      (state) => ({ ...state, runnerConnected: false }),
-      publish,
-    )
+    return this.serial(async () => {
+      const state = await this.read()
+      if (state?.runnerConnected)
+        await this.write({ ...state, runnerConnected: false }, publish)
+    })
   }
 
   reportStart(
@@ -151,6 +153,7 @@ export class DurableLifecycle {
 
   activity(): Promise<void> {
     return this.update(async (state) => {
+      const remote = await this.hooks.extendDeadline()
       if (
         state.state === 'stopped' ||
         state.state === 'archived' ||
@@ -159,7 +162,7 @@ export class DurableLifecycle {
         return state
       return reconciledLifecycle(
         { ...state, lastActivityAt: this.now() },
-        await this.hooks.extendDeadline(),
+        remote,
         this.now(),
       )
     })
@@ -172,25 +175,24 @@ export class DurableLifecycle {
     })
   }
 
+  recoverTurns(publish?: LifecyclePublisher): Promise<void> {
+    return this.update(
+      (state) => recoverLifecycleTurns(state, this.hooks),
+      publish,
+    )
+  }
+
   turn(
     sessionId: string,
     running: boolean,
     publish?: LifecyclePublisher,
+    occurredAt = this.now(),
   ): Promise<void> {
-    return this.update(async (state) => {
-      if (state.state === 'stopped' || state.state === 'archived') return state
-      const remote = await this.hooks.extendDeadline()
-      if (remote) return reconciledLifecycle(state, remote, this.now())
-      const sessions = new Set(state.runningSessions)
-      if (running) sessions.add(sessionId)
-      else sessions.delete(sessionId)
-      return {
-        ...state,
-        runningSessions: [...sessions],
-        state: sessions.size ? 'working' : 'ready',
-        lastActivityAt: this.now(),
-      }
-    }, publish)
+    const change = { sessionId, running, occurredAt }
+    return this.update(
+      (state) => applyLifecycleTurn(state, change, this.hooks, this.now),
+      publish,
+    )
   }
 
   stopped(): Promise<void> {

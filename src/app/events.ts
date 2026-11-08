@@ -37,15 +37,34 @@ export const browserDelay: Delay = (ms, run) => {
  * event once, in the order of its number. A resent event is dropped. A gap
  * or a dropped connection opens the stream again after the last number
  * that arrived, so no event gets lost.
+ *
+ * The stored history can come in pages that share one cutoff. A page can
+ * leave out an event that a later event of the replay replaces, so `last`
+ * stays at the last complete number until the final page has applied. Live
+ * events wait until then, in their order.
  */
 export class WorkspaceStream {
-  /** The number of the last event that arrived. */
+  /**
+   * The number through which the complete state has applied. A replay can
+   * leave out an event that a later event replaces, so a number through
+   * which the state applied can have no event of its own.
+   */
   readonly last = new Store(0)
   private readonly listeners = new Set<(envelope: StreamEnvelope) => void>()
   private closeSource: (() => void) | null = null
   private cancelRetry: (() => void) | null = null
   private failures = 0
   private running = false
+  /**
+   * The number that the pages of a replay have read through. The state
+   * through it can still miss an event that a later page replaces, so only
+   * a new connection starts after it.
+   */
+  private progress = 0
+  /** The cutoff of a replay that has more pages to come, or null. */
+  private replay: number | null = null
+  /** The live events that wait for the final page of a replay. */
+  private waiting: StreamEnvelope[] = []
   private readonly source: WorkspaceEventSource
   private readonly target: Omit<StreamTarget, 'afterEventNumber'>
   private readonly delay: Delay
@@ -80,8 +99,11 @@ export class WorkspaceStream {
   }
 
   private connect(): void {
+    this.replay = null
+    this.waiting = []
+    this.progress = Math.max(this.progress, this.last.get())
     this.closeSource = this.source.open(
-      { ...this.target, afterEventNumber: this.last.get() },
+      { ...this.target, afterEventNumber: this.progress },
       {
         message: (value) => this.receive(value),
         closed: () => this.retryLater(),
@@ -114,28 +136,65 @@ export class WorkspaceStream {
       return
     }
     if (message.type === 'history') {
-      const ordered = [...message.envelopes].sort(
-        (a, b) => a.eventNumber - b.eventNumber,
-      )
-      for (const envelope of ordered) this.accept(envelope)
       this.failures = 0
-      if (message.throughEventNumber > this.last.get()) {
-        this.last.set(message.throughEventNumber)
-      }
+      this.page(message)
       return
     }
-    // A gap reads again after the last number. `accept` drops a resent event.
-    if (message.envelope.eventNumber > this.last.get() + 1) {
-      this.reconnect()
+    if (this.replay !== null) {
+      this.waiting.push(message.envelope)
       return
     }
-    this.accept(message.envelope)
+    this.live(message.envelope)
   }
 
-  private accept(envelope: StreamEnvelope): void {
-    if (envelope.eventNumber <= this.last.get()) return
+  /**
+   * Applies one page of a replay. Its events apply in order, also across
+   * numbers that the page leaves out. Only the final page moves `last` to
+   * the cutoff, and then the waiting live events follow it.
+   */
+  private page(message: Extract<StreamMessage, { type: 'history' }>): void {
+    const through = message.throughEventNumber
+    const ordered = [...message.envelopes].sort(
+      (a, b) => a.eventNumber - b.eventNumber,
+    )
+    for (const envelope of ordered) {
+      if (envelope.eventNumber <= this.progress) continue
+      if (envelope.eventNumber > through) continue
+      this.progress = envelope.eventNumber
+      this.deliver(envelope)
+    }
+    const next = message.nextAfterEventNumber
+    if (next !== null) {
+      this.replay = through
+      this.progress = Math.max(this.progress, Math.min(next, through))
+      return
+    }
+    this.replay = null
+    this.progress = Math.max(this.progress, through)
+    if (this.progress > this.last.get()) this.last.set(this.progress)
+    const waiting = this.waiting.sort((a, b) => a.eventNumber - b.eventNumber)
+    this.waiting = []
+    for (const envelope of waiting) {
+      if (this.live(envelope) === 'gap') return
+    }
+  }
+
+  /** Applies a live event, or opens again after a gap, which it reports. */
+  private live(envelope: StreamEnvelope): 'gap' | null {
+    // A gap reads again after the last number. A resent event is dropped.
+    if (envelope.eventNumber > this.last.get() + 1) {
+      this.reconnect()
+      return 'gap'
+    }
+    if (envelope.eventNumber <= this.last.get()) return null
+    this.progress = envelope.eventNumber
     this.last.set(envelope.eventNumber)
-    // The number counts in any case. Only this workspace's events reach the screens.
+    this.deliver(envelope)
+    return null
+  }
+
+  /** The number counts in any case. Only this workspace's events reach the screens. */
+  private deliver(envelope: StreamEnvelope): void {
     if (envelope.workspaceId !== this.target.workspaceId) return
     for (const listener of [...this.listeners]) listener(envelope)
   }

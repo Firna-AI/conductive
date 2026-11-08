@@ -2,6 +2,7 @@ import { DurableObject } from 'cloudflare:workers'
 import type { RunnerEvent } from '../src/shared/runner'
 import type { UserMessage } from '../src/shared/messages'
 import type { ChatWorkspaceSummary } from './chat/workspace-summary'
+import { readChatWorkspaceResponse } from './chat/workspace-response'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
 import { WorkspaceChat } from './chat/backend'
 import type { DeviceOperationResult } from './devices/internal'
@@ -83,6 +84,19 @@ export class Workspace
     return this.chat.workspaceSummary()
   }
 
+  readChatWorkspaceResponse(orgId: string, workspaceId: string) {
+    return this.chat.runLifecycle(() =>
+      readChatWorkspaceResponse(
+        this.env,
+        this.chat.store,
+        orgId,
+        workspaceId,
+        () => this.controller.readLifecycle(),
+        () => this.controller.readLifecycleStartLog(),
+      ),
+    )
+  }
+
   async waitLifecycleStart() {
     return startResultForTransport(
       await this.controller.waitLifecycleStart(),
@@ -152,7 +166,11 @@ export class Workspace
   }
 
   lifecycleActivity() {
-    return this.run(() => this.controller.lifecycleActivity())
+    return this.chat.runLifecycle(async () => {
+      const result = await this.controller.lifecycleActivity()
+      if (result.ok) await this.chat.flushRunner()
+      return result
+    })
   }
 
   async lifecycleStopped(): Promise<void> {
@@ -254,9 +272,11 @@ export class Workspace
         this.env,
         this.controller,
         (id) => this.env.WORKSPACES.idFromName(id).equals(this.ctx.id),
-        (id, after) =>
+        (id, work) =>
           this.chat.store.run(() =>
-            this.chat.store.read(id, (view) => view.history(after)),
+            work((after, through) =>
+              this.chat.store.read(id, (view) => view.history(after, through)),
+            ),
           ),
       )) ?? response
     )

@@ -31,13 +31,20 @@ const create: WorkspaceStart = {
   steps: [],
 }
 
-/** A chat whose load reads this workspace record and start. */
+/**
+ * A chat whose load reads this workspace record and start, before the
+ * events that the test sends.
+ */
 function chatWith(
   detail: Omit<WorkspaceResponse, 'error'>,
   conversation: RecordedChatScenario,
 ) {
   const chat = chatFor({ conversation })
-  chat.server.json('GET', workspacePath(org, ws), { ...detail, error: null })
+  chat.server.json('GET', workspacePath(org, ws), {
+    ...detail,
+    error: null,
+    eventNumber: 0,
+  })
   return chat
 }
 

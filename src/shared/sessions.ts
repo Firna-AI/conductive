@@ -44,17 +44,21 @@ export interface Session {
   createdAt: Timestamp
   closedAt: Timestamp | null
   activeTurnId: string | null
+  /** The stored start time of the active turn, or null before dispatch. */
+  activeTurnStartedAt: Timestamp | null
   retryMessageId: string | null
   startedBy: MessageSender | null
   sourceSessionId: string | null
   loginAvailable: boolean
 }
 export interface SessionsResponse {
+  eventNumber: number
   sessions: readonly Session[]
   /** Closed sessions, last closed first. */
   history: readonly Session[]
 }
 export interface SessionResponse {
+  eventNumber: number
   session: Session
 }
 export interface CreateSessionRequest {
@@ -83,6 +87,7 @@ export interface InterruptRequest {
   turnId: string
 }
 export interface InterruptResponse {
+  eventNumber: number
   turnId: string
   state: 'stopping' | 'stopped'
 }

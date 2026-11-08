@@ -4,11 +4,11 @@ import type {
   ChangeModelResponse,
 } from '../../shared/sessions'
 import { sessionState } from './chat-snapshot'
-import { showNotice, type ChatContext } from './context'
+import { isRefusal, showNotice, type ChatContext } from './context'
 import { changeDraft, keepFiles } from './drafts'
 import { hydrate } from './history'
-import { showOpened, type PendingMove } from './model-moves'
-import { beginChange, placeEdit, placeIfNewest } from './session-records'
+import { showOpened, waitingMove, type PendingMove } from './model-moves'
+import { beginEdit, confirmRecord } from './session-records'
 
 /**
  * A model of the same agent stays in the session. A model of the other
@@ -21,11 +21,18 @@ import { beginChange, placeEdit, placeIfNewest } from './session-records'
  * sent files that the backend did not keep, from the draft that moved,
  * wherever it is now.
  *
- * Two orders apply. The session record follows the versions of
- * `session-records.ts`, so a newer pick, action, or stream record wins over
- * an older reply or rollback. The draft move and the focus follow the newest
- * pick: a session that an older pick created shows as a tab, but it takes
- * neither the draft nor the focus.
+ * A change that opens a session waits until its record shows or the server
+ * refuses it. A failure with no answer, such as a lost connection, is no
+ * refusal: the server can still have opened the session, so its record
+ * still moves the draft once, as it is then. A new pick of the same model
+ * sends the same request again, with its session ID and its draft, so the
+ * server takes it as the same change and opens no second session.
+ *
+ * Two orders apply. A model of the same agent shows at once as a pending
+ * edit, until its reply or its failure, over the newest record by event
+ * number, as `session-records.ts` says. The draft move and the focus follow
+ * the newest pick: a session that an older pick created shows as a tab, but
+ * it takes neither the draft nor the focus.
  */
 export async function chooseModel(
   context: ChatContext,
@@ -39,7 +46,9 @@ export async function chooseModel(
   context.picks.set(sessionId, pick)
   const latest = () => context.live() && context.picks.get(sessionId) === pick
   const { draft } = sessionState(snapshot, sessionId)
-  const request: ChangeModelRequest = {
+  const sameAgent = choice.agent === session.choice.agent
+  const waiting = sameAgent ? null : waitingMove(context, sessionId, choice)
+  const request: ChangeModelRequest = waiting?.request ?? {
     choice,
     draft: {
       text: draft.text,
@@ -47,30 +56,35 @@ export async function chooseModel(
     },
     newSessionId: context.newId(),
   }
-  const sameAgent = choice.agent === session.choice.agent
-  const move: PendingMove = { from: sessionId, pick, moved: null }
-  if (!sameAgent) context.moves.set(request.newSessionId, move)
-  const version = sameAgent
-    ? placeEdit(context, { ...session, choice })
-    : beginChange(context, sessionId)
+  const { newSessionId } = request
+  const move: PendingMove = waiting ?? {
+    from: sessionId,
+    request,
+    pick,
+    moved: null,
+  }
+  move.pick = pick
+  if (!sameAgent) context.moves.set(newSessionId, move)
+  const end = sameAgent ? beginEdit(context, sessionId, { choice }) : null
   let response: ChangeModelResponse
   try {
     response = await context.api.changeModel(sessionId, request)
   } catch (error) {
-    context.moves.delete(request.newSessionId)
-    if (sameAgent) placeIfNewest(context, session, version)
+    end?.()
+    if (!sameAgent && isRefusal(error)) context.moves.delete(newSessionId)
     if (latest())
       showNotice(context, sessionId, "The model didn't change", error)
     return
   }
   if (!context.live()) return
   if (!response.created) {
-    context.moves.delete(request.newSessionId)
-    placeIfNewest(context, response.session, version)
+    context.moves.delete(newSessionId)
+    confirmRecord(context, response.session, response.eventNumber)
+    end?.()
     return
   }
-  const shown = showOpened(context, response.session)
-  context.moves.delete(request.newSessionId)
+  const shown = showOpened(context, response.session, response.eventNumber)
+  context.moves.delete(newSessionId)
   const moved = move.moved
   if (moved !== null) {
     changeDraft(context, moved, (current) =>

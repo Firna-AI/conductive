@@ -8,9 +8,27 @@ import type { StoredWorkspaceStartJob } from '../../lifecycle/start-job-codec'
 export class Workspace extends ProductionWorkspace {
   private queued = 0
   private readonly queueReaders: { after: number; resolve: () => void }[] = []
+  private stopAfterRead = false
 
-  constructor(context: DurableObjectState, env: WorkspaceCompositionEnv) {
-    super(context, env, () => DEVICE_TEST_NOW)
+  constructor(
+    context: DurableObjectState,
+    env: WorkspaceCompositionEnv,
+    now: () => number = () => DEVICE_TEST_NOW,
+  ) {
+    super(context, env, now)
+  }
+
+  stopAfterNextRead(): void {
+    this.stopAfterRead = true
+  }
+
+  async readLifecycle() {
+    const state = await super.readLifecycle()
+    if (this.stopAfterRead) {
+      this.stopAfterRead = false
+      await this.lifecycleStopped()
+    }
+    return state
   }
 
   async queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean> {

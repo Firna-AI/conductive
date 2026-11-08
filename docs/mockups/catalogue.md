@@ -66,7 +66,9 @@ shows stopped. Its child pages:
 - `app/orgs/suspended/settings` has the four tabs, read-only also for an
   admin.
 - `app/orgs/suspended/leave` has Leave org for a member who is not an
-  admin, and its `confirm` variant has the question before the leave.
+  admin, and its `confirm` variant has the question before the leave. Acme
+  is the only org of that member, so Leave org opens
+  `app/sign-in/get-started/no-org`: no org, and the agent still connected.
 - `app/orgs/suspended/deleted` has a deleted org that is also suspended:
   the notice of the org above the page of the deleted org, with its date,
   and no Restore.

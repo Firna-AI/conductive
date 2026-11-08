@@ -20,7 +20,12 @@ export async function changeModel(
     await transaction.saveSession(session)
     await queueModel(transaction, session, dependencies.randomId())
     await transaction.emit({ type: 'session.updated', session })
-    return { session, created: false, draft: savedDraft }
+    return {
+      session,
+      created: false,
+      draft: savedDraft,
+      eventNumber: transaction.eventNumber,
+    }
   }
   const id = identifier(body?.newSessionId)
   const existing = await transaction.session(id)
@@ -49,9 +54,19 @@ export async function changeModel(
         'Open a new session and try again.',
       )
     }
-    return { session: existing, created: true, draft: savedDraft }
+    return {
+      session: existing,
+      created: true,
+      draft: savedDraft,
+      eventNumber: transaction.eventNumber,
+    }
   }
   const created = await createSession(transaction, next, id, user, dependencies)
   await transaction.saveModelSessionCreation(id, creation)
-  return { session: created, created: true, draft: savedDraft }
+  return {
+    session: created,
+    created: true,
+    draft: savedDraft,
+    eventNumber: transaction.eventNumber,
+  }
 }

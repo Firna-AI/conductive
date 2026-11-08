@@ -17,7 +17,7 @@ import {
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { memberViewer, people } from '../fixtures/members'
-import { orgList, orgs } from '../fixtures/orgs'
+import { type Org, orgList, orgs } from '../fixtures/orgs'
 import { paths } from '../paths'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
 
@@ -75,6 +75,8 @@ const org = orgs.acme
 export function OrgSettingsScreen(props: {
   state: OrgSettingsState
   viewport: Viewport
+  /** The orgs of the person signed in, which the rail lists. */
+  railOrgs?: readonly Org[]
 }) {
   const { state, viewport } = props
   const admin = state.viewer === 'admin'
@@ -133,7 +135,7 @@ export function OrgSettingsScreen(props: {
     <AppFrame
       overlay={dialog}
       rail={{
-        orgs: orgList,
+        orgs: props.railOrgs ?? orgList,
         current: org.key,
         suspended: suspended ? org.key : undefined,
         person: admin ? undefined : people[memberViewer],

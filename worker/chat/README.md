@@ -44,12 +44,15 @@ Trusted Worker code can also call methods of `WorkspaceChat` that run no
 gate. [Trusted workspace calls](integration/README.md#trusted-workspace-calls)
 gives their rules.
 
-`Workspace` has two trusted RPCs with no HTTP path:
+`Workspace` has these trusted chat RPCs with no HTTP path:
 
 - `acceptLifecycleFirstMessage(first)` returns the stored first message of
   a create. A repeat returns the same message and adds no history.
 - `readChatWorkspaceSummary()` returns the last event number, the last
   event number with visible output, and whether a dispatched turn runs.
+- `readChatWorkspaceResponse(orgId, workspaceId)` returns the reply of a
+  workspace read or Resume and that summary, as
+  [Browser routes](../lifecycle/README.md#browser-routes) says.
 
 [The workspace lifecycle](integration/README.md#the-workspace-lifecycle)
 says how the lifecycle and chat work together.

@@ -1,5 +1,9 @@
 import type { WorkspaceTarget } from '../api/client'
-import { readStreamMessage, type StreamEnvelope } from '../api/read-workspace'
+import {
+  readStreamMessage,
+  type StoredEvents,
+  type StreamEnvelope,
+} from '../api/read-workspace'
 
 export interface StreamListener {
   /** One message of the stream: the stored history first, then each event. */
@@ -40,6 +44,12 @@ const MAX_RECONNECT_DELAY_MS = 15_000
  * opens again once after the cursor so the server can resend what is missing.
  * An event of another workspace is ignored. A hold closes the connection and
  * keeps the cursor, so a release asks only for the events after it.
+ *
+ * The stored history can come in pages that share one cutoff. A page can
+ * leave out the numbers of events that a later event of the read replaces,
+ * so its events need no gap check. The cursor moves to the progress of each
+ * page, and to the cutoff only after the final page. Live events wait until
+ * then, and a gap after the cutoff opens the stream again.
  */
 export class WorkspaceStream {
   private readonly target: WorkspaceTarget
@@ -51,6 +61,8 @@ export class WorkspaceStream {
   private generation = 0
   private unsubscribe: (() => void) | null = null
   private recoveringFrom: number | null = null
+  /** The cutoff of a paged history that has more pages to come, or null. */
+  private replay: number | null = null
   private retryHandle: TimerHandle | null = null
   private failures = 0
   private running = false
@@ -68,7 +80,11 @@ export class WorkspaceStream {
     this.timers = options.timers ?? browserTimers
   }
 
-  /** The last event number that the stream applied with no gap before it. */
+  /**
+   * The number through which the stream applied the state with no gap. A
+   * history page can leave out an event that a later event replaces, and
+   * during more pages it is the progress of the pages.
+   */
   get through(): number {
     return this.cursor
   }
@@ -112,6 +128,7 @@ export class WorkspaceStream {
   private open(): void {
     this.unsubscribe?.()
     this.unsubscribe = null
+    this.replay = null
     this.generation += 1
     const generation = this.generation
     const unsubscribe = this.subscribe(this.target, this.cursor, {
@@ -129,16 +146,16 @@ export class WorkspaceStream {
   private receive(raw: unknown): void {
     const message = readStreamMessage(raw)
     if (!message) return
-    if (message.type === 'history') this.failures = 0
-    const envelopes =
-      message.type === 'history'
-        ? [...message.history.envelopes].sort(
-            (left, right) => left.eventNumber - right.eventNumber,
-          )
-        : [message.envelope]
     const ready: StreamEnvelope[] = []
-    for (const envelope of envelopes) this.accept(envelope, ready)
+    if (message.type === 'history') {
+      this.failures = 0
+      this.page(message.history, ready)
+    } else {
+      this.accept(message.envelope, ready)
+    }
     if (ready.length > 0) this.deliver(ready)
+    // A live event waits for the final page, and opens nothing before it.
+    if (this.replay !== null) return
     if (this.pending.size === 0) this.recoveringFrom = null
     else if (this.recoveringFrom !== this.cursor) {
       this.recoveringFrom = this.cursor
@@ -146,16 +163,53 @@ export class WorkspaceStream {
     }
   }
 
+  /**
+   * Takes one page of the stored history. Its events apply in order, also
+   * across numbers that the page leaves out. The cutoff counts only after
+   * the final page, which then lets the waiting live events follow it.
+   */
+  private page(history: StoredEvents, ready: StreamEnvelope[]): void {
+    const through = history.throughEventNumber
+    const envelopes = [...history.envelopes].sort(
+      (left, right) => left.eventNumber - right.eventNumber,
+    )
+    for (const envelope of envelopes) {
+      const number = envelope.eventNumber
+      if (envelope.workspaceId !== this.target.workspaceId) continue
+      if (!Number.isInteger(number) || number <= this.cursor) continue
+      if (number > through) continue
+      ready.push(envelope)
+      this.cursor = number
+    }
+    const next = history.nextAfterEventNumber
+    if (next !== null) {
+      this.replay = through
+      this.cursor = Math.max(this.cursor, Math.min(next, through))
+      return
+    }
+    this.replay = null
+    this.cursor = Math.max(this.cursor, through)
+    for (const number of [...this.pending.keys()]) {
+      if (number <= this.cursor) this.pending.delete(number)
+    }
+    this.drain(ready)
+  }
+
   private accept(envelope: StreamEnvelope, ready: StreamEnvelope[]): void {
     const number = envelope.eventNumber
     if (envelope.workspaceId !== this.target.workspaceId) return
     if (!Number.isInteger(number) || number <= this.cursor) return
-    if (number !== this.cursor + 1) {
+    if (this.replay !== null || number !== this.cursor + 1) {
       this.pending.set(number, envelope)
       return
     }
     ready.push(envelope)
     this.cursor = number
+    this.drain(ready)
+  }
+
+  /** Takes the waiting events that follow the cursor with no gap. */
+  private drain(ready: StreamEnvelope[]): void {
     let next = this.pending.get(this.cursor + 1)
     while (next) {
       this.pending.delete(next.eventNumber)

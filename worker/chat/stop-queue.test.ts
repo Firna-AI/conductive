@@ -34,11 +34,13 @@ describe('messages after Stop', () => {
       const laterId = `later-${state}`
       const active = await startTurn(fixture, runner, session.id, firstId)
       await fixture.send(session.id, beforeId, fixture.memberCookie)
+      const beforeStop = await fixture.history(session.id)
       const stopped = await fixture.fetch(
         sessionPaths.interrupt(fixture.org.id, WORKSPACE_ID, session.id),
         { turnId: active.turnId },
       )
       expect(await stopped.json(), state).toEqual({
+        eventNumber: beforeStop.throughEventNumber + 1,
         turnId: active.turnId,
         state: 'stopping',
       })
@@ -55,7 +57,7 @@ describe('messages after Stop', () => {
       expect(
         await fixture.send(session.id, afterId, fixture.memberCookie),
         state,
-      ).toEqual(waiting)
+      ).toEqual({ ...waiting, eventNumber: waiting.eventNumber + 2 })
       const pending = await fixture.chat.store.read(
         WORKSPACE_ID,
         async (view) =>
@@ -77,7 +79,7 @@ describe('messages after Stop', () => {
       expect(
         await fixture.send(session.id, afterId, fixture.memberCookie),
         state,
-      ).toEqual(waiting)
+      ).toEqual({ ...waiting, eventNumber: waiting.eventNumber + 6 })
       expect(
         await fixture.chat.store.read(WORKSPACE_ID, async (view) =>
           (await view.pending()).filter(

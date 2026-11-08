@@ -10,8 +10,8 @@ import type { SessionsResponse } from '../../shared/sessions'
 import type { WorkspaceViewResponse } from '../../shared/workspace-view'
 import type {
   CreateWorkspaceResponse,
+  OrderedWorkspaceResponse,
   Workspace,
-  WorkspaceResponse,
   WorkspaceState,
   WorkspacesResponse,
 } from '../../shared/workspaces'
@@ -53,7 +53,10 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
     (item) => item.id === FAKE_IDS.workspace,
   )
   if (!workspace) throw new Error('The workspace fixture is missing.')
-  const detail: WorkspaceResponse = {
+  // The read of the workspace. It holds the state before the events that a
+  // test sends, so each sent event is newer.
+  const detail: OrderedWorkspaceResponse = {
+    eventNumber: 0,
     workspace,
     start:
       state === 'starting'
@@ -81,6 +84,8 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
         : null,
   }
   const sessions: SessionsResponse = {
+    // The fake's records hold the state before the events that a test sends.
+    eventNumber: 0,
     sessions: workspaceSessions.map((session, index) => ({
       id: session.key,
       workspaceId: workspace.id,
@@ -89,6 +94,7 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
       createdAt: FAKE_TIME - (index + 1) * 60_000,
       closedAt: null,
       activeTurnId: state === 'working' ? 'turn-1' : null,
+      activeTurnStartedAt: state === 'working' ? FAKE_TIME : null,
       retryMessageId: null,
       startedBy: senderSnapshot(personNamed(session.starter)),
       sourceSessionId: null,
@@ -105,6 +111,7 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
       createdAt: FAKE_TIME - (index + 2) * 86_400_000,
       closedAt: FAKE_TIME - (index + 1) * 86_400_000,
       activeTurnId: null,
+      activeTurnStartedAt: null,
       retryMessageId: null,
       // The mockups name no starter of a closed session: the owner started it.
       startedBy: senderSnapshot(workspace.owner),

@@ -132,7 +132,11 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
     { method: 'POST', body: JSON.stringify({ turnId }) },
   )
   expect(stopped.status).toBe(200)
-  expect(await stopped.json()).toEqual({ turnId, state: 'stopping' })
+  expect(await stopped.json()).toEqual({
+    eventNumber: 6,
+    turnId,
+    state: 'stopping',
+  })
   expect(await runner.inbox.next()).toMatchObject({
     type: 'interrupt',
     sessionId,

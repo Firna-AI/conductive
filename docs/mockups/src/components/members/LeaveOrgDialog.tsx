@@ -11,7 +11,8 @@ import { ScreenLink } from '../common/ScreenLink'
 /**
  * A member confirms that they leave a suspended org. They lose access to
  * it and to its chats. Their workspaces stay in the org, with the owner
- * that the last-admin rule picks.
+ * that the last-admin rule picks. Acme is the last org of the member, so
+ * Leave org opens Get started.
  */
 export function LeaveOrgDialog(props: {
   viewer: PersonKey
@@ -29,9 +30,11 @@ export function LeaveOrgDialog(props: {
           <ScreenLink asChild to={paths.suspendedLeave}>
             <ActionButton>Cancel</ActionButton>
           </ScreenLink>
-          <ActionButton icon={LogOut} tone="danger">
-            Leave org
-          </ActionButton>
+          <ScreenLink asChild to={paths.getStartedNoOrg}>
+            <ActionButton icon={LogOut} tone="danger">
+              Leave org
+            </ActionButton>
+          </ScreenLink>
         </>
       }
       title={`Leave ${org.name}?`}

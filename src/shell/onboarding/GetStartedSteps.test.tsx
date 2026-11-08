@@ -56,8 +56,15 @@ function pressable(view: HTMLElement, name: string): boolean {
   )
 }
 
+/** The texts of the elements that match `selector`, in their order. */
+function textsOf(view: HTMLElement, selector: string): string[] {
+  return Array.from(view.querySelectorAll(selector), (item) =>
+    (item.textContent ?? '').trim(),
+  )
+}
+
 describe('the steps of Get started', () => {
-  test('a member who leaves their last org on a phone gets Create org again', async () => {
+  test('a member who leaves their last org on a phone gets Create org again, in words that claim no first use', async () => {
     const server = new FakeApiServer({ role: 'member' })
     const acme = coreFixtures('member').orgs.orgs.find(
       (org) => org.id === FAKE_IDS.org,
@@ -80,10 +87,14 @@ describe('the steps of Get started', () => {
       address: navigation.history.at(-1),
       createOrg: pressable(view, 'Create org'),
       created: (view.textContent ?? '').includes('Created'),
+      intro: textsOf(view, 'p').find((text) => text.startsWith('Welcome,')),
+      orgStep: textsOf(view, 'h2').find((text) => text.startsWith('2. ')),
     }).toEqual({
       address: routes.getStarted(),
       createOrg: true,
       created: false,
+      intro: 'Welcome, Priya Raman. Finish these steps to create a workspace.',
+      orgStep: '2. Create an org',
     })
   })
 

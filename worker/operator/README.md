@@ -94,6 +94,9 @@ Each start and build step uses the same suspension check as user suspension.
 An image source grant cannot issue or release credentials for a suspended org.
 A pending allocation still recovers its saved request before cleanup removes the resource.
 An org suspension prevents every disk retention resume, including deleted-org maintenance and a later owner change.
+It also blocks lifecycle activity and turn deadline extensions inside the workspace queue.
+An activity body that finishes after suspension gets 403 `org_suspended`.
+The refusal keeps the activity time, provider deadline, and pending stop alarm unchanged.
 No route lifts an org suspension.
 
 ## What a suspension blocks

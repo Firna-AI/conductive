@@ -3,8 +3,8 @@ import type { GetStartedResponse, GetStartedStep } from '../shared/onboarding'
 export type StepState = 'done' | 'next' | 'later'
 
 /**
- * The three steps of Get started in their fixed order: the GitHub App, the
- * first org, then Claude or Codex. A reply of the API names only these.
+ * The three steps of Get started in their fixed order: the GitHub App, an
+ * org, then Claude or Codex. A reply of the API names only these.
  */
 export const getStartedOrder: readonly GetStartedStep[] = [
   'github-app',

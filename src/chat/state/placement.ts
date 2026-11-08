@@ -36,6 +36,15 @@ function placeOf(
   const order = transcript.turns.findIndex((turn) => turn.id === turnId)
   const later = new Set(transcript.turns.slice(order + 1).map((t) => t.id))
   const start = items.findIndex((item) => turnOf(transcript, item) === turnId)
+  // A late item of a turn that the chat never saw, with no line of its own:
+  // that turn ended before the turn that runs now started.
+  if (order < 0 && start < 0) {
+    const running = transcript.turn?.turnId
+    const first = items.findIndex(
+      (item) => running !== undefined && turnOf(transcript, item) === running,
+    )
+    return first < 0 ? items.length : first
+  }
   for (let index = Math.max(start, 0); index < items.length; index += 1) {
     const item = items[index]
     const owner = turnOf(transcript, item)

@@ -1,5 +1,6 @@
 import type { WorkspacePlatform } from './workspace-platform'
 import type { AppEnv, AppDependencies } from '../env'
+import { requireActiveOrg } from '../data/user-access'
 import { DurableLifecycle } from './durable'
 import type { TurnScopes } from './turns'
 import type { WorkspaceEventJournal } from './durable-journal'
@@ -55,9 +56,21 @@ export function createWorkspaceLifecycle(
         )
       },
       extendDeadline: async () => {
-        const result = await extendWorkspaceDeadline(
-          await workspaceActionContext(env, dependencies, lifecycle),
+        const state = await lifecycle.read()
+        if (!state) return undefined
+        await requireActiveOrg(env.DB, state.orgId)
+        if (
+          state.state === 'stopped' ||
+          state.state === 'archived' ||
+          state.startStop !== undefined
         )
+          return undefined
+        const result = await extendWorkspaceDeadline({
+          env,
+          dependencies,
+          orgId: state.orgId,
+          workspaceId: state.workspaceId,
+        })
         if (result) await turns.clear()
         return result
       },
@@ -74,6 +87,19 @@ export function createWorkspaceLifecycle(
       },
       startPending: async () =>
         Boolean(await ctx.storage.get('job', 'lifecycle:start-job')),
+      recoverTurns: async (id) => {
+        const recovery = await ctx.readChatRecovery?.(id)
+        if (!recovery) return undefined
+        await turns.clear()
+        for (const turn of recovery.runningTurns) await turns.register(turn)
+        ctx.chatRecovered?.()
+        return {
+          runningSessions: [
+            ...new Set(recovery.runningTurns.map((turn) => turn.sessionId)),
+          ],
+          lastTurnEndedAt: recovery.lastTurnEndedAt,
+        }
+      },
     },
   )
   const projection = new WorkspaceStateProjection({
@@ -82,6 +108,8 @@ export function createWorkspaceLifecycle(
     journal,
     readLifecycle: () => lifecycle.read(),
     deviceWaiting: async (id) => (await ctx.deviceWaiting?.(id)) ?? false,
+    latestTitle: async (id) =>
+      (await ctx.readChatRecovery?.(id))?.title ?? null,
   })
   return { lifecycle, projection }
 }

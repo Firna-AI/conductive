@@ -27,9 +27,12 @@ says.
   sends no event. So a sent message stays pending, and a new session adds
   no tab.
 - One counter numbers the events of all workspaces of the dev fake, and its
-  event source ignores the workspace. So after the first event of another
-  workspace, the chat applies no more live events. Use `npm run dev` for
-  the chat load and the kept chat. The
+  event source ignores the workspace. So an event of another workspace
+  leaves a gap in the event numbers of the chat. At the next event of the
+  open workspace, the chat opens its stream again, and the history fills
+  the gap. Each such event costs one more connection, and the chat still
+  applies the later events. Use `npm run dev` for the chat load and the
+  kept chat. The
   [chat development page](../chat/dev/README.md) has a fake with state for
   live events and writes.
 - The production build uses `live-services.ts`: the Worker on the origin of
@@ -73,103 +76,10 @@ and removal are not wired into this tab yet.
 
 ## Data lifecycle
 
-- A screen asks for the org parts that it shows, as in
-  `useEffect(() => org.watch('repositories', 'list'), [org])`. A part
-  reads when its first screen mounts, each time that the user comes back
-  to the page, and on a timer while a screen shows it. The last screen
-  that leaves stops the timer. Screens that show a part share its reads.
-- The timer is short while a row works, needs input, or starts, or while a
-  build runs. Otherwise it is slow, so that changes from other tabs and
-  other people show. Repositories and the members read at entry and at
-  focus only. The waits are choices of the app, not product
-  limits.
-- Each part is a `Resource`. A screen sees the answer of the newest read,
-  then the changes that the server confirmed after that read started, such
-  as events, then the waiting writes in the order that they went out. A
-  read that started before a change keeps the change. A failed read keeps
-  the value that shows.
-- A list write shows its change at once, and a failure takes back that
-  change only. An answer confirms only the fields of its write: a move
-  answer sets the section of the workspace, not its state. A workspace
-  record from an event, an open, or Archive keeps the place of its row,
-  because only a read of the list and a move change the place.
-- A save can answer with the whole value, such as the repositories or
-  computer settings. Its answer counts from its arrival. A read that
-  started before it changes nothing.
-- The saves of one value go out one at a time. The next save starts after
-  the answer of the one before, because an answer carries no order of its
-  own. A failed save rejects only its own caller, and the next save goes.
-  List writes do not wait for each other.
-- A repository save adds or removes that repository only. It keeps the
-  choices from other saves and other clients. The save queue keeps an add
-  before a later remove of the same repository.
-- A Resume reply keeps each newer field change that arrived while its
-  request ran. A reply after close changes no workspace state.
-- A workspace event applies its saved public error with the workspace
-  state. An older event without the error keeps the current error. An
-  explicit null clears it. Event errors carry no log, so the model keeps
-  a null log for them.
-- An admitted create stays in `OrgModel.creations` until its start ends.
-  A failed start takes the workspace out of the list, and gives the first
-  message back in a form of its own. A sign-out, or a sign-in of another
-  person, forgets every create.
-  [Creation recovery](creation-recovery.md) gives the rules.
-- The tab keeps the `WorkspaceModel` of each workspace that it showed, for
-  the signed-in user, as
-  [The kept workspace](../shell/workspace/README.md#the-kept-workspace)
-  says. A return opens the model again, and its stream starts after its
-  last event number. A sign-out, or a sign-in of another user, closes and
-  forgets every kept model.
-- An open reads the workspace detail, shows it, and starts the event
-  stream. Only then does a stopped or failed workspace get its Resume. So
-  a refused or failed start keeps the detail and the stream, and
-  `startError` of `WorkspaceModel` holds the error. A manual Resume still
-  rejects for its caller.
-- A `user_suspended` refusal holds only while the owner stays the same. A
-  new owner in the detail, or from `reassigned(workspace)`, clears it. A
-  late refusal for a former owner sets nothing.
-- A suspended org takes no write except a leave. [A suspended
-  org](suspended-org.md) gives how the app learns of it, from the org list
-  or from an `org_suspended` refusal, and what its screens show.
-- The settings of the cloud computer are one value of the org in
-  `OrgModel`. Every opening of the Cloud computer tab shares them, so a
-  save from a closed tab shows in the reopened tab.
-- The Cloud computer tab follows the builds while it shows. When the newest
-  build ends, by any path, the tab reads the settings again, because the
-  server changes them at a build, such as `needsBuild`.
-- While the tab shows, `ComputerModel` owns one `BuildLogFollower` for the
-  log of the newest build that runs or failed. A newer build replaces the
-  follower, so an answer for an older build changes neither the log nor
-  the timer. When the builds show the end of the build before the log
-  does, the follower reads the final log. When this update arrives during
-  an active read, the follower keeps it. After that read, the follower
-  reads again, unless that answer already shows the new state.
-- Each read of the follower gets the build details at `buildPath`: the
-  build with its full log, in one answer. The follower takes the state and
-  the lines from the same answer, never from two reads. The follower sends
-  this read at the start, on its timer, for Try again, and when the builds
-  show a new state. While a read runs, a new read waits for its answer and
-  sends nothing. The Worker also serves an event stream of each build, as
-  the [lifecycle routes](../../worker/lifecycle/README.md#browser-routes)
-  say. The app does not read it.
-- The read mark of an open workspace follows the applied state, the
-  number of the newest event, and the visibility of the page, so their
-  order does not count. A hidden page sends no read mark. When the page
-  shows again, the mark goes through the newest event that arrived. A page
-  without the focus still shows its output, so the focus does not count.
-- The chat, the GitHub views, the terminal tool, the preview tool, and the
-  workspace screen keep one store for each workspace through
-  `useWorkspaceStore`. The hook makes the store, connects it after the
-  render, and follows its snapshot. It stops the store at unmount. A switch
-  of workspace stops the old store and makes a new one. The
-  [tool README](../terminal/README.md#workspace-events) gives the rules of
-  the tool store. The store of `WorkspaceScreen` is a view of the kept
-  workspace, so its stop keeps the parts, as the
-  [workspace integration](../shell/workspace/README.md#integration) shows.
-- The other workspace stores do not use the hook yet. The files
-  development pages start and stop their `WorkspaceFiles` in their own
-  effects. The [files integration](../files/README.md#integration) shows
-  the hook for a new files owner.
+[Data lifecycle](data-lifecycle.md) gives the rules of the data that the
+screens read and write. It covers the org parts, the saves, the creates,
+the kept workspace models, the build log, the read marks, and the
+workspace stores.
 
 ## Screens
 
@@ -188,12 +98,17 @@ focus, saved drafts, and New workspace.
   the save. No answer brings a stored secret back.
 - The browser keeps only the panel widths (`panels.ts`). A browser that
   refuses its storage keeps them until the page closes.
-- The open of a workspace, its read mark, the Archive check, and the
-  settings reads of the Cloud computer tab count a generation. An answer
-  that arrives after their screen closed or the user cancelled starts no
-  stream, writes no older state, opens no question, and schedules no
-  request. One follower owns the requests and the timer of a build log.
-  After it stops, an answer changes nothing and schedules nothing.
+- The open of a workspace, the Archive check, and the settings reads of
+  the Cloud computer tab count a generation. An answer that arrives after
+  their screen closed or the user cancelled starts no stream, writes no
+  older state, opens no question, and schedules no request.
+- A read mark counts no generation, because one request serves every
+  visit of its kept model. An answer after a close still sets the
+  confirmed number, which a later open uses. While the model stays closed,
+  that answer changes no detail and schedules no request. After a new
+  open, it can schedule the next mark of the new visit.
+- One follower owns the requests and the timer of a build log. After it
+  stops, an answer changes nothing and schedules nothing.
 - Timers, the focus, the visibility, and the input of the page come from
   `AppServices` (`delay`, `onFocus`, `visible`, and `onInput`), so that no
   unit test runs a real timer or needs a browser page. The browser hears
@@ -226,6 +141,8 @@ clicks, types, and lets the answers of the fake API settle.
 - `get-started.ts`: the order and the states of the steps of Get started.
   `setup-steps.ts`: `setupSteps`, the steps that the screens show, and
   `setupOrg`, the org of Get started and of the address `/`.
+- [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
+  setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   and computer settings of one org, with `watch` and the wait of each part.
 - `account-model.ts`: the agent logins, the default model, the GitHub App
@@ -242,6 +159,8 @@ clicks, types, and lets the answers of the fake API settle.
 - `suspension.ts` and `permissions.ts`: the suspension of an org, the
   client that reports its refusals, and the rules of what a person may
   change.
+- `workspace-read-marks.ts`: `WorkspaceReadMarks`, the read marks of one
+  kept workspace model, with its shown and confirmed numbers.
 - `new-workspace-model.ts`: the first message that creates a workspace.
   `creations.ts`: `Creations`, the admitted creates of an org in this tab,
   and `failedCreate`, which tells a create whose start failed.

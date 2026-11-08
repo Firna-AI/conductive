@@ -26,7 +26,10 @@ export type RailState = {
   suspended?: OrgKey
   /** No org exists yet, and nothing is connected. */
   firstRun?: boolean
-  /** The person signed in, when it is not the account of the mockups. */
+  /**
+   * The person signed in. Without it, the rail shows the account of the
+   * mockups.
+   */
   person?: Person
 }
 

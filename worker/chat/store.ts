@@ -1,35 +1,23 @@
-import type { UserMessage } from '../../src/shared/messages'
-import type { Session } from '../../src/shared/sessions'
 import type {
   WorkspaceEvent,
   WorkspaceEventEnvelope,
 } from '../../src/shared/events'
 import { HttpError } from '../http'
 import { chatFilesStorage } from './files-storage'
-import {
-  loadHistoryEvent,
-  saveHistoryEvent,
-  type StoredWorkspaceEvent,
-} from './history-storage'
+import { saveHistoryEvent } from './history-storage'
+import { HistoryPages } from './history-pages'
+import { ChatRecords } from './chat-records'
 import type { FilesStorage } from '../files/storage'
 import type { GitHubStateTransaction } from '../github/contracts'
 import { ReportRepairs } from './report-repairs'
 import { WorkspaceSummaryProjection } from './workspace-summary'
-import { normalizeSession, type StoredSession } from './session-storage'
-import type {
-  ChatData,
-  ChatStorage,
-  ModelSessionCreation,
-  PendingCommand,
-  StoredTurn,
-} from './types'
-
-const ROOT = 'chat:v1:'
-const META = `${ROOT}meta`
-const key = (kind: string, id: string) =>
-  `${ROOT}${kind}:${encodeURIComponent(id)}`
-const eventKey = (eventNumber: number) =>
-  `${ROOT}event:${String(eventNumber).padStart(20, '0')}`
+import {
+  CHAT_ROOT as ROOT,
+  CHAT_META as META,
+  chatKey as key,
+  chatEventKey as eventKey,
+} from './storage-keys'
+import type { ChatData, ChatStorage, PendingCommand, StoredTurn } from './types'
 
 interface ChatMetadata {
   workspaceId: string
@@ -37,7 +25,7 @@ interface ChatMetadata {
   commandThrough: number
 }
 
-export class ChatTransaction {
+export class ChatTransaction extends ChatRecords {
   readonly workspaceId: string
   readonly now: number
   readonly emitted: WorkspaceEventEnvelope[] = []
@@ -45,12 +33,13 @@ export class ChatTransaction {
   readonly github: GitHubStateTransaction
   readonly repairs: ReportRepairs
   private readonly summary: WorkspaceSummaryProjection
-  private readonly data: ChatData
+  private readonly pages: HistoryPages
   private through: number
   private commandThrough: number
 
   constructor(data: ChatData, metadata: ChatMetadata, now: number) {
-    this.data = data
+    super(data)
+    this.pages = new HistoryPages(data)
     this.files = chatFilesStorage(data)
     this.github = {
       get: (key) => data.get(key),
@@ -61,7 +50,7 @@ export class ChatTransaction {
     this.summary = new WorkspaceSummaryProjection(
       data,
       () => this.turns(),
-      () => this.history(0),
+      (after, through) => this.history(after, through),
     )
     this.workspaceId = metadata.workspaceId
     this.through = metadata.through
@@ -69,36 +58,6 @@ export class ChatTransaction {
     this.now = now
   }
 
-  async session(id: string): Promise<Session | undefined> {
-    const session = await this.data.get<StoredSession>(key('session', id))
-    return session ? normalizeSession(session) : undefined
-  }
-  message(id: string): Promise<UserMessage | undefined> {
-    return this.data.get(key('message', id))
-  }
-  turn(id: string): Promise<StoredTurn | undefined> {
-    return this.data.get(key('turn', id))
-  }
-  messageTurn(id: string): Promise<string | undefined> {
-    return this.data.get(key('message-turn', id))
-  }
-  newestTurn(sessionId: string): Promise<string | undefined> {
-    return this.data.get(key('newest-turn', sessionId))
-  }
-  async sessions(): Promise<Session[]> {
-    return [
-      ...(
-        await this.data.list<StoredSession>({ prefix: `${ROOT}session:` })
-      ).values(),
-    ].map(normalizeSession)
-  }
-  async turns(): Promise<StoredTurn[]> {
-    return [
-      ...(
-        await this.data.list<StoredTurn>({ prefix: `${ROOT}turn:` })
-      ).values(),
-    ]
-  }
   async pending(): Promise<PendingCommand[]> {
     const records = [
       ...(
@@ -127,34 +86,27 @@ export class ChatTransaction {
       )
     )?.command
   }
-  saveSession(session: Session): Promise<void> {
-    return this.data.put(key('session', session.id), session)
-  }
-  modelSessionCreation(id: string): Promise<ModelSessionCreation | undefined> {
-    return this.data.get(key('model-session', id))
-  }
-  saveModelSessionCreation(
-    id: string,
-    creation: ModelSessionCreation,
-  ): Promise<void> {
-    return this.data.put(key('model-session', id), creation)
-  }
-  saveMessage(message: UserMessage): Promise<void> {
-    return this.data.put(key('message', message.id), message)
-  }
-  messageSource(messageId: string): Promise<string | undefined> {
-    return this.data.get(key('message-source', messageId))
-  }
-  saveMessageSource(messageId: string, sessionId: string): Promise<void> {
-    return this.data.put(key('message-source', messageId), sessionId)
-  }
   saveTurn(turn: StoredTurn): Promise<void> {
     return this.summary
-      .turn(turn)
+      .turn(turn, this.now)
       .then(() => this.data.put(key('turn', turn.id), turn))
   }
   workspaceSummary() {
     return this.summary.read(this.through)
+  }
+  async lifecycleRecovery() {
+    const { activeTurnIds, lastTurnEndedAt, title } =
+      await this.summary.recovery()
+    const runningTurns: StoredTurn[] = []
+    for (const id of activeTurnIds) {
+      const turn = await this.turn(id)
+      if (turn?.state === 'running' || turn?.state === 'stopping')
+        runningTurns.push(turn)
+    }
+    return { runningTurns, lastTurnEndedAt, title }
+  }
+  get eventNumber(): number {
+    return this.through
   }
   saveMessageTurn(messageId: string, turnId: string): Promise<void> {
     return this.data.put(key('message-turn', messageId), turnId)
@@ -174,34 +126,26 @@ export class ChatTransaction {
   saveCursor(streamId: string, through: number): Promise<void> {
     return this.data.put(key('cursor', streamId), through)
   }
-  async history(after: number) {
-    return {
-      events: await Promise.all(
-        [
-          ...(
-            await this.data.list<StoredWorkspaceEvent>({
-              prefix: `${ROOT}event:`,
-              startAfter: eventKey(after),
-            })
-          ).values(),
-        ].map((stored) => loadHistoryEvent(this.data, stored)),
-      ),
-      throughEventNumber: this.through,
-    }
+  history(after: number, through = this.through, sessionId?: string) {
+    return this.pages.read(after, Math.min(through, this.through), sessionId)
   }
 
   async emit(
     event: WorkspaceEvent,
     occurredAt = this.now,
+    late?: true,
   ): Promise<WorkspaceEventEnvelope> {
+    await this.pages.prepare(this.through)
     const envelope: WorkspaceEventEnvelope = {
       workspaceId: this.workspaceId,
       eventNumber: ++this.through,
       occurredAt,
       event: structuredClone(event),
+      ...(late ? { late } : {}),
     }
     await this.summary.event(envelope)
     await saveHistoryEvent(this.data, eventKey(envelope.eventNumber), envelope)
+    await this.pages.index(envelope)
     this.emitted.push(envelope)
     return envelope
   }

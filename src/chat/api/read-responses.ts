@@ -5,11 +5,11 @@ import type { Attachment, SendMessageResponse } from '../../shared/messages'
 import type {
   ChangeModelResponse,
   InterruptResponse,
-  Session,
+  SessionResponse,
   SessionsResponse,
 } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
-import { flag, list, nullable, oneOf, record, text } from './json'
+import { count, flag, list, nullable, oneOf, record, text } from './json'
 import {
   readAgent,
   readAttachment,
@@ -36,21 +36,29 @@ export type MemberSummary = Pick<User, 'id' | 'githubLogin' | 'displayName'>
 /** What the chat needs to know about the org: its name. */
 export type OrgSummary = Pick<Org, 'name'>
 
+/** The session lists, with the event number whose state they hold. */
 export function readSessions(value: unknown): SessionsResponse {
   const source = record(value, 'sessions')
   return {
+    eventNumber: count(source.eventNumber),
     sessions: list(readSession)(source.sessions),
     history: list(readSession)(source.history),
   }
 }
 
-export function readSessionResponse(value: unknown): Session {
-  return readSession(record(value, 'session response').session)
+/** A session record of a reply, with the event number whose state it holds. */
+export function readSessionResponse(value: unknown): SessionResponse {
+  const source = record(value, 'session response')
+  return {
+    eventNumber: count(source.eventNumber),
+    session: readSession(source.session),
+  }
 }
 
 export function readSendResponse(value: unknown): SendMessageResponse {
   const source = record(value, 'send response')
   return {
+    eventNumber: count(source.eventNumber),
     message: readUserMessage(source.message),
     turnId: nullable(text)(source.turnId),
     session: readSession(source.session),
@@ -60,7 +68,7 @@ export function readSendResponse(value: unknown): SendMessageResponse {
 export function readChangeModel(value: unknown): ChangeModelResponse {
   const source = record(value, 'model response')
   return {
-    session: readSession(source.session),
+    ...readSessionResponse(value),
     created: flag(source.created),
     draft: readDraft(source.draft),
   }
@@ -69,6 +77,7 @@ export function readChangeModel(value: unknown): ChangeModelResponse {
 export function readInterrupt(value: unknown): InterruptResponse {
   const source = record(value, 'interrupt response')
   return {
+    eventNumber: count(source.eventNumber),
     turnId: text(source.turnId),
     state: oneOf({ stopping: true, stopped: true })(source.state),
   }

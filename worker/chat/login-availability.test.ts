@@ -154,7 +154,11 @@ it('serves another member the list and subscription when the starter ciphertext 
     fixture.memberCookie,
   )
   expect(response.status).toBe(200)
-  expect(await response.json()).toEqual({ sessions: [session], history: [] })
+  expect(await response.json()).toEqual({
+    eventNumber: 1,
+    sessions: [session],
+    history: [],
+  })
   const subscription = fixture.tab(0, undefined, fixture.memberCookie)
   await expect(subscription).resolves.toMatchObject({ closed: 0 })
   const tab = await subscription
@@ -211,7 +215,11 @@ it('leaves archived-workspace availability and storage unchanged during reads an
     sessionsPath(fixture.org.id, WORKSPACE_ID),
   )
   expect(response.status).toBe(200)
-  expect(await response.json()).toEqual({ sessions: [session], history: [] })
+  expect(await response.json()).toEqual({
+    eventNumber: 1,
+    sessions: [session],
+    history: [],
+  })
   expect((await fixture.history(session.id)).events).toHaveLength(1)
   const tab = await fixture.tab()
   expect(tab.messages[0]?.type).toBe('history')

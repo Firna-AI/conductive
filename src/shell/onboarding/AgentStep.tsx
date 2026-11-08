@@ -1,9 +1,12 @@
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import { getStartedCopy } from '../../../docs/mockups/src/screens/getStartedCopy'
 import type { StepState } from '../../app/get-started'
 import { useStore } from '../../app/store'
 import { AgentList } from '../account/AgentList'
 import { useApp } from '../context'
 import { DoneStatus, useRefreshSteps } from './stepParts'
+
+const copy = getStartedCopy.agent
 
 /**
  * Connect Claude or Codex. As the next step, the form of the agent of the
@@ -20,11 +23,11 @@ export function AgentStep(props: { state: StepState }) {
   const initial = next ? (account?.defaultChoice.agent ?? null) : null
   return (
     <Section
-      description="Your agents run on your own Claude or OpenAI account. Connect at least one now, and the other at any time in your account."
+      description={copy.description}
       status={
-        props.state === 'done' ? <DoneStatus label="Connected" /> : undefined
+        props.state === 'done' ? <DoneStatus label={copy.done} /> : undefined
       }
-      title="3. Connect Claude or Codex"
+      title={copy.title}
     >
       <AgentList
         closable={!next}

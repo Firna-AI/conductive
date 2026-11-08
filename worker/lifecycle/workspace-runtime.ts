@@ -17,6 +17,10 @@ export interface PendingTurn {
   senderUserId: string
 }
 
+export type LifecycleActivityResult =
+  | { ok: true }
+  | { ok: false; error: { code: 'org_suspended'; message: string } }
+
 /** Internal RPC only. Machine requests cannot register sender identities. */
 export interface WorkspaceLifecycleEndpoint {
   initializeLifecycle(input: {
@@ -40,7 +44,7 @@ export interface WorkspaceLifecycleEndpoint {
   suspendLifecycle(workspaceId: string, ownerUserId: string): Promise<boolean>
   reconcileLifecycleAccess(workspaceId: string): Promise<void>
   clearLifecycle(): Promise<void>
-  lifecycleActivity(): Promise<void>
+  lifecycleActivity(): Promise<LifecycleActivityResult>
   credentialSender(turnId: string): Promise<string | null>
   retryFailedCreateCleanup(workspaceId: string): Promise<void>
   finishDiskMaintenance(): Promise<void>

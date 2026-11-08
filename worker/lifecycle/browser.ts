@@ -165,8 +165,11 @@ export async function handleLifecycleRequest(
       context.body?.source === 'input' ||
       context.body?.source === 'terminal' ||
       context.body?.source === 'preview'
-    )
-      await runtime.workspace(workspaceId).lifecycleActivity()
+    ) {
+      const result = await runtime.workspace(workspaceId).lifecycleActivity()
+      if (!result.ok)
+        throw new HttpError(403, result.error.code, result.error.message)
+    }
     return privateResponse(Response.json({}))
   }
   return null
