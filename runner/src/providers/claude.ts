@@ -1,4 +1,3 @@
-import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 
 import { query } from '@anthropic-ai/claude-agent-sdk'
@@ -6,6 +5,7 @@ import { query } from '@anthropic-ai/claude-agent-sdk'
 import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
 import { ClaudeInputWindow } from './claude-input-window'
+import { spawnClaudeProcess } from './claude-process'
 import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
@@ -44,35 +44,36 @@ export function createClaudeFactory(
       options.event(event)
     })
     let closed = false
-    const stream = start({
-      prompt: input,
-      options: {
-        cwd: options.cwd,
-        env: providerEnvironment(options.home, options.login),
-        pathToClaudeCodeExecutable: binary(),
-        model: options.choice.model,
-        ...(options.choice.effort === 'none'
-          ? { thinking: { type: 'disabled' } }
-          : { effort: options.choice.effort }),
-        ...(options.conversationId ? { resume: options.conversationId } : {}),
-        permissionMode: 'bypassPermissions',
-        allowDangerouslySkipPermissions: true,
-        includePartialMessages: true,
-        persistSession: true,
-        settingSources: ['project'],
-        mcpServers: computer ? { computer } : {},
-        spawnClaudeCodeProcess: (request) => {
-          options.signal?.throwIfAborted()
-          const child = spawn(request.command, request.args, {
-            cwd: request.cwd,
-            env: request.env,
-            stdio: ['pipe', 'pipe', 'ignore'],
-          })
-          lifetime.register(child)
-          return child
+    let stream: ClaudeQuery
+    try {
+      stream = start({
+        prompt: input,
+        options: {
+          cwd: options.cwd,
+          env: providerEnvironment(options.home),
+          pathToClaudeCodeExecutable: binary(),
+          model: options.choice.model,
+          ...(options.choice.effort === 'none'
+            ? { thinking: { type: 'disabled' } }
+            : { effort: options.choice.effort }),
+          ...(options.conversationId ? { resume: options.conversationId } : {}),
+          permissionMode: 'bypassPermissions',
+          allowDangerouslySkipPermissions: true,
+          includePartialMessages: true,
+          persistSession: true,
+          settingSources: ['project'],
+          mcpServers: computer ? { computer } : {},
+          spawnClaudeCodeProcess: (request) => {
+            options.signal?.throwIfAborted()
+            return spawnClaudeProcess(request, options.login, lifetime)
+          },
         },
-      },
-    })
+      })
+    } catch (error) {
+      input.discard()
+      await lifetime.close()
+      throw error
+    }
     void (async () => {
       try {
         for await (const message of stream) {

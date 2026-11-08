@@ -4008,6 +4008,51 @@ Added on 8 November 2026 from the check of finding 2 of PR #48
 - **Chosen:** A now, by the user on 8 November 2026, with D as a later
   follow-up: `plans/follow-ups/runner-output-save-failure.md`.
 
+### 132. Store chat attachments until the turn
+
+Added on 8 November 2026 from Milestone 15i, which found that no
+milestone built the attachment storage.
+
+- **Background:** The composer attaches files to a message, and every
+  upload fails today. A file must wait between the upload and the turn:
+  a new workspace has no cloud computer yet, and a message can wait while
+  its computer starts. The Worker can read files in a cloud computer, but
+  it cannot write them yet.
+- **Options:**
+  - **A.** One R2 bucket. Each upload goes there, with a limit of 25 MB
+    for each file. The Worker copies each file into the cloud computer
+    when the turn starts. A file is deleted with its workspace, and an
+    unsent draft file after 7 days.
+  - **B.** The storage of each workspace's own object, in chunks.
+  - **C.** Upload only into a running cloud computer. The first message
+    of a new workspace, and a message to a stopped workspace, cannot carry
+    files.
+  - **D.** As C, but a message with files waits as an unsent draft until
+    the cloud computer runs, as in decision 130 A. A new workspace starts
+    its computer before its first message.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026. Milestone 8p builds it.
+
+### 133. Decide which org env values count as secrets
+
+Added on 8 November 2026 from the check of finding 12 of PR #42
+(Milestone 8i).
+
+- **Background:** The runner's output filter hides only the workspace
+  token and the agent logins, so an agent can repeat an org env value into
+  the saved chat. The start-log masker hides every org env value, also a
+  short, common value such as `1`.
+- **Options:**
+  - **A.** Keep both rules, and state in the access protocol that agent
+    output can show org env values.
+  - **B.** One list of start secrets feeds both filters, and only values
+    of 8 or more characters count.
+  - **C.** Add a "secret" mark to each org env var. Only marked values are
+    hidden, in the chat and in the start logs.
+- **Recommendation:** C.
+- **Chosen:** A now, by the user on 8 November 2026, with C as a later
+  follow-up: `plans/follow-ups/org-env-values-in-output.md`.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -5096,6 +5141,35 @@ Apply decision 128 C. Added on 8 November 2026.
       `docs/protocol/workspaces-and-sandboxes.md`, and delete that item.
       Branch: `conductor/boat-native-remote-workspaces-milestone-5d`.
 
+## Milestone 5e: Lifecycle follow-ups
+
+Depends on: 8m, 15i, 15o. These branches change the alarm and the start
+path that this milestone changes.
+
+Apply the `fix after merge` items of the workspace lifecycle. Added on 8
+November 2026.
+
+- [ ] Apply option B of `plans/follow-ups/shared-object-alarm.md`: one
+      alarm scheduler sets the next alarm at the end of each run. Delete
+      that item.
+- [ ] Apply option B of `plans/follow-ups/terminal-setup-passes-start-limit.md`,
+      and delete that item.
+
+## Milestone 5f: Tests on the real workspace object
+
+Depends on: 5e, 8m. Both change the lifecycle and chat tests that this
+milestone moves.
+
+Apply the `fix after merge` items of the Worker tests. Added on 8 November
+2026. One native harness serves the chat tests and the lifecycle tests, as
+both items recommend.
+
+- [ ] Apply option C of `plans/follow-ups/chat-tests-on-real-object.md` and
+      option E of `plans/follow-ups/lifecycle-tests-on-real-object.md`, with
+      one native harness. Delete both items.
+- [ ] Apply option C of `plans/follow-ups/harness-test-speed.md` (decision
+      113), and delete that item.
+
 ## Milestone 6: App shell and workspaces
 
 Tags: ui
@@ -5501,6 +5575,21 @@ The saved-tree notice has no age, because its mark carries no time.
 
 Evidence: `.context/boat-native-remote-workspaces/7v/verification.md`.
 
+## Milestone 7x: Runner follow-ups
+
+Depends on: none.
+
+Apply the `fix after merge` items of the runner. Added on 8 November 2026.
+
+- [x] Apply option D of `plans/follow-ups/runner-output-save-failure.md`
+      (decision 131), and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-7x`.
+- [x] Apply option C of `plans/follow-ups/agent-login-in-tool-processes.md`
+      (decision 114): no tool process inherits the login of the agent.
+      Check the Codex program too. Update "Agent logins in a sandbox" in
+      `docs/protocol/access-and-security.md`. Branch: `conductor/boat-native-remote-workspaces-milestone-7x`.
+The live check of option C in a real sandbox moved to Milestone 16a on 8
+November 2026.
+
 ## Milestone 8: Chat UI
 
 Tags: ui
@@ -5711,7 +5800,7 @@ Depends on: 5, 6, 7, 7r, 8, 8j
 
 - [x] Wire the app shell, the chat screens, the chat backend, and the
       runner together. The run with a real Boat sandbox moved to Milestone
-      16a on 9 November 2026, because it needs the deployed app.
+      16a on 8 November 2026, because it needs the deployed app.
   - [x] Forward the browser chat routes to the object named by the decoded
         workspace ID, before the outer browser gate.
         Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
@@ -5887,6 +5976,50 @@ observed start success, so later resume events do not hold its composer.
 
 Evidence: `.context/boat-native-remote-workspaces/8n-report.md`.
 
+## Milestone 8o: Keep the workspace after a failed first start
+
+Tags: ui
+
+Depends on: 15i, 15o. Both change the failed-start path.
+
+Apply decision 130 D, which the user chose as a later follow-up on 8
+November 2026. Added on 8 November 2026.
+
+- [ ] Draw the kept workspace in the mockups: its start error, its chat,
+      its queued messages, and Try again. Then build it, and compare it
+      with its mockup.
+- [ ] Apply option D of `plans/follow-ups/failed-first-start-keeps-workspace.md`,
+      with the changes to `docs/protocol/chat-and-events.md` and
+      `docs/protocol/workspaces-and-sandboxes.md`. Delete that item.
+
+## Milestone 8p: Chat attachments
+
+Tags: ui
+
+Depends on: 8m, 15i. They change the chat path, the composer, and the
+deletion purge that this milestone extends.
+
+Apply decision 132 A. Added on 8 November 2026.
+
+- [ ] Draw each missing attachment state in the mockups, such as upload
+      progress, a failed upload with Try again, a file over the limit, and
+      the files of a sent message. Then build them, and compare each with
+      its mockup.
+- [ ] Store each upload in one R2 bucket, with a limit of 25 MB for each
+      file and a record of each file. Only a message of the uploader, in
+      the workspace or the new workspace that the upload names, can use
+      the file.
+- [ ] When the turn of a message starts, copy each of its files into the
+      cloud computer at its path. The Worker has no provider route that
+      writes a file yet. Add one to the fixed list of provider routes, or
+      send the file through the runner connection, as a design call.
+- [ ] Delete the files of a workspace with the workspace, also in the
+      purge of a deleted org, and an unsent draft file after 7 days.
+- [ ] Add the bucket to `docs/deployment.md` and to the Worker
+      configuration. State the rules in `docs/protocol/chat-and-events.md`
+      and `docs/protocol/access-and-security.md`, and the stored files on
+      the privacy page, with "(decision 132)".
+
 ## Milestone 16a: First deployment
 
 Depends on: 8i, 8m
@@ -5905,15 +6038,21 @@ This milestone needs the prerequisites from the user.
 - [ ] Smoke-test it with a real Boat sandbox: run `npm ci --prefix runner`,
       `npm --prefix runner run build`, `node image/live-check.mjs --prepare`,
       and `node image/live-check.mjs` with the `LIVE_*` settings of the
-      deployment guide. Moved from Milestone 8i on 9 November 2026.
+      deployment guide. Moved from Milestone 8i on 8 November 2026.
 - [ ] Measure the first agent start after a resume over several runs,
       with the runner inside and outside the home folder. Keep the faster
       place. Moved from Milestone 7r on 6 November 2026 and from Milestone
-      8i on 9 November 2026, because it needs a real sandbox and real
+      8i on 8 November 2026, because it needs a real sandbox and real
       logins.
 - [ ] Check that chat survives a restart: send a message before the
       runner connects, deploy again, then check the history, the event
       numbers, and the delivery of the waiting message.
+- [ ] Run the live check of `plans/follow-ups/agent-login-in-tool-processes.md`
+      with a Claude subscription token, an Anthropic API key, and an
+      OpenAI API key: a server that a tool starts cannot read the login
+      during or after the turn. Then delete that item. Moved from
+      Milestone 7x on 8 November 2026, because it needs the deployed test
+      app and the three logins from the user.
 
 ## Milestone 9: Files backend
 
@@ -6619,6 +6758,58 @@ Evidence: `.context/milestone-15o/ui-product/report.md`,
 `.context/milestone-15o/worker/post-merge/completion.md`,
 `.context/milestone-15o/primary-sync-8i.md`, and
 `.context/milestone-15o/check-post-8i.log`.
+
+## Milestone 15p: Checks, tests, and marketing follow-ups
+
+Depends on: none.
+
+Apply the small `fix after merge` items of the gate, the tests, and the
+marketing site. Added on 8 November 2026.
+
+- [ ] Apply option C of `plans/follow-ups/unused-export-check.md` (decision
+      112): add an unused-export check to the complete gate. Delete that
+      item.
+- [ ] Apply option A of `plans/follow-ups/mac-top-navigation-flake.md`, and
+      delete that item.
+- [ ] Apply option A of `plans/follow-ups/workspace-store-hook-test-store.md`,
+      and delete that item.
+- [ ] Apply option D of `plans/follow-ups/legal-pages-follow-protocol.md`,
+      and delete that item.
+- [ ] Apply option C of `plans/follow-ups/marketing-site-copies.md`, and
+      delete that item.
+
+## Milestone 15q: Access follow-ups
+
+Tags: ui
+
+Depends on: 15i, 15o. They change the Terms page, the account page, and
+the desktop paths.
+
+Apply the `fix after merge` items of the access rules. Added on 8 November
+2026.
+
+- [ ] Draw the "no re-use" login setting and the linked session in the
+      mockups. Then build them, and compare them with their mockups.
+- [ ] Apply option B of `plans/follow-ups/login-reuse-setting.md` (decision
+      116), with the access protocol and the Terms page. Delete that item.
+- [ ] Apply option C of `plans/follow-ups/desktop-stream-after-access-loss.md`
+      (decision 117), and delete that item.
+
+## Milestone 15r: Secret org env vars
+
+Tags: ui
+
+Depends on: 7x, 15i. They change the runner's output filter and wire the
+org settings.
+
+Apply decision 133 C, which the user chose as a later follow-up on 8
+November 2026. Added on 8 November 2026.
+
+- [ ] Draw the "secret" mark of an org env var in the mockups of the org
+      settings. Then build it, and compare it with its mockup.
+- [ ] Apply option C of `plans/follow-ups/org-env-values-in-output.md`,
+      with the changes to `docs/protocol/access-and-security.md` and the
+      privacy page. Delete that item.
 
 ## Milestone 15d: Marketing site
 
