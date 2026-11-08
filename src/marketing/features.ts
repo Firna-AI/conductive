@@ -1,8 +1,8 @@
 import type { MarketingPictureKey } from '../../docs/mockups/src/screens/marketingPictureList'
-import type { IconName } from './icons'
+import type { IconName } from './icon-shapes'
 
 /** One feature of the app: what it does, and a real screen that shows it. */
-export type Feature = {
+type Feature = {
   label: string
   title: string
   text: string

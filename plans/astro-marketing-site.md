@@ -284,57 +284,66 @@ Depends on: 2
 Serve the built pages and the agreement page from the Worker, then delete
 the old page code.
 
-- [ ] Add the site response in `worker/marketing/`: the file list, the
+- [x] Add the site response in `worker/marketing/`: the file list, the
       paths, the markers, the `404` page, the headers, and the `503`
       answer. Use it in `worker/hosts.ts`.
-- [ ] Serve the agreement page from the build in `startSignIn`, with the
+- [x] Serve the agreement page from the build in `startSignIn`, with the
       Continue address and the site origin.
-- [ ] Serve the site's asset files on the app host, and answer other
+- [x] Serve the site's asset files on the app host, and answer other
       paths under `/_site/` as unknown app paths.
-- [ ] Add a test helper in `worker/test-support/` that holds a small built
+- [x] Add a test helper in `worker/test-support/` that holds a small built
       site and answers as the assets binding does.
-- [ ] Move each assertion of `src/marketing/routes.test.ts` to the new
+- [x] Move each assertion of `src/marketing/routes.test.ts` to the new
       tests. The policy assertion now covers each inline style element of
       the page, not only one.
-- [ ] Add a test that builds the site once into a temporary folder with
+- [x] Add a test that builds the site once into a temporary folder with
       `astro build --outDir`, and serves it through the Worker. It checks
       these cases:
-  - [ ] Each sign-in link of the home page leads to the app origin, and
+  - [x] Each sign-in link of the home page leads to the app origin, and
         the footer shows the year of the request.
-  - [ ] The Terms and Privacy links of the footer open the draft pages,
+  - [x] The Terms and Privacy links of the footer open the draft pages,
         with their draft fields.
-  - [ ] No page names the sandbox provider.
-  - [ ] No page holds a script or a style attribute. The policy of each
+  - [x] No page names the sandbox provider.
+  - [x] No page holds a script or a style attribute. The policy of each
         page allows exactly the hashes of its inline style elements. Each
         file that a page names is served.
-- [ ] Add router cases with the helper:
-  - [ ] The methods, and `HEAD` without a body.
-  - [ ] The `404` page for `/terms/`, an app file, and an API path.
-  - [ ] No redirect and no app page from the binding.
-  - [ ] The `503` answer without the file list.
-- [ ] Add a case for the agreement page: the Continue link leads to the
+- [x] Add router cases with the helper:
+  - [x] The methods, and `HEAD` without a body.
+  - [x] The `404` page for `/terms/`, an app file, and an API path.
+  - [x] No redirect and no app page from the binding.
+  - [x] The `503` answer without the file list.
+- [x] Add a case for the agreement page: the Continue link leads to the
       accepted-terms sign-in path with the desktop challenge.
-- [ ] Add a case for the app host: it serves a site asset file and no site
+- [x] Add a case for the app host: it serves a site asset file and no site
       page.
-- [ ] Give the marketing host case of `worker/security/gate.test.ts` the
+- [x] Give the marketing host case of `worker/security/gate.test.ts` the
       test helper, and keep its assertions.
-- [ ] Delete the old modules of "Replaced ways". Save the searches that
+- [x] Delete the old modules of "Replaced ways". Save the searches that
       show them unused under `.context/astro-marketing-site/`.
-- [ ] Delete the plugin of `astro.config.ts` that hides `actions.ts`, with
+- [x] Delete the plugin of `astro.config.ts` that hides `actions.ts`, with
       that module. Point `features.ts` at `IconName` in `icon-shapes.ts`.
       Drop the re-export of `picturesCss` with `frames.ts`. Fix the
       comments of `styles/base.css` and `styles/frames.css` that name
       `pictures.ts`. Added on 8 November 2026 from the Milestone 2 report.
-- [ ] Update the marketing README: how the Worker serves the site, the
+- [x] Update the marketing README: how the Worker serves the site, the
       development steps, and the key code. Keep the `#pictures`,
       `#legal-drafts`, and `#development` anchors that other docs link to.
-- [ ] Update the site preview text and the key code of `README.md`, and
+- [x] Update the site preview text and the key code of `README.md`, and
       each stale statement in `docs/mockups/marketing-site.md`. Check each
       relative link of each changed Markdown file.
-- [ ] Smoke-test with `npm run build` and `npm run preview`. Open each
+- [x] Smoke-test with `npm run build` and `npm run preview`. Open each
       page, an unknown address, a picture, and the agreement page with a
       desktop challenge, at 1440 and 390 px. Save the screenshots under
       `.context/astro-marketing-site/`.
+
+Milestone completed on 8 November 2026 by the non-ui implementor, a Codex
+session. It moved every assertion of the old site tests and added 14
+tests. Each new test failed first on an assertion. The built-site test
+passed 10 of 10 runs in about 1.8 s each. Report and evidence:
+`.context/astro-marketing-site/reports/m3-worker.md`. Agent calls: a page
+without its markers, or an HTML answer for a site file, counts as the
+app fallback and gives `503`. On the app host, an unknown path under
+`/_site/` gets the app page from `/`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 

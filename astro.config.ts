@@ -51,31 +51,6 @@ function generatedStylesPlugin(): Plugin {
 }
 
 /**
- * Astro reads the module `actions` of its source folder as the server
- * actions of the site. The site has none: `src/marketing/actions.ts` holds
- * the buttons of the pages that the Worker renders. So the build reads an
- * empty set of server actions in its place.
- */
-function noServerActionsPlugin(): Plugin {
-  const actionsModule = decodeURI(
-    new URL('actions', new URL(siteSource, import.meta.url)).pathname,
-  )
-  const emptyActions = '\0conductive-site-no-server-actions'
-  return {
-    name: 'conductive-site-no-server-actions',
-    enforce: 'pre',
-    resolveId(id) {
-      return id === actionsModule || id === emptyActions
-        ? emptyActions
-        : undefined
-    },
-    load(id) {
-      return id === emptyActions ? 'export const server = {}' : undefined
-    },
-  }
-}
-
-/**
  * The pages name the brand icons under the site folder, where the Worker
  * serves them. The Astro development server serves the brand folder at
  * `/`, so it maps each address under the site folder there.
@@ -177,11 +152,7 @@ export default defineConfig({
       // targets only the newest browsers, so the CSS would lose prefixes.
       target: 'baseline-widely-available',
     },
-    plugins: [
-      generatedStylesPlugin(),
-      noServerActionsPlugin(),
-      siteFolderInDevelopmentPlugin(),
-    ],
+    plugins: [generatedStylesPlugin(), siteFolderInDevelopmentPlugin()],
   },
   integrations: [siteFileList()],
 })

@@ -133,7 +133,12 @@ A value in `.dev.vars` replaces either one in local development. When
 `.dev.vars` sets `MACHINE_ORIGIN` or `MARKETING_ORIGIN` to a local address,
 requests to that address keep that role. The
 [marketing README](src/marketing/README.md#development) uses this to preview
-the site.
+the built site through the Worker. For `npm run preview`, set
+`MARKETING_ORIGIN=http://localhost:5174` and
+`APP_ORIGIN=http://127.0.0.1:5174` in `.dev.vars`. Run `npm run build`
+before `npm run preview`. Open `http://localhost:5174` for the site and
+`http://127.0.0.1:5174` for the app. The Worker fills sign-in links from
+`APP_ORIGIN` and serves Astro's built pages with their security headers.
 
 Worker types come from `wrangler.jsonc`. The type check generates them
 under `.wrangler/`, which Git also ignores.
@@ -192,6 +197,13 @@ complete yet:
 - `mokly.config.json`: the Mokly configuration.
 
 - `worker/app.ts`: the Worker's HTTP entry point.
+- `worker/marketing/`: built marketing pages, the agreement page before
+  GitHub, the file list, request markers, and the site's security headers.
+- `src/marketing/`: Astro pages, layouts, parts, styles, pictures, and
+  shared legal text. Its [README](src/marketing/README.md) gives the build
+  and preview steps.
+- `src/shared/site-build.ts`: names and types shared by the Astro build
+  and the Worker.
 - `worker/security/`: GitHub sign-in, signed sessions, the request gate,
   the app origin of each request, the Mac app's sign-in handoff and origin
   rules, and the shared content security policy of the web app and the Mac
