@@ -46,9 +46,8 @@ the lost lines, the turns, and Try again.
 - Each session log takes the `session.updated` records of its session with its other events.
   It keeps the `retryMessageId` of the record with the highest event number as `Transcript.retryMessageId`.
   So a record that arrives late, such as in a history load, never brings back an older Try again or hides a newer one.
-- `SessionLog.takeListed` takes the record of the session list that the chat reads after the history.
-  That record counts at the event number that the stream starts after.
-  When the log already holds a newer record, the listed record changes nothing. A later `session.updated` event replaces it.
+- A record from a read or a reply counts at the event number of its state, as the [record order rule](README.md#rules-for-this-code) says.
+  `SessionLog.offer` in [`state/session-log.ts`](state/session-log.ts) folds it at its place in the event order.
 - `retryItemId` picks one failed item. A turn that continues the unanswered messages of a finished turn takes their IDs.
   So a late failure of the older turn can name the same message. Then only the item of the newer known turn offers Try again.
 - The Worker refuses an old Try again, such as from a second tab that missed newer events, with `409 retry_not_available`.
