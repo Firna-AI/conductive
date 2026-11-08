@@ -4168,6 +4168,29 @@ of branch `calummoore/directory-path-length`.
 - **Recommendation:** B.
 - **Chosen:** A, by the user on 8 November 2026.
 
+### 144. Choose when the terminal moves a running shell by itself
+
+Added on 8 November 2026, from review finding 3 of branch
+`calummoore/directory-path-length`.
+
+- **Background:** The folder hook of decision 142 B moves a shell to the
+  folder that `$PWD` names whenever the real folder differs. So it also
+  moves the shell when a symbolic link in its path changes, when its
+  folder is made again, or when a command assigns `PWD`. No requirement
+  covers these moves.
+- **Options:**
+  - **A.** Keep the code, and state the general rule.
+  - **B.** Move the shell only when its real folder is under
+    `/var/lib/ascii-lazy/retired/`, an undocumented Boat path.
+  - **C.** The Worker watches Boat's `hydrated` signal and writes a marker
+    file when the restore ends. The hook moves the shell only for that
+    restore.
+  - **D.** Move the shell only when the two folders are on different file
+    systems.
+  - **E.** As A, and print one line at each move.
+- **Recommendation:** A, after the finding check. The review recommended B.
+- **Chosen:** C, by the user on 8 November 2026.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -6481,6 +6504,52 @@ Apply decision 142 B and decision 143 A. Added on 8 November 2026.
       8 November 2026: round 3 found one finding that waits for the user,
       in `plans/follow-ups/folder-hook-outside-restores.md`.
       Branch: `calummoore/directory-path-length`.
+
+## Milestone 11f: Move shells only for the restore
+
+Depends on: 11e.
+
+Apply decision 144 C. Added on 8 November 2026.
+
+Orchestrator calls of 8 November 2026:
+
+- The workspace alarm polls Boat's `GET /sandboxes/{id}` every 5 seconds
+  after each successful create and resume, until `hydrated` is not
+  `false`, the sandbox stops, or the next start begins. Reason: the
+  Worker has no Boat webhook route, and a webhook needs a new secret and
+  Boat setup. The `get` and command routes are already on the fixed route
+  list, and the alarm already polls Boat every 5 seconds while the runner
+  is not connected.
+- A reply without `hydrated` ends the watch as a finished restore. Reason:
+  Boat's schema makes the field optional, and Boat says that a sandbox
+  that restored nothing is hydrated from the start.
+- The watch has no own deadline. The idle stop after 30 minutes ends it.
+- The terminal area owns the marker `/run/conductive-terminal/restore-ended`
+  and the privileged command that writes it, because it owns the terminal
+  files of a sandbox. `/run` is memory, so each start begins without it.
+- The hook checks the folder of a shell once, at its first prompt after
+  the marker exists, and never again. Reason: decision 144 C limits the
+  moves to the restore.
+- A disk retention restart starts no watch, because it starts no terminal.
+
+- [ ] Parse `hydrated` in the sandbox provider's `get` reply, as `true`,
+      `false`, or absent.
+- [ ] Add the restore watch to the lifecycle state and to the alarm of the
+      workspace object, with its schedule and its end at a stop, an error,
+      an archive, and a new start. Write the marker through the terminal
+      area when the restore ends.
+- [ ] Make the folder hook wait for the marker, and check once.
+- [ ] Test the parser, the watch, and the hook.
+- [ ] Update `worker/terminal/README.md`, the lifecycle docs, the sandbox
+      README, the "Terminal" section of
+      `docs/protocol/workspaces-and-sandboxes.md`, and the post-merge
+      check. Delete `plans/follow-ups/folder-hook-outside-restores.md`, and
+      update `plans/follow-ups/old-disk-view-after-restore.md`.
+- [ ] Run the complete gate. Commit and push the branch.
+- [ ] Review the new commits against `origin/main` with the
+      `implementation-review` skill. The two fix rounds of the branch are
+      used, so a `fix now` finding becomes `fix after merge`, and a
+      critical finding goes to the user. Update pull request #67.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 
