@@ -35,7 +35,8 @@ export function workspaceName(
  * A tab whose file name the app does not know shows "File".
  * The linked session opens as the last tab. While the login of the starter
  * of the first session is not available, that first session leads to its
- * view for the member, beside the linked session.
+ * view for the member, beside the linked session. While the starter keeps
+ * the login for their own messages, the first session leads to that view.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -48,12 +49,14 @@ export function tabsFor(
   const [first, second] = workspaceSessions
   const linked =
     state.tab === 'linked-session' || state.composer === 'no-starter-login'
+  let firstPath: string = linked ? paths.noStarterLogin : paths.app
+  if (state.composer === 'not-shared') firstPath = paths.loginNotShared
   const tabs: WorkspaceTab[] = [
     {
       key: first.key,
       kind: 'session',
       title: first.title,
-      to: linked ? paths.noStarterLogin : paths.app,
+      to: firstPath,
       selected: state.tab === 'session',
     },
     { key: second.key, kind: 'session', title: second.title, selected: false },

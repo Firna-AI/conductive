@@ -150,6 +150,7 @@ export function readSession(value: unknown): Session {
     startedBy: nullable(readSender)(source.startedBy),
     sourceSessionId: nullable(text)(source.sourceSessionId),
     loginAvailable: flag(source.loginAvailable),
+    loginShared: flag(source.loginShared),
   }
 }
 

@@ -18,6 +18,7 @@ import {
   WORKSPACE_ID,
 } from './harness.test-support'
 import { captureLoginQueries } from './login-queries.test-support'
+import { liveSessions } from './retry.test-support'
 import { startTurn } from './turn-lifecycle.test-support'
 
 let harness: TestHarness
@@ -36,7 +37,13 @@ afterAll(async () => {
 
 it('loads open-session starter metadata in one query for one or four sessions without reading credentials', async () => {
   const fixture = await createChatFixture(harness)
+  await harness.env.DB.prepare(
+    "UPDATE agent_logins SET no_reuse = 1 WHERE user_id = ? AND agent = 'claude'",
+  )
+    .bind(fixture.owner.id)
+    .run()
   const first = await fixture.createSession()
+  expect(first).toMatchObject({ loginAvailable: true, loginShared: false })
   const closed = await fixture.createSession(CODEX, fixture.memberCookie)
   expect(
     (
@@ -64,7 +71,11 @@ it('loads open-session starter metadata in one query for one or four sessions wi
     WORKSPACE_ID,
   ])
   expect(decrypt).not.toHaveBeenCalled()
-  one.close()
+  await harness.env.DB.prepare(
+    "UPDATE agent_logins SET no_reuse = 0 WHERE user_id = ? AND agent = 'claude'",
+  )
+    .bind(fixture.owner.id)
+    .run()
 
   const second = await fixture.createSession(CODEX)
   const third = await fixture.createSession(CLAUDE)
@@ -88,13 +99,17 @@ it('loads open-session starter metadata in one query for one or four sessions wi
   const response = await fixture.fetch(list)
   expect(await response.json()).toMatchObject({
     sessions: [
-      { id: first.id, loginAvailable: true },
-      { id: second.id, loginAvailable: true },
-      { id: third.id, loginAvailable: true },
-      { id: fourth.id, loginAvailable: true },
+      { id: first.id, loginAvailable: true, loginShared: true },
+      { id: second.id, loginAvailable: true, loginShared: true },
+      { id: third.id, loginAvailable: true, loginShared: true },
+      { id: fourth.id, loginAvailable: true, loginShared: true },
     ],
     history: [{ id: closed.id, loginAvailable: true }],
   })
+  expect(
+    liveSessions(one.messages).filter((session) => session.id === first.id),
+  ).toMatchObject([{ id: first.id, loginAvailable: true, loginShared: true }])
+  one.close()
   four.close()
 })
 

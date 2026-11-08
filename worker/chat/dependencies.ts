@@ -7,7 +7,10 @@ import {
   scheduleConnectionCheck,
 } from '../security/connection-access'
 import { loginResolver } from './login-access'
-import { readLoginAvailability } from './login-availability'
+import {
+  readLoginMetadata,
+  type SessionLoginMetadata,
+} from './login-availability'
 import { firstStartIncomplete } from './queries'
 import type { ChatDependencies } from './types'
 import { filterRunnerOutput } from './runner-output'
@@ -35,11 +38,11 @@ export function chatDependencies(
     firstStartIncomplete: (id) => firstStartIncomplete(env.DB, id),
     randomId: randomToken,
     randomConnectionId: randomToken,
-    readLoginAvailability: (targets) => {
+    readLoginMetadata: (targets) => {
       const id = workspaceId()
       return id === null
-        ? Promise.resolve(new Set<string>())
-        : readLoginAvailability(env.DB, id, targets)
+        ? Promise.resolve(new Map<string, SessionLoginMetadata>())
+        : readLoginMetadata(env.DB, id, targets)
     },
     resolveAttachments: async (_userId, _workspaceId, ids) => {
       if (ids.length)

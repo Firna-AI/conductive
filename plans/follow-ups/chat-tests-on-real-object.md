@@ -45,3 +45,5 @@
 - **Related:** [native-entries-advance-alarms.md](native-entries-advance-alarms.md): apply that item first. Then put the commit fault controls of the native harness next to its advance method, so that the harness keeps one alarm rule.
 - **Recommendation:** D, together with option E of `plans/follow-ups/lifecycle-tests-on-real-object.md`, so that one native harness serves both. C moves only the shared fixture, and Milestone 8m already added checks outside it, on `createRunnerLimitsFixture` and on `MemoryChatStorage` directly. D includes C.
 - **Action:** fix after merge, apply D, because it removes the in-memory chat store from many test files outside the diffs that found it.
+
+- **Also:** finding 6 of review round 2 of Milestone 15r, 8 November 2026: the durability test of the output filter uses a fake store. Its option B goes here, and the branch adds one native case now.

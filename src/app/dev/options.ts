@@ -55,6 +55,8 @@ const PATHS = ['plain', 'masked'] as const
  * - `signedOut=1`: the Worker refuses the session, so the sign-in shows.
  * - `stop=<seconds>`: an open workspace stops that many seconds after it
  *   opens, as a sandbox does that stops while its workspace is open.
+ * - `shareSave=fail`: each change of the share setting of an agent login
+ *   fails, so the account shows that the change was not saved.
  */
 export interface DevOptions {
   /** The options of the recorded server. */
@@ -67,6 +69,7 @@ export interface DevOptions {
   signedOut: boolean
   /** The wait before an open workspace stops, or `null` for no stop. */
   stopAfterMs: number | null
+  shareSaveFails: boolean
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -95,6 +98,7 @@ export function readDevOptions(search: string): DevOptions {
     suspended: params.get('suspended') === '1',
     signedOut: params.get('signedOut') === '1',
     stopAfterMs: stopAfter(params.get('stop')),
+    shareSaveFails: params.get('shareSave') === 'fail',
   }
 }
 

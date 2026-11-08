@@ -1,17 +1,18 @@
 import { X } from 'lucide-react'
+import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { labelName } from '../model/file-labels'
 import type { FilesNavigation, FilesTab } from '../navigation'
 import { FileIcon } from '../panel/file-icons'
 import { IconButton } from '../ui/actions'
 import { FilesLink } from '../ui/FilesLink'
 import { classes } from '../ui/classes'
-import styles from './FileTabItem.module.css'
 
 /**
  * The closable tab of an open file or diff, for the tab row of the centre
  * column on desktop. It is a list item, so the shell puts it in the same
- * list as the session tabs. The tab is a link to its own address. It shows
- * the label of its path, or "File" when no record names the file.
+ * list as the session tabs, and it takes their styles from the mockups. The
+ * tab is a link to its own address. It shows the label of its path, or
+ * "File" when no record names the file.
  */
 export function FileTabItem(props: {
   tab: FilesTab

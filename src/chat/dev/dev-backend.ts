@@ -1,4 +1,5 @@
 import { createApiClient } from '../../app/api/client'
+import type { AgentLoginStatus } from '../../shared/account'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import type { Session } from '../../shared/sessions'
 import { sessionsPath } from '../../shared/sessions'
@@ -25,7 +26,7 @@ import {
   seedLinked,
   withReaderLogin,
   withStarter,
-  writeReaderLogin,
+  writeReaderLogins,
 } from './dev-logins'
 import { DevMac, handleMacWrite, writeMacReplies } from './dev-mac'
 import { lossEvents, withUnreadFiles } from './dev-loss'
@@ -49,8 +50,8 @@ export class DevBackend {
   readonly messages = new Map<string, UserMessage>()
   /** The member who reads the page, who sends, starts sessions, and presses Stop. */
   readonly viewer: MessageSender
-  /** The reader has a Claude login, which a Claude session of the reader records. */
-  readonly claudeLogin: boolean
+  /** The agent logins of the reader, which each session of the reader records. */
+  readonly logins: readonly AgentLoginStatus[]
   /** The recorded turn that runs in a session, which Stop and steer reach. */
   readonly recordedTurns = new Map<string, string>()
   workspace: Workspace
@@ -66,7 +67,7 @@ export class DevBackend {
   private constructor(parts: {
     target: WorkspaceTarget
     viewer: MessageSender
-    claudeLogin: boolean
+    logins: readonly AgentLoginStatus[]
     server: FakeApiServer
     clock: Clock
     stream: DevStream
@@ -78,7 +79,7 @@ export class DevBackend {
   }) {
     this.target = parts.target
     this.viewer = parts.viewer
-    this.claudeLogin = parts.claudeLogin
+    this.logins = parts.logins
     this.server = parts.server
     this.clock = parts.clock
     this.stream = parts.stream
@@ -106,7 +107,10 @@ export class DevBackend {
     const workspaceId =
       options.workspace === 'new' ? NEW_WORKSPACE : FAKE_IDS.workspace
     const target = { orgId: org, workspaceId }
-    const claudeLogin = writeReaderLogin(server, options)
+    const logins = writeReaderLogins(server, options)
+    const claudeLogin = logins.some(
+      (login) => login.agent === 'claude' && login.connected,
+    )
     const api = createChatApi(createApiClient(server.fetch), target)
     const [detail, listed, view] = await Promise.all([
       api.workspace(),
@@ -140,7 +144,7 @@ export class DevBackend {
     const backend = new DevBackend({
       target,
       viewer,
-      claudeLogin,
+      logins,
       server,
       clock,
       stream: new DevStream(
