@@ -64,6 +64,34 @@ Org suspension keeps shell reads available.
 The common browser gate refuses every org write except Leave.
 The view, read-mark, shared-shell, settings, repository, and archive SQL writes also check stored org state, so an earlier permission read cannot admit a later write.
 
+### List order
+
+- The list read orders the sections by `position`, then ID. In each
+  section, it orders the workspaces by `position`, then creation time,
+  then ID.
+- Each insert and each move computes its positions from the current rows,
+  inside the D1 write transaction that saves them. No route computes a
+  saved position from an earlier list read. So two overlapping moves give
+  the same order as the two moves one after the other.
+- `insertWorkspace` in [`workspace-data.ts`](../lifecycle/workspace-data.ts)
+  gives a new workspace the lowest `position` of the active workspaces in
+  its section, minus 1. In a section without active workspaces, the new
+  workspace takes 0. So it lists first, as the
+  [mockups](../../docs/mockups/src/components/workspaces/sections.ts)
+  show. A position can be negative.
+- The [app](../../src/app/list-changes.ts) and its
+  [dev fake](../../src/app/dev/create-routes.ts) also show a new workspace
+  first.
+- A workspace move request holds `sectionId` and `position`, the index in
+  that section. It can omit `sectionId`. Then the move uses the stored
+  section of the workspace, inside the transaction. Without `position`,
+  the index is 0.
+- A section move request holds `position`, the index in the section list.
+  Each index counts the rows without the moved row.
+- A move ranks the current rows of its target from an `AS MATERIALIZED`
+  snapshot, then puts the moved row at the index. That keyword makes
+  SQLite compute the snapshot once, before the update changes a row.
+
 ## Development
 
 Run `npm run test -- worker/app-api worker/chat/integration` from the
@@ -89,6 +117,16 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   values, member reads, and refused member writes through the Worker.
 - `feature-shell-sections.test.ts` checks section order, private collapse,
   workspace moves, section deletion, and workspace event publication.
+- `feature-workspaces-data.test.ts` and `feature-sections-data.test.ts`
+  commit a second move just before the batch of a first move. They check
+  that the order keeps both moves: a move out of the target section, two
+  moves in one section, and two section moves.
+- [`workspace-data.test.ts`](../lifecycle/workspace-data.test.ts) in the
+  lifecycle folder checks that a new workspace lists first, before and
+  after a move. It runs with the lifecycle tests.
+- `shell-list.test-support.ts` gives these three test files their org,
+  sections, and rows. Its D1 wrapper commits the second move of the move
+  tests.
 - `feature-shell-github.test.ts` checks the user's GitHub access, paginated
   repository reads, saved org initials, and admin repository selection.
 
@@ -112,6 +150,11 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   values and returns their names. [`feature-sections.ts`](feature-sections.ts)
   and [`feature-workspaces.ts`](feature-workspaces.ts) save list changes and
   publish workspace metadata through the workspace object.
+- [`feature-workspaces-data.ts`](feature-workspaces-data.ts):
+  `updateShellWorkspace`, the rename and the move of a workspace in one D1
+  batch. [`feature-sections-data.ts`](feature-sections-data.ts): the
+  section writes `insertShellSection`, `updateShellSection`, and
+  `deleteShellSection`. [List order](#list-order) gives their rules.
 - [`feature-github.ts`](feature-github.ts): account installations and
   repositories read with the fresh GitHub user token.
   [`feature-org.ts`](feature-org.ts) creates an org with its chosen

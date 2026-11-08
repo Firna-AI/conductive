@@ -7105,10 +7105,33 @@ Depends on: none.
 Apply the `fix after merge` items of the workspace and section lists.
 Added on 8 November 2026.
 
-- [ ] Apply option A of `plans/follow-ups/new-workspace-position-after-reorder.md`,
+- [x] Apply option A of `plans/follow-ups/new-workspace-position-after-reorder.md`,
       and delete that item.
-- [ ] Apply option B of `plans/follow-ups/atomic-workspace-and-section-moves.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15s`.
+- [x] Apply option B of `plans/follow-ups/atomic-workspace-and-section-moves.md`,
       and delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15s`.
+
+Design calls by the implementor, checked by the orchestrator on 8 November
+2026:
+
+- A position-only workspace move uses its stored section inside the
+  transaction. An earlier read can have a stale section after another move.
+- Keep the existing archive filters and tie order. Workspace ties use
+  creation time, then ID. Section ties use ID. Rank only the target list,
+  so other sections keep their saved positions.
+- Build the workspace snapshot from the guarded moving row. A refused
+  update then changes no sibling position.
+- Remove `orderedSectionWorkspaceIds` after its caller uses the atomic
+  operation. No live caller needs the old read-and-write path.
+- Keep the list reader, app list change, and dev create fake as they are.
+  They already use stored order or put new workspaces first.
+- Change the regression setup to use the new section and index inputs.
+  Keep the same order assertions, so the baseline failures still apply.
+- Keep the list order rule in the app API README. The lifecycle README
+  links to it, so the shared rule has one home.
+
+Evidence: `.context/boat-native-remote-workspaces/15s/orchestrator-checks.md`.
 
 ## Milestone 13c: GitHub follow-ups
 
