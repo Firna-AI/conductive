@@ -20,6 +20,7 @@ archives.
 
 Contract owners:
 
+- [Automatic deploys](../docs/automatic-deploys.md).
 - [Deployment inputs](../docs/deployment.md).
 - The [image README](../image/README.md#the-runner-archive) and
   [Developer scripts](../image/developer-scripts.md#package-the-archive).
@@ -228,6 +229,10 @@ so.
   the only alert. The route answers without D1 and without a version, so
   the check proves only that the Worker answers. Wrangler reports the
   version that it deployed.
+- The deploy passes `--tag` with the short commit and `--message` with the
+  full commit. The run summary names the commit, the archive URL, and
+  whether the run uploaded the archive. Reason: the Cloudflare dashboard
+  and the run then show which commit is live. Added during Milestone 3.
 - No automatic rollback. `docs/deployment.md` gives `npx wrangler rollback`
   for the Worker and D1 Time Travel for the database. A rollback cannot
   cross a Durable Object migration. Reason: a Worker rollback does not
@@ -271,12 +276,15 @@ so.
   `/user/tokens/verify`, because an account token answers only the first.
   The run masks the secret key in the log, because GitHub masks only the
   stored token. The manual upload used the same key pair.
-- The docs ask for the R2 permission group `Workers R2 Storage Bucket Item
-  Write` on the bucket `conductive-runner`, where the token is made
-  through the API. Otherwise the account group `Workers R2 Storage Write`
-  works. Reason: Cloudflare documents both groups. The bucket group limits
-  the derived key pair to the one bucket with no second secret, as option
-  C of decision 2 wanted.
+- The docs ask for a token from the template "Edit Cloudflare Workers",
+  with D1 Edit added. That template holds the account group `Workers R2
+  Storage Write`. To limit R2 to the bucket `conductive-runner`, the docs
+  say to make the token through the API, to leave out that group, and to
+  add `Workers R2 Storage Bucket Item Write` on the bucket. Reason:
+  Cloudflare documents both groups. The bucket group limits the derived
+  key pair to the one bucket with no second secret, as option C of
+  decision 2 wanted. Corrected during Milestone 1, which found that the
+  template already holds the account group.
 - An S3 HEAD request checks whether the archive exists. After an upload, a
   HEAD request to the public URL checks the size. Reason: the S3 check
   does not put a 404 answer into the cache of the public domain.
@@ -316,27 +324,31 @@ Depends on: none
 The docs state the automatic deploy, its settings, and the runner archive
 that it publishes.
 
-- [ ] `docs/deployment.md`: add a section on automatic deploys. Give the
+- [x] `docs/deployment.md`: add a section on automatic deploys. Give the
       steps in order, the skip and fail cases, the environment
       `production` with its branch rule, its secret and its variable, the
       token permissions, the health check, a manual run, the rollback and
       its Durable Object limit, the gap between the migrations and the
       upload, and deploys from other branches. Say that the user creates
-      the environment with its rule before the first run.
-- [ ] `docs/deployment.md`, "The runner archive": the deploy publishes each
+      the environment with its rule before the first run. Done on
+      8 November 2026 in the new page `docs/automatic-deploys.md`, because
+      `docs/deployment.md` would have passed 300 lines.
+- [x] `docs/deployment.md`, "The runner archive": the deploy publishes each
       new archive by its digest. A new archive reaches the next build of
       each org image, not an existing image. Keep the manual steps for a
       deploy by hand, with the 300 MiB limit of Wrangler and the S3 API.
-- [ ] `image/README.md`, "The runner archive", and
+- [x] `image/README.md`, "The runner archive", and
       `image/developer-scripts.md`, "Package the archive": add
       `--base-url`, and say that the deploy workflow uses it.
-- [ ] `README.md`: change the status sentence, the sentence that says the
+- [x] `README.md`: change the status sentence, the sentence that says the
       setup includes no deploy command, and the CI paragraph that says CI
       does not deploy.
-- [ ] `AGENTS.md`, "CI": add the deploy workflow, and the ruleset of
+- [x] `AGENTS.md`, "CI": add the deploy workflow, and the ruleset of
       decision 3 B. `main` takes a commit only through a pull request with
       a green `Complete gate` check, and an admin can bypass the rule.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files. Done on
+      8 November 2026: 120 links in the changed files, none broken.
+      Evidence: `.context/deploy-on-main/proof/m1-link-check.log`.
 
 ## Milestone 2: Runner archive named by its digest
 
@@ -388,7 +400,7 @@ Depends on: 1, 2, 3
 - [ ] Run the targeted checks and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] The user creates the environment `production` with its `main` rule
-      before the merge, as `docs/deployment.md` says. The secret and the
+      before the merge, as `docs/automatic-deploys.md` says. The secret and the
       variable can follow later, because the run skips without them.
 - [ ] The user creates the ruleset of decision 3 B on `main` before the
       merge: require a pull request and the `Complete gate` check, with
@@ -407,8 +419,8 @@ Depends on: 1, 2, 3
 ## Post-merge follow-up (non-blocking)
 
 - [ ] The user creates the token, and stores its secret and the account ID
-      variable in the environment `production`, as `docs/deployment.md`
-      says.
+      variable in the environment `production`, as
+      `docs/automatic-deploys.md` says.
 - [ ] Check the first deploy run on `main`: the runner upload or reuse, the
       migrations, the deploy, and the health check.
 - [ ] Start an org image build in the deployed app. Check that it installs
