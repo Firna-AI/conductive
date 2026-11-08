@@ -5372,6 +5372,8 @@ Completed on 8 November 2026. Agent calls of that date:
   A best-effort title failure returns its outcome and keeps the marker.
 - Let the start own progress while its job exists. Restore the normal
   lifecycle timer after completion, so the runner wait uses its deadline.
+  Keep publication retries independent after that job ends, so a failed
+  D1 publication cannot block idle work.
 - Keep the generic alarm marker that member Restore writes. The receiving
   lifecycle owner gives restored image, start, or cleanup work its task slot.
 - Run terminal setup and its password read in separate saved phases,

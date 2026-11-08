@@ -74,10 +74,10 @@ export async function runWorkspaceAlarm(input: {
       }
       if (await input.starts.pending()) {
         await lifecycle.schedule()
-        return
+        if (await storage.get('job', START_JOB_KEY)) return
       }
     }
-    await input.startStorage.deleteAlarm()
+    if (!(await input.starts.pending())) await input.startStorage.deleteAlarm()
     const state = await lifecycle.read()
     if (
       state &&
