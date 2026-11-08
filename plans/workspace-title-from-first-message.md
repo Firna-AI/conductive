@@ -12,11 +12,12 @@ city name. On 8 November 2026 the user showed the workspace `delft`, still
 with its city name after 22 minutes, and wrote: "should rename based on the
 first message".
 
-With the recommended options of its decisions, this change makes the agent
-runner ask the agent of the first turn for a title, from the text of the
-first message. The runner sends the title as `workspace.title`, and the
-Worker renames the workspace as it does now. The first session tab takes
-the title too. The change does not rename branches.
+With the options that the user chose on 8 November 2026, this change makes
+the agent runner ask the agent of the first turn for a title, from the text
+of the first message. The runner sends the title as `workspace.title`, and
+the Worker renames the workspace as it does now. The first session tab
+takes the title too. Each later session tab takes the first line of its own
+first message. The change does not rename branches.
 It does not rename the workspaces that exist now, because each sandbox
 keeps the runner of the org image that it started from. A new runner
 archive and a new build of each org image bring the change to new
@@ -46,9 +47,9 @@ Contract owners:
 
 ## Design
 
-Each call below is an agent call of 8 November 2026. The calls assume the
-recommended options of decisions 142, 143, and 144. Another answer changes
-them before the work starts.
+Each call below is an agent call of 8 November 2026. The calls follow the
+user's choices for decisions 142 and 143. The calls about decision 144
+assume its recommended option, and wait for its answer.
 
 - The runner starts the title request. Reason: the runner already holds
   the agent programs, the login of the turn, and the saved
@@ -95,7 +96,21 @@ them before the work starts.
   client.
 - The workspace and its first session take the title through one rule:
   each takes the title only while it still has the first name of the
-  workspace. Reason: decisions 143 and 144 recommend the same rule.
+  workspace. Reason: decision 143 chose this rule for the first session,
+  and decision 144 recommends it for the workspace.
+- A later session takes the first line of its own first message as its
+  title, when the Worker accepts that message. The Worker collapses the
+  spaces and cuts the line to at most 60 characters, at a word boundary. A
+  message with no text keeps "New session". A name that a member gave the
+  session before stays. Reason: the user wrote "other sessions take the
+  first message" with decision 143, and the tab shows one short line. A
+  title request for each session was rejected, because the user chose C,
+  not E, and the first message needs no model call.
+- A later session is each session other than the first session of the
+  workspace: a session that "+" opens, a session that a model of the other
+  agent opens, and a linked session that a message of another member
+  opens. Reason: the user named only the first session and "other
+  sessions".
 
 ## Decisions
 
@@ -196,6 +211,7 @@ Options check reports: `.context/workspace-title-from-first-message/`.
 - **Action:** ask the user, because B changes the protocol rule that the
   title request comes after the first answer, and no user decision covers
   that change.
+- **Decision:** The user chose B on 8 November 2026.
 
 ### 143. The first session tab keeps "New session"
 
@@ -249,6 +265,10 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   chat README agree. The options check of 8 November 2026 kept C.
 - **Action:** ask the user, because the choice decides which side of a
   mismatch between the mockups and the product is right.
+- **Decision:** The user chose C on 8 November 2026, and wrote: "first
+  session takes the same name as the workspace, other sessions take the
+  first message". So each later session takes its own first message as its
+  name, as the design above says.
 
 ### 144. A title undoes a name from the workspace route
 
@@ -337,30 +357,50 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   requirement covers, and A and C each override or remove a feature of the
   route on `origin/main`.
 
-## Milestone 1: Documentation and protocol
+## Milestone 1: Mockups
+
+Tags: mockup
 
 Depends on: none
 
+Each later session tab shows the first line of its own first message, as
+the user chose with decision 143. The first session tab already shows the
+workspace name and then the title, so it does not change.
+
+- [ ] Show the first line of the first message, cut to 60 characters, on
+      each later session tab that has a first message, such as the second
+      session of the open workspace and the linked session. A session
+      with no message keeps "New session".
+- [ ] Change the comment of `generatedName` in
+      `docs/mockups/src/fixtures/workspaces.ts`, so that it no longer says
+      that the first answer names the workspace.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: 1
+
 The docs state the requirements of decisions 142, 143, and 144, as the
-user chooses them.
+user chose them.
 
 - [ ] In [Messages](../docs/protocol/chat-and-events.md#messages), state
       when the app asks for the title, from what, on which login, and what
       a failed request does (decision 142).
-- [ ] In the same section, state the name of the first session tab, and
-      when it takes the title (decision 143).
-- [ ] In the same section, state which name a workspace keeps when a
-      member names it and the agent also titles it (decision 144). Give the
-      rule in [Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates),
+- [ ] In [Sessions](../docs/protocol/chat-and-events.md#sessions), state
+      the name of the first session tab and when it takes the title, and
+      the name of each later session tab (decision 143).
+- [ ] Waits for decision 144. In the same doc, state which name a
+      workspace keeps when a member names it and the agent also titles it.
+      Give the rule in
+      [Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates),
       that a later full report replaces the workspace name, the same
       exception.
-- [ ] Change the comment of `generatedName` in
-      `docs/mockups/src/fixtures/workspaces.ts`, so that it no longer says
-      that the first answer names the workspace.
 
-## Milestone 2: The title request in the runner
+## Milestone 3: The title request in the runner
 
-Depends on: 1
+Depends on: 2
 
 The runner asks the agent of the first turn for a title, and sends it as
 `workspace.title`, as the design above says.
@@ -387,38 +427,45 @@ The runner asks the agent of the first turn for a title, and sends it as
 - [ ] Update the [agent runner README](../runner/README.md) and
       [Agent logins](../runner/agent-logins.md).
 
-## Milestone 3: The first session name in the Worker
+## Milestone 4: Session and workspace names in the Worker
 
-Depends on: 1
+Depends on: 2
 
 - [ ] Give the first session of a new workspace the workspace name.
 - [ ] When the Worker stores the first `workspace.title`, rename the first
       session to the title while it still has the earlier workspace name.
       Send `session.updated` to each open tab.
-- [ ] Apply the title to the workspace only while the workspace still has
-      its city name, which the creation record keeps. Guard the title
-      write, the repair write, and the detail read (decision 144).
-- [ ] After each stored title, send the workspace record with the name
-      that the Worker kept to each open tab (decision 144).
+- [ ] When a later session accepts its first message, give it the first
+      line of that message as its title, while it still has the default
+      title. Send `session.updated` to each open tab.
 - [ ] Add Worker tests: the title renames the first session, a session
-      that a member renamed keeps its name, and a name from the workspace
+      that a member renamed keeps its name, and a later session takes its
+      first message.
+- [ ] Waits for decision 144. Apply the title to the workspace only while
+      the workspace still has its city name, which the creation record
+      keeps. Guard the title write, the repair write, and the detail read.
+- [ ] Waits for decision 144. After each stored title, send the workspace
+      record with the name that the Worker kept to each open tab.
+- [ ] Waits for decision 144. Add a Worker test: a name from the workspace
       route stays after the title and after the next change of the state.
 - [ ] Update the [Worker chat README](../worker/chat/README.md).
 
-## Milestone 4: The web app
+## Milestone 5: The web app
 
 Tags: ui
 
-Depends on: 1, 3
+Depends on: 1, 2, 4
 
 - [ ] Make the development page write the title when the first turn
-      starts, as decision 142 says. Update the
+      starts (decision 142), and give each later session its first message
+      as its title (decision 143). Update the
       [chat README](../src/chat/README.md).
-- [ ] Make open tabs take the workspace name from the workspace record,
-      not from the `workspace.title` event, so that a title that the Worker
-      skips never shows (decision 144). Add a test for a skipped title.
+- [ ] Waits for decision 144. Make open tabs take the workspace name from
+      the workspace record, not from the `workspace.title` event, so that
+      a title that the Worker skips never shows. Add a test for a skipped
+      title.
 
-## Milestone 5: Verification, commit, review, and pull request
+## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
