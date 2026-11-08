@@ -129,12 +129,15 @@ export async function deleteShellSection(
       .bind(sectionId, orgId, orgId, userId),
     db
       .prepare(
-        `UPDATE sections SET position = (SELECT COUNT(*) FROM sections prior
-         WHERE prior.org_id = sections.org_id AND (prior.position < sections.position
-           OR (prior.position = sections.position AND prior.id < sections.id)))
+        `WITH ranks AS MATERIALIZED (
+           SELECT id, ROW_NUMBER() OVER (ORDER BY position, id) - 1 AS position
+           FROM sections WHERE org_id = ?
+         ) UPDATE sections SET position = (
+           SELECT ranks.position FROM ranks WHERE ranks.id = sections.id
+         )
        WHERE org_id = ? AND ${activeShellMemberPredicate}`,
       )
-      .bind(orgId, orgId, userId),
+      .bind(orgId, orgId, orgId, userId),
   ])
   return {
     deleted: moved[1].meta.changes > 0,

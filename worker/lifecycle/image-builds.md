@@ -88,8 +88,9 @@ refresh for each org whose current image holds the pushed repository, and
 that has an admin who is not suspended. It
 acts on a push to the default branch, at most once in 30 minutes for each
 org. A push during a running job waits for a later refresh. Only the
-verified GitHub webhook receiver may call it, and that receiver does not
-exist yet. The image coordinator starts the daily refresh by itself.
+verified GitHub webhook receiver may call it. The
+[GitHub backend](../github/README.md) owns that receiver. The image
+coordinator starts the daily refresh by itself.
 A daily refresh sets the saved daily deadline 24 hours after its start.
 
 Both refreshes start with the first admin who is not suspended, from

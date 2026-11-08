@@ -74,11 +74,10 @@ node image/live-check.mjs
   `package-runner.mjs` must make that image. The check makes no image.
 - A repository of that org that the image holds.
 
-The app has no setup path for that image yet. The Worker routes no image
-build, as the [Worker README](../worker/README.md#routes) says. An
-operator can publish the image through trusted Worker code that calls the
-build entry points, as [Image builds](../worker/lifecycle/image-builds.md)
-says.
+Build computer on the Cloud computer tab of the org starts that build, as
+[The org image](../docs/protocol/workspaces-and-sandboxes.md#the-org-image)
+says. [The runner archive](README.md#the-runner-archive) gives the steps
+that supply the archive to the build.
 
 ### Variables
 

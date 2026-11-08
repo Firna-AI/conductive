@@ -188,4 +188,57 @@ it('persists section order and private collapse, moves a workspace, and returns 
     body: JSON.stringify({ name: 'Hidden' }),
   })
   expect(outsider.status).toBe(404)
+
+  const toDelete = await fixture.request(sectionsPath(OUTER_ORG), {
+    method: 'POST',
+    body: JSON.stringify({ name: 'Delete after moving another section' }),
+  })
+  expect(toDelete.status).toBe(201)
+  const deletedSection = nested(
+    record(await toDelete.json()),
+    'section',
+    readSection,
+  )
+  const sectionA = 'a-survivor'
+  const sectionZ = 'z-survivor'
+  await fixture.env.DB.batch([
+    fixture.env.DB.prepare(
+      `INSERT INTO sections (id, org_id, name, position, created_at)
+       VALUES (?, ?, 'A survivor', 2, 1)`,
+    ).bind(sectionA, OUTER_ORG),
+    fixture.env.DB.prepare(
+      `INSERT INTO sections (id, org_id, name, position, created_at)
+       VALUES (?, ?, 'Z survivor', 3, 1)`,
+    ).bind(sectionZ, OUTER_ORG),
+  ])
+  const movedSection = await fixture.request(sectionPath(OUTER_ORG, sectionZ), {
+    method: 'PATCH',
+    body: JSON.stringify({ position: 2 }),
+  })
+  expect(movedSection.status).toBe(200)
+  const beforeDelete = readSections(
+    await (await fixture.request(sectionsPath(OUTER_ORG))).json(),
+  )
+  expect(beforeDelete.map(({ id, position }) => ({ id, position }))).toEqual([
+    { id: OUTER_SECTION, position: 0 },
+    { id: deletedSection.id, position: 1 },
+    { id: sectionZ, position: 2 },
+    { id: sectionA, position: 3 },
+  ])
+  const deletedAfterMove = await fixture.request(
+    sectionPath(OUTER_ORG, deletedSection.id),
+    {
+      method: 'DELETE',
+      body: '{}',
+    },
+  )
+  expect(deletedAfterMove.status).toBe(204)
+  const afterDelete = readSections(
+    await (await fixture.request(sectionsPath(OUTER_ORG))).json(),
+  )
+  expect(afterDelete.map(({ id, position }) => ({ id, position }))).toEqual([
+    { id: OUTER_SECTION, position: 0 },
+    { id: sectionZ, position: 1 },
+    { id: sectionA, position: 2 },
+  ])
 })
