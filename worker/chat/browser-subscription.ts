@@ -46,11 +46,17 @@ export function subscribeBrowser({
         throw error
       })
     try {
-      const history = await store.read(access.workspace.id, (view) =>
-        view.history(after),
-      )
-      browsers.check(peer)
-      peer.send({ type: 'history', history })
+      let through: number | undefined
+      while (true) {
+        const history = await store.read(access.workspace.id, (view) =>
+          view.history(after, through),
+        )
+        browsers.check(peer)
+        peer.send({ type: 'history', history })
+        if (!history.hasMore) break
+        through = history.throughEventNumber
+        after = history.nextAfterEventNumber
+      }
       return unsubscribe
     } catch (error) {
       unsubscribe()

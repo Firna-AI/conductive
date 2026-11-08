@@ -30,6 +30,7 @@ export function newSessionRecord(
     createdAt: FAKE_TIME,
     closedAt,
     activeTurnId: null,
+    activeTurnStartedAt: null,
     retryMessageId: null,
     startedBy: senderSnapshot(fakeUser),
     sourceSessionId: null,
@@ -54,6 +55,7 @@ export function opensSession(
     const body = record(await request.json())
     const draft = readDraft(body.draft)
     const reply: ChangeModelResponse = {
+      eventNumber: 0,
       session: newSessionRecord(text(body.newSessionId), choice),
       created: true,
       draft: { ...draft, attachmentIds: draft.attachmentIds.filter(keeps) },
@@ -136,11 +138,17 @@ export function chatFor(
       return `client-${ids}`
     },
   })
+  /**
+   * The number of the next event of the fake stream. A reply that a test
+   * writes holds the state through it, as the Worker's reply of a change
+   * does before the stream brings the change.
+   */
+  const nextEventNumber = () => server.events.history().throughEventNumber + 1
   const emit = (
     event: WorkspaceEvent,
     workspaceId: string = FAKE_IDS.workspace,
   ) => {
-    const eventNumber = server.events.history().throughEventNumber + 1
+    const eventNumber = nextEventNumber()
     server.events.emit({
       workspaceId,
       eventNumber,
@@ -186,6 +194,7 @@ export function chatFor(
     after,
     timers,
     emit,
+    nextEventNumber,
     requests,
     bodies,
     held,

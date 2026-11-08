@@ -19,9 +19,10 @@ import {
 import type { FileTree } from './tree-model'
 
 /**
- * The workspace event stream. The first message holds the stored events
- * after `afterEventNumber`. Live events follow. The shell injects its
- * socket adapter, or `FakeWorkspaceEvents.subscribe` in development.
+ * The workspace event stream after `afterEventNumber`. It sends stored
+ * history in one or more pages, then live events. Live events wait for the
+ * final history page. The shell injects its socket adapter, or
+ * `FakeWorkspaceEvents.subscribe` in development.
  */
 export type FilesSubscribe = (
   afterEventNumber: number,
@@ -57,7 +58,9 @@ type Resource = 'tree' | 'changes'
 /**
  * The live files of one workspace: the tree and the changes from the file
  * routes, kept current by the file events of the workspace stream. It
- * skips repeated events, and reads the stream again after a gap.
+ * skips repeated events, and reads the stream again after a gap. The stored
+ * history can come in pages that share one cutoff, and a page can leave out
+ * numbers. Live events wait until the final page.
  */
 export class WorkspaceFiles {
   readonly client: FilesClient
@@ -78,6 +81,10 @@ export class WorkspaceFiles {
   private readonly listeners = new Set<() => void>()
   private readonly reads = new Map<Resource, AbortController>()
   private lastEventNumber = 0
+  /** The cutoff of a replay that has more pages to come, or null. */
+  private replay: number | null = null
+  /** The live events that wait for the final page of a replay. */
+  private waiting: StreamEnvelope[] = []
   private subscription = 0
   private unsubscribe: (() => void) | null = null
   private running = false
@@ -140,6 +147,8 @@ export class WorkspaceFiles {
 
   private listen(): void {
     const subscription = ++this.subscription
+    this.replay = null
+    this.waiting = []
     this.unsubscribe?.()
     this.unsubscribe = this.subscribeToStream(
       this.lastEventNumber,
@@ -152,23 +161,44 @@ export class WorkspaceFiles {
   private receive(raw: unknown): void {
     const message = parseStreamMessage(raw)
     if (!message) return
+    if (message.type === 'event') {
+      if (this.replay !== null) this.waiting.push(message.envelope)
+      else this.live(message.envelope)
+      return
+    }
     const invalidation = new FilesInvalidation()
-    if (message.type === 'history') {
-      let taken = false
-      for (const envelope of message.envelopes) {
-        taken = this.take(envelope, invalidation) || taken
-      }
-      this.lastEventNumber = Math.max(
-        this.lastEventNumber,
-        message.throughEventNumber,
-      )
-      return taken ? this.commit(invalidation) : this.publish({})
+    const through = message.throughEventNumber
+    let taken = false
+    for (const envelope of message.envelopes) {
+      if (envelope.eventNumber > through) continue
+      taken = this.take(envelope, invalidation) || taken
     }
+    const next = message.nextAfterEventNumber
+    this.replay = next === null ? null : through
+    this.lastEventNumber = Math.max(
+      this.lastEventNumber,
+      next === null ? through : Math.min(next, through),
+    )
+    if (taken) this.commit(invalidation)
+    else this.publish({})
+    if (next !== null) return
+    const waiting = this.waiting.sort((a, b) => a.eventNumber - b.eventNumber)
+    this.waiting = []
+    for (const envelope of waiting) {
+      if (!this.live(envelope)) return
+    }
+  }
+
+  /** Applies one live event, or subscribes again after a gap and says so. */
+  private live(envelope: StreamEnvelope): boolean {
     // A gap: subscribe again, so the history brings the missed events.
-    if (message.envelope.eventNumber > this.lastEventNumber + 1) {
-      return this.listen()
+    if (envelope.eventNumber > this.lastEventNumber + 1) {
+      this.listen()
+      return false
     }
-    if (this.take(message.envelope, invalidation)) this.commit(invalidation)
+    const invalidation = new FilesInvalidation()
+    if (this.take(envelope, invalidation)) this.commit(invalidation)
+    return true
   }
 
   /**

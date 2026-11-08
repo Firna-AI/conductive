@@ -69,6 +69,7 @@ export async function createRunnerLimitsFixture() {
       hooks.push(structuredClone(envelope))
     },
     runnerReady: async () => undefined,
+    runnerHello: async () => undefined,
     matchesObject: () => true,
   }
   const publish = (events: readonly WorkspaceEventEnvelope[]) => {
@@ -116,6 +117,7 @@ export async function createRunnerLimitsFixture() {
         createdAt: 25,
         closedAt: null,
         activeTurnId: context.turnId,
+        activeTurnStartedAt: null,
         retryMessageId: null,
         startedBy: {
           id: 'sender',

@@ -5,11 +5,7 @@ import { showNotice, type ChatContext } from './context'
 import { afterSend, changeDraft, draftIdOf, holderOf } from './drafts'
 import { waitsForFirstStart } from './first-start'
 import { showTarget, takeReply } from './linked-replies'
-import {
-  applyWorkspaceIfNewest,
-  beginChange,
-  WORKSPACE_RECORD,
-} from './session-records'
+import { confirmWorkspace } from './session-records'
 import { toUpload } from './uploads'
 
 function change(
@@ -120,11 +116,7 @@ export async function sendDraft(
   }))
   let target: string | null = null
   try {
-    target = takeReply(
-      context,
-      sessionId,
-      await context.api.send(sessionId, request),
-    )
+    target = takeReply(context, await context.api.send(sessionId, request))
     changeDraft(context, draftId, (current) => afterSend(current, request))
     const holder = holderOf(context.store.get(), draftId)
     const owner = context.store.get().notice?.sessionId
@@ -155,7 +147,7 @@ export async function retryTurn(
   try {
     const reply = await context.api.retry(sessionId, messageId)
     if (reply.message.sessionId !== sessionId) {
-      target = takeReply(context, sessionId, reply)
+      target = takeReply(context, reply)
     }
   } catch (error) {
     showNotice(context, sessionId, "The turn didn't restart", error)
@@ -164,15 +156,17 @@ export async function retryTurn(
   await showTarget(context, sessionId, target, draftId)
 }
 
-/** Stop interrupts the running turn. The turn shows as stopped when it ends. */
+/**
+ * Stop interrupts the running turn: the one that the transcript shows, from
+ * its events and the records of its session. The turn shows as stopped when
+ * it ends.
+ */
 export async function interruptTurn(
   context: ChatContext,
   sessionId: string,
 ): Promise<void> {
-  const snapshot = context.store.get()
-  const state = sessionState(snapshot, sessionId)
-  const session = snapshot.sessions.find((item) => item.id === sessionId)
-  const turnId = state.transcript.turn?.turnId ?? session?.activeTurnId
+  const state = sessionState(context.store.get(), sessionId)
+  const turnId = state.transcript.turn?.turnId
   if (!turnId || state.stopping) return
   change(context, sessionId, (current) => ({ ...current, stopping: true }))
   try {
@@ -185,15 +179,14 @@ export async function interruptTurn(
 
 /**
  * Resume, or Try again after a failed start, starts the sandbox. Its reply
- * shows the workspace and the start steps only while no newer event of the
- * workspace came, and the button is free again in every case.
+ * shows the workspace and the start steps only while no newer state of them
+ * came by event number, and the button is free again in every case.
  */
 export async function resumeWorkspace(context: ChatContext): Promise<void> {
   if (context.store.get().resuming) return
-  const version = beginChange(context, WORKSPACE_RECORD)
   context.store.update((snapshot) => ({ ...snapshot, resuming: true }))
   try {
-    applyWorkspaceIfNewest(context, await context.api.resume(), version)
+    confirmWorkspace(context, await context.api.resume())
   } catch (error) {
     showNotice(context, null, "The sandbox didn't start", error)
   } finally {

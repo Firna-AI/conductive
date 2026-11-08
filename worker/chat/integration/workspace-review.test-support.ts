@@ -73,6 +73,9 @@ export async function reviewWorkspaceFixture(bundle: string) {
   }
   return {
     ...fixture,
+    get runtime() {
+      return fixture.runtime
+    },
     actor,
     runner,
     turn,

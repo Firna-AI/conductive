@@ -1,9 +1,9 @@
 import type { ChatEvent } from '../../shared/chat-events'
 import type { WorkspaceEvent } from '../../shared/events'
 import type {
+  OrderedWorkspaceResponse,
   StartStep,
   Workspace,
-  WorkspaceResponse,
   WorkspaceStart,
   WorkspaceState,
 } from '../../shared/workspaces'
@@ -27,11 +27,20 @@ export interface StreamEnvelope {
   eventNumber: number
   occurredAt: number
   event: ChatStreamEvent | null
+  /** The workspace marked an agent event of a turn that had ended. */
+  late: boolean
 }
 
+/**
+ * One page of stored events. The pages of one read can leave out the numbers
+ * of events that a later event of the same read replaces.
+ */
 export interface StoredEvents {
   envelopes: readonly StreamEnvelope[]
+  /** All pages of one read together hold the state through this number. */
   throughEventNumber: number
+  /** Where the next page of the same read starts, or null on the final page. */
+  nextAfterEventNumber: number | null
 }
 
 export type StreamMessage =
@@ -93,9 +102,13 @@ function readStart(value: unknown): WorkspaceStart {
   }
 }
 
-export function readWorkspaceResponse(value: unknown): WorkspaceResponse {
+/** A read or a Resume reply, with the event number of its state. */
+export function readWorkspaceResponse(
+  value: unknown,
+): OrderedWorkspaceResponse {
   const source = record(value, 'workspace response')
   return {
+    eventNumber: count(source.eventNumber),
     workspace: readWorkspace(source.workspace),
     start: nullable(readStart)(source.start),
     error: nullable((error) => {
@@ -140,6 +153,8 @@ export function readEnvelope(value: unknown): StreamEnvelope {
     eventNumber: count(source.eventNumber),
     occurredAt: count(source.occurredAt),
     event,
+    // Only the value true is the mark of the workspace.
+    late: source.late === true,
   }
 }
 
@@ -148,6 +163,8 @@ export function readStoredEvents(value: unknown): StoredEvents {
   return {
     envelopes: list(readEnvelope)(source.events),
     throughEventNumber: count(source.throughEventNumber),
+    nextAfterEventNumber:
+      source.hasMore === true ? count(source.nextAfterEventNumber) : null,
   }
 }
 

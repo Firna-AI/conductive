@@ -42,7 +42,10 @@ it('refuses later messages in every session before the first start succeeds and 
     fixture.history(first.id),
     fixture.history(other.id),
   ])
-  expect(await fixture.send(first.id, 'first-message')).toEqual(accepted)
+  expect(await fixture.send(first.id, 'first-message')).toEqual({
+    ...accepted,
+    eventNumber: 4,
+  })
   for (const [sessionId, cookie] of [
     [first.id, fixture.ownerCookie],
     [other.id, fixture.memberCookie],
@@ -84,7 +87,10 @@ it('refuses later messages in every session before the first start succeeds and 
         'Wait for the workspace to start before sending another message.',
     },
   })
-  expect(await fixture.send(first.id, 'first-message')).toEqual(accepted)
+  expect(await fixture.send(first.id, 'first-message')).toEqual({
+    ...accepted,
+    eventNumber: 4,
+  })
   expect(await lifecycleSnapshot(fixture)).toEqual(before)
   expect(
     await Promise.all([fixture.history(first.id), fixture.history(other.id)]),

@@ -1,5 +1,6 @@
 import { advanceStartStop } from './durable-start-stop'
 import { reconciledLifecycle } from './durable-reconciliation'
+import { recoverLifecycleTurns } from './durable-turns'
 import { isConfirmedStopped } from './confirmed-stop'
 import {
   IDLE_MS,
@@ -22,6 +23,7 @@ export async function advanceLifecycleAlarm(
     await write(await advanceStartStop(state, hooks, now))
     return
   }
+  state = await recoverLifecycleTurns(state, hooks)
   let stopPending = false
   if (!state.runnerConnected && !isConfirmedStopped(state) && hooks.reconcile) {
     state = reconciledLifecycle(state, await hooks.reconcile(), now())

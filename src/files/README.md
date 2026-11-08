@@ -47,11 +47,13 @@ const { store: files } = useWorkspaceStore(
 A new `create` makes a new store, so keep `fetch` and `socket` stable.
 Give `files` to the screens.
 
-The first message of the subscription holds the stored history, and the
-store reads each message from `unknown`. The store reads the tree and the
-changes routes, then applies the file events of the stream in event order.
-It skips an event that it already has. After a gap in the event numbers,
-it subscribes again from its last event number. After a gap in the tree
+The store reads each message of the subscription from `unknown`: the stored
+history first, in one or more pages, then the live events. The pages of
+one replay share one cutoff, and a page can leave out event numbers. The
+store reads the tree and the changes routes, then applies the file events
+in event order, and live events wait for the final page. It skips an event
+that it already has. After a gap in the numbers of the live events, it
+subscribes again from its last event number. After a gap in the tree
 revisions, it reads the tree route again.
 
 The stored history and the live events change the open pages in the same
@@ -68,7 +70,7 @@ Some events cannot name their paths:
 - a change list without an earlier one
 
 After such an event, each open page reads its file or diff again. The
-store collects the changes of one message: a whole history, or one live
+store collects the changes of one message: a history page, or one live
 event. Then it applies them once.
 
 The workspace can refuse an update of a file list. After such a first

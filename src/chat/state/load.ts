@@ -1,10 +1,10 @@
 import type { SessionsResponse } from '../../shared/sessions'
-import type { WorkspaceResponse } from '../../shared/workspaces'
+import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
 import { refreshDevices } from '../device/device-actions'
 import type { ChatSnapshot } from './chat-snapshot'
 import { logOf, messageOf, withTranscript, type ChatContext } from './context'
-import { withFirstStart } from './first-start'
 import { hydrate } from './history'
+import { confirmWorkspace, shownRecord } from './session-records'
 import { orderSessions, pickActive, sortHistory } from './sessions'
 
 const orNull = <T>(request: Promise<T>): Promise<T | null> =>
@@ -18,9 +18,14 @@ const none = Promise.resolve(null)
  * 1. The session list and the view choose the session to show.
  * 2. Its full history gives the event number that the stream starts after.
  * 3. The workspace and the session list load again after that number, so no
- *    change between the reads and the stream gets lost. Each record of that
- *    list gives the retry message of its session after that number, until
- *    a newer record from the stream or a history replaces it.
+ *    change between the reads and the stream gets lost. Each read carries
+ *    the event number of its state, so a record shows only while no newer
+ *    record of the stream or a history replaces it.
+ *
+ * When the history of the shown session fails, the chat still loads. That
+ * session shows its failed history with Try again, and its record shows a
+ * running turn with Stop. The stream then starts after the older of the two
+ * later reads.
  *
  * Without an open session, the stream starts at the beginning, so its
  * history holds every session. The watch of the shown session, which the
@@ -72,16 +77,12 @@ export async function loadChat(context: ChatContext): Promise<void> {
     view,
     activeSessionId: active,
   }))
-  let after = 0
+  let through: number | null = 0
   if (active) {
-    const through = await hydrate(context, active, true)
-    if (through === null) {
-      fail(null)
-      return
-    }
-    after = through
+    through = await hydrate(context, active, true)
+    if (!context.live()) return
   }
-  let detail: WorkspaceResponse
+  let detail: OrderedWorkspaceResponse
   let sessions: SessionsResponse
   try {
     ;[detail, sessions] = await Promise.all([api.workspace(), api.sessions()])
@@ -90,32 +91,34 @@ export async function loadChat(context: ChatContext): Promise<void> {
     return
   }
   if (!context.live()) return
-  const listed: string[] = []
-  for (const session of [...sessions.sessions, ...sessions.history]) {
-    if (logOf(context, session.id).takeListed(session, after)) {
-      listed.push(session.id)
-    }
+  const listed = [...sessions.sessions, ...sessions.history]
+  for (const session of listed) {
+    logOf(context, session.id).offer(session, sessions.eventNumber)
   }
+  confirmWorkspace(context, detail)
   store.update((snapshot) => {
-    const open = orderSessions(sessions.sessions, snapshot.view)
+    const records = listed.map((item) => shownRecord(context, item.id) ?? item)
+    const open = orderSessions(
+      records.filter((item) => item.closedAt === null),
+      snapshot.view,
+    )
     const shown = open.some((item) => item.id === snapshot.activeSessionId)
-    let next: ChatSnapshot = withFirstStart({
+    let next: ChatSnapshot = {
       ...snapshot,
       load: { state: 'ready' },
-      workspace: detail.workspace,
-      start: detail.start,
       sessions: open,
-      history: sortHistory(sessions.history),
+      history: sortHistory(records.filter((item) => item.closedAt !== null)),
       activeSessionId: shown
         ? snapshot.activeSessionId
         : pickActive(open, snapshot.view),
-    })
-    for (const id of listed) {
+    }
+    for (const { id } of listed) {
       const log = logOf(context, id)
       next = withTranscript(next, id, log.transcript, log.times)
     }
     return next
   })
+  const after = through ?? Math.min(detail.eventNumber, sessions.eventNumber)
   context.stream.start(after)
   await refreshDevices(context)
 }

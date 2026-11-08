@@ -6,6 +6,7 @@ import type {
   DiskRetentionResult,
   DurableLifecycleState,
   LifecycleStorage,
+  LifecycleTurnRecovery,
 } from './durable-types'
 
 export const FIRST_MESSAGE: SendMessageRequest = {
@@ -48,6 +49,9 @@ export function lifecycleFixture() {
         eligible: true,
       })),
     extendDeadline: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    recoverTurns: vi
+      .fn<() => Promise<LifecycleTurnRecovery | undefined>>()
+      .mockResolvedValue(undefined),
   }
   const create = () => new DurableLifecycle(storage, () => now, hooks)
   return {

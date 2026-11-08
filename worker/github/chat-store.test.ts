@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, it } from 'vitest'
 
 import { array } from '../chat/agent-events'
 import { record } from '../chat/inputs'
+import { CHAT_EVENT_PREFIX, CHAT_META } from '../chat/storage-keys'
 import {
   SQLITE_TIME,
   SQLITE_WORKSPACE_ID,
@@ -104,10 +105,14 @@ it('stages the snapshot, event, cursor, and receipt in one SQLite transaction be
   expect(records.get('github:state')).toEqual(sqliteSnapshot())
   expect(records.get('github:delivery:atomic')).toEqual(receipt)
   expect(
-    [...records.values()].filter((value) => record(value).eventNumber === 1),
+    [...records.entries()]
+      .filter(([key]) => key.startsWith(CHAT_EVENT_PREFIX))
+      .map(([, value]) => value),
   ).toEqual([envelope])
   expect(
-    [...records.values()].filter((value) => record(value).through === 1),
+    [...records.entries()]
+      .filter(([key]) => key === CHAT_META)
+      .map(([, value]) => value),
   ).toEqual([
     { workspaceId: SQLITE_WORKSPACE_ID, through: 1, commandThrough: 0 },
   ])

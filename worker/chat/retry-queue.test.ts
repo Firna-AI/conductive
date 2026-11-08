@@ -3,8 +3,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { sessionPaths } from '../../src/shared/sessions'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
+import { checkRetryBoundaries } from './retry-boundaries.test-support'
 import {
-  liveSessions,
   retryRequest,
   retryUnavailable,
   sessionRecord,
@@ -78,6 +78,7 @@ describe('retry eligibility and queued work', () => {
       { turnId: cancelledId },
     )
     expect(await stopped.json()).toEqual({
+      eventNumber: 22,
       turnId: cancelledId,
       state: 'stopped',
     })
@@ -93,60 +94,11 @@ describe('retry eligibility and queued work', () => {
     expect(messageCommands(runner, 'cancelled')).toEqual([])
   })
 
-  it('commits retry eligibility with the failure and the accepted retry', async () => {
-    const fixture = await createChatFixture(harness)
-    const session = await fixture.createSession()
-    const runner = await fixture.connect()
-    runner.emit({ type: 'runner.ready' })
-    await fixture.drain()
-    const active = await startTurn(fixture, runner, session.id, 'atomic')
-    const tab = await fixture.tab()
-    const before = await lifecycleSnapshot(fixture)
-    fixture.storage.failCommit = true
-    runner.emit(terminalEvent(active, 'failed'))
-    await expect(fixture.drain()).rejects.toThrow('Injected storage failure')
-    expect(await lifecycleSnapshot(fixture)).toEqual(before)
-    expect(liveSessions(tab.messages)).toEqual([])
-    fixture.storage.failCommit = false
-    await fixture.connect(runner)
-    expect((await sessionRecord(fixture, session.id)).retryMessageId).toBe(
-      'atomic',
-    )
-    expect(
-      liveSessions(tab.messages).map((record) => record.retryMessageId),
-    ).toEqual(['atomic'])
-    const failed = await lifecycleSnapshot(fixture)
-    const failedHistory = await fixture.history(session.id)
-    fixture.storage.failCommit = true
-    const refused = await retryRequest(fixture, session.id, 'atomic')
-    expect(refused.status).toBe(500)
-    expect(await refused.json()).toEqual({
-      error: {
-        code: 'internal_error',
-        message: 'The request failed. Try again.',
-      },
-    })
-    expect(await lifecycleSnapshot(fixture)).toEqual(failed)
-    expect(
-      liveSessions(tab.messages).map((record) => record.retryMessageId),
-    ).toEqual(['atomic'])
-    fixture.storage.failCommit = false
-    expect(await fixture.history(session.id)).toEqual(failedHistory)
-    fixture.restart()
-    const resumedTab = await fixture.tab()
-    const accepted = await retryRequest(fixture, session.id, 'atomic')
-    expect(accepted.status).toBe(202)
-    const stored = await sessionRecord(fixture, session.id)
-    expect(stored.retryMessageId).toBeNull()
-    expect(
-      liveSessions(resumedTab.messages).map((record) => record.retryMessageId),
-    ).toEqual([null])
-    expect(
-      (await fixture.history(session.id)).events.filter(
-        ({ event }) => event.type === 'message.accepted',
-      ),
-    ).toHaveLength(2)
-    tab.close()
-    resumedTab.close()
+  it('commits retry eligibility with a failed turn at both commit boundaries', async () => {
+    await checkRetryBoundaries(harness, 'failure')
+  })
+
+  it('commits retry eligibility with an accepted retry at both commit boundaries', async () => {
+    await checkRetryBoundaries(harness, 'retry')
   })
 })

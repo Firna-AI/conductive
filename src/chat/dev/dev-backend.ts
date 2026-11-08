@@ -32,7 +32,7 @@ import { lossEvents, withUnreadFiles } from './dev-loss'
 import type { DevOptions } from './dev-options'
 import { handleWrite } from './dev-routes'
 import { takeState } from './dev-sandbox'
-import { followTitle } from './dev-sessions'
+import { followTitle, setActiveTurn } from './dev-sessions'
 import { DevStream } from './dev-stream'
 
 const NEW_WORKSPACE = 'saved-carts'
@@ -88,6 +88,8 @@ export class DevBackend {
     this.closed = parts.closed
     this.mac = parts.mac
     this.agent = new DevAgent(parts.stream, parts.clock)
+    this.agent.onTurn = (sessionId, turnId, at) =>
+      setActiveTurn(this, sessionId, turnId, at)
   }
 
   static async create(options: DevOptions, clock: Clock): Promise<DevBackend> {
@@ -248,14 +250,20 @@ export class DevBackend {
     return { ...event, message: { ...event.message, createdAt: now } }
   }
 
-  /** Writes the current records as the fake's replies, and tells the tabs. */
+  /**
+   * Writes the current records as the fake's replies, and tells the tabs.
+   * Each read carries the number of the last event, as the Worker's do.
+   */
   sync(): void {
     const { orgId, workspaceId } = this.target
+    const eventNumber = this.stream.last
     this.server.json('GET', sessionsPath(orgId, workspaceId), {
+      eventNumber,
       sessions: this.open,
       history: this.closed,
     })
     this.server.json('GET', workspacePath(orgId, workspaceId), {
+      eventNumber,
       workspace: this.workspace,
       start: this.start,
       error:

@@ -1,4 +1,8 @@
-import type { WorkspaceState } from '../../shared/workspaces'
+import type {
+  Workspace,
+  WorkspaceStart,
+  WorkspaceState,
+} from '../../shared/workspaces'
 import type { ChatSnapshot } from './chat-snapshot'
 
 /**
@@ -15,14 +19,17 @@ const afterFirstStart: ReadonlySet<WorkspaceState> = new Set([
 ])
 
 /**
- * The records of the snapshot show that the first start of the workspace
- * succeeded: a state after it, or the record of a resume.
+ * The records show that the first start of the workspace succeeded: a state
+ * after it, or the record of a resume.
  */
-function showsSuccess(snapshot: ChatSnapshot): boolean {
-  const state = snapshot.workspace?.state
+function showsSuccess(
+  workspace: Workspace | null,
+  start: WorkspaceStart | null,
+): boolean {
+  const state = workspace?.state
   return (
     (state !== undefined && afterFirstStart.has(state)) ||
-    snapshot.start?.kind === 'resume'
+    start?.kind === 'resume'
   )
 }
 
@@ -34,7 +41,22 @@ function showsSuccess(snapshot: ChatSnapshot): boolean {
  * workspace record or of its start.
  */
 export function withFirstStart(snapshot: ChatSnapshot): ChatSnapshot {
-  if (snapshot.firstStartDone || !showsSuccess(snapshot)) return snapshot
+  return noteFirstStart(snapshot, snapshot.workspace, snapshot.start)
+}
+
+/**
+ * Remembers the success of the first start that a record shows, also a
+ * record that is older than the one that shows, because a start that
+ * succeeded stays a success.
+ */
+export function noteFirstStart(
+  snapshot: ChatSnapshot,
+  workspace: Workspace | null,
+  start: WorkspaceStart | null,
+): ChatSnapshot {
+  if (snapshot.firstStartDone || !showsSuccess(workspace, start)) {
+    return snapshot
+  }
   return { ...snapshot, firstStartDone: true }
 }
 
@@ -46,5 +68,8 @@ export function withFirstStart(snapshot: ChatSnapshot): ChatSnapshot {
  */
 export function waitsForFirstStart(snapshot: ChatSnapshot): boolean {
   if (snapshot.workspace === null) return false
-  return !snapshot.firstStartDone && !showsSuccess(snapshot)
+  return (
+    !snapshot.firstStartDone &&
+    !showsSuccess(snapshot.workspace, snapshot.start)
+  )
 }

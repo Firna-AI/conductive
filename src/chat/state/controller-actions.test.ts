@@ -43,7 +43,12 @@ describe('ChatController actions', () => {
     chat.server.json(
       'POST',
       messages,
-      { message: queued, turnId: null, session },
+      {
+        message: queued,
+        turnId: null,
+        session,
+        eventNumber: chat.nextEventNumber(),
+      },
       202,
     )
     await chat.controller.send(id)
@@ -167,18 +172,21 @@ describe('ChatController actions', () => {
     const [session] = chat.controller.getSnapshot().sessions
     const sonnet: AgentChoice = { ...opus, model: 'Sonnet 5.5' }
     const fable: AgentChoice = { ...opus, model: 'Fable 5.1' }
-    const answer = (choice: AgentChoice) =>
+    // The server takes the picks in their order, so the later one is newer.
+    const after = chat.nextEventNumber()
+    const answer = (choice: AgentChoice, eventNumber: number) =>
       chat.server.json('PUT', model, {
         session: { ...session, choice },
         created: false,
         draft: { text: '', attachmentIds: [] },
+        eventNumber,
       })
     const first = chat.controller.chooseModel(id, sonnet)
     const second = chat.controller.chooseModel(id, fable)
-    answer(fable)
+    answer(fable, after + 1)
     chat.held.splice(1, 1)[0]()
     await second
-    answer(sonnet)
+    answer(sonnet, after)
     chat.held.splice(0, 1)[0]()
     await first
     expect(chat.controller.getSnapshot().sessions[0].choice).toEqual(fable)

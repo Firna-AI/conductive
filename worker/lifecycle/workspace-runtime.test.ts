@@ -108,13 +108,13 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     caller.lifecycleStep('during', 'During connection', 'completed'),
   ])
   expect(browser.response.status).toBe(101)
-  const opening = publicHistory(await browser.inbox.next())
+  const opening = await publicHistory(browser.inbox)
   expect(
     opening.events.some((event) => hasStartStep(event, 'fetch', 'running')),
   ).toBe(true)
   await caller.lifecycleStep('last', 'After connection', 'completed')
   const captured = await fixture.openEvents(id)
-  const beforeRestart = publicHistory(await captured.inbox.next())
+  const beforeRestart = await publicHistory(captured.inbox)
   const openingLive = await liveEvents(
     browser.inbox,
     opening.throughEventNumber,
@@ -134,7 +134,7 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   await fixture.restart()
   await abandoned
   const resumedBrowser = await fixture.openEvents(id)
-  const resumedHistory = publicHistory(await resumedBrowser.inbox.next())
+  const resumedHistory = await publicHistory(resumedBrowser.inbox)
   expect(resumedHistory).toEqual(beforeRestart)
   fixture.boat.commandOutput = 'part-restored'
   fixture.boat.commandRunning = false
@@ -167,7 +167,7 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   const ready = await restored.readLifecycle()
   expect(await restored.alarmAt()).toBe((ready?.lastActivityAt ?? 0) + IDLE_MS)
   const completedBrowser = await fixture.openEvents(id)
-  const before = publicHistory(await completedBrowser.inbox.next())
+  const before = await publicHistory(completedBrowser.inbox)
   expect(
     before.events.some((event) => hasStartStep(event, 'fetch', 'completed')),
   ).toBe(true)
@@ -179,7 +179,7 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   expect([...resumedHistory.events, ...completedLive]).toEqual(before.events)
   await restored.lifecyclePrepared()
   const unchangedBrowser = await fixture.openEvents(id)
-  expect(publicHistory(await unchangedBrowser.inbox.next())).toEqual(before)
+  expect(await publicHistory(unchangedBrowser.inbox)).toEqual(before)
   await restored.becomeIdle()
   expect(await restored.readLifecycle()).toMatchObject({
     state: 'stopped',
@@ -197,7 +197,7 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     { event: { type: 'start.updated' } },
   ])
   const stoppedBrowser = await fixture.openEvents(id)
-  const after = publicHistory(await stoppedBrowser.inbox.next())
+  const after = await publicHistory(stoppedBrowser.inbox)
   expect(after.events.slice(0, before.events.length)).toEqual(before.events)
   expect(after.throughEventNumber).toBe(before.throughEventNumber + 2)
   expect(after.events).toEqual([...before.events, ...stoppedLive])

@@ -138,6 +138,7 @@ describe('session parts', () => {
       workspaceId: 'w',
       createdAt: 0,
       activeTurnId: null,
+      activeTurnStartedAt: null,
       retryMessageId: null,
       startedBy: senderSnapshot(fakeUser),
       sourceSessionId: null,

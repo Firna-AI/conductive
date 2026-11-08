@@ -45,7 +45,11 @@ describe('durable runner dispatch', () => {
       sessionPaths.interrupt(fixture.org.id, WORKSPACE_ID, session.id),
       { turnId },
     )
-    expect(await stopped.json()).toEqual({ turnId, state: 'stopped' })
+    expect(await stopped.json()).toEqual({
+      eventNumber: 6,
+      turnId,
+      state: 'stopped',
+    })
     expect(runner.commands).toEqual([])
     expect(
       await fixture.chat.store.read(WORKSPACE_ID, (view) => view.pending()),
@@ -75,6 +79,7 @@ describe('durable runner dispatch', () => {
       { turnId: unsent },
     )
     expect(await stopUnsent.json()).toEqual({
+      eventNumber: 11,
       turnId: unsent,
       state: 'stopped',
     })

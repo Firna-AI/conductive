@@ -40,7 +40,13 @@ function envelope(
   eventNumber: number,
   event: StreamEnvelope['event'],
 ): StreamEnvelope {
-  return { workspaceId: 'workspace-1', eventNumber, occurredAt: 25, event }
+  return {
+    workspaceId: 'workspace-1',
+    eventNumber,
+    occurredAt: 25,
+    event,
+    late: false,
+  }
 }
 
 it('keeps refusal markers and completion counts when older session history refolds', () => {

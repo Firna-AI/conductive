@@ -21,6 +21,8 @@ gives the create, read, resume, and activity routes of a workspace to
 - Keep the state of each workspace in its Durable Object: the starts, the
   activity, the idle stop, and the disk retention restart. That restart
   starts a stopped sandbox briefly, so that Boat keeps its disk.
+- Repair the running turns, the idle time, and the name of a workspace
+  from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
   the current turn.
 
@@ -50,8 +52,8 @@ from [`runtime.ts`](runtime.ts). The caller gives these options:
   and returns it. So it must be idempotent for the message and session IDs.
   In production, the admission has already stored that message in chat, so
   the hook adds no history.
-- `projectWorkspace`: optional. It changes the workspace record of each
-  reply, such as its state for the reader.
+- `projectWorkspace`: optional. It changes each reply, such as the state
+  of the workspace for the reader.
 - `waitUntil`: the `waitUntil` of the Worker's execution context. A create
   gives it its work, so the work continues when the browser closes.
 
@@ -60,26 +62,22 @@ from [`runtime.ts`](runtime.ts). The caller gives these options:
 refresh reads the archive variables. It gives `acceptFirstMessage` to
 `acceptLifecycleFirstMessage` of the workspace object.
 
+For a read or a resume, the `projectWorkspace` of `chatLifecycleRoute`
+takes the reply from `readChatWorkspaceResponse` of the workspace object.
+That read runs in one task of the chat queue. That reply has the event
+number of its state. Its name comes from the latest committed agent title,
+when there is one. The state for the reader uses the chat summary of the
+same read.
+
+[Creates and resumes](workspace-object.md#creates-and-resumes) says how the
+workspace object runs the start of each create and resume. It gives the
+waits, the replies, the branch, the terminal start hook, the runner
+readiness, and the stop cleanup of a failed resume.
+
 - A create needs a published org image and a repository that its build
   loaded. A change to the chosen repositories takes effect after the next
   successful build. A repeat of the same first message ID from the same
   sender returns the same workspace, until that create fails.
-- A create or a resume queues its start with `queueLifecycleStart`. The
-  workspace object runs the start, so a closed browser does not cancel it.
-- A create waits only for its admission, with `waitCreationAdmission`.
-  Admission makes the workspace, its token, and the first message durable.
-  The sandbox can still be starting. `waitCreationLifecycle` waits for the
-  end of a create, and `waitLifecycleStart` for the end of a resume.
-- Resume answers when the start is queued, with the workspace in
-  `starting`. No browser route waits for the end of a start. The events of
-  the workspace carry the start steps and the result. A failed resume
-  keeps the workspace and its chat, with an error and a valid Try again.
-- A test that needs the end of a resume uses `resumeCompletedWorkspace` in
-  [`completed-resume-test-support.ts`](completed-resume-test-support.ts).
-  It waits for the job that its call queued, and reads the real result.
-- The write that ends the `records` phase stores the admission in the start
-  job. The end of the create moves it to the completed creation record. A
-  repeat with other content still gets the admitted first message.
 - A failed create keeps the full first message, with its attachment IDs,
   as a hidden draft, and records the sandbox cleanup. It then releases the
   creation claim and publishes the failed `start.updated` and the error
@@ -88,30 +86,6 @@ refresh reads the archive variables. It gives `acceptFirstMessage` to
   and the org purge. Lifecycle cleanup leaves the attachments to their owner.
 - A retry gets a fresh workspace ID with the same first message ID. Its
   start waits until the records of the failed attempt are gone.
-- Resume restarts only a stopped or failed workspace. A resumed
-  sandbox gets fresh env vars and runs the startup script again, but it
-  fetches no code. A start older than the last stop cannot restart it.
-- Each start gives the sandbox the default branch of its repository. It
-  gives no setting for the computer tools, because Boat writes the entry
-  of the `computer` server into the sandbox, as
-  [What it does](../../runner/README.md#what-it-does) says.
-- After the startup script succeeds at create and each resume, the start
-  calls the start hook of the [terminal backend](../terminal/README.md).
-  The hook starts the terminal and caches its encrypted password before
-  the workspace becomes ready. Builds and disk retention restarts skip it.
-- The start then saves its runner phase. Its success waits for the runner
-  readiness report within the original start deadline. The readiness wait
-  runs no startup command again and schedules its alarm at that deadline.
-  Each alarm and readiness report still checks the owner and requester.
-  The shared success path prepares the lifecycle only after its final
-  access, cancellation, and deadline checks. That lifecycle write restores
-  the alarm before the job saves success, also after a runner-phase restart.
-- A failed or cancelled resume records its result separately from its
-  stop cleanup. Native lifecycle state keeps the pending stop across
-  restarts. The lifecycle retries the existing stop operation every 30
-  seconds, and a later resume waits for confirmation. Cleanup keeps the
-  saved failure message. Late runner reports cannot revive that failed
-  start.
 - Activity from the `input`, `terminal`, and `preview` sources resets the
   idle time.
 - The build log is a stream of server-sent events. It continues after the
@@ -132,22 +106,9 @@ turn and the branch step use the sender.
 workspace token as a bearer token, and the current turn ID in the
 `X-Conductive-Turn-Id` header. The handler reads no request body and needs
 no content type. `Workspace.credentialSender` maps that turn to a sender,
-in the chat queue:
-
-- A create that prepares its repository has its own grant. The start job
-  is a create in the `fetch` or `branch` phase, not cancelled or failed,
-  and its `turnId` matches. The grant gives the sender of the admitted
-  first message.
-- Otherwise the turn must be the running stored chat turn: the active
-  turn of an open session. `activeStoredTurn` in
-  [`access.ts`](../devices/access.ts) reads it. So access ends with the
-  turn, also after a queued Stop, a session close, or a login failure.
-- A stopped or archived workspace gives no sender. The lifecycle admission
-  keeps no turn record for the queued first message.
-
-`machine.test.ts` runs the route with `machineCredentialFixture` in
-[`machine-test-support.ts`](machine-test-support.ts), over the production
-chat and runner boundaries.
+in the chat queue, as
+[The git credential sender](workspace-object.md#the-git-credential-sender)
+says, with its tests.
 
 The handler returns a fresh GitHub App user token of the sender, from
 `freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).
@@ -163,9 +124,10 @@ runner socket, with the private error response wrapper.
 ### Workspace Durable Object
 
 [Workspace Durable Object](workspace-object.md) describes the Durable
-Object of each workspace and of each image coordinator: its names, its
-lifecycle steps, its alarm, its start logs, its event socket, and the
-publication of its events.
+Object of each workspace and of each image coordinator. It gives their
+names, the lifecycle steps, the alarm, the start logs, the event socket,
+and the publication of the events. It also gives the creates and resumes,
+the git credential sender, and the turn recovery.
 
 ### Builds and refreshes
 
@@ -213,7 +175,8 @@ object holds the lifecycle state, the turn records, and the events.
 - [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
   answers once the start is queued.
 - [`workspace-state-projection.ts`](workspace-state-projection.ts):
-  `WorkspaceStateProjection`, the one writer of the shown state, as
+  `WorkspaceStateProjection`, the one writer of the shown state and of the
+  repaired name, as
   [Workspace Durable Object](workspace-object.md#the-shown-state) says.
 - [`workspace-controller.ts`](workspace-controller.ts):
   `createWorkspaceController`, the lifecycle methods of the workspace
@@ -244,9 +207,19 @@ object holds the lifecycle state, the turn records, and the events.
   creates, and `failedCreationForSender`.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
+- [`durable-turns.ts`](durable-turns.ts): `recoverLifecycleTurns`, which
+  rebuilds the running sessions and the idle time from the committed chat.
+  The [turn recovery](workspace-object.md#turn-recovery) gives the rules.
 - [`durable-start-stop.ts`](durable-start-stop.ts): the saved stop owner of
-  failed and cancelled resumes. [`durable-alarm.ts`](durable-alarm.ts) advances
-  stop cleanup before normal lifecycle work.
+  failed and cancelled resumes.
+- [`durable-alarm.ts`](durable-alarm.ts): `advanceLifecycleAlarm`, the
+  lifecycle step of the alarm. It advances stop cleanup before normal
+  lifecycle work. It runs the turn repair before its deadline and idle
+  decisions.
+- [`create-workspace-lifecycle.ts`](create-workspace-lifecycle.ts):
+  `createWorkspaceLifecycle`, the lifecycle with its hooks and the shared
+  state writer. Its `recoverTurns` hook reads the committed chat through
+  `readChatRecovery` of [`workspace-platform.ts`](workspace-platform.ts).
 - [`confirmed-stop.ts`](confirmed-stop.ts): `isConfirmedStopped` shares the
   physical stop classification across lifecycle maintenance. A saved public
   error stays separate. `finishRetentionAttempt` clears an ended attempt

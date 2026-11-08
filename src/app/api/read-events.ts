@@ -29,13 +29,18 @@ export interface StreamEnvelope {
   type: string
   event: JsonObject
   shell: ShellEvent | null
+  /** The workspace marked an agent event of a turn that had ended. */
+  late: boolean
 }
 
 export type StreamMessage =
   | {
       type: 'history'
       envelopes: StreamEnvelope[]
+      /** All pages of one replay together hold the state through this number. */
       throughEventNumber: number
+      /** Where the next page of the replay starts, or null on the final page. */
+      nextAfterEventNumber: number | null
     }
   | { type: 'event'; envelope: StreamEnvelope }
 
@@ -73,6 +78,8 @@ export function readEnvelope(value: unknown): StreamEnvelope {
     type: text(event, 'type'),
     event,
     shell: readShellEvent(event),
+    // Only the value true is the mark of the workspace.
+    late: envelope.late === true,
   }
 }
 
@@ -84,6 +91,10 @@ export function readStreamMessage(value: unknown): StreamMessage {
       type: 'history',
       envelopes: items(history, 'events', readEnvelope),
       throughEventNumber: count(history, 'throughEventNumber'),
+      nextAfterEventNumber:
+        history.hasMore === true
+          ? count(history, 'nextAfterEventNumber')
+          : null,
     }
   }
   if (message.type === 'event') {

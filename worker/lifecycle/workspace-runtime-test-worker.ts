@@ -23,10 +23,13 @@ import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
 export class WorkspaceRuntimeFixture extends Workspace {
   private heldMachine: ReturnType<typeof holdMachineCheckpoint> | undefined
   private readonly clock: ManualChatClock
+  private readonly chatIds: string[]
 
   constructor(context: DurableObjectState, env: LifecycleEnvironment) {
     const clock = new ManualChatClock(Date.now())
+    const chatIds: string[] = []
     super(context, env, clock.now, {
+      randomId: () => chatIds.shift() ?? crypto.randomUUID(),
       scheduleRunnerCheck: clock.schedule,
       scheduleBrowserCheck: clock.schedule,
       resolveAttachments: async (_userId, _workspaceId, ids) => ({
@@ -44,6 +47,11 @@ export class WorkspaceRuntimeFixture extends Workspace {
       }),
     })
     this.clock = clock
+    this.chatIds = chatIds
+  }
+
+  nextChatIds(ids: string[]): void {
+    this.chatIds.push(...ids)
   }
 
   tickRunnerAccess(): Promise<void> {
@@ -104,11 +112,11 @@ export default {
       const identity = await authenticateWorkspaceToken(env, bearer ?? '')
       return env.WORKSPACES.getByName(identity.workspaceId).fetch(request)
     }
-    const events = path.match(
-      /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/events$/,
+    const chat = path.match(
+      /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:events|history|sessions)(?:\/|$)/,
     )
-    if (events)
-      return env.WORKSPACES.getByName(decodeURIComponent(events[1])).fetch(
+    if (chat)
+      return env.WORKSPACES.getByName(decodeURIComponent(chat[1])).fetch(
         request,
       )
     const send = (request: Request) => fetch(request)

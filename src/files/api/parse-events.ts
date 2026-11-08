@@ -79,7 +79,10 @@ export type StreamMessage =
   | {
       type: 'history'
       envelopes: StreamEnvelope[]
+      /** All pages of one replay together hold the state through this number. */
       throughEventNumber: number
+      /** Where the next page of the replay starts, or null on the final page. */
+      nextAfterEventNumber: number | null
     }
   | { type: 'event'; envelope: StreamEnvelope }
 
@@ -105,8 +108,18 @@ export function parseStreamMessage(value: unknown): StreamMessage | null {
   const events = readArray(value.history, 'events')
   const through = readCount(value.history, 'throughEventNumber')
   if (events === null || through === null) return null
+  const next =
+    value.history.hasMore === true
+      ? readCount(value.history, 'nextAfterEventNumber')
+      : null
+  if (value.history.hasMore === true && next === null) return null
   const envelopes = parseItems(events, parseEnvelope).sort(
     (left, right) => left.eventNumber - right.eventNumber,
   )
-  return { type: 'history', envelopes, throughEventNumber: through }
+  return {
+    type: 'history',
+    envelopes,
+    throughEventNumber: through,
+    nextAfterEventNumber: next,
+  }
 }

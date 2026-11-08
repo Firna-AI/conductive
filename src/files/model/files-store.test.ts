@@ -1,7 +1,8 @@
 import { expect, it } from 'vitest'
+import type { WorkspaceEventEnvelope } from '../../shared/events'
 import { filePaths, type ChangesResponse } from '../../shared/files'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { toolFixtures } from '../../test-support/fixtures/tools'
 import type { FilesSubscribe } from './files-store'
 import { versionOf } from './files-store'
@@ -213,5 +214,77 @@ it(
     })
     expect(versionOf(files.getSnapshot(), path)).not.toBe(before)
     stop()
+  },
+)
+
+it(
+  'applies history pages across left-out numbers, and holds live events until the final page',
+  slow,
+  async () => {
+    const server = new FakeApiServer()
+    const after: number[] = []
+    let send: (message: unknown) => void = () => {}
+    const files = filesFor(server, (afterEventNumber, listener) => {
+      after.push(afterEventNumber)
+      send = listener
+      return () => {}
+    })
+    await startFiles(files)
+    const changes = files.getSnapshot().changes
+    if (!changes) throw new Error('The changes did not load.')
+    const listed = (count: number) => ({
+      ...changes,
+      summary: { ...changes.summary, files: count },
+    })
+    const at = (
+      eventNumber: number,
+      event: WorkspaceEventEnvelope['event'],
+    ) => ({
+      workspaceId: id,
+      eventNumber,
+      occurredAt: FAKE_TIME,
+      event,
+    })
+    const page = (
+      events: readonly WorkspaceEventEnvelope[],
+      through: number,
+      next?: number,
+    ) => ({
+      type: 'history',
+      history: {
+        events,
+        throughEventNumber: through,
+        ...(next === undefined
+          ? {}
+          : { hasMore: true, nextAfterEventNumber: next }),
+      },
+    })
+    send(page([at(4, { type: 'changes.updated', changes: listed(1) })], 10, 5))
+    send({
+      type: 'event',
+      envelope: at(11, { type: 'changes.updated', changes: listed(9) }),
+    })
+    expect(files.getSnapshot().changes?.summary.files).toBe(1)
+    const added = { name: 'paged.ts', kind: 'file', change: 'added' } as const
+    send(
+      page(
+        [
+          at(9, {
+            type: 'files.changed',
+            delta: {
+              revision: 2,
+              changes: [
+                { operation: 'upsert', entry: { ...added, path: 'paged.ts' } },
+              ],
+            },
+          }),
+        ],
+        10,
+      ),
+    )
+    expect(paths(files)).toContain('paged.ts')
+    expect(files.getSnapshot().changes?.summary.files).toBe(9)
+    expect(after).toEqual([0])
+    files.stop()
   },
 )

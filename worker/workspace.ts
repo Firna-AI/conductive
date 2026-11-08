@@ -2,6 +2,7 @@ import { DurableObject } from 'cloudflare:workers'
 import type { RunnerEvent } from '../src/shared/runner'
 import type { UserMessage } from '../src/shared/messages'
 import type { ChatWorkspaceSummary } from './chat/workspace-summary'
+import { readChatWorkspaceResponse } from './chat/workspace-response'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
 import { WorkspaceChat } from './chat/backend'
 import type { DeviceOperationResult } from './devices/internal'
@@ -81,6 +82,19 @@ export class Workspace
 
   async readChatWorkspaceSummary(): Promise<ChatWorkspaceSummary> {
     return this.chat.workspaceSummary()
+  }
+
+  readChatWorkspaceResponse(orgId: string, workspaceId: string) {
+    return this.chat.runLifecycle(() =>
+      readChatWorkspaceResponse(
+        this.env,
+        this.chat.store,
+        orgId,
+        workspaceId,
+        () => this.controller.readLifecycle(),
+        () => this.controller.readLifecycleStartLog(),
+      ),
+    )
   }
 
   async waitLifecycleStart() {
@@ -254,9 +268,11 @@ export class Workspace
         this.env,
         this.controller,
         (id) => this.env.WORKSPACES.idFromName(id).equals(this.ctx.id),
-        (id, after) =>
+        (id, work) =>
           this.chat.store.run(() =>
-            this.chat.store.read(id, (view) => view.history(after)),
+            work((after, through) =>
+              this.chat.store.read(id, (view) => view.history(after, through)),
+            ),
           ),
       )) ?? response
     )

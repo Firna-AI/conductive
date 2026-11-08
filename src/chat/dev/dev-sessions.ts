@@ -27,6 +27,26 @@ export function recordOf(
   )
 }
 
+/**
+ * Names the active turn of a session in its record, with its start time, or
+ * no turn after its end, as the Worker does. The chat ends a turn that a
+ * newer record no longer names.
+ */
+export function setActiveTurn(
+  backend: DevBackend,
+  sessionId: string,
+  turnId: string | null,
+  startedAt: number | null,
+): void {
+  const session = recordOf(backend, sessionId)
+  if (!session || session.activeTurnId === turnId) return
+  place(backend, {
+    ...session,
+    activeTurnId: turnId,
+    activeTurnStartedAt: turnId === null ? null : startedAt,
+  })
+}
+
 /** An accepted message ends the retry of its session, as the Worker does. */
 export function clearRetry(backend: DevBackend, sessionId: string): void {
   const session = recordOf(backend, sessionId)
@@ -55,6 +75,7 @@ export function newSession(
     createdAt: backend.clock.now(),
     closedAt: null,
     activeTurnId: null,
+    activeTurnStartedAt: null,
     retryMessageId: null,
     startedBy: backend.viewer,
     sourceSessionId: options.source ?? null,
