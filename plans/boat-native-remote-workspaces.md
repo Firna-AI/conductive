@@ -4247,6 +4247,8 @@ answer.
 - **Action:** ask the user, because D changes the rule "a JSON body for
   each write" of the access protocol, and no recorded decision covers
   that change.
+- **Chosen:** D, by the user on 8 November 2026. Milestone 8p builds it,
+  with the conditions of the options check.
 - **Options check, 8 November 2026:** it keeps D. A test in Miniflare
   confirmed that D streams into R2 through a fixed-length stream, so D
   needs a required `Content-Length`. D keeps the forged-request
@@ -4254,6 +4256,23 @@ answer.
   the file name goes in the URL. D also changes
   `docs/protocol/desktop-app.md`. Report:
   `.context/options-check-144/report.md`.
+
+### 145. Choose how file paths with a secret value work
+
+Added on 8 November 2026 from finding 3 of the review of Milestone 15r.
+
+- **Background:** Decision 133 C hides each marked org env var in the
+  chat. The filter also masked file paths, so a path that held a marked
+  value could not open, and two paths could become one.
+- **Options:**
+  - **A.** Keep the real paths for every operation, and mask only the
+    shown labels. The access protocol and the privacy page say that a
+    path can show a marked value.
+  - **B.** Use opaque file handles with masked labels.
+  - **C.** Replace a value in a path with a reversible token.
+  - **D.** Leave every repository field unmasked.
+- **Recommendation:** D.
+- **Chosen:** A, by the user on 8 November 2026. Milestone 15r applies it.
 
 ## Design
 
