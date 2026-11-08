@@ -108,6 +108,12 @@ assume its recommended option, and wait for its answer.
   never calls Workers AI and needs no Cloudflare login. Reason: the
   binding is remote only, and the post-merge check tests real titles.
 
+- The development page treats its load as the create, so the recorded
+  first message asks for the title at load, and the title comes about one
+  second later through the page clock. Its fake title never fails, so it
+  asks once. Reason: Send waits during the first start, so only the first
+  message can give the title during the start, as the mockups show.
+
 ### The title request in the runner (decision 142 B, replaced)
 
 These calls of 8 November 2026 applied to the runner request that decision
@@ -784,9 +790,11 @@ Tags: ui
 
 Depends on: 9
 
-- [ ] Make the development page write the title soon after it accepts the
+- [x] Make the development page write the title soon after it accepts the
       first message, during the start. Update the
       [chat README](../src/chat/README.md).
+
+Evidence: `.context/workspace-title-from-first-message/dev-page-146/`.
 
 ## Milestone 11: Verification, review, and pull request
 

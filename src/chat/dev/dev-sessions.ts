@@ -6,8 +6,11 @@ import type { DevBackend } from './dev-backend'
 /** The title of a session that has no title of its own yet. */
 const NEW_SESSION = 'New session'
 
-/** The title that the scripted agent writes for a new workspace. */
-export const AGENT_TITLE = 'Saved carts'
+/** The title of a new workspace, in place of the title model of the Worker. */
+export const WORKSPACE_TITLE = 'Saved carts'
+
+/** The time that the title model takes to answer: about a second. */
+const TITLE_DELAY_MS = 1_000
 
 /** Places a session among the tabs or in the history, and tells the tabs. */
 export function place(backend: DevBackend, session: Session): void {
@@ -129,8 +132,8 @@ export function targetOf(backend: DevBackend, session: Session): Session {
 }
 
 /**
- * The title that the agent writes for a new workspace. The workspace takes
- * it as its name. The first session of the workspace takes it too, while it
+ * The title of a workspace, as the Worker stores it. The workspace takes it
+ * as its name. The first session of a new workspace takes it too, while it
  * still has the name that the workspace had, so a name that a user gave the
  * session stays. The backend gives these titles. This page does the same,
  * so its tabs match the mockups.
@@ -150,24 +153,41 @@ export function writeTitle(backend: DevBackend, name: string): void {
 }
 
 /**
+ * A message with text that the page accepts asks for the title of a new
+ * workspace, as the Worker asks its title model. The title comes about a
+ * second later, whether or not the sandbox is ready. A message with no text
+ * asks nothing, so the next message with text asks. The page asks once,
+ * because its title never fails. When the workspace already has the title,
+ * such as from a button of the page, the page does not write it again.
+ */
+export function askTitle(backend: DevBackend, text: string): void {
+  if (backend.titled === null || backend.titleAsked || text.trim() === '')
+    return
+  backend.titleAsked = true
+  backend.timers.push(
+    window.setTimeout(() => {
+      if (backend.workspace.name !== WORKSPACE_TITLE)
+        writeTitle(backend, WORKSPACE_TITLE)
+    }, TITLE_DELAY_MS),
+  )
+}
+
+/**
  * A new workspace: its first session takes the workspace name, as the
- * backend gives it. While the workspace has no title, the agent writes the
- * title when a turn starts with a message that has text, as the runner
- * asks for it. A message with no text gives no title.
+ * backend gives it. The create and the recorded chat accepted their messages
+ * before the page loaded, so the first of them with text asks for the title
+ * as the page loads.
  */
 export function followTitle(backend: DevBackend): void {
   const [first] = backend.open
-  if (first) {
-    backend.titled = first.id
-    backend.open = [
-      { ...first, title: backend.workspace.name },
-      ...backend.open.slice(1),
-    ]
-    backend.sync()
-  }
-  backend.agent.onStarted = (message) => {
-    if (backend.workspace.name !== AGENT_TITLE && message.text.trim() !== '') {
-      writeTitle(backend, AGENT_TITLE)
-    }
+  if (!first) return
+  backend.titled = first.id
+  backend.open = [
+    { ...first, title: backend.workspace.name },
+    ...backend.open.slice(1),
+  ]
+  backend.sync()
+  for (const message of backend.messages.values()) {
+    askTitle(backend, message.text)
   }
 }

@@ -36,11 +36,6 @@ export class DevAgent {
   private readonly turns = new Map<string, Turn>()
   private count = 0
   /**
-   * Called after the start of each turn, with the message that started it.
-   * The runner asks for the title of a new workspace at this point.
-   */
-  onStarted: (message: UserMessage) => void = () => {}
-  /**
    * Called when a turn of a session starts, with its start time, and after
    * its end, with null, so the session record names its active turn.
    */
@@ -173,7 +168,6 @@ export class DevAgent {
         window.setTimeout(() => {
           const next = event()
           this.stream.emit(next)
-          if (next.type === 'turn.started') this.onStarted(messages[0])
           // The record names no active turn after the end, as the Worker does.
           if (next.type === 'turn.completed') this.onTurn(sessionId, null, null)
         }, delay),

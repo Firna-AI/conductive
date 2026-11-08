@@ -66,14 +66,18 @@ the header while they run. The Mac refuses a change of an older pairing, as
 the Worker does.
 
 The titles follow the backend. With `workspace=new`, the first session
-starts with the workspace name, Lisbon. The scripted agent writes the
-title "Saved carts" when a turn starts with a message that has text, while
-the workspace has no title. The workspace and its first session take the
-title, but a name that the reader gave that session stays. Each other
-session has "New session" until it accepts a message with text. The first
-line of that message then becomes its title, from `sessionTitleFrom` in
-`src/shared/session-title.ts`, which the Worker uses too. A name that the
-reader gave the session stays.
+starts with the workspace name, Lisbon. The create of the workspace
+accepted its first message before the page loaded. About a second after
+the page loads, the page writes the title "Saved carts", whether or not
+the sandbox is ready. After a first message with no text, the next message
+with text that the page accepts gives the title, about a second later. The
+workspace and its first session take the title, but a name that the reader
+gave that session stays.
+
+Each other session has "New session" until it accepts a message with text.
+The first line of that message then becomes its title, from
+`sessionTitleFrom` in `src/shared/session-title.ts`, which the Worker uses
+too. A name that the reader gave the session stays.
 
 ## Key code
 

@@ -8,6 +8,7 @@ import { readAttachment, readChoice } from '../api/read-chat'
 import type { DevBackend } from './dev-backend'
 import { requestStop, resume } from './dev-sandbox'
 import {
+  askTitle,
   clearRetry,
   newSession,
   place,
@@ -56,8 +57,9 @@ async function send(backend: DevBackend, session: Session, request: Request) {
 /**
  * Accepts a message of the reader, as the Worker does: it steers the running
  * turn, waits for the sandbox, or starts a turn. The session then names no
- * retry, and a later session can take its title from the message. The reply
- * names the session that took the message, with its record.
+ * retry, and a later session can take its title from the message. A new
+ * workspace with no title yet asks for it. The reply names the session that
+ * took the message, with its record.
  */
 function accept(backend: DevBackend, session: Session, outgoing: Outgoing) {
   const ready = ['ready', 'working', 'input', 'unread'].includes(
@@ -75,6 +77,7 @@ function accept(backend: DevBackend, session: Session, outgoing: Outgoing) {
   if (!steered) backend.stream.emit({ type: 'message.accepted', message })
   clearRetry(backend, session.id)
   titleFromMessage(backend, session.id, message.text)
+  askTitle(backend, message.text)
   const answer = (turnId: string | null) =>
     recordReply(
       backend,

@@ -51,13 +51,15 @@ stops its own controller:
   Stop, and names that member to the others. When the members do not load,
   it names nobody but the reader.
 - `onWorkspaceChange` gets the workspace record after each change: its state,
-  and the title that the agent writes through `workspace.title` and
+  and the title that the backend gives it through `workspace.title` and
   `workspace.updated` events. The header and the list of the app show it.
 - Each tab shows the `title` of its session record. The backend provides
-  the titles that the mockups show: the first session of a new workspace
-  has the workspace name, and the agent's title renames both. Each other
-  session has "New session" until it accepts a message with text. The
-  first line of that message then becomes its title, as
+  the titles that the mockups show. The first session of a new workspace
+  has the workspace name. The title from the first message then renames
+  the workspace and that session, as
+  [Messages](../../docs/protocol/chat-and-events.md#messages) says. Each
+  other session has "New session" until it accepts a message with text.
+  The first line of that message then becomes its title, as
   [Sessions](../../docs/protocol/chat-and-events.md#sessions) says. The
   development page does the same.
 - `extraTabs` takes `<li>` tabs, such as open files, after the session tabs.

@@ -25,7 +25,7 @@ const stateLabels: Readonly<Record<WorkspaceState, string>> = {
 
 /**
  * A stand-in for the app's workspace header, so the page shows the name and
- * the state that the chat reports, such as the title that the agent writes.
+ * the state that the chat reports, such as the title of a new workspace.
  */
 function DevHeader(props: { workspace: Workspace; mobile: boolean }) {
   const { workspace } = props
