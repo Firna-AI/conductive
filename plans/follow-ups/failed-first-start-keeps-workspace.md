@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-08, option D of decision 130, from the 8i review of PR #42. The user chose A now and D as a later follow-up.
-- **Location:** `worker/lifecycle/start-failure.ts` and `worker/lifecycle/failed-creation-events.ts` after Milestone 8i, and "Create a workspace" in `docs/protocol/workspaces-and-sandboxes.md`.
+- **Location:** `worker/lifecycle/start-failure.ts` and `worker/lifecycle/failed-creation-events.ts` after Milestone 8i, and "A failed first start" in `docs/protocol/create-a-workspace.md`.
 
 - **Terms:**
   - **First start:** the first start of the cloud computer of a new workspace. The first message of a new workspace triggers it.

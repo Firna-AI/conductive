@@ -220,6 +220,8 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   flows, and the terms.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
+  - [Create a workspace](docs/protocol/create-a-workspace.md)
+  - [Repository folders](docs/protocol/repository-folders.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
   - [Access and security](docs/protocol/access-and-security.md)
   - [GitHub banner](docs/protocol/github-banner.md)

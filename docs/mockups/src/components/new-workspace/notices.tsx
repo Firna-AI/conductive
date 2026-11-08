@@ -38,9 +38,17 @@ export function CreateFailedNotice(props: { failure: CreateFailure }) {
   )
 }
 
-/** What an org without chosen repositories asks first. */
+/** What an org without chosen repositories asks of an admin first. */
 export function chooseRepositoriesFirst(org: string): string {
   return `Choose the repositories of ${org} first`
+}
+
+/**
+ * What a member who is not an admin reads in an org without chosen
+ * repositories, as on the empty page of the org: only an admin chooses them.
+ */
+export function adminChoosesRepositories(org: string): string {
+  return `An admin of ${org} chooses its repositories first`
 }
 
 /** Opens the Repositories tab of the org settings, for an admin. */
@@ -55,7 +63,8 @@ export function ChooseRepositoriesButton() {
 /**
  * The notice of the New workspace dialog in an org that has chosen no
  * repositories yet, so no workspace can start. An admin gets Choose
- * repositories. The page says the same words in its empty chat.
+ * repositories. A member who is not an admin reads that an admin chooses
+ * them. The page says the same words in its empty chat.
  */
 export function ChooseRepositoriesNotice(props: {
   org: string
@@ -65,7 +74,11 @@ export function ChooseRepositoriesNotice(props: {
     <Notice
       action={props.admin ? <ChooseRepositoriesButton /> : undefined}
       icon={FolderGit2}
-      title={chooseRepositoriesFirst(props.org)}
+      title={
+        props.admin
+          ? chooseRepositoriesFirst(props.org)
+          : adminChoosesRepositories(props.org)
+      }
     />
   )
 }

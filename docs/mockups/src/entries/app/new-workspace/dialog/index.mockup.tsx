@@ -41,7 +41,7 @@ export const newWorkspaceDialog = defineScreen({
       slug: 'no-repositories',
       title: 'No repositories',
       description:
-        'Acme has chosen no repositories yet, so the dialog has no repository picker, and Create is off. The notice asks to choose the repositories of Acme first. For an admin, Choose repositories closes the dialog and opens the Repositories tab of the org settings. A member who is not an admin sees the notice without the button.',
+        'Acme has chosen no repositories yet, so the dialog has no repository picker, and Create is off. The notice asks to choose the repositories of Acme first. For an admin, Choose repositories closes the dialog and opens the Repositories tab of the org settings. A member who is not an admin reads that an admin of Acme chooses its repositories first, without the button.',
       props: { repositories: 'none' },
     },
   ],

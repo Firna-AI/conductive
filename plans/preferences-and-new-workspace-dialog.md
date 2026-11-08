@@ -17,9 +17,9 @@ a picker for the section, or the menu beside Create in the screenshot.
 
 Contract owners:
 
-- The section Create a workspace of
-  [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md#create-a-workspace).
-  Milestone 2 moves it to its own page, `docs/protocol/create-a-workspace.md`.
+- [Create a workspace](../docs/protocol/create-a-workspace.md), which
+  Milestone 2 moved out of
+  [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md).
 - The [web app README](../src/app/README.md) and its
   [Screens](../src/app/screens.md) page.
 - The [mockup catalogue](../docs/mockups/catalogue.md).
@@ -140,6 +140,21 @@ on 8 November 2026. The user can change it before the plan is approved.
   Shift+Enter adds a line, as decision 143 says. So Enter creates the
   workspace from the dialog and from the page. One shared key rule serves
   the chat, the page, and the dialog. On a phone, Enter adds a line.
+- Agent calls after the protocol draft, each the way the app already
+  works elsewhere:
+  - Back during a create closes the dialog. The create goes on, and the
+    app opens the new workspace when the server accepts it, as the page
+    does.
+  - A window with the phone layout gets the key rule of a phone, as the
+    chat does today.
+  - When the dialog closes and another screen opens, that screen takes the
+    focus. The trigger gets the focus back only when the screen stays.
+  - While the screen shows a New workspace form, New workspace opens the
+    page, because a dialog over a form would show a second message field.
+  - An open app uses a choice that the user saved in another browser after
+    its next start, as for Model and effort.
+  - While the message cannot go, Enter does nothing. While an input method
+    composes a word, Enter belongs to the input method, as in the chat.
 
 ### The protocol doc
 
@@ -248,21 +263,19 @@ Depends on: 1
 The protocol states the preference and the dialog before the code
 changes.
 
-- [ ] Move the section Create a workspace of
+- [x] Move the section Create a workspace of
       `docs/protocol/workspaces-and-sandboxes.md` to the new page
       `docs/protocol/create-a-workspace.md`. Update each link to it, also
       in `docs/protocol/chat-and-events.md`, and add the page to the lists
       of protocol docs in `docs/architecture.md` and `README.md`.
-- [ ] Add the requirements of the new page: New workspace opens as a
+- [x] Add the requirements of the new page: New workspace opens as a
       page or as a dialog, as the preference of the user says. The
       choice belongs to the account, and a new account gets the page. A
       phone always opens the page. The address of New workspace always
       shows the page. A close of the dialog keeps the message.
-- [ ] Add the key rule of decision 143 to the new page: on a computer,
+- [x] Add the key rule of decision 143 to the new page: on a computer,
       Enter creates the workspace from the page and from the dialog, and
       Shift+Enter adds a line, as in the chat.
-- [ ] Update `src/app/screens.md` and `src/app/README.md` with the
-      Preferences tab, the dialog, and the shared draft.
 
 ## Milestone 3: The stored preference
 
@@ -291,6 +304,8 @@ and saves it.
       `AccountModel.setNewWorkspaceView`. Serve it in the dev fake
       `src/app/dev/account-routes.ts` and in the fake API of
       `src/test-support/`.
+- [ ] Update `worker/app-api/README.md`, `migrations/README.md`, and the
+      account model line of `src/app/README.md`.
 
 ## Milestone 4: The Preferences tab
 
@@ -310,6 +325,7 @@ The Account page gets its tabs, and Preferences saves the choice.
       `src/app/router.test.ts`: the address opens Preferences, the tab
       shows the saved choice, a change saves it, and a failed save shows
       the error and keeps the saved choice.
+- [ ] Update `src/app/screens.md` with the tabs of the account.
 
 ## Milestone 5: The New workspace dialog
 
@@ -334,7 +350,8 @@ run beside Milestone 4, because the two change different files.
       row in `src/shell/list/Sidebar.tsx`, the button in
       `src/shell/list/OrgHome.tsx`, and the menu item through
       `src/shell/list/useListActions.ts`. It opens the dialog on a
-      computer when the user chose it, and the page in every other case.
+      computer when the user chose it, and the page in every other case,
+      also while the screen shows a New workspace form.
 - [ ] Give the dialog, the page, and the chat in
       `src/chat/components/Composer.tsx` one shared key rule: on a
       computer, Enter sends and Shift+Enter adds a line.
@@ -345,6 +362,8 @@ run beside Milestone 4, because the two change different files.
       create keeps the dialog with Try again. Test that Enter creates the
       workspace from the page and from the dialog, and that Shift+Enter
       adds a line. Run each new test 10 times.
+- [ ] Update `src/app/screens.md` and `src/app/README.md` with the
+      dialog, its entry points, the shared draft, and the key rule.
 - [ ] Smoke-test with `npm run dev`: choose the dialog in Preferences,
       then open New workspace from each entry point, in the browser and
       in a phone size. Save the screenshots under

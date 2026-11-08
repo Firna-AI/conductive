@@ -109,13 +109,14 @@ says.
 - The composer names the member whose login its message runs on, such as
   "Uses Priya's Claude login", or "Uses your Claude login" to Priya.
 - The composer attaches files to a message.
+- [The send key](create-a-workspace.md#the-send-key) gives the key that
+  sends a message from the composer (decision 143).
 - The composer shows a notice when the user has no login for the agent of
   the chosen model (decision 33). It shows no such notice when the message
   runs on the login of another member.
 - The first message of a new workspace creates the workspace, as
-  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
-  says. The app accepts that message before the sandbox is ready
-  (decision 14).
+  [Create a workspace](create-a-workspace.md) says. The app accepts that
+  message before the sandbox is ready (decision 14).
 - After the first start of a workspace succeeds, the app also accepts a
   message while the sandbox is not ready, such as during a resume
   (decision 14).
@@ -138,7 +139,7 @@ says.
 - When a tab gets the `workspace_starting` error, its composer keeps the
   message as an unsent draft.
 - Reason: a failed first start removes the workspace, as
-  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  [Create a workspace](create-a-workspace.md#a-failed-first-start)
   says. Acceptance of later messages during the first start was rejected,
   because the removal would leave those accepted messages with no way back
   to their senders.
