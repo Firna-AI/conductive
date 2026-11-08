@@ -1,0 +1,38 @@
+# Older Get started replies undo setup progress
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-08, from the branch `calummoore/github-installation-redirect`, review finding 3, round 1, with option D of its check.
+- **Location:** `refreshGetStarted` in `src/app/app-model.ts:170`, the focus read in `watchInstallations` in `src/app/account-model.ts:59`, and `Resource.read` in `src/app/resource.ts:62`.
+- **Reason:** the race needs a read that stays open across the whole install on GitHub, so normal use does not meet it, and the shared fix reaches past the files of the branch.
+
+- **Terms:**
+  - **Get started:** the first-run page with three steps: install the GitHub App, create an org, and connect Claude or Codex. The reply of `GET /api/get-started` says whether the GitHub App step is complete.
+  - **Resource:** the shared store for a server value in `src/app/resource.ts`. It keeps the answer of the newest read, so an older reply cannot replace a newer one.
+  - **Refresher:** the shared reads of one `Resource` while screens show it, in `src/app/refresh.ts`. It reads at once, at each return to the page, and shares one read in flight.
+- **Background:**
+  - The user chose on 8 November 2026 that Get started and Account read the installs of the GitHub App again each time that the user comes back to the page. The Mac app opens GitHub in the default browser, so only a return to its window shows a new install.
+  - `AccountModel.watchInstallations` reads the installs through a `Resource` and a `Refresher`, so those reads keep their order.
+  - The same return also calls `AppModel.refreshGetStarted`, which reads `GET /api/get-started` and keeps the reply that arrives last. It has no order and no shared read in flight.
+  - Create org, the agent step, and Accept invitation also call `refreshGetStarted`, after a user action.
+  - `OrgStep` turns off Create org while the GitHub App step is not complete, in `src/shell/onboarding/OrgStep.tsx:66`.
+- **Problem:**
+  - Two reads of the steps can overlap, and the older reply can arrive last. A check reproduced this with held replies: the step went from `complete: true` back to `complete: false` when the older reply arrived.
+  - One return to a browser tab fires both `focus` and `visibilitychange`, and `windowFocus` in `src/app/services.ts:72` calls the listener for each. So each return sends two reads of the steps. For a user with no saved repository, each read also calls GitHub.
+- **Impact if no action:** Get started can show an installed GitHub App as not installed, and Create org stays off until the next return or a reload. Each return to a tab costs one extra read.
+- **Root question:** How should the Get started steps keep the newest answer about the GitHub App install?
+- **Options:**
+  - **A.** Count the reads in `refreshGetStarted` and drop a reply that a newer read replaced. Add a regression with held replies. It keeps two reads for each return. Effort: Small.
+  - **B.** Serialize the reads of the steps, and queue one more read when a return comes during a read. It adds queue logic of its own. Effort: Medium.
+  - **C.** Move the Get started reply into a `Resource`, and read it at boot, after a step, and on focus through it. Share one read in flight on focus, as the installs `Refresher` does. `Resource.read` drops a failure when a value already shows, so it must give the failure back to its caller: the Create org toast, the agent-step toast, and the boot failure need it. That change reaches every `Resource`. Add the regression with held replies. Effort: Medium.
+  - **D.** Let the GitHub App step follow the installs list too: a listed install completes the step, also when the reply of the steps says no. Remove the focus read of the steps from `watchInstallations`, so each return sends one read. Update `src/app/screens.md`, `src/app/README.md`, and the Mac app section "GitHub App install" of `docs/protocol/desktop-app.md`. The step then has two sources, which must keep the same meaning. The other callers of `refreshGetStarted` stay without order. Effort: Medium.
+- **Left out:**
+  - Change nothing: the reproduced defect stays.
+  - Check only whether the install is complete: it would hide a later removal of the install.
+  - One focus call for each return, changed only in `windowFocus`: reads from two separate returns still race.
+  - Read the steps only when the installs answer changes: those reads still have no order.
+  - A version in the reply of the steps: C gives the same order with no change to the contract.
+- **Wider fix:** C. It puts every read of the steps under the shared order of `Resource`, so a new caller cannot bring the race back.
+- **Previous examples:** commit `13877b8` gave `Resource` its ordered reads. `src/app/build-log-follower.test.ts:126` guards an older build reply in the same way.
+- **Recommendation:** C. It is the only option that orders every read of the steps. Choose D when one read for each return, and a reply that cannot hide a listed install, matter more than one source for the step.
+- **Action:** fix after merge, apply C, because this rare timing case has a workaround, a second return to the page, and the shared fix reaches past the files of the branch.
