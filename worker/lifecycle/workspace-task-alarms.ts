@@ -27,11 +27,11 @@ export function workspaceTaskAlarms(
   })
 }
 
-export function taskWorkspaceStorage(
-  storage: WorkspaceStorage,
+export function taskWorkspaceTransaction(
+  transaction: WorkspaceTransaction,
   source: AlarmSource,
-): WorkspaceStorage {
-  const owned = (transaction: WorkspaceTransaction): WorkspaceTransaction => ({
+): WorkspaceTransaction {
+  return {
     get: transaction.get.bind(transaction),
     put: transaction.put.bind(transaction),
     delete: transaction.delete.bind(transaction),
@@ -40,7 +40,15 @@ export function taskWorkspaceStorage(
       writeWorkspaceAlarm(alarmTransaction(transaction), source, at),
     deleteAlarm: () =>
       writeWorkspaceAlarm(alarmTransaction(transaction), source, null),
-  })
+  }
+}
+
+export function taskWorkspaceStorage(
+  storage: WorkspaceStorage,
+  source: AlarmSource,
+): WorkspaceStorage {
+  const owned = (transaction: WorkspaceTransaction) =>
+    taskWorkspaceTransaction(transaction, source)
   return {
     ...owned(storage),
     setAlarm: (at) =>

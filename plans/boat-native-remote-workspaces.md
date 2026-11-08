@@ -5405,10 +5405,15 @@ Completed on 8 November 2026. Agent calls of that date:
   A best-effort title failure returns its outcome and keeps the marker.
 - Let the start own progress while its job exists. Restore the normal
   lifecycle timer after completion, so the runner wait uses its deadline.
-  Keep publication retries independent after that job ends, so a failed
-  D1 publication cannot block idle work.
+  Give result publication its own deadline, because it can overlap a
+  resume. A publication retry does not block idle work or an access stop.
+- Store each result publication and its initial due time in one
+  transaction, so a restart cannot lose that retry. Release a removed
+  job or publication deadline when Archive clears its record.
 - Keep the generic alarm marker that member Restore writes. The receiving
   lifecycle owner gives restored image, start, or cleanup work its task slot.
+  Claim an older publication at that wake only when its new slot is absent,
+  so a current retry keeps its own due time.
 - Run terminal setup and its password read in separate saved phases,
   within the existing shown startup step. This keeps command polling
   separate from the later bounded file read.

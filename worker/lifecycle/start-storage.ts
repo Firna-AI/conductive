@@ -1,4 +1,8 @@
 import type { WorkspaceStorage } from './platform-storage'
+import {
+  taskWorkspaceStorage,
+  taskWorkspaceTransaction,
+} from './workspace-task-alarms'
 import type { AppEnv } from '../env'
 import {
   encryptedStartText,
@@ -57,10 +61,15 @@ export async function readEncryptedStartLog(
 }
 
 export function durableStartStorage(
-  storage: WorkspaceStorage,
+  rawStorage: WorkspaceStorage,
   now: () => number,
   env: Pick<AppEnv, 'BOAT_KEY_ENCRYPTION_KEY'>,
 ): StartJobStorage {
+  const storage = taskWorkspaceStorage(rawStorage, 'lifecycle:start')
+  const publicationStorage = taskWorkspaceStorage(
+    rawStorage,
+    'lifecycle:publication',
+  )
   async function storedResult(result: WorkspaceStartResult | undefined) {
     if (!result || result.ok) return result
     const log = await readStartLog(storage, env)
@@ -155,14 +164,16 @@ export function durableStartStorage(
     },
     publication: () => storage.get('publication', PUBLICATION),
     clearPublication: async () => {
-      await storage.transaction(async (transaction) => {
+      await rawStorage.transaction(async (transaction) => {
         await transaction.delete(PUBLICATION)
-        if (!(await transaction.get('job', JOB)))
-          await transaction.deleteAlarm()
+        await taskWorkspaceTransaction(
+          transaction,
+          'lifecycle:publication',
+        ).deleteAlarm()
       })
     },
     complete: async (result) => {
-      await storage.transaction(async (transaction) => {
+      await rawStorage.transaction(async (transaction) => {
         const current = await transaction.get('job', JOB)
         if (!current || (current.cancelled && result.ok)) return
         const stored = result.ok
@@ -184,11 +195,16 @@ export function durableStartStorage(
             workspaceId: current.workspaceId,
             state: result.ok ? 'succeeded' : 'failed',
           })
+          await taskWorkspaceTransaction(
+            transaction,
+            'lifecycle:publication',
+          ).setAlarm(now() + 30_000)
         }
         await transaction.delete(JOB)
-        if (current.kind === 'create')
-          await transaction.setAlarm(now() + 30_000)
-        else await transaction.deleteAlarm()
+        await taskWorkspaceTransaction(
+          transaction,
+          'lifecycle:start',
+        ).deleteAlarm()
       })
     },
     secrets: async (values) => {
@@ -249,5 +265,7 @@ export function durableStartStorage(
           startAlarmDeadline(await storage.get('job', JOB), now()),
         ),
       ),
+    schedulePublication: (at) =>
+      publicationStorage.setAlarm(at ?? now() + 1_000),
   }
 }

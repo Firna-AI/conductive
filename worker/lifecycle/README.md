@@ -145,6 +145,9 @@ object holds the lifecycle state, the turn records, and the events.
   the password read.
 - [`start-completion.ts`](start-completion.ts): restores runner-step progress
   and prepares successful starts through the lifecycle writer.
+- [`creation-publication.ts`](creation-publication.ts): `publishCreationResult`
+  writes the stored result of a create to D1, with its own due time, as
+  [Creates and resumes](workspace-object.md#creates-and-resumes) says.
 - [`start-runner.ts`](start-runner.ts): readiness admission, the original
   deadline, and the active owner and requester checks for runner reports.
 - [`job-time-limit.ts`](job-time-limit.ts): the build and start time limits

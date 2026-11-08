@@ -50,6 +50,7 @@ export function createWorkspaceController(
   const journal = new WorkspaceEventJournal(platform.storage, platform.publish)
   const alarms = workspaceTaskAlarms(platform.storage)
   const startStorage = taskWorkspaceStorage(platform.storage, 'lifecycle:start')
+  const startJobs = durableStartStorage(platform.storage, dependencies.now, env)
   const cleanupStorage = taskWorkspaceStorage(
     platform.storage,
     'lifecycle:cleanup',
@@ -191,6 +192,9 @@ export function createWorkspaceController(
         Boolean(await platform.storage.get('job', 'lifecycle:start-job')),
       )
       await alarms.set('lifecycle:access', null)
+      if (!(await startJobs.job())) await startStorage.deleteAlarm()
+      if (!(await startJobs.publication()))
+        await alarms.set('lifecycle:publication', null)
       await journal.clearFailedCreate()
     },
     async acknowledgeLifecycleFirstMessage(publish): Promise<void> {
@@ -252,6 +256,7 @@ export function createWorkspaceController(
         accessStop,
         alarms,
         startStorage,
+        startJobs,
         cleanupStorage,
       })
     },
@@ -260,7 +265,7 @@ export function createWorkspaceController(
     env,
     dependencies,
     controller,
-    durableStartStorage(startStorage, dependencies.now, env),
+    startJobs,
     async (error, cancelled) => {
       await turns.clear()
       await lifecycle.stopFailedStart(error, cancelled)

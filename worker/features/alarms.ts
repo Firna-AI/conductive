@@ -2,7 +2,7 @@ import type { ReceiverStorage } from '../members/receiver-storage'
 
 export type AlarmSource =
   | 'lifecycle'
-  | `lifecycle:${'start' | 'changed' | 'cleanup' | 'access' | 'image'}`
+  | `lifecycle:${'start' | 'publication' | 'changed' | 'cleanup' | 'access' | 'image'}`
   | 'devices'
   | 'previews'
   | 'github'
@@ -85,6 +85,12 @@ export class WorkspaceAlarms {
       const due = [...alarms].filter(([, at]) => at <= now)
       return new Set(due.map(([key]) => key.slice('alarm:'.length)))
     })
+  }
+
+  has(source: AlarmSource): Promise<boolean> {
+    return this.storage.transaction(async (transaction) =>
+      (await transaction.read()).has(`alarm:${source}`),
+    )
   }
 
   schedule(): Promise<void> {

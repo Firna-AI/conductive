@@ -5,6 +5,8 @@ import { retrySandboxCleanup } from './cleanup'
 import type { DurableLifecycle } from './durable'
 import type { ImageCoordinator } from './image-coordinator'
 import type { WorkspaceStartCoordinator } from './start-coordinator'
+import type { StartJobStorage } from './start-types'
+import { publishCreationResult } from './creation-publication'
 import { START_JOB_KEY } from './start-storage'
 import { retryAllocationCleanup } from './start-allocation-cleanup'
 import { startAlarmDeadline } from './start-provider-retry'
@@ -13,6 +15,7 @@ import type { WorkspaceAccessStop } from './workspace-suspension'
 export async function runWorkspaceAlarm(input: {
   storage: WorkspaceStorage
   startStorage: WorkspaceStorage
+  startJobs: StartJobStorage
   cleanupStorage: WorkspaceStorage
   alarms: WorkspaceAlarms
   env: AppEnv
@@ -43,6 +46,12 @@ export async function runWorkspaceAlarm(input: {
         /* The publication marker keeps its new retry time. */
       }
     }
+    const legacyPublication =
+      due.has('lifecycle') &&
+      !(await alarms.has('lifecycle:publication')) &&
+      Boolean(await input.startJobs.publication())
+    if (due.has('lifecycle:publication') || legacyPublication)
+      await publishCreationResult(env, input.startJobs)
     if (await input.starts.pending()) {
       if (requested('lifecycle:start') || due.has('lifecycle')) {
         try {
@@ -74,10 +83,10 @@ export async function runWorkspaceAlarm(input: {
       }
       if (await input.starts.pending()) {
         await lifecycle.schedule()
-        if (await storage.get('job', START_JOB_KEY)) return
+        return
       }
     }
-    if (!(await input.starts.pending())) await input.startStorage.deleteAlarm()
+    await input.startStorage.deleteAlarm()
     const state = await lifecycle.read()
     if (
       state &&

@@ -61,9 +61,10 @@ command start. For a workspace object, it:
 `WorkspaceAlarms` in [`alarms.ts`](../features/alarms.ts) is the one
 scheduler of the object alarm. Each owner of a timed task stores its own
 due time there. The lifecycle owners are the lifecycle state, the start,
-the `changed` retry, the delete of a failed create, the access stop, and
-the image coordinator. The Mac devices, the previews, and GitHub store
-their due times there too.
+and the publication of a create result. The `changed` retry, the delete of
+a failed create, the access stop, and the image coordinator are lifecycle
+owners too. The Mac devices, the previews, and GitHub store their due
+times there too.
 
 - Each write that changes a due time sets the object alarm to the earliest
   stored due time.
@@ -164,6 +165,13 @@ create and resume. The workspace object runs that start:
 - While a start job exists, the start keeps its own due time, and the
   lifecycle state keeps none. After the start ends, the alarm run sets the
   lifecycle due time from the saved state.
+- The end of a create stores its result in the object, with the first
+  retry time of its D1 publication. The create then writes that result to
+  D1. A failed write retries at the publication's own due time, also while
+  a later resume waits for runner readiness.
+- Start work means only an actual start job. So a pending publication does
+  not hold back the idle stop or the access stop of a suspended owner or
+  org.
 - A failed or cancelled resume records its result separately from its
   stop cleanup. Native lifecycle state keeps the pending stop across
   restarts. The lifecycle retries the existing stop operation every 30

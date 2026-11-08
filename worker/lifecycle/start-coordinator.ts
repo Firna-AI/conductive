@@ -113,9 +113,7 @@ export class WorkspaceStartCoordinator {
     return this.admissionWaiters.wait(() => this.storage.admission())
   }
   async pending(): Promise<boolean> {
-    return Boolean(
-      (await this.storage.job()) || (await this.storage.publication()),
-    )
+    return Boolean(await this.storage.job())
   }
 
   reportRunnerReady(apply: () => Promise<void>): Promise<void> {

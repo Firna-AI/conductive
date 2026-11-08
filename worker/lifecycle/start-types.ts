@@ -124,4 +124,5 @@ export interface StartJobStorage {
     },
   ): Promise<void>
   schedule(at?: number): Promise<void>
+  schedulePublication(at?: number): Promise<void>
 }
