@@ -218,4 +218,44 @@ describe('the first message of a create whose start fails', () => {
     emit(server, broken)
     expect(queryByRole('button', 'Try again', view)).not.toBeNull()
   })
+
+  test('shows the message that the start saved in the not-available view of a tab that did not send it', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const app = await startedApp(server, {
+      events: recordingSocket(server).source,
+    })
+    const { view, go } = mountTab(app)
+    await settle()
+    go(routes.workspace(org, createdId))
+    await settle()
+    expect(headerName(view)).toBe(created.workspace.name)
+    const passedLimit: WorkspaceEvent = {
+      type: 'workspace.updated',
+      workspace: { ...created.workspace, state: 'error' },
+      error: {
+        code: 'workspace_start_failed',
+        message:
+          'The cloud computer did not start within the 20-minute limit. Try again.',
+      },
+    }
+
+    // The server publishes the error state with its saved cause, then the
+    // failed step.
+    createdEvent(passedLimit, server)
+    createdEvent(
+      { type: 'start.updated', start: createStart('failed') },
+      server,
+    )
+    await settle()
+
+    expect(view.textContent).toContain('This workspace is not available')
+    expect(view.textContent).toContain(
+      'The cloud computer did not start within the 20-minute limit. Try again.',
+    )
+    expect(view.textContent).not.toContain("Its sandbox didn't start.")
+    expect(queryByRole('button', 'All workspaces', view)).not.toBeNull()
+    expect(queryByRole('button', 'Resume', view)).toBeNull()
+    expect(queryByRole('button', 'Try again', view)).toBeNull()
+  })
 })

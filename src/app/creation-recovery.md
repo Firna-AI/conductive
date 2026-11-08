@@ -66,10 +66,11 @@ The server side of a failed create is in the
 ## Other tabs
 
 - In a tab without the form, a workspace whose create start failed shows
-  the unavailable view. It says "This workspace is not available" and "Its
-  sandbox didn't start.", with All workspaces. It offers no Resume, and the
-  list drops its row. `failedCreate` tells such a workspace: the state
-  `error`, a `create` start, and a step in the state `failed`.
+  the unavailable view. It says "This workspace is not available" and the
+  message that the start saved, or "Its sandbox didn't start." when it has
+  none, with All workspaces. It offers no Resume, and the list drops its
+  row. `failedCreate` tells such a workspace: the state `error`, a
+  `create` start, and a step in the state `failed`.
 - A create that started keeps its start record. A later error of its
   sandbox has no failed step. So it keeps the sandbox bar with Try again,
   as a failed resume does.
