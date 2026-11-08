@@ -23,6 +23,14 @@ says.
 - Create org accepts a name, custom initials, and chosen repositories.
 - Before the org exists, the create screen lists repositories that the
   signed-in user and the shared GitHub App can both reach.
+- Each list of the repositories that the GitHub App reaches has a Manage
+  access link. The link opens the page of the GitHub App on GitHub. That
+  page lists the GitHub accounts of the person, personal and org. There
+  the person changes the repositories that the app reaches on an account,
+  or installs the app on another account.
+- A link to the settings page of each installation was rejected, because
+  it gives no link when no account has the app, and it cannot install the
+  app on another account.
 - The org rail and General settings show the saved initials.
 - The product is free, with no limits (decisions 45 and 81). It has no
   plans, no billing, and no limits of its own on workspaces, minutes, or
