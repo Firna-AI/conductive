@@ -68,8 +68,8 @@ Contract owners. Milestone 2 creates them:
   render with a stable `connect`. It reads the store through `subscribe`
   and `getSnapshot`. It stops the store at unmount and at a switch of
   workspace. Milestone 13a moved `useGitHubState` and `useChatController`.
-  Milestone 15i moves the files owners. Milestone 13b moves the tools and
-  the workspace screen, then deletes `useToolStore` and `ToolStore.listen`.
+  Milestone 15i moves the files owners. Milestone 13b moved the tools and
+  the workspace screen, and deleted `useToolStore` and `ToolStore.listen`.
   Added on 7 November 2026, for finding 2 of the PR #37 review. Consumers:
   - The shell's `WorkspaceFiles` owner and its factory, which Milestone 15i
     adds. It starts on the hook, as the Integration section of
@@ -78,25 +78,31 @@ Contract owners. Milestone 2 creates them:
     store of `src/files/dev/main.tsx` in its own effect. Milestone 15i.
   - `src/shell/workspace/dev/DevPage.tsx`, which does the same with the
     module-level store of `src/shell/workspace/dev/main.tsx`. Milestone 15i.
-  - `TerminalToolBody` in `src/terminal/TerminalTool.tsx`, which keeps its
-    `ToolStore` through `useToolStore` and runs its `loadTerminal` read in
-    its own effect. Milestone 13b.
-  - `PreviewToolBody` in `src/previews/PreviewTool.tsx`, which keeps its
-    `ToolStore` the same way and runs its `listPreviews` read and its retry
-    in its own effect. Milestone 13b.
-  - `useToolStore` in `src/terminal/tool-parts/useToolStore.ts`, which
-    makes a `ToolStore` in `useState` and subscribes it through
-    `ToolStore.listen` while React listens. Milestone 13b deletes it.
-  - `WorkspaceScreen` in `src/shell/workspace/WorkspaceScreen.tsx`, which
-    makes its `WorkspaceModel` and `HeaderNotices` in `useState`. Its own
-    effects follow the stream, then open and close the model. Milestone 13b.
-  - The tests that subscribe a `ToolStore` through `listen`:
+  - `TerminalToolBody` in `src/terminal/TerminalTool.tsx` now uses the
+    shared hook and `createTerminalStore`. The store owns its
+    `loadTerminal` read. Moved in Milestone 13b.
+  - `PreviewToolBody` in `src/previews/PreviewTool.tsx` now uses the
+    shared hook and `createPreviewsStore`. The store owns its
+    `listPreviews` read and retry. Moved in Milestone 13b.
+  - `useToolStore` in `src/terminal/tool-parts/useToolStore.ts` and
+    `ToolStore.listen` are deleted. The tools use the shared hook and
+    `ToolStore.subscribe`, `getSnapshot`, and `connect`. Milestone 13b.
+  - `WorkspaceScreen` in `src/shell/workspace/WorkspaceScreen.tsx` now
+    uses the shared hook over a `WorkspaceView` of its kept parts. The
+    view owns the open, the notices follow, and the chat show and hide.
+    `workspace-view.ts` holds that store. Moved in Milestone 13b.
+  - The cache factory in `src/shell/workspace/shown-workspaces.ts` now
+    starts and stops nothing. The first connect starts the members read
+    and the cache observers. A user change replaces the active memory
+    after the render. Moved in Milestone 13b, with the cache of 8i kept.
+  - The tests that subscribed a `ToolStore` through `listen`:
     `src/terminal/tool-parts/toolStore.test.ts` and
-    `src/previews/previewsState.test.ts`. Milestone 13b.
-  - The docs that show the old code: the "Workspace events" section and the
-    Key code of `src/terminal/README.md`, and the Integration section of
-    `src/shell/workspace/README.md`. The Data lifecycle lines of
-    `src/app/README.md` also move with their code. Milestone 13b.
+    `src/previews/previewsState.test.ts` now use the new subscription.
+    Every assertion stays. Moved in Milestone 13b.
+  - The "Workspace events" section and Key code of
+    `src/terminal/README.md`, the Integration section of
+    `src/shell/workspace/README.md`, and the Data lifecycle lines of
+    `src/app/README.md` now show the shared hook. Updated in Milestone 13b.
 
 ## Decisions
 
@@ -6162,6 +6168,10 @@ workspace lifecycle lines of `src/app/README.md`. After Milestone 8i lands,
 the scope also covers the lifecycle lines of `shown-workspaces.ts` if its
 cache factory still starts reads or subscriptions. That change keeps the
 cache and the chat behaviour.
+On 8 November 2026, the orchestrator also approved `workspace-view.ts`
+for the store of one mounted view and its connect and cleanup logic.
+`shown-workspaces.ts` keeps the kept cache. The split adds no behaviour
+or dependency, and keeps every existing assertion.
 
 Agent calls, 7 November 2026: one tool definition gives `ToolStore` the
 reducer and the read of each tool. This keeps the read and abort rules in
@@ -6171,7 +6181,18 @@ stays on a new connection with the same fetch, as the old effect did.
 The preview reducer gives Try again a read number. The workspace keys and
 the preview writes stay in the views, to keep their current behaviour.
 
+Agent calls, 8 November 2026: the hook makes one `WorkspaceView` per mount
+over the kept parts of 8i. Its snapshot hides an old failure until this
+view's open ends, to keep the existing spinner. The first connect starts
+the cache observers and members read. Their cache lifetime stays the same.
+Each connect follows the notices before the open, and its stop ends that
+follow, because the model stream is closed while away. A new user's memory
+replaces the active memory at connect, so that a render stops nothing.
+
 Tool evidence: `.context/boat-native-remote-workspaces/reports/tools-ui.md`.
+Primary merge evidence: `.context/boat-native-remote-workspaces/reports/primary-merge.md`.
+Workspace evidence: `.context/boat-native-remote-workspaces/reports/workspace-ui.md`.
+Comparison evidence: `.context/boat-native-remote-workspaces/reports/orchestrator-workspace-check.md`.
 
 - [x] Move `TerminalToolBody` in `src/terminal/TerminalTool.tsx` to
       `useWorkspaceStore`, with a stable `create` and `connect`. Move its
@@ -6185,17 +6206,23 @@ Tool evidence: `.context/boat-native-remote-workspaces/reports/tools-ui.md`.
       `src/previews/previewsState.test.ts` to the new subscription, with
       every assertion.
       Branch: `conductor/boat-native-remote-workspaces-milestone-13b`.
-- [ ] Move `WorkspaceScreen` in `src/shell/workspace/WorkspaceScreen.tsx`
-      to `useWorkspaceStore`. A stable `create` makes the `WorkspaceModel`
-      and its `HeaderNotices`. A stable `connect` makes the notices follow
-      the stream before it opens the model. Its stop closes the model and
-      ends the follow. The store that `create` returns needs `subscribe`
-      and `getSnapshot`. They can read the `detail` store of the model.
-- [ ] Update the "Workspace events" section and the Key code of
+- [x] Move `WorkspaceScreen` in `src/shell/workspace/WorkspaceScreen.tsx`
+      to `useWorkspaceStore` after Milestone 8i merges. A stable `create`
+      takes its kept `WorkspaceModel`, `HeaderNotices`, and chat, and makes
+      the store of this view. The factory starts no read or subscription.
+      A stable `connect` makes the notices follow the stream before it
+      opens the model, and shows the chat. Its stop closes the model, ends
+      the follow, and hides the chat. Keep the cached parts and their event
+      numbers. The store needs `subscribe` and `getSnapshot`. They can read
+      the `detail` store of the model.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-13b`.
+- [x] Update the "Workspace events" section and the Key code of
       `src/terminal/README.md`, and the Integration section of
       `src/shell/workspace/README.md`. Update the old lifecycle lines of
       `src/app/README.md` with the code that they describe.
-- [ ] Compare each tool and the workspace screen with its mockup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-13b`.
+- [x] Compare each tool and the workspace screen with its mockup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-13b`.
 
 ## Milestone 15: Agent tools
 

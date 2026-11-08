@@ -149,17 +149,19 @@ and removal are not wired into this tab yet.
   order does not count. A hidden page sends no read mark. When the page
   shows again, the mark goes through the newest event that arrived. A page
   without the focus still shows its output, so the focus does not count.
-- The chat, the GitHub views, the terminal tool, and the preview tool keep
-  one store for each workspace through `useWorkspaceStore`. The hook makes
-  the store, connects it after the render, and follows its snapshot. It
-  stops the store at unmount. A switch of workspace stops the old store and
-  makes a new one. The [tool README](../terminal/README.md#workspace-events)
-  gives the rules of the tool store.
+- The chat, the GitHub views, the terminal tool, the preview tool, and the
+  workspace screen keep one store for each workspace through
+  `useWorkspaceStore`. The hook makes the store, connects it after the
+  render, and follows its snapshot. It stops the store at unmount. A switch
+  of workspace stops the old store and makes a new one. The
+  [tool README](../terminal/README.md#workspace-events) gives the rules of
+  the tool store. The store of `WorkspaceScreen` is a view of the kept
+  workspace, so its stop keeps the parts, as the
+  [workspace integration](../shell/workspace/README.md#integration) shows.
 - The other workspace stores do not use the hook yet. The files
   development pages start and stop their `WorkspaceFiles` in their own
-  effects. `WorkspaceScreen` opens and closes its `WorkspaceModel` in its
-  own effect. The [files integration](../files/README.md#integration)
-  shows the hook for a new files owner.
+  effects. The [files integration](../files/README.md#integration) shows
+  the hook for a new files owner.
 
 ## Screens
 
