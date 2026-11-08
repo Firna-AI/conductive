@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useCallback, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, SearchX } from 'lucide-react'
@@ -10,6 +10,10 @@ import { failedCreate } from '../../app/creations'
 import { mayArchive } from '../../app/permissions'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
+import {
+  useWorkspaceStore,
+  type WorkspaceIdentity,
+} from '../../app/workspace-store'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess } from '../context'
@@ -26,6 +30,7 @@ import { SandboxPanel } from './SandboxNotice'
 import { shownWorkspaces } from './shown-workspaces'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
+import type { WorkspaceView } from './workspace-view'
 import workspaceStyles from './workspace.module.css'
 
 /**
@@ -49,6 +54,11 @@ function Unavailable(props: { orgId: string; body: string }) {
       title="This workspace is not available"
     />
   )
+}
+
+/** Shows the kept parts of the workspace while the screen shows it. */
+function connectView(view: WorkspaceView): () => void {
+  return view.connect()
 }
 
 /**
@@ -75,36 +85,22 @@ export function WorkspaceScreen(props: {
 }) {
   const app = useApp()
   const access = useOrgAccess(props.org)
-  const [shown] = useState(() =>
-    shownWorkspaces(app, props.viewer).get(props.org.id, props.workspaceId),
+  const create = useCallback(
+    (workspace: WorkspaceIdentity) =>
+      shownWorkspaces(app, props.viewer).view(workspace),
+    [app, props.viewer],
+  )
+  const { store: shown, snapshot: detail } = useWorkspaceStore(
+    { orgId: props.org.id, workspaceId: props.workspaceId },
+    { create, connect: connectView },
   )
   const { model, notices, chat } = shown
-  // A failure that a kept model shows is from an earlier open. It waits for
-  // the open of this view, as a first open does.
-  const [reopening, setReopening] = useState(
-    () => model.detail.get().state === 'failed',
-  )
-  const detail = useStore(model.detail)
   const startError = useStore(model.startError)
   const features = useFeatures()
   const viewport = useViewport()
   const theme = useSharedUiTheme()
   const resume = useAction(() => model.resume(), "The sandbox didn't start.")
-  useEffect(() => {
-    let current = true
-    // Each view shows every failed repair, also one that Dismiss hid before.
-    notices.newView()
-    void model.open().finally(() => {
-      if (current) setReopening(false)
-    })
-    chat.show()
-    return () => {
-      current = false
-      model.close()
-      chat.hide()
-    }
-  }, [notices, model, chat])
-  if (detail.state === 'loading' || reopening) {
+  if (detail.state === 'loading') {
     return (
       <div className={workspaceStyles.center}>
         <Spinner

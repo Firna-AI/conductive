@@ -1,12 +1,11 @@
-import { useEffect } from 'react'
+import { useCallback } from 'react'
 import { CircleAlert, CirclePause, Unplug } from 'lucide-react'
+import { useWorkspaceStore } from '../app/workspace-store'
 import { ToolButton } from './tool-parts/ToolButtons'
 import { ToolRoot } from './tool-parts/ToolRoot'
 import { ToolMessage, ToolWaiting } from './tool-parts/ToolStates'
-import { useToolStore } from './tool-parts/useToolStore'
 import { workspaceKey, type ToolWorkspace } from './tool-parts/workspace'
-import { loadTerminal } from './terminalApi'
-import { initialReadiness, readinessReducer } from './terminalReadiness'
+import { createTerminalStore, type TerminalStore } from './terminalStore'
 import { TerminalScreen, type ConnectTerminal } from './TerminalScreen'
 import styles from './TerminalTool.module.css'
 
@@ -29,23 +28,17 @@ export function TerminalTool(props: TerminalToolProps) {
 }
 
 function TerminalToolBody(props: TerminalToolProps) {
-  const { fetch, orgId, workspaceId } = props.workspace
-  const [{ view, read }, dispatch] = useToolStore(
-    readinessReducer,
-    initialReadiness,
-    props.workspace,
+  const { fetch, subscribe } = props.workspace
+  const connect = useCallback(
+    (store: TerminalStore) => store.connect({ fetch, subscribe }),
+    [fetch, subscribe],
   )
-
-  useEffect(() => {
-    const controller = new AbortController()
-    void loadTerminal({ fetch, orgId, workspaceId }, controller.signal).then(
-      (result) => {
-        if (controller.signal.aborted) return
-        dispatch({ type: 'answer', read, result })
-      },
-    )
-    return () => controller.abort()
-  }, [fetch, orgId, workspaceId, read, dispatch])
+  const { store, snapshot } = useWorkspaceStore(props.workspace, {
+    create: createTerminalStore,
+    connect,
+  })
+  const { view } = snapshot
+  const { dispatch } = store
 
   const retry = () => dispatch({ type: 'retry' })
 
