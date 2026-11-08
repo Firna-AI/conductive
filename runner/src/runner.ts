@@ -14,6 +14,9 @@ import { SerialQueue } from './serial-queue'
 import { workspaceToolRuntime } from './providers/workspace-tools'
 import type { EngineOptions } from './engine-session'
 import type { EventStore } from './state'
+import type { Agent } from '../../src/shared/agents'
+import type { TitleRequest } from './providers/title'
+import { WorkspaceTitle } from './workspace-title'
 
 export interface RunnerOptions {
   workspaceId: string
@@ -24,6 +27,7 @@ export interface RunnerOptions {
   home: string
   defaultBranch: string
   providers: EngineOptions['providers']
+  titles?: Record<Agent, TitleRequest>
   warm: () => Promise<unknown>
   now: () => number
   warn: (message: string) => void
@@ -34,6 +38,7 @@ export class Runner {
   readonly link: RunnerLink
   readonly files: FileReporter
   readonly engine: AgentEngine
+  private readonly title: WorkspaceTitle
   private readonly options: RunnerOptions
   private readonly sanitizer = new OutputSanitizer()
   private readonly emitted = new SerialQueue()
@@ -48,6 +53,11 @@ export class Runner {
     this.options = options
     this.refreshed = new Set(options.store.snapshot.reports.commands)
     this.sanitizer.add(options.request.workspaceToken)
+    this.title = new WorkspaceTitle({
+      ...options,
+      tools: workspaceToolRuntime(options.request),
+      emit: (event) => this.emit(event),
+    })
     const repository = new Repository(options.cwd, options.warn)
     this.files = new FileReporter(
       repository,
@@ -71,6 +81,7 @@ export class Runner {
           before,
         ),
       emit: (event) => this.emit(event),
+      turnStarted: (command) => this.title.start(command),
     })
     this.link = new RunnerLink(options.store, {
       ...options,
@@ -123,13 +134,14 @@ export class Runner {
     await this.link.idle()
     await Promise.all(this.commands)
     await this.engine.idle()
+    await this.title.idle()
     await this.link.idle()
   }
 
   async close(): Promise<void> {
     this.stopped = true
     this.stopWatching?.()
-    await this.engine.close()
+    await Promise.all([this.engine.close(), this.title.close()])
     await this.link.persist()
     this.link.close()
   }

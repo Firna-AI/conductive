@@ -5,7 +5,7 @@ import { onTestFinished } from 'vitest'
 import type { Agent } from '../../src/shared/agents'
 import type { RunnerTurn } from '../../src/shared/runner'
 import { FakeDurableObjectEndpoint } from '../../worker/test-support/fake-durable-object'
-import { Runner } from '../src/runner'
+import { Runner, type RunnerOptions } from '../src/runner'
 import { DiskStorage, EventStore } from '../src/state'
 import { FakeProviders } from './providers'
 import { repositoryFixture } from './repository'
@@ -43,7 +43,7 @@ export function turn(
   }
 }
 
-export async function runnerHarness() {
+export async function runnerHarness(overrides: Partial<RunnerOptions> = {}) {
   const repository = await repositoryFixture()
   const endpoint = new FakeDurableObjectEndpoint({
     workspaceId: 'workspace-1',
@@ -71,6 +71,7 @@ export async function runnerHarness() {
       warnings.push(message)
     },
     disconnected: () => {},
+    ...overrides,
   }
   const runner = new Runner(options)
   let cutoff = false
