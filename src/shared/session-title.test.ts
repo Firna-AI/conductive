@@ -19,6 +19,16 @@ it.each([
     title: 'Fix the title',
   },
   {
+    name: 'returns null for a single full stop',
+    text: '.',
+    title: null,
+  },
+  {
+    name: 'trims the space before a removed final full stop',
+    text: 'Fix the title .',
+    title: 'Fix the title',
+  },
+  {
     name: 'keeps a final ellipsis',
     text: 'Still working...',
     title: 'Still working...',

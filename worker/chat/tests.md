@@ -13,6 +13,10 @@ npm run typecheck
   and a stored login for each agent.
 - Its helpers send messages, open tabs, connect a `FakeRunner`, and
   restart `WorkspaceChat` on the same storage.
+- `createFirstMessageFixture` in `first-message.test-support.ts` assigns
+  the first session and message of a workspace with a city name.
+  `first-message.test.ts`, `workspace-session-title.test.ts`, and
+  `session-titles.test.ts` share this fixture.
 - `MemoryChatStorage` keeps the records in memory. Set `beforeCommit` to
   delay a commit and test a late commit.
 - To test that a failed commit rolls back the whole receipt of an action,
@@ -64,8 +68,14 @@ npm run typecheck
   lifecycle, and the app API. `integration/run-browser-harness.mjs` serves
   a production app build through that entry.
   [Outer Worker tests](integration/outer-worker-tests.md) describes them.
+- `integration/workspace-title-recovery.test.ts` checks title-write
+  recovery. Its first-session case uses `recoveryWorkspaceFixture` to
+  restart the real workspace object before both tabs open. It checks
+  titles through the sessions route, ordered events for both tabs,
+  duplicate receipts, and a member name after another restart.
 - `first-message.test.ts` checks that a sender who is not the assigned
   sender of a first message gets a refusal, and that no session is stored.
+  It also checks the initial city name and unchanged repeated admission.
 - `workspace-summary.test.ts` checks the stored summary: the event cursor,
   the visible output, and the dispatched work. Queued input and metadata
   are not output.
