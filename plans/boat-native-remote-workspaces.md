@@ -4104,6 +4104,25 @@ Added on 8 November 2026 from Milestone 16a.
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 8 November 2026.
 
+### 141. Choose the final checks before the first merge
+
+Added on 8 November 2026, when the user asked to merge the baseline.
+
+- **Background:** `main` holds only the initial commit, so the diff of the
+  first pull request is the whole product: about 2,400 files. Each
+  milestone already had its own review rounds. The deploy fixes that the
+  orchestrator made straight on the primary branch had no review.
+- **Options:**
+  - **A.** Review the whole diff against `main`, with its fix rounds.
+  - **B.** Review only the commits that no milestone review covered, run
+    the complete gate, and move the open checks of Milestones 16 and 16a
+    to the work after the merge.
+  - **C.** As B, and run the Milestone 16 smoke test first.
+- **Recommendation:** B.
+- **Chosen:** C, by the user on 8 November 2026. The pull request keeps
+  this plan, because the work goes on in later pull requests, as the
+  `plans` skill says.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -7207,8 +7226,14 @@ This milestone needs the prerequisites from the user.
       the place of the database when it creates it. Added on 6 November
       2026. Done on 7 November 2026: `conductive`, in `WEUR`, with every
       merged migration applied. Branch: `calummoore/conductor-alternative-architecture`.
-- [ ] Smoke-test with a real Boat sandbox: create a workspace, chat, open
-      a file, use the terminal, open a preview, stop, and resume.
+- [x] Smoke-test with a real Boat sandbox: create a workspace, chat, open
+      a file, use the terminal, open a preview, stop, and resume. Done on 8
+      November 2026 through the deployed app: the agent made a file and
+      answered, the Files tab read it, the terminal ran a command, a port
+      preview served the folder, and after a stop, a resume ran a queued
+      message, and the agent answered from the kept file.
+      Evidence: `.context/deploy/smoke.mjs` and `smoke2.mjs`.
+      Branch: `calummoore/conductor-alternative-architecture`.
 - [ ] Check that a private Boat port does not answer on the public
       address of the sandbox without its token.
 - [ ] In a real workspace, run `conductive workspaces list` and an MCP
