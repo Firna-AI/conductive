@@ -28,6 +28,7 @@ export function withStarter(
       ? { ...session, startedBy: null, loginAvailable: false }
       : { ...session, loginAvailable: false }
   return {
+    ...list,
     sessions: list.sessions.map(change),
     history: list.history.map(change),
   }
@@ -72,6 +73,7 @@ export function withReaderLogin(
       ? { ...session, loginAvailable: false }
       : session
   return {
+    ...list,
     sessions: list.sessions.map(change),
     history: list.history.map(change),
   }
@@ -115,7 +117,7 @@ export function seedLinked(
     messageIds: [message.id],
   })
   backend.recordedTurns.set(linked.id, turnId)
-  place(backend, { ...linked, activeTurnId: turnId })
+  place(backend, { ...linked, activeTurnId: turnId, activeTurnStartedAt: now })
   const tab: WorkspaceTab = { kind: 'session', sessionId: linked.id }
   const { orgId, workspaceId } = backend.target
   backend.server.json('GET', workspaceViewPath(orgId, workspaceId), {

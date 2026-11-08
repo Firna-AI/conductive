@@ -74,10 +74,13 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
         readWorkspaceResponse,
       ),
     sessions: () => client.get(sessionsPath(orgId, workspaceId), readSessions),
-    /** The full stored history of one session. */
-    history: (sessionId: string) =>
+    /**
+     * One page of the stored history of one session. A later page names the
+     * cutoff of the first page, so all pages hold the state through it.
+     */
+    history: (sessionId: string, after = 0, through?: number) =>
       client.get(
-        chatHistoryPath(orgId, workspaceId, sessionId),
+        chatHistoryPath(orgId, workspaceId, sessionId, after, through),
         readStoredEvents,
       ),
     view: () => client.get(workspaceViewPath(orgId, workspaceId), readView),

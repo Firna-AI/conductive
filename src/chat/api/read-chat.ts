@@ -145,6 +145,7 @@ export function readSession(value: unknown): Session {
     createdAt: count(source.createdAt),
     closedAt: nullable(count)(source.closedAt),
     activeTurnId: nullable(text)(source.activeTurnId),
+    activeTurnStartedAt: nullable(count)(source.activeTurnStartedAt),
     retryMessageId: nullable(text)(source.retryMessageId),
     startedBy: nullable(readSender)(source.startedBy),
     sourceSessionId: nullable(text)(source.sourceSessionId),

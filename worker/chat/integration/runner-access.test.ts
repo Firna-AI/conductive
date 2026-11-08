@@ -127,5 +127,9 @@ it('keeps a foreign runner token in its own workspace and refuses a different wo
   })
   const other = await fixture.request(sessionsPath(OUTER_ORG, OTHER_WORKSPACE))
   expect(other.status).toBe(200)
-  expect(await other.json()).toEqual({ sessions: [], history: [] })
+  expect(await other.json()).toEqual({
+    eventNumber: 0,
+    sessions: [],
+    history: [],
+  })
 })

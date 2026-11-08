@@ -21,11 +21,17 @@ describe('session records', () => {
     const renaming = chat.controller.rename(id, 'Lookups')
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
     const renamed = chat.controller.getSnapshot().sessions[0]
+    // The server renamed the session first, then closed it.
+    const after = chat.nextEventNumber()
     chat.server.json('POST', sessionPaths.close(org, ws, id), {
       session: { ...renamed, closedAt: FAKE_TIME + 1 },
+      eventNumber: after + 1,
     })
     await chat.controller.requestClose(id)
-    chat.server.json('PATCH', sessionPath(org, ws, id), { session: renamed })
+    chat.server.json('PATCH', sessionPath(org, ws, id), {
+      session: renamed,
+      eventNumber: after,
+    })
     chat.held.splice(0, 1)[0]()
     await renaming
     const snapshot = chat.controller.getSnapshot()
@@ -50,6 +56,8 @@ describe('session records', () => {
     const fable: AgentChoice = { ...opus, model: 'Fable 5.1' }
     const choice = () => chat.controller.getSnapshot().sessions[0].choice
     const answered = chat.controller.chooseModel(id, sonnet)
+    // Another tab changed the model after the server took this change.
+    const changed = chat.nextEventNumber()
     chat.emit({
       type: 'session.updated',
       session: { ...session, choice: fable },
@@ -58,6 +66,7 @@ describe('session records', () => {
       session: { ...session, choice: sonnet },
       created: false,
       draft: { text: '', attachmentIds: [] },
+      eventNumber: changed - 1,
     })
     chat.held.splice(0, 1)[0]()
     await answered
@@ -91,12 +100,13 @@ describe('session records', () => {
     await chat.controller.start()
     const closed = chat.controller.getSnapshot().history[0]
     const reopened = { ...closed, closedAt: null }
+    const next = chat.nextEventNumber()
     chat.server.json('POST', sessionPaths.reopen(org, ws, closed.id), {
       session: reopened,
+      eventNumber: next + 1,
     })
     await chat.controller.reopen(closed.id)
     expect(chat.controller.getSnapshot().activeSessionId).toBe(closed.id)
-    const next = chat.server.events.history().throughEventNumber + 1
     const envelope = (eventNumber: number, closedAt: number | null) => ({
       workspaceId: ws,
       eventNumber,
@@ -124,6 +134,7 @@ describe('session records', () => {
     const closedRecord = { ...session, closedAt: FAKE_TIME + 1 }
     chat.server.json('POST', sessionPaths.close(org, ws, id), {
       session: closedRecord,
+      eventNumber: chat.nextEventNumber(),
     })
     const closing = chat.controller.requestClose(id)
     chat.emit({ type: 'session.updated', session: closedRecord })
@@ -135,7 +146,10 @@ describe('session records', () => {
       activeTab: { kind: 'session', sessionId: 'debounce' },
     })
     expect(shown(chat.controller, 'debounce')).toHaveLength(4)
-    chat.server.json('POST', sessionPaths.reopen(org, ws, id), { session })
+    chat.server.json('POST', sessionPaths.reopen(org, ws, id), {
+      session,
+      eventNumber: chat.nextEventNumber(),
+    })
     const reopening = chat.controller.reopen(id)
     chat.emit({ type: 'session.updated', session })
     chat.held.splice(0, 1)[0]()

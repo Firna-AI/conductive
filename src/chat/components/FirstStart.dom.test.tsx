@@ -46,10 +46,12 @@ describe('the composer during the first start of a new workspace', () => {
   it('keeps the message while Send waits with its reason, ignores Enter, and sends only when the user asks after the start', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ conversation: 'queued' })
+    // The read holds the state before the events that the test sends.
     server.json('GET', workspacePath(org, ws), {
       workspace: workspaceIn('starting'),
       start: { kind: 'create', startedAt: FAKE_TIME, steps: [] },
       error: null,
+      eventNumber: 0,
     })
     const subscribe: SubscribeToWorkspace = (_target, after, listener) =>
       server.events.subscribe(after, (message) => listener.message(message))

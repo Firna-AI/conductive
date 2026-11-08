@@ -130,7 +130,22 @@ describe('workspace chat recorded events', () => {
             (event) => 'turnId' in event && event.type !== 'message.sent',
           ),
         scenario,
-      ).toEqual(expected)
+      ).toEqual(
+        {
+          history: [
+            expected[0],
+            expected[1],
+            { ...expected[2], text: '' },
+            expected[4],
+            expected[5],
+            expected[6],
+            expected[7],
+          ],
+          interrupted: expected,
+          failed: expected,
+          'omitted-data': expected,
+        }[scenario],
+      )
       expect(JSON.stringify(history), scenario).not.toContain(
         'must-not-be-stored',
       )

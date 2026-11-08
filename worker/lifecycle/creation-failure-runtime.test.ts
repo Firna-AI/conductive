@@ -108,7 +108,7 @@ it('replays the accepted first message and failed start to only its sender after
       ],
     })
     const before = await fixture.openEvents(id)
-    const accepted = publicHistory(await before.inbox.next())
+    const accepted = await publicHistory(before.inbox)
     expect(accepted.events).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -139,7 +139,7 @@ it('replays the accepted first message and failed start to only its sender after
       request: { ...FIRST_MESSAGE, attachmentIds: ['runtime-attachment'] },
     })
     const reconnect = await fixture.openEvents(id, accepted.throughEventNumber)
-    const failed = publicHistory(await reconnect.inbox.next())
+    const failed = await publicHistory(reconnect.inbox)
     expect(
       failed.events.some((envelope) =>
         hasStartStep(envelope, 'fetch', 'failed'),
@@ -157,7 +157,7 @@ it('replays the accepted first message and failed start to only its sender after
     )
     await fixture.restart()
     const restored = await fixture.openEvents(id)
-    const history = publicHistory(await restored.inbox.next())
+    const history = await publicHistory(restored.inbox)
     expect(history.events).toEqual([...accepted.events, ...failed.events])
     expect(
       history.events.filter(

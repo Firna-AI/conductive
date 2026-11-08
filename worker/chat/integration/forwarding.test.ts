@@ -106,7 +106,11 @@ it('forwards encoded workspace chat writes with their unread body and authentica
   })
   const other = await fixture.request(sessionsPath(OUTER_ORG, OTHER_WORKSPACE))
   expect(other.status).toBe(200)
-  expect(await other.json()).toEqual({ sessions: [], history: [] })
+  expect(await other.json()).toEqual({
+    eventNumber: 0,
+    sessions: [],
+    history: [],
+  })
 })
 
 it('keeps the Durable Object browser gate on forwarded chat routes', async () => {

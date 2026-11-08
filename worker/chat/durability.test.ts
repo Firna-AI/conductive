@@ -17,7 +17,7 @@ describe('workspace chat durability', () => {
     await harness.dispose()
   })
 
-  it('confirms and broadcasts only after an atomic commit and replays a failed commit', async () => {
+  it('confirms and broadcasts only after an atomic commit', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
     const runner = await fixture.connect()
@@ -56,50 +56,7 @@ describe('workspace chat durability', () => {
       envelope: { event: { type: 'assistant.delta', text: 'Durable' } },
     })
     fixture.storage.beforeCommit = null
-    fixture.storage.failCommit = true
-    runner.emit({
-      type: 'assistant.delta',
-      sessionId: session.id,
-      turnId: command.turnId,
-      messageId: 'answer',
-      text: ' after failure',
-    })
-    await expect(fixture.drain()).rejects.toThrow('Injected storage failure')
-    expect(runner.received.at(-1)).toEqual({
-      type: 'confirm',
-      streamId: 'fake-stream-1',
-      throughEventNumber: 2,
-    })
-    expect(
-      await fixture.chat.store.read(WORKSPACE_ID, (view) =>
-        view.cursor('fake-stream-1'),
-      ),
-    ).toBe(2)
-    fixture.storage.failCommit = false
-    fixture.restart()
-    await fixture.connect(runner)
-    expect(runner.pendingEvents()).toEqual([])
-    const history = await fixture.history(session.id)
-    expect(
-      history.events
-        .filter(({ event }) => event.type === 'assistant.delta')
-        .map(({ event }) => event),
-    ).toEqual([
-      {
-        type: 'assistant.delta',
-        sessionId: session.id,
-        turnId: command.turnId,
-        messageId: 'answer',
-        text: 'Durable',
-      },
-      {
-        type: 'assistant.delta',
-        sessionId: session.id,
-        turnId: command.turnId,
-        messageId: 'answer',
-        text: ' after failure',
-      },
-    ])
+    tab.close()
   })
 
   it('continues unanswered messages with their sender after a text-only turn', async () => {

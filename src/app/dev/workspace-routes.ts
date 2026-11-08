@@ -3,6 +3,7 @@ import {
   workspacePaths,
   workspacesPath,
   type ArchiveCheckResponse,
+  type OrderedWorkspaceResponse,
   type WorkspaceResponse,
   type WorkspacesResponse,
 } from '../../shared/workspaces'
@@ -30,6 +31,17 @@ import type { OrgState } from './state'
 
 function detailReply(org: OrgState, workspaceId: string): Response {
   return json(workspaceDetail(org, workspaceId) satisfies WorkspaceResponse)
+}
+
+function orderedDetailReply(
+  backend: DevBackend,
+  org: OrgState,
+  workspaceId: string,
+): Response {
+  return json({
+    ...workspaceDetail(org, workspaceId),
+    eventNumber: backend.eventNumber,
+  } satisfies OrderedWorkspaceResponse)
 }
 
 /**
@@ -72,7 +84,7 @@ function readWorkspace(
   if (current.state !== 'stopped' && backend.state.stopAfterMs !== null) {
     stopLater(backend, org, workspaceId, backend.state.stopAfterMs)
   }
-  return detailReply(org, workspaceId)
+  return orderedDetailReply(backend, org, workspaceId)
 }
 
 /** Archive deletes the cloud computer and keeps the chat read-only. */
@@ -147,7 +159,7 @@ export function workspaceRoutes(backend: DevBackend): Route[] {
       answer: ({ params }) => {
         const org = orgOf(params)
         resumeWorkspace(backend, org, params.workspace)
-        return detailReply(org, params.workspace)
+        return orderedDetailReply(backend, org, params.workspace)
       },
     },
     {

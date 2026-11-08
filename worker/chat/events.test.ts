@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
+import { chatHistoryPath } from '../../src/shared/events'
 import { FakeRunner } from '../test-support/fake-runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
@@ -164,5 +165,73 @@ describe('workspace chat event delivery', () => {
     const history = await fixture.history(session.id)
     expect(history.throughEventNumber).toBe(all.throughEventNumber)
     expect(history.events.at(-1)?.event.type).not.toBe('workspace.title')
+  })
+
+  it('sends every history page before a concurrent live event and pages empty session projections', async () => {
+    const fixture = await createChatFixture(harness)
+    const session = await fixture.createSession()
+    await fixture.chat.changeWorkspace(WORKSPACE_ID, async (transaction) => {
+      for (let number = 1; number <= 70; number++)
+        await transaction.emit({ type: 'workspace.title', name: `${number}` })
+    })
+    let concurrent: Promise<void> | undefined
+    const tab = await fixture.tab(0, (message) => {
+      if (message.type === 'history' && concurrent === undefined)
+        concurrent = fixture.chat.appendWorkspaceEvent(WORKSPACE_ID, {
+          type: 'workspace.title',
+          name: 'Live',
+        })
+    })
+    await concurrent
+    const pages = tab.messages.filter((message) => message.type === 'history')
+    expect(
+      pages.map((message) => [
+        message.history.throughEventNumber,
+        message.history.nextAfterEventNumber ?? null,
+      ]),
+    ).toEqual([
+      [71, 32],
+      [71, 64],
+      [71, null],
+    ])
+    expect(
+      pages.flatMap((message) =>
+        message.history.events.map((entry) => entry.eventNumber),
+      ),
+    ).toEqual(Array.from({ length: 71 }, (_, index) => index + 1))
+    expect(tab.messages.at(-1)).toMatchObject({
+      type: 'event',
+      envelope: {
+        eventNumber: 72,
+        event: { type: 'workspace.title', name: 'Live' },
+      },
+    })
+    const first = await fixture.fetch(
+      chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id),
+    )
+    expect(await first.json()).toMatchObject({
+      throughEventNumber: 72,
+      hasMore: true,
+      nextAfterEventNumber: 32,
+      events: [expect.objectContaining({ eventNumber: 1 })],
+    })
+    await fixture.chat.appendWorkspaceEvent(WORKSPACE_ID, {
+      type: 'workspace.title',
+      name: 'After the snapshot',
+    })
+    const second = await fixture.fetch(
+      chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id, 32, 72),
+    )
+    expect(await second.json()).toEqual({
+      throughEventNumber: 72,
+      hasMore: true,
+      nextAfterEventNumber: 64,
+      events: [],
+    })
+    const final = await fixture.fetch(
+      chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id, 64, 72),
+    )
+    expect(await final.json()).toEqual({ throughEventNumber: 72, events: [] })
+    tab.close()
   })
 })

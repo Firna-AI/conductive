@@ -236,6 +236,16 @@ export async function realRuntimeFixture(bundle: string) {
     actor: (id: string) => bindings.WORKSPACES.getByName(id),
     fetch: (path: string) =>
       runtime.dispatchFetch(`https://runtime.test${path}`),
+    request: (path: string, body: unknown) =>
+      runtime.dispatchFetch(`${env.APP_ORIGIN}${path}`, {
+        method: 'POST',
+        headers: {
+          Origin: env.APP_ORIGIN ?? '',
+          Cookie: `${SESSION_COOKIE}=${sessionToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      }),
     openEvents: async (
       id: string,
       after = 0,
@@ -257,8 +267,8 @@ export async function realRuntimeFixture(bundle: string) {
       redirects = true
       requests.length = 0
     },
-    restart: async () => {
-      await closeBrowsers()
+    restart: async (disconnect = true) => {
+      if (disconnect) await closeBrowsers()
       await runtime.dispose()
       runtime = create()
       bindings = await runtime.getBindings<RuntimeBindings>()

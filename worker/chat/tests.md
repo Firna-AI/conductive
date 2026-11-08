@@ -13,8 +13,11 @@ npm run typecheck
   and a stored login for each agent.
 - Its helpers send messages, open tabs, connect a `FakeRunner`, and
   restart `WorkspaceChat` on the same storage.
-- `MemoryChatStorage` keeps the records in memory. Set `failCommit` or
-  `beforeCommit` to test a failed or a late commit.
+- `MemoryChatStorage` keeps the records in memory. Set `beforeCommit` to
+  delay a commit and test a late commit.
+- To test that a failed commit rolls back the whole receipt of an action,
+  use `checkCommitBoundaries` in
+  [`commit-boundary.test-support.ts`](commit-boundary.test-support.ts).
 - Its key order and `startAfter` comparison use UTF-8 bytes, like real storage.
 - Set `crashAfterCommit` to commit the next transaction, then throw once.
   The restart tests cover retry permission, report repairs, turn cleanup,

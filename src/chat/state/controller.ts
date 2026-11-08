@@ -21,7 +21,8 @@ import {
   type Overlay,
 } from './chat-snapshot'
 import { closeArchived, isArchived, showArchived } from './archive-view'
-import { applyEnvelopes, viewWriter, type ChatContext } from './context'
+import { applyEnvelopes } from './apply-events'
+import { viewWriter, type ChatContext } from './context'
 import { hydrate, watchShownSession } from './history'
 import { loadChat } from './load'
 import { followSources, withSources, type ChatSources } from './sources'
@@ -149,7 +150,8 @@ export class ChatController {
       store: this.store,
       logs: new Map(),
       loading: new Map(),
-      versions: new Map(),
+      edits: new Map(),
+      workspaceOrder: { through: 0 },
       picks: new Map(),
       moves: new Map(),
       newId: this.options.newId ?? (() => crypto.randomUUID()),

@@ -65,11 +65,11 @@ it('joins trees and independent changes parts before projection, live publicatio
     'b.txt',
   ])
   expect((await fixture.history()).events.map(({ event }) => event)).toEqual(
-    fixture.published.map(({ event }) => event),
+    fixture.published.slice(1).map(({ event }) => event),
   )
   expect(
     (await fixture.history()).events.map(({ event }) => event.type),
-  ).toEqual(['files.snapshot', 'files.snapshot', 'changes.updated'])
+  ).toEqual(['files.snapshot', 'changes.updated'])
   expect(JSON.stringify((await fixture.history()).events)).not.toContain(
     'partNumber',
   )
@@ -127,7 +127,6 @@ it('refuses inconsistent parts, duplicate paths, and gaps or interleaving in tre
   expect(
     (await fixture.history()).events.map(({ event }) => event.type),
   ).toEqual([
-    'files.snapshot',
     'runner.event-refused',
     'runner.event-refused',
     'runner.event-refused',

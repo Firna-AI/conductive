@@ -59,14 +59,30 @@ export async function chatLifecycleRoute(
         binding
           .getByName(first.workspaceId, { locationHint: 'weur' })
           .acceptLifecycleFirstMessage(first),
-      projectWorkspace: async (response) => ({
-        ...response,
-        workspace: await workspaceForViewer(
-          env,
-          context.user.id,
-          response.workspace,
-        ),
-      }),
+      projectWorkspace: async (response) => {
+        if (create)
+          return {
+            ...response,
+            workspace: await workspaceForViewer(
+              env,
+              context.user.id,
+              response.workspace,
+            ),
+          }
+        const ordered = await binding
+          .getByName(response.workspace.id, { locationHint: 'weur' })
+          .readChatWorkspaceResponse(orgId, response.workspace.id)
+        return {
+          ...ordered.response,
+          workspace: await workspaceForViewer(
+            env,
+            context.user.id,
+            ordered.response.workspace,
+            undefined,
+            ordered.summary,
+          ),
+        }
+      },
       waitUntil: (promise) => execution?.waitUntil(promise),
     },
   )

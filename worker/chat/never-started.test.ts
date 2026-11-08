@@ -58,6 +58,7 @@ describe('runner events for turns that never started', () => {
       { turnId: queued.id },
     )
     expect(await response.json()).toEqual({
+      eventNumber: 8,
       turnId: queued.id,
       state: 'stopped',
     })

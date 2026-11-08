@@ -26,7 +26,10 @@ function required(workspace: Workspace | null): Workspace {
   return workspace
 }
 
-/** The reply of a Resume that started the sandbox. */
+/**
+ * The reply of a Resume that started the sandbox. It holds the state of the
+ * fake's recorded events, so each event that a test sends is newer.
+ */
 function startingReply(workspace: Workspace) {
   const step = {
     id: 'restore',
@@ -39,6 +42,7 @@ function startingReply(workspace: Workspace) {
     workspace: { ...workspace, state: 'starting' },
     start: { kind: 'resume', startedAt: FAKE_TIME, steps: [step] },
     error: null,
+    eventNumber: 0,
   }
 }
 

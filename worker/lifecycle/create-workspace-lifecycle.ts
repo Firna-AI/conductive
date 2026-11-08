@@ -74,6 +74,19 @@ export function createWorkspaceLifecycle(
       },
       startPending: async () =>
         Boolean(await ctx.storage.get('job', 'lifecycle:start-job')),
+      recoverTurns: async (id) => {
+        const recovery = await ctx.readChatRecovery?.(id)
+        if (!recovery) return undefined
+        await turns.clear()
+        for (const turn of recovery.runningTurns) await turns.register(turn)
+        ctx.chatRecovered?.()
+        return {
+          runningSessions: [
+            ...new Set(recovery.runningTurns.map((turn) => turn.sessionId)),
+          ],
+          lastTurnEndedAt: recovery.lastTurnEndedAt,
+        }
+      },
     },
   )
   const projection = new WorkspaceStateProjection({
@@ -82,6 +95,8 @@ export function createWorkspaceLifecycle(
     journal,
     readLifecycle: () => lifecycle.read(),
     deviceWaiting: async (id) => (await ctx.deviceWaiting?.(id)) ?? false,
+    latestTitle: async (id) =>
+      (await ctx.readChatRecovery?.(id))?.title ?? null,
   })
   return { lifecycle, projection }
 }

@@ -11,7 +11,8 @@ import { WorkspaceModel } from './workspace-model'
 const orgId = FAKE_IDS.org
 const workspaceId = FAKE_IDS.workspace
 const resumePath = workspacePaths.resume(orgId, workspaceId)
-const recorded = workspaceFixtures('starting').detail
+const { workspace: shown, start, error } = workspaceFixtures('starting').detail
+const recorded = { workspace: shown, start, error }
 const starting = {
   ...recorded,
   workspace: {
@@ -24,6 +25,8 @@ const starting = {
     },
   },
 }
+/** The Resume reply holds the state before the events that the tests send. */
+const startingReply = { ...starting, eventNumber: 0 }
 const completed: WorkspaceStart = {
   kind: 'resume',
   startedAt: FAKE_TIME - 3_000,
@@ -49,7 +52,7 @@ async function openWorkspace() {
   const workspace = new WorkspaceModel(org, workspaceId)
   await org.reload('list')
   await workspace.open()
-  server.json('POST', resumePath, starting)
+  server.json('POST', resumePath, startingReply)
   held.holdAnswer('POST', resumePath)
   return { held, events, org, workspace, server }
 }
@@ -92,8 +95,14 @@ describe('WorkspaceModel Resume', () => {
     workspace.close()
   })
 
-  test('a title event keeps its name while Resume applies the other reply fields', async () => {
-    const { held, events, org, workspace } = await openWorkspace()
+  test('a newer Resume reply shows, with the name of an older title event', async () => {
+    const { held, events, org, workspace, server } = await openWorkspace()
+    // The server renamed the workspace at event 1, then resumed it at 2.
+    server.json('POST', resumePath, {
+      ...starting,
+      workspace: { ...starting.workspace, name: 'Address autocomplete' },
+      eventNumber: 2,
+    })
     const resuming = workspace.resume()
     events.send({
       type: 'event',

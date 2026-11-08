@@ -18,10 +18,12 @@ streams, and the order of the runner commands.
 - Each event gets the next workspace event number. The numbers start at 1,
   have no gaps, and span all sessions and runner streams.
 - A tab connects with `after`, the last event number that it has. It gets
-  one `history` message with the stored events after that number. Then it
-  gets one `event` message for each new event.
-- The history read and the new subscription run in the queue. So no event
-  falls between them, and no event comes twice.
+  the stored events after that number in one or more `history` pages, in
+  the shape of `ChatHistoryResponse` in
+  [`src/shared/events.ts`](../../src/shared/events.ts). Then it gets one
+  `event` message for each new event.
+- The history pages and the new subscription run in one queue task. So no
+  event falls between them, and no event comes twice.
 - The records use the `chat:v1:` key prefix of the Durable Object storage.
 - Each runner stream numbers its events from 1. The Durable Object stores
   a runner event, or its refusal marker, only when its number is the stream

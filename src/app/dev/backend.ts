@@ -16,6 +16,8 @@ export interface DevBackend {
   /** The time now, in Unix milliseconds. It starts at `FAKE_TIME`. */
   readonly now: () => number
   readonly newId: () => string
+  /** The newest event number in the shared development stream. */
+  readonly eventNumber: number
   /** Sends a live event of a workspace to each open stream. */
   readonly emit: (workspaceId: string, event: WorkspaceEvent) => void
 }
@@ -26,16 +28,20 @@ export function createBackend(
   now: () => number,
   newId: () => string,
 ): DevBackend {
+  // The filter keeps no event, so the call copies no history.
+  const eventNumber = () =>
+    events.history(Number.MAX_SAFE_INTEGER).throughEventNumber
   return {
     state,
     now,
     newId,
+    get eventNumber() {
+      return eventNumber()
+    },
     emit: (workspaceId, event) => {
-      // The filter keeps no event, so the call copies no history.
-      const last = events.history(Number.MAX_SAFE_INTEGER).throughEventNumber
       events.emit({
         workspaceId,
-        eventNumber: last + 1,
+        eventNumber: eventNumber() + 1,
         occurredAt: now(),
         event,
       })

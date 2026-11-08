@@ -45,6 +45,18 @@ export async function saveHistoryEvent(
   } satisfies StoredFileEvent)
 }
 
+export async function deleteHistoryEvent(
+  data: ChatData,
+  key: string,
+): Promise<void> {
+  const stored = await data.get<StoredWorkspaceEvent>(key)
+  if (stored && !('event' in stored)) {
+    for (let part = 0; part < stored.fileEventChunks; part++)
+      await data.delete(chunkKey(stored.eventNumber, part))
+  }
+  await data.delete(key)
+}
+
 export async function loadHistoryEvent(
   data: ChatData,
   stored: StoredWorkspaceEvent,

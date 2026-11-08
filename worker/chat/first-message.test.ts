@@ -66,7 +66,11 @@ it('refuses an unassigned first-message sender without storing a session or spen
     sessionsPath(fixture.org.id, WORKSPACE_ID),
   )
   expect(sessions.status).toBe(200)
-  expect(await sessions.json()).toEqual({ sessions: [], history: [] })
+  expect(await sessions.json()).toEqual({
+    eventNumber: 0,
+    sessions: [],
+    history: [],
+  })
   expect(await fixture.chat.workspaceSummary(WORKSPACE_ID)).toEqual({
     throughEventNumber: 0,
     lastOutputEventNumber: 0,

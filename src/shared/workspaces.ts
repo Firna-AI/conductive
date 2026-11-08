@@ -63,6 +63,10 @@ export interface WorkspaceResponse {
   start: WorkspaceStart | null
   error: { code: string; message: string; log: string | null } | null
 }
+export interface OrderedWorkspaceResponse extends WorkspaceResponse {
+  /** The workspace event sequence when this read or resume reply was made. */
+  eventNumber: number
+}
 export interface WorkspacesResponse {
   workspaces: readonly Workspace[]
 }

@@ -34,9 +34,15 @@ export class OuterFakeRunner {
   readonly received: unknown[] = []
   readonly closed: Promise<{ code: number; reason: string }>
   private eventNumber = 0
-  private readonly streamId = 'outer-runner-stream'
+  private readonly streamId: string
 
-  constructor(socket: WebSocket, workspaceId = OUTER_WORKSPACE) {
+  constructor(
+    socket: WebSocket,
+    workspaceId = OUTER_WORKSPACE,
+    options: { streamId?: string; eventNumber?: number } = {},
+  ) {
+    this.streamId = options.streamId ?? 'outer-runner-stream'
+    this.eventNumber = options.eventNumber ?? 0
     this.socket = socket
     this.inbox = new SocketInbox(socket)
     socket.addEventListener('message', (event) => {

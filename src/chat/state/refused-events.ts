@@ -1,7 +1,8 @@
 import type { RunnerEventRefused } from '../../shared/chat-events'
-import { endsTurn, endTurn, isRunning } from './known-turns'
+import { endsTurn, isRunning } from './known-turns'
 import type { Transcript, TranscriptItem } from './transcript'
-import { endLostTurn, replaceAt } from './turn-events'
+import { replaceAt } from './turn-events'
+import { endShownTurn } from './turn-records'
 
 /**
  * Applies a refusal marker of a session. The marker shows once, as a line at
@@ -18,10 +19,7 @@ export function foldRefused(
     endsTurn(event) &&
     event.turnId !== null &&
     isRunning(transcript, event.turnId)
-      ? {
-          ...endLostTurn(transcript, event.turnId),
-          turns: endTurn(transcript.turns, event.turnId),
-        }
+      ? endShownTurn(transcript, event.turnId)
       : transcript
   const item: TranscriptItem = {
     kind: 'lost',

@@ -56,8 +56,8 @@ function linkedServer() {
     }),
   ]
   server.json('GET', sessionsPath(org, ws), {
+    ...sessions,
     sessions: [...sessions.sessions, ...linked],
-    history: sessions.history,
   })
   const tabs: WorkspaceTab[] = [
     ...view.view.tabs,
@@ -82,9 +82,11 @@ function linkedServer() {
       throughEventNumber: 1_000,
     })
   }
-  // The Worker reopens the closed source as an open session.
+  // The Worker reopens the closed source as an open session, after the
+  // events that the fake holds.
   server.json('POST', sessionPaths.reopen(org, ws, closed.id), {
     session: { ...closed, closedAt: null },
+    eventNumber: server.events.history().throughEventNumber + 1,
   })
   return { server, closed }
 }
@@ -145,7 +147,7 @@ describe('the link of a linked session to its source', () => {
       closedAt: FAKE_TIME - 3_600_000,
     })
     server.json('GET', sessionsPath(org, ws), {
-      sessions: sessions.sessions,
+      ...sessions,
       history: [closedLinked, ...sessions.history],
     })
     const words = 'Continue the loading state.'

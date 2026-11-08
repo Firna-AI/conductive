@@ -4,6 +4,8 @@ import { chatHistoryPath } from '../../../src/shared/events'
 import { workspacePath, workspacePaths } from '../../../src/shared/workspaces'
 import { sandboxProvider } from '../../sandbox/client'
 import type { WorkspaceStartResult } from '../../lifecycle/start-types'
+import { orgEnvironmentContext } from '../../lifecycle/settings-data'
+import { encrypt } from '../../security/crypto'
 import { readWorkspaceToken } from '../../lifecycle/tokens'
 import { closeSockets } from '../adapter-sockets.test-support'
 import { record } from '../inputs'
@@ -32,6 +34,19 @@ afterEach(async () => {
   await fixture?.dispose()
   fixture = undefined
 })
+
+async function setStartLogSecret(active: ReviewWorkspaceFixture) {
+  const ciphertext = await encrypt(
+    JSON.stringify({ APP_SECRET: 'ordered-log-secret' }),
+    orgEnvironmentContext(OUTER_ORG),
+    active.env.BOAT_KEY_ENCRYPTION_KEY,
+  )
+  await active.env.DB.prepare(
+    'UPDATE settings SET env_vars_ciphertext = ? WHERE org_id = ?',
+  )
+    .bind(ciphertext, OUTER_ORG)
+    .run()
+}
 
 it('answers resume and retry with durable starting state while chat and startup failure stay on the event path', async () => {
   const active = (fixture = await reviewWorkspaceFixture(bundle))
@@ -63,6 +78,8 @@ it('answers resume and retry with durable starting state while chat and startup 
   expect(await opened.json()).toMatchObject({
     workspace: { id: OUTER_WORKSPACE, state: 'stopped' },
   })
+  await setStartLogSecret(active)
+  active.boat.commandOutput = 'failed ordered-log-secret'
   active.boat.commandRunning = true
   const resuming = active.request(
     workspacePaths.resume(OUTER_ORG, OUTER_WORKSPACE),
@@ -118,14 +135,20 @@ it('answers resume and retry with durable starting state while chat and startup 
       ok: false,
       error: { code: 'workspace_start_failed' },
     })
+    expect((await active.actor().readLifecycle())?.error).toMatchObject({
+      code: 'workspace_start_failed',
+      log: null,
+    })
     const failed = await active.request(
       workspacePath(OUTER_ORG, OUTER_WORKSPACE),
     )
     expect(failed.status).toBe(200)
-    expect(await failed.json()).toMatchObject({
+    const failedBody: unknown = await failed.json()
+    expect(failedBody).toMatchObject({
       workspace: { id: OUTER_WORKSPACE, state: 'error' },
-      error: { code: 'workspace_start_failed' },
+      error: { code: 'workspace_start_failed', log: 'failed [hidden]' },
     })
+    expect(JSON.stringify(failedBody)).not.toContain('ordered-log-secret')
     const stored = await active.browser()
     expect(
       array(stored.history.events, record).some((envelope) => {
@@ -178,4 +201,32 @@ it('answers resume and retry with durable starting state while chat and startup 
     await active.actor().advanceStartAlarm()
     await resuming
   }
+})
+
+it('numbers a fresh workspace snapshot when Stop follows the first lifecycle read', async () => {
+  const active = (fixture = await reviewWorkspaceFixture(bundle))
+  await active.actor().stopAfterNextRead()
+  const response = await active.request(
+    workspacePath(OUTER_ORG, OUTER_WORKSPACE),
+  )
+  expect(response.status).toBe(200)
+  const body = record(await response.json())
+  const browser = await active.browser()
+  expect(body).toMatchObject({
+    workspace: { id: OUTER_WORKSPACE, state: 'stopped' },
+    start: { kind: 'create' },
+    error: null,
+    eventNumber: browser.history.throughEventNumber,
+  })
+  const stored = array(browser.history.events, record)
+  expect(stored.at(-1)).toMatchObject({
+    eventNumber: body.eventNumber,
+  })
+  expect(
+    stored
+      .filter((envelope) => record(envelope.event).type === 'workspace.updated')
+      .at(-1),
+  ).toMatchObject({
+    event: { type: 'workspace.updated', workspace: { state: 'stopped' } },
+  })
 })

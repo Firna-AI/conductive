@@ -2,16 +2,19 @@ import type { ChatEvent, RunnerEventRefused } from '../../shared/chat-events'
 import type { Session } from '../../shared/sessions'
 import type { ChatStreamEvent, StreamEnvelope } from '../api/read-workspace'
 import { emptyTranscript, foldEvent, type Transcript } from './transcript'
+import { foldRecord } from './turn-records'
 
 export interface ChatEnvelope {
   eventNumber: number
   occurredAt: number
   event: SessionEvent
+  /** The workspace marked an agent event of a turn that had ended. */
+  late: boolean
 }
 
 /**
  * A chat event of one session: an event of its transcript, or a record of
- * the session, whose retry message the log keeps.
+ * the session.
  */
 export type SessionEvent =
   | Exclude<ChatEvent, { type: 'runner.event-refused' }>
@@ -53,124 +56,150 @@ export function chatEventsOf(
   envelopes: readonly StreamEnvelope[],
 ): ChatEnvelope[] {
   const events: ChatEnvelope[] = []
-  for (const { eventNumber, occurredAt, event } of envelopes) {
+  for (const { eventNumber, occurredAt, event, late } of envelopes) {
     const sessionEvent = asSessionEvent(event)
     if (sessionEvent && sessionOf(sessionEvent) === sessionId) {
-      events.push({ eventNumber, occurredAt, event: sessionEvent })
+      events.push({ eventNumber, occurredAt, event: sessionEvent, late })
     }
   }
   return events
 }
 
-const byNumber = (left: ChatEnvelope, right: ChatEnvelope) =>
-  left.eventNumber - right.eventNumber
-
-/** The newest record of a session in its log, at its place in the events. */
-interface PlacedRecord {
-  /** The number of its event, or of the event that the list read follows. */
+/** A record of the session, and the event number whose state it holds. */
+export interface PlacedRecord {
   eventNumber: number
-  retryMessageId: Session['retryMessageId']
+  session: Session
 }
 
+/** One step of the fold: an event, or a record from a read or a reply. */
+type Entry =
+  | { kind: 'event'; envelope: ChatEnvelope }
+  | { kind: 'record'; record: PlacedRecord }
+
+const numberOf = (entry: Entry) =>
+  entry.kind === 'event' ? entry.envelope.eventNumber : entry.record.eventNumber
+
+/** A record holds the state after its number, so it follows that event. */
+const byOrder = (left: Entry, right: Entry) =>
+  numberOf(left) - numberOf(right) ||
+  (left.kind === right.kind ? 0 : left.kind === 'event' ? -1 : 1)
+
 /**
- * The stored and live events of one session, in event-number order. The
- * numbers belong to this session's log only, so a history that loads after
- * the workspace stream moved on still applies in full. Each number applies
- * once, and an older event folds the transcript again in order. The log
- * also keeps the time of the first event of each item, so a part that is
- * not an event, such as a Mac command, can take its place among them.
+ * The stored and live events of one session, and its records, in event
+ * order. The numbers belong to this session's log only, so a history that
+ * loads after the workspace stream moved on still applies in full. Each
+ * number applies once, and an older event folds the transcript again in
+ * order, when the transcript is next read. The log also keeps the time of
+ * the first event of each item, so a part that is not an event, such as a
+ * Mac command, can take its place among them.
  *
- * The transcript names the retry message of the newest session record by
- * event number, not by arrival. So a history that loads after newer live
- * records never brings back an older Try again, or takes away a newer one.
+ * Each record folds at its place in the order: a `session.updated` event,
+ * and a record that a read or a reply gives with its event number. So a
+ * record that arrives late, such as in a history load, never brings back an
+ * older Try again or running turn, or hides a newer one. `record` gives the
+ * newest record of the session.
  */
 export class SessionLog {
-  private readonly events: ChatEnvelope[] = []
+  private readonly entries: Entry[] = []
   private readonly numbers = new Set<number>()
+  private newest: PlacedRecord | null = null
   private folded: Transcript = emptyTranscript
   private firstTimes: ReadonlyMap<string, number> = new Map()
-  private record: PlacedRecord = { eventNumber: 0, retryMessageId: null }
+  /** An entry came before the end of the fold, so the fold runs again. */
+  private stale = false
 
   get transcript(): Transcript {
+    this.refold()
     return this.folded
   }
 
   /** The time of the first event of each item of the transcript, by its ID. */
   get times(): ReadonlyMap<string, number> {
+    this.refold()
     return this.firstTimes
   }
 
-  /** Adds the events that are new, and says whether the transcript changed. */
+  /** The newest record of the session by event number, or null. */
+  get record(): PlacedRecord | null {
+    return this.newest
+  }
+
+  /** Adds the events that are new, and says whether there were any. */
   merge(envelopes: readonly ChatEnvelope[]): boolean {
-    const fresh: ChatEnvelope[] = []
+    const fresh: Entry[] = []
     for (const envelope of envelopes) {
       const { eventNumber, event } = envelope
       if (this.numbers.has(eventNumber)) continue
       this.numbers.add(eventNumber)
-      if (event.type !== 'session.updated') {
-        fresh.push(envelope)
-      } else if (eventNumber > this.record.eventNumber) {
-        const { retryMessageId } = event.session
-        this.record = { eventNumber, retryMessageId }
+      fresh.push({ kind: 'event', envelope })
+      if (event.type !== 'session.updated') continue
+      if (this.newest === null || eventNumber > this.newest.eventNumber) {
+        this.newest = { eventNumber, session: event.session }
       }
     }
-    if (fresh.length > 0) this.foldFresh(fresh)
-    const shown = this.showRecord()
-    return shown || fresh.length > 0
+    this.add(fresh)
+    return fresh.length > 0
   }
 
   /**
-   * Takes the record of the session list. The chat reads the list after the
-   * history that its stream follows, so the record holds after that event
-   * number. A `session.updated` event up to that number never replaces it,
-   * and a later one does. Says whether the transcript changed.
+   * Takes a record that a read or a reply gives, with the event number of
+   * its state. Only a record newer than each record of the log counts. Says
+   * whether it counted.
    */
-  takeListed(
-    session: Pick<Session, 'retryMessageId'>,
-    afterEventNumber: number,
-  ): boolean {
-    if (this.record.eventNumber > afterEventNumber) return false
-    const { retryMessageId } = session
-    this.record = { eventNumber: afterEventNumber, retryMessageId }
-    return this.showRecord()
+  offer(session: Session, eventNumber: number): boolean {
+    if (this.newest !== null && this.newest.eventNumber >= eventNumber) {
+      return false
+    }
+    const record = { eventNumber, session }
+    this.newest = record
+    this.add([{ kind: 'record', record }])
+    return true
   }
 
-  private foldFresh(fresh: ChatEnvelope[]): void {
-    fresh.sort(byNumber)
-    const last = this.events.at(-1)?.eventNumber ?? 0
-    this.events.push(...fresh)
-    const appends = fresh[0].eventNumber > last
-    if (!appends) this.events.sort(byNumber)
-    const folded = appends
-      ? fold(this.folded, fresh, this.firstTimes)
-      : fold(emptyTranscript, this.events, new Map())
+  private add(fresh: Entry[]): void {
+    if (fresh.length === 0) return
+    fresh.sort(byOrder)
+    const last = this.entries.at(-1)
+    const appends = last === undefined || byOrder(last, fresh[0]) < 0
+    this.entries.push(...fresh)
+    if (!appends) {
+      this.entries.sort(byOrder)
+      this.stale = true
+    }
+    if (this.stale) return
+    const folded = fold(this.folded, fresh, this.firstTimes)
     this.folded = folded.transcript
     this.firstTimes = folded.times
   }
 
-  /** Shows the retry message of the newest record, and says if it changed. */
-  private showRecord(): boolean {
-    const { retryMessageId } = this.record
-    if (this.folded.retryMessageId === retryMessageId) return false
-    this.folded = { ...this.folded, retryMessageId }
-    return true
+  private refold(): void {
+    if (!this.stale) return
+    this.stale = false
+    const folded = fold(emptyTranscript, this.entries, new Map())
+    this.folded = folded.transcript
+    this.firstTimes = folded.times
   }
 }
 
 /**
- * Folds events in order, and notes the time of each item that an event
+ * Folds entries in order, and notes the time of each item that an event
  * adds. The map of times is copied only when an event adds an item.
  */
 function fold(
   start: Transcript,
-  events: readonly ChatEnvelope[],
+  entries: readonly Entry[],
   known: ReadonlyMap<string, number>,
 ): { transcript: Transcript; times: ReadonlyMap<string, number> } {
   let transcript = start
   let times = known
   let copy: Map<string, number> | null = null
-  for (const { event, occurredAt } of events) {
-    const next = foldEvent(transcript, event, occurredAt)
+  for (const entry of entries) {
+    if (entry.kind === 'record') {
+      transcript = foldRecord(transcript, entry.record.session)
+      continue
+    }
+    const { event, occurredAt, late } = entry.envelope
+    const next = foldEvent(transcript, event, occurredAt, late)
     if (next.items.length > transcript.items.length) {
       for (const item of next.items) {
         if (times.has(item.id)) continue
