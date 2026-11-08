@@ -3,12 +3,28 @@ import type { AgentChoice } from '../../src/shared/agents'
 import type {
   WorkspaceLifecycleEndpoint,
   PendingTurn,
+  LifecycleActivityResult,
 } from './workspace-runtime'
 import type { FailedCreationDraft } from './failed-creations'
 import type { ImageCoordinatorState } from './image-timers'
-import type { LifecyclePublisher } from './durable-types'
+import type {
+  LifecyclePublisher,
+  LifecycleReconciliation,
+} from './durable-types'
+import type { LifecycleActivitySnapshot } from './input-activity-state'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
+  lifecycleActivity(checkOnly?: true): Promise<LifecycleActivityResult>
+  extendLifecycleInput(
+    operation: () => Promise<LifecycleReconciliation>,
+  ): Promise<LifecycleReconciliation | void>
+  recordLifecycleInput(at: number): Promise<void>
+  captureLifecycleActivity(): Promise<LifecycleActivitySnapshot | undefined>
+  reconcileLifecycleActivity(
+    snapshot: LifecycleActivitySnapshot,
+    remote: LifecycleReconciliation,
+  ): Promise<void>
+  cancelLifecycleWaiters(): void
   cancelSuspendedLifecycleStart(
     workspaceId: string,
     ownerUserId: string,

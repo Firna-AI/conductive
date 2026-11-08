@@ -12,6 +12,7 @@ import type { User } from '../shared/api'
 import { AccountScreen } from './account/AccountScreen'
 import { SignInScreen } from './auth/SignInScreen'
 import { useApp } from './context'
+import { InvitationsScreen } from './invitations/InvitationsScreen'
 import { PhoneFrame } from './layout/frames'
 import layout from './layout/layout.module.css'
 import { Sidebar } from './list/Sidebar'
@@ -42,12 +43,28 @@ function Alone(props: { children: ReactNode }) {
   )
 }
 
+/** The wait of the first load, as the app shows it. */
+function Loading() {
+  const theme = useSharedUiTheme()
+  return (
+    <Alone>
+      <div className={ui.center}>
+        <Spinner
+          accessibilityLabel="Loading"
+          color={theme.colors.muted}
+          size={16}
+        />
+      </div>
+    </Alone>
+  )
+}
+
 /**
- * The address `/` goes to Get started, or to the org of Get started: the
- * first org that is not deleted, else a deleted one, whose page offers
+ * The app opens as usual: Get started, or the org of Get started. That is
+ * the first org that is not deleted, else a deleted one, whose page offers
  * Restore.
  */
-function Home() {
+function OpenApp() {
   const app = useApp()
   const navigation = useNavigation()
   const orgs = useStore(app.orgs)
@@ -59,6 +76,30 @@ function Home() {
       : routes.org(first.id)
   useEffect(() => navigation.replace(target), [navigation, target])
   return null
+}
+
+/**
+ * The address `/`, also with the `?invite=` of an invitation email. The
+ * invitations that wait for the user show first, in the frame of the app,
+ * until the user accepts one or continues. Without one, the app opens as
+ * usual. Nothing else waits for the invitations.
+ */
+function Home(props: { user: User }) {
+  const { invitations } = useApp()
+  const state = useStore(invitations.state)
+  const phone = useViewport() === 'phone'
+  useEffect(() => invitations.open(), [invitations])
+  const { list } = state
+  if (state.passed) return <OpenApp />
+  if (list === null || list.state === 'loading') return <Loading />
+  if (list.state === 'ready' && list.value.length === 0) return <OpenApp />
+  const page = <InvitationsScreen user={props.user} />
+  if (phone) return <PhoneFrame>{page}</PhoneFrame>
+  return (
+    <RailFrame current={null} user={props.user}>
+      {page}
+    </RailFrame>
+  )
 }
 
 type AccountRoute = Extract<Route, { screen: 'account' }>
@@ -93,7 +134,7 @@ function Signed(props: { route: Route; user: User }) {
     )
   switch (route.screen) {
     case 'home':
-      return <Home />
+      return <Home user={user} />
     case 'get-started':
       return inRail(<GetStartedScreen user={user} />, null)
     case 'account':
@@ -119,21 +160,10 @@ export function Shell() {
   const app = useApp()
   const boot = useStore(app.boot)
   const route = useRoute()
-  const theme = useSharedUiTheme()
   useEffect(() => app.ensureStarted(), [app])
   switch (boot.state) {
     case 'loading':
-      return (
-        <Alone>
-          <div className={ui.center}>
-            <Spinner
-              accessibilityLabel="Loading"
-              color={theme.colors.muted}
-              size={16}
-            />
-          </div>
-        </Alone>
-      )
+      return <Loading />
     case 'signed-out':
       return (
         <Alone>

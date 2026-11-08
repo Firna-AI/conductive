@@ -31,16 +31,23 @@ it('runs terminal installation inside the detached software command and streams 
   expect(boat.commandRequests).toEqual([
     {
       sandboxId: 'bx_1',
+      detached: false,
+      command: expect.stringContaining(
+        '/opt/conductive/agent-tools/tools/main.ts',
+      ),
+    },
+    {
+      sandboxId: 'bx_1',
       detached: true,
       command: expect.stringContaining(
         '/usr/local/lib/conductive/terminal-password',
       ),
     },
   ])
-  expect(lifecycleCommandBody(boat.commands[0])).toContain(
+  expect(lifecycleCommandBody(boat.commands[1])).toContain(
     'RuntimeDirectoryPreserve=yes',
   )
-  expect(lifecycleCommandBody(boat.commands[0])).toContain(
+  expect(lifecycleCommandBody(boat.commands[1])).toContain(
     [
       IMAGE_NODE_RUNTIME.url,
       IMAGE_NODE_RUNTIME.sha256,
@@ -49,7 +56,7 @@ it('runs terminal installation inside the detached software command and streams 
       .map(shellQuote)
       .join(' '),
   )
-  expect(lifecycleCommandBody(boat.commands[0])).not.toContain(
+  expect(lifecycleCommandBody(boat.commands[1])).not.toContain(
     'systemctl start conductive-terminal.service',
   )
   expect(boat.fileReads).toEqual([])

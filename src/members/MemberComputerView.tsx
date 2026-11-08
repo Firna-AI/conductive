@@ -7,16 +7,10 @@ import type {
 } from '../shared/org-settings'
 import { BuildCard } from './BuildCard'
 import { EnvVarsSection, ScriptSection } from './ComputerSections'
+import { softwareSentence } from './software'
 import { ViewportScope, type Viewport } from './ui/controls'
 import { Notice } from './ui/Notice'
 import { TabIntro } from './ui/Section'
-
-/**
- * What every cloud computer includes before the install script runs, as the
- * mockups state it. The org image of Milestone 5 owns this list.
- */
-const includedSoftware =
-  'Cloud computers run Ubuntu 24.04 and include Node.js 24, npm, pnpm, Bun, Python 3.12, uv, Go, Rust, Java, GCC, Clang, Docker, git, and gh.'
 
 export type MemberComputerViewProps = {
   /** The org, for its name in the text. */
@@ -25,22 +19,35 @@ export type MemberComputerViewProps = {
   builds: BuildsResponse
   /**
    * The log of the newest build of `builds` while it runs or after it
-   * failed, oldest event first. Null shows that the log did not load. The
-   * view shows no log when the newest build succeeded.
+   * failed, oldest event first. A refresh does not count as a build. Null
+   * shows that the log did not load. The view shows no log when the newest
+   * build succeeded.
    */
   log: readonly BuildLogEvent[] | null
   viewport: Viewport
   /** The time now, in Unix milliseconds, for the times of the builds. */
   now: number
   timeZone?: string
+  /**
+   * The org is suspended, so nothing in it changes, also for an admin. The
+   * intro then says nothing about admins, because the notice of the org
+   * says why.
+   */
+  suspended?: boolean
 }
 
-/** The heading of the Cloud computer tab of a member who is not an admin. */
-export function MemberComputerIntro(props: { orgName: string }) {
+/**
+ * The heading of the Cloud computer tab of a member who is not an admin, or
+ * of anyone in a suspended org.
+ */
+export function MemberComputerIntro(props: {
+  orgName: string
+  suspended?: boolean
+}) {
+  const note = props.suspended ? '' : ' Only an admin can change it.'
   return (
     <TabIntro title="Cloud computer">
-      The shared cloud computer of {props.orgName}. Every workspace starts from
-      it, with every repository of the org. Only an admin can change it.
+      {`The shared cloud computer of ${props.orgName}. Every workspace starts from it, with every repository of the org.${note}`}
     </TabIntro>
   )
 }
@@ -58,7 +65,10 @@ export function MemberComputerView(props: MemberComputerViewProps) {
   const { settings } = props
   return (
     <ViewportScope viewport={props.viewport}>
-      <MemberComputerIntro orgName={props.org.name} />
+      <MemberComputerIntro
+        orgName={props.org.name}
+        suspended={props.suspended}
+      />
       <BuildCard
         builds={props.builds}
         log={props.log}
@@ -66,7 +76,12 @@ export function MemberComputerView(props: MemberComputerViewProps) {
         timeZone={props.timeZone}
       />
       <ScriptSection
-        description={`${includedSoftware} The install script runs only at a build of the computer.`}
+        description={[
+          softwareSentence(settings.baseImage),
+          'The install script runs only at a build of the computer.',
+        ]
+          .filter((sentence) => sentence !== null)
+          .join(' ')}
         notice={
           settings.needsBuild ? (
             <Notice

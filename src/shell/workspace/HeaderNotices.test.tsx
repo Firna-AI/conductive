@@ -67,11 +67,14 @@ async function openWorkspace(
 
 /** The notices under the header, each as its text and its age. */
 function notices(container: HTMLElement): string[] {
-  return Array.from(container.querySelectorAll('[role="status"]'), (node) =>
-    Array.from(node.children, (part) => part.textContent ?? '')
-      .filter((text) => text !== '')
-      .join(' '),
-  )
+  const texts: string[] = []
+  let bar = container.querySelector('header')?.nextElementSibling ?? null
+  while (bar?.getAttribute('role') === 'status') {
+    const parts = Array.from(bar.children, (part) => part.textContent ?? '')
+    texts.push(parts.filter((text) => text !== '').join(' '))
+    bar = bar.nextElementSibling
+  }
+  return texts
 }
 
 /** The element that directly follows the workspace header. */

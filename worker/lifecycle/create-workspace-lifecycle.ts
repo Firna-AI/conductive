@@ -41,6 +41,8 @@ export function createWorkspaceLifecycle(
           await ctx.stopped?.(state.workspaceId)
       },
       stop: async () => {
+        const state = await lifecycle.read()
+        if (state) await ctx.stopping?.(state.workspaceId)
         const result = await stopWorkspaceSandbox(
           await workspaceActionContext(env, dependencies, lifecycle),
         )
@@ -55,16 +57,18 @@ export function createWorkspaceLifecycle(
           confirmedStopped,
         )
       },
-      extendDeadline: async () => {
+      extendDeadline: async (request) => {
         const state = await lifecycle.read()
         if (!state) return undefined
         await requireActiveOrg(env.DB, state.orgId)
+        if (request?.kind === 'check') return undefined
         if (
           state.state === 'stopped' ||
           state.state === 'archived' ||
           state.startStop !== undefined
         )
           return undefined
+        if (request?.kind === 'input') return request.extend()
         const result = await extendWorkspaceDeadline({
           env,
           dependencies,

@@ -1,8 +1,10 @@
-import { useState } from 'react'
-import { Trash2 } from 'lucide-react'
 import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import { mayChangeSettings } from '../../app/permissions'
+import { routes } from '../../app/router'
+import { useServices } from '../../app/services'
+import { useNow } from '../../app/time'
+import { DeleteOrgSection } from '../../members/DeleteOrgSection'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess } from '../context'
@@ -12,11 +14,12 @@ import {
   type OrgNameDraft,
 } from '../orgs/OrgNameFields'
 import { ActionButton } from '../ui/actions'
+import { useGo } from '../ui/AppLink'
 import { tileInitials } from '../ui/Avatars'
 import { useAction } from '../ui/useAction'
 import { useSavedDraft } from '../ui/useSavedDraft'
-import { DeleteOrgDialog, deletionDays } from './DeleteOrgDialog'
 import { LeaveOrgSection } from './LeaveOrg'
+import { useMembersApi, useMembersViewport } from './members-api'
 
 function sameNames(a: OrgNameDraft, b: OrgNameDraft): boolean {
   return a.name === b.name && a.initials === b.initials
@@ -72,31 +75,28 @@ function NameSection(props: { org: OrgSummary }) {
 }
 
 /**
- * Deletes the org, as the user decided in decision 30: every cloud computer
- * stops and the org hides at once, and everything is deleted after 7 days
- * unless an admin restores it.
+ * Delete org of the members UI, as the user decided in decision 30: every
+ * cloud computer stops and the org hides at once, and everything is
+ * deleted after 7 days unless an admin restores it. The answer keeps the
+ * org faded in the rail of its admins, and the org opens its restore page.
  */
 function DeleteSection(props: { org: OrgSummary }) {
-  const [confirming, setConfirming] = useState(false)
+  const app = useApp()
+  const go = useGo()
+  const { timeZone } = useServices()
+  const now = useNow(60_000)
   return (
-    <>
-      <Section
-        actions={
-          <ActionButton
-            icon={Trash2}
-            onPress={() => setConfirming(true)}
-            tone="danger"
-          >
-            Delete org
-          </ActionButton>
-        }
-        description={`Stops every cloud computer of ${props.org.name} and hides it from its members. Everything is deleted after ${deletionDays} days, unless an admin restores it.`}
-        title="Delete org"
-      />
-      {confirming ? (
-        <DeleteOrgDialog close={() => setConfirming(false)} org={props.org} />
-      ) : null}
-    </>
+    <DeleteOrgSection
+      api={useMembersApi(props.org.id)}
+      now={now}
+      onDeleted={(deleted) => {
+        app.putOrg(deleted)
+        go(routes.org(props.org.id))
+      }}
+      org={props.org}
+      timeZone={timeZone}
+      viewport={useMembersViewport()}
+    />
   )
 }
 

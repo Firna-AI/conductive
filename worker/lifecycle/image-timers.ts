@@ -26,6 +26,7 @@ export async function refreshImagesForPush(
   runtime: ImageRuntime,
   input: {
     githubRepositoryId: number
+    installationId?: number
     ref: string
     software: ImageSoftwareArtifact
   },
@@ -36,9 +37,16 @@ export async function refreshImagesForPush(
        (SELECT id FROM image_builds WHERE org_id = s.org_id AND state = 'running'))
      JOIN json_each(j.repositories_json) entry
      JOIN repositories r ON r.id = json_extract(entry.value, '$.id') AND r.org_id = s.org_id
-     JOIN orgs ON orgs.id = r.org_id WHERE r.github_repository_id = ? AND orgs.deleted_at IS NULL AND ${activeOrgPredicate('orgs')}`,
+     JOIN orgs ON orgs.id = r.org_id WHERE r.github_repository_id = ? AND orgs.deleted_at IS NULL
+     AND ${activeOrgPredicate('orgs')}
+     AND (? IS NULL OR EXISTS (SELECT 1 FROM github_installations i
+       WHERE i.id = r.installation_id AND i.id = ? AND i.suspended_at IS NULL))`,
   )
-    .bind(input.githubRepositoryId)
+    .bind(
+      input.githubRepositoryId,
+      input.installationId ?? null,
+      input.installationId ?? null,
+    )
     .all<{ orgId: string; defaultBranch: string }>()
   const builds: string[] = []
   for (const repository of results) {

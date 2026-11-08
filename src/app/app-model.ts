@@ -3,9 +3,7 @@ import { MODELS_PATH, type AgentModel } from '../shared/agents'
 import { API_PATHS, orgPath, type User } from '../shared/api'
 import { GET_STARTED_PATH, type GetStartedResponse } from '../shared/onboarding'
 import {
-  deleteOrgPath,
   leaveOrgPath,
-  restoreOrgPath,
   type CreateOrgRequest,
   type OrgSummary,
   type RenameOrgRequest,
@@ -20,10 +18,11 @@ import {
   readUser,
 } from './api/read-core'
 import { AccountModel } from './account-model'
-import { setupSteps } from './setup-steps'
+import { InvitationsModel } from './invitations-model'
 import { OrgModel } from './org-model'
 import { isSuspended } from './permissions'
 import type { AppServices } from './services'
+import { setupSteps } from './setup-steps'
 import { asApiError, Store, type Readable } from './store'
 
 export type Boot =
@@ -57,6 +56,8 @@ export class AppModel {
    */
   readonly getStarted: Readable<GetStartedResponse | null>
   readonly account: AccountModel
+  /** The invitations that wait for the user, which Home shows first. */
+  readonly invitations: InvitationsModel
   readonly services: AppServices
   private readonly orgModels = new Map<string, OrgModel>()
   /** The last reply of the API on the steps. No screen reads it as it is. */
@@ -73,6 +74,7 @@ export class AppModel {
       orgs: this.orgs,
       account: this.account.account,
     })
+    this.invitations = new InvitationsModel(this)
     // The model lives as long as its store, so it never unsubscribes.
     this.boot.subscribe(() => this.followPerson())
   }
@@ -191,7 +193,12 @@ export class AppModel {
     return this.org(orgId).services.api
   }
 
-  private putOrg(org: OrgSummary): void {
+  /**
+   * Puts a newer record of an org in the list of the user, such as the
+   * answer of Delete org or Restore. The rail and the screens of the org
+   * follow it.
+   */
+  putOrg(org: OrgSummary): void {
     this.orgs.change((orgs) =>
       orgs.some((item) => item.id === org.id)
         ? orgs.map((item) => (item.id === org.id ? org : item))
@@ -226,18 +233,6 @@ export class AppModel {
     )
   }
 
-  /** Delete org asks for the name of the org, which the request repeats. */
-  async deleteOrg(orgId: string, name: string): Promise<void> {
-    this.putOrg(
-      await this.orgApi(orgId).send(
-        'POST',
-        deleteOrgPath(orgId),
-        { name },
-        readOrgResponse,
-      ),
-    )
-  }
-
   /**
    * Leaves an org, and takes it out of the list of the user. A suspended
    * org takes a leave too, as its one change. The API refuses the leave of
@@ -246,16 +241,5 @@ export class AppModel {
   async leaveOrg(orgId: string): Promise<void> {
     await this.orgApi(orgId).send('POST', leaveOrgPath(orgId), {}, ignore)
     this.orgs.change((orgs) => orgs.filter((org) => org.id !== orgId))
-  }
-
-  async restoreOrg(orgId: string): Promise<void> {
-    this.putOrg(
-      await this.orgApi(orgId).send(
-        'POST',
-        restoreOrgPath(orgId),
-        {},
-        readOrgResponse,
-      ),
-    )
   }
 }

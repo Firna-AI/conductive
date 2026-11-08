@@ -24,12 +24,15 @@ import { useViewport } from '../ui/viewport'
 import { ArchiveDialog } from './ArchiveDialog'
 import { ChatArea } from './ChatArea'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
+import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
 import { sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
-import { shownWorkspaces } from './shown-workspaces'
+import { shownWorkspaces } from './tab-memory'
+import { ToolsPart } from './tools/ToolsPart'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
+import { WorkspaceMacBar } from './WorkspaceMacBar'
 import type { WorkspaceView } from './workspace-view'
 import workspaceStyles from './workspace.module.css'
 
@@ -65,12 +68,13 @@ function connectView(view: WorkspaceView): () => void {
  * An open workspace. Desktop shows the chat column beside the right column;
  * a phone shows one view at a time, with five tabs to switch. The shell draws
  * the header, the start steps, and the states of the sandbox, and the chat
- * fills the centre. Later milestones fill the files, the tools, and the pull
- * request bar.
+ * fills the centre. The app's own parts fill the files, the tools, the pull
+ * request bar, and the owner picker, unless the host gives its own.
  *
- * The tab keeps the model, the header notices, and the chat of each
- * workspace that it showed. So a return draws the workspace at once, and
- * each stream asks only for the events after its own last event number.
+ * The tab keeps the model, the header notices, the chat, and the tool
+ * events of each workspace that it showed. So a return draws the workspace
+ * at once, and each stream asks only for the events after its own last
+ * event number.
  *
  * In a suspended org the history stays, and the refused bar of the org
  * takes the place of the composer, also while the stop of its cloud
@@ -94,7 +98,7 @@ export function WorkspaceScreen(props: {
     { orgId: props.org.id, workspaceId: props.workspaceId },
     { create, connect: connectView },
   )
-  const { model, notices, chat } = shown
+  const { model, notices, chat, toolEvents } = shown
   const startError = useStore(model.startError)
   const features = useFeatures()
   const viewport = useViewport()
@@ -160,27 +164,42 @@ export function WorkspaceScreen(props: {
     viewer: props.viewer,
     sandbox,
     readOnly: suspended || sandbox === 'archived',
+    panel: sandboxParts.panel,
     viewport,
     view: props.view,
     stream: model.stream,
+    savedView: chat,
+    toolEvents: toolEvents.subscribe,
     archive: mayArchive(access, workspace, props.viewer)
       ? () => void model.archive.start()
       : null,
     onReassigned: (updated) => model.reassigned(updated),
   }
   const phone = viewport === 'phone'
-  const panelState = sandboxParts.panel
-  const panel = (content: ReactNode) =>
-    panelState === null ? (
-      content
-    ) : (
+  // The state of a sandbox that does not run, in place of a part: the
+  // notice of the bar, with the words of a refusal, or the wait of a start.
+  const down =
+    sandboxParts.panel === null ? null : (
       <SandboxPanel
         phone={phone}
         resume={resume}
-        state={panelState}
+        state={sandboxParts.panel}
         workspace={workspace}
       />
     )
+  const panel = (content: ReactNode) => down ?? content
+  // The shell's own tools keep their tabs on desktop around the state of a
+  // sandbox that does not run, and mount no tool then. A tools part of the
+  // host shows the state in its place.
+  const tools = features.tools ? (
+    panel(features.tools(context))
+  ) : (
+    <ToolsPart context={context} placeholder={down} />
+  )
+  // The Files part keeps the lists of a stopped sandbox, from the copy that
+  // the workspace keeps, and shows a start or a refusal in their place. An
+  // archived workspace has no lists.
+  const files = sandbox === 'archived' ? panel(null) : features.files?.(context)
   const chatArea = (
     <ChatArea
       chat={chat}
@@ -205,10 +224,10 @@ export function WorkspaceScreen(props: {
     const archived = sandbox === 'archived'
     const content = {
       chat: chatArea,
-      files: panel(features.files?.(context)),
-      tool: panel(features.tools?.(context)),
+      files,
+      tool: tools,
     }
-    return (
+    const screen = (
       <div className={page.mobileBody}>
         {header}
         <HeaderNoticeBars notices={notices} />
@@ -224,22 +243,28 @@ export function WorkspaceScreen(props: {
         {dialog}
       </div>
     )
+    // An archived workspace on a phone shows only its chat: no pull request
+    // row and no Checks, so it reads no GitHub state.
+    if (archived) return screen
+    return <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
   }
+  // The bar of the Mac app tops the main area, above the whole workspace.
   return (
-    <div className={body.body}>
-      <div className={body.chat}>
-        {header}
-        <HeaderNoticeBars notices={notices} />
-        {chatArea}
+    <WorkspaceGitHub context={context}>
+      <WorkspaceMacBar context={context} />
+      <div className={body.body}>
+        <div className={body.chat}>
+          {header}
+          <HeaderNoticeBars notices={notices} />
+          {chatArea}
+        </div>
+        <RightColumn
+          files={files}
+          pullRequest={features.pullRequest?.(context)}
+          tools={sandbox === 'archived' ? undefined : tools}
+        />
+        {dialog}
       </div>
-      <RightColumn
-        files={panel(features.files?.(context))}
-        pullRequest={features.pullRequest?.(context)}
-        tools={
-          sandbox === 'archived' ? undefined : panel(features.tools?.(context))
-        }
-      />
-      {dialog}
-    </div>
+    </WorkspaceGitHub>
   )
 }

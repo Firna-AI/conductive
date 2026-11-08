@@ -73,6 +73,10 @@ export class WorkspaceChat {
     return this.operations.commit(workspaceId, event, occurredAt)
   }
 
+  commitPreviewRevocations(workspaceId: string, previewIds: readonly string[]) {
+    return this.operations.revokePreviews(workspaceId, previewIds)
+  }
+
   constructor(
     storage: ChatStorage,
     env: AppEnv,
@@ -179,6 +183,11 @@ export class WorkspaceChat {
 
   closeRunner(): void {
     this.runner.close()
+  }
+
+  closeConnections(): void {
+    this.runner.close()
+    this.browsers.closeAll()
   }
 
   /** Trusted feature owners share the same stored browser event sequence. */

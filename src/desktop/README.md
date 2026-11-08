@@ -2,8 +2,9 @@
 
 The Desktop tool shows the live desktop of a workspace's cloud computer,
 where the agents use a browser. The workspace screen shows it in the tools
-panel of the right column, and on a phone as the Desktop page. Milestone 15i
-mounts it and wires it to the backend.
+panel of the right column, and on a phone as the Desktop page, as
+[the tools part](../shell/workspace/README.md#the-tools-part) says. The
+screen mounts the tool at each show, so each show reads a new desktop URL.
 
 ## Behaviour
 

@@ -119,7 +119,7 @@ export async function reconcileWorkspaceSandbox(
 }
 
 /** A refused control operation can mean the computer already stopped. Read once. */
-async function replyOrCurrentState(
+export async function replyOrCurrentState(
   provider: SandboxProvider,
   sandboxId: string,
   operation: () => Promise<Sandbox>,

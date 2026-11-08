@@ -31,23 +31,30 @@ On the app hostname, the Worker serves these API routes:
 - The chat routes of a workspace: its sessions and their actions, the chat history, and the events socket.
 
 The [app API](app-api/README.md) serves the account, shell, and workspace routes after the request gate.
+`CONDUCTIVE_FRAME_SOURCES` adds trusted HTTPS desktop stream origins to the asset policy.
+Use the same configured sources in the web app and Mac app.
 The model list and the default model come from Worker variables, as [Deployment inputs](../docs/deployment.md#models) says.
 
-The Worker routes no other app API path yet.
-A signed-in request to another path gets `404 not_found`.
-The missing paths include org settings, image builds, and GitHub installations of the account.
-The other missing paths are section writes, member writes other than Leave, and workspace archive.
-With the model variables set, the production app can start after sign-in.
-A screen that reads a missing path still gets `404`.
-`npm run dev` does not show these gaps, because the development app uses its fake API in the browser.
+The Worker also serves org settings, repository choices, sections, member writes,
+workspace metadata and archive, image builds and logs, account GitHub access,
+and pending invitations with explicit acceptance.
+The [feature shell](app-api/feature-shell.ts) implements the shared shell writes.
+The [workspace features](features/workspace.ts) dispatch files, terminal,
+previews, and desktop inside the real workspace object.
+The [GitHub composition](features/github.ts) stores banner updates in the common chat stream.
 
-On the machine hostname, the Worker serves the Mac command route, the git credential route, the image source credential route, and the runner socket, `/v1/runner`.
-The handlers of the two credential routes check their own tokens, as the [lifecycle README](lifecycle/README.md#machine-route) says.
-They run no browser gate and read no JSON body.
-The runner socket needs the workspace token as a bearer token, and it skips the browser gate.
-The Worker forwards it to the Durable Object of the workspace of that token.
-A runner request without a current workspace token gets `401 workspace_token_required`.
-Each other machine path gets a `501` stub, such as the GitHub webhooks and the workspace tools of the agents.
+On the machine hostname, the Worker serves the Mac command routes, the git
+credential route, the image source credential route, workspace create/list
+tools, GitHub webhooks, and the runner socket.
+These handlers use their own machine credentials and skip the browser gate.
+The [tools composition](tools/composition.ts) reads the active stored turn.
+It keeps the inherited owner separate from the sender of the first message.
+
+The preview domain forwards each private preview to its workspace object.
+Its authorizer redeems the one-use viewer grant before any sandbox request.
+The object owns preview expiry and revocation beside its other alarm sources.
+A Cron Trigger runs deleted-org maintenance and cleanup every 15 minutes.
+The [member composition](members/composition.ts) supplies the durable lifecycle hooks.
 
 ## Development
 
@@ -66,12 +73,15 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 ### Key Code
 
 - [app.ts](app.ts) exports the Worker HTTP handler.
-- [application.ts](application.ts) selects the host surface, forwards the device, chat, and runner routes, serves the machine credential routes, and applies the request gate to the other app routes.
+- [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
 - [routes.ts](routes.ts) dispatches protected app routes.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
-- [workspace.ts](workspace.ts) holds `Workspace`, the Durable Object class of each workspace.
+- [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity).
+- [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. Each message is fixed safe text, never a token, a raw error, a request body, or response data.
+- [features/alarms.ts](features/alarms.ts) keeps separate durable alarm deadlines for lifecycle, devices, previews, and GitHub.
+- [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
 - [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
 - [http/request-body.ts](http/request-body.ts) applies the default and declared request body limits.

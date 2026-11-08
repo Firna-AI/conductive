@@ -191,7 +191,11 @@ export function SandboxBar(props: {
 export function SandboxPanel(props: {
   state: SandboxPanelState
   workspace: Workspace
-  resume: Action<[]>
+  /**
+   * Resume, or Try again, which a phone shows. Null where the panel shows
+   * only a start or a refusal, which have no action.
+   */
+  resume: Action<[]> | null
   phone: boolean
 }) {
   const theme = useSharedUiTheme()
@@ -211,7 +215,7 @@ export function SandboxPanel(props: {
   return (
     <EmptyState
       action={
-        phone && problem.action ? (
+        phone && problem.action && resume ? (
           <ActionButton
             busy={resume.pending}
             onPress={() => resume.run()}

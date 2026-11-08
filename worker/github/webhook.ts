@@ -21,6 +21,11 @@ export interface GitHubWebhookEnv {
 export interface GitHubWebhookDependencies {
   now: () => number
   refresh: GitHubRefreshWorkspace
+  pushed?: (
+    repositoryId: number,
+    installationId: number,
+    branch: string,
+  ) => Promise<void>
 }
 
 async function authenticatedBody(
@@ -127,6 +132,12 @@ export async function handleGitHubWebhook(
         ...(route.push ? { pushBranch: route.branch } : {}),
       })
     }
+    if (route.push && route.branch !== undefined)
+      await dependencies.pushed?.(
+        route.repositoryId,
+        route.installationId,
+        route.branch,
+      )
     await completeDelivery(env.DB, deliveryId, dependencies.now())
     return new Response(null, { status: 204 })
   } catch (error) {

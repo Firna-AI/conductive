@@ -8,7 +8,7 @@ import { LinkTabs } from '../ui/links'
 import { useViewport } from '../ui/viewport'
 import { ComputerTab } from './ComputerTab'
 import { GeneralTab } from './GeneralTab'
-import { MembersTab } from './MembersTab'
+import { MembersSettings } from './MembersSettings'
 import { RepositoriesTab } from './RepositoriesTab'
 
 /** The parts of the org settings, in their order. */
@@ -28,7 +28,7 @@ function TabBody(props: { org: OrgSummary; tab: SettingsTab; user: User }) {
     case 'cloud-computer':
       return <ComputerTab org={props.org} />
     case 'members':
-      return <MembersTab org={props.org} user={props.user} />
+      return <MembersSettings org={props.org} user={props.user} />
   }
 }
 

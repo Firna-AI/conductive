@@ -4,9 +4,9 @@ The web app is the React app under `src/`. `src/app/` holds its data: the
 typed API client, the models that screens read, the router, the event
 stream, and the services that the app gets from outside. `src/shell/` holds
 the screens of the app shell.
-The workspace screen mounts the chat. The files, the tools, and the pull
-request bar plug into the shell as features, as [Composition](#composition)
-says.
+The workspace screen mounts the chat, the Files screens, the tools, the
+pull request bar, and the owner picker. A host can give its own parts, as
+[Composition](#composition) says.
 
 ## Run it
 
@@ -55,37 +55,52 @@ with the shell's own chat column, as
 [The chat of the workspace](../shell/workspace/README.md#the-chat-of-the-workspace)
 says. Each feature is a function
 of `WorkspaceContext`, which gives the org, the workspace, the viewer, the
-sandbox state, the layout, the address after the workspace, the ordered
-event stream, and the Archive action. A missing feature leaves its place
-empty.
+sandbox state, whether the workspace is read-only, what a part shows while
+the sandbox does not run, the layout, the address after the workspace, the
+ordered event stream, the saved view of the kept chat, the events of the
+tools, and the Archive action. The feature clients send through the
+services of the org, from `useOrgServices`, whose client and fetch mark the
+org on `org_suspended`. The shell gives
+its own `files`, `tools`, `pullRequest`, and `owner` parts, as
+[the workspace screen](../shell/workspace/README.md#the-files-part) says. A
+part of the host takes the place of the shell's own part. A missing
+feature leaves its place empty.
 
 | Feature       | Place |
 | ------------- | ----- |
 | `tabs`        | The tabs of the shell's own chat column, in place of the chat |
 | `transcript`  | The history of that column, before the start steps |
 | `composer`    | The composer of that column while the sandbox runs or starts |
-| `center`      | A file or diff tab in place of the chat |
-| `files`       | All files, Changes, and Checks |
-| `tools`       | Terminal, Preview, and Desktop |
-| `pullRequest` | The pull request bar, or the row on a phone |
-| `owner`       | The owner picker that reassigns a workspace |
+| `center`      | A part in place of the whole chat. Without it, the chat shows the file or diff tab of the address |
+| `files`       | All files, Changes, and Checks. The shell gives its own |
+| `tools`       | Terminal, Preview, and Desktop. The shell gives its own |
+| `pullRequest` | The pull request bar, or the row on a phone. The shell gives its own |
+| `owner`       | The owner picker that reassigns a workspace. The shell gives its own |
 
-The Members tab of the org settings is `MembersTab` in
-`../shell/settings/`. It shows the members read-only. Invite, role changes,
-and removal are not wired into this tab yet.
+The org settings mount the members UI of `../members/`: `MembersSettings`
+for the Members tab, Delete org in the General tab of an admin, the restore
+page of a deleted org, and the read-only Repositories and Cloud computer
+tabs of a member. The Cloud computer tab of a member gets the live builds,
+log, and settings of `ComputerModel`. `useMembersApi(orgId)` in
+`../shell/settings/members-api.ts` gives one members client for each org,
+over the fetch of the org's client, so a refusal of a suspended org marks
+the org. In a suspended org every person gets the read-only tabs, and the
+restore page offers no Restore. A removal reads the list and the members
+of the org again. Delete org and Restore give their answers to
+`AppModel.putOrg`.
 
 ## Data lifecycle
 
 [Data lifecycle](data-lifecycle.md) gives the rules of the data that the
 screens read and write. It covers the org parts, the saves, the creates,
-the kept workspace models, the build log, the read marks, and the
-workspace stores.
+the invitations, the kept workspace models, the build log, the read marks,
+the workspace stores, and the raw event streams of feature stores.
 
 ## Screens
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
-the account and Get started, sign-in, orgs, panels and layers, the
-focus, saved drafts, and New workspace.
+the account and Get started, sign-in, invitations, orgs, panels and
+layers, the focus, saved drafts, and New workspace.
 
 ## Rules for this code
 
@@ -136,8 +151,17 @@ clicks, types, and lets the answers of the fake API settle.
 
 ## Key code
 
-- `api/client.ts`: the JSON client and `ApiError`. `api/read-*.ts`: the readers.
-- `app-model.ts`: the session, the orgs, the models list, and Get started.
+- `api/client.ts`: the JSON client and `ApiError`. The client also gives
+  its `fetch`, for a feature client that reads its own replies, so the web
+  app and the Mac app keep their transport. `api/read-*.ts`: the readers.
+- `replay-socket.ts`: `replaySubscribe`, the raw event stream of a feature
+  store over the event source of the app, with the reconnect rules of
+  [Data lifecycle](data-lifecycle.md).
+- `app-model.ts`: the session, the orgs, the models list, Get started, and
+  `putOrg`, which takes a confirmed org record.
+- `invitations-model.ts`: `InvitationsModel`, the pending invitations,
+  Continue to workspaces, and Accept invitation.
+  `api/read-invitations.ts`: their readers.
 - `get-started.ts`: the order and the states of the steps of Get started.
   `setup-steps.ts`: `setupSteps`, the steps that the screens show, and
   `setupOrg`, the org of Get started and of the address `/`.
@@ -157,8 +181,8 @@ clicks, types, and lets the answers of the fake API settle.
 - `workspace-model.ts` and `archive-model.ts`: an open workspace, its
   `startError` and `reassigned`, and Archive.
 - `suspension.ts` and `permissions.ts`: the suspension of an org, the
-  client that reports its refusals, and the rules of what a person may
-  change.
+  client that reports its refusals, also the replies of its fetch, and the
+  rules of what a person may change.
 - `workspace-read-marks.ts`: `WorkspaceReadMarks`, the read marks of one
   kept workspace model, with its shown and confirmed numbers.
 - `new-workspace-model.ts`: the first message that creates a workspace.
@@ -167,7 +191,8 @@ clicks, types, and lets the answers of the fake API settle.
 - `computer-model.ts`: the scripts, the env vars, the builds, and the log.
 - `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
   the log of one build.
-- `events.ts`: the ordered event stream and the event socket.
+- `events.ts`: the ordered event stream, the event socket, and
+  `openSocket`, the terminal socket on the same origin as the events.
 - `workspace-store.ts`: `useWorkspaceStore`, which gives a connected view
   the store of its workspace, and the `create` and `connect` functions that
   the view supplies.

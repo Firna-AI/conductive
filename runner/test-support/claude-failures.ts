@@ -7,6 +7,7 @@ import type { ProviderEvent } from '../src/providers/types'
 import { string } from '../src/parse'
 import { FakeClaudeQuery } from './claude-query'
 import { turn } from './harness'
+import { fakeToolContext } from './providers'
 
 export async function checkClaudeFailures(
   runner: Runner,
@@ -163,6 +164,7 @@ export async function checkClaudeFailures(
     login: turn().login,
     choice: turn().message.choice,
     conversationId: null,
+    tools: fakeToolContext,
     event: (event) => {
       events.push(event)
     },

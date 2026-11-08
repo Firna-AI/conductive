@@ -88,7 +88,7 @@ So a plain object does not type-check as the environment of a child process.
 - `harness.ts` owns D1 setup and the HTTP test app.
 - `migrations.ts` applies migrations for every test harness.
 - `fake-boat.ts` supplies provider replies and fresh streaming response factories.
-- `fake-github.ts` supplies sign-in replies.
+- `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.
 - `fake-runner.ts` supplies the runner without an agent SDK.
 - `fake-durable-object.ts` supplies the workspace endpoint without Cloudflare.
 - `fake-runner-files.ts` joins valid file report parts for the endpoint.

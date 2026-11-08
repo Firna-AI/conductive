@@ -8,7 +8,9 @@ import { ACCOUNT_PATHS } from '../../shared/account'
 import { MODELS_PATH } from '../../shared/agents'
 import { orgPath } from '../../shared/api'
 import type { WorkspaceEvent } from '../../shared/events'
+import { githubPaths } from '../../shared/github'
 import { membersPath } from '../../shared/members'
+import { terminalPaths } from '../../shared/terminal'
 import { workspacePath } from '../../shared/workspaces'
 import { byLabel } from '../../test-support/dom-queries'
 import type { FakeApiServer } from '../../test-support/fake-api'
@@ -83,6 +85,19 @@ export function chatRequests(server: FakeApiServer, from: number): string[] {
         others.some((path) => line === `GET ${path}`),
     )
 }
+
+/**
+ * The reads of a return to a kept workspace, in path order: the terminal and
+ * the GitHub bar read their state again, as at each show, and the model
+ * reads the workspace. The chat and the files read nothing again. The parts
+ * read on their own, so the order in which they read is not fixed.
+ */
+export const returnReads = [
+  `GET ${terminalPaths.connection(org, id)}`,
+  `GET ${githubPaths.banner(org, id)}`,
+  `GET ${githubPaths.checks(org, id)}`,
+  `GET ${workspacePath(org, id)}`,
+].sort()
 
 /** The JSON bodies of the requests with this method and path, from `from` on. */
 export function bodiesOf(

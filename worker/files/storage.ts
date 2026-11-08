@@ -32,7 +32,7 @@ const KEY = 'files:state:v1'
 const CHUNK_CHARACTERS = 65_536
 
 export function durableFilesStorage(
-  storage: DurableObjectStorage,
+  storage: Pick<DurableObjectStorage, 'get' | 'transaction'>,
 ): FilesStorage {
   return {
     get: (key) => storage.get<unknown>(key),

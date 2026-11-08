@@ -15,6 +15,11 @@ plan limits.
   org, and reassigns a workspace. A member who is not an admin sees the
   members and each workspace's owner without actions. "Owner" names only
   the person who owns a workspace.
+- After the GitHub sign-in, the invited person sees each pending
+  invitation with its org and the invited email, as
+  `app/sign-in/invitations` shows. Accept invitation joins that org and
+  opens it. Continue to workspaces accepts nothing. The page has no
+  Decline.
 - Only an admin renames the org, and changes the repositories, the scripts,
   and the env vars, from decisions 54 and 57. A member sees the General,
   Repositories, and Cloud computer tabs read-only: the values, without edit

@@ -1,7 +1,11 @@
 # Preview backend
 
 This area issues preview hostnames, launches previews, and proxies private
-sandbox ports. The production route dispatcher does not call these handlers yet.
+sandbox ports. The production Worker forwards API and proxy requests to the workspace object.
+That object keeps the live proxy, its alarm deadline, and lifecycle revocation hooks.
+Close, expiry, and lifecycle revocation publish `preview.revoked` in the common chat stream.
+A marker commits with each revocation event, so retries keep one stored event for each preview.
+The close response waits for that commit. Lifecycle callbacks use the queue-owned publisher.
 The browser uses the [shared preview contract](../../src/shared/previews.ts).
 
 Create one `createPreviewHandler(env, dependencies)` for the route owner.
@@ -164,9 +168,11 @@ The request and response streams read only when their consumer requests data.
 They read one chunk at a time. No cached authorization or time window permits data.
 Completed HTTP connections release their registry entries.
 
-Set `dependencies.onActivity` to notify the workspace lifecycle owner.
-The proxy also updates the D1 activity time. Each preview HTTP request and
-WebSocket handshake counts. Socket frames and idle connections do not count.
+Set `dependencies.onActivity` to report each input to the input owner of the
+workspace, as [Input activity](../lifecycle/README.md#input-activity) says.
+That call returns at once. The proxy writes no D1 activity time. Each preview
+HTTP request and WebSocket handshake counts. Socket frames and idle
+connections do not count.
 
 The header allowlists live in `headers.ts`. The cookie allowlist filters
 request and response cookies. It accepts valid app cookie names. It excludes
@@ -181,6 +187,7 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 
 ### Key Code
 
+- [revocation-events.ts](revocation-events.ts) stores each publication marker with its common-stream event.
 - [handler.ts](handler.ts) exports the API, launch, proxy, revocation, and expiry entry points.
 - [launch.ts](launch.ts) builds the launch replies and the authorizer page response, and handles both authorizer POST modes.
 - [launch-document.ts](launch-document.ts) builds the launch page markup and its CSP.

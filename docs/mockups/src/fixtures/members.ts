@@ -5,7 +5,7 @@
  * members of an org and reassigns its workspaces (decision 54).
  */
 
-import { account } from './orgs'
+import { account, type OrgKey } from './orgs'
 
 export const personKeys = ['cal', 'priya', 'jonas'] as const
 
@@ -66,6 +66,18 @@ export const acmeMembers: readonly Membership[] = [
 
 export const acmeInvites: readonly Invite[] = [
   { email: 'mira@example.com', sent: '2 days ago' },
+]
+
+/**
+ * An invite as the invited person sees it: the org that sent it, and the
+ * verified email of their GitHub account that it names.
+ */
+export type PendingInvite = { org: OrgKey; email: string }
+
+/** The invites that wait for the signed-in person at a first sign-in. */
+export const pendingInvites: readonly PendingInvite[] = [
+  { org: 'acme', email: 'cal@example.com' },
+  { org: 'futex', email: 'cal@example.com' },
 ]
 
 /** The member whom the remove state removes from Acme. */

@@ -107,6 +107,16 @@ export async function cleanupDeletedOrgs(
             )
               throw cleanupBusy()
           }
+          const deleteOrgState = hooks.deleteOrgState
+          if (deleteOrgState) {
+            await runLifecycleHook(
+              env,
+              org.id,
+              token,
+              dependencies,
+              (ownership) => deleteOrgState(org.id, ownership),
+            )
+          }
           if (!(await purgeOrgRecords(env.DB, org.id, token)))
             throw new Error('Org purge claim was lost')
           result.purged.push(org.id)

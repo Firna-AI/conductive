@@ -122,6 +122,9 @@ export interface ReadFileRequest {
 export interface ReadDiffRequest {
   path: string
 }
+/** Maximum bytes of a file or diff read. */
+export const FILE_READ_MAX_BYTES = 5_242_880
+
 export interface FileResponse {
   path: string
   mediaType: string

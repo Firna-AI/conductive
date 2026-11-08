@@ -14,14 +14,17 @@ screens show.
   gives no time of the suspension, so it changes no summary. So a page with
   an old org list shows the suspended org at once.
 - The client of `OrgModel` reports each such refusal. `noteOrgRefusals` in
-  `suspension.ts` wraps it. The kept chat of a workspace uses the same
-  client. So do the rename, the delete, the restore, and the leave of an
-  org in `AppModel`. The create of an org and the account actions use the
-  client of the app.
+  `suspension.ts` wraps it, also its `fetch`, whose failed replies it
+  reads. The kept chat of a workspace uses the same client. So do the
+  rename and the leave of an org in `AppModel`. The feature clients of an
+  org send through its `fetch`: the members UI with its delete and
+  restore, the kept files, Download, the GitHub views, the tools, and the
+  Mac bar. The create of an org and the account actions use the client of
+  the app.
 - `OrgModel.suspension.suspended` follows the summary and the refusals.
   `useOrgAccess` in `../shell/context.ts` gives a screen the role of the
   person and the suspension. `permissions.ts` holds the rules:
-  `mayChangeSettings`, `showsAdminOnly`, and `mayArchive`.
+  `mayChangeSettings` and `mayArchive`.
 - A workspace of a suspended org sends no Resume, no read mark, and no
   activity. An `org_suspended` refusal stays after an owner change. Only a
   `user_suspended` refusal ends with a new owner.
@@ -37,9 +40,11 @@ screens show.
   menu, and no drag. A section collapses in this view only.
 - The rail names the org as suspended.
 - The settings show the notice above each tab. Each tab is read-only, also
-  for an admin, and General has no Delete org. A save that the API refuses
-  with `org_suspended` closes the open forms of the tab, and a toast tells
-  what was not saved.
+  for an admin, and General has no Delete org. Repositories, Cloud
+  computer, and Members show the read-only tabs of the members UI, with no
+  sentence that only an admin changes them, and Members shows no invite. A
+  save that the API refuses with `org_suspended` closes the open forms of
+  the tab, and a toast tells what was not saved.
 - General offers Leave org to a person whom the last-admin rule lets
   leave: a member who is not an admin, or an admin while the members list
   another admin. The question counts the person's workspaces from the
@@ -51,7 +56,9 @@ screens show.
 - New workspace shows the refused bar in place of the composer.
 - A workspace shows the refused bar of the org in place of the composer,
   also while the stop of its cloud computer runs. The files and the tools
-  show the refused state. Resume and Archive do not show. An archived
+  show the refused state. Resume and Archive do not show, also not in the
+  pull request bar, and the owner picker offers no other owner. A change of
+  the open tabs or the file list stays in the browser. An archived
   workspace keeps its bar, with the notice of the org above it.
 - The chat shows its history read-only, as
   [the chat README](../chat/README.md#rules-for-this-code) says.

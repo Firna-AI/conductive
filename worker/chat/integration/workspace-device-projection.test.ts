@@ -10,6 +10,7 @@ import {
   workspacesPath,
 } from '../../../src/shared/workspaces'
 import { TOOL_TURN_HEADER } from '../../../tools/context'
+import { deleteOrgPath } from '../../../src/shared/orgs'
 import { orgWorkspaces } from '../../tools/store'
 import { closeSockets } from '../adapter-sockets.test-support'
 import { array } from '../agent-events'
@@ -35,6 +36,7 @@ beforeAll(async () => {
     'worker/chat/integration/workspace-review-entry.test-support.ts',
   )
 })
+
 afterEach(async () => {
   await fixture?.dispose()
   fixture = undefined
@@ -157,4 +159,48 @@ it('keeps current Mac input across lifecycle activity, heartbeat, retained retur
       .bind(OUTER_WORKSPACE)
       .first('state'),
   ).toBe('ready')
+})
+
+it('cancels a pending Mac request before org deletion finishes without projecting into the deleted org', async () => {
+  const active = (fixture = await reviewWorkspaceFixture(bundle))
+  const mac = await active.connectMac()
+  const requested = await active.runtime.dispatchFetch(
+    `${OUTER_MACHINE_ORIGIN}${DEVICE_COMMAND_PATH}`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${OUTER_TOKEN}`,
+        [TOOL_TURN_HEADER]: 'first-turn',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        requestId: 'deleted-org-request',
+        command: 'echo pending',
+        folder: '/Users/owner/project',
+        reason: 'Check deletion cleanup',
+      }),
+    },
+  )
+  expect(requested.status).toBe(202)
+  expect(await mac.inbox.next()).toMatchObject({
+    type: 'command.request',
+    request: { requestId: 'deleted-org-request' },
+  })
+  const deleted = await active.request(deleteOrgPath(OUTER_ORG), {
+    method: 'POST',
+    body: JSON.stringify({ name: 'Chat org' }),
+  })
+  expect(deleted.status).toBe(200)
+  expect(await mac.inbox.next()).toMatchObject({
+    type: 'command.cancel',
+    requestId: 'deleted-org-request',
+    workspaceId: OUTER_WORKSPACE,
+  })
+  expect(
+    await active.actor().deviceOperation(OUTER_WORKSPACE, {
+      type: 'workspace.validate',
+      requestId: 'deleted-org-request',
+      tokenHash: 'ignored-ended-request',
+    }),
+  ).toEqual({ ok: true, value: { valid: false, reason: 'request_ended' } })
 })

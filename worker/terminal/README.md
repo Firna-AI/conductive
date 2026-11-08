@@ -7,7 +7,8 @@ It is the only owner of the terminal software in a sandbox. That software
 is ttyd, tmux, their two systemd services, the launcher, the shell server,
 and the password program.
 The [sandbox software](../../image/README.md) holds no terminal file.
-The production route dispatcher does not call these handlers yet.
+The production Worker forwards both terminal paths to the workspace object.
+Its feature handler keeps one terminal connection owner and reports input activity to the lifecycle.
 The browser uses the [shared terminal contract](../../src/shared/terminal.ts).
 
 Call `createTerminalHandler(env, dependencies).fetch(request)` for both
@@ -96,8 +97,8 @@ The app supplies no extra terminal secret at start. The workspace token
 keeps its existing scope and does not authenticate terminal access.
 `/run` must stay temporary memory storage in the org image.
 
-Set `dependencies.onActivity` to notify the workspace lifecycle owner.
-The handler also updates the D1 activity time. Only terminal input counts.
+Set `dependencies.onActivity` to report each input to the input owner of the workspace, as [Input activity](../lifecycle/README.md#input-activity) says.
+That call returns at once. The handler writes no D1 activity time. Only terminal input counts.
 The initial handshake, window changes, output, and idle sockets do not count.
 
 `TerminalConnections` owns each authenticated session and workspace/sandbox

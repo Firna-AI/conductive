@@ -1,8 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { ComputerModel } from '../../app/computer-model'
-import { ManualDelay, requestLines } from '../../app/test-kit'
+import { requestLines } from '../../app/test-kit'
 import { orgSettingsPaths } from '../../shared/org-settings'
 import {
   accessibleName,
@@ -17,7 +16,7 @@ import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { orgSuspendedBody } from '../../test-support/suspended-org'
 import { click, mountScreen, settle, typeText } from '../test-mount'
 import { startedApp } from '../test-render'
-import { ComputerSettings } from './ComputerTab'
+import { ComputerTab } from './ComputerTab'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -27,18 +26,16 @@ const [firstName = '', secondName = ''] = names
 const suspendedMessage =
   'This org is suspended. For questions, write to abuse@conductive.build.'
 
-/** The Cloud computer settings of Acme, mounted for its admin. */
+/**
+ * The Cloud computer tab of Acme, mounted for its admin. The tab gives the
+ * settings with their actions, or the read-only view when the person may
+ * not change them, as after a refusal of a suspended org.
+ */
 async function mountedSettings(server: FakeApiServer): Promise<HTMLElement> {
   const app = await startedApp(server)
   const org = app.orgs.get().find((item) => item.id === FAKE_IDS.org)
   if (!org) throw new Error('The fake org is missing.')
-  await app.org(org.id).reload('builds')
-  const computer = new ComputerModel(app.org(org.id), new ManualDelay().delay)
-  await computer.load()
-  const view = mountScreen(
-    app,
-    <ComputerSettings computer={computer} org={org} />,
-  )
+  const view = mountScreen(app, <ComputerTab org={org} />)
   await settle()
   return view
 }

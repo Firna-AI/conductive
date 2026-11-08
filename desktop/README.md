@@ -10,6 +10,13 @@ It has no preload script or privileged renderer bridge.
 Only the bundled main frame can use a sanitized clipboard write.
 All other permissions are denied.
 
+The Download action fetches an authorized file response before it creates a memory blob.
+The main process permits that blob only from the active app window's exact main frame.
+It checks Electron's native frame, window contents, initiator origin, and blob address.
+It cancels downloads from child frames, preview frames, and other windows.
+It also cancels non-blob downloads and downloads with no native source frame.
+The file flow adds no renderer bridge.
+
 The desktop entry supplies the configured Worker origin to the app's API and event services.
 API calls use `credentials: include`, so Chromium sends the HttpOnly desktop session cookie.
 Workspace sockets use the same Worker origin.
@@ -194,6 +201,11 @@ Playwright runs the shell test in the real Electron window.
 That test starts sign-in through the native menu and receives the handoff in the main process.
 It checks the real Chromium session cookie on an API call before and after a restart.
 
+The [download test](tests/downloads.spec.ts) runs the real main-process policy.
+It calls the production browser download module and checks the saved response bytes.
+It also checks a refused response, child and preview frames, another window, and a data address.
+Run it after the desktop build with `npm --prefix desktop run test:electron -- tests/downloads.spec.ts`.
+
 Mac CI runs the source and packaged tests on an Apple silicon runner for each pull request.
 Pushes to `main` and to the primary branch of the plan, and release tags that start with `v`, also run them on an Intel runner.
 It builds DMG and ZIP files with publishing disabled.
@@ -255,6 +267,7 @@ It offers Restart now or Later once for each downloaded version.
 - [Device contract](../src/shared/device.ts) supplies shared message types, routes, and wire limits.
 - [Desktop contract](../worker/security/desktop-contract.ts) shares the desktop origin and session cookie format without Worker dependencies.
 - [Navigation](src/navigation.ts) keeps remote pages outside the main frame.
+- [Downloads](src/downloads.ts) allows file response blobs from the bundled main frame only.
 - [Preview launch](src/preview.ts) exchanges an authenticated launcher for a short browser handoff.
 - [Permissions](src/permissions.ts) denies unapproved browser access.
 - [Bundle server](src/export-handler.ts) serves only admitted local files.

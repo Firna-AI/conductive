@@ -11,6 +11,7 @@ import {
 import { readBuildJob } from '../build-data'
 import { advanceImageBuild } from '../image-builds'
 import { heldOperation } from '../platform-test-storage'
+import { WORKSPACE_TOOLS_DIRECTORY } from '../../tools/image'
 import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'
 import { INSTALLATION_TOKEN } from './native-github-test-support'
@@ -89,11 +90,13 @@ it('keeps a native source fetch after a temporary status error and resumes witho
           ?.tokenCiphertext,
       ).toBeNull()
       order.push(
-        !detached
-          ? 'cleanup'
-          : command.includes('/tmp/conductive-install.sh')
-            ? 'install'
-            : 'software',
+        !detached && command.includes(WORKSPACE_TOOLS_DIRECTORY)
+          ? 'tools'
+          : !detached
+            ? 'cleanup'
+            : command.includes('/tmp/conductive-install.sh')
+              ? 'install'
+              : 'software',
       )
     }
     claim.release()
@@ -123,7 +126,7 @@ it('keeps a native source fetch after a temporary status error and resumes witho
         ['mint', 'claim', 'revoke', 'finalize'].includes(event),
       ),
     ).toEqual(['mint', 'claim', 'revoke', 'finalize'])
-    expect(order).toEqual(['software', 'install', 'cleanup'])
+    expect(order).toEqual(['tools', 'software', 'install', 'cleanup'])
   } finally {
     claim.release()
     await fixture.dispose()

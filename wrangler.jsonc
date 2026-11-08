@@ -3,6 +3,7 @@
   "name": "conductive",
   "main": "./worker/index.ts",
   "compatibility_date": "2026-11-06",
+  "triggers": { "crons": ["*/15 * * * *"] },
   "vars": {
     "MACHINE_ORIGIN": "https://api.conductive.build",
     "PREVIEW_DOMAIN": "conductive.page",

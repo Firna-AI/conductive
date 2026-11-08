@@ -4071,6 +4071,39 @@ Added on 8 November 2026 from the user's request to merge a baseline soon.
   branch while it can, and into `main` after the first merge. Milestone 17
   moves the open ones into a new plan.
 
+### 137. Choose the Boat organization of the deployed app
+
+Added on 8 November 2026 from Milestone 16a.
+
+- **Background:** Every cloud computer of every org runs in one Boat
+  organization of the app. The deployment guide asks for an organization
+  that holds only the app's sandboxes, and for a key with only the actions
+  that the app uses.
+- **Options:**
+  - **A.** Use the existing "Firna" organization and the current key now,
+    and make a separate organization later.
+  - **B.** Make a separate organization and a key with the actions of the
+    guide now.
+- **Recommendation:** B.
+- **Chosen:** A, by the user on 8 November 2026, for now. The follow-up
+  item `plans/follow-ups/separate-boat-organization.md` holds B.
+
+### 138. Choose the models of the deployed app
+
+Added on 8 November 2026 from Milestone 16a.
+
+- **Background:** The model list is operator data. The app does not start
+  without a valid list.
+- **Options:**
+  - **A.** Claude only: Opus 5.5, Sonnet 5.5, and Haiku 5.5, each with
+    the efforts low, medium, high, and max. The default is Opus 5.5 at
+    high.
+  - **B.** As A, plus Codex with `gpt-6.1-sol`, with the efforts low,
+    medium, high, and xhigh.
+  - **C.** Another list.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 8 November 2026.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -6539,27 +6572,133 @@ departure. A removed person could then verify the email again and accept.
 
 Depends on: 8i, 9, 10, 11, 12, 13, 13a, 14, 15, 15a, 15c, 15g
 
-- [ ] Wire each feature's screens to its backend inside the app shell.
-- [ ] Connect the lifecycle hooks of the Milestone 15a members backend to
+Status: Complete on `conductor/boat-native-remote-workspaces-milestone-15i`.
+
+- [x] Wire each feature's screens to its backend inside the app shell.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15i`.
+- [x] Connect the lifecycle hooks of the Milestone 15a members backend to
       the workspace Durable Object and the sandboxes. `deleteWorkspaceState`
       must delete the chat history of the workspace. Run
       `cleanupDeletedOrgs` on a Cron Trigger, so that Delete org removes
       everything of the org after 7 days, as the orgs protocol says.
       Added on 6 November 2026, because no milestone connected these hooks.
-- [ ] Give the shell one `WorkspaceFiles` owner on `useWorkspaceStore`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15i`.
+- [x] Give the shell one `WorkspaceFiles` owner on `useWorkspaceStore`,
       as the Integration section of `src/files/README.md` shows. Its stable
       `create` is the factory: it builds the store from `createFilesClient`
       and the workspace socket. Its stable `connect` calls `files.start()`
       and returns `() => files.stop()`, because `stop` is an ordinary
       method. Added on 7 November 2026, for finding 2 of the PR #37 review.
-- [ ] Move `src/files/dev/DevApp.tsx` to `useWorkspaceStore`. Move the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15i`.
+- [x] Move `src/files/dev/DevApp.tsx` to `useWorkspaceStore`. Move the
       module-level `WorkspaceFiles` of `src/files/dev/main.tsx` into its
       stable `create`. Replace its start and stop effect with its stable
-      `connect`.
-- [ ] Move `src/shell/workspace/dev/DevPage.tsx` to `useWorkspaceStore` the
+      `connect`. Branch: `conductor/boat-native-remote-workspaces-milestone-15i`.
+- [x] Move `src/shell/workspace/dev/DevPage.tsx` to `useWorkspaceStore` the
       same way, with the module-level `WorkspaceFiles` of
       `src/shell/workspace/dev/main.tsx`.
-- [ ] Run the complete gate, and compare each screen with its mockup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15i`.
+- [x] Run the complete gate, and compare each screen with its mockup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15i`.
+
+Evidence: `.context/milestone-15i/verification.md`,
+`.context/milestone-15i/check.log`, and
+`.context/milestone-15i/visual/final/manifest.json`.
+
+Design calls of the orchestrator, 9 November 2026. They stay inside the
+requirements in force, so they add no numbered decision.
+
+- This milestone also owns the agent registration of the runner:
+  `runner/src/providers/claude.ts`, `runner/src/providers/codex.ts`, and
+  what they need. It also owns the shared invitation contracts in
+  `src/shared/members.ts`, the tests of both, and the affected docs.
+- Register the workspace MCP server for each agent, beside the computer
+  server. Reason: [Agent tools](../docs/protocol/agent-tools.md#workspace-tools)
+  says that every sandbox has two workspace tools, an MCP server and a CLI.
+- Keep the computer rule of finding 12 F of PR #42. The runner reads the
+  computer server from Boat's entry in `/home/user/.claude.json`. Add no
+  URL or secret to the start settings.
+- Wire the acceptance of an invitation to the Worker function of Milestone
+  15g. Add the shared browser contracts of this flow. Keep the access
+  checks of Milestones 15g and 15m.
+- Give production file reads a fixed limit of 5 MiB, or 5,242,880 bytes.
+  Reason: the protocol requires a size limit for a file read. Boat's file
+  read stops at 5 MiB, so the fallback to it cannot read more.
+  [Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+  states the value and its reason.
+- This milestone also owns a minimal public seam in `src/chat` for file
+  tabs. The chat takes content that replaces the session chat but keeps
+  the tab row. While that content shows, no session tab is selected. File
+  tabs change the saved view through the chat's existing writer, so no
+  write is lost. Reason: [Sessions](../docs/protocol/chat-and-events.md#sessions)
+  puts the session tabs beside the open files and diffs.
+- This milestone also owns a `will-download` policy that lets a trusted
+  Download in the Mac app save its file. It also owns the desktop tests
+  and `desktop/README.md` of that policy. Other downloads stay cancelled.
+  Reason: [Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+  lets the header of a file tab download the file. The Mac app cancelled
+  every download.
+- Add the new forward migration `202611071600_org_initials.sql` in the
+  [reserved range](../migrations/README.md#reserved-ranges) of this
+  milestone. It adds the nullable `orgs.initials` column. Reason:
+  [Orgs](../docs/protocol/orgs-and-members.md#orgs) says that the org rail
+  shows the saved initials. No table stored them.
+- Attachment upload, storage, and delivery to the sandbox stay outside
+  this milestone. They need their own backend milestone and a storage
+  decision. Keep the reply `503 attachments_unavailable` and all
+  attachment UI unchanged.
+- When the pending invitation list does not load, show the Invitations
+  page with the load-failure notice, Try again, and Continue to
+  workspaces. Reason: a recoverable API failure stays visible, and the
+  other routes stay usable. The mockup `app/sign-in/invitations` draws it.
+- The stopped and error workspace mockups keep the saved All files and
+  Changes lists, as [Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+  requires. The tools panel and the composer keep their sandbox notices.
+- The Worker and the Mac build get the same trusted HTTPS desktop stream
+  origins in `CONDUCTIVE_FRAME_SOURCES`, with no token and no wildcard
+  that the provider does not document.
+  [Frame sources](../docs/deployment.md#frame-sources) gives the input.
+
+Primary integration call, 8 November 2026, for the start time limits of
+Milestone 5d:
+
+- The primary orchestrator asked for a fresh 20-minute start budget for
+  each restored allocated create, or a budget without the stopped time.
+- Root chose the fresh budget. A create gets it when its saved checkpoint
+  is requeued on the first open after Restore.
+- Reason: Restore itself starts no sandbox, as
+  [Delete org](../docs/protocol/orgs-and-members.md#delete-org) says.
+- The allocation attempt, the pinned payload and image, and the original
+  creation date stay unchanged.
+- A new real-object regression must keep the create alive at once after
+  days of retention. It must fail the create after 20 minutes without
+  progress.
+
+Evidence: `.context/milestone-15i/5d-worker-merge.md`,
+`.context/milestone-15i/5d-restore-budget/report.md`, and
+`.context/milestone-15i/5d-ui-check.md`.
+
+Primary review fixes, 8 November 2026, for the review of `0d1f3ad`:
+
+- 17 D: one input owner in each workspace object updates D1 and the
+  provider at most once a minute. No input path waits for them.
+- 18 D: one server owner computes the GitHub step of Get started in every
+  org state.
+- 19 A: the dead `worker/lifecycle/start-next-phase.ts` is deleted.
+
+Evidence: `.context/milestone-15i/orchestrator-r1/activity/report.md` and
+`.context/milestone-15i/orchestrator-r1/get-started/report.md`.
+
+Primary 8m merge `a6d686a` and its replay fix. Evidence:
+`.context/milestone-15i/orchestrator-r1/8m-ui-merge.md`,
+`.context/milestone-15i/orchestrator-r1/8m-worker-merge.md`,
+`.context/milestone-15i/orchestrator-r1/8m-worker-check.md`,
+`.context/milestone-15i/orchestrator-r1/8m-docs-merge.md`, and
+`.context/milestone-15i/orchestrator-r1/replay-pages/`.
+
+Primary review round 2, finding 21 A. Evidence:
+`.context/milestone-15i/orchestrator-r2/21-report.md` and
+`.context/milestone-15i/orchestrator-r2/docs-report.md`.
 
 ## Milestone 15j: Rename to Conductive
 

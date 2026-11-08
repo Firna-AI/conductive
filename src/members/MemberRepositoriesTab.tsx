@@ -11,16 +11,20 @@ import styles from './MemberRepositoriesTab.module.css'
 
 /**
  * The repositories that the org chose, without search, Add, or Remove, for
- * a member who is not an admin (decision 57).
+ * a member who is not an admin (decision 57), and for everyone in a
+ * suspended org, whose notice says why.
  */
 export function OrgRepositoryList(props: {
   repositories: readonly Repository[]
+  suspended?: boolean
 }) {
   const chosen = props.repositories.filter((repository) => repository.selected)
   if (chosen.length === 0) {
     return (
       <SectionText muted>
-        No repositories yet. An admin can add them.
+        {props.suspended
+          ? 'No repositories yet.'
+          : 'No repositories yet. An admin can add them.'}
       </SectionText>
     )
   }
@@ -46,20 +50,25 @@ export function OrgRepositoryList(props: {
 /**
  * The Repositories tab of the org settings for a member who is not an
  * admin: the repositories of the org, read-only. Only admins change them,
- * as decision 57 says. Mount it in the page column of the org settings.
+ * as decision 57 says. In a suspended org everyone sees this tab, and it
+ * adds no sentence about admins, because the notice of the org says why.
+ * Mount it in the page column of the org settings.
  */
 export function MemberRepositoriesTab(props: {
   api: MembersApi
   org: Org
   viewport: Viewport
+  /** The org is suspended, so nothing in it changes, also for an admin. */
+  suspended?: boolean
 }) {
   const { api, org } = props
+  const note = props.suspended ? '' : ' Only an admin can change them.'
   const load = useCallback(() => api.repositories(org.id), [api, org.id])
   const { state, retry } = useResource(load)
   return (
     <ViewportScope viewport={props.viewport}>
       <Section
-        description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. Only an admin can change them.`}
+        description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them.${note}`}
         title="Repositories"
       >
         {state.status === 'loading' ? (
@@ -73,7 +82,10 @@ export function MemberRepositoriesTab(props: {
           />
         ) : null}
         {state.status === 'ready' ? (
-          <OrgRepositoryList repositories={state.value.repositories} />
+          <OrgRepositoryList
+            repositories={state.value.repositories}
+            suspended={props.suspended}
+          />
         ) : null}
       </Section>
     </ViewportScope>

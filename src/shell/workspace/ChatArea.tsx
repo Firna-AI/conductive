@@ -9,28 +9,39 @@ import type { WorkspaceStart } from '../../shared/workspaces'
 import { useGo } from '../ui/AppLink'
 import type { Action } from '../ui/useAction'
 import { useFeatures, type WorkspaceContext } from './features'
+import { useChatFiles } from './files/chat-files'
+import { filesCenter } from './files/files-features'
 import { SandboxBar } from './SandboxNotice'
 import { StartingCard } from './StartingCard'
 import { ChatColumn } from './WorkspaceColumns'
 
-/** The kept chat of the workspace, with the parts that the shell draws. */
+/**
+ * The kept chat of the workspace, with the parts that the shell draws, and
+ * the open files: their tabs after the session tabs, and `content`, a file
+ * or diff tab in place of the chat of the session.
+ */
 function KeptChat(props: {
+  context: WorkspaceContext
   chat: ChatController
   host: ChatHost
-  phone: boolean
-  readOnly: boolean
+  content: ReactNode
 }) {
+  const { context } = props
   const services = useServices()
   const go = useGo()
   const clock = useMemo(() => ({ now: services.now }), [services])
+  const files = useChatFiles(context, props.content)
   return (
     <WorkspaceChatView
       clock={clock}
+      content={props.content}
       controller={props.chat}
+      extraTabs={files.extraTabs}
       host={props.host}
       onConnectAgent={(agent) => go(routes.account(agent))}
-      readOnly={props.readOnly}
-      viewport={props.phone ? 'mobile' : 'desktop'}
+      onOpenDiff={files.onOpenDiff}
+      readOnly={context.readOnly}
+      viewport={context.viewport === 'phone' ? 'mobile' : 'desktop'}
     />
   )
 }
@@ -43,9 +54,11 @@ function KeptChat(props: {
  * refused, with its reason, such as in a suspended org, or a start that
  * failed, with the message that the workspace saved for it. `orgNotice` is
  * the notice of a suspended org above the bar of an archived workspace. A
- * read-only workspace shows its chat read-only. A host that gives the
- * `tabs`, `transcript`, or `composer` slot gets the shell's own column with
- * those slots instead. A `center` part takes the place of the chat.
+ * read-only workspace shows its chat read-only. The chat shows the open
+ * file tabs, and on desktop the file or diff tab of the address in place of
+ * the chat of its session. A host that gives the `tabs`, `transcript`, or
+ * `composer` slot gets the shell's own column with those slots instead. A
+ * `center` part of the host takes the place of the chat.
  */
 export function ChatArea(props: {
   context: WorkspaceContext
@@ -89,9 +102,9 @@ export function ChatArea(props: {
     center ?? (
       <KeptChat
         chat={props.chat}
+        content={features.center ? null : filesCenter(context)}
+        context={context}
         host={{ starting, sandboxBar }}
-        phone={phone}
-        readOnly={context.readOnly}
       />
     )
   )

@@ -48,6 +48,14 @@ of the data that the screens read and write.
   message back in a form of its own. A sign-out, or a sign-in of another
   person, forgets every create.
   [Creation recovery](creation-recovery.md) gives the rules.
+- The invitations of the user read at the first show of `/` for that user,
+  through `AppModel.invitations`. The first load and the other addresses
+  never wait for them. A failed read shows on `/` with Try again and
+  Continue to workspaces, and keeps the user signed in. Only Accept
+  invitation joins an org. The joined org goes to the list of orgs and
+  opens, and Get started reads again. A sign-out, or a sign-in of another
+  person, forgets the invitations, and an answer for the person before
+  changes nothing.
 - The tab keeps the `WorkspaceModel` of each workspace that it showed, for
   the signed-in user, as
   [The kept workspace](../shell/workspace/README.md#the-kept-workspace)
@@ -117,16 +125,28 @@ of the data that the screens read and write.
   that a later page holds.
 - Known limit: a request that never answers holds back each later mark,
   because the API client has no timeout.
-- The chat, the GitHub views, the terminal tool, the preview tool, and the
-  workspace screen keep one store for each workspace through
-  `useWorkspaceStore`. The hook makes the store, connects it after the
-  render, and follows its snapshot. It stops the store at unmount. A switch
-  of workspace stops the old store and makes a new one. The
+- The chat, the GitHub views, the terminal tool, the preview tool, the
+  workspace screen, the Files part, and the files development pages keep
+  one store for each workspace through `useWorkspaceStore`. The hook makes
+  the store, connects it after the render, and follows its snapshot. It
+  stops the store at unmount. A switch of workspace stops the old store and
+  makes a new one. The
   [tool README](../terminal/README.md#workspace-events) gives the rules of
   the tool store. The store of `WorkspaceScreen` is a view of the kept
   workspace, so its stop keeps the parts, as the
   [workspace integration](../shell/workspace/README.md#integration) shows.
-- The other workspace stores do not use the hook yet. The files
-  development pages start and stop their `WorkspaceFiles` in their own
-  effects. The [files integration](../files/README.md#integration) shows
-  the hook for a new files owner.
+  The `create` of the Files part finds the store that the tab keeps for the
+  workspace, as the [files integration](../files/README.md#integration)
+  shows.
+- A feature store that reads the raw socket messages itself, as the files
+  do, follows the event source of the app through `replaySubscribe`. Each
+  message reaches the store unchanged.
+- When the connection drops, `replaySubscribe` opens again after the same
+  growing wait as the ordered stream. The new connection starts after the
+  last number that the store holds complete:
+  - While more history pages come, the `nextAfterEventNumber` of the last
+    page, capped at the cutoff of the replay.
+  - After the final page, its cutoff.
+  - After the replay, the newest live event.
+- A live event during an unfinished replay moves no number. The store holds
+  that event until the final page.

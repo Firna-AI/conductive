@@ -18,8 +18,11 @@ const orgWords =
 const ownerWords =
   'The workspace owner is suspended. Ask an admin to assign another member.'
 
-/** The Files tab of the workspace of Acme on a phone. */
-async function phoneFiles(server: FakeApiServer): Promise<HTMLElement> {
+/** A tab of the workspace of Acme on a phone: Files, or a tool. */
+async function phoneTab(
+  server: FakeApiServer,
+  tab: 'files' | 'terminal',
+): Promise<HTMLElement> {
   const app = await startedApp(server)
   const org = app.orgs.get().find((item) => item.id === FAKE_IDS.org)
   if (!org) throw new Error('The fake org is missing.')
@@ -27,7 +30,7 @@ async function phoneFiles(server: FakeApiServer): Promise<HTMLElement> {
     app,
     <WorkspaceScreen
       org={org}
-      view={['files']}
+      view={[tab]}
       viewer={fakeUser}
       workspaceId={FAKE_IDS.workspace}
     />,
@@ -37,7 +40,7 @@ async function phoneFiles(server: FakeApiServer): Promise<HTMLElement> {
   return view
 }
 
-/** What the panel of the Files tab says. */
+/** What the panel of the tab says. */
 function panelOf(view: HTMLElement, words: string) {
   const text = view.textContent ?? ''
   const count = (part: string) => text.split(part).length - 1
@@ -49,8 +52,8 @@ function panelOf(view: HTMLElement, words: string) {
   }
 }
 
-describe('the Files tab of a refused start on a phone', () => {
-  test('shows the words of the refusal of the org or of the owner in place of the line on the chat history', async () => {
+describe('the Files and tool tabs of a refused start on a phone', () => {
+  test('show the words of the refusal of the org or of the owner in place of the line on the chat history', async () => {
     const suspendedOrg = new FakeApiServer({ workspaceState: 'ready' })
     serveSuspendedAcme(suspendedOrg)
     const suspendedOwner = new FakeApiServer({ workspaceState: 'stopped' })
@@ -60,12 +63,21 @@ describe('the Files tab of a refused start on a phone', () => {
       { error: { code: 'user_suspended', message: ownerWords } },
       403,
     )
+    // The Files part and the tools show the panel from their own places.
+    const refused = { title: 1, words: 1, history: 0, resume: false }
     expect({
-      org: panelOf(await phoneFiles(suspendedOrg), orgWords),
-      owner: panelOf(await phoneFiles(suspendedOwner), ownerWords),
+      orgFiles: panelOf(await phoneTab(suspendedOrg, 'files'), orgWords),
+      orgTool: panelOf(await phoneTab(suspendedOrg, 'terminal'), orgWords),
+      ownerFiles: panelOf(await phoneTab(suspendedOwner, 'files'), ownerWords),
+      ownerTool: panelOf(
+        await phoneTab(suspendedOwner, 'terminal'),
+        ownerWords,
+      ),
     }).toEqual({
-      org: { title: 1, words: 1, history: 0, resume: false },
-      owner: { title: 1, words: 1, history: 0, resume: false },
+      orgFiles: refused,
+      orgTool: refused,
+      ownerFiles: refused,
+      ownerTool: refused,
     })
   })
 })

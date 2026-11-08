@@ -6,9 +6,9 @@ It joins the numbered parts of each full runner report before it stores the comp
 It also sends file and diff requests to the connected runner.
 A disconnected file read uses the shared sandbox provider on the server.
 
-The lifecycle milestone owns the workspace Durable Object and root routes.
-This module exports the hooks for that later wiring.
-It changes no root route or shared contract.
+The workspace Durable Object owns one `WorkspaceFiles` over the chat storage.
+Production routes forward the original request to that object.
+Its handler preserves cancellation and reads the captured checkout folder from D1.
 
 ## Integration
 
@@ -113,13 +113,14 @@ Before the first tree report or unavailable-tree mark, it returns `file_unavaila
 
 Required options:
 
-- `maxFileBytes`: the backend's file size limit in bytes. No product default exists here.
+- `maxFileBytes`: the backend file size limit in bytes. Production uses `FILE_READ_MAX_BYTES`, which is 5,242,880 bytes. It applies to each file version and each patch field.
 - `workspaceFiles`: a resolver for the authorized workspace's `WorkspaceFilesPort`.
 - `repositoryRoot`: the absolute checkout directory in the sandbox for that workspace.
 - `fetch`: the server's provider transport.
 - `now`: the clock for the existing request gate.
 
-The port's methods are asynchronous, so a later Durable Object adapter can implement them.
+The production handler calls the local port inside the workspace object.
+The outer Worker forwards its request through `fetch`, with its cancellation signal.
 Its `read` and `diff` methods return `null` when the runner is disconnected.
 An adapter must preserve that result.
 It must carry request cancellation to the object or detach pending requests when its connection ends.
@@ -161,6 +162,7 @@ No migration is required.
 
 ### Key Code
 
+- [Production composition](../features/workspace.ts) mounts the gated handler and resolves the captured checkout folder.
 - [workspace.ts](workspace.ts) exposes the workspace integration object and RPC port.
 - [handlers.ts](handlers.ts) exposes the gated HTTP handler and its required options.
 - [state.ts](state.ts) applies snapshots and tree updates and keeps branch changes.

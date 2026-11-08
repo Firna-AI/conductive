@@ -99,12 +99,7 @@ export class PreviewProxy {
       const destination = request.headers.get('Sec-Fetch-Dest')
       const refresh = destination === 'document' || destination === 'iframe'
       const port = await this.ports.get(row, refresh)
-      await recordActivity(
-        this.env,
-        this.dependencies,
-        row.workspaceId,
-        'preview',
-      )
+      recordActivity(this.dependencies, row.workspaceId)
       await scope.authorize()
       let upstream: Response
       try {

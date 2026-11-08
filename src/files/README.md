@@ -11,17 +11,19 @@ The visual spec is the `app/files` page of the
 `app/chat/unavailable-files` for a tree that the cloud computer could not
 read.
 
-The screens render data from the Worker only. The app does not mount them
-yet. The development pages and the tests run them against the fake API of
+The screens render data from the Worker only. The workspace screen of the
+app shell mounts them, as
+[the Files part](../shell/workspace/README.md#the-files-part) says. The
+development pages and the tests run them against the fake API of
 [the browser fakes](../test-support/README.md).
 
 ## Integration
 
-The shell keeps one `WorkspaceFiles` store for each open workspace through
+The tab keeps one `WorkspaceFiles` store for each workspace whose Files
+part showed, beside its kept chat. The Files part connects it through
 `useWorkspaceStore` of [the web app](../app/README.md). A stable `create`
-builds the store with the fetch of the app and the subscription of its
-workspace event socket. It starts nothing. A stable `connect` starts the
-store and returns its stop:
+finds the kept store, or makes it. It starts nothing. A stable `connect`
+starts the store and returns its stop:
 
 ```ts
 function startFiles(files: WorkspaceFiles): () => void {
@@ -31,12 +33,8 @@ function startFiles(files: WorkspaceFiles): () => void {
 
 const create = useCallback(
   ({ orgId, workspaceId }: WorkspaceIdentity) =>
-    new WorkspaceFiles({
-      client: createFilesClient({ fetch, orgId, workspaceId }),
-      subscribe: (afterEventNumber, listener) =>
-        socket.subscribe(afterEventNumber, listener),
-    }),
-  [fetch, socket],
+    shownWorkspaces(app, viewer).files(orgId, workspaceId),
+  [app, viewer],
 )
 const { store: files } = useWorkspaceStore(
   { orgId, workspaceId },
@@ -44,8 +42,14 @@ const { store: files } = useWorkspaceStore(
 )
 ```
 
-A new `create` makes a new store, so keep `fetch` and `socket` stable.
-Give `files` to the screens.
+The kept store reads the file routes with the `fetch` of the org's
+`ApiClient`, so the Mac app reads them from its own Worker, and a refusal
+of a suspended org marks the org. Its stream is
+the event source of the app, after the last event number of the store.
+When the connection drops, the stream opens again as
+[Data lifecycle](../app/README.md#data-lifecycle) says. So a return shows
+the lists at once, and the socket asks only for the events after the last
+complete point. Give `files` to the screens.
 
 The store reads each message of the subscription from `unknown`: the stored
 history first, in one or more pages, then the live events. The pages of
@@ -121,14 +125,15 @@ to show, All files says "The list of all files is unavailable" in place of
 an empty list. That state shows also while the first read of the tree
 waits, or after it failed.
 
-The shell owns the workspace view on the Worker: the open tabs, the
-active tab, and the list. It passes them to the screens, with a
-`FilesNavigation`:
+The workspace view on the Worker holds the open tabs, the active tab, and
+the list. The kept chat loads it and saves it, and the shell changes it
+through the chat, so the view has one writer. The shell passes the view to
+the screens, with a `FilesNavigation`:
 
 - `href(target)` gives the address of a list, a file tab, or a diff tab.
-- `navigate(target)` handles a plain click. The shell updates the view
-  and its address. A click with a modifier key opens the address in a new
-  browser tab.
+- `navigate(target)` handles a plain click. The shell saves the change in
+  the view, then moves the address. A click with a modifier key opens the
+  address in a new browser tab.
 
 The screens:
 
@@ -178,7 +183,9 @@ the header shows that the download didn't start. The development page and
 the tests inject `fetchedDownload` with the fetch of the fake API, because
 the fake API serves no route that the browser can read. Pass the same
 `targets` object on each render, because a new object starts new Copy and
-Download states.
+Download states. The shell passes targets over the services of the app:
+Copy uses their `copy`, and Download reads the route with the `fetch` of
+the app's `ApiClient`, so the Mac app reads the file from its own Worker.
 
 The shell supplies the design tokens as `--ui-*` CSS variables and the
 `@firna/ui` theme provider, as `docs/mockups/src/theme.ts` builds them.
@@ -224,7 +231,9 @@ of Download.
 ## Development
 
 The development page runs the screens against `FakeApiServer`, with the
-mockup samples. From the repository root:
+mockup samples. `dev/main.tsx` makes the store of the page in a stable
+`create`, and `DevApp` connects it through `useWorkspaceStore`, as the app
+does. From the repository root:
 
 ```sh
 npm exec vite -- --config src/files/dev/vite.config.ts

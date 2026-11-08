@@ -43,8 +43,11 @@ export async function createRunnerLimitsFixture() {
   let closed = 0
   let failSend = false
   let commandSequence = 0
+  let connectionSequence = 0
   let store = new ChatStore(storage, () => 25)
   const dependencies: ChatDependencies = {
+    runnerAttached: () => undefined,
+    runnerDetached: () => undefined,
     waitUntil: (promise) => {
       void promise.catch(() => undefined)
     },
@@ -60,6 +63,7 @@ export async function createRunnerLimitsFixture() {
     readConnectionAccess: async () => [],
     firstStartIncomplete: async () => false,
     randomId: () => `command-${++commandSequence}`,
+    randomConnectionId: () => `connection-${++connectionSequence}`,
     readLoginAvailability: async () => new Set<string>(),
     resolveLogin: async () => null,
     resolveAttachments: async () => ({ attachments: [], paths: [] }),

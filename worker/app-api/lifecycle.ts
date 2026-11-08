@@ -3,11 +3,13 @@ import {
   workspacePaths,
   workspacesPath,
 } from '../../src/shared/workspaces'
+import { orgSettingsPaths } from '../../src/shared/org-settings'
 import { runnerSoftware } from '../configuration'
 import type { AppDependencies, AppEnv } from '../env'
 import { handleLifecycleRequest } from '../lifecycle/browser'
 import { imageRuntime, workspaceRuntime } from '../lifecycle/runtime'
 import { readWorkspace } from '../lifecycle/workspace-data'
+import { requireFeatureResult } from '../features/result'
 import type { RequestContext } from '../security/gate'
 import { workspaceChildId } from './workspace-path'
 import {
@@ -28,6 +30,10 @@ export async function chatLifecycleRoute(
   const path = new URL(request.url).pathname
   const workspaceId = workspaceChildId(path, orgId)
   const create = path === workspacesPath(orgId) && request.method === 'POST'
+  const build =
+    path === orgSettingsPaths.builds(orgId) ||
+    path === orgSettingsPaths.refresh(orgId) ||
+    path.startsWith(`${orgSettingsPaths.builds(orgId)}/`)
   const read =
     workspaceId &&
     path === workspacePath(orgId, workspaceId) &&
@@ -39,11 +45,35 @@ export async function chatLifecycleRoute(
       workspacePaths.resume(orgId, workspaceId),
       workspacePaths.activity(orgId, workspaceId),
     ].includes(path)
-  if (!create && !read && !action) return null
+  if (!create && !read && !action && !build) return null
   if (action)
     requireWritableWorkspace(await readWorkspace(env.DB, orgId, workspaceId))
   const binding = workspaceBinding(env)
   const lifecycleEnv = { ...env, WORKSPACES: binding }
+  if (
+    workspaceId &&
+    path === workspacePaths.resume(orgId, workspaceId) &&
+    request.method === 'POST' &&
+    requireFeatureResult(
+      await binding
+        .getByName(workspaceId)
+        .resumeMemberCreation(orgId, workspaceId, context.user.id),
+    )
+  ) {
+    const ordered = await binding
+      .getByName(workspaceId, { locationHint: 'weur' })
+      .readChatWorkspaceResponse(orgId, workspaceId)
+    return Response.json({
+      ...ordered.response,
+      workspace: await workspaceForViewer(
+        env,
+        context.user.id,
+        ordered.response.workspace,
+        undefined,
+        ordered.summary,
+      ),
+    })
+  }
   return handleLifecycleRequest(
     request,
     context,

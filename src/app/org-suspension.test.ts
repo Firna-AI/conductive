@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { ApiRequestError, createMembersApi } from '../members/api/client'
 import { orgPath } from '../shared/api'
 import { deleteOrgPath, leaveOrgPath, restoreOrgPath } from '../shared/orgs'
 import { workspacePaths } from '../shared/workspaces'
@@ -90,7 +91,12 @@ describe('the workspace of a suspended org', () => {
   })
 })
 
-describe('the org writes of the app model', () => {
+/** The code of a refusal, from the client of the app or of the members UI. */
+function refusalCode(error: unknown): string {
+  return error instanceof ApiRequestError ? error.code : asApiError(error).code
+}
+
+describe('the org writes of the app and of the members UI', () => {
   test('a rename, a delete, a restore, or a leave that the API refuses as suspended marks the org on a page with an old org list, and keeps the org list', async () => {
     const refusals = [
       [
@@ -99,17 +105,23 @@ describe('the org writes of the app model', () => {
         orgPath(org),
         (app: AppModel) => app.renameOrg(org, { name: 'Acme Labs' }),
       ],
+      // Delete org and Restore of the members UI send through the fetch of
+      // the org, as `useMembersApi` gives it.
       [
         'delete',
         'POST',
         deleteOrgPath(org),
-        (app: AppModel) => app.deleteOrg(org, 'Acme'),
+        (app: AppModel) =>
+          createMembersApi(app.org(org).services.api.fetch).deleteOrg(org, {
+            name: 'Acme',
+          }),
       ],
       [
         'restore',
         'POST',
         restoreOrgPath(org),
-        (app: AppModel) => app.restoreOrg(org),
+        (app: AppModel) =>
+          createMembersApi(app.org(org).services.api.fetch).restoreOrg(org),
       ],
       [
         'leave',
@@ -125,10 +137,7 @@ describe('the org writes of the app model', () => {
       const app = new AppModel(testServices(server))
       await app.start()
       const before = app.org(org).suspension.suspended.get()
-      const refusal = await write(app).then(
-        () => null,
-        (error: unknown) => asApiError(error).code,
-      )
+      const refusal = await write(app).then(() => null, refusalCode)
       seen[name] = {
         before,
         refusal,

@@ -33,14 +33,6 @@ export function mayChangeSettings(access: OrgAccess): boolean {
 }
 
 /**
- * The settings tell a member who is not an admin that only an admin can
- * change them. A suspended org adds nothing, because its notice says why.
- */
-export function showsAdminOnly(access: OrgAccess): boolean {
-  return access.role !== 'admin' && !access.suspended
-}
-
-/**
  * Only the owner of a workspace and the admins of its org archive it
  * (decision 42). An archived workspace has nothing more to archive, and a
  * suspended org archives nothing.

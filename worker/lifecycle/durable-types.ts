@@ -51,6 +51,13 @@ export type DiskRetentionResult =
       eligible: boolean
     }
 
+export type LifecycleDeadlineRequest =
+  | { kind: 'check' }
+  | {
+      kind: 'input'
+      extend(): Promise<LifecycleReconciliation>
+    }
+
 export interface LifecycleHooks {
   changed(
     state: DurableLifecycleState,
@@ -62,7 +69,9 @@ export interface LifecycleHooks {
     command: RetentionCommandPort,
     confirmedStopped: boolean,
   ): Promise<DiskRetentionResult>
-  extendDeadline(): Promise<LifecycleReconciliation | void>
+  extendDeadline(
+    request?: LifecycleDeadlineRequest,
+  ): Promise<LifecycleReconciliation | void>
   reconcile?(): Promise<LifecycleReconciliation>
   startPending?(): Promise<boolean>
   recoverTurns?(workspaceId: string): Promise<LifecycleTurnRecovery | undefined>

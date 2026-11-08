@@ -62,6 +62,7 @@ The default org is `acme`. The default workspace is `checkout-autocomplete`.
 `FAKE_IDS` in `fixtures/core.ts` names the shared sample IDs.
 Options select the org role, workspace state, conversation, and GitHub banner state.
 Replace a reply to draw a missing login, a first run, or a deleted org.
+The fake answers `GET /api/invites` with no invitations. A test sets its own list with `server.json`.
 `serveSuspendedAcme(server, role)` in `suspended-org.ts` serves Acme as a suspended org in the org list, and `orgSuspendedBody` is the error body of the API for a write that a suspended org refuses.
 `macCommands` chooses the Mac commands of the fake workspace, and `onMac` makes the window the Mac app on the Mac of the fake user.
 Without `onMac`, the window is a browser: it has no pairing, and the Mac settings refuse it as the Worker does.

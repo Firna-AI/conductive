@@ -47,6 +47,7 @@ it('proxies WebSocket frames without keeping an idle workspace active and closes
   const outgoing = upstream.nextMessage()
   browser.emit('reload')
   expect(await outgoing).toBe('reload')
+  await harness.activity()
   expect(await harness.status()).toEqual({ activity: TEST_TIME + 1000 })
   const another = createPreviewHandler(harness.env, harness.dependencies)
   expect(

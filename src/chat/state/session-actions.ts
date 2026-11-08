@@ -39,6 +39,28 @@ export async function selectSession(
   await hydrate(context, sessionId)
 }
 
+/**
+ * Changes the view with a change of the app, such as an open file tab.
+ * With `save`, it saves the view through the same writer as the session
+ * tabs. Without it, as in a read-only workspace, the view changes in the
+ * browser only, as the session tabs do. Until the load reads the view, the
+ * saved tabs are unknown, so it changes nothing. A change that returns the
+ * same view saves nothing.
+ */
+export function updateView(
+  context: ChatContext,
+  change: (view: WorkspaceView) => WorkspaceView,
+  save: boolean,
+): void {
+  if (!context.live()) return
+  const current = context.store.get().view
+  if (current === null) return
+  const view = change(current)
+  if (view === current) return
+  context.store.update((latest) => ({ ...latest, view }))
+  if (save) context.saveView(view)
+}
+
 /** Shows a session that an action opened, when it is open now. */
 async function showIfOpen(context: ChatContext, sessionId: string) {
   const open = context.store

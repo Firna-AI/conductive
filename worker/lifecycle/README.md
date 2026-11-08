@@ -11,7 +11,7 @@ says.
 `chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
 gives the create, read, resume, and activity routes of a workspace to
 `handleLifecycleRequest`. The root Worker also serves the
-[machine route](#machine-route). It routes no build route yet.
+[machine route](#machine-route), image builds, refreshes, and build log streams.
 
 ## Responsibilities
 
@@ -30,105 +30,21 @@ gives the create, read, resume, and activity routes of a workspace to
 
 ### Browser routes
 
-`handleLifecycleRequest` in [`browser.ts`](browser.ts) serves these routes
-of the shared contracts:
+[Browser routes](routes.md#browser-routes) gives the routes that
+`handleLifecycleRequest` serves, the options of its caller, and the rules
+of a create.
 
-- create, read, resume, and activity of a workspace, from
-  `src/shared/workspaces.ts`
-- the build list, a new build, a refresh, one build, and its log stream,
-  from `src/shared/org-settings.ts`
+### Input activity
 
-Run the browser gate first, and pass its `RequestContext`. The handler
-returns `null` for every other route. `env` is a `LifecycleEnvironment`
-from [`runtime.ts`](runtime.ts). The caller gives these options:
-
-- `software`: the runner archive for each new build and refresh, as the
-  [image README](../../image/README.md#the-runner-archive) says.
-  `runnerSoftware` in [`configuration.ts`](../configuration.ts) reads it
-  from two Worker variables, as
-  [Deployment inputs](../../docs/deployment.md#the-runner-archive) says.
-- `acceptFirstMessage`: the hook of the chat backend. After the admission
-  and for each repeat, it stores the queued first message of that admission
-  and returns it. So it must be idempotent for the message and session IDs.
-  In production, the admission has already stored that message in chat, so
-  the hook adds no history.
-- `projectWorkspace`: optional. It changes each reply, such as the state
-  of the workspace for the reader.
-- `waitUntil`: the `waitUntil` of the Worker's execution context. A create
-  gives it its work, so the work continues when the browser closes.
-
-`chatLifecycleRoute` makes the runtime with `workspaceRuntime` and
-`imageRuntime`. It gives `software` as a getter, so only a build or a
-refresh reads the archive variables. It gives `acceptFirstMessage` to
-`acceptLifecycleFirstMessage` of the workspace object.
-
-For a read or a resume, the `projectWorkspace` of `chatLifecycleRoute`
-takes the reply from `readChatWorkspaceResponse` of the workspace object.
-That read runs in one task of the chat queue. That reply has the event
-number of its state. Its name comes from the latest committed agent title,
-when there is one. The state for the reader uses the chat summary of the
-same read.
-
-[Creates and resumes](workspace-object.md#creates-and-resumes) says how the
-workspace object runs the start of each create and resume. It gives the
-waits, the replies, the branch, the terminal start hook, the runner
-readiness, and the stop cleanup of a failed resume.
-
-- A create needs a published org image and a repository that its build
-  loaded. A change to the chosen repositories takes effect after the next
-  successful build. A repeat of the same first message ID from the same
-  sender returns the same workspace, until that create fails.
-- A failed create keeps the full first message, with its attachment IDs,
-  as a hidden draft, and records the sandbox cleanup. It then releases the
-  creation claim and publishes the failed `start.updated` and the error
-  `workspace.updated`. After that, it removes the workspace and its token
-  records. `failedLifecycleCreation` finds the draft for the event replay
-  and the org purge. Lifecycle cleanup leaves the attachments to their owner.
-- A retry gets a fresh workspace ID with the same first message ID. Its
-  start waits until the records of the failed attempt are gone.
-- Activity from the `input`, `terminal`, and `preview` sources resets the
-  idle time.
-- The deadline hook checks the org from lifecycle state before provider access.
-  Activity and turn updates call it inside the lifecycle queue before writing state.
-  A refused update preserves the activity time, provider deadline, and stop-retry alarm.
-  Activity carries a plain refusal through the workspace RPC for the route's 403 reply.
-  Stop, reconciliation, and disk cleanup keep their separate hooks.
-- The build log is a stream of server-sent events. It continues after the
-  `Last-Event-ID` header or the `after` value, and it ends with a `build`
-  event when the job ends. One D1 batch reads the build state and its log,
-  so the stream sends all log events before the final `build` event.
-
-`createWorkspace` in [`workspaces.ts`](workspaces.ts) also takes an optional
-trusted `sender` as its last argument. The agent tools need it for a
-workspace that an agent creates. The `user` stays the owner, and the first
-turn and the branch step use the sender.
+[Input activity](routes.md#input-activity) gives how one
+`InputActivityOwner` in each workspace object takes the input of the
+browser, the terminal, and previews.
 
 ### Machine route
 
-`handleGitCredential` in [`machine.ts`](machine.ts) serves
-`MACHINE_PATHS.gitCredential` on the machine hostname. The
-[git credential helper](../../image/README.md#git-credentials) sends the
-workspace token as a bearer token, and the current turn ID in the
-`X-Conductive-Turn-Id` header. The handler reads no request body and needs
-no content type. `Workspace.credentialSender` maps that turn to a sender,
-in the chat queue, as
-[The git credential sender](workspace-object.md#the-git-credential-sender)
-says, with its tests.
-
-The handler returns a fresh GitHub App user token of the sender, from
-`freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).
-It stores no token. A user without a stored GitHub token must sign in again.
-One response helper runs the same authorization before token resolution and after its last wait.
-Each authorization reads the trusted sender through `credentialSender`.
-Its final D1 read in [`machine-credential-data.ts`](machine-credential-data.ts) checks the shared workspace token rule, sender membership, and sender suspension together.
-The handler does no asynchronous work between that final read and the reply.
-
-`createApp` in [`worker/application.ts`](../application.ts) routes
-`MACHINE_PATHS.gitCredential` to this handler, and
-`IMAGE_SOURCE_CREDENTIAL_PATH` to `handleImageSourceCredential` in
-[`image-sources/credential.ts`](image-sources/credential.ts). It does this
-on the machine hostname only, after the Mac command route and before the
-runner socket, with the private error response wrapper.
+[Machine route](routes.md#machine-route) gives `handleGitCredential`, the
+git credential route on the machine hostname, and how `createApp` routes
+it.
 
 ### Workspace Durable Object
 
@@ -225,6 +141,17 @@ object holds the lifecycle state, the turn records, and the events.
 - [`durable-turns.ts`](durable-turns.ts): `recoverLifecycleTurns`, which
   rebuilds the running sessions and the idle time from the committed chat.
   The [turn recovery](workspace-object.md#turn-recovery) gives the rules.
+- [`input-activity-owner.ts`](input-activity-owner.ts): `InputActivityOwner`,
+  the one input owner of a workspace object, with its minute updates and
+  retries. [`create-input-activity.ts`](create-input-activity.ts) connects
+  it to the lifecycle hooks, the member fence, and `warnWorker`.
+- [`input-activity-local.ts`](input-activity-local.ts): `LifecycleInputState`,
+  the fenced input time in the durable lifecycle state, with its capture
+  and its reconciliation.
+- [`input-activity-update.ts`](input-activity-update.ts) and
+  [`input-activity-data.ts`](input-activity-data.ts): one D1 and provider
+  update. `writeWorkspaceActivity` moves `last_activity_at` forward with
+  `MAX`.
 - [`durable-start-stop.ts`](durable-start-stop.ts): the saved stop owner of
   failed and cancelled resumes.
 - [`durable-alarm.ts`](durable-alarm.ts): `advanceLifecycleAlarm`, the
@@ -295,7 +222,9 @@ object holds the lifecycle state, the turn records, and the events.
   `authenticateWorkspaceToken`.
 - [`runtime.ts`](runtime.ts): `LifecycleEnvironment`, `workspaceRuntime`,
   and `imageRuntime`.
-- [`worker/workspace.ts`](../workspace.ts): the `Workspace` class.
+- [`worker/workspace.ts`](../workspace.ts): the composed `Workspace` class.
+  [`worker/workspace-lifecycle.ts`](../workspace-lifecycle.ts) exposes its lifecycle methods.
+- [Member receivers](../members/workspace-receiver.ts) install durable generations, drain active phases, and restore maintenance timers.
 
 ### Related Docs
 

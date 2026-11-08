@@ -260,7 +260,9 @@ says.
 - A file opens as a tab in the centre column. Markdown shows rendered, with
   a switch to its source. Code shows with line numbers and syntax colours.
 - The header of a file tab can copy and download the file.
-- Reading a file has a size limit.
+- Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
+  Reason: Boat's file read stops at 5 MiB, so a file read that falls back
+  to it cannot read more.
 - The Markdown preview fills short table rows only up to 65,536 empty
   cells in one file. Then it shows the rest of the file as text
   (decision 88).

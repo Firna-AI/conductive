@@ -24,7 +24,14 @@ import { randomToken } from './security/crypto'
 import { finishDesktopSignIn } from './security/desktop-auth'
 import { DESKTOP_EXCHANGE_PATH } from './security/desktop-contract'
 import { desktopCors, desktopPreflight } from './security/desktop-origin'
-import { checkOrigin, gate } from './security/gate'
+import { checkOrigin } from './security/gate'
+import { membersGate } from './members/gate'
+import { productionMembersHooks } from './members/composition'
+import { cleanupDeletedOrgs } from './members/cleanup'
+import { routePreview, routeWorkspaceFeatures } from './features/router'
+import { productionAgentTools } from './tools/composition'
+import { productionGitHubWebhook } from './github/composition'
+import { appFrameSources } from './configuration'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -64,6 +71,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         if (surface === 'marketing') {
           return await marketingResponse(request, env, dependencies.now())
         }
+        if (surface === 'preview')
+          return respond(await routePreview(request, env, dependencies))
         if (surface === 'app') {
           checkOrigin(request, env)
           if (appApi && !upgrade) {
@@ -75,10 +84,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             const response = new Response(asset.body, asset)
             response.headers.set(
               'Content-Security-Policy',
-              appContentSecurityPolicy(
-                env.APP_ORIGIN,
-                env.PREVIEW_DOMAIN ? [`https://*.${env.PREVIEW_DOMAIN}`] : [],
-              ),
+              appContentSecurityPolicy(env.APP_ORIGIN, appFrameSources(env)),
             )
             return response
           }
@@ -87,6 +93,14 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return respond(await routeMacCommand(request, env))
         }
         if (surface === 'machine') {
+          if (path === MACHINE_PATHS.workspaces)
+            return respond(
+              await productionAgentTools(request, env, dependencies),
+            )
+          if (path === MACHINE_PATHS.githubWebhook)
+            return respond(
+              await productionGitHubWebhook(request, env, dependencies),
+            )
           if (path === MACHINE_PATHS.gitCredential) {
             const machineEnv = env
             const runtime = workspaceRuntime(
@@ -131,7 +145,9 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return respond(await routeDevice(request, env))
         const chatResponse = await routeChat(request, env)
         if (chatResponse) return respond(chatResponse)
-        const context = await gate(request, env, dependencies.now())
+        const featureResponse = await routeWorkspaceFeatures(request, env)
+        if (featureResponse) return respond(featureResponse)
+        const context = await membersGate(request, env, dependencies.now())
         return respond(
           await route(request, env, context, dependencies, execution),
         )
@@ -144,7 +160,16 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       }
     },
   }
-  return { fetch: requestBodyEntry(application.fetch) }
+  return {
+    fetch: requestBodyEntry(application.fetch),
+    async scheduled(_event: ScheduledController, env: AppEnv): Promise<void> {
+      await cleanupDeletedOrgs(
+        env,
+        dependencies,
+        productionMembersHooks(env, dependencies),
+      )
+    },
+  }
 }
 
 function healthResponse(): Response {

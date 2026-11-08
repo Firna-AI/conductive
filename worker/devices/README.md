@@ -173,7 +173,6 @@ Invalid operation values fail with 400 `invalid_input`.
 An unexpected error fails with 500 `internal_error` and a generic message.
 No HTTP route dispatches an internal operation directly.
 
-General app mounting, image-build installation, and runner MCP registration remain integration work.
 The existing installer embeds the new CLI/MCP modules and shared contract.
 The Mac tool itself uses the real Worker dispatch.
 

@@ -123,7 +123,7 @@ export function createTerminalHandler(
           authorize: registration.check,
           onClose: registration.dispose,
           fromBrowser: terminalFrames(auth, () =>
-            recordActivity(env, dependencies, target.workspaceId, 'terminal'),
+            recordActivity(dependencies, target.workspaceId),
           ),
         })
         registration.attach(bridge.close)

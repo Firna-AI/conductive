@@ -53,7 +53,16 @@ export function lifecycleFixture() {
       .fn<() => Promise<LifecycleTurnRecovery | undefined>>()
       .mockResolvedValue(undefined),
   }
-  const create = () => new DurableLifecycle(storage, () => now, hooks)
+  const create = () =>
+    new DurableLifecycle(storage, () => now, {
+      ...hooks,
+      extendDeadline: (request) =>
+        request?.kind === 'check'
+          ? Promise.resolve()
+          : request?.kind === 'input'
+            ? request.extend()
+            : hooks.extendDeadline(),
+    })
   return {
     lifecycle: create(),
     recreate: create,
