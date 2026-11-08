@@ -61,6 +61,8 @@ says.
   opens as the last tab (decision 77).
 - The user can rename a session.
 - Each session has its own model picker.
+- When one tab sends two edits of the same field of a session, the edit
+  that the server commits last wins (decision 142).
 - Closing the tab of a session without a running turn moves the session to
   the session history (decision 31).
 - Closing the tab of a session whose turn runs asks first. After the

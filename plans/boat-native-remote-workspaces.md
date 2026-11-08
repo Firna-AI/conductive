@@ -6212,6 +6212,14 @@ The edit-order investigation is complete. It confirms reversed commits,
 but no requirement chooses the winning edit. The item keeps that decision
 open and recommends F. No write-order behavior changes in this milestone.
 
+Outcome on 8 November 2026: the user chose A for decision 142. This closes
+the edit-order decision that the paragraph above keeps open.
+`docs/protocol/chat-and-events.md` states the rule under Sessions. When one
+tab sends two edits of the same field of a session, the edit that the
+server commits last wins. The current behaviour stays. No product code
+changes. Milestone 8q deletes the answered follow-up item
+`plans/follow-ups/chat-edit-admission-order.md`.
+
 Evidence: `.context/boat-native-remote-workspaces/8q/`, with the delegate
 reports, regression failures, repeat runs, and authorization proof.
 
