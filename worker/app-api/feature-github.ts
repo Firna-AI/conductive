@@ -13,14 +13,27 @@ import {
 } from '../github/parsers'
 import { githubJson, githubRequest } from '../github/transport'
 import { requireActiveUser } from '../data/user-access'
+import { warnWorker } from '../warnings'
 import { freshGitHubUserToken } from '../security/github-tokens'
 import {
   saveShellInstallations,
   type ShellGitHubInstallation,
 } from './feature-github-data'
 
-export const GITHUB_INSTALL_URL =
-  'https://github.com/apps/conductive/installations/new'
+const DEFAULT_GITHUB_APP_SLUG = 'conductive'
+const GITHUB_APP_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+/** The install page of the GitHub App that this deployment uses. */
+export function githubInstallUrl(env: Pick<AppEnv, 'GITHUB_APP_SLUG'>): string {
+  const configured = env.GITHUB_APP_SLUG?.trim()
+  const valid = configured && GITHUB_APP_SLUG.test(configured)
+  if (configured && !valid)
+    warnWorker(
+      'GITHUB_APP_SLUG is not a GitHub App slug. The install link uses the default slug.',
+    )
+  const slug = valid ? configured : DEFAULT_GITHUB_APP_SLUG
+  return `https://github.com/apps/${slug}/installations/new`
+}
 
 async function allPages(
   dependencies: AppDependencies,
