@@ -4125,6 +4125,45 @@ Added on 8 November 2026, when the user asked to merge the baseline.
   this plan, because the work goes on in later pull requests, as the
   `plans` skill says.
 
+### 142. Choose which quick chat edit wins
+
+Added on 8 November 2026 from Milestone 8q.
+
+- **Background:** A tab sends each session rename or model change at once.
+  The server checks access before it queues the write. Milestone 8q
+  reproduced two quick edits of one field that committed in the reverse
+  order.
+- **Options:**
+  - **A.** State that the last committed edit wins, and keep the current
+    behaviour.
+  - **C.** The app queues the requests of each field.
+  - **D.** The server queues the write before the access check.
+  - **E.** The app disables the field while its request waits.
+  - **F.** Each tab sends an edit sequence number, and the server keeps the
+    newest edit of that tab.
+- **Recommendation:** C.
+- **Chosen:** A, by the user on 8 November 2026. Milestone 8q states the
+  rule in `docs/protocol/chat-and-events.md`.
+
+### 143. Choose where milestones merge after the first merge
+
+Added on 8 November 2026, after pull request #57 merged into `main`.
+
+- **Background:** Decision 135 said that milestones merge into `main` after
+  the first merge. The running milestones target the primary branch, and
+  `AGENTS.md` turns agent merges into `main` off.
+- **Options:**
+  - **A.** Keep the primary branch for integration. The orchestrator
+    reviews and merges each milestone there, and opens a batched pull
+    request into `main`.
+  - **B.** Point each milestone pull request at `main`. The user merges
+    each one.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026, who added "merge them into
+  main when ready". So the orchestrator also merges each batched pull
+  request into `main` when its CI passes. This replaces the merge target
+  of decision 135.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
