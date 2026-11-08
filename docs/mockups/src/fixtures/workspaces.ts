@@ -179,6 +179,38 @@ export const workspaceList: readonly Workspace[] = [
   }),
 ]
 
+/**
+ * The archived workspaces of Acme, the last archived first. Their cloud
+ * computers are deleted, and their chats stay read-only.
+ */
+export const archivedWorkspaceList: readonly Workspace[] = [
+  workspace('checkout-redesign', 'Checkout page redesign', {
+    repository: 'storefront',
+    section: 'checkout',
+    status: 'archived',
+    updated: '4d',
+  }),
+  workspace('black-friday-banner', 'Black Friday banner', {
+    repository: 'marketing-site',
+    section: 'general',
+    status: 'archived',
+    updated: '9d',
+    owner: 'priya',
+  }),
+  workspace(
+    'stripe-sdk',
+    'Stripe SDK upgrade',
+    {
+      repository: 'billing-service',
+      section: 'infra',
+      status: 'archived',
+      updated: '16d',
+      owner: 'jonas',
+    },
+    codex,
+  ),
+]
+
 /** The workspace that the drag state moves, and where it lands. */
 export const workspaceDrag = {
   workspace: 'webhook-retries',
