@@ -183,7 +183,8 @@ export class LifecycleBoat {
           ok: true,
           type: 'file.read',
           success: true,
-          path,
+          // Boat answers relative to its work directory, /home/user.
+          path: path.replace(/^\/home\/user\//, ''),
           size: this.terminalPassword.length,
           encoding: 'base64',
           content: btoa(this.terminalPassword),
