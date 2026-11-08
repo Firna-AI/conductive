@@ -123,6 +123,8 @@ export const privacyDocument: LegalDocument = {
           text`It does not send the key of its cloud computer provider to
             your browser or into a cloud computer.`,
           text`Your browser does not get a stored secret back.`,
+          text`An agent can repeat an env var value in its answer. The chat
+            history then shows that value to each member who reads the chat.`,
         ),
       ],
     },

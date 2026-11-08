@@ -1,7 +1,7 @@
 # Org env values reach the chat, and short ones vanish from logs
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-08, two problems outside the scope of the check of finding 12 of PR #42, branch `conductor/boat-native-remote-workspaces-milestone-8i`, round 2.
 - **Location:** the runner's output filter in `runner/src/runner.ts:50`, and the start-log masker in `worker/lifecycle/masked-start-log.ts:14`.
 
@@ -21,4 +21,4 @@
 - **Wider fix:** C. The admin says which values are secrets, so no length rule guesses.
 - **Previous examples:** finding 12 of PR #42, where a start setting was missing from the output filter.
 - **Recommendation:** C. It hides real secrets and keeps ordinary values readable.
-- **Action:** ask the user, because C adds a setting to the org env vars, and B changes what the chat and the logs show.
+- **Action:** fix after merge, apply C, because the user chose A now and C as a later follow-up on 8 November 2026 (decision 133). The access protocol states the risk until C lands.
