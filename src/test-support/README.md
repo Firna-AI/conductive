@@ -29,7 +29,7 @@ In the `failed` conversation, each open session names the failed request `ask`, 
 All other session records hold null.
 Each session record names its starter in `startedBy`, as `senderSnapshot` copies a person.
 An open session takes the starter that the mockups name, and a closed one the workspace owner.
-Each record has `sourceSessionId: null` and `loginAvailable: true`.
+Each record has `sourceSessionId: null`, `loginAvailable: true`, and `loginShared: true`.
 The replies of Send and Try again name the session that took the message, with its record.
 Browser file recordings contain complete reports.
 `recordedRunnerFileEvents` keeps four complete runner reports for current file readers.

@@ -25,12 +25,14 @@ export type AgentLoginStatus =
       agent: 'claude'
       connected: true
       kind: 'token' | 'api-key'
+      noReuse: boolean
       updatedAt: Timestamp
     }
   | {
       agent: 'codex'
       connected: true
       kind: 'api-key'
+      noReuse: boolean
       updatedAt: Timestamp
     }
 
@@ -55,9 +57,20 @@ export interface AccountResponse {
   user: User
   defaultChoice: AgentChoice
   agentLogins: readonly AgentLoginStatus[]
+  /**
+   * The page of the shared GitHub App on GitHub. It lists the GitHub
+   * accounts of the person. An account with the app opens the settings
+   * of its installation, where the person chooses the repositories that
+   * the app reaches. Another account installs the app.
+   */
+  githubAppUrl: string
 }
 
 export type SaveAgentLoginResponse = AgentLoginStatus
+export interface UpdateAgentLoginRequest {
+  noReuse: boolean
+}
+export type UpdateAgentLoginResponse = AgentLoginStatus
 export interface SetDefaultModelRequest {
   choice: AgentChoice
 }

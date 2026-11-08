@@ -75,7 +75,10 @@ Each other message of the session gets HTTP 409 with the code `retry_not_availab
 It is null only for an older record whose starter is not known.
 `Session.sourceSessionId` names the session where a message opened this linked session, and null otherwise.
 `Session.loginAvailable` is the result of the last server check of the starter's login.
-Each member reads the same value. None of these fields holds a login.
+It stays true when the starter does not share that login.
+`Session.loginShared` says whether the starter lets other members use that login, from the same check.
+Each member reads the same values. None of these fields holds a login.
+[Messages](../../docs/protocol/chat-and-events.md#messages) states how the composer uses both values.
 `SendMessageResponse.session` in `messages.ts` is the record of the session that took the message.
 It can differ from the session of the request.
 [Agents](../../docs/protocol/chat-and-events.md#agents) states the starter rule.
@@ -112,7 +115,7 @@ The git credential payload is not defined yet.
 
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
-- [Account contracts](account.ts) include the repository list available before an org exists.
+- [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.

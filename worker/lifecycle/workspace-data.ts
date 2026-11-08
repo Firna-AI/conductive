@@ -125,8 +125,11 @@ export async function insertWorkspace(
     db
       .prepare(
         `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, state, created_at, updated_at, last_activity_at)
-       SELECT ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ? WHERE ${activeOrgIdPredicate('?')}`,
+       name, branch, state, created_at, updated_at, last_activity_at, position)
+       SELECT ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?,
+         (SELECT COALESCE(MIN(position) - 1, 0) FROM workspaces
+          WHERE org_id = ? AND section_id = ? AND archived_at IS NULL AND state != 'archived')
+       WHERE ${activeOrgIdPredicate('?')}`,
       )
       .bind(
         input.id,
@@ -139,6 +142,8 @@ export async function insertWorkspace(
         input.now,
         input.now,
         input.now,
+        input.orgId,
+        section.id,
         input.orgId,
       ),
     db

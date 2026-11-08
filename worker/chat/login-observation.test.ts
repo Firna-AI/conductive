@@ -7,6 +7,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
+import { readAgentLogin } from './queries'
 
 describe('committed session login observations', () => {
   let harness: TestHarness
@@ -21,13 +22,21 @@ describe('committed session login observations', () => {
   })
 
   it('publishes and keeps unavailable login state when the starter Send is refused', async () => {
-    const fixture = await createChatFixture(harness)
+    const fixture = await createChatFixture(harness, {
+      resolveLogin: async (userId, agent) => {
+        if (userId === null) return null
+        const login = await readAgentLogin(harness.env, userId, agent)
+        await harness.env.DB.prepare(
+          'DELETE FROM agent_logins WHERE user_id = ?',
+        )
+          .bind(userId)
+          .run()
+        return login
+      },
+    })
     const session = await fixture.createSession()
     const ownerTab = await fixture.tab()
     const memberTab = await fixture.tab(0, undefined, fixture.memberCookie)
-    await harness.env.DB.prepare('DELETE FROM agent_logins WHERE user_id = ?')
-      .bind(fixture.owner.id)
-      .run()
     const response = await fixture.fetch(
       sessionPaths.messages(fixture.org.id, WORKSPACE_ID, session.id),
       {
@@ -48,6 +57,7 @@ describe('committed session login observations', () => {
       view.session(session.id),
     )
     expect(stored?.loginAvailable).toBe(false)
+    expect(stored?.loginShared).toBe(false)
     expect(ownerTab.messages.slice(1)).toEqual([
       {
         type: 'event',
@@ -57,7 +67,7 @@ describe('committed session login observations', () => {
           occurredAt: TEST_TIME,
           event: {
             type: 'session.updated',
-            session: { ...session, loginAvailable: false },
+            session: { ...session, loginAvailable: false, loginShared: false },
           },
         },
       },
@@ -139,6 +149,7 @@ describe('committed session login observations', () => {
       view.session(session.id),
     )
     expect(stored?.loginAvailable).toBe(false)
+    expect(stored?.loginShared).toBe(false)
     expect(
       await fixture.chat.store.read(WORKSPACE_ID, (view) => view.sessions()),
     ).toHaveLength(1)
@@ -162,7 +173,7 @@ describe('committed session login observations', () => {
           occurredAt: TEST_TIME,
           event: {
             type: 'session.updated',
-            session: { ...session, loginAvailable: false },
+            session: { ...session, loginAvailable: false, loginShared: false },
           },
         },
       },

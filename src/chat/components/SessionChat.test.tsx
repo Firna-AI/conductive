@@ -145,6 +145,7 @@ describe('session parts', () => {
       startedBy: senderSnapshot(fakeUser),
       sourceSessionId: null,
       loginAvailable: true,
+      loginShared: true,
       choice: { agent, model: 'Model', effort: 'high' as const },
     }))
     const html = renderToStaticMarkup(

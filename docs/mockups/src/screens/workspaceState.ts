@@ -75,8 +75,9 @@ export const workspaceStateSchema = {
     /**
      * The composer: empty, with a message that is not sent yet, with
      * attached files, with its picker open, or with a message for an agent
-     * that is not connected, or in a session whose starter's login is not
-     * available. With files, a file can still upload, its upload can fail,
+     * that is not connected. Or with a message in a session whose starter's
+     * login is not available, or whose starter keeps that login for their
+     * own messages. With files, a file can still upload, its upload can fail,
      * or a file over the size limit can stay out of the message.
      */
     composer: {
@@ -90,6 +91,7 @@ export const workspaceStateSchema = {
         'picker',
         'no-agent',
         'no-starter-login',
+        'not-shared',
       ],
     },
     /** The user drags the handle of the right column to widen it. */

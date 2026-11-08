@@ -255,10 +255,30 @@ Later screens add the frame and connection sources that they need.
   starter is a member of the org.
   [Messages](chat-and-events.md#messages) says what a message of another
   member does when the login of the starter cannot be used.
+- Each agent login has a share setting (decision 116). It says whether the
+  messages of other members can run on that login.
+- The kind of a login sets the default of its share setting. A new Claude
+  subscription login does not let other members use it. A new API key lets
+  them use it.
+- Reason: Anthropic's consumer terms forbid making a Claude account
+  available to anyone else. The owner of an API key may let a team use it.
+  Sharing every login by default was rejected for that reason.
+- A replaced login keeps its share setting while its kind stays the same. A
+  login whose kind changes gets the default of its new kind. Reason: a key
+  rotation keeps the choice of its owner.
+- The account page shows the share setting of each connected login. Its
+  owner can change the setting there at any time.
+- When the starter does not share the login, a message of another member
+  starts a new session on that member's own login. A Try again of another
+  member does the same. [Messages](chat-and-events.md#messages) states the
+  rules of such a new session.
+- The workspace checks the share setting when it accepts each message, and
+  again before it gives the login to the runner. So a waiting message of
+  another member never runs on a login that its owner stopped sharing.
 - A message of a sender who left the org never reaches the agent, also
   while the login of the starter works.
-- The session record shows whether the login of its starter can be used. It
-  holds no part of the login.
+- The session record shows whether the login of its starter can be used,
+  and whether the starter shares it. It holds no part of the login.
 - The runner never writes a login to disk.
 - No process that the agent starts inherits the login of its turn. The
   login is not in the environment, the arguments, or an inherited open file
@@ -270,11 +290,10 @@ Later screens add the frame and connection sources that they need.
   because it also stops the servers behind port previews. The Claude
   program's setting that removes the login from tool processes was rejected,
   because it runs each tool command in isolation.
-- Risk: the other members of a session spend the login of its starter.
-  Anthropic's rules for hosted products ask each end user to sign in with
-  their own credentials. So the shared use of a Claude subscription stays a
-  risk (decision 105).
-- The starter cannot refuse this use of their login (decision 116).
+- Risk: while the starter shares the login, the other members of a session
+  spend it. Anthropic's rules for hosted products ask each end user to sign
+  in with their own credentials. So a shared Claude subscription stays a
+  risk (decisions 105 and 116).
 - Risk: a member with a terminal in the same sandbox can read the login of
   the turn that runs now. Every other process of the same sandbox user can
   read it too, such as a tool of the agent or a server that the startup
@@ -283,8 +302,9 @@ Later screens add the frame and connection sources that they need.
   copy after the turn. The rule against inheritance stops only the
   automatic copy into new processes.
 - So the members of one org trust each other with their logins, also after
-  a turn ends. A proxy that keeps every login out of the sandbox was
-  rejected, because it is a much larger build.
+  a turn ends. The share setting does not keep a login away from them. A
+  proxy that keeps every login out of the sandbox was rejected, because it
+  is a much larger build.
 - Risk: while a turn runs, each process in the sandbox can get the
   sender's GitHub App user token. Each member with a terminal there can
   get it too, for example with `git credential fill`. A copied token keeps

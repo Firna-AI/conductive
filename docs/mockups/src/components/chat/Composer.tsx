@@ -16,8 +16,13 @@ import styles from './Composer.module.css'
 export type ComposerState = {
   /** The model and the effort of the next message. */
   choice: AgentChoice
-  /** An agent turn runs, so a message steers it. */
+  /** An agent turn runs, so a message steers it, and Stop ends it. */
   running: boolean
+  /**
+   * A message starts a new linked session, so it does not steer a running
+   * turn of this session. Stop still ends that turn.
+   */
+  startsSession?: boolean
   draft: string
   /**
    * The attached files. Send waits while a file uploads, and while a failed
@@ -73,14 +78,16 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
 /**
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. While a turn runs, a message
- * steers the turn, and Stop ends it. While Send waits for the first start
- * of a new workspace, a message in the box shows the reason beside Send.
+ * steers the turn, and Stop ends it, unless the message starts a new
+ * linked session. While Send waits for the first start of a new
+ * workspace, a message in the box shows the reason beside Send.
  * Send also waits for the uploads of the files, whose chips show their
  * state. A line under the box names whose agent login the session uses.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const { field } = useControlSizes()
-  const placeholder = props.running
+  const steers = props.running && props.startsSession !== true
+  const placeholder = steers
     ? 'Steer the agent while it works'
     : (props.placeholder ?? 'Message the agent')
   const uploads = props.attachments.some((file) => file.state !== undefined)
@@ -133,7 +140,7 @@ export function Composer(props: ComposerState & { lines?: number }) {
         </div>
       </div>
       {props.sessionLogin ? <SessionLoginLine {...props.sessionLogin} /> : null}
-      {props.running && props.draft !== '' ? (
+      {steers && props.draft !== '' ? (
         <span className={styles.hint}>
           The agent reads this at its next step.
         </span>

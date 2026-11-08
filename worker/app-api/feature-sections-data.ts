@@ -36,10 +36,10 @@ export async function updateShellSection(
     sectionId: string
     name?: string
     collapsed?: boolean
-    order?: readonly string[]
+    position?: number
   },
 ): Promise<boolean> {
-  const { orgId, userId, sectionId, name, collapsed, order } = input
+  const { orgId, userId, sectionId, name, collapsed, position } = input
   const guard = `org_id = ? AND ${activeShellMemberPredicate}`
   const statements = [
     db
@@ -71,14 +71,35 @@ export async function updateShellSection(
           userId,
         ),
     )
-  for (const [position, id] of order?.entries() ?? [])
+  if (position !== undefined)
     statements.push(
       db
         .prepare(
-          `UPDATE sections SET position = ? WHERE id = ? AND ${guard}
-       AND EXISTS (SELECT 1 FROM sections target WHERE target.id = ? AND target.org_id = ?)`,
+          `WITH siblings AS MATERIALIZED (
+             SELECT id, ROW_NUMBER() OVER (ORDER BY position, id) - 1 AS rank
+             FROM sections WHERE org_id = ? AND id != ?
+           ), destination AS MATERIALIZED (
+             SELECT MIN(?, COUNT(*)) AS position FROM siblings
+           ), ranks AS MATERIALIZED (
+             SELECT siblings.id, rank + CASE WHEN rank >= destination.position THEN 1 ELSE 0 END AS position
+             FROM siblings CROSS JOIN destination
+             UNION ALL SELECT ?, position FROM destination
+           ) UPDATE sections SET position = (
+             SELECT ranks.position FROM ranks WHERE ranks.id = sections.id
+           ) WHERE ${guard} AND id IN (SELECT id FROM ranks)
+             AND EXISTS (SELECT 1 FROM sections target WHERE target.id = ? AND target.org_id = ?)`,
         )
-        .bind(position, id, orgId, orgId, userId, sectionId, orgId),
+        .bind(
+          orgId,
+          sectionId,
+          position,
+          sectionId,
+          orgId,
+          orgId,
+          userId,
+          sectionId,
+          orgId,
+        ),
     )
   const result = await db.batch(statements)
   return result[0].meta.changes > 0

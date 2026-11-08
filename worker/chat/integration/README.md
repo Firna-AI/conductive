@@ -275,7 +275,7 @@ methods of `Workspace`.
 
 ## Agent logins and attachments
 
-[Agent logins and attachments](logins-and-attachments.md) gives the login checks and the attachment seams.
+[Agent logins and attachments](logins-and-attachments.md) gives the login checks, the share refusal, and the attachment seams.
 
 ## Session logins
 

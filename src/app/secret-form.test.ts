@@ -38,6 +38,7 @@ describe('SecretForm', () => {
       agent: 'codex',
       connected: true,
       kind: 'api-key',
+      noReuse: false,
       updatedAt: 1,
     })
     form.set('sk-accepted')
@@ -52,6 +53,7 @@ describe('SecretForm', () => {
       agent: 'codex',
       connected: true,
       kind: 'api-key',
+      noReuse: false,
       updatedAt: 1,
     })
   })

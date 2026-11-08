@@ -47,9 +47,15 @@ npm run typecheck
   refused Send, and that a repeated message ID observes nothing.
   `linked-retry.test.ts` also restarts after a crash at the acceptance of a
   linked Retry. It checks each stored record, and a stale Retry gets 409.
+- `login-reuse.test.ts` tests a starter who does not share the login.
+  Another member gets an empty linked session, and the first session keeps
+  `loginAvailable: true` with `loginShared: false`. A queued message of
+  another member fails with the cause before the runner gets it, and its
+  Retry opens a linked session.
 - `login-availability.test.ts` tests the metadata path. One query serves one
-  or four sessions and reads no credential. Reads check no login and flush
-  no runner. The list and a new tab still work with a damaged starter
+  or four sessions and reads no credential. `loginShared` follows the share
+  setting, and an open tab gets the changed value. Reads check no login and
+  flush no runner. The list and a new tab still work with a damaged starter
   ciphertext. Closed sessions and archived workspaces stay unchanged.
   `login-queries.test-support.ts` records its D1 login queries.
 - `turn-dispatch.test.ts` checks that a runner disconnect during the

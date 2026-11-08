@@ -36,6 +36,11 @@ as a Worker secret.
 Both fields start empty. The operator API keeps their first values.
 Members receive only the suspension time.
 
+`202611080100_agent_login_reuse.sql` adds the `agent_logins.no_reuse` preference.
+Existing Claude subscription tokens refuse re-use by default.
+Existing API keys allow re-use by default.
+The migration keeps the encrypted secret and its timestamps.
+
 `202611081849_chat_attachments.sql` adds attachment metadata, owner and target identities, claim revisions, and retryable deletion state.
 The private R2 bucket holds the bytes.
 The uploader ID is opaque, so retained files do not block account deletion.

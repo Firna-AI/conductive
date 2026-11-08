@@ -40,6 +40,7 @@ export function newSessionRecord(
     startedBy: senderSnapshot(fakeUser),
     sourceSessionId: null,
     loginAvailable: true,
+    loginShared: true,
     ...more,
   }
 }

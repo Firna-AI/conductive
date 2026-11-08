@@ -56,6 +56,8 @@ const BANNERS = [
  *   opens, as a sandbox does that stops while its workspace is open.
  * - `upload=wait|fail`: each file upload never ends, or the first upload of
  *   each file name fails once, so Try again works.
+ * - `shareSave=fail`: each change of the share setting of an agent login
+ *   fails, so the account shows that the change was not saved.
  */
 export interface DevOptions {
   /** The options of the recorded server. */
@@ -70,6 +72,7 @@ export interface DevOptions {
   stopAfterMs: number | null
   /** What each file upload does. */
   upload: DevUploadMode
+  shareSaveFails: boolean
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -98,6 +101,7 @@ export function readDevOptions(search: string): DevOptions {
     signedOut: params.get('signedOut') === '1',
     stopAfterMs: stopAfter(params.get('stop')),
     upload: pick(params, 'upload', UPLOADS) ?? 'ready',
+    shareSaveFails: params.get('shareSave') === 'fail',
   }
 }
 

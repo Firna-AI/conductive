@@ -7293,15 +7293,48 @@ the desktop paths.
 Apply the `fix after merge` items of the access rules. Added on 8 November
 2026.
 
-- [ ] Draw the "no re-use" login setting and the linked session in the
+Scope extension approved on 8 November 2026: this workspace also owns
+`worker/app-api/boot.ts`, `worker/app-api/account-data.ts`, one new
+migration, and their tests and README lines. The primary orchestrator
+chose option A of the workspace's scope question.
+
+Design calls by the agent on 8 November 2026:
+
+- Save the share setting without sending the secret again. Reason: a
+  stored secret never returns to the browser.
+- Keep the saved share setting when a replacement has the same login
+  kind. Apply the new kind's default when the kind changes. Reason: a key
+  rotation must keep the owner's choice.
+- Keep `loginAvailable` about the starter's login. Reason: a refusal to
+  share does not stop the starter from using that login.
+- Add `loginShared` to the session record. Reason: another member's
+  composer must name the login that its next message will use.
+- Read only metadata when a session starts. Reason: its availability and
+  sharing state need no decrypted secret.
+- Read older records and events as shared until the next metadata check.
+  Reason: those records came from the earlier sharing rule.
+- Use a newer metadata result before returning a resolved login. Reason:
+  a sharing refusal or a missing login must not leave a stale credential
+  eligible for Send.
+- Use `2026-11-08-login-sharing` as the Terms revision. Reason: a changed
+  Terms page needs a distinct revision on the same date.
+
+The primary orchestrator approved the session reuse metadata, chat UI,
+Privacy, chat protocol, mockup notes, shared contract notes, and Terms
+revision scope on 8 November 2026, with option A of workspace item 2.
+Decision 146 moves the desktop TODO to `plans/follow-ups/desktop-stream-after-access-loss.md`.
+Evidence: `.context/boat-native-remote-workspaces/reports/`.
+
+- [x] Draw the "no re-use" login setting and the linked session in the
       mockups. Then build them, and compare them with their mockups.
-- [ ] Apply option B of `plans/follow-ups/login-reuse-setting.md` (decision
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15q`.
+- [x] Apply option B of `plans/follow-ups/login-reuse-setting.md` (decision
       116), with the access protocol and the Terms page. Delete that item.
-- [ ] Apply option C of `plans/follow-ups/desktop-stream-after-access-loss.md`
-      (decision 117), and delete that item.
-- [ ] Apply option B of `plans/follow-ups/restore-for-suspended-admin.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15q`.
+- [x] Apply option B of `plans/follow-ups/restore-for-suspended-admin.md`,
       with its lines in `docs/protocol/operator-actions.md` and
       `worker/members/README.md`. Delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15q`.
 
 ## Milestone 15r: Secret org env vars
 
@@ -7339,10 +7372,33 @@ Depends on: none.
 Apply the `fix after merge` items of the workspace and section lists.
 Added on 8 November 2026.
 
-- [ ] Apply option A of `plans/follow-ups/new-workspace-position-after-reorder.md`,
+- [x] Apply option A of `plans/follow-ups/new-workspace-position-after-reorder.md`,
       and delete that item.
-- [ ] Apply option B of `plans/follow-ups/atomic-workspace-and-section-moves.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15s`.
+- [x] Apply option B of `plans/follow-ups/atomic-workspace-and-section-moves.md`,
       and delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15s`.
+
+Design calls by the implementor, checked by the orchestrator on 8 November
+2026:
+
+- A position-only workspace move uses its stored section inside the
+  transaction. An earlier read can have a stale section after another move.
+- Keep the existing archive filters and tie order. Workspace ties use
+  creation time, then ID. Section ties use ID. Rank only the target list,
+  so other sections keep their saved positions.
+- Build the workspace snapshot from the guarded moving row. A refused
+  update then changes no sibling position.
+- Remove `orderedSectionWorkspaceIds` after its caller uses the atomic
+  operation. No live caller needs the old read-and-write path.
+- Keep the list reader, app list change, and dev create fake as they are.
+  They already use stored order or put new workspaces first.
+- Change the regression setup to use the new section and index inputs.
+  Keep the same order assertions, so the baseline failures still apply.
+- Keep the list order rule in the app API README. The lifecycle README
+  links to it, so the shared rule has one home.
+
+Evidence: `.context/boat-native-remote-workspaces/15s/orchestrator-checks.md`.
 
 ## Milestone 13c: GitHub follow-ups
 
