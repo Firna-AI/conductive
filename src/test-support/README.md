@@ -103,6 +103,7 @@ await view.rerender(<OwnerPicker {...props} workspace={next} />)
   It fails when it finds none or more than one. `queryByRole` gives null for none. `queryAllByRole` gives all.
 - `byLabel(label)` and `queryByLabel(label)` match an exact `aria-label`. `accessibleName(element)` gives the name.
 - `byText(text)` and `queryByText(text)` give the innermost element whose spoken text is exactly `text`.
+  `queryAllByText` gives all, so a test can count the shown copies of a text.
 - `byDialog(name)` gives the one `<dialog>` with the name. Each finder takes an optional root.
 - The finders skip an element that is not shown, and every `aria-hidden` subtree.
   `isShown(element)` is the check: `checkVisibility()` is true, and no ancestor has `hidden`.

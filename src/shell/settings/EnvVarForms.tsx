@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Input } from '@firna/ui/input'
+import { useToast } from '@firna/ui/toast'
 import { Plus, X } from 'lucide-react'
 import { productName } from '../../../docs/mockups/src/brand'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
@@ -9,23 +10,39 @@ import sections from '../../../docs/mockups/src/components/settings/Section.modu
 import type { ComputerModel } from '../../app/computer-model'
 import { SecretForm } from '../../app/secret-form'
 import { useStore } from '../../app/store'
+import { isOrgRefusal } from '../../app/suspension'
 import { ActionButton, IconButton } from '../ui/actions'
 import local from './settings.module.css'
 
 /**
  * Saves the value of a variable through a secret form, and closes the form
  * after the save. The value leaves the browser once and never comes back.
+ * A failed save shows its message under the field. A refusal because the
+ * org is suspended also ends the permission, so the form closes, and a
+ * toast shows the message instead.
  */
 function useValueForm(computer: ComputerModel, close: () => void) {
   // The value goes out as typed: it may be empty, and its spaces stay.
   const [form] = useState(() => new SecretForm({ raw: true }))
   const value = useStore(form.value)
   const state = useStore(form.state)
+  const { toast } = useToast()
   const save = (name: string) => {
     void form
       .submit((secret) => computer.setEnvVar(name, secret))
       .then((saved) => {
-        if (saved) close()
+        if (saved) {
+          close()
+          return
+        }
+        const { error } = form.state.get()
+        if (error && isOrgRefusal(error)) {
+          toast({
+            title: `${name} was not saved`,
+            description: error.message,
+            tone: 'error',
+          })
+        }
       })
   }
   return { form, value, state, save }

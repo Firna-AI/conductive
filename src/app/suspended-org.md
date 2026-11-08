@@ -36,7 +36,9 @@ screens show.
   menu, and no drag. A section collapses in this view only.
 - The rail names the org as suspended.
 - The settings show the notice above each tab. Each tab is read-only, also
-  for an admin, and General has no Delete org.
+  for an admin, and General has no Delete org. A save that the API refuses
+  with `org_suspended` closes the open forms of the tab, and a toast tells
+  what was not saved.
 - General offers Leave org to a person whom the last-admin rule lets
   leave: a member who is not an admin, or an admin while the members list
   another admin. The question counts the person's workspaces from the
