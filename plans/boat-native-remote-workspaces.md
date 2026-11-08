@@ -5233,6 +5233,10 @@ November 2026.
       and delete that item.
 - [ ] Apply option C of `plans/follow-ups/terminal-replies-count-as-activity.md`,
       and delete that item.
+- [ ] Apply option D of `plans/follow-ups/concurrency-callback-errors.md`,
+      and delete that item. Added on 8 November 2026.
+- [ ] Apply option A of `plans/follow-ups/activity-for-suspended-owner.md`,
+      and delete that item. Added on 8 November 2026.
 
 ## Milestone 5f: Tests on the real workspace object
 
@@ -5248,6 +5252,9 @@ both items recommend.
       one native harness. Delete both items.
 - [ ] Apply option C of `plans/follow-ups/harness-test-speed.md` (decision
       113), and delete that item.
+- [ ] Apply option A of `plans/follow-ups/start-time-limit-test-under-load.md`
+      after the move to the real object, and delete that item. Added on 8
+      November 2026.
 
 ## Milestone 6: App shell and workspaces
 
@@ -7077,6 +7084,76 @@ November 2026. Added on 8 November 2026.
 - [ ] Apply option C of `plans/follow-ups/org-env-values-in-output.md`,
       with the changes to `docs/protocol/access-and-security.md` and the
       privacy page. Delete that item.
+
+## Milestone 8r: Chat write follow-ups
+
+Depends on: 8p, 8q. They change the chat path and the chat client that
+these items change.
+
+Apply the `fix after merge` items of the chat writes. Added on 8 November
+2026.
+
+- [ ] Apply option C of `plans/follow-ups/chat-access-before-queued-writes.md`,
+      and delete that item.
+- [ ] Apply option B of `plans/follow-ups/chat-open-edits-after-read-only.md`,
+      and delete that item.
+
+## Milestone 15s: Shell list follow-ups
+
+Depends on: none.
+
+Apply the `fix after merge` items of the workspace and section lists.
+Added on 8 November 2026.
+
+- [ ] Apply option A of `plans/follow-ups/new-workspace-position-after-reorder.md`,
+      and delete that item.
+- [ ] Apply option B of `plans/follow-ups/atomic-workspace-and-section-moves.md`,
+      and delete that item.
+
+## Milestone 13c: GitHub follow-ups
+
+Depends on: 5e. Its one alarm scheduler changes the GitHub alarms.
+
+Apply the `fix after merge` items of the GitHub code. Added on 8 November
+2026.
+
+- [ ] Apply option B of `plans/follow-ups/github-push-refresh-isolation.md`,
+      and delete that item.
+- [ ] Apply option E of `plans/follow-ups/shared-github-app-credentials.md`,
+      and delete that item.
+
+## Milestone 15t: Typed Worker warnings
+
+Depends on: 5e, 8o. They change the start and the failed start, where
+most warnings live.
+
+Apply the wider fix of findings 1 and 6 of the review of the deploy fixes.
+Added on 8 November 2026.
+
+- [ ] Apply option D of `plans/follow-ups/typed-worker-warnings.md`, and
+      delete that item.
+
+## Milestone 15u: One record of every cloud computer
+
+Depends on: 5e, 8o, 15q. They change the start, the failed start, and the
+member actions that read the computers.
+
+Apply option F of finding 10 of PR #52. Added on 8 November 2026.
+
+- [ ] Apply option F of `plans/follow-ups/computer-ledger.md`, and delete
+      that item.
+
+## Milestone 2c: Doc follow-ups
+
+Depends on: 8o, 8p, 15q, 15r. They change the protocol docs that this
+milestone splits.
+
+Apply the `fix after merge` items of the docs. Added on 8 November 2026.
+
+- [ ] Apply option A of `plans/follow-ups/protocol-docs-split.md`, and
+      delete that item.
+- [ ] Apply option A of `plans/follow-ups/readme-feature-list.md`, and
+      delete that item.
 
 ## Milestone 15d: Marketing site
 
