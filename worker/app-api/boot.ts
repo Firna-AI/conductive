@@ -20,6 +20,7 @@ import {
   saveAccountDefault,
   saveAccountLogin,
 } from './account-data'
+import { githubInstallUrl } from './feature-github'
 import { getStartedData } from './get-started-data'
 import { configuredDefaultChoice, configuredModels } from './models'
 
@@ -44,6 +45,7 @@ export async function bootRoute(
           (await accountDefault(env.DB, userId)) ??
           configuredDefaultChoice(env),
         agentLogins: await accountLogins(env.DB, userId),
+        githubAppUrl: githubInstallUrl(env),
       } satisfies AccountResponse)
     }
   }
