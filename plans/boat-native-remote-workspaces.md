@@ -6407,6 +6407,11 @@ Depends on: 11c.
 
 Apply decision 142 A. Added on 8 November 2026.
 
+Each org image build installs the terminal files. An existing workspace
+keeps the launcher of its image, also after a resume, so it keeps the
+bug. A workspace gets the fix when it starts from an org image that a
+build makes after the deploy.
+
 - [x] Give tmux the path of the repository folder when a terminal
       connection creates the workspace shell. Update the launcher test and
       `worker/terminal/README.md`. Record the open part in
@@ -7350,8 +7355,18 @@ checks of 16 and 16a to the work after the merge.
 
 - [ ] After the deploy of Milestone 11d, build the org image again. A
       change to the terminal files reaches a workspace only through a new
-      image. Then resume a workspace with another tool open. Wait until
-      `GET /sandboxes/{id}` of Boat gives `hydrated: true`, and only then
-      open the Terminal tab, so that it creates the first shell. Run `pwd -P` in it. Check that it prints
-      `/home/user/code/<name>`, not a path under
-      `/var/lib/ascii-lazy/retired/`. The prompt alone does not show it.
+      image. An existing workspace keeps the launcher of its image, also
+      after a resume. So create a new workspace from the rebuilt image,
+      and let it stop, for example after 30 minutes without activity.
+      Resume it with another tool open. Wait until `GET /sandboxes/{id}`
+      of Boat gives `hydrated: true`, and only then open the Terminal tab,
+      so that it creates the first shell. In that shell, check these
+      commands:
+  - `grep -c -F -- '-s workspace -c' /usr/local/lib/conductive/terminal`
+    prints `1`. A `0` means that the workspace runs the old launcher.
+  - `readlink /proc/$(pgrep -o -x ttyd)/cwd` prints a path under
+    `/var/lib/ascii-lazy/retired/`. Another path means that the restore
+    ended before the terminal started, so the check did not test the
+    fix. Then stop and resume the workspace again.
+  - `pwd -P` prints `/home/user/code/<name>`, not a path under
+    `/var/lib/ascii-lazy/retired/`. The prompt alone does not show it.
