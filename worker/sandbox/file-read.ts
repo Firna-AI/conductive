@@ -8,6 +8,17 @@ function invalid(): never {
   throw new ProviderError('invalid_response', 502)
 }
 
+/** Boat answers a path under its work directory relative to that directory. */
+const BOAT_WORK_DIRECTORY = '/home/user'
+
+function samePath(reply: unknown, requested: string): boolean {
+  if (typeof reply !== 'string') return false
+  if (reply === requested) return true
+  return (
+    !reply.startsWith('/') && `${BOAT_WORK_DIRECTORY}/${reply}` === requested
+  )
+}
+
 function isSize(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
 }
@@ -29,7 +40,7 @@ export async function readSandboxFile(
     if (
       value.type !== 'file.read' ||
       typeof value.success !== 'boolean' ||
-      value.path !== path ||
+      !samePath(value.path, path) ||
       (value.encoding !== 'utf8' && value.encoding !== 'base64') ||
       !isSize(value.size) ||
       typeof value.content !== 'string'
@@ -61,7 +72,7 @@ export async function readSandboxFile(
       if (
         info.type !== 'file.info' ||
         (info.success !== undefined && info.success !== true) ||
-        info.path !== path ||
+        !samePath(info.path, path) ||
         typeof info.name !== 'string' ||
         info.isDir !== false ||
         typeof info.isSymlink !== 'boolean' ||

@@ -6141,8 +6141,16 @@ This milestone needs the prerequisites from the user.
       secrets, and the runner archive of `a145db0` at
       `runner.conductive.build`. Resend and the desktop stream origins wait.
       Branch: `calummoore/conductor-alternative-architecture`.
-- [ ] Deploy the chat path to the user's Cloudflare account, with GitHub
-      sign-in, so that the user can work in Conductive.
+- [x] Deploy the chat path to the user's Cloudflare account, with GitHub
+      sign-in, so that the user can work in Conductive. Done on 8 November
+      2026: an org image build, a workspace start in about 20 seconds, and a
+      first agent reply, through the deployed app. The first runs found and
+      fixed six defects: the GitHub App slug of the install link
+      (`ae8294c`), the saved image names (`49f0b2d`), the packaged ttyd
+      service on the terminal port (`6610fbf`), the terminal password path
+      (`9a88df8`) and reply path (`04076ba`) of the provider's file API,
+      and whitespace in a saved agent login (`14dd6f9`).
+      Branch: `calummoore/conductor-alternative-architecture`.
 - [ ] Smoke-test it with a real Boat sandbox: run `npm ci --prefix runner`,
       `npm --prefix runner run build`, `node image/live-check.mjs --prepare`,
       and `node image/live-check.mjs` with the `LIVE_*` settings of the

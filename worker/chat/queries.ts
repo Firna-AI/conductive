@@ -75,6 +75,14 @@ export function agentLoginContext(userId: string, agent: Agent): string {
   return `agent-login:${userId}:${agent}`
 }
 
+/**
+ * A login never holds whitespace. A token that a terminal wrapped can arrive
+ * with a space or a line break inside it, so each save and read removes them.
+ */
+export function loginSecret(value: string): string {
+  return value.replace(/\s+/g, '')
+}
+
 export async function readAgentLogin(
   env: AppEnv,
   userId: string,
@@ -92,7 +100,7 @@ export async function readAgentLogin(
     agentLoginContext(userId, agent),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
-  return { ...loginKind, secret }
+  return { ...loginKind, secret: loginSecret(secret) }
 }
 
 export async function senderLoginAccess(

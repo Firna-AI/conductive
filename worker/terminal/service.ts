@@ -3,6 +3,7 @@ import { workspaceTarget } from '../previews/access'
 import { WorkspaceTools } from '../previews/provider'
 import type { ToolDependencies } from '../previews/types'
 import { ProviderError } from '../sandbox/errors'
+import { warnWorker } from '../warnings'
 import type { SandboxProvider } from '../sandbox/provider'
 import { cacheTerminalPassword } from './credentials'
 import { privilegedCommand } from './privileged'
@@ -11,6 +12,7 @@ import {
   launcherScript,
   sessionServerScript,
   TERMINAL_RUNTIME,
+  TERMINAL_RUNTIME_VIEW,
 } from './scripts'
 
 export const TERMINAL_PORT = 7681
@@ -19,6 +21,10 @@ export function terminalInstallCommand(): string {
   return privilegedCommand(`set -eu
 apt-get update
 apt-get install -y ttyd tmux
+# The ttyd package enables its own service on port 7681, which the
+# workspace terminal needs. Stop it and keep it from starting.
+systemctl disable --now ttyd.service 2>/dev/null || true
+systemctl mask ttyd.service
 install -d -m 755 /usr/local/lib/conductive
 cat > /usr/local/lib/conductive/terminal <<'CONDUCTIVE_TERMINAL'
 ${launcherScript()}
@@ -104,12 +110,19 @@ export async function startWorkspaceTerminal(
   const command = `set -eu
 install -d -m 700 -o user -g user /run/conductive-terminal
 touch /run/conductive-terminal/enabled
+systemctl stop ttyd.service 2>/dev/null || true
 systemctl start conductive-terminal.service
-systemctl is-active --quiet conductive-terminal.service`
+systemctl is-active --quiet conductive-terminal.service
+install -d -m 700 -o user -g user ${TERMINAL_RUNTIME_VIEW}
+mountpoint -q ${TERMINAL_RUNTIME_VIEW} || mount --bind ${TERMINAL_RUNTIME} ${TERMINAL_RUNTIME_VIEW}`
   const result = await provider.command(privilegedCommand(command))
-  if (result.exitCode !== 0 || result.timedOut)
+  if (result.exitCode !== 0 || result.timedOut) {
+    warnWorker(
+      `The terminal of workspace ${workspaceId} did not start: exit code ${result.exitCode}, timed out ${result.timedOut}, ${result.stderr.slice(-300)}`,
+    )
     throw new ProviderError('unavailable', 502)
-  const file = await provider.readFile(`${TERMINAL_RUNTIME}/password`, 64)
+  }
+  const file = await provider.readFile(`${TERMINAL_RUNTIME_VIEW}/password`, 64)
   if (file.kind !== 'file') throw new ProviderError('invalid_response', 502)
   let password: string
   try {

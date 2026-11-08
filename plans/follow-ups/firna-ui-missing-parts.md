@@ -22,6 +22,13 @@
 - **Problem:** Every Firna app that needs these parts builds its own copy. The accounting mockups keep notices, tags, and page chrome local for the same reason.
 - **Impact if no action:** The copies drift apart in look and in accessibility.
 - **Root question:** Where do the parts that `@firna/ui` lacks live?
+- **Status on 8 November 2026:** `@firna/ui` 5.1.0 shipped the parts, but Milestone 15n found that five of them cannot draw the mockups yet:
+  - `LinkTabs` cannot wrap the phone settings tabs into three columns.
+  - `Notice` moves Retry below the text.
+  - `InlineMenuSheet` has a fixed larger title and a close button.
+  - `InlineMenu` cannot draw section labels in monospace capitals.
+  - `EmptyState` adds an icon circle, and it has no place for a mark before its title.
+  The user chose on 8 November 2026 to keep the local copies and to add these options to the library later. The local copies stay until then.
 - **Options:**
   - **A.** Keep them as local components and token CSS in each app. Effort: Small.
   - **B.** Add link buttons, link tabs, a notice, an empty state, an extra-small size, a small type scale, dense rows, a dense menu and a phone menu sheet, touch sizes, and a resize handle to `@firna/ui`. Then replace the local versions in this repository. Effort: Medium.

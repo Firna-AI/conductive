@@ -4,7 +4,7 @@ import type { IconName } from './icons'
 /**
  * The words of the features of the home page. The site renders them as HTML,
  * and the mockups render them with React in
- * docs/mockups/src/screens/marketingFeatures.tsx, so both show the same
+ * docs/mockups/src/screens/MarketingScreen.tsx, so both show the same
  * words, icons, and pictures, in the same order.
  */
 

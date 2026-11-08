@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 
 import { terminalPassword } from '../terminal/credentials'
-import { TERMINAL_RUNTIME } from '../terminal/scripts'
+import { TERMINAL_RUNTIME_VIEW } from '../terminal/scripts'
 import { setupBackendTests } from './backend-test-hooks'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { DISK_KEEPALIVE_MS } from './durable-types'
@@ -70,7 +70,7 @@ it('starts and caches the terminal after startup at create and resume while rete
   expect((await creation).workspace.state).toBe('starting')
   expect((await endpoint.readLifecycle())?.state).toBe('ready')
   expect(terminalStarts).toBe(1)
-  expect(boat.fileReads).toEqual([`${TERMINAL_RUNTIME}/password`])
+  expect(boat.fileReads).toEqual([`${TERMINAL_RUNTIME_VIEW}/password`])
   expect(await terminalPassword(runtime.env, id, 'bx_1')).toBe('b'.repeat(64))
 
   const context = {
@@ -86,7 +86,7 @@ it('starts and caches the terminal after startup at create and resume while rete
   expect((await endpoint.readLifecycle())?.state).toBe('stopped')
   expect(boat.resumeIds).toEqual(['bx_1'])
   expect(terminalStarts).toBe(1)
-  expect(boat.fileReads).toEqual([`${TERMINAL_RUNTIME}/password`])
+  expect(boat.fileReads).toEqual([`${TERMINAL_RUNTIME_VIEW}/password`])
 
   boat.terminalPassword = 'c'.repeat(64)
   const resumed = await fixture.run(() =>
@@ -96,8 +96,8 @@ it('starts and caches the terminal after startup at create and resume while rete
   expect(terminalStarts).toBe(2)
   expect(await terminalPassword(runtime.env, id, 'bx_1')).toBe('c'.repeat(64))
   expect(boat.fileReads).toEqual([
-    `${TERMINAL_RUNTIME}/password`,
-    `${TERMINAL_RUNTIME}/password`,
+    `${TERMINAL_RUNTIME_VIEW}/password`,
+    `${TERMINAL_RUNTIME_VIEW}/password`,
   ])
   expect(boat.commands.join('\n')).not.toContain(boat.terminalPassword)
 })
