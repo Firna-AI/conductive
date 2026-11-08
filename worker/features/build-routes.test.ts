@@ -11,7 +11,7 @@ import {
   OUTER_ORG,
   OUTER_SOFTWARE,
 } from '../chat/integration/outer-seed.test-support'
-import { insertBuild } from '../lifecycle/build-data'
+import { insertBuild } from '../lifecycle/build-admission-data'
 import { readSavedScript } from '../lifecycle/saved-script'
 import { featureFixture, type FeatureFixture } from './fixture.test-support'
 

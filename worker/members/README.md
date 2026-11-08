@@ -36,6 +36,12 @@ It then calls `sandboxProvider` from the [sandbox area](../sandbox/README.md), w
 Under a cleanup lease, a provider failure returns 502 `org_cleanup_failed`.
 A refused Boat key is such a failure. The recovery state stays for a retry.
 
+A suspended org stays visible to its members.
+Every member write except voluntary Leave uses the shared active-org check and SQL predicate.
+The Leave recipient and last-active-admin rules remain in force.
+Pending invitation lists omit suspended orgs, and acceptance preserves their invitations and memberships.
+Org suspension also blocks a pending Restore activation and disk retention restart.
+
 ## Lifecycle ownership
 
 `runLifecycleHook` runs every lifecycle mutation callback.

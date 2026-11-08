@@ -31,17 +31,20 @@ export function failedStartJob(
   now: number,
 ): WorkspaceStartJob {
   const caught =
-    !(error instanceof HttpError && error.code === 'user_suspended') &&
-    startTimeLimitReached(job, now)
+    !(
+      error instanceof HttpError &&
+      ['user_suspended', 'org_suspended'].includes(error.code)
+    ) && startTimeLimitReached(job, now)
       ? new JobTimeLimit('start')
       : error
   const failure =
     caught instanceof HttpError ? caught : new WorkspaceStartError(null)
-  return job.cancelled && failure.code !== 'user_suspended'
+  const suspended = ['user_suspended', 'org_suspended'].includes(failure.code)
+  return job.cancelled && !suspended
     ? job
     : {
         ...job,
-        cancelled: job.cancelled || failure.code === 'user_suspended',
+        cancelled: job.cancelled || suspended,
         failure: job.failure ?? {
           code: failure.code,
           message: failure.message,
@@ -77,7 +80,8 @@ export async function finishFailedStart(
       },
       Boolean(
         job.cancelled &&
-        (!job.failure || job.failure.code === 'user_suspended'),
+        (!job.failure ||
+          ['user_suspended', 'org_suspended'].includes(job.failure.code)),
       ),
     )
     return {

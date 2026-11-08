@@ -1,6 +1,6 @@
 import { API_PATHS } from './api'
 
-export const TERMS_VERSION = '2026-11-07'
+export const TERMS_VERSION = '2026-11-08'
 export const TERMS_VERSION_PARAMETER = 'terms_version'
 
 export function acceptedTermsSignInPath(): string {

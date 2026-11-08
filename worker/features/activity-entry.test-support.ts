@@ -24,6 +24,10 @@ export class Workspace extends FeatureWorkspace {
     return this.activity.localSettled()
   }
 
+  recordInputBatch(workspaceId: string, times: readonly number[]): void {
+    for (const at of times) this.activity.record(workspaceId, at)
+  }
+
   readActivityAlarm(): Promise<number | null> {
     return this.ctx.storage.getAlarm()
   }

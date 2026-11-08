@@ -24,7 +24,10 @@ export async function applyStartRunnerReady(
     try {
       await requireActiveStartUsers(env.DB, job)
     } catch (error) {
-      if (!(error instanceof HttpError && error.code === 'user_suspended'))
+      if (!(
+        error instanceof HttpError &&
+        ['user_suspended', 'org_suspended'].includes(error.code)
+      ))
         throw error
       await storage.update(failedStartJob(job, error, now()))
       return

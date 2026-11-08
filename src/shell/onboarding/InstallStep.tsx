@@ -4,6 +4,7 @@ import {
   Section,
   SectionText,
 } from '../../../docs/mockups/src/components/settings/Section'
+import { getStartedCopy } from '../../../docs/mockups/src/screens/getStartedCopy'
 import styles from '../../../docs/mockups/src/screens/GetStartedScreen.module.css'
 import type { StepState } from '../../app/get-started'
 import { useStore, valueOf } from '../../app/store'
@@ -14,7 +15,7 @@ import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { DoneStatus } from './stepParts'
 
-const title = '1. Install the GitHub App'
+const copy = getStartedCopy.install
 
 /** The accounts of the installations, such as "acme and futex", in bold. */
 function AccountNames(props: { installations: readonly GitHubInstallation[] }) {
@@ -83,11 +84,11 @@ export function InstallStep(props: { state: StepState }) {
       <Section
         actions={
           <ActionButton disabled={!response} icon={Plus} onPress={install}>
-            Add another account
+            {copy.another}
           </ActionButton>
         }
-        status={<DoneStatus label="Installed" />}
-        title={title}
+        status={<DoneStatus label={copy.done} />}
+        title={copy.title}
       >
         <InstalledText installations={response?.installations ?? []} />
         {failed}
@@ -104,11 +105,11 @@ export function InstallStep(props: { state: StepState }) {
           onPress={install}
           tone={next ? 'primary' : 'secondary'}
         >
-          Install the GitHub App
+          {copy.action}
         </ActionButton>
       }
-      description="Install it on the GitHub account that owns your repositories, such as the organization of your company. You choose the repositories that it can reach."
-      title={title}
+      description={copy.description}
+      title={copy.title}
     >
       {failed}
     </Section>

@@ -1,4 +1,5 @@
 import { ArrowRight } from 'lucide-react'
+import { getStartedCopy as copy } from '../../../docs/mockups/src/screens/getStartedCopy'
 import styles from '../../../docs/mockups/src/screens/GetStartedScreen.module.css'
 import { nextStep, stepState } from '../../app/get-started'
 import { personName } from '../../app/people'
@@ -15,20 +16,18 @@ import { AgentStep } from './AgentStep'
 import { InstallStep } from './InstallStep'
 import { OrgStep } from './OrgStep'
 
-/** The way into the first org, once every step is done. */
+/** The way into the org of Get started, once every step is done. */
 function Finish(props: { org: OrgSummary }) {
   const go = useGo()
   return (
     <div className={styles.finish}>
-      <p className={styles.finishText}>
-        {props.org.name} is ready for its first workspace.
-      </p>
+      <p className={styles.finishText}>{copy.finish(props.org.name)}</p>
       <ActionButton
         icon={ArrowRight}
         onPress={() => go(routes.org(props.org.id))}
         tone="primary"
       >
-        {`Open ${props.org.name}`}
+        {copy.open(props.org.name)}
       </ActionButton>
     </div>
   )
@@ -62,19 +61,18 @@ function Steps(props: { response: GetStartedResponse }) {
 }
 
 /**
- * The only first run, after the GitHub sign-in: the user installs the
- * GitHub App, creates the first org, and connects Claude or Codex. The
- * steps come from the API, and each done step loads them again.
+ * The first run after the GitHub sign-in, and the page of a person with no
+ * org: the user installs the GitHub App, creates an org, and connects
+ * Claude or Codex. The step of the GitHub App comes from the API, and each
+ * done step loads it again. The org step and the agent step follow the org
+ * list and the account. The words are the mockup's, from one copy module.
  */
 export function GetStartedScreen(props: { user: User }) {
   const app = useApp()
   const response = useStore(app.getStarted)
   return (
-    <Page subtitle={`@${props.user.githubLogin}`} title="Get started">
-      <p className={styles.intro}>
-        Welcome, {personName(props.user)}. Three steps before your first
-        workspace.
-      </p>
+    <Page subtitle={`@${props.user.githubLogin}`} title={copy.title}>
+      <p className={styles.intro}>{copy.intro(personName(props.user))}</p>
       {response ? <Steps response={response} /> : null}
     </Page>
   )

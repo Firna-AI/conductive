@@ -1,3 +1,4 @@
+import { suspendedOrgError } from '../data/org-access'
 import {
   readWorkspaceAccessStop,
   suspendedWorkspaceOwnerError,
@@ -39,8 +40,10 @@ export class WorkspaceAccessStop {
     const input = this.context()
     const row = await readWorkspaceAccessStop(input.env.DB, workspaceId)
     if (
-      !row?.ownerSuspended ||
-      row.ownerUserId !== ownerUserId ||
+      !(
+        row?.orgSuspended ||
+        (row?.ownerSuspended && row.ownerUserId === ownerUserId)
+      ) ||
       !(await input.starts.pending())
     )
       return false
@@ -95,7 +98,7 @@ export class WorkspaceAccessStop {
       row?.ownerSuspended && (!ownerUserId || row.ownerUserId === ownerUserId)
     const tokenStop = row?.revokedTokenRunning && !startPending
     const result =
-      row && (ownerStop || tokenStop)
+      row && (row.orgSuspended || ownerStop || tokenStop)
         ? await stopForAccess(input, workspaceId, row)
         : undefined
     return { input, row, startPending, result }
@@ -114,7 +117,7 @@ async function stopForAccess(
   row: WorkspaceAccessStopRecord,
 ): Promise<boolean> {
   const { env, dependencies, storage, lifecycle, starts, turns } = input
-  if (row.ownerSuspended) await starts.cancel()
+  if (row.orgSuspended || row.ownerSuspended) await starts.cancel()
   await revokeWorkspacePreviews(env.DB, workspaceId, dependencies.now())
   if (await starts.pending()) {
     await storage.setAlarm(dependencies.now() + 1_000)
@@ -138,8 +141,10 @@ async function stopForAccess(
     }
     await turns.clear()
     try {
-      if (result === 'error' && row.ownerSuspended) {
-        const error = suspendedWorkspaceOwnerError()
+      if (result === 'error' && (row.orgSuspended || row.ownerSuspended)) {
+        const error = row.orgSuspended
+          ? suspendedOrgError()
+          : suspendedWorkspaceOwnerError()
         await lifecycle.fail({
           code: error.code,
           message: error.message,
@@ -160,7 +165,7 @@ async function stopForAccess(
       ))
         throw error
     }
-    if (row.ownerSuspended) await storage.deleteAlarm()
+    if (row.orgSuspended || row.ownerSuspended) await storage.deleteAlarm()
     return true
   } catch {
     await storage.setAlarm(dependencies.now() + 30_000)

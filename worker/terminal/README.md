@@ -131,6 +131,10 @@ runtime folders. The install test runs `terminalInstallCommand()` with fake
 `sudo`, `apt-get`, and `systemctl` commands. Run the tests of this area with
 `npm run test -- worker/terminal`.
 
+An org suspension refuses new sockets with 403 `org_suspended`.
+The shared sandbox rule closes existing sockets at their next access check.
+Terminal status reads remain available.
+
 ### Key Code
 
 - [handler.ts](handler.ts) exports `createTerminalHandler`.

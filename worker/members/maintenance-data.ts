@@ -1,3 +1,4 @@
+import { activeWorkspaceOwnerPredicate } from '../data/sandbox-access'
 import type { WorkspaceDisk } from './maintenance-contract'
 import { lifecycleWritePredicate } from './lifecycle-data'
 
@@ -19,10 +20,9 @@ export async function workspaceDisks(
       .prepare(
         `SELECT w.id AS workspaceId, w.sandbox_id AS sandboxId, w.stopped_at AS stoppedAt,
      w.next_disk_keepalive_at AS nextKeepaliveAt FROM workspaces w
-     JOIN users owner ON owner.id = w.owner_user_id AND owner.suspended_at IS NULL
      JOIN org_deletion_resources r ON r.org_id = w.org_id AND r.kind = 'sandbox' AND r.resource_id = w.sandbox_id
      WHERE w.org_id = ? AND w.archived_at IS NULL AND w.state = 'stopped'
-     AND w.stopped_at IS NOT NULL AND r.removed_at IS NULL ORDER BY w.id`,
+     AND w.stopped_at IS NOT NULL AND r.removed_at IS NULL AND ${activeWorkspaceOwnerPredicate} ORDER BY w.id`,
       )
       .bind(orgId)
       .all<WorkspaceDisk>()

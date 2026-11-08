@@ -60,7 +60,7 @@ export function createFakeServices(search: string): AppServices {
   ]
   const fetch = routeFetch(
     routes,
-    (path) => guardScope(backend.state, path),
+    (path, method) => guardScope(backend.state, path, method),
     server.fetch,
   )
   const events: WorkspaceEventSource = {

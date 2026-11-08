@@ -1,3 +1,4 @@
+import { requireActiveOrg } from '../data/user-access'
 import type { WorkspaceStorage } from './platform-storage'
 import type { AppEnv } from '../env'
 import type { AppDependencies } from '../env'
@@ -50,6 +51,16 @@ export class ImageCoordinator {
       this.dependencies.now(),
       state,
     )
+    if (next.buildId === null) {
+      try {
+        await requireActiveOrg(this.env.DB, state.orgId)
+      } catch (error) {
+        if (!(error instanceof HttpError && error.code === 'org_suspended'))
+          throw error
+        await this.storage.deleteAlarm()
+        return
+      }
+    }
     state = { ...state, buildId: next.buildId, nextAt: next.nextAt }
     await this.storage.put('image', KEY, {
       ...state,

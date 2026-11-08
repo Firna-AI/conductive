@@ -7,7 +7,7 @@ import { requestLines } from '../../app/test-kit'
 import { deleteOrgPath, restoreOrgPath } from '../../shared/orgs'
 import { byDialog, byRole, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, fakeUser } from '../../test-support/fixtures/core'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
@@ -101,7 +101,7 @@ describe('the end of an org in the app', () => {
     const app = await startedApp(new FakeApiServer())
     const [acme] = app.orgs.get()
     if (!acme) throw new Error('The app has no org.')
-    const view = mountScreen(app, <GeneralTab org={acme} />)
+    const view = mountScreen(app, <GeneralTab org={acme} user={fakeUser} />)
     const trigger = byRole('button', 'Delete org', view)
     click(trigger)
     const dialog = byDialog('Delete Acme?')

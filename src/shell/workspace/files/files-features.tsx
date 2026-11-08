@@ -36,7 +36,7 @@ function TabPage(props: {
 }) {
   const { tab } = props
   useOpenTab(props.context.savedView, tab)
-  const targets = useFileTargets()
+  const targets = useFileTargets(props.context.org.id)
   const common = {
     files: props.files,
     layout: props.layout,
@@ -52,18 +52,22 @@ function TabPage(props: {
 
 /**
  * The state of the sandbox in place of All files and Changes: while it
- * starts, and while the app refuses its start. A stopped or failed sandbox
- * keeps the lists, from the copy that the workspace keeps.
+ * starts, and while the app refuses its start, with the words of the
+ * refusal. A stopped or failed sandbox keeps the lists, from the copy that
+ * the workspace keeps.
  */
 function sandboxPlaceholder(context: WorkspaceContext): ReactNode {
-  const state = context.startRefused
-    ? 'refused'
-    : context.sandbox === 'starting'
-      ? 'starting'
-      : null
-  if (!state) return undefined
+  const { panel } = context
+  if (!panel || (panel.problem !== 'starting' && panel.problem !== 'refused')) {
+    return undefined
+  }
   return (
-    <SandboxPanel resume={null} state={state} workspace={context.workspace} />
+    <SandboxPanel
+      phone={context.viewport === 'phone'}
+      resume={null}
+      state={panel}
+      workspace={context.workspace}
+    />
   )
 }
 

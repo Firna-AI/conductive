@@ -1,3 +1,4 @@
+import { requireWritableOrgRequest } from './org-writes'
 import { API_PATHS, type Org, type User } from '../../src/shared/api'
 import { findMembership } from '../data/orgs'
 import { sessionUser } from '../data/users'
@@ -87,6 +88,7 @@ export async function gate(
     if (!org)
       throw new HttpError(404, 'org_not_found', 'The org is not available.')
   }
+  if (org) await requireWritableOrgRequest(request, env.DB, org.id)
   const body = ['GET', 'HEAD', 'OPTIONS'].includes(request.method)
     ? null
     : await readJsonObject(request)

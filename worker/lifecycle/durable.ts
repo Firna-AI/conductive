@@ -42,6 +42,7 @@ export class DurableLifecycle {
       now,
       serial: (operation) => this.serial(operation),
       write: (state) => this.write(state),
+      extendDeadline: (request) => this.hooks.extendDeadline(request),
     })
   }
 

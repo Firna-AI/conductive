@@ -15,6 +15,7 @@ import {
   press,
   waitFor,
 } from '../../test-support/mount'
+import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import { Shell } from '../Shell'
 import { mountScreen } from '../test-mount'
 import { startedApp } from '../test-render'
@@ -77,6 +78,21 @@ describe('the owner in the header of a workspace', () => {
       request: { path, body: '{"userId":"priya"}' },
       listed: 'priya',
     })
+  })
+
+  test('in a suspended org its admin sees the owner without the menu', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    serveSuspendedAcme(server)
+    const view = mountWorkspace(await startedApp(server))
+    const header = await waitFor(
+      () => view.querySelector('header'),
+      'the header of the workspace',
+    )
+    expect({
+      owner: queryByText('Cal, owner of the workspace', header)?.textContent,
+      menu: queryByRole('button', 'Owner: Cal', header),
+    }).toEqual({ owner: 'Cal, owner of the workspace', menu: null })
   })
 
   test('a member who is not an admin sees the owner without the menu', async () => {

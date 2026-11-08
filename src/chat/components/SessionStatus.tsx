@@ -91,12 +91,14 @@ function Waiting(props: { text: string }) {
  * What takes the place of the transcript: the load of the chat, no open
  * session, the history of a session with nothing to show yet, or a new
  * session. A chat with content shows its history status beside it. The
- * start steps count as content while `starting` holds.
+ * start steps count as content while `starting` holds. A read-only chat
+ * names only the session history, because it starts no session.
  */
 export function emptyView(props: {
   snapshot: ChatSnapshot
   controller: ChatController
   starting: boolean
+  readOnly?: boolean
 }): ReactNode {
   const { snapshot, controller } = props
   const { load, workspace } = snapshot
@@ -119,7 +121,11 @@ export function emptyView(props: {
   if (!id) {
     return (
       <EmptyState
-        body="Start a session with +, or reopen one from the session history."
+        body={
+          props.readOnly || workspace.state === 'archived'
+            ? 'Open a session from the session history.'
+            : 'Start a session with +, or reopen one from the session history.'
+        }
         icon={MessageSquarePlus}
         title="No open session"
       />

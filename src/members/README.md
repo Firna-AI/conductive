@@ -67,16 +67,21 @@ with the message of the API.
 
 | Component               | Where it goes                                              | Props and callbacks                                                                                                    |
 | ----------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `MembersTab`            | The Members tab, in the page column of the org settings    | `api`, `org` (with the viewer's `role`), `viewerId`, `viewport`, `now`, optional `onMemberRemoved(member)`             |
-| `OwnerPicker`           | The workspace header, beside the state                     | `api`, `workspace`, `canReassign` (the viewer is an admin), `viewport`, `onReassigned(workspace)`                      |
+| `MembersTab`            | The Members tab, in the page column of the org settings    | `api`, `org` (with the viewer's `role`), `viewerId`, `viewport`, `now`, optional `onMemberRemoved(member)` and `suspended` |
+| `OwnerPicker`           | The workspace header, beside the state                     | `api`, `workspace`, `canReassign` (the viewer is an admin of an org that is not suspended), `viewport`, `onReassigned(workspace)` |
 | `DeleteOrgSection`      | The General tab of an admin, under the org name            | `api`, `org`, `viewport`, `now`, optional `timeZone`, `onDeleted(org)`. It renders nothing for a member.               |
-| `DeletedOrgPage`        | The main area of a deleted org, which it fills             | `api`, `org` (with `deletion`), `viewport`, optional `timeZone`, `onRestored(org)`. Only an admin gets Restore.        |
-| `MemberRepositoriesTab` | The Repositories tab of a member who is not an admin       | `api`, `org`, `viewport`                                                                                               |
-| `MemberComputerView`    | The Cloud computer tab of a member, with data from the caller | `org`, `settings`, `builds`, `log`, `viewport`, `now`, optional `timeZone`. It loads nothing and holds no state.     |
+| `DeletedOrgPage`        | The main area of a deleted org, which it fills             | `api`, `org` (with `deletion`), `viewport`, optional `timeZone` and `suspended`, `onRestored(org)`. Only an admin gets Restore. |
+| `MemberRepositoriesTab` | The Repositories tab of a member who is not an admin       | `api`, `org`, `viewport`, optional `suspended`                                                                         |
+| `MemberComputerView`    | The Cloud computer tab of a member, with data from the caller | `org`, `settings`, `builds`, `log`, `viewport`, `now`, optional `timeZone` and `suspended`. It loads nothing and holds no state. |
 | `MemberComputerTab`     | The same tab, with its data loaded once from the API       | `api`, `org`, `viewport`, `now`, optional `timeZone`                                                                   |
 
 - `now` is the time in Unix milliseconds. It sets the age of each invite, the
   times of the builds, and the date in the Delete org question.
+- `suspended` says that the operator suspended the org. Nothing in it
+  changes, also for an admin, and the shell shows the notice of the org
+  above the component. The component then shows no action, no invite, and
+  no sentence that only an admin changes the value. The shell gives the
+  read-only tabs to every person of a suspended org.
 - `onDeleted` gets the org with `deletion.deletesAt`. The shell keeps the
   org faded in the rail of its admins and opens `DeletedOrgPage`.
 - `onRestored` gets the active org of the API's answer, with its `initials`
@@ -124,10 +129,10 @@ Each component keys its local state to the scope that it shows:
 
 | Component          | Scope                                        |
 | ------------------ | -------------------------------------------- |
-| `MembersTab`       | The org, the viewer's role, and the viewer   |
+| `MembersTab`       | The org, the viewer's role, the viewer, and `suspended` |
 | `OwnerPicker`      | The workspace, its org, and `canReassign`    |
 | `DeleteOrgSection` | The org                                      |
-| `DeletedOrgPage`   | The org and the viewer's role                |
+| `DeletedOrgPage`   | The org, the viewer's role, and `suspended`  |
 
 When the scope changes, an open menu or question closes, a typed email and
 an error go, and the component loads the data of the new scope. The answer

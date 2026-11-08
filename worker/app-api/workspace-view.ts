@@ -4,6 +4,8 @@ import type {
 } from '../../src/shared/workspace-view'
 import { identifier, record } from '../chat/inputs'
 import { HttpError } from '../http'
+import { activeOrgIdPredicate } from '../data/org-access'
+import { requireActiveOrg } from '../data/user-access'
 
 function invalidView(): never {
   throw new HttpError(
@@ -73,7 +75,8 @@ export async function saveWorkspaceView(
   await db
     .prepare(
       `INSERT INTO workspace_views (workspace_id, org_id, user_id, view_json, updated_at)
-     VALUES (?, ?, ?, ?, ?) ON CONFLICT(workspace_id, user_id) DO UPDATE SET
+     SELECT ?, ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}
+     ON CONFLICT(workspace_id, user_id) DO UPDATE SET
      view_json = excluded.view_json, updated_at = excluded.updated_at`,
     )
     .bind(
@@ -82,6 +85,8 @@ export async function saveWorkspaceView(
       input.userId,
       JSON.stringify(input.view),
       input.now,
+      input.orgId,
     )
     .run()
+  await requireActiveOrg(db, input.orgId)
 }

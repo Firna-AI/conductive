@@ -1,11 +1,13 @@
 import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import { mayChangeSettings } from '../../app/permissions'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
 import { useNow } from '../../app/time'
 import { DeleteOrgSection } from '../../members/DeleteOrgSection'
+import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp } from '../context'
+import { useApp, useOrgAccess } from '../context'
 import {
   orgNameFields,
   OrgNameFields,
@@ -16,6 +18,7 @@ import { useGo } from '../ui/AppLink'
 import { tileInitials } from '../ui/Avatars'
 import { useAction } from '../ui/useAction'
 import { useSavedDraft } from '../ui/useSavedDraft'
+import { LeaveOrgSection } from './LeaveOrg'
 import { useMembersApi, useMembersViewport } from './members-api'
 
 function sameNames(a: OrgNameDraft, b: OrgNameDraft): boolean {
@@ -84,7 +87,7 @@ function DeleteSection(props: { org: OrgSummary }) {
   const now = useNow(60_000)
   return (
     <DeleteOrgSection
-      api={useMembersApi()}
+      api={useMembersApi(props.org.id)}
       now={now}
       onDeleted={(deleted) => {
         app.putOrg(deleted)
@@ -100,20 +103,29 @@ function DeleteSection(props: { org: OrgSummary }) {
 /**
  * The General tab. An admin renames the org, sets its initials, and
  * deletes it. A member sees the name and the initials without fields,
- * because only an admin changes them (decision 57).
+ * because only an admin changes them (decision 57). A suspended org shows
+ * them without fields to everyone, and offers Leave org, its one change.
  */
-export function GeneralTab(props: { org: OrgSummary }) {
+export function GeneralTab(props: { org: OrgSummary; user: User }) {
   const { org } = props
-  if (org.role !== 'admin') {
+  const access = useOrgAccess(org)
+  if (!mayChangeSettings(access)) {
+    const { suspended } = access
     return (
-      <Section description="Only an admin can change it." title="Org">
-        <DetailList
-          rows={[
-            { term: 'Name', value: org.name },
-            { term: 'Initials', value: tileInitials(org) },
-          ]}
-        />
-      </Section>
+      <>
+        <Section
+          description={suspended ? undefined : 'Only an admin can change it.'}
+          title="Org"
+        >
+          <DetailList
+            rows={[
+              { term: 'Name', value: org.name },
+              { term: 'Initials', value: tileInitials(org) },
+            ]}
+          />
+        </Section>
+        {suspended ? <LeaveOrgSection org={org} user={props.user} /> : null}
+      </>
     )
   }
   return (

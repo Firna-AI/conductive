@@ -42,7 +42,7 @@ export async function resumeCreationCheckpoint(
     (await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY))?.generation ?? 0
   await requireOrgMember(env.DB, orgId, userId)
   const row = await readWorkspace(env.DB, orgId, workspaceId)
-  await requireActiveWorkspaceOwner(env.DB, row.ownerUserId)
+  await requireActiveWorkspaceOwner(env.DB, row.ownerUserId, orgId)
   if (!['stopped', 'error'].includes(row.state) || row.archivedAt !== null)
     return false
   const job = readStartJob(saved)

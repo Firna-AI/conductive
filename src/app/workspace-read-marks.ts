@@ -6,6 +6,8 @@ import { valueOf, type Loadable, type Readable } from './store'
 interface ReadMarkView {
   detail: Readable<Loadable<WorkspaceResponse>>
   last: Readable<number>
+  /** A suspended org refuses each write, so it gets no read mark. */
+  suspended: Readable<boolean>
   clearUnread: () => void
 }
 
@@ -41,6 +43,7 @@ export class WorkspaceReadMarks {
     this.stops.push(
       this.view.detail.subscribe(check),
       this.view.last.subscribe(check),
+      this.view.suspended.subscribe(check),
       this.services.visible.subscribe(check),
     )
     this.check()
@@ -61,6 +64,7 @@ export class WorkspaceReadMarks {
       !this.opened ||
       !detail ||
       this.archived ||
+      this.view.suspended.get() ||
       !this.services.visible.get()
     ) {
       this.clearTimer()

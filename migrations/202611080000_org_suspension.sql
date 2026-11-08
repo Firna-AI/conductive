@@ -1,0 +1,2 @@
+ALTER TABLE orgs ADD COLUMN suspended_at INTEGER;
+ALTER TABLE orgs ADD COLUMN suspended_by_user_id TEXT REFERENCES users(id) ON DELETE SET NULL;

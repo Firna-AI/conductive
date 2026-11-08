@@ -176,8 +176,14 @@ export class WorkspaceLifecycle
 
   async lifecycleActivity() {
     const at = this.activityNow()
-    const state = await this.readLifecycle()
-    if (state) this.activity.record(state.workspaceId, at)
+    return this.chat.runLifecycle(() =>
+      this.integration.withGeneration(async () => {
+        const state = await this.controller.readLifecycle()
+        const result = await this.controller.lifecycleActivity(true)
+        if (result.ok && state) this.activity.record(state.workspaceId, at)
+        return result
+      }),
+    )
   }
 
   async lifecycleStopped(): Promise<void> {

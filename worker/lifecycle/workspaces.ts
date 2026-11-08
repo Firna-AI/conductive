@@ -1,3 +1,4 @@
+import { requireActiveOrg } from '../data/user-access'
 import type { User } from '../../src/shared/api'
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
 import { requireOrgMember } from './access'
@@ -25,6 +26,7 @@ export async function createWorkspace(
   input: CreateWorkspaceRequest,
   sender: User = user,
 ): Promise<ProvisionedWorkspace> {
+  await requireActiveOrg(runtime.env.DB, orgId)
   await requireOrgMember(runtime.env.DB, orgId, user.id)
   await requireOrgMember(runtime.env.DB, orgId, sender.id)
   const key: CreationKey = {

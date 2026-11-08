@@ -1,12 +1,12 @@
 import { useEffect, useMemo } from 'react'
-import { useServices } from '../../app/services'
 import { AllowAllBar } from '../../chat/device/AllowAllBar'
 import { useMacSettings } from '../../chat/device/mac-settings'
+import { useOrgServices } from '../context'
 import { useMacApp } from '../mac/mac-app'
 import type { WorkspaceContext } from './features'
 
 function MacBar(props: { context: WorkspaceContext }) {
-  const services = useServices()
+  const services = useOrgServices(props.context.org.id)
   const clock = useMemo(() => ({ now: services.now }), [services])
   const { controller, state } = useMacSettings(services.api)
   const { stream } = props.context

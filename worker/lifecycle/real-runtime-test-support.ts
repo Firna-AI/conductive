@@ -233,6 +233,7 @@ export async function realRuntimeFixture(bundle: string) {
     boat,
     requests,
     env,
+    closeConnections: closeBrowsers,
     actor: (id: string) => bindings.WORKSPACES.getByName(id),
     fetch: (path: string) =>
       runtime.dispatchFetch(`https://runtime.test${path}`),

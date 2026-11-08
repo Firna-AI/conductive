@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from 'react'
-import { useServices } from '../../../app/services'
 import {
   useWorkspaceStore,
   type WorkspaceIdentity,
@@ -10,9 +9,9 @@ import {
   saveFromMemory,
 } from '../../../files/page/fetched-download'
 import type { FileActionTargets } from '../../../files/page/file-actions'
-import { useApp } from '../../context'
+import { useApp, useOrgServices } from '../../context'
 import type { WorkspaceContext } from '../features'
-import { shownWorkspaces } from '../shown-workspaces'
+import { shownWorkspaces } from '../tab-memory'
 import { startFiles } from './files-store'
 
 /** Finds the kept store of a workspace, or makes it. It starts nothing. */
@@ -55,12 +54,13 @@ export function useKeptFiles(context: WorkspaceContext): WorkspaceFiles {
 }
 
 /**
- * Copy and Download over the services of the app. Download reads the route
- * with the fetch of the app, so the Mac app reads it from its own Worker.
- * The object stays the same for the same services, as the pages need.
+ * Copy and Download over the services of the org. Download reads the route
+ * with the fetch of the org, so the Mac app reads it from its own Worker,
+ * and a refusal of a suspended org marks the org. The object stays the same
+ * for the same services, as the pages need.
  */
-export function useFileTargets(): FileActionTargets {
-  const services = useServices()
+export function useFileTargets(orgId: string): FileActionTargets {
+  const services = useOrgServices(orgId)
   return useMemo(
     () => ({
       writeText: (text) => services.copy(text),

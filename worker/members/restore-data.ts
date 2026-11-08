@@ -1,3 +1,4 @@
+import { activeOrgPredicate } from '../data/org-access'
 export interface RestoreRequest {
   requestId: string
   requestedAt: number
@@ -33,7 +34,7 @@ export async function saveRestoreRequest(
        restore_requested_at = CASE WHEN restore_requested_by_user_id = ? THEN COALESCE(restore_requested_at, ?) ELSE ? END,
        restore_requested_by_user_id = ?
      WHERE org_id = ? AND lease_token = ? AND purge_started_at IS NULL
-     AND EXISTS (SELECT 1 FROM orgs WHERE id = ? AND deleted_at IS NOT NULL AND purge_after > ?)
+     AND EXISTS (SELECT 1 FROM orgs WHERE id = ? AND deleted_at IS NOT NULL AND ${activeOrgPredicate('orgs')} AND purge_after > ?)
      AND EXISTS (SELECT 1 FROM org_members WHERE org_id = ? AND user_id = ? AND role = 'admin')`,
     )
     .bind(
@@ -67,7 +68,7 @@ export function pendingRestoreRequest(
      d.restore_requested_by_user_id AS requestedByUserId FROM org_deletions d JOIN orgs o ON o.id = d.org_id
      JOIN org_members m ON m.org_id = d.org_id AND m.user_id = d.restore_requested_by_user_id
      WHERE d.org_id = ? AND d.lease_token = ? AND d.restore_request_id IS NOT NULL
-     AND m.role = 'admin' AND o.deleted_at IS NOT NULL AND o.purge_after > ? AND d.purge_started_at IS NULL`,
+     AND m.role = 'admin' AND ${activeOrgPredicate('o')} AND o.deleted_at IS NOT NULL AND o.purge_after > ? AND d.purge_started_at IS NULL`,
     )
     .bind(orgId, token, now)
     .first<RestoreRequest>()
@@ -85,7 +86,7 @@ export async function restoreOrgRecords(
   const result = await db.batch([
     db
       .prepare(
-        `UPDATE orgs SET deleted_at = NULL, purge_after = NULL WHERE id = ? AND purge_after > ? AND lifecycle_generation = ?
+        `UPDATE orgs SET deleted_at = NULL, purge_after = NULL WHERE id = ? AND ${activeOrgPredicate('orgs')} AND purge_after > ? AND lifecycle_generation = ?
        AND EXISTS (SELECT 1 FROM org_deletions WHERE org_id = ? AND lease_token = ? AND lease_until > ? AND purge_started_at IS NULL
          AND restore_request_id = ? AND restore_requested_by_user_id = ?)
        AND EXISTS (SELECT 1 FROM org_members WHERE org_id = ? AND user_id = ? AND role = 'admin')`,

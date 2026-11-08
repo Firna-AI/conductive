@@ -5,13 +5,13 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react'
-import { useServices } from '../../../app/services'
 import { useNow } from '../../../app/time'
 import type { FilesTarget } from '../../../files/navigation'
 import type { GitHubFeed, GitHubSource } from '../../../github/githubStore'
 import { PullRequestBar } from '../../../github/PullRequestBar'
 import { PullRequestRow } from '../../../github/PullRequestRow'
 import { useGitHubState } from '../../../github/useGitHubState'
+import { useOrgServices } from '../../context'
 import type { WorkspaceContext } from '../features'
 import { useFilesNavigation } from '../files/files-navigation'
 import { githubSubscribe } from './github-events'
@@ -25,14 +25,14 @@ export function useGitHubFeed(): GitHubFeed | null {
 
 /**
  * One GitHub store for the open workspace, for the pull request bar or row
- * and for the Checks tab. It reads with the fetch of the app, follows the
+ * and for the Checks tab. It reads with the fetch of the org, follows the
  * ordered stream of the workspace, and waits with the timer of the app.
  */
 export function WorkspaceGitHub(props: {
   context: WorkspaceContext
   children: ReactNode
 }) {
-  const services = useServices()
+  const services = useOrgServices(props.context.org.id)
   const { org, workspace, stream } = props.context
   const source = useMemo<GitHubSource>(
     () => ({
@@ -90,12 +90,11 @@ export function PullRequestPart(props: { context: WorkspaceContext }) {
       />
     )
   }
-  const { archive } = context
   return (
     <PullRequestBar
       github={github}
       now={now}
-      onArchive={() => archive?.()}
+      onArchive={context.archive}
       viewer={{ id: context.viewer.id, role: context.org.role }}
       workspace={context.workspace}
     />

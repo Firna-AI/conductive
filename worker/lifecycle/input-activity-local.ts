@@ -4,6 +4,7 @@ import {
   type DurableLifecycleState,
   type LifecycleReconciliation,
   type LifecycleStorage,
+  type LifecycleDeadlineRequest,
 } from './durable-types'
 import type { LifecycleActivitySnapshot } from './input-activity-state'
 
@@ -14,6 +15,9 @@ export class LifecycleInputState {
     now(): number
     serial<T>(operation: () => Promise<T>): Promise<T>
     write(state: DurableLifecycleState): Promise<void>
+    extendDeadline(
+      request: LifecycleDeadlineRequest,
+    ): Promise<LifecycleReconciliation | void>
   }
 
   constructor(options: {
@@ -21,6 +25,9 @@ export class LifecycleInputState {
     now(): number
     serial<T>(operation: () => Promise<T>): Promise<T>
     write(state: DurableLifecycleState): Promise<void>
+    extendDeadline(
+      request: LifecycleDeadlineRequest,
+    ): Promise<LifecycleReconciliation | void>
   }) {
     this.options = options
   }
@@ -34,7 +41,9 @@ export class LifecycleInputState {
   ): Promise<void> {
     const captured = await this.options.serial(async () => {
       const state = await this.options.storage.get(LIFECYCLE_STATE_KEY)
-      if (!state || !this.acceptsInput(state)) return
+      if (!state) return
+      await this.options.extendDeadline({ kind: 'check' })
+      if (!this.acceptsInput(state)) return
       await this.options.write({
         ...state,
         lastActivityAt: Math.max(state.lastActivityAt, this.options.now()),
@@ -47,8 +56,9 @@ export class LifecycleInputState {
   record(at: number): Promise<void> {
     return this.options.serial(async () => {
       const state = await this.options.storage.get(LIFECYCLE_STATE_KEY)
-      if (!state || !this.acceptsInput(state) || at <= state.lastActivityAt)
-        return
+      if (!state) return
+      await this.options.extendDeadline({ kind: 'check' })
+      if (!this.acceptsInput(state) || at <= state.lastActivityAt) return
       await this.options.storage.put(LIFECYCLE_STATE_KEY, {
         ...state,
         lastActivityAt: at,
@@ -59,10 +69,24 @@ export class LifecycleInputState {
   capture(): Promise<LifecycleActivitySnapshot | undefined> {
     return this.options.serial(async () => {
       const state = await this.options.storage.get(LIFECYCLE_STATE_KEY)
+      if (state) await this.options.extendDeadline({ kind: 'check' })
       return state && this.acceptsInput(state)
         ? { workspaceId: state.workspaceId, revision: this.revision }
         : undefined
     })
+  }
+
+  check(): Promise<void> {
+    return this.options.serial(async () => {
+      if (await this.options.storage.get(LIFECYCLE_STATE_KEY))
+        await this.options.extendDeadline({ kind: 'check' })
+    })
+  }
+
+  extend(
+    operation: () => Promise<LifecycleReconciliation>,
+  ): Promise<LifecycleReconciliation | void> {
+    return this.options.extendDeadline({ kind: 'input', extend: operation })
   }
 
   reconcile(
@@ -79,6 +103,7 @@ export class LifecycleInputState {
         !this.acceptsInput(state)
       )
         return false
+      await this.options.extendDeadline({ kind: 'check' })
       await this.options.write(
         reconciledLifecycle(state, remote, this.options.now()),
       )

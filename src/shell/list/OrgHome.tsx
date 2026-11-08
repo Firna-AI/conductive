@@ -2,13 +2,17 @@ import { useEffect } from 'react'
 import { FolderGit2, PanelLeft, Plus } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import responsive from '../../../docs/mockups/src/components/layout/responsive.module.css'
+import {
+  SuspendedOrgAbove,
+  SuspendedOrgPanel,
+} from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
 import { useStore, valueOf } from '../../app/store'
 import { DeletedOrgPage } from '../../members/DeletedOrgPage'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp, useOrgModel } from '../context'
+import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { useMembersApi, useMembersViewport } from '../settings/members-api'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
@@ -84,32 +88,43 @@ function ChooseWorkspace(props: { org: OrgSummary }) {
  * The page of an org that an admin deleted (decision 30): the restore page
  * of the members UI. Its cloud computers are stopped, and its members
  * cannot open it. An admin restores it until the day when everything is
- * deleted. The answer of Restore shows the org as an active org again.
+ * deleted. The answer of Restore shows the org as an active org again. A
+ * suspended org refuses a restore, so its page offers none, and the notice
+ * of the org shows above the day and the facts of the delete.
  */
 export function DeletedOrg(props: { org: OrgSummary }) {
+  const { suspended } = useOrgAccess(props.org)
   const app = useApp()
   const { timeZone } = useServices()
-  return (
+  const page = (
     <DeletedOrgPage
-      api={useMembersApi()}
+      api={useMembersApi(props.org.id)}
       onRestored={(restored) => app.putOrg(restored)}
       org={props.org}
+      suspended={suspended}
       timeZone={timeZone}
       viewport={useMembersViewport()}
     />
   )
+  if (!suspended) return page
+  return <SuspendedOrgAbove org={props.org}>{page}</SuspendedOrgAbove>
 }
 
 /**
  * The main area of an org. On a wide desktop the sidebar lists the
- * workspaces, so the main area waits for a choice. Below 900 px the list
- * moves into the main area.
+ * workspaces, so the main area waits for a choice. A suspended org shows
+ * its notice there instead. Below 900 px the list moves into the main area.
  */
 export function OrgHome(props: { org: OrgSummary; user: User }) {
+  const { suspended } = useOrgAccess(props.org)
   return (
     <>
       <div className={`${responsive.wideOnly} ${list.choose}`}>
-        <ChooseWorkspace org={props.org} />
+        {suspended ? (
+          <SuspendedOrgPanel org={props.org} />
+        ) : (
+          <ChooseWorkspace org={props.org} />
+        )}
       </div>
       <div className={`${responsive.narrowOnly} ${list.narrowList}`}>
         <HomeList org={props.org} user={props.user} />

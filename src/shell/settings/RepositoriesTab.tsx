@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import { mayChangeSettings } from '../../app/permissions'
 import { useStore } from '../../app/store'
 import { MemberRepositoriesTab } from '../../members/MemberRepositoriesTab'
 import type { OrgSummary } from '../../shared/orgs'
-import { useOrgModel } from '../context'
+import { useOrgAccess, useOrgModel } from '../context'
 import { Loaded } from './LoadState'
 import { useMembersApi, useMembersViewport } from './members-api'
 import { RepositoryPicker } from './RepositoryPicker'
@@ -36,11 +37,20 @@ function AdminRepositories(props: { org: OrgSummary }) {
 /**
  * The Repositories tab. An admin adds and removes the repositories. A
  * member who is not an admin sees the chosen ones only, in the read-only
- * tab of the members UI (decision 57).
+ * tab of the members UI (decision 57), and so does everyone in a suspended
+ * org.
  */
 export function RepositoriesTab(props: { org: OrgSummary }) {
-  const api = useMembersApi()
+  const access = useOrgAccess(props.org)
+  const api = useMembersApi(props.org.id)
   const viewport = useMembersViewport()
-  if (props.org.role === 'admin') return <AdminRepositories org={props.org} />
-  return <MemberRepositoriesTab api={api} org={props.org} viewport={viewport} />
+  if (mayChangeSettings(access)) return <AdminRepositories org={props.org} />
+  return (
+    <MemberRepositoriesTab
+      api={api}
+      org={props.org}
+      suspended={access.suspended}
+      viewport={viewport}
+    />
+  )
 }

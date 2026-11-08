@@ -1,5 +1,6 @@
 import type { WorkspacePlatform } from './workspace-platform'
 import type { AppEnv, AppDependencies } from '../env'
+import { requireActiveOrg } from '../data/user-access'
 import { DurableLifecycle } from './durable'
 import type { TurnScopes } from './turns'
 import type { WorkspaceEventJournal } from './durable-journal'
@@ -56,10 +57,24 @@ export function createWorkspaceLifecycle(
           confirmedStopped,
         )
       },
-      extendDeadline: async () => {
-        const result = await extendWorkspaceDeadline(
-          await workspaceActionContext(env, dependencies, lifecycle),
+      extendDeadline: async (request) => {
+        const state = await lifecycle.read()
+        if (!state) return undefined
+        await requireActiveOrg(env.DB, state.orgId)
+        if (request?.kind === 'check') return undefined
+        if (
+          state.state === 'stopped' ||
+          state.state === 'archived' ||
+          state.startStop !== undefined
         )
+          return undefined
+        if (request?.kind === 'input') return request.extend()
+        const result = await extendWorkspaceDeadline({
+          env,
+          dependencies,
+          orgId: state.orgId,
+          workspaceId: state.workspaceId,
+        })
         if (result) await turns.clear()
         return result
       },

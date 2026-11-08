@@ -1,5 +1,6 @@
 import type { User } from '../../src/shared/api'
 import { HttpError } from '../http'
+import { activeOrgIdPredicate, activeOrgPredicate } from '../data/org-access'
 
 export async function toolUser(
   db: D1Database,
@@ -11,7 +12,8 @@ export async function toolUser(
       `SELECT u.id, u.github_id AS githubId, u.github_login AS githubLogin,
     u.display_name AS displayName, u.avatar_url AS avatarUrl FROM users u
     JOIN org_members m ON m.user_id = u.id JOIN orgs o ON o.id = m.org_id
-    WHERE m.org_id = ? AND u.id = ? AND u.suspended_at IS NULL AND o.deleted_at IS NULL`,
+    WHERE m.org_id = ? AND u.id = ? AND u.suspended_at IS NULL AND o.deleted_at IS NULL
+      AND ${activeOrgPredicate('o')}`,
     )
     .bind(orgId, userId)
     .first<User>()
@@ -32,7 +34,8 @@ export async function saveWorkspaceToolParent(
 ): Promise<void> {
   await db
     .prepare(
-      'UPDATE workspaces SET created_by_workspace_id = ? WHERE id = ? AND org_id = ?',
+      `UPDATE workspaces SET created_by_workspace_id = ? WHERE id = ? AND org_id = ?
+       AND ${activeOrgIdPredicate('workspaces.org_id')}`,
     )
     .bind(parentId, workspaceId, orgId)
     .run()

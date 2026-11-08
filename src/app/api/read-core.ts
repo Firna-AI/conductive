@@ -71,14 +71,18 @@ export function readOrg(value: unknown): OrgSummary {
       deletesAt: count(fields, 'deletesAt'),
     }
   })
+  const suspension = maybeNested(org, 'suspension', (item) => ({
+    suspendedAt: count(record(item, 'suspension'), 'suspendedAt'),
+  }))
   const initials = maybeText(org, 'initials')
-  const summary: OrgSummary = {
+  return {
     id: text(org, 'id'),
     name: text(org, 'name'),
     role: choice(org, 'role', ROLES),
     ...(initials === null ? {} : { initials }),
+    ...(suspension === null ? {} : { suspension }),
+    ...(deletion === null ? {} : { deletion }),
   }
-  return deletion ? { ...summary, deletion } : summary
 }
 
 export function readSection(value: unknown): Section {

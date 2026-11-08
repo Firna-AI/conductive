@@ -17,6 +17,7 @@ import {
   finishFailedStart,
   type ResumeStartFailure,
 } from './start-failure'
+import { requireActiveOrg } from '../data/user-access'
 import { firstOrgAdmin } from './settings-data'
 import { advanceStartMachine } from './start-machine'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
@@ -172,6 +173,8 @@ export class WorkspaceStartCoordinator {
         job.orgId,
         this.dependencies.fetch,
       )
+      if (job.cancelled && !job.failure)
+        await requireActiveOrg(this.env.DB, job.orgId)
       if (job.cancelled || job.failure) {
         const result = await finishFailedStart(
           this.env,

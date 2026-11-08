@@ -1,3 +1,4 @@
+import { suspendedOrgError } from '../data/org-access'
 import { HttpError } from '../http'
 import { suspendedUserError } from '../data/user-access'
 import type { MaskedStartLog } from './masked-start-log'
@@ -18,6 +19,7 @@ export class WorkspaceStartError extends HttpError {
 export function workspaceStartFailure(
   error: Extract<WorkspaceStartResult, { ok: false }>['error'],
 ): HttpError {
+  if (error.code === 'org_suspended') return suspendedOrgError()
   if (error.code === 'user_suspended')
     return Object.assign(suspendedUserError(), { message: error.message })
   return Object.assign(new WorkspaceStartError(error.log), error)

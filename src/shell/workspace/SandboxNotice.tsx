@@ -1,10 +1,19 @@
 import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { Archive, Ban, CircleAlert, CirclePause } from 'lucide-react'
+import { Archive, CircleAlert, CirclePause } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import {
+  orgSuspendedReason,
+  refusedIcon,
+} from '../../../docs/mockups/src/components/orgs/suspension'
 import styles from '../../../docs/mockups/src/components/workspace/SandboxNotice.module.css'
+import type {
+  SandboxNoticeState,
+  SandboxPanelState,
+  SandboxProblem,
+} from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import type { ApiError } from '../../app/api/client'
 import { useServices } from '../../app/services'
 import { formatDay } from '../../app/time'
@@ -13,34 +22,35 @@ import { ActionButton } from '../ui/actions'
 import type { Action } from '../ui/useAction'
 
 /**
- * Why the sandbox is not running. `refused` is a start that the app
- * refuses, such as while the owner of the workspace is suspended.
+ * The notice of a start in a suspended org. The org's metadata and the
+ * `org_suspended` refusal give the same words, so a page whose metadata is
+ * old shows the same notice.
  */
-export type SandboxProblem = 'stopped' | 'error' | 'refused' | 'archived'
+export const orgRefusal = {
+  problem: 'refused',
+  reason: orgSuspendedReason,
+} as const satisfies SandboxNoticeState
 
 /**
- * What the bar in place of the composer shows. A refused start carries the
- * words of the app's refusal, so one notice serves every reason. A start
- * that failed can carry the message that the workspace saved for it, such
- * as its time limit.
- */
-export type SandboxNoticeState =
-  | { problem: 'stopped' | 'archived' }
-  | { problem: 'error'; message?: string | null }
-  | { problem: 'refused'; reason: string }
-
-/**
- * The codes of the API for a start that the app refuses, such as while the
- * owner of the workspace is suspended. The refusal lasts until its cause
+ * The codes of the API for a start that the app refuses: while the owner of
+ * the workspace is suspended, or its org. The refusal lasts until its cause
  * changes, so its notice offers no action.
  */
-const refusalCodes: ReadonlySet<string> = new Set(['user_suspended'])
+const refusalCodes: ReadonlySet<string> = new Set([
+  'user_suspended',
+  'org_suspended',
+])
 
-/** The notice of a start that the app refused, from the start error. */
+/**
+ * The notice of a start that the app refused, from the start error. An
+ * owner's refusal shows the words of the API. An org's refusal shows the
+ * words of `orgRefusal`.
+ */
 export function refusedStart(
   error: ApiError | null,
 ): SandboxNoticeState | null {
   if (!error || !refusalCodes.has(error.code)) return null
+  if (error.code === 'org_suspended') return orgRefusal
   return { problem: 'refused', reason: error.message }
 }
 
@@ -86,7 +96,7 @@ function problemOf(problem: SandboxProblem, archivedOn: string): Problem {
       }
     case 'refused':
       return {
-        icon: Ban,
+        icon: refusedIcon,
         title: "The sandbox can't start",
         body: history,
         panelBody: history,
@@ -120,6 +130,22 @@ function barBody(notice: SandboxNoticeState, body: string): string {
     case 'archived':
       return body
   }
+}
+
+/**
+ * The bar of a refused start, with the words of its cause and no action.
+ * New workspace shows it too, before a workspace exists.
+ */
+export function RefusedBar(props: { reason: string }) {
+  const problem = problemOf('refused', '')
+  return (
+    <Notice
+      body={props.reason}
+      icon={problem.icon}
+      title={problem.title}
+      tone={problem.tone}
+    />
+  )
 }
 
 /**
@@ -159,19 +185,26 @@ export function SandboxBar(props: {
 
 /**
  * What a panel shows while the sandbox is not running. Desktop leaves the
- * action to the bar under the chat; a phone shows it in the panel.
+ * action and the words of a refusal to the bar under the chat. A phone
+ * shows the bar only on the Chat tab, so its panels show them too.
  */
 export function SandboxPanel(props: {
-  state: 'starting' | SandboxProblem
+  state: SandboxPanelState
   workspace: Workspace
+  /**
+   * Resume, or Try again, which a phone shows. Null where the panel shows
+   * only a start or a refusal, which have no action.
+   */
   resume: Action<[]> | null
+  phone: boolean
 }) {
   const theme = useSharedUiTheme()
+  const { state, resume, phone } = props
   const problem = useProblem(
-    props.state === 'starting' ? 'stopped' : props.state,
+    state.problem === 'starting' ? 'stopped' : state.problem,
     props.workspace,
   )
-  if (props.state === 'starting') {
+  if (state.problem === 'starting') {
     return (
       <div className={styles.waiting}>
         <Spinner color={theme.colors.muted} size={13} />
@@ -179,11 +212,10 @@ export function SandboxPanel(props: {
       </div>
     )
   }
-  const { resume } = props
   return (
     <EmptyState
       action={
-        resume && problem.action ? (
+        phone && problem.action && resume ? (
           <ActionButton
             busy={resume.pending}
             onPress={() => resume.run()}
@@ -193,9 +225,11 @@ export function SandboxPanel(props: {
           </ActionButton>
         ) : undefined
       }
-      body={problem.panelBody}
+      body={
+        phone && state.problem === 'refused' ? state.reason : problem.panelBody
+      }
       icon={problem.icon}
-      title={props.state === 'archived' ? 'Archived' : problem.title}
+      title={state.problem === 'archived' ? 'Archived' : problem.title}
     />
   )
 }

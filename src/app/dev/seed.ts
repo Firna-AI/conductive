@@ -47,7 +47,11 @@ function acme(
     deletesAt: FAKE_TIME + DELETE_AFTER,
   }
   return {
-    org: options.deleted ? { ...summary, deletion } : summary,
+    org: {
+      ...summary,
+      ...(options.deleted ? { deletion } : {}),
+      ...(options.suspended ? { suspension: { suspendedAt: FAKE_TIME } } : {}),
+    },
     sections: core.sectionList.sections,
     workspaces: workspaces.workspaces,
     starts: new Map(workspaces.workspaces.map(startOf)),

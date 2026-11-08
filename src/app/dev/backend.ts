@@ -1,5 +1,7 @@
+import { orgSuspendedReason } from '../../../docs/mockups/src/components/orgs/suspension'
 import { orgPath } from '../../shared/api'
 import type { WorkspaceEvent } from '../../shared/events'
+import { leaveOrgPath } from '../../shared/orgs'
 import type { Section } from '../../shared/sections'
 import {
   workspacePath,
@@ -7,6 +9,7 @@ import {
   type WorkspaceResponse,
 } from '../../shared/workspaces'
 import type { FakeWorkspaceEvents } from '../../test-support/fake-events'
+import { orgSuspendedCode } from '../suspension'
 import { ID, match, RouteError } from './router'
 import type { DevState, OrgState } from './state'
 
@@ -84,15 +87,28 @@ export function requireSection(org: OrgState, sectionId: string): Section {
   return section
 }
 
+/** The methods that only read, which a suspended org still answers. */
+const reads: ReadonlySet<string> = new Set(['GET', 'HEAD', 'OPTIONS'])
+
 /**
  * Refuses a request under an org or a workspace that the user cannot
  * reach, also when the recorded server has a reply for it. The Worker
- * checks the membership of every org path in the same way.
+ * checks the membership of every org path in the same way. A suspended
+ * org refuses each write with `org_suspended`, except a leave, as the
+ * Worker does.
  */
-export function guardScope(state: DevState, path: string): void {
+export function guardScope(
+  state: DevState,
+  path: string,
+  method = 'GET',
+): void {
   const scope = match(orgPath(ID.org), path, true)
   if (!scope) return
   const org = requireOrg(state, scope.org)
+  const leave = method === 'POST' && path === leaveOrgPath(scope.org)
+  if (org.org.suspension && !reads.has(method) && !leave) {
+    throw new RouteError(403, orgSuspendedCode, orgSuspendedReason)
+  }
   const inner = match(workspacePath(ID.org, ID.workspace), path, true)
   if (inner) requireWorkspace(org, inner.workspace)
 }

@@ -7,8 +7,8 @@ export async function applyLifecycleTurn(
   hooks: LifecycleHooks,
   now: () => number,
 ): Promise<DurableLifecycleState> {
-  if (state.state === 'stopped' || state.state === 'archived') return state
   const remote = await hooks.extendDeadline()
+  if (state.state === 'stopped' || state.state === 'archived') return state
   if (remote) return reconciledLifecycle(state, remote, now())
   const sessions = new Set(state.runningSessions)
   if (change.running) sessions.add(change.sessionId)

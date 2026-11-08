@@ -4,6 +4,7 @@ import {
   Section,
   SectionText,
 } from '../../../docs/mockups/src/components/settings/Section'
+import { getStartedCopy } from '../../../docs/mockups/src/screens/getStartedCopy'
 import styles from '../../../docs/mockups/src/screens/GetStartedScreen.module.css'
 import type { StepState } from '../../app/get-started'
 import { routes } from '../../app/router'
@@ -16,9 +17,12 @@ import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { DoneStatus } from './stepParts'
 
-const title = '2. Create your first org'
+const copy = getStartedCopy.org
 
-/** The first org, with the number of the repositories that it chose. */
+/**
+ * The org of Get started, with the number of the repositories that it
+ * chose.
+ */
 function CreatedText(props: { org: OrgSummary }) {
   const model = useOrgModel(props.org.id)
   const repositories = useStore(model.repositories)
@@ -47,15 +51,14 @@ function CreatedText(props: { org: OrgSummary }) {
 }
 
 /**
- * The first org. Create org opens the form of the first org, which comes
- * back to Get started. Before the GitHub App is installed, the button is
- * off.
+ * The org step. Create org opens the form of Get started, which comes back
+ * here. Before the GitHub App is installed, the button is off.
  */
 export function OrgStep(props: { state: StepState; org: OrgSummary | null }) {
   const go = useGo()
   if (props.state === 'done') {
     return (
-      <Section status={<DoneStatus label="Created" />} title={title}>
+      <Section status={<DoneStatus label={copy.done} />} title={copy.title}>
         {props.org ? <CreatedText org={props.org} /> : null}
       </Section>
     )
@@ -70,11 +73,11 @@ export function OrgStep(props: { state: StepState; org: OrgSummary | null }) {
           onPress={() => go(routes.createOrg(true))}
           tone={next ? 'primary' : 'secondary'}
         >
-          Create org
+          {copy.action}
         </ActionButton>
       }
-      description="An org holds your workspaces, the repositories that they use, and their cloud computer."
-      title={title}
+      description={copy.description}
+      title={copy.title}
     />
   )
 }

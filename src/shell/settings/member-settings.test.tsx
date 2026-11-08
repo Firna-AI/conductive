@@ -33,6 +33,7 @@ import {
   press,
   waitFor,
 } from '../../test-support/mount'
+import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import { mountScreen } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
 import { OrgSettingsScreen } from './OrgSettingsScreen'
@@ -179,6 +180,26 @@ describe('the org settings of a member who is not an admin', () => {
 })
 
 describe('the Members tab of an admin', () => {
+  test('in a suspended org the Members tab lists the members without the invite, role menus, Remove, and invites, also for its admin', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    serveSuspendedAcme(server)
+    const { settings } = await signedIn(server)
+    const view = settings('members')
+    const list = await waitFor(
+      () => queryByRole('list', 'Members', view),
+      'the members of Acme',
+    )
+    const { members, invites } = coreFixtures().members
+    const text = list.textContent ?? ''
+    expect({
+      rows: list.querySelectorAll(':scope > li').length,
+      invites: invites.filter((invite) => text.includes(invite.email)).length,
+      buttons: view.querySelectorAll('button').length,
+      fields: view.querySelectorAll('input, textarea').length,
+    }).toEqual({ rows: members.length, invites: 0, buttons: 0, fields: 0 })
+  })
+
   test('a removal reads the workspaces and the members of the org again', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()

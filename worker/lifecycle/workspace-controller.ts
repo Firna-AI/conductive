@@ -1,4 +1,5 @@
 import type { AppDependencies, AppEnv } from '../env'
+import { HttpError } from '../http'
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
 import { requireWorkspaceOrg } from './access'
 import { runWorkspaceAlarm } from './workspace-alarm'
@@ -64,6 +65,7 @@ export function createWorkspaceController(
     put: (key, value) => platform.storage.put('draft', key, value),
   }
   const controller: WorkspaceController = {
+    extendLifecycleInput: (operation) => lifecycle.input.extend(operation),
     recordLifecycleInput: (at) => lifecycle.input.record(at),
     captureLifecycleActivity: () => lifecycle.input.capture(),
     reconcileLifecycleActivity: async (snapshot, remote) => {
@@ -138,8 +140,19 @@ export function createWorkspaceController(
     lifecycleFailed(error: NonNullable<DurableLifecycleState['error']>) {
       return lifecycle.fail(error)
     },
-    lifecycleActivity() {
-      return lifecycle.activity()
+    async lifecycleActivity(checkOnly) {
+      try {
+        if (checkOnly) await lifecycle.input.check()
+        else await lifecycle.activity()
+        return { ok: true }
+      } catch (error) {
+        if (!(error instanceof HttpError && error.code === 'org_suspended'))
+          throw error
+        return {
+          ok: false,
+          error: { code: error.code, message: error.message },
+        }
+      }
     },
     async lifecycleStopped(): Promise<void> {
       await starts.cancel()

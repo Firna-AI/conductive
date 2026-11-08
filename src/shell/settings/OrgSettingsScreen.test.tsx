@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { ComputerModel } from '../../app/computer-model'
+import type { SettingsTab } from '../../app/router'
 import { flushMicrotasks, ManualDelay } from '../../app/test-kit'
 import {
   buildPath,
@@ -7,6 +8,7 @@ import {
   type ImageBuild,
 } from '../../shared/org-settings'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import {
   coreFixtures,
   FAKE_IDS,
@@ -102,6 +104,40 @@ describe('OrgSettingsScreen', () => {
         ([, value]) => value,
       ),
     ).toEqual(['Acme', 'AC'])
+  })
+
+  test('a suspended org shows its notice above each tab, and no edit control, also for its only admin', async () => {
+    const server = new FakeApiServer()
+    serveSuspendedAcme(server)
+    const { app, org, user, model } = await signedIn(server)
+    await model.reload('repositories')
+    await model.reload('builds')
+    const computer = new ComputerModel(model, new ManualDelay().delay)
+    await computer.load()
+    const screen = (tab: SettingsTab) =>
+      renderScreen(app, <OrgSettingsScreen org={org} tab={tab} user={user} />)
+    const notice =
+      'Acme is suspended Its workspaces and settings are read-only. For questions, write to abuse@conductive.build.'
+    const tabs = {
+      general: screen('general'),
+      repositories: screen('repositories'),
+      'cloud computer': screen('cloud-computer'),
+      members: screen('members'),
+    }
+    for (const [tab, html] of Object.entries(tabs)) {
+      expect(textOf(html), tab).toContain(notice)
+    }
+    const pages = {
+      general: tabs.general,
+      repositories: tabs.repositories,
+      'cloud computer': tabs['cloud computer'],
+    }
+    for (const [page, html] of Object.entries(pages)) {
+      expect(html, page).not.toMatch(/<button|<input|<textarea/)
+      expect(textOf(html), page).not.toMatch(
+        /Save|Build computer|Delete org|Leave org|Only an admin/,
+      )
+    }
   })
 
   test('an older settings reply without the base image names no software', async () => {

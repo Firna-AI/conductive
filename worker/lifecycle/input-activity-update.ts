@@ -21,6 +21,9 @@ export function inputActivityUpdate(options: {
   dependencies: AppDependencies
   storage: ReceiverStorage
   capture(at: number): Promise<CapturedInputActivity>
+  extendDeadline(
+    operation: () => Promise<LifecycleReconciliation>,
+  ): Promise<LifecycleReconciliation | void>
   reconcile(
     captured: CapturedInputActivity,
     sandboxId: string,
@@ -56,11 +59,15 @@ export function inputActivityUpdate(options: {
       await assertReceiverActive(options.storage, captured.generation)
       return response
     })
-    const sandbox = await replyOrCurrentState(provider, target.sandboxId, () =>
-      provider.setAutoStop(target.sandboxId, 1_860),
-    )
-    const state = providerState(sandbox.state)
-    const remote = state === 'stopped' || state === 'error' ? state : undefined
+    const remote = await options.extendDeadline(async () => {
+      const sandbox = await replyOrCurrentState(
+        provider,
+        target.sandboxId,
+        () => provider.setAutoStop(target.sandboxId, 1_860),
+      )
+      const state = providerState(sandbox.state)
+      return state === 'stopped' || state === 'error' ? state : undefined
+    })
     if (remote) {
       const current = await readInputActivityTarget(options.env.DB, workspaceId)
       if (

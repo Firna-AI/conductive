@@ -1,11 +1,11 @@
+import { publishBuild } from './build-admission-data'
 import type { SandboxProvider } from '../sandbox/provider'
-import { requireActiveUser } from '../data/user-access'
-import type { BuildJob } from './build-data'
+import { requireActiveOrg, requireActiveUser } from '../data/user-access'
 import {
   assignBuildSnapshot,
-  publishBuild,
   readBuildJob,
   updateBuildJob,
+  type BuildJob,
 } from './build-data'
 import { allocateImageBuild } from './image-allocation'
 import { advanceBuildCommand, cleanupBuild } from './build-execution'
@@ -30,6 +30,7 @@ export async function advanceBuildStep(
   const { env, dependencies } = runtime
   const { buildId, orgId } = job
   const recoveringAllocation = job.phase === 'allocating' && !job.sandboxId
+  if (!recoveringAllocation) await requireActiveOrg(env.DB, orgId)
   if (job.phase === 'create') {
     await updateBuildJob(env.DB, buildId, 'allocating')
     job = { ...job, phase: 'allocating' }
@@ -53,6 +54,7 @@ export async function advanceBuildStep(
   if (job.phase === 'snapshot') {
     if (job.kind === 'build' && job.snapshotName === null)
       await clearBuildCommands(provider, job.sandboxId, job.buildId)
+    await requireActiveOrg(env.DB, orgId)
     const snapshot = await createResource(
       provider,
       buildSnapshotIntent(env.DB, job),
@@ -64,11 +66,13 @@ export async function advanceBuildStep(
     return false
   }
   if (job.phase === 'publish') {
+    await requireActiveOrg(env.DB, orgId)
     await publishBuild(env.DB, job, dependencies.now())
     job = await readBuildJob(env.DB, orgId, buildId)
     return await cleanupBuild(runtime, provider, job)
   }
   if (job.phase === 'sources') {
+    await requireActiveOrg(env.DB, orgId)
     const prepared = await runtime.prepareSources({
       orgId,
       buildId,
@@ -94,5 +98,6 @@ export async function advanceBuildStep(
     )
     return false
   }
+  await requireActiveOrg(env.DB, orgId)
   return await advanceBuildCommand(runtime, provider, job)
 }

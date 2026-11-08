@@ -138,12 +138,13 @@ function errorResponse(error: unknown): Response {
 
 /**
  * A fetch that answers from `routes`. `guard` runs first. It refuses a
- * request for an org or a workspace that the user cannot reach. A request
- * that no route answers goes on to `fallback`, the recorded server.
+ * request for an org or a workspace that the user cannot reach, and a write
+ * that a suspended org refuses. A request that no route answers goes on to
+ * `fallback`, the recorded server.
  */
 export function routeFetch(
   routes: readonly Route[],
-  guard: (path: string) => void,
+  guard: (path: string, method: string) => void,
   fallback: FetchLike,
 ): FetchLike {
   async function answer(
@@ -152,7 +153,7 @@ export function routeFetch(
   ): Promise<Response | null> {
     const request = new Request(new URL(input, FAKE_ORIGIN), init)
     const path = new URL(request.url).pathname
-    guard(path)
+    guard(path, request.method)
     for (const route of routes) {
       if (route.method !== request.method) continue
       const params = match(route.path, path)

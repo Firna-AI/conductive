@@ -1,6 +1,5 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError, requiredString } from '../http'
-import { requireOrgMember } from '../members/permissions'
 import type { RequestContext } from '../security/gate'
 import {
   deleteShellSection,
@@ -11,6 +10,7 @@ import {
   invalidShellInput,
   optionalShellPosition,
   optionalShellString,
+  requireShellWriter,
 } from './feature-shell-access'
 import { shellSections } from './shell-data'
 import { workspaceBinding } from './workspace-state'
@@ -25,7 +25,7 @@ export async function featureSectionWrite(
   if (!context.org) throw invalidShellInput()
   const orgId = context.org.id
   const userId = context.user.id
-  await requireOrgMember(env.DB, orgId, userId)
+  await requireShellWriter(env.DB, orgId, userId)
   const sections = await shellSections(env.DB, orgId, userId)
   if (request.method === 'POST') {
     const id = dependencies.randomToken()
@@ -36,7 +36,7 @@ export async function featureSectionWrite(
       name: requiredString(context.body?.name),
       now: dependencies.now(),
     })
-    if (!inserted) await requireOrgMember(env.DB, orgId, userId)
+    if (!inserted) await requireShellWriter(env.DB, orgId, userId)
     return Response.json(
       {
         section: (await shellSections(env.DB, orgId, userId)).find(
@@ -58,7 +58,7 @@ export async function featureSectionWrite(
       now: dependencies.now(),
     })
     if (!result.deleted) {
-      await requireOrgMember(env.DB, orgId, userId)
+      await requireShellWriter(env.DB, orgId, userId)
       throw sectionNotFound()
     }
     await Promise.all(
@@ -92,7 +92,7 @@ export async function featureSectionWrite(
       order,
     }))
   ) {
-    await requireOrgMember(env.DB, orgId, userId)
+    await requireShellWriter(env.DB, orgId, userId)
     throw sectionNotFound()
   }
   return Response.json({

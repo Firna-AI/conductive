@@ -28,14 +28,26 @@ export type MemberComputerViewProps = {
   /** The time now, in Unix milliseconds, for the times of the builds. */
   now: number
   timeZone?: string
+  /**
+   * The org is suspended, so nothing in it changes, also for an admin. The
+   * intro then says nothing about admins, because the notice of the org
+   * says why.
+   */
+  suspended?: boolean
 }
 
-/** The heading of the Cloud computer tab of a member who is not an admin. */
-export function MemberComputerIntro(props: { orgName: string }) {
+/**
+ * The heading of the Cloud computer tab of a member who is not an admin, or
+ * of anyone in a suspended org.
+ */
+export function MemberComputerIntro(props: {
+  orgName: string
+  suspended?: boolean
+}) {
+  const note = props.suspended ? '' : ' Only an admin can change it.'
   return (
     <TabIntro title="Cloud computer">
-      The shared cloud computer of {props.orgName}. Every workspace starts from
-      it, with every repository of the org. Only an admin can change it.
+      {`The shared cloud computer of ${props.orgName}. Every workspace starts from it, with every repository of the org.${note}`}
     </TabIntro>
   )
 }
@@ -53,7 +65,10 @@ export function MemberComputerView(props: MemberComputerViewProps) {
   const { settings } = props
   return (
     <ViewportScope viewport={props.viewport}>
-      <MemberComputerIntro orgName={props.org.name} />
+      <MemberComputerIntro
+        orgName={props.org.name}
+        suspended={props.suspended}
+      />
       <BuildCard
         builds={props.builds}
         log={props.log}

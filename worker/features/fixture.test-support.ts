@@ -6,7 +6,7 @@ import {
   OUTER_ORG,
   OUTER_SOFTWARE,
 } from '../chat/integration/outer-seed.test-support'
-import { insertBuild } from '../lifecycle/build-data'
+import { insertBuild } from '../lifecycle/build-admission-data'
 import { readSavedScript } from '../lifecycle/saved-script'
 import { array } from '../chat/agent-events'
 import { string } from '../chat/inputs'

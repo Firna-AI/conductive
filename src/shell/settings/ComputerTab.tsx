@@ -4,10 +4,11 @@ import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import { TabIntro } from '../../../docs/mockups/src/components/settings/TabIntro'
 import { ComputerModel } from '../../app/computer-model'
 import { latestBuild } from '../../app/org-model'
+import { mayChangeSettings } from '../../app/permissions'
 import { useStore, valueOf } from '../../app/store'
 import { softwareSentence } from '../../members/software'
 import type { OrgSummary } from '../../shared/orgs'
-import { useOrgModel } from '../context'
+import { useOrgAccess, useOrgModel } from '../context'
 import { useAction } from '../ui/useAction'
 import { BuildCard } from './BuildCard'
 import { BuildButton } from './BuildParts'
@@ -19,9 +20,9 @@ import { ScriptSection } from './ScriptSection'
 /**
  * The Cloud computer tab of an admin, as the model holds it: the builds,
  * the scripts, and the env vars, which only an admin builds and changes
- * (decision 57). Build computer in the head of the builds and in the
- * notice of a changed install script is one action, so one press starts
- * one build.
+ * (decision 57), and nobody in a suspended org. Build computer in the head
+ * of the builds and in the notice of a changed install script is one
+ * action, so one press starts one build.
  */
 export function ComputerSettings(props: {
   org: OrgSummary
@@ -107,18 +108,26 @@ export function ComputerSettings(props: {
  * The Cloud computer tab. It keeps one computer model while it shows: the
  * model reads the settings and follows the builds, and it stops following
  * them and the build log on unmount. An admin gets the settings with their
- * actions. A member who is not an admin gets the read-only view of the
- * members UI, with the same live builds and log.
+ * actions. A member who is not an admin, and everyone in a suspended org,
+ * get the read-only view of the members UI, with the same live builds and
+ * log.
  */
 export function ComputerTab(props: { org: OrgSummary }) {
+  const access = useOrgAccess(props.org)
   const model = useOrgModel(props.org.id)
   const [computer] = useState(() => new ComputerModel(model))
   useEffect(() => {
     computer.start()
     return () => computer.stop()
   }, [computer])
-  if (props.org.role === 'admin') {
+  if (mayChangeSettings(access)) {
     return <ComputerSettings computer={computer} org={props.org} />
   }
-  return <MemberComputer computer={computer} org={props.org} />
+  return (
+    <MemberComputer
+      computer={computer}
+      org={props.org}
+      suspended={access.suspended}
+    />
+  )
 }

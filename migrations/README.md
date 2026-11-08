@@ -32,6 +32,10 @@ The `boat_keys` table of `202611060000_worker_core.sql` stays for the same
 reason. No code reads or writes it, because the app keeps its one Boat key
 as a Worker secret.
 
+`202611080000_org_suspension.sql` adds the suspension time and operator reference to `orgs`.
+Both fields start empty. The operator API keeps their first values.
+Members receive only the suspension time.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -62,6 +66,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | 15d Marketing | `202611071700`–`202611071759` |
 | 15e Mac app | `202611072000`–`202611072059` |
 | 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
+| 15o Org suspension | `202611080000`–`202611080059` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
 

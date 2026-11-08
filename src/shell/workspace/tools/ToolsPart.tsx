@@ -10,6 +10,7 @@ import { PreviewTool } from '../../../previews/PreviewTool'
 import type { ConnectTerminal } from '../../../terminal/TerminalScreen'
 import { TerminalTool } from '../../../terminal/TerminalTool'
 import type { ToolWorkspace } from '../../../terminal/tool-parts/workspace'
+import { useOrgServices } from '../../context'
 import type { WorkspaceContext } from '../features'
 import { toolTabs } from './tool-address'
 import { useToolNavigation, type ToolNavigation } from './tool-navigation'
@@ -75,7 +76,7 @@ function useTerminalConnect(): ConnectTerminal {
 /**
  * The Terminal, Preview, and Desktop tools of the workspace: a panel with
  * their tabs on desktop, and the page of one tool on a phone. Each tool
- * reads the routes through the fetch of the app, and the events of the
+ * reads the routes through the fetch of the org, and the events of the
  * workspace in order. The terminal stays mounted after its first show, so
  * its connection stays while another tool shows. The Desktop tool mounts
  * at each show, so it reads a new desktop address. A `placeholder`, such as
@@ -87,7 +88,7 @@ export function ToolsPart(props: {
   placeholder?: ReactNode
 }) {
   const { context } = props
-  const services = useServices()
+  const services = useOrgServices(context.org.id)
   const navigation = useToolNavigation(context)
   const connect = useTerminalConnect()
   const { org, workspace, toolEvents } = context

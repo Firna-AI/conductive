@@ -1,3 +1,5 @@
+import { activeOrgIdPredicate } from '../data/org-access'
+import { requireActiveOrg } from '../data/user-access'
 import type { User } from '../../src/shared/api'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { Workspace, WorkspaceState } from '../../src/shared/workspaces'
@@ -102,9 +104,9 @@ export async function insertWorkspace(
     await db
       .prepare(
         `INSERT OR IGNORE INTO sections (id, org_id, name, position, is_default, created_at)
-       VALUES (?, ?, 'General', 0, 1, ?)`,
+       SELECT ?, ?, 'General', 0, 1, ? WHERE ${activeOrgIdPredicate('?')}`,
       )
-      .bind(`general-${input.orgId}`, input.orgId, input.now)
+      .bind(`general-${input.orgId}`, input.orgId, input.now, input.orgId)
       .run()
   }
   const section = await db
@@ -124,7 +126,7 @@ export async function insertWorkspace(
       .prepare(
         `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
        name, branch, state, created_at, updated_at, last_activity_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?)`,
+       SELECT ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ? WHERE ${activeOrgIdPredicate('?')}`,
       )
       .bind(
         input.id,
@@ -137,11 +139,12 @@ export async function insertWorkspace(
         input.now,
         input.now,
         input.now,
+        input.orgId,
       ),
     db
       .prepare(
         `INSERT INTO workspace_runtime (workspace_id, org_id, created_by_user_id, session_id, first_turn_id, agent, model, effort, first_message_id, repository_locations_json)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM workspaces WHERE id = ?)`,
       )
       .bind(
         input.id,
@@ -156,8 +159,10 @@ export async function insertWorkspace(
         input.repositoryLocations
           ? JSON.stringify(input.repositoryLocations)
           : null,
+        input.id,
       ),
   ])
+  await requireActiveOrg(db, input.orgId)
   return leasedImage(db, input.orgId, input.id)
 }
 

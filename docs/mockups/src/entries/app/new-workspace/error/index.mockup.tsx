@@ -1,6 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
 import {
   NewWorkspaceScreen,
+  newWorkspaceForm,
   newWorkspaceSchema,
 } from '../../../../screens/NewWorkspaceScreen'
 
@@ -12,7 +13,7 @@ export const notCreated = defineScreen({
     'Moved here from a saved state of the New workspace page, with the same path, so that page shows only its canonical screen.',
   relatedDocs: [],
   propSchema: newWorkspaceSchema,
-  props: { result: 'error' },
+  props: { ...newWorkspaceForm, result: 'error' },
   render: (props, context) => (
     <NewWorkspaceScreen state={props} viewport={context.viewport} />
   ),

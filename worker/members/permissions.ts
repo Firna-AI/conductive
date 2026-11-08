@@ -1,5 +1,5 @@
 import { HttpError } from '../http'
-import { requireActiveUser } from '../data/user-access'
+import { requireActiveOrg, requireActiveUser } from '../data/user-access'
 import { visibleOrg } from './org-data'
 
 export async function requireOrgMember(
@@ -23,6 +23,7 @@ export async function requireOrgAdmin(
   allowDeleted = false,
 ) {
   const org = await requireOrgMember(db, orgId, userId, allowDeleted)
+  await requireActiveOrg(db, orgId)
   if (org.role !== 'admin') {
     throw new HttpError(
       403,

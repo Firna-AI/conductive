@@ -18,6 +18,11 @@ export function interceptMembersWrite(
         if (key === 'bind')
           return (...values: unknown[]) =>
             statement(target.bind(...values), writes)
+        if (key === 'run' && writes)
+          return async () => {
+            await intercept()
+            return target.run()
+          }
         if (key === 'first' && writes)
           return async <T>(column?: string) => {
             await intercept()

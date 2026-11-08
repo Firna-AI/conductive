@@ -18,6 +18,7 @@ import { agentLoginContext } from '../chat/queries'
 import { encrypt } from '../security/crypto'
 import { readWorkspace, workspaceView } from './workspace-data'
 import type { WorkspaceRuntime } from './workspace-runtime'
+import type { LifecycleEnvironment } from './runtime'
 import { workspaceLifecycleEndpoint } from './workspace-transport'
 
 interface RunningMachineTurn {
@@ -28,11 +29,13 @@ interface RunningMachineTurn {
 
 export async function machineCredentialFixture(bundle: string) {
   const active = await createLifecycleChatFixture(bundle)
+  const { WORKSPACES } =
+    await active.runtime.getBindings<Pick<LifecycleEnvironment, 'WORKSPACES'>>()
   const user = { ...active.first.sender }
   const sockets: WebSocket[] = []
   let runner: OuterFakeRunner | undefined
   const runtime: WorkspaceRuntime = {
-    env: active.env,
+    env: { ...active.env, WORKSPACES },
     dependencies: {
       now: Date.now,
       randomToken: () => 'machine-test-token',

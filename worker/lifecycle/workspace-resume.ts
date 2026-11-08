@@ -1,6 +1,9 @@
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
-import { requireActiveWorkspaceOwner } from '../data/user-access'
+import {
+  requireActiveOrg,
+  requireActiveWorkspaceOwner,
+} from '../data/user-access'
 import { requireOrgMember } from './access'
 import { readImageSettings, workspaceRepository } from './settings-data'
 import { readWorkspace } from './workspace-data'
@@ -15,6 +18,7 @@ export async function resumeWorkspace(
   userId: string,
 ): Promise<WorkspaceResponse> {
   const { env, dependencies } = runtime
+  await requireActiveOrg(env.DB, orgId)
   await requireOrgMember(env.DB, orgId, userId)
   const row = await readWorkspace(env.DB, orgId, workspaceId)
   const endpoint = runtime.workspace(workspaceId)
@@ -22,7 +26,7 @@ export async function resumeWorkspace(
     return workspaceResponse(runtime, orgId, workspaceId)
   if (row.state !== 'stopped' && row.state !== 'error')
     return workspaceResponse(runtime, orgId, workspaceId)
-  await requireActiveWorkspaceOwner(env.DB, row.ownerUserId)
+  await requireActiveWorkspaceOwner(env.DB, row.ownerUserId, orgId)
   if (!row.sandboxId)
     throw new HttpError(
       409,

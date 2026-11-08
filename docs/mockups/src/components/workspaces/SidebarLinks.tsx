@@ -7,14 +7,19 @@ import styles from './SidebarLinks.module.css'
 
 /**
  * The link to the settings of the org. A dot says that something there needs
- * the user, such as a failed build of the cloud computer.
+ * the user, such as a failed build of the cloud computer. `to` is the page of
+ * the settings, such as those of a suspended org.
  */
-export function SettingsLink(props: { current?: boolean; alert?: boolean }) {
+export function SettingsLink(props: {
+  current?: boolean
+  alert?: boolean
+  to?: string
+}) {
   return (
     <ScreenLink
       aria-current={props.current ? 'page' : undefined}
       className={classes(styles.settings, props.current && styles.current)}
-      to={paths.orgSettings}
+      to={props.to ?? paths.orgSettings}
     >
       {props.alert ? <span aria-hidden className={styles.alert} /> : null}
       Settings

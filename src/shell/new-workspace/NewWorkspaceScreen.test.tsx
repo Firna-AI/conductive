@@ -5,6 +5,7 @@ import { DRAFT_ATTACHMENTS_PATH } from '../../shared/messages'
 import { orgSettingsPaths } from '../../shared/org-settings'
 import { workspacesPath } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { renderScreen, startedApp, textOf } from '../test-render'
 import { NewWorkspaceScreen } from './NewWorkspaceScreen'
@@ -62,6 +63,25 @@ async function screenText(role: OrgRole, builtAt?: number): Promise<string> {
 }
 
 describe('NewWorkspaceScreen', () => {
+  test('a suspended org shows the refused bar in place of the composer, and invites no first message', async () => {
+    const server = new FakeApiServer()
+    serveSuspendedAcme(server)
+    const app = await startedApp(server)
+    const org = app.orgs.get().find((item) => item.id === FAKE_IDS.org)
+    if (!org) throw new Error('The fake org is missing.')
+    const html = renderScreen(
+      app,
+      <NewWorkspaceScreen org={org} sectionId={null} />,
+    )
+    expect({
+      refused: textOf(html).includes(
+        "The sandbox can't start This org is suspended. For questions, write to abuse@conductive.build.",
+      ),
+      start: textOf(html).includes('Start a workspace'),
+      composer: html.includes('<textarea'),
+    }).toEqual({ refused: true, start: false, composer: false })
+  })
+
   test('the start note says when the image was built, as a time or a date', async () => {
     const cases = [
       ['eight hours ago', FAKE_TIME - 8 * hour, 'built 8 hours ago.'],

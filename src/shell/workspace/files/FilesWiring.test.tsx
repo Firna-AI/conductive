@@ -20,6 +20,7 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../../test-support/mount'
+import { serveSuspendedAcme } from '../../../test-support/suspended-org'
 import { click, settle } from '../../test-mount'
 import { bodiesOf } from '../kept-test-kit'
 import { currents, linkTo, openTab } from '../wiring-test-kit'
@@ -124,6 +125,22 @@ describe('the Files screens in the workspace', () => {
     await settle()
     expect(navigation.href()).toBe(changes)
     expect(queryByLabel('Changed files', view)).not.toBeNull()
+  })
+
+  test('in a suspended org, a click on a list changes the view in the tab only, and saves no view', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    serveSuspendedAcme(server)
+    const { view } = await openTab(server, routes.workspace(org, id))
+    const panel = byLabel('Files and tools', view)
+    const checks = filesHref(org, id, { kind: 'list', list: 'checks' })
+    click(linkTo(panel, checks))
+    await settle()
+
+    expect({
+      current: currents(panel, checks),
+      saved: await savedViews(server, 0),
+    }).toEqual({ current: ['page'], saved: [] })
   })
 
   test('keep the lists of a stopped sandbox, and show the sandbox in their place while it starts or the app refuses its start', async () => {

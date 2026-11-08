@@ -1,3 +1,4 @@
+import { requireWritableOrgRequest } from '../security/org-writes'
 import type { AppEnv } from '../env'
 import { checkHost, checkOrigin, gate } from '../security/gate'
 
@@ -9,5 +10,12 @@ export async function deviceBrowserGate(
 ) {
   checkHost(request, env)
   checkOrigin(request, env)
-  return gate(new Request(request.url, { headers: request.headers }), env, now)
+  const context = await gate(
+    new Request(request.url, { headers: request.headers }),
+    env,
+    now,
+  )
+  if (context.org)
+    await requireWritableOrgRequest(request, env.DB, context.org.id)
+  return context
 }

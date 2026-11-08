@@ -85,6 +85,7 @@ it('denies missing, invalid, revoked, archived, and deleted-org workspace creden
     "UPDATE workspaces SET archived_at = 1 WHERE id = 'calling-workspace'",
     "UPDATE workspaces SET state = 'archived' WHERE id = 'calling-workspace'",
     "UPDATE orgs SET deleted_at = 1 WHERE id = 'org-a'",
+    "UPDATE orgs SET suspended_at = 1 WHERE id = 'org-a'",
   ]) {
     await fixture.db.prepare(update).run()
     const response = await fixture.request()
@@ -95,7 +96,9 @@ it('denies missing, invalid, revoked, archived, and deleted-org workspace creden
       fixture.db.prepare(
         "UPDATE workspaces SET archived_at = NULL, state = 'working' WHERE id = 'calling-workspace'",
       ),
-      fixture.db.prepare('UPDATE orgs SET deleted_at = NULL'),
+      fixture.db.prepare(
+        'UPDATE orgs SET deleted_at = NULL, suspended_at = NULL',
+      ),
     ])
   }
 })

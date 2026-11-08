@@ -132,12 +132,24 @@ export const termsDocument: LegalDocument = {
     {
       title: 'Suspension',
       blocks: [
-        paragraph`The operator can suspend an account that breaks these
-          terms, or whose use puts other people or the service at risk. A
-          suspension stops the cloud computers of the workspaces that the
-          account owns, closes their previews, and blocks new starts. When
-          the risk is urgent, the operator can suspend an account without
+        paragraph`The operator can suspend an account or an org that breaks
+          these terms, or whose use puts other people or the service at
+          risk. When the risk is urgent, the operator can suspend without
           notice.`,
+        paragraph`A suspension of an account ends its sign-in. It stops the
+          cloud computers of the workspaces that the account owns, closes
+          their previews, and blocks new starts.`,
+        paragraph`A suspension of an org stops each cloud computer of the org,
+          closes its previews and terminals, and blocks each start and
+          build. Its members keep their accounts and their other orgs. They
+          can still open the org and read its chat history. Nothing in the
+          org can change, except that a member can leave it. An admin can
+          leave only while another admin whose account is not suspended
+          remains.`,
+        paragraph`A stopped cloud computer gets no restart to keep its disk
+          while its workspace owner or org is suspended. So its disk can be
+          deleted, with any work that is not pushed to GitHub.`,
+        paragraph`To ask about a suspension, write to ${mailLink(abuseAddress)}.`,
         paragraph`${draft('To write: how the operator tells you about a suspension, how you ask for a review, and what happens to your data')}`,
       ],
     },

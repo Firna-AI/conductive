@@ -3,6 +3,7 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, SearchX } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
+import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
 import { failedCreate } from '../../app/creations'
@@ -15,7 +16,7 @@ import {
 } from '../../app/workspace-store'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp } from '../context'
+import { useApp, useOrgAccess } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { useAction } from '../ui/useAction'
@@ -25,12 +26,9 @@ import { ChatArea } from './ChatArea'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
-import {
-  refusedStart,
-  SandboxPanel,
-  type SandboxNoticeState,
-} from './SandboxNotice'
-import { shownWorkspaces } from './shown-workspaces'
+import { sandboxView } from './sandbox-view'
+import { SandboxPanel } from './SandboxNotice'
+import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
@@ -77,6 +75,11 @@ function connectView(view: WorkspaceView): () => void {
  * events of each workspace that it showed. So a return draws the workspace
  * at once, and each stream asks only for the events after its own last
  * event number.
+ *
+ * In a suspended org the history stays, and the refused bar of the org
+ * takes the place of the composer, also while the stop of its cloud
+ * computer runs. An archived workspace keeps its bar, with the notice of
+ * the org above it.
  */
 export function WorkspaceScreen(props: {
   org: OrgSummary
@@ -85,6 +88,7 @@ export function WorkspaceScreen(props: {
   viewer: User
 }) {
   const app = useApp()
+  const access = useOrgAccess(props.org)
   const create = useCallback(
     (workspace: WorkspaceIdentity) =>
       shownWorkspaces(app, props.viewer).view(workspace),
@@ -147,42 +151,39 @@ export function WorkspaceScreen(props: {
   }
   const { workspace, start, error } = detail.value
   const sandbox = sandboxState(workspace)
-  // A refused start shows while the sandbox is down, until its cause ends.
-  const refusal =
-    sandbox === 'stopped' || sandbox === 'error'
-      ? refusedStart(startError)
-      : null
+  const { suspended } = access
+  const sandboxParts = sandboxView({
+    sandbox,
+    suspended,
+    startError,
+    savedError: error?.message ?? null,
+  })
   const context: WorkspaceContext = {
     org: props.org,
     workspace,
     viewer: props.viewer,
     sandbox,
-    startRefused: refusal !== null,
+    readOnly: suspended || sandbox === 'archived',
+    panel: sandboxParts.panel,
     viewport,
     view: props.view,
     stream: model.stream,
     savedView: chat,
     toolEvents: toolEvents.subscribe,
-    archive: mayArchive(props.org, workspace, props.viewer)
+    archive: mayArchive(access, workspace, props.viewer)
       ? () => void model.archive.start()
       : null,
     onReassigned: (updated) => model.reassigned(updated),
   }
   const phone = viewport === 'phone'
-  // A failed start carries the message that the workspace saved for it.
-  const notice: SandboxNoticeState | null =
-    refusal ??
-    (sandbox === 'error'
-      ? { problem: 'error', message: error?.message ?? null }
-      : sandbox === 'ready' || sandbox === 'starting'
-        ? null
-        : { problem: sandbox })
-  // The state of a sandbox that does not run, in place of a part.
+  // The state of a sandbox that does not run, in place of a part: the
+  // notice of the bar, with the words of a refusal, or the wait of a start.
   const down =
-    sandbox === 'ready' ? null : (
+    sandboxParts.panel === null ? null : (
       <SandboxPanel
-        resume={phone ? resume : null}
-        state={refusal ? 'refused' : sandbox}
+        phone={phone}
+        resume={resume}
+        state={sandboxParts.panel}
         workspace={workspace}
       />
     )
@@ -196,16 +197,19 @@ export function WorkspaceScreen(props: {
     <ToolsPart context={context} placeholder={down} />
   )
   // The Files part keeps the lists of a stopped sandbox, from the copy that
-  // the workspace keeps, and shows a start in their place. An archived
-  // workspace has no lists.
+  // the workspace keeps, and shows a start or a refusal in their place. An
+  // archived workspace has no lists.
   const files = sandbox === 'archived' ? panel(null) : features.files?.(context)
   const chatArea = (
     <ChatArea
       chat={chat}
       context={context}
-      notice={notice}
+      notice={sandboxParts.bar}
+      orgNotice={
+        sandboxParts.orgNotice ? <SuspendedOrgNotice org={props.org} /> : null
+      }
       resume={resume}
-      start={start}
+      start={sandboxParts.refusal ? null : start}
     />
   )
   const header = (

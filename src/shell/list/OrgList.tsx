@@ -3,12 +3,13 @@ import { InputFrame } from '@firna/ui/input'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { ApiError } from '../../app/api/client'
-import { groupWorkspaces } from '../../app/sections'
+import { groupWorkspaces, type SectionGroup } from '../../app/sections'
 import { useStore } from '../../app/store'
 import { useNow } from '../../app/time'
 import { useOrgModel } from '../context'
 import { LoadFailure } from '../ui/LoadFailure'
 import ui from '../ui/ui.module.css'
+import type { SectionActions } from './SectionHeader'
 import { SectionList } from './SectionList'
 import { useListActions } from './useListActions'
 import type { RowVariant } from './WorkspaceRow'
@@ -49,20 +50,50 @@ function NewSectionField(props: {
 }
 
 /**
+ * The collapse of each section in this view only, for a read-only list. A
+ * suspended org refuses each change of a section, also a collapse, but its
+ * members still open each section to read it.
+ */
+function useLocalCollapse(actions: SectionActions) {
+  const [collapsed, setCollapsed] = useState<ReadonlyMap<string, boolean>>(
+    () => new Map(),
+  )
+  const local: SectionActions = {
+    ...actions,
+    toggle: (section) =>
+      setCollapsed((current) =>
+        new Map(current).set(section.id, !section.collapsed),
+      ),
+  }
+  const apply = (groups: readonly SectionGroup[]): readonly SectionGroup[] =>
+    groups.map((group) => {
+      const value = collapsed.get(group.section.id)
+      return value === undefined
+        ? group
+        : { ...group, section: { ...group.section, collapsed: value } }
+    })
+  return { actions: local, apply }
+}
+
+/**
  * The workspaces of an org in their sections, as the sidebar and the list
- * page show them, with the field of a new section at the end.
+ * page show them, with the field of a new section at the end. `readOnly`
+ * shows them without changes, for a suspended org.
  */
 export function OrgList(props: {
   orgId: string
   variant: RowVariant
   selectedId: string | null
+  readOnly?: boolean
 }) {
+  const readOnly = props.readOnly ?? false
   const org = useOrgModel(props.orgId)
   const theme = useSharedUiTheme()
   const sections = useStore(org.sections)
   const workspaces = useStore(org.workspaces)
   const now = useNow(30_000)
   const { actions, move, adding, create, cancelAdding } = useListActions(org)
+  const local = useLocalCollapse(actions)
   useEffect(() => org.watch('list'), [org])
   const failure = (error: ApiError) => (
     <LoadFailure
@@ -88,15 +119,16 @@ export function OrgList(props: {
   return (
     <>
       <SectionList
-        actions={actions}
+        actions={readOnly ? local.actions : actions}
         archived={groups.archived}
-        groups={groups.sections}
+        groups={readOnly ? local.apply(groups.sections) : groups.sections}
         move={move}
         now={now}
+        readOnly={readOnly}
         selectedId={props.selectedId}
         variant={props.variant}
       />
-      {adding ? (
+      {adding && !readOnly ? (
         <NewSectionField cancel={cancelAdding} create={create} />
       ) : null}
     </>

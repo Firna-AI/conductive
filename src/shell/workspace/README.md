@@ -16,231 +16,40 @@ states of the cloud computer are in `app/shell`, and the notices are in
 
 ## The kept workspace
 
-The tab keeps a `ShownWorkspace` for each workspace that it showed: its
-`WorkspaceModel`, its `HeaderNotices`, and its `ChatController`.
-`shownWorkspaces(app, user)` in `shown-workspaces.ts` gives the memory of
-the `AppModel` of the tab, for the signed-in user.
-
-- Each mount of the screen shows the kept parts through a new
-  `WorkspaceView`, after the render, as [Integration](#integration) says.
-- An unmount closes the socket of the model and the socket of the chat.
-  Each stream keeps its last event number.
-- A return draws the kept header, notices, and chat at once. Then each
-  socket asks only for the events after its own last event number.
-- On a return, the model reads the workspace again, as at each open. The
-  chat reads nothing again: no history, no session list, and no view.
-- Each kept chat takes the account, the models, its org, and the members of
-  the org from the app models, as its `sources`. So a login that the
-  account screen saves, a new default model, or a new org name shows in
-  the kept chat at once.
-- A first show reads the members of the org when they are not ready, such
-  as when no screen read them yet or an earlier read failed. A return reads
-  no members.
-- A kept detail that failed waits for the open of this view, with the
-  spinner. So a return never shows an old failure.
-- A chat load that ends while the screen is away opens no socket until the
-  next mount.
-- A sign-out, or a sign-in of another user, stops every kept workspace and
-  forgets it.
-- Each kept workspace gives the events of its stream and a 404 of its open
-  to the creates of its org, as
-  [Creation recovery](../../app/creation-recovery.md) says. A failed create
-  of this tab forgets its kept model, notices, and chat, so its streams
-  never open again.
-- In a tab without its form, a workspace whose create start failed shows
-  the unavailable view. It says "This workspace is not available" and the
-  message that the start saved, or "Its sandbox didn't start." when it has
-  none, with All workspaces. It offers no Resume, and the list drops its
-  row.
-- A create that started keeps its start record. So a later error of its
-  sandbox shows the sandbox bar with Try again, as a failed resume does.
-- The tab also keeps the `ToolEvents` of each workspace. Each show makes
-  them follow the stream of the model before it opens, as the notices do.
-  They keep the revokes of previews, and give each tool the kept revokes
-  first, then the live events.
-- The tab also keeps the `WorkspaceFiles` of each workspace whose Files
-  part showed. The Files part connects it while it shows, so a return
-  shows the lists at once, and its socket asks only for the events after
-  its last event number. A sign-out and a failed create stop and forget it
-  with the other kept parts.
-- Nothing goes to browser storage. So a reload or a new tab starts empty,
-  and reads the stored history again.
-- The memory has no size limit. It keeps each workspace that the tab
-  showed until a reload or a sign-out.
+[The kept workspace](kept-workspace.md) gives the parts that the tab keeps
+for each workspace that it showed, and what a return reads again.
 
 ## The chat of the workspace
 
-`ChatArea` draws the chat in the centre: `WorkspaceChatView` with the kept
-`ChatController`, as
-[A chat that the app keeps](../../chat/README.md#a-chat-that-the-app-keeps)
-says.
-
-- The shell draws the start steps, with the time of each step, and the
-  sandbox bar, with Resume. It draws them from its own record of the
-  workspace, and gives them to the chat as `host`. The chat places them.
-- An open reads the workspace, shows it, and starts the stream. Only then
-  does a stopped or failed workspace resume. A Resume answers when the
-  server queued the start, with the state `starting`. The stored chat
-  shows during the start, and the stream brings the start steps and the
-  result. A failed resume keeps the workspace and its chat, with Try
-  again.
-- Connect, on the notice of a missing agent login, opens the Connect form
-  of the account.
-- On desktop, the chat shows the file and diff tabs of the saved view
-  after the session tabs. The file or diff tab of the address shows in
-  place of the chat of the session, and the tabs stay. No session tab is
-  the current one then.
-- A click on a session tab, a new session, or a reopened session makes
-  that session the active tab of the view. The address then goes back to
-  the chat.
-- Close on a file tab takes it out of the view. When it shows, the next
-  file tab shows, else the one before, else the chat.
-- A file of a finished turn opens its diff tab. A phone shows it in the
-  Files tab.
-- An archived workspace shows no file tabs and no file page.
-- A `center` part of the host takes the place of the whole chat, also of
-  its tabs.
-- When the features give the `tabs`, `transcript`, or `composer` slot, the
-  shell draws its own chat column with those slots, in place of the chat.
+[The chat of the workspace](screen-parts.md#the-chat-of-the-workspace)
+gives how `ChatArea` draws the kept chat in the centre, with its file
+tabs.
 
 ## The Files part
 
-The shell gives All files, Changes, and Checks as its own `files` part,
-with the [Files screens](../../files/README.md). A `files` part of the host
-takes its place. The address after the workspace names what shows:
-
-| Address | What shows |
-| ------- | ---------- |
-| `files` | The Files tab of a phone, with the list of the saved view |
-| `files/all`, `files/changes`, `files/checks` | That list |
-| `files/preview/<path>`, `files/source/<path>` | The file tab, in that mode |
-| `files/diff/<path>` | The diff tab |
-
-Each folder of a path is a part of the address. Another address under
-`files` shows the list of the saved view.
-
-- The kept chat loads and saves the workspace view. The shell reads the
-  tabs and the list from the chat, and changes them only through the
-  chat's `updateView`, so the view has one writer.
-- While the chat has not read the view, as during its load or after a
-  failed load, the shell saves nothing, so the saved tabs stay. The file
-  page still reads its file.
-- A click on a file or a diff saves its tab as the open and active tab,
-  then moves the address. A page that shows from an address, such as a
-  link or the browser history, saves its tab too.
-- A click on a list saves the list. On desktop the list belongs to the
-  right column, so the address keeps the tab of the centre. On a phone a
-  list is a page with its own address. An address that names a list saves
-  that list.
-- On a phone, a file or a diff shows as a page of the Files tab, with a
-  link back to All files or Changes.
-- The lists show while the sandbox is stopped or failed, from the copy
-  that the workspace keeps. While the sandbox starts, and while the app
-  refuses its start, the sandbox panel shows in place of All files and
-  Changes, and Checks stays. An archived workspace has no file lists, and
-  its right column shows the archived panel.
-- Copy and Download use the services of the app, as
-  [the Files screens](../../files/README.md#integration) say.
+[The Files part](screen-parts.md#the-files-part) gives the Files screens
+of the shell, their addresses, and the saved view.
 
 ## The tools part
 
-The shell gives its own Terminal, Preview, and Desktop tools, with the
-[terminal](../../terminal/README.md), the
-[previews](../../previews/README.md), and the
-[desktop](../../desktop/README.md). A `tools` part of the host takes their
-place. An archived workspace has no tools.
-
-- While the sandbox does not run, the tools show its state: starting,
-  stopped, failed, or refused. On desktop the panel keeps its tabs around
-  the state. A phone shows the state on the tool page. No tool mounts then,
-  so no tool reads its route or opens the terminal.
-- A `tools` part of the host shows only while the sandbox runs. The shell
-  shows the state of the sandbox in its place.
-
-| Address | What shows |
-| ------- | ---------- |
-| `terminal`, `desktop` | That tool |
-| `preview`, `preview/<previewId>` | The Preview tool, with that preview |
-
-- An address that names a tool shows it and saves it as `tool` of the
-  view. Without one, the saved view names the tool.
-- On desktop the panel has a tab for each tool. A click saves the tool,
-  and the address keeps the tab of the centre. Only a tool address follows
-  the new tool. A preview tab changes the address only from a preview
-  address, and otherwise picks the preview in the panel.
-- On a phone each tool is a page of the tab bar, with its own address.
-- The terminal mounts at its first show, then stays mounted and hidden
-  while another tool shows, so its connection stays. Its socket opens at
-  the `socketPath` of the terminal state through `openSocket` of the app's
-  event source, so the Mac app reaches its own Worker.
-- The Desktop tool mounts at each show, so it reads a new desktop URL.
-- Each tool reads its routes with the `fetch` of the app's `ApiClient`,
-  and the events of the kept `ToolEvents`.
+[The tools part](screen-parts.md#the-tools-part) gives the Terminal,
+Preview, and Desktop tools of the shell, and their addresses.
 
 ## The GitHub part
 
-The workspace screen keeps one GitHub store, through `useGitHubState` of
-[the GitHub screens](../../github/README.md), for the pull request bar or
-row and the Checks tab of the Files part. It reads with the `fetch` of
-the app, waits with the timer of the app, and takes the GitHub events of
-the ordered stream of the workspace.
-
-- On desktop, the bar tops the right column. After a merge, its Archive
-  opens the Archive question of the screen.
-- On a phone, the row sits under the header on every tab. A pull request
-  opens the Checks tab at its address.
-- An archived workspace keeps the bar on desktop. On a phone it shows only
-  its chat, so the screen reads no GitHub state there.
+[The GitHub part](screen-parts.md#the-github-part) gives the one GitHub
+store of the screen, and the pull request bar or row.
 
 ## The Mac bar and the owner
 
-- The owner picker of the header is the shell's own `owner` part,
-  `WorkspaceOwner`. It mounts `OwnerPicker` of the
-  [members UI](../../members/README.md).
-- In the Mac app, `WorkspaceMacBar` tops the main area above the whole
-  workspace, also while a file shows in place of the chat. It mounts
-  `AllowAllBar`, the bar of the 15 minutes, of the
-  [Mac commands](../../chat/device/README.md). A browser draws nothing
-  there.
+[The Mac bar and the owner](screen-parts.md#the-mac-bar-and-the-owner)
+gives the owner picker, the Mac bar, and the services of the org.
 
 ## Notices of a failed repair
 
-The workspace name and the start steps belong to no chat session. The
-workspace can refuse an update of one of them. After such a first loss, it
-asks the runner for a fresh full report, and the screen shows nothing.
-When the workspace refuses that report too, the repair failed. Then a bar
-below the header names the data that is out of date, with the time since
-the repair failed.
-[Lost workspace updates](../../../docs/protocol/chat-and-events.md#lost-workspace-updates)
-gives the rules. The Files panel shows the notices of the file lists, as
-[the Files screens](../../files/README.md#integration) say.
-
-- `HeaderNotices` keeps these failed repairs. It is a store of its own,
-  apart from `WorkspaceModel`. The tab keeps one for each workspace that it
-  showed, as [The kept workspace](#the-kept-workspace) says.
-- Only a marker with `repairFailed: true` and no session adds a failed
-  repair. A first loss adds nothing. The chat owns the markers of a session.
-- Only a later full report of the same kind in the stream clears a failed
-  repair: `workspace.title` for the name, and `start.updated` for the start
-  steps. A report of another kind and `workspace.updated` clear nothing.
-- A reply of a route clears nothing, such as the reply of Resume. Only the
-  order of the stream shows that a report is newer than the failure.
-- The notice of the start steps stays after the start ends, until a full
-  report of the start steps.
-- A further failure of a failed kind keeps the time of the first one.
-- The bar of the name comes first, then the bar of the start steps. On
-  desktop they sit above the session tabs. On a phone they sit above the
-  pull request row, on every tab.
-
-Dismiss hides a bar in the mounted view only:
-
-- It sends nothing to the Worker, and the failed repair stays.
-- A further failure of the same kind stays hidden.
-- Each mount of the screen starts a new view with `newView`, so a return
-  shows the bar again. A new tab reads the stored history, so it shows the
-  bar too.
-- A full report of that kind clears the failed repair. A failure after
-  that report shows again, also in the view where Dismiss hid the bar.
+After a failed repair, a bar below the header names the workspace data
+that is out of date. [Notices of a failed repair](repair-notices.md) says
+how the bars show, clear, and hide.
 
 ## Integration
 
@@ -303,70 +112,13 @@ move on every 30 seconds.
 
 ## A refused start
 
-`WorkspaceScreen` reads `model.startError`. While the sandbox is stopped or
-failed, a start error whose code is in `refusalCodes` of `SandboxNotice.tsx`
-shows the refused bar and panels: "The sandbox can't start", with the
-reason of the error and no action. Today the only such code is
-`user_suspended`. Other start errors keep the stopped and error notices.
-The header, the history, and the owner control stay. The Resume action and
-its failure toast stay as they were.
-
-`WorkspaceContext.onReassigned(workspace)` passes a confirmed new owner to
-`model.reassigned`. A feature that composes the owner slot must call it
-from the `onReassigned` of the owner picker.
-[Starts, stops, and builds](../../../docs/protocol/operator-actions.md#starts-stops-and-builds)
-states the refusal.
+[A refused start](refused-start.md) gives the refused bar and panels, the
+refusal of a suspended org, and the context that each part gets.
 
 ## Development page
 
-The development page runs the app shell with this workspace, its chat, and
-its Files panel over the [fake API](../../test-support/README.md). It uses
-React alone, with no Worker. The clock of the page stands still at
-`FAKE_TIME`, so each stored age stays as drawn. The product build does not
-include the page. From the repository root:
-
-```sh
-npx vite --config src/shell/workspace/dev/vite.config.js --port 5182
-```
-
-Then open `http://localhost:5182/src/shell/workspace/dev/`. The root of
-this server is the repository root, so it also serves the
-[Files development page](../../files/README.md#development) at
-`/src/files/dev.html`. The address holds the state of the page:
-
-| Parameter  | Values |
-| ---------- | ------ |
-| `repair`   | The failed repairs of the stored history: `name`, `start`, `all-files`, and `changes`, joined by commas. The default, `name,changes`, is the picture of `app/chat/lost-updates`. `none` stores none. |
-| `viewport` | `desktop`, or `phone`. The default follows the window. |
-| `scheme`   | `dark`, or `light`. The default follows the system. |
-| `view`     | The tab of a phone: `files`, the default, or `chat`, `terminal`, `preview`, or `desktop`. |
-| `list`     | The list of the Files panel: `changes`, the default, or `all`, or `checks`. |
-| `controls` | `off` hides the controls, as for a picture. |
-
-For example, `?viewport=phone&view=terminal&repair=name,start,all-files,changes`
-draws the bars of the name and the start steps on the Terminal tab of a
-phone. The Files tab shows the notices of the two lists.
-
-The controls have a row for each kind: Name, Start steps, All files, and
-Changes.
-
-- "Lose an update" sends the marker of a first loss, and nothing shows.
-- "Lose its fresh report" sends the marker of a failed repair, and the
-  notice shows.
-- "Send a full report" clears the notice of that kind only.
-- "Send a tree update" sends a tree delta, which leaves the notice of All
-  files.
-- "Open the workspace again" mounts a new workspace screen in the same
-  tab. The kept notices start a new view, so a bar that Dismiss hid shows
-  again, with no new read of the stored history.
-
-The page gives its own Files part, so the real chat fills the centre.
-`dev/main.tsx` makes the store of that part in a stable `create`, and
-`DevPage` connects it through `useWorkspaceStore`. The other parts are the
-app's own: the tools, the pull request bar, and the owner picker. The fake
-has no terminal socket, so the terminal shows Disconnected.
-
-Run the tests with `npm run test -- src/shell/workspace`.
+[Development page](development-page.md) says how to run the page over the
+fake API, with its address options, its controls, and the test command.
 
 ## Key code
 
@@ -375,11 +127,12 @@ Run the tests with `npm run test -- src/shell/workspace`.
   the notices, the columns, and the features. Its `Unavailable` view shows
   a 404 and a failed create.
 - `shown-workspaces.ts`: `ShownWorkspaces`, the kept workspaces of one tab
-  and one user, and `shownWorkspaces`, which clears them at a sign-out or a
-  sign-in of another user. It gives the events and a 404 of each kept
+  and one user. It gives the events and a 404 of each kept
   workspace to the creates of its org, and forgets a failed create.
   `ShownWorkspaces.view` gives a view of a workspace, and makes its parts
   at the first view.
+- `tab-memory.ts`: `shownWorkspaces`, which clears them at a sign-out or a
+  sign-in of another user.
 - `workspace-view.ts`: `WorkspaceView`, the store of one mounted view over
   the kept parts. Its snapshot is the detail of the model. `connect` shows
   the parts, and its result hides them.
@@ -444,7 +197,8 @@ Run the tests with `npm run test -- src/shell/workspace`.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
   states of the cloud computer, the start steps, and the Archive question.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
-  the refused notice.
+  the refused notice. `sandbox-view.ts` chooses the bar and the panels,
+  also for a suspended org and for the saved message of a failed start.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
 

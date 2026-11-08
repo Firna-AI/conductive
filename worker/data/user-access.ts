@@ -1,6 +1,7 @@
 import { HttpError } from '../http'
 import type { WorkspaceState } from '../../src/shared/workspaces'
 import { workspaceTokenResourcePredicate } from './workspace-token-access'
+import { suspendedOrgError } from './org-access'
 
 export interface UserAccess {
   id: string
@@ -33,8 +34,32 @@ export async function userSuspended(
 export async function requireActiveUser(
   db: D1Database,
   userId: string,
+  orgId?: string,
 ): Promise<void> {
-  if (await userSuspended(db, userId)) throw suspendedUserError()
+  await requireActiveAccess(db, orgId, userId)
+}
+
+async function requireActiveAccess(
+  db: D1Database,
+  orgId?: string,
+  userId?: string,
+  owner = false,
+): Promise<void> {
+  const row = await db
+    .prepare(
+      `SELECT
+    (SELECT suspended_at FROM orgs WHERE id = ?) AS orgSuspendedAt,
+    (SELECT suspended_at FROM users WHERE id = ?) AS userSuspendedAt`,
+    )
+    .bind(orgId ?? null, userId ?? null)
+    .first<{ orgSuspendedAt: number | null; userSuspendedAt: number | null }>()
+  if (row?.orgSuspendedAt != null) throw suspendedOrgError()
+  if (row?.userSuspendedAt != null)
+    throw owner ? suspendedWorkspaceOwnerError() : suspendedUserError()
+}
+
+export function requireActiveOrg(db: D1Database, orgId: string): Promise<void> {
+  return requireActiveAccess(db, orgId)
 }
 
 export function suspendedUserError(): HttpError {
@@ -52,8 +77,9 @@ export function suspendedWorkspaceOwnerError(): HttpError {
 export async function requireActiveWorkspaceOwner(
   db: D1Database,
   userId: string,
+  orgId?: string,
 ): Promise<void> {
-  if (await userSuspended(db, userId)) throw suspendedWorkspaceOwnerError()
+  await requireActiveAccess(db, orgId, userId, true)
 }
 
 export interface WorkspaceAccessStopRecord {
@@ -63,6 +89,7 @@ export interface WorkspaceAccessStopRecord {
   orgDeletedAt: number | null
   state: WorkspaceState
   ownerSuspended: boolean
+  orgSuspended: boolean
   revokedTokenRunning: boolean
   maintenanceAllowed: boolean
 }
@@ -76,6 +103,7 @@ export async function readWorkspaceAccessStop(
       `SELECT w.owner_user_id AS ownerUserId, w.org_id AS orgId, w.sandbox_id AS sandboxId,
          o.deleted_at AS orgDeletedAt, w.state,
          CASE WHEN u.suspended_at IS NOT NULL THEN 1 ELSE 0 END AS ownerSuspended,
+         CASE WHEN o.suspended_at IS NOT NULL THEN 1 ELSE 0 END AS orgSuspended,
          CASE WHEN t.revoked_at IS NOT NULL AND w.state IN
            ('starting', 'ready', 'working', 'unread', 'input')
            THEN 1 ELSE 0 END AS revokedTokenRunning,
@@ -90,9 +118,13 @@ export async function readWorkspaceAccessStop(
     .first<
       Omit<
         WorkspaceAccessStopRecord,
-        'ownerSuspended' | 'revokedTokenRunning' | 'maintenanceAllowed'
+        | 'ownerSuspended'
+        | 'orgSuspended'
+        | 'revokedTokenRunning'
+        | 'maintenanceAllowed'
       > & {
         ownerSuspended: number
+        orgSuspended: number
         revokedTokenRunning: number
         maintenanceAllowed: number
       }
@@ -101,6 +133,7 @@ export async function readWorkspaceAccessStop(
     ? {
         ...row,
         ownerSuspended: row.ownerSuspended === 1,
+        orgSuspended: row.orgSuspended === 1,
         revokedTokenRunning: row.revokedTokenRunning === 1,
         maintenanceAllowed: row.maintenanceAllowed === 1,
       }

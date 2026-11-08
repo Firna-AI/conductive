@@ -32,6 +32,7 @@ export function createWorkspaceInputActivity(
       env,
       dependencies,
       storage,
+      extendDeadline: (operation) => controller.extendLifecycleInput(operation),
       capture: (at) =>
         local(async () => {
           await controller.recordLifecycleInput(at)

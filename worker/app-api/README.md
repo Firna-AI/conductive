@@ -21,7 +21,8 @@ repository selection, sections, and workspace metadata.
 The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
 The [archive route](archive.ts) uses the real workspace object to check saved work and remove its sandbox.
 `membersRoute` alone serves the org list and one org.
-It also serves org recovery, roles, invitations, and workspace ownership.
+It also serves Leave, org recovery, roles, invitations, and workspace ownership.
+Leave keeps the existing last-active-admin rule and native owner-change maintenance.
 
 ## Rules
 
@@ -58,6 +59,10 @@ It also serves org recovery, roles, invitations, and workspace ownership.
 - `chatLifecycleRoute` gives the lifecycle handler the runner archive as a
   getter, so only a build or a refresh reads it. It gives the first message
   of a create to `acceptLifecycleFirstMessage` of the workspace object.
+
+Org suspension keeps shell reads available.
+The common browser gate refuses every org write except Leave.
+The view, read-mark, shared-shell, settings, repository, and archive SQL writes also check stored org state, so an earlier permission read cannot admit a later write.
 
 ## Development
 

@@ -1,12 +1,12 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError, requiredString } from '../http'
 import { readWorkspace, workspaceView } from '../lifecycle/workspace-data'
-import { requireOrgMember } from '../members/permissions'
 import type { RequestContext } from '../security/gate'
 import {
   invalidShellInput,
   optionalShellPosition,
   optionalShellString,
+  requireShellWriter,
 } from './feature-shell-access'
 import {
   orderedSectionWorkspaceIds,
@@ -28,7 +28,7 @@ export async function featureWorkspaceWrite(
   if (!context.org) throw invalidShellInput()
   const orgId = context.org.id
   const userId = context.user.id
-  await requireOrgMember(env.DB, orgId, userId)
+  await requireShellWriter(env.DB, orgId, userId)
   const current = await readWorkspace(env.DB, orgId, workspaceId)
   requireWritableWorkspace(current)
   const nameInput = optionalShellString(context.body?.name)
@@ -61,7 +61,7 @@ export async function featureWorkspaceWrite(
       now: dependencies.now(),
     }))
   ) {
-    await requireOrgMember(env.DB, orgId, userId)
+    await requireShellWriter(env.DB, orgId, userId)
     requireWritableWorkspace(await readWorkspace(env.DB, orgId, workspaceId))
     throw sectionNotFound()
   }

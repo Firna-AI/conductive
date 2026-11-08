@@ -31,17 +31,19 @@ function newestLog(
 }
 
 /**
- * The Cloud computer tab of a member who is not an admin: the read-only
- * view of the members UI, with the live builds, log, and settings of the
- * computer model. The view follows a running build as the tab of an admin
- * does, and it shows no action, because only an admin changes the cloud
- * computer (decision 57).
+ * The Cloud computer tab of a member who is not an admin, and of everyone
+ * in a suspended org: the read-only view of the members UI, with the live
+ * builds, log, and settings of the computer model. The view follows a
+ * running build as the tab of an admin does, and it shows no action,
+ * because only an admin changes the cloud computer (decision 57), and
+ * nobody in a suspended org.
  */
 export function MemberComputer(props: {
   org: OrgSummary
   computer: ComputerModel
+  suspended: boolean
 }) {
-  const { org, computer } = props
+  const { org, computer, suspended } = props
   const model = useOrgModel(org.id)
   const builds = useStore(model.builds)
   const settings = useStore(computer.settings)
@@ -59,6 +61,7 @@ export function MemberComputer(props: {
         now={now}
         org={org}
         settings={settings.value}
+        suspended={suspended}
         timeZone={timeZone}
         viewport={viewport}
       />
@@ -76,7 +79,7 @@ export function MemberComputer(props: {
   }
   return (
     <ViewportScope viewport={viewport}>
-      <MemberComputerIntro orgName={org.name} />
+      <MemberComputerIntro orgName={org.name} suspended={suspended} />
       {failure ? (
         <LoadFailure
           message={failure.message}

@@ -1,3 +1,4 @@
+import { activeOrgPredicate } from '../data/org-access'
 import type { WorkspaceTarget } from './types'
 import {
   activeWorkspaceOwnerPredicate,
@@ -6,6 +7,7 @@ import {
 
 export interface WorkspaceAccessTarget extends WorkspaceTarget {
   ownerActive: number
+  orgActive: number
   sandboxAllowed: number
 }
 
@@ -18,6 +20,7 @@ export function readWorkspaceTarget(
   return db
     .prepare(
       `SELECT w.org_id AS orgId, w.id AS workspaceId, w.sandbox_id AS sandboxId, w.state,
+       CASE WHEN ${activeOrgPredicate('o')} THEN 1 ELSE 0 END AS orgActive,
        CASE WHEN ${activeWorkspaceOwnerPredicate} THEN 1 ELSE 0 END AS ownerActive,
        CASE WHEN ${sandboxAccessPredicate} THEN 1 ELSE 0 END AS sandboxAllowed
      FROM workspaces w JOIN orgs o ON o.id = w.org_id

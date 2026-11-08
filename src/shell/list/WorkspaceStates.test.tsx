@@ -40,6 +40,8 @@ describe('workspace states', () => {
             workspace,
             viewer: fakeUser,
             sandbox: sandboxState(workspace),
+            readOnly: false,
+            panel: null,
             viewport: 'desktop',
             view: [],
             stream: open.stream,

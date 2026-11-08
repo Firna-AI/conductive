@@ -1,3 +1,5 @@
+import { requireActiveOrg } from '../data/user-access'
+import { HttpError } from '../http'
 import { runningBuild } from './build-data'
 import type { ImageRuntime } from './image-builds'
 import { pendingImageCleanup } from './image-maintenance-data'
@@ -57,6 +59,7 @@ export async function readImageSchedule(
   }
 }
 
+/** Pending cleanup stays scheduled while suspension disables idle refresh. */
 export async function scheduleIdleImage(
   runtime: ImageRuntime,
   orgId: string,
@@ -67,5 +70,13 @@ export async function scheduleIdleImage(
     buildId: null,
     nextAt: now + IMAGE_DAY_MS,
   })
+  if (next.buildId === null) {
+    try {
+      await requireActiveOrg(runtime.env.DB, orgId)
+    } catch (error) {
+      if (error instanceof HttpError && error.code === 'org_suspended') return
+      throw error
+    }
+  }
   await runtime.scheduler.schedule(orgId, software, next.nextAt, next.buildId)
 }

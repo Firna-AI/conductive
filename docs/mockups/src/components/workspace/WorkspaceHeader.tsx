@@ -38,6 +38,8 @@ export function WorkspaceHeader(props: {
   canReassign: boolean
   /** The workspace can be archived: it is not archived yet. */
   archivable: boolean
+  /** The list that Back opens on a phone, such as that of a suspended org. */
+  back?: string
 }) {
   const { workspace, name } = props
   const repository = repositories[workspace.repository].name
@@ -57,7 +59,7 @@ export function WorkspaceHeader(props: {
   if (props.viewport === 'mobile') {
     return (
       <header className={styles.mobile}>
-        <ScreenLink asChild to={paths.shell}>
+        <ScreenLink asChild to={props.back ?? paths.shell}>
           <IconButton icon={ChevronLeft} label="All workspaces" />
         </ScreenLink>
         <div className={styles.titles}>

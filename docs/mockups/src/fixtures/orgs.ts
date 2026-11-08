@@ -51,6 +51,12 @@ export const installations = [
 export const firstInstallation = installations[2]
 
 /**
+ * The account where a member of Acme reaches the GitHub App: acme, which
+ * owns the repositories of Acme. It stays after a leave of the org.
+ */
+export const memberInstallation = installations[0]
+
+/**
  * An org that an admin deleted: its cloud computers stopped, and it is
  * hidden from its members until the date when everything is deleted.
  */
@@ -58,3 +64,9 @@ export const deletedOrg = {
   org: 'acme',
   deletes: '12 November',
 } as const satisfies { org: OrgKey; deletes: string }
+
+/**
+ * An org that the operator suspended: its cloud computers stop, and its
+ * members can open it and read everything in it, without changes.
+ */
+export const suspendedOrg: OrgKey = 'acme'

@@ -8,7 +8,7 @@ import { HttpError } from '../http'
 import type { LifecycleEnvironment } from './runtime'
 import type { StoredWorkspaceStartJob } from './start-job-codec'
 import { START_JOB_KEY } from './start-storage'
-import { IDLE_MS } from './durable-types'
+import { DISK_KEEPALIVE_MS, IDLE_MS } from './durable-types'
 import type { FirstWorkspaceMessage } from './workspace-runtime'
 import type { UserMessage } from '../../src/shared/messages'
 import { holdMachineCheckpoint } from './runtime-checkpoint-test-support'
@@ -85,6 +85,28 @@ export class WorkspaceRuntimeFixture extends Workspace {
       target,
       () => [{ storage: this.ctx.storage, fire: () => this.alarm() }],
     )
+  }
+  async fireScheduledAlarm(): Promise<boolean> {
+    if ((await this.ctx.storage.getAlarm()) === null) return false
+    await this.tick()
+    return true
+  }
+  async makeDiskRetentionDue(): Promise<void> {
+    const state = await this.readLifecycle()
+    if (state?.state !== 'stopped') throw new Error('No stopped lifecycle')
+    const nextDiskKeepaliveAt = this.clock.now() - 1
+    const stoppedAt = nextDiskKeepaliveAt - DISK_KEEPALIVE_MS
+    await this.ctx.storage.put('lifecycle:state', {
+      ...state,
+      stoppedAt,
+      nextDiskKeepaliveAt,
+    })
+    await this.env.DB.prepare(
+      'UPDATE workspaces SET stopped_at = ?, next_disk_keepalive_at = ? WHERE id = ?',
+    )
+      .bind(stoppedAt, nextDiskKeepaliveAt, state.workspaceId)
+      .run()
+    await this.ctx.storage.setAlarm(nextDiskKeepaliveAt)
   }
   alarmAt(): Promise<number | null> {
     return this.ctx.storage.getAlarm()

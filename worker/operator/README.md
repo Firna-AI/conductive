@@ -2,7 +2,7 @@
 
 The operator is the person who runs the app, as opposed to the admin of an
 org inside the app. This folder holds the operator's API in the Worker. It
-has one action: suspend a user, for example after an abuse report. A
+can suspend a user or an org after an abuse report. A user
 suspension signs the user out, stops every cloud computer that the user
 owns, and blocks each new start.
 
@@ -66,6 +66,39 @@ curl -X POST "$APP/api/operator/users/<githubId>/suspension" \
   --data '{}'
 ```
 
+## Suspend an org
+
+Send `POST /api/operator/orgs/<orgId>/suspension` with `{}` through the same operator gate.
+`orgSuspensionPath` builds the encoded path.
+The reply is `OrgSuspensionResponse`, with `orgId`, `suspendedAt`, and the two pending lists of the user action.
+An unknown org gets 404 `org_not_found`.
+A repeat keeps the first suspension time and operator.
+Only internal storage holds the operator ID.
+
+The action revokes every workspace token and preview hostname of the org before it asks for stops.
+It stops every workspace and unfinished build of the org, whoever owns or started it.
+The native workspace and image alarms retry incomplete cleanup after runtime restarts.
+Failed creates stay in `pendingWorkspaceIds` while their sandbox cleanup records remain, including after their workspace rows are removed.
+The action reads those cleanup records after workspace processing and lists each workspace ID once.
+The existing native cleanup alarm retries Delete for those computers.
+The org remains readable, and members keep their account sessions and other orgs.
+`OrgSummary.suspension` gives members the suspension time.
+
+Org writes get 403 `org_suspended`, with the abuse address from the product domain.
+The exact POST Leave route stays open under its existing active-admin rule.
+The shared org SQL predicate also guards member mutations, invitation acceptance, build admission, publication, and refresh claims.
+Account sign-in still saves verified emails without accepting an invitation.
+
+Every sandbox and token check uses the shared workspace rule, which also requires an org that is not suspended.
+Each start and build step uses the same suspension check as user suspension.
+An image source grant cannot issue or release credentials for a suspended org.
+A pending allocation still recovers its saved request before cleanup removes the resource.
+An org suspension prevents every disk retention resume, including deleted-org maintenance and a later owner change.
+It also blocks lifecycle activity and turn deadline extensions inside the workspace queue.
+An activity body that finishes after suspension gets 403 `org_suspended`.
+The refusal keeps the activity time, provider deadline, and pending stop alarm unchanged.
+No route lifts an org suspension.
+
 ## What a suspension blocks
 
 The suspension stays on the user record. Each of these entries reads it:
@@ -111,7 +144,7 @@ says.
 `sandboxAccessPredicate` in [`sandbox-access.ts`](../data/sandbox-access.ts)
 is the one rule of interactive access to a sandbox. The workspace is not
 archived, has a sandbox, and runs. Its org is not deleted, and its owner is
-not suspended. Each check reads the current owner again, so the rule holds
+not suspended. Its org is not suspended. Each check reads the current owner again, so the rule holds
 for as long as the owner stays suspended, also while a stop is pending.
 
 - For a workspace whose owner is suspended, a new preview, a preview
@@ -180,13 +213,13 @@ one row with `readWorkspaceAccessStop` from
 of the owner, the state, the sandbox, the org, and a revoked workspace
 token. The workspace must stop in either of these cases:
 
-- Its owner is suspended.
+- Its owner or its org is suspended.
 - It runs with a revoked workspace token, and no start waits. A waiting
   start gives it a new token, so that start goes on.
 
 The stop takes these steps:
 
-1. For a suspended owner, it cancels the active start. In both cases it
+1. For a suspended owner or org, it cancels the active start. In both cases it
    revokes the preview hostnames of the workspace.
 2. While a start still runs, it sets an alarm one second later and
    reports that the stop is pending.
@@ -197,8 +230,8 @@ The stop takes these steps:
    `user_suspended` for a suspended owner.
 4. A stop that Boat has not confirmed, or a failed stop, sets an alarm 30
    seconds later and reports that the stop is pending.
-5. After a confirmed stop, it deletes the alarm only for a suspended
-   owner. An owner who is not suspended keeps the disk retention alarm.
+5. After a confirmed stop, it deletes the alarm for a suspended
+   owner or org. An owner who is not suspended keeps the disk retention alarm.
 
 Each alarm of the workspace object runs this check. So a stop goes on
 without the operator, also after the workspace gets another owner.
@@ -239,6 +272,8 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
 - [`route.ts`](route.ts): `handleOperatorRequest`, the route and the
   operator check. `route` in [`worker/routes.ts`](../routes.ts) calls it
   first, after the gate.
+- [`suspend-org.ts`](suspend-org.ts) and [`org-data.ts`](org-data.ts): the org action, stored suspension, revocations, and pending resources.
+- [`org-access.ts`](../data/org-access.ts): the active-org SQL predicate and the org error.
 - [`suspend-user.ts`](suspend-user.ts): `suspendUser`, the steps and the
   pending lists.
 - [`data.ts`](data.ts): `recordUserSuspension`, which records the

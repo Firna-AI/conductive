@@ -8,8 +8,14 @@ drafts, and New workspace.
 - The app runs every cloud computer in its own Boat account, so no org has
   a Boat key. The app has no key screen, tab, notice, or Get started step,
   and no text of the app names Boat.
-- Get started has three steps: the GitHub App, the first org, and Claude or
+- Get started has three steps: the GitHub App, an org, and Claude or
   Codex. A reply of the API names only these steps.
+- Only the GitHub App step comes from that reply. The org step and the org
+  of Get started follow the org list, also a deleted org, as the address
+  `/` does. The agent step follows the logins of the account. So a leave of
+  the last org offers Create org again, and a connect on Account completes
+  its step at once. `setupSteps` in `setup-steps.ts` derives them, and each
+  screen reads them through `AppModel.getStarted`.
 - The sign-in screen shows the agreement to the Terms and the Privacy
   notice above Continue with GitHub. Its words come from `termsAgreement`
   in `src/marketing/legal-text.ts`, and its links lead to the marketing
@@ -20,8 +26,8 @@ drafts, and New workspace.
 - The address `/` shows the invitations of the user first, in the frame of
   the app: each org with its invited email and Accept invitation, then
   Continue to workspaces. Without invitations, or after Continue to
-  workspaces, it opens Get started or the first org. The `?invite=` link of
-  an invitation email leads there.
+  workspaces, it opens Get started or the org of Get started. The
+  `?invite=` link of an invitation email leads there.
 - The account of the Mac app shows This Mac after the sign-in section. A
   browser shows none and asks no Mac.
 - Create org asks for the name and the initials, and lists the
@@ -30,6 +36,8 @@ drafts, and New workspace.
   GitHub IDs of the chosen ones.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
+- A suspended org shows its notice, and no action that it refuses, as
+  [A suspended org](suspended-org.md) says.
 - The Cloud computer tab names the software of the base image from the
   settings reply. An older reply without it names no software.
 - A step of a panel, by a key or a drag, starts from the width that the

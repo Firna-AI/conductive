@@ -8,6 +8,7 @@ import { TerminalView } from '../components/tools/TerminalView'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
 import {
   archivedSections,
+  suspendedSections,
   workspaceSections,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
@@ -20,6 +21,7 @@ import { orgs } from '../fixtures/orgs'
 import { freshSessionPrompt, workspaceSession } from '../fixtures/terminal'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -56,11 +58,13 @@ export function FilesContent(props: {
   viewport: Viewport
 }) {
   const { state } = props
-  if (state.sandbox === 'archived') {
-    return <SandboxPanel action={false} state="archived" />
+  const phone = props.viewport === 'mobile'
+  const panel = panelState(state)
+  if (panel?.problem === 'archived') {
+    return <SandboxPanel phone={phone} state={panel} />
   }
   const open = openFile(state)
-  if (props.viewport === 'mobile' && open) {
+  if (phone && open) {
     const back =
       open === 'diff'
         ? { label: 'Changes', to: paths.filesChanges }
@@ -68,11 +72,8 @@ export function FilesContent(props: {
     return <FilePage back={back} view={open} />
   }
   const placeholder =
-    state.sandbox === 'starting' || state.sandbox === 'refused' ? (
-      <SandboxPanel
-        action={props.viewport === 'mobile'}
-        state={state.sandbox}
-      />
+    panel && (panel.problem === 'starting' || panel.problem === 'refused') ? (
+      <SandboxPanel phone={phone} state={panel} />
     ) : undefined
   return (
     <FilesPanel
@@ -93,9 +94,8 @@ export function ToolContent(props: {
 }) {
   const { state } = props
   const mobile = props.viewport === 'mobile'
-  if (state.sandbox !== 'ready') {
-    return <SandboxPanel action={mobile} state={state.sandbox} />
-  }
+  const panel = panelState(state)
+  if (panel) return <SandboxPanel phone={mobile} state={panel} />
   switch (state.tool) {
     case 'terminal':
       return isNew(state) ? (
@@ -116,22 +116,27 @@ export function ToolContent(props: {
 
 /**
  * The sidebar beside an open workspace, which shows its current status. An
- * archived workspace sits in the open Archived group.
+ * archived workspace sits in the open Archived group. In a suspended org
+ * every row shows stopped, and nothing in the sidebar changes the org.
  */
 export function workspaceSidebar(
   workspace: Workspace,
   status: ActivityStatus,
+  suspended: boolean,
 ): ReactNode {
   if (status !== 'archived') {
-    const sections = workspaceSections({ workspace, status })
-    return <Sidebar org={orgs.acme} sections={sections} />
+    const sections = suspended
+      ? suspendedSections(workspace)
+      : workspaceSections({ workspace, status })
+    return <Sidebar org={orgs.acme} sections={sections} suspended={suspended} />
   }
-  const list = archivedSections(workspace)
+  const list = archivedSections(workspace, suspended)
   return (
     <Sidebar
       archived={list.archived}
       org={orgs.acme}
       sections={list.sections}
+      suspended={suspended}
     />
   )
 }

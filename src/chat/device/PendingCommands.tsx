@@ -19,16 +19,18 @@ import { answerOf, canAnswer, type DeviceSnapshot } from './device-snapshot'
  * A command that waits for its answer, as a compact message (decision 62):
  * the exact command, the Mac, the time limit, and Details. The Mac app on
  * the Mac that got the request shows Deny and Allow. Every other window
- * shows the state only, because only that Mac app can allow the command.
+ * shows the state only, because only that Mac app can allow the command. A
+ * read-only workspace takes no answer, so it shows the state only too.
  */
 function PendingCommand(props: {
   request: DeviceCommandRecord
   devices: DeviceSnapshot
   readers: RequestReaders
+  readOnly: boolean
   onAnswer: (requestId: string, action: DeviceApprovalAction) => void
 }) {
   const { request, devices } = props
-  const choices = canAnswer(devices, request)
+  const choices = !props.readOnly && canAnswer(devices, request)
   const mac = macLabel(request, choices)
   return (
     <section
@@ -66,6 +68,8 @@ export function PendingCommands(props: {
   requests: readonly DeviceCommandRecord[]
   devices: DeviceSnapshot
   readers: RequestReaders
+  /** The workspace takes no answer: it is archived, or its org is suspended. */
+  readOnly?: boolean
   onAnswer: (requestId: string, action: DeviceApprovalAction) => void
 }) {
   if (props.requests.length === 0) return null
@@ -80,6 +84,7 @@ export function PendingCommands(props: {
           devices={props.devices}
           key={request.requestId}
           onAnswer={props.onAnswer}
+          readOnly={props.readOnly ?? false}
           readers={props.readers}
           request={request}
         />

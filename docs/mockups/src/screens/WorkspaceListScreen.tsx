@@ -3,8 +3,10 @@ import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
+import { SuspendedOrgPanel } from '../components/orgs/SuspendedOrgNotice'
 import {
   newOrgSections,
+  suspendedSections,
   workspaceSections,
   type ListDrag,
   type ListMenu,
@@ -15,6 +17,7 @@ import {
   orgList,
   orgListWithLabs,
   orgs,
+  suspendedOrg,
   type Org,
 } from '../fixtures/orgs'
 import { anotherOrg, newOrg } from '../fixtures/repositories'
@@ -38,9 +41,19 @@ export const workspaceListSchema = {
   properties: {
     /**
      * The workspaces of Acme, the first org of a new user or another new
-     * org, both without workspaces, or a deleted org.
+     * org, both without workspaces, a deleted org, Acme after the operator
+     * suspended it, or a deleted org that the operator suspended.
      */
-    list: { enum: ['workspaces', 'new-org', 'another-org', 'deleted'] },
+    list: {
+      enum: [
+        'workspaces',
+        'new-org',
+        'another-org',
+        'deleted',
+        'suspended',
+        'deleted-suspended',
+      ],
+    },
     /** The menu of a section, a workspace dragged, or the org switcher. */
     menu: { enum: ['none', 'section', 'drag', 'orgs'] },
   },
@@ -81,11 +94,25 @@ const newOrgs: Readonly<
 
 function MobileList(props: { state: WorkspaceListState }) {
   const { list, menu } = props.state
-  if (list === 'deleted') {
+  if (list === 'deleted' || list === 'deleted-suspended') {
     return (
       <MobileFrame>
         <ListHeader org={orgs[deletedOrg.org]} settings={false} />
-        <DeletedOrg />
+        <DeletedOrg suspended={list === 'deleted-suspended'} />
+      </MobileFrame>
+    )
+  }
+  if (list === 'suspended') {
+    // A suspended org has no section menus, so only the org switcher opens.
+    return (
+      <MobileFrame>
+        <HomeList
+          menuStyle="sheet"
+          org={orgs[suspendedOrg]}
+          sections={suspendedSections()}
+          suspended
+        />
+        {menu === 'orgs' ? sheets.orgs : null}
       </MobileFrame>
     )
   }
@@ -105,6 +132,34 @@ function MobileList(props: { state: WorkspaceListState }) {
 }
 
 /**
+ * The list of a suspended org on desktop. The main area shows the notice
+ * of the org in place of New workspace. A narrow window shows the list as
+ * a page, with the notice at its top.
+ */
+function SuspendedList() {
+  const org = orgs[suspendedOrg]
+  const sections = suspendedSections()
+  return (
+    <AppFrame
+      rail={{ ...acmeRail, suspended: suspendedOrg }}
+      sidebar={<Sidebar org={org} sections={sections} suspended />}
+    >
+      <div className={`${responsive.wideOnly} ${styles.choose}`}>
+        <SuspendedOrgPanel org={org} />
+      </div>
+      <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
+        <HomeList
+          menuStyle="anchored"
+          org={org}
+          sections={sections}
+          suspended
+        />
+      </div>
+    </AppFrame>
+  )
+}
+
+/**
  * The workspace list of an org, grouped in the sections that the user made.
  * On a phone and in a narrow window it is the home screen. On a wide
  * desktop the list is the sidebar, and the main area waits for a choice.
@@ -115,7 +170,8 @@ export function WorkspaceListScreen(props: {
 }) {
   const { list, menu } = props.state
   if (props.viewport === 'mobile') return <MobileList state={props.state} />
-  if (list === 'deleted') {
+  if (list === 'suspended') return <SuspendedList />
+  if (list === 'deleted' || list === 'deleted-suspended') {
     const rail: RailState = {
       orgs: orgList,
       current: deletedOrg.org,
@@ -123,7 +179,7 @@ export function WorkspaceListScreen(props: {
     }
     return (
       <AppFrame rail={rail}>
-        <DeletedOrg />
+        <DeletedOrg suspended={list === 'deleted-suspended'} />
       </AppFrame>
     )
   }

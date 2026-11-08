@@ -77,7 +77,7 @@ function Tab(props: {
 export function SessionTabs(props: {
   tabs: readonly SessionTab[]
   mobile: boolean
-  /** An archived workspace: no new session, and no rename. */
+  /** A read-only chat: no new session and no rename. */
   readOnly: boolean
   renaming: string | null
   historyOpen: boolean

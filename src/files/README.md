@@ -42,8 +42,9 @@ const { store: files } = useWorkspaceStore(
 )
 ```
 
-The kept store reads the file routes with the `fetch` of the app's
-`ApiClient`, so the Mac app reads them from its own Worker. Its stream is
+The kept store reads the file routes with the `fetch` of the org's
+`ApiClient`, so the Mac app reads them from its own Worker, and a refusal
+of a suspended org marks the org. Its stream is
 the event source of the app, after the last event number of the store.
 When the connection drops, the stream opens again as
 [Data lifecycle](../app/README.md#data-lifecycle) says. So a return shows

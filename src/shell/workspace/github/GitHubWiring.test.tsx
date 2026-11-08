@@ -12,6 +12,10 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../../test-support/mount'
+import {
+  orgSuspendedBody,
+  serveSuspendedAcme,
+} from '../../../test-support/suspended-org'
 import { click, settle } from '../../test-mount'
 import { filesHref } from '../files/files-address'
 import { emit } from '../kept-test-kit'
@@ -75,5 +79,29 @@ describe('the GitHub state in the workspace', () => {
       line.startsWith(`GET ${githubPaths.banner(org, id)}`),
     )
     expect(githubReads).toEqual([])
+  })
+
+  test('in a suspended org, the bar of a merged pull request offers no Archive', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ banner: 'merged' })
+    serveSuspendedAcme(server)
+    const { view } = await openTab(server, routes.workspace(org, id))
+    const column = byLabel('Files and tools', view)
+    expect({
+      merged: (column.textContent ?? '').includes('Merged into'),
+      archive: queryByRole('button', 'Archive', column),
+    }).toEqual({ merged: true, archive: null })
+  })
+
+  test('a GitHub read that the API refuses as suspended marks the org, also while the org list shows it in use', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    server.json('GET', githubPaths.banner(org, id), orgSuspendedBody, 403)
+    const { view } = await openTab(server, routes.workspace(org, id))
+    const text = view.textContent ?? ''
+    expect({
+      refused: text.includes("The sandbox can't start"),
+      words: text.includes(orgSuspendedBody.error.message),
+    }).toEqual({ refused: true, words: true })
   })
 })

@@ -23,8 +23,11 @@ export interface PullRequestBarProps {
   /** The owner and the state of the workspace decide whether Archive shows. */
   workspace: Pick<Workspace, 'owner' | 'state'>
   viewer: GitHubViewer
-  /** Opens the app's Archive flow, with its check for unpushed work. */
-  onArchive: () => void
+  /**
+   * Opens the app's Archive flow, with its check for unpushed work, or null
+   * when the app offers no Archive, as in a suspended org.
+   */
+  onArchive: (() => void) | null
 }
 
 /**
@@ -77,8 +80,11 @@ export function PullRequestBar(props: PullRequestBarProps) {
   }
   const status = bannerStatus(banner, checks.checks)
   const detail = bannerDetail(banner, checks.checks, props.now)
+  const { onArchive } = props
   const archive =
     banner.state === 'merged' && canArchive(props.workspace, props.viewer)
+      ? onArchive
+      : null
   return (
     <div className={classes(styles.bar, styles[status.tone])}>
       <span className={styles.number}>{`#${banner.pullRequest.number}`}</span>
@@ -90,7 +96,7 @@ export function PullRequestBar(props: PullRequestBarProps) {
       ) : null}
       <span className={styles.actions}>
         {archive ? (
-          <ActionButton icon={Archive} onPress={props.onArchive}>
+          <ActionButton icon={Archive} onPress={archive}>
             Archive
           </ActionButton>
         ) : null}

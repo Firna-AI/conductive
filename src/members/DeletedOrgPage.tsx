@@ -16,6 +16,11 @@ export type DeletedOrgPageProps = {
   org: OrgSummary
   viewport: Viewport
   timeZone?: string
+  /**
+   * The org is suspended. It refuses a restore, so the page offers none and
+   * says nothing of one. The notice of the org, above the page, says why.
+   */
+  suspended?: boolean
   /** The org is back. The shell shows it as an active org again. */
   onRestored: (org: OrgSummary) => void
 }
@@ -26,12 +31,13 @@ export type DeletedOrgPageProps = {
  * `deletion.deletesAt`. Restore brings the org back as it was, and its
  * workspaces start again only when they open. Only an admin gets Restore.
  * Mount it in the main area of the app, which it fills. It keys its state
- * to the org and the viewer's role, so an error of one org never shows on
- * another, and an old answer calls no callback.
+ * to the org, the viewer's role, and the suspension of the org. So an error
+ * of one org never shows on another, and an old answer calls no callback.
  */
 export function DeletedOrgPage(props: DeletedOrgPageProps) {
   const { org } = props
-  return <DeletedOrg key={`${org.id}/${org.role}`} {...props} />
+  const suspended = props.suspended ?? false
+  return <DeletedOrg key={`${org.id}/${org.role}/${suspended}`} {...props} />
 }
 
 function DeletedOrg(props: DeletedOrgPageProps) {
@@ -39,6 +45,7 @@ function DeletedOrg(props: DeletedOrgPageProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { api, org } = props
+  const restorable = !props.suspended
   const admin = org.role === 'admin'
   const title = org.deletion
     ? `${org.name} is deleted on ${deletionDay(org.deletion.deletesAt, props.timeZone)}`
@@ -61,7 +68,7 @@ function DeletedOrg(props: DeletedOrgPageProps) {
     <ViewportScope viewport={props.viewport}>
       <EmptyState
         action={
-          admin ? (
+          admin && restorable ? (
             <ActionButton
               busy={busy}
               icon={ArchiveRestore}
@@ -73,9 +80,11 @@ function DeletedOrg(props: DeletedOrgPageProps) {
           ) : undefined
         }
         body={
-          admin
-            ? "Its cloud computers are stopped, and its members can't open it. Restore it to bring back its workspaces, chats, and settings."
-            : 'Its cloud computers are stopped. An admin can restore it until then.'
+          !restorable
+            ? "Its cloud computers are stopped, and its members can't open it."
+            : admin
+              ? "Its cloud computers are stopped, and its members can't open it. Restore it to bring back its workspaces, chats, and settings."
+              : 'Its cloud computers are stopped. An admin can restore it until then.'
         }
         icon={ArchiveRestore}
         title={title}

@@ -1,29 +1,18 @@
 import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { Archive, Ban, CircleAlert, CirclePause } from 'lucide-react'
+import { Archive, CircleAlert, CirclePause } from 'lucide-react'
 import { archivedOn } from '../../fixtures/archive'
 import { ActionButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
 import { Notice } from '../common/Notice'
+import { refusedIcon } from '../orgs/suspension'
 import styles from './SandboxNotice.module.css'
-
-/**
- * Why the sandbox is not running. `refused` is a start that the app
- * refuses, such as while the owner of the workspace is suspended.
- */
-export type SandboxProblem = 'stopped' | 'error' | 'refused' | 'archived'
-
-/**
- * What the bar in place of the composer shows. A refused start carries the
- * words of the app's refusal, so one notice serves every reason. A start
- * that failed can carry the message that the app saved for it, such as the
- * 20-minute limit of a start.
- */
-export type SandboxNoticeState =
-  | { problem: 'stopped' | 'archived' }
-  | { problem: 'error'; message?: string }
-  | { problem: 'refused'; reason: string }
+import type {
+  SandboxNoticeState,
+  SandboxPanelState,
+  SandboxProblem,
+} from './sandboxNoticeState'
 
 type Problem = {
   icon: LucideIcon
@@ -63,7 +52,7 @@ const problems: Readonly<Record<SandboxProblem, Problem>> = {
     tone: 'danger',
   },
   refused: {
-    icon: Ban,
+    icon: refusedIcon,
     title: "The sandbox can't start",
     body: history,
     panelBody: history,
@@ -119,14 +108,16 @@ export function SandboxBar(props: SandboxNoticeState) {
 
 /**
  * What a panel shows while the sandbox is not running. The desktop layout
- * leaves the action to the chat bar beside it.
+ * leaves the action and the words of a refusal to the chat bar beside it. A
+ * phone shows the bar only on the Chat tab, so its panels show them too.
  */
 export function SandboxPanel(props: {
-  state: 'starting' | SandboxProblem
-  action: boolean
+  state: SandboxPanelState
+  phone: boolean
 }) {
   const theme = useSharedUiTheme()
-  if (props.state === 'starting') {
+  const { state } = props
+  if (state.problem === 'starting') {
     return (
       <div className={styles.waiting}>
         <Spinner color={theme.colors.muted} size={13} />
@@ -134,16 +125,20 @@ export function SandboxPanel(props: {
       </div>
     )
   }
-  const problem = problems[props.state]
-  const archived = props.state === 'archived'
+  const problem = problems[state.problem]
+  const archived = state.problem === 'archived'
   return (
     <EmptyState
       action={
-        props.action && problem.action ? (
+        props.phone && problem.action ? (
           <RecoveryButton label={problem.action} />
         ) : undefined
       }
-      body={problem.panelBody}
+      body={
+        props.phone && state.problem === 'refused'
+          ? state.reason
+          : problem.panelBody
+      }
       icon={problem.icon}
       title={archived ? 'Archived' : problem.title}
     />

@@ -34,6 +34,11 @@ Calls between the workspace object and the device broker use Durable Object RPC,
 They add no HTTP body or reply budget.
 Cloudflare [limits](https://developers.cloudflare.com/workers/runtime-apis/rpc/#limitations) one serialized RPC message to 32 MiB, far above one device frame.
 
+Org suspension revokes org workspace tokens and the shared token rule checks the stored org state.
+The command checks repeat before approvals and results.
+The body-free browser gate also checks the original write method.
+Account-level Mac connections remain available for the member's other orgs.
+
 ## Main process and renderer
 
 The main-process socket requires `Origin: conductive-app://desktop`.

@@ -143,6 +143,23 @@ export function byLabel(
 }
 
 /**
+ * Every shown element whose spoken text is exactly `text`, and inside which
+ * no smaller element has it.
+ */
+export function queryAllByText(
+  text: string,
+  root: ParentNode = document,
+): HTMLElement[] {
+  const holds = (element: Element) => tidy(spokenText(element)) === text
+  return Array.from(root.querySelectorAll<HTMLElement>('*')).filter(
+    (element) =>
+      holds(element) &&
+      !Array.from(element.children).some(holds) &&
+      findable(element),
+  )
+}
+
+/**
  * The one shown element whose spoken text is exactly `text`, and inside
  * which no smaller element has it, or null. More than one fails.
  */
@@ -150,14 +167,7 @@ export function queryByText(
   text: string,
   root: ParentNode = document,
 ): HTMLElement | null {
-  const holds = (element: Element) => tidy(spokenText(element)) === text
-  const found = Array.from(root.querySelectorAll<HTMLElement>('*')).filter(
-    (element) =>
-      holds(element) &&
-      !Array.from(element.children).some(holds) &&
-      findable(element),
-  )
-  return single(found, `have the text "${text}"`)
+  return single(queryAllByText(text, root), `have the text "${text}"`)
 }
 
 /** The one shown element with exactly this text. None or more than one fails. */

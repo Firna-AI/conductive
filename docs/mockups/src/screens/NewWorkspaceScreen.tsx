@@ -4,14 +4,19 @@ import { ChatPane } from '../components/chat/ChatPane'
 import { ActionButton } from '../components/common/actions'
 import { Notice } from '../components/common/Notice'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import { acmeRail } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
 import { useMacApp } from '../components/mac/MacApp'
-import { workspaceSections } from '../components/workspaces/sections'
+import {
+  suspendedSections,
+  workspaceSections,
+} from '../components/workspaces/sections'
+import { orgSuspendedReason } from '../components/orgs/suspension'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { lastBuild } from '../fixtures/computer'
 import { savedCartsMessage } from '../fixtures/conversations'
 import { you } from '../fixtures/members'
-import { orgs } from '../fixtures/orgs'
+import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { repositories } from '../fixtures/repositories'
 import { startErrors } from '../fixtures/starting'
 import { savedCarts } from '../fixtures/workspaces'
@@ -21,17 +26,29 @@ import styles from './NewWorkspaceScreen.module.css'
 export const newWorkspaceSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['result'],
+  required: ['result', 'org'],
   properties: {
     /**
      * The empty form, or a create whose first start failed: a failure, or
      * the 20-minute limit of a start.
      */
     result: { enum: ['form', 'error', 'time-limit'] },
+    /**
+     * The org: in use, or suspended by the operator. A suspended org
+     * refuses every create, so the page shows the refused bar of a
+     * workspace in place of the composer, with the words of the org.
+     */
+    org: { enum: ['active', 'suspended'] },
   },
 } as const
 
 export type NewWorkspaceState = SchemaProps<typeof newWorkspaceSchema>
+
+/** The empty chat of a new workspace in an org in use. */
+export const newWorkspaceForm: NewWorkspaceState = {
+  result: 'form',
+  org: 'active',
+}
 
 type CreateFailure = Exclude<NewWorkspaceState['result'], 'form'>
 
@@ -73,22 +90,26 @@ function Start() {
   )
 }
 
-/** The empty chat and its composer. The first message creates the workspace. */
-function NewChat(props: {
-  result: NewWorkspaceState['result']
-  viewport: Viewport
-}) {
-  const failed = props.result !== 'form'
-  const notice =
-    props.result === 'form' ? undefined : (
-      <Notice
-        action={<ActionButton tone="primary">Try again</ActionButton>}
-        body={failureBodies[props.result]}
-        icon={CircleAlert}
-        title="The workspace wasn't created"
-        tone="danger"
-      />
-    )
+/**
+ * The empty chat and its composer. The first message creates the workspace.
+ * In a suspended org the refused bar takes the place of the composer, and
+ * the chat invites no first message, because the org refuses the create.
+ */
+function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
+  const suspended = props.state.org === 'suspended'
+  const { result } = props.state
+  // A suspended org refuses each create, so no create of it failed.
+  const failure = suspended || result === 'form' ? null : result
+  const failed = failure !== null
+  const notice = failure ? (
+    <Notice
+      action={<ActionButton tone="primary">Try again</ActionButton>}
+      body={failureBodies[failure]}
+      icon={CircleAlert}
+      title="The workspace wasn't created"
+      tone="danger"
+    />
+  ) : undefined
   return (
     <ChatPane
       composer={{
@@ -99,9 +120,14 @@ function NewChat(props: {
         running: false,
         sendTo: failed ? undefined : paths.creating,
       }}
-      empty={<Start />}
+      empty={suspended ? undefined : <Start />}
       items={[]}
       notice={notice}
+      problem={
+        suspended
+          ? { problem: 'refused', reason: orgSuspendedReason }
+          : undefined
+      }
       viewer={you}
       viewport={props.viewport}
     />
@@ -119,18 +145,33 @@ export function NewWorkspaceScreen(props: {
 }) {
   const mac = useMacApp()
   const mobile = props.viewport === 'mobile'
+  const suspended = props.state.org === 'suspended'
+  const list = suspended ? paths.suspendedOrg : paths.shell
   const page = (
     <Page
-      back={mobile ? { label: 'Workspaces', to: paths.shell } : undefined}
+      back={mobile ? { label: 'Workspaces', to: list } : undefined}
       fill
       subtitle={orgs.acme.name}
       title="New workspace"
       viewport={props.viewport}
     >
-      <NewChat result={props.state.result} viewport={props.viewport} />
+      <NewChat state={props.state} viewport={props.viewport} />
     </Page>
   )
   if (mobile) return <MobileFrame>{page}</MobileFrame>
+  if (suspended) {
+    // The sidebar of a suspended org has no New workspace to select.
+    return (
+      <AppFrame
+        rail={{ ...acmeRail, suspended: suspendedOrg }}
+        sidebar={
+          <Sidebar org={orgs.acme} sections={suspendedSections()} suspended />
+        }
+      >
+        {page}
+      </AppFrame>
+    )
+  }
   const sidebar = (
     <Sidebar
       current="new-workspace"

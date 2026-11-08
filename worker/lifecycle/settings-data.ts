@@ -1,3 +1,4 @@
+import { activeOrgPredicate } from '../data/org-access'
 import type { AppEnv } from '../env'
 import { activeAdminMemberPredicate } from '../data/active-admin'
 import { HttpError, isRecord } from '../http'
@@ -168,7 +169,7 @@ export function firstActiveOrgAdmin(
     .prepare(
       `SELECT m.user_id AS userId FROM org_members m
        JOIN orgs o ON o.id = m.org_id
-       WHERE m.org_id = ? AND ${activeAdminMemberPredicate('m')} AND o.deleted_at IS NULL
+       WHERE m.org_id = ? AND ${activeAdminMemberPredicate('m')} AND o.deleted_at IS NULL AND ${activeOrgPredicate('o')}
        ORDER BY m.joined_at, m.user_id LIMIT 1`,
     )
     .bind(orgId)

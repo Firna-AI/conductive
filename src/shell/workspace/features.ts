@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
+import type { SandboxPanelState } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import type { WorkspaceStream } from '../../app/events'
 import type { ChatController } from '../../chat/state/controller'
 import type { User } from '../../shared/api'
@@ -29,8 +30,18 @@ export interface WorkspaceContext {
   /** The person signed in. */
   viewer: User
   sandbox: SandboxState
-  /** The app refuses to start the sandbox, as while its owner is suspended. */
-  startRefused?: boolean
+  /**
+   * The workspace takes no change: it is archived, or its org is suspended.
+   * A feature then shows its history only, and sends no write, also none
+   * for a view, such as a switch of the session tab.
+   */
+  readOnly: boolean
+  /**
+   * What a part shows in place of its content while the sandbox does not
+   * run: the notice of the bar, with the words of a refused start, or the
+   * wait of a start. Null while the sandbox runs.
+   */
+  panel: SandboxPanelState | null
   viewport: Viewport
   /** The address after the workspace, such as `['files']` or `['terminal']`. */
   view: readonly string[]

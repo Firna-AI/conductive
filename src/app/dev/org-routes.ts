@@ -2,6 +2,7 @@ import { API_PATHS, orgPath } from '../../shared/api'
 import { membersPath, type MembersResponse } from '../../shared/members'
 import {
   deleteOrgPath,
+  leaveOrgPath,
   restoreOrgPath,
   type OrgResponse,
   type OrgsResponse,
@@ -15,6 +16,7 @@ import {
   numbers,
   optional,
   requiredText,
+  RouteError,
   type Params,
   type Route,
 } from './router'
@@ -23,6 +25,7 @@ import {
   freshOrg,
   slugify,
   uniqueId,
+  type DevState,
   type OrgState,
 } from './state'
 
@@ -95,6 +98,44 @@ function restoreOrg(org: OrgState): Response {
   return orgReply(org.org)
 }
 
+/**
+ * Get started after a leave of its org, as on the Worker: the next org that
+ * is not deleted takes its place. Without one, the org step opens again.
+ */
+function leaveSetupOrg(state: DevState, orgId: string): void {
+  if (state.getStarted.orgId !== orgId) return
+  const next = state.orgs.find((item) => !item.org.deletion)?.org.id ?? null
+  state.getStarted = {
+    orgId: next,
+    steps: state.getStarted.steps.map((item) =>
+      item.step === 'org' ? { step: 'org', complete: next !== null } : item,
+    ),
+  }
+}
+
+/**
+ * Leave. The org leaves the list of the user, and Get started follows. The
+ * last-admin rule refuses the leave of the last admin with the words of the
+ * Worker. A suspended org takes the leave too, as the Worker does.
+ */
+function leaveOrg(backend: DevBackend, org: OrgState): Response {
+  const { state } = backend
+  const userId = state.account.user.id
+  const otherAdmin = org.members.members.some(
+    (member) => member.role === 'admin' && member.user.id !== userId,
+  )
+  if (org.org.role === 'admin' && !otherAdmin) {
+    throw new RouteError(
+      409,
+      'last_admin',
+      'Make another member whose account is not suspended an admin first.',
+    )
+  }
+  state.orgs = state.orgs.filter((item) => item !== org)
+  leaveSetupOrg(state, org.org.id)
+  return new Response(null, { status: 204 })
+}
+
 /** The orgs of the user, their names, their deletion, and their members. */
 export function orgRoutes(backend: DevBackend): Route[] {
   const { state } = backend
@@ -132,6 +173,11 @@ export function orgRoutes(backend: DevBackend): Route[] {
       method: 'POST',
       path: restoreOrgPath(ID.org),
       answer: ({ params }) => restoreOrg(orgOf(params)),
+    },
+    {
+      method: 'POST',
+      path: leaveOrgPath(ID.org),
+      answer: ({ params }) => leaveOrg(backend, orgOf(params)),
     },
     {
       method: 'GET',

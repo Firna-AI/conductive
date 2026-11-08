@@ -59,6 +59,18 @@ plan limits.
 - Delete org asks for the org name. The deleted org stays faded in the rail
   of its admins until the date when everything is deleted, and its page
   offers Restore.
+- The operator can suspend an org, from decision 129. Its members still
+  open it and read its chats, and its notice gives the abuse address.
+  Nothing in it can change, so its screens show no action that it refuses,
+  also for an admin. No notice promises its files. A deleted org that is
+  also suspended shows the notice above its page, keeps the date when
+  everything is deleted, and offers no Restore, as
+  `app/orgs/suspended/deleted` shows.
+- A person whom the last-admin rule of decision 123 lets leave sees Leave
+  org on the General tab of a suspended org, as `app/orgs/suspended/leave`
+  shows. The only active admin sees no Leave org, because the org keeps
+  someone who can manage it. If a leave still gets the last-admin refusal,
+  the screen names no step that the suspended org refuses.
 - Three orgs show: Acme, Firna, the first org of the sign-up, and Acme Labs,
   which Create org makes. The parts live in `src/components/members/`.
 
@@ -71,9 +83,14 @@ plan limits.
   `claude setup-token` or an API key, and Codex with an OpenAI API key.
   `AgentConnectForm` opens under the row of the agent. A connected login
   shows its kind and Remove.
-- Get started has three steps: install the GitHub App, create the first
-  org, and connect Claude or Codex, from decision 33. The next step opens
-  its form.
+- Get started has three steps: install the GitHub App, create an org, and
+  connect Claude or Codex, from decision 33. The next step opens its form.
+- A login belongs to the person, so the agent step has its own state. A
+  person who leaves the last org returns to Get started with the agent
+  still connected, as `app/sign-in/get-started/no-org` shows.
+- The app and the mockups take the words of Get started from
+  `src/screens/getStartedCopy.ts`. The words make no claim about earlier
+  use.
 - The composer shows a notice when the agent of the chosen model is not
   connected. In a session that another member started, a message uses the
   available login of that member, so no agent notice shows.

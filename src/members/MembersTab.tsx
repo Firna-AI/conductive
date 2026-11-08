@@ -108,6 +108,11 @@ export type MembersTabProps = {
   now: number
   /** A member left the org. Their workspaces now belong to the viewer. */
   onMemberRemoved?: (member: OrgMember) => void
+  /**
+   * The org is suspended, so nothing in it changes, also for an admin. The
+   * tab shows the members and their roles without actions and invites.
+   */
+  suspended?: boolean
 }
 
 /**
@@ -117,19 +122,26 @@ export type MembersTabProps = {
  * and their workspaces, without those actions. Mount it in the page column
  * of the org settings, which spaces its two sections.
  *
- * The tab keys its state to the org, the viewer's role, and the viewer. When
- * one of them changes, it loads the members again, and an open question,
- * a typed email, and an error go. Old answers then call no callback.
+ * The tab keys its state to the org, the viewer's role, the viewer, and the
+ * suspension of the org. When one of them changes, it loads the members
+ * again, and an open question, a typed email, and an error go. Old answers
+ * then call no callback.
  */
 export function MembersTab(props: MembersTabProps) {
   const { org, viewerId } = props
-  return <OrgMembersTab key={`${org.id}/${org.role}/${viewerId}`} {...props} />
+  const suspended = props.suspended ?? false
+  return (
+    <OrgMembersTab
+      key={`${org.id}/${org.role}/${viewerId}/${suspended}`}
+      {...props}
+    />
+  )
 }
 
 function OrgMembersTab(props: MembersTabProps) {
   const { store, state } = useMembers(props.api, props.org.id, props.viewerId)
   const mounted = useMountedRef()
-  const canManage = props.org.role === 'admin'
+  const canManage = props.org.role === 'admin' && !props.suspended
   const ready = state.status === 'ready' ? state : null
   // The store holds the open question, so an answer for another member
   // leaves it as it is.

@@ -6,6 +6,11 @@ The gate checks access before it reads a write body.
 Open chat tabs and terminal sockets check their access again through the [shared connection reader](#open-connections).
 Sign-in also asks for the [terms consent](#terms-consent) and refuses [suspended users](#suspended-users).
 
+Org writes also check the current suspension before the gate reads their body.
+The exact POST Leave route keeps its existing membership guards.
+Org reads and chat-tab grants remain available.
+`org-writes.ts` shares this rule with the members and Mac browser gates.
+
 ## JSON request bodies
 
 The gate calls `readJsonObject(request)` once for each write.

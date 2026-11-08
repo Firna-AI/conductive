@@ -2,6 +2,8 @@ import type { AppEnv } from '../env'
 import { readWorkspace } from '../lifecycle/workspace-data'
 import { HttpError } from '../http'
 import { requireOrgMember } from '../members/permissions'
+import { requireActiveOrg } from '../data/user-access'
+import { activeOrgPredicate } from '../data/org-access'
 
 export async function archiveWorkspaceAccess(
   env: AppEnv,
@@ -9,6 +11,7 @@ export async function archiveWorkspaceAccess(
   id: string,
   userId: string,
 ) {
+  await requireActiveOrg(env.DB, orgId)
   const org = await requireOrgMember(env.DB, orgId, userId)
   const row = await readWorkspace(env.DB, orgId, id)
   if (org.role !== 'admin' && row.ownerUserId !== userId)
@@ -34,6 +37,7 @@ export async function markWorkspaceArchived(
       AND EXISTS (SELECT 1 FROM orgs o JOIN org_members m ON m.org_id = o.id
         JOIN users u ON u.id = m.user_id AND u.suspended_at IS NULL
         WHERE o.id = workspaces.org_id AND o.deleted_at IS NULL AND m.user_id = ?
+        AND ${activeOrgPredicate('o')}
         AND (m.role = 'admin' OR workspaces.owner_user_id = m.user_id))`,
     ).bind(now, now, id, orgId, userId),
     env.DB.prepare(
@@ -45,4 +49,5 @@ export async function markWorkspaceArchived(
       (SELECT 1 FROM workspaces WHERE id = ? AND state = 'archived')`,
     ).bind(id, id),
   ])
+  await requireActiveOrg(env.DB, orgId)
 }

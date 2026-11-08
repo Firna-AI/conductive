@@ -9,61 +9,99 @@ import {
 import { Section, SectionText } from '../components/settings/Section'
 import { defaultChoice } from '../fixtures/agents'
 import type { AgentLogins } from '../fixtures/logins'
-import { firstInstallation } from '../fixtures/orgs'
+import type { PersonKey } from '../fixtures/members'
+import {
+  firstInstallation,
+  type installations,
+  memberInstallation,
+} from '../fixtures/orgs'
 import { newOrg } from '../fixtures/repositories'
 import { paths } from '../paths'
+import { getStartedCopy as copy } from './getStartedCopy'
 import styles from './GetStartedScreen.module.css'
 
-/** The steps of Get started in their order, then `done` after the last. */
-export const getStartedSteps = ['install', 'org', 'agent', 'done'] as const
+/**
+ * The GitHub App step and the org step in their order, then `done` after
+ * both. The agent step has its own state, because a login belongs to the
+ * person and not to an org.
+ */
+export const getStartedSteps = ['install', 'org', 'done'] as const
 
 export type GetStartedStep = (typeof getStartedSteps)[number]
 
-/** Whether the first run is past a step, which then shows as done. */
+/** Whether the person has connected an agent. */
+export const agentStates = ['none', 'connected'] as const
+
+export type AgentState = (typeof agentStates)[number]
+
+/**
+ * The people whom Get started draws: Cal, who signs up, and Priya, a member
+ * who left Acme, the last org.
+ */
+export const getStartedPeople = [
+  'cal',
+  'priya',
+] as const satisfies readonly PersonKey[]
+
+export type GetStartedPerson = (typeof getStartedPeople)[number]
+
+/** The installation of the GitHub App that each person reaches. */
+const installationOf: Readonly<
+  Record<GetStartedPerson, (typeof installations)[number]>
+> = {
+  cal: firstInstallation,
+  priya: memberInstallation,
+}
+
+/** Whether Get started is past a step, which then shows as done. */
 export function isPast(step: GetStartedStep, target: GetStartedStep): boolean {
   return getStartedSteps.indexOf(step) > getStartedSteps.indexOf(target)
 }
 
 const done = (label: string) => <StatusText label={label} tone="success" />
 
-export function InstallStep(props: { step: GetStartedStep }) {
-  const title = '1. Install the GitHub App'
+export function InstallStep(props: {
+  step: GetStartedStep
+  person: GetStartedPerson
+}) {
+  const { install } = copy
   if (!isPast(props.step, 'install')) {
     return (
       <Section
         actions={
           <ScreenLink asChild to={paths.getStartedInstalled}>
             <ActionButton icon={ArrowUpRight} tone="primary">
-              Install the GitHub App
+              {install.action}
             </ActionButton>
           </ScreenLink>
         }
-        description="Install it on the GitHub account that owns your repositories, such as the organization of your company. You choose the repositories that it can reach."
-        title={title}
+        description={install.description}
+        title={install.title}
       />
     )
   }
+  const installation = installationOf[props.person]
   return (
     <Section
-      actions={<ActionButton icon={Plus}>Add another account</ActionButton>}
-      status={done('Installed')}
-      title={title}
+      actions={<ActionButton icon={Plus}>{install.another}</ActionButton>}
+      status={done(install.done)}
+      title={install.title}
     >
       <SectionText>
         Installed on{' '}
-        <span className={styles.strong}>{firstInstallation.account}</span>, with{' '}
-        {firstInstallation.repositories} repositories.
+        <span className={styles.strong}>{installation.account}</span>, with{' '}
+        {installation.repositories} repositories.
       </SectionText>
     </Section>
   )
 }
 
 export function OrgStep(props: { step: GetStartedStep }) {
-  const title = '2. Create your first org'
+  const { org } = copy
   if (isPast(props.step, 'org')) {
     const used = newOrg.repositories.filter((item) => item.used).length
     return (
-      <Section status={done('Created')} title={title}>
+      <Section status={done(org.done)} title={org.title}>
         <SectionText>
           <span className={styles.strong}>{newOrg.name}</span>, with {used}{' '}
           repositories.
@@ -78,7 +116,7 @@ export function OrgStep(props: { step: GetStartedStep }) {
       icon={Plus}
       tone={next ? 'primary' : 'secondary'}
     >
-      Create org
+      {org.action}
     </ActionButton>
   )
   return (
@@ -92,22 +130,22 @@ export function OrgStep(props: { step: GetStartedStep }) {
           create
         )
       }
-      description="An org holds your workspaces, the repositories that they use, and their cloud computer."
-      title={title}
+      description={org.description}
+      title={org.title}
     />
   )
 }
 
 /**
- * Connect Claude or Codex, from decision 33 D. The default model is
- * Claude's, so the form of Claude opens when the step is next, and Claude
- * is connected with a subscription token when the step is done.
+ * Connect Claude or Codex. A connected agent is Claude with a subscription
+ * token, and it can come before the org. The default model is Claude's, so
+ * the form of Claude opens when the step is next.
  */
-export function AgentStep(props: { step: GetStartedStep }) {
-  const finished = props.step === 'done'
-  const logins: AgentLogins = finished ? { claude: 'token' } : {}
+export function AgentStep(props: { step: GetStartedStep; agent: AgentState }) {
+  const connected = props.agent === 'connected'
+  const logins: AgentLogins = connected ? { claude: 'token' } : {}
   const form: OpenAgentForm | undefined =
-    props.step === 'agent'
+    !connected && props.step === 'done'
       ? {
           agent: defaultChoice.agent,
           connectTo: paths.getStartedConnected,
@@ -116,9 +154,9 @@ export function AgentStep(props: { step: GetStartedStep }) {
       : undefined
   return (
     <Section
-      description="Your agents run on your own Claude or OpenAI account. Connect at least one now, and the other at any time in your account."
-      status={finished ? done('Connected') : undefined}
-      title="3. Connect Claude or Codex"
+      description={copy.agent.description}
+      status={connected ? done(copy.agent.done) : undefined}
+      title={copy.agent.title}
     >
       <AgentList form={form} logins={logins} />
     </Section>

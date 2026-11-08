@@ -218,6 +218,17 @@ it('checks the request gate and org workspace relationship before reaching file 
       })
     ).status,
   ).toBe(404)
+  await harness.env.DB.prepare('UPDATE orgs SET suspended_at = 1 WHERE id = ?')
+    .bind(org.id)
+    .run()
+  expect(
+    (await request(filePaths.content(org.id, workspaceId, 'file.txt'))).status,
+  ).toBe(403)
+  await harness.env.DB.prepare(
+    'UPDATE orgs SET suspended_at = NULL WHERE id = ?',
+  )
+    .bind(org.id)
+    .run()
   await harness.env.DB.prepare('UPDATE orgs SET deleted_at = 1 WHERE id = ?')
     .bind(org.id)
     .run()

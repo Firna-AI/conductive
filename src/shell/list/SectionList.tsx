@@ -58,7 +58,8 @@ function LiftedRow(props: {
  * The sections of the org, each a group of workspaces that the people of
  * the org made, then the Archived group. A workspace moves to another
  * section by drag and drop, by a long press on a phone, or by Alt and an
- * arrow key.
+ * arrow key. A read-only list, as in a suspended org, moves nothing and
+ * shows no section menu.
  */
 export function SectionList(props: {
   groups: readonly SectionGroup[]
@@ -68,6 +69,7 @@ export function SectionList(props: {
   now: number
   actions: SectionActions
   move: (workspaceId: string, target: DropTarget) => void
+  readOnly: boolean
 }) {
   const { drag, bind, layout } = useRowDrag(props.move)
   /** A move by keys keeps the focus on its row. */
@@ -115,6 +117,7 @@ export function SectionList(props: {
             <SectionHeader
               actions={props.actions}
               count={workspaces.length}
+              readOnly={props.readOnly}
               section={section}
               variant={props.variant}
             />
@@ -127,7 +130,11 @@ export function SectionList(props: {
                       : null}
                     <li>
                       <WorkspaceRow
-                        bind={bind(workspace, { sectionId: section.id, index })}
+                        bind={
+                          props.readOnly
+                            ? undefined
+                            : bind(workspace, { sectionId: section.id, index })
+                        }
                         drag={
                           drag?.workspace.id === workspace.id
                             ? 'placeholder'
@@ -135,7 +142,11 @@ export function SectionList(props: {
                         }
                         linkRef={rows.linkRef(workspace.id)}
                         now={props.now}
-                        onKeyDown={(event) => onKeyDown(workspace, event)}
+                        onKeyDown={
+                          props.readOnly
+                            ? undefined
+                            : (event) => onKeyDown(workspace, event)
+                        }
                         onLinkBlur={rows.blur}
                         onLinkFocus={(event) => rows.focus(workspace.id, event)}
                         rowRef={layout.row(workspace.id, section.id)}

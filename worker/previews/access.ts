@@ -1,3 +1,4 @@
+import { suspendedOrgError } from '../data/org-access'
 import { API_PATHS } from '../../src/shared/api'
 import type { AppEnv } from '../env'
 import { suspendedWorkspaceOwnerError } from '../data/user-access'
@@ -27,6 +28,7 @@ export async function workspaceTarget(
 }
 
 export function requireRunning(target: WorkspaceAccessTarget): void {
+  if (target.orgActive !== 1) throw suspendedOrgError()
   if (target.ownerActive !== 1) throw suspendedWorkspaceOwnerError()
   if (!target.sandboxId || target.sandboxAllowed !== 1) {
     throw new HttpError(
@@ -56,6 +58,7 @@ export async function verifyTarget(
       'The workspace is not available.',
     )
   }
+  if (current.orgActive !== 1) throw suspendedOrgError()
   if (current.ownerActive !== 1) throw suspendedWorkspaceOwnerError()
   if (running) requireRunning(current)
 }

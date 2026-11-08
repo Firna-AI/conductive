@@ -1,3 +1,4 @@
+import { activeOrgPredicate } from '../data/org-access'
 import type { OrgInvite, PendingOrgInvite } from '../../src/shared/members'
 import { activeAdminPredicate } from './org-data'
 
@@ -56,7 +57,7 @@ export async function takeInvite(
 ) {
   const identity = `SELECT 1 FROM org_invites i
     JOIN user_verified_emails e ON e.email = i.email
-    JOIN orgs o ON o.id = i.org_id WHERE i.id = ? AND i.org_id = ? AND e.user_id = ? AND o.deleted_at IS NULL`
+    JOIN orgs o ON o.id = i.org_id WHERE i.id = ? AND i.org_id = ? AND e.user_id = ? AND o.deleted_at IS NULL AND ${activeOrgPredicate('o')}`
   const results = await db.batch([
     db
       .prepare(
@@ -80,7 +81,7 @@ export async function listPendingInvites(db: D1Database, userId: string) {
       .prepare(
         `SELECT i.id, i.email, i.created_at AS createdAt, o.id AS orgId, o.name AS orgName
          FROM org_invites i JOIN orgs o ON o.id = i.org_id
-         WHERE o.deleted_at IS NULL AND EXISTS (
+         WHERE o.deleted_at IS NULL AND ${activeOrgPredicate('o')} AND EXISTS (
            SELECT 1 FROM user_verified_emails e WHERE e.user_id = ? AND e.email = i.email
          ) AND NOT EXISTS (
            SELECT 1 FROM org_members m WHERE m.org_id = i.org_id AND m.user_id = ?

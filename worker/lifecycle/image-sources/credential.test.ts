@@ -139,6 +139,10 @@ it('limits the read token to one repository and consumes its private build grant
         "UPDATE repositories SET full_name = 'example/source-repository'",
       ],
       ['UPDATE orgs SET deleted_at = 1', 'UPDATE orgs SET deleted_at = NULL'],
+      [
+        'UPDATE orgs SET suspended_at = 1',
+        'UPDATE orgs SET suspended_at = NULL',
+      ],
     ]) {
       await fixture.env.DB.prepare(mutation[0]).run()
       expect((await claim()).status).toBe(401)

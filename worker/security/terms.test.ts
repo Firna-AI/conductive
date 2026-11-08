@@ -55,7 +55,7 @@ async function authorize(startPath: string, callbackQuery = '') {
 it('requires consent at OAuth start before it creates a new account', async () => {
   const refused = await authorize(
     API_PATHS.githubSignIn,
-    '&terms_version=2026-11-07',
+    '&terms_version=2026-11-08',
   )
   expect(refused.status).toBe(403)
   expect(await refused.json()).toEqual({
@@ -80,14 +80,14 @@ it('requires consent at OAuth start before it creates a new account', async () =
     await harness.env.DB.prepare(
       'SELECT terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
     ).first(),
-  ).toEqual({ version: '2026-11-07', acceptedAt: TEST_TIME })
+  ).toEqual({ version: '2026-11-08', acceptedAt: TEST_TIME })
   harness.setTime(TEST_TIME + 1_000)
   expect((await authorize(acceptedTermsSignInPath())).status).toBe(302)
   expect(
     await harness.env.DB.prepare(
       'SELECT terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
     ).first(),
-  ).toEqual({ version: '2026-11-07', acceptedAt: TEST_TIME })
+  ).toEqual({ version: '2026-11-08', acceptedAt: TEST_TIME })
 })
 
 it('records explicit consent for an existing account and keeps its identity', async () => {
@@ -95,7 +95,7 @@ it('records explicit consent for an existing account and keeps its identity', as
     "INSERT INTO users (id, github_id, github_login, created_at, updated_at) VALUES ('existing-user', 7, 'old-login', 0, 0)",
   ).run()
   expect(
-    (await authorize(API_PATHS.githubSignIn, '&terms_version=2026-11-07'))
+    (await authorize(API_PATHS.githubSignIn, '&terms_version=2026-11-08'))
       .status,
   ).toBe(302)
   expect(
@@ -119,7 +119,7 @@ it('records explicit consent for an existing account and keeps its identity', as
     id: 'existing-user',
     login: 'octocat',
     createdAt: 0,
-    version: '2026-11-07',
+    version: '2026-11-08',
     acceptedAt: TEST_TIME + 1_000,
   })
 })
@@ -131,7 +131,7 @@ it('replaces an old consent revision only after explicit current consent', async
     .bind(TEST_TIME - 10_000)
     .run()
   expect(
-    (await authorize(API_PATHS.githubSignIn, '&terms_version=2026-11-07'))
+    (await authorize(API_PATHS.githubSignIn, '&terms_version=2026-11-08'))
       .status,
   ).toBe(302)
   expect(
@@ -145,5 +145,5 @@ it('replaces an old consent revision only after explicit current consent', async
     await harness.env.DB.prepare(
       'SELECT terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
     ).first(),
-  ).toEqual({ version: '2026-11-07', acceptedAt: TEST_TIME + 1_000 })
+  ).toEqual({ version: '2026-11-08', acceptedAt: TEST_TIME + 1_000 })
 })
