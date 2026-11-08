@@ -341,38 +341,53 @@ Depends on: 3
 New workspace opens the dialog when the user chose it. Milestone 5 can
 run beside Milestone 4, because the two change different files.
 
-- [ ] Move the parts that the page and the dialog share out of
+- [x] Move the parts that the page and the dialog share out of
       `src/shell/new-workspace/NewWorkspaceScreen.tsx`: the repository
       picker, the readiness of the message, and the send. Keep each file
       under 300 lines.
-- [ ] Add the dialog in `src/shell/new-workspace/`, as in the mockup. It
+- [x] Add the dialog in `src/shell/new-workspace/`, as in the mockup. It
       uses the draft of `OrgModel.newWorkspace` and the notices of
       `notices.tsx`. It closes before an action opens another page, and
       when the address changes. In an org without chosen repositories,
       the dialog and the page tell a member who is not an admin that an
       admin chooses them.
-- [ ] Add one way to open New workspace that each entry point uses: the
+- [x] Add one way to open New workspace that each entry point uses: the
       row in `src/shell/list/Sidebar.tsx`, the button in
       `src/shell/list/OrgHome.tsx`, and the menu item through
       `src/shell/list/useListActions.ts`. It opens the dialog on a
       computer when the user chose it, and the page in every other case,
       also while the screen shows a New workspace form.
-- [ ] Give the dialog, the page, and the chat in
+- [x] Give the dialog, the page, and the chat in
       `src/chat/components/Composer.tsx` one shared key rule: on a
       computer, Enter sends and Shift+Enter adds a line.
-- [ ] Test with happy-dom: each entry point opens the dialog with the
+- [x] Test with happy-dom: each entry point opens the dialog with the
       preference and the page without it, a phone opens the page, a
       section keeps its section, Escape keeps the draft, Connect closes
       the dialog first, the create opens the new workspace, and a failed
       create keeps the dialog with Try again. Test that Enter creates the
       workspace from the page and from the dialog, and that Shift+Enter
       adds a line. Run each new test 10 times.
-- [ ] Update `src/app/screens.md` and `src/app/README.md` with the
+- [x] Update `src/app/screens.md` and `src/app/README.md` with the
       dialog, its entry points, the shared draft, and the key rule.
-- [ ] Smoke-test with `npm run dev`: choose the dialog in Preferences,
+- [x] Smoke-test with `npm run dev`: choose the dialog in Preferences,
       then open New workspace from each entry point, in the browser and
       in a phone size. Save the screenshots under
       `.context/preferences-and-new-workspace-dialog/`.
+
+Screenshots, test proofs, and logs: `.context/preferences-and-new-workspace-dialog/m5/`.
+
+Agent calls during Milestone 5, on 8 November 2026:
+
+- Every modal layer, the dialogs and the sheets of the app, uses one hook.
+  A press outside then gives the focus back to the trigger, as
+  `src/app/screens.md` says. Before, the browser moved the focus to the
+  page after such a press.
+- The menu item New workspace of General opens New workspace without a
+  section, as the row at the top of the list does. So General keeps one
+  draft, as the protocol page requires.
+- The page asks for the repositories of the org only after they load, as
+  the dialog does.
+- Escape closes only the newest open layer, such as a menu in the dialog.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

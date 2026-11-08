@@ -13,6 +13,8 @@ import { DeletedOrgPage } from '../../members/DeletedOrgPage'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
+import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
+import { repositoriesFirst } from '../new-workspace/notices'
 import { useMembersApi, useMembersViewport } from '../settings/members-api'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
@@ -25,11 +27,12 @@ function ChooseWorkspace(props: { org: OrgSummary }) {
   const workspaces = valueOf(useStore(model.workspaces))
   const repositories = valueOf(useStore(model.repositories))
   const go = useGo()
+  const open = useNewWorkspace().open
   useEffect(() => model.watch('repositories'), [model])
   const newWorkspace = (
     <ActionButton
       icon={Plus}
-      onPress={() => go(routes.newWorkspace(props.org.id))}
+      onPress={() => open({ orgId: props.org.id, sectionId: null })}
       tone="primary"
     >
       New workspace
@@ -60,11 +63,7 @@ function ChooseWorkspace(props: { org: OrgSummary }) {
             </ActionButton>
           ) : undefined
         }
-        body={
-          admin
-            ? `Choose the repositories of ${props.org.name} first.`
-            : `An admin of ${props.org.name} chooses its repositories first.`
-        }
+        body={`${repositoriesFirst(props.org)}.`}
         icon={FolderGit2}
         title={`Start the first workspace in ${props.org.name}`}
       />

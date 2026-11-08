@@ -5,6 +5,7 @@ import { useStore } from '../../app/store'
 import { useMacApp, useNarrowWindow, type MacChrome } from '../mac/mac-app'
 import mac from '../mac/mac.module.css'
 import { WindowControls, WindowStrip } from '../mac/WindowControls'
+import { NewWorkspaceHost } from '../new-workspace/NewWorkspaceHost'
 import { OverlayHost } from '../ui/Overlay'
 import { usePanelWidths } from './panels'
 import { ResizeHandle } from './ResizeHandle'
@@ -50,9 +51,11 @@ function BrowserFrame(props: FrameProps) {
   return (
     <div className={frame.frame}>
       <OverlayHost>
-        {props.rail}
-        {props.sidebar ? <SidebarPanel>{props.sidebar}</SidebarPanel> : null}
-        <main className={frame.main}>{props.children}</main>
+        <NewWorkspaceHost>
+          {props.rail}
+          {props.sidebar ? <SidebarPanel>{props.sidebar}</SidebarPanel> : null}
+          <main className={frame.main}>{props.children}</main>
+        </NewWorkspaceHost>
       </OverlayHost>
     </div>
   )
@@ -79,20 +82,22 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
       )}
     >
       <OverlayHost>
-        <div className={classes(frame.left, !shown && mac.cornerLeft)}>
-          <WindowControls
-            chrome={props.chrome}
-            placement={shown ? 'panel' : 'corner'}
-            toggle={!sidebar ? 'off' : hidden ? 'show' : 'hide'}
-          />
-          <div className={frame.leftBody}>
-            {props.rail}
-            {props.sidebar ? (
-              <SidebarPanel hidden={hidden}>{props.sidebar}</SidebarPanel>
-            ) : null}
+        <NewWorkspaceHost>
+          <div className={classes(frame.left, !shown && mac.cornerLeft)}>
+            <WindowControls
+              chrome={props.chrome}
+              placement={shown ? 'panel' : 'corner'}
+              toggle={!sidebar ? 'off' : hidden ? 'show' : 'hide'}
+            />
+            <div className={frame.leftBody}>
+              {props.rail}
+              {props.sidebar ? (
+                <SidebarPanel hidden={hidden}>{props.sidebar}</SidebarPanel>
+              ) : null}
+            </div>
           </div>
-        </div>
-        <main className={frame.main}>{props.children}</main>
+          <main className={frame.main}>{props.children}</main>
+        </NewWorkspaceHost>
       </OverlayHost>
     </div>
   )
@@ -102,7 +107,8 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
  * The desktop app: the org rail, the sidebar of the org, and the main area.
  * Below 900 px the sidebar hides, and the org in the rail leads to its
  * list. A page can leave out the sidebar.
- * Dialogs open over the whole frame.
+ * Dialogs open over the whole frame, also the New workspace dialog. A phone
+ * has no such dialog: New workspace opens the page there.
  */
 export function AppFrame(props: FrameProps) {
   const chrome = useMacApp()

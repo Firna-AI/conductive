@@ -166,6 +166,12 @@ members from the models of the app.
   free Resume button, still run when its reply is older. The header of
   [`state/session-records.ts`](state/session-records.ts) gives the pending
   edits of a rename or a model change.
+- The composer reads Enter through `useSendKey` of
+  `components/send-key.ts`, the one send key of every composer: the chat,
+  and the page and the dialog of New workspace. On a computer, Enter sends
+  and Shift+Enter adds a line, as
+  [The send key](../../docs/protocol/create-a-workspace.md#the-send-key)
+  says. In the phone layout, Enter adds a line.
 - Send waits in every session until the records show that the first start
   of the workspace succeeded. The Worker refuses each new message until
   then, as [Messages](../../docs/protocol/chat-and-events.md#messages) says.
@@ -293,6 +299,8 @@ check in the Mac app.
   responses.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
+- `components/send-key.ts`: `useSendKey`, the send key that the composer
+  shares with the page and the dialog of New workspace in the app shell.
 - `device/`: the Mac commands. Their [README](device/README.md) names
   their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its

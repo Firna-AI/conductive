@@ -100,7 +100,8 @@ the workspace stores, and the raw event streams of feature stores.
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the focus, saved drafts, and New workspace.
+layers, the focus, saved drafts, and New workspace as a page or a dialog,
+with the send key that every composer shares.
 
 ## Rules for this code
 
@@ -148,6 +149,8 @@ server rendering, after the test loads its data. A test that needs focus
 and keys opts into happy-dom with `// @vitest-environment happy-dom`, and
 mounts the screen with `../shell/test-mount.tsx`, which also presses keys,
 clicks, types, and lets the answers of the fake API settle.
+`../shell/new-workspace/dialog-test-kit.tsx` mounts the whole app in a tab
+for the tests of New workspace as a page or a dialog, and of its send key.
 
 ## Key code
 
@@ -204,7 +207,17 @@ clicks, types, and lets the answers of the fake API settle.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
-  `useDismiss`, the layer of sheets and dialogs.
+  `useDismiss`, the layer of sheets and dialogs, and `useModalLayer`, which
+  every sheet and dialog uses. Escape closes only the newest layer.
+- `../shell/new-workspace/NewWorkspaceHost.tsx`: `NewWorkspaceHost`, the
+  New workspace dialog of a desktop frame, and `useNewWorkspace`, the one
+  way that each place opens New workspace as the dialog or the page.
+  `NewWorkspaceDialog.tsx`: the dialog.
+- `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
+  and the dialog share: the repository, the notices, the readiness, and
+  the send. `parts.tsx`: their repository menu and files.
+- `../chat/components/send-key.ts`: `useSendKey`, the send key of every
+  composer.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.
   `../shell/list/useRowFocus.ts`: the focus of a row after a move by keys.
 - `../shell/orgs/`: Create org and the name and initials fields.

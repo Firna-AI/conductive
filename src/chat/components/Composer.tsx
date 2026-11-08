@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from 'react'
+import { useRef } from 'react'
 import { Button } from '@firna/ui/button'
 import { InputFrame } from '@firna/ui/input'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
@@ -15,6 +15,7 @@ import { ActionButton, IconButton } from '../ui/actions'
 import { DraftFiles } from './AttachmentChips'
 import local from './chat.module.css'
 import { ModelPicker } from './ModelPicker'
+import { useSendKey } from './send-key'
 
 export interface ComposerProps {
   draft: Draft
@@ -57,9 +58,8 @@ export interface ComposerProps {
  * steers the turn, and Stop sits beside Send. While Send waits for the
  * first start of the workspace, the box keeps the message, and the reason
  * shows beside Send. A line under the box names whose agent login the
- * session uses. On desktop, Enter sends and Shift+Enter starts a new line.
- * The composer reads Enter before the text field does, so Enter never adds
- * a line to a message that it sends.
+ * session uses. Enter sends as the shared rule of `useSendKey` says: on
+ * desktop, Enter sends and Shift+Enter starts a new line.
  */
 export function Composer(props: ComposerProps) {
   const control = useControlSizes()
@@ -68,15 +68,8 @@ export function Composer(props: ComposerProps) {
   const empty = draft.text.trim() === '' && draft.attachments.length === 0
   const off =
     empty || props.blocked || props.waits || props.sending || props.attaching
-  const touch = control.field === 'lg'
   const steers = props.running && props.startsSession !== true
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (touch || event.key !== 'Enter' || event.shiftKey) return
-    if (event.nativeEvent.isComposing) return
-    if (!(event.target instanceof HTMLTextAreaElement)) return
-    event.preventDefault()
-    if (!off) props.onSend()
-  }
+  const onKeyDown = useSendKey(!off, props.onSend)
   return (
     <div className={styles.wrap}>
       <div className={styles.composer} onKeyDownCapture={onKeyDown}>

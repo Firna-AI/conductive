@@ -1,28 +1,32 @@
 import type { ReactNode } from 'react'
-import { CircleAlert, Plug } from 'lucide-react'
+import { CircleAlert, FolderGit2, Plug } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import { ApiError } from '../../app/api/client'
-import type { CreationStartError } from '../../app/new-workspace-model'
+import type {
+  CreateState,
+  CreationStartError,
+} from '../../app/new-workspace-model'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
+import type { OrgSummary } from '../../shared/orgs'
 import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
-import { useGo } from '../ui/AppLink'
 import { modelLabel } from '../ui/ModelPicker'
 
 const agentNames = { claude: 'Claude', codex: 'Codex' } as const
 
 /**
  * The notice over the composer when a message cannot go yet: the agent of
- * the chosen model is not connected. A notice turns Send off.
+ * the chosen model is not connected. A notice turns Send off. Its Connect
+ * goes to the account through `open`.
  */
 export function useBlockingNotice(
   choice: AgentChoice | undefined,
   models: readonly AgentModel[],
+  open: (to: string) => void,
 ): ReactNode {
   const app = useApp()
-  const go = useGo()
   const account = useStore(app.account.account)
   const login = account?.agentLogins.find(
     (item) => item.agent === choice?.agent,
@@ -34,7 +38,7 @@ export function useBlockingNotice(
         action={
           <ActionButton
             icon={Plug}
-            onPress={() => go(routes.account(choice.agent))}
+            onPress={() => open(routes.account(choice.agent))}
           >
             {`Connect ${agent}`}
           </ActionButton>
@@ -45,6 +49,45 @@ export function useBlockingNotice(
     )
   }
   return null
+}
+
+/**
+ * What an org without chosen repositories asks first, without the full
+ * stop. An admin chooses them. A member who is not an admin reads that an
+ * admin chooses them, because only an admin can.
+ */
+export function repositoriesFirst(org: Pick<OrgSummary, 'name' | 'role'>) {
+  return org.role === 'admin'
+    ? `Choose the repositories of ${org.name} first`
+    : `An admin of ${org.name} chooses its repositories first`
+}
+
+/**
+ * The notice of an org that has chosen no repositories yet, so no workspace
+ * can start. An admin gets Choose repositories, which goes to the
+ * Repositories tab of the org settings through `open`.
+ */
+export function ChooseRepositoriesNotice(props: {
+  org: OrgSummary
+  open: (to: string) => void
+}) {
+  const { org } = props
+  return (
+    <Notice
+      action={
+        org.role === 'admin' ? (
+          <ActionButton
+            icon={FolderGit2}
+            onPress={() => props.open(routes.settings(org.id, 'repositories'))}
+          >
+            Choose repositories
+          </ActionButton>
+        ) : undefined
+      }
+      icon={FolderGit2}
+      title={repositoriesFirst(org)}
+    />
+  )
 }
 
 /**
@@ -83,7 +126,7 @@ function failureBody(error: ApiError | CreationStartError | null): string {
  * when the server took the message and its sandbox then did not start. A
  * first start that failed shows the message that the Worker saved for it.
  */
-export function CreateFailed(props: {
+function CreateFailed(props: {
   error: ApiError | CreationStartError | null
   ready: boolean
   retry: () => void
@@ -103,6 +146,22 @@ export function CreateFailed(props: {
       icon={CircleAlert}
       title="The workspace wasn't created"
       tone="danger"
+    />
+  )
+}
+
+/** The notice of a create that failed, or `null` while none failed. */
+export function createFailure(
+  create: CreateState,
+  ready: boolean,
+  retry: () => void,
+): ReactNode {
+  if (create.state !== 'failed' && create.state !== 'not-started') return null
+  return (
+    <CreateFailed
+      error={create.state === 'failed' ? create.error : (create.error ?? null)}
+      ready={ready}
+      retry={retry}
     />
   )
 }
