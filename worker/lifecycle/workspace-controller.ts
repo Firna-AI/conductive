@@ -16,12 +16,7 @@ import {
   readStartLog,
   START_JOB_KEY,
 } from './start-storage'
-import {
-  retainFailedCreation,
-  failedCreationForSender,
-  type FailedCreationDraft,
-  type FailedCreationStorage,
-} from './failed-creations'
+import { FIRST_MESSAGE_ADMISSION_KEY } from './workspace-runtime'
 import { workspaceActionContext } from './workspace-actions'
 import { initializeWorkspaceLifecycle } from './lifecycle-admission'
 import { createWorkspaceLifecycle } from './create-workspace-lifecycle'
@@ -60,10 +55,6 @@ export function createWorkspaceController(
     starts,
     turns,
   }))
-  const drafts: FailedCreationStorage = {
-    get: (key) => platform.storage.get('draft', key),
-    put: (key, value) => platform.storage.put('draft', key, value),
-  }
   const controller: WorkspaceController = {
     extendLifecycleInput: (operation) => lifecycle.input.extend(operation),
     recordLifecycleInput: (at) => lifecycle.input.record(at),
@@ -96,24 +87,6 @@ export function createWorkspaceController(
     readLifecycleStartLog() {
       return readStartLog(platform.storage, env)
     },
-    async retainLifecycleFailedCreation(
-      error: FailedCreationDraft['error'],
-      fallback?: Omit<FailedCreationDraft, 'error'>,
-    ): Promise<void> {
-      await retainFailedCreation(
-        env,
-        drafts,
-        await lifecycle.read(),
-        error,
-        fallback,
-      )
-    },
-    async failedLifecycleCreation(
-      orgId: string,
-      senderUserId: string,
-    ): Promise<FailedCreationDraft | undefined> {
-      return failedCreationForSender(env, drafts, orgId, senderUserId)
-    },
     async initializeLifecycle(
       input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
     ): Promise<void> {
@@ -137,8 +110,34 @@ export function createWorkspaceController(
         await lifecycle.step('runner', 'Starting the agent', 'completed')
       await lifecycle.prepared()
     },
-    lifecycleFailed(error: NonNullable<DurableLifecycleState['error']>) {
-      return lifecycle.fail(error)
+    async lifecycleFailed(error: NonNullable<DurableLifecycleState['error']>) {
+      const job = await platform.storage.get('job', START_JOB_KEY)
+      const first = await platform.storage.get(
+        'first',
+        FIRST_MESSAGE_ADMISSION_KEY,
+      )
+      if (!(await lifecycle.read()) && first && job) {
+        await lifecycle.initialize({
+          workspaceId: first.workspaceId,
+          orgId: job.orgId,
+          firstMessage: first.request,
+        })
+        await lifecycle.beginStart('create')
+      }
+      const state = await lifecycle.read()
+      if (job?.kind === 'create' && state?.start) {
+        const running = state.start.steps.filter(
+          (step) => step.state === 'running',
+        )
+        for (const step of running)
+          await lifecycle.step(step.id, step.label, 'failed')
+        if (
+          !running.length &&
+          !state.start.steps.some((step) => step.state === 'failed')
+        )
+          await lifecycle.step('start', 'Starting the cloud computer', 'failed')
+      }
+      await lifecycle.fail(error)
     },
     async lifecycleActivity(checkOnly) {
       try {
@@ -173,7 +172,10 @@ export function createWorkspaceController(
       if (state) await platform.stopped?.(state.workspaceId)
       await turns.clear()
       await lifecycle.clear(
-        Boolean(await platform.storage.get('job', 'lifecycle:start-job')),
+        Boolean(
+          (await platform.storage.get('job', 'lifecycle:start-job')) ||
+          (await platform.storage.get('text', 'lifecycle:cleanup')),
+        ),
       )
       await journal.clearFailedCreate()
     },

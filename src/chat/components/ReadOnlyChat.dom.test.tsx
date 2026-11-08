@@ -62,6 +62,7 @@ describe('a read-only chat', () => {
                 workspace={workspace}
               />
             ),
+            keepsComposer: false,
           }}
           orgId={FAKE_IDS.org}
           readOnly

@@ -8,7 +8,6 @@ import {
 } from '../security/connection-access'
 import { loginResolver } from './login-access'
 import { readLoginAvailability } from './login-availability'
-import { firstStartIncomplete } from './queries'
 import type { ChatDependencies } from './types'
 
 /**
@@ -29,7 +28,6 @@ export function chatDependencies(
       runnerTokenAllowed(env.DB, id, tokenHash),
     readConnectionAccess: (tabs, now) =>
       readConnectionAccess(env.DB, tabs, now),
-    firstStartIncomplete: (id) => firstStartIncomplete(env.DB, id),
     randomId: randomToken,
     randomConnectionId: randomToken,
     readLoginAvailability: (targets) => {

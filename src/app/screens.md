@@ -69,7 +69,7 @@ drafts, and New workspace.
   files, and the paperclip is off while the create runs. Send and Try
   again read one readiness: the text, the files, the agent login, the
   repository, and the model.
-- A create whose sandbox did not start gets its own New workspace form in
-  the tab that sent it. The address of that workspace shows the form, with
-  "The workspace wasn't created". Try again sends the same message ID, as
-  [Creation recovery](creation-recovery.md#the-returned-form) says.
+- A create request that fails keeps the message in the form, with "The
+  workspace wasn't created". Try again sends the same message ID. A failed
+  first start keeps its workspace instead, as
+  [Creation recovery](creation-recovery.md#a-failed-first-start) says.

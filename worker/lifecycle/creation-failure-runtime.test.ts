@@ -1,4 +1,3 @@
-import { WebSocket } from 'miniflare'
 import { beforeAll, expect, it } from 'vitest'
 
 import {
@@ -20,7 +19,7 @@ beforeAll(async () => {
   bundle = await runtimeBundle()
 })
 
-it('replays the accepted first message and failed start to only its sender after HTTP 201 and public deletion', async () => {
+it('keeps the accepted first message and failed start readable to every member after restart', async () => {
   const fixture = await realRuntimeFixture(bundle)
   try {
     const user = {
@@ -123,20 +122,21 @@ it('replays the accepted first message and failed start to only its sender after
       await actor.tick()
     expect(await actor.waitCreationLifecycle()).toMatchObject({
       ok: false,
-      error: { code: 'workspace_cleanup_pending' },
+      error: { code: 'workspace_start_failed' },
     })
     expect(
       await fixture.env.DB.prepare(
         'SELECT COUNT(*) AS count FROM workspaces',
       ).first('count'),
-    ).toBe(0)
+    ).toBe(1)
     expect(
       await fixture.env.DB.prepare(
         'SELECT COUNT(*) AS count FROM workspace_tokens',
       ).first('count'),
-    ).toBe(0)
-    expect(await actor.failedLifecycleCreation(org.id, user.id)).toMatchObject({
-      request: { ...FIRST_MESSAGE, attachmentIds: ['runtime-attachment'] },
+    ).toBe(1)
+    expect(await actor.readLifecycle()).toMatchObject({
+      state: 'error',
+      error: { code: 'workspace_start_failed' },
     })
     const reconnect = await fixture.openEvents(id, accepted.throughEventNumber)
     const failed = await publicHistory(reconnect.inbox)
@@ -155,6 +155,17 @@ it('replays the accepted first message and failed start to only its sender after
         }),
       ]),
     )
+    const failedStep = failed.events.findIndex((envelope) =>
+      hasStartStep(envelope, 'fetch', 'failed'),
+    )
+    const firstError = failed.events.findIndex((envelope) => {
+      const event = record(envelope.event)
+      return (
+        event.type === 'workspace.updated' &&
+        record(event.workspace).state === 'error'
+      )
+    })
+    expect(failedStep).toBeLessThan(firstError)
     await fixture.restart()
     const restored = await fixture.openEvents(id)
     const history = await publicHistory(restored.inbox)
@@ -164,10 +175,7 @@ it('replays the accepted first message and failed start to only its sender after
         (envelope) => record(envelope.event).type === 'message.accepted',
       ),
     ).toHaveLength(1)
-    await restored.closed
-    expect(restored.response.webSocket?.readyState).toBe(
-      WebSocket.READY_STATE_CLOSED,
-    )
+    expect(restored.isClosed).toBe(false)
     await fixture.env.DB.batch([
       fixture.env.DB.prepare(
         "INSERT INTO users (id, github_id, github_login, created_at, updated_at) VALUES ('other-member', 12, 'teammate', 0, 0)",
@@ -184,9 +192,11 @@ it('replays the accepted first message and failed start to only its sender after
       'session',
       fixture.env.SESSION_SIGNING_KEY,
     )
-    await expect(
-      fixture.openEvents(id, 0, { Cookie: `${SESSION_COOKIE}=${token}` }),
-    ).rejects.toThrow('Status: 404')
+    const member = await fixture.openEvents(id, 0, {
+      Cookie: `${SESSION_COOKIE}=${token}`,
+    })
+    expect((await publicHistory(member.inbox)).events).toEqual(history.events)
+    expect(member.isClosed).toBe(false)
     await expect(
       fixture.openEvents(id, 0, { Origin: 'https://untrusted.test' }),
     ).rejects.toThrow('Status: 403')

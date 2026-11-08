@@ -1,5 +1,4 @@
 import type { AppModel } from '../../app/app-model'
-import { failedCreate } from '../../app/creations'
 import type { OrgModel } from '../../app/org-model'
 import { valueOf } from '../../app/store'
 import { WorkspaceModel } from '../../app/workspace-model'
@@ -28,10 +27,8 @@ export interface ShownWorkspace {
 
 interface KeptWorkspace extends ShownWorkspace {
   readonly org: OrgModel
-  /** Whether a screen showed it, so that its first show started the observers. */
+  /** Whether a screen showed it, so that its first show read the members. */
   started: boolean
-  /** End the subscriptions of the kept parts to each other and to the org. */
-  readonly stops: (() => void)[]
 }
 
 /**
@@ -114,7 +111,6 @@ export class ShownWorkspaces {
       }),
       org,
       started: false,
-      stops: [],
     }
     this.kept.set(key, shown)
     return shown
@@ -122,32 +118,17 @@ export class ShownWorkspaces {
 
   /**
    * The first show of a kept workspace. It says whether the tab still keeps
-   * the workspace, and starts the observers that end when the tab forgets
-   * it. Later shows start nothing more.
+   * the workspace. Later shows start nothing more.
    */
   private start(key: string, shown: KeptWorkspace): boolean {
     if (this.kept.get(key) !== shown) return false
     if (shown.started) return true
     if (!this.onShow()) return false
     shown.started = true
-    const { model, org } = shown
-    const { workspaceId } = model
+    const { org } = shown
     // The chat names the members of the org. A first show reads them when
     // no screen did, and a return reads them never again.
     if (org.members.get().state !== 'ready') void org.reload('members')
-    const { creations } = org
-    const failed = creations.of(workspaceId)
-    shown.stops.push(
-      // The creates of this tab read the same events, so a failed start
-      // turns into its form in the same render as the error state.
-      model.stream.subscribe((envelope) =>
-        creations.observe(workspaceId, envelope),
-      ),
-      model.detail.subscribe(() => this.removal(key, org, model)),
-      failed.subscribe(() => {
-        if (failed.get()?.state === 'failed') this.forget(key)
-      }),
-    )
     return true
   }
 
@@ -177,37 +158,9 @@ export class ShownWorkspaces {
     for (const files of this.keptFiles.values()) files.stop()
     this.keptFiles.clear()
   }
-
-  /**
-   * The server removes a create whose sandbox did not start. A 404 of its
-   * open tells the creates of this tab. An error state of its create start
-   * takes it out of the list, and forgets its kept parts, also in a tab
-   * that did not create it.
-   */
-  private removal(key: string, org: OrgModel, model: WorkspaceModel): void {
-    const detail = model.detail.get()
-    if (detail.state === 'failed' && detail.error.status === 404) {
-      org.creations.removed(model.workspaceId)
-    }
-    if (detail.state === 'ready' && failedCreate(detail.value)) {
-      org.removeWorkspace(model.workspaceId)
-      this.forget(key)
-    }
-  }
-
-  /** Stops a kept workspace for good, so that its streams never open again. */
-  private forget(key: string): void {
-    this.keptFiles.get(key)?.stop()
-    this.keptFiles.delete(key)
-    const shown = this.kept.get(key)
-    if (!shown) return
-    this.kept.delete(key)
-    stop(shown)
-  }
 }
 
 function stop(shown: KeptWorkspace): void {
   shown.model.close()
-  for (const end of shown.stops) end()
   shown.chat.stop()
 }

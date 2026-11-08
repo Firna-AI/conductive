@@ -15,6 +15,7 @@ import {
   workspaceActionContext,
 } from './workspace-actions'
 import { keepWorkspaceDisk } from './disk-retention'
+import { hasPendingStartWork } from './start-storage'
 
 export function createWorkspaceLifecycle(
   ctx: WorkspacePlatform,
@@ -89,8 +90,7 @@ export function createWorkspaceLifecycle(
         if (result) await turns.clear()
         return result
       },
-      startPending: async () =>
-        Boolean(await ctx.storage.get('job', 'lifecycle:start-job')),
+      startPending: () => hasPendingStartWork(ctx.storage),
       recoverTurns: async (id) => {
         const recovery = await ctx.readChatRecovery?.(id)
         if (!recovery) return undefined

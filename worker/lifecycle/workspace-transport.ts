@@ -94,7 +94,5 @@ export function workspaceLifecycleEndpoint(
         log.secretsCiphertext,
       )
     },
-    retainLifecycleFailedCreation: (error, fallback) =>
-      transport.retainLifecycleFailedCreation(error, fallback),
   }
 }

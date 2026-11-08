@@ -37,6 +37,7 @@ export const paths = {
   newWorkspace: 'app/new-workspace',
   creating: 'app/new-workspace/creating',
   firstTurn: 'app/new-workspace/first-turn',
+  retrying: 'app/new-workspace/retrying',
   orgSettings: 'app/org-settings',
   repositories: 'app/org-settings/repositories',
   cloudComputer: 'app/org-settings/cloud-computer',

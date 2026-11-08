@@ -74,15 +74,11 @@ The `fetch` of the class opens the workspace event socket at
 upgrade request without changes, because the object runs the browser gate
 itself. The socket sends the stored history first, then each new event.
 
-After a failed create removes its records, `failedCreationEvents` in
-[`failed-creation-events.ts`](failed-creation-events.ts) serves that path
-only to the sender of the first message, after the browser gate. It sends
-each page of the stored public history once, with the `message.accepted`
-event of the first message, and then closes. All pages share one cutoff,
-and they go out in one task of the chat queue. The browser does not
-restore the composer from this replay. The tab that sent the create keeps
-its first message in memory, as
-[Creation recovery](../../src/app/creation-recovery.md) says.
+An admitted failed create keeps its workspace and normal event socket.
+Every current member can read its chat, queued messages, and saved cause.
+There is no sender-only replay or returned first-message draft.
+The first-message transaction stores its admission marker beside the chat.
+That marker preserves accepted work if the later lifecycle checkpoint fails.
 
 `WorkspaceEventJournal` in [`durable-journal.ts`](durable-journal.ts) keeps
 ordered lifecycle publication and suppresses unchanged updates. The
@@ -117,6 +113,19 @@ create and resume. The workspace object runs that start:
 - Resume restarts only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
+- After a failed first start, Resume instead queues a replacement create.
+  It keeps the workspace, branch, repository, creation date, and first-message IDs.
+  It uses the current image and settings, with a fresh token and allocation key.
+  It keeps the original preparation sender and the current retry requester separate.
+  Previous cleanup finishes before new allocation, including after a restart.
+  Archive preserves a pending failed-computer cleanup alarm.
+- A failed first start keeps its alarm while a start, outcome publication,
+  or failed-computer cleanup is pending. Later lifecycle writes preserve that work.
+  After cleanup and publication finish, it schedules no normal lifecycle alarm.
+- An active create failure always leaves a failed start step.
+  Its running steps become failed before the workspace error event is published.
+  If no step is running or failed, the controller records the failed start itself.
+  A later sandbox error after successful creation adds no such step.
 - Each start gives the sandbox the default branch of its repository. It
   gives no setting for the computer tools, because Boat writes the entry
   of the `computer` server into the sandbox, as

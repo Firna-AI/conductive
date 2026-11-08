@@ -1,7 +1,7 @@
 import type { ComposerState } from '../components/chat/Composer'
 import { attachmentDraft, draftAttachments } from '../fixtures/attachments'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
-import { heldDraft } from '../fixtures/starting'
+import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { otherStarter, sessionLoginFor } from './sessionStarter'
@@ -36,9 +36,9 @@ export function isRunning(state: WorkspaceState): boolean {
  * available, Send opens a new linked session on the own login of the
  * viewer.
  *
- * While the sandbox of a new workspace starts for the first time, Send
- * waits in every session, and the box keeps the message. A resume of a
- * stopped workspace takes messages, which wait for the sandbox.
+ * While the sandbox is not ready, Send queues the message in the
+ * workspace, also during the first start and after a failed first start of
+ * a new workspace. The message waits for the sandbox.
  */
 export function composerFor(
   state: WorkspaceState,
@@ -58,7 +58,7 @@ export function composerFor(
   else if (withFiles) draft = attachmentDraft
   else if (!fresh && noLogin) draft = followUpDraft
   else if (!fresh && state.composer === 'draft') {
-    draft = isNew(state) ? heldDraft : followUpDraft
+    draft = isNew(state) ? savedCartsDraft : followUpDraft
   }
   return {
     choice: workspace.choice,
@@ -69,7 +69,6 @@ export function composerFor(
     sessionAgent: fresh ? undefined : workspace.choice.agent,
     sendTo: opensLinked ? paths.linkedSession : undefined,
     blocked: needsLogin,
-    waits: isNew(state) && state.sandbox === 'starting',
     sessionLogin: sessionLoginFor(workspace, opensLinked ? undefined : starter),
   }
 }

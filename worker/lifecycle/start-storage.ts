@@ -1,5 +1,6 @@
 import type { WorkspaceStorage } from './platform-storage'
 import type { AppEnv } from '../env'
+import { FIRST_MESSAGE_ADMISSION_KEY } from './workspace-runtime'
 import {
   encryptedStartText,
   releasedStartLog,
@@ -24,6 +25,17 @@ const CREATE_RESULT = 'lifecycle:create-result'
 const PUBLICATION = 'lifecycle:create-publication'
 export const START_LOG_PREFIX = 'lifecycle:start-log:'
 const LOG = START_LOG_PREFIX
+
+export async function hasPendingStartWork(
+  storage: WorkspaceStorage,
+): Promise<boolean> {
+  const pending = await Promise.all([
+    storage.get('job', JOB),
+    storage.get('publication', PUBLICATION),
+    storage.get('text', 'lifecycle:cleanup'),
+  ])
+  return pending.some(Boolean)
+}
 
 export async function readStartLog(
   storage: WorkspaceStorage,
@@ -98,6 +110,10 @@ export function durableStartStorage(
           return false
         for (const key of old.keys()) await transaction.delete(key)
         await transaction.delete(RESULT)
+        if (job.replaceFailedCreation) {
+          await transaction.delete(CREATE_RESULT)
+          await transaction.delete(PUBLICATION)
+        }
         await transaction.delete('lifecycle:start-log-count')
         await transaction.delete('lifecycle:start-secrets')
         await transaction.put(
@@ -154,6 +170,7 @@ export function durableStartStorage(
       return (await storage.get('creation', CREATE_RESULT))?.admission
     },
     publication: () => storage.get('publication', PUBLICATION),
+    firstMessage: () => storage.get('first', FIRST_MESSAGE_ADMISSION_KEY),
     clearPublication: async () => {
       await storage.delete(PUBLICATION)
     },

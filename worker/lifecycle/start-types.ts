@@ -5,6 +5,7 @@ import type { ProvisionedWorkspace } from './workspace-response'
 import type { RepositoryLocation } from './repository-locations'
 import type { SavedScript } from './saved-script'
 import type { ProviderRetryState } from './provider-retry'
+import type { FirstWorkspaceMessage } from './workspace-runtime'
 
 interface WorkspaceStartData {
   workspaceId: string
@@ -36,6 +37,8 @@ interface WorkspaceStartData {
   requestedByUserId?: string
   providerRetry?: ProviderRetryState | null
   deadlineAt?: number
+  /** A deliberate first-start replacement keeps the existing chat admission. */
+  replaceFailedCreation?: boolean
 }
 
 export type WorkspaceMachinePhase =
@@ -103,6 +106,7 @@ export interface StartJobStorage {
   result(): Promise<WorkspaceStartResult | undefined>
   creationResult(): Promise<WorkspaceStartResult | undefined>
   admission(): Promise<WorkspaceCreationAdmission | undefined>
+  firstMessage(): Promise<FirstWorkspaceMessage | undefined>
   publication(): Promise<CreationPublication | undefined>
   clearPublication(): Promise<void>
   complete(result: WorkspaceStartResult): Promise<void>

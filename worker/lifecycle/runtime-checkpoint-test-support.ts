@@ -1,5 +1,7 @@
 import { START_JOB_KEY } from './start-storage'
 import type { StoredWorkspaceStartJob } from './start-job-codec'
+import { FIRST_MESSAGE_ADMISSION_KEY } from './workspace-runtime'
+import { LIFECYCLE_STATE_KEY } from './durable-types'
 
 export function holdMachineCheckpoint(storage: DurableObjectStorage) {
   let reached: () => void = () => {}
@@ -22,4 +24,23 @@ export function holdMachineCheckpoint(storage: DurableObjectStorage) {
     return result
   }
   return { entered, release }
+}
+
+export function failAfterFirstMessageAdmission(storage: DurableObjectStorage) {
+  const transaction = storage.transaction.bind(storage)
+  storage.transaction = async (operation) => {
+    const result = await transaction(operation)
+    if (
+      (await storage.get(FIRST_MESSAGE_ADMISSION_KEY)) &&
+      !(await storage.get(LIFECYCLE_STATE_KEY))
+    ) {
+      storage.transaction = async () => {
+        storage.transaction = transaction
+        throw new Error(
+          'The first lifecycle write failed after chat admission.',
+        )
+      }
+    }
+    return result
+  }
 }

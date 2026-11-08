@@ -62,7 +62,6 @@ export async function createRunnerLimitsFixture() {
     scheduleRunnerCheck: () => () => undefined,
     readRunnerAccess: async () => true,
     readConnectionAccess: async () => [],
-    firstStartIncomplete: async () => false,
     randomId: () => `command-${++commandSequence}`,
     randomConnectionId: () => `connection-${++connectionSequence}`,
     readLoginAvailability: async () => new Set<string>(),

@@ -190,10 +190,13 @@ methods of `Workspace`.
 
 ### Stop and summary
 
-- When the lifecycle state becomes `stopped` or `error`, or a failed create
-  clears the lifecycle, `stopWorkspace` closes the runner. It ends each
+- When the lifecycle state becomes `stopped` or `error`,
+  `stopWorkspace` closes the runner. It ends each
   running or stopping turn as stopped. Queued turns stay for the resume.
   Device cleanup starts too.
+- A failed admitted create keeps the same workspace and normal access to chat.
+  Later messages remain queued. A replacement create uses a fresh computer token.
+  Its readiness releases the existing commands in their saved order.
 - During org deletion, a missing workspace ends only the state projection.
   Device reconciliation still settles the request and sends its broker cancellation.
 - `workspaceSummary` gives the last event number, the last event number
