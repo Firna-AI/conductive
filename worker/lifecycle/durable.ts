@@ -10,6 +10,7 @@ import { advanceDiskRetentionState } from './disk-retention-state'
 import { writeLifecycleState } from './durable-scheduling'
 import { failedStartStop } from './durable-start-stop'
 import { advanceLifecycleAlarm } from './durable-alarm'
+import { isConfirmedStopped } from './confirmed-stop'
 import {
   LIFECYCLE_STATE_KEY,
   type DurableLifecycleState,
@@ -167,7 +168,7 @@ export class DurableLifecycle {
   rearmStopped(): Promise<void> {
     return this.serial(async () => {
       const state = await this.read()
-      if (state?.state === 'stopped') await this.write(state)
+      if (state && isConfirmedStopped(state)) await this.write(state)
     })
   }
 
@@ -194,9 +195,7 @@ export class DurableLifecycle {
 
   stopped(): Promise<void> {
     return this.update((state) =>
-      state.state === 'stopped' && state.startStop !== 'pending'
-        ? state
-        : reconciledLifecycle(state, 'stopped', this.now()),
+      reconciledLifecycle(state, 'stopped', this.now()),
     )
   }
 

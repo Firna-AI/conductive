@@ -12,6 +12,7 @@ export interface RetentionCommandState {
   processId: number | null
   stdoutOffset: number
   stderrOffset: number
+  stopRequestedAt?: number
 }
 
 export interface RetentionCommandPort {

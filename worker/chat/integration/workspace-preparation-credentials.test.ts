@@ -1,3 +1,4 @@
+import type { WebSocket } from 'miniflare'
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { readCreated } from '../../../src/app/api/read-workspaces'
@@ -9,6 +10,7 @@ import { readWorkspaceToken } from '../../lifecycle/tokens'
 import { saveGitHubTokens } from '../../security/github-tokens'
 import { CLAUDE } from '../harness.test-support'
 import { record, string } from '../inputs'
+import { closeSockets } from '../adapter-sockets.test-support'
 import {
   createOuterRuntime,
   OUTER_MACHINE_ORIGIN,
@@ -17,16 +19,23 @@ import {
 } from './outer-runtime.test-support'
 import { OUTER_ORG, OUTER_REPOSITORY } from './outer-seed.test-support'
 import type { Workspace } from './preparation-entry.test-support'
-import { driveWorkspaceStart } from './workspace-start.test-support'
+import {
+  driveWorkspaceStart,
+  prepareWorkspaceStart,
+} from './workspace-start.test-support'
+import { connectShellRunner } from './shell-runner.test-support'
 
 let bundle: string
 let fixture: OuterRuntime | undefined
+const sockets: WebSocket[] = []
 beforeAll(async () => {
   bundle = await outerWorkerBundle(
     'worker/chat/integration/preparation-entry.test-support.ts',
   )
 })
 afterEach(async () => {
+  await closeSockets(...sockets)
+  sockets.length = 0
   await fixture?.dispose()
   fixture = undefined
 })
@@ -109,6 +118,20 @@ it('keeps private repository preparation authorized after a member stops its que
   expect(afterPreparation.status).toBe(409)
   expect(await afterPreparation.json()).toMatchObject({
     error: { code: 'current_turn_required' },
+  })
+  await prepareWorkspaceStart(actor)
+  const runner = await connectShellRunner(
+    active,
+    created.workspace.id,
+    token,
+    'preparation-ready-stream',
+  )
+  sockets.push(runner.socket)
+  expect(await runner.inbox.next()).toMatchObject({ type: 'welcome' })
+  runner.emit({ type: 'runner.ready' })
+  expect(await runner.inbox.next()).toMatchObject({
+    type: 'confirm',
+    throughEventNumber: 1,
   })
   expect(
     await driveWorkspaceStart<

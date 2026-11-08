@@ -1,8 +1,8 @@
-import {
-  DISK_KEEPALIVE_MS,
-  type DurableLifecycleState,
-  type LifecycleReconciliation,
+import type {
+  DurableLifecycleState,
+  LifecycleReconciliation,
 } from './durable-types'
+import { finishRetentionAttempt, isConfirmedStopped } from './confirmed-stop'
 
 /** Reuse each confirmed provider state before a stored runner flag can hide it. */
 export function reconciledLifecycle(
@@ -10,16 +10,18 @@ export function reconciledLifecycle(
   remote: LifecycleReconciliation | void,
   now: number,
 ): DurableLifecycleState {
-  if (remote === 'stopped')
+  if (remote === 'stopped') {
+    const stoppedAt =
+      state.diskRetentionCommand?.stopRequestedAt ??
+      (isConfirmedStopped(state) ? null : now)
     return {
-      ...state,
+      ...finishRetentionAttempt(state, stoppedAt),
       state: state.startStop && state.error ? 'error' : 'stopped',
       startStop: state.startStop ? 'stopped' : undefined,
       runningSessions: [],
       runnerConnected: false,
-      stoppedAt: now,
-      nextDiskKeepaliveAt: now + DISK_KEEPALIVE_MS,
     }
+  }
   if (remote === 'error')
     return {
       ...state,

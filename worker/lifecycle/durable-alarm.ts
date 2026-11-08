@@ -1,5 +1,6 @@
 import { advanceStartStop } from './durable-start-stop'
 import { reconciledLifecycle } from './durable-reconciliation'
+import { isConfirmedStopped } from './confirmed-stop'
 import {
   IDLE_MS,
   type DurableLifecycleState,
@@ -22,10 +23,10 @@ export async function advanceLifecycleAlarm(
     return
   }
   let stopPending = false
-  if (!state.runnerConnected && state.state !== 'stopped' && hooks.reconcile) {
+  if (!state.runnerConnected && !isConfirmedStopped(state) && hooks.reconcile) {
     state = reconciledLifecycle(state, await hooks.reconcile(), now())
   }
-  if (state.state === 'stopped' || state.startStop === 'stopped') {
+  if (isConfirmedStopped(state)) {
     if (
       state.nextDiskKeepaliveAt !== null &&
       state.nextDiskKeepaliveAt <= now()

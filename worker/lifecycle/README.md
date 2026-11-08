@@ -242,6 +242,10 @@ object holds the lifecycle state, the turn records, and the events.
 - [`durable-start-stop.ts`](durable-start-stop.ts): the saved stop owner of
   failed and cancelled resumes. [`durable-alarm.ts`](durable-alarm.ts) advances
   stop cleanup before normal lifecycle work.
+- [`confirmed-stop.ts`](confirmed-stop.ts): `isConfirmedStopped` shares the
+  physical stop classification across lifecycle maintenance. A saved public
+  error stays separate. `finishRetentionAttempt` clears an ended attempt
+  and renews dates only when its owner supplies a stop-request time.
 - [`workspace-actions.ts`](workspace-actions.ts): the stop, deadline, and
   state read actions on the sandbox.
 - [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
@@ -253,11 +257,19 @@ object holds the lifecycle state, the turn records, and the events.
 - [`retention-command.ts`](retention-command.ts): `advanceRetentionCommand`
   starts the maintenance script detached and polls its saved process.
   Its journal identity and output offsets survive reconstruction.
+- [`retention-stop.ts`](retention-stop.ts): `stopRetention` saves the
+  attempt's stop request before it contacts the provider. Later confirmation
+  uses that time. An already stopped sandbox with no saved request keeps
+  its earlier disk dates.
 - [`disk-retention-state.ts`](disk-retention-state.ts):
   `advanceDiskRetentionState` saves the original maintenance deadline in
   native lifecycle state before the first provider call. It also saves the
   maintenance command identity and process. It keeps the failure after
   cleanup and caps active maintenance alarms at the deadline.
+- [`retention-data.ts`](retention-data.ts): saved phase progress and the
+  resource eligibility lookup used when a confirmed stopped workspace shows
+  an error. The lookup reuses the shared owner, org, and archive predicate.
+  Confirmed stop finalization clears the D1 progress with the native attempt.
 - [`durable-scheduling.ts`](durable-scheduling.ts): `writeLifecycleState`,
   the shared lifecycle state and alarm write.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.

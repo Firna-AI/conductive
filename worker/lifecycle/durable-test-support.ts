@@ -41,7 +41,12 @@ export function lifecycleFixture() {
     stop: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
     keepalive: vi
       .fn<(deadlineAt: number) => Promise<DiskRetentionResult>>()
-      .mockResolvedValue({ done: true, error: null }),
+      .mockImplementation(async () => ({
+        done: true,
+        error: null,
+        stoppedAt: now,
+        eligible: true,
+      })),
     extendDeadline: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
   }
   const create = () => new DurableLifecycle(storage, () => now, hooks)

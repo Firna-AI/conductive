@@ -42,10 +42,14 @@ export interface DurableLifecycleState {
   error: { code: string; message: string; log: string | null } | null
 }
 
-export interface DiskRetentionResult {
-  done: boolean
-  error: string | null
-}
+export type DiskRetentionResult =
+  | { done: false; error: string | null }
+  | {
+      done: true
+      error: string | null
+      stoppedAt: number | null
+      eligible: boolean
+    }
 
 export interface LifecycleHooks {
   changed(
@@ -56,6 +60,7 @@ export interface LifecycleHooks {
   keepalive(
     deadlineAt: number,
     command: RetentionCommandPort,
+    confirmedStopped: boolean,
   ): Promise<DiskRetentionResult>
   extendDeadline(): Promise<LifecycleReconciliation | void>
   reconcile?(): Promise<LifecycleReconciliation>

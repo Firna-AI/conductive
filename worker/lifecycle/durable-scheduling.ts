@@ -7,6 +7,7 @@ import {
   type LifecycleStorage,
   type LifecyclePublisher,
 } from './durable-types'
+import { isConfirmedStopped } from './confirmed-stop'
 
 export async function writeLifecycleState(
   storage: LifecycleStorage,
@@ -21,14 +22,13 @@ export async function writeLifecycleState(
     await hooks.changed(state, publish)
     return
   }
-  const alarm =
-    state.state === 'stopped' || state.startStop === 'stopped'
-      ? state.nextDiskKeepaliveAt
-      : state.state === 'error'
-        ? now() + 5_000
-        : state.runningSessions.length
-          ? now() + TURN_HEARTBEAT_MS
-          : state.lastActivityAt + IDLE_MS
+  const alarm = isConfirmedStopped(state)
+    ? state.nextDiskKeepaliveAt
+    : state.state === 'error'
+      ? now() + 5_000
+      : state.runningSessions.length
+        ? now() + TURN_HEARTBEAT_MS
+        : state.lastActivityAt + IDLE_MS
   if (alarm === null || state.state === 'archived') await storage.deleteAlarm()
   else {
     const startPending = (await hooks.startPending?.()) ?? false
@@ -36,8 +36,7 @@ export async function writeLifecycleState(
       startPending
         ? Math.min(alarm, now() + 1_000)
         : !state.runnerConnected &&
-            state.state !== 'stopped' &&
-            state.startStop !== 'stopped' &&
+            !isConfirmedStopped(state) &&
             hooks.reconcile
           ? Math.min(alarm, now() + 5_000)
           : alarm,
