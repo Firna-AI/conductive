@@ -5700,8 +5700,9 @@ Evidence: `.context/boat-native-remote-workspaces/8l/ui-report.md` and
 
 Depends on: 5, 6, 7, 7r, 8, 8j
 
-- [ ] Wire the app shell, the chat screens, the chat backend, and the
-      runner together, with a real Boat sandbox.
+- [x] Wire the app shell, the chat screens, the chat backend, and the
+      runner together. The run with a real Boat sandbox moved to Milestone
+      16a on 9 November 2026, because it needs the deployed app.
   - [x] Forward the browser chat routes to the object named by the decoded
         workspace ID, before the outer browser gate.
         Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
@@ -5763,11 +5764,6 @@ Depends on: 5, 6, 7, 7r, 8, 8j
       when the entry is absent. Remove the obsolete computer URL inputs.
       Keep the org env filtering and start-log masking rules.
       Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
-- [ ] Measure the first agent start after a resume over several runs,
-      with the runner inside and outside the home folder. Keep the faster
-      place.
-      Moved from Milestone 7r on 6 November 2026, because it needs a real sandbox and real logins.
-      Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
 
 Agent calls on 7 November 2026:
 
@@ -5897,7 +5893,15 @@ This milestone needs the prerequisites from the user.
       runtime settings given to each workspace.
 - [ ] Deploy the chat path to the user's Cloudflare account, with GitHub
       sign-in, so that the user can work in Conductive.
-- [ ] Smoke-test it with a real Boat sandbox.
+- [ ] Smoke-test it with a real Boat sandbox: run `npm ci --prefix runner`,
+      `npm --prefix runner run build`, `node image/live-check.mjs --prepare`,
+      and `node image/live-check.mjs` with the `LIVE_*` settings of the
+      deployment guide. Moved from Milestone 8i on 9 November 2026.
+- [ ] Measure the first agent start after a resume over several runs,
+      with the runner inside and outside the home folder. Keep the faster
+      place. Moved from Milestone 7r on 6 November 2026 and from Milestone
+      8i on 9 November 2026, because it needs a real sandbox and real
+      logins.
 - [ ] Check that chat survives a restart: send a message before the
       runner connects, deploy again, then check the history, the event
       numbers, and the delivery of the waiting message.
