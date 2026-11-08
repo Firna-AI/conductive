@@ -6669,6 +6669,8 @@ Design calls of the orchestrator, 8 November 2026:
 
 Depends on: none.
 
+Completed on 8 November 2026.
+
 Apply the small `fix after merge` items of the gate, the tests, and the
 marketing site. Added on 8 November 2026.
 
@@ -6687,12 +6689,14 @@ Agent calls on 8 November 2026, within the approved options:
   file. Detection moves from the build to the tests.
 - Let the chosen glob emit each matching file. Reason: the marketing host
   still serves only the files that the shared list names.
+- Wait for pointer input before each new frame's first click. Reason: a
+  loaded document does not prove that the browser can send input to it.
 
 - [x] Apply option C of `plans/follow-ups/unused-export-check.md` (decision
       112): add an unused-export check to the complete gate. Delete that
       item. Branch: `conductor/boat-native-remote-workspaces-milestone-15p`.
-- [ ] Apply option A of `plans/follow-ups/mac-top-navigation-flake.md`, and
-      delete that item.
+- [x] Apply option A of `plans/follow-ups/mac-top-navigation-flake.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15p`.
 - [x] Apply option A of `plans/follow-ups/workspace-store-hook-test-store.md`,
       and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15p`.
 - [x] Apply option D of `plans/follow-ups/legal-pages-follow-protocol.md`,
