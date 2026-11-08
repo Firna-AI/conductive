@@ -72,7 +72,7 @@ export function fakeWorkspaceRoutes(
         {
           ...sessions.sessions[0],
           id: data.created.sessionId,
-          title: 'New session',
+          title: data.created.workspace.name,
           activeTurnId: null,
           activeTurnStartedAt: null,
           retryMessageId: null,

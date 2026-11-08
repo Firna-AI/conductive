@@ -55,7 +55,10 @@ stops its own controller:
   `workspace.updated` events. The header and the list of the app show it.
 - Each tab shows the `title` of its session record. The backend provides
   the titles that the mockups show: the first session of a new workspace
-  has the workspace name, and the agent's title renames both. The
+  has the workspace name, and the agent's title renames both. Each other
+  session has "New session" until it accepts a message with text. The
+  first line of that message then becomes its title, as
+  [Sessions](../../docs/protocol/chat-and-events.md#sessions) says. The
   development page does the same.
 - `extraTabs` takes `<li>` tabs, such as open files, after the session tabs.
 - `content` takes a page that the app shows in place of the chat of the

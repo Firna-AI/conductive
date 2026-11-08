@@ -1,6 +1,13 @@
 import { chatHistoryPath } from '../../shared/events'
+import { sessionTitleFrom } from '../../shared/session-title'
 import type { Session } from '../../shared/sessions'
 import type { DevBackend } from './dev-backend'
+
+/** The title of a session that has no title of its own yet. */
+const NEW_SESSION = 'New session'
+
+/** The title that the scripted agent writes for a new workspace. */
+export const AGENT_TITLE = 'Saved carts'
 
 /** Places a session among the tabs or in the history, and tells the tabs. */
 export function place(backend: DevBackend, session: Session): void {
@@ -56,6 +63,23 @@ export function clearRetry(backend: DevBackend, sessionId: string): void {
 }
 
 /**
+ * A later session, each session but the first session of a new workspace,
+ * takes the first line of an accepted message as its title while it still
+ * has the title "New session", as the Worker does. So a name that a member
+ * gave the session stays, and a message with no text leaves the title.
+ */
+export function titleFromMessage(
+  backend: DevBackend,
+  sessionId: string,
+  text: string,
+): void {
+  const session = recordOf(backend, sessionId)
+  if (!session || session.id === backend.titled) return
+  const title = session.title === NEW_SESSION ? sessionTitleFrom(text) : null
+  if (title !== null) place(backend, { ...session, title })
+}
+
+/**
  * A new session that the reader of the page starts, as its starter. `id` is
  * the ID that the chat chose, and `source` the session that a linked session
  * points to.
@@ -70,7 +94,7 @@ export function newSession(
   const session: Session = {
     id: options.id ?? `dev-session-${backend.count}`,
     workspaceId,
-    title: 'New session',
+    title: NEW_SESSION,
     choice,
     createdAt: backend.clock.now(),
     closedAt: null,
@@ -105,11 +129,11 @@ export function targetOf(backend: DevBackend, session: Session): Session {
 }
 
 /**
- * The title that the agent writes after its first answer in a new
- * workspace. The workspace takes it as its name. The first session of the
- * workspace takes it too, while it still has the name that the workspace
- * had, so a name that a user gave the session stays. The backend gives
- * these titles. This page does the same, so its tabs match the mockups.
+ * The title that the agent writes for a new workspace. The workspace takes
+ * it as its name. The first session of the workspace takes it too, while it
+ * still has the name that the workspace had, so a name that a user gave the
+ * session stays. The backend gives these titles. This page does the same,
+ * so its tabs match the mockups.
  */
 export function writeTitle(backend: DevBackend, name: string): void {
   const previous = backend.workspace.name
@@ -127,7 +151,9 @@ export function writeTitle(backend: DevBackend, name: string): void {
 
 /**
  * A new workspace: its first session takes the workspace name, as the
- * backend gives it, and the agent's first answer writes the title.
+ * backend gives it. While the workspace has no title, the agent writes the
+ * title when a turn starts with a message that has text, as the runner
+ * asks for it. A message with no text gives no title.
  */
 export function followTitle(backend: DevBackend): void {
   const [first] = backend.open
@@ -139,9 +165,9 @@ export function followTitle(backend: DevBackend): void {
     ]
     backend.sync()
   }
-  backend.agent.onAnswer = () => {
-    if (backend.workspace.name !== 'Saved carts') {
-      writeTitle(backend, 'Saved carts')
+  backend.agent.onStarted = (message) => {
+    if (backend.workspace.name !== AGENT_TITLE && message.text.trim() !== '') {
+      writeTitle(backend, AGENT_TITLE)
     }
   }
 }

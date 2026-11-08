@@ -574,10 +574,14 @@ Tags: ui
 
 Depends on: 1, 2, 4
 
-- [ ] Make the development page write the title when the first turn
+Evidence: `.context/workspace-title-from-first-message/dev-page/`.
+
+- [x] Make the development page write the title when the first turn
       starts (decision 142), and give each later session its first message
       as its title (decision 143). Update the
       [chat README](../src/chat/README.md).
+- [x] Make the fake API of the app tests give the first session of a
+      created workspace the workspace name, as the Worker does.
 - [ ] Waits for decision 144. Make open tabs take the workspace name from
       the workspace record, not from the `workspace.title` event, so that
       a title that the Worker skips never shows. Add a test for a skipped

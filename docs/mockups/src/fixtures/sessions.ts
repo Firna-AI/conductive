@@ -5,6 +5,7 @@
  * a message.
  */
 
+import { sessionTitleFrom } from '../../../../src/shared/session-title'
 import type { AgentKey } from './agents'
 import type { PersonKey } from './members'
 
@@ -25,32 +26,15 @@ export type StartedSession = Session & { starter: PersonKey }
 /** The title of a session before a first message with text. */
 const defaultTitle = 'New session'
 
-/** The most characters that a title from a first message keeps. */
-const titleLimit = 60
-
 /**
- * The title that the first message with text gives a later session: the
- * first line with text, with each run of spaces made one space and one
- * final full stop removed. The limit counts Unicode code points, so a cut
- * never splits a character. A line over the limit ends at its last word
- * boundary within the limit, and a word over the limit ends at the limit.
- * No ellipsis marks the cut, but the tab can still shorten the title on
+ * The first message of a later session, and the title that it gives. The
+ * title comes from `sessionTitleFrom`, the rule that the Worker applies
+ * too. No ellipsis marks a cut, but the tab can still shorten the title on
  * screen. A message with no text, such as one with only a screenshot,
  * keeps the default title.
  */
-function titleFrom(message: string): string {
-  const line = message.trim().split('\n')[0].replace(/\s+/g, ' ').trim()
-  const text = /[^.]\.$/.test(line) ? line.slice(0, -1) : line
-  if (text === '') return defaultTitle
-  const points = Array.from(text)
-  if (points.length <= titleLimit) return text
-  const boundary = points.lastIndexOf(' ', titleLimit)
-  return points.slice(0, boundary > 0 ? boundary : titleLimit).join('')
-}
-
-/** The first message of a later session, and the title that it gives. */
 function firstMessage(text: string): { firstMessage: string; title: string } {
-  return { firstMessage: text, title: titleFrom(text) }
+  return { firstMessage: text, title: sessionTitleFrom(text) ?? defaultTitle }
 }
 
 /**
