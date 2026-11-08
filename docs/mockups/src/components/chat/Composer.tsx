@@ -40,8 +40,9 @@ export type ComposerState = {
    */
   waits?: boolean
   /**
-   * Whose agent login the session uses: the login of its starter. The line
-   * under the box names it.
+   * The agent login of another member that the session uses: the login of
+   * its starter. The line under the box names it. A message on the own
+   * login of the viewer has no line.
    */
   sessionLogin?: SessionLogin
 }
@@ -67,8 +68,9 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. While a turn runs, a message
  * steers the turn, and Stop ends it. While Send waits for the first start
- * of a new workspace, a message in the box shows the reason beside Send. A
- * line under the box names whose agent login the session uses.
+ * of a new workspace, a message in the box shows the reason beside Send.
+ * When a message spends the agent login of another member, a line under
+ * the box names that login.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const { field } = useControlSizes()

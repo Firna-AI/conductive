@@ -36,7 +36,10 @@ export interface ComposerProps {
    * message in the box shows the short reason beside Send.
    */
   waits: boolean
-  /** Whose agent login the session uses, which a line under the box names. */
+  /**
+   * The agent login of another member that the session uses, which a line
+   * under the box names. A message on the reader's own login has no line.
+   */
   login?: SessionLogin
   /**
    * A message starts a new linked session, so it does not steer a running
@@ -56,8 +59,9 @@ export interface ComposerProps {
  * attach button, the model picker, and Send. While a turn runs, a message
  * steers the turn, and Stop sits beside Send. While Send waits for the
  * first start of the workspace, the box keeps the message, and the reason
- * shows beside Send. A line under the box names whose agent login the
- * session uses. On desktop, Enter sends and Shift+Enter starts a new line.
+ * shows beside Send. When a message spends the agent login of another
+ * member, a line under the box names that login. On desktop, Enter sends
+ * and Shift+Enter starts a new line.
  * The composer reads Enter before the text field does, so Enter never adds
  * a line to a message that it sends.
  */

@@ -46,16 +46,14 @@ export function sessionLoginOf(
 }
 
 /**
- * What the line under the composer says: the reader's own login, also for a
- * message that starts a linked session, or the login of another member.
+ * What the line under the composer says: the login of another member, which
+ * a message of the reader spends. A message on the reader's own login, also
+ * one that starts a linked session, gets no line.
  */
 export function loginLineOf(
   view: SessionLoginView | null,
   agent: string,
 ): SessionLogin | undefined {
-  if (view === null) return undefined
-  if (view.kind === 'member') {
-    return { owner: { kind: 'member', name: view.name }, agent }
-  }
-  return { owner: { kind: 'viewer' }, agent }
+  if (view?.kind !== 'member') return undefined
+  return { starter: view.name, agent }
 }

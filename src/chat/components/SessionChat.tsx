@@ -91,11 +91,12 @@ function sandboxParts(props: SessionChatProps): ChatHost {
  * sandbox starts, and under it the notices and the composer, or the bar that
  * takes the composer's place while the sandbox does not run. The status of
  * the stored history comes from its load alone, so content never hides a
- * failed load. The composer names whose login the session uses. A linked
- * session starts with a link to the session that it started from. The
- * shown record comes from the tabs, so a closed session that an archived
- * workspace shows keeps its link too. A read-only workspace, archived or of
- * a suspended org, shows no composer and no control that writes.
+ * failed load. The composer names the login of another member that a
+ * message spends. A linked session starts with a link to the session that
+ * it started from. The shown record comes from the tabs, so a closed
+ * session that an archived workspace shows keeps its link too. A read-only
+ * workspace, archived or of a suspended org, shows no composer and no
+ * control that writes.
  */
 export function SessionChat(props: SessionChatProps) {
   const { snapshot, controller, now } = props

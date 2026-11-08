@@ -22,8 +22,7 @@ const connectPaths: Readonly<Record<AgentKey, string>> = {
  * A message in the session of another member runs on the login of that
  * starter, so the own login of the viewer does not matter there. When the
  * login of the starter is not available, the notice says that the message
- * starts a new session, and the login line names the own login of the
- * viewer. The starter sees the notice that asks to connect.
+ * starts a new session. The starter sees the notice that asks to connect.
  */
 export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   const { choice } = workspace

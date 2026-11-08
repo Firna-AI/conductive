@@ -8,7 +8,7 @@ import {
 export const sessions = defineScreen({
   title: 'Sessions',
   description:
-    'A new session, after + at the end of the tabs: an empty chat with its own model picker. It works on the same branch and the same cloud computer as the two other sessions. The user started it, so its composer says "Uses your Claude login".',
+    'A new session, after + at the end of the tabs: an empty chat with its own model picker. It works on the same branch and the same cloud computer as the two other sessions. The user started it, so no line under its composer names a login.',
   rationale:
     'Each agent session is a tab in the centre column, beside the open files and diffs. The current session shows a pencil to rename it, and every tab closes. The user chose several sessions per workspace, each with its own model picker, in decision 19. On a phone the sessions are tabs at the top of the Chat tab. The clock after + opens the session history, as the user chose in decision 31.',
   relatedDocs: [],
@@ -41,7 +41,7 @@ export const sessions = defineScreen({
       slug: 'no-starter-login',
       title: "Starter's login not available",
       description:
-        'Cal started Address autocomplete, then removed the Claude login from the account. Priya opens the session, whose chat stays as it was, and writes a message. The notice over the composer says that the message starts a new session. The line under the composer says "Uses your Claude login". Send opens the new session.',
+        'Cal started Address autocomplete, then removed the Claude login from the account. Priya opens the session, whose chat stays as it was, and writes a message. The notice over the composer says that the message starts a new session. Send opens the new session.',
       rationale:
         "The user chose option A of decision 115 on 7 November 2026. When the starter's login cannot be used, another member's message starts a new, empty session on that member's own login. Examples are a starter who left the org or removed the login. The first session stays as it was. The notice shows before Send, so the member knows where the message goes. Cal sees the notice that asks to connect Claude, as the Agent not connected state of the composer shows.",
       props: { tab: 'session', viewer: 'member', composer: 'no-starter-login' },

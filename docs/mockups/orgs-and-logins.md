@@ -29,9 +29,10 @@ plan limits.
 - Each session runs on the agent login of the member who started it, also
   for the messages of other members. So a reassign changes no login, and
   the cloud computer keeps running.
-- The line under the composer names the login that a message uses, such
-  as "Uses Cal's Claude login" in `app/composer/login`, or "Uses your Claude
-  login". When the login of the member who started a session is not
+- When a message uses the login of another member, the line under the
+  composer names that login, such as "Uses Cal's Claude login" in
+  `app/composer/login`. A message on the own login of the viewer shows no
+  line. When the login of the member who started a session is not
   available, a message of another member starts a new session. The notice
   over the composer of the first session says so, and its chat stays as it
   was, as `app/sessions/no-starter-login` shows. The new session starts

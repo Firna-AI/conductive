@@ -106,8 +106,11 @@ says.
   old result until the next check.
 - When the record already shows a login that cannot be used, the composer
   says before the send that the message starts a new session.
-- The composer names the member whose login its message runs on, such as
-  "Uses Priya's Claude login", or "Uses your Claude login" to Priya.
+- When a message runs on the login of another member, the composer names
+  that member, such as "Uses Priya's Claude login".
+- The composer names no login when a message runs on the user's own login.
+  A line for the own login was rejected, because it tells the user nothing
+  new.
 - The composer attaches files to a message.
 - The composer shows a notice when the user has no login for the agent of
   the chosen model (decision 33). It shows no such notice when the message

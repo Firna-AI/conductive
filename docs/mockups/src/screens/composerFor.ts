@@ -30,11 +30,11 @@ export function isRunning(state: WorkspaceState): boolean {
  * the picker marks the models of the other agent as opening a new session.
  * A message for an agent that is not connected waits, and Send is off.
  *
- * A session runs on the login of its starter, and a line under the box
- * names that login. When the starter is another member, the own login of
- * the viewer does not matter. When the login of that starter is not
- * available, Send opens a new linked session on the own login of the
- * viewer.
+ * A session runs on the login of its starter. When the starter is another
+ * member, a line under the box names that login, and the own login of the
+ * viewer does not matter. When the login of that starter is not available,
+ * Send opens a new linked session on the own login of the viewer, and the
+ * box has no login line.
  *
  * While the sandbox of a new workspace starts for the first time, Send
  * waits in every session, and the box keeps the message. A resume of a
