@@ -14,7 +14,7 @@ examples.
 ## How to set the inputs
 
 - Declare the bindings in `wrangler.jsonc`. It already holds `DB`,
-  `ASSETS`, and `WORKSPACES`.
+  `ASSETS`, `WORKSPACES`, and `AI`.
 - Set each public variable in the `vars` of `wrangler.jsonc`, or in the
   settings of the Worker in the Cloudflare dashboard.
 - `wrangler.jsonc` sets `keep_vars`. So each deploy keeps the variables
@@ -43,6 +43,7 @@ examples.
 | `DB` | D1 database | Every route that reads users, orgs, or workspaces | The production database. Apply the migrations with `npx wrangler d1 migrations apply DB --remote`. |
 | `ASSETS` | Static assets | The pages of the web app | The client build of `npm run build`. |
 | `WORKSPACES` | Durable Object namespace | Chat, the events socket, the runner socket, Mac commands, the workspace routes, the workspace list, the read mark, the git credential route, and image builds | The `Workspace` class of `worker/workspace.ts`. |
+| `AI` | Workers AI | The title of each new workspace | Workers AI on the Cloudflare account of the Worker, as [The title model](#the-title-model) says. |
 
 ## Public variables
 
@@ -57,6 +58,7 @@ examples.
 | `BOAT_ORG_ID` | Each call to Boat | The ID of the app's Boat organization, as [The app's Boat account](#the-apps-boat-account) says. It is not a secret. |
 | `CONDUCTIVE_MODELS` | `GET /api/models` | The JSON model list, as [Models](#models) says. |
 | `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, for a user with no saved default | The JSON default choice, as [Models](#models) says. |
+| `CONDUCTIVE_TITLE_MODEL` | The title of each new workspace | Optional. The Workers AI model ID of the title model, as [The title model](#the-title-model) says. Without it, a new workspace keeps its city name. It is not a secret. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
 | `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
@@ -121,6 +123,26 @@ The shape of the two values, with placeholders in place of real values:
 ```json
 { "agent": "claude", "model": "<model ID>", "effort": "medium" }
 ```
+
+## The title model
+
+`CONDUCTIVE_TITLE_MODEL` names the model that writes the title of each new
+workspace, as [Messages](protocol/chat-and-events.md#messages) says. It is
+operator data. The Worker has no built-in title model.
+
+- The value is the model ID of a text generation model of Workers AI, the
+  model service of Cloudflare. The
+  [Workers AI models](https://developers.cloudflare.com/workers-ai/models/)
+  catalogue lists them. Choose a small, fast model.
+- The Worker calls the model through the `AI` binding, on the Cloudflare
+  account of the Worker. Each request counts toward the Workers AI use of
+  that account.
+- Without the binding or the variable, a new workspace keeps its city
+  name, and the Worker logs a warning. The Worker also logs a warning for
+  a failed request. No route fails for a missing title.
+- Workers AI runs only on the network of Cloudflare. `npm run dev` and
+  `npm run preview` do not reach it. So they need no Cloudflare login, and
+  a new workspace keeps its city name there.
 
 ## The runner archive
 

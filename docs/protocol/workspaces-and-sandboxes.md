@@ -130,8 +130,8 @@ says.
 - Reason: a GitHub login is unique, so the branches of each person stay
   together. A first name was rejected, because two people can share one.
 - The workspace name starts as the city name.
-  [Chat and events](chat-and-events.md#messages) says how the agent's title
-  then renames it.
+  [Chat and events](chat-and-events.md#messages) says how a title from the
+  first message then renames it.
 - When the sandbox of a new workspace does not start, the workspace does
   not stay. The events of the workspace first show the failed start and
   the error state. The app then removes the workspace and its token.

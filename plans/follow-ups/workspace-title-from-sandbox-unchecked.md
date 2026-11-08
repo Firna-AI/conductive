@@ -18,9 +18,9 @@
   - **A.** Accept each name, as now. Effort: Small.
   - **B.** Refuse an empty name and a name over a limit, such as 100 characters, as an invalid runner event. The refusal marker and the repair request already exist for such events. Effort: Small.
   - **C.** Keep the old name for an empty name, and cut a long name to the limit, with a warning in the Worker log. The workspace still gets a name from a long title. Effort: Small.
-  - **D.** The Worker makes the title itself, so no sandbox code sets the name. It needs a model call or a rule in the Worker, and it changes the protocol rule that the agent writes the title. Effort: Large.
+  - **D.** The Worker ignores each `workspace.title` from a sandbox, because the Worker now writes the titles itself: the user chose on 8 November 2026, with decision 146 C of the workspace title plan, that the Worker asks a Workers AI model for the title. No runner sends a title any more. This removes the runner title path of the Worker, its repair request of the kind `workspace.title`, and their tests, which are on `origin/main`, so it needs the user's approval. Effort: Medium.
 - **Left out:** None.
-- **Wider fix:** None. The other text of runner events, such as the labels of start steps, shows only inside its own workspace.
+- **Wider fix:** D. It removes the case, while B and C only limit it.
 - **Previous examples:** None found.
-- **Recommendation:** C. It keeps the name readable for every member, and it handles a long title without a failure, as the always-on rules prefer.
-- **Action:** ask the user, because each option except A adds a stricter check of runner input, and the always-on rules give that choice to the user.
+- **Recommendation:** D. No sandbox code can then set the name at all, because the Worker owns each title. C is the smaller change if the runner path must stay.
+- **Action:** ask the user, because D removes functionality that is on `origin/main`, and B and C add a stricter check of runner input, and the always-on rules give each of these choices to the user.

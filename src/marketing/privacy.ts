@@ -74,7 +74,9 @@ export const privacyDocument: LegalDocument = {
       title: 'Who gets your data',
       blocks: [
         list(
-          text`Cloudflare runs ${productName} and stores its data.`,
+          text`Cloudflare runs ${productName} and stores its data.
+            Cloudflare's AI model service also writes a short name for each
+            new workspace from the text of its first message.`,
           text`GitHub signs you in, and gives ${productName} access to your
             repositories through its GitHub App.`,
           text`A cloud computer provider runs the cloud computers of every org

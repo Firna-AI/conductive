@@ -62,10 +62,9 @@ says.
 - The tab of a session shows the title of the session.
 - The first session of a new workspace starts with the name of the
   workspace, the city name (decision 143).
-- When the workspace takes the agent's title as its name, as
-  [Messages](#messages) says, the first session takes the title too. It
-  takes only the first title of the workspace, and only while it still
-  has the city name.
+- When the workspace takes a title as its name, as [Messages](#messages)
+  says, the first session takes the title too. It takes only the first
+  title of the workspace, and only while it still has the city name.
 - Each other session starts with the title "New session" (decision 143).
 - When the workspace accepts a message with text in such a session, the
   first line with text of that message becomes its title. The session
@@ -201,28 +200,32 @@ says.
 - Reason: a tab that missed newer events can still show an older Try again.
   A check in the chat alone was rejected, because such a tab could send an
   older message again. The agent would then answer out of order.
-- When the first turn of a new workspace starts, the app asks the agent of
-  that turn for a title of three to five words (decision 142). The agent
-  writes the title from the text of the first message.
-- The title request runs at the same time as the turn. The turn does not
-  wait for it. The request uses the agent login of the turn. The chat does
-  not show it.
-- The workspace then takes the title as its name.
+- When the app accepts the first message of a new workspace, it asks a
+  small model of Workers AI for a title (decision 146). The request asks
+  for three to five words. Workers AI is the model service of Cloudflare,
+  on the account that hosts the app.
+- The model writes the title from the text of that message. The request
+  holds no other data of the workspace. It uses no agent login of a
+  member. The chat does not show it.
+- The reply to the message does not wait for the title. The workspace
+  then takes the title as its name.
 - When the request fails, the workspace keeps its name. The app then asks
-  again when the next turn of the workspace starts, until the workspace
-  has a title.
-- A later request also uses the text of the first message. After a restart
-  of the runner, it can use the text of the message that starts its turn
-  instead.
-- A first message with no text starts no request. The next turn whose
-  message has text then asks, from that text.
-- Reason: the title needs only the first message. A request after the
-  first answer was rejected, because an agent can write its first answer
-  only at the end of a long turn.
-- A name that the Worker makes from the first words of the message was
-  rejected, because such names are weaker than the agent's title. A model
-  call from the Worker was rejected, because it needs a new path for the
-  logins of the members, or a new key of the operator.
+  again when it accepts the next message with text in the workspace. It
+  asks until the workspace has a title.
+- A later request also uses the text of the first message. Only when the
+  first message has no text does it use the text of the message that
+  starts it.
+- A first message with no text starts no request. The next message with
+  text in the workspace then starts it.
+- Reason: the name shows within seconds, while the sandbox starts, and the
+  operator chooses the model and its speed.
+- A request in the sandbox on the agent login of the member was rejected.
+  The name then waits for the sandbox, and each title spends the
+  subscription of the member.
+- A Claude model with an API key of the operator was rejected, because it
+  sends each first message to another company. A name from the first
+  words of the message, with no model, was rejected, because such names
+  are weaker.
 
 ## What the chat shows
 
