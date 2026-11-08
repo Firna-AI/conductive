@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-08, a problem outside the scope of the check of finding 3 of PR #47, branch `conductor/boat-native-remote-workspaces-milestone-5c`, round 2. Corrected on 2026-11-09 by the check of finding 12 of PR #50 (Milestone 5d): the first text named the device broker, but the Mac connection attaches only in the broker object of each user (`worker/devices/broker-routes.ts:56`), so the broker never sets the alarm of a workspace object (`worker/devices/broker.ts:190`).
+- **Added:** 2026-11-08, a problem outside the scope of the check of finding 3 of PR #47, branch `conductor/boat-native-remote-workspaces-milestone-5c`, round 2. Corrected on 2026-11-08 by the check of finding 12 of PR #50 (Milestone 5d): the first text named the device broker, but the Mac connection attaches only in the broker object of each user (`worker/devices/broker-routes.ts:56`), so the broker never sets the alarm of a workspace object (`worker/devices/broker.ts:190`).
 - **Location:** `worker/lifecycle/workspace-alarm.ts:57`, the `if (advancedStart) return` branch, and `worker/lifecycle/start-coordinator.ts:140`.
 
 - **Terms:**
