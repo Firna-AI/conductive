@@ -4071,6 +4071,39 @@ Added on 8 November 2026 from the user's request to merge a baseline soon.
   branch while it can, and into `main` after the first merge. Milestone 17
   moves the open ones into a new plan.
 
+### 137. Choose the Boat organization of the deployed app
+
+Added on 8 November 2026 from Milestone 16a.
+
+- **Background:** Every cloud computer of every org runs in one Boat
+  organization of the app. The deployment guide asks for an organization
+  that holds only the app's sandboxes, and for a key with only the actions
+  that the app uses.
+- **Options:**
+  - **A.** Use the existing "Firna" organization and the current key now,
+    and make a separate organization later.
+  - **B.** Make a separate organization and a key with the actions of the
+    guide now.
+- **Recommendation:** B.
+- **Chosen:** A, by the user on 8 November 2026, for now. The follow-up
+  item `plans/follow-ups/separate-boat-organization.md` holds B.
+
+### 138. Choose the models of the deployed app
+
+Added on 8 November 2026 from Milestone 16a.
+
+- **Background:** The model list is operator data. The app does not start
+  without a valid list.
+- **Options:**
+  - **A.** Claude only: Opus 5.5, Sonnet 5.5, and Haiku 5.5, each with
+    the efforts low, medium, high, and max. The default is Opus 5.5 at
+    high.
+  - **B.** As A, plus Codex with `gpt-6.1-sol`, with the efforts low,
+    medium, high, and xhigh.
+  - **C.** Another list.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 8 November 2026.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
