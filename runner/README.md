@@ -81,6 +81,9 @@ These facts belong to this implementation, not to the protocol docs.
   works. One event can leave the output filter as several events, because
   the filter first releases its held text. The runner tries to save each of
   them, also after an earlier one fails.
+  The turn text buffer uses the same rule. Its drain tries each buffered
+  message, the next agent event, and each final tool update in order before
+  it reports the first save error. It never appends the same text again.
   A failed turn-end, ready, or unavailable-tree event save gets one more
   save of the pending state. That save sends the same numbered event.
   A failed start step ends the turn with its cause.

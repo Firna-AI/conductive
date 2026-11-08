@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { filePaths } from '../../src/shared/files'
+import { toolFixtures } from '../../src/test-support/fixtures/tools'
 import { recordedRunnerFileEvents } from '../../src/test-support/recorded-files'
 import {
   createHarness,
@@ -30,24 +31,37 @@ afterAll(async () => {
 
 it('serves the last stored file tree and changes while the sandbox sleeps', async () => {
   const context = await setupFilesHttp(harness, runtime)
-  const { org, workspaceId, files, request } = context
+  const { org, workspaceId, files, request, evict } = context
   const connected = await connectWorkspaceFiles(files)
   for (const event of recordedRunnerFileEvents) connected.runner.emit(event)
+  connected.runner.emit({ type: 'files.unavailable' })
   await connected.flush()
   connected.runner.disconnect()
+  await evict()
   const tree = await request(filePaths.tree(org.id, workspaceId))
   const changes = await request(filePaths.changes(org.id, workspaceId))
   expect(tree.status).toBe(200)
-  expect(await tree.json()).toMatchObject({
+  expect(await tree.json()).toEqual({
     revision: 2,
-    entries: expect.arrayContaining([
+    entries: [
+      ...toolFixtures().files.entries.filter(
+        (entry) => !['README.md', '.env.example'].includes(entry.path),
+      ),
       {
         path: 'notes.txt',
         name: 'notes.txt',
         kind: 'file',
         change: 'untracked',
       },
-    ]),
+      { path: 'docs', name: 'docs', kind: 'directory', change: null },
+      {
+        path: 'docs/README.md',
+        name: 'README.md',
+        kind: 'file',
+        change: 'renamed',
+      },
+    ],
+    unavailable: true,
   })
   expect(changes.status).toBe(200)
   expect(await changes.json()).toMatchObject({
@@ -213,7 +227,7 @@ it('checks the request gate and org workspace relationship before reaching file 
 })
 
 it('returns explicit unavailable state before a snapshot and confines reads to repository paths', async () => {
-  const { org, workspaceId, request, files } = await setupFilesHttp(
+  const { org, workspaceId, request, files, evict } = await setupFilesHttp(
     harness,
     runtime,
   )
@@ -228,6 +242,16 @@ it('returns explicit unavailable state before a snapshot and confines reads to r
     })
   }
   const connected = await connectWorkspaceFiles(files)
+  connected.runner.emit({ type: 'files.unavailable' })
+  await connected.flush()
+  await evict()
+  const tree = await request(filePaths.tree(org.id, workspaceId))
+  expect(tree.status).toBe(200)
+  expect(await tree.json()).toEqual({
+    revision: 0,
+    entries: [],
+    unavailable: true,
+  })
   const response = await request(
     filePaths.content(org.id, workspaceId, '../other-repository/secret.txt'),
   )
