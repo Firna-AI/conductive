@@ -4,6 +4,18 @@
   "main": "./worker/index.ts",
   "compatibility_date": "2026-11-06",
   "triggers": { "crons": ["*/15 * * * *"] },
+  // The deployment serves only its own hostnames.
+  "workers_dev": false,
+  "preview_urls": false,
+  // The other public variables of docs/deployment.md are set on the Worker
+  // itself, so that each deploy keeps them.
+  "keep_vars": true,
+  "routes": [
+    { "pattern": "conductive.build", "custom_domain": true },
+    { "pattern": "app.conductive.build", "custom_domain": true },
+    { "pattern": "api.conductive.build", "custom_domain": true },
+    { "pattern": "*.conductive.page/*", "zone_name": "conductive.page" },
+  ],
   "vars": {
     "MACHINE_ORIGIN": "https://api.conductive.build",
     "PREVIEW_DOMAIN": "conductive.page",

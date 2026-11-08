@@ -17,6 +17,13 @@ examples.
   `ASSETS`, and `WORKSPACES`.
 - Set each public variable in the `vars` of `wrangler.jsonc`, or in the
   settings of the Worker in the Cloudflare dashboard.
+- `wrangler.jsonc` sets `keep_vars`. So each deploy keeps the variables
+  that the settings of the Worker hold. Set a variable of one deployment
+  there, or with `--var` on its first deploy.
+- `wrangler.jsonc` routes the hostnames of
+  [Architecture](architecture.md#hostnames) and each hostname of the
+  preview domain. A proxied wildcard DNS record of the preview domain must
+  exist, so that each preview hostname reaches the Worker.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one
