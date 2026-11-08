@@ -31,9 +31,10 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
   [Deployment inputs](../../docs/deployment.md#models) says. A missing or
   invalid value gives a 503 on its own route only.
 - An account reply reads `user_preferences` and the records of the agent
-  logins. A login write encrypts the secret with
-  `agentLoginContext(userId, agent)` and `BOAT_KEY_ENCRYPTION_KEY`. No reply
-  holds a stored secret.
+  logins. It also gives the page of the GitHub App from `GITHUB_APP_SLUG`,
+  so a screen links to that page without a GitHub read. A login write
+  encrypts the secret with `agentLoginContext(userId, agent)` and
+  `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
 - Get started has only the steps `github-app`, `org`, and `agent-login`.
 - `getStartedGitHubComplete` owns the `github-app` step in every org state.
   The step is complete when an org of the user that is not deleted has a

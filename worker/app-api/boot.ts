@@ -24,6 +24,7 @@ import {
   saveAccountLogin,
   saveAccountNewWorkspaceView,
 } from './account-data'
+import { githubInstallUrl } from './feature-github'
 import { getStartedData } from './get-started-data'
 import { configuredDefaultChoice, configuredModels } from './models'
 
@@ -49,6 +50,7 @@ export async function bootRoute(
           configuredDefaultChoice(env),
         agentLogins: await accountLogins(env.DB, userId),
         newWorkspaceView: await accountNewWorkspaceView(env.DB, userId),
+        githubAppUrl: githubInstallUrl(env),
       } satisfies AccountResponse)
     }
   }

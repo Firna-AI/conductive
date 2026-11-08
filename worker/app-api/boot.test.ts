@@ -15,6 +15,7 @@ import {
   expectAccountState,
   expectIndependentPreferences,
   expectInvalidWorkspaceView,
+  harnessGitHubAppUrl,
   isolationAccountStates,
   operatorModels,
   putAccountValue,
@@ -55,6 +56,7 @@ it('boots from operator models and persists account preferences and encrypted se
       { agent: 'claude', connected: false },
       { agent: 'codex', connected: false },
     ],
+    githubAppUrl: harnessGitHubAppUrl,
   })
   const catalog = await harness.request(MODELS_PATH, cookie)
   expect(catalog.status).toBe(200)

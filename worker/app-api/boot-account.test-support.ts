@@ -23,6 +23,10 @@ export const operatorModels = [
   { agent: 'codex', model: 'operator-codex', label: 'Codex', efforts: ['low'] },
 ]
 
+/** The page of the GitHub App that the harness configures, the default app. */
+export const harnessGitHubAppUrl =
+  'https://github.com/apps/conductive/installations/new'
+
 export interface AccountState extends Omit<AccountResponse, 'user'> {
   agentLoginComplete: boolean
 }
@@ -50,12 +54,14 @@ export function isolationAccountStates(
   const empty: AccountState = {
     defaultChoice: choice,
     newWorkspaceView: 'page',
+    githubAppUrl: harnessGitHubAppUrl,
     agentLogins: noLogins,
     agentLoginComplete: false,
   }
   const firstConnected: AccountState = {
     defaultChoice: choice,
     newWorkspaceView: 'page',
+    githubAppUrl: harnessGitHubAppUrl,
     agentLogins: firstLogins,
     agentLoginComplete: true,
   }
@@ -66,6 +72,7 @@ export function isolationAccountStates(
   const otherConnected: AccountState = {
     defaultChoice: choice,
     newWorkspaceView: 'page',
+    githubAppUrl: harnessGitHubAppUrl,
     agentLogins: otherClaudeLogin,
     agentLoginComplete: true,
   }
