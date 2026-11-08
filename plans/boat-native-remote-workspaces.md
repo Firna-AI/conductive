@@ -6420,13 +6420,16 @@ build makes after the deploy.
 - [x] Run the complete gate. Commit and push the branch. Done on
       8 November 2026: the complete gate passed on the fix.
       Branch: `calummoore/directory-path-length`.
-- [ ] Review the branch against `origin/main` with the
+- [x] Review the branch against `origin/main` with the
       `implementation-review` skill. Report the findings, then apply the
       fix rule: fix the `fix now` findings, record follow-up items under
-      `plans/follow-ups/` for the rest, re-review once, and report.
+      `plans/follow-ups/` for the rest, re-review once, and report. Done
+      on 8 November 2026: two rounds found two findings in the post-merge
+      check, and `c6e9971` and `dbb9251` fix both. Evidence:
+      `.context/reviews/calummoore/directory-path-length/findings.md`.
       Branch: `calummoore/directory-path-length`.
-- [ ] Open the pull request into `main`.
-      Branch: `calummoore/directory-path-length`.
+- [x] Open the pull request into `main`. Done on 8 November 2026: pull
+      request #67. Branch: `calummoore/directory-path-length`.
 
 Evidence: `.context/ascii-sim.log`, the local simulation with tmux and
 moved mounts. `.context/gate-directory-path-length.log`, the gate.
