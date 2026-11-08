@@ -1,5 +1,8 @@
 import { isPendingCommand } from '../components/chat/PendingCommand'
-import type { SandboxNoticeState } from '../components/workspace/SandboxNotice'
+import type {
+  SandboxNoticeState,
+  SandboxPanelState,
+} from '../components/workspace/sandboxNoticeState'
 import { orgSuspendedReason } from '../components/orgs/suspension'
 import { conversations } from '../fixtures/conversations'
 import { startErrors } from '../fixtures/starting'
@@ -56,4 +59,16 @@ export function sandboxNotice(
     case 'starting':
       return undefined
   }
+}
+
+/**
+ * What the panels of the files and the tools show in place of their
+ * content: the notice of the bar, with the words of a refusal, or the wait
+ * of a start. A ready sandbox shows its content.
+ */
+export function panelState(
+  state: WorkspaceState,
+): SandboxPanelState | undefined {
+  if (state.sandbox === 'starting') return { problem: 'starting' }
+  return sandboxNotice(state)
 }

@@ -1,11 +1,10 @@
+import type {
+  SandboxNoticeState,
+  SandboxPanelState,
+} from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import type { ApiError } from '../../app/api/client'
 import type { SandboxState } from './features'
-import {
-  orgRefusal,
-  refusedStart,
-  type SandboxNoticeState,
-  type SandboxProblem,
-} from './SandboxNotice'
+import { orgRefusal, refusedStart } from './SandboxNotice'
 
 /** What the screen shows of the sandbox of an open workspace. */
 export interface SandboxView {
@@ -13,8 +12,12 @@ export interface SandboxView {
   refusal: SandboxNoticeState | null
   /** The bar in place of the composer, or null for the composer. */
   bar: SandboxNoticeState | null
-  /** What the files and the tools show in place of their content, if anything. */
-  panel: 'starting' | SandboxProblem | null
+  /**
+   * What the files and the tools show in place of their content, if
+   * anything: the notice of the bar, also a refusal with its words, or the
+   * wait of a start.
+   */
+  panel: SandboxPanelState | null
   /** The notice of a suspended org shows above the bar of an archived workspace. */
   orgNotice: boolean
 }
@@ -50,7 +53,7 @@ export function sandboxView(input: {
   return {
     refusal,
     bar,
-    panel: refusal ? 'refused' : sandbox === 'ready' ? null : sandbox,
+    panel: bar ?? (sandbox === 'starting' ? { problem: 'starting' } : null),
     orgNotice: suspended && sandbox === 'archived',
   }
 }

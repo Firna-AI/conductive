@@ -223,6 +223,9 @@ clicks, types, and lets the answers of the fake API settle.
 
 - `api/client.ts`: the JSON client and `ApiError`. `api/read-*.ts`: the readers.
 - `app-model.ts`: the session, the orgs, the models list, and Get started.
+- `get-started.ts`: the order and the states of the steps of Get started.
+  `setup-steps.ts`: `setupSteps`, the steps that the screens show, and
+  `setupOrg`, the org of Get started and of the address `/`.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   and computer settings of one org, with `watch` and the wait of each part.
 - `account-model.ts`: the agent logins, the default model, the GitHub App

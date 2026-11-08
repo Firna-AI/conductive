@@ -9,30 +9,17 @@ import {
   refusedIcon,
 } from '../../../docs/mockups/src/components/orgs/suspension'
 import styles from '../../../docs/mockups/src/components/workspace/SandboxNotice.module.css'
+import type {
+  SandboxNoticeState,
+  SandboxPanelState,
+  SandboxProblem,
+} from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import type { ApiError } from '../../app/api/client'
 import { useServices } from '../../app/services'
 import { formatDay } from '../../app/time'
 import type { Workspace } from '../../shared/workspaces'
 import { ActionButton } from '../ui/actions'
 import type { Action } from '../ui/useAction'
-
-/**
- * Why the sandbox is not running. `refused` is a start that the app
- * refuses, such as while the owner of the workspace or its org is
- * suspended.
- */
-export type SandboxProblem = 'stopped' | 'error' | 'refused' | 'archived'
-
-/**
- * What the bar in place of the composer shows. A refused start carries the
- * words of the app's refusal, so one notice serves every reason. A start
- * that failed can carry the message that the workspace saved for it, such
- * as its time limit.
- */
-export type SandboxNoticeState =
-  | { problem: 'stopped' | 'archived' }
-  | { problem: 'error'; message?: string | null }
-  | { problem: 'refused'; reason: string }
 
 /**
  * The notice of a start in a suspended org. The org's metadata and the
@@ -198,19 +185,22 @@ export function SandboxBar(props: {
 
 /**
  * What a panel shows while the sandbox is not running. Desktop leaves the
- * action to the bar under the chat; a phone shows it in the panel.
+ * action and the words of a refusal to the bar under the chat. A phone
+ * shows the bar only on the Chat tab, so its panels show them too.
  */
 export function SandboxPanel(props: {
-  state: 'starting' | SandboxProblem
+  state: SandboxPanelState
   workspace: Workspace
-  resume: Action<[]> | null
+  resume: Action<[]>
+  phone: boolean
 }) {
   const theme = useSharedUiTheme()
+  const { state, resume, phone } = props
   const problem = useProblem(
-    props.state === 'starting' ? 'stopped' : props.state,
+    state.problem === 'starting' ? 'stopped' : state.problem,
     props.workspace,
   )
-  if (props.state === 'starting') {
+  if (state.problem === 'starting') {
     return (
       <div className={styles.waiting}>
         <Spinner color={theme.colors.muted} size={13} />
@@ -218,11 +208,10 @@ export function SandboxPanel(props: {
       </div>
     )
   }
-  const { resume } = props
   return (
     <EmptyState
       action={
-        resume && problem.action ? (
+        phone && problem.action ? (
           <ActionButton
             busy={resume.pending}
             onPress={() => resume.run()}
@@ -232,9 +221,11 @@ export function SandboxPanel(props: {
           </ActionButton>
         ) : undefined
       }
-      body={problem.panelBody}
+      body={
+        phone && state.problem === 'refused' ? state.reason : problem.panelBody
+      }
       icon={problem.icon}
-      title={props.state === 'archived' ? 'Archived' : problem.title}
+      title={state.problem === 'archived' ? 'Archived' : problem.title}
     />
   )
 }

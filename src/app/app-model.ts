@@ -20,6 +20,7 @@ import {
   readUser,
 } from './api/read-core'
 import { AccountModel } from './account-model'
+import { setupSteps } from './setup-steps'
 import { OrgModel } from './org-model'
 import { isSuspended } from './permissions'
 import type { AppServices } from './services'
@@ -49,10 +50,17 @@ export class AppModel {
    */
   readonly refusedOrgs = new Store<ReadonlySet<string>>(new Set())
   readonly models = new Store<readonly AgentModel[]>([])
-  readonly getStarted = new Store<GetStartedResponse | null>(null)
+  /**
+   * The steps of Get started as every screen shows them. Only the step of
+   * the GitHub App comes from the reply of the API. The others follow the
+   * org list and the account, as `setupSteps` says.
+   */
+  readonly getStarted: Readable<GetStartedResponse | null>
   readonly account: AccountModel
   readonly services: AppServices
   private readonly orgModels = new Map<string, OrgModel>()
+  /** The last reply of the API on the steps. No screen reads it as it is. */
+  private readonly setupReply = new Store<GetStartedResponse | null>(null)
   private started = false
   /** The person of the last ready boot, whose creates the org models keep. */
   private userId: string | null = null
@@ -60,6 +68,11 @@ export class AppModel {
   constructor(services: AppServices) {
     this.services = services
     this.account = new AccountModel(services, this)
+    this.getStarted = setupSteps({
+      server: this.setupReply,
+      orgs: this.orgs,
+      account: this.account.account,
+    })
     // The model lives as long as its store, so it never unsubscribes.
     this.boot.subscribe(() => this.followPerson())
   }
@@ -106,7 +119,7 @@ export class AppModel {
       this.account.account.set(account)
       this.orgs.set(orgs)
       this.models.set(models)
-      this.getStarted.set(getStarted)
+      this.setupReply.set(getStarted)
       this.boot.set({ state: 'ready', user })
     } catch (error) {
       const failure = asApiError(error)
@@ -153,7 +166,7 @@ export class AppModel {
   }
 
   async refreshGetStarted(): Promise<void> {
-    this.getStarted.set(
+    this.setupReply.set(
       await this.services.api.get(GET_STARTED_PATH, readGetStarted),
     )
   }

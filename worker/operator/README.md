@@ -78,6 +78,9 @@ Only internal storage holds the operator ID.
 The action revokes every workspace token and preview hostname of the org before it asks for stops.
 It stops every workspace and unfinished build of the org, whoever owns or started it.
 The native workspace and image alarms retry incomplete cleanup after runtime restarts.
+Failed creates stay in `pendingWorkspaceIds` while their sandbox cleanup records remain, including after their workspace rows are removed.
+The action reads those cleanup records after workspace processing and lists each workspace ID once.
+The existing native cleanup alarm retries Delete for those computers.
 The org remains readable, and members keep their account sessions and other orgs.
 `OrgSummary.suspension` gives members the suspension time.
 

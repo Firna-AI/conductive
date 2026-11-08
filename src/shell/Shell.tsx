@@ -4,6 +4,7 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert } from 'lucide-react'
 import { EmptyState } from '../../docs/mockups/src/components/common/EmptyState'
 import { inFirstRun } from '../app/get-started'
+import { setupOrg } from '../app/setup-steps'
 import { useNavigation, useRoute } from '../app/navigation'
 import { routes, type Route } from '../app/router'
 import { useStore } from '../app/store'
@@ -41,13 +42,17 @@ function Alone(props: { children: ReactNode }) {
   )
 }
 
-/** The address `/` goes to Get started, or to the first org of the user. */
+/**
+ * The address `/` goes to Get started, or to the org of Get started: the
+ * first org that is not deleted, else a deleted one, whose page offers
+ * Restore.
+ */
 function Home() {
   const app = useApp()
   const navigation = useNavigation()
   const orgs = useStore(app.orgs)
   const getStarted = useStore(app.getStarted)
-  const first = orgs.find((org) => !org.deletion) ?? orgs[0]
+  const first = setupOrg(orgs)
   const target =
     inFirstRun(getStarted) || !first
       ? routes.getStarted()

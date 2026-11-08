@@ -175,7 +175,8 @@ export function WorkspaceScreen(props: {
       content
     ) : (
       <SandboxPanel
-        resume={phone ? resume : null}
+        phone={phone}
+        resume={resume}
         state={panelState}
         workspace={workspace}
       />

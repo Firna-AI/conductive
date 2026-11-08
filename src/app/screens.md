@@ -10,6 +10,12 @@ New workspace.
   and no text of the app names Boat.
 - Get started has three steps: the GitHub App, the first org, and Claude or
   Codex. A reply of the API names only these steps.
+- Only the GitHub App step comes from that reply. The org step and the org
+  of Get started follow the org list, also a deleted org, as the address
+  `/` does. The agent step follows the logins of the account. So a leave of
+  the last org offers Create org again, and a connect on Account completes
+  its step at once. `setupSteps` in `setup-steps.ts` derives them, and each
+  screen reads them through `AppModel.getStarted`.
 - The sign-in screen shows the agreement to the Terms and the Privacy
   notice above Continue with GitHub. Its words come from `termsAgreement`
   in `src/marketing/legal-text.ts`, and its links lead to the marketing

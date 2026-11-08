@@ -23,19 +23,19 @@ describe('the sandbox view of an open workspace', () => {
       org: {
         refusal: { problem: 'refused', reason: orgWords },
         bar: { problem: 'refused', reason: orgWords },
-        panel: 'refused',
+        panel: { problem: 'refused', reason: orgWords },
         orgNotice: false,
       },
       owner: {
         refusal: { problem: 'refused', reason: ownerWords },
         bar: { problem: 'refused', reason: ownerWords },
-        panel: 'refused',
+        panel: { problem: 'refused', reason: ownerWords },
         orgNotice: false,
       },
       none: {
         refusal: null,
         bar: { problem: 'error', message: saved },
-        panel: 'error',
+        panel: { problem: 'error', message: saved },
         orgNotice: false,
       },
     })

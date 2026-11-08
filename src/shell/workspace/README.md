@@ -142,11 +142,20 @@ move on every 30 seconds.
 
 `WorkspaceScreen` reads `model.startError`. While the sandbox is stopped or
 failed, a start error whose code is in `refusalCodes` of `SandboxNotice.tsx`
-shows the refused bar and panels: "The sandbox can't start", with the
-reason of the error and no action. The codes are `user_suspended` and
-`org_suspended`. Other start errors keep the stopped and error notices.
-The header, the history, and the owner control stay. The Resume action and
-its failure toast stay as they were.
+shows the refused bar and panels: "The sandbox can't start", with no
+action. The bar shows the reason of the error. The codes are
+`user_suspended` and `org_suspended`. Other start errors keep the stopped
+and error notices. The header, the history, and the owner control stay.
+The Resume action and its failure toast stay as they were.
+
+The bar and the panels take one notice, so each panel gets the whole
+refusal with its reason: `SandboxPanelState` is a `SandboxNoticeState` or
+the wait of a start. These types have one owner, the mockups'
+`src/components/workspace/sandboxNoticeState.ts`, which the app and the
+mockups both import. A phone shows the bar only on the Chat tab. So on a
+phone, the panels of Files, Terminal, Preview, and Desktop show the reason
+in place of "Your chat history is available.", as they show the action of
+the bar. A desktop panel keeps its short text beside the bar.
 
 A suspended org refuses each start, so its workspace shows the refused bar
 of the org in any state but archived, also while the stop of its cloud

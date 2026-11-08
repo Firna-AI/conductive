@@ -69,13 +69,20 @@ chat, and five tabs at the bottom.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
-  action. The notice takes any refusal reason.
+  action. The notice takes any refusal reason. `sandboxNoticeState.ts`
+  beside it owns the types of the bar and the panels, which the app
+  imports too.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.
   - For a suspended org, the words name the org and the abuse address, as
     `app/orgs/suspended/workspace` shows. The New workspace page of such an
     org shows the same bar in place of the composer.
+  - A phone shows the bar only on the Chat tab. So the panels of its Files,
+    Terminal, Preview, and Desktop tabs show the words of the refusal in
+    place of the line on the chat history, as the `files` variants of
+    `app/shell/refused` and `app/orgs/suspended/workspace` show. A desktop
+    keeps its short panels beside the bar.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
   suspended org, with the mark of a refused start. It names the org and
   the abuse address, and it offers no action. It is a box at the top of

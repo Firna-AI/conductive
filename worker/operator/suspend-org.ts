@@ -2,7 +2,12 @@ import type { OrgSuspensionResponse } from '../../src/shared/operator'
 import { jobSoftware, readBuildJob } from '../lifecycle/build-data'
 import { imageRuntime } from '../lifecycle/runtime'
 import type { WorkspaceRuntime } from '../lifecycle/workspace-runtime'
-import { orgBuilds, orgWorkspaces, recordOrgSuspension } from './org-data'
+import {
+  orgBuilds,
+  orgCleanupWorkspaceIds,
+  orgWorkspaces,
+  recordOrgSuspension,
+} from './org-data'
 
 export async function suspendOrg(
   runtime: WorkspaceRuntime,
@@ -17,7 +22,9 @@ export async function suspendOrg(
     dependencies.now(),
   )
   const pendingWorkspaceIds: string[] = []
+  const suppliedWorkspaceIds = new Set<string>()
   for (const workspace of await orgWorkspaces(env.DB, orgId)) {
+    suppliedWorkspaceIds.add(workspace.id)
     try {
       if (
         await runtime
@@ -29,6 +36,11 @@ export async function suspendOrg(
       // The persistent suspension also blocks every start and native alarm.
     }
     pendingWorkspaceIds.push(workspace.id)
+  }
+  for (const id of await orgCleanupWorkspaceIds(env.DB, orgId)) {
+    if (suppliedWorkspaceIds.has(id)) continue
+    suppliedWorkspaceIds.add(id)
+    pendingWorkspaceIds.push(id)
   }
   const pendingBuildIds: string[] = []
   for (const build of await orgBuilds(env.DB, orgId)) {

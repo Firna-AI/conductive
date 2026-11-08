@@ -63,8 +63,9 @@ function Steps(props: { response: GetStartedResponse }) {
 
 /**
  * The only first run, after the GitHub sign-in: the user installs the
- * GitHub App, creates the first org, and connects Claude or Codex. The
- * steps come from the API, and each done step loads them again.
+ * GitHub App, creates the first org, and connects Claude or Codex. The step
+ * of the GitHub App comes from the API, and each done step loads it again.
+ * The org step and the agent step follow the org list and the account.
  */
 export function GetStartedScreen(props: { user: User }) {
   const app = useApp()

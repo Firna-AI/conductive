@@ -21,6 +21,7 @@ import { orgs } from '../fixtures/orgs'
 import { freshSessionPrompt, workspaceSession } from '../fixtures/terminal'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -54,24 +55,22 @@ export function FilesContent(props: {
   viewport: Viewport
 }) {
   const { state } = props
-  if (state.sandbox === 'archived') {
-    return <SandboxPanel action={false} state="archived" />
+  const phone = props.viewport === 'mobile'
+  const panel = panelState(state)
+  if (panel?.problem === 'archived') {
+    return <SandboxPanel phone={phone} state={panel} />
   }
   const open = openFile(state)
-  if (props.viewport === 'mobile' && open) {
+  if (phone && open) {
     const back =
       open === 'diff'
         ? { label: 'Changes', to: paths.filesChanges }
         : { label: 'All files', to: paths.filesAll }
     return <FilePage back={back} view={open} />
   }
-  const placeholder =
-    state.sandbox === 'ready' ? undefined : (
-      <SandboxPanel
-        action={props.viewport === 'mobile'}
-        state={state.sandbox}
-      />
-    )
+  const placeholder = panel ? (
+    <SandboxPanel phone={phone} state={panel} />
+  ) : undefined
   return (
     <FilesPanel
       banner={state.banner}
@@ -91,9 +90,8 @@ export function ToolContent(props: {
 }) {
   const { state } = props
   const mobile = props.viewport === 'mobile'
-  if (state.sandbox !== 'ready') {
-    return <SandboxPanel action={mobile} state={state.sandbox} />
-  }
+  const panel = panelState(state)
+  if (panel) return <SandboxPanel phone={mobile} state={panel} />
   switch (state.tool) {
     case 'terminal':
       return isNew(state) ? (

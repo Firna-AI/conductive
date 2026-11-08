@@ -25,6 +25,7 @@ import {
   freshOrg,
   slugify,
   uniqueId,
+  type DevState,
   type OrgState,
 } from './state'
 
@@ -98,9 +99,24 @@ function restoreOrg(org: OrgState): Response {
 }
 
 /**
- * Leave. The org leaves the list of the user. The last-admin rule refuses
- * the leave of the last admin with the words of the Worker. A suspended org
- * takes the leave too, as the Worker does.
+ * Get started after a leave of its org, as on the Worker: the next org that
+ * is not deleted takes its place. Without one, the org step opens again.
+ */
+function leaveSetupOrg(state: DevState, orgId: string): void {
+  if (state.getStarted.orgId !== orgId) return
+  const next = state.orgs.find((item) => !item.org.deletion)?.org.id ?? null
+  state.getStarted = {
+    orgId: next,
+    steps: state.getStarted.steps.map((item) =>
+      item.step === 'org' ? { step: 'org', complete: next !== null } : item,
+    ),
+  }
+}
+
+/**
+ * Leave. The org leaves the list of the user, and Get started follows. The
+ * last-admin rule refuses the leave of the last admin with the words of the
+ * Worker. A suspended org takes the leave too, as the Worker does.
  */
 function leaveOrg(backend: DevBackend, org: OrgState): Response {
   const { state } = backend
@@ -116,6 +132,7 @@ function leaveOrg(backend: DevBackend, org: OrgState): Response {
     )
   }
   state.orgs = state.orgs.filter((item) => item !== org)
+  leaveSetupOrg(state, org.org.id)
   return new Response(null, { status: 204 })
 }
 

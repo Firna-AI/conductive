@@ -27,7 +27,8 @@ screens show.
   `user_suspended` refusal ends with a new owner.
 - `AppModel.leaveOrg` sends the leave, the one write that a suspended org
   takes, and takes the org out of the list. The API refuses the leave of
-  the last active admin with `last_admin`.
+  the last active admin with `last_admin`. Get started follows the org
+  list, so after a leave of the last org it offers Create org again.
 
 ## What the screens show
 

@@ -92,14 +92,16 @@ export async function authenticateWorkspaceToken(
   )
     .bind(await hash(token))
     .first<{ workspaceId: string; orgId: string }>()
-  if (!row) {
-    throw new HttpError(
-      401,
-      'workspace_token_refused',
-      'The workspace token is not valid.',
-    )
-  }
+  if (!row) throw workspaceTokenRefusedError()
   return row
+}
+
+export function workspaceTokenRefusedError(): HttpError {
+  return new HttpError(
+    401,
+    'workspace_token_refused',
+    'The workspace token is not valid.',
+  )
 }
 
 export async function revokeWorkspaceToken(

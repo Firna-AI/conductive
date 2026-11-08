@@ -152,6 +152,10 @@ chat and runner boundaries.
 The handler returns a fresh GitHub App user token of the sender, from
 `freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).
 It stores no token. A user without a stored GitHub token must sign in again.
+One response helper runs the same authorization before token resolution and after its last wait.
+Each authorization reads the trusted sender through `credentialSender`.
+Its final D1 read in [`machine-credential-data.ts`](machine-credential-data.ts) checks the shared workspace token rule, sender membership, and sender suspension together.
+The handler does no asynchronous work between that final read and the reply.
 
 `createApp` in [`worker/application.ts`](../application.ts) routes
 `MACHINE_PATHS.gitCredential` to this handler, and
