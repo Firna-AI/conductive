@@ -75,21 +75,27 @@ export const termsDocument: LegalDocument = {
           text`Every member of an org sees all of its workspaces, and can send
             messages in each of them.`,
           text`Each session runs on the agent login of the member who started
-            it, also for the messages of other members. Each turn's git calls
-            use a GitHub token of the member whose message started the turn.
+            it. The messages of other members use that login only when its
+            owner allows it. Otherwise, the message of another member starts a
+            new session on the login of that member. Each turn's git calls use
+            a GitHub token of the member whose message started the turn.
             Pushes and pull requests show as that member.`,
           text`That GitHub token reaches every repository where that person
             installed the GitHub App and has access, not only the
             repositories of the org.`,
-          text`While your login is connected, you cannot stop other members
-            from using it in the sessions that you started.
+          text`Each login that you connect has a setting that lets other
+            members use it in the sessions that you start. For a Claude
+            subscription, the setting starts off. For an API key, it starts
+            on. When you replace a login with one of the same kind, the
+            setting stays. You can change it on your account page.
             ${draft("Do Anthropic's terms let other members use a member's Claude subscription?")}`,
           text`While a turn runs, its agent login and its GitHub token are in
             the cloud computer of the workspace. A member with a terminal in
             that cloud computer can read them. A program that a tool of the
             agent starts, such as a dev server, can keep the agent login after
-            the turn ends. A member with a terminal can read it there too. Work
-            in an org only with people whom you trust with your logins.`,
+            the turn ends. A member with a terminal can read it there too. The
+            setting of your login does not change this. Work in an org only
+            with people whom you trust with your logins.`,
           text`Admins manage the members, the repositories, the scripts, and
             the env vars of the org.`,
         ),

@@ -93,7 +93,11 @@ function pageFor(state: MacAppState): ReactNode {
     case 'account':
       return (
         <AccountScreen
-          state={{ connections: 'connected', form: 'none' }}
+          state={{
+            connections: 'connected',
+            form: 'none',
+            shareChange: 'none',
+          }}
           viewport="desktop"
         />
       )
