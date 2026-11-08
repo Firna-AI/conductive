@@ -34,7 +34,7 @@ export const createWorkspace = defineUseCase({
       screenPath: 'app/new-workspace/first-turn',
       title: 'The agent starts',
       description:
-        'The sandbox is ready, and the agent works on the message. Its first answer names the workspace Saved carts.',
+        'The sandbox is ready, and the agent works on the message. The agent writes the title Saved carts from that message, and the workspace and its session tab take it.',
     },
   ],
 })

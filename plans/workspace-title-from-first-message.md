@@ -99,13 +99,28 @@ assume its recommended option, and wait for its answer.
   workspace. Reason: decision 143 chose this rule for the first session,
   and decision 144 recommends it for the workspace.
 - A later session takes the first line of its own first message as its
-  title, when the Worker accepts that message. The Worker collapses the
-  spaces and cuts the line to at most 60 characters, at a word boundary. A
-  message with no text keeps "New session". A name that a member gave the
-  session before stays. Reason: the user wrote "other sessions take the
+  title, when the Worker accepts that message. A name that a member gave
+  the session before stays. Reason: the user wrote "other sessions take the
   first message" with decision 143, and the tab shows one short line. A
   title request for each session was rejected, because the user chose C,
   not E, and the first message needs no model call.
+- The title of a later session follows one exact rule, which the mockups
+  and the Worker share:
+  - Take the first line with text, so leading blank lines do not count.
+  - Make each run of spaces one space, and remove one final full stop, as
+    the workspace title does. An ellipsis stays.
+  - Count Unicode code points, so a cut never splits a character. A line
+    over 60 code points ends at its last space within the limit. A word
+    over the limit ends at the limit. No ellipsis marks the cut.
+  - Keep Markdown marks and quotes, because they are the words of the
+    member.
+  - Reason: the mockups of 8 November 2026 needed these cases settled, and
+    one rule keeps the mockups and the Worker alike.
+- A session whose first message has no text, such as a message with only a
+  screenshot, keeps "New session". The next message with text then gives
+  its title. Reason: a message with no text gives no name, and many
+  "New session" rows in the session history would read as an action and
+  look alike. The mockup check of 8 November 2026 found this case.
 - A later session is each session other than the first session of the
   workspace: a session that "+" opens, a session that a model of the other
   agent opens, and a linked session that a message of another member
@@ -367,16 +382,23 @@ Each later session tab shows the first line of its own first message, as
 the user chose with decision 143. The first session tab already shows the
 workspace name and then the title, so it does not change.
 
-- [ ] Show the first line of the first message, cut to 60 characters, on
+- [x] Show the first line of the first message, cut to 60 characters, on
       each later session tab that has a first message, such as the second
       session of the open workspace and the linked session. A session
       with no message keeps "New session".
-- [ ] Change the comment of `generatedName` in
+- [x] Change the comment of `generatedName` in
       `docs/mockups/src/fixtures/workspaces.ts`, so that it no longer says
       that the first answer names the workspace.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+- [x] Make `src/chat/components/ReadOnlyChat.dom.test.tsx` read the title
+      of the second session from the fixture, because the fixture title
+      changed.
+- [x] Say in the fixture that a member renamed the first session of the
+      open workspace, so its tab differs from the workspace name.
+- [ ] Capture the site pictures again with `npm run marketing:pictures`,
+      because the hero and agents pictures show a later session tab.
 
 ## Milestone 2: Documentation and protocol
 

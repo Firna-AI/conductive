@@ -14,8 +14,9 @@ export function isNew(state: WorkspaceState): boolean {
 }
 
 /**
- * The name of the workspace: the city that the app gave it, until the
- * agent's first answer names it after the task.
+ * The name of the workspace: the city that the app gave it while the first
+ * message waits for the sandbox. When the first turn starts, the agent
+ * writes a title from that message, and the title replaces the city.
  */
 export function workspaceName(
   state: WorkspaceState,

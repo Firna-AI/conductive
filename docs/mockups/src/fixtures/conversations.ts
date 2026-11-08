@@ -9,6 +9,7 @@ import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
+import { linkedSession } from './sessions'
 import { unavailableConversations } from './unavailableConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
@@ -213,11 +214,11 @@ const cutOffTurn: readonly ChatItem[] = [
 ]
 
 /**
- * The next message that a user writes after the turn ends. In the linked
- * session, it is the message of the member who opened that session.
+ * The next message that a user writes after the turn ends. When the login
+ * of the starter is not available, this message opens the linked session,
+ * so its text is the first message of that session.
  */
-export const followUpDraft =
-  'Show a loading state under the address line while the lookup runs.'
+export const followUpDraft = linkedSession.firstMessage
 
 export const conversations: Readonly<
   Record<ConversationKey, readonly ChatItem[]>
@@ -268,7 +269,7 @@ export const conversations: Readonly<
   ...macConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
-  ...linkedConversations(followUpDraft),
+  ...linkedConversations,
 }
 
 /** The steer message that the user types while a turn runs. */

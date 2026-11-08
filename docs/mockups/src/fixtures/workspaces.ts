@@ -47,8 +47,9 @@ export type Workspace = {
    */
   owner: PersonKey
   /**
-   * The name that the app gives a new workspace, a city, until the agent's
-   * first answer names it after the task.
+   * The name that the app gives a new workspace, a city. When the first
+   * turn starts, the agent writes a title from the first message, and that
+   * title replaces the city as the name.
    */
   generatedName?: string
 }

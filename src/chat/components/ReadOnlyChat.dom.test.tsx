@@ -48,7 +48,9 @@ describe('a read-only chat', () => {
     const server = new FakeApiServer({ workspaceState: 'ready' })
     const subscribe: SubscribeToWorkspace = (_target, after, listener) =>
       server.events.subscribe(after, (message) => listener.message(message))
-    const { workspace } = workspaceFixtures('ready').detail
+    const fixtures = workspaceFixtures('ready')
+    const { workspace } = fixtures.detail
+    const second = fixtures.sessions.sessions[1].title
     await mount(
       <ServicesContext.Provider value={testServices(server)}>
         <WorkspaceChat
@@ -75,16 +77,16 @@ describe('a read-only chat', () => {
       () => queryByText(orgRefusal.reason),
       'the refused bar of the host',
     )
-    await press(byRole('button', 'Debounce lookups'))
+    await press(byRole('button', second))
     await waitFor(
-      () => isShownTab('Debounce lookups'),
+      () => isShownTab(second),
       'the second session as the shown tab',
     )
     expect({
       refused: queryByText("The sandbox can't start") !== null,
       composer: document.querySelector('textarea') !== null,
       newSession: queryByRole('button', 'New session') !== null,
-      rename: queryByRole('button', 'Rename Debounce lookups') !== null,
+      rename: queryByRole('button', `Rename ${second}`) !== null,
       resume: queryByRole('button', 'Resume') !== null,
       writes: server.requests
         .filter((request) => request.method !== 'GET')
