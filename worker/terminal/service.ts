@@ -3,6 +3,7 @@ import { workspaceTarget } from '../previews/access'
 import { WorkspaceTools } from '../previews/provider'
 import type { ToolDependencies } from '../previews/types'
 import { ProviderError } from '../sandbox/errors'
+import { warnWorker } from '../warnings'
 import type { SandboxProvider } from '../sandbox/provider'
 import { cacheTerminalPassword } from './credentials'
 import { privilegedCommand } from './privileged'
@@ -115,8 +116,12 @@ systemctl is-active --quiet conductive-terminal.service
 install -d -m 700 -o user -g user ${TERMINAL_RUNTIME_VIEW}
 mountpoint -q ${TERMINAL_RUNTIME_VIEW} || mount --bind ${TERMINAL_RUNTIME} ${TERMINAL_RUNTIME_VIEW}`
   const result = await provider.command(privilegedCommand(command))
-  if (result.exitCode !== 0 || result.timedOut)
+  if (result.exitCode !== 0 || result.timedOut) {
+    warnWorker(
+      `The terminal of workspace ${workspaceId} did not start: exit code ${result.exitCode}, timed out ${result.timedOut}, ${result.stderr.slice(-300)}`,
+    )
     throw new ProviderError('unavailable', 502)
+  }
   const file = await provider.readFile(`${TERMINAL_RUNTIME_VIEW}/password`, 64)
   if (file.kind !== 'file') throw new ProviderError('invalid_response', 502)
   let password: string

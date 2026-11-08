@@ -239,12 +239,12 @@ export class WorkspaceStartCoordinator {
       if (!(await runnerStartConnected(this.endpoint))) return false
       return await this.finish({ ok: true })
     } catch (error) {
-      if (await retryStartError(this.storage, error, this.dependencies.now()))
-        return false
       const current = (await this.storage.job()) ?? job
       warnWorker(
         `Workspace start ${current.workspaceId} failed in phase ${current.phase}: ${errorSummary(error)}`,
       )
+      if (await retryStartError(this.storage, error, this.dependencies.now()))
+        return false
       const failedJob = failedStartJob(current, error, this.dependencies.now())
       await this.storage.update(failedJob)
       const result = await finishFailedStart(
