@@ -1,4 +1,5 @@
 import { saveOAuthState, saveSession, takeOAuthState } from '../data/users'
+import { requireActiveUser } from '../data/user-access'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { readJsonObject } from '../http/json-body'
@@ -78,6 +79,7 @@ export async function finishDesktopSignIn(
     throw invalidHandoff()
   const sessionId = dependencies.randomToken()
   const expiresAt = now + SESSION_SECONDS * 1000
+  await requireActiveUser(env.DB, handoff.userId)
   await saveSession(env.DB, sessionId, handoff.userId, expiresAt, now)
   const session = await sign(
     { sessionId, expiresAt },

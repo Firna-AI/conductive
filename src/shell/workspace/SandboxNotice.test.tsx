@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { workspacePaths } from '../../shared/workspaces'
+import { workspacePath, workspacePaths } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, fakeUser } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
@@ -16,7 +16,7 @@ describe('SandboxBar', () => {
   test('a start that failed shows the message that the workspace saved for it, with Try again', async () => {
     const server = new FakeApiServer({ workspaceState: 'error' })
     const { detail } = workspaceFixtures('error')
-    server.json('POST', workspacePaths.open(FAKE_IDS.org, FAKE_IDS.workspace), {
+    server.json('GET', workspacePath(FAKE_IDS.org, FAKE_IDS.workspace), {
       ...detail,
       error: {
         code: 'workspace_start_failed',
@@ -25,6 +25,12 @@ describe('SandboxBar', () => {
         log: null,
       },
     })
+    server.json(
+      'POST',
+      workspacePaths.resume(FAKE_IDS.org, FAKE_IDS.workspace),
+      { error: { code: 'workspace_start_failed', message: 'Try again.' } },
+      503,
+    )
     const app = await startedApp(server)
     const org = app.orgs.get().find((item) => item.id === FAKE_IDS.org)
     if (!org) throw new Error('The fake org is missing.')

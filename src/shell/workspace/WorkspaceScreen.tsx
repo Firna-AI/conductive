@@ -20,7 +20,12 @@ import { ArchiveDialog } from './ArchiveDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
 import { HeaderNotices } from './header-notices'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
-import { SandboxBar, SandboxPanel } from './SandboxNotice'
+import {
+  refusedStart,
+  SandboxBar,
+  SandboxPanel,
+  type SandboxNoticeState,
+} from './SandboxNotice'
 import { StartingCard } from './StartingCard'
 import {
   ChatColumn,
@@ -47,6 +52,7 @@ export function WorkspaceScreen(props: {
   const [model] = useState(() => new WorkspaceModel(org, props.workspaceId))
   const [notices] = useState(() => new HeaderNotices())
   const detail = useStore(model.detail)
+  const startError = useStore(model.startError)
   const features = useFeatures()
   const viewport = useViewport()
   const theme = useSharedUiTheme()
@@ -109,29 +115,37 @@ export function WorkspaceScreen(props: {
     archive: mayArchive(props.org, workspace, props.viewer)
       ? () => void model.archive.start()
       : null,
+    onReassigned: (updated) => model.reassigned(updated),
   }
   const phone = viewport === 'phone'
-  const problem = sandbox === 'ready' || sandbox === 'starting' ? null : sandbox
+  // A refused start shows while the sandbox is down, until its cause ends.
+  const refusal =
+    sandbox === 'stopped' || sandbox === 'error'
+      ? refusedStart(startError)
+      : null
+  // A failed start carries the message that the workspace saved for it.
+  const notice: SandboxNoticeState | null =
+    refusal ??
+    (sandbox === 'error'
+      ? { problem: 'error', message: error?.message ?? null }
+      : sandbox === 'ready' || sandbox === 'starting'
+        ? null
+        : { problem: sandbox })
   const panel = (content: ReactNode) =>
     sandbox === 'ready' ? (
       content
     ) : (
       <SandboxPanel
         resume={phone ? resume : null}
-        state={sandbox}
+        state={refusal ? 'refused' : sandbox}
         workspace={workspace}
       />
     )
   const chat = features.center?.(context) ?? (
     <ChatColumn
       footer={
-        problem ? (
-          <SandboxBar
-            message={problem === 'error' ? error?.message : null}
-            problem={problem}
-            resume={resume}
-            workspace={workspace}
-          />
+        notice ? (
+          <SandboxBar notice={notice} resume={resume} workspace={workspace} />
         ) : (
           features.composer?.(context)
         )

@@ -95,11 +95,3 @@ export async function prepareStartTerminal(
   if (startTimeLimitReached(job, dependencies.now()))
     throw new JobTimeLimit('start')
 }
-
-export function startStepLabel(phase: WorkspaceStartJob['phase']): string {
-  return phase === 'fetch'
-    ? 'Fetching the default branch'
-    : phase === 'branch'
-      ? 'Creating your branch'
-      : 'Applying your startup script'
-}

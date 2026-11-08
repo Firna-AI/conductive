@@ -32,8 +32,14 @@ export const workspaceStateSchema = {
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
-    /** The cloud computer. An archived workspace has none. */
-    sandbox: { enum: ['ready', 'starting', 'stopped', 'error', 'archived'] },
+    /**
+     * The cloud computer. An archived workspace has none. `refused` is a
+     * stopped cloud computer whose start the app refuses, such as while the
+     * owner of the workspace is suspended.
+     */
+    sandbox: {
+      enum: ['ready', 'starting', 'stopped', 'error', 'refused', 'archived'],
+    },
     /**
      * The message that the app saved for a start that failed, which the
      * error state shows: a failure, or the 20-minute limit of a start.

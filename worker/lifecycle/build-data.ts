@@ -17,6 +17,7 @@ import { serializeSavedScript, type SavedScript } from './saved-script'
 
 export type BuildPhase =
   | 'create'
+  | 'allocating'
   | 'sources'
   | 'software'
   | 'install'

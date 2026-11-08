@@ -57,7 +57,9 @@ says.
 - The Cloud computer tab lists the builds, each with its time, its result,
   and its length.
 - A push to the default branch of a chosen repository refreshes the org
-  image, at most once in 30 minutes. A daily timer refreshes it too.
+  image, at most once in 30 minutes. A daily timer refreshes it too. Each
+  automatic refresh needs an admin who is not suspended, as
+  [Operator actions](operator-actions.md#starts-stops-and-builds) says.
 - A refresh fetches the new commits of every chosen repository. It does
   not run the install script.
 - Reason: a new workspace then needs only a small fetch. The limit of one
@@ -208,7 +210,9 @@ says.
   not cut off real work.
 - A stop ends every process in the sandbox. Its files and its agent
   sessions stay.
-- Opening a stopped workspace resumes its sandbox.
+- Opening a stopped workspace resumes its sandbox. A workspace whose owner
+  is suspended does not start, as
+  [Operator actions](operator-actions.md#starts-stops-and-builds) says.
 - When a sandbox stops while its workspace is open, the tab shows the
   stopped state with Resume (decision 11).
 - A resume at once when the tab shows again was rejected. Resume avoids a
@@ -218,7 +222,10 @@ says.
 - A start that fails shows the error state with Try again. The chat history
   stays.
 - Near day 14 of a stop, the app starts the sandbox briefly and stops it
-  again, so that Boat keeps its disk (decision 43).
+  again, so that Boat keeps its disk (decision 43). A workspace whose owner
+  is suspended gets no such restart, as
+  [Starts, stops, and builds](operator-actions.md#starts-stops-and-builds)
+  says (decision 125).
 - Reason: Boat can delete the disk of a sandbox that is stopped for more
   than 14 days, and a resume then fails.
 - Each such restart uses a start and some minutes of the app's Boat

@@ -69,6 +69,22 @@ mockups' `LostUpdateBar` and the words of `lostCopy.ts`. Its Dismiss is the
 shell's `IconButton`. The ages use the clock of `AppServices`, and they
 move on every 30 seconds.
 
+## A refused start
+
+`WorkspaceScreen` reads `model.startError`. While the sandbox is stopped or
+failed, a start error whose code is in `refusalCodes` of `SandboxNotice.tsx`
+shows the refused bar and panels: "The sandbox can't start", with the
+reason of the error and no action. Today the only such code is
+`user_suspended`. Other start errors keep the stopped and error notices.
+The header, the history, and the owner control stay. The Resume action and
+its failure toast stay as they were.
+
+`WorkspaceContext.onReassigned(workspace)` passes a confirmed new owner to
+`model.reassigned`. A feature that composes the owner slot must call it
+from the `onReassigned` of the owner picker.
+[Starts, stops, and builds](../../../docs/protocol/operator-actions.md#starts-stops-and-builds)
+states the refusal.
+
 ## Development page
 
 The development page runs the app shell with this workspace and its Files
@@ -135,6 +151,8 @@ Run the tests with `npm run test -- src/shell/workspace`.
   columns, and the tab bar of a phone.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
   states of the cloud computer, the start steps, and the Archive question.
+  `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
+  the refused notice.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
 

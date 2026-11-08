@@ -1,7 +1,7 @@
 import { providerState } from './provider-state'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import { orgSandboxProvider } from '../sandbox/client'
+import { orgSandboxProvider, sandboxProvider } from '../sandbox/client'
 import { readWorkspace, revokeWorkspacePreviews } from './workspace-data'
 import { firstOrgAdmin } from './settings-data'
 import type { DurableLifecycle } from './durable'
@@ -10,6 +10,7 @@ import type {
   LifecycleStopResult,
 } from './durable-types'
 import type { Sandbox, SandboxProvider } from '../sandbox/provider'
+import { ProviderError } from '../sandbox/errors'
 
 export interface WorkspaceActionContext {
   env: AppEnv
@@ -72,6 +73,30 @@ export async function stopWorkspaceSandbox(
   const status = await reconcileReply(context, sandbox)
   if (status) return status
   return 'pending'
+}
+
+export async function stopAccessDeniedWorkspaceSandbox(
+  context: WorkspaceActionContext,
+  sandboxId: string | null,
+): Promise<LifecycleStopResult> {
+  if (!sandboxId) return 'stopped'
+  const provider = sandboxProvider(context.env, context.dependencies.fetch)
+  let sandbox: Sandbox
+  try {
+    sandbox = await replyOrCurrentState(provider, sandboxId, () =>
+      provider.stop(sandboxId),
+    )
+  } catch (error) {
+    if (!(error instanceof ProviderError && error.kind === 'not_found'))
+      throw error
+    await revokeWorkspacePreviews(
+      context.env.DB,
+      context.workspaceId,
+      context.dependencies.now(),
+    )
+    return 'stopped'
+  }
+  return (await reconcileReply(context, sandbox)) ?? 'pending'
 }
 
 export async function extendWorkspaceDeadline(

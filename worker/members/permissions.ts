@@ -1,4 +1,5 @@
 import { HttpError } from '../http'
+import { requireActiveUser } from '../data/user-access'
 import { visibleOrg } from './org-data'
 
 export async function requireOrgMember(
@@ -7,6 +8,7 @@ export async function requireOrgMember(
   userId: string,
   allowDeleted = false,
 ) {
+  await requireActiveUser(db, userId)
   const org = await visibleOrg(db, orgId, userId)
   if (!org || (org.deletion && !allowDeleted)) {
     throw new HttpError(404, 'org_not_found', 'The org is not available.')

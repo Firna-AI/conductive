@@ -1,6 +1,7 @@
 import type { ImageBuild } from '../../src/shared/org-settings'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import { requireActiveUser, userSuspended } from '../data/user-access'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
@@ -176,6 +177,7 @@ export async function advanceImageBuild(
   const { env, dependencies } = runtime
   let job = await readBuildJob(env.DB, orgId, buildId)
   let provider: SandboxProvider | undefined
+  const recoveringAllocation = job.phase === 'allocating' && !job.sandboxId
   try {
     const expired =
       dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS
@@ -188,10 +190,17 @@ export async function advanceImageBuild(
         throw imageSourceFailure()
       }
     }
+    const suspended =
+      !recoveringAllocation &&
+      job.state === 'running' &&
+      job.phase !== 'cleanup' &&
+      job.startedByUserId !== null &&
+      (await userSuspended(env.DB, job.startedByUserId))
     if (
       job.state === 'running' &&
       job.phase !== 'cleanup' &&
       !expired &&
+      !suspended &&
       providerRetryPending(job.providerRetry, dependencies.now())
     )
       return false
@@ -211,6 +220,8 @@ export async function advanceImageBuild(
     )
     if (job.phase === 'cleanup' || job.state !== 'running')
       return await cleanupBuild(runtime, provider, job)
+    if (!recoveringAllocation && job.startedByUserId)
+      await requireActiveUser(env.DB, job.startedByUserId)
     if (expired) throw new JobTimeLimit('build')
     if (providerRetryExpired(job.providerRetry, dependencies.now()))
       throw new ProviderRetryExhausted()
@@ -221,6 +232,7 @@ export async function advanceImageBuild(
     job = await readBuildJob(env.DB, orgId, buildId)
     if (job.phase === 'cleanup' || job.state !== 'running') throw error
     const failure =
+      !(error instanceof HttpError && error.code === 'user_suspended') &&
       dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS
         ? new JobTimeLimit('build')
         : error
@@ -235,8 +247,9 @@ export async function advanceImageBuild(
     }
     if (
       provider &&
-      job.phase === 'create' &&
+      job.phase === 'allocating' &&
       !job.sandboxId &&
+      !(failure instanceof HttpError && failure.code === 'user_suspended') &&
       !(failure instanceof ProviderRetryExhausted) &&
       !(failure instanceof JobTimeLimit) &&
       !(failure instanceof ProviderError)

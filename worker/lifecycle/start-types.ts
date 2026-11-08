@@ -29,6 +29,7 @@ interface WorkspaceStartData {
     status: number
     timeLimit?: boolean
   }
+  requestedByUserId?: string
   providerRetry?: ProviderRetryState | null
   deadlineAt?: number
 }

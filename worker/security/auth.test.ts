@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { API_PATHS } from '../../src/shared/api'
+import { acceptedTermsSignInPath } from '../../src/shared/terms'
 import {
   createHarness,
   responseCookie,
@@ -21,7 +22,7 @@ beforeEach(async () => {
 })
 
 it('starts GitHub authorization with browser state and PKCE', async () => {
-  const response = await harness.fetch(API_PATHS.githubSignIn)
+  const response = await harness.fetch(acceptedTermsSignInPath())
   expect(response.status).toBe(302)
   const location = new URL(response.headers.get('Location') ?? '')
   expect(location.origin + location.pathname).toBe(

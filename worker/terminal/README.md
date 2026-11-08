@@ -14,6 +14,8 @@ Call `createTerminalHandler(env, dependencies).fetch(request)` for both
 shared terminal paths. The handler runs the app gate on each request and
 each upgrade. Its default socket runtime uses Cloudflare WebSocket pairs.
 Tests can inject `dependencies.sockets` at that boundary.
+A socket open for a workspace whose owner is suspended gets 403
+`user_suspended`. The status read still answers.
 
 Run `terminalInstallCommand()` in the software command of each org image
 build. The build runs that command detached and writes its output to the
@@ -102,6 +104,8 @@ The initial handshake, window changes, output, and idle sockets do not count.
 registration. Each registration holds a `sandbox` identity of the
 [shared connection reader](../security/README.md#open-connections).
 That kind binds the grant to the current sandbox of a running workspace that is not archived.
+The owner of that workspace must not be suspended, as [Sandbox access](../operator/README.md#sandbox-access) says.
+So an open socket closes at the next access check after that suspension.
 Chat tabs use the `workspace` kind, which has no sandbox check.
 `add` reads the first grant before the handler connects to the ttyd port.
 The shared reader sets the deadline of each grant.

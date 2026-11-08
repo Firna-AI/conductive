@@ -1,12 +1,13 @@
+import { paths } from '../../paths'
 import { classes } from '../common/classes'
+import { ScreenLink } from '../common/ScreenLink'
 import styles from './LegalLinks.module.css'
 
-/**
- * The legal pages of the site: Terms and Privacy, as the user chose for
- * decision 35. The pages are not drawn yet, so each link is a placeholder
- * without an address.
- */
-export const legalPages = ['Terms', 'Privacy'] as const
+/** The legal pages of the site, as the user chose for decision 35. */
+const legalPages = [
+  { label: 'Terms', to: paths.terms },
+  { label: 'Privacy', to: paths.privacy },
+] as const
 
 /** The legal pages in a row, which wraps on a narrow screen. */
 export function LegalLinks(props: { align?: 'start' | 'center' }) {
@@ -16,9 +17,9 @@ export function LegalLinks(props: { align?: 'start' | 'center' }) {
       className={classes(styles.row, props.align === 'center' && styles.center)}
     >
       {legalPages.map((page) => (
-        <a className={styles.link} key={page}>
-          {page}
-        </a>
+        <ScreenLink className={styles.link} key={page.to} to={page.to}>
+          {page.label}
+        </ScreenLink>
       ))}
     </nav>
   )

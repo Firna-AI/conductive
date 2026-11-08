@@ -5,7 +5,7 @@ import { setupBackendTests } from './backend-test-hooks'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { readRetention } from './retention-data'
 import { createCompletedWorkspace } from './completed-creation-test-support'
-import { openWorkspace } from './workspace-resume'
+import { resumeWorkspace } from './workspace-resume'
 import { reconcileWorkspaceSandbox } from './workspace-actions'
 
 const backendFixture = setupBackendTests()
@@ -71,7 +71,7 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
     boat.failStop = false
     boat.synchronousExitCode = 0
     await fixture.run(() =>
-      openWorkspace(runtime, org.id, created.workspace.id, user.id, 'tab-one'),
+      resumeWorkspace(runtime, org.id, created.workspace.id, user.id),
     )
     expect(await readRetention(runtime.env.DB, created.workspace.id)).toBe(null)
     expect(boat.resumeIds).toEqual(['bx_1', 'bx_1', 'bx_1'])
@@ -111,13 +111,7 @@ it('ends failed maintenance and refuses destructive resume of a normal errored w
     boat.failStop = true
     await expect(
       fixture.run(() =>
-        openWorkspace(
-          runtime,
-          org.id,
-          created.workspace.id,
-          user.id,
-          'error-tab',
-        ),
+        resumeWorkspace(runtime, org.id, created.workspace.id, user.id),
       ),
     ).rejects.toMatchObject({ code: 'workspace_start_failed' })
     expect(
@@ -131,13 +125,7 @@ it('ends failed maintenance and refuses destructive resume of a normal errored w
     await actor.alarm()
     expect(await readRetention(runtime.env.DB, created.workspace.id)).toBe(null)
     await fixture.run(() =>
-      openWorkspace(
-        runtime,
-        org.id,
-        created.workspace.id,
-        user.id,
-        'recovered-tab',
-      ),
+      resumeWorkspace(runtime, org.id, created.workspace.id, user.id),
     )
     expect((await actor.readLifecycle())?.startupPrepared).toBe(true)
     // A normal user's error can contain unsaved writes. Never resume it automatically.
@@ -151,13 +139,7 @@ it('ends failed maintenance and refuses destructive resume of a normal errored w
     const resumes = boat.resumeIds.length
     await expect(
       fixture.run(() =>
-        openWorkspace(
-          runtime,
-          org.id,
-          created.workspace.id,
-          user.id,
-          'normal-error-tab',
-        ),
+        resumeWorkspace(runtime, org.id, created.workspace.id, user.id),
       ),
     ).rejects.toMatchObject({ code: 'workspace_start_failed' })
     expect(boat.resumeIds).toHaveLength(resumes)

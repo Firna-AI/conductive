@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { capturePictures } from './capture-pictures.ts'
 import { launchChrome, type Browser } from './cdp.ts'
 import { encodePictures } from './encode-pictures.ts'
+import { openPage } from './page.ts'
 import { buildMockups } from './processes.ts'
 import { serveMockups } from './server.ts'
 
@@ -14,10 +15,15 @@ async function regenerate(signal: AbortSignal): Promise<void> {
   let browser: Browser | undefined
   try {
     server = await serveMockups('mokly-static')
-    browser = await launchChrome(signal)
+    const captureBrowser = await launchChrome(signal)
+    browser = captureBrowser
     const raw = join(temporary, 'png')
     const encoded = join(temporary, 'webp')
-    const stems = await capturePictures(browser, server.origin, raw)
+    const stems = await capturePictures({
+      origin: server.origin,
+      directory: raw,
+      openPage: (viewport) => openPage(captureBrowser, viewport),
+    })
     await encodePictures(raw, encoded, stems)
     signal.throwIfAborted()
     for (const stem of stems) {

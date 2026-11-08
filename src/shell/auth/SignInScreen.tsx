@@ -1,33 +1,38 @@
 import { Button } from '@firna/ui/button'
-import { productDomain, productName } from '../../../docs/mockups/src/brand'
+import { productDomain } from '../../../docs/mockups/src/brand'
 import { Lockup } from '../../../docs/mockups/src/components/brand/Logo'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { GitHubMark } from '../../../docs/mockups/src/components/common/GitHubMark'
 import legal from '../../../docs/mockups/src/components/marketing/LegalLinks.module.css'
+import {
+  RunningText,
+  type TextLinkRenderer,
+} from '../../../docs/mockups/src/components/marketing/RunningText'
 import wordmark from '../../../docs/mockups/src/components/marketing/Wordmark.module.css'
+import { signInCopy } from '../../../docs/mockups/src/screens/signInCopy'
 import styles from '../../../docs/mockups/src/screens/SignInScreen.module.css'
-import { API_PATHS } from '../../shared/api'
+import { termsAgreement } from '../../marketing/legal-text'
+import { pageHrefs } from '../../marketing/links'
+import { acceptedTermsSignInPath } from '../../shared/terms'
 import { useServices } from '../../app/services'
 import { useViewport } from '../ui/viewport'
 
 /**
- * The legal pages of the site, from decision 35. The marketing site at the
- * root of the product domain serves them.
+ * The pages of the marketing site at the root of the product domain, which
+ * serves the legal pages of decision 35.
  */
+const siteHrefs = pageHrefs(`https://${productDomain}`)
+
 const legalPages = [
-  { label: 'Terms', path: '/terms' },
-  { label: 'Privacy', path: '/privacy' },
+  { label: 'Terms', page: 'terms' },
+  { label: 'Privacy', page: 'privacy' },
 ] as const
 
 function LegalLinks() {
   return (
     <nav aria-label="Legal" className={`${legal.row} ${legal.center}`}>
       {legalPages.map((page) => (
-        <a
-          className={legal.link}
-          href={`https://${productDomain}${page.path}`}
-          key={page.path}
-        >
+        <a className={legal.link} href={siteHrefs[page.page]} key={page.page}>
           {page.label}
         </a>
       ))}
@@ -35,43 +40,54 @@ function LegalLinks() {
   )
 }
 
+/** A link of the agreement, to its page on the marketing site. */
+const siteLink: TextLinkRenderer = ({ target, className, children }) => (
+  <a
+    className={className}
+    href={'page' in target ? siteHrefs[target.page] : `mailto:${target.mail}`}
+  >
+    {children}
+  </a>
+)
+
 /**
  * The GitHub sign-in of the app. GitHub is the only way in, and the first
- * sign-in of a new user also creates the account. It stands alone, without
- * the rail, because nobody is signed in yet.
+ * sign-in of a new user also creates the account. The agreement to the
+ * terms sits just above Continue with GitHub, which carries the current
+ * terms revision. It stands alone, without the rail, because nobody is
+ * signed in yet.
  */
 export function SignInScreen() {
   const { leave } = useServices()
   const phone = useViewport() === 'phone'
-  const title = `Sign in to ${productName}`
   return (
     <div className={classes(styles.page, phone && styles.mobile)}>
       <header className={styles.header}>
-        <a className={wordmark.wordmark} href={`https://${productDomain}`}>
+        <a className={wordmark.wordmark} href={siteHrefs.home}>
           <Lockup height={30} />
         </a>
       </header>
       <div className={styles.body}>
-        <section aria-label={title} className={styles.card}>
-          <h1 className={styles.title}>{title}</h1>
-          <p className={styles.text}>
-            Use your GitHub account. If you are new, this also creates your
-            account.
+        <section aria-label={signInCopy.title} className={styles.card}>
+          <h1 className={styles.title}>{signInCopy.title}</h1>
+          <p className={styles.text}>{signInCopy.text}</p>
+          <p className={styles.agreement}>
+            <RunningText link={siteLink} text={termsAgreement} />
           </p>
           <Button
             block
             iconNode={<GitHubMark className={styles.mark} size={17} />}
-            onPress={() => leave(API_PATHS.githubSignIn)}
+            onPress={() => leave(acceptedTermsSignInPath())}
             size="lg"
             tone="primary"
           >
-            Continue with GitHub
+            {signInCopy.action}
           </Button>
         </section>
       </div>
       <footer className={styles.footer}>
-        <a className={styles.back} href={`https://${productDomain}`}>
-          Back to the home page
+        <a className={styles.back} href={siteHrefs.home}>
+          {signInCopy.home}
         </a>
         <LegalLinks />
       </footer>

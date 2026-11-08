@@ -30,7 +30,7 @@ hostname. The composition root must add each route and wrapper below.
 `handleLifecycleRequest` in [`browser.ts`](browser.ts) serves these routes
 of the shared contracts:
 
-- create, read, open, resume, and activity of a workspace, from
+- create, read, resume, and activity of a workspace, from
   `src/shared/workspaces.ts`
 - the build list, a new build, a refresh, one build, and its log stream,
   from `src/shared/org-settings.ts`
@@ -77,7 +77,7 @@ const response = await handleLifecycleRequest(request, context, runtime, {
   and the org purge. Lifecycle cleanup leaves the attachments to their owner.
 - A retry gets a fresh workspace ID with the same first message ID. Its
   start waits until the records of the failed attempt are gone.
-- Open and resume restart only a stopped or failed workspace. A resumed
+- Resume restarts only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
 - After the startup script succeeds at create and each resume, the start
@@ -240,8 +240,7 @@ object holds the lifecycle state, the turn records, and the events.
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
-- [`workspace-resume.ts`](workspace-resume.ts): `openWorkspace` and
-  `resumeWorkspace`.
+- [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
   phases, admission, process IDs, output offsets, retry state, deadline, and results.
@@ -315,3 +314,4 @@ object holds the lifecycle state, the turn records, and the events.
 - [Shared contracts](../../src/shared/README.md): the browser and runner
   payloads.
 - [Migrations](../../migrations/README.md): the D1 tables.
+- [Operator actions](../operator/README.md#lifecycle-checks): the suspension checks.

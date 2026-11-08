@@ -11,17 +11,17 @@ import { HttpError } from '../http'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { readWorkspace } from './workspace-data'
-import { finishFailedStart } from './start-failure'
+import { failedStartJob, finishFailedStart } from './start-failure'
 import { firstOrgAdmin } from './settings-data'
-import { WorkspaceStartError } from './workspace-start'
 import { advanceStartMachine } from './start-machine'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { StartWaiters } from './start-waiters'
+import { requireActiveStartUsers } from './start-access'
+import { stepLabel } from './start-step-label'
 import {
   advanceStartCommand,
   nextStartCommand,
   prepareStartTerminal,
-  startStepLabel,
 } from './start-command-execution'
 import {
   providerRetryPending,
@@ -65,6 +65,7 @@ export class WorkspaceStartCoordinator {
       if (job.kind === 'create' && (await this.storage.creationResult()))
         return false
       if (await this.storage.job()) return false
+      await requireActiveStartUsers(this.env.DB, job)
       const epoch = await this.storage.epoch()
       const state = await this.endpoint.readLifecycle()
       if (
@@ -124,21 +125,13 @@ export class WorkspaceStartCoordinator {
     )
     if (!job) return publishCreationResult(this.env, this.storage)
     const expired = startTimeLimitReached(job, this.dependencies.now())
-    if (
-      !job.cancelled &&
-      !job.failure &&
-      !expired &&
-      providerRetryPending(job.providerRetry, this.dependencies.now())
-    )
-      return false
     let provider: SandboxProvider | undefined
     try {
-      if (
-        job.phase === 'records' &&
-        !job.cancelled &&
-        !job.failure &&
-        !expired
-      ) {
+      if (job.phase === 'records' && !job.cancelled && !job.failure) {
+        await requireActiveStartUsers(this.env.DB, job)
+        if (expired) throw new JobTimeLimit('start')
+        if (providerRetryPending(job.providerRetry, this.dependencies.now()))
+          return false
         const admitted = await advanceStartRecords(
           this.env,
           this.dependencies,
@@ -170,7 +163,10 @@ export class WorkspaceStartCoordinator {
         if (result) await this.finish(result)
         return result !== null
       }
+      await requireActiveStartUsers(this.env.DB, job)
       if (expired) throw new JobTimeLimit('start')
+      if (providerRetryPending(job.providerRetry, this.dependencies.now()))
+        return false
       if (providerRetryExpired(job.providerRetry, this.dependencies.now()))
         throw new ProviderRetryExhausted()
       const row = await readWorkspace(this.env.DB, job.orgId, job.workspaceId)
@@ -184,6 +180,7 @@ export class WorkspaceStartCoordinator {
       if (job.phase === 'machine' || job.phase === 'ready') {
         const next = await advanceStartMachine(
           this.env,
+          this.dependencies,
           this.endpoint,
           provider,
           row,
@@ -210,7 +207,7 @@ export class WorkspaceStartCoordinator {
           provider,
           row,
           job,
-          startStepLabel(job.phase),
+          stepLabel(job.phase),
         ))
       )
         return false
@@ -218,7 +215,7 @@ export class WorkspaceStartCoordinator {
         await prepareStartTerminal(this.env, this.dependencies, job)
       await this.endpoint.lifecycleStep(
         job.phase,
-        startStepLabel(job.phase),
+        stepLabel(job.phase),
         'completed',
       )
       if (job.phase === 'fetch' || job.phase === 'branch') {
@@ -239,25 +236,10 @@ export class WorkspaceStartCoordinator {
       await this.finish({ ok: true })
       return true
     } catch (error) {
-      const caught = startTimeLimitReached(job, this.dependencies.now())
-        ? new JobTimeLimit('start')
-        : error
-      if (await retryStartError(this.storage, caught, this.dependencies.now()))
+      if (await retryStartError(this.storage, error, this.dependencies.now()))
         return false
       const current = (await this.storage.job()) ?? job
-      const failure =
-        caught instanceof HttpError ? caught : new WorkspaceStartError(null)
-      const failedJob = current.cancelled
-        ? current
-        : {
-            ...current,
-            failure: current.failure ?? {
-              code: failure.code,
-              message: failure.message,
-              status: failure.status,
-              timeLimit: caught instanceof JobTimeLimit,
-            },
-          }
+      const failedJob = failedStartJob(current, error, this.dependencies.now())
       await this.storage.update(failedJob)
       const result = await finishFailedStart(
         this.env,

@@ -1,29 +1,22 @@
 import type { ReactNode } from 'react'
+import type {
+  PictureScale,
+  ScreenCrop,
+  ScreenSize,
+} from '../../screens/marketingPictureList'
 import { classes } from '../common/classes'
 import { StillLinks } from '../common/ScreenLink'
 import styles from './ScreenFrame.module.css'
-
-/** The size that a screen lays out at, in px. */
-export type ScreenSize = { width: number; height: number }
-
-/** The part of a screen that a picture shows, in px of the screen. */
-export type ScreenCrop = { x: number; y: number; width: number; height: number }
-
-/**
- * How large a picture shows its screen: a fixed factor, or `inherit`, which
- * reads the factor from the `--frame-scale` property of an ancestor, so that
- * the picture can follow the width of the page.
- */
-export type FrameScale = number | 'inherit'
 
 /** A real screen of the app, and the part of it that a picture shows. */
 export type ScreenPicture = {
   /** What the picture shows, for assistive technology. */
   label: string
+  /** The size that the screen lays out at. */
   size: ScreenSize
-  /** The whole screen when omitted. */
-  crop?: ScreenCrop
-  scale: FrameScale
+  /** The part of the screen that the picture shows, in px of the screen. */
+  crop: ScreenCrop
+  scale: PictureScale
   screen: ReactNode
 }
 
@@ -36,20 +29,24 @@ export type FrameDevice = 'window' | 'excerpt' | 'phone'
 /** The top band of the phone, over which its notch sits, in px. */
 const phoneBand = 44
 
-function length(px: number, scale: FrameScale): string {
+function length(px: number, scale: PictureScale): string {
   return scale === 'inherit'
     ? `calc(${px}px * var(--frame-scale))`
     : `${px * scale}px`
 }
 
-/** The visible part of the screen, which clips the scaled screen. */
+/**
+ * The visible part of the screen, which clips the scaled screen. The screen
+ * lays out at its own size, and a visitor cannot focus or press anything in
+ * it.
+ */
 function PictureView(props: {
   picture: ScreenPicture
   className: string
   label?: string
 }) {
   const { picture } = props
-  const crop = picture.crop ?? { x: 0, y: 0, ...picture.size }
+  const { crop } = picture
   const factor =
     picture.scale === 'inherit' ? 'var(--frame-scale)' : `${picture.scale}`
   return (
@@ -74,6 +71,22 @@ function PictureView(props: {
         <StillLinks>{picture.screen}</StillLinks>
       </div>
     </div>
+  )
+}
+
+/**
+ * The part of the screen of a picture at its own size, without a frame. It
+ * starts at the top left corner of the page, so that the capture command can
+ * save it as the file of the picture.
+ */
+export function ScreenCapture(props: { picture: ScreenPicture }) {
+  const { picture } = props
+  return (
+    <PictureView
+      className={styles.view}
+      label={picture.label}
+      picture={{ ...picture, scale: 1 }}
+    />
   )
 }
 

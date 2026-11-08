@@ -1,10 +1,11 @@
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
+import { requireActiveWorkspaceOwner } from '../data/user-access'
 import { requireOrgMember } from './access'
 import { readImageSettings, workspaceRepository } from './settings-data'
 import { readWorkspace } from './workspace-data'
 import { workspaceResponse } from './workspace-response'
-import { WorkspaceStartError } from './workspace-start'
+import { workspaceStartFailure } from './workspace-start'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import { workspaceRepositoryLocations } from './repository-location-data'
 
@@ -22,6 +23,7 @@ export async function resumeWorkspace(
     return workspaceResponse(runtime, orgId, workspaceId)
   if (row.state !== 'stopped' && row.state !== 'error')
     return workspaceResponse(runtime, orgId, workspaceId)
+  await requireActiveWorkspaceOwner(env.DB, row.ownerUserId)
   if (!row.sandboxId)
     throw new HttpError(
       409,
@@ -34,6 +36,7 @@ export async function resumeWorkspace(
     workspaceId,
     orgId,
     kind: 'resume',
+    requestedByUserId: userId,
     imageName: null,
     startupScript: settings.startupScript,
     environmentCiphertext: settings.envVarsCiphertext,
@@ -52,20 +55,6 @@ export async function resumeWorkspace(
   })
   if (!accepted) return workspaceResponse(runtime, orgId, workspaceId)
   const result = await endpoint.waitLifecycleStart()
-  if (!result.ok)
-    throw Object.assign(new WorkspaceStartError(result.error.log), result.error)
+  if (!result.ok) throw workspaceStartFailure(result.error)
   return workspaceResponse(runtime, orgId, workspaceId)
-}
-
-export async function openWorkspace(
-  runtime: WorkspaceRuntime,
-  orgId: string,
-  workspaceId: string,
-  userId: string,
-  tabId: string,
-): Promise<WorkspaceResponse> {
-  await requireOrgMember(runtime.env.DB, orgId, userId)
-  await readWorkspace(runtime.env.DB, orgId, workspaceId)
-  await runtime.workspace(workspaceId).openLifecycleTab(tabId)
-  return resumeWorkspace(runtime, orgId, workspaceId, userId)
 }

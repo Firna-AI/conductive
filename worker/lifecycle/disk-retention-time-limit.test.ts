@@ -5,7 +5,7 @@ import { setupBackendTests } from './backend-test-hooks'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { readRetention } from './retention-data'
-import { openWorkspace } from './workspace-resume'
+import { resumeWorkspace } from './workspace-resume'
 
 const backendFixture = setupBackendTests()
 const STARTED_AT = TEST_TIME + 1_123_260_000
@@ -77,9 +77,7 @@ it('ends an unready retention restart at its original deadline through phase cha
     state: 'stopped',
     error: { message: FAILURE },
   })
-  await fixture.run(() =>
-    openWorkspace(runtime, org.id, id, user.id, 'after-limit'),
-  )
+  await fixture.run(() => resumeWorkspace(runtime, org.id, id, user.id))
   expect(await platform.endpoint().readLifecycle()).toMatchObject({
     state: 'starting',
     startupPrepared: true,

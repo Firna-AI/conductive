@@ -23,6 +23,11 @@ export interface WorkspaceContext {
   stream: WorkspaceStream
   /** Opens the Archive question, or `null` when the viewer may not archive. */
   archive: (() => void) | null
+  /**
+   * Takes the workspace of the API's answer after the owner picker assigns
+   * another owner, so the header and the start state follow at once.
+   */
+  onReassigned: (workspace: Workspace) => void
 }
 
 export type WorkspaceSlot = (context: WorkspaceContext) => ReactNode

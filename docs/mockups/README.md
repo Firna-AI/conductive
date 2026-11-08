@@ -40,177 +40,15 @@ full desktop layout.
 
 ## The design
 
-The design is Graphite: dark-first, with near-black surfaces, cool greys, and
-one bright sky accent for what is active, such as the selected rail item, a
-working agent, and the main action. It is dense, with small radii, and its
-labels (tabs, section names, times) use the monospace font in capitals. The
-light scheme uses the same cool greys and a darker accent.
-
-The desktop layout has four columns. The org rail holds the mark, the orgs
-as squares with their initials, Create org, and the account at the bottom.
-The sidebar shows the org name with its Settings link, New workspace, and
-the sections that the user made. Each workspace is one line: a dot-matrix
-status mark, the name, and the time, and it moves to another section by
-drag and drop. The centre column has a slim header that names the
-repository, the branch, and the owner of the workspace, and ends with
-Archive. Then come a tab for each agent session and each open file or diff,
-+ for a new session, and a clock that opens the session history. The right
-column has the pull request bar on top, the All files, Changes, and Checks
-lists below it, and the Terminal, Preview, and Desktop tabs at the bottom.
-It shows no file content. A phone shows an org switcher at the top of the list, and the
-workspace with a compact pull request row, the sessions as tabs above the
-chat, and five tabs at the bottom.
-
-- The tokens live in `src/design/`: the colours of each scheme in
-  `palette.ts`, and the type, density, sizes, radii, and fonts in
-  `metrics.ts`. The renderer writes them as `--ui-*` CSS variables, and gives
-  `@firna/ui` the same colours through its theme.
-- The logo comes from the masters in `docs/brand/`, which
-  `src/components/brand/Logo.module.css` reads and only scales. The tile
-  of the app icon stands alone at the top of the org rail. The lockup,
-  with dark or light text for the scheme, names the product on the
-  marketing site and the sign-in page. The macOS app icon shows in the
-  notifications of the Mac app.
-- `ActionButton` and `IconButton` in `src/components/common/actions.tsx` give
-  the Firna button the dense size and a lighter label.
-- On a phone every touch target is at least 44 px high. `MobileFrame` gives
-  the Firna controls the touch sizes through `useControlSizes` in
-  `src/components/common/touch.tsx`, and local controls read the
-  `--ui-touch-min` variable, which is 0 on desktop.
-- One `ModelPicker` in `src/components/chat/` sets the model and the effort
-  in every composer, such as "Opus 5.5 High". It names no agent brand. In a
-  session with messages, each model of the other agent says "New session",
-  because it opens a new session with the draft, from decision 51.
-- While the sandbox of a new workspace starts for the first time, Send
-  waits in each session, and each box keeps its message.
-  `SendWait` in `src/components/chat/` gives the short reason beside Send,
-  "You can send when the sandbox is ready", in two lines on a phone. The
-  user sends the message when the sandbox is ready, as
-  `app/new-workspace/waiting` shows. A resume of a stopped workspace still
-  takes messages, which wait for the sandbox.
-- A view runs no script, so a screen draws an open menu in place: `Menu` in
-  `src/components/common/` beside its button, or in a `Sheet` on a phone.
-  Firna's own menu rows are taller than the dense design. A row can lead with
-  a mark, such as an avatar, and end with a muted detail and an icon.
-- `ConfirmDialog` in `src/components/common/` asks before an action that a
-  user cannot simply undo: a dialog over the dimmed app on desktop, and a
-  sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
-- `AgentMark` in `src/components/chat/` marks the agent of a session with two
-  letters on a small tile, CL or CX, because the app draws no brand logo.
-- `StatusGlyph` in `src/components/workspaces/` draws the state of a
-  workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
-  working and starting move with CSS. A finished turn is a full bright green
-  square, and ready is one bright cell on a faint green grid. A workspace
-  whose agent waits for the user, such as for the approval of a command,
-  shows Needs input: a middle column in the accent colour that pulses.
-- Copy says cloud computer or sandbox. No screen names Boat, also not the
-  marketing site or Get started.
-- A build of the cloud computer runs for at most 60 minutes, and a start of
-  a sandbox for at most 20 minutes. A build that runs names its limit under
-  its log, and the start card names the limit under its steps. A failed
-  build or start shows the message that the app saved for it, so a job that
-  passed its limit names that limit, as
-  `app/org-settings/cloud-computer/build-failed/time-limit`,
-  `app/shell/error/time-limit`, and `app/new-workspace/time-limit` show.
-- On desktop the sidebar and the right column resize from `ResizeHandle` in
-  `src/components/layout/`, a hairline on their inner edge. On hover and
-  during a drag a short grip in the accent colour shows in its middle, so no
-  panel gets an accent edge.
-- A state tints a whole bar or box, and its edges stay neutral. No box has
-  an accent strip on any edge.
-- `sizes.ts` in `src/components/chat/` holds the one size formatter.
-  The mockups, chat, and composer of a new workspace share it.
-  The attachment fixtures hold byte counts.
-  The formatter shows sizes such as "12 KB" and "1.2 MB".
-- Data that the chat does not have shows in plain words, from decision 76.
-  `lostCopy.ts` in `src/components/chat/` holds the words. A tool call whose
-  output the runner shortened shows the size that it left out, such as "1.2 MB left out", and
-  its folded group shows the total. A turn with more than 200 files ends its
-  list with plain text, such as "47 more files". A stopped turn shows no
-  file list, so its line ends with the count, such as
-  "You stopped the agent · 5 changed files not listed".
-  `LostLine` draws a refused runner event as one centred, muted line at its
-  place, which names the lost data and why, such as "A tool update was lost
-  because it was too large". It never shows the lost data, and a phone wraps
-  it into balanced lines.
-- The app frame is a size container (`app-frame`), so the layout follows the
-  width of the frame, not of the window. In the app the two are the same. A
-  screen is as high as `--ui-screen-height`, which is the window, or the
-  frame of a picture on the marketing site.
-- On a phone the org settings put their four tabs in three columns, so every
-  tab shows. The session tabs all shrink, and the current one keeps the start
-  of its title beside its rename and close buttons.
+[The design](design.md) gives the style of the app, the layouts of the
+desktop and the phone, the design tokens, and the parts that the screens
+share.
 
 ## The catalogue
 
-| Path                | What it shows                                                                 |
-| ------------------- | ----------------------------------------------------------------------------- |
-| `marketing`         | The home page of the site: the app, its features, and sign-up                 |
-| `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
-| `app/sign-in`       | The GitHub sign-in, and Get started, the only first run, in three steps       |
-| `app/shell`         | The workspace list, and the sandbox starting, stopped, and with an error      |
-| `app/sections`      | The menu of a section, and a workspace dragged to another section             |
-| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted     |
-| `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
-| `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, its errors, the start, a held second message, the first turn   |
-| `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
-| `app/chat`          | A finished turn, then running turns, lost data, and lost updates              |
-| `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
-| `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
-| `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
-| `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
-| `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
-| `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
-| `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
-| `app/panels`        | The right column, widened by the handle on its inner edge                     |
-| `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |
-| `user-flows`        | Sign up, create a workspace, reopen it, create an org, run a Mac command      |
-
-A folder page shows at most five screens, saved states included. A folder
-with child folders shows only its canonical screen, as `app`, `app/sign-in`,
-`app/shell`, `app/orgs`, `app/new-workspace`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/banner`, and `app/chat` do.
-`app/org-settings/cloud-computer` and its building
-and build-failed states moved from `app/repository-settings` and its updating
-and update-failed states, and declare `movedFrom`. The states of `app/shell`,
-`app/new-workspace`, and `app/org-settings/cloud-computer` moved into their own
-folders and kept their paths, so that each of those pages shows only its
-canonical screen. `app/sign-in/get-started`
-moved into its own folder and kept its path. Get started is the only first
-run, so the first run of `app/shell` and the not-connected state of
-`app/orgs/new` are gone, and their links lead to Get started. Its second
-step opens `app/orgs/new/first`, whose Create org and Cancel return to Get
-started. The entries
-of `app/orgs/new`, `app/orgs/empty`, and `app/orgs/deleted` moved into their
-own folders and kept their paths, so `app/orgs` shows only its canonical
-screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
-paid plan went away, and declares `movedFrom`.
-
-`app/banner` shows a branch with commits and no pull request. Its child
-pages show the other states of decision 18: `app/banner/checks` has the
-running, failed, and passed checks and the merge, which moved from
-`app/banner/checks-running`, `checks-failed`, `ready-to-merge`, and `merged`
-and declare `movedFrom`. `app/banner/blocked` has a merge conflict, requested
-changes, a draft, and a pull request closed without a merge. A conflict and
-requested changes tint the bar amber. `app/banner/no-commits` has a branch
-without commits, whose bar offers no Create pull request, as in
-`app/new-workspace/creating` and `first-turn`.
-
-`app/chat` shows a finished turn. Its child pages: `app/chat/turns` has the
-running turn, steer, interrupt, and a failure, which moved from
-`app/chat/running`, `steer`, `interrupted`, and `failed` and declare
-`movedFrom`. `app/chat/lost-data` draws the data that the chat does not
-have, from decision 76: tool output and turn files that the runner left out,
-and the lines of runner events that the workspace refused.
-`app/chat/lost-updates` draws a failed repair, from decision 96. After a
-refused update that belongs to no session, such as a file update, the
-workspace asks for a fresh full report, and nothing shows. Only when that
-report is lost too does a notice name the data that stays unavailable,
-beside that data: under the file lists for a file list, and under the
-header for other data, such as the workspace name. The `failed-repair`
-value of the `lostUpdate` state draws it, and every other screen stays
-silent.
+[The catalogue](catalogue.md) lists each path of the catalogue and what it
+shows. It also gives the rules of the folder pages, the entries that moved,
+and the child pages of `app/banner` and `app/chat`.
 
 ## Folder layout
 
@@ -250,154 +88,23 @@ silent.
 
 ## Orgs and members
 
-The product is free for now, as the user decided on 5 November 2026 in
-decision 45. So the screens show no plans, no billing, no seats, and no
-plan limits.
-
-- An admin invites a person by email, from decision 78. An open invite shows
-  its email, and a member row shows the GitHub login. The roles are admin and
-  member, from decision 54. Only an admin manages the members, deletes the
-  org, and reassigns a workspace. A member who is not an admin sees the
-  members and each workspace's owner without actions. "Owner" names only
-  the person who owns a workspace.
-- Only an admin renames the org, and changes the repositories, the scripts,
-  and the env vars, from decisions 54 and 57. A member sees the General,
-  Repositories, and Cloud computer tabs read-only: the values, without edit
-  fields, Save, or Build computer. The General tab of a member is the child
-  page `app/org-settings/member`, because `app/org-settings` has child
-  pages. `DetailList` in `src/components/settings/` shows such values.
-- Each session runs on the agent login of the member who started it, also
-  for the messages of other members. So a reassign changes no login, and
-  the cloud computer keeps running.
-- The line under the composer names the login that a message uses, such
-  as "Uses Cal's Claude login" in `app/composer/login`, or "Uses your Claude
-  login". When the login of the member who started a session is not
-  available, a message of another member starts a new session. The notice
-  over the composer of the first session says so, and its chat stays as it
-  was, as `app/sessions/no-starter-login` shows. The new session starts
-  with a line that links back to the first session, then the new message,
-  as `app/sessions/linked` shows. The parts live in
-  `src/components/chat/SessionLogin.tsx` and `LinkedLine.tsx`.
-- A stopped turn names the member who pressed Stop, from decision 72,
-  because all members of an org see the same chat. That member sees "You
-  stopped the agent", as `app/chat/turns/interrupted` shows. The other members
-  see the name of that member, such as "Cal stopped the agent" in
-  `app/reassign/member-stop`. When no member pressed Stop, such as when
-  the cloud computer stopped during the turn, the chat says "The agent
-  stopped", as `app/shell/stopped/during-turn` shows.
-- Each branch starts with the GitHub login of the owner of its workspace,
-  such as `calummoore/lisbon-7k2q`, from decision 53.
-- Archive, from decision 16, deletes the cloud computer and keeps the chat
-  read-only in the Archived group at the end of the list. It checks first
-  for work that is not committed or not pushed. The pull request bar offers
-  it after a merge. Only the workspace's owner and the org's admins see
-  Archive, from decision 42. An archived workspace has no file lists and no
-  tools, so a phone shows only its chat.
-- No workspace shows as expiring. Near day 14 of a stop, the app starts the
-  cloud computer briefly and stops it again, from decision 43.
-- Any user creates orgs. Create org of the first run returns to Get started.
-- Delete org asks for the org name. The deleted org stays faded in the rail
-  of its admins until the date when everything is deleted, and its page
-  offers Restore.
-- Three orgs show: Acme, Firna, the first org of the sign-up, and Acme Labs,
-  which Create org makes. The parts live in `src/components/members/`.
+[Orgs and members](orgs-and-logins.md#orgs-and-members) gives what the
+screens show of orgs and members: the roles, the logins of the sessions,
+the owners of the workspaces, Archive, and Delete org.
 
 ## Logins
 
-- The app runs every cloud computer in its own account. So no org has a
-  key for its cloud computers, and no screen asks for one or for another
-  account.
-- The account connects Claude with a subscription token from
-  `claude setup-token` or an API key, and Codex with an OpenAI API key.
-  `AgentConnectForm` opens under the row of the agent. A connected login
-  shows its kind and Remove.
-- Get started has three steps: install the GitHub App, create the first
-  org, and connect Claude or Codex, from decision 33. The next step opens
-  its form.
-- The composer shows a notice when the agent of the chosen model is not
-  connected. In a session that another member started, a message uses the
-  available login of that member, so no agent notice shows.
+[Logins](orgs-and-logins.md#logins) gives the agent logins of the account,
+the steps of Get started, and the notice for an agent that is not
+connected.
 
 ## The Mac app
 
-The Mac app is the web app in a window of macOS, from decision 62. Its
-screens live under `mac-app`, and their parts in `src/components/mac/`.
-
-- `MacScreen` lays the screen of a Mac out at 1440 × 900 and scales it to
-  the view in steps of `--mac-scale`, because a view runs no script. The
-  app has no phone layout, so a phone view shows the same screen, smaller.
-- The window has no title bar. The red, yellow, and green window buttons
-  sit inset at the top left of the left panel, above every layer of the
-  app, as macOS draws them. `WindowControls` keeps their space, then shows
-  the sidebar toggle, and back and forward at the right. In full screen
-  the buttons are gone, and the toggle takes their space.
-- `MacApp` marks the screens inside it as the Mac app, so that `AppFrame`
-  draws the window controls and a banner of the Mac app. The account of
-  the Mac app keeps the sidebar of the org and adds the This Mac section.
-- An agent can ask to run a command on the Mac of the person who sent the
-  turn. The request waits as a compact message just above the composer,
-  from `PendingCommand` in `src/components/chat/`: the exact command, the
-  time limit, Deny, and Allow. A longer time limit shows its reason.
-  Details opens the folder, the reason, the workspace, and the sender. The
-  arrow beside Allow opens Always allow and Allow all commands for 15
-  minutes. A view runs no script, so Details is a native disclosure, the
-  arrow opens a native popover in the top layer, and each choice is a
-  link. The header and the workspace list mark the workspace with Needs
-  input, so the request shows from every page. A notification of macOS
-  opens the workspace when the app is in the background. The 15 minutes
-  show as an amber bar with the time left and Stop.
-- The requests that wait share one region above the composer, from
-  `ChatPane.module.css`. It takes at most 40% of the window, so a long
-  command or many requests scroll inside it, and an edge that cuts a
-  request fades. `mac-app/requests` draws four requests with a long script.
-  A view cannot open a popover, so the chat draws an open menu with
-  `DrawnChoices` outside the region, at the actions of its request, and the
-  region keeps its bound.
-- Each change of the Mac's settings shows its result until the next change
-  of the same control: done, done but not saved, or failed, from
-  `ChangeOutcome` in `src/components/mac/`. This Mac lists the results of
-  Remove under its list, and the bar of the 15 minutes names the result of
-  Stop, also after the 15 minutes end. A change that the Mac made but did
-  not save took its row or its 15 minutes away, so its result offers Try
-  again. `mac-app/this-mac` and `mac-app/stop` draw them.
-- The web app shows a waiting request without the choices, because only
-  the Mac app can allow a command on the Mac. Once answered, the command
-  shows as a card at its place in the chat: denied, done with its output,
-  or Mac not available.
+[The Mac app](mac-app.md) gives the screens of the Mac app: its window, the
+commands that an agent runs on the Mac, and This Mac.
 
 ## The marketing site
 
-The home page follows the calm structure of a Conductor-style home page: a
-header, a hero with a short headline, one sentence, and a large picture of
-the app, then one section for each feature, the smaller features, a last
-call to action, and a footer. Both actions, "Start free with GitHub"
-and "Sign in", lead to `app/sign-in`. The parts live in
-`src/components/marketing/`.
-
-The site keeps still captures of the workspace screen, the org settings cloud computer tab, and the phone workspace list.
-Changes to those screens require recapture with the [capture steps](../../src/marketing/README.md#pictures).
-
-- Every picture is a real screen of the catalogue, not a drawing of one.
-  `ScreenFrame` lays the screen out at its own size, 1440 × 900 on desktop
-  and 390 × 800 on a phone, then scales it and crops it to one part.
-  `src/screens/marketingPictures.tsx` chooses the screen, its state, and the
-  part, in px of the screen. When a layout of the app changes, look at the
-  pictures again.
-- A picture is `inert`, so a visitor cannot focus or press anything in it.
-  It also sets `StillLinks`: a `ScreenLink` in it is plain content, and an
-  outside link has no address. So a picture never links into the catalogue.
-- The hero picture follows the width of the page in steps of
-  `--frame-scale`, because a view runs no script. The other pictures keep
-  one scale.
-- Each claim on the page is one that the plan decides. The page shows no
-  customer logos, testimonials, user counts, certifications, desktop or
-  native mobile app, API, other agents, or changelog.
-- The page shows no plans, because the product is free for now. It asks
-  for no other account, because the app runs every cloud computer in its
-  own account.
-- The product is "Conductive", on `conductive.build`.
-  `src/brand.ts` holds the name and the domains, so that one change renames
-  the product.
-- The footer and the sign-in page link to Terms and Privacy, from
-  `LegalLinks` and decision 35. The pages are not drawn yet, so the links
-  have no address.
+[The marketing site](marketing-site.md) gives the home page and its
+pictures, the Terms, Privacy, and not-found pages, and the page before
+GitHub.

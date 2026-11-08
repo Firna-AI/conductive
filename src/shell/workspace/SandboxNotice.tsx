@@ -1,17 +1,48 @@
 import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { Archive, CircleAlert, CirclePause } from 'lucide-react'
+import { Archive, Ban, CircleAlert, CirclePause } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import styles from '../../../docs/mockups/src/components/workspace/SandboxNotice.module.css'
+import type { ApiError } from '../../app/api/client'
 import { useServices } from '../../app/services'
 import { formatDay } from '../../app/time'
 import type { Workspace } from '../../shared/workspaces'
 import { ActionButton } from '../ui/actions'
 import type { Action } from '../ui/useAction'
 
-export type SandboxProblem = 'stopped' | 'error' | 'archived'
+/**
+ * Why the sandbox is not running. `refused` is a start that the app
+ * refuses, such as while the owner of the workspace is suspended.
+ */
+export type SandboxProblem = 'stopped' | 'error' | 'refused' | 'archived'
+
+/**
+ * What the bar in place of the composer shows. A refused start carries the
+ * words of the app's refusal, so one notice serves every reason. A start
+ * that failed can carry the message that the workspace saved for it, such
+ * as its time limit.
+ */
+export type SandboxNoticeState =
+  | { problem: 'stopped' | 'archived' }
+  | { problem: 'error'; message?: string | null }
+  | { problem: 'refused'; reason: string }
+
+/**
+ * The codes of the API for a start that the app refuses, such as while the
+ * owner of the workspace is suspended. The refusal lasts until its cause
+ * changes, so its notice offers no action.
+ */
+const refusalCodes: ReadonlySet<string> = new Set(['user_suspended'])
+
+/** The notice of a start that the app refused, from the start error. */
+export function refusedStart(
+  error: ApiError | null,
+): SandboxNoticeState | null {
+  if (!error || !refusalCodes.has(error.code)) return null
+  return { problem: 'refused', reason: error.message }
+}
 
 interface Problem {
   icon: LucideIcon
@@ -26,6 +57,12 @@ interface Problem {
 }
 
 const saved = 'Your files and chat are saved.'
+
+/**
+ * A refused start can last until the disk of the sandbox is gone, so its
+ * notice promises only the chat history.
+ */
+const history = 'Your chat history is available.'
 
 function problemOf(problem: SandboxProblem, archivedOn: string): Problem {
   switch (problem) {
@@ -47,6 +84,14 @@ function problemOf(problem: SandboxProblem, archivedOn: string): Problem {
         action: 'Try again',
         tone: 'danger',
       }
+    case 'refused':
+      return {
+        icon: Ban,
+        title: "The sandbox can't start",
+        body: history,
+        panelBody: history,
+        tone: 'neutral',
+      }
     case 'archived':
       return {
         icon: Archive,
@@ -64,18 +109,33 @@ function useProblem(problem: SandboxProblem, workspace: Workspace): Problem {
   return problemOf(problem, formatDay(archivedAt, timeZone))
 }
 
+/** The text of the bar: the refusal, or the saved message before the body. */
+function barBody(notice: SandboxNoticeState, body: string): string {
+  switch (notice.problem) {
+    case 'refused':
+      return notice.reason
+    case 'error':
+      return notice.message ? `${notice.message} ${body}` : body
+    case 'stopped':
+    case 'archived':
+      return body
+  }
+}
+
 /**
- * The bar that takes the place of the composer while the sandbox is down.
- * `message` is the message that the workspace saved for a start that
- * failed, such as its time limit. The bar shows it before the body.
+ * The bar that takes the place of the composer while the sandbox is down. A
+ * refused start shows the words of the refusal, and no action, because the
+ * start stays refused until its cause changes. A start that failed shows
+ * the message that the workspace saved for it, such as its time limit,
+ * before the body.
  */
 export function SandboxBar(props: {
-  problem: SandboxProblem
+  notice: SandboxNoticeState
   workspace: Workspace
   resume: Action<[]>
-  message?: string | null
 }) {
-  const problem = useProblem(props.problem, props.workspace)
+  const { notice } = props
+  const problem = useProblem(notice.problem, props.workspace)
   return (
     <Notice
       action={
@@ -89,7 +149,7 @@ export function SandboxBar(props: {
           </ActionButton>
         ) : undefined
       }
-      body={props.message ? `${props.message} ${problem.body}` : problem.body}
+      body={barBody(notice, problem.body)}
       icon={problem.icon}
       title={problem.title}
       tone={problem.tone}

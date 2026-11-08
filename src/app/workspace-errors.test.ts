@@ -1,5 +1,9 @@
 import { expect, test } from 'vitest'
-import { workspacePaths, type WorkspaceStart } from '../shared/workspaces'
+import {
+  workspacePath,
+  workspacePaths,
+  type WorkspaceStart,
+} from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
@@ -10,7 +14,7 @@ import { WorkspaceModel } from './workspace-model'
 
 const orgId = FAKE_IDS.org
 const workspaceId = FAKE_IDS.workspace
-const openPath = workspacePaths.open(orgId, workspaceId)
+const openPath = workspacePath(orgId, workspaceId)
 const resumePath = workspacePaths.resume(orgId, workspaceId)
 const savedError = {
   code: 'workspace_start_failed',
@@ -101,7 +105,8 @@ test('old workspace events keep a saved error until an event explicitly clears i
     ...workspaceFixtures('error').detail,
     error: { ...savedError, log: 'Previously released masked output.' },
   }
-  server.json('POST', openPath, saved)
+  server.json('GET', openPath, saved)
+  server.json('POST', resumePath, { error: savedError }, 503)
   const { events, workspace } = setup(server)
   await workspace.open()
   const before = valueOf(workspace.detail.get())

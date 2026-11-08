@@ -77,8 +77,8 @@ The Durable Object runs the gates itself.
   an expired grant closes and gets no event.
 - Every 15 seconds, one D1 query refreshes the grants of all open tabs.
   The refresh closes each tab without a new grant. Sign-out, membership
-  removal, session expiry, and org deletion end access. A failed read
-  closes each tab of its batch.
+  removal, a suspension of the user, session expiry, and org deletion end
+  access. A failed read closes each tab of its batch.
 - A separate expiry timer closes each tab at its grant deadline, also
   while a refresh read waits. A late read result cannot reopen a closed
   tab.
@@ -89,9 +89,17 @@ The Durable Object runs the gates itself.
   `Authorization: Bearer <workspace token>`.
 - `tokenWorkspace` hashes the token. It accepts a token that is not
   revoked, of a workspace that is not archived, in an org that is not
-  deleted.
+  deleted, with an owner who is not suspended.
+  `workspaceTokenAccessPredicate` in
+  [`workspace-token-access.ts`](../data/workspace-token-access.ts) holds
+  that rule. The agent tools, the git credential route, and the Mac
+  commands use it too.
 - The runner sends `hello` first, with `RUNNER_PROTOCOL_VERSION` and its
   workspace ID. A new runner connection closes the previous one.
+- `AuthenticatedRunner` keeps the token hash of its connection. It checks
+  the token rule again before each message that it sends or receives, and
+  every 15 seconds while the connection is idle, with no cached result. A
+  failed rule or a failed read closes the connection.
 - The first workspace that passes a gate binds the Durable Object. Each
   other workspace gets `404 workspace_not_found`. So does a workspace that
   `matchesObject` refuses, because `WORKSPACES.idFromName` names another
@@ -100,10 +108,15 @@ The Durable Object runs the gates itself.
   `readLogin` in `login-access.ts`, the only caller of `resolveLogin`. It
   reads the agent login of a starter or of a linked-session member, for one
   agent. `resolveLogin` first checks the workspace, that user, the sender,
-  and the runner token in one D1 read. An override replaces only the login
-  read.
-- Its metadata path reads only the membership and the stored login kind of
-  each starter, in one D1 query. It reads no ciphertext.
+  and the runner token in one D1 read. The workspace must pass the token
+  rule above, without the token. That user and the sender must be members
+  who are not suspended. An override replaces only the login read.
+- Its metadata path, `readLoginAvailability`, reads only the membership,
+  the suspension, and the stored login kind of each starter, in one D1
+  query. The workspace must also pass the token rule above. So a suspended
+  starter or a refused workspace shows an unavailable login. The result
+  sets only `loginAvailable`, so the session list, the history, and the
+  event subscription stay readable. It reads no ciphertext.
 - A revoked or replaced runner token closes that connection without a
   login, and the command stays queued. A sender who left the org gets no
   login either. [Session logins](integration/README.md#session-logins) says
@@ -136,7 +149,7 @@ The Durable Object runs the gates itself.
   cursor plus one.
 - A duplicate gets a new confirm and is not stored again. A gap gets a
   `resend` from the first missing number. The `welcome` gives the cursor,
-  or less while a [report repair](#report-repairs) waits for its first send.
+  or less while a [report repair](report-repairs.md) waits for its first send.
 - The `turn_not_active` reason means that the turn never started.
 - Valid late events append to a started turn that ended. They change no
   turn, session, message, or command state.
@@ -188,50 +201,8 @@ accepts. It is the only public part of the retry state.
 
 ## Report repairs
 
-[Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
-states the rules. A report repair is the stored `report.refresh` command of
-one `RunnerReportKind`.
-
-- `ReportRepairs` on `ChatTransaction.repairs` keeps one record for each kind
-  under the `chat:v1:report-repair:` prefix.
-- Refusal checks use one identity reader. It reads only the event type,
-  session and turn IDs, and the revision and part number of a full file report.
-  Each unreadable field is null. The checks use this identity, the envelope
-  stream, and the stored records. Part count and payload contents do not
-  identify an old tail.
-- A record holds its command, its cause, its state, a `sent` flag, and a
-  `replacementRevision`. The cause is the stream and the event number of the
-  first refusal. For a file kind, it also holds the newest applied,
-  incomplete, or refused full-report revision. The state is `pending` or
-  `failed`.
-- `refuseRunnerEvent` calls `refuseReportRepair` before `refuse(type)`
-  discards the incomplete file report. So the check still reads the revision
-  of that report.
-- The first refusal of a kind saves a `pending` record with a new command ID.
-  A later refusal of a replacement sets `failed`, and its marker gets
-  `repairFailed`. A remaining part or a tree delta changes nothing.
-- A stored new part 1 of a multipart report on the cause stream sets
-  `replacementRevision`. So the later parts of a reused revision count as a
-  replacement.
-- The record, the marker, and the cursor commit in the receipt transaction.
-- A complete tree, changes list, start steps, or name removes the record of
-  its kind in the same transaction. A tree delta and a pending part do not.
-- After the commit, `RepairDelivery.flush` sends each `pending` record that
-  the connection did not get yet. The first send of a record then commits
-  `sent`.
-- Only then does `RunnerChannel` send the confirm and run the hooks. A send
-  failure or a failed `sent` commit throws. The channel then closes the
-  connection without the confirm.
-- The `welcome` holds `confirmedThrough` below the cause of each `pending`
-  record of its stream that no connection got. So the runner sends that
-  event again, and the channel confirms it as a duplicate.
-- After the `welcome`, the channel sends the repairs before the other
-  commands. A repair needs no `runner.ready` and carries no login, so its
-  send runs no login or token check.
-- Turn, message, interrupt, model, and file commands still wait for
-  `runner.ready`.
-- Each new connection gets each `pending` record again, with the same
-  command ID. A `failed` record is never sent again.
+[Report repairs](report-repairs.md) says how the chat backend asks the
+runner for one fresh full report after it refuses an update.
 
 ## Tests
 
@@ -268,6 +239,8 @@ agent runner, the logins and attachments, and the test fixtures.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event.
+- `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
+  runner connection before each message and while it is idle.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
 - `runner-delivery.ts`: the sends of pending commands, with the login
@@ -306,6 +279,7 @@ agent runner, the logins and attachments, and the test fixtures.
 - [GitHub banner backend](../github/README.md)
 - [Access and security: Agent logins in a sandbox](../../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
 - [Access and security: The workspace token](../../docs/protocol/access-and-security.md#the-workspace-token)
+- [Operator actions: Workspace tokens and runners](../../docs/protocol/operator-actions.md#workspace-tokens-and-runners)
 - [Architecture: Workspace Durable Object](../../docs/architecture.md#workspace-durable-object)
 - [Shared contracts](../../src/shared/README.md)
 - [Backend and runner fakes](../test-support/README.md)

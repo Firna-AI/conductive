@@ -1,8 +1,10 @@
 import {
   workspacePath,
   workspacePaths,
+  type Workspace,
   type WorkspaceResponse,
 } from '../shared/workspaces'
+import type { ApiError } from './api/client'
 import { ignore } from './api/parse'
 import type { ShellEvent } from './api/read-events'
 import { readWorkspaceResponse } from './api/read-workspaces'
@@ -24,6 +26,7 @@ const activityInterval = 60_000
 /** The open workspace: its state, its start steps, and its Archive question. */
 export class WorkspaceModel {
   readonly detail = new Store<Loadable<WorkspaceResponse>>(loading)
+  readonly startError = new Store<ApiError | null>(null)
   readonly archive: ArchiveModel
   readonly stream: WorkspaceStream
   readonly workspaceId: string
@@ -33,6 +36,7 @@ export class WorkspaceModel {
   /** Each open and each close counts one up, so an old open knows it is obsolete. */
   private generation = 0
   private reading = false
+  private refusedOwnerId: string | null = null
   /** Newer field changes to replay over each pending Resume answer. */
   private readonly resuming = new Set<Change<WorkspaceResponse>[]>()
 
@@ -61,18 +65,10 @@ export class WorkspaceModel {
    */
   async open(): Promise<void> {
     const run = ++this.generation
-    const archived = this.org.workspace(this.workspaceId)?.state === 'archived'
     const path = workspacePath(this.org.orgId, this.workspaceId)
     let detail: WorkspaceResponse
     try {
-      detail = await (archived
-        ? this.api.get(path, readWorkspaceResponse)
-        : this.api.send(
-            'POST',
-            workspacePaths.open(this.org.orgId, this.workspaceId),
-            {},
-            readWorkspaceResponse,
-          ))
+      detail = await this.api.get(path, readWorkspaceResponse)
     } catch (error) {
       if (run === this.generation) {
         this.detail.set({ state: 'failed', error: asApiError(error) })
@@ -96,6 +92,10 @@ export class WorkspaceModel {
       this.org.services.onInput(() => this.reportActivity()),
     )
     this.stream.start()
+    if (run !== this.generation) return
+    const state = valueOf(this.detail.get())?.workspace.state
+    if (state === 'stopped' || state === 'error')
+      await this.resume().catch(() => undefined)
   }
 
   /** Stops the stream. An open that still runs can no longer start it. */
@@ -139,13 +139,33 @@ export class WorkspaceModel {
     change: Change<WorkspaceResponse> = () => detail,
   ): void {
     for (const changes of this.resuming) changes.push(change)
+    if (
+      this.refusedOwnerId !== null &&
+      this.refusedOwnerId !== detail.workspace.owner.id
+    ) {
+      this.refusedOwnerId = null
+      this.startError.set(null)
+    }
     this.detail.set(ready(detail))
     this.org.putWorkspace(detail.workspace)
+  }
+
+  reassigned(workspace: Workspace): void {
+    const detail = valueOf(this.detail.get())
+    if (!detail) return
+    const change: Change<WorkspaceResponse> = (current) => ({
+      ...current,
+      workspace: { ...current.workspace, owner: workspace.owner },
+    })
+    this.setDetail(change(detail), change)
   }
 
   /** Resume of a stopped sandbox, and Try again after a start that failed. */
   async resume(): Promise<void> {
     const run = this.generation
+    const ownerId = valueOf(this.detail.get())?.workspace.owner.id
+    if (this.startError.get()?.code !== 'user_suspended')
+      this.startError.set(null)
     const changes: Change<WorkspaceResponse>[] = []
     this.resuming.add(changes)
     let detail: WorkspaceResponse
@@ -156,10 +176,26 @@ export class WorkspaceModel {
         {},
         readWorkspaceResponse,
       )
+    } catch (error) {
+      const problem = asApiError(error)
+      const sameOwner =
+        ownerId !== undefined &&
+        ownerId === valueOf(this.detail.get())?.workspace.owner.id
+      if (
+        run === this.generation &&
+        (problem.code !== 'user_suspended' || sameOwner)
+      ) {
+        this.refusedOwnerId =
+          problem.code === 'user_suspended' ? (ownerId ?? null) : null
+        this.startError.set(problem)
+      }
+      throw error
     } finally {
       this.resuming.delete(changes)
     }
     if (run !== this.generation) return
+    this.refusedOwnerId = null
+    this.startError.set(null)
     this.setDetail(changes.reduce((value, change) => change(value), detail))
   }
 

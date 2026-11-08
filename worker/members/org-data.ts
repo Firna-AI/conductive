@@ -1,5 +1,6 @@
 import type { Org } from '../../src/shared/api'
 import type { OrgSummary } from '../../src/shared/orgs'
+import { activeAdminMemberPredicate } from '../data/active-admin'
 
 interface OrgRow extends Org {
   deletedAt: number | null
@@ -66,5 +67,5 @@ export async function renameOrg(
 export const activeAdminPredicate = `EXISTS (
   SELECT 1 FROM orgs access_org JOIN org_members access_member ON access_member.org_id = access_org.id
   WHERE access_org.id = ? AND access_member.user_id = ?
-  AND access_member.role = 'admin' AND access_org.deleted_at IS NULL
+  AND ${activeAdminMemberPredicate('access_member')} AND access_org.deleted_at IS NULL
 )`

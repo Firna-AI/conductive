@@ -6,7 +6,7 @@ import type { StartingLog } from '../../fixtures/starting'
 import { classes } from '../common/classes'
 import { DrawnChoices } from '../mac/CommandActions'
 import { useMacApp } from '../mac/MacApp'
-import { SandboxBar, type SandboxProblem } from '../workspace/SandboxNotice'
+import { SandboxBar, type SandboxNoticeState } from '../workspace/SandboxNotice'
 import { StartingCard } from '../workspace/StartingCard'
 import { ChatItemView } from './ChatItemView'
 import { Composer, type ComposerState } from './Composer'
@@ -26,9 +26,11 @@ import styles from './ChatPane.module.css'
 export function ChatPane(props: {
   items: readonly ChatItem[]
   composer: ComposerState
-  problem?: SandboxProblem
-  /** The message that the app saved for a start that failed. */
-  startError?: string
+  /**
+   * The sandbox is not running: the bar takes the place of the composer. A
+   * failed start carries its saved message, and a refused start its reason.
+   */
+  problem?: SandboxNoticeState
   starting?: StartingLog
   empty?: ReactNode
   /** A message above the composer, such as a failed create. */
@@ -88,7 +90,7 @@ export function ChatPane(props: {
         {mac?.choicesOpen && pending.length > 0 ? <DrawnChoices /> : null}
         {props.notice}
         {props.problem ? (
-          <SandboxBar message={props.startError} problem={props.problem} />
+          <SandboxBar {...props.problem} />
         ) : (
           <Composer {...props.composer} />
         )}

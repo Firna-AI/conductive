@@ -1,5 +1,6 @@
 import { providerState } from './provider-state'
 import type { AppEnv } from '../env'
+import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
@@ -17,6 +18,34 @@ import {
 import { deleteProvisionalWorkspace } from './workspace-data'
 import { markCreationFailed } from './creation-attempt-data'
 import { startTimeLimitReached } from './start-provider-retry'
+import { JobTimeLimit } from './job-time-limit'
+import { WorkspaceStartError } from './workspace-start'
+
+export function failedStartJob(
+  job: WorkspaceStartJob,
+  error: unknown,
+  now: number,
+): WorkspaceStartJob {
+  const caught =
+    !(error instanceof HttpError && error.code === 'user_suspended') &&
+    startTimeLimitReached(job, now)
+      ? new JobTimeLimit('start')
+      : error
+  const failure =
+    caught instanceof HttpError ? caught : new WorkspaceStartError(null)
+  return job.cancelled && failure.code !== 'user_suspended'
+    ? job
+    : {
+        ...job,
+        cancelled: job.cancelled || failure.code === 'user_suspended',
+        failure: job.failure ?? {
+          code: failure.code,
+          message: failure.message,
+          status: failure.status,
+          timeLimit: caught instanceof JobTimeLimit,
+        },
+      }
+}
 
 export async function finishFailedStart(
   env: AppEnv,
@@ -43,6 +72,7 @@ export async function finishFailedStart(
         if (!(error instanceof ProviderError && error.kind === 'not_found'))
           return null
       }
+      await endpoint.lifecycleStopped()
     }
     if (!job.cancelled)
       await endpoint.lifecycleFailed({

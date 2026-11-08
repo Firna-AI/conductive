@@ -1,22 +1,20 @@
 import type { SandboxProvider } from '../sandbox/provider'
+import { requireActiveUser } from '../data/user-access'
 import type { BuildJob } from './build-data'
 import {
-  assignBuildSandbox,
   assignBuildSnapshot,
   publishBuild,
   readBuildJob,
+  updateBuildJob,
 } from './build-data'
+import { allocateImageBuild } from './image-allocation'
 import { advanceBuildCommand, cleanupBuild } from './build-execution'
 import { completeBuildPhase } from './build-phase-data'
 import { clearBuildCommands } from './command-intents'
 import type { ImageRuntime } from './image-builds'
 import { SourceCommandPort } from './image-sources/source-commands'
 import { providerState } from './provider-state'
-import {
-  buildSandboxIntent,
-  buildSnapshotIntent,
-  createResource,
-} from './resource-intents'
+import { buildSnapshotIntent, createResource } from './resource-intents'
 import {
   capturedRepositoryLocations,
   readRepositoryLocations,
@@ -31,13 +29,15 @@ export async function advanceBuildStep(
 ): Promise<boolean> {
   const { env, dependencies } = runtime
   const { buildId, orgId } = job
+  const recoveringAllocation = job.phase === 'allocating' && !job.sandboxId
   if (job.phase === 'create') {
-    const sandbox = await createResource(
-      provider,
-      buildSandboxIntent(env.DB, job),
-    )
-    await assignBuildSandbox(env.DB, buildId, sandbox.id)
-    await completeBuildPhase(env.DB, buildId, 'sources')
+    await updateBuildJob(env.DB, buildId, 'allocating')
+    job = { ...job, phase: 'allocating' }
+  }
+  if (job.phase === 'allocating') {
+    if (!recoveringAllocation && job.startedByUserId)
+      await requireActiveUser(env.DB, job.startedByUserId)
+    await allocateImageBuild(env.DB, provider, job)
     return false
   }
   if (!job.sandboxId) throw new Error('Missing build sandbox')

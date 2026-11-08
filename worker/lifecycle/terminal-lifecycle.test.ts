@@ -6,7 +6,7 @@ import { setupBackendTests } from './backend-test-hooks'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { DISK_KEEPALIVE_MS } from './durable-types'
 import { stopWorkspaceSandbox } from './workspace-actions'
-import { openWorkspace } from './workspace-resume'
+import { resumeWorkspace } from './workspace-resume'
 import { createWorkspace } from './workspaces'
 import { lifecycleCommandBody } from './command-test-support'
 
@@ -90,7 +90,7 @@ it('starts and caches the terminal after startup at create and resume while rete
 
   boat.terminalPassword = 'c'.repeat(64)
   const resumed = await fixture.run(() =>
-    openWorkspace(runtime, org.id, id, user.id, 'terminal-resume'),
+    resumeWorkspace(runtime, org.id, id, user.id),
   )
   expect(resumed.workspace.state).toBe('ready')
   expect(terminalStarts).toBe(2)

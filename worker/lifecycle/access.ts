@@ -1,5 +1,6 @@
 import type { Org } from '../../src/shared/api'
 import { findMembership } from '../data/orgs'
+import { requireActiveUser } from '../data/user-access'
 import { HttpError } from '../http'
 
 export async function requireOrgMember(
@@ -8,6 +9,7 @@ export async function requireOrgMember(
   userId: string,
   admin = false,
 ): Promise<Org> {
+  await requireActiveUser(db, userId)
   const org = await findMembership(db, orgId, userId)
   if (!org) {
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
