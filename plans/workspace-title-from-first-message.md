@@ -389,7 +389,7 @@ workspace name and then the title, so it does not change.
 - [x] Change the comment of `generatedName` in
       `docs/mockups/src/fixtures/workspaces.ts`, so that it no longer says
       that the first answer names the workspace.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 - [x] Make `src/chat/components/ReadOnlyChat.dom.test.tsx` read the title
@@ -397,8 +397,12 @@ workspace name and then the title, so it does not change.
       changed.
 - [x] Say in the fixture that a member renamed the first session of the
       open workspace, so its tab differs from the workspace name.
-- [ ] Capture the site pictures again with `npm run marketing:pictures`,
+- [x] Capture the site pictures again with `npm run marketing:pictures`,
       because the hero and agents pictures show a later session tab.
+
+Evidence: `.context/workspace-title-from-first-message/reports/m1-mockups.md`,
+`mockups-check.log`, `marketing-pictures.log`, and the screenshots in
+`mockups/`.
 
 ## Milestone 2: Documentation and protocol
 
