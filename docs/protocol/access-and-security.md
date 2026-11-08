@@ -208,19 +208,28 @@ Later screens add the frame and connection sources that they need.
 - The session record shows whether the login of its starter can be used. It
   holds no part of the login.
 - The runner never writes a login to disk.
+- No process that the agent starts inherits the login of its turn. The
+  login is not in the environment, the arguments, or an inherited open file
+  of such a process. The agent program writes no copy of the login to disk.
+  So a dev server that a tool starts gets no copy of the login (decision
+  114).
+- Reason: a server that a tool starts can run for days after its turn.
+  Stopping every program of the agent at the end of each turn was rejected,
+  because it also stops the servers behind port previews. The Claude
+  program's setting that removes the login from tool processes was rejected,
+  because it runs each tool command in isolation.
 - Risk: the other members of a session spend the login of its starter.
   Anthropic's rules for hosted products ask each end user to sign in with
   their own credentials. So the shared use of a Claude subscription stays a
   risk (decision 105).
 - The starter cannot refuse this use of their login (decision 116).
 - Risk: a member with a terminal in the same sandbox can read the login of
-  the turn that runs now. Every other process in the sandbox can read it
-  too, such as a tool of the agent or a server that the startup script
-  started.
-- Risk: a program that a tool of the agent starts gets a copy of the login
-  of its turn. A program that keeps running after the turn, such as a dev
-  server, keeps that login, and each member with a terminal in the sandbox
-  can read it (decision 114).
+  the turn that runs now. Every other process of the same sandbox user can
+  read it too, such as a tool of the agent or a server that the startup
+  script started.
+- Risk: such a process can copy the login while the turn runs, and use the
+  copy after the turn. The rule against inheritance stops only the
+  automatic copy into new processes.
 - So the members of one org trust each other with their logins, also after
   a turn ends. A proxy that keeps every login out of the sandbox was
   rejected, because it is a much larger build.
