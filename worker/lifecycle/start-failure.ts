@@ -1,7 +1,5 @@
-import { providerState } from './provider-state'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
-import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type {
@@ -20,6 +18,11 @@ import { markCreationFailed } from './creation-attempt-data'
 import { startTimeLimitReached } from './start-provider-retry'
 import { JobTimeLimit } from './job-time-limit'
 import { WorkspaceStartError } from './workspace-start'
+
+export type ResumeStartFailure = (
+  error: { code: string; message: string; log: null },
+  cancelled: boolean,
+) => Promise<void>
 
 export function failedStartJob(
   job: WorkspaceStartJob,
@@ -54,6 +57,7 @@ export async function finishFailedStart(
   job: WorkspaceStartJob,
   provider: SandboxProvider | undefined,
   now: () => number,
+  finishResumeFailure: ResumeStartFailure,
 ): Promise<WorkspaceStartResult | null> {
   const failure = job.failure ?? {
     code: 'workspace_start_stopped',
@@ -61,25 +65,17 @@ export async function finishFailedStart(
     status: 409,
   }
   if (job.kind === 'resume') {
-    if (job.cancelled && provider && job.allocatedSandboxId) {
-      try {
-        if (
-          providerState((await provider.stop(job.allocatedSandboxId)).state) !==
-          'stopped'
-        )
-          return null
-      } catch (error) {
-        if (!(error instanceof ProviderError && error.kind === 'not_found'))
-          return null
-      }
-      await endpoint.lifecycleStopped()
-    }
-    if (!job.cancelled)
-      await endpoint.lifecycleFailed({
+    await finishResumeFailure(
+      {
         code: failure.code,
         message: failure.message,
         log: null,
-      })
+      },
+      Boolean(
+        job.cancelled &&
+        (!job.failure || job.failure.code === 'user_suspended'),
+      ),
+    )
     return {
       ok: false,
       error: { code: failure.code, message: failure.message, log: null },

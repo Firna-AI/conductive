@@ -35,7 +35,7 @@ interface WorkspaceStartData {
 }
 
 export type WorkspaceMachinePhase =
-  'machine' | 'ready' | 'fetch' | 'branch' | 'startup'
+  'machine' | 'ready' | 'fetch' | 'branch' | 'startup' | 'runner'
 
 export type WorkspaceRunningStartJob = WorkspaceStartData &
   (
@@ -112,5 +112,5 @@ export interface StartJobStorage {
       stderrNextOffset: number
     },
   ): Promise<void>
-  schedule(): Promise<void>
+  schedule(at?: number): Promise<void>
 }

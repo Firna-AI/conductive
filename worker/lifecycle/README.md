@@ -84,6 +84,16 @@ const response = await handleLifecycleRequest(request, context, runtime, {
   calls the start hook of the [terminal backend](../terminal/README.md).
   The hook starts the terminal and caches its encrypted password before
   the workspace becomes ready. Builds and disk retention restarts skip it.
+- The start then saves its runner phase. Its success waits for the runner
+  readiness report within the original start deadline. The readiness wait
+  runs no startup command again and schedules its alarm at that deadline.
+  Each alarm and readiness report still checks the owner and requester.
+- A failed or cancelled resume records its result separately from its
+  stop cleanup. Native lifecycle state keeps the pending stop across
+  restarts. The lifecycle retries the existing stop operation every 30
+  seconds, and a later resume waits for confirmation. Cleanup keeps the
+  saved failure message. Late runner reports cannot revive that failed
+  start.
 - Activity from the `input`, `terminal`, and `preview` sources resets the
   idle time.
 - The build log is a stream of server-sent events. It continues after the
@@ -244,6 +254,10 @@ object holds the lifecycle state, the turn records, and the events.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
   phases, admission, process IDs, output offsets, retry state, deadline, and results.
+- [`start-progress.ts`](start-progress.ts): the command steps and the move
+  into the saved runner readiness phase.
+- [`start-runner.ts`](start-runner.ts): readiness admission, the original
+  deadline, and the active owner and requester checks for runner reports.
 - [`job-time-limit.ts`](job-time-limit.ts): the build and start time limits
   and their public failure messages.
 - [`start-allocation-cleanup.ts`](start-allocation-cleanup.ts):
@@ -260,6 +274,9 @@ object holds the lifecycle state, the turn records, and the events.
   creates, and `failedCreationForSender`.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
+- [`durable-start-stop.ts`](durable-start-stop.ts): the saved stop owner of
+  failed and cancelled resumes. [`durable-alarm.ts`](durable-alarm.ts) advances
+  stop cleanup before normal lifecycle work.
 - [`workspace-actions.ts`](workspace-actions.ts): the stop, deadline, and
   state read actions on the sandbox.
 - [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
@@ -268,15 +285,23 @@ object holds the lifecycle state, the turn records, and the events.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`, the
   maintenance resume, startup, and stop phases. Its D1 progress retains a
   failure while stop cleanup retries.
+- [`retention-command.ts`](retention-command.ts): `advanceRetentionCommand`
+  starts the maintenance script detached and polls its saved process.
+  Its journal identity and output offsets survive reconstruction.
 - [`disk-retention-state.ts`](disk-retention-state.ts):
   `advanceDiskRetentionState` saves the original maintenance deadline in
-  native lifecycle state before the first provider call. It keeps the
-  failure after cleanup and caps active maintenance alarms at the deadline.
+  native lifecycle state before the first provider call. It also saves the
+  maintenance command identity and process. It keeps the failure after
+  cleanup and caps active maintenance alarms at the deadline.
 - [`durable-scheduling.ts`](durable-scheduling.ts): `writeLifecycleState`,
   the shared lifecycle state and alarm write.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
+- [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
+  replays a saved allocation request and saves the recovered sandbox ID.
+  Failed image jobs retain their unresolved allocation phase until cleanup
+  recovers and deletes the sandbox.
 - [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,
   which splits output into rows and adds the budget statements of
   [`build-log-retention.ts`](build-log-retention.ts) to the same D1 batch.

@@ -9,6 +9,7 @@ import {
 import type { MaskedStartLog } from './masked-start-log'
 import { readStartJob, serializeStartJob } from './start-job-codec'
 import { START_ALLOCATION_CLEANUP_KEY } from './start-allocation-cleanup'
+import { startAlarmDeadline } from './start-provider-retry'
 import type {
   StartJobStorage,
   WorkspaceStartResult,
@@ -234,6 +235,12 @@ export function durableStartStorage(
         })
       })
     },
-    schedule: () => storage.setAlarm(now() + 1_000),
+    schedule: async (at) =>
+      storage.setAlarm(
+        Math.min(
+          at ?? now() + 1_000,
+          startAlarmDeadline(await storage.get('job', JOB), now()),
+        ),
+      ),
   }
 }

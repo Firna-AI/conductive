@@ -53,8 +53,11 @@ export async function runningRuntimeWorkspace(
   )
   const actor = fixture.actor(workspaceId)
   await actor.queueLifecycleStart(serializeStartJob(job))
-  for (let step = 0; step < 16 && (await actor.checkpoint()); step++)
+  for (let step = 0; step < 16 && (await actor.checkpoint()); step++) {
+    if ((await actor.checkpoint())?.phase === 'runner')
+      await actor.reportRunnerLifecycle({ type: 'runner.ready' })
     await actor.tick()
+  }
   const result = await actor.waitCreationLifecycle()
   if (!result.ok) throw new Error(`Runtime create failed: ${result.error.code}`)
   const { sandboxId } = await readWorkspace(

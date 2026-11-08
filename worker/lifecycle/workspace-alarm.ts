@@ -36,10 +36,12 @@ export async function runWorkspaceAlarm(input: {
             ? (job.providerRetry?.retryAt ?? 0)
             : 0
         await storage.setAlarm(
-          Math.min(
-            Math.max(now + 1_000, retryAt),
-            startAlarmDeadline(job, now),
-          ),
+          job?.phase === 'runner' && !job.cancelled && !job.failure
+            ? startAlarmDeadline(job, now)
+            : Math.min(
+                Math.max(now + 1_000, retryAt),
+                startAlarmDeadline(job, now),
+              ),
         )
         return
       }
@@ -52,7 +54,7 @@ export async function runWorkspaceAlarm(input: {
   const state = await input.lifecycle.read()
   if (state && (await input.accessStop.check(state.workspaceId)) !== undefined)
     return
-  if (advancedStart) return
+  if (advancedStart && state?.startStop !== 'pending') return
   const cleanupId = await storage.get('text', 'lifecycle:cleanup')
   if (cleanupId) {
     try {

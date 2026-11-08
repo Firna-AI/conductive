@@ -14,8 +14,13 @@ export async function writeLifecycleState(
   now: () => number,
 ): Promise<void> {
   await storage.put(LIFECYCLE_STATE_KEY, state)
+  if (state.startStop === 'pending') {
+    await storage.setAlarm(now() + 30_000)
+    await hooks.changed(state)
+    return
+  }
   const alarm =
-    state.state === 'stopped'
+    state.state === 'stopped' || state.startStop === 'stopped'
       ? state.nextDiskKeepaliveAt
       : state.state === 'error'
         ? now() + 5_000
@@ -28,7 +33,10 @@ export async function writeLifecycleState(
     await storage.setAlarm(
       startPending
         ? Math.min(alarm, now() + 1_000)
-        : !state.runnerConnected && state.state !== 'stopped' && hooks.reconcile
+        : !state.runnerConnected &&
+            state.state !== 'stopped' &&
+            state.startStop !== 'stopped' &&
+            hooks.reconcile
           ? Math.min(alarm, now() + 5_000)
           : alarm,
     )

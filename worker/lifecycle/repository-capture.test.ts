@@ -5,7 +5,6 @@ import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { FIRST_MESSAGE } from './durable-test-support'
-import { keepWorkspaceDisk } from './disk-retention'
 import { startImageBuild } from './image-builds'
 import { finishImageBuild } from './image-test-support'
 import { orgEnvironmentContext } from './settings-data'
@@ -142,15 +141,10 @@ it('keeps the workspace image folder map at resume and retention after a later s
   })
   boat.states.set(row.sandboxId, 'archived')
   await runtime.workspace(id).lifecycleStopped()
-  await keepWorkspaceDisk(
-    {
-      env: runtime.env,
-      dependencies: runtime.dependencies,
-      orgId: org.id,
-      workspaceId: id,
-    },
-    runtime.dependencies.now() + 1_200_000,
-  )
+  fixture.setTime(runtime.dependencies.now() + 1_123_200_000)
+  const platform = fixture.actors.get(id)
+  if (!platform) throw new Error('Missing retention controller')
+  await platform.endpoint().alarm()
   expect(resumedEnvironments[1]).toMatchObject({
     APP_SECRET: 'fresh-secret',
     CONDUCTIVE_REPOSITORY_DIR: '/home/user/code/storefront',

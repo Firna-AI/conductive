@@ -117,7 +117,7 @@ it('removes a failed create and its token while retaining the draft and cleanup 
   }
 })
 
-it('resumes the same disk and retries a failed startup on its already running machine', async () => {
+it('resumes the same disk and retries a failed startup after stopping its old work', async () => {
   const fixture = await backendFixture()
   try {
     const { runtime, org, user, boat } = fixture
@@ -196,7 +196,7 @@ it('resumes the same disk and retries a failed startup on its already running ma
     const commandCount = boat.commands.length
     expect(await endpoint.queueLifecycleStart(stale)).toBe(false)
     expect(boat.commands).toHaveLength(commandCount)
-    expect(boat.resumeIds).toEqual(['bx_1'])
+    expect(boat.resumeIds).toEqual(['bx_1', 'bx_1'])
     expect(boat.deletedIds).toEqual([])
     expect(
       boat.commands.every(

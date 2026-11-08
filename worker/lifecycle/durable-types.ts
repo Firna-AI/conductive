@@ -3,6 +3,10 @@ import type {
   WorkspaceStart,
   WorkspaceState,
 } from '../../src/shared/workspaces'
+import type {
+  RetentionCommandPort,
+  RetentionCommandState,
+} from './retention-command'
 
 export const IDLE_MS = 30 * 60 * 1_000
 export const DISK_KEEPALIVE_MS = 13 * 24 * 60 * 60 * 1_000
@@ -27,9 +31,11 @@ export interface DurableLifecycleState {
   runningSessions: readonly string[]
   runnerConnected: boolean
   startupPrepared?: boolean
+  startStop?: 'pending' | 'stopped' | 'error'
   stoppedAt: number | null
   nextDiskKeepaliveAt: number | null
   diskRetentionDeadlineAt?: number
+  diskRetentionCommand?: RetentionCommandState
   error: { code: string; message: string; log: string | null } | null
 }
 
@@ -41,7 +47,10 @@ export interface DiskRetentionResult {
 export interface LifecycleHooks {
   changed(state: DurableLifecycleState): void | Promise<void>
   stop(): Promise<LifecycleStopResult | void>
-  keepalive(deadlineAt: number): Promise<DiskRetentionResult>
+  keepalive(
+    deadlineAt: number,
+    command: RetentionCommandPort,
+  ): Promise<DiskRetentionResult>
   extendDeadline(): Promise<LifecycleReconciliation | void>
   reconcile?(): Promise<LifecycleReconciliation>
   startPending?(): Promise<boolean>

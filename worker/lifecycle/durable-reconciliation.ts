@@ -13,7 +13,8 @@ export function reconciledLifecycle(
   if (remote === 'stopped')
     return {
       ...state,
-      state: 'stopped',
+      state: state.startStop && state.error ? 'error' : 'stopped',
+      startStop: state.startStop ? 'stopped' : undefined,
       runningSessions: [],
       runnerConnected: false,
       stoppedAt: now,
@@ -25,11 +26,14 @@ export function reconciledLifecycle(
       state: 'error',
       runningSessions: [],
       runnerConnected: false,
-      error: {
-        code: 'sandbox_failed',
-        message: 'The cloud computer stopped with an error. Try again.',
-        log: null,
-      },
+      error:
+        state.startStop && state.error
+          ? state.error
+          : {
+              code: 'sandbox_failed',
+              message: 'The cloud computer stopped with an error. Try again.',
+              log: null,
+            },
     }
   return state
 }

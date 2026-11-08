@@ -11,18 +11,17 @@ import { HttpError } from '../http'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { readWorkspace } from './workspace-data'
-import { failedStartJob, finishFailedStart } from './start-failure'
+import {
+  failedStartJob,
+  finishFailedStart,
+  type ResumeStartFailure,
+} from './start-failure'
 import { firstOrgAdmin } from './settings-data'
 import { advanceStartMachine } from './start-machine'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { StartWaiters } from './start-waiters'
 import { requireActiveStartUsers } from './start-access'
-import { stepLabel } from './start-step-label'
-import {
-  advanceStartCommand,
-  nextStartCommand,
-  prepareStartTerminal,
-} from './start-command-execution'
+import { advanceStartSteps } from './start-progress'
 import {
   providerRetryPending,
   providerRetryExpired,
@@ -35,6 +34,7 @@ import {
   startTimeLimitReached,
 } from './start-provider-retry'
 import { JobTimeLimit } from './job-time-limit'
+import { applyStartRunnerReady } from './start-runner'
 
 /** The actor's alarm owns progress. Waiting HTTP requests own no phase. */
 export class WorkspaceStartCoordinator {
@@ -42,6 +42,7 @@ export class WorkspaceStartCoordinator {
   private readonly dependencies: AppDependencies
   private readonly endpoint: WorkspaceLifecycleEndpoint
   private readonly storage: StartJobStorage
+  private readonly finishResumeFailure: ResumeStartFailure
   private readonly waiters = new StartWaiters<WorkspaceStartResult>()
   private readonly creationWaiters = new StartWaiters<WorkspaceStartResult>()
   private readonly admissionWaiters =
@@ -53,11 +54,13 @@ export class WorkspaceStartCoordinator {
     dependencies: AppDependencies,
     endpoint: WorkspaceLifecycleEndpoint,
     storage: StartJobStorage,
+    finishResumeFailure: ResumeStartFailure,
   ) {
     this.env = env
     this.dependencies = dependencies
     this.endpoint = endpoint
     this.storage = storage
+    this.finishResumeFailure = finishResumeFailure
   }
 
   enqueue(job: WorkspaceStartJob): Promise<boolean> {
@@ -68,6 +71,7 @@ export class WorkspaceStartCoordinator {
       await requireActiveStartUsers(this.env.DB, job)
       const epoch = await this.storage.epoch()
       const state = await this.endpoint.readLifecycle()
+      if (state?.startStop === 'pending') return false
       if (
         job.kind === 'resume' &&
         state?.state !== 'stopped' &&
@@ -111,6 +115,16 @@ export class WorkspaceStartCoordinator {
     )
   }
 
+  reportRunnerReady(apply: () => Promise<void>): Promise<void> {
+    return applyStartRunnerReady(
+      this.env,
+      this.storage,
+      this.endpoint,
+      this.dependencies.now,
+      apply,
+    )
+  }
+
   advance(): Promise<boolean> {
     const next = this.accepting.then(() => this.advanceOwned())
     this.accepting = next.catch(() => undefined)
@@ -127,6 +141,11 @@ export class WorkspaceStartCoordinator {
     const expired = startTimeLimitReached(job, this.dependencies.now())
     let provider: SandboxProvider | undefined
     try {
+      if (job.phase === 'runner' && !job.cancelled && !job.failure) {
+        await requireActiveStartUsers(this.env.DB, job)
+        if (!expired && !(await this.endpoint.readLifecycle())?.runnerConnected)
+          return false
+      }
       if (job.phase === 'records' && !job.cancelled && !job.failure) {
         await requireActiveStartUsers(this.env.DB, job)
         if (expired) throw new JobTimeLimit('start')
@@ -159,6 +178,7 @@ export class WorkspaceStartCoordinator {
           job,
           provider,
           this.dependencies.now,
+          this.finishResumeFailure,
         )
         if (result) await this.finish(result)
         return result !== null
@@ -177,6 +197,10 @@ export class WorkspaceStartCoordinator {
       const state = await this.endpoint.readLifecycle()
       if (!state?.start || state.state === 'stopped' || state.state === 'error')
         await this.endpoint.beginLifecycleStart(job.kind)
+      if (job.phase === 'runner') {
+        await this.finish({ ok: true })
+        return true
+      }
       if (job.phase === 'machine' || job.phase === 'ready') {
         const next = await advanceStartMachine(
           this.env,
@@ -200,39 +224,18 @@ export class WorkspaceStartCoordinator {
         return false
       }
       if (
-        !(await advanceStartCommand(
+        !(await advanceStartSteps(
           this.env,
+          this.dependencies,
           this.endpoint,
           this.storage,
           provider,
           row,
           job,
-          stepLabel(job.phase),
         ))
       )
         return false
-      if (job.phase === 'startup')
-        await prepareStartTerminal(this.env, this.dependencies, job)
-      await this.endpoint.lifecycleStep(
-        job.phase,
-        stepLabel(job.phase),
-        'completed',
-      )
-      if (job.phase === 'fetch' || job.phase === 'branch') {
-        await nextStartCommand(
-          this.storage,
-          job,
-          job.phase === 'fetch' ? 'branch' : 'startup',
-        )
-        return false
-      }
-      if (!(await this.endpoint.readLifecycle())?.runnerConnected)
-        await this.endpoint.lifecycleStep(
-          'runner',
-          'Starting the agent',
-          'running',
-        )
-      await this.endpoint.lifecyclePrepared()
+      if (!(await this.endpoint.readLifecycle())?.runnerConnected) return false
       await this.finish({ ok: true })
       return true
     } catch (error) {
@@ -248,6 +251,7 @@ export class WorkspaceStartCoordinator {
         failedJob,
         provider,
         this.dependencies.now,
+        this.finishResumeFailure,
       )
       if (result) await this.finish(result)
       return result !== null
@@ -261,6 +265,8 @@ export class WorkspaceStartCoordinator {
   private async finish(result: WorkspaceStartResult): Promise<void> {
     const job = await this.storage.job()
     if (result.ok && job?.cancelled) return
+    if (result.ok && job && startTimeLimitReached(job, this.dependencies.now()))
+      throw new JobTimeLimit('start')
     await this.storage.complete(result)
     const stored = (await this.storage.result()) ?? result
     if (job?.kind === 'create') {

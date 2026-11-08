@@ -90,6 +90,14 @@ job deadline. The image and workspace alarm schedulers cap their next
 retry at that deadline. Terminal cleanup keeps its own retries after the
 job fails.
 
+A failed image job keeps the `allocating` phase when a dispatched request
+has no confirmed sandbox ID. The existing build row owns that cleanup.
+[`cleanupBuild`](build-execution.ts) replays the saved request through
+[`recoverImageBuildAllocation`](image-allocation.ts), then saves the ID
+before it deletes the sandbox. Only finished cleanup writes `done`.
+A definite refusal of the first dispatch needs no allocation recovery.
+A refused replay after an uncertain dispatch keeps the saved ownership.
+
 An old start without a saved deadline uses its saved creation time or
 lifecycle start time. The start coordinator saves the restored deadline
 before it advances the job. A timed-out start with an unresolved

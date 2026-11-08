@@ -67,6 +67,11 @@ it('gives each resume its own deadline and restores an old saved start when its 
   const base = await start.job()
   if (!base) throw new Error('Missing original start')
   await start.tick(TEST_TIME + 2_000)
+  await fixture.actors
+    .get(base.workspaceId)
+    ?.endpoint()
+    .reportRunnerLifecycle({ type: 'runner.ready' })
+  await start.tick(TEST_TIME + 2_000)
   await start.endpoint.lifecycleStopped()
   fixture.boat.states.set('bx_1', 'archived')
   fixture.setTime(TEST_TIME + 300_000)

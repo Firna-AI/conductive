@@ -50,7 +50,8 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
     )
     await actor.alarm()
     await actor.alarm()
-    boat.synchronousExitCode = 1
+    boat.commandExitCode = 1
+    await actor.alarm()
     await actor.alarm()
     expect(await readRetention(runtime.env.DB, created.workspace.id)).toEqual({
       phase: 'stop',
@@ -69,14 +70,14 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
     )
     expect(boat.resumeIds).toEqual(['bx_1', 'bx_1'])
     boat.failStop = false
-    boat.synchronousExitCode = 0
+    boat.commandExitCode = 0
     await fixture.run(() =>
       resumeWorkspace(runtime, org.id, created.workspace.id, user.id),
     )
     expect(await readRetention(runtime.env.DB, created.workspace.id)).toBe(null)
     expect(boat.resumeIds).toEqual(['bx_1', 'bx_1', 'bx_1'])
     expect(await actor.readLifecycle()).toMatchObject({
-      state: 'starting',
+      state: 'ready',
       start: { kind: 'resume' },
       nextDiskKeepaliveAt: null,
     })

@@ -69,8 +69,11 @@ it('keeps failure logs masked across Worker RPC and storage reloads', async () =
     )
     const actor = fixture.actor(id)
     expect(await actor.queueLifecycleStart(serializeStartJob(job))).toBe(true)
-    for (let step = 0; step < 20 && (await actor.checkpoint()); step++)
+    for (let step = 0; step < 20 && (await actor.checkpoint()); step++) {
+      if ((await actor.checkpoint())?.phase === 'runner')
+        await actor.reportRunnerLifecycle({ type: 'runner.ready' })
       await actor.tick()
+    }
     expect(await actor.waitCreationLifecycle()).toEqual({ ok: true })
     await actor.lifecycleStopped()
     fixture.boat.commandOutput = 'failed rpc-secret'

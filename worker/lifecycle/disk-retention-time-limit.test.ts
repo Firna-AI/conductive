@@ -79,7 +79,7 @@ it('ends an unready retention restart at its original deadline through phase cha
   })
   await fixture.run(() => resumeWorkspace(runtime, org.id, id, user.id))
   expect(await platform.endpoint().readLifecycle()).toMatchObject({
-    state: 'starting',
+    state: 'ready',
     startupPrepared: true,
     start: { kind: 'resume' },
     error: null,
@@ -95,7 +95,7 @@ it('records retention timeout when startup finishes at the original deadline and
   await fixture.tick(STARTED_AT)
   expect(await fixture.progress()).toEqual({ phase: 'startup', error: null })
   fixture.boat.beforeCommand = async (_command, detached) => {
-    if (!detached) fixture.setTime(DEADLINE)
+    if (detached) fixture.setTime(DEADLINE)
   }
   await fixture.tick(DEADLINE - 1)
 

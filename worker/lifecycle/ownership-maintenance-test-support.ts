@@ -76,7 +76,10 @@ export async function queueRuntimeResume(fixture: RuntimeFixture, id: string) {
 
 export async function finishRuntimeStart(fixture: RuntimeFixture, id: string) {
   const actor = fixture.actor(id)
-  for (let step = 0; step < 16 && (await actor.checkpoint()); step++)
+  for (let step = 0; step < 16 && (await actor.checkpoint()); step++) {
+    if ((await actor.checkpoint())?.phase === 'runner')
+      await actor.reportRunnerLifecycle({ type: 'runner.ready' })
     await actor.tick()
+  }
   return actor.waitLifecycleStart()
 }

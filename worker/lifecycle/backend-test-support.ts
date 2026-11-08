@@ -108,6 +108,11 @@ export async function backendFixture(sharedHarness?: TestHarness) {
     })
     void result.catch(() => {})
     while (!finished) {
+      for (const actor of actors.values()) {
+        const job = await actor.storage.get('job', START_JOB_KEY)
+        if (job?.phase === 'runner' && !job.cancelled && !job.failure)
+          await actor.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
+      }
       const next = [...actors.values()]
         .filter(
           (actor) =>

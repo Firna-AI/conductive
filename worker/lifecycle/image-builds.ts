@@ -11,6 +11,7 @@ import {
   providerRetryPending,
   providerRetryExpired,
   ProviderRetryExhausted,
+  transientProviderError,
 } from './provider-retry'
 import {
   progressImageRetry,
@@ -178,6 +179,7 @@ export async function advanceImageBuild(
   let job = await readBuildJob(env.DB, orgId, buildId)
   let provider: SandboxProvider | undefined
   const recoveringAllocation = job.phase === 'allocating' && !job.sandboxId
+  const firstAllocation = job.phase === 'create'
   try {
     const expired =
       dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS
@@ -259,12 +261,20 @@ export async function advanceImageBuild(
       failure instanceof HttpError
         ? failure.message
         : 'The cloud computer image could not build. Check the log and try again.'
+    const unresolvedAllocation =
+      job.phase === 'allocating' &&
+      !job.sandboxId &&
+      !(
+        firstAllocation &&
+        error instanceof ProviderError &&
+        !transientProviderError(error)
+      )
     await failBuild(env.DB, buildId, message, dependencies.now())
-    await updateBuildJob(env.DB, buildId, 'cleanup')
+    if (!unresolvedAllocation) await updateBuildJob(env.DB, buildId, 'cleanup')
     if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))
       return false
     if (!provider) {
-      if (job.sandboxId) return false
+      if (job.sandboxId || unresolvedAllocation) return false
       await updateBuildJob(env.DB, buildId, 'done')
       await scheduleIdleImage(runtime, orgId, jobSoftware(job))
       return true

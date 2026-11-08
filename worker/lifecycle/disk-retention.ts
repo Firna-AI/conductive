@@ -9,8 +9,7 @@ import {
   repositoryLocation,
 } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
-import { workspaceStartupCommand } from './image-software'
-import { readImageSettings, workspaceEnvironment } from './settings-data'
+import { workspaceEnvironment } from './settings-data'
 import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
 import {
   readRetention,
@@ -24,11 +23,16 @@ import {
 } from './workspace-actions'
 import { revokeWorkspacePreviews } from './workspace-data'
 import type { DurableLifecycle } from './durable'
+import {
+  advanceRetentionCommand,
+  type RetentionCommandPort,
+} from './retention-command'
 
 /** The caller serializes this action with user starts in the workspace object. */
 export async function keepWorkspaceDisk(
   context: WorkspaceActionContext,
   deadlineAt: number,
+  command: RetentionCommandPort,
 ): Promise<DiskRetentionResult> {
   const { env, workspaceId, orgId } = context
   const { provider, sandboxId, row } = await actionResources(context)
@@ -119,22 +123,13 @@ export async function keepWorkspaceDisk(
       return { done: false, error: null }
     }
     if (status !== 'ready') return { done: false, error: null }
-    const settings = await readImageSettings(env.DB, orgId)
-    let error: string | null = null
-    try {
-      const result = await provider.runCommand(
-        sandboxId,
-        workspaceStartupCommand(settings.startupScript, 'retention'),
-      )
-      if (result.exitCode !== 0 || result.timedOut)
-        error = 'The startup script failed during disk retention.'
-    } catch {
-      error = 'The startup script could not run during disk retention.'
-    }
-    if (context.dependencies.now() >= deadlineAt)
-      error = new JobTimeLimit('start').message
-    await setRetention(env.DB, workspaceId, 'stop', error)
-    return { done: false, error }
+    return advanceRetentionCommand(
+      context,
+      provider,
+      sandboxId,
+      deadlineAt,
+      command,
+    )
   }
   return { done: false, error: null }
 }
@@ -204,9 +199,20 @@ export async function finishDiskMaintenance(
 ): Promise<void> {
   try {
     if (
-      await lifecycle.finishDiskMaintenance(async () =>
-        Boolean(await readRetention(context.env.DB, context.workspaceId)),
-      )
+      await lifecycle.finishDiskMaintenance(async () => {
+        const progress = await readRetention(
+          context.env.DB,
+          context.workspaceId,
+        )
+        if (progress?.phase === 'startup')
+          await setRetention(
+            context.env.DB,
+            context.workspaceId,
+            'stop',
+            progress.error,
+          )
+        return Boolean(progress)
+      })
     )
       return
   } catch {
