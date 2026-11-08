@@ -18,7 +18,10 @@ export const creating = defineScreen({
     conversation: 'queued',
     banner: 'no-commits',
   },
-  useCasePaths: ['user-flows/create-workspace'],
+  useCasePaths: [
+    'user-flows/create-workspace',
+    'user-flows/create-workspace-dialog',
+  ],
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),

@@ -31,6 +31,7 @@ export const paths = {
   suspendedLeaveConfirm: 'app/orgs/suspended/leave/confirm',
   sections: 'app/sections',
   account: 'app/account',
+  accountPreferences: 'app/account/preferences',
   accountSetup: 'app/account/setup',
   connectClaude: 'app/account/connect-claude',
   connectCodex: 'app/account/connect-codex',

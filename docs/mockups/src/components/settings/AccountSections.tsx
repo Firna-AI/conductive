@@ -1,14 +1,10 @@
 import { ArrowUpRight, LogOut } from 'lucide-react'
-import {
-  agentKeys,
-  agents,
-  defaultChoice,
-  type AgentKey,
-} from '../../fixtures/agents'
+import { agentKeys, agents, type AgentKey } from '../../fixtures/agents'
 import { loginLabels, type AgentLogins } from '../../fixtures/logins'
 import { account, installations } from '../../fixtures/orgs'
-import { ModelPicker } from '../chat/ModelPicker'
+import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
+import { LinkTabs } from '../common/LinkTabs'
 import { AccountAvatar } from '../orgs/OrgTile'
 import { StatusText } from '../common/StatusText'
 import { AgentConnectForm } from './AgentConnectForm'
@@ -146,17 +142,29 @@ export function AgentsSection(props: {
   )
 }
 
-/** The model and the effort that new workspaces start with. */
-export function DefaultsSection() {
+/** The two pages of the account. */
+export type AccountTab = 'general' | 'preferences'
+
+/**
+ * The pages of the account, as tabs that link to each one: General, with
+ * the sign-in and the connections, and Preferences.
+ */
+export function AccountTabs(props: { tab: AccountTab }) {
   return (
-    <Section
-      description="New workspaces start with these. Each message can change them."
-      title="New workspaces"
-    >
-      <div className={styles.defaults}>
-        <span className={styles.defaultsLabel}>Model and effort</span>
-        <ModelPicker choice={defaultChoice} />
-      </div>
-    </Section>
+    <LinkTabs
+      label="Account"
+      tabs={[
+        {
+          label: 'General',
+          to: paths.account,
+          selected: props.tab === 'general',
+        },
+        {
+          label: 'Preferences',
+          to: paths.accountPreferences,
+          selected: props.tab === 'preferences',
+        },
+      ]}
+    />
   )
 }

@@ -1,19 +1,11 @@
-import { MessageSquarePlus, Plug } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
+import { MessageSquarePlus } from 'lucide-react'
+import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
 import { Notice } from '../components/common/Notice'
-import { ScreenLink } from '../components/common/ScreenLink'
-import { agents, type AgentKey } from '../fixtures/agents'
+import { agents } from '../fixtures/agents'
 import { people } from '../fixtures/members'
 import type { Workspace } from '../fixtures/workspaces'
-import { paths } from '../paths'
 import { otherStarter } from './sessionStarter'
 import type { WorkspaceState } from './workspaceState'
-
-/** The account with the Connect form of each agent open. */
-const connectPaths: Readonly<Record<AgentKey, string>> = {
-  claude: paths.connectClaude,
-  codex: paths.connectCodex,
-}
 
 /**
  * The notice over the composer when the agent of the chosen model is not
@@ -41,15 +33,5 @@ export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   const noLogin =
     state.composer === 'no-agent' || state.composer === 'no-starter-login'
   if (!noLogin || starter !== undefined) return undefined
-  return (
-    <Notice
-      action={
-        <ScreenLink asChild to={connectPaths[choice.agent]}>
-          <ActionButton icon={Plug}>{`Connect ${agent}`}</ActionButton>
-        </ScreenLink>
-      }
-      icon={Plug}
-      title={`Connect ${agent} to use ${choice.model}`}
-    />
-  )
+  return <ConnectAgentNotice choice={choice} />
 }

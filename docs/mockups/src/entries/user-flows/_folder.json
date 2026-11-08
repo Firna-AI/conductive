@@ -3,6 +3,7 @@
   "order": [
     "sign-up",
     "create-workspace",
+    "create-workspace-dialog",
     "reopen-stopped-workspace",
     "create-org",
     "mac-command"

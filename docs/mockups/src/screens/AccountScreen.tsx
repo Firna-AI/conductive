@@ -4,12 +4,13 @@ import type { RailState } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
 import { useMacApp } from '../components/mac/MacApp'
 import {
+  AccountTabs,
   AgentsSection,
-  DefaultsSection,
   GitHubSection,
   SignInSection,
   type OpenAgentForm,
 } from '../components/settings/AccountSections'
+import { DefaultsSection } from '../components/settings/PreferencesSections'
 import { ThisMacSection } from '../components/settings/ThisMacSection'
 import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
@@ -25,8 +26,13 @@ import { paths } from '../paths'
 export const accountSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['connections', 'form'],
+  required: ['tab', 'connections', 'form', 'view', 'save'],
   properties: {
+    /**
+     * The tab: General, with the sign-in and the connections, or
+     * Preferences. Each tab has its own address.
+     */
+    tab: { enum: ['general', 'preferences'] },
     /** GitHub and the agents are connected, or not yet, as at the first run. */
     connections: { enum: ['connected', 'not-connected'] },
     /**
@@ -34,10 +40,26 @@ export const accountSchema = {
      * other agent is.
      */
     form: { enum: ['none', 'claude', 'codex'] },
+    /** How New workspace opens on a computer: as the page, or as a dialog. */
+    view: { enum: ['page', 'dialog'] },
+    /**
+     * The save of the last change on Preferences: saved, or failed. A failed
+     * save shows its error, and the choice keeps its saved value.
+     */
+    save: { enum: ['saved', 'failed'] },
   },
 } as const
 
 export type AccountState = SchemaProps<typeof accountSchema>
+
+/** The General tab of a connected account, with no form open. */
+export const accountGeneral: AccountState = {
+  tab: 'general',
+  connections: 'connected',
+  form: 'none',
+  view: 'page',
+  save: 'saved',
+}
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
 
@@ -56,22 +78,39 @@ function loginsFor(state: AccountState): AgentLogins {
 }
 
 /**
- * The account: the GitHub sign-in, and what every org shares. The GitHub
- * App, the agents, and the model of new workspaces. The product is free,
- * so the page shows no plan and no billing, and the sandbox provider stays
- * out of sight. The Mac app adds the This Mac section.
+ * The General tab: the GitHub sign-in, and what every org shares, the
+ * GitHub App and the agents. The Mac app adds the This Mac section.
+ */
+function GeneralTab(props: { state: AccountState }) {
+  const { form } = props.state
+  const mac = useMacApp()
+  const openForm: OpenAgentForm | undefined =
+    form === 'none'
+      ? undefined
+      : { agent: form, connectTo: paths.account, cancel: true }
+  return (
+    <>
+      <SignInSection />
+      {mac ? <ThisMacSection /> : null}
+      <GitHubSection connected={props.state.connections === 'connected'} />
+      <AgentsSection form={openForm} logins={loginsFor(props.state)} />
+    </>
+  )
+}
+
+/**
+ * The account, in two tabs. General holds the GitHub sign-in and what every
+ * org shares. Preferences holds how new workspaces start: their model, and
+ * how New workspace opens. The product is free, so the page shows no plan
+ * and no billing, and the sandbox provider stays out of sight.
  */
 export function AccountScreen(props: {
   state: AccountState
   viewport: Viewport
 }) {
-  const { form } = props.state
+  const { state } = props
   const mac = useMacApp()
-  const connected = props.state.connections === 'connected'
-  const openForm: OpenAgentForm | undefined =
-    form === 'none'
-      ? undefined
-      : { agent: form, connectTo: paths.account, cancel: true }
+  const connected = state.connections === 'connected'
   const mobile = props.viewport === 'mobile'
   const back = connected
     ? { label: 'Workspaces', to: paths.shell }
@@ -80,14 +119,18 @@ export function AccountScreen(props: {
     <Page
       back={mobile ? back : undefined}
       subtitle={`@${account.login}`}
+      tabs={<AccountTabs tab={state.tab} />}
       title="Account"
       viewport={props.viewport}
     >
-      <SignInSection />
-      {mac ? <ThisMacSection /> : null}
-      <GitHubSection connected={connected} />
-      <AgentsSection form={openForm} logins={loginsFor(props.state)} />
-      <DefaultsSection />
+      {state.tab === 'general' ? (
+        <GeneralTab state={state} />
+      ) : (
+        <DefaultsSection
+          saveFailed={state.save === 'failed'}
+          view={state.view}
+        />
+      )}
     </Page>
   )
   if (mobile) return <MobileFrame>{page}</MobileFrame>

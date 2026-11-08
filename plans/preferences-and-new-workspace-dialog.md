@@ -48,8 +48,15 @@ on 8 November 2026. The user can change it before the plan is approved.
 - The New workspaces section gets a row for the way that New workspace
   opens, with two choices: a page and a dialog. A segmented control shows the choice, as
   the Connect form of an agent does. Each change saves at once, as Model
-  and effort does. A failed save shows an error and keeps the saved
-  choice. The mockups give the words.
+  and effort does. The mockups give the words: the section says "How you
+  start new workspaces.", the row says "Open New workspace in" with
+  "Page" and "Dialog", and its helper line says "A phone always opens the
+  page."
+- Agent call, after the mockups: a failed save of the row shows "The
+  choice wasn't saved. Try again." under the control, in the error line of
+  the segmented control, and the row keeps the saved choice. Model and
+  effort keeps its toast. A toast for the new row was rejected, because
+  the error line of the control is closer to the choice.
 
 ### The stored choice
 
@@ -105,6 +112,17 @@ on 8 November 2026. The user can change it before the plan is approved.
 - The dialog shows the notices of the page: a missing agent login, a
   failed create with Try again, and an org without chosen repositories,
   with Choose repositories for an admin.
+- Agent call, after the mockups: the dialog shows only a failed create
+  request. A create that the server took closes the dialog. When the
+  sandbox of that workspace then does not start, the message comes back
+  in the form of the page, at the address of the workspace, as
+  [Creation recovery](../src/app/creation-recovery.md) says.
+- Agent call, after the mockups: the dialog always names the org and the
+  section, also General. The page keeps its subtitle.
+- Agent call, after the mockups: in an org without chosen repositories,
+  the dialog and the page tell a member who is not an admin that an
+  admin chooses them, as the empty page of the org does. The page told
+  such a member to choose them, which a member cannot do.
 - Agent call: an action of the dialog that opens another page, such as
   Connect Claude or Choose repositories, closes the dialog first. The
   dialog also closes when the address changes, such as with the Back
@@ -199,26 +217,29 @@ The Account mockup gets its two tabs. The New workspace dialog gets its
 own page, and a user flow shows the way from Preferences to a created
 workspace. Each screen has its desktop and its phone view.
 
-- [ ] Give `AccountScreen` in `docs/mockups/src/screens/` the tabs General
+- [x] Give `AccountScreen` in `docs/mockups/src/screens/` the tabs General
       and Preferences. Draw Preferences with the choice of how New
       workspace opens, in the New workspaces section that moves there
       from General. Give the section a description that fits both rows.
       Add the tab to `app/account`, and keep each page within five
       screens, as the `mockups` skill says.
-- [ ] Add a screen component for the dialog over a ready workspace, with
+- [x] Add a screen component for the dialog over a ready workspace, with
       its own page `app/new-workspace/dialog`. Draw the empty dialog,
       a draft with a file and the notice of a missing agent login, a
       failed create, and an org without chosen repositories. The phone
       view shows the page, because a phone always opens it.
-- [ ] Add a user flow: choose the dialog in Preferences, choose New
+- [x] Add a user flow: choose the dialog in Preferences, choose New
       workspace in the list, write the task in the dialog, and see the
       new workspace open.
-- [ ] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages in light
+- [x] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages in light
       and dark, and save the screenshots under
       `.context/preferences-and-new-workspace-dialog/`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Screenshots and check logs: `.context/preferences-and-new-workspace-dialog/mockups/`
+and `.context/preferences-and-new-workspace-dialog/m1-*.log`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -306,7 +327,9 @@ run beside Milestone 4, because the two change different files.
 - [ ] Add the dialog in `src/shell/new-workspace/`, as in the mockup. It
       uses the draft of `OrgModel.newWorkspace` and the notices of
       `notices.tsx`. It closes before an action opens another page, and
-      when the address changes.
+      when the address changes. In an org without chosen repositories,
+      the dialog and the page tell a member who is not an admin that an
+      admin chooses them.
 - [ ] Add one way to open New workspace that each entry point uses: the
       row in `src/shell/list/Sidebar.tsx`, the button in
       `src/shell/list/OrgHome.tsx`, and the menu item through
