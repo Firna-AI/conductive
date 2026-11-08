@@ -20,12 +20,6 @@ export class Workspace extends FeatureWorkspace {
     })
   }
 
-  async queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean> {
-    const accepted = await super.queueLifecycleStart(job)
-    if (accepted && job.phase === 'records') await this.advanceStartAlarm()
-    return accepted
-  }
-
   async alarm(): Promise<void> {
     const job = await this.ctx.storage.get<StoredWorkspaceStartJob>(
       'lifecycle:start-job',

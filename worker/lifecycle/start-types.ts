@@ -18,7 +18,7 @@ interface WorkspaceStartData {
   attempt: string
   /** Restore changes only the command journal identity, not allocation. */
   commandAttempt?: string
-  /** A retained create continues this phase after shared sandbox readiness. */
+  /** A retained create rebuilds runtime files from this phase after readiness. */
   afterReadyPhase?: 'fetch' | 'branch' | 'startup'
   creation?: WorkspaceCreation
   processId: number | null
@@ -39,7 +39,14 @@ interface WorkspaceStartData {
 }
 
 export type WorkspaceMachinePhase =
-  'machine' | 'ready' | 'fetch' | 'branch' | 'startup' | 'runner'
+  | 'machine'
+  | 'ready'
+  | 'fetch'
+  | 'branch'
+  | 'startup'
+  | 'terminal'
+  | 'terminal-password'
+  | 'runner'
 
 export type WorkspaceRunningStartJob = WorkspaceStartData &
   (

@@ -14,11 +14,8 @@ export async function initializeWorkspaceLifecycle(
 ): Promise<void> {
   await requireWorkspaceOrg(env.DB, input.orgId, input.workspaceId)
   await requireOrgMember(env.DB, input.orgId, input.firstTurn.senderUserId)
-  // A throw inside blockConcurrencyWhile resets the whole object and cancels
-  // its alarm, so the callback returns each failure, and the caller throws it.
-  let failure: unknown = null
-  await ctx.blockConcurrencyWhile(async () => {
-    try {
+  try {
+    await ctx.blockConcurrencyWhile(async () => {
       if ((await ctx.storage.get('job', 'lifecycle:start-job'))?.cancelled)
         return
       if (await ctx.storage.get('image', 'org-image:coordinator'))
@@ -30,14 +27,11 @@ export async function initializeWorkspaceLifecycle(
       await ctx.admitFirstMessage?.(input)
       if (await lifecycle.read()) return
       await lifecycle.initialize(input)
-    } catch (error) {
-      failure = error
-    }
-  })
-  if (failure !== null) {
+    })
+  } catch (error) {
     warnWorker(
-      `Workspace ${input.workspaceId} could not admit its first message: ${errorSummary(failure)}`,
+      `Workspace ${input.workspaceId} could not admit its first message: ${errorSummary(error)}`,
     )
-    throw failure
+    throw error
   }
 }

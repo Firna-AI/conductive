@@ -77,9 +77,15 @@ npm run test -- worker/chat/integration
   `workspace-start.test-support.ts` uses it to run each start phase without
   a wait for the timers. `completeWorkspaceResume` of the same file waits
   for the end of a resume after its reply, and fails on a failed start.
-- `workspace-review-entry.test-support.ts` holds a `Workspace` with a
-  fixed clock, a wait for queued starts, a read of the start checkpoint,
-  and `advanceStartAlarm`. All state changes use the production object.
+- `workspace-review-entry.test-support.ts` holds a `Workspace` with a wait
+  for queued starts, a read of the start checkpoint, and
+  `advanceStartAlarm`.
+  [`NativeAlarmWorkspace`](../../lifecycle/native-alarm-workspace.test-support.ts),
+  the shared base of the journey, preparation, and review entries, starts
+  its clock at a fixed test time. `advanceStartAlarm` advances that clock
+  to the given time or to the stored alarm. Then it runs only the stored
+  alarms that are due on that clock. All state changes use the production
+  object.
   `reviewWorkspaceFixture` in `workspace-review.test-support.ts` starts it
   with a prepared create start, a ready fake runner with a running first
   turn, event sockets, and a Mac connection.

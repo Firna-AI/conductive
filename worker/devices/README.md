@@ -182,7 +182,8 @@ Only the fixture mounts the pre-existing chat and runner paths for setup.
 Its Vite bundle uses `write: false`.
 Sender selection comes from messages stored through that real chat path.
 `DeviceRuntime` takes one clock for lease, watchdog, and command times.
-The fixture moves that clock and invokes the real Durable Object alarm through test-only routes.
+The fixture moves that clock through a test-only route.
+Its test-only alarm route runs the real Durable Object alarm only for stored alarms that are due on that clock, through `advanceScheduledAlarms`.
 The publication recovery test interrupts real D1 with a temporary trigger and replays through a browser route.
 `worker/chat/integration/workspace-device-projection.test.ts` runs the composed workspace object with a real waiting request.
 D1, the list, and a reopen keep `input` through lifecycle activity, a start-step update, and a heartbeat.

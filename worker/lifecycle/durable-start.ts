@@ -1,5 +1,72 @@
-import type { StartStep } from '../../src/shared/workspaces'
+import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
 import type { DurableLifecycleState } from './durable-types'
+
+export function initialLifecycle(
+  input: Pick<DurableLifecycleState, 'workspaceId' | 'orgId'> & {
+    firstMessage: NonNullable<DurableLifecycleState['pendingFirstMessage']>
+  },
+  now: number,
+): DurableLifecycleState {
+  return {
+    workspaceId: input.workspaceId,
+    orgId: input.orgId,
+    state: 'starting',
+    start: null,
+    pendingFirstMessage: input.firstMessage,
+    lastActivityAt: now,
+    runningSessions: [],
+    runnerConnected: false,
+    stoppedAt: null,
+    nextDiskKeepaliveAt: null,
+    error: null,
+  }
+}
+
+export function beginningLifecycleStart(
+  state: DurableLifecycleState,
+  kind: WorkspaceStart['kind'],
+  now: number,
+): DurableLifecycleState {
+  return {
+    ...state,
+    state: 'starting',
+    start: { kind, startedAt: now, steps: [] },
+    error: null,
+    stoppedAt: null,
+    nextDiskKeepaliveAt: null,
+    diskRetentionDeadlineAt: undefined,
+    runnerConnected: false,
+    lastActivityAt: now,
+    startupPrepared: false,
+    startStop: undefined,
+    diskRetentionCommand: undefined,
+  }
+}
+
+export function readyLifecycle(
+  state: DurableLifecycleState,
+): DurableLifecycleState {
+  if (
+    ['stopped', 'archived', 'error'].includes(state.state) ||
+    state.startStop !== undefined
+  )
+    return state
+  return {
+    ...state,
+    state:
+      state.start && !state.startupPrepared
+        ? 'starting'
+        : state.runningSessions.length
+          ? 'working'
+          : ['unread', 'input'].includes(state.state)
+            ? state.state
+            : 'ready',
+    runnerConnected: true,
+    error: null,
+    stoppedAt: null,
+    nextDiskKeepaliveAt: null,
+  }
+}
 
 export function withStartStep(
   state: DurableLifecycleState,

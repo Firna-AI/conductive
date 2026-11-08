@@ -29,6 +29,7 @@ import { HttpError } from './http'
 import { featureResult } from './features/result'
 import { orgLifecycleActive } from './members/composition-data'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
+import { expireWorkspacePreviews, runWorkspaceAlarms } from './workspace-alarms'
 import type { ConnectionScheduler } from './security/connection-access'
 
 export class Workspace extends WorkspaceLifecycle {
@@ -173,29 +174,27 @@ export class Workspace extends WorkspaceLifecycle {
       fence &&
       !(await orgLifecycleActive(this.env.DB, fence.orgId, fence.generation))
     ) {
-      await this.integration.storage.setAlarm(this.now() + 30_000)
+      await this.integration.alarms.defer(this.now(), this.now() + 30_000)
+      await this.integration.alarms.set('lifecycle:access', this.now() + 30_000)
       return
     }
-    const due = await this.integration.alarms.take(this.now())
-    if (!due.size || due.has('lifecycle')) await this.alarmLifecycle()
-    if (due.has('github')) await this.github.alarm()
-    if (due.has('previews')) {
-      await this.features.previews.expire()
-      const id = await this.integration.storage.get<string>(
-        'previews:workspace-id',
-      )
-      if (id)
-        await this.integration.alarms.set(
-          'previews',
-          await this.features.previews.nextExpiry(id),
+    await runWorkspaceAlarms(this.integration.alarms, this.now(), {
+      lifecycle: () => this.alarmLifecycle(),
+      github: () => this.github.alarm(),
+      previews: () =>
+        expireWorkspacePreviews(
+          this.integration.storage,
+          this.integration.alarms,
+          this.features.previews,
+        ),
+      devices: () => this.devices.alarm(),
+      publishRevocations: async () => {
+        const workspaceId = await this.integration.storage.get<string>(
+          'previews:workspace-id',
         )
-    }
-    await this.devices.alarm()
-    const previewWorkspace = await this.integration.storage.get<string>(
-      'previews:workspace-id',
-    )
-    if (previewWorkspace)
-      await this.features.publishRevocations(previewWorkspace)
+        if (workspaceId) await this.features.publishRevocations(workspaceId)
+      },
+    })
   }
 
   async fetch(request: Request): Promise<Response> {

@@ -48,12 +48,10 @@ export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
   finishLifecycleTurn(
     turnId: string,
     publish?: LifecyclePublisher,
-    occurredAt?: number,
   ): Promise<void>
   reportRunnerLifecycle(
     event: RunnerEvent,
     publish?: LifecyclePublisher,
-    occurredAt?: number,
   ): Promise<void>
   runnerLifecycleDisconnected(publish?: LifecyclePublisher): Promise<void>
   scheduleImage(state: ImageCoordinatorState): Promise<void>

@@ -43,7 +43,7 @@ it('polls a retained never-ending maintenance script across reconstruction and s
   expect(platform.storage.alarmAt).toBe(DEADLINE)
   expect(boat.commandRequests).toHaveLength(commands + 1)
   expect(boat.statusRequests.at(-1)).toEqual({
-    processId: 4,
+    processId: 5,
     stdoutOffset: 0,
     stderrOffset: 0,
   })

@@ -92,7 +92,7 @@ it('keeps a failed resume after late runner readiness and permits a safe new rea
     error: null,
   })
   const stops = fixture.boat.stopIds.length
-  await start.advance()
+  await start.tick(fixture.runtime.dependencies.now() + 1_000)
   expect(fixture.boat.stopIds).toHaveLength(stops)
 })
 

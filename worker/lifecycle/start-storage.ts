@@ -155,7 +155,11 @@ export function durableStartStorage(
     },
     publication: () => storage.get('publication', PUBLICATION),
     clearPublication: async () => {
-      await storage.delete(PUBLICATION)
+      await storage.transaction(async (transaction) => {
+        await transaction.delete(PUBLICATION)
+        if (!(await transaction.get('job', JOB)))
+          await transaction.deleteAlarm()
+      })
     },
     complete: async (result) => {
       await storage.transaction(async (transaction) => {
@@ -182,6 +186,9 @@ export function durableStartStorage(
           })
         }
         await transaction.delete(JOB)
+        if (current.kind === 'create')
+          await transaction.setAlarm(now() + 30_000)
+        else await transaction.deleteAlarm()
       })
     },
     secrets: async (values) => {

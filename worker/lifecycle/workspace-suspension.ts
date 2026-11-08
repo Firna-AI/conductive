@@ -15,6 +15,7 @@ import { revokeWorkspacePreviews } from './workspace-data'
 import { reconciledLifecycle } from './durable-reconciliation'
 import { isConfirmedStopped } from './confirmed-stop'
 import { retentionResourceAllowed } from './retention-data'
+import type { WorkspaceAlarms } from '../features/alarms'
 
 export interface WorkspaceSuspensionContext {
   env: AppEnv
@@ -23,6 +24,7 @@ export interface WorkspaceSuspensionContext {
   lifecycle: DurableLifecycle
   starts: WorkspaceStartCoordinator
   turns: TurnScopes
+  alarms: WorkspaceAlarms
 }
 
 export class WorkspaceAccessStop {
@@ -101,6 +103,7 @@ export class WorkspaceAccessStop {
       row && (row.orgSuspended || ownerStop || tokenStop)
         ? await stopForAccess(input, workspaceId, row)
         : undefined
+    if (result === undefined) await input.storage.deleteAlarm()
     return { input, row, startPending, result }
   }
 
@@ -165,7 +168,10 @@ async function stopForAccess(
       ))
         throw error
     }
-    if (row.orgSuspended || row.ownerSuspended) await storage.deleteAlarm()
+    await storage.deleteAlarm()
+    if (row.orgSuspended || row.ownerSuspended) {
+      await input.alarms.set('lifecycle', null)
+    }
     return true
   } catch {
     await storage.setAlarm(dependencies.now() + 30_000)

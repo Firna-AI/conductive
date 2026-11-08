@@ -71,7 +71,7 @@ it('gives each resume its own deadline and restores an old saved start when its 
     .get(base.workspaceId)
     ?.endpoint()
     .reportRunnerLifecycle({ type: 'runner.ready' })
-  await start.tick(fixture.runtime.dependencies.now())
+  expect(await fixture.run(() => start.wait())).toEqual({ ok: true })
   await start.endpoint.lifecycleStopped()
   fixture.boat.states.set('bx_1', 'archived')
   fixture.setTime(TEST_TIME + 300_000)
@@ -141,11 +141,17 @@ it('enforces the start deadline before a later provider retry after reconstructi
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
 })
 
-it('fails a start when terminal preparation completes at the deadline before publishing success', async () => {
+it('fails a start when its terminal password read completes at the deadline before publishing success', async () => {
   const fixture = await backendFixture()
   const start = await startRetryFixture(fixture)
-  fixture.boat.beforeCommand = async (_command, detached) => {
-    if (!detached) fixture.setTime(TEST_TIME + 1_200_000)
+  for (let step = 0; step < 3; step++) await start.advance()
+  expect(await start.job()).toMatchObject({ phase: 'terminal-password' })
+  const fetch = fixture.runtime.dependencies.fetch
+  fixture.runtime.dependencies.fetch = async (request) => {
+    const response = await fetch(request)
+    if (new URL(request.url).pathname.endsWith('/files'))
+      fixture.setTime(TEST_TIME + 1_200_000)
+    return response
   }
   await start.tick(TEST_TIME + 1_199_999)
 

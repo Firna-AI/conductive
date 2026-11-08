@@ -22,6 +22,7 @@ export interface LifecycleStorage {
   delete(key: string): Promise<boolean>
   setAlarm(timestamp: number): Promise<void>
   deleteAlarm(): Promise<void>
+  changedAlarm(timestamp: number | null, keepEarlier?: boolean): Promise<void>
 }
 
 export interface DurableLifecycleState {
@@ -62,7 +63,7 @@ export interface LifecycleHooks {
   changed(
     state: DurableLifecycleState,
     publish?: LifecyclePublisher,
-  ): void | Promise<void>
+  ): boolean | void | Promise<boolean | void>
   stop(): Promise<LifecycleStopResult | void>
   keepalive(
     deadlineAt: number,
@@ -75,6 +76,7 @@ export interface LifecycleHooks {
   reconcile?(): Promise<LifecycleReconciliation>
   startPending?(): Promise<boolean>
   recoverTurns?(workspaceId: string): Promise<LifecycleTurnRecovery | undefined>
+  lastTurnEndedAt?(workspaceId: string): Promise<number | null>
 }
 
 export interface LifecycleTurnRecovery {

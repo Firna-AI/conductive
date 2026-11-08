@@ -9,6 +9,7 @@ import { FIRST_MESSAGE } from './durable-test-support'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { finishImageBuild } from './image-test-support'
 import { localSavedScriptFixture } from './saved-script-test-support'
+import { advanceToRunner } from './start-resume-test-support'
 import { createWorkspace } from './workspaces'
 
 const backendFixture = setupBackendTests()
@@ -151,7 +152,7 @@ it('recovers a running startup after a lost start reply without repeating its si
       'started\nfinished\n',
     ])
     fixture.boat.commandRunning = false
-    await start.advance()
+    await advanceToRunner(start)
     await fixture.actors
       .get(created.workspace.id)
       ?.endpoint()

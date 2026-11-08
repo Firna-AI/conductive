@@ -1,6 +1,10 @@
 import type { AppDependencies, AppEnv } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
-import { startWorkspaceTerminal } from '../terminal/service'
+import {
+  startWorkspaceTerminal,
+  terminalStartCommand,
+} from '../terminal/service'
+import { warnWorker } from '../warnings'
 import { lifecycleCommand } from './command-intents'
 import { workspacePhaseCommand } from './start-command'
 import { workspaceEnvironment } from './settings-data'
@@ -30,7 +34,8 @@ export async function advanceStartCommand(
   if (
     job.phase !== 'fetch' &&
     job.phase !== 'branch' &&
-    job.phase !== 'startup'
+    job.phase !== 'startup' &&
+    job.phase !== 'terminal'
   )
     throw new WorkspaceStartError(null)
   await provider.setAutoStop(row.sandboxId, 1_800)
@@ -44,7 +49,8 @@ export async function advanceStartCommand(
       await readWorkspaceToken(env, job.workspaceId),
       ...Object.values(values),
     ])
-    await endpoint.lifecycleStep(job.phase, label, 'running')
+    if (job.phase !== 'terminal')
+      await endpoint.lifecycleStep(job.phase, label, 'running')
     const started = await provider.startCommand(
       row.sandboxId,
       lifecycleCommand(
@@ -54,7 +60,9 @@ export async function advanceStartCommand(
           attempt: job.commandAttempt ?? job.attempt,
         },
         job.phase,
-        workspacePhaseCommand(row, job),
+        job.phase === 'terminal'
+          ? terminalStartCommand()
+          : workspacePhaseCommand(row, job),
       ),
     )
     await storage.update({ ...job, processId: started.processId })
@@ -68,8 +76,13 @@ export async function advanceStartCommand(
   await storage.capture(job, status)
   await storage.retry(job.attempt, 'progress')
   if (status.more || status.running) return false
-  if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut)
+  if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut) {
+    if (job.phase === 'terminal')
+      warnWorker(
+        `The terminal of workspace ${job.workspaceId} did not start: exit code ${status.exitCode}, timed out ${status.timedOut}`,
+      )
     throw new WorkspaceStartError(null)
+  }
   return true
 }
 
@@ -81,6 +94,10 @@ export async function nextStartCommand(
   await storage.update({
     ...job,
     phase,
+    afterReadyPhase:
+      job.kind === 'create' && phase === 'terminal'
+        ? 'startup'
+        : job.afterReadyPhase,
     providerRetry: null,
     processId: null,
     stdoutOffset: 0,
