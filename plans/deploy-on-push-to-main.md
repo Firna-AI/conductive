@@ -11,8 +11,9 @@ runner archive when it changed, applies the D1 migrations, deploys the
 Worker, and checks the health route.
 
 The user chose the approach in a brainstorm on 8 November 2026: decision
-1 B and decision 2 B below. Decisions 3 and 4 came from the options check
-and wait for the user. The survey of the other repositories is in
+1 B and decision 2 B below. Decisions 3 and 4 came from the options check.
+The user chose decision 3 B on 8 November 2026. Decision 4 waits for the
+user. The survey of the other repositories is in
 `.context/deploy-on-main/notes.md`. The change does not cover the Mac app,
 a staging deployment, pull request previews, or a clean-up of old runner
 archives.
@@ -132,6 +133,7 @@ Added on 8 November 2026 from option F of the options check.
 - **Related:** Decision 1. B and D guard the path that decision 1 B opens. Decision 4: a hand token is the other path to the live app.
 - **Recommendation:** D. It keeps failed code off `main` and off the live app, and no agent can skip it. The options check changed the recommendation from B, because the agents act as the admin.
 - **Action:** ask the user, because D adds a new gate, and the always-on rules reserve a new gate for the user. It also needs admin access to the repository settings.
+- **Chosen:** B, by the user on 8 November 2026. The option text said that the agents act as the admin, so each agent can also bypass the rule. The user creates the ruleset, because the agents' token cannot change the settings.
 
 ### 4. Choose who may deploy by hand
 
@@ -328,7 +330,9 @@ that it publishes.
 - [ ] `README.md`: change the status sentence, the sentence that says the
       setup includes no deploy command, and the CI paragraph that says CI
       does not deploy.
-- [ ] `AGENTS.md`, "CI": add the deploy workflow.
+- [ ] `AGENTS.md`, "CI": add the deploy workflow, and the ruleset of
+      decision 3 B. `main` takes a commit only through a pull request with
+      a green `Complete gate` check, and an admin can bypass the rule.
 - [ ] Check each relative link of the changed Markdown files.
 
 ## Milestone 2: Runner archive named by its digest
@@ -383,6 +387,9 @@ Depends on: 1, 2, 3
 - [ ] The user creates the environment `production` with its `main` rule
       before the merge, as `docs/deployment.md` says. The secret and the
       variable can follow later, because the run skips without them.
+- [ ] The user creates the ruleset of decision 3 B on `main` before the
+      merge: require a pull request and the `Complete gate` check, with
+      the admin role on the bypass list.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
