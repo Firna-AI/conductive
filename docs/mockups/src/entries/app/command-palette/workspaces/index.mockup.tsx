@@ -31,5 +31,12 @@ export const paletteWorkspaces = defineScreen({
         'The state filter shows the archived workspaces of Acme, the last archived first. An archived workspace opens with its chat read-only.',
       props: { view: 'workspaces-archived' },
     },
+    {
+      slug: 'empty',
+      title: 'No workspace to show',
+      description:
+        'The filters choose acme/marketing-site and Archived. Acme has no archived workspace in that repository, so one line says where they show. With the Active filter, the line says "Workspaces of" and the repository, or the org while the filter shows all repositories.',
+      props: { view: 'workspaces-empty' },
+    },
   ],
 })

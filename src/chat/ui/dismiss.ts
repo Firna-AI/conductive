@@ -1,4 +1,5 @@
 import { useEffect, useRef, type RefObject } from 'react'
+import { useMenuLayer } from '../../shell/ui/layers'
 
 /** Calls `close` when the user presses Escape. */
 export function useEscape(close: () => void, active = true): void {
@@ -14,7 +15,8 @@ export function useEscape(close: () => void, active = true): void {
 
 /**
  * Closes an open menu on Escape, and on a press outside its anchor: the
- * wrapper of the menu and the button that opens it.
+ * wrapper of the menu and the button that opens it. The key of the command
+ * palette of the app closes it too.
  */
 export function useDismiss(
   anchor: RefObject<HTMLElement | null>,
@@ -22,6 +24,7 @@ export function useDismiss(
   close: () => void,
 ): void {
   useEscape(close, open)
+  useMenuLayer(open, close)
   useEffect(() => {
     if (!open) return
     const onPointer = (event: PointerEvent) => {

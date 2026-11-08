@@ -97,15 +97,32 @@ function NoResults(props: { query: string }) {
   )
 }
 
+/** The line of a tab that has no row to show while the field is empty. */
+function EmptyTab(props: { line: string }) {
+  return (
+    <div className={styles.empty} role="status">
+      <p className={styles.emptyBody}>{props.line}</p>
+    </div>
+  )
+}
+
 /**
  * The results in their groups. The first row is highlighted, so Enter runs
- * it. The list scrolls under the search field and the tabs.
+ * it. The list scrolls under the search field and the tabs. `empty` is the
+ * line of a tab without rows while the field is empty.
  */
 export function PaletteResults(props: {
   groups: readonly PaletteGroup[]
   query: string
+  empty?: string
 }) {
-  if (props.groups.length === 0) return <NoResults query={props.query} />
+  if (props.groups.length === 0) {
+    return props.empty ? (
+      <EmptyTab line={props.empty} />
+    ) : (
+      <NoResults query={props.query} />
+    )
+  }
   const first = props.groups[0]?.rows[0]
   return (
     <div className={styles.results} data-mokly-scroll="palette-results">

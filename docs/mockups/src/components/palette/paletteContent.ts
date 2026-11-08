@@ -1,5 +1,5 @@
 import { orgs } from '../../fixtures/orgs'
-import { repositories } from '../../fixtures/repositories'
+import { repositories, type RepositoryKey } from '../../fixtures/repositories'
 import { archivedWorkspaceList } from '../../fixtures/workspaces'
 import {
   workspaceSections,
@@ -46,6 +46,8 @@ export type PaletteContent = {
   placeholder: { desktop: string; mobile: string }
   filters?: PaletteFilters
   groups: readonly PaletteGroup[]
+  /** The line of a tab that has no row to show while the field is empty. */
+  empty?: string
 }
 
 /**
@@ -147,12 +149,39 @@ function searchGroups(
 
 const allRepositories = 'All repositories'
 
+/** The repository that the empty Workspaces tab chooses. */
+const emptyRepository: RepositoryKey = 'marketing-site'
+
 function filters(view: OpenPaletteView): PaletteFilters {
+  const empty = view === 'workspaces-empty'
   return {
-    repository: allRepositories,
-    state: view === 'workspaces-archived' ? 'Archived' : 'Active',
+    repository: empty ? repositories[emptyRepository].name : allRepositories,
+    state: view === 'workspaces-archived' || empty ? 'Archived' : 'Active',
     repositoryMenu: view === 'workspaces-repository',
   }
+}
+
+/** The archived workspaces of one repository, or of all, in one group. */
+function archivedGroups(repository?: RepositoryKey): PaletteGroup[] {
+  const rows = archivedRows.filter(
+    (row) =>
+      repository === undefined || row.workspace.repository === repository,
+  )
+  if (rows.length === 0) return []
+  return [{ label: 'Archived', rows: workspaceRows(rows) }]
+}
+
+/**
+ * The line of the Workspaces tab when it has no workspace to show and the
+ * field is empty. It says where the workspaces of the filters show: in the
+ * chosen repository, or in the org.
+ */
+function emptyLine(filters: PaletteFilters): string {
+  const place =
+    filters.repository === allRepositories ? orgs.acme.name : filters.repository
+  return filters.state === 'Archived'
+    ? `Archived workspaces of ${place} show here`
+    : `Workspaces of ${place} show here`
 }
 
 function groupsOf(
@@ -180,7 +209,9 @@ function groupsOf(
         rows: workspaceRows(section.rows),
       }))
     case 'workspaces-archived':
-      return [{ label: 'Archived', rows: workspaceRows(archivedRows) }]
+      return archivedGroups()
+    case 'workspaces-empty':
+      return archivedGroups(emptyRepository)
     case 'actions': {
       const open = context.open
       const own: PaletteGroup[] = open
@@ -214,14 +245,21 @@ export function paletteContent(
   context: PaletteContext,
 ): PaletteContent {
   const tab = viewTabs[view]
+  const query = paletteQueries[view] ?? ''
+  const tabFilters = tab === 'workspaces' ? filters(view) : undefined
+  const groups = groupsOf(view, context)
   return {
     tab,
-    query: paletteQueries[view] ?? '',
+    query,
     placeholder: {
       desktop: palettePlaceholders[tab],
       mobile: phonePlaceholders[tab],
     },
-    filters: tab === 'workspaces' ? filters(view) : undefined,
-    groups: groupsOf(view, context),
+    filters: tabFilters,
+    groups,
+    empty:
+      tabFilters && query === '' && groups.length === 0
+        ? emptyLine(tabFilters)
+        : undefined,
   }
 }

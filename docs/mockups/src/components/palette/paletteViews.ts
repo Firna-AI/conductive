@@ -4,12 +4,14 @@ import { paths } from '../../paths'
  * The states of an open command palette that the mockups draw. Each state
  * names its tab. The states of the Workspaces tab name their filter, or the
  * menu that lies open, and the states of a search name their query.
+ * `workspaces-empty` has filters that leave no workspace to show.
  */
 export const openPaletteViews = [
   'all',
   'workspaces',
   'workspaces-repository',
   'workspaces-archived',
+  'workspaces-empty',
   'actions',
   'settings',
   'search',
@@ -64,6 +66,7 @@ export const viewTabs: Readonly<Record<OpenPaletteView, PaletteTab>> = {
   workspaces: 'workspaces',
   'workspaces-repository': 'workspaces',
   'workspaces-archived': 'workspaces',
+  'workspaces-empty': 'workspaces',
   actions: 'actions',
   settings: 'settings',
   search: 'all',

@@ -236,6 +236,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   `Archived workspaces of <org or repository> show here`.
 - `<org or repository>` names the chosen repository, such as
   acme/marketing-site, or the org while the filter shows all repositories.
+- Without an org, the line has no name: `Workspaces show here`, or
+  `Archived workspaces show here`.
 - When a query matches no row of the current tab, the palette says
   `Nothing matches “<query>”`. `<query>` is the text of the search field.
 - Under it, the palette says "Try a workspace name, a branch, or a

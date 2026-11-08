@@ -5,6 +5,7 @@ import { PanelWidths } from './app/panels'
 import { ServicesContext, type AppServices } from './app/services'
 import { AppModelContext } from './shell/context'
 import { PanelContext } from './shell/layout/panels'
+import { PaletteProvider } from './shell/palette/PaletteProvider'
 import { Shell } from './shell/Shell'
 import { ThemeRoot } from './shell/ui/ThemeRoot'
 import { useViewport, ViewportProvider } from './shell/ui/viewport'
@@ -35,7 +36,9 @@ export function App(props: {
             <FeaturesContext.Provider value={props.features ?? {}}>
               <ViewportProvider viewport={viewport}>
                 <ThemeRoot>
-                  <Shell />
+                  <PaletteProvider>
+                    <Shell />
+                  </PaletteProvider>
                 </ThemeRoot>
               </ViewportProvider>
             </FeaturesContext.Provider>

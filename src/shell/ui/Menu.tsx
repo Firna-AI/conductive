@@ -4,6 +4,7 @@ import { Check } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
 import menu from '../../../docs/mockups/src/components/common/Menu.module.css'
+import { useMenuLayer } from './layers'
 import { useDismiss, useLayerFocus } from './Overlay'
 import { Sheet } from './Sheet'
 import { useViewport } from './viewport'
@@ -160,6 +161,8 @@ export function MenuButton(props: {
   const close = () => setOpen(false)
   const phone = viewport === 'phone'
   useDismiss(open && !phone, anchor, close)
+  // The palette key closes a desktop menu. A phone sheet holds the key.
+  useMenuLayer(open && !phone, close)
   return (
     <span className={props.className ?? ui.anchor} ref={anchor}>
       {props.trigger({ open, toggle: () => setOpen((value) => !value) })}

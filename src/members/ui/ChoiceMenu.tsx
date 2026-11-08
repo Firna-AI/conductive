@@ -6,6 +6,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
+import { useMenuLayer } from '../../shell/ui/layers'
 import type { ButtonHandle } from './actions'
 import { useViewport } from './controls'
 import { MenuPanel, type MenuChoice } from './MenuPanel'
@@ -70,6 +71,8 @@ export function ChoiceMenu<T extends string>(props: {
     () => requestClose(busy, () => onOpenChange(false)),
     [busy, onOpenChange],
   )
+  // The key of the command palette asks the desktop menu to close.
+  useMenuLayer(open && !mobile, askToClose)
 
   useEffect(() => {
     if (!open || mobile) return

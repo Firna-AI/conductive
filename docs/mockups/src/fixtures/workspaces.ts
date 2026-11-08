@@ -191,7 +191,7 @@ export const archivedWorkspaceList: readonly Workspace[] = [
     updated: '4d',
   }),
   workspace('black-friday-banner', 'Black Friday banner', {
-    repository: 'marketing-site',
+    repository: 'storefront',
     section: 'general',
     status: 'archived',
     updated: '9d',

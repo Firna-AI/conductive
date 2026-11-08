@@ -79,7 +79,9 @@ list of Acme. Its child pages:
 
 - `app/command-palette/workspaces` has the Workspaces tab. Its
   `repository` variant has the menu of the repository filter, and its
-  `archived` variant has the archived workspaces.
+  `archived` variant has the archived workspaces. Its `empty` variant has
+  the Archived filter of `acme/marketing-site`, which holds no archived
+  workspace, and the line that says where they show.
 - `app/command-palette/actions` has the Actions tab over the list. Its
   `workspace` variant has the tab over an open workspace, whose actions
   come first.

@@ -354,14 +354,14 @@ Depends on: 1
 Milestone 2 found a state that no mockup draws: the Workspaces tab with
 nothing to show while the field is empty.
 
-- [ ] Move the archived Black Friday banner of Acme to `acme/storefront`
+- [x] Move the archived Black Friday banner of Acme to `acme/storefront`
       in the fixtures, so that `acme/marketing-site` has no archived
       workspace.
-- [ ] Add the `empty` variant to `app/command-palette/workspaces`: the
+- [x] Add the `empty` variant to `app/command-palette/workspaces`: the
       Archived filter with `acme/marketing-site` chosen, and the line
       "Archived workspaces of acme/marketing-site show here".
-- [ ] Update `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
+- [x] Update `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
       and `npm run file-length:check`. Smoke-test the page in light and
       dark, on desktop and on a phone.
 
@@ -374,48 +374,53 @@ Depends on: 2 and 2a
 The web app and the Mac app get the palette, wired to the existing
 actions.
 
-- [ ] Add a pure command model in `src/app/`. It builds the rows from the
+- [x] Add a pure command model in `src/app/`. It builds the rows from the
       org, its sections, workspaces, and repositories, the person, the
       route, and the Mac app. Test in Node that the actions follow the
       role, the suspension, and the page, and that archived workspaces
       and recent workspaces come out right.
-- [ ] Add the matcher: case, word order, and the rank of a match at the
+- [x] Add the matcher: case, word order, and the rank of a match at the
       start of a word. Test it in Node.
-- [ ] Hear ⌘K and Ctrl+K through a new key listener of `AppServices`, so
+- [x] Hear ⌘K and Ctrl+K through a new key listener of `AppServices`, so
       that no unit test needs a browser page. The listener stops the own
       action of the browser on that key. The input listener of the page
       can not, because it is passive and gets no event. Keep Ctrl+K in
       the terminal.
-- [ ] Add the palette layer in `src/shell/` on `OverlayHost`: the dialog
+- [x] Add the palette layer in `src/shell/` on `OverlayHost`: the dialog
       of a desktop, the page of a phone, the tabs, the filters, the rows,
       the empty state, the focus, and the keys. Reuse the CSS modules of
       the mockup part.
-- [ ] Add the Search row to `src/shell/list/Sidebar.tsx` and to the list
+- [x] Add the Search row to `src/shell/list/Sidebar.tsx` and to the list
       page.
-- [ ] Wire each action to the existing one: New workspace, New section,
+- [x] Wire each action to the existing one: New workspace, New section,
       Create org, the switch of org, New session, Session history, the
       tabs of the right column, Archive, and the sidebar toggle of the
       Mac app.
-- [ ] Order Recent workspaces by their latest activity, as decision 146
+- [x] Order Recent workspaces by their latest activity, as decision 146
       chose.
-- [ ] Keep the org that the person opened last in the tab, for the pages
+- [x] Keep the org that the person opened last in the tab, for the pages
       without an org, as the Mac app does for its sidebar.
-- [ ] Test with happy-dom: the key opens and closes the palette, Escape
+- [x] Test with happy-dom: the key opens and closes the palette, Escape
       closes it, and the focus goes back. The arrows and Enter run a row.
       The tabs and the filters work. A search finds a workspace by its
       name, branch, and repository, and archived matches come last. The
       empty state shows. A member and a suspended org get only their
       actions. Ctrl+K in the terminal stays there. A phone gets the page.
       Run each new test 10 times.
-- [ ] Capture the marketing pictures again with `npm run marketing:pictures`,
+- [x] Capture the marketing pictures again with `npm run marketing:pictures`,
       as [the marketing site README](../src/marketing/README.md) says. The
       Search row changes the sidebar and the phone list that the pictures
       show.
-- [ ] Add the mechanics of the palette layer to `src/app/screens.md`:
+- [x] Add the mechanics of the palette layer to `src/app/screens.md`:
       the inert frame, the focus trap, and the key listener. The protocol
       doc states the visible rules.
-- [ ] Add the palette to the feature list of `README.md`.
-- [ ] Update the Key code of `src/app/README.md`.
+- [x] Add the palette to the feature list of `README.md`.
+- [x] Update the Key code of `src/app/README.md`.
+- [x] Settle the line of the Workspaces tab when the palette has no org,
+      and state it in `docs/protocol/command-palette.md`. Agent call, 8
+      November 2026: the line keeps the pattern of the doc without the
+      name, "Workspaces show here" or "Archived workspaces show here". The
+      pattern already settles this detail, and the state is rare.
 
 ## Milestone 4: Verification, commit, review, and pull request
 

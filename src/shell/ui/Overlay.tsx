@@ -10,6 +10,7 @@ import {
   type RefObject,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { useModalLayer } from './layers'
 import styles from './ui.module.css'
 
 /** The elements of a layer that can take the focus, links first among equals. */
@@ -69,6 +70,28 @@ export function Overlay(props: { children: ReactNode }) {
   return host ? createPortal(props.children, host) : null
 }
 
+/** Closes an open layer on a press outside `inside`. */
+export function usePressOutside(
+  open: boolean,
+  inside: RefObject<HTMLElement | null>,
+  close: () => void,
+): void {
+  const closeRef = useRef(close)
+  useEffect(() => {
+    closeRef.current = close
+  })
+  useEffect(() => {
+    if (!open) return
+    const onPointer = (event: PointerEvent) => {
+      const target = event.target
+      if (target instanceof Node && inside.current?.contains(target)) return
+      closeRef.current()
+    }
+    document.addEventListener('pointerdown', onPointer)
+    return () => document.removeEventListener('pointerdown', onPointer)
+  }, [open, inside])
+}
+
 /**
  * Closes an open layer on Escape and on a press outside `inside`. Escape
  * counts in the capture phase, because a text field stops its key events.
@@ -82,6 +105,7 @@ export function useDismiss(
   useEffect(() => {
     closeRef.current = close
   })
+  usePressOutside(open, inside, close)
   useEffect(() => {
     if (!open) return
     const onKey = (event: KeyboardEvent) => {
@@ -89,18 +113,9 @@ export function useDismiss(
       event.stopPropagation()
       closeRef.current()
     }
-    const onPointer = (event: PointerEvent) => {
-      const target = event.target
-      if (target instanceof Node && inside.current?.contains(target)) return
-      closeRef.current()
-    }
     document.addEventListener('keydown', onKey, true)
-    document.addEventListener('pointerdown', onPointer)
-    return () => {
-      document.removeEventListener('keydown', onKey, true)
-      document.removeEventListener('pointerdown', onPointer)
-    }
-  }, [open, inside])
+    return () => document.removeEventListener('keydown', onKey, true)
+  }, [open])
 }
 
 /**
@@ -110,7 +125,9 @@ export function useDismiss(
  * the user moved it elsewhere. A modal layer, a sheet or a dialog, makes
  * the content of the frame inert while it shows, and active again before
  * the focus goes back. A layer inside another, such as a menu in a sheet,
- * leaves the focus to the outer layer with `enabled: false`.
+ * leaves the focus to the outer layer with `enabled: false`. A modal layer
+ * also counts as an open dialog for the command palette, whose key then
+ * does nothing.
  */
 export function useLayerFocus(
   layer: RefObject<HTMLElement | null>,
@@ -119,6 +136,7 @@ export function useLayerFocus(
   const { holdModal } = useContext(OverlayContext)
   const enabled = options.enabled ?? true
   const { modal } = options
+  useModalLayer(enabled && modal)
   useEffect(() => {
     if (!enabled) return
     const node = layer.current

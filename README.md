@@ -42,6 +42,8 @@ These features are planned. The protocol docs state each one.
   script, with a startup script and env vars.
 - Agents can create and list workspaces.
 - Orgs with members, sections, reassignment, Archive, and Delete org.
+- A command palette, on ⌘K or Ctrl+K, finds the workspaces of the org,
+  runs the actions of the page, and opens the settings.
 - The web app works on phones and on desktops.
 - A Mac app for macOS, with the native window buttons in its own top bar.
 
