@@ -25,8 +25,10 @@ without a clash. The brainstorm asked them as items 1 to 4.
 
 Contract owners:
 
+- [Operator section](../docs/protocol/operator-section.md). Milestone 2
+  writes it.
 - [Operator actions](../docs/protocol/operator-actions.md). Milestone 2
-  adds the operator page to it.
+  adds the lift to it.
 - [Access and security](../docs/protocol/access-and-security.md#orgs-and-workspaces).
   Milestone 2 adds the operator exception to it.
 - The [operator area README](../worker/operator/README.md).
@@ -327,6 +329,43 @@ The agent's calls for decision 147, on 8 November 2026:
 - The org search also shows what matched when the match is not a name,
   such as a preview address.
 
+The calls of Milestone 2, on 8 November 2026. The docs agent made the
+first group, and the orchestrator made the second after its questions:
+
+- The section shows counts, names, IDs, dates, roles, and states. IDs and
+  dates belong to the metadata, because the pages show them.
+- The page of an org gives the number of its repositories, as the mockup
+  shows.
+- A search lists its matches newest first, 20 at a time.
+- The last of the 30 days is the current UTC day.
+- A repeat of a suspension keeps the first time only while the target is
+  still suspended. After a lift, a new suspension has its own time and
+  operator.
+- The section changes no app setting, and it cannot change who is an
+  operator.
+- The pages show the suspension in force, and no log of the records,
+  because decision 145 chose B, not C.
+- The protocol doc of the section is its own page,
+  `docs/protocol/operator-section.md`, because `operator-actions.md` passed
+  the length target. The splits of the other long docs stay with
+  `plans/follow-ups/protocol-docs-split.md`.
+- After a lift, a disk restart whose day 14 already passed runs at once,
+  as the disk restart rule says for a workspace that nothing blocks. Lifts
+  are rare, and the disk may still exist.
+- The org search finds every preview address and cloud computer ID that
+  the app still has a record of, open or closed, because an abuse report
+  often names an address that is already closed.
+- The Overview counts include a deleted org and its workspaces while their
+  records exist. Only the largest orgs leave deleted orgs out.
+- "Running now" counts each unfinished build or refresh of an org image,
+  because a refresh also runs a cloud computer.
+- A lift replies 200 with the target and the time of the lift. A repeat
+  replies 200 with no time, because nothing changed and a new rejection
+  needs the user.
+- Every operator request uses the normal sign-in session, as decision 142
+  C chose. The question of a fresh sign-in for operator writes waits for
+  the user in `plans/follow-ups/fresh-sign-in-for-operator-writes.md`.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -430,21 +469,24 @@ Evidence: `.context/operator-section/mockups-check.log`, and the
 
 Depends on: 1c
 
-- [ ] Add "The operator page" to `docs/protocol/operator-actions.md`: who
-      sees it, the numbers that it shows, the app-wide reads, metadata
-      only, and the not-found page for everyone else.
-- [ ] Add "Lift a suspension" to `docs/protocol/operator-actions.md`: only
+- [x] Add "The operator section" to the protocol, in its own page
+      `docs/protocol/operator-section.md`: who sees it, the numbers that it
+      shows, the app-wide reads, metadata only, and the not-found page for
+      everyone else.
+- [x] Add "Lift a suspension" to `docs/protocol/operator-actions.md`: only
       an operator lifts, what comes back, what stays lost, the record of
       each suspension and lift, and the disk restart.
-- [ ] Add the Orgs and Users tabs to the operator page part: the search
+- [x] Add the Orgs and Users tabs to the operator page part: the search
       keys, what each page shows, and Suspend and Lift from the pages,
       each with its confirm step.
-- [ ] Add the operator exception to "Orgs and workspaces" in
+- [x] Add the operator exception to "Orgs and workspaces" in
       `docs/protocol/access-and-security.md`: the operator page reads
       counts and org names across every org.
-- [ ] Add the operator page to the Web app part of `docs/architecture.md`,
+- [x] Add the operator page to the Web app part of `docs/architecture.md`,
       and say in its Operator and Suspension terms that the operator also
       suspends orgs.
+
+Evidence: `.context/operator-section/m2-docs-report.md`.
 
 ## Milestone 3: Operator numbers in the Worker
 
@@ -515,6 +557,8 @@ Depends on: 3, 4, 5
 - [ ] Add the Orgs and Users tabs, their searches, and the page of an org
       and of a user, with Suspend and Lift and their dialogs.
 - [ ] Test the screens, the routes, the links, the suspend, and the lift.
+- [ ] Update the Privacy draft in `src/marketing/privacy.ts` for the lift
+      and the record of each suspension and lift.
 - [ ] Add a README for the new area, and update `src/app/README.md`.
 
 ## Milestone 7: Verification, commit, review, and pull request

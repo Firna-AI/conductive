@@ -1,10 +1,12 @@
 # Operator actions
 
 This doc holds the requirements and the decisions in force for the
-operator, the suspension of a user, the suspension of an org, the owners
-and admins that a suspension leaves, and abuse reports. All users share the
-app's Boat account, so misuse by one user puts the sandboxes of every user
-at risk, as [Sign-in](access-and-security.md#sign-in) says. The terms are
+operator. It covers the suspension of a user or an org, the owners and
+admins that a suspension leaves, and the lift of a suspension. It also
+covers abuse reports. [Operator section](operator-section.md) states the
+pages of the operator in the web app. All users share the app's Boat
+account, so misuse by one user puts the sandboxes of every user at risk,
+as [Sign-in](access-and-security.md#sign-in) says. The terms are
 those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
@@ -20,10 +22,10 @@ number names a dated record, as
   of an org can run code in its workspaces.
 - The Worker knows each operator by a numeric GitHub user ID in its
   settings. Without that setting, nobody is an operator.
-- The request of a suspension goes to the app hostname, behind its gate:
-  a signed-in session, a matching `Origin` header, and a JSON body.
-  [Hostnames and gates](access-and-security.md#hostnames-and-gates) states
-  that gate.
+- Each operator request goes to the app hostname, behind its gate: a
+  signed-in session, a matching `Origin` header, and a JSON body for each
+  write. [Hostnames and gates](access-and-security.md#hostnames-and-gates)
+  states that gate.
 - A request from a user who is not an operator gets HTTP 403 with the code
   `operator_required`.
 
@@ -32,8 +34,8 @@ number names a dated record, as
 - The request names the user by their numeric GitHub user ID. An ID
   without an account gets HTTP 404 with the code `user_not_found`.
 - The suspension records its time and the operator who asked for it.
-- A repeat of the request keeps the first time and the first operator. It
-  runs every other step again.
+- A repeat of the request while the user is suspended keeps the first
+  time and the first operator. It runs every other step again.
 - The suspension is in force as soon as the reply comes, also when a stop
   has not finished.
 - The reply names each workspace and each build whose stop has not
@@ -180,7 +182,7 @@ whoever owns or started it (decision 129).
 - The request names the org by its ID. An ID without an org gets HTTP 404
   with the code `org_not_found`.
 - The operator can also suspend an org that an admin deleted, while the
-  org still exists. No admin can then restore it.
+  org still exists. No admin can restore it while it is suspended.
 - The other rules of [Suspend a user](#suspend-a-user) hold for an org
   too. They cover the record of the time and the operator, a repeat, and
   the reply with its pending stops.
@@ -224,9 +226,54 @@ whoever owns or started it (decision 129).
   refusal.
 - The rules of a leave in [Owners and admins](#owners-and-admins) still
   hold (decision 123). No member can become an admin while the org is
-  suspended, so the only active admin cannot leave it.
+  suspended. So the only active admin cannot leave it until an operator
+  lifts the suspension.
 - Reason: the org keeps someone who can manage it, as decision 55
   requires.
+
+## Lift a suspension
+
+A lift ends the suspension of a user or of an org (decision 145).
+
+- Only an operator lifts the suspension of a user or of an org. A lift by
+  the suspended user or by an admin of the org was rejected, because the
+  target could then end its own suspension.
+- A suspension does not end on its own after a set time. Reason: a
+  suspension for abuse must not end on its own.
+- The request names the user or the org as the request of a suspension
+  does. An unknown target gets HTTP 404 with the code `user_not_found` or
+  `org_not_found`.
+- A lift replies with HTTP 200, the target, and the time of the lift.
+- A repeat of a lift changes nothing. A lift of a user or an org that is
+  not suspended also changes nothing. Such a lift replies with HTTP 200
+  and the target, with no time, because nothing changed.
+- A lift clears the suspension. The rules above for a suspended user or
+  org then no longer apply to that user or org.
+- A lifted user can sign in again. No sign-in session that the suspension
+  ended comes back.
+- A revoked workspace token never works again. So each workspace gets a
+  new token at its next start, as
+  [Workspace tokens and runners](#workspace-tokens-and-runners) says.
+- No preview that the suspension revoked comes back. No build that the
+  suspension failed comes back.
+- A lift gives back the restart near day 14 of the stop. It covers each
+  stopped workspace that the user owns, or each stopped workspace of the
+  org.
+- A restart whose day 14 has already passed runs at once after the lift.
+  Reason: lifts are rare, and the disk may still exist.
+- A workspace whose owner or org is still suspended gets no restart, as
+  [Starts, stops, and builds](#starts-stops-and-builds) says.
+- A disk that Boat deleted while the suspension lasted stays lost, with
+  any unpushed work on it.
+- A lift of an org that an admin deleted leaves the org deleted. An admin
+  can then restore it while its 7 days last, as
+  [Delete org](orgs-and-members.md#delete-org) says.
+- The app records each suspension and each lift, with its time and its
+  operator. It keeps every record.
+- The [operator section](operator-section.md) shows the suspension in
+  force, but no log of these records.
+- An open page of a member learns of the lift at its next load. Reason:
+  lifts are rare.
 
 ## Abuse reports
 
