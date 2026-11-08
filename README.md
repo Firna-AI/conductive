@@ -19,7 +19,9 @@ Today the repository holds:
 - the Mac app shell in `desktop/`, which is not complete yet, as
   [Mac app](#mac-app) says
 
-The app has no deployment yet.
+A test deployment runs at `conductive.build`. The project is not in
+production yet. [Deployment inputs](docs/deployment.md) lists what a
+deployment needs.
 
 ## Features
 

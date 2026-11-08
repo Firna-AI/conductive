@@ -11,7 +11,12 @@
   // itself, so that each deploy keeps them.
   "keep_vars": true,
   // Workers Logs keeps each log line, also of the workspace objects.
-  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    // A query string can hold a sign-in code or a preview credential.
+    "redact_query_string": true,
+  },
   "routes": [
     { "pattern": "conductive.build", "custom_domain": true },
     { "pattern": "app.conductive.build", "custom_domain": true },

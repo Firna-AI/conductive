@@ -24,6 +24,10 @@ examples.
   [Architecture](architecture.md#hostnames) and each hostname of the
   preview domain. A proxied wildcard DNS record of the preview domain must
   exist, so that each preview hostname reaches the Worker.
+- `wrangler.jsonc` turns on Workers Logs, which keeps each warning of the
+  Worker and of its Durable Objects. It removes the query string of each
+  request URL from the logs, because a query string can hold a sign-in
+  code or a preview credential.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one

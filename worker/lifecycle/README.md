@@ -112,7 +112,9 @@ object holds the lifecycle state, the turn records, and the events.
 - [`workspace-controller.ts`](workspace-controller.ts):
   `createWorkspaceController`, the lifecycle methods of the workspace
   object. [`lifecycle-admission.ts`](lifecycle-admission.ts) checks a create
-  and calls the admission hook.
+  and calls the admission hook. It throws a refused admission only after
+  `blockConcurrencyWhile` ends, because a throw inside it resets the
+  object. The start then ends as a normal failed start.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
   phases, admission, process IDs, output offsets, retry state, deadline, and results.

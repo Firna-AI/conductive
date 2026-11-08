@@ -118,7 +118,7 @@ mountpoint -q ${TERMINAL_RUNTIME_VIEW} || mount --bind ${TERMINAL_RUNTIME} ${TER
   const result = await provider.command(privilegedCommand(command))
   if (result.exitCode !== 0 || result.timedOut) {
     warnWorker(
-      `The terminal of workspace ${workspaceId} did not start: exit code ${result.exitCode}, timed out ${result.timedOut}, ${result.stderr.slice(-300)}`,
+      `The terminal of workspace ${workspaceId} did not start: exit code ${result.exitCode}, timed out ${result.timedOut}`,
     )
     throw new ProviderError('unavailable', 502)
   }

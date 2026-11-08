@@ -1,3 +1,4 @@
+import { CommandFailed } from '../warnings'
 import type { SandboxProvider } from '../sandbox/provider'
 import {
   jobSoftware,
@@ -65,8 +66,10 @@ export async function advanceBuildCommand(
   )
   if (status.more || status.running) return false
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut)
-    throw new Error(
-      `Image command failed: state ${status.state}, exit code ${status.exitCode ?? 'none'}, timed out ${status.timedOut}`,
+    throw new CommandFailed(
+      status.state,
+      status.exitCode,
+      status.timedOut === true,
     )
   const next: BuildPhase = job.phase === 'software' ? 'install' : 'snapshot'
   await completeBuildPhase(runtime.env.DB, job.buildId, next)

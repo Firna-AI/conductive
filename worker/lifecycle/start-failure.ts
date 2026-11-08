@@ -69,7 +69,7 @@ export async function finishFailedStart(
     status: 409,
   }
   warnWorker(
-    `Workspace start ${job.workspaceId} ends as failed in phase ${job.phase}: ${failure.code}, ${failure.message}${job.cancelled ? ', cancelled' : ''}`,
+    `Workspace start ${job.workspaceId} ends as failed in phase ${job.phase}: ${failure.code}${job.cancelled ? ', cancelled' : ''}`,
   )
   if (job.kind === 'resume') {
     await finishResumeFailure(

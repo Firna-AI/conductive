@@ -2,8 +2,14 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
 import { readAccount } from '../../src/app/api/read-core'
-import { readAgentLogin } from '../chat/queries'
+import { agentLoginContext, readAgentLogin } from '../chat/queries'
+import { decrypt, encrypt } from '../security/crypto'
 import { createHarness, type TestHarness } from '../test-support/harness'
+import { saveAccountLogin } from './account-data'
+
+/** A token that a narrow window wrapped when the user copied it. */
+const WRAPPED = 'sk-ant-oat01-first part\n second part'
+const JOINED = 'sk-ant-oat01-firstpartsecondpart'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -27,23 +33,53 @@ beforeEach(async () => {
 })
 afterAll(async () => harness.dispose())
 
-it('removes the spaces and line breaks that a wrapped token brings into a saved login', async () => {
+async function signIn(): Promise<{ cookie: string; userId: string }> {
   const cookie = await harness.login()
   const account = readAccount(
     await (await harness.request(ACCOUNT_PATHS.account, cookie)).json(),
   )
+  return { cookie, userId: account.user.id }
+}
+
+it('stores a saved token without the spaces and line breaks of a wrapped copy', async () => {
+  const { cookie, userId } = await signIn()
   const saved = await harness.request(agentLoginPath('claude'), cookie, {
     method: 'PUT',
-    body: JSON.stringify({
-      agent: 'claude',
-      kind: 'token',
-      secret: 'sk-ant-oat01-first part\n second part',
-    }),
+    body: JSON.stringify({ agent: 'claude', kind: 'token', secret: WRAPPED }),
   })
   expect(saved.status).toBe(200)
-  expect(await readAgentLogin(harness.env, account.user.id, 'claude')).toEqual({
+  const ciphertext = await harness.env.DB.prepare(
+    "SELECT ciphertext FROM agent_logins WHERE user_id = ? AND agent = 'claude'",
+  )
+    .bind(userId)
+    .first<string>('ciphertext')
+  if (ciphertext === null) throw new Error('The login was not stored.')
+  const stored = await decrypt(
+    ciphertext,
+    agentLoginContext(userId, 'claude'),
+    harness.env.BOAT_KEY_ENCRYPTION_KEY,
+  )
+  expect(stored).toBe(JOINED)
+})
+
+it('reads a token that an older save stored with spaces and line breaks', async () => {
+  const { userId } = await signIn()
+  const ciphertext = await encrypt(
+    WRAPPED,
+    agentLoginContext(userId, 'claude'),
+    harness.env.BOAT_KEY_ENCRYPTION_KEY,
+  )
+  await saveAccountLogin(
+    harness.env.DB,
+    userId,
+    'claude',
+    'token',
+    ciphertext,
+    1,
+  )
+  expect(await readAgentLogin(harness.env, userId, 'claude')).toEqual({
     agent: 'claude',
     kind: 'token',
-    secret: 'sk-ant-oat01-firstpartsecondpart',
+    secret: JOINED,
   })
 })

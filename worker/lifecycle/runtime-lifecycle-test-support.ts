@@ -7,10 +7,13 @@ import { readSavedScript } from './saved-script'
 import { serializeStartJob } from './start-job-codec'
 import { connectRuntimeChat } from './runtime-chat-test-support'
 
-export async function runningRuntimeWorkspace(
-  fixture: Awaited<ReturnType<typeof realRuntimeFixture>>,
+type RuntimeFixture = Awaited<ReturnType<typeof realRuntimeFixture>>
+
+/** Claims the create of a workspace and queues its start job, as a first message does. */
+export async function queueRuntimeCreate(
+  fixture: RuntimeFixture,
+  workspaceId = 'runtime-state-workspace',
 ) {
-  const workspaceId = 'runtime-state-workspace'
   const user = {
     id: 'runtime-user',
     githubId: 11,
@@ -54,6 +57,12 @@ export async function runningRuntimeWorkspace(
   )
   const actor = fixture.actor(workspaceId)
   await actor.queueLifecycleStart(serializeStartJob(job))
+  return { actor, job }
+}
+
+export async function runningRuntimeWorkspace(fixture: RuntimeFixture) {
+  const { actor, job } = await queueRuntimeCreate(fixture)
+  const { workspaceId } = job
   for (let step = 0; step < 16 && (await actor.checkpoint()); step++) {
     if ((await actor.checkpoint())?.phase === 'runner')
       await actor.reportRunnerLifecycle({ type: 'runner.ready' })
