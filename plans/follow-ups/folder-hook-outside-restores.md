@@ -1,0 +1,36 @@
+# The folder hook also moves a shell outside a restore
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-08, from branch `calummoore/directory-path-length`, review round 3, finding 3.
+- **Location:** `terminalPromptCommand` in `worker/terminal/scripts.ts`, the paragraph on the folder hook and its list of limits in `worker/terminal/README.md`, and the "Terminal" section of `docs/protocol/workspaces-and-sandboxes.md`.
+- **Reason:** the moves outside a restore are behaviour at a boundary that no requirement covers, so the user decides.
+
+- **Terms:**
+  - **Restore:** after a start from a saved snapshot, Boat shows all files at once and downloads their content in the background. When it ends, a running program keeps an old view of the disk under `/var/lib/ascii-lazy/retired/`.
+  - **Folder hook:** the Bash prompt command `terminalPromptCommand`. The shell server sets it as `PROMPT_COMMAND` in the global tmux environment of the workspace shell.
+- **Background:**
+  - On 8 November 2026, the user chose a folder hook that moves an early terminal shell to the live copy of its folder after the restore. The "Terminal" section of `docs/protocol/workspaces-and-sandboxes.md` states that requirement for the restore only.
+  - Before each prompt, the hook compares the real folder of the shell with the folder that `$PWD` names, with `builtin test . -ef "$PWD"`. When they differ, it runs `builtin cd -- "$PWD"`, and it keeps `OLDPWD`.
+  - A Bash 5.2 probe showed four moves outside a restore. The shell moved when a symbolic link in its path changed its target, when its folder was deleted and made again, when its folder was renamed and made again, and when a command assigned a new value to `PWD`. Plain Bash stayed in its folder in each case.
+  - In a simulation of the restore with moved mounts, the real folder and the `$PWD` folder had different device numbers. A link change or a remade folder on one disk kept the same device.
+  - The list of limits in `worker/terminal/README.md` names only the first two of the four cases.
+- **Problem:** The hook also moves the shell in these four cases, and it says nothing. No requirement or decision covers these moves.
+- **Impact if no action:** In these cases, the next relative command runs in another folder than plain Bash would use, with no notice. That folder is the one that the prompt shows.
+- **Root question:** When should the terminal change the folder of a running shell by itself?
+- **Options:**
+  - **A.** Keep the code. State the general rule in the protocol and in the README: the shell moves to the folder that its prompt shows whenever the two differ. The existing hook test already moves a folder away and makes it again. Effort: Small.
+  - **B.** Move the shell only when its real folder is under `/var/lib/ascii-lazy/retired/`. This puts an undocumented Boat path into the code. If Boat changes that path, the bug comes back with no error. Effort: Small.
+  - **C.** The Worker reads `hydrated` from `GET /sandboxes/{id}` after a start and writes a marker file in the sandbox when the restore ends. The hook moves the shell only after that marker appears. This adds a Worker watch and state, and the post-merge restore check must wait for the marker. Effort: Medium.
+  - **D.** Move the shell only when its real folder and the `$PWD` folder are on different file systems. When the `-ef` test fails, the hook compares the devices with `stat -c %d`. A change on the same disk then keeps plain Bash behaviour. Nobody checked on Boat that the old view is on another file system, and the hook test needs a fake `stat`. Effort: Small.
+  - **E.** As A, and print one line in the terminal at each move. The text must explain an internal event without naming Boat, and it needs a protocol line. Effort: Small.
+- **Left out:**
+  - No change, because it leaves a behaviour at the boundary that no requirement covers.
+  - A restart of the shell, because it ends running commands, which the "Terminal" section rejects.
+  - A terminal that waits for the end of the restore, because the user rejected it on 8 November 2026: the Terminal tab then waits too.
+  - A Boat change, because an early shell stays in the old view until Boat acts.
+- **Wider fix:** C. It acts on Boat's documented `hydrated` signal, so it stays restore-only when Boat changes its paths or its disks.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/old-disk-view-after-restore.md`. Its `findmnt -T .` step shows if the old view is on another file system, which D needs. With C, the restore check at the end of `plans/boat-native-remote-workspaces.md` must also wait for the marker.
+- **Recommendation:** A. It needs no Boat internal, and each move puts the shell in the folder that its prompt already shows. C best protects against a trigger that guesses the restore from a symptom. The review recommended B.
+- **Action:** ask the user, because the moves outside a restore are behaviour at a boundary that no requirement covers.

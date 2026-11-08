@@ -6474,10 +6474,12 @@ Apply decision 142 B and decision 143 A. Added on 8 November 2026.
       8 November 2026: the complete gate passed. Evidence:
       `.context/gate-directory-path-length-3.log`.
       Branch: `calummoore/directory-path-length`.
-- [ ] Review the new commits against `origin/main` with the
+- [x] Review the new commits against `origin/main` with the
       `implementation-review` skill. The two fix rounds of the branch are
       used, so a `fix now` finding becomes `fix after merge`, and a
-      critical finding goes to the user. Update pull request #67.
+      critical finding goes to the user. Update pull request #67. Done on
+      8 November 2026: round 3 found one finding that waits for the user,
+      in `plans/follow-ups/folder-hook-outside-restores.md`.
       Branch: `calummoore/directory-path-length`.
 
 ## Milestone 12: Terminal, previews, and desktop UI
