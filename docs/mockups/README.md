@@ -81,6 +81,13 @@ chat, and five tabs at the bottom.
   in every composer, such as "Opus 5.5 High". It names no agent brand. In a
   session with messages, each model of the other agent says "New session",
   because it opens a new session with the draft, from decision 51.
+- While the sandbox of a new workspace starts for the first time, Send
+  waits in each session, and each box keeps its message.
+  `SendWait` in `src/components/chat/` gives the short reason beside Send,
+  "You can send when the sandbox is ready", in two lines on a phone. The
+  user sends the message when the sandbox is ready, as
+  `app/new-workspace/waiting` shows. A resume of a stopped workspace still
+  takes messages, which wait for the sandbox.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
   `src/components/common/` beside its button, or in a `Sheet` on a phone.
   Firna's own menu rows are taller than the dense design. A row can lead with
@@ -149,7 +156,7 @@ chat, and five tabs at the bottom.
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted     |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, its error, the workspace while it starts, the first turn       |
+| `app/new-workspace` | An empty chat, its error, the start, a held second message, the first turn    |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
 | `app/chat`          | A finished turn, then running turns, lost data, and lost updates              |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |

@@ -64,12 +64,20 @@ export const workspaceStateSchema = {
       ],
     },
     /**
-     * The composer: empty, with attached files, with its picker open, or
-     * with a message for an agent that is not connected, or in a session
-     * whose starter's login is not available.
+     * The composer: empty, with a message that is not sent yet, with
+     * attached files, with its picker open, or with a message for an agent
+     * that is not connected, or in a session whose starter's login is not
+     * available.
      */
     composer: {
-      enum: ['empty', 'attachments', 'picker', 'no-agent', 'no-starter-login'],
+      enum: [
+        'empty',
+        'draft',
+        'attachments',
+        'picker',
+        'no-agent',
+        'no-starter-login',
+      ],
     },
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },

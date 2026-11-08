@@ -140,6 +140,10 @@ says.
   attachments.
 - Try again creates the workspace with a new workspace ID. The message
   keeps its message ID.
+- The first message is the only message that a new workspace accepts
+  before its first start succeeds, as
+  [Messages](chat-and-events.md#messages) says (decision 130). So the
+  removal of a failed workspace loses no accepted message.
 - After the removal, only the member who sent the first message can still
   get the events of the failed workspace. That member gets the stored
   events once, and the connection then closes.

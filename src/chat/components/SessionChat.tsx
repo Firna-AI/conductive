@@ -6,6 +6,7 @@ import { tabSessions } from '../state/archive-view'
 import { sendBlock } from '../state/blockers'
 import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
+import { waitsForFirstStart } from '../state/first-start'
 import { modelLabel } from '../state/format'
 import { loginLineOf, sessionLoginOf } from '../state/session-login'
 import { agentNames } from './AgentMark'
@@ -124,6 +125,7 @@ export function SessionChat(props: SessionChatProps) {
         <Composer
           attaching={state.draft.uploads > 0}
           blocked={block !== null}
+          waits={waitsForFirstStart(snapshot)}
           choice={session.choice}
           draft={state.draft}
           login={loginLineOf(login, agentNames[session.choice.agent])}

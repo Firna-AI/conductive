@@ -5,6 +5,7 @@ import type { StreamEnvelope } from '../api/read-workspace'
 import type { DeviceChannel } from '../device/device-actions'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
+import { withFirstStart } from './first-start'
 import {
   applyMoves,
   claimMoves,
@@ -162,6 +163,8 @@ export function applyEnvelopes(
       } else if (event?.type === 'start.updated') {
         next = { ...next, start: event.start }
       }
+      // Each record of a batch counts, also one that a later record replaces.
+      next = withFirstStart(next)
     }
     for (const record of records.values()) next = placeSession(next, record)
     next = applyMoves(next, moves)
