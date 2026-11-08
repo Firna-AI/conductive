@@ -7221,8 +7221,17 @@ Depends on: 15i, 15d, 16a
 This milestone needs the prerequisites from the user. Decision 141 moves
 its open checks to the work after the first merge into `main`.
 
-- [ ] Deploy the Worker, D1, and the web app to the user's Cloudflare
-      account, with GitHub sign-in.
+- [x] Deploy the Worker, D1, and the web app to the user's Cloudflare
+      account, with GitHub sign-in. Done on 8 November 2026: `18753f9`,
+      with every merged migration applied, at `conductive.build`,
+      `app.conductive.build`, `api.conductive.build`, and the preview
+      domain `conductive.page`. The smoke test ran again on it: an agent
+      reply, the Files tab, the terminal, a port preview, and a reply after
+      a resume. A message after a provider stop waited 5 minutes, which
+      `plans/follow-ups/runner-liveness-after-provider-stop.md` records.
+      Evidence: `.context/deploy/smoke-0291f84a.log`,
+      `smoke2-0291f84a.log`, and `smoke3-0291f84a.log`.
+      Branch: `calummoore/conductor-alternative-architecture`.
 - [x] Create the D1 database with the Western Europe location hint, near
       the workspace Durable Objects and Boat's machines. Cloudflare fixes
       the place of the database when it creates it. Added on 6 November

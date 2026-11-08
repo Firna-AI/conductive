@@ -75,6 +75,10 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   defaults and logins, both with a Claude login. After each save and a
   delete, each reads only their own account and Get started step.
   `boot-account.test-support.ts` holds the account helpers of that test.
+- `agent-login-secret.test.ts` checks that a saved login keeps no
+  whitespace, and that a read removes the whitespace of an older login.
+- `feature-github-install.test.ts` checks the install link of the GitHub
+  App, and the default app when the slug is missing or not valid.
 - `shell-resources.test.ts` and `chat-read-state.test.ts` check the lists,
   the private views, the encoded workspace IDs, the archived writes, and
   the read marks.

@@ -99,8 +99,8 @@ GitHub sign-in needs these values in `.dev.vars`:
 | `SESSION_SIGNING_KEY` | 32 random bytes, encoded as Base64 |
 | `BOAT_KEY_ENCRYPTION_KEY` | A separate 32 random bytes, encoded as Base64. It encrypts the stored secrets, such as the agent logins and the workspace tokens. |
 
-Keep the client secret and both keys as Worker secrets when deployment is
-set up. Open `/api/auth/github` to start sign-in. GitHub then returns to
+In a deployment, the client secret and both keys are Worker secrets, as
+[Deployment inputs](docs/deployment.md#secrets) says. Open `/api/auth/github` to start sign-in. GitHub then returns to
 `/api/auth/github/callback` on the same app origin. The GitHub App must
 accept that callback address, for example
 `http://127.0.0.1:5174/api/auth/github/callback` for `npm run preview`. The
@@ -120,9 +120,10 @@ no other Boat work. The Worker needs two values to start cloud computers:
 
 [The app's Boat account](worker/sandbox/README.md#the-apps-boat-account)
 says how to make the key. Put both values in `.dev.vars` to start real cloud
-computers in local development. In a deployment, keep `BOAT_API_KEY` as a
-Worker secret, and add `BOAT_ORG_ID` to the `vars` of `wrangler.jsonc`, next
-to `MACHINE_ORIGIN`.
+computers in local development. In a deployment, `BOAT_API_KEY` is a
+Worker secret, and `BOAT_ORG_ID` is a variable in the settings of the
+Worker, as [Deployment inputs](docs/deployment.md#how-to-set-the-inputs)
+says.
 [Access and security](docs/protocol/access-and-security.md#the-apps-boat-key)
 states how the Worker keeps them away from the browser and the sandboxes.
 

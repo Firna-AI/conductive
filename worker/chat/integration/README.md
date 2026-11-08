@@ -279,6 +279,9 @@ methods of `Workspace`.
   `agentLoginContext(userId, agent)`, and `BOAT_KEY_ENCRYPTION_KEY`.
 - `readAgentLogin` decrypts with the same context and key. It accepts the
   kinds `token` and `api-key` for Claude, and only `api-key` for Codex.
+- A login never holds whitespace. The save removes it, and
+  `readAgentLogin` removes it again, so a login that was saved before that
+  rule still works.
 - A message whose login is missing gets `409 agent_login_required`, and no
   session is created, as [Session logins](#session-logins) says.
 - When the starter's login, or the sender's access, is gone as a command
