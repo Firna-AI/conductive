@@ -18,6 +18,6 @@
   - **B.** Do A as part of the harness speed work in `harness-test-speed.md`. Effort: Medium.
 - **Left out:** A longer time limit for this case, because it hides the slow path.
 - **Wider fix:** B.
-- **Previous examples:** decision 113, which raised the time limit of the slow harness tests.
+- **Previous examples:** decision 113, which raised the time limit of the slow harness tests. On 8 November 2026, the gate of Milestone 15s saw the same failure in `repository-capture.test.ts` and `runner-environment.test.ts`: each timed out after 15 seconds, and their workers then ran out of heap. Both passed alone, in the full retry, and in CI. Fix them with the same option.
 - **Recommendation:** A. It is small and removes the flake at its source.
 - **Action:** fix after merge, apply A, because the test is outside the reviewed commits.
