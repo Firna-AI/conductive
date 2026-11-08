@@ -85,6 +85,9 @@ The store applies them in this way:
 
 - Events apply in the order of their numbers. The store skips an event of
   another workspace, a repeated event, and an event older than the last one.
+- The store keeps replay progress separate from its resume position. A
+  reconnect starts after the last complete replay or handled live event.
+  It receives unfinished pages again, so no held GitHub state gets lost.
 - `GitHubStore.connect()` starts the first read and the event subscription.
   The first read starts even when the history never comes.
   `useGitHubState` connects the store and subscribes the views through

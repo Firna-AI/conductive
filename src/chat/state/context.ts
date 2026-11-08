@@ -5,7 +5,6 @@ import type { DeviceChannel } from '../device/device-actions'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
 import type { PendingMove } from './model-moves'
-import { SessionLog } from './session-log'
 import type { PendingEdit } from './session-records'
 import type { Transcript } from './transcript'
 
@@ -15,7 +14,6 @@ export interface ChatContext {
   readonly api: ChatApi
   readonly store: ChatStore
   readonly stream: WorkspaceStream
-  readonly logs: Map<string, SessionLog>
   /** The running history load of each session, so that loads are shared. */
   readonly loading: Map<string, Promise<number | null>>
   /** The rename and model edits that wait for their replies, by session. */
@@ -42,14 +40,6 @@ export interface ChatContext {
   readonly owned: boolean
   /** The routes of Mac commands, and the number of their latest read. */
   readonly devices: DeviceChannel
-}
-
-export function logOf(context: ChatContext, sessionId: string): SessionLog {
-  const known = context.logs.get(sessionId)
-  if (known) return known
-  const log = new SessionLog()
-  context.logs.set(sessionId, log)
-  return log
 }
 
 const RETRY_MESSAGE = 'The request failed. Try again.'

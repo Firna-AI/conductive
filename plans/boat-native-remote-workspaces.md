@@ -6140,17 +6140,41 @@ Depends on: none.
 Apply the `fix after merge` items of the chat client. Added on 8 November
 2026.
 
-- [ ] Apply option B of `plans/follow-ups/github-store-reconnect-replay.md`,
+- [x] Apply option B of `plans/follow-ups/github-store-reconnect-replay.md`,
       and delete that item.
-- [ ] Apply option B of `plans/follow-ups/chat-session-record-owner.md`, and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8q`.
+- [x] Apply option B of `plans/follow-ups/chat-session-record-owner.md`, and
       delete that item.
-- [ ] Apply option A of `plans/follow-ups/model-change-reply-focus.md`, and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8q`.
+- [x] Apply option A of `plans/follow-ups/model-change-reply-focus.md`, and
       delete that item. Do it after the record owner fix, because both
       change the model-change actions under `src/chat/state/`.
-- [ ] Apply option B of `plans/follow-ups/chat-edit-admission-order.md`:
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8q`.
+- [x] Apply option B of `plans/follow-ups/chat-edit-admission-order.md`:
       reproduce the reversed commits, and find the required order of two
       quick edits. Record the result and the next option in that item.
       Ask the user when no requirement sets the order.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8q`.
+
+Orchestrator implementation calls, 8 November 2026:
+
+- Apply the GitHub fix in `src/github/`, as the selected item names.
+  The scope summary names `src/app/`, whose shared hook owns no replay state.
+- Keep session logs in the existing record owner, in a private map keyed
+  by the chat context. Other modules receive read access only.
+- Publish model-change reply records through that owner in place of
+  `showOpened`. Keep the record and its draft move in one snapshot.
+- Check the active file or diff tab before selecting a model-change
+  target. The session ID alone still names the last chat when a file opens.
+- Save the moved view only when its target is selected. A background
+  draft move then adds no repeated view write.
+
+The edit-order investigation is complete. It confirms reversed commits,
+but no requirement chooses the winning edit. The item keeps that decision
+open and recommends F. No write-order behavior changes in this milestone.
+
+Evidence: `.context/boat-native-remote-workspaces/8q/`, with the delegate
+reports, regression failures, repeat runs, and authorization proof.
 
 ## Milestone 16a: First deployment
 

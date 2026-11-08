@@ -1,52 +1,86 @@
-# Quick edits from one tab can commit reversed
+# Choose which quick chat edit wins
 
-- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
 - **Added:** 2026-11-08, from PR #53, branch `conductor/boat-native-remote-workspaces-milestone-8m`, a new problem outside the scope that the round 1 check of finding 10 found.
-- **Location:** `worker/chat/backend.ts:102` and `:105`, `worker/chat/browser-authorization.ts:19` and `:30`, `src/chat/state/model-actions.ts:68`, and `src/chat/state/session-actions.ts:92`.
-- **Reason:** This branch does not touch the order of authorization and queue admission. The required order of overlapping edits is not established.
+- **Location:** `worker/chat/backend.ts:107` and `:110`, `worker/chat/browser-authorization.ts:19` and `:30`, `worker/chat/queries.ts:14`, `src/chat/state/model-actions.ts:71`, and `src/chat/state/session-actions.ts:116`.
+- **Reason:** The investigation confirms reversed commits, but no requirement chooses the order of two edits from one tab.
 
-- **Source:** Review. **Category:** Product bug.
+- **Source:** Review. **Category:** Docs or spec.
 - **Terms:**
-  - **Edit:** a rename of a chat session, or a change of its model, which the browser sends at once.
-  - **Serial queue:** `ChatStore.run` in `worker/chat/store.ts`, which runs the chat work of one workspace object one task at a time.
-  - **Authorization reads:** the awaited checks of a browser request before its route runs: the request gate and the workspace read.
+  - **Edit:** A session rename or a model change that stays in the session.
+  - **Workspace object:** The Durable Object that keeps one workspace's chat records and events.
+  - **Serial queue:** `ChatStore.run` in `worker/chat/store.ts`, which runs one workspace's chat tasks one at a time.
+  - **Authorization read:** A D1 read that checks whether a browser request may reach a workspace.
+  - **Edit sequence:** A number that states the edit order of one field from one browser tab.
 - **Background:**
-  - Conductive shows each agent conversation of a workspace as a chat tab. The user can rename a session, and each session has its own model picker.
-  - The browser sends each edit at once, also while an earlier edit of the same field waits, at `src/chat/state/model-actions.ts:68` and `src/chat/state/session-actions.ts:92`. The model picker stays on while a change waits.
-  - In each workspace object, `WorkspaceChat.fetch` in `worker/chat/backend.ts` first awaits `authorizeBrowser`, at line 102. Only then does it enter the serial queue with `this.store.run`, at line 105. The route commits the edit inside the queue.
-  - `authorizeChatBrowser` in `worker/chat/browser-authorization.ts` awaits the request gate, at line 19, and then the workspace read `findChatWorkspace`, at line 30.
-  - The gate in `worker/security/gate.ts` checks the session signature, and reads the session user and the org membership from D1. It also reads the JSON body of a write.
-  - The workspace gives each committed change the next event number. Each tab then shows the record with the highest event number.
-- **Problem:** A static trace of the code shows that two quick edits from one tab can commit in reverse order.
-  1. A tab sends edit 1, such as Sonnet, and then edit 2, such as Fable, for one session.
-  2. Both requests run their authorization reads at the same time, outside the serial queue.
-  3. When the reads of edit 2 end first, edit 2 enters the queue and commits first.
-  4. Edit 1 then commits, and it replaces the field with the older value.
-  5. Edit 1 now has the higher event number. So each tab shows the older value as the newest record, and the Worker keeps it.
-  - The network can also deliver two requests in another order than the browser sent them. The trace covers only the authorization step.
-  - No existing reproduction ran. The trace comes from a read of the code.
-  - The contract is unknown. No requirement says which of two quick edits from one tab must win.
-  - `docs/protocol/chat-and-events.md` says only three things here. The user can rename a session, and each session has its own model picker. Every open tab gets the same events in the same order.
-  - So it is not settled whether the last pick of the user must win, or whether the last committed edit may win.
-- **Impact if no action:** In rare timing, the session keeps the older name or model after the user picked a newer one. The next message then runs on the older model, until the user picks again.
-- **Root question:** Which of two quick edits from one tab must the workspace keep, and which part of the system must keep that order?
+  - Conductive shows each agent conversation as a chat tab. The user can rename a session and change its model.
+  - The browser sends each edit at once, also while an earlier edit of that field waits. The model picker stays on during a change.
+  - `WorkspaceChat.fetch` awaits `authorizeBrowser` before it enters the serial queue. The route then commits the edit inside that queue.
+  - `authorizeChatBrowser` awaits the request gate and `findChatWorkspace`. The gate checks the signed session, the user, the membership, and the JSON body.
+  - Each committed change gets the next event number. The browser shows the confirmed session record with the highest event number.
+- **Problem:** The first edit can replace the second edit after both requests succeed. No requirement says which edit must win.
+- **Investigation, 2026-11-08:**
+  - The user chose B, investigation before any behavior change. B is complete.
+  - The proof used `outerWorkerBundle` and `createOuterRuntime` from `worker/chat/integration/outer-runtime.test-support.ts`.
+  - Requests used the production Worker entry, its forwarding route, the real workspace object, the real gate, D1, and SQLite chat storage.
+  - A scratch subclass wrapped D1 without changing a product file. It held the first `findChatWorkspace` read through an explicit promise.
+  - The held query selected `w.id`, `w.org_id AS orgId`, and `w.archived_at AS archivedAt` from `workspaces w` and `orgs`.
+  - Its filter was `WHERE w.id = ? AND w.org_id = ? AND orgs.deleted_at IS NULL`.
+  - The proof created one session at event 1 with title `New session`.
+  - It sent a PATCH with title `First name`, then waited for the held authorization read.
+  - It sent a second PATCH with title `Second name`. That request returned HTTP 200 with event 2 while the first request still waited.
+  - Native chat storage then held `Second name`. The live socket received `session.updated` at event 2 with that title.
+  - The proof released the first read. The first request returned HTTP 200 with event 3 and title `First name`.
+  - Native chat storage and GET sessions then held `First name`. GET sessions returned event 3.
+  - Stored history contained event 1 `New session`, event 2 `Second name`, and event 3 `First name`, in that order.
+  - The live socket received event 2 `Second name`, then event 3 `First name`.
+  - The control awaited each rename before sending the next. It committed `First name` at event 2 and `Second name` at event 3.
+  - Both Worker runs made zero outbound HTTP calls. The harness replaced all external service traffic with fakes.
+  - A separate proof called the production `ChatController` and API client with `FakeApiServer`.
+  - It observed two pending rename requests before either answer. It also observed two pending model changes of the same agent before either answer.
+  - This browser proof used controller actions. It did not drive a rendered browser.
+  - Static reads of `SessionTabs.tsx`, `RenameField.tsx`, `Composer.tsx`, and `ModelPicker.tsx` confirm that the controls permit these repeated actions.
+  - `RenameField` prevents duplicate submission of one field instance. A new rename opens another instance while the first request waits.
+  - The command `npm run test -- --config .context/boat-native-remote-workspaces/8q/admission/vitest.config.ts --reporter verbose` passed all three scratch checks.
+  - These checks are a one-time proof. No permanent test, product code, or requirement changed.
+  - The proof establishes the authorization reversal. It measures no production frequency and no network request reordering.
+- **Requirement search:**
+  - `docs/protocol/chat-and-events.md` permits renames and a model picker. It requires every open tab to receive the same events in the same order.
+  - Its model rule keeps a same-agent change in the session. A different agent opens a new session with the draft.
+  - The user chose that model rule on 2026-11-06. It does not order two edits of one field.
+  - `docs/protocol/access-and-security.md` requires the access gate before a route. It does not order overlapping authorized requests.
+  - A search of every other file under `docs/protocol/` found no order rule for session edits.
+  - `docs/architecture.md` states the chat boundaries and event storage. It does not choose the winning edit.
+  - The workspace plan's choices for session models, creation order of tabs, and chat memory do not order edits.
+  - `worker/chat/history.md` describes commit order and event publication. It does not require queue entry before authorization.
+  - `src/chat/README.md` and `src/chat/state/session-records.ts` order received records by event number. They do not choose commit order.
+  - Result: neither the user's latest edit nor the latest commit has an explicit winning rule for this overlap.
+- **Static extension:** A same-agent model change uses the same authorization path and queue before it saves the choice in `worker/chat/model-changes.ts`.
+  - `src/chat/state/message-actions.ts:109` copies the displayed session choice into the next message.
+  - An earlier model choice can therefore become the choice of a later message. The Worker proof reproduced renames only.
+- **Impact if no action:** Two successful edits can leave the session with the first name or model choice. The user must select the intended value again.
+- **Root question:** Which edit of one field from one tab must win, and where must the system preserve that order?
+- **Shared assumptions:**
+  - The existing access checks stay in force, as `docs/protocol/access-and-security.md` requires.
+  - Confirmed records still follow event numbers, as the chat record rule requires. This rule does not choose the order of writes.
+  - No current requirement makes the latest user edit win. A states the commit rule instead.
+  - Overlapping edits are current browser behavior, not a requirement. E removes that behavior.
+  - This question concerns one tab's edits of one field. It sets no global order for edits from different tabs.
 - **Options:**
-  - **A.** Keep the order of the commits, and state the rule: the last committed edit wins, and each tab shows it by event number. It needs no code change, but it adds a requirement. Effort: Small.
-  - **B.** Investigate before any behavior change. Effort: Medium.
-    - Write a reproduction. Delay the authorization reads of the first of two quick renames, and let the second finish first. Then read the stored name and the event numbers.
-    - Check whether normal use sends two edits of one field at once, and how often the network reorders them.
-    - Find the required order of overlapping edits. When no requirement settles it, bring that order to the user as its own decision, with the facts of the reproduction.
-    - Then propose one of the other options at its ownership point.
-  - **C.** In the browser chat state, send the next edit of a field only after the earlier edit of that field answers. The pending edit still shows at once. A later edit then waits behind an unanswered request, and the API client has no timeout. Effort: Medium.
-  - **D.** In `WorkspaceChat.fetch`, admit each browser write into the serial queue before its authorization reads, and authorize it inside the queue. The writes then commit in their order of arrival at the object. The authorization reads then hold the queue, and the network can still reorder two requests. Effort: Medium.
-  - **E.** Turn off the model picker and the rename field of a session while an edit of that field waits. Edits of one field from one tab then never overlap. It is a visible change beyond the protocol, and it can need a mockup state. Effort: Medium.
-  - **F.** Give each edit an edit ID or a sequence number of its tab. The Worker then skips an edit that a later edit of the same tab replaced. It covers every order of arrival. It changes the protocol and adds a requirement at the API boundary. Effort: Large.
+  - **A.** Keep commit order and state that the last committed edit wins. Each tab shows it by event number. No product code changes. The first user edit can remain after both successes. Effort: Small.
+  - **B.** Investigate before any behavior change. Completed on 2026-11-08 with the proof and requirement search above. Network frequency remains unmeasured. Effort: Medium.
+  - **C.** Send the next edit of a field only after the previous edit answers, through a browser queue. The pending value shows at once. This preserves one tab's send order. An unanswered request holds later edits because the API client has no timeout. Effort: Medium.
+  - **D.** Admit browser writes into the workspace object's serial queue before authorization, and authorize inside that queue. Writes then commit in object arrival order. This prevents the demonstrated reversal. Slow authorization holds the shared queue, and network reordering can still reverse user intent. Effort: Medium.
+  - **E.** Turn off the model picker and rename field while an edit of that field waits. One tab can make no overlapping edit. This changes visible controls and can need a mockup state. Slow requests keep the controls off. Effort: Medium.
+  - **F.** Give edits a tab identity and edit sequence. The Worker skips an edit that a later edit of that tab already replaced. The latest successful edit of that tab wins regardless of arrival or authorization order. It changes browser requests, Worker storage, and the API contract. Effort: Large.
 - **Left out:**
-  - A fix in the display only: the browser already shows the newest committed record, and the Worker still keeps the older value.
-  - Choose one of A or C to F now, before the investigation: each sets the order rule. No requirement says yet which edit must win.
-- **Wider fix:** F, if the investigation shows that the last pick of the user must win. Only an edit identity covers every order of arrival, for every tab. Until then, none.
+  - A display-only fix leaves native storage with the first value. It cannot preserve the latest user edit at the Worker boundary.
+  - Repeating B cannot choose the required behavior. The reproduction and contract search are complete.
+  - An event-number precondition rejects the newer edit when two quick edits start from the same record. It needs another edit from the user.
+  - A larger transport timeout or retry does not establish edit order. It does not answer this question.
+- **Wider fix:** F. An edit sequence lets the Worker preserve each tab's edit order without waiting for an earlier request's answer.
 - **Previous examples:** None found.
-- **Related:** [chat-session-record-owner.md](chat-session-record-owner.md): the same edits, in the browser display. That fix shows the newest record that the server keeps, so here it shows the older value too. Its one-queue option for the edits of a tab is option C here.
-- **Recommendation:** B. A reproduction and the required order of overlapping edits must come before any behavior change, because no requirement sets that order yet.
-- **Action:** fix after merge, apply B, because this branch does not change the admission order, and the contract needs a check first.
+- **Related:** The browser record owner in `src/chat/state/session-records.ts` shows the highest confirmed event number. It cannot choose the Worker's commit order. Its display fixes still show `First name` after event 3 in this proof.
+- **Recommendation:** F. It preserves the latest successful user edit despite either arrival order, without holding later edits behind an unanswered request.
+- **Action:** ask the user, because F adds an edit-order requirement at the API boundary that no recorded choice covers.

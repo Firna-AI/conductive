@@ -7,7 +7,7 @@ import { sessionState } from './chat-snapshot'
 import { isRefusal, showNotice, type ChatContext } from './context'
 import { changeDraft, keepFiles } from './drafts'
 import { hydrate } from './history'
-import { showOpened, waitingMove, type PendingMove } from './model-moves'
+import { waitingMove, type PendingMove } from './model-moves'
 import { beginEdit, confirmRecord } from './session-records'
 
 /**
@@ -29,8 +29,8 @@ import { beginEdit, confirmRecord } from './session-records'
  * server takes it as the same change and opens no second session.
  *
  * Two orders apply. A model of the same agent shows at once as a pending
- * edit, until its reply or its failure, over the newest record by event
- * number, as `session-records.ts` says. The draft move and the focus follow
+ * edit over the newest record, as `session-records.ts` says. Confirmation
+ * retires older edits of the same field. The draft move and the focus follow
  * the newest pick: a session that an older pick created shows as a tab, but
  * it takes neither the draft nor the focus.
  */
@@ -65,12 +65,12 @@ export async function chooseModel(
   }
   move.pick = pick
   if (!sameAgent) context.moves.set(newSessionId, move)
-  const end = sameAgent ? beginEdit(context, sessionId, { choice }) : null
+  const edit = sameAgent ? beginEdit(context, sessionId, { choice }) : null
   let response: ChangeModelResponse
   try {
     response = await context.api.changeModel(sessionId, request)
   } catch (error) {
-    end?.()
+    edit?.fail()
     if (!sameAgent && isRefusal(error)) context.moves.delete(newSessionId)
     if (latest())
       showNotice(context, sessionId, "The model didn't change", error)
@@ -79,11 +79,11 @@ export async function chooseModel(
   if (!context.live()) return
   if (!response.created) {
     context.moves.delete(newSessionId)
-    confirmRecord(context, response.session, response.eventNumber)
-    end?.()
+    if (edit) edit.confirm(response.session, response.eventNumber)
+    else confirmRecord(context, response.session, response.eventNumber)
     return
   }
-  const shown = showOpened(context, response.session, response.eventNumber)
+  confirmRecord(context, response.session, response.eventNumber)
   context.moves.delete(newSessionId)
   const moved = move.moved
   if (moved !== null) {
@@ -91,5 +91,7 @@ export async function chooseModel(
       keepFiles(current, request.draft, response.draft),
     )
   }
-  if (shown) await hydrate(context, response.session.id)
+  if (context.store.get().activeSessionId === response.session.id) {
+    await hydrate(context, response.session.id)
+  }
 }
