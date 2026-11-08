@@ -154,7 +154,7 @@ this repository creates that mailbox.
 - `home.ts`, `features.ts`: the home page and its copy.
 - `chrome.ts`, `actions.ts`: the header, the footer with the address for
   abuse reports, and the actions. `wordmark(home)` links the lockup to a
-  given home address, for the agreement page on the app host.
+  given home address, for the pages on the app host.
 - `links.ts`: the paths of the site, and `pageHrefs`, which gives each page
   as a path on the site or as a complete address on another origin.
 - `legal.ts`, `terms.ts`, `privacy.ts`: the legal pages and their drafts.
@@ -163,6 +163,9 @@ this repository creates that mailbox.
   unknown address, and `termsAgreement`, the agreement of sign-in.
 - `sign-in-consent.ts`: `termsConsentPage`, the agreement page that the
   Worker serves on the app host before GitHub.
+- `github-setup.ts`: `githubSetupPage`, the page that the Worker serves on
+  the app host after an install of the GitHub App from the Mac app. It
+  tells the user to go back to the Mac app.
 - [`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts):
   the one list of the pictures, with `pictureCaptures`, `capturePagePath`,
   and `pictureFileName`.

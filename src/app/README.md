@@ -170,7 +170,9 @@ clicks, types, and lets the answers of the fake API settle.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   and computer settings of one org, with `watch` and the wait of each part.
 - `account-model.ts`: the agent logins, the default model, the GitHub App
-  installations, and the repositories that Create org offers.
+  installations, and the repositories that Create org offers. A screen
+  watches the installations: they read at once, and again with the steps
+  of Get started each time that the user comes back to the page.
 - `panels.ts`: `PanelWidths`, the widths of the panels, and `next`, the
   one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and

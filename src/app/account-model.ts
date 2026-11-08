@@ -17,8 +17,10 @@ import {
   readLogin,
 } from './api/read-core'
 import type { AppModel } from './app-model'
+import { Refresher } from './refresh'
+import { Resource } from './resource'
 import type { AppServices } from './services'
-import { load, loading, Store, type Loadable } from './store'
+import { load, loading, Store, type Loadable, type Readable } from './store'
 
 /**
  * The account of the person signed in: the agent logins, the default model,
@@ -27,28 +29,45 @@ import { load, loading, Store, type Loadable } from './store'
  */
 export class AccountModel {
   readonly account = new Store<AccountResponse | null>(null)
-  readonly installations = new Store<Loadable<GitHubInstallationsResponse>>(
-    loading,
-  )
+  readonly installations: Readable<Loadable<GitHubInstallationsResponse>>
   /** The repositories that Create org offers, before the org exists. */
   readonly repositories = new Store<Loadable<GitHubRepositoriesResponse>>(
     loading,
   )
   private readonly services: AppServices
   private readonly app: AppModel
+  private readonly installationReads: Refresher<GitHubInstallationsResponse>
 
   constructor(services: AppServices, app: AppModel) {
     this.services = services
     this.app = app
+    const installations = new Resource(() =>
+      services.api.get(ACCOUNT_PATHS.githubInstallations, readInstallations),
+    )
+    this.installations = installations.store
+    this.installationReads = new Refresher(installations, () => null, services)
   }
 
+  /**
+   * Reads the installs while a screen shows them: at once, and each time
+   * that the user comes back to the page, such as from GitHub in another
+   * window. A return also reads the steps of Get started again, because an
+   * install completes its first step. A failed read keeps what shows.
+   */
+  watchInstallations(): () => void {
+    const stopReads = this.installationReads.watch()
+    const stopSteps = this.services.onFocus(() => {
+      void this.app.refreshGetStarted().catch(() => undefined)
+    })
+    return () => {
+      stopReads()
+      stopSteps()
+    }
+  }
+
+  /** Reads the installs now, such as for Try again after a failed read. */
   loadInstallations(): Promise<void> {
-    return load(this.installations, () =>
-      this.services.api.get(
-        ACCOUNT_PATHS.githubInstallations,
-        readInstallations,
-      ),
-    )
+    return this.installationReads.refresh()
   }
 
   loadRepositories(): Promise<void> {

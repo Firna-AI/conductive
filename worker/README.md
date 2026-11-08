@@ -30,6 +30,12 @@ On the app hostname, the Worker serves these API routes:
 - The operator's suspension of users and orgs, as the [operator area](operator/README.md) says.
 - The chat routes of a workspace: its sessions and their actions, the chat history, and the events socket.
 
+On the app hostname, the Worker also serves `/github/setup`, where GitHub sends the user after an install of the GitHub App.
+[`github-setup.ts`](github-setup.ts) serves it before the request gate, with no session.
+It sends an install from a browser back to the screen where it started.
+It answers an install from the Mac app with a page that sends the user back to the Mac app.
+[The GitHub App](../docs/protocol/github-banner.md#the-github-app) states the rules.
+
 The [app API](app-api/README.md) serves the account, shell, and workspace routes after the request gate.
 `CONDUCTIVE_FRAME_SOURCES` adds trusted HTTPS desktop stream origins to the asset policy.
 Use the same configured sources in the web app and Mac app.

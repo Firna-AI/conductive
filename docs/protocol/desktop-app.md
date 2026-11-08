@@ -141,6 +141,18 @@ limits, their results, and what the chat shows.
 - After a failed exchange, the user can start sign-in again.
 - The Mac app writes no handoff code and no session token to its logs.
 
+## GitHub App install
+
+- Install the GitHub App opens GitHub in the user's default browser, as
+  each other web address does.
+- After the install, the browser shows a page that tells the user to go
+  back to the Mac app. When an owner of the GitHub account must approve
+  the install, the page says so.
+- The Mac app reads the installs and the steps of Get started again when
+  its window gets the focus.
+- A `conductive://` address that opens the Mac app after the install was
+  rejected. Reason: the Mac app accepts only the address of its sign-in.
+
 ## The sign-in session
 
 - The Mac app has its own sign-in session, with its own session cookie.
