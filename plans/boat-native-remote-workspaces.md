@@ -4008,6 +4008,26 @@ Added on 8 November 2026 from the check of finding 2 of PR #48
 - **Chosen:** A now, by the user on 8 November 2026, with D as a later
   follow-up: `plans/follow-ups/runner-output-save-failure.md`.
 
+### 133. Decide which org env values count as secrets
+
+Added on 8 November 2026 from the check of finding 12 of PR #42
+(Milestone 8i).
+
+- **Background:** The runner's output filter hides only the workspace
+  token and the agent logins, so an agent can repeat an org env value into
+  the saved chat. The start-log masker hides every org env value, also a
+  short, common value such as `1`.
+- **Options:**
+  - **A.** Keep both rules, and state in the access protocol that agent
+    output can show org env values.
+  - **B.** One list of start secrets feeds both filters, and only values
+    of 8 or more characters count.
+  - **C.** Add a "secret" mark to each org env var. Only marked values are
+    hidden, in the chat and in the start logs.
+- **Recommendation:** C.
+- **Chosen:** A now, by the user on 8 November 2026, with C as a later
+  follow-up: `plans/follow-ups/org-env-values-in-output.md`.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -6720,6 +6740,22 @@ Apply the `fix after merge` items of the access rules. Added on 8 November
       116), with the access protocol and the Terms page. Delete that item.
 - [ ] Apply option C of `plans/follow-ups/desktop-stream-after-access-loss.md`
       (decision 117), and delete that item.
+
+## Milestone 15r: Secret org env vars
+
+Tags: ui
+
+Depends on: 7x, 15i. They change the runner's output filter and wire the
+org settings.
+
+Apply decision 133 C, which the user chose as a later follow-up on 8
+November 2026. Added on 8 November 2026.
+
+- [ ] Draw the "secret" mark of an org env var in the mockups of the org
+      settings. Then build it, and compare it with its mockup.
+- [ ] Apply option C of `plans/follow-ups/org-env-values-in-output.md`,
+      with the changes to `docs/protocol/access-and-security.md` and the
+      privacy page. Delete that item.
 
 ## Milestone 15d: Marketing site
 
