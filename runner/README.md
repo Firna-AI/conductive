@@ -32,12 +32,8 @@ These facts belong to this implementation, not to the protocol docs.
 - Both agents get the sandbox's `computer` MCP server and the `conductive`
   workspace MCP server. The [agent tools guide](agent-tools.md) gives
   their settings, runtime context, and process lifetime.
-- The runner starts each turn with the login of its `turn` command. That
-  login stays for the whole turn, also when a `message` command carries
-  another login. Each `message` command of the turn goes to the running
-  agent process at once, whoever sent it. Each end of a turn closes its
-  agent process, so no idle agent process keeps a login. The next turn
-  starts a new agent process on the saved conversation, when one exists.
+- Each agent program gets the login of its turn through a route that its
+  tool processes do not inherit, as [Agent logins](agent-logins.md) says.
 - When the running agent cannot take the model or the effort of a message
   at once, that message waits for the result of the agent. A new agent
   process then takes the waiting input on the same conversation and login.
@@ -84,12 +80,16 @@ These facts belong to this implementation, not to the protocol docs.
   works. One event can leave the output filter as several events, because
   the filter first releases its held text. The runner tries to save each of
   them, also after an earlier one fails.
-  The turn text buffer uses the same rule. Its drain tries each buffered
-  message, the next agent event, and each final tool update in order before
-  it reports the first save error. It never appends the same text again.
-  A failed turn-end, ready, or unavailable-tree event save gets one more
-  save of the pending state. That save sends the same numbered event.
-  A failed start step ends the turn with its cause.
+  The turn text buffer tries each buffered message, the next agent event,
+  and each final tool update in order. It never appends the same text again.
+- A failed save of agent output, which is `turn.thinking`, `assistant.delta`,
+  `assistant.completed`, or `tool.updated`, gets one more save of the
+  pending state. Then the runner warns "The agent output save failed. The
+  turn will continue." The turn goes on, also when that save fails. A later
+  save that works sends the output once.
+- A failed turn-end, ready, or unavailable-tree event save gets one more
+  save of the pending state. That save sends the same numbered event. A
+  failed `turn.started` save or start step ends the turn with its cause.
 - At a normal shutdown, the runner sends one stopped end for each running
   turn, before it closes the connection. Each end lists the changed files
   when the runner can read them. Otherwise, it marks them as unavailable.

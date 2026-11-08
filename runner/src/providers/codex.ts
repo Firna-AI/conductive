@@ -43,9 +43,8 @@ export function createCodexFactory(
       model_provider: 'conductive',
       'model_providers.conductive.name': 'Conductive',
       'model_providers.conductive.base_url': 'https://api.openai.com/v1',
-      'model_providers.conductive.env_key': 'OPENAI_API_KEY',
       'model_providers.conductive.wire_api': 'responses',
-      'model_providers.conductive.requires_openai_auth': false,
+      'model_providers.conductive.requires_openai_auth': true,
       cli_auth_credentials_store: 'ephemeral',
       'mcp_servers.conductive.command': WORKSPACE_TOOLS_MCP.command,
       'mcp_servers.conductive.args': WORKSPACE_TOOLS_MCP.args,
@@ -77,7 +76,7 @@ export function createCodexFactory(
         command: process.execPath,
         args,
         cwd: options.cwd,
-        env: providerEnvironment(options.home, options.login, options.tools),
+        env: providerEnvironment(options.home, options.tools),
         signal: options.signal,
         lifetime,
       }),
@@ -120,6 +119,10 @@ export function createCodexFactory(
         capabilities: { experimentalApi: true },
       })
       rpc.notify('initialized')
+      await rpc.request('account/login/start', {
+        type: 'apiKey',
+        apiKey: options.login.secret,
+      })
       const response = object(
         await rpc.request(
           options.conversationId ? 'thread/resume' : 'thread/start',

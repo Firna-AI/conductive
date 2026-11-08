@@ -45,17 +45,22 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
   const second = await sdk.nextUser()
   const uuid2 = string(second.uuid)
   expect(first.priority).toBe('next')
-  expect(sdk.parameters?.options).toMatchObject({
+  const sdkOptions = sdk.parameters?.options
+  const providerEnv = sdkOptions?.env ?? {}
+  expect({
+    pathToClaudeCodeExecutable: sdkOptions?.pathToClaudeCodeExecutable,
+    includePartialMessages: sdkOptions?.includePartialMessages,
+    persistSession: sdkOptions?.persistSession,
+    mcpServers: sdkOptions?.mcpServers,
+  }).toMatchObject({
     pathToClaudeCodeExecutable: '/pinned/sdk/claude',
     includePartialMessages: true,
     persistSession: true,
-    env: {
-      CLAUDE_CODE_OAUTH_TOKEN: 'secret-alice',
-      CLAUDE_CONFIG_DIR: `${h.home}/.conductive/claude`,
-    },
     mcpServers: { computer: fakeComputerServer },
   })
-  expect(sdk.parameters?.options?.env?.ANTHROPIC_API_KEY).toBeUndefined()
+  expect(providerEnv.CLAUDE_CONFIG_DIR).toBe(`${h.home}/.conductive/claude`)
+  expect(Object.hasOwn(providerEnv, 'ANTHROPIC_API_KEY')).toBe(false)
+  expect(Object.hasOwn(providerEnv, 'CLAUDE_CODE_OAUTH_TOKEN')).toBe(false)
   await sdk.raw({ type: 'system', subtype: 'init', session_id: 'sdk-session' })
   await sdk.raw({
     type: 'system',

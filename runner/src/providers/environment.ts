@@ -1,7 +1,6 @@
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import type { RunnerLogin } from '../../../src/shared/runner'
 import { TOOL_ENV } from '../../../tools/context'
 import type { WorkspaceToolContext } from './workspace-tools'
 
@@ -13,10 +12,9 @@ export async function prepareProviderHome(home: string): Promise<void> {
   )
 }
 
-/** Remove inherited provider accounts before adding the session starter's login. */
+/** Provider logins travel through private process input, never the environment. */
 export function providerEnvironment(
   home: string,
-  login: RunnerLogin,
   tools: WorkspaceToolContext,
 ): Record<string, string | undefined> {
   const env = { ...process.env }
@@ -32,10 +30,5 @@ export function providerEnvironment(
   env[TOOL_ENV.machineOrigin] = tools.machineOrigin
   env[TOOL_ENV.workspaceToken] = tools.workspaceToken
   env[TOOL_ENV.turnId] = tools.turnId
-  if (login?.agent === 'claude')
-    env[
-      login.kind === 'token' ? 'CLAUDE_CODE_OAUTH_TOKEN' : 'ANTHROPIC_API_KEY'
-    ] = login.secret
-  if (login?.agent === 'codex') env.OPENAI_API_KEY = login.secret
   return env
 }

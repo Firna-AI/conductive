@@ -145,7 +145,17 @@ export class Runner {
         try {
           await this.link.emit(boundChatEvent(safe), reportCommandId)
         } catch (error) {
-          failures.push(error)
+          if (
+            safe.type === 'turn.thinking' ||
+            safe.type === 'assistant.delta' ||
+            safe.type === 'assistant.completed' ||
+            safe.type === 'tool.updated'
+          ) {
+            await this.link.persist().catch(() => {})
+            this.options.warn(
+              'The agent output save failed. The turn will continue.',
+            )
+          } else failures.push(error)
         }
       }
       if (failures.length) {

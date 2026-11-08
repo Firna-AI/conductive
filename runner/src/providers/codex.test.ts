@@ -25,9 +25,12 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
   h.endpoint.send(turn('1', 'alice', 'codex'))
   await runner.idle()
   const server = servers.latest
-  expect(servers.requests[0].env.OPENAI_API_KEY).toBe('secret-alice')
+  expect(Object.hasOwn(servers.requests[0].env, 'OPENAI_API_KEY')).toBe(false)
+  expect(
+    server.writes.find((write) => write.method === 'account/login/start'),
+  ).toMatchObject({ params: { type: 'apiKey', apiKey: 'secret-alice' } })
   expect(servers.requests[0].args).toContain(
-    'model_providers.conductive.requires_openai_auth=false',
+    'model_providers.conductive.requires_openai_auth=true',
   )
   expect(servers.requests[0].args).toContain(
     'cli_auth_credentials_store="ephemeral"',
@@ -124,7 +127,12 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
   h.endpoint.send(turn('4', 'bob', 'codex'))
   await runner.idle()
   expect(servers.processes).toHaveLength(3)
-  expect(servers.requests[2].env.OPENAI_API_KEY).toBe('secret-bob')
+  expect(Object.hasOwn(servers.requests[2].env, 'OPENAI_API_KEY')).toBe(false)
+  expect(
+    servers.latest.writes.find(
+      (write) => write.method === 'account/login/start',
+    ),
+  ).toMatchObject({ params: { type: 'apiKey', apiKey: 'secret-bob' } })
   expect(
     servers.latest.writes.find((write) => write.method === 'thread/resume'),
   ).toMatchObject({ params: { threadId: 'codex-conversation' } })

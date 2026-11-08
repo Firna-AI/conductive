@@ -15,7 +15,12 @@ beforeEach(mockComputerServer)
 
 it('closes Codex startup and in-flight requests when their session signal is canceled', async () => {
   const h = await repositoryFixture()
-  for (const method of ['initialize', 'turn/start', 'turn/steer']) {
+  for (const method of [
+    'initialize',
+    'account/login/start',
+    'turn/start',
+    'turn/steer',
+  ]) {
     const controller = new AbortController()
     const entered = deferred<ProcessRequest>()
     const servers = new FakeAppServers()
@@ -49,7 +54,7 @@ it('closes Codex startup and in-flight requests when their session signal is can
       signal: controller.signal,
     })
     let request: Promise<void> | null = null
-    if (method !== 'initialize') {
+    if (method !== 'initialize' && method !== 'account/login/start') {
       provider = await opening
       if (method === 'turn/steer') await provider.send(turn())
       request = provider.send(turn('held'))

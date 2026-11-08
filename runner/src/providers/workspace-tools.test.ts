@@ -15,7 +15,7 @@ import { createCodexFactory } from './codex'
 beforeEach(mockComputerServer)
 
 it.each(['claude', 'codex'] as const)(
-  'registers workspace tools for %s with fresh active turn context and preserves the session login',
+  'registers workspace tools for %s with fresh active turn context and no login in its environment',
   async (agent) => {
     const h = await runnerHarness()
     await h.runner.close()
@@ -64,9 +64,10 @@ it.each(['claude', 'codex'] as const)(
         CONDUCTIVE_MACHINE_ORIGIN: 'https://machines.conductive.test',
         CONDUCTIVE_WORKSPACE_TOKEN: 'workspace-secret',
         CONDUCTIVE_TURN_ID: turnId,
-        [agent === 'claude' ? 'CLAUDE_CODE_OAUTH_TOKEN' : 'OPENAI_API_KEY']:
-          'secret-alice',
       })
+      expect(environment()).not.toHaveProperty('CLAUDE_CODE_OAUTH_TOKEN')
+      expect(environment()).not.toHaveProperty('ANTHROPIC_API_KEY')
+      expect(environment()).not.toHaveProperty('OPENAI_API_KEY')
       expect(registration()).toEqual(
         agent === 'claude'
           ? {
