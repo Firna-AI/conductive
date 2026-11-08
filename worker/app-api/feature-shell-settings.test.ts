@@ -160,6 +160,26 @@ it('saves shared scripts and encrypted env values through the real Worker and ke
     SERVICE_TOKEN: { value: 'secret-a', secret: false },
     ['__proto__']: { value: 'prototype-value', secret: true },
   })
+  const replaced = await fixture.request(path, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      envVars: [
+        { operation: 'set', name: 'SERVICE_TOKEN', value: 'replacement' },
+        { operation: 'set', name: '__proto__', value: 'prototype-next' },
+        { operation: 'set', name: 'constructor', value: 'new-secret' },
+        { operation: 'remove', name: 'LEGACY_TOKEN' },
+        { operation: 'set', name: 'LEGACY_TOKEN', value: 'recreated-secret' },
+      ],
+    }),
+  })
+  expect(replaced.status).toBe(200)
+  expect(await workspaceEnvironmentSettings(fixture.env, OUTER_ORG)).toEqual({
+    LEGACY_TOKEN: { value: 'recreated-secret', secret: true },
+    PUBLIC_MODE: { value: 'production', secret: false },
+    SERVICE_TOKEN: { value: 'replacement', secret: false },
+    ['__proto__']: { value: 'prototype-next', secret: true },
+    constructor: { value: 'new-secret', secret: true },
+  })
   const removed = await fixture.request(path, {
     method: 'PATCH',
     body: JSON.stringify({
@@ -169,6 +189,7 @@ it('saves shared scripts and encrypted env values through the real Worker and ke
         { operation: 'remove', name: 'PUBLIC_MODE' },
         { operation: 'remove', name: 'SERVICE_TOKEN' },
         { operation: 'remove', name: '__proto__' },
+        { operation: 'remove', name: 'constructor' },
       ],
     }),
   })

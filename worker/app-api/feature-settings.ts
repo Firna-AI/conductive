@@ -32,7 +32,12 @@ function environmentChanges(value: unknown): EnvChange[] | undefined {
       return { operation: 'classify', name, secret }
     if (entry.operation !== 'set' || typeof entry.value !== 'string')
       throw invalidShellInput()
-    return { operation: 'set', name, value: entry.value, secret }
+    return {
+      operation: 'set',
+      name,
+      value: entry.value,
+      ...(entry.secret === undefined ? {} : { secret }),
+    }
   })
 }
 
@@ -69,11 +74,18 @@ export async function featureSettings(
               ...environment,
               [change.name]: { ...previous, secret: change.secret },
             }
-        } else
+        } else {
+          const previous = Object.hasOwn(environment, change.name)
+            ? environment[change.name]
+            : undefined
           environment = {
             ...environment,
-            [change.name]: { value: change.value, secret: change.secret },
+            [change.name]: {
+              value: change.value,
+              secret: change.secret ?? previous?.secret ?? true,
+            },
           }
+        }
       }
       const envVarsCiphertext =
         changes === undefined

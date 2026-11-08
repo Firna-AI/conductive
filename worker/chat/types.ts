@@ -8,6 +8,7 @@ import type {
   RunnerInterrupt,
   RunnerLogin,
   WorkspaceToRunner,
+  RunnerEventEnvelope,
 } from '../../src/shared/runner'
 import type {
   WorkspaceEvent,
@@ -20,6 +21,8 @@ import type {
 } from '../security/connection-access'
 import type { AuthenticatedRunner } from './authenticated-runner'
 import type { SessionLoginTarget } from './login-availability'
+import type { FilteredRunnerOutput } from './runner-output'
+import type { ChatTransaction } from './store'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -113,6 +116,11 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  filterRunnerOutput(
+    transaction: ChatTransaction,
+    workspace: RunnerWorkspaceRecord,
+    input: RunnerEventEnvelope,
+  ): Promise<FilteredRunnerOutput>
   runnerAttached(
     workspaceId: string,
     connectionId: string,

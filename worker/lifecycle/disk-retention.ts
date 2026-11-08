@@ -13,7 +13,7 @@ import {
   workspaceEnvironmentSettings,
   workspaceRepository,
 } from './settings-data'
-import { environmentSecrets, environmentValues } from './org-environment'
+import { environmentValues } from './org-environment'
 import { recordRunningEnvironment } from './start-environment'
 import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
 import {
@@ -133,9 +133,6 @@ export async function keepWorkspaceDisk(
           ),
           CONDUCTIVE_TURN_ID: '',
           CONDUCTIVE_DISK_KEEPALIVE: '1',
-          CONDUCTIVE_OUTPUT_SECRETS: JSON.stringify(
-            environmentSecrets(environment),
-          ),
         },
         1_800,
       )

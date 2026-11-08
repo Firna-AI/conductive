@@ -50,7 +50,7 @@ export interface UpdateOrgSettingsRequest {
   installScript?: string
   startupScript?: string
   envVars?: readonly (
-    | { operation: 'set'; name: string; value: string; secret: boolean }
+    | { operation: 'set'; name: string; value: string; secret?: boolean }
     | { operation: 'classify'; name: string; secret: boolean }
     | { operation: 'remove'; name: string }
   )[]

@@ -11,7 +11,6 @@ The [agent runner](README.md) reads these variables when the service starts.
 | `CONDUCTIVE_DEFAULT_BRANCH`   | Yes      | The default branch, as a name that Git resolves in that folder.       |
 | `CONDUCTIVE_HOME`             | No       | The home folder of the agents. The default is the home of the user.   |
 | `CONDUCTIVE_STATE_PATH`       | No       | The state file. The default is `.conductive/runner-state.json` there. |
-| `CONDUCTIVE_OUTPUT_SECRETS`   | No       | The JSON list of marked org env values from this sandbox's start. The default is `[]`. |
 
 - The runner route is the path `MACHINE_PATHS.runner`, which is
   `/v1/runner`, from [`agent-tools.ts`](../src/shared/agent-tools.ts) on
@@ -31,7 +30,7 @@ The [agent runner](README.md) reads these variables when the service starts.
 - The state file belongs to one workspace. Keep it out of the org image.
 - After a failed or dropped connection, the runner connects again in 1 second.
 
-When a required variable is missing, the secret list is invalid, or the state file cannot be read,
+When a required variable is missing or the state file cannot be read,
 the runner exits with code 1. It writes this line to standard error:
 
 ```text

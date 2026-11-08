@@ -223,6 +223,10 @@ tests through the production Worker entry.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event.
+- `runner-output.ts` and `runner-output-state.ts`: the filter from the
+  actual start capture, and its encrypted held answer suffixes. The
+  suffix, filtered events, and raw cursor commit in one transaction.
+  The shared field policy keeps operational paths and masks display labels.
 - `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
   runner connection before each message and while it is idle.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable

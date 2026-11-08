@@ -97,6 +97,12 @@ In both integrations, the `send` callback sends a `RunnerFileCommand` over the o
 Pass each file or diff result to `files.runner.receive(connectionId, payload)` with the ID of its socket.
 In the combined integration, these results reach the owner through the chat backend's `receiveFileResult` hook.
 These results use request IDs and bypass the numbered chat event history.
+Real file paths and base branches stay unchanged for every operation.
+Separate masked display labels come from the shared output field policy.
+The gated handler fills those labels from the actual start capture for
+runner results, direct opens, cached reports, and provider fallback.
+The browser receives no secret list. Raw operational paths can therefore
+contain marked values; the access protocol states this exposure.
 The broker checks the response type, connection, requested path, default branch, and file byte count.
 Pending reads fail when their connection closes or when their request signal aborts.
 The owner must handle socket health and detach a connection that has failed.

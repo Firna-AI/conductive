@@ -172,11 +172,21 @@ export class ComputerModel {
   }
 
   /**
-   * Sets the value and the Secret mark of a variable. The value goes out
-   * and never comes back.
+   * Sets the value and the Secret mark of a variable, as Add variable
+   * does. The value goes out and never comes back.
    */
   setEnvVar(name: string, value: string, secret: boolean): Promise<void> {
     return this.write({ envVars: [{ operation: 'set', name, value, secret }] })
+  }
+
+  /**
+   * Replaces only the value of a variable. The write sends no mark, so the
+   * Worker keeps the mark that it stores when it applies the write, and a
+   * name that it does not know starts secret. The value goes out and never
+   * comes back.
+   */
+  replaceEnvVar(name: string, value: string): Promise<void> {
+    return this.write({ envVars: [{ operation: 'set', name, value }] })
   }
 
   /** Sets only the Secret mark of a variable. No value goes out or back. */

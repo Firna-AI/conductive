@@ -1,7 +1,7 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import { RUNNER_EVENT_MAX_BYTES } from '../../src/shared/runner'
 import { parseFileEvent } from '../files/parsers'
-import { jsonBytes } from './runner-event-limits'
+import { jsonBytes } from '../../src/shared/event-limits'
 import { normalizeSession } from './session-storage'
 import type { ChatData } from './types'
 

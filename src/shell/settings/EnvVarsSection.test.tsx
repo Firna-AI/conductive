@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { requestLines } from '../../app/test-kit'
+import type { FetchLike } from '../../app/api/client'
+import { HeldRequests, requestLines } from '../../app/test-kit'
 import { orgSettingsPaths } from '../../shared/org-settings'
 import {
   accessibleName,
@@ -35,10 +36,14 @@ const failedSave = {
 /**
  * The Cloud computer tab of Acme, mounted for its admin. The tab gives the
  * settings with their actions, or the read-only view when the person may
- * not change them, as after a refusal of a suspended org.
+ * not change them, as after a refusal of a suspended org. `fetch` can hold
+ * a request or its answer.
  */
-async function mountedSettings(server: FakeApiServer): Promise<HTMLElement> {
-  const app = await startedApp(server)
+async function mountedSettings(
+  server: FakeApiServer,
+  fetch: FetchLike = server.fetch,
+): Promise<HTMLElement> {
+  const app = await startedApp(server, { fetch })
   const org = app.orgs.get().find((item) => item.id === FAKE_IDS.org)
   if (!org) throw new Error('The fake org is missing.')
   const view = mountScreen(app, <ComputerTab org={org} />)
@@ -101,18 +106,29 @@ function settingsWrites(server: FakeApiServer): Promise<unknown[]> {
 }
 
 describe('the environment variables of the cloud computer', () => {
-  test('an admin of an org in use adds a secret variable, changes a value with its saved mark, switches a mark, and deletes a variable, and each form closes empty after its save', async () => {
+  test('an admin of an org in use adds a secret variable, saves a new value without a mark after a waiting mark save and a Cancel, switches a mark, and deletes a variable, and each form closes empty after its save', async () => {
     const server = new FakeApiServer()
-    const view = await mountedSettings(server)
+    const held = new HeldRequests(server)
+    const view = await mountedSettings(server, held.fetch)
     click(byRole('button', 'Add variable', view))
     const newMark = isOn(view, 'Secret')
     typeInto(view, 'Name', 'API_TOKEN')
     typeInto(view, 'Value', 'token-value')
     click(byRole('button', 'Save variable', view))
     await settle()
-    click(byRole('button', `Change the value of ${plainName}`, view))
-    typeInto(view, `New value of ${plainName}`, 'new-value')
+    // The admin marks the variable while its value form shows, and the
+    // answer of the mark waits. Cancel and a reopen give a new form, which
+    // shows the old mark. The value save goes out after the mark answers.
+    const change = `Change the value of ${plainName}`
+    click(byRole('button', change, view))
+    held.holdAnswer('PATCH', settingsPath)
+    click(byRole('switch', `Secret value of ${plainName}`, view))
+    await settle()
+    click(byRole('button', 'Cancel', view))
+    click(byRole('button', change, view))
+    typeInto(view, `New value of ${plainName}`, 'new-private-value')
     click(byRole('button', 'Save', view))
+    held.release('PATCH', settingsPath)
     await settle()
     click(byRole('switch', `Secret value of ${secretName}`, view))
     await settle()
@@ -145,13 +161,11 @@ describe('the environment variables of the cloud computer', () => {
           ],
         },
         {
+          envVars: [{ operation: 'classify', name: plainName, secret: true }],
+        },
+        {
           envVars: [
-            {
-              operation: 'set',
-              name: plainName,
-              value: 'new-value',
-              secret: false,
-            },
+            { operation: 'set', name: plainName, value: 'new-private-value' },
           ],
         },
         {

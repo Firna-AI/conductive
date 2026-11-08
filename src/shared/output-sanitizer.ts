@@ -1,6 +1,5 @@
-import type { RunnerEvent } from '../../src/shared/runner'
-import type { RunnerFileEvent } from '../../src/shared/files'
-import type { RetainedReport } from './report-state'
+import type { RunnerEvent } from './runner'
+import type { RunnerFileEvent } from './files'
 import {
   filterFileReport,
   filterOutput,
@@ -8,32 +7,55 @@ import {
 } from './output-fields'
 
 type Delta = Extract<RunnerEvent, { type: 'assistant.delta' }>
+export interface HeldOutput {
+  event: Delta
+  secrets: readonly string[]
+}
 const REDACTION_MARKER = '[redacted]'
 
 /** Holds only the suffix that can still become a known credential. */
 export class OutputSanitizer {
   private readonly secrets = new Set<string>()
-  private readonly pending = new Map<string, Delta>()
+  private readonly pending = new Map<string, HeldOutput>()
+
+  constructor(pending: readonly HeldOutput[] = []) {
+    for (const held of pending) this.pending.set(this.key(held.event), held)
+  }
+
+  snapshot(): HeldOutput[] {
+    return [...this.pending.values()]
+  }
 
   add(secret: string): void {
     if (secret) this.secrets.add(secret)
   }
 
+  text(value: string): string {
+    return this.filter(value, true).text
+  }
+
   fileReport(event: RunnerFileEvent): RunnerFileEvent {
-    return filterFileReport(event, (value) => this.filter(value, true).text)
+    return filterFileReport(event, (value) => this.text(value))
   }
 
   retainedReport(event: RetainedReport): RetainedReport {
-    return filterRetainedReport(event, (value) => this.filter(value, true).text)
+    return filterRetainedReport(event, (value) => this.text(value))
   }
 
   accept(event: RunnerEvent): RunnerEvent[] {
     if (event.type === 'assistant.delta') {
       const key = this.key(event)
-      const text = (this.pending.get(key)?.text ?? '') + event.text
-      const filtered = this.filter(text, false)
+      const previous = this.pending.get(key)
+      const text = (previous?.event.text ?? '') + event.text
+      const secrets = [
+        ...new Set([...this.secrets, ...(previous?.secrets ?? [])]),
+      ]
+      const filtered = this.filter(text, false, secrets)
       if (filtered.held)
-        this.pending.set(key, { ...event, text: filtered.held })
+        this.pending.set(key, {
+          event: { ...event, text: filtered.held },
+          secrets: secrets.filter((secret) => secret.startsWith(filtered.held)),
+        })
       else this.pending.delete(key)
       return filtered.text ? [{ ...event, text: filtered.text }] : []
     }
@@ -62,16 +84,25 @@ export class OutputSanitizer {
 
   private flush(matches: (event: Delta) => boolean): RunnerEvent[] {
     const result: RunnerEvent[] = []
-    for (const [key, event] of this.pending) {
+    for (const [key, held] of this.pending) {
+      const { event } = held
       if (!matches(event)) continue
       this.pending.delete(key)
-      result.push({ ...event, text: this.filter(event.text, true).text })
+      result.push({
+        ...event,
+        text: this.filter(event.text, true, [...this.secrets, ...held.secrets])
+          .text,
+      })
     }
     return result
   }
 
-  private filter(text: string, final: boolean): { text: string; held: string } {
-    const secrets = [...this.secrets].sort((a, b) => b.length - a.length)
+  private filter(
+    text: string,
+    final: boolean,
+    values: readonly string[] = [...this.secrets],
+  ): { text: string; held: string } {
+    const secrets = [...values].sort((a, b) => b.length - a.length)
     let output = ''
     let index = 0
     while (index < text.length) {
@@ -99,6 +130,10 @@ export class OutputSanitizer {
   }
 
   private clean(event: RunnerEvent): RunnerEvent {
-    return filterOutput(event, (value) => this.filter(value, true).text)
+    return filterOutput(event, (value) => this.text(value))
   }
 }
+type RetainedReport = Extract<
+  RunnerEvent,
+  { type: 'start.updated' | 'workspace.title' }
+>

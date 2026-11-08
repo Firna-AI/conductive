@@ -32,6 +32,8 @@ const BANNERS = [
   'blocked',
 ] as const satisfies readonly BannerState[]
 
+const PATHS = ['plain', 'masked'] as const
+
 /**
  * The preview state of the dev fake, from the query string of the page,
  * such as `/?role=member&workspace=stopped`. An unknown value is ignored,
@@ -41,6 +43,8 @@ const BANNERS = [
  * - `workspace=<state>`: the state of `checkout-autocomplete`.
  * - `conversation=<scenario>`: its recorded chat, such as `running`.
  * - `banner=<state>`: its GitHub banner, such as `merged`.
+ * - `paths=masked`: two files whose real paths hold a fake secret value,
+ *   with their labels, in the file lists and at the end of each turn.
  * - `firstRun=github-app|org|agent-login`: Get started is not done from
  *   that step on. With `github-app` or `org`, the user has no org until
  *   Create org runs. In each first run, no agent login is connected.
@@ -83,6 +87,7 @@ export function readDevOptions(search: string): DevOptions {
       workspaceState: pick(params, 'workspace', WORKSPACE_STATES),
       conversation: pick(params, 'conversation', CONVERSATIONS),
       banner: pick(params, 'banner', BANNERS),
+      paths: pick(params, 'paths', PATHS),
     },
     firstRun: pick(params, 'firstRun', getStartedOrder) ?? null,
     noAgentLogin: params.get('login') === 'none',

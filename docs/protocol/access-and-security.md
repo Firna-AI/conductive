@@ -313,8 +313,8 @@ Later screens add the frame and connection sources that they need.
 ## Secrets that users enter
 
 - The app stores the env var values and the agent logins encrypted.
-- The values of env vars are write-only. The browser never gets a stored
-  value back, whatever the mark of the env var.
+- The values of env vars are write-only. The settings never return a
+  stored value to the browser, whatever the mark of the env var.
 - An admin marks each env var of the org as secret or not secret
   (decision 133). Each env var is secret until an admin clears its mark.
   The value of a secret env var is a secret value.
@@ -322,9 +322,27 @@ Later screens add the frame and connection sources that they need.
 - A changed mark applies at the next start of each sandbox, as a changed
   value does. The chat history and the start logs from before that start
   keep their text.
-- The runner hides each exact copy of a secret value in the text that the
-  app shows from each runner event. It does this before it saves or sends
-  the event. It also hides the workspace token and the agent logins there.
+- The Durable Object of the workspace hides each exact copy of a secret
+  value in the text that screens show from each runner event. It does
+  this before it checks, stores, or sends the event. It uses the values
+  and the marks of the last start of the sandbox.
+- The Durable Object does this for each runner, also for an older runner
+  from an org image or a saved disk. It also hides a copy that consecutive
+  text events of one answer split.
+- Reason: an org image or a saved disk can hold an older runner. A filter
+  of secret values in the runner was rejected, because an older runner
+  does not have it.
+- The app keeps the real path of each file and the real name of the
+  default branch. Reads, diffs, and the file lists use them. The browser
+  gets these real values, so a secret value can show in the data that the
+  browser gets and sends (decision 145).
+- Screens show a separate label of each path and branch name. The label
+  hides each exact copy of a secret value.
+- Reason: a hidden path or branch name names nothing real, and two hidden
+  paths can become equal. File IDs in place of real paths were rejected,
+  because they change the file API.
+- The runner hides the workspace token and the agent logins in the text
+  that screens show, before it saves or sends an event.
 - A start log hides each exact copy of a secret value and of the workspace
   token before a browser gets it.
 - The app does not hide the value of an env var that is not secret. So
@@ -334,9 +352,12 @@ Later screens add the frame and connection sources that they need.
   guesses. A mask of every value was rejected, because it also hides
   short, common values, such as `1`, in ordinary text.
 - Risk: the app hides only exact copies of a value. A changed or encoded
-  value still shows. File reads, diffs, and the terminal hide no value.
+  value still shows. File content, diff content, and the terminal hide no
+  value.
   The mark does not keep a value from the agent or from a member with a
   terminal, because each sandbox gets every env var.
+- Risk: the runner does not hide secret values. So its saved events on the
+  disk of the sandbox can hold them, as the agent sessions there do.
 
 ## Agent logins
 

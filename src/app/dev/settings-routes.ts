@@ -16,28 +16,35 @@ import {
 } from './router'
 import type { OrgState } from './state'
 
+/** A set without a mark replaces only the value, and keeps the mark. */
 type EnvChange =
-  | { operation: 'set' | 'classify'; name: string; secret: boolean }
+  | { operation: 'set'; name: string; secret?: boolean }
+  | { operation: 'classify'; name: string; secret: boolean }
   | { operation: 'remove'; name: string }
 
 /**
  * A change of an env var. A set sends a value, which the fake drops. As in
- * the Worker, a value is secret unless the change says `false`.
+ * the Worker, a mark is secret unless the change says `false`.
  */
 function readEnvChange(value: unknown): EnvChange {
   const change = record(value, 'env var')
   const name = requiredText(change, 'name')
   const operation = choice(change, 'operation', ['set', 'classify', 'remove'])
   if (operation === 'remove') return { operation, name }
-  if (operation === 'set') text(change, 'value')
-  return { operation, name, secret: change.secret !== false }
+  const secret = change.secret !== false
+  if (operation === 'classify') return { operation, name, secret }
+  text(change, 'value')
+  return change.secret === undefined
+    ? { operation, name }
+    : { operation, name, secret }
 }
 
 type EnvVars = OrgState['settings']['envVars']
 
 /**
- * The variables after one change. A set adds a new name at the end, and
- * a classify of a missing name changes nothing.
+ * The variables after one change. A set adds a new name at the end, which
+ * starts secret when the set has no mark. A set without a mark keeps the
+ * mark of a known name. A classify of a missing name changes nothing.
  */
 function applyEnvChange(vars: EnvVars, change: EnvChange): EnvVars {
   if (change.operation === 'remove') {
@@ -45,10 +52,12 @@ function applyEnvChange(vars: EnvVars, change: EnvChange): EnvVars {
   }
   const known = vars.some((item) => item.name === change.name)
   if (change.operation === 'set' && !known) {
-    return [...vars, { name: change.name, secret: change.secret }]
+    return [...vars, { name: change.name, secret: change.secret ?? true }]
   }
   return vars.map((item) =>
-    item.name === change.name ? { ...item, secret: change.secret } : item,
+    item.name === change.name
+      ? { ...item, secret: change.secret ?? item.secret }
+      : item,
   )
 }
 

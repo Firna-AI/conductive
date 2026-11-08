@@ -10,7 +10,6 @@ it('loads runner settings without a computer server URL', () => {
     CONDUCTIVE_REPOSITORY: '/repo',
     CONDUCTIVE_DEFAULT_BRANCH: 'main',
     CONDUCTIVE_HOME: '/private-agent-home',
-    CONDUCTIVE_OUTPUT_SECRETS: '["org-private","a","1"]',
   }
   expect(() => configuration(env)).not.toThrow()
   expect(configuration(env)).toEqual({
@@ -22,11 +21,6 @@ it('loads runner settings without a computer server URL', () => {
     cwd: '/repo',
     home: '/private-agent-home',
     defaultBranch: 'main',
-    outputSecrets: ['org-private', 'a', '1'],
     statePath: '/private-agent-home/.conductive/runner-state.json',
   })
-  expect(
-    configuration({ ...env, CONDUCTIVE_OUTPUT_SECRETS: undefined })
-      .outputSecrets,
-  ).toEqual([])
 })

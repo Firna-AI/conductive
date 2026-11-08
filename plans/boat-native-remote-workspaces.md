@@ -7289,6 +7289,57 @@ Evidence: `.context/milestone-15r/ui-report.md`,
 `.context/milestone-15r/docs-report.md`, and
 `.context/milestone-15r/check.log`.
 
+Review round 1 fixes, selected by the user on 8 November 2026:
+
+- [x] Apply C of finding 1: make the workspace object filter marked env
+      values from the current start capture. Share the field policy,
+      sanitizer, and event bounds with the runner. Keep held text through
+      confirmed receipts. Remove the runner's private org-value list.
+      Update the access protocol and Privacy page for central filtering
+      and the possible raw copy on a computer's disk. Prove the fix with
+      an older runner that has no list.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+- [x] Apply D of finding 2: make a value-only replacement preserve the
+      stored mark inside the settings compare-and-swap loop. Let Change
+      send `set` without a mark. Let Add keep its explicit mark. Keep
+      browser pending state as it is. Prove the atomic setting and the
+      Cancel/reopen request sequence.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+- [x] Apply A of finding 3, selected as decision 145 on 8 November 2026:
+      keep real paths for reads, diffs, keys, joins, and provider fallback.
+      Mask separate screen labels through the one shared field policy.
+      State path exposure in the access protocol and Privacy page with
+      `(decision 145)`. Prove a reported file opens when its path holds a
+      marked value, and two formerly colliding paths stay distinct.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+
+Design calls for this fix round:
+
+- Use `set` without a mark for a value-only replacement. Reason: Add
+  already supplies a mark, and old clients can keep the stored mark too.
+- Keep pending output encrypted beside the raw receipt cursor. Reason:
+  a confirmed prefix must survive a reconnect without storing raw secrets.
+- Keep transport and shape checks before typed filtering. Filter before
+  semantic checks and storage, then apply the existing byte bounds again.
+  Reason: input needs a known shape, and redaction can increase its size.
+- Keep operational paths and references separate from optional display
+  labels. Reason: old records remain readable, and masks cannot change
+  file identity or the arguments of operations.
+- Keep earlier omission counts when applying the existing bounds again.
+  Reason: an older runner has already removed those bytes and files.
+- Show "File" while no display label is known. Reason: a raw route path
+  can hold a marked value, and the browser has no list to mask it.
+- Keep existing server labels during a folder move until entry updates
+  supply new labels. Reason: joining safe pieces can form a secret value.
+- Treat an empty optional label as absent in the shared filter. Reason:
+  browser readers drop it, so it must not bypass label masking.
+- Do not guess paths that old records already replaced with a marker.
+  Reason: that change lost information. Fresh reports can supply real
+  paths when an updated source is available.
+
+Fix evidence: `.context/milestone-15r/fix-round-1/` and
+`.context/reviews/conductor/boat-native-remote-workspaces-milestone-15r/findings.md`.
+
 ## Milestone 8r: Chat write follow-ups
 
 Depends on: 8p, 8q. They change the chat path and the chat client that

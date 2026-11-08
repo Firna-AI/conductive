@@ -74,7 +74,14 @@ function joinReport(
     invalid()
   return {
     type: first.type,
-    changes: { baseBranch: first.changes.baseBranch, summary, files },
+    changes: {
+      baseBranch: first.changes.baseBranch,
+      ...(first.changes.displayBaseBranch === undefined
+        ? {}
+        : { displayBaseBranch: first.changes.displayBaseBranch }),
+      summary,
+      files,
+    },
   }
 }
 

@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import { OutputSanitizer } from './output-sanitizer'
+import { OutputSanitizer } from '../../src/shared/output-sanitizer'
 
 it('masks a secret that starts with the marker across deltas and preserves a standalone marker', () => {
   const output = new OutputSanitizer()

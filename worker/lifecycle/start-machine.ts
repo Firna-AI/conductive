@@ -15,7 +15,7 @@ import {
 } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
 import { workspaceEnvironmentSettings } from './settings-data'
-import { environmentSecrets, environmentValues } from './org-environment'
+import { environmentValues } from './org-environment'
 import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
 import { WorkspaceStartError } from './workspace-start'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
@@ -67,9 +67,6 @@ export async function advanceStartMachine(
       ),
       CONDUCTIVE_TURN_ID: '',
       CONDUCTIVE_DISK_KEEPALIVE: '0',
-      CONDUCTIVE_OUTPUT_SECRETS: JSON.stringify(
-        environmentSecrets(environment),
-      ),
     }
     await endpoint.lifecycleStep(
       job.kind === 'create' ? 'image' : 'disk',

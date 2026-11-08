@@ -47,6 +47,10 @@ export async function createRunnerLimitsFixture() {
   let connectionSequence = 0
   let store = new ChatStore(storage, () => 25)
   const dependencies: ChatDependencies = {
+    filterRunnerOutput: async (_transaction, _workspace, input) => ({
+      events: [input],
+      save: async () => undefined,
+    }),
     runnerAttached: () => undefined,
     runnerDetached: () => undefined,
     waitUntil: (promise) => {

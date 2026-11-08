@@ -55,10 +55,13 @@ These facts belong to this implementation, not to the protocol docs.
   input. Only a `turn` command starts a turn. A `message` command reaches
   only the running turn that it names. Others get only a local warning. An
   idle `model` command only saves the choice, and the next turn applies it.
-- One output filter replaces marked org env values, the workspace token,
-  and known logins in displayed output with `[redacted]`. It loads the org
-  values before the first file scan. It holds possible secret prefixes
-  across text events. It keeps protocol fields and IDs unchanged.
+- The shared output filter replaces the workspace token and known logins
+  in displayed text with `[redacted]`. It holds possible secret prefixes
+  across answer events. It keeps real file paths and base branches for
+  operations, and masks their separate display labels. The workspace
+  object filters marked org env values before it stores or sends events.
+  The runner receives no private list of org env values. Its local state
+  can therefore hold those values, as agent sessions can.
 - Claude text joins across SDK frames and text blocks until `message_stop`,
   or else the next `message_start`, a tool result, or the result. So a split
   login stays in one filtered message, and partial text still streams live.
@@ -220,11 +223,13 @@ tools that time the first agent start after a resume.
 
 - `src/main.ts` and `src/config.ts`: the service entry point, the variables
   and their defaults, the state file, and the reconnect after each drop.
-- `src/runner.ts`, `src/output-sanitizer.ts`, and `src/output-fields.ts`: `Runner` joins the
-  connection, the agents, the file reports, and the report requests. The
-  shared output filter removes known secrets from complete and streamed text
-  before each save.
-- `src/event-limits.ts`: byte accounting and tool and turn-summary caps.
+- `src/runner.ts`: `Runner` joins the connection, agents, file reports,
+  and report requests.
+- [`OutputSanitizer`](../src/shared/output-sanitizer.ts) and the
+  [output field policy](../src/shared/output-fields.ts): the one filter
+  shared with the Worker. The runner supplies tokens and logins.
+- [`event-limits.ts`](../src/shared/event-limits.ts): portable UTF-8 byte
+  accounting and the shared tool and turn-summary caps.
 - `src/file-parts.ts`: full report parts and bounded tree deltas.
 - `src/file-updates.ts`: the full tree or the tree delta of each scan, and
   the check for a new changes report.

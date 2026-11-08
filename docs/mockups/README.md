@@ -101,6 +101,12 @@ both.
 `app/org-settings/cloud-computer`, its `add-variable` and `change-value`
 pages, and its `member` page show them.
 
+A file path can hold a secret value. The lists, the tabs, the page
+headers, and the files of a finished turn then show "[redacted]" in place
+of the value, and each file still opens by its real path. A tab whose file
+name the app does not know shows "File". The `paths` state of the
+workspace screen draws them, as `app/chat/masked-paths` shows.
+
 ## Logins
 
 [Logins](orgs-and-logins.md#logins) gives the agent logins of the account,

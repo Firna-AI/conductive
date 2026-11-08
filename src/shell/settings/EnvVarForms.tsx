@@ -16,55 +16,57 @@ import { ActionButton, IconButton } from '../ui/actions'
 import { MarkSwitch, useMark, type EnvVar } from './EnvVarMark'
 
 /**
- * Saves the value of a variable with its Secret mark through a secret
- * form, and closes the form after the save. The value leaves the browser
- * once and never comes back. A failed save shows its message under the
- * field. A refusal because the org is suspended also ends the permission,
- * so the form closes, and a toast shows the message instead.
+ * The value of a variable through a secret form. `save` sends the typed
+ * value with the write of its caller, and closes the form after the save.
+ * The value leaves the browser once and never comes back. A failed save
+ * shows its message under the field. A refusal because the org is
+ * suspended also ends the permission, so the form closes, and a toast
+ * shows the message instead.
  */
-function useValueForm(computer: ComputerModel, close: () => void) {
+function useValueForm(close: () => void) {
   // The value goes out as typed: it may be empty, and its spaces stay.
   const [form] = useState(() => new SecretForm({ raw: true }))
   const value = useStore(form.value)
   const state = useStore(form.state)
   const { toast } = useToast()
-  const save = (name: string, secret: boolean) => {
-    void form
-      .submit((typed) => computer.setEnvVar(name, typed, secret))
-      .then((saved) => {
-        if (saved) {
-          close()
-          return
-        }
-        const { error } = form.state.get()
-        if (error && isOrgRefusal(error)) {
-          toast({
-            title: `${name} was not saved`,
-            description: error.message,
-            tone: 'error',
-          })
-        }
-      })
+  const save = (name: string, write: (value: string) => Promise<void>) => {
+    void form.submit(write).then((saved) => {
+      if (saved) {
+        close()
+        return
+      }
+      const { error } = form.state.get()
+      if (error && isOrgRefusal(error)) {
+        toast({
+          title: `${name} was not saved`,
+          description: error.message,
+          tone: 'error',
+        })
+      }
+    })
   }
   return { form, value, state, save }
 }
 
 /**
- * A new value for a variable, in its row, with Save and Cancel. The new
- * value keeps the saved mark, and the Secret switch stays in the row. A
- * write of the mark holds Save, and a save of the value holds the switch.
+ * A new value for a variable, in its row, with Save and Cancel. The save
+ * sends no mark, so the Worker keeps the stored mark, also a mark that a
+ * save of the switch changed after this row opened. The Secret switch
+ * stays in the row. A write of the mark holds Save, and a save of the
+ * value holds the switch.
  */
 export function ChangeValueRow(props: {
   item: EnvVar
   computer: ComputerModel
   close: () => void
 }) {
-  const { item } = props
+  const { item, computer } = props
   const { field } = useControlSizes()
-  const mark = useMark(props.computer, item)
-  const { form, value, state, save } = useValueForm(props.computer, props.close)
+  const mark = useMark(computer, item)
+  const { form, value, state, save } = useValueForm(props.close)
   const submit = () => {
-    if (!mark.pending) save(item.name, item.secret)
+    if (mark.pending) return
+    save(item.name, (typed) => computer.replaceEnvVar(item.name, typed))
   }
   return (
     <li className={classes(styles.row, styles.editable, styles.changing)}>
@@ -113,10 +115,12 @@ export function AddVariableForm(props: {
   const { field } = useControlSizes()
   const [name, setName] = useState('')
   const [secret, setSecret] = useState(true)
-  const { form, value, state, save } = useValueForm(props.computer, props.close)
-  const ready = name.trim() !== ''
+  const { form, value, state, save } = useValueForm(props.close)
+  const added = name.trim()
+  const ready = added !== ''
   const add = () => {
-    if (ready) save(name.trim(), secret)
+    if (!ready) return
+    save(added, (typed) => props.computer.setEnvVar(added, typed, secret))
   }
   return (
     <>

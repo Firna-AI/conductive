@@ -6,8 +6,8 @@ import { wireFixture } from '../test-support/wire'
 import { configuration } from './config'
 import { Runner } from './runner'
 
-it('masks marked values before initial reports and keeps short-secret output and metadata valid', async () => {
-  const h = await wireFixture(reportSnapshot(['org-private.production']))
+it('masks the workspace token before reports and preserves output metadata', async () => {
+  const h = await wireFixture(reportSnapshot(['wire-token.production']))
   h.endpoint.confirmEvents = false
   const runner = new Runner({
     ...h.options,
@@ -18,7 +18,6 @@ it('masks marked values before initial reports and keeps short-secret output and
       CONDUCTIVE_REPOSITORY: '/repo',
       CONDUCTIVE_DEFAULT_BRANCH: 'main',
       CONDUCTIVE_HOME: '/home/agent',
-      CONDUCTIVE_OUTPUT_SECRETS: '["org-private","a","1"]',
     }),
   })
   onTestFinished(() => runner.close())
@@ -32,7 +31,8 @@ it('masks marked values before initial reports and keeps short-secret output and
         partCount: 1,
         entries: [
           {
-            path: '[redacted].production',
+            path: 'wire-token.production',
+            displayPath: '[redacted].production',
             name: 'file',
             kind: 'file',
             change: 'untracked',
@@ -46,10 +46,11 @@ it('masks marked values before initial reports and keeps short-secret output and
         revision: 1,
         partNumber: 1,
         partCount: 1,
-        baseBranch: 'm[redacted]in',
+        baseBranch: 'main',
         files: [
           {
-            path: '[redacted].production',
+            path: 'wire-token.production',
+            displayPath: '[redacted].production',
             change: 'untracked',
             added: 1,
             removed: 0,
@@ -72,17 +73,17 @@ it('masks marked values before initial reports and keeps short-secret output and
     messageIds: ['message-1'],
   })
   const provider = h.providers.latest
-  provider.emit({ type: 'delta', messageId: 'answer-a1', text: 'org-' })
+  provider.emit({ type: 'delta', messageId: 'answer-a1', text: 'wire-' })
   await runner.idle()
   provider.emit({
     type: 'delta',
     messageId: 'answer-a1',
-    text: 'private production a 1',
+    text: 'token production a 1',
   })
   provider.emit({
     type: 'answer',
     messageId: 'answer-a1',
-    text: 'org-private production a 1',
+    text: 'wire-token production a 1',
     userMessageIds: ['message-1'],
   })
   provider.emit({
@@ -90,8 +91,8 @@ it('masks marked values before initial reports and keeps short-secret output and
     tool: {
       id: 'tool-a1',
       kind: 'read',
-      target: 'org-private production a 1',
-      detail: 'org-private production a 1',
+      target: 'wire-token production a 1',
+      detail: 'wire-token production a 1',
       omittedDetailBytes: 0,
       state: 'done',
     },
@@ -99,10 +100,10 @@ it('masks marked values before initial reports and keeps short-secret output and
   provider.emit({
     type: 'failed',
     code: 'failure-a1',
-    message: 'org-private production a 1',
+    message: 'wire-token production a 1',
   })
   await runner.idle()
-  const text = '[redacted] production [redacted] [redacted]'
+  const text = '[redacted] production a 1'
   expect(h.endpoint.runnerEvents.slice(4).map(({ event }) => event)).toEqual([
     {
       type: 'assistant.delta',
@@ -168,7 +169,5 @@ it('masks marked values before initial reports and keeps short-secret output and
   expect(h.endpoint.runnerEvents.slice(-2).map(({ event }) => event)).toEqual(
     retained,
   )
-  expect(JSON.stringify(await h.storage.read())).not.toContain('org-private')
-  expect(JSON.stringify(h.endpoint.received)).not.toContain('org-private')
   expect(h.warnings).toEqual([])
 })

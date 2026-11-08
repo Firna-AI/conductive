@@ -1,25 +1,84 @@
 import type {
   ChangedFile,
+  ChangesResponse,
+  DiffResponse,
   FileEntry,
+  FileResponse,
+  FileTreeResponse,
   RunnerFileEvent,
-} from '../../src/shared/files'
-import type { RunnerEvent } from '../../src/shared/runner'
-import type { RetainedReport } from './report-state'
+} from './files'
+import type { RunnerEvent } from './runner'
 
 type FilterText = (value: string) => string
 
+function pathLabel<T extends { path: string; displayPath?: string }>(
+  value: T,
+  text: FilterText,
+): T {
+  const displayPath = text(value.displayPath || value.path)
+  return displayPath === value.path && value.displayPath === undefined
+    ? value
+    : { ...value, displayPath }
+}
+
+function baseLabel<
+  T extends { baseBranch: string; displayBaseBranch?: string },
+>(value: T, text: FilterText): T {
+  const displayBaseBranch = text(value.displayBaseBranch || value.baseBranch)
+  return displayBaseBranch === value.baseBranch &&
+    value.displayBaseBranch === undefined
+    ? value
+    : { ...value, displayBaseBranch }
+}
+
 function fileEntry(entry: FileEntry, text: FilterText): FileEntry {
-  return { ...entry, path: text(entry.path), name: text(entry.name) }
+  return { ...pathLabel(entry, text), name: text(entry.name) }
 }
 
 function changedFile<T extends ChangedFile>(file: T, text: FilterText): T {
+  const result = pathLabel(file, text)
+  if (file.previousPath === undefined) return result
+  const previousDisplayPath = text(
+    file.previousDisplayPath || file.previousPath,
+  )
+  return previousDisplayPath === file.previousPath &&
+    file.previousDisplayPath === undefined
+    ? result
+    : { ...result, previousDisplayPath }
+}
+
+export function filterTree<T extends FileTreeResponse>(
+  tree: T,
+  text: FilterText,
+): T {
   return {
-    ...file,
-    path: text(file.path),
-    ...(file.previousPath === undefined
-      ? {}
-      : { previousPath: text(file.previousPath) }),
+    ...tree,
+    entries: tree.entries.map((entry) => fileEntry(entry, text)),
   }
+}
+
+export function filterChanges<T extends ChangesResponse>(
+  changes: T,
+  text: FilterText,
+): T {
+  return {
+    ...baseLabel(changes, text),
+    files: changes.files.map((file) => changedFile(file, text)),
+  }
+}
+
+export function filterFileResponse(
+  file: FileResponse,
+  text: FilterText,
+): FileResponse {
+  return pathLabel(file, text)
+}
+
+export function filterDiffResponse(
+  diff: DiffResponse,
+  text: FilterText,
+): DiffResponse {
+  return baseLabel(pathLabel(diff, text), text)
 }
 
 export function filterFileReport(
@@ -29,10 +88,7 @@ export function filterFileReport(
   if (event.type === 'files.snapshot')
     return {
       ...event,
-      tree: {
-        ...event.tree,
-        entries: event.tree.entries.map((entry) => fileEntry(entry, text)),
-      },
+      tree: filterTree(event.tree, text),
     }
   if (event.type === 'files.changed')
     return {
@@ -40,12 +96,10 @@ export function filterFileReport(
       delta: {
         ...event.delta,
         changes: event.delta.changes.map((change) => {
-          if (change.operation === 'remove')
-            return { ...change, path: text(change.path) }
+          if (change.operation === 'remove') return change
           if (change.operation === 'move')
             return {
               ...change,
-              previousPath: text(change.previousPath),
               entry: fileEntry(change.entry, text),
             }
           return { ...change, entry: fileEntry(change.entry, text) }
@@ -55,11 +109,7 @@ export function filterFileReport(
   if (event.type === 'changes.updated')
     return {
       ...event,
-      changes: {
-        ...event.changes,
-        baseBranch: text(event.changes.baseBranch),
-        files: event.changes.files.map((file) => changedFile(file, text)),
-      },
+      changes: filterChanges(event.changes, text),
     }
   return event
 }
@@ -119,3 +169,7 @@ export function filterOutput(
     }
   return event
 }
+type RetainedReport = Extract<
+  RunnerEvent,
+  { type: 'start.updated' | 'workspace.title' }
+>

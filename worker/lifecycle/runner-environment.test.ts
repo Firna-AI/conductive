@@ -78,7 +78,6 @@ it('supplies each start its repository branch and encrypted org settings without
     env: {
       CONDUCTIVE_DEFAULT_BRANCH: 'release-main',
       ORG_SECRET: initialSecret,
-      CONDUCTIVE_OUTPUT_SECRETS: JSON.stringify([initialSecret]),
     },
   })
   expect(JSON.stringify(created)).not.toContain(initialSecret)
@@ -114,7 +113,6 @@ it('supplies each start its repository branch and encrypted org settings without
       PUBLIC_MODE: 'production',
       PUBLIC_FLAG: '1',
       SHORT_SECRET: 'a',
-      CONDUCTIVE_OUTPUT_SECRETS: JSON.stringify([resumedSecret, 'a']),
       CONDUCTIVE_DISK_KEEPALIVE: '0',
     },
   })
@@ -151,7 +149,6 @@ it('supplies each start its repository branch and encrypted org settings without
     env: {
       CONDUCTIVE_DEFAULT_BRANCH: 'resume-main',
       ORG_SECRET: retentionSecret,
-      CONDUCTIVE_OUTPUT_SECRETS: JSON.stringify([retentionSecret, 'a']),
       CONDUCTIVE_DISK_KEEPALIVE: '1',
     },
   })
