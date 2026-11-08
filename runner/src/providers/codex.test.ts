@@ -1,9 +1,12 @@
-import { expect, it, onTestFinished } from 'vitest'
+import { beforeEach, expect, it, onTestFinished } from 'vitest'
 
 import { FakeAppServers } from '../../test-support/app-server'
+import { mockComputerServer } from '../../test-support/computer-mcp'
 import { runnerHarness, turn } from '../../test-support/harness'
 import { Runner } from '../runner'
 import { createCodexFactory } from './codex'
+
+beforeEach(mockComputerServer)
 
 it('streams App Server partial text and sends steer, model, and interrupt controls', async () => {
   const h = await runnerHarness()
@@ -29,7 +32,10 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     'cli_auth_credentials_store="ephemeral"',
   )
   expect(servers.requests[0].args).toContain(
-    'mcp_servers.computer.url="http://computer.test/mcp"',
+    'mcp_servers.computer.command="/fake/platform/computer-server"',
+  )
+  expect(servers.requests[0].args).toContain(
+    'mcp_servers.computer.args=["--socket","/run/test-computer.sock"]',
   )
   expect(JSON.stringify(servers.requests[0].args)).not.toContain('secret-alice')
   server.notify('item/agentMessage/delta', {
@@ -223,11 +229,11 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
   const direct = await createCodexFactory(servers.start)({
     cwd: h.root,
     home: h.home,
-    computerMcpUrl: h.options.computerMcpUrl,
     login: turn('close', 'bob', 'codex').login,
     choice: { agent: 'codex', model: 'test-model', effort: 'high' },
     conversationId: null,
     event: () => {},
+    warn: h.options.warn,
   })
   const closing = servers.latest
   const order: string[] = []

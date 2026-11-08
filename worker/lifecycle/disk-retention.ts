@@ -9,7 +9,11 @@ import {
 } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
 import { workspaceStartupCommand } from './image-software'
-import { readImageSettings, workspaceEnvironment } from './settings-data'
+import {
+  readImageSettings,
+  workspaceEnvironment,
+  workspaceRepository,
+} from './settings-data'
 import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
 import { readRetention, setRetention, clearRetention } from './retention-data'
 import {
@@ -56,6 +60,11 @@ export async function keepWorkspaceDisk(
         context.dependencies.now(),
       )
       const environment = await workspaceEnvironment(env, orgId)
+      const repository = await workspaceRepository(
+        env.DB,
+        orgId,
+        row.repositoryId,
+      )
       const token = await readWorkspaceToken(env, workspaceId)
       const locations = await workspaceRepositoryLocations(env.DB, workspaceId)
       await provider.resume(
@@ -66,6 +75,7 @@ export async function keepWorkspaceDisk(
           WORKSPACE_TOKEN: token,
           CONDUCTIVE_WORKSPACE_ID: workspaceId,
           CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
+          CONDUCTIVE_DEFAULT_BRANCH: repository.defaultBranch,
           CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
             locations,
             row.repositoryId,

@@ -45,7 +45,6 @@ export interface SessionRuntime {
 export interface EngineOptions {
   cwd: string
   home: string
-  computerMcpUrl: string
   providers: Record<Agent, ProviderFactory>
   store: EventStore
   now: () => number
@@ -93,11 +92,11 @@ export async function startProvider(
       options.providers[session.agent]({
         cwd: options.cwd,
         home: options.home,
-        computerMcpUrl: options.computerMcpUrl,
         login: turn.first.login,
         choice: session.choice,
         conversationId: session.conversationId,
         event,
+        warn: options.warn,
         signal,
         lifetime,
       }),

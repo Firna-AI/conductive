@@ -45,16 +45,21 @@ export class TurnLifecycle {
   }
 
   async canDispatch(command: PendingCommand): Promise<boolean> {
-    if (command.type === 'model') return true
+    if (command.type === 'model') {
+      const active = this.session.activeTurnId
+        ? await this.transaction.turn(this.session.activeTurnId)
+        : undefined
+      return active?.state !== 'queued'
+    }
     if (
       this.session.closedAt !== null ||
       this.session.activeTurnId !== command.turnId
     )
       return false
     const turn = await this.transaction.turn(command.turnId)
-    return command.type === 'interrupt'
-      ? turn?.state === 'stopping'
-      : turn?.state === 'queued' || turn?.state === 'running'
+    if (command.type === 'interrupt') return turn?.state === 'stopping'
+    if (command.type === 'message') return turn?.state === 'running'
+    return turn?.state === 'queued' || turn?.state === 'running'
   }
 
   async finish(turn: StoredTurn, end: TurnEnd): Promise<void> {

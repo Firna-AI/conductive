@@ -39,11 +39,11 @@ export interface ProviderProcess {
 export interface ProviderOptions {
   cwd: string
   home: string
-  computerMcpUrl: string
   login: RunnerLogin
   choice: AgentChoice
   conversationId: string | null
   event: (event: ProviderEvent) => void
+  warn: (message: string) => void
   signal?: AbortSignal
   lifetime?: ProviderLifetime
 }

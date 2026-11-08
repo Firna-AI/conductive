@@ -1,7 +1,7 @@
 import type { DeviceCommandRecord } from '../../src/shared/device'
 import type { Workspace, WorkspaceState } from '../../src/shared/workspaces'
 import type { WorkspaceChat } from '../chat/backend'
-import type { ChatStorage } from '../chat/types'
+import type { ChatStorage, ChatCallbackPublisher } from '../chat/types'
 import type { AppEnv } from '../env'
 import {
   readDeviceWorkspace,
@@ -13,14 +13,56 @@ const INPUT_KEY = 'devices:v1:input-state'
 interface InputState {
   previous: WorkspaceState
 }
-/** A conditional restore cannot replace a later lifecycle state. */
+export type DeviceStateProjection = (
+  request: DeviceCommandRecord,
+  now: number,
+  publish: ChatCallbackPublisher,
+) => Promise<boolean>
+
+/** Device changes join the same state-write owner as lifecycle changes. */
 export async function publishDeviceState(
   storage: ChatStorage,
   chat: WorkspaceChat,
   env: AppEnv,
   request: DeviceCommandRecord,
-  waiting: boolean,
+  readWaiting: () => Promise<boolean>,
   now = Date.now(),
+  projection?: DeviceStateProjection,
+): Promise<void> {
+  return chat.authorizedWorkspaceOperation(
+    request.workspaceId,
+    async () => undefined,
+    async (operation) => {
+      const publish: ChatCallbackPublisher = async (event, occurredAt) => {
+        await operation.change((transaction) =>
+          transaction.emit(event, occurredAt),
+        )
+      }
+      if (projection && (await projection(request, now, publish))) {
+        await storage.delete(INPUT_KEY)
+        return
+      }
+      await publishFallback(
+        storage,
+        chat,
+        env,
+        request,
+        await readWaiting(),
+        now,
+        publish,
+      )
+    },
+  )
+}
+
+async function publishFallback(
+  storage: ChatStorage,
+  chat: WorkspaceChat,
+  env: AppEnv,
+  request: DeviceCommandRecord,
+  waiting: boolean,
+  now: number,
+  publish: ChatCallbackPublisher,
 ): Promise<void> {
   let row = await readDeviceWorkspace(env.DB, request.workspaceId)
   if (!row) return
@@ -38,10 +80,8 @@ export async function publishDeviceState(
     await storage.delete(INPUT_KEY)
   }
   row = await readDeviceWorkspace(env.DB, request.workspaceId)
-  const session = await chat.store.run(() =>
-    chat.store.read(request.workspaceId, (view) =>
-      view.session(request.sessionId),
-    ),
+  const session = await chat.store.read(request.workspaceId, (view) =>
+    view.session(request.sessionId),
   )
   if (!row || !session) return
   const workspace: Workspace = {
@@ -63,8 +103,7 @@ export async function publishDeviceState(
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,
   }
-  await chat.appendWorkspaceEvent(
-    request.workspaceId,
+  await publish(
     {
       type: 'workspace.updated',
       workspace,

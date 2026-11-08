@@ -1,8 +1,8 @@
+import { ApiError } from '../../app/api/client'
 import type {
   DeviceApprovalAction,
   DeviceCommandRecord,
 } from '../../shared/device'
-import { ChatApiError } from '../api/client'
 import type { ChatSnapshot } from '../state/chat-snapshot'
 import { showNotice, type ChatContext } from '../state/context'
 import type { DeviceApi } from './device-api'
@@ -140,7 +140,7 @@ export async function answerCommand(
     context.store.update((snapshot) =>
       withDevices(snapshot, (current) => withoutAnswer(current, requestId)),
     )
-    const pending = error instanceof ChatApiError && error.code === NOT_PENDING
+    const pending = error instanceof ApiError && error.code === NOT_PENDING
     if (!pending) {
       showNotice(
         context,

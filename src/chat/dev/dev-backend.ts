@@ -1,3 +1,4 @@
+import { createApiClient } from '../../app/api/client'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import type { Session } from '../../shared/sessions'
 import { sessionsPath } from '../../shared/sessions'
@@ -16,11 +17,7 @@ import {
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { recordedChatEvents } from '../../test-support/recorded-chat'
 import { recordedFileEvents } from '../../test-support/recorded-files'
-import {
-  createChatApi,
-  type FetchLike,
-  type WorkspaceTarget,
-} from '../api/client'
+import { createChatApi, type WorkspaceTarget } from '../api/client'
 import { endsTurn } from '../state/known-turns'
 import type { Clock } from '../ui/clock'
 import { DevAgent } from './dev-agent'
@@ -108,7 +105,7 @@ export class DevBackend {
       options.workspace === 'new' ? NEW_WORKSPACE : FAKE_IDS.workspace
     const target = { orgId: org, workspaceId }
     const claudeLogin = writeReaderLogin(server, options)
-    const api = createChatApi(server.fetch, target)
+    const api = createChatApi(createApiClient(server.fetch), target)
     const [detail, listed, view] = await Promise.all([
       api.workspace(),
       api.sessions(),
@@ -172,7 +169,10 @@ export class DevBackend {
     return backend
   }
 
-  readonly fetch: FetchLike = async (input, init) => {
+  readonly fetch = async (
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> => {
     const request =
       input instanceof Request
         ? new Request(input, init)
@@ -182,6 +182,9 @@ export class DevBackend {
       (await handleWrite(this, request))
     return written ?? this.server.fetch(request)
   }
+
+  /** The JSON client of the page, over its fake API, as the app gives one. */
+  readonly client = createApiClient(this.fetch)
 
   /** Keeps the messages, the queued ones, and the running turn of the recorded chat. */
   private note(events: readonly WorkspaceEvent[]): void {

@@ -4,6 +4,7 @@ import runtimeInstall from '../../image/install-runtime.sh?raw'
 import installScript from '../../image/install.sh?raw'
 import runnerService from '../../image/conductive-runner.service?raw'
 import runnerStart from '../../image/runner-start.sh?raw'
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { HttpError, isRecord } from '../http'
 import { terminalInstallCommand } from '../terminal/service'
 import { shellQuote, writeFileCommand } from './commands'
@@ -58,7 +59,10 @@ export function installImageSoftware(artifact: ImageSoftwareArtifact): string {
   const files: Readonly<Record<string, string>> = {
     'install.sh': installScript,
     'install-runtime.sh': runtimeInstall,
-    'runner-start.sh': runnerStart,
+    'runner-start.sh': runnerStart.replaceAll(
+      '@RUNNER_PATH@',
+      MACHINE_PATHS.runner,
+    ),
     'git-credential-helper.sh': credentialStart,
     'git-credential-helper.mjs': credentialScript,
     'conductive-runner.service': runnerService,

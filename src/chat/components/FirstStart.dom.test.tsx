@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+import { createApiClient } from '../../app/api/client'
 import type { WorkspaceEvent } from '../../shared/events'
 import { sessionPaths } from '../../shared/sessions'
 import { workspacePath, type WorkspaceState } from '../../shared/workspaces'
@@ -67,7 +68,7 @@ describe('the composer during the first start of a new workspace', () => {
       )
     await mount(
       <WorkspaceChat
-        fetch={server.fetch}
+        client={createApiClient(server.fetch)}
         orgId={org}
         subscribe={subscribe}
         viewport="desktop"

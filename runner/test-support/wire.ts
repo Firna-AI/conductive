@@ -76,7 +76,6 @@ export async function wireFixture(
     cwd: '/repo',
     home: '/home/agent',
     defaultBranch: 'main',
-    computerMcpUrl: 'http://computer.test/mcp',
     providers: { claude: providers.open, codex: providers.open },
     warm: async () => {},
     now: () => 100,

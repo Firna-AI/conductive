@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
+import { createApiClient } from '../../app/api/client'
 import { chatHistoryPath } from '../../shared/events'
 import { sessionPaths, sessionsPath } from '../../shared/sessions'
 import {
@@ -96,7 +97,7 @@ describe('the link of a linked session to its source', () => {
       server.events.subscribe(after, (message) => listener.message(message))
     await mount(
       <WorkspaceChat
-        fetch={server.fetch}
+        client={createApiClient(server.fetch)}
         orgId={org}
         subscribe={subscribe}
         viewport="desktop"
@@ -164,7 +165,7 @@ describe('the link of a linked session to its source', () => {
       server.events.subscribe(after, (item) => listener.message(item))
     await mount(
       <WorkspaceChat
-        fetch={server.fetch}
+        client={createApiClient(server.fetch)}
         orgId={org}
         subscribe={subscribe}
         viewport="desktop"

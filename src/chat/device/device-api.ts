@@ -1,3 +1,4 @@
+import type { ApiClient } from '../../app/api/client'
 import {
   DEVICE_CURRENT_PATH,
   DEVICE_SETTINGS_PATH,
@@ -14,11 +15,7 @@ import {
   readDeviceRecord,
   readDeviceSettingsResponse,
 } from '../../shared/device-read'
-import {
-  requestJson,
-  type FetchLike,
-  type WorkspaceTarget,
-} from '../api/client'
+import type { WorkspaceTarget } from '../api/client'
 import {
   list,
   nullable,
@@ -52,17 +49,14 @@ function pairingOf(pairing: DevicePairing): DevicePairing {
  * The routes of Mac commands. The IDs of a pairing name a connection, and
  * give no access: the Worker checks the session of the window itself.
  */
-export function createDeviceApi(fetch: FetchLike) {
+export function createDeviceApi(client: ApiClient) {
   return {
     commands: (target: WorkspaceTarget) =>
-      requestJson(
-        fetch,
-        'GET',
+      client.get(
         deviceCommandsPath(target.orgId, target.workspaceId),
         readDeviceCommands,
       ),
-    current: () =>
-      requestJson(fetch, 'GET', DEVICE_CURRENT_PATH, readDeviceCurrent),
+    current: () => client.get(DEVICE_CURRENT_PATH, readDeviceCurrent),
     /** The address names the request by its key, which the Worker gives. */
     answer: (
       target: WorkspaceTarget,
@@ -70,30 +64,23 @@ export function createDeviceApi(fetch: FetchLike) {
       pairing: DevicePairing,
       action: DeviceApprovalAction,
     ) =>
-      requestJson(
-        fetch,
+      client.send(
         'POST',
         deviceApprovalPath(target.orgId, target.workspaceId, requestKey),
-        readAccepted,
         { ...pairingOf(pairing), action } satisfies DeviceApprovalRequest,
+        readAccepted,
       ),
     settings: () =>
-      requestJson(
-        fetch,
-        'GET',
-        DEVICE_SETTINGS_PATH,
-        readDeviceSettingsResponse,
-      ),
+      client.get(DEVICE_SETTINGS_PATH, readDeviceSettingsResponse),
     changeSettings: (pairing: DevicePairing, operation: SettingsChange) =>
-      requestJson(
-        fetch,
+      client.send(
         'POST',
         DEVICE_SETTINGS_PATH,
-        readDeviceSettingsResponse,
         {
           ...pairingOf(pairing),
           operation,
         } satisfies DeviceSettingsRequest,
+        readDeviceSettingsResponse,
       ),
   }
 }

@@ -1,6 +1,7 @@
+import { ApiError } from '../../app/api/client'
 import type { Session } from '../../shared/sessions'
 import type { WorkspaceView } from '../../shared/workspace-view'
-import { ChatApiError, type ChatApi, type WorkspaceTarget } from '../api/client'
+import type { ChatApi, WorkspaceTarget } from '../api/client'
 import type { StreamEnvelope } from '../api/read-workspace'
 import type { DeviceChannel } from '../device/device-actions'
 import type { WorkspaceStream } from '../stream/workspace-stream'
@@ -47,6 +48,11 @@ export interface ChatContext {
   readonly saveView: (view: WorkspaceView) => void
   /** The chat is still open. A response that arrives later changes nothing. */
   readonly live: () => boolean
+  /**
+   * App models own the account, the org, the models, and the members, so
+   * the load reads none of them, as `ChatSources` says.
+   */
+  readonly owned: boolean
   /** The routes of Mac commands, and the number of their latest read. */
   readonly devices: DeviceChannel
 }
@@ -62,7 +68,7 @@ export function logOf(context: ChatContext, sessionId: string): SessionLog {
 const RETRY_MESSAGE = 'The request failed. Try again.'
 
 export function messageOf(error: unknown): string {
-  return error instanceof ChatApiError ? error.message : RETRY_MESSAGE
+  return error instanceof ApiError ? error.message : RETRY_MESSAGE
 }
 
 export function showNotice(

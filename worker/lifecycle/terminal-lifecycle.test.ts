@@ -6,7 +6,7 @@ import { setupBackendTests } from './backend-test-hooks'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { DISK_KEEPALIVE_MS } from './durable-types'
 import { stopWorkspaceSandbox } from './workspace-actions'
-import { resumeWorkspace } from './workspace-resume'
+import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 import { createWorkspace } from './workspaces'
 import { lifecycleCommandBody } from './command-test-support'
 

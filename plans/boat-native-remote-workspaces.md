@@ -5702,17 +5702,126 @@ Depends on: 5, 6, 7, 7r, 8, 8j
 
 - [ ] Wire the app shell, the chat screens, the chat backend, and the
       runner together, with a real Boat sandbox.
-- [ ] Keep the chat of each workspace that the tab showed in memory, as
+  - [x] Forward the browser chat routes to the object named by the decoded
+        workspace ID, before the outer browser gate.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Forward the versioned runner route with bearer-token lookup and no
+        browser gate. Test queued dispatch, live output, Stop, and token
+        isolation through the production Worker.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Mount the chat in the workspace screen and use the app's JSON client
+        for chat and Mac command requests. Move the components, development
+        pages, and tests to that client, and remove the chat-only transport.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Add a runner archive packager for the existing URL and SHA-256
+        artifact contract. Include the runtime packages and the measurement
+        tools. Document the external archive supply that a build needs.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Map the sandbox token, repository directory, and machine origin to
+        the runner settings in the staged launcher. Insert the shared
+        runner path and keep build and retention starts idle.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Add one script for the real app and sandbox check and the repeated
+        resume measurements in both placements. Check it with local fake
+        endpoints. Keep the real runs open.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Connect durable first-message admission and the chat/lifecycle hooks.
+        Keep lifecycle publication in the chat event queue, and register
+        trusted turns before dispatch.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Serve the shell boot APIs and the workspace list, view, read, open,
+        create, and resume paths needed by chat.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Load the runner artifact and runtime settings. Document each
+        deployment variable and secret for the first deployment.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Restore the first message of an admitted create when its start
+      fails, through one owner in the sending tab. Preserve attachments,
+      the message ID, newer drafts, and other pending submissions. Retry
+      with a new workspace ID. Check a failure after admission with a
+      leave and return in the production browser journey.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Keep the chat of each workspace that the tab showed in memory, as
       decision 87 says. A return to the workspace shows the chat at once,
       then gets only the events after its last event number. A reload or a
       new tab starts empty.
-- [ ] Test the chat end to end: create a workspace, send a message, stream
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Test the chat end to end: create a workspace, send a message, stream
       the answer, stop and resume, and send again.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Test unread chat writes, the object gate, and stored and live events
+        through the production Worker and real local objects. Add a local
+        browser harness with fake external services.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Apply the checked production review fixes 9 B, 10 D, and 11 A.
+      Authorize GitHub from stored running turns and separate preparation
+      access. Keep commands behind their turn. Test account isolation with
+      two signed-in users.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Apply finding 12 F. Read the sandbox's computer stdio entry for
+      each agent start. Start without computer tools and give one warning
+      when the entry is absent. Remove the obsolete computer URL inputs.
+      Keep the org env filtering and start-log masking rules.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
 - [ ] Measure the first agent start after a resume over several runs,
       with the runner inside and outside the home folder. Keep the faster
       place.
       Moved from Milestone 7r on 6 November 2026, because it needs a real sandbox and real logins.
       Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+
+Agent calls on 7 November 2026:
+
+- Use `AppServices.api` for the chat, its device controls, and their
+  development pages and tests. Reason: the shell already owns that JSON
+  client, and it supplies no separate fetch function.
+- Keep each shown workspace's model, header notices, and chat controller
+  with the tab's app model and signed-in user. Reason: both workspace
+  streams must retain their cursors, and a return must draw before its
+  open request finishes. A sign-out clears the memory.
+- Keep the shell's start card and sandbox bar in the mounted chat. Reason:
+  the shell's start card shows the required step times.
+- Give kept chats the account, org, models, and members from their existing
+  app owners. Reason: same-tab settings changes must reach the kept chat
+  without a history reload or an older independent reply.
+- Use the same private Node for both measurement placements. Move only
+  the runner and its packages. Reason: the comparison changes runner
+  placement while the runtime stays fixed.
+
+Scope update on 7 November 2026: the primary orchestrator chose option A
+and assigned the production chat/lifecycle integration, shell boot APIs,
+runtime configuration, deployment inputs, and read-mark follow-up record
+to this workspace. This is an ownership call, not a new product decision.
+Milestone 15i still owns the other feature screens. Merge Milestones 4f
+and 7w from the primary branch when they land. Keep their current provider
+and sender-login paths until those merges.
+
+The retry rules from primary commit `822f4bc` and the Conductive rename at
+`61ff6d8` are included. The runner route and launcher use the versioned
+machine paths. No real sandbox or measurement run has completed here.
+
+The app-wide Boat account at `ac05a6c` and the private Node runtime at
+`03af6ce` are included. The archive holds the runner and its runtime
+packages. The image installs Node separately. The live measurement uses
+that same Node for both runner placements. Today's sender-login behavior
+stays until Milestone 7w merges.
+
+Primary Milestone 7w is included through `d923fe0`. Each session now uses
+its starter's login. The production admission passes its checked first
+sender to that session factory. The primary registration at `e58c914`
+keeps decision 130 open and records the later 8m recovery work.
+
+Review summary: finding 2 is addressed with app-owned inputs for each
+kept chat. The regression checks preserve the draft, current login and
+default model, org and member data, and both event cursors.
+
+Evidence: `.context/boat-native-remote-workspaces/8i/worker-report.md`,
+`ui-report.md`, `image-report.md`, `docs-report.md`, `scope-gap.md`, and
+`browser-smoke.json` in the same folder.
+Final scoped reports: `worker-final-report.md`, `image-final-report.md`,
+`ui-fix-2-report.md`, and `docs-final-report.md` in that folder.
+Production completion reports are in its `completion/` folder:
+`workspace-report.md`, `boot-api-report.md`, `runtime-report.md`,
+`browser-report.md`, `browser-verified.md`, and `docs-report.md`.
 
 ## Milestone 8m: Chat fixes from the reviews
 
@@ -5783,6 +5892,9 @@ and replay in a new tab.
 
 This milestone needs the prerequisites from the user.
 
+- [ ] Use [the deployment input guide](../docs/deployment.md) for each Worker
+      variable and secret, the public runner archive and digest, and the
+      runtime settings given to each workspace.
 - [ ] Deploy the chat path to the user's Cloudflare account, with GitHub
       sign-in, so that the user can work in Conductive.
 - [ ] Smoke-test it with a real Boat sandbox.

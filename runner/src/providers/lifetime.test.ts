@@ -3,15 +3,18 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { expect, it, onTestFinished, vi } from 'vitest'
+import { beforeEach, expect, it, onTestFinished, vi } from 'vitest'
 
 import { FakeChild } from '../../test-support/child'
 import { FakeClaudeQuery } from '../../test-support/claude-query'
+import { mockComputerServer } from '../../test-support/computer-mcp'
 import { engineFixture } from '../../test-support/engine'
 import { turn } from '../../test-support/harness'
 import { deferred, stop } from '../../test-support/runtime'
 import { createClaudeFactory, type ClaudeQueryFactory } from './claude'
 import { createCodexFactory } from './codex'
+
+beforeEach(mockComputerServer)
 
 vi.mock('node:child_process', async (original) => ({
   ...(await original<typeof import('node:child_process')>()),

@@ -7,7 +7,7 @@ import {
   readWorkspaceToken,
   storeWorkspaceToken,
 } from '../lifecycle/tokens'
-import { resumeWorkspace } from '../lifecycle/workspace-resume'
+import { resumeCompletedWorkspace as resumeWorkspace } from '../lifecycle/completed-resume-test-support'
 import { existingWorkspace, joinedMember } from './suspension-test-support'
 import { suspendUser } from './suspend-user'
 

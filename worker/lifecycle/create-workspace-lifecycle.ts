@@ -3,11 +3,8 @@ import type { AppEnv, AppDependencies } from '../env'
 import { DurableLifecycle } from './durable'
 import type { TurnScopes } from './turns'
 import type { WorkspaceEventJournal } from './durable-journal'
-import {
-  persistLifecycleState,
-  readWorkspace,
-  workspaceView,
-} from './workspace-data'
+import { readWorkspace } from './workspace-data'
+import { WorkspaceStateProjection } from './workspace-state-projection'
 import {
   extendWorkspaceDeadline,
   stopWorkspaceSandbox,
@@ -22,7 +19,7 @@ export function createWorkspaceLifecycle(
   dependencies: AppDependencies,
   turns: TurnScopes,
   journal: WorkspaceEventJournal,
-): DurableLifecycle {
+) {
   const lifecycle: DurableLifecycle = new DurableLifecycle(
     {
       get: (key) => ctx.storage.get('lifecycle', key),
@@ -33,17 +30,10 @@ export function createWorkspaceLifecycle(
     },
     dependencies.now,
     {
-      changed: async (state) => {
-        await persistLifecycleState(env.DB, state, dependencies.now())
-        const row = await readWorkspace(env.DB, state.orgId, state.workspaceId)
-        await journal.publishLifecycle(
-          {
-            workspace: workspaceView(row),
-            start: state.start,
-            error: state.error,
-          },
-          dependencies.now(),
-        )
+      changed: async (state, publish) => {
+        await projection.changed(publish)
+        if (state.state === 'stopped' || state.state === 'error')
+          await ctx.stopped?.(state.workspaceId)
       },
       stop: async () => {
         const result = await stopWorkspaceSandbox(
@@ -79,5 +69,12 @@ export function createWorkspaceLifecycle(
         Boolean(await ctx.storage.get('job', 'lifecycle:start-job')),
     },
   )
-  return lifecycle
+  const projection = new WorkspaceStateProjection({
+    env,
+    dependencies,
+    journal,
+    readLifecycle: () => lifecycle.read(),
+    deviceWaiting: async (id) => (await ctx.deviceWaiting?.(id)) ?? false,
+  })
+  return { lifecycle, projection }
 }

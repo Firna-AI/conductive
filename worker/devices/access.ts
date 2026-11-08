@@ -43,19 +43,8 @@ export async function activeDeviceSender(
   tokenHash: string,
 ): Promise<{ sender: DeviceSender; sessionId: string; workspaceName: string }> {
   return chat.store.run(async () => {
-    const turn = await chat.store.read(workspaceId, (view) => view.turn(turnId))
-    const session = turn
-      ? await chat.store.read(workspaceId, (view) =>
-          view.session(turn.sessionId),
-        )
-      : null
-    if (
-      !turn ||
-      turn.state !== 'running' ||
-      !session ||
-      session.closedAt !== null ||
-      session.activeTurnId !== turn.id
-    )
+    const turn = await activeStoredTurn(chat, workspaceId, turnId)
+    if (!turn)
       throw new HttpError(
         403,
         'calling_turn_required',
@@ -76,8 +65,25 @@ export async function activeDeviceSender(
         'membership_required',
         'The Mac request is not available.',
       )
-    return { sender, sessionId: session.id, workspaceName: workspace.name }
+    return { sender, sessionId: turn.sessionId, workspaceName: workspace.name }
   })
+}
+
+/** The caller holds the chat queue. This read does not enter it again. */
+export async function activeStoredTurn(
+  chat: WorkspaceChat,
+  workspaceId: string,
+  turnId: string,
+) {
+  const turn = await chat.store.read(workspaceId, (view) => view.turn(turnId))
+  const session = turn
+    ? await chat.store.read(workspaceId, (view) => view.session(turn.sessionId))
+    : null
+  return turn?.state === 'running' &&
+    session?.closedAt === null &&
+    session.activeTurnId === turn.id
+    ? turn
+    : null
 }
 export function currentCommandAccess(
   db: D1Database,

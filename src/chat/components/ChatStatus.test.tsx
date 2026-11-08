@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { AgentChoice } from '../../shared/agents'
 import { chatHistoryPath } from '../../shared/events'
 import type { FakeApiServer } from '../../test-support/fake-api'
+import { sessionsPath } from '../../shared/sessions'
 import { workspacePaths, type Workspace } from '../../shared/workspaces'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { recordedChatEvents } from '../../test-support/recorded-chat'
@@ -80,6 +81,18 @@ describe('the workspace record after Resume', () => {
       "The sandbox couldn't start Your files and chat are saved. Try again",
     )
     expect(late.text()).not.toContain('Resuming the sandbox')
+  })
+})
+
+describe('the load status of the chat', () => {
+  it('names a reply that it cannot read with the retry message and Try again', async () => {
+    const { text } = await renderChat({
+      setup: (server) =>
+        server.json('GET', sessionsPath(org, ws), { sessions: 'none' }),
+    })
+    expect(text()).toContain(
+      "The chat didn't load The request failed. Try again. Try again",
+    )
   })
 })
 

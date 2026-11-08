@@ -1,30 +1,24 @@
-import { expect, it } from 'vitest'
+import { beforeAll, expect, it } from 'vitest'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { TOOL_TURN_HEADER } from '../../tools/context'
 import { saveGitHubTokens } from '../security/github-tokens'
 import { TEST_TIME } from '../test-support/harness'
-import { setupBackendTests } from './backend-test-hooks'
-import { FIRST_MESSAGE } from './durable-test-support'
+import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
 import { handleGitCredential } from './machine'
+import { machineCredentialFixture } from './machine-test-support'
 import { readWorkspaceToken } from './tokens'
-import { createCompletedWorkspace } from './completed-creation-test-support'
 
-const backendFixture = setupBackendTests()
+let bundle: string
+beforeAll(async () => {
+  bundle = await outerWorkerBundle()
+})
 
 it('returns the trusted sender token without reading a large request body', async () => {
-  const fixture = await backendFixture()
+  const fixture = await machineCredentialFixture(bundle)
   try {
-    const { runtime, org, user } = fixture
-    const created = await fixture.run(() =>
-      createCompletedWorkspace(runtime, org.id, user, {
-        repositoryId: fixture.repositoryId,
-        firstMessage: FIRST_MESSAGE,
-      }),
-    )
-    const actor = fixture.actors.get(created.workspace.id)?.endpoint()
-    if (!actor) throw new Error('Missing production controller')
-    await actor.reportRunnerLifecycle({ type: 'runner.ready' })
+    const { runtime, user } = fixture
+    const created = await fixture.create()
     await saveGitHubTokens(
       runtime.env,
       user.id,
@@ -66,7 +60,7 @@ it('returns the trusted sender token without reading a large request body', asyn
 })
 
 it('gets the trusted turn sender token afresh for concurrent sessions and rejects arbitrary identities', async () => {
-  const fixture = await backendFixture()
+  const fixture = await machineCredentialFixture(bundle)
   try {
     const { runtime, org, user } = fixture
     await runtime.env.DB.batch([
@@ -83,25 +77,11 @@ it('gets the trusted turn sender token afresh for concurrent sessions and reject
       githubId: 18,
       githubLogin: 'teammate',
     }
-    const created = await fixture.run(() =>
-      createCompletedWorkspace(
-        runtime,
-        org.id,
-        user,
-        { repositoryId: fixture.repositoryId, firstMessage: FIRST_MESSAGE },
-        sender,
-      ),
-    )
+    const created = await fixture.create(sender)
     expect(created.workspace.owner.id).toBe(user.id)
     expect(created.first.sender.id).toBe('second-user')
-    const actor = fixture.actors.get(created.workspace.id)?.endpoint()
-    if (!actor) throw new Error('Missing production controller')
-    await actor.reportRunnerLifecycle({ type: 'runner.ready' })
-    await actor.registerLifecycleTurn({
-      turnId: 'second-turn',
-      sessionId: 'second-session',
-      senderUserId: user.id,
-    })
+    const secondSession = await fixture.session()
+    const secondTurn = await fixture.send(secondSession, 'second-message')
     const save = (id: string, accessToken: string) =>
       saveGitHubTokens(
         runtime.env,
@@ -131,22 +111,21 @@ it('gets the trusted turn sender token afresh for concurrent sessions and reject
       )
     const [first, second] = await Promise.all([
       handleGitCredential(request(created.first.turnId), runtime),
-      handleGitCredential(request('second-turn'), runtime),
+      handleGitCredential(request(secondTurn.turnId), runtime),
     ])
     expect(await first.json()).toEqual({ token: 'sender-token-one' })
     expect(await second.json()).toEqual({ token: 'sender-token-two' })
     expect(second.headers.get('Cache-Control')).toBe('no-store')
     await save(user.id, 'new-sender-token')
     expect(
-      await (await handleGitCredential(request('second-turn'), runtime)).json(),
+      await (
+        await handleGitCredential(request(secondTurn.turnId), runtime)
+      ).json(),
     ).toEqual({ token: 'new-sender-token' })
-    await actor.registerLifecycleTurn({
-      turnId: 'replacement-turn',
-      sessionId: 'second-session',
-      senderUserId: user.id,
-    })
+    await fixture.finish(secondTurn)
+    const replacement = await fixture.send(secondSession, 'replacement-message')
     await expect(
-      handleGitCredential(request('second-turn'), runtime),
+      handleGitCredential(request(secondTurn.turnId), runtime),
     ).rejects.toMatchObject({ status: 409, code: 'current_turn_required' })
     expect(
       await (
@@ -159,9 +138,9 @@ it('gets the trusted turn sender token afresh for concurrent sessions and reject
         runtime,
       ),
     ).rejects.toMatchObject({ status: 409, code: 'current_turn_required' })
-    await actor.finishLifecycleTurn('replacement-turn')
+    await fixture.finish(replacement)
     await expect(
-      handleGitCredential(request('replacement-turn'), runtime),
+      handleGitCredential(request(replacement.turnId), runtime),
     ).rejects.toMatchObject({ status: 409, code: 'current_turn_required' })
   } finally {
     await fixture.dispose()

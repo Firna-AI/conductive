@@ -47,17 +47,18 @@ export async function defaultBranchCredential(
     },
     TEST_TIME,
   )
-  const created = await fixture.run(async () => {
-    const admitted = await createWorkspace(
+  const created = await fixture.run(() =>
+    createWorkspace(
       runtime,
       org.id,
       user,
       { repositoryId: fixture.repositoryId, firstMessage: FIRST_MESSAGE },
       sender,
-    )
-    await runtime.workspace(admitted.workspace.id).waitCreationLifecycle()
-    return admitted
-  })
+    ),
+  )
+  const start = fixture.starts.get(created.workspace.id)
+  if (!start) throw new Error('The create job is missing.')
+  while ((await start.job())?.phase !== 'fetch') await start.advance()
   const token = await readWorkspaceToken(runtime.env, created.workspace.id)
   const turns: string[] = []
   return {

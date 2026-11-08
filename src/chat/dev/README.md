@@ -15,6 +15,11 @@ Then open `http://127.0.0.1:5181/src/chat/dev/`. This Vite configuration
 serves the page with React on the fake API alone, without the Worker and its
 sign-in gate.
 
+`npm run dev` also shows the chat, in the workspace screen of the whole
+app, over the fake API of the app. That fake has limits for the chat, as
+[Run it](../../app/README.md#run-it) says. Use this page for live events and
+writes.
+
 ## Options
 
 The address chooses the state. The first value of each option is the default:

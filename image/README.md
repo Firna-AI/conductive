@@ -5,7 +5,9 @@ it into the org image before it runs the org's install script. The org
 image is the saved snapshot that every new sandbox of an org starts from.
 In a workspace sandbox, this software starts the agent runner. It also
 gives git a fresh GitHub token for each operation. The agent tools are not
-in this folder yet.
+in this folder yet. The folder also holds two
+[developer scripts](developer-scripts.md) that no build installs: the
+archive packager and the live check.
 
 ## Responsibilities
 
@@ -16,6 +18,8 @@ in this folder yet.
 - Make the git credential helper the system credential helper of git.
 - Start no runner in a build sandbox. The service runs it only in a
   workspace sandbox.
+- Package the runner archive and its digest on a developer machine.
+- Check the chat path and time the first agent start in a real sandbox.
 
 The [terminal backend](../worker/terminal/README.md) owns ttyd, tmux, their
 services, the terminal launcher, and the local password. It also owns the
@@ -31,7 +35,7 @@ Each build takes one input, an `ImageSoftwareArtifact`. It is the public
 HTTPS URL of a `.tar.gz` archive, with the SHA-256 digest of the archive.
 The caller of the lifecycle routes supplies it as the `software` option, as
 the [lifecycle README](../worker/lifecycle/README.md#browser-routes) says.
-No code in this repository builds the archive yet. `readImageSoftware` in
+`readImageSoftware` in
 [`image-software.ts`](../worker/lifecycle/image-software.ts) refuses a URL
 with a user name, a password, a query, or a fragment. It also refuses a
 digest that is not 64 hexadecimal characters.
@@ -43,6 +47,25 @@ dependencies. It needs no Node, because the runner runs on the
 Put no credential in the URL or in the archive. Each saved snapshot keeps
 the unpacked archive.
 
+[`package-runner.mjs`](package-runner.mjs) makes the archive on a
+developer machine, as
+[Developer scripts](developer-scripts.md#package-the-archive) says. It
+writes the URL and the digest of the archive to `<archive>.json`.
+
+To supply an archive:
+
+1. Publish the exact archive at its URL, on a public HTTPS host.
+2. Set the Worker variables `CONDUCTIVE_RUNNER_ARCHIVE_URL` and
+   `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` to that URL and the matching digest,
+   as [Deployment inputs](../docs/deployment.md#the-runner-archive) says.
+   `<archive>.json` holds both.
+
+A build fails when the file at the URL does not match the digest. So a
+versioned URL for each archive is a good choice.
+
+The Worker does not serve the archive. No route reads the two variables
+yet, because the Worker does not route the image builds.
+
 ## The private Node runtime
 
 [The private Node runtime](runtime.md) gives the pinned Node release, its
@@ -50,51 +73,9 @@ paths, and its update steps.
 
 ## Install
 
-Before this step, Git in the build sandbox copies each chosen repository
-into its folder, as the
-[source loader](../worker/lifecycle/repository-layout.md#the-source-loader)
-says. That Git comes from the image that the build sandbox starts from.
-The first build starts as a new default sandbox. Each later build or
-refresh starts from the last org image, which holds everything that earlier
-builds installed. The copy uses no part of this folder's software.
-
-Risk: a program with root access that an earlier install left in that
-image can read the clone token of a later copy. That token can only read
-its own repository, which the image already holds. The Worker revokes it
-when the copy ends, as
-[GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
-says.
-
-The software step of a build calls `installImageSoftware`. It writes the
-scripts and the runner unit of this folder to `/opt/conductive/staged/`.
-Each staged script holds the quoted full path of the private Node in place
-of `@CONDUCTIVE_NODE@`. Then the step runs these commands, in this order:
-
-```sh
-sudo -n sh /opt/conductive/staged/install-runtime.sh '<Node URL>' '<Node digest>' '<version folder>'
-sudo -n sh /opt/conductive/staged/install.sh '<archive URL>' '<SHA-256 digest>'
-```
-
-Boat runs commands as `user`, with passwordless sudo. The installers need
-system permissions. The installed runner service runs as `user`.
-
-`install.sh` does these steps. A failure stops it, and the build fails.
-
-1. It downloads the archive with `curl`, and checks the digest with
-   `sha256sum`.
-2. It unpacks the archive into a new folder, and checks `runner/main.mjs`.
-   It writes the version of the private Node to the build log.
-3. It replaces `/opt/conductive/software` with the new folder, so no file
-   of an older archive stays.
-4. It installs the runner start script, the git credential helper, and the
-   runner's systemd unit.
-5. It makes `conductive-git-credential` the system credential helper of
-   git, and sets `credential.useHttpPath`.
-6. It enables the runner service. It does not start it.
-
-A refresh skips this step, and the terminal installer with it. So a change
-in this folder or in the terminal software reaches the new workspaces of an
-org only after its next build. A workspace that exists keeps its software.
+[Install in a build](install.md) describes the software step of each image
+build: the staged scripts, the private Node, and the steps of `install.sh`.
+A refresh skips that step.
 
 ## Start in a workspace
 
@@ -106,6 +87,7 @@ each resume, together with the org's env vars:
 | `WORKSPACE_TOKEN` | The workspace token. |
 | `CONDUCTIVE_WORKSPACE_ID` | The workspace ID. |
 | `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
+| `CONDUCTIVE_DEFAULT_BRANCH` | The default branch of the workspace's repository. |
 | `CONDUCTIVE_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
 | `CONDUCTIVE_TURN_ID` | Empty. The runner sets it for each agent process. |
@@ -164,6 +146,20 @@ its password, and its automatic restart in its
 [README](../worker/terminal/README.md). That README also says how the
 workspace shell keeps running when a terminal connection drops.
 
+Before it runs the runner, `runner-start.sh` sets three variables of the
+runner's [configuration](../runner/README.md#configuration) from the table.
+Each value replaces a saved variable of the same name.
+
+| Runner variable | Value |
+| --- | --- |
+| `CONDUCTIVE_WORKSPACE_TOKEN` | `WORKSPACE_TOKEN` |
+| `CONDUCTIVE_REPOSITORY` | `CONDUCTIVE_REPOSITORY_DIR` |
+| `CONDUCTIVE_RUNNER_URL` | `CONDUCTIVE_MACHINE_ORIGIN` without a trailing slash, then the path of `MACHINE_PATHS.runner` |
+
+The Worker gives no setting for the computer tools. Boat writes the entry
+of the `computer` server into each sandbox at its start, and the runner
+reads it, as [What it does](../runner/README.md#what-it-does) says.
+
 ## Git credentials
 
 `install.sh` installs `git-credential-helper.sh` as
@@ -183,7 +179,7 @@ caller's `CONDUCTIVE_TURN_ID`, loads the sandbox variables, and runs
 - Without a current turn, or when the Worker refuses, the helper writes one
   fixed message. Git then gets no credential from the helper.
 
-The Worker's route is not wired to the machine hostname yet, as the
+The Worker serves that route on the machine hostname, as the
 [lifecycle README](../worker/lifecycle/README.md#machine-route) says.
 
 ## Secrets
@@ -195,7 +191,6 @@ The Worker's route is not wired to the machine hostname yet, as the
   repository. The Worker revokes it before the build goes on, as
   [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
   says. The software step and the install script run only after that.
-- The archive URL can hold no user name, no password, and no query.
 - The workspace object keeps the env values and output chunks of a start
   only in encrypted form. Before it returns a start log, it masks the
   complete joined stdout and stderr with the saved env values. This hides
@@ -223,12 +218,27 @@ Run the installer tests with
 `npm run test -- worker/lifecycle/image-runtime.test.ts worker/lifecycle/image-software.test.ts`.
 They run the shipped scripts with local archives and a fake `curl`.
 
+Run the start script test with
+`npm run test -- worker/chat/integration/runner-launcher.test.ts`. It stages
+the software with `installImageSoftware` in a temporary folder under
+`.context/`, and runs the staged `runner-start.sh` with `/bin/sh`. It checks
+the settings that the runner configuration reads, and that the script uses
+the private Node, not a `node` on the path. It also checks that a
+build, a disk retention restart, and an unfinished start start no runner.
+
 - The Worker imports each file with Vite's `?raw` suffix. When you add a
-  file here, also add it to `installImageSoftware`. Add it to `install.sh`
-  too when a sandbox uses it after the build.
+  file that the sandbox needs, also add it to `installImageSoftware`.
+  Add it to `install.sh` too when a sandbox uses it after the build. The
+  developer scripts stay out of the sandbox.
 - Start Node in a script only as `@CONDUCTIVE_NODE@`.
+- `runner-start.sh` holds the placeholder `@RUNNER_PATH@`.
+  `installImageSoftware` replaces it with `MACHINE_PATHS.runner` when it
+  stages the script, so the runner path has one source. Run only the staged
+  copy.
 - Keep each start script safe to run in a build sandbox. Of the variables
   in the table, a build sandbox has only the folder variables.
+- [Developer scripts](developer-scripts.md#development) gives the checks of
+  the developer scripts.
 
 ### Key Code
 
@@ -238,7 +248,7 @@ They run the shipped scripts with local archives and a fake `curl`.
   and the git helper. Its arguments are the archive URL and the digest.
 - [`runner-start.sh`](runner-start.sh) and
   [`conductive-runner.service`](conductive-runner.service): start the agent
-  runner.
+  runner, and map the sandbox variables to the runner variables.
 - [The terminal backend](../worker/terminal/service.ts): owns the terminal
   install command, its two services, and its workspace start hook.
 - [`git-credential-helper.sh`](git-credential-helper.sh) and
@@ -252,9 +262,13 @@ They run the shipped scripts with local archives and a fake `curl`.
 - [`saved-script.ts`](../worker/lifecycle/saved-script.ts):
   `savedScriptCommand`, which writes the org's install or startup script to
   a file and runs it with Bash.
+- [Developer scripts](developer-scripts.md#key-code): the archive packager
+  and the live check.
 
 ### Related Docs
 
+- [Install in a build](install.md), [the private Node runtime](runtime.md),
+  and [developer scripts](developer-scripts.md): the guides of this folder.
 - [Workspace lifecycle](../worker/lifecycle/README.md): the builds, the
   start steps, and the git credential route.
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md):

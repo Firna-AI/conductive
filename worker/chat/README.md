@@ -34,8 +34,25 @@ which serves these routes. The path helpers live in
 | `GET` events socket | `workspaceEventsPath` | Sends the stored history, then each new event |
 | `GET` runner socket | `MACHINE_PATHS.runner` | Connects the agent runner on the machine hostname |
 
-Trusted Worker code can also call six methods of `WorkspaceChat` that run no
-gate. [Trusted workspace calls](integration/README.md#trusted-workspace-calls) gives their rules.
+The outer Worker forwards each route of this table to the object of its
+workspace, as [the integration README](integration/README.md#the-outer-worker)
+says. `routeChat` in [`router.ts`](router.ts) forwards the browser routes.
+`routeRunner` forwards the runner socket of the machine hostname, by its
+bearer token.
+
+Trusted Worker code can also call methods of `WorkspaceChat` that run no
+gate. [Trusted workspace calls](integration/README.md#trusted-workspace-calls)
+gives their rules.
+
+`Workspace` has two trusted RPCs with no HTTP path:
+
+- `acceptLifecycleFirstMessage(first)` returns the stored first message of
+  a create. A repeat returns the same message and adds no history.
+- `readChatWorkspaceSummary()` returns the last event number, the last
+  event number with visible output, and whether a dispatched turn runs.
+
+[The workspace lifecycle](integration/README.md#the-workspace-lifecycle)
+says how the lifecycle and chat work together.
 
 A cross-agent model change uses the client's `newSessionId`. A repeated
 request gets the same session. An unrelated occupied ID is refused. A
@@ -60,6 +77,9 @@ The separate trusted first-message path does not use this public route.
 
 The Durable Object runs the gates itself.
 
+- A forwarded browser chat request keeps the body limit of the Worker
+  entry and the host and `Origin` checks. The outer Worker skips its
+  request gate, so only the gate of the Durable Object parses the JSON body.
 - `authorizeBrowser` runs `gate` from `worker/security/gate.ts`, the gate
   of the other app routes. It checks the app hostname, the `Origin`
   header, the session cookie, the org membership, and the body of writes.
@@ -125,84 +145,20 @@ The Durable Object runs the gates itself.
 
 ## History and event order
 
-- `ChatStore.run` is one serial queue. Each request, each runner message,
-  each command send, and each trusted read, change, or replay runs in it,
-  one at a time.
-- `ChatStore.change` commits the new events, the runner cursor, and the
-  changed records in one storage transaction. The tabs get the events
-  only after the commit.
-- One publisher of `WorkspaceChat` pushes the events of each commit to the
-  open tabs, in the queue task of that commit. So the tabs get the events
-  in commit order.
-- A failed send closes its tab. When the tab connects again, it gets the
-  missed events from the stored history.
-- Each event gets the next workspace event number. The numbers start at 1,
-  have no gaps, and span all sessions and runner streams.
-- A tab connects with `after`, the last event number that it has. It gets
-  one `history` message with the stored events after that number. Then it
-  gets one `event` message for each new event.
-- The history read and the new subscription run in the queue. So no event
-  falls between them, and no event comes twice.
-- The records use the `chat:v1:` key prefix of the Durable Object storage.
-- Each runner stream numbers its events from 1. The Durable Object stores
-  a runner event, or its refusal marker, only when its number is the stream
-  cursor plus one.
-- A duplicate gets a new confirm and is not stored again. A gap gets a
-  `resend` from the first missing number. The `welcome` gives the cursor,
-  or less while a [report repair](report-repairs.md) waits for its first send.
-- The `turn_not_active` reason means that the turn never started.
-- Valid late events append to a started turn that ended. They change no
-  turn, session, message, or command state.
-- A refused `turn.completed` or `turn.failed` ends its started active turn as `failed`.
-- A message and its command commit together. The Durable Object sends the
-  commands in order when the runner is ready.
-- After the login checks, delivery commits the turn state before sending.
-  If sending a newly dispatched turn throws, delivery restores its queued
-  state. `message.sent` follows a successful send.
-- The internal `StoredTurn.started` marker keeps dispatch evidence after an end.
-- The interrupt route stores and pushes `turn.stop-requested` with the
-  authenticated member's ID before it interrupts the runner. Runner events
-  cannot set that member.
-- A message accepted while the active turn stops waits in another stored
-  turn. Its commands go out only after that turn becomes active.
-- After a finished turn, its unanswered messages run before later waiting
-  work. Closing a session records its waiting turns as stopped in history.
-- A command stays pending until the Durable Object removes it. A new runner
-  connection gets each pending command again, with the same command ID.
-- An active agent event that lists a message ID removes that message's
-  command. The first end of a turn removes each command of that turn.
-- A new `model` command replaces the pending `model` command of its
-  session.
+[History and event order](history.md) gives the serial queue, the one
+publisher, the event numbers, the runner streams, and the order of the
+runner commands.
 
 ## Retries
 
-[Messages](../../docs/protocol/chat-and-events.md#messages) states the
-rules. `Session.retryMessageId` names the one message that the retry route
-accepts. It is the only public part of the retry state.
-
-- `ChatTransaction.newestTurn` and `saveNewestTurn` keep the ID of the
-  newest turn of each session under the `chat:v1:newest-turn:` prefix. This
-  internal record never reaches a tab.
-- Each accepted message records its turn there, also a running turn that it
-  joins. It also sets `retryMessageId` to null.
-- The end of the active turn sets `retryMessageId` to the retry message of a
-  failed end. It does so only when that turn is still the newest turn. Every
-  other end sets null.
-- A refused end has no retry message, so it sets null.
-- A turn that waits counts as the newest turn, also after a Stop ends it
-  before it starts.
-- When the newest turn finishes, a continuation of its unanswered messages
-  becomes the newest turn.
-- The session record and its `session.updated` event commit in the same
-  transaction as the change that sets the field.
-- A missing message, or a message of another session, gets
-  `404 message_not_found`. Each other message that the record does not name
-  gets `409 retry_not_available`, and the route writes nothing.
+[Retries](retries.md) gives the stored retry state, and the rules of the
+retry route for `Session.retryMessageId`.
 
 ## Report repairs
 
 [Report repairs](report-repairs.md) says how the chat backend asks the
-runner for one fresh full report after it refuses an update.
+runner for one fresh full report after it refuses an update. It describes
+the stored records, the refusal checks, and the sends before each confirm.
 
 ## Tests
 
@@ -211,15 +167,18 @@ npm run test -- worker/chat
 npm run typecheck
 ```
 
-[Test fixtures](integration/README.md#test-fixtures) names the test
-support files and what each group of tests covers.
+[Chat backend tests](tests.md) names the test support files and what each
+group of tests covers.
 
 ## Seams for other milestones
 
 [Chat backend integration](integration/README.md) gives the seams for other
-features. It covers the hooks, the trusted workspace calls and the workspace
-events, the outer Worker, the lifecycle, the files, the GitHub state, the
-agent runner, the logins and attachments, and the test fixtures.
+features. It covers the hooks, the trusted workspace calls, the workspace
+events, the outer Worker, and the lifecycle. It also covers the files, the
+GitHub state, the agent runner, the logins and attachments, the session
+logins, and the test fixtures. Its
+[Outer Worker tests](integration/outer-worker-tests.md) guide gives the
+tests through the production Worker entry.
 
 ## Key code
 
@@ -229,6 +188,23 @@ agent runner, the logins and attachments, and the test fixtures.
   owner can replace. The login resolver always wraps an override.
 - `operation.ts`: `ChatOperation`, the reads and changes of one route, tab
   subscription, or dispatch, in the serial queue that its caller holds.
+- `workspace-integration.ts`: `createWorkspaceIntegration`, which joins
+  chat, the lifecycle, and the Mac devices in the workspace object. It
+  sets the hooks, and gives the Mac devices the shared state writer.
+- `workspace-operations.ts`: `WorkspaceOperations`, the queue-owned work of
+  the lifecycle: the first message, the stop, the summary, and the
+  lifecycle events.
+- `first-message.ts`: the checks and the admission of the first message of
+  a create.
+- `workspace-summary.ts`: `WorkspaceSummaryProjection`, the summary that
+  `readChatWorkspaceSummary` returns.
+- `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched
+  turns as stopped when the lifecycle state becomes stopped or error.
+- `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
+  the object.
+- `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
+  a browser tab: the login refresh, the tab registration, the close after
+  a failed start, and the grant check before the history.
 - `http-routes.ts`, `send-message.ts`, `messages.ts`, and `sessions.ts`: the
   routes, Send and Retry with linked sessions, the turns, and session state.
 - `model-changes.ts`: client session IDs, the creation records that repeated
@@ -252,15 +228,19 @@ agent runner, the logins and attachments, and the test fixtures.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
 - `turn-lifecycle.ts`, `turn-events.ts`, `turn-context.ts`, and
-  `continuation.ts`: active and waiting turns, the retry message of a turn
-  end, safe turn context, late data, terminal events, and unanswered
-  messages.
+  `continuation.ts`: active and waiting turns, the dispatch rule of each
+  command, the retry message of a turn end, safe turn context, late data,
+  terminal events, and unanswered messages.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-tabs.ts`: open tabs, their grants, the refresh and expiry
   timers, and the grant check before each send. By default,
   `WorkspaceChat` gives it `readConnectionAccess` from
   [`worker/security/connection-access.ts`](../security/connection-access.ts).
-- `queries.ts`: the D1 reads of workspaces, tokens, members, and logins.
+- `router.ts`: `routeChat`, `routeRunner`, and `forwardWorkspaceRequest`,
+  which forward the browser chat routes and the runner socket from the
+  outer Worker to the object.
+- `queries.ts`: the D1 reads of workspaces, tokens, members, and logins,
+  and the title update of a workspace.
 - `login-access.ts`, `login-availability.ts`, and `login-kind.ts`:
   `readLogin` and the access checks, the metadata query, and the valid
   login kinds.
@@ -276,6 +256,7 @@ agent runner, the logins and attachments, and the test fixtures.
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
 - [Chat and events: Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
 - [Chat backend integration](integration/README.md)
+- [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)
 - [Access and security: Agent logins in a sandbox](../../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
 - [Access and security: The workspace token](../../docs/protocol/access-and-security.md#the-workspace-token)
