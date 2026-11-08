@@ -30,6 +30,29 @@ export class WorkspaceAccessStop {
     this.context = context
   }
 
+  async cancelPending(
+    workspaceId: string,
+    ownerUserId: string,
+  ): Promise<boolean> {
+    const input = this.context()
+    const row = await readWorkspaceAccessStop(input.env.DB, workspaceId)
+    if (
+      !row?.ownerSuspended ||
+      row.ownerUserId !== ownerUserId ||
+      !(await input.starts.pending())
+    )
+      return false
+    await input.starts.cancel()
+    await revokeWorkspacePreviews(
+      input.env.DB,
+      workspaceId,
+      input.dependencies.now(),
+    )
+    if (!(await input.starts.pending())) return false
+    await input.storage.setAlarm(input.dependencies.now() + 1_000)
+    return true
+  }
+
   check(
     workspaceId: string,
     ownerUserId?: string,

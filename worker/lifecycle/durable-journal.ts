@@ -18,7 +18,11 @@ export class WorkspaceEventJournal {
     this.publish = publish
   }
 
-  publishLifecycle(response: WorkspaceResponse, now: number): Promise<void> {
+  publishLifecycle(
+    response: WorkspaceResponse,
+    now: number,
+    publish = this.publish,
+  ): Promise<void> {
     return this.serial(async () => {
       const signature = JSON.stringify({
         state: response.workspace.state,
@@ -26,7 +30,7 @@ export class WorkspaceEventJournal {
         error: response.error,
       })
       if ((await this.storage.get('text', LAST_PUBLISHED)) === signature) return
-      await this.publish({
+      await publish({
         workspaceId: response.workspace.id,
         event: {
           type: 'workspace.updated',
@@ -38,7 +42,7 @@ export class WorkspaceEventJournal {
         occurredAt: now,
       })
       if (response.start)
-        await this.publish({
+        await publish({
           workspaceId: response.workspace.id,
           event: { type: 'start.updated', start: response.start },
           occurredAt: now,

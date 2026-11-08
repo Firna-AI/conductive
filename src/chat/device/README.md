@@ -10,13 +10,15 @@ top of the workspace. See [the chat](../README.md) for the whole chat.
 
 `ThisMacSection` goes in the account, and `AllowAllBar` goes at the top of
 the workspace. Mount them only in the Mac app, because a browser has no
-Mac. Both read the Mac's settings through `useMacSettings(fetch)`. Call its
-`refresh` from `onWorkspaceChange`, which follows each change of a Mac
-command, so the bar shows the 15 minutes that an answer started.
+Mac. No screen of the app mounts them yet. Both read the Mac's settings
+through `useMacSettings(client)`. Give it a stable `ApiClient`, such as
+`AppServices.api`, because a new client makes a new settings controller.
+Call its `refresh` from `onWorkspaceChange`, which follows each change of a
+Mac command, so the bar shows the 15 minutes that an answer started.
 
 ```tsx
-<ThisMacSection fetch={appFetch} viewport="desktop" />
-const { controller, state } = useMacSettings(appFetch)
+<ThisMacSection client={services.api} viewport="desktop" />
+const { controller, state } = useMacSettings(services.api)
 <AllowAllBar controller={controller} state={state} workspaceId={workspaceId} />
 ```
 
@@ -92,7 +94,8 @@ menu of Allow over the region. Build the Mac app first, then run
 
 ### Key code
 
-- `device-api.ts`: the routes and the readers.
+- `device-api.ts`: the routes, through the app's `ApiClient`, and the
+  readers.
 - `device-actions.ts`: the reads and the answers of the chat.
 - `placement.ts`: the place of each card in its turn.
 - `PendingCommands.tsx`, `CommandChoices.tsx`, and `CommandCard.tsx`: the

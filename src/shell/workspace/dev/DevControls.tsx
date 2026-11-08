@@ -22,8 +22,7 @@ const kinds: readonly (readonly [string, RunnerReportKind])[] = [
  * The controls of the page. For each kind: the first loss, which shows
  * nothing, the loss of its fresh full report, which shows the notice, and a
  * full report, which clears it. A tree update leaves the notice of All
- * files. "Open the workspace again" mounts a new view, which reads the
- * stored history.
+ * files. "Open the workspace again" starts a new view of the kept notices.
  */
 export function DevControls(props: {
   server: FakeApiServer

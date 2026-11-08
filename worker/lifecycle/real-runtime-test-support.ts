@@ -9,7 +9,8 @@ import type { LifecycleEnvironment } from './runtime'
 import { LifecycleBoat } from './lifecycle-boat-test-support'
 import type { WorkspaceRuntimeFixture } from './workspace-runtime-test-worker'
 import { SESSION_COOKIE } from '../security/cookies'
-import { sign } from '../security/crypto'
+import { encrypt, sign } from '../security/crypto'
+import { agentLoginContext } from '../chat/queries'
 import { applyMigrations } from '../test-support/migrations'
 import { seedPublishedImage } from './published-image-test-support'
 import { readWorkspaceToken } from './tokens'
@@ -41,7 +42,7 @@ interface RuntimeBindings {
 }
 
 export async function realRuntimeFixture(bundle: string) {
-  const root = `${import.meta.dirname}/../../.context/boat-native-remote-workspaces/milestone-5/orchestrator-round-1/terminal-state/runtime`
+  const root = `${import.meta.dirname}/../../.context/boat-native-remote-workspaces/8i/completion/legacy-runtime`
   await mkdir(root, { recursive: true })
   const directory = await mkdtemp(`${root}/case-`)
   const boat = new LifecycleBoat()
@@ -154,6 +155,20 @@ export async function realRuntimeFixture(bundle: string) {
       "INSERT INTO settings (org_id, org_image_name, updated_at) VALUES ('runtime-org', 'base-runtime-image', 0)",
     ),
   ])
+  await database
+    .prepare(
+      `INSERT INTO agent_logins
+    (user_id, agent, kind, ciphertext, created_at, updated_at)
+    VALUES ('runtime-user', 'codex', 'api-key', ?, 0, 0)`,
+    )
+    .bind(
+      await encrypt(
+        'runtime-agent-key',
+        agentLoginContext('runtime-user', 'codex'),
+        env.BOAT_KEY_ENCRYPTION_KEY,
+      ),
+    )
+    .run()
   await seedPublishedImage(database, {
     orgId: 'runtime-org',
     buildId: 'base-runtime-build',

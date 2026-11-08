@@ -7,7 +7,7 @@ import { retrySandboxCleanup } from './cleanup'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { orgEnvironmentContext } from './settings-data'
 import { createCompletedWorkspace } from './completed-creation-test-support'
-import { resumeWorkspace } from './workspace-resume'
+import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 import { lifecycleCommandBody } from './command-test-support'
 
 const backendFixture = setupBackendTests()
@@ -98,7 +98,7 @@ it('removes a failed create and its token while retaining the draft and cleanup 
       await runtime
         .workspace(created.workspace.id)
         .credentialSender(created.first.turnId),
-    ).toBe(user.id)
+    ).toBeNull()
     expect(boat.starts.at(-1)).toMatchObject({
       from: 'last-good-image',
       noEnv: true,

@@ -1,4 +1,5 @@
 import type { Agent, AgentChoice } from '../../src/shared/agents'
+import type { PendingTurn } from '../lifecycle/workspace-runtime'
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
 import type { Attachment, MessageDraft } from '../../src/shared/messages'
 import type {
@@ -108,6 +109,23 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  waitUntil(promise: Promise<unknown>): void
+  runnerDisconnected(
+    workspaceId: string,
+    publish: ChatCallbackPublisher,
+  ): Promise<void>
+  turnDispatching(
+    workspaceId: string,
+    turn: PendingTurn,
+    publish: ChatCallbackPublisher,
+  ): Promise<boolean>
+  turnDispatchFailed(
+    workspaceId: string,
+    turnId: string,
+    publish: ChatCallbackPublisher,
+  ): Promise<void>
+  browserOpened(workspaceId: string, tabId: string): Promise<void>
+  browserClosed(workspaceId: string, tabId: string): Promise<void>
   now: () => number
   scheduleBrowserCheck: ConnectionScheduler
   scheduleRunnerCheck: ConnectionScheduler

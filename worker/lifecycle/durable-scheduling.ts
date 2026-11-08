@@ -5,6 +5,7 @@ import {
   type DurableLifecycleState,
   type LifecycleHooks,
   type LifecycleStorage,
+  type LifecyclePublisher,
 } from './durable-types'
 
 export async function writeLifecycleState(
@@ -12,11 +13,12 @@ export async function writeLifecycleState(
   hooks: LifecycleHooks,
   state: DurableLifecycleState,
   now: () => number,
+  publish?: LifecyclePublisher,
 ): Promise<void> {
   await storage.put(LIFECYCLE_STATE_KEY, state)
   if (state.startStop === 'pending') {
     await storage.setAlarm(now() + 30_000)
-    await hooks.changed(state)
+    await hooks.changed(state, publish)
     return
   }
   const alarm =
@@ -41,5 +43,5 @@ export async function writeLifecycleState(
           : alarm,
     )
   }
-  await hooks.changed(state)
+  await hooks.changed(state, publish)
 }

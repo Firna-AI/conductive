@@ -32,11 +32,8 @@ async function measure(): Promise<void> {
   ])
   const resumeId = process.env.CONDUCTIVE_MEASURE_RESUME_ID
   const secret = process.env.CONDUCTIVE_MEASURE_LOGIN
-  const computerMcpUrl = process.env.CONDUCTIVE_COMPUTER_MCP_URL
-  if (!resumeId || !secret || !computerMcpUrl)
-    throw new Error(
-      'Set the resume ID, measurement login, and computer MCP URL.',
-    )
+  if (!resumeId || !secret)
+    throw new Error('Set the resume ID and measurement login.')
   const agent = oneOf(process.env.CONDUCTIVE_MEASURE_AGENT, ['claude', 'codex'])
   const kind =
     agent === 'codex'
@@ -73,11 +70,11 @@ async function measure(): Promise<void> {
     provider = await factory({
       cwd: process.env.CONDUCTIVE_REPOSITORY ?? process.cwd(),
       home: process.env.CONDUCTIVE_HOME ?? homedir(),
-      computerMcpUrl,
       login,
       choice,
       conversationId: null,
       event,
+      warn: (message) => process.stderr.write(`${message}\n`),
     })
     const sessionId = randomUUID()
     const command: RunnerTurn = {

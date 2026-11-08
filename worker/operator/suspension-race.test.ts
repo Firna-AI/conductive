@@ -5,6 +5,7 @@ import { FIRST_MESSAGE } from '../lifecycle/durable-test-support'
 import { createWorkspace } from '../lifecycle/workspaces'
 import { heldOperation } from '../lifecycle/platform-test-storage'
 import { resumeWorkspace } from '../lifecycle/workspace-resume'
+import { resumeCompletedWorkspace } from '../lifecycle/completed-resume-test-support'
 import { stopWorkspaceSandbox } from '../lifecycle/workspace-actions'
 import { ensureWorkspaceToken } from '../lifecycle/tokens'
 import {
@@ -90,7 +91,7 @@ it('cancels a queued resume when its caller is suspended and its owner stays act
   })
   await endpoint.lifecycleStopped()
   const queued = fixture.nextQueued()
-  const resuming = resumeWorkspace(
+  const resuming = resumeCompletedWorkspace(
     fixture.runtime,
     fixture.org.id,
     workspace.id,

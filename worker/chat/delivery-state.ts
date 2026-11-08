@@ -20,7 +20,7 @@ export class DeliveryState {
     return this.store.change(
       workspaceId,
       async (transaction) => {
-        if (command.type !== 'turn' && command.type !== 'message') return false
+        if (command.type !== 'turn') return false
         const turn = await transaction.turn(command.turnId)
         if (!turn || turn.state !== 'queued') return false
         turn.state = 'running'

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react'
+import { ApiError, type ApiClient } from '../../app/api/client'
 import type {
   DevicePairing,
   DeviceSettings,
   DeviceSettingsResponse,
 } from '../../shared/device'
-import { ChatApiError, type FetchLike } from '../api/client'
 import { messageOf } from '../state/context'
 import {
   createDeviceApi,
@@ -39,7 +39,7 @@ export type MacSettingsState = MacSettingsView & {
 }
 
 const unavailable = (error: unknown) =>
-  error instanceof ChatApiError && error.code === 'device_unavailable'
+  error instanceof ApiError && error.code === 'device_unavailable'
 
 /** The settings and the pairing of a reply. */
 function readyView(reply: DeviceSettingsResponse): MacSettingsView {
@@ -197,16 +197,16 @@ export class MacSettingsController {
 }
 
 /**
- * The settings controller of this window, and its state. A new `fetch`
- * makes a new controller, so pass a stable function.
+ * The settings controller of this window, and its state. A new `client`
+ * makes a new controller, so pass a stable one, such as the app's.
  */
-export function useMacSettings(fetch: FetchLike): {
+export function useMacSettings(client: ApiClient): {
   controller: MacSettingsController
   state: MacSettingsState
 } {
   const controller = useMemo(
-    () => new MacSettingsController(createDeviceApi(fetch)),
-    [fetch],
+    () => new MacSettingsController(createDeviceApi(client)),
+    [client],
   )
   useEffect(() => {
     void controller.start()

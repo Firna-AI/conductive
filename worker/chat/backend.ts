@@ -3,16 +3,23 @@ import type {
   WorkspaceEvent,
   WorkspaceEventEnvelope,
 } from '../../src/shared/events'
-import { workspacePath } from '../../src/shared/workspaces'
+import type { UserMessage } from '../../src/shared/messages'
+import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
-import { gate, type RequestContext } from '../security/gate'
+import { chatDependencies } from './dependencies'
+import {
+  authorizeChatBrowser,
+  type BrowserAccess,
+} from './browser-authorization'
+import { subscribeBrowser } from './browser-subscription'
 import { afterNumber, chatRoute } from './http-routes'
 import { BrowserTabs } from './browser-tabs'
-import { findChatWorkspace, tokenWorkspace } from './queries'
+import { tokenWorkspace } from './queries'
+import { WorkspaceOperations } from './workspace-operations'
+import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
-import { chatDependencies } from './dependencies'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore, type ChatTransaction } from './store'
 import {
@@ -25,14 +32,7 @@ import type {
   ChatDependencies,
   ChatStorage,
   RunnerPeer,
-  WorkspaceRecord,
 } from './types'
-
-export interface BrowserAccess {
-  context: RequestContext
-  workspace: WorkspaceRecord
-  suffix: string
-}
 
 /** The Durable Object and the in-memory runner adapter use this boundary. */
 export class WorkspaceChat {
@@ -41,7 +41,36 @@ export class WorkspaceChat {
   private readonly dependencies: ChatDependencies
   private readonly runner: RunnerChannel
   private readonly browsers: BrowserTabs
+  private readonly operations: WorkspaceOperations
   private workspaceId: string | null = null
+
+  async workspaceSummary(workspaceId?: string): Promise<ChatWorkspaceSummary> {
+    return this.operations.summary(workspaceId)
+  }
+
+  runLifecycle<T>(operation: () => Promise<T>): Promise<T> {
+    return this.store.run(operation)
+  }
+
+  flushRunner(): Promise<void> {
+    return this.runner.flush()
+  }
+
+  async acceptFirstMessage(first: FirstWorkspaceMessage): Promise<UserMessage> {
+    return this.operations.accept(first)
+  }
+
+  async stopWorkspace(workspaceId: string): Promise<void> {
+    await this.operations.stop(workspaceId)
+  }
+
+  commitWorkspaceEvent(
+    workspaceId: string,
+    event: WorkspaceEvent,
+    occurredAt?: number,
+  ): Promise<void> {
+    return this.operations.commit(workspaceId, event, occurredAt)
+  }
 
   constructor(
     storage: ChatStorage,
@@ -55,6 +84,15 @@ export class WorkspaceChat {
     this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>
       this.publish(events),
     )
+    this.operations = new WorkspaceOperations({
+      env,
+      store: this.store,
+      dependencies: this.dependencies,
+      workspaceId: () => this.workspaceId,
+      bind: (id) => this.bind(id),
+      publish: (events) => this.publish(events),
+      closeRunner: () => this.runner.close(),
+    })
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -89,42 +127,13 @@ export class WorkspaceChat {
   }
 
   async authorizeBrowser(request: Request): Promise<BrowserAccess> {
-    const context = await gate(request, this.env, this.dependencies.now())
-    const path = new URL(request.url).pathname
-    const match = path.match(/^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)(?:\/|$)/)
-    if (!context.org || !match)
-      throw new HttpError(
-        404,
-        'workspace_not_found',
-        'The workspace is not available.',
-      )
-    let workspaceId: string
-    try {
-      workspaceId = decodeURIComponent(match[1])
-    } catch {
-      throw new HttpError(
-        404,
-        'workspace_not_found',
-        'The workspace is not available.',
-      )
-    }
-    const workspace = await findChatWorkspace(
-      this.env.DB,
-      context.org.id,
-      workspaceId,
+    const access = await authorizeChatBrowser(
+      request,
+      this.env,
+      this.dependencies.now(),
     )
-    if (!workspace)
-      throw new HttpError(
-        404,
-        'workspace_not_found',
-        'The workspace is not available.',
-      )
-    this.bind(workspace.id)
-    return {
-      context,
-      workspace,
-      suffix: path.slice(workspacePath(context.org.id, workspace.id).length),
-    }
+    this.bind(access.workspace.id)
+    return access
   }
 
   async connectRunner(request: Request, peer: RunnerPeer): Promise<void> {
@@ -232,36 +241,13 @@ export class WorkspaceChat {
     after: number,
     peer: BrowserPeer,
   ): Promise<() => void> {
-    return this.store.run(async () => {
-      if (access.workspace.archivedAt === null)
-        await this.operation(access.workspace.id).logins.refresh()
-      const unsubscribe = await this.browsers
-        .add(peer, {
-          kind: 'workspace',
-          workspaceId: access.workspace.id,
-          orgId: access.workspace.orgId,
-          userId: access.context.user.id,
-          sessionId: access.context.sessionId,
-        })
-        .catch((error: unknown) => {
-          try {
-            peer.close()
-          } catch {
-            // The peer has already disconnected.
-          }
-          throw error
-        })
-      try {
-        const history = await this.store.read(access.workspace.id, (view) =>
-          view.history(after),
-        )
-        this.browsers.check(peer)
-        peer.send({ type: 'history', history })
-        return unsubscribe
-      } catch (error) {
-        unsubscribe()
-        throw error
-      }
+    return subscribeBrowser({
+      store: this.store,
+      browsers: this.browsers,
+      operation: this.operation(access.workspace.id),
+      access,
+      after,
+      peer,
     })
   }
 

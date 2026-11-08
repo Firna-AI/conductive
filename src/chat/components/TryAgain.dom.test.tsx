@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
+import { createApiClient } from '../../app/api/client'
 import { retryMessagePath } from '../../shared/sessions'
 import {
   byText,
@@ -37,7 +38,7 @@ describe('Try again in a tab that missed newer events', () => {
       server.events.subscribe(after, (message) => listener.message(message))
     await mount(
       <WorkspaceChat
-        fetch={server.fetch}
+        client={createApiClient(server.fetch)}
         orgId={org}
         subscribe={subscribe}
         viewport="desktop"

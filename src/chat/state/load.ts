@@ -10,6 +10,8 @@ import { orderSessions, pickActive, sortHistory } from './sessions'
 const orNull = <T>(request: Promise<T>): Promise<T | null> =>
   request.catch(() => null)
 
+const none = Promise.resolve(null)
+
 /**
  * Loads the chat of a workspace, then starts its event stream.
  *
@@ -26,6 +28,10 @@ const orNull = <T>(request: Promise<T>): Promise<T | null> =>
  *
  * The Mac commands load after the stream starts. A request that changes
  * after that read comes with a workspace event that the stream delivers.
+ *
+ * When app models own the account, the org, the models, and the members,
+ * the load reads none of them and writes none of them. So no reply of an
+ * old read can replace a newer value of the app.
  */
 export async function loadChat(context: ChatContext): Promise<void> {
   const { api, store } = context
@@ -38,12 +44,13 @@ export async function loadChat(context: ChatContext): Promise<void> {
   }
   store.update((snapshot) => ({ ...snapshot, load: { state: 'loading' } }))
   context.stream.stop()
+  const { owned } = context
   const extras = Promise.all([
     orNull(api.view()),
-    orNull(api.models()),
-    orNull(api.account()),
-    orNull(api.org()),
-    orNull(api.members()),
+    owned ? none : orNull(api.models()),
+    owned ? none : orNull(api.account()),
+    owned ? none : orNull(api.org()),
+    owned ? none : orNull(api.members()),
   ])
   let first: SessionsResponse
   try {
@@ -55,13 +62,14 @@ export async function loadChat(context: ChatContext): Promise<void> {
   const [view, models, account, org, members] = await extras
   if (!context.live()) return
   const active = pickActive(orderSessions(first.sessions, view), view)
+  // An input that an app model owns keeps the value of its source.
+  const read = owned
+    ? {}
+    : { models: models ?? [], account, members: members ?? [], org }
   store.update((snapshot) => ({
     ...snapshot,
+    ...read,
     view,
-    models: models ?? [],
-    account,
-    members: members ?? [],
-    org,
     activeSessionId: active,
   }))
   let after = 0

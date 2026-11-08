@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
+import { createApiClient } from '../../app/api/client'
 import { DEVICE_SETTINGS_PATH } from '../../shared/device'
 import {
   byLabel,
@@ -48,7 +49,11 @@ describe('ThisMacSection', () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ onMac: true })
     await mount(
-      <ThisMacSection clock={clock} fetch={server.fetch} viewport="desktop" />,
+      <ThisMacSection
+        clock={clock}
+        client={createApiClient(server.fetch)}
+        viewport="desktop"
+      />,
     )
     await waitFor(() => queryByText("Cal's MacBook Pro"), 'the name of the Mac')
     const commands = () =>
@@ -108,7 +113,11 @@ describe('ThisMacSection', () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ onMac: true })
     await mount(
-      <ThisMacSection clock={clock} fetch={server.fetch} viewport="desktop" />,
+      <ThisMacSection
+        clock={clock}
+        client={createApiClient(server.fetch)}
+        viewport="desktop"
+      />,
     )
     await waitFor(() => queryByText("Cal's MacBook Pro"), 'the name of the Mac')
     const unsaved =
@@ -171,7 +180,11 @@ describe('ThisMacSection', () => {
       }),
     )
     await mount(
-      <ThisMacSection clock={clock} fetch={server.fetch} viewport="desktop" />,
+      <ThisMacSection
+        clock={clock}
+        client={createApiClient(server.fetch)}
+        viewport="desktop"
+      />,
     )
     await waitFor(
       () => queryByLabel('Always allowed commands'),
@@ -206,7 +219,11 @@ describe('ThisMacSection', () => {
     holdAnimationFrames()
     const browser = new FakeApiServer()
     const away = await mount(
-      <ThisMacSection clock={clock} fetch={browser.fetch} viewport="desktop" />,
+      <ThisMacSection
+        clock={clock}
+        client={createApiClient(browser.fetch)}
+        viewport="desktop"
+      />,
     )
     await waitFor(
       () =>
@@ -225,7 +242,11 @@ describe('ThisMacSection', () => {
     }
     server.json('GET', DEVICE_SETTINGS_PATH, { error: failed }, 502)
     await mount(
-      <ThisMacSection clock={clock} fetch={server.fetch} viewport="desktop" />,
+      <ThisMacSection
+        clock={clock}
+        client={createApiClient(server.fetch)}
+        viewport="desktop"
+      />,
     )
     await waitFor(() => queryByText('This Mac did not load'), 'the failed read')
     expect(queryByText('The Mac did not answer. Try again.')).not.toBeNull()

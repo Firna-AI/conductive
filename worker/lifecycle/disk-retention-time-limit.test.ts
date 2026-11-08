@@ -5,7 +5,7 @@ import { setupBackendTests } from './backend-test-hooks'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { readRetention } from './retention-data'
-import { resumeWorkspace } from './workspace-resume'
+import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 
 const backendFixture = setupBackendTests()
 const STARTED_AT = TEST_TIME + 1_123_260_000

@@ -28,7 +28,15 @@ These facts belong to this implementation, not to the protocol docs.
   `codex app-server` from the `@openai/codex` package, which
   `@openai/codex-sdk` installs.
 - Both agents run without approval prompts, with the rights of the service
-  user. Both get the `computer` MCP server of the sandbox.
+  user.
+- Both agents get the `computer` MCP server of the sandbox. Boat writes its
+  `mcpServers.computer` entry to `/home/user/.claude.json` at each sandbox
+  start. The entry names a local stdio server that talks over a Unix
+  socket, with no URL and no credential.
+- The runner reads that entry again at each agent start. Claude gets it as
+  it is, and Codex gets its command and arguments as a stdio server.
+  Without a valid entry, the runner writes a warning, and the agent starts
+  without computer tools.
 - The runner starts each turn with the login of its `turn` command. That
   login stays for the whole turn, also when a `message` command carries
   another login. Each `message` command of the turn goes to the running
@@ -107,34 +115,9 @@ These facts belong to this implementation, not to the protocol docs.
 
 ## Event limits
 
-The runner keeps each event within the limits that
-[Chat and events](../docs/protocol/chat-and-events.md#the-agent-runner) and
-[Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
-state. The [shared contracts](../src/shared/README.md) hold the constants.
-No variable changes them, and the runner protocol stays at version 1. Each
-byte budget measures the event or field after the output filter.
-
-- A tool detail keeps the longest prefix that fits
-  [`TOOL_DETAIL_MAX_BYTES`](../src/shared/chat-events.ts), and
-  `omittedDetailBytes` counts the rest. A turn summary keeps the first whole
-  files within `TURN_COMPLETED_MAX_FILES` and `TURN_COMPLETED_FILES_MAX_BYTES`.
-  `omittedFileCount` counts the rest, and the Changes report lists every file.
-- Each file event fits [`FILE_EVENT_MAX_BYTES`](../src/shared/files.ts). A
-  full tree or changes report goes as numbered parts of one revision. A
-  large tree update goes as deltas of at most `FILE_TREE_DELTA_MAX_CHANGES`
-  changes, with consecutive revisions.
-- Tree and changes reports have separate revision counters, which survive
-  a reconnect or a restart. The refresh after each connect sends a full tree
-  and a full changes report with newer revisions.
-- A failed repository scan sends `files.unavailable` and still permits
-  `runner.ready`. The next successful tree scan sends a full snapshot.
-- Before the outbox takes an event number, it checks the complete envelope
-  against [`RUNNER_EVENT_MAX_BYTES`](../src/shared/runner.ts). An event
-  that does not fit gets a local warning and no number, so later events
-  continue. This check covers the size of an event only.
-- A confirm can also cover a refusal marker that the workspace stored for
-  an event. The runner then removes that event from its outbox and does
-  not send it again. The runner never sends a refusal marker.
+[Event limits](event-limits.md) gives the byte and count limits of each
+event, the parts of the file reports, the unavailable file reports, and
+the outbox size check.
 
 ## Report requests
 
@@ -210,15 +193,14 @@ The runner reads these variables when the service starts.
 | `CONDUCTIVE_RUNNER_URL`       | Yes      | The `https:` or `wss:` URL of the runner route.                       |
 | `CONDUCTIVE_REPOSITORY`       | Yes      | The folder of the workspace repository.                               |
 | `CONDUCTIVE_DEFAULT_BRANCH`   | Yes      | The default branch, as a name that Git resolves in that folder.       |
-| `CONDUCTIVE_COMPUTER_MCP_URL` | Yes      | The absolute URL of the `computer` MCP server of the sandbox.         |
 | `CONDUCTIVE_HOME`             | No       | The home folder of the agents. The default is the home of the user.   |
 | `CONDUCTIVE_STATE_PATH`       | No       | The state file. The default is `.conductive/runner-state.json` there. |
 
 - The runner route is the path `MACHINE_PATHS.runner`, which is
   `/v1/runner`, from [`agent-tools.ts`](../src/shared/agent-tools.ts) on
   the hostname for machines, `api.conductive.build`.
-- This repository does not record the URL of the `computer` MCP server.
-  The image integration must supply it.
+- No variable configures the computer tools. The runner reads the entry
+  that Boat writes, as [What it does](#what-it-does) says.
 - `CONDUCTIVE_DEFAULT_BRANCH` is the base of the file marks, the Changes
   list, and the changed files of each turn. Each diff request names its own
   base branch. File reports compare the commit of that branch, the Git ID
@@ -252,6 +234,8 @@ The runner could not start. Check its configuration and saved state.
   `engine.ts` and the wire fixture in `wire.ts` use the production
   `DiskStorage` in a temporary folder. `disk.ts` supplies the controlled
   disk fixture for the recovery tests, and it can hold one chosen write.
+  `mockComputerServer` in `computer-mcp.ts` makes `readComputerServer` give
+  the fixed test entry `fakeComputerServer`.
 - The tests need Git. They need no network, no agent login, no cloud
   account, and no cloud computer. No test starts a real agent program, a
   real Worker, or a real sandbox. So a passing run does not show that a
@@ -291,6 +275,9 @@ tools that time the first agent start after a resume.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
+  `computer-mcp.ts` gives `readComputerServer`, which reads the `computer`
+  entry of the sandbox at each agent start. It warns through the `warn`
+  callback of `ProviderOptions`.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
   queue, the file tree, the branch changes, bounded reads, and the files of
   one turn.

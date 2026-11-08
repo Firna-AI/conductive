@@ -108,7 +108,11 @@ cp ${shellQuote(archive)} "$output"
     start: async (values: Readonly<Record<string, string>>, ready = true) => {
       await writeFile(
         join(root, 'run/ascii-secrets/env.sh'),
-        Object.entries({ CONDUCTIVE_REPOSITORY_DIR: repository, ...values })
+        Object.entries({
+          CONDUCTIVE_REPOSITORY_DIR: repository,
+          CONDUCTIVE_MACHINE_ORIGIN: 'https://machine.conductive.test',
+          ...values,
+        })
           .map(([name, value]) => `${name}=${shellQuote(value)}\n`)
           .join(''),
       )

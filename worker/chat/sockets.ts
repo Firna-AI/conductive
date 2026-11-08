@@ -1,7 +1,8 @@
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
 import type { WorkspaceToRunner } from '../../src/shared/runner'
 import { HttpError } from '../http'
-import type { BrowserAccess, WorkspaceChat } from './backend'
+import type { WorkspaceChat } from './backend'
+import type { BrowserAccess } from './browser-authorization'
 import { afterNumber } from './http-routes'
 
 function socketPair(request: Request) {

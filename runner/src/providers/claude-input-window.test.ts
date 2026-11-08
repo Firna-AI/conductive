@@ -1,10 +1,13 @@
-import { expect, it, onTestFinished } from 'vitest'
+import { beforeEach, expect, it, onTestFinished } from 'vitest'
 
 import { FakeClaudeQuery } from '../../test-support/claude-query'
+import { mockComputerServer } from '../../test-support/computer-mcp'
 import { runnerHarness, turn } from '../../test-support/harness'
 import { string } from '../parse'
 import { Runner } from '../runner'
 import { createClaudeFactory } from './claude'
+
+beforeEach(mockComputerServer)
 
 async function queuedClaudeTurn() {
   const h = await runnerHarness()
@@ -100,9 +103,9 @@ it('frees Claude input only for explicitly listed outstanding SDK UUIDs on each 
     home: h.home,
     login: first.login,
     choice: first.message.choice,
-    computerMcpUrl: h.options.computerMcpUrl,
     conversationId: null,
     event: () => {},
+    warn: h.options.warn,
   })
   onTestFinished(() => provider.close())
   for (let id = 1; id <= 65; id++) await provider.send(turn(String(id)))

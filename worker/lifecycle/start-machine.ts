@@ -58,6 +58,7 @@ export async function advanceStartMachine(
       WORKSPACE_TOKEN: token,
       CONDUCTIVE_WORKSPACE_ID: job.workspaceId,
       CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
+      CONDUCTIVE_DEFAULT_BRANCH: job.defaultBranch,
       CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
         locations,
         row.repositoryId,
@@ -116,10 +117,7 @@ export async function advanceStartMachine(
     }
     return {
       phase: 'ready',
-      environmentCiphertext:
-        job.kind === 'resume'
-          ? await runningEnvironment(env.DB, job.workspaceId)
-          : job.environmentCiphertext,
+      environmentCiphertext: await runningEnvironment(env.DB, job.workspaceId),
     }
   }
   if (!row.sandboxId) throw new WorkspaceStartError(null)

@@ -4,7 +4,7 @@ import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
 import { heldOperation } from './platform-test-storage'
 import { retentionCommandFixture } from './retention-command-test-support'
-import { resumeWorkspace } from './workspace-resume'
+import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 
 const backendFixture = setupBackendTests()
 const DEADLINE = TEST_TIME + 1_124_460_000

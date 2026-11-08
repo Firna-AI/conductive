@@ -38,7 +38,8 @@ const MAX_RECONNECT_DELAY_MS = 15_000
  * spans every session and file event of the workspace. A resent event is
  * dropped. An event after a gap waits until the gap fills, and the stream
  * opens again once after the cursor so the server can resend what is missing.
- * An event of another workspace is ignored.
+ * An event of another workspace is ignored. A hold closes the connection and
+ * keeps the cursor, so a release asks only for the events after it.
  */
 export class WorkspaceStream {
   private readonly target: WorkspaceTarget
@@ -53,6 +54,7 @@ export class WorkspaceStream {
   private retryHandle: TimerHandle | null = null
   private failures = 0
   private running = false
+  private held = false
 
   constructor(options: {
     target: WorkspaceTarget
@@ -71,14 +73,35 @@ export class WorkspaceStream {
     return this.cursor
   }
 
+  /** Runs the stream after the event number. A held stream opens at its release. */
   start(afterEventNumber: number): void {
     this.running = true
     this.cursor = afterEventNumber
-    this.open()
+    if (!this.held) this.open()
   }
 
   stop(): void {
     this.running = false
+    this.close()
+  }
+
+  /**
+   * Closes the connection and keeps it closed, also through a start or a
+   * retry, until `release`. The cursor and the waiting events stay.
+   */
+  hold(): void {
+    this.held = true
+    this.close()
+  }
+
+  /** Opens the connection again after the cursor, when the stream runs. */
+  release(): void {
+    if (!this.held) return
+    this.held = false
+    if (this.running) this.open()
+  }
+
+  private close(): void {
     this.generation += 1
     this.unsubscribe?.()
     this.unsubscribe = null
@@ -153,7 +176,7 @@ export class WorkspaceStream {
   }
 
   private schedule(delayMs: number): void {
-    if (!this.running) return
+    if (!this.running || this.held) return
     if (this.retryHandle !== null) this.timers.clear(this.retryHandle)
     this.retryHandle = this.timers.set(() => {
       this.retryHandle = null

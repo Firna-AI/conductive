@@ -35,14 +35,17 @@ export type WorkspaceSlot = (context: WorkspaceContext) => ReactNode
 /**
  * The parts that later milestones put into the shell of a workspace. The
  * shell draws the frame, the header, the start steps, and the sandbox
- * states. A missing part leaves its place empty.
+ * states, and the chat of the workspace fills the centre. A missing part
+ * leaves its place empty. A host that gives `tabs`, `transcript`, or
+ * `composer` gets the shell's own chat column with those parts in place of
+ * the chat.
  */
 export interface WorkspaceFeatures {
-  /** The session and file tabs above the centre column (Milestone 8). */
+  /** The tabs above the shell's own chat column, in place of the chat. */
   tabs?: WorkspaceSlot
-  /** The chat history. The start steps follow it (Milestone 8). */
+  /** The history of the shell's own chat column. The start steps follow it. */
   transcript?: WorkspaceSlot
-  /** The composer while the sandbox runs or starts (Milestone 8). */
+  /** The composer of the shell's own chat column while the sandbox runs or starts. */
   composer?: WorkspaceSlot
   /** A file or diff tab in place of the chat, or `null` for the chat (Milestone 10). */
   center?: (context: WorkspaceContext) => ReactNode | null

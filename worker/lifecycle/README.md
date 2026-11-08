@@ -8,9 +8,10 @@ and its own Boat sandbox. The code reaches Boat only through the
 with the app's one Boat key, as the [sandbox area](../sandbox/README.md)
 says.
 
-The root Worker does not call these handlers yet. `worker/routes.ts` has no
-lifecycle route, and `worker/application.ts` serves a stub on the machine
-hostname. The composition root must add each route and wrapper below.
+`chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
+gives the create, read, resume, and activity routes of a workspace to
+`handleLifecycleRequest`. The root Worker also serves the
+[machine route](#machine-route). It routes no build route yet.
 
 ## Responsibilities
 
@@ -37,24 +38,27 @@ of the shared contracts:
 
 Run the browser gate first, and pass its `RequestContext`. The handler
 returns `null` for every other route. `env` is a `LifecycleEnvironment`
-from [`runtime.ts`](runtime.ts). The caller gives three options:
+from [`runtime.ts`](runtime.ts). The caller gives these options:
 
 - `software`: the runner archive for each new build and refresh, as the
   [image README](../../image/README.md#the-runner-archive) says.
+  `runnerSoftware` in [`configuration.ts`](../configuration.ts) reads it
+  from two Worker variables, as
+  [Deployment inputs](../../docs/deployment.md#the-runner-archive) says.
 - `acceptFirstMessage`: the hook of the chat backend. After the admission
   and for each repeat, it stores the queued first message of that admission
   and returns it. So it must be idempotent for the message and session IDs.
+  In production, the admission has already stored that message in chat, so
+  the hook adds no history.
+- `projectWorkspace`: optional. It changes the workspace record of each
+  reply, such as its state for the reader.
 - `waitUntil`: the `waitUntil` of the Worker's execution context. A create
   gives it its work, so the work continues when the browser closes.
 
-```ts
-const runtime = { ...workspaceRuntime(env), images: imageRuntime(env) }
-const response = await handleLifecycleRequest(request, context, runtime, {
-  software,
-  acceptFirstMessage,
-  waitUntil: (promise) => ctx.waitUntil(promise),
-})
-```
+`chatLifecycleRoute` makes the runtime with `workspaceRuntime` and
+`imageRuntime`. It gives `software` as a getter, so only a build or a
+refresh reads the archive variables. It gives `acceptFirstMessage` to
+`acceptLifecycleFirstMessage` of the workspace object.
 
 - A create needs a published org image and a repository that its build
   loaded. A change to the chosen repositories takes effect after the next
@@ -66,6 +70,13 @@ const response = await handleLifecycleRequest(request, context, runtime, {
   Admission makes the workspace, its token, and the first message durable.
   The sandbox can still be starting. `waitCreationLifecycle` waits for the
   end of a create, and `waitLifecycleStart` for the end of a resume.
+- Resume answers when the start is queued, with the workspace in
+  `starting`. No browser route waits for the end of a start. The events of
+  the workspace carry the start steps and the result. A failed resume
+  keeps the workspace and its chat, with an error and a valid Try again.
+- A test that needs the end of a resume uses `resumeCompletedWorkspace` in
+  [`completed-resume-test-support.ts`](completed-resume-test-support.ts).
+  It waits for the job that its call queued, and reads the real result.
 - The write that ends the `records` phase stores the admission in the start
   job. The end of the create moves it to the completed creation record. A
   repeat with other content still gets the admitted first message.
@@ -80,6 +91,10 @@ const response = await handleLifecycleRequest(request, context, runtime, {
 - Resume restarts only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
+- Each start gives the sandbox the default branch of its repository. It
+  gives no setting for the computer tools, because Boat writes the entry
+  of the `computer` server into the sandbox, as
+  [What it does](../../runner/README.md#what-it-does) says.
 - After the startup script succeeds at create and each resume, the start
   calls the start hook of the [terminal backend](../terminal/README.md).
   The hook starts the terminal and caches its encrypted password before
@@ -113,93 +128,41 @@ turn and the branch step use the sender.
 [git credential helper](../../image/README.md#git-credentials) sends the
 workspace token as a bearer token, and the current turn ID in the
 `X-Conductive-Turn-Id` header. The handler reads no request body and needs
-no content type. The workspace object maps that turn to its sender. Only
-trusted turn records give a sender: the first turn of a create, and each
-turn that the chat backend registers. A stop clears them.
+no content type. `Workspace.credentialSender` maps that turn to a sender,
+in the chat queue:
+
+- A create that prepares its repository has its own grant. The start job
+  is a create in the `fetch` or `branch` phase, not cancelled or failed,
+  and its `turnId` matches. The grant gives the sender of the admitted
+  first message.
+- Otherwise the turn must be the running stored chat turn: the active
+  turn of an open session. `activeStoredTurn` in
+  [`access.ts`](../devices/access.ts) reads it. So access ends with the
+  turn, also after a queued Stop, a session close, or a login failure.
+- A stopped or archived workspace gives no sender. The lifecycle admission
+  keeps no turn record for the queued first message.
+
+`machine.test.ts` runs the route with `machineCredentialFixture` in
+[`machine-test-support.ts`](machine-test-support.ts), over the production
+chat and runner boundaries.
 
 The handler returns a fresh GitHub App user token of the sender, from
 `freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).
 It stores no token. A user without a stored GitHub token must sign in again.
 
-The composition root must route `MACHINE_PATHS.gitCredential` to this
-handler, and `IMAGE_SOURCE_CREDENTIAL_PATH` to `handleImageSourceCredential`
-in [`image-sources/credential.ts`](image-sources/credential.ts), on the
-machine hostname only, before any browser route, with the private error
-response wrapper. Until then, a create cannot fetch a private repository
-or push to an empty one, and a build cannot copy a repository.
+`createApp` in [`worker/application.ts`](../application.ts) routes
+`MACHINE_PATHS.gitCredential` to this handler, and
+`IMAGE_SOURCE_CREDENTIAL_PATH` to `handleImageSourceCredential` in
+[`image-sources/credential.ts`](image-sources/credential.ts). It does this
+on the machine hostname only, after the Mac command route and before the
+runner socket, with the private error response wrapper.
 
 ### Workspace Durable Object
 
-`Workspace` in [`worker/workspace.ts`](../workspace.ts) is the Durable
-Object class of the `WORKSPACES` binding. [`runtime.ts`](runtime.ts) gets
-each object by name, with the Western Europe location hint. Each name has
-one role:
-
-- The workspace ID names the workspace object of one workspace.
-- `org-image:<orgId>` names the image coordinator of one org.
-
-Its public methods are internal RPC, not HTTP routes. This folder uses the
-`WorkspaceLifecycleEndpoint` interface of
-[`workspace-runtime.ts`](workspace-runtime.ts). These hooks wait for the
-chat backend and the runner ingestion, and no code calls them yet:
-
-- `registerLifecycleTurn` records the trusted sender of a turn before the
-  turn goes out. `finishLifecycleTurn`, or a report that the turn ended,
-  removes it.
-- `reportRunnerLifecycle` takes each runner event that ordered runner
-  ingestion accepts. `runnerLifecycleDisconnected` takes a disconnect.
-- `acknowledgeLifecycleFirstMessage` clears the pending first message of
-  the create. The admission keeps its own copy for repeats.
-
-The `alarm` of the class serves both roles. For an image coordinator, it
-advances the running build or refresh by one step, or starts the daily
-refresh. A transient Boat error keeps the job step for the next alarm, within the
-[retry window](image-builds.md#provider-retries), except a source command start. For a workspace object, it:
-
-- runs the queued start of a create or a resume, one phase at a time
-- stops the sandbox after 30 minutes without activity or a running turn
-- extends the Boat auto-stop deadline while a turn runs, and applies the
-  state in that reply even when the saved runner flag says connected
-- reads the sandbox state from Boat while the runner is not connected
-- runs the disk retention restart 13 days after each confirmed stop
-- retries the sandbox delete of a failed create
-- recovers and deletes an unresolved allocation after a start reaches its limit
-
-The deadline and stop actions use the sandbox state in each Boat reply.
-When Boat refuses an action, they read the sandbox state once. The
-[Boat update reference](https://docs.boat.dev/api/reference/sandboxes/update-sandbox)
-does not promise a refusal for an archived sandbox, so the code handles a
-reply and a refusal. A confirmed stop or a Boat `error` state clears all
-running sessions and turn records. A Boat `error` state sets the workspace
-error state, with no resume and no delete. A stop reply that still shows an
-active sandbox keeps the workspace state and schedules another alarm.
-
-The object encrypts the env values and output chunks of a start. To release
-a log, it joins all stdout parts, then all stderr parts, and masks the
-joined text with the saved env values. So a value that crosses the stdout
-and stderr boundary stays hidden. Only `MaskedStartLog.mask` can create a
-`MaskedStartLog`, because the constructor is private. Internal RPC carries
-only encrypted log data, and the caller decrypts and masks it again.
-Browser responses keep the plain string log of the shared contract.
-
-The `fetch` of the class opens the workspace event socket at
-`workspaceEventsPath` of `src/shared/events.ts`. Forward the browser's
-upgrade request without changes, because the object runs the browser gate
-itself. The socket sends the stored history first, then each new event.
-After a failed create removes its records, `failedCreationEvents` in
-[`failed-creation-events.ts`](failed-creation-events.ts) serves that path
-only to the sender of the first message, after the browser gate. It sends
-the stored public history once, with the `message.accepted` event of the
-first message, and then closes. The browser does not restore the composer
-from it yet. The owner of `src/app/` and `src/shell/` adds that recovery.
-
-`WorkspaceEventJournal` in [`durable-journal.ts`](durable-journal.ts) keeps
-ordered lifecycle publication and suppresses unchanged updates. Each
-workspace update includes the saved public error code and message, or null
-to clear an error. The event carries no error log. The
-production `Workspace` must send each `workspace.updated` and
-`start.updated` event to `WorkspaceChat`. Chat stores and numbers the only
-workspace event history, with chat and lifecycle events.
+[Workspace Durable Object](workspace-object.md) describes the Durable
+Object of each workspace and of each image coordinator: its names, its
+lifecycle steps, its alarm, its start logs, its event socket, and the
+publication of its events.
 
 ### Builds and refreshes
 
@@ -218,16 +181,10 @@ the log limits, the snapshot leases, and the refresh timers.
 ## Settings
 
 The lifecycle code reads `LifecycleEnvironment` from
-[`runtime.ts`](runtime.ts). It needs these values in addition to the
-[Get started](../../README.md#get-started) values:
-
-| Name | Value |
-| --- | --- |
-| `WORKSPACES` | The Durable Object binding in `wrangler.jsonc`. |
-| `MACHINE_ORIGIN` | The `https://` origin of the machine hostname. Each sandbox gets it as `CONDUCTIVE_MACHINE_ORIGIN`. Both credential routes refuse every request without it, and a build cannot copy a repository. |
-| `GITHUB_APP_PRIVATE_KEY` | The GitHub App's private key, as PEM. A build or refresh needs it when the org chose a repository. The PEM file from GitHub works as it is. |
-
-`BOAT_KEY_ENCRYPTION_KEY` also encrypts the workspace tokens.
+[`runtime.ts`](runtime.ts). [Deployment inputs](../../docs/deployment.md)
+gives each binding, variable, and secret that it reads, such as
+`WORKSPACES`, `MACHINE_ORIGIN`, `BOAT_API_KEY`, `BOAT_ORG_ID`,
+`GITHUB_APP_PRIVATE_KEY`, and the runner archive variables.
 
 ## Development
 
@@ -250,7 +207,15 @@ object holds the lifecycle state, the turn records, and the events.
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
-- [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`.
+- [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
+  answers once the start is queued.
+- [`workspace-state-projection.ts`](workspace-state-projection.ts):
+  `WorkspaceStateProjection`, the one writer of the shown state, as
+  [Workspace Durable Object](workspace-object.md#the-shown-state) says.
+- [`workspace-controller.ts`](workspace-controller.ts):
+  `createWorkspaceController`, the lifecycle methods of the workspace
+  object. [`lifecycle-admission.ts`](lifecycle-admission.ts) checks a create
+  and calls the admission hook.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
   phases, admission, process IDs, output offsets, retry state, deadline, and results.

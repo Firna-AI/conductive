@@ -15,6 +15,7 @@ import {
   type DurableLifecycleState,
   type LifecycleHooks,
   type LifecycleStorage,
+  type LifecyclePublisher,
 } from './durable-types'
 
 /** One instance lives inside each workspace Durable Object. */
@@ -78,43 +79,57 @@ export class DurableLifecycle {
     }))
   }
 
-  step(id: string, label: string, status: StartStep['state']): Promise<void> {
-    return this.update((state) =>
-      withStartStep(state, id, label, status, this.now()),
+  step(
+    id: string,
+    label: string,
+    status: StartStep['state'],
+    publish?: LifecyclePublisher,
+  ): Promise<void> {
+    return this.update(
+      (state) => withStartStep(state, id, label, status, this.now()),
+      publish,
     )
   }
 
-  runnerReady(): Promise<void> {
-    return this.update((state) =>
-      state.state === 'stopped' ||
-      state.state === 'archived' ||
-      state.state === 'error' ||
-      state.startStop !== undefined
-        ? state
-        : {
-            ...state,
-            state:
-              state.start && !state.startupPrepared
-                ? 'starting'
-                : state.runningSessions.length
-                  ? 'working'
-                  : ['unread', 'input'].includes(state.state)
-                    ? state.state
-                    : 'ready',
-            runnerConnected: true,
-            error: null,
-            stoppedAt: null,
-            nextDiskKeepaliveAt: null,
-          },
+  runnerReady(publish?: LifecyclePublisher): Promise<void> {
+    return this.update(
+      (state) =>
+        state.state === 'stopped' ||
+        state.state === 'archived' ||
+        state.state === 'error' ||
+        state.startStop !== undefined
+          ? state
+          : {
+              ...state,
+              state:
+                state.start && !state.startupPrepared
+                  ? 'starting'
+                  : state.runningSessions.length
+                    ? 'working'
+                    : ['unread', 'input'].includes(state.state)
+                      ? state.state
+                      : 'ready',
+              runnerConnected: true,
+              error: null,
+              stoppedAt: null,
+              nextDiskKeepaliveAt: null,
+            },
+      publish,
     )
   }
 
-  runnerDisconnected(): Promise<void> {
-    return this.update((state) => ({ ...state, runnerConnected: false }))
+  runnerDisconnected(publish?: LifecyclePublisher): Promise<void> {
+    return this.update(
+      (state) => ({ ...state, runnerConnected: false }),
+      publish,
+    )
   }
 
-  reportStart(start: WorkspaceStart): Promise<void> {
-    return this.update((state) => withReportedStart(state, start))
+  reportStart(
+    start: WorkspaceStart,
+    publish?: LifecyclePublisher,
+  ): Promise<void> {
+    return this.update((state) => withReportedStart(state, start), publish)
   }
 
   prepared(): Promise<void> {
@@ -156,7 +171,11 @@ export class DurableLifecycle {
     })
   }
 
-  turn(sessionId: string, running: boolean): Promise<void> {
+  turn(
+    sessionId: string,
+    running: boolean,
+    publish?: LifecyclePublisher,
+  ): Promise<void> {
     return this.update(async (state) => {
       if (state.state === 'stopped' || state.state === 'archived') return state
       const remote = await this.hooks.extendDeadline()
@@ -170,7 +189,7 @@ export class DurableLifecycle {
         state: sessions.size ? 'working' : 'ready',
         lastActivityAt: this.now(),
       }
-    })
+    }, publish)
   }
 
   stopped(): Promise<void> {
@@ -194,8 +213,11 @@ export class DurableLifecycle {
     )
   }
 
-  acknowledgeFirstMessage(): Promise<void> {
-    return this.update((state) => ({ ...state, pendingFirstMessage: null }))
+  acknowledgeFirstMessage(publish?: LifecyclePublisher): Promise<void> {
+    return this.update(
+      (state) => ({ ...state, pendingFirstMessage: null }),
+      publish,
+    )
   }
 
   clear(preserveAlarm = false): Promise<boolean> {
@@ -236,15 +258,25 @@ export class DurableLifecycle {
     change: (
       state: DurableLifecycleState,
     ) => DurableLifecycleState | Promise<DurableLifecycleState>,
+    publish?: LifecyclePublisher,
   ): Promise<void> {
     return this.serial(async () => {
       const state = await this.read()
-      if (state) await this.write(await change(state))
+      if (state) await this.write(await change(state), publish)
     })
   }
 
-  private async write(state: DurableLifecycleState): Promise<void> {
-    await writeLifecycleState(this.storage, this.hooks, state, this.now)
+  private async write(
+    state: DurableLifecycleState,
+    publish?: LifecyclePublisher,
+  ): Promise<void> {
+    await writeLifecycleState(
+      this.storage,
+      this.hooks,
+      state,
+      this.now,
+      publish,
+    )
   }
 
   private keepalive(state: DurableLifecycleState) {

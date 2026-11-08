@@ -3,7 +3,10 @@ import { ChevronDown, FolderGit2, Sparkles } from 'lucide-react'
 import chat from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/screens/NewWorkspaceScreen.module.css'
-import { draftReady } from '../../app/new-workspace-model'
+import {
+  draftReady,
+  type NewWorkspaceModel,
+} from '../../app/new-workspace-model'
 import { currentBuild } from '../../app/org-model'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
@@ -96,17 +99,22 @@ function Start(props: {
 /**
  * New workspace: an empty chat with the repository, and the composer with
  * its files and its model. The first message creates the workspace, and the
- * app names it and its branch. A failed create keeps the message.
+ * app names it and its branch. A failed create keeps the message. `form`
+ * is the form of a message that came back after its sandbox did not start.
+ * Without it, the screen shows the form of the section.
  */
 export function NewWorkspaceScreen(props: {
   org: OrgSummary
   sectionId: string | null
+  form?: NewWorkspaceModel
 }) {
   const { org } = props
   const app = useApp()
   const go = useGo()
   const orgModel = useOrgModel(org.id)
-  const [model] = useState(() => orgModel.newWorkspace(props.sectionId))
+  const [model] = useState(
+    () => props.form ?? orgModel.newWorkspace(props.sectionId),
+  )
   const account = useStore(app.account.account)
   const models = useStore(app.models)
   const repositories = valueOf(useStore(orgModel.repositories))
@@ -130,8 +138,9 @@ export function NewWorkspaceScreen(props: {
       : null
   const send = async () => {
     if (!ready) return
-    const created = await model.send(ready)
-    if (created) go(routes.workspace(org.id, created.workspace.id))
+    await model.send(ready, (created) =>
+      go(routes.workspace(org.id, created.workspace.id)),
+    )
   }
   const section = sections?.find((item) => item.id === props.sectionId)
   return (
@@ -154,9 +163,13 @@ export function NewWorkspaceScreen(props: {
           />
         </div>
         <div className={chat.footer}>
-          {create.state === 'failed' ? (
+          {create.state === 'failed' || create.state === 'not-started' ? (
             <CreateFailed
-              error={create.error}
+              error={
+                create.state === 'failed'
+                  ? create.error
+                  : (create.error ?? null)
+              }
               ready={ready !== null}
               retry={() => void send()}
             />

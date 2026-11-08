@@ -64,7 +64,6 @@ export async function runnerHarness() {
     cwd: repository.root,
     home: repository.home,
     defaultBranch: 'main',
-    computerMcpUrl: 'http://computer.test/mcp',
     providers: { claude: providers.open, codex: providers.open },
     warm: async () => {},
     now: () => now,

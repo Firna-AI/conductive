@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
+import type { ApiClient } from '../app/api/client'
 import {
   useWorkspaceStore,
   type WorkspaceIdentity,
 } from '../app/workspace-store'
-import type { FetchLike } from './api/client'
 import type { ChatSnapshot } from './state/chat-snapshot'
 import { ChatController } from './state/controller'
 import type { SubscribeToWorkspace } from './stream/workspace-stream'
@@ -11,8 +11,8 @@ import type { SubscribeToWorkspace } from './stream/workspace-stream'
 export interface ChatConnection {
   orgId: string
   workspaceId: string
-  /** The browser's `fetch`, or a fake with the same shape. Keep it stable. */
-  fetch: FetchLike
+  /** The JSON client of the app, or one over a fake API. Keep it stable. */
+  client: ApiClient
   /** Opens the workspace event stream. Keep it stable. */
   subscribe: SubscribeToWorkspace
 }
@@ -25,19 +25,19 @@ function startChat(controller: ChatController): () => void {
 
 /**
  * The controller of one workspace's chat and its current snapshot. A new
- * workspace, `fetch`, or `subscribe` makes a new controller, so pass stable
- * functions. The controller starts when the component mounts and stops when
- * it unmounts.
+ * workspace, `client`, or `subscribe` makes a new controller, so pass stable
+ * ones. The controller starts when the component mounts and stops when it
+ * unmounts.
  */
 export function useChatController(connection: ChatConnection): {
   controller: ChatController
   snapshot: ChatSnapshot
 } {
-  const { orgId, workspaceId, fetch, subscribe } = connection
+  const { orgId, workspaceId, client, subscribe } = connection
   const create = useCallback(
     (target: WorkspaceIdentity) =>
-      new ChatController({ target, fetch, subscribe }),
-    [fetch, subscribe],
+      new ChatController({ target, client, subscribe }),
+    [client, subscribe],
   )
   const { store, snapshot } = useWorkspaceStore(
     { orgId, workspaceId },

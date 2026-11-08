@@ -69,12 +69,50 @@ export class RunnerDelivery {
           advanced = true
         continue
       }
+      const publish = async (
+        event: WorkspaceEventEnvelope['event'],
+        occurredAt?: number,
+      ) => {
+        await this.store.change(
+          active.workspace.id,
+          (transaction) => transaction.emit(event, occurredAt),
+          this.publish,
+        )
+      }
+      if (
+        outbound.type === 'turn' &&
+        !(await this.dependencies.turnDispatching(
+          active.workspace.id,
+          {
+            turnId: outbound.turnId,
+            sessionId: outbound.sessionId,
+            senderUserId: outbound.message.sender.id,
+          },
+          publish,
+        ))
+      )
+        continue
+      if (!isCurrent()) {
+        if (outbound.type === 'turn')
+          await this.dependencies.turnDispatchFailed(
+            active.workspace.id,
+            outbound.turnId,
+            publish,
+          )
+        return false
+      }
       const beganTurn = await this.dispatch.begin(active.workspace.id, command)
       try {
         await active.peer.send(outbound)
       } catch {
         detach()
         await this.dispatch.unsent(active.workspace.id, command, beganTurn)
+        if (beganTurn && 'turnId' in command)
+          await this.dependencies.turnDispatchFailed(
+            active.workspace.id,
+            command.turnId,
+            publish,
+          )
         return false
       }
       active.delivered.add(command.commandId)
@@ -87,7 +125,6 @@ export class RunnerDelivery {
     active: ActiveRunner,
     command: PendingCommand,
   ): Promise<RunnerCommand | null> {
-    if (command.type === 'model') return command
     const canDispatch = await this.store.read(
       active.workspace.id,
       async (view) => {
@@ -98,7 +135,7 @@ export class RunnerDelivery {
       },
     )
     if (!canDispatch) return null
-    if (command.type === 'interrupt') return command
+    if (command.type === 'interrupt' || command.type === 'model') return command
     const message = await this.store.read(active.workspace.id, (view) =>
       view.message(command.messageId),
     )

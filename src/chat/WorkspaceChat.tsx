@@ -1,18 +1,25 @@
-import { useCallback, useEffect, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react'
 import type { Agent } from '../shared/agents'
 import type { WorkspaceView } from '../shared/workspace-view'
 import type { Workspace } from '../shared/workspaces'
 import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
-import { SessionChat } from './components/SessionChat'
+import { SessionChat, type ChatHost } from './components/SessionChat'
 import { SessionTabs } from './components/SessionTabs'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
-import { sessionState } from './state/chat-snapshot'
+import { sessionState, type ChatSnapshot } from './state/chat-snapshot'
+import type { ChatController } from './state/controller'
 import { systemClock, useNow, type Clock } from './ui/clock'
 import { useChatController, type ChatConnection } from './useChatController'
 import styles from './WorkspaceChat.module.css'
 
-export interface WorkspaceChatProps extends ChatConnection {
+/** How the chat shows, and what it tells the app. */
+export interface ChatViewProps {
   /** The phone layout takes 44 px touch targets and sheets for menus. */
   viewport: 'desktop' | 'mobile'
   /** The time source for durations and relative times. */
@@ -27,7 +34,11 @@ export interface WorkspaceChatProps extends ChatConnection {
   onOpenDiff?: (path: string) => void
   /** The notice of an agent with no login leads to its Connect form. */
   onConnectAgent?: (agent: Agent) => void
+  /** The start steps and the sandbox bar that the app draws, as `ChatHost` says. */
+  host?: ChatHost
 }
+
+export interface WorkspaceChatProps extends ChatConnection, ChatViewProps {}
 
 function useReport<T>(value: T | null, report?: (value: T) => void): void {
   useEffect(() => {
@@ -35,14 +46,11 @@ function useReport<T>(value: T | null, report?: (value: T) => void): void {
   }, [value, report])
 }
 
-/**
- * The chat of one workspace: the session tabs with the session history, and
- * the chat of the open session with its composer. It loads through `fetch`
- * and follows the workspace through `subscribe`. Give it a stable `fetch`
- * and `subscribe`, as `useChatController` says.
- */
-export function WorkspaceChat(props: WorkspaceChatProps) {
-  const { controller, snapshot } = useChatController(props)
+/** The session tabs, the chat of the open session, and the overlays. */
+function ChatBody(
+  props: ChatViewProps & { controller: ChatController; snapshot: ChatSnapshot },
+) {
+  const { controller, snapshot } = props
   const mobile = props.viewport === 'mobile'
   const active = snapshot.activeSessionId
   const running = active ? sessionState(snapshot, active).transcript.turn : null
@@ -88,6 +96,7 @@ export function WorkspaceChat(props: WorkspaceChatProps) {
       />
       <SessionChat
         controller={controller}
+        host={props.host}
         mobile={mobile}
         now={now}
         onConnectAgent={props.onConnectAgent}
@@ -110,4 +119,32 @@ export function WorkspaceChat(props: WorkspaceChatProps) {
       <div className={styles.phone}>{body}</div>
     </TouchScreen>
   )
+}
+
+/**
+ * The chat of one workspace: the session tabs with the session history, and
+ * the chat of the open session with its composer. It loads through `client`
+ * and follows the workspace through `subscribe`. Give it a stable `client`
+ * and `subscribe`, as `useChatController` says.
+ */
+export function WorkspaceChat(props: WorkspaceChatProps) {
+  const { controller, snapshot } = useChatController(props)
+  return <ChatBody {...props} controller={controller} snapshot={snapshot} />
+}
+
+/**
+ * The chat of a controller that the app keeps, such as across the pages of
+ * a tab. The app shows and hides the controller itself, as
+ * `ChatController.show` says. This view only draws it.
+ */
+export function WorkspaceChatView(
+  props: ChatViewProps & { controller: ChatController },
+) {
+  const { controller } = props
+  const snapshot = useSyncExternalStore(
+    controller.subscribe,
+    controller.getSnapshot,
+    controller.getSnapshot,
+  )
+  return <ChatBody {...props} snapshot={snapshot} />
 }

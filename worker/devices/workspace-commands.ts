@@ -15,6 +15,7 @@ import { deviceCall, type DeviceOperationValue } from './internal'
 import { deviceBrokerName } from './paths'
 import { commandPending, DeviceRecords } from './records'
 import { workspaceMachine } from './workspace-machine'
+import type { DeviceStateProjection } from './state'
 
 export class WorkspaceDevices {
   readonly records: DeviceRecords
@@ -28,12 +29,13 @@ export class WorkspaceDevices {
     storage: ChatStorage,
     matches: (name: string) => boolean,
     now: () => number,
+    projection?: DeviceStateProjection,
   ) {
     this.chat = chat
     this.env = env
     this.matches = matches
     this.now = now
-    this.records = new DeviceRecords(storage, chat, env, now)
+    this.records = new DeviceRecords(storage, chat, env, now, projection)
   }
   machine(request: Request): Promise<Response> {
     return workspaceMachine(this, request)

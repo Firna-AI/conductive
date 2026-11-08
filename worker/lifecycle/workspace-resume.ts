@@ -5,7 +5,6 @@ import { requireOrgMember } from './access'
 import { readImageSettings, workspaceRepository } from './settings-data'
 import { readWorkspace } from './workspace-data'
 import { workspaceResponse } from './workspace-response'
-import { workspaceStartFailure } from './workspace-start'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import { workspaceRepositoryLocations } from './repository-location-data'
 
@@ -32,7 +31,7 @@ export async function resumeWorkspace(
     )
   const settings = await readImageSettings(env.DB, orgId)
   const repository = await workspaceRepository(env.DB, orgId, row.repositoryId)
-  const accepted = await endpoint.queueLifecycleStart({
+  await endpoint.queueLifecycleStart({
     workspaceId,
     orgId,
     kind: 'resume',
@@ -53,8 +52,5 @@ export async function resumeWorkspace(
     stderrOffset: 0,
     allocatedSandboxId: row.sandboxId,
   })
-  if (!accepted) return workspaceResponse(runtime, orgId, workspaceId)
-  const result = await endpoint.waitLifecycleStart()
-  if (!result.ok) throw workspaceStartFailure(result.error)
   return workspaceResponse(runtime, orgId, workspaceId)
 }

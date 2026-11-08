@@ -1,6 +1,7 @@
 import { object, string } from '../parse'
 import { codexBinary } from './binaries'
 import { codexNotification } from './codex-events'
+import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
@@ -34,6 +35,8 @@ export function createCodexFactory(
     const lifetime = options.lifetime ?? new ProviderLifetime()
     await prepareProviderHome(options.home)
     options.signal?.throwIfAborted()
+    const computer = await readComputerServer(options.warn)
+    options.signal?.throwIfAborted()
     const configs = {
       model_provider: 'conductive',
       'model_providers.conductive.name': 'Conductive',
@@ -42,7 +45,14 @@ export function createCodexFactory(
       'model_providers.conductive.wire_api': 'responses',
       'model_providers.conductive.requires_openai_auth': false,
       cli_auth_credentials_store: 'ephemeral',
-      'mcp_servers.computer.url': options.computerMcpUrl,
+      ...(computer
+        ? {
+            'mcp_servers.computer.command': computer.command,
+            ...(computer.args
+              ? { 'mcp_servers.computer.args': computer.args }
+              : {}),
+          }
+        : {}),
     }
     const args = [
       codexBinary(),

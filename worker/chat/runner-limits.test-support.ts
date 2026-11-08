@@ -45,6 +45,14 @@ export async function createRunnerLimitsFixture() {
   let commandSequence = 0
   let store = new ChatStore(storage, () => 25)
   const dependencies: ChatDependencies = {
+    waitUntil: (promise) => {
+      void promise.catch(() => undefined)
+    },
+    runnerDisconnected: async () => undefined,
+    turnDispatching: async () => true,
+    turnDispatchFailed: async () => undefined,
+    browserOpened: async () => undefined,
+    browserClosed: async () => undefined,
     now: () => 25,
     scheduleBrowserCheck: () => () => undefined,
     scheduleRunnerCheck: () => () => undefined,

@@ -1,6 +1,7 @@
-import { expect, it } from 'vitest'
+import { beforeEach, expect, it } from 'vitest'
 
 import { FakeAppServers } from '../../test-support/app-server'
+import { mockComputerServer } from '../../test-support/computer-mcp'
 import { turn } from '../../test-support/harness'
 import { deferred } from '../../test-support/runtime'
 import { repositoryFixture } from '../../test-support/repository'
@@ -8,6 +9,8 @@ import { object } from '../parse'
 import { createCodexFactory } from './codex'
 import type { ProcessRequest, StartProcess } from './process'
 import type { ProviderProcess } from './types'
+
+beforeEach(mockComputerServer)
 
 it('closes Codex startup and in-flight requests when their session signal is canceled', async () => {
   const h = await repositoryFixture()
@@ -36,11 +39,11 @@ it('closes Codex startup and in-flight requests when their session signal is can
     const opening = createCodexFactory(start)({
       cwd: h.root,
       home: h.home,
-      computerMcpUrl: 'http://computer.test/mcp',
       login: turn().login,
       choice: turn().message.choice,
       conversationId: null,
       event: () => {},
+      warn: () => {},
       signal: controller.signal,
     })
     let request: Promise<void> | null = null

@@ -10,7 +10,7 @@ import type { DevBackend } from './dev-backend'
  */
 export function DevMacBanner(props: { backend: DevBackend; clock: Clock }) {
   const { backend } = props
-  const { controller, state } = useMacSettings(backend.fetch)
+  const { controller, state } = useMacSettings(backend.client)
   useEffect(
     () => backend.mac.listen(() => void controller.refresh()),
     [backend, controller],
