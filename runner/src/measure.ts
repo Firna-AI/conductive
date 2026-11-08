@@ -67,12 +67,18 @@ async function measure(): Promise<void> {
       effort: 'low' as const,
     }
     if (!choice.model) throw new Error('Set the measurement model.')
+    const turnId = randomUUID()
     provider = await factory({
       cwd: process.env.CONDUCTIVE_REPOSITORY ?? process.cwd(),
       home: process.env.CONDUCTIVE_HOME ?? homedir(),
       login,
       choice,
       conversationId: null,
+      tools: {
+        machineOrigin: process.env.CONDUCTIVE_MACHINE_ORIGIN ?? '',
+        workspaceToken: process.env.CONDUCTIVE_WORKSPACE_TOKEN ?? '',
+        turnId,
+      },
       event,
       warn: (message) => process.stderr.write(`${message}\n`),
     })
@@ -81,7 +87,7 @@ async function measure(): Promise<void> {
       type: 'turn',
       commandId: randomUUID(),
       sessionId,
-      turnId: randomUUID(),
+      turnId,
       login,
       attachments: [],
       message: {

@@ -19,7 +19,7 @@ import {
 import { firstOrgAdmin } from './settings-data'
 import { advanceStartMachine } from './start-machine'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
-import { StartWaiters } from './start-waiters'
+import { abortStartWaiters, StartWaiters } from './start-waiters'
 import { requireActiveStartUsers } from './start-access'
 import { advanceStartSteps } from './start-progress'
 import {
@@ -259,6 +259,10 @@ export class WorkspaceStartCoordinator {
 
   async cancel(): Promise<void> {
     if (await this.storage.stop()) await this.storage.schedule()
+  }
+
+  abortWaiters(): void {
+    abortStartWaiters(this.waiters, this.creationWaiters, this.admissionWaiters)
   }
 
   private async finish(result: WorkspaceStartResult): Promise<boolean> {

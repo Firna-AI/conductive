@@ -3,6 +3,7 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'
 import { runnerHarness, turn } from '../../test-support/harness'
+import { fakeToolContext } from '../../test-support/providers'
 import { string } from '../parse'
 import { Runner } from '../runner'
 import { createClaudeFactory } from './claude'
@@ -104,6 +105,7 @@ it('frees Claude input only for explicitly listed outstanding SDK UUIDs on each 
     login: first.login,
     choice: first.message.choice,
     conversationId: null,
+    tools: fakeToolContext,
     event: () => {},
     warn: h.options.warn,
   })

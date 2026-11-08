@@ -2,17 +2,6 @@ import type { HttpFetch } from '../../env'
 import { isRecord } from '../../http'
 import { base64Url } from '../../security/crypto'
 import type { SourceRepository } from './data'
-import { privateKeyBytes } from './private-key'
-
-export async function appSigningKey(pem: string): Promise<CryptoKey> {
-  return crypto.subtle.importKey(
-    'pkcs8',
-    privateKeyBytes(pem),
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  )
-}
 
 export async function installationToken(
   fetch: HttpFetch,

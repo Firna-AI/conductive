@@ -65,10 +65,11 @@ function FileTabs(props: {
 /**
  * The files of the workspace: the All files, Changes, and Checks tabs. A
  * file opens as a tab in the centre column, and `open` marks its row. A
- * branch without edits has no changes yet. While the sandbox does not run,
- * `placeholder` replaces the file lists; the checks come from GitHub and
- * still show. When the cloud computer could not read the files, `tree` keeps
- * the saved list under a notice, or says that no list is available.
+ * branch without edits has no changes yet. A `placeholder`, such as the
+ * state of a sandbox that starts, replaces the file lists. The checks come
+ * from GitHub and still show. When the cloud computer could not read the
+ * files, `tree` keeps the saved list under a notice, or says that no list
+ * is available.
  */
 export function FilesPanel(props: {
   view: FileList

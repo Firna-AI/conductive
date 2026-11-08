@@ -13,6 +13,7 @@ import type { TurnOutput } from './turn-output'
 import { failureCause } from './providers/failure'
 import { cancelable } from './engine-cancel'
 import { ProviderLifetime } from './providers/lifetime'
+import type { WorkspaceToolRuntime } from './providers/workspace-tools'
 
 export interface ActiveTurn {
   first: ProviderInput
@@ -45,6 +46,7 @@ export interface SessionRuntime {
 export interface EngineOptions {
   cwd: string
   home: string
+  tools: WorkspaceToolRuntime
   providers: Record<Agent, ProviderFactory>
   store: EventStore
   now: () => number
@@ -95,6 +97,7 @@ export async function startProvider(
         login: turn.first.login,
         choice: session.choice,
         conversationId: session.conversationId,
+        tools: { ...options.tools, turnId: turn.first.turnId },
         event,
         warn: options.warn,
         signal,

@@ -5,6 +5,7 @@ import type { ChatController } from '../../chat/state/controller'
 import type { WorkspaceResponse } from '../../shared/workspaces'
 import type { HeaderNotices } from './header-notices'
 import type { ShownWorkspace } from './shown-workspaces'
+import type { ToolEvents } from './tools/tool-events'
 
 /**
  * One view of a kept workspace: the store that `useWorkspaceStore` gives a
@@ -18,6 +19,7 @@ export class WorkspaceView
   readonly model: WorkspaceModel
   readonly notices: HeaderNotices
   readonly chat: ChatController
+  readonly toolEvents: ToolEvents
   private readonly start: () => boolean
   private readonly reopening: Store<boolean>
 
@@ -29,6 +31,7 @@ export class WorkspaceView
     this.model = parts.model
     this.notices = parts.notices
     this.chat = parts.chat
+    this.toolEvents = parts.toolEvents
     this.start = start
     this.reopening = new Store(parts.model.detail.get().state === 'failed')
   }
@@ -47,18 +50,20 @@ export class WorkspaceView
     this.reopening.get() ? loading : this.model.detail.get()
 
   /**
-   * Shows the workspace in this view, after its render. The notices follow
-   * the stream before the model opens it, so that a first show also reads
-   * the stored history. The result closes the model, ends the follow, and
-   * hides the chat. A workspace that the tab forgot never opens again.
+   * Shows the workspace in this view, after its render. The notices and the
+   * tool events follow the stream before the model opens it, so that a first
+   * show also reads the stored history. The result closes the model, ends
+   * both follows, and hides the chat. A workspace that the tab forgot never
+   * opens again.
    */
   readonly connect = (): (() => void) => {
     if (!this.start()) return () => undefined
-    const { model, notices, chat } = this
+    const { model, notices, chat, toolEvents } = this
     let current = true
     // Each view shows every failed repair, also one that Dismiss hid before.
     notices.newView()
     const unfollow = notices.follow(model.stream)
+    const unfollowTools = toolEvents.follow(model.stream)
     void model.open().finally(() => {
       if (current) this.reopening.set(false)
     })
@@ -67,6 +72,7 @@ export class WorkspaceView
       current = false
       model.close()
       unfollow()
+      unfollowTools()
       chat.hide()
     }
   }

@@ -6,9 +6,20 @@ import type {
 } from './workspace-runtime'
 import type { FailedCreationDraft } from './failed-creations'
 import type { ImageCoordinatorState } from './image-timers'
-import type { LifecyclePublisher } from './durable-types'
+import type {
+  LifecyclePublisher,
+  LifecycleReconciliation,
+} from './durable-types'
+import type { LifecycleActivitySnapshot } from './input-activity-state'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
+  recordLifecycleInput(at: number): Promise<void>
+  captureLifecycleActivity(): Promise<LifecycleActivitySnapshot | undefined>
+  reconcileLifecycleActivity(
+    snapshot: LifecycleActivitySnapshot,
+    remote: LifecycleReconciliation,
+  ): Promise<void>
+  cancelLifecycleWaiters(): void
   cancelSuspendedLifecycleStart(
     workspaceId: string,
     ownerUserId: string,

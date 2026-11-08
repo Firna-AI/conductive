@@ -1,3 +1,4 @@
+import { FILE_READ_MAX_BYTES } from '../../src/shared/files'
 import type { Git } from './git'
 import type { GitEntry } from './git-entries'
 
@@ -44,16 +45,19 @@ export async function entryPatch(
     ...(previous ? [previous.path] : []),
     ...(current ? [current.path] : []),
   ])
-  return git.run([
-    'diff',
-    ...(current?.mode === '160000' ? [] : ['--cached']),
-    '--no-ext-diff',
-    '--no-textconv',
-    '--binary',
-    '--find-renames',
-    '--submodule=short',
-    oldTree,
-    '--',
-    ...paths,
-  ])
+  return git.run(
+    [
+      'diff',
+      ...(current?.mode === '160000' ? [] : ['--cached']),
+      '--no-ext-diff',
+      '--no-textconv',
+      '--binary',
+      '--find-renames',
+      '--submodule=short',
+      oldTree,
+      '--',
+      ...paths,
+    ],
+    { maxBytes: FILE_READ_MAX_BYTES },
+  )
 }

@@ -95,7 +95,6 @@ The CLI writes that message to stderr and returns status 1.
 MCP returns it in a tool result with `isError: true`.
 
 The Mac command route is mounted in the real Worker.
-General image installation and runner tool registration remain composition work.
 
 ## Image assets
 
@@ -118,8 +117,8 @@ The software step of each image build installs the private Node.
 The tools installer adds no Node runtime.
 No workspace token, agent login, or org environment value enters the image assets.
 
-The image build and the runner do not use these tools yet.
-The [Worker README](../worker/tools/README.md#production-composition) lists the required composition work.
+[Production composition](../worker/tools/README.md#production-composition) gives the image build step that installs these tools.
+[Workspace tools](../runner/agent-tools.md#workspace-tools) gives their registration for each agent.
 
 ## Development
 

@@ -16,7 +16,7 @@ export interface FilesHandlerOptions {
   workspaceFiles: (
     workspace: FilesWorkspace,
   ) => WorkspaceFilesPort | Promise<WorkspaceFilesPort>
-  repositoryRoot: (workspace: FilesWorkspace) => string
+  repositoryRoot: (workspace: FilesWorkspace) => string | Promise<string>
   fetch: HttpFetch
   now: () => number
 }
@@ -73,6 +73,18 @@ export function createFilesHandler(options: FilesHandlerOptions) {
             request.signal,
           )
           if (!diff) throw fileUnavailable()
+          for (const content of [
+            diff.oldContent,
+            diff.newContent,
+            diff.patch,
+          ]) {
+            const size =
+              content === null
+                ? 0
+                : new TextEncoder().encode(content).byteLength
+            if (size > options.maxFileBytes)
+              throw new FileTooLargeError(size, options.maxFileBytes)
+          }
           response = Response.json(diff)
         } else {
           const contentPath = new URL(
@@ -97,7 +109,7 @@ export function createFilesHandler(options: FilesHandlerOptions) {
               env,
               context.user.id,
               workspace,
-              options.repositoryRoot(workspace),
+              await options.repositoryRoot(workspace),
               path,
               options.maxFileBytes,
               options.fetch,

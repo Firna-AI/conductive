@@ -7,6 +7,12 @@ import type {
   ProviderProcess,
 } from '../src/providers/types'
 
+export const fakeToolContext = {
+  machineOrigin: 'https://machines.conductive.test',
+  workspaceToken: 'workspace-secret',
+  turnId: 'turn-1',
+}
+
 export class FakeProvider implements ProviderProcess {
   readonly options: ProviderOptions
   readonly messages: ProviderInput[] = []

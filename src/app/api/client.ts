@@ -18,6 +18,12 @@ export class ApiError extends Error {
 }
 
 export interface ApiClient {
+  /**
+   * The fetch of this client, with its origin and its credentials. A
+   * feature client that reads its own replies, such as the file routes,
+   * sends through it, so the web app and the Mac app keep their transport.
+   */
+  readonly fetch: FetchLike
   get<T>(path: string, read: (body: unknown) => T): Promise<T>
   /** A write. The app gate needs a JSON body, so an empty write sends `{}`. */
   send<T>(
@@ -80,6 +86,7 @@ export function createApiClient(fetch: FetchLike): ApiClient {
     }
   }
   return {
+    fetch,
     get: (path, read) =>
       request(
         path,

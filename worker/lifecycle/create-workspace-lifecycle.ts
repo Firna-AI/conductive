@@ -40,6 +40,8 @@ export function createWorkspaceLifecycle(
           await ctx.stopped?.(state.workspaceId)
       },
       stop: async () => {
+        const state = await lifecycle.read()
+        if (state) await ctx.stopping?.(state.workspaceId)
         const result = await stopWorkspaceSandbox(
           await workspaceActionContext(env, dependencies, lifecycle),
         )

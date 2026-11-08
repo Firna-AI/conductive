@@ -1,0 +1,48 @@
+/* One invite: the open-invite mark, the org and its email, then Accept invitation. */
+.row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 8px 8px 12px;
+  box-sizing: border-box;
+}
+
+.row + .row {
+  border-top: 1px solid var(--ui-border);
+}
+
+/* On a phone, Accept invitation takes the full width under its text. */
+.stacked {
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 12px 10px;
+  padding: 12px;
+}
+
+.stacked .action {
+  grid-column: 1 / -1;
+}
+
+/* The button fills the row, also inside a link, as in the page footer. */
+.stacked .action > * {
+  flex: 1 1 auto;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+/* The email stays whole, so the person can tell which address was invited. */
+.email {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  overflow-wrap: anywhere;
+}
+
+.action {
+  display: flex;
+}

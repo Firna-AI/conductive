@@ -1,6 +1,9 @@
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
+import { TOOL_ENV } from '../../../tools/context'
+import type { WorkspaceToolContext } from './workspace-tools'
+
 export async function prepareProviderHome(home: string): Promise<void> {
   await Promise.all(
     ['claude', 'codex'].map((name) =>
@@ -12,6 +15,7 @@ export async function prepareProviderHome(home: string): Promise<void> {
 /** Provider logins travel through private process input, never the environment. */
 export function providerEnvironment(
   home: string,
+  tools: WorkspaceToolContext,
 ): Record<string, string | undefined> {
   const env = { ...process.env }
   for (const key of Object.keys(env)) {
@@ -23,5 +27,8 @@ export function providerEnvironment(
   env.CODEX_HOME = `${home}/.conductive/codex`
   env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = '1'
   env.DISABLE_AUTOUPDATER = '1'
+  env[TOOL_ENV.machineOrigin] = tools.machineOrigin
+  env[TOOL_ENV.workspaceToken] = tools.workspaceToken
+  env[TOOL_ENV.turnId] = tools.turnId
   return env
 }

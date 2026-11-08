@@ -24,5 +24,12 @@ export function workspacePhaseCommand(
       sender: job.creation.sender,
     })
   }
-  return `set -eu\nexport CONDUCTIVE_TURN_ID=${shellQuote(job.turnId)}\ncd ${shellQuote(directory)}\ngit checkout -b ${shellQuote(row.branch)} FETCH_HEAD`
+  return `set -eu
+export CONDUCTIVE_TURN_ID=${shellQuote(job.turnId)}
+cd ${shellQuote(directory)}
+if git show-ref --verify --quiet ${shellQuote(`refs/heads/${row.branch}`)}; then
+  git checkout ${shellQuote(row.branch)}
+else
+  git checkout -b ${shellQuote(row.branch)} FETCH_HEAD
+fi`
 }

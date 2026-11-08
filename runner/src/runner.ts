@@ -11,6 +11,7 @@ import { RunnerLink } from './link'
 import { OutputSanitizer } from './output-sanitizer'
 import { Repository } from './repository'
 import { SerialQueue } from './serial-queue'
+import { workspaceToolRuntime } from './providers/workspace-tools'
 import type { EngineOptions } from './engine-session'
 import type { EventStore } from './state'
 
@@ -60,6 +61,7 @@ export class Runner {
     )
     this.engine = new AgentEngine({
       ...options,
+      tools: workspaceToolRuntime(options.request),
       checkpoint: (signal) =>
         checkpoint(new Repository(options.cwd, options.warn, signal)),
       changedSince: (before, signal) =>

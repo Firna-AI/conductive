@@ -1,17 +1,17 @@
 import { useEffect } from 'react'
-import { ArchiveRestore, FolderGit2, PanelLeft, Plus } from 'lucide-react'
+import { FolderGit2, PanelLeft, Plus } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import responsive from '../../../docs/mockups/src/components/layout/responsive.module.css'
 import { routes } from '../../app/router'
-import { useStore, valueOf } from '../../app/store'
-import { formatDay } from '../../app/time'
 import { useServices } from '../../app/services'
+import { useStore, valueOf } from '../../app/store'
+import { DeletedOrgPage } from '../../members/DeletedOrgPage'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgModel } from '../context'
+import { useMembersApi, useMembersViewport } from '../settings/members-api'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
-import { useAction } from '../ui/useAction'
 import { HomeList } from './HomeList'
 import list from './list.module.css'
 
@@ -81,37 +81,21 @@ function ChooseWorkspace(props: { org: OrgSummary }) {
 }
 
 /**
- * The page of an org that an admin deleted (decision 30). Its cloud
- * computers are stopped, and its members cannot open it. An admin restores
- * it until the day when everything is deleted.
+ * The page of an org that an admin deleted (decision 30): the restore page
+ * of the members UI. Its cloud computers are stopped, and its members
+ * cannot open it. An admin restores it until the day when everything is
+ * deleted. The answer of Restore shows the org as an active org again.
  */
 export function DeletedOrg(props: { org: OrgSummary }) {
   const app = useApp()
   const { timeZone } = useServices()
-  const restore = useAction(
-    () => app.restoreOrg(props.org.id),
-    "The org wasn't restored.",
-  )
-  const deletion = props.org.deletion
   return (
-    <EmptyState
-      action={
-        <ActionButton
-          busy={restore.pending}
-          icon={ArchiveRestore}
-          onPress={() => restore.run()}
-          tone="primary"
-        >
-          {`Restore ${props.org.name}`}
-        </ActionButton>
-      }
-      body="Its cloud computers are stopped, and its members can't open it. Restore it to bring back its workspaces, chats, and settings."
-      icon={ArchiveRestore}
-      title={
-        deletion
-          ? `${props.org.name} is deleted on ${formatDay(deletion.deletesAt, timeZone)}`
-          : `${props.org.name} is deleted`
-      }
+    <DeletedOrgPage
+      api={useMembersApi()}
+      onRestored={(restored) => app.putOrg(restored)}
+      org={props.org}
+      timeZone={timeZone}
+      viewport={useMembersViewport()}
     />
   )
 }

@@ -1,8 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '../../../docs/mockups/src/render.css'
+import type { WorkspaceIdentity } from '../../app/workspace-store'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { storeFailedRepairs } from '../../test-support/recorded-repairs'
 import { createFilesClient } from '../api/files-client'
 import { WorkspaceFiles, type FilesSubscribe } from '../model/files-store'
@@ -36,14 +36,17 @@ storeUnreadTree(server, view.tree, devNow())
 // Mockup data reads the routes only. Live data replays the recorded events.
 const subscribe: FilesSubscribe = (after, listener) =>
   server.events.subscribe(live ? after : Math.max(after, baseline), listener)
-const files = new WorkspaceFiles({
-  client: createFilesClient({
-    fetch: server.fetch,
-    orgId: FAKE_IDS.org,
-    workspaceId: FAKE_IDS.workspace,
-  }),
-  subscribe,
-})
+
+/** Makes the store of the page over the fake API. It starts nothing. */
+function createFiles({
+  orgId,
+  workspaceId,
+}: WorkspaceIdentity): WorkspaceFiles {
+  return new WorkspaceFiles({
+    client: createFilesClient({ fetch: server.fetch, orgId, workspaceId }),
+    subscribe,
+  })
+}
 
 const targets = devTargets(server)
 
@@ -51,7 +54,7 @@ const root = document.getElementById('root')
 if (root) {
   createRoot(root).render(
     <StrictMode>
-      <DevApp files={files} server={server} targets={targets} />
+      <DevApp createFiles={createFiles} server={server} targets={targets} />
     </StrictMode>,
   )
 }

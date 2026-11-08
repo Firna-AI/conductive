@@ -8,6 +8,7 @@ import { FakeChild } from '../../test-support/child'
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'
 import { turn } from '../../test-support/harness'
+import { fakeToolContext } from '../../test-support/providers'
 import { deferred } from '../../test-support/runtime'
 import { createClaudeFactory, type ClaudeQueryFactory } from './claude'
 import * as environment from './environment'
@@ -49,6 +50,7 @@ function fixture(kind: RunnerLogin['kind'] = 'token') {
     login: { agent: 'claude' as const, kind, secret: 'private-test-login' },
     choice: turn().message.choice,
     conversationId: null,
+    tools: fakeToolContext,
     event: () => {},
     warn: () => {},
   }

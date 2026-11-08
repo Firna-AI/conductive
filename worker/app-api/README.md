@@ -12,7 +12,16 @@ Each handler returns `null` for a path that it does not own. The
 | --- | --- |
 | `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, and `PUT` and `DELETE` of `/api/account/agent-logins/:agent` |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
-| `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, and `POST` of its `resume` and `activity` |
+| `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
+| `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
+
+`featureShellRoute` in [feature-shell.ts](feature-shell.ts) serves account GitHub
+access, org creation with initials and repository choices, shared settings,
+repository selection, sections, and workspace metadata.
+The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
+The [archive route](archive.ts) uses the real workspace object to check saved work and remove its sandbox.
+`membersRoute` alone serves the org list and one org.
+It also serves org recovery, roles, invitations, and workspace ownership.
 
 ## Rules
 
@@ -25,6 +34,14 @@ Each handler returns `null` for a path that it does not own. The
   `agentLoginContext(userId, agent)` and `BOAT_KEY_ENCRYPTION_KEY`. No reply
   holds a stored secret.
 - Get started has only the steps `github-app`, `org`, and `agent-login`.
+- `getStartedGitHubComplete` owns the `github-app` step in every org state.
+  The step is complete when an org of the user that is not deleted has a
+  repository through an installation that is not suspended.
+- Otherwise the step reads only `/user/installations`, page by page, with
+  the fresh GitHub user token. A suspended installation does not count.
+- A failed GitHub read leaves the step incomplete and writes one fixed
+  warning through `warnWorker`. The account and Get started still load. The
+  installation list of the account shows its own error.
 - A repository without a GitHub installation is not in the list.
 - Each member has a view of their own. A read mark only moves forward, and
   it stops at the last event number of the workspace.
@@ -59,6 +76,12 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - `chat-create-journey.test.ts` boots the shell, creates a workspace, and
   delivers the first message through a Stop and a resume.
 - `machine-credentials.test.ts` checks the two machine credential routes.
+- `feature-shell-settings.test.ts` checks shared scripts, encrypted env
+  values, member reads, and refused member writes through the Worker.
+- `feature-shell-sections.test.ts` checks section order, private collapse,
+  workspace moves, section deletion, and workspace event publication.
+- `feature-shell-github.test.ts` checks the user's GitHub access, paginated
+  repository reads, saved org initials, and admin repository selection.
 
 ### Key code
 
@@ -66,6 +89,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [`get-started-data.ts`](get-started-data.ts), and
   [`models.ts`](models.ts): the account, its logins, Get started, and the
   model variables.
+- [`get-started-github.ts`](get-started-github.ts):
+  `getStartedGitHubComplete`, the one owner of the `github-app` step.
 - [`shell.ts`](shell.ts) and [`shell-data.ts`](shell-data.ts): the lists of
   an org and the read marks.
 - [`workspace-view.ts`](workspace-view.ts): the saved view of each member.
@@ -73,6 +98,17 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   its reader, and the refusal of archived writes.
 - [`workspace-path.ts`](workspace-path.ts): the workspace ID of a path.
 - [`lifecycle.ts`](lifecycle.ts): the lifecycle routes and their options.
+- [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
+  request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
+  values and returns their names. [`feature-sections.ts`](feature-sections.ts)
+  and [`feature-workspaces.ts`](feature-workspaces.ts) save list changes and
+  publish workspace metadata through the workspace object.
+- [`feature-github.ts`](feature-github.ts): account installations and
+  repositories read with the fresh GitHub user token.
+  [`feature-org.ts`](feature-org.ts) creates an org with its chosen
+  repositories. [`feature-repositories.ts`](feature-repositories.ts) merges
+  the org's saved choices with repositories that its reader can access.
+  Their `*-data.ts` files keep queries and guarded writes.
 
 ### Related docs
 

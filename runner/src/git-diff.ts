@@ -1,8 +1,9 @@
 import { posix } from 'node:path'
 
-import type { DiffResponse } from '../../src/shared/files'
+import { FILE_READ_MAX_BYTES, type DiffResponse } from '../../src/shared/files'
 import {
   FileAccessError,
+  fileTooLarge,
   readBytes,
   readLinkBytes,
   safePath,
@@ -14,12 +15,19 @@ import { indexEntries, treeEntry, type GitEntry } from './git-entries'
 import { updateWorkingIndex, withGitIndex } from './git-index'
 import { changesFromIndex } from './repository-changes'
 import { entryPatch } from './git-patch'
+import { integer } from './parse'
 
 async function blob(git: Git, entry: GitEntry | null): Promise<Buffer | null> {
   if (!entry) return null
   if (entry.mode === '160000')
     return Buffer.from(`Subproject commit ${entry.oid}\n`)
-  return git.run(['cat-file', 'blob', entry.oid])
+  const size = integer(
+    Number((await git.run(['cat-file', '-s', entry.oid])).toString().trim()),
+  )
+  if (size > FILE_READ_MAX_BYTES) throw fileTooLarge(size, FILE_READ_MAX_BYTES)
+  return git.run(['cat-file', 'blob', entry.oid], {
+    maxBytes: FILE_READ_MAX_BYTES,
+  })
 }
 
 export async function readGitDiff(
@@ -47,7 +55,7 @@ export async function readGitDiff(
         physical.kind === 'link'
           ? await readLinkBytes(source.root, path)
           : physical.kind === 'file'
-            ? await readBytes(source.root, path, Number.MAX_SAFE_INTEGER)
+            ? await readBytes(source.root, path, FILE_READ_MAX_BYTES)
             : null
       await updateWorkingIndex(
         index,

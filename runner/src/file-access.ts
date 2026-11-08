@@ -3,7 +3,7 @@ import { open, readlink, realpath, type FileHandle } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 
 import { isFilePath } from '../../src/shared/file-path'
-import type { FileResponse } from '../../src/shared/files'
+import { FILE_READ_MAX_BYTES, type FileResponse } from '../../src/shared/files'
 import type { RunnerFileError } from '../../src/shared/runner-files'
 import { decodeUtf8 } from '../../src/shared/utf8'
 
@@ -19,6 +19,18 @@ export function unavailable(): FileAccessError {
   return new FileAccessError({
     code: 'file_unavailable',
     message: 'The file cannot be read.',
+  })
+}
+
+export function fileTooLarge(
+  sizeBytes: number,
+  limitBytes: number,
+): FileAccessError {
+  return new FileAccessError({
+    code: 'file_too_large',
+    message: 'The file exceeds the read limit.',
+    sizeBytes,
+    limitBytes,
   })
 }
 
@@ -94,13 +106,7 @@ export async function readBytes(
   maxBytes: number,
 ): Promise<Buffer> {
   return withReadFile(root, path, async (file, size) => {
-    if (size > maxBytes)
-      throw new FileAccessError({
-        code: 'file_too_large',
-        message: 'The file exceeds the read limit.',
-        sizeBytes: size,
-        limitBytes: maxBytes,
-      })
+    if (size > maxBytes) throw fileTooLarge(size, maxBytes)
     const bytes = Buffer.alloc(size + 1)
     let length = 0
     while (length < bytes.length) {
@@ -108,13 +114,7 @@ export async function readBytes(
       if (result.bytesRead === 0) break
       length += result.bytesRead
     }
-    if (length > maxBytes)
-      throw new FileAccessError({
-        code: 'file_too_large',
-        message: 'The file exceeds the read limit.',
-        sizeBytes: length,
-        limitBytes: maxBytes,
-      })
+    if (length > maxBytes) throw fileTooLarge(length, maxBytes)
     if (length > size) throw unavailable()
     return bytes.subarray(0, length)
   })
@@ -143,7 +143,11 @@ export async function readFileResponse(
   path: string,
   maxBytes: number,
 ): Promise<FileResponse> {
-  const bytes = await readBytes(root, path, maxBytes)
+  const bytes = await readBytes(
+    root,
+    path,
+    Math.min(maxBytes, FILE_READ_MAX_BYTES),
+  )
   const text = textContent(bytes)
   const type = mediaType(path)
   return {

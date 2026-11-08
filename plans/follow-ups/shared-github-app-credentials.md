@@ -1,0 +1,77 @@
+# Two GitHub App token issuers duplicate credential code
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-08, from branch `conductor/boat-native-remote-workspaces-milestone-15i`, review round 2, the wider fix of finding 4 and its finding check.
+- **Location:** `worker/github/credentials.ts`, `worker/lifecycle/image-sources/github-app.ts`, `worker/lifecycle/image-sources/materialize.ts:128`, `worker/github/private-key.ts`, `worker/github/transport.ts`, and the GitHub App steps of `worker/lifecycle/repository-layout.md`.
+- **Reason:** The shared key importer already fixed the failure that the review found.
+
+- **Terms:**
+  - **GitHub App:** the app identity that signs requests for installation access with the key in `GITHUB_APP_PRIVATE_KEY`.
+  - **App JWT:** the short-lived token that the Worker signs with the App key to ask GitHub for an installation token.
+  - **Installation token:** a GitHub token for one installation, limited to the named repositories and permissions.
+  - **Token issuer:** code that imports the key, signs the App JWT, and asks GitHub for an installation token.
+- **Background:**
+  - One Worker secret, `GITHUB_APP_PRIVATE_KEY`, holds the App key for every feature.
+  - Two token issuers exist.
+    - `installationTokenProvider` in `worker/github/credentials.ts` serves the GitHub banner, the Checks list, and the workspace refreshes of verified GitHub webhooks.
+    - `installationToken` in `worker/lifecycle/image-sources/github-app.ts` serves the repository copies of image builds, through `worker/lifecycle/image-sources/materialize.ts`.
+    - `revokeInstallationToken` in the same file revokes those tokens.
+  - Both issuers import the key with `appSigningKey` in `worker/github/private-key.ts`.
+  - It accepts the PKCS#1 PEM that GitHub downloads. It also accepts each PKCS#8 text that worked before:
+    - a PKCS#8 PEM, with or without line breaks
+    - a bare PKCS#8 Base64 body, on one line or on many lines
+    - a PKCS#8 PEM with only its header or only its footer
+  - Before that shared importer, each issuer had its own importer.
+  - The banner importer removed only the PKCS#8 header, so the downloaded PKCS#1 key failed.
+    - A one-time route run used in-memory Miniflare and fake GitHub replies.
+    - With a PKCS#1 key, the banner and Checks gave `502 github_unavailable`.
+    - A signed push to `main` gave 502. It started no image refresh.
+    - Image builds accepted the same key.
+    - An earlier commit, `7bf86c5`, had added PKCS#1 support to the image importer only.
+- **Problem:**
+  - Each issuer still has its own App JWT signer, clock, token request, reply checks, and error mapping.
+  - Clock: the banner issuer uses the `now()` that its caller injects. The image issuer uses `Date.now()`.
+  - Request:
+    - The banner issuer uses `githubRequest` and `githubJson` in `worker/github/transport.ts`.
+    - They set a 30-second timeout and the shared API version constant.
+    - They accept any 2xx reply. They read at most 26 MiB.
+    - The image issuer builds its own request. It sets no timeout. It writes out the API version.
+    - It requires status 201. It reads the reply with no size limit.
+  - Errors: the banner issuer throws `502 github_unavailable`. The image issuer throws a plain `Error`, which its build path maps.
+  - Key: the banner issuer keeps the imported key for each provider. It drops the key after a failure.
+  - The image issuer imports the key for each repository.
+  - Revocation: only the image path revokes its tokens.
+  - These differences are choices of two copies, not requirements.
+  - The permissions differ on purpose. They must stay different.
+  - The banner asks for contents, pull requests, checks, and statuses, all read only. The image copy asks for contents read only.
+- **Impact if no action:**
+  - A later change to one copy can break one GitHub feature while the other still works.
+  - Such a change can touch the API version, the clock, a timeout, or a reply check.
+  - The key text broke a feature in this way.
+- **Root question:** How can every GitHub App feature get and release its installation tokens through one flow, with its own permissions and errors?
+- **Options:** the letters continue those of the review that found the problem. Its earlier options covered only the key import. The shared importer above settled that part.
+  - **F.** A refinement that this follow-up adds.
+    - Share only the App JWT signer.
+    - Both issuers call one function that takes the key, the client ID, and the clock.
+    - The token requests, the reply checks, the revocation, and the error mappings stay apart.
+    - So the differences in timeout and reply checks remain.
+    - Effort: Small.
+  - **E.** Build one GitHub App credential module that owns the key import, the App JWT, the installation-token request, and the revocation.
+    - Each caller gives its installation, its repository IDs, its permissions, and its error mapping.
+    - It removes the second JWT signer, and the differences in clock, timeout, and reply checks.
+    - Keep the permissions and the error mapping of each caller as they are.
+    - Update the image-source tests and the GitHub App steps of `worker/lifecycle/repository-layout.md`.
+    - Effort: Medium.
+- **Left out:**
+  - Change nothing: the two copies can drift again, as the key text did.
+  - A test that gives one key text to both issuers: the shared importer already covers the key text.
+    - No test covers every other detail of two copies.
+    - A test for the class also needs the user's approval.
+  - An external GitHub App authentication library: it adds a dependency to the Worker bundle.
+    - Its timeout and error behaviour still need mapping.
+    - Bring it back if the flow grows.
+- **Wider fix:** E. One flow gives one place for each credential rule.
+- **Previous examples:** `7bf86c5` added PKCS#1 support to the image importer only. The banner importer then could not read the downloaded key.
+- **Recommendation:** E. It removes each difference that can break one feature. It keeps the permissions and the errors that must differ. F is smaller. It leaves the request and reply differences in place.
+- **Action:** fix after merge, apply E, because E reaches image-source code outside the change that found it.

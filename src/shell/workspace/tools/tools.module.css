@@ -1,0 +1,15 @@
+/*
+ * The place of the terminal in the tools panel. It stays mounted while
+ * another tool shows, so its connection stays, and it hides then.
+ */
+.tool {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.tool[hidden] {
+  display: none;
+}

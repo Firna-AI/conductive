@@ -1,5 +1,6 @@
 import { createHarness, TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
 import type { ProxySocket, SocketRuntime } from './types'
+import { toolsActivity } from './activity.test-support'
 
 class TestSocket implements ProxySocket {
   binaryType: 'blob' | 'arraybuffer' = 'blob'
@@ -90,6 +91,7 @@ export async function createToolsHarness() {
   core.env.BOAT_API_KEY = 'boat-test-key'
   core.boat.apiKey = 'boat-test-key'
   let now = TEST_TIME
+  let activity = toolsActivity(core.env.DB, () => now)
   let desktopSequence = 0
   let terminalSequence = 0
   const passwords = new Map<string, string>()
@@ -113,6 +115,7 @@ export async function createToolsHarness() {
     },
   }
   const dependencies = {
+    onActivity: (id: string, at: number) => activity.record(id, at),
     now: () => now,
     sockets,
     fetch: async (request: Request) => {
@@ -206,6 +209,7 @@ export async function createToolsHarness() {
   return {
     ...core,
     dependencies,
+    activity: () => activity.settled(),
     requests,
     serverSockets,
     upstreamSockets,
@@ -217,6 +221,8 @@ export async function createToolsHarness() {
       response = factory
     },
     resetTools: async () => {
+      await activity.settled()
+      activity = toolsActivity(core.env.DB, () => now)
       await core.reset()
       now = TEST_TIME
       requests.length = 0

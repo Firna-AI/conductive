@@ -84,4 +84,19 @@ export class WorkspaceOperations {
       publish,
     )
   }
+
+  async revokePreviews(
+    workspaceId: string,
+    previewIds: readonly string[],
+  ): Promise<void> {
+    const { store, bind, publish } = this.options
+    bind(workspaceId)
+    await store.change(
+      workspaceId,
+      async (transaction) => {
+        for (const id of previewIds) await transaction.previews.revoke(id)
+      },
+      publish,
+    )
+  }
 }

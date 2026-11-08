@@ -6,7 +6,9 @@ tab. Each action links to GitHub. [GitHub banner](../../docs/protocol/github-ban
 states the requirements, and the mockups under `app/banner` draw them.
 
 The parts read the shared contracts in `src/shared/github.ts` and
-`src/shared/events.ts`. Milestone 15i mounts them in the app shell.
+`src/shared/events.ts`. The workspace screen mounts them with one store for
+the bar or the row and the Checks tab, as
+[the GitHub part](../shell/workspace/README.md#the-github-part) says.
 
 ## Use the parts in the app
 
@@ -36,7 +38,11 @@ const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe, delay 
   then live events, as `WorkspaceSocketMessage` says. The pages of one replay
   share one cutoff, and a page can leave out event numbers. The store holds
   a live event that comes before the final page, and applies it after that
-  page. The fake API's `server.events.subscribe` has this shape.
+  page. The fake API's `server.events.subscribe` has this shape. The
+  workspace screen gives the GitHub events of the ordered stream of the
+  workspace, each checked with the readers of the replies, as live messages
+  with no history, because the store reads the current state when it
+  connects.
 - `delay` is `AppServices.delay`, the timer of the app. The store waits with
   it before each [backup read](#backup-reads). The development page gives
   `browserDelay`.

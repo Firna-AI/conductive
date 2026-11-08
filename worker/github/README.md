@@ -3,7 +3,9 @@
 This module reads GitHub branch state for the shared banner and checks API.
 It also verifies GitHub App webhooks and finds their workspace targets.
 It stores its state and events in the [chat store](../chat/README.md) of the workspace Durable Object.
-A production consumer supplies the Worker routes and the Durable Object wiring.
+The production Worker mounts both browser reads and the signed webhook route.
+The workspace object owns one state adapter and its durable retry requests.
+Verified default-branch pushes also notify image refresh.
 
 The [banner protocol](../../docs/protocol/github-banner.md) states the requirements.
 The [shared contracts](../../src/shared/github.ts) define the response bodies.
@@ -41,14 +43,15 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   Its permissions allow repository content, pull request, check, and commit status reads only.
   The token stays on the server.
   This module has no sandbox credential endpoint.
+- [appSigningKey](private-key.ts) imports `GITHUB_APP_PRIVATE_KEY` for each GitHub App feature: these reads and the repository copies of image builds.
+  It accepts each key text that the deployment guide allows.
 
 ## Server integration
 
 1. Add `GITHUB_WEBHOOK_SECRET` and `GITHUB_APP_PRIVATE_KEY` as Worker secrets.
    Keep `GITHUB_CLIENT_ID` as the app's client ID.
-   `GITHUB_APP_PRIVATE_KEY` must contain PKCS#8 PEM.
-   Convert a downloaded RSA key with `openssl pkcs8 -topk8 -nocrypt -in github-app.pem -out github-app-pkcs8.pem`.
-   The current environment interface and Wrangler configuration do not declare these new secrets.
+   [Secrets](../../docs/deployment.md#secrets) in the deployment guide gives the key text that `GITHUB_APP_PRIVATE_KEY` takes.
+   `AppEnv` declares these secrets. Set their values through Worker secret configuration.
 2. Populate `github_installations` and `repositories.installation_id` from trusted GitHub App installation setup.
    Keep suspension and repository access records current.
    No active installation means no read or webhook publication.
@@ -87,7 +90,7 @@ The Worker callback forwards only the workspace binding and refresh signal to th
 It sends no function or token over the Durable Object boundary.
 Neither public HTTP handler accepts a caller-supplied workspace token or installation token.
 
-The production consumer can persist the workspace binding and refresh signal before a read.
+The production workspace object persists each scheduled workspace binding and refresh signal.
 The signal keeps the delivery ID, pushed branch, retry attempt, and user ID when present.
 The consumer can schedule Durable Object alarm retries for failed reads or publication.
 A retry must keep these inputs so delivery receipts and access checks still apply.
@@ -230,6 +233,8 @@ API references:
 
 ### Key Code
 
+- [Production composition](../features/github.ts) owns the state adapter and retry alarm.
+- [composition.ts](composition.ts) mounts verified webhooks and image refresh.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
 - [webhook.ts](webhook.ts) verifies deliveries and starts workspace refreshes.
 - [app-handler.ts](app-handler.ts) serves protected banner and checks reads.

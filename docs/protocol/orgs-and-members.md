@@ -140,3 +140,8 @@ says.
 - Restore brings the org back as it was. Its workspaces start again when
   they open. A workspace whose owner is suspended does not start, as
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
+- An unfinished create continues when its workspace opens after Restore.
+  It then gets a new start limit of 20 minutes, the limit of each start in
+  [Time limits of builds and starts](workspaces-and-sandboxes.md#time-limits-of-builds-and-starts).
+  The workspace keeps its original creation date.
+- Reason: the create makes no progress while its org is deleted.

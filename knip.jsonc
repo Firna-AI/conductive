@@ -16,6 +16,7 @@
         "worker/chat/integration/*-entry.test-support.ts",
         "worker/devices/test-worker.test-support.ts",
         "worker/lifecycle/workspace-runtime-test-worker.ts",
+        "worker/features/{entry,activity-entry,checkpoint-entry}.test-support.ts",
         "docs/mockups/src/entries/**/*.tsx",
         "docs/mockups/src/render.tsx",
       ],

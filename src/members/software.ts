@@ -1,4 +1,4 @@
-import type { BaseImage } from '../../shared/base-image'
+import type { BaseImage } from '../shared/base-image'
 
 /** A list in words: "a", "a and b", or "a, b, and c". */
 function listed(items: readonly string[]): string {
