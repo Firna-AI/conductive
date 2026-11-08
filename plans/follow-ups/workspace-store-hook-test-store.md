@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-09, a problem outside the scope of round 1 of PR #51, branch `conductor/boat-native-remote-workspaces-milestone-13b`.
+- **Added:** 2026-11-08, a problem outside the scope of round 1 of PR #51, branch `conductor/boat-native-remote-workspaces-milestone-13b`.
 - **Location:** `src/app/workspace-store.test.tsx:17`.
 
 - **Terms:**

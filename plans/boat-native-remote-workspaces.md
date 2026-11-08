@@ -5096,6 +5096,35 @@ Apply decision 128 C. Added on 8 November 2026.
       `docs/protocol/workspaces-and-sandboxes.md`, and delete that item.
       Branch: `conductor/boat-native-remote-workspaces-milestone-5d`.
 
+## Milestone 5e: Lifecycle follow-ups
+
+Depends on: 8m, 15i, 15o. These branches change the alarm and the start
+path that this milestone changes.
+
+Apply the `fix after merge` items of the workspace lifecycle. Added on 8
+November 2026.
+
+- [ ] Apply option B of `plans/follow-ups/shared-object-alarm.md`: one
+      alarm scheduler sets the next alarm at the end of each run. Delete
+      that item.
+- [ ] Apply option B of `plans/follow-ups/terminal-setup-passes-start-limit.md`,
+      and delete that item.
+
+## Milestone 5f: Tests on the real workspace object
+
+Depends on: 5e, 8m. Both change the lifecycle and chat tests that this
+milestone moves.
+
+Apply the `fix after merge` items of the Worker tests. Added on 8 November
+2026. One native harness serves the chat tests and the lifecycle tests, as
+both items recommend.
+
+- [ ] Apply option C of `plans/follow-ups/chat-tests-on-real-object.md` and
+      option E of `plans/follow-ups/lifecycle-tests-on-real-object.md`, with
+      one native harness. Delete both items.
+- [ ] Apply option C of `plans/follow-ups/harness-test-speed.md` (decision
+      113), and delete that item.
+
 ## Milestone 6: App shell and workspaces
 
 Tags: ui
@@ -5501,6 +5530,24 @@ The saved-tree notice has no age, because its mark carries no time.
 
 Evidence: `.context/boat-native-remote-workspaces/7v/verification.md`.
 
+## Milestone 7x: Runner follow-ups
+
+Depends on: none.
+
+Apply the `fix after merge` items of the runner. Added on 8 November 2026.
+
+- [ ] Apply option D of `plans/follow-ups/runner-output-save-failure.md`
+      (decision 131), and delete that item.
+- [ ] Apply option C of `plans/follow-ups/agent-login-in-tool-processes.md`
+      (decision 114): no tool process inherits the login of the agent.
+      Check the Codex program too. Update "Agent logins in a sandbox" in
+      `docs/protocol/access-and-security.md`.
+- [ ] Confirm option C in a real sandbox with the real logins of the
+      `LIVE_*` settings: a server that a tool starts cannot read the login
+      after the turn. The orchestrator runs this check in the primary
+      workspace, because only that workspace holds the real-sandbox
+      settings. Then delete `plans/follow-ups/agent-login-in-tool-processes.md`.
+
 ## Milestone 8: Chat UI
 
 Tags: ui
@@ -5711,7 +5758,7 @@ Depends on: 5, 6, 7, 7r, 8, 8j
 
 - [x] Wire the app shell, the chat screens, the chat backend, and the
       runner together. The run with a real Boat sandbox moved to Milestone
-      16a on 9 November 2026, because it needs the deployed app.
+      16a on 8 November 2026, because it needs the deployed app.
   - [x] Forward the browser chat routes to the object named by the decoded
         workspace ID, before the outer browser gate.
         Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
@@ -5887,6 +5934,22 @@ observed start success, so later resume events do not hold its composer.
 
 Evidence: `.context/boat-native-remote-workspaces/8n-report.md`.
 
+## Milestone 8o: Keep the workspace after a failed first start
+
+Tags: ui
+
+Depends on: 15i, 15o. Both change the failed-start path.
+
+Apply decision 130 D, which the user chose as a later follow-up on 8
+November 2026. Added on 8 November 2026.
+
+- [ ] Draw the kept workspace in the mockups: its start error, its chat,
+      its queued messages, and Try again. Then build it, and compare it
+      with its mockup.
+- [ ] Apply option D of `plans/follow-ups/failed-first-start-keeps-workspace.md`,
+      with the changes to `docs/protocol/chat-and-events.md` and
+      `docs/protocol/workspaces-and-sandboxes.md`. Delete that item.
+
 ## Milestone 16a: First deployment
 
 Depends on: 8i, 8m
@@ -5905,11 +5968,11 @@ This milestone needs the prerequisites from the user.
 - [ ] Smoke-test it with a real Boat sandbox: run `npm ci --prefix runner`,
       `npm --prefix runner run build`, `node image/live-check.mjs --prepare`,
       and `node image/live-check.mjs` with the `LIVE_*` settings of the
-      deployment guide. Moved from Milestone 8i on 9 November 2026.
+      deployment guide. Moved from Milestone 8i on 8 November 2026.
 - [ ] Measure the first agent start after a resume over several runs,
       with the runner inside and outside the home folder. Keep the faster
       place. Moved from Milestone 7r on 6 November 2026 and from Milestone
-      8i on 9 November 2026, because it needs a real sandbox and real
+      8i on 8 November 2026, because it needs a real sandbox and real
       logins.
 - [ ] Check that chat survives a restart: send a message before the
       runner connects, deploy again, then check the history, the event
@@ -6685,6 +6748,42 @@ Design calls of the orchestrator, 8 November 2026:
       production objects.
 - [ ] Add the org suspension to the suspension page of the protocol and
       to the Terms page.
+
+## Milestone 15p: Checks, tests, and marketing follow-ups
+
+Depends on: none.
+
+Apply the small `fix after merge` items of the gate, the tests, and the
+marketing site. Added on 8 November 2026.
+
+- [ ] Apply option C of `plans/follow-ups/unused-export-check.md` (decision
+      112): add an unused-export check to the complete gate. Delete that
+      item.
+- [ ] Apply option A of `plans/follow-ups/mac-top-navigation-flake.md`, and
+      delete that item.
+- [ ] Apply option A of `plans/follow-ups/workspace-store-hook-test-store.md`,
+      and delete that item.
+- [ ] Apply option D of `plans/follow-ups/legal-pages-follow-protocol.md`,
+      and delete that item.
+- [ ] Apply option C of `plans/follow-ups/marketing-site-copies.md`, and
+      delete that item.
+
+## Milestone 15q: Access follow-ups
+
+Tags: ui
+
+Depends on: 15i, 15o. They change the Terms page, the account page, and
+the desktop paths.
+
+Apply the `fix after merge` items of the access rules. Added on 8 November
+2026.
+
+- [ ] Draw the "no re-use" login setting and the linked session in the
+      mockups. Then build them, and compare them with their mockups.
+- [ ] Apply option B of `plans/follow-ups/login-reuse-setting.md` (decision
+      116), with the access protocol and the Terms page. Delete that item.
+- [ ] Apply option C of `plans/follow-ups/desktop-stream-after-access-loss.md`
+      (decision 117), and delete that item.
 
 ## Milestone 15d: Marketing site
 
