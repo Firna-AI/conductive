@@ -24,4 +24,4 @@
 - **Wider fix:** G, in place of D. Its rule also covers claims of actions, and the words keep one home. H includes G.
 - **Previous examples:** finding 14 of PR #52.
 - **Recommendation:** H, in place of F. It also fixes the same claim on the GitHub App step, and "Done" also fits a deleted org.
-- **Action:** ask the user, because each option adds a requirement to a protocol doc.
+- **Action:** ask the user later, because the user deferred this choice on 8 November 2026. Each option adds a requirement to a protocol doc.

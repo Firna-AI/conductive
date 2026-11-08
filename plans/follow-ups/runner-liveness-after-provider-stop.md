@@ -25,4 +25,4 @@
 - **Wider fix:** D, in place of B. D finds each stop and error that the provider reports, for every runner version, also with no turn and no open tab. B works only for a runner from a newer image, and it needs a version gate. C stays necessary with B or D.
 - **Previous examples:** None found.
 - **Recommendation:** C, in place of B. The message of the smoke test then waits and runs after the resume, for every runner version, with no new requirement. D best protects the codebase against later provider stops.
-- **Action:** ask the user, because B adds a protocol rule for the runner connection. The options check found that C needs no new rule, so the user can also choose C to apply without a decision.
+- **Action:** ask the user later, because the user deferred this choice on 8 November 2026. The options check found that C needs no new rule, so the user can also choose C to apply without a decision.

@@ -20,4 +20,4 @@
 - **Wider fix:** None. The rule of `plans/follow-ups/get-started-returning-member.md` keeps the words of the page true.
 - **Previous examples:** finding 12 of PR #52.
 - **Recommendation:** A. It keeps the Restore path that finding 12 chose, and the words become true.
-- **Action:** ask the user, because the deleted state of Get started is behaviour that no requirement covers.
+- **Action:** ask the user later, because the user deferred this choice on 8 November 2026. No requirement says what Get started shows for a deleted org.
