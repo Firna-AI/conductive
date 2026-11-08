@@ -17,8 +17,9 @@
 - **Options:**
   - **A.** Keep the request records without query strings, as now. Name the records, what they can hold, and how long Cloudflare keeps them in the privacy draft. Effort: Small.
   - **C.** Turn off the request records with `observability.logs.invocation_logs: false`, and keep only the Worker's warnings. Name the warnings in the privacy draft. Effort: Small.
-- **Left out:** No log store, because the warnings found the six defects of the first deploy.
-- **Wider fix:** C. It removes every request record, whatever the shape of a credential in it.
+  - **D.** Move the preview proxy into a second Worker with request records off, and keep A on the main Worker. The app keeps its own request records, and no record of a previewed page stays. The new Worker needs its own routes, bindings, secrets, tests, and deploy docs, and the hop to the workspace object must hide the address. Effort: Large.
+- **Left out:** No log store, because the warnings found the six defects of the first deploy. A lower sampling rate, because each sampled request still keeps its record.
+- **Wider fix:** C. It removes every request record, whatever the shape of a credential in it. D is the Large form of C that keeps the app's own records.
 - **Previous examples:** finding 2 of that review.
 - **Recommendation:** A. The records show the status and the path of each failed request, which helps to answer a user's report, and the privacy draft then tells users.
 - **Action:** ask the user, because C gives up the request records, and the privacy words depend on the answer.
