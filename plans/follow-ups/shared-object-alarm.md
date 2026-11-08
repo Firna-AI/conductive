@@ -2,21 +2,51 @@
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-08, a problem outside the scope of the check of finding 3 of PR #47, branch `conductor/boat-native-remote-workspaces-milestone-5c`, round 2. Corrected on 2026-11-08 by the check of finding 12 of PR #50 (Milestone 5d): the first text named the device broker, but the Mac connection attaches only in the broker object of each user (`worker/devices/broker-routes.ts:56`), so the broker never sets the alarm of a workspace object (`worker/devices/broker.ts:190`).
-- **Location:** `worker/lifecycle/workspace-alarm.ts:57`, the `if (advancedStart) return` branch, and `worker/lifecycle/start-coordinator.ts:140`.
+- **Added:** 2026-11-08, a problem outside the scope of the check of finding 3 of PR #47, branch `conductor/boat-native-remote-workspaces-milestone-5c`, round 2. Corrected on 2026-11-08 by the check of finding 12 of PR #50 (Milestone 5d): the first text named the device broker, but the Mac connection attaches only in the broker object of each user (`worker/devices/broker-routes.ts:56`), so the broker never sets the alarm of a workspace object (`worker/devices/broker.ts:190`). Extended on 2026-11-08 by finding 20 of PR #53, branch `conductor/boat-native-remote-workspaces-milestone-8m`, round 2, and by the problem outside the scope of its check.
+- **Location:** `worker/lifecycle/workspace-alarm.ts:57`, the `if (advancedStart) return` branch, and `worker/lifecycle/start-coordinator.ts:140`. The retry of a failed `changed` hook in the catch at `worker/lifecycle/workspace-alarm.ts:74-84`, and `writeLifecycleState` at `worker/lifecycle/durable-scheduling.ts:25-45`.
+- **Reason:** Each case needs a rare failure, and Milestone 5e owns the one alarm scheduler that ends the class.
 
 - **Terms:**
   - **Workspace object:** the Durable Object that owns one workspace's lifecycle and chat. It has one alarm.
   - **Alarm run:** one call of the object's alarm handler. Cloudflare deletes the alarm before the run, so a run that sets no new alarm leaves none.
-- **Background:** The lifecycle sets the alarm for start polls, provider retries, idle stops, and disk restarts. Finding 12 of PR #50 found a successful start that consumed the alarm and set no next one. Milestone 5d fixes that path.
-- **Problem:** Other runs can end the same way. A failed D1 write of a creation result is retried in a later run, which counts as an advanced start and returns before it sets the lifecycle alarm again, or the cleanup retry of a failed create. Each owner of the alarm must remember to set the next time.
-- **Impact if no action:** An idle workspace can run past its 30-minute stop, or a failed create can keep its cloud computer, until another event sets the alarm.
-- **Root question:** How does every alarm run leave the next alarm that the workspace still needs?
+  - **`changed` hook:** the hook that runs after each lifecycle write, at `worker/lifecycle/create-workspace-lifecycle.ts:35-42`. For a stopped workspace, it first clears the disk retention record in D1.
+  - **Shown-state writer:** `WorkspaceStateProjection.changed` at `worker/lifecycle/workspace-state-projection.ts:87-93`, which the `changed` hook calls. It writes the newest chat title to D1, then the state.
+- **Background:**
+  - The lifecycle sets the alarm for start polls, provider retries, idle stops, and disk restarts. Finding 12 of PR #50 found a successful start that consumed the alarm and set no next one. Milestone 5d fixes that path.
+  - Milestone 8m added the title write to the shown-state writer. A failed title write keeps the D1 state back, at `worker/lifecycle/workspace-state-projection.ts:63-76`.
+  - The workspace read, the workspace list, and Resume take the stopped state from D1. Resume acts only on a D1 state of `stopped` or `error`, at `worker/lifecycle/workspace-resume.ts:23-24`.
+- **Problem:**
+  - Other runs can end the same way. A failed D1 write of a creation result is retried in a later run, which counts as an advanced start and returns before it sets the lifecycle alarm again, or the cleanup retry of a failed create.
+  - A write can also replace a pending retry. At the idle stop, `writeLifecycleState` stores `stopped`, sets the alarm to the disk keepalive 13 days later, and then calls the `changed` hook.
+  - When the hook fails, the catch of the alarm run sets a retry 30 seconds later. The hook fails on a failed title write, a failed D1 state write, or a failed retention clear.
+  - The object keeps that retry only as its alarm. Each later lifecycle write sets the alarm from the state alone, so it moves the alarm back to the keepalive.
+  - When the `changed` hook of that later write fails too, outside an alarm run, nothing sets the retry again.
+  - Milestone 8m found this with an activity request between the failed stop and its retry. A probe reproduced it: at the retry time no alarm ran, and Resume returned `ready` with no queued start.
+  - Commit `5289546` of Milestone 15i then stopped activity from writing a stopped workspace. Other writes still replace the retry, such as `rearmStopped` at `worker/lifecycle/workspace-suspension.ts:86`, because each write of `DurableLifecycle` sets the alarm, also for an unchanged state.
+  - Each owner of the alarm must remember to set the next time.
+- **Impact if no action:**
+  - An idle workspace can run past its 30-minute stop, or a failed create can keep its cloud computer, until another event sets the alarm.
+  - After a lost retry, D1 can show `ready` for a stopped workspace until its keepalive alarm, up to 13 days later. Resume then does nothing, and the list shows the wrong state.
+  - The disk stays safe. The keepalive alarm writes the state before it reads the D1 state, at `worker/lifecycle/disk-retention-state.ts:22` and `worker/lifecycle/disk-retention.ts:38-42`.
+- **Root question:** How does the workspace object keep the next alarm of each pending task, through every alarm run and every write?
 - **Options:**
   - **A.** Fix the creation retry path: after it advances the start, it sets the lifecycle alarm and the cleanup retry, as the normal path does. Add a regression test that deletes each alarm before the next run. Effort: Small.
   - **B.** Add one alarm scheduler to the object. Each owner reports its next due time, and the scheduler sets the alarm to the earliest at the end of each run. No owner calls `setAlarm` itself, so no run can end without the next alarm. Effort: Medium.
-- **Left out:** A second object for some of the duties, because the lifecycle, the chat, and the start steps must stay in one serial queue.
-- **Wider fix:** B.
-- **Previous examples:** finding 12 of PR #50.
+    - The scheduler also sets the alarm to the earliest stored due time at each write that changes a due time. A lifecycle write outside an alarm run, such as `rearmStopped` or a turn update, is not a run.
+    - It stores a due time for every failure of the `changed` hook, not only for a failed title write. That covers a failed D1 state write and a failed retention clear too.
+    - It stores that due time before the D1 write, and it clears the due time after success. So the due time also survives a restart between the two stores.
+    - The retry of the `changed` hook keeps the rule of the current catch: it never comes after the disk retention deadline.
+    - The device feature stores a marker of this kind before its D1 write, at `worker/devices/state.ts:75-76`.
+    - Test: fail the `changed` hook at the idle stop, and run another lifecycle write before the retry. Then advance only due stored alarms. The retry must run, and D1 must reach `stopped`.
+    - If a direct fix of the retry must come first, store the retry time inside the lifecycle in the same way. The scheduler can take it over later with no change of behaviour.
+- **Left out:**
+  - A second object for some of the duties, because the lifecycle, the chat, and the start steps must stay in one serial queue.
+  - A retry only in memory. It fails after a restart, so it fails the goal.
+  - One D1 batch for the title and the state. A failed batch still loses its retry, so it fails the goal.
+- **Wider fix:** B. It ends the class for every owner of the alarm. For that, it must store a due time for every failure of the `changed` hook, before the D1 write.
+- **Previous examples:** finding 12 of PR #50, and finding 20 of PR #53. In the second, an activity request replaced the retry of a failed title write at the idle stop.
+- **Related:**
+  - [native-entries-advance-alarms.md](native-entries-advance-alarms.md): its option C gives this scheduler native tests that delete each alarm before they run it. Both items are in Milestone 5e.
+  - [lifecycle-turn-times-from-chat.md](lifecycle-turn-times-from-chat.md): both items change the lifecycle in Milestone 5e, and they do not conflict.
 - **Recommendation:** B. It ends the class: the scheduler, not each path, sets the next alarm.
 - **Action:** fix after merge, apply B, because the creation retry path is outside the diffs of PR #47 and PR #50.
