@@ -2,7 +2,7 @@ import type { ReactElement, ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AppModel } from '../app/app-model'
 import { memoryNavigation, NavigationContext } from '../app/navigation'
-import { PanelWidths } from '../app/panels'
+import { PanelLayout } from '../app/panels'
 import { ServicesContext } from '../app/services'
 import { testServices } from '../app/test-kit'
 import type { FakeApiServer } from '../test-support/fake-api'
@@ -38,7 +38,7 @@ export function AppProviders(
     <ServicesContext.Provider value={app.services}>
       <AppModelContext.Provider value={app}>
         <NavigationContext.Provider value={memoryNavigation(props.href ?? '/')}>
-          <PanelContext.Provider value={new PanelWidths(app.services.storage)}>
+          <PanelContext.Provider value={new PanelLayout(app.services.storage)}>
             <ViewportProvider viewport={props.viewport ?? 'desktop'}>
               <ThemeRoot scheme="dark">{props.children}</ThemeRoot>
             </ViewportProvider>

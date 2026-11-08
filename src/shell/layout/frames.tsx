@@ -6,7 +6,7 @@ import { useMacApp, useNarrowWindow, type MacChrome } from '../mac/mac-app'
 import mac from '../mac/mac.module.css'
 import { WindowControls, WindowStrip } from '../mac/WindowControls'
 import { OverlayHost } from '../ui/Overlay'
-import { usePanelWidths } from './panels'
+import { usePanelLayout } from './panels'
 import { ResizeHandle } from './ResizeHandle'
 
 interface FrameProps {
@@ -21,7 +21,7 @@ function SidebarPanel(props: {
   /** The Mac app marks the sidebar that the user hid. */
   hidden?: boolean
 }) {
-  const widths = useStore(usePanelWidths().widths)
+  const widths = useStore(usePanelLayout().widths)
   const sidebar = useRef<HTMLElement>(null)
   return (
     <aside

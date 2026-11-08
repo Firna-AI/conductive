@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AppModel } from './app/app-model'
 import { NavigationContext, type Navigation } from './app/navigation'
-import { PanelWidths } from './app/panels'
+import { PanelLayout } from './app/panels'
 import { ServicesContext, type AppServices } from './app/services'
 import { AppModelContext } from './shell/context'
 import { PanelContext } from './shell/layout/panels'
@@ -25,7 +25,7 @@ export function App(props: {
   features?: WorkspaceFeatures
 }) {
   const [app] = useState(() => new AppModel(props.services))
-  const [panels] = useState(() => new PanelWidths(props.services.storage))
+  const [panels] = useState(() => new PanelLayout(props.services.storage))
   const viewport = useViewport()
   return (
     <ServicesContext.Provider value={props.services}>

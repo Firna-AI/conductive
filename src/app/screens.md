@@ -44,6 +44,10 @@ drafts, and New workspace.
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A
   step that ends at its start width stores nothing.
+- On desktop, the toggle at the end of the workspace header hides the
+  right column and shows it again. The choice holds for every workspace
+  of the tab until the page closes. A hidden column stays mounted, so its
+  file lists keep their connection and the terminal keeps its session.
 - A sheet or a dialog makes the rest of its frame inert through
   `OverlayHost`. It keeps Tab and Shift+Tab inside, also from the layer
   itself and from a text field. When it closes, the frame is active again

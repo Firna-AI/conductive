@@ -16,6 +16,7 @@ import { useGo } from '../ui/AppLink'
 import { PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
 import type { WorkspaceContext } from './features'
+import { RightColumnToggle } from './WorkspaceColumns'
 
 /** The owner of the workspace, without the menu that reassigns it. */
 function Owner(props: { workspace: Workspace; compact: boolean }) {
@@ -43,7 +44,8 @@ function State(props: { workspace: Workspace }) {
 /**
  * The name, repository, branch, owner, and state of the open workspace,
  * and Archive for its owner and the org's admins (decision 42). The list
- * groups workspaces by section, so the header names the repository.
+ * groups workspaces by section, so the header names the repository. On
+ * desktop the header ends with the toggle of the right column.
  */
 export function WorkspaceHeader(props: {
   context: WorkspaceContext
@@ -101,6 +103,7 @@ export function WorkspaceHeader(props: {
       {ownerView}
       <State workspace={workspace} />
       {archiveButton}
+      <RightColumnToggle />
     </header>
   )
 }
