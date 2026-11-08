@@ -376,23 +376,27 @@ Depends on: 2
 
 `.github/workflows/deploy.yml` deploys each push to `main`.
 
-- [ ] Add the workflow with the triggers, the permissions, the concurrency
+- [x] Add the workflow with the triggers, the permissions, the concurrency
       group, the environment, and the steps of the design:
-  - [ ] the settings check, which skips or fails
-  - [ ] the newest-commit check
-  - [ ] `npm ci`, `npm ci --prefix runner`, and `npm run build`
-  - [ ] the runner package, the S3 check, the upload of a new archive, and
+  - [x] the settings check, which skips or fails
+  - [x] the newest-commit check
+  - [x] `npm ci`, `npm ci --prefix runner`, and `npm run build`
+  - [x] the runner package, the S3 check, the upload of a new archive, and
         the check of the public URL
-  - [ ] the migrations, the deploy with the two runner variables, and the
+  - [x] the migrations, the deploy with the two runner variables, and the
         health check
-- [ ] Check the workflow once with actionlint. Save the output under
-      `.context/deploy-on-main/`.
+- [x] Check the workflow once with actionlint. Save the output under
+      `.context/deploy-on-main/`. Done on 8 November 2026: actionlint 1.7.12
+      with shellcheck 0.11.0 reports nothing. Evidence:
+      `.context/deploy-on-main/proof/m3/actionlint.log`.
 - [x] Run `npm run build`, then `npx wrangler deploy --dry-run` with the
       two `--var` values, once. Save the output. Done on 8 November 2026,
       before the workflow: it exits 0 with no credential. Evidence:
       `.context/deploy-on-main/proof/deploy-dry-run.log`.
-- [ ] Run the scripts of the settings check and the newest-commit check
-      once with sample values for each case. Save the output.
+- [x] Run the scripts of the settings check and the newest-commit check
+      once with sample values for each case. Save the output. Done on
+      8 November 2026: 9 of 9 cases gave the expected result. Evidence:
+      `.context/deploy-on-main/proof/m3/decide.log`.
 - [x] After a build, run `npx wrangler d1 migrations list DB --local` once
       with and once without `--config wrangler.jsonc`. Save the output.
       Done on 8 November 2026: both list the same migrations. Evidence:
