@@ -14,6 +14,7 @@ interface WorkspaceTitleOptions {
   store: EventStore
   tools: WorkspaceToolRuntime
   titles?: Record<Agent, TitleRequest>
+  filterText: (value: string) => string
   emit: (event: RunnerEvent) => Promise<void>
   warn: (message: string) => void
 }
@@ -32,7 +33,9 @@ export class WorkspaceTitle {
   start(command: ProviderInput): void {
     if (this.stopped || this.saved() || !this.options.titles) return
     if (this.text === null && command.message.text.trim())
-      this.text = Array.from(command.message.text).slice(0, 4_000).join('')
+      this.text = Array.from(this.options.filterText(command.message.text))
+        .slice(0, 4_000)
+        .join('')
     if (!this.text?.trim() || this.pending) return
     const controller = new AbortController()
     this.controller = controller
@@ -82,7 +85,7 @@ export class WorkspaceTitle {
         }),
       )
       signal.throwIfAborted()
-      const name = cleanTitle(answer)
+      const name = cleanTitle(this.options.filterText(answer))
       if (!name) throw new Error('The title is empty.')
       if (!this.saved() && !this.stopped)
         await this.options.emit({ type: 'workspace.title', name })

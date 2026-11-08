@@ -56,6 +56,7 @@ export class Runner {
     this.title = new WorkspaceTitle({
       ...options,
       tools: workspaceToolRuntime(options.request),
+      filterText: (value) => this.sanitizer.text(value),
       emit: (event) => this.emit(event),
     })
     const repository = new Repository(options.cwd, options.warn)

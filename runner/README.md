@@ -126,7 +126,7 @@ when no `workspace.title` report is saved. Only one title request runs at
 a time. A resent turn that does not start makes no request.
 
 The request is a separate conversation, hidden from the chat. It gets only
-the first 4,000 characters of the first message with text, without
+the first 4,000 characters of the filtered first message with text, without
 attachments. The prompt treats that text as data and asks for a title of
 three to five words. The runner keeps that text in memory until a request
 succeeds. A later turn retries with that text. After a runner restart, a
@@ -147,8 +147,10 @@ The runner keeps the first line with text from the answer. It removes
 surrounding quotes, backticks, Markdown marks, a leading `Title:` label,
 and one final full stop. It makes each run of spaces one space. It cuts a
 long title to 60 characters at a word boundary. A longer single word ends
-at 60 characters. The output filter removes known secrets before the
-runner saves and sends `workspace.title`. A title saved during the request
+at 60 characters. The runner filters the complete message text before it
+cuts it. It filters the complete answer before it cleans it. The output
+filter also removes known secrets before the runner saves and sends
+`workspace.title`. A title saved during the request
 stops that request from sending another title.
 
 The request has a time limit of 60 seconds. A shutdown stops it. Each
