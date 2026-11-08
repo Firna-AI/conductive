@@ -1,0 +1,24 @@
+---
+import { signInHref } from '../request-values'
+import GitHubMark from './GitHubMark.astro'
+
+/** The main action of the site. The app starts the GitHub sign-up. */
+type Props = { size: 'md' | 'lg'; class?: string }
+
+const { size, class: className } = Astro.props
+---
+
+<a
+  class:list={[
+    'button',
+    'button-primary',
+    { 'button-md': size === 'md' },
+    className,
+  ]}
+  href={signInHref}
+>
+  <span class="button-icon">
+    <GitHubMark size={16} />
+  </span>
+  <span>Start free with GitHub</span>
+</a>

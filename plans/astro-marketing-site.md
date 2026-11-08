@@ -229,43 +229,53 @@ Depends on: 1
 Add Astro and build each current page with it. The Worker still serves the
 old pages at the end of this milestone.
 
-- [ ] Merge `origin/main`. List each site change since this plan, and port
+- [x] Merge `origin/main`. List each site change since this plan, and port
       it too.
-- [ ] Add the dev dependencies with `npm install -D`: `astro`,
+- [x] Add the dev dependencies with `npm install -D`: `astro`,
       `@astrojs/check`, `@emnapi/runtime`, `eslint-plugin-astro`, and
       `prettier-plugin-astro`. Check that `npm ls vite` shows one Vite 8.
-- [ ] Add `astro.config.ts`, the shared module of the site folder, the
+- [x] Add `astro.config.ts`, the shared module of the site folder, the
       file list, and the markers, and the integration that writes the
       file list.
-- [ ] Port the pages one to one, with the same paths, markup, classes,
+- [x] Port the pages one to one, with the same paths, markup, classes,
       and texts:
-  - [ ] The layout: the head, the header, and the footer with the abuse
+  - [x] The layout: the head, the header, and the footer with the abuse
         address and the year.
-  - [ ] The home page: the hero, the feature sections, the smaller
+  - [x] The home page: the hero, the feature sections, the smaller
         features, and the last call to action, with the pictures.
-  - [ ] Terms and Privacy, from the text model of `legal-text.ts`.
-  - [ ] The page for an unknown address.
-  - [ ] The agreement page before GitHub, with only the wordmark in its
+  - [x] Terms and Privacy, from the text model of `legal-text.ts`.
+  - [x] The page for an unknown address.
+  - [x] The agreement page before GitHub, with only the wordmark in its
         header and no footer.
-- [ ] Join the generated CSS to the bundled styles, so that each page
+- [x] Join the generated CSS to the bundled styles, so that each page
       carries it inline. Record the hash of each inline style element of
       each page in the file list. Read the picture
       files with one glob keyed by the shared list. Read the brand files
       and the font with `?url` imports.
-- [ ] Remove the picture part from
+- [x] Remove the picture part from
       `plans/follow-ups/marketing-site-copies.md`.
-- [ ] Add the scripts: `site:dev`, `site:build`, `astro check` in
+- [x] Add the scripts: `site:dev`, `site:build`, `astro check` in
       `typecheck`, and the site build before Vite in `build` and `dev`.
       Run `astro check` so that it cannot wait on a prompt.
-- [ ] Lint, format, and length-check `.astro` files with the existing
+- [x] Lint, format, and length-check `.astro` files with the existing
       commands. Ignore `.astro/` and `public/_site/` in Git, Prettier, and
       ESLint.
-- [ ] Leave `_site/` out of the Mac app bundle in `desktop/vite.config.ts`.
-- [ ] Compare each built page with the current site at 1440 and 390 px,
+- [x] Leave `_site/` out of the Mac app bundle in `desktop/vite.config.ts`.
+- [x] Compare each built page with the current site at 1440 and 390 px,
       dark and light. Save the screenshots under
       `.context/astro-marketing-site/`.
-- [ ] Update the development section of the marketing README, the command
+- [x] Update the development section of the marketing README, the command
       table of `README.md`, and the commands of `AGENTS.md`.
+
+Milestone completed on 8 November 2026 by the UI implementor. Each built
+page matches the old page with 0 differing pixels once its markers are
+filled. The implementor's calls and the checks are in
+`.context/astro-marketing-site/reports/m2-site-build.md`. The calls
+include `tsconfig.site.json` for `astro check`, `CI=true` so that
+`astro check` never waits on its install prompt, Vite's default browser
+target so that the CSS keeps its `-webkit-` prefixes, and a temporary
+plugin that hides the old `actions.ts` from Astro, which reads that name
+as its server actions.
 
 ## Milestone 3: Serve the built site from the Worker
 
@@ -310,6 +320,11 @@ the old page code.
       test helper, and keep its assertions.
 - [ ] Delete the old modules of "Replaced ways". Save the searches that
       show them unused under `.context/astro-marketing-site/`.
+- [ ] Delete the plugin of `astro.config.ts` that hides `actions.ts`, with
+      that module. Point `features.ts` at `IconName` in `icon-shapes.ts`.
+      Drop the re-export of `picturesCss` with `frames.ts`. Fix the
+      comments of `styles/base.css` and `styles/frames.css` that name
+      `pictures.ts`. Added on 8 November 2026 from the Milestone 2 report.
 - [ ] Update the marketing README: how the Worker serves the site, the
       development steps, and the key code. Keep the `#pictures`,
       `#legal-drafts`, and `#development` anchors that other docs link to.

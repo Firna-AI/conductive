@@ -1,19 +1,16 @@
 import {
-  marketingPictureKeys,
   marketingPictures,
   type MarketingPictureKey,
-  type PictureFrame,
   type PictureLayout,
 } from '../../docs/mockups/src/screens/marketingPictureList'
 import { html, type Html } from './html'
 import { pictureFiles } from './picture-files'
+import { frameClasses, lightMedia, phoneMedia } from './picture-styles'
 
-/** The phone layout of the site. The stylesheets use the same width. */
-const phoneMedia = '(max-width: 759.98px)'
+/** `styles.ts` reads the size of each picture from here. */
+export { picturesCss } from './picture-styles'
 
 type Loading = 'eager' | 'lazy'
-
-const lightMedia = '(prefers-color-scheme: light)'
 
 function source(media: string, url: string): Html {
   return html`<source media="${media}" srcset="${url}" />`
@@ -61,12 +58,6 @@ function images(key: MarketingPictureKey, loading: Loading): Html {
   >`
 }
 
-const frameClasses: Readonly<Record<PictureFrame, string>> = {
-  excerpt: 'frame-excerpt',
-  phone: 'frame-phone',
-  'window-or-phone': 'frame-window frame-mobile-phone',
-}
-
 /**
  * A real screen of the app as a still picture in its frame: an excerpt, a
  * phone, or a window. A picture holds no link and no control.
@@ -84,31 +75,4 @@ export function pictureFrame(key: MarketingPictureKey, loading: Loading): Html {
   return html`<div class="frame ${frameClasses[frame]} picture-${key}">
     ${inner}
   </div>`
-}
-
-/** The size of a picture in one layout, and the scale of its phone. */
-function viewRules(
-  selector: string,
-  key: MarketingPictureKey,
-  layout: PictureLayout,
-): string {
-  const { crop, scale } = marketingPictures[key][layout]
-  const { width, height } = crop
-  if (scale === 'inherit') {
-    return `${selector} img{width:calc(${width}px * var(--frame-scale));aspect-ratio:${width}/${height}}`
-  }
-  return `${selector}{--phone-scale:${scale}}${selector} img{width:${width * scale}px;aspect-ratio:${width}/${height}}`
-}
-
-/**
- * The size of each picture in each layout, and the scale of each phone. It
- * uses the arithmetic of the mockup, so each picture has the mockup's size.
- */
-export function picturesCss(): string {
-  return marketingPictureKeys
-    .map((key) => {
-      const selector = `.picture-${key}`
-      return `${viewRules(selector, key, 'desktop')}@media ${phoneMedia}{${viewRules(selector, key, 'mobile')}}`
-    })
-    .join('')
 }

@@ -139,8 +139,22 @@ this repository creates that mailbox.
 
 ## Development
 
+Astro also builds each page of the site, and the agreement page, as a
+static HTML file. The pages are in `pages/`, with the layouts in
+`layouts/` and the parts in `components/`. The Worker serves the pages
+that `routes.ts` and `sign-in-consent.ts` render, not the built files.
+
 - Run the tests: `npm run test -- src/marketing`. The test of the capture
   command uses fake pages, so it needs no browser.
+- Work on the built pages with `npm run site:dev`. It serves them at
+  `http://localhost:4321`, and it reloads a page after each change. The
+  sign-in links lead to the app of `npm run dev`, the footer shows the
+  current year, and the agreement page is at `/app-host/terms-consent`.
+- Build the pages with `npm run site:build`. It writes each page and
+  each file that a page names to `public/_site/`, which Git ignores. It
+  also writes the file list, `site-files.json`, with the hash of each
+  style element of each page. `npm run dev` and `npm run build` build the
+  site first.
 - Preview the site with `npm run dev`. Set `APP_ORIGIN` to
   `http://127.0.0.1:5173` and `MARKETING_ORIGIN` to
   `http://localhost:5173` in `.dev.vars`. Then open `http://localhost:5173`
@@ -183,3 +197,21 @@ this repository creates that mailbox.
 - `assets.ts`: the brand files and the font, and the asset paths that the
   site serves.
 - `html.ts`: the `html` template tag, which escapes each value.
+- [`astro.config.ts`](../../astro.config.ts): the settings of the Astro
+  build, the CSS that code generates (the font, the design tokens, and the
+  size of each picture), and the file list that each build writes.
+- [`site-build.ts`](../shared/site-build.ts): the site folder, the file
+  list and its type, the agreement page, the addresses of the favicons,
+  and the marker of each value of a request, which the build and the
+  Worker share.
+- `pages/`, `layouts/`, `components/`: the built pages, the document and
+  the layouts with the header and the footer, and the parts.
+- `request-values.ts`: the markers of the app origin, the year, the site
+  origin, and the Continue address, or local values in `npm run site:dev`.
+- `picture-urls.ts`: the address of each picture file, from one glob keyed
+  by `pictureFileName` of the list. The build fails when a picture of the
+  list has no file.
+- `picture-styles.ts`: the media queries, the classes of each frame, and
+  the CSS of the size of each picture, which `frames.ts` and the built
+  pages share.
+- `icon-shapes.ts`: the lucide icons of the built pages, as shapes.

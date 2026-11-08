@@ -140,13 +140,15 @@ under `.wrangler/`, which Git also ignores.
 
 | Command                     | What it does                                                   |
 | --------------------------- | -------------------------------------------------------------- |
-| `npm run dev`               | Serve the web app and the local Worker                         |
-| `npm run build`             | Check types and build the web app and Worker into `dist/`      |
+| `npm run dev`               | Build the marketing site, then serve the web app and the local Worker |
+| `npm run build`             | Check types, build the marketing site into `public/_site/`, then build the web app and Worker into `dist/` |
 | `npm run preview`           | Serve the built app and local Worker at port 5174              |
-| `npm run typecheck`         | Generate types and check app, tools, Worker production, and Worker tests |
+| `npm run typecheck`         | Generate types and check app, tools, Worker production, Worker tests, and the Astro files of the marketing site |
 | `npm run test`              | Run the Vitest tests                                           |
 | `npm run db:migrate`        | Apply the D1 migrations to local storage                       |
-| `npm run file-length:check` | Check the 300-line limit of JavaScript and TypeScript files     |
+| `npm run file-length:check` | Check the 300-line limit of JavaScript, TypeScript, and Astro files |
+| `npm run site:dev`          | Serve the marketing site from Astro at `http://localhost:4321`, and reload on edits |
+| `npm run site:build`        | Build the marketing site into `public/_site/`, with its file list |
 | `npm run check`             | Run every check, including the app build, the mockup checks, and the runner checks |
 | `npm run mockups:serve`     | Serve the catalogue at `http://127.0.0.1:4173`, and watch edits |
 | `npm run mockups:check`     | Check mockup types, then build the catalogue in strict mode     |
