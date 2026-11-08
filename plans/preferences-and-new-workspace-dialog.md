@@ -41,12 +41,12 @@ on 8 November 2026. The user can change it before the plan is approved.
   its own entry in the rail was rejected, because it adds an entry to the
   rail for a few settings.
 - General keeps the sign-in, This Mac in the Mac app, GitHub, and the
-  agents. Decision 142 says whether the New workspaces section, with Model
-  and effort, moves to Preferences. When it moves, its description
-  changes to fit both rows, because "Each message can change them" does
-  not fit the way that New workspace opens.
-- Preferences shows a row for the way that New workspace opens, with two
-  choices: a page and a dialog. A segmented control shows the choice, as
+  agents. The New workspaces section, with Model and effort, moves to
+  Preferences, as decision 142 says. Its description changes to fit both
+  rows, because "Each message can change them" does not fit the way that
+  New workspace opens.
+- The New workspaces section gets a row for the way that New workspace
+  opens, with two choices: a page and a dialog. A segmented control shows the choice, as
   the Connect form of an agent does. Each change saves at once, as Model
   and effort does. A failed save shows an error and keeps the saved
   choice. The mockups give the words.
@@ -118,8 +118,10 @@ on 8 November 2026. The user can change it before the plan is approved.
   left out, because it needs a new notice for a create that finished.
 - The message takes the focus when the dialog opens. The focus goes back
   to the trigger when the dialog closes, as for the other dialogs.
-- Decision 143 says which key sends the message from each composer, and
-  so which key creates the workspace.
+- On a computer, Enter sends the message from every composer, and
+  Shift+Enter adds a line, as decision 143 says. So Enter creates the
+  workspace from the dialog and from the page. One shared key rule serves
+  the chat, the page, and the dialog. On a phone, Enter adds a line.
 
 ### The protocol doc
 
@@ -132,7 +134,7 @@ on 8 November 2026. The user can change it before the plan is approved.
 
 ## Decisions
 
-The user has not answered these decisions yet. The options check of the
+The user answered both decisions on 8 November 2026. The options check of the
 `plans` skill ran over them on 8 November 2026. It added options C and D
 to decision 142. It added options D and E and a wider root question to
 decision 143. It kept both recommendations. Its report is
@@ -160,6 +162,7 @@ decision 143. It kept both recommendations. Its report is
 - **Previous examples:** None found.
 - **Recommendation:** B. All the settings of new workspaces then sit together, and General keeps the sign-in and the connections. Under A, the only row of Preferences does not apply on a phone.
 - **Action:** ask the user, because B moves a control of the Account page, a visible change that the request does not cover.
+- **Chosen:** B, by the user on 8 November 2026.
 
 ### 143. Choose the send key of each composer
 
@@ -184,6 +187,7 @@ decision 143. It kept both recommendations. Its report is
 - **Previous examples:** The key rule of the chat composer in `src/chat/components/Composer.tsx:60`.
 - **Recommendation:** B. One rule in every composer is easier to learn, and the chat already teaches it.
 - **Action:** ask the user, because B changes how the existing page reacts to Enter, which the request does not cover.
+- **Chosen:** B, by the user on 8 November 2026.
 
 ## Milestone 1: Mockups
 
@@ -197,11 +201,10 @@ workspace. Each screen has its desktop and its phone view.
 
 - [ ] Give `AccountScreen` in `docs/mockups/src/screens/` the tabs General
       and Preferences. Draw Preferences with the choice of how New
-      workspace opens, and with the outcome of decision 142. When the New
-      workspaces section moves, give it a description that fits both
-      rows. Under option E of decision 143, also draw the send key. Add
-      the tab to `app/account`, and keep each page within five screens,
-      as the `mockups` skill says.
+      workspace opens, in the New workspaces section that moves there
+      from General. Give the section a description that fits both rows.
+      Add the tab to `app/account`, and keep each page within five
+      screens, as the `mockups` skill says.
 - [ ] Add a screen component for the dialog over a ready workspace, with
       its own page `app/new-workspace/dialog`. Draw the empty dialog,
       a draft with a file and the notice of a missing agent login, a
@@ -234,10 +237,9 @@ changes.
       choice belongs to the account, and a new account gets the page. A
       phone always opens the page. The address of New workspace always
       shows the page. A close of the dialog keeps the message.
-- [ ] Add the key rule of decision 143 for each composer that it
-      changes: to the new page for the New workspace page and the
-      dialog, and to `docs/protocol/chat-and-events.md` when the key of
-      the chat changes.
+- [ ] Add the key rule of decision 143 to the new page: on a computer,
+      Enter creates the workspace from the page and from the dialog, and
+      Shift+Enter adds a line, as in the chat.
 - [ ] Update `src/app/screens.md` and `src/app/README.md` with the
       Preferences tab, the dialog, and the shared draft.
 
@@ -268,8 +270,6 @@ and saves it.
       `AccountModel.setNewWorkspaceView`. Serve it in the dev fake
       `src/app/dev/account-routes.ts` and in the fake API of
       `src/test-support/`.
-- [ ] Under option E of decision 143, store, serve, and read the send
-      key in the same way. Drop this TODO under every other option.
 
 ## Milestone 4: The Preferences tab
 
@@ -283,7 +283,8 @@ The Account page gets its tabs, and Preferences saves the choice.
       address `/account/preferences`.
 - [ ] Show General and Preferences with `LinkTabs` in
       `src/shell/account/AccountScreen.tsx`, as in the mockup.
-- [ ] Add the Preferences tab with the choice, and apply decision 142.
+- [ ] Add the Preferences tab with the New workspaces section, moved
+      from General, and the new choice in it.
 - [ ] Test in `src/shell/account/AccountScreen.test.tsx` and
       `src/app/router.test.ts`: the address opens Preferences, the tab
       shows the saved choice, a change saves it, and a failed save shows
@@ -311,15 +312,16 @@ run beside Milestone 4, because the two change different files.
       `src/shell/list/OrgHome.tsx`, and the menu item through
       `src/shell/list/useListActions.ts`. It opens the dialog on a
       computer when the user chose it, and the page in every other case.
-- [ ] Apply decision 143 to the keys of each composer that it changes,
-      through one shared key rule for the dialog, the page, and the chat
-      in `src/chat/components/Composer.tsx`.
+- [ ] Give the dialog, the page, and the chat in
+      `src/chat/components/Composer.tsx` one shared key rule: on a
+      computer, Enter sends and Shift+Enter adds a line.
 - [ ] Test with happy-dom: each entry point opens the dialog with the
       preference and the page without it, a phone opens the page, a
       section keeps its section, Escape keeps the draft, Connect closes
       the dialog first, the create opens the new workspace, and a failed
-      create keeps the dialog with Try again. Test the key of each
-      composer that decision 143 changes. Run each new test 10 times.
+      create keeps the dialog with Try again. Test that Enter creates the
+      workspace from the page and from the dialog, and that Shift+Enter
+      adds a line. Run each new test 10 times.
 - [ ] Smoke-test with `npm run dev`: choose the dialog in Preferences,
       then open New workspace from each entry point, in the browser and
       in a phone size. Save the screenshots under
