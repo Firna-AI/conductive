@@ -1,6 +1,6 @@
 # Turn on Mac app updates
 
-Status: Active. On branch `calummoore/bootstrap-v31`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/desktop-app-auto-update`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The Mac app has an updater, but no installed copy can update itself. Every
 build turns the updater off. The public feed repository that the code names,

@@ -2,7 +2,7 @@
 
 - **Severity:** High. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-08, from the options check of the Mac app update plan on branch `calummoore/bootstrap-v31`, a problem outside its scope.
+- **Added:** 2026-11-08, from the options check of the Mac app update plan on branch `calummoore/desktop-app-auto-update`, a problem outside its scope.
 - **Location:** The `release` job of `.github/workflows/desktop-ci.yml`, its `if:` line and its `environment: desktop-release` line. The deployment rules of the GitHub environment `desktop-release` of `Firna-AI/remote-code`. The section "Signed release packages" of `desktop/README.md`. The section "Packages and updates" of `docs/protocol/desktop-app.md`.
 - **Reason:** the signing setup is outside the update change, and the user approved its tag rule on 8 November 2026.
 
