@@ -1,3 +1,4 @@
+import { requireWritableOrgRequest } from '../security/org-writes'
 import { API_PATHS, orgPath } from '../../src/shared/api'
 import { orgSettingsPaths } from '../../src/shared/org-settings'
 import { deleteOrgPath, restoreOrgPath } from '../../src/shared/orgs'
@@ -39,6 +40,7 @@ export async function membersGate(
     allowDeleted,
   )
   context.org = org
+  await requireWritableOrgRequest(request, env.DB, orgId)
   const writesSharedSettings =
     !['GET', 'HEAD', 'OPTIONS'].includes(request.method) &&
     [

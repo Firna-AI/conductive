@@ -38,6 +38,7 @@ describe('workspace states', () => {
             workspace,
             viewer: fakeUser,
             sandbox: sandboxState(workspace),
+            readOnly: false,
             viewport: 'desktop',
             view: [],
             stream: open.stream,

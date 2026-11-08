@@ -1,6 +1,8 @@
+import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import { routes, type SettingsTab } from '../../app/router'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
+import { useOrgAccess } from '../context'
 import { Page } from '../layout/Page'
 import { LinkTabs } from '../ui/links'
 import { useViewport } from '../ui/viewport'
@@ -20,7 +22,7 @@ const tabs = [
 function TabBody(props: { org: OrgSummary; tab: SettingsTab; user: User }) {
   switch (props.tab) {
     case 'general':
-      return <GeneralTab org={props.org} />
+      return <GeneralTab org={props.org} user={props.user} />
     case 'repositories':
       return <RepositoriesTab org={props.org} />
     case 'cloud-computer':
@@ -33,7 +35,8 @@ function TabBody(props: { org: OrgSummary; tab: SettingsTab; user: User }) {
 /**
  * The settings of an org: its name, its repositories, its cloud computer,
  * and its members. Each tab is a link with its own address. A member sees
- * every tab without its edit actions.
+ * every tab without its edit actions. A suspended org shows its notice
+ * above every tab, and every person sees the tabs without edit actions.
  */
 export function OrgSettingsScreen(props: {
   org: OrgSummary
@@ -42,6 +45,7 @@ export function OrgSettingsScreen(props: {
 }) {
   const { org, tab } = props
   const phone = useViewport() === 'phone'
+  const { suspended } = useOrgAccess(org)
   return (
     <Page
       back={{ label: 'Workspaces', to: routes.org(org.id) }}
@@ -59,6 +63,7 @@ export function OrgSettingsScreen(props: {
       }
       title={org.name}
     >
+      {suspended ? <SuspendedOrgNotice org={org} /> : null}
       <TabBody key={org.id} org={org} tab={tab} user={props.user} />
     </Page>
   )

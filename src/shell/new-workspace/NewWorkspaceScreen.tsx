@@ -13,12 +13,13 @@ import { useStore, valueOf } from '../../app/store'
 import { whenOf, type When } from '../../app/time'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Repository } from '../../shared/org-settings'
-import { useApp, useOrgModel } from '../context'
+import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { Page } from '../layout/Page'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { MenuButton } from '../ui/Menu'
 import { useViewport } from '../ui/viewport'
+import { orgRefusal, RefusedBar } from '../workspace/SandboxNotice'
 import { Composer } from './Composer'
 import { CreateFailed, useBlockingNotice } from './notices'
 
@@ -101,7 +102,9 @@ function Start(props: {
  * its files and its model. The first message creates the workspace, and the
  * app names it and its branch. A failed create keeps the message. `form`
  * is the form of a message that came back after its sandbox did not start.
- * Without it, the screen shows the form of the section.
+ * Without it, the screen shows the form of the section. A suspended org
+ * refuses each create, so its page shows the refused bar in place of the
+ * composer, and the empty chat invites no first message.
  */
 export function NewWorkspaceScreen(props: {
   org: OrgSummary
@@ -122,6 +125,7 @@ export function NewWorkspaceScreen(props: {
   const draft = useStore(model.draft)
   const create = useStore(model.create)
   const phone = useViewport() === 'phone'
+  const { suspended } = useOrgAccess(org)
   useEffect(() => orgModel.watch('repositories', 'builds', 'list'), [orgModel])
   const chosen = (repositories ?? []).filter((item) => item.selected)
   const repositoryId = draft.repositoryId ?? chosen[0]?.id
@@ -155,29 +159,37 @@ export function NewWorkspaceScreen(props: {
         className={classes(chat.chat, phone && chat.mobile)}
       >
         <div className={chat.empty}>
-          <Start
-            choose={(id) => model.setRepository(id)}
-            org={org}
-            repositories={chosen}
-            repositoryId={repositoryId}
-          />
+          {suspended ? null : (
+            <Start
+              choose={(id) => model.setRepository(id)}
+              org={org}
+              repositories={chosen}
+              repositoryId={repositoryId}
+            />
+          )}
         </div>
         <div className={chat.footer}>
-          {create.state === 'failed' || create.state === 'not-started' ? (
-            <CreateFailed
-              error={create.state === 'failed' ? create.error : null}
-              ready={ready !== null}
-              retry={() => void send()}
-            />
-          ) : null}
-          {notice}
-          <Composer
-            choice={choice}
-            model={model}
-            models={models}
-            ready={ready !== null}
-            send={() => void send()}
-          />
+          {suspended ? (
+            <RefusedBar reason={orgRefusal.reason} />
+          ) : (
+            <>
+              {create.state === 'failed' || create.state === 'not-started' ? (
+                <CreateFailed
+                  error={create.state === 'failed' ? create.error : null}
+                  ready={ready !== null}
+                  retry={() => void send()}
+                />
+              ) : null}
+              {notice}
+              <Composer
+                choice={choice}
+                model={model}
+                models={models}
+                ready={ready !== null}
+                send={() => void send()}
+              />
+            </>
+          )}
         </div>
       </section>
     </Page>

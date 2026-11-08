@@ -10,12 +10,19 @@ const workspace = {
 }
 
 describe('mayArchive', () => {
-  test('the owner and the admins archive a workspace, another member does not', () => {
+  test('the owner and the admins archive a workspace, another member does not, and nobody archives in a suspended org', () => {
+    const active = false
     expect([
-      mayArchive({ role: 'member' }, workspace, priya),
-      mayArchive({ role: 'admin' }, workspace, cal),
-      mayArchive({ role: 'member' }, workspace, cal),
-      mayArchive({ role: 'admin' }, { ...workspace, state: 'archived' }, cal),
-    ]).toEqual([true, true, false, false])
+      mayArchive({ role: 'member', suspended: active }, workspace, priya),
+      mayArchive({ role: 'admin', suspended: active }, workspace, cal),
+      mayArchive({ role: 'member', suspended: active }, workspace, cal),
+      mayArchive(
+        { role: 'admin', suspended: active },
+        { ...workspace, state: 'archived' },
+        cal,
+      ),
+      mayArchive({ role: 'admin', suspended: true }, workspace, cal),
+      mayArchive({ role: 'member', suspended: true }, workspace, priya),
+    ]).toEqual([true, true, false, false, false, false])
   })
 })

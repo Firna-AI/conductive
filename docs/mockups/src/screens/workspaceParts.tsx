@@ -8,6 +8,7 @@ import { TerminalView } from '../components/tools/TerminalView'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
 import {
   archivedSections,
+  suspendedSections,
   workspaceSections,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
@@ -113,22 +114,27 @@ export function ToolContent(props: {
 
 /**
  * The sidebar beside an open workspace, which shows its current status. An
- * archived workspace sits in the open Archived group.
+ * archived workspace sits in the open Archived group. In a suspended org
+ * every row shows stopped, and nothing in the sidebar changes the org.
  */
 export function workspaceSidebar(
   workspace: Workspace,
   status: ActivityStatus,
+  suspended: boolean,
 ): ReactNode {
   if (status !== 'archived') {
-    const sections = workspaceSections({ workspace, status })
-    return <Sidebar org={orgs.acme} sections={sections} />
+    const sections = suspended
+      ? suspendedSections(workspace)
+      : workspaceSections({ workspace, status })
+    return <Sidebar org={orgs.acme} sections={sections} suspended={suspended} />
   }
-  const list = archivedSections(workspace)
+  const list = archivedSections(workspace, suspended)
   return (
     <Sidebar
       archived={list.archived}
       org={orgs.acme}
       sections={list.sections}
+      suspended={suspended}
     />
   )
 }

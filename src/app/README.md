@@ -18,7 +18,8 @@ says.
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
-  `?login=none`, or `?deleted=1`. `dev/options.ts` lists them. A new org
+  `?login=none`, `?deleted=1`, or `?suspended=1`. `dev/options.ts` lists
+  them. A new org
   of the dev fake gets every repository of the account's list, and keeps
   its custom initials through rename, delete, and restore.
 - The workspace screen shows the real chat over the dev fake. The fake
@@ -123,6 +124,9 @@ and removal are not wired into this tab yet.
 - A `user_suspended` refusal holds only while the owner stays the same. A
   new owner in the detail, or from `reassigned(workspace)`, clears it. A
   late refusal for a former owner sets nothing.
+- A suspended org takes no write except a leave. [A suspended
+  org](suspended-org.md) gives how the app learns of it, from the org list
+  or from an `org_suspended` refusal, and what its screens show.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.
@@ -227,6 +231,9 @@ clicks, types, and lets the answers of the fake API settle.
   writes, their changes, moves, and the Archived group.
 - `workspace-model.ts` and `archive-model.ts`: an open workspace, its
   `startError` and `reassigned`, and Archive.
+- `suspension.ts` and `permissions.ts`: the suspension of an org, the
+  client that reports its refusals, and the rules of what a person may
+  change.
 - `new-workspace-model.ts`: the first message that creates a workspace.
   `creations.ts`: `Creations`, the admitted creates of an org in this tab,
   and `failedCreate`, which tells a create whose start failed.

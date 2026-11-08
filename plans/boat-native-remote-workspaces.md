@@ -6538,19 +6538,37 @@ Design calls of the orchestrator, 8 November 2026:
   suspended org and read its chats. A notice says that the org is
   suspended, and it gives the abuse address.
 - Nothing in the org can change while it is suspended. A member can
-  still leave.
+  still leave under the last-admin rule of decision 123 E. The only
+  active admin cannot leave while the org is suspended. The org keeps
+  someone who can manage it, as decision 55 requires.
 - Decision 125 B also holds for the org: its workspaces get no disk
   restart near day 14.
+- The shell passes its existing refused-start bar into a full chat view.
+  The chat keeps no second copy of the refusal words. This keeps the
+  owner and org causes in one notice.
+- The client keeps observed refusals apart from the server's suspension
+  time. Each org action uses the org client, so a refusal makes an old
+  page read-only at once.
+- Section collapse and chat-tab navigation stay in the browser while
+  the org is suspended. They change no saved org data.
 
-- [ ] Draw the suspended org in the mockups: the notice in the org and
+- [x] Draw the suspended org in the mockups: the notice in the org and
       on its workspaces, and the refused actions. Then build the screens,
       and compare each with its mockup.
-- [ ] Add the org suspension: the operator route, one shared check that
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15o`.
+- [x] Add the org suspension: the operator route, one shared check that
       every start, build, refresh, connection, preview, tool, and token
       path uses with the user suspension, and native tests through the
       production objects.
-- [ ] Add the org suspension to the suspension page of the protocol and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15o`.
+- [x] Add the org suspension to the suspension page of the protocol and
       to the Terms page.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15o`.
+
+Evidence: `.context/milestone-15o/ui-product/report.md`,
+`.context/milestone-15o/worker/post-merge/completion.md`,
+`.context/milestone-15o/primary-sync-8i.md`, and
+`.context/milestone-15o/check-post-8i.log`.
 
 ## Milestone 15d: Marketing site
 

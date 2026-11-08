@@ -61,7 +61,8 @@ export class WorkspaceModel {
    * Opens the workspace. A stopped sandbox resumes, and the steps stream in.
    * The input of the user on the page counts as activity until `close`. A
    * call to `close` while the request runs makes its answer obsolete, so an
-   * old open never starts the stream again.
+   * old open never starts the stream again. A suspended org refuses each
+   * write, so its workspace sends no Resume, read mark, or activity.
    */
   async open(): Promise<void> {
     const run = ++this.generation
@@ -92,10 +93,14 @@ export class WorkspaceModel {
       this.org.services.onInput(() => this.reportActivity()),
     )
     this.stream.start()
-    if (run !== this.generation) return
+    if (run !== this.generation || this.suspended) return
     const state = valueOf(this.detail.get())?.workspace.state
     if (state === 'stopped' || state === 'error')
       await this.resume().catch(() => undefined)
+  }
+
+  private get suspended(): boolean {
+    return this.org.suspension.suspended.get()
   }
 
   /** Stops the stream. An open that still runs can no longer start it. */
@@ -192,6 +197,7 @@ export class WorkspaceModel {
 
   /** Counts input in the open workspace, at most once a minute. */
   reportActivity(): void {
+    if (this.suspended) return
     const state = valueOf(this.detail.get())?.workspace.state
     if (state === undefined || state === 'stopped' || state === 'error') return
     if (state === 'archived') return
@@ -220,7 +226,7 @@ export class WorkspaceModel {
   private async markRead(): Promise<void> {
     const detail = valueOf(this.detail.get())
     const through = this.stream.last.get()
-    if (!this.org.services.visible.get()) return
+    if (!this.org.services.visible.get() || this.suspended) return
     if (this.reading || !detail || through === 0) return
     if (detail.workspace.state !== 'unread') return
     const run = this.generation

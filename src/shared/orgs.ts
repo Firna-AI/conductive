@@ -3,6 +3,7 @@ import { orgPath, type Org, type Timestamp } from './api'
 export interface OrgSummary extends Org {
   /** Custom initials shown in the rail. Older replies may omit them. */
   initials?: string
+  suspension?: { suspendedAt: Timestamp }
   /** Absent for an active org. Only its admins can see a deleted org. */
   deletion?: { deletedAt: Timestamp; deletesAt: Timestamp }
 }

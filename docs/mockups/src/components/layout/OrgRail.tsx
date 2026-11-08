@@ -19,6 +19,11 @@ export type RailState = {
   hint?: OrgKey
   /** An org that an admin deleted, which waits for its restore. */
   deleted?: OrgKey
+  /**
+   * An org that the operator suspended. Its tile looks as before, because
+   * its members still open it, and the org's pages show the notice.
+   */
+  suspended?: OrgKey
   /** No org exists yet, and nothing is connected. */
   firstRun?: boolean
   /** The person signed in, when it is not the account of the mockups. */
@@ -47,28 +52,50 @@ function RailLink(props: {
   )
 }
 
+/** An org of the rail that an admin deleted or the operator suspended. */
+type OrgState = 'deleted' | 'suspended'
+
+/** Whether an org of the rail is deleted or suspended. */
+function orgState(rail: RailState, key: OrgKey): OrgState | undefined {
+  if (rail.deleted === key) return 'deleted'
+  if (rail.suspended === key) return 'suspended'
+  return undefined
+}
+
+/** The page that an org of the rail opens, and the name of its link. */
+function orgLink(
+  org: Org,
+  state: OrgState | undefined,
+): { to?: string; label: string } {
+  switch (state) {
+    case 'deleted':
+      return { to: paths.deletedOrg, label: `${org.name}, deleted` }
+    case 'suspended':
+      return { to: paths.suspendedOrg, label: `${org.name}, suspended` }
+    case undefined:
+      return { to: orgLinks[org.key], label: org.name }
+  }
+}
+
 function OrgItem(props: {
   org: Org
   current: boolean
   hint: boolean
-  deleted: boolean
+  state?: OrgState
 }) {
   const { org } = props
-  const to = props.deleted ? paths.deletedOrg : orgLinks[org.key]
+  const { to, label } = orgLink(org, props.state)
   const avatar = <OrgTile current={props.current} org={org} size={26} />
-  const tile = props.deleted ? (
-    <span className={styles.deleted}>{avatar}</span>
-  ) : (
-    avatar
-  )
+  const tile =
+    props.state === 'deleted' ? (
+      <span className={styles.deleted}>{avatar}</span>
+    ) : (
+      avatar
+    )
   return (
     <li className={styles.item}>
       {to ? (
-        <RailLink
-          current={props.current}
-          label={props.deleted ? `${org.name}, deleted` : org.name}
-          to={to}
-        >
+        <RailLink current={props.current} label={label} to={to}>
           {tile}
         </RailLink>
       ) : (
@@ -100,10 +127,10 @@ export function OrgRail(props: RailState) {
         {props.orgs.map((org) => (
           <OrgItem
             current={props.current === org.key}
-            deleted={props.deleted === org.key}
             hint={props.hint === org.key}
             key={org.key}
             org={org}
+            state={orgState(props, org.key)}
           />
         ))}
         <li className={styles.item}>

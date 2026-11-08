@@ -4,9 +4,10 @@ import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import { TabIntro } from '../../../docs/mockups/src/components/settings/TabIntro'
 import { ComputerModel } from '../../app/computer-model'
 import { latestBuild } from '../../app/org-model'
+import { mayChangeSettings, showsAdminOnly } from '../../app/permissions'
 import { useStore, valueOf } from '../../app/store'
 import type { OrgSummary } from '../../shared/orgs'
-import { useOrgModel } from '../context'
+import { useOrgAccess, useOrgModel } from '../context'
 import { useAction } from '../ui/useAction'
 import { BuildCard } from './BuildCard'
 import { BuildButton } from './BuildParts'
@@ -17,16 +18,18 @@ import { softwareSentence } from './software'
 
 /**
  * The Cloud computer tab as the model holds it: the builds, the scripts,
- * and the env vars. Only an admin builds and changes them (decision 57).
- * Build computer in the head of the builds and in the notice of a changed
- * install script is one action, so one press starts one build.
+ * and the env vars. Only an admin builds and changes them (decision 57),
+ * and nobody in a suspended org. Build computer in the head of the builds
+ * and in the notice of a changed install script is one action, so one
+ * press starts one build.
  */
 export function ComputerSettings(props: {
   org: OrgSummary
   computer: ComputerModel
 }) {
   const { org, computer } = props
-  const admin = org.role === 'admin'
+  const access = useOrgAccess(org)
+  const admin = mayChangeSettings(access)
   const model = useOrgModel(org.id)
   const builds = useStore(model.builds)
   const settings = useStore(computer.settings)
@@ -51,7 +54,7 @@ export function ComputerSettings(props: {
   return (
     <>
       <TabIntro title="Cloud computer">
-        {`The shared cloud computer of ${org.name}. Every workspace starts from it, with every repository of the org.${admin ? '' : ' Only an admin can change it.'}`}
+        {`The shared cloud computer of ${org.name}. Every workspace starts from it, with every repository of the org.${showsAdminOnly(access) ? ' Only an admin can change it.' : ''}`}
       </TabIntro>
       <Loaded
         failure="The builds did not load"

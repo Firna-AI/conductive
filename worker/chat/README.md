@@ -143,6 +143,10 @@ The Durable Object runs the gates itself.
   when the workspace checks the starter's login. The storage never holds a
   login.
 
+An org suspension keeps chat history and event subscriptions readable.
+The common browser write gate refuses session and message changes with `org_suspended`.
+The shared token rule refuses runners and agent logins for the org.
+
 ## History and event order
 
 [History and event order](history.md) gives the serial queue, the one

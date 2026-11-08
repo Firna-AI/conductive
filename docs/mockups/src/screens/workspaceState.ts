@@ -28,6 +28,7 @@ export const workspaceStateSchema = {
     'viewer',
     'lostUpdate',
     'tree',
+    'org',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -114,6 +115,13 @@ export const workspaceStateSchema = {
      * none. The next complete list returns to `latest`.
      */
     tree: { enum: treeStates },
+    /**
+     * The org of the workspace: in use, or suspended by the operator. In a
+     * suspended org every start is refused, so the screen draws a sandbox
+     * that is not archived as `refused`, with the words of the org's
+     * refusal, and nothing in the workspace can change.
+     */
+    org: { enum: ['active', 'suspended'] },
   },
 } as const
 
@@ -136,6 +144,7 @@ export const readyWorkspace: WorkspaceState = {
   viewer: 'admin',
   lostUpdate: 'none',
   tree: 'latest',
+  org: 'active',
 }
 
 /**

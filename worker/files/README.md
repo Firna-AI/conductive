@@ -147,6 +147,9 @@ A disconnected diff returns `file_unavailable` and makes no Boat call.
 The Boat fallback does not resume a stopped sandbox.
 Boat may therefore refuse a file read until the cloud computer is ready.
 
+Org suspension refuses file resources with 403 `org_suspended` before any runner or provider call.
+Chat history remains readable through its separate access path.
+
 ## Development
 
 Run `npm run test -- worker/files` from the repository root with Node 24.

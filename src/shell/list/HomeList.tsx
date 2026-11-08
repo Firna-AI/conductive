@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Check, ChevronDown, Plus } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import styles from '../../../docs/mockups/src/screens/WorkspaceListScreen.module.css'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp } from '../context'
+import { useApp, useOrgAccess } from '../context'
 import { useMacBar } from '../mac/mac-app'
 import { AppLink } from '../ui/AppLink'
 import { OrgTile, PersonAvatar } from '../ui/Avatars'
@@ -114,14 +115,32 @@ export function ListHeader(props: {
   )
 }
 
-/** The workspace list as a page: on a phone, and in a narrow window. */
+/**
+ * The workspace list as a page: on a phone, and in a narrow window. A
+ * suspended org shows its notice in place of New workspace, and its list
+ * read-only.
+ */
 export function HomeList(props: { org: OrgSummary; user: User }) {
+  const { suspended } = useOrgAccess(props.org)
   return (
     <>
       <ListHeader org={props.org} settings user={props.user} />
       <div className={styles.scroll}>
-        <NewWorkspaceLink current={false} orgId={props.org.id} variant="page" />
-        <OrgList orgId={props.org.id} selectedId={null} variant="page" />
+        {suspended ? (
+          <SuspendedOrgNotice org={props.org} />
+        ) : (
+          <NewWorkspaceLink
+            current={false}
+            orgId={props.org.id}
+            variant="page"
+          />
+        )}
+        <OrgList
+          orgId={props.org.id}
+          readOnly={suspended}
+          selectedId={null}
+          variant="page"
+        />
       </div>
     </>
   )

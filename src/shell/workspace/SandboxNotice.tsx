@@ -1,9 +1,13 @@
 import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { Archive, Ban, CircleAlert, CirclePause } from 'lucide-react'
+import { Archive, CircleAlert, CirclePause } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import {
+  orgSuspendedReason,
+  refusedIcon,
+} from '../../../docs/mockups/src/components/orgs/suspension'
 import styles from '../../../docs/mockups/src/components/workspace/SandboxNotice.module.css'
 import type { ApiError } from '../../app/api/client'
 import { useServices } from '../../app/services'
@@ -14,7 +18,8 @@ import type { Action } from '../ui/useAction'
 
 /**
  * Why the sandbox is not running. `refused` is a start that the app
- * refuses, such as while the owner of the workspace is suspended.
+ * refuses, such as while the owner of the workspace or its org is
+ * suspended.
  */
 export type SandboxProblem = 'stopped' | 'error' | 'refused' | 'archived'
 
@@ -27,17 +32,35 @@ export type SandboxNoticeState =
   | { problem: 'refused'; reason: string }
 
 /**
- * The codes of the API for a start that the app refuses, such as while the
- * owner of the workspace is suspended. The refusal lasts until its cause
+ * The notice of a start in a suspended org. The org's metadata and the
+ * `org_suspended` refusal give the same words, so a page whose metadata is
+ * old shows the same notice.
+ */
+export const orgRefusal = {
+  problem: 'refused',
+  reason: orgSuspendedReason,
+} as const satisfies SandboxNoticeState
+
+/**
+ * The codes of the API for a start that the app refuses: while the owner of
+ * the workspace is suspended, or its org. The refusal lasts until its cause
  * changes, so its notice offers no action.
  */
-const refusalCodes: ReadonlySet<string> = new Set(['user_suspended'])
+const refusalCodes: ReadonlySet<string> = new Set([
+  'user_suspended',
+  'org_suspended',
+])
 
-/** The notice of a start that the app refused, from the start error. */
+/**
+ * The notice of a start that the app refused, from the start error. An
+ * owner's refusal shows the words of the API. An org's refusal shows the
+ * words of `orgRefusal`.
+ */
 export function refusedStart(
   error: ApiError | null,
 ): SandboxNoticeState | null {
   if (!error || !refusalCodes.has(error.code)) return null
+  if (error.code === 'org_suspended') return orgRefusal
   return { problem: 'refused', reason: error.message }
 }
 
@@ -83,7 +106,7 @@ function problemOf(problem: SandboxProblem, archivedOn: string): Problem {
       }
     case 'refused':
       return {
-        icon: Ban,
+        icon: refusedIcon,
         title: "The sandbox can't start",
         body: history,
         panelBody: history,
@@ -104,6 +127,22 @@ function useProblem(problem: SandboxProblem, workspace: Workspace): Problem {
   const { timeZone } = useServices()
   const archivedAt = workspace.archivedAt ?? workspace.updatedAt
   return problemOf(problem, formatDay(archivedAt, timeZone))
+}
+
+/**
+ * The bar of a refused start, with the words of its cause and no action.
+ * New workspace shows it too, before a workspace exists.
+ */
+export function RefusedBar(props: { reason: string }) {
+  const problem = problemOf('refused', '')
+  return (
+    <Notice
+      body={props.reason}
+      icon={problem.icon}
+      title={problem.title}
+      tone={problem.tone}
+    />
+  )
 }
 
 /**

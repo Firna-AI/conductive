@@ -154,10 +154,21 @@ move on every 30 seconds.
 `WorkspaceScreen` reads `model.startError`. While the sandbox is stopped or
 failed, a start error whose code is in `refusalCodes` of `SandboxNotice.tsx`
 shows the refused bar and panels: "The sandbox can't start", with the
-reason of the error and no action. Today the only such code is
-`user_suspended`. Other start errors keep the stopped and error notices.
+reason of the error and no action. The codes are `user_suspended` and
+`org_suspended`. Other start errors keep the stopped and error notices.
 The header, the history, and the owner control stay. The Resume action and
 its failure toast stay as they were.
+
+A suspended org refuses each start, so its workspace shows the refused bar
+of the org in any state but archived, also while the stop of its cloud
+computer runs. The bar has the same words for the org list's suspension
+and for an `org_suspended` refusal. An archived workspace keeps its bar,
+and `ChatArea` puts the notice of the org above it. `sandbox-view.ts` holds
+these rules. `WorkspaceContext.readOnly` tells each part that the
+workspace takes no write: it is archived, or its org is suspended.
+`ChatArea` gives it to the kept chat, which then shows its history
+read-only. [A suspended org](../../app/suspended-org.md) gives the other
+screens.
 
 `WorkspaceContext.onReassigned(workspace)` passes a confirmed new owner to
 `model.reassigned`. A feature that composes the owner slot must call it
@@ -244,7 +255,8 @@ Run the tests with `npm run test -- src/shell/workspace`.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
   states of the cloud computer, the start steps, and the Archive question.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
-  the refused notice.
+  the refused notice. `sandbox-view.ts` chooses the bar and the panels,
+  also for a suspended org.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
 

@@ -38,7 +38,9 @@ function editor(view: HTMLElement, label: string) {
 /** The General tab of the org, as the settings screen shows it. */
 function General() {
   const org = useStore(useApp().orgs).find((item) => item.id === FAKE_IDS.org)
-  return org ? <GeneralTab org={org} /> : null
+  return org ? (
+    <GeneralTab org={org} user={coreFixtures().account.user} />
+  ) : null
 }
 
 describe('the editors of saved settings', () => {

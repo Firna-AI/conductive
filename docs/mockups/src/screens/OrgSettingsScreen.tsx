@@ -2,43 +2,50 @@ import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
-import { MembersTab } from '../components/members/MembersTab'
+import { LeaveOrgDialog } from '../components/members/LeaveOrgDialog'
 import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
-import { ComputerTab } from '../components/settings/ComputerTab'
+import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
 import {
-  DeleteOrgSection,
-  OrgDetailsSection,
   SettingsTabs,
+  suspendedSettingsLinks,
 } from '../components/settings/OrgSections'
 import {
-  OrgRepositoryList,
-  RepositoryList,
-} from '../components/settings/RepositoryList'
-import { Section } from '../components/settings/Section'
-import { workspaceSections } from '../components/workspaces/sections'
+  suspendedSections,
+  workspaceSections,
+} from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import { memberViewer, people, you } from '../fixtures/members'
+import { memberViewer, people } from '../fixtures/members'
 import { orgList, orgs } from '../fixtures/orgs'
-import { acmeRepositories } from '../fixtures/repositories'
 import { paths } from '../paths'
+import { settingsViewer, TabBody } from './orgSettingsTabs'
 
 export const orgSettingsSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['tab', 'build', 'dialog', 'viewer'],
+  required: ['tab', 'build', 'dialog', 'viewer', 'org'],
   properties: {
     tab: { enum: ['general', 'repositories', 'computer', 'members'] },
     /** The builds of the cloud computer, which its tab shows. */
     build: { enum: ['ready', 'building', 'failed', 'changed'] },
-    /** A dialog over the page: Delete org, or the removal of a member. */
-    dialog: { enum: ['none', 'delete-org', 'remove-member'] },
+    /**
+     * A dialog over the page: Delete org, the removal of a member, or the
+     * leave of a suspended org.
+     */
+    dialog: { enum: ['none', 'delete-org', 'remove-member', 'leave-org'] },
     /**
      * The person signed in: an admin, or a member who is not an admin. A
      * member sees no actions on the members, no Delete org, and the name,
      * the repositories, and the cloud computer read-only.
      */
     viewer: { enum: ['admin', 'member'] },
+    /**
+     * The org: in use, or suspended by the operator. A suspended org shows
+     * its notice above every tab, and every person, also an admin, sees
+     * the settings read-only, without Delete org. Its one action is Leave
+     * org, for each person whom the last-admin rule lets leave.
+     */
+    org: { enum: ['active', 'suspended'] },
   },
 } as const
 
@@ -50,53 +57,16 @@ export const acmeSettings: OrgSettingsState = {
   build: 'ready',
   dialog: 'none',
   viewer: 'admin',
+  org: 'active',
 }
 
 const org = orgs.acme
 
-function TabBody(props: { state: OrgSettingsState }) {
-  const { state } = props
-  const admin = state.viewer === 'admin'
-  switch (state.tab) {
-    case 'general':
-      return (
-        <>
-          <OrgDetailsSection
-            initials={org.initials}
-            name={org.name}
-            readOnly={!admin}
-          />
-          {admin ? <DeleteOrgSection name={org.name} /> : null}
-        </>
-      )
-    case 'repositories':
-      return (
-        <Section
-          description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. ${admin ? 'A change takes effect at the next build.' : 'Only an admin can change them.'}`}
-          title="Repositories"
-        >
-          {admin ? (
-            <RepositoryList repositories={acmeRepositories} search="" />
-          ) : (
-            <OrgRepositoryList repositories={acmeRepositories} />
-          )}
-        </Section>
-      )
-    case 'computer':
-      return (
-        <ComputerTab build={state.build} org={org.name} readOnly={!admin} />
-      )
-    case 'members':
-      return (
-        <MembersTab canManage={admin} viewer={admin ? you : memberViewer} />
-      )
-  }
-}
-
 /**
  * The settings of an org: its name and initials, the repositories that it
  * uses, its cloud computer, and its members. The app-wide connections live
- * in the account. Only an admin changes the members and deletes the org.
+ * in the account. Only an admin changes the members and deletes the org. A
+ * suspended org shows its notice first, and nobody changes its settings.
  */
 export function OrgSettingsScreen(props: {
   state: OrgSettingsState
@@ -104,20 +74,37 @@ export function OrgSettingsScreen(props: {
 }) {
   const { state, viewport } = props
   const admin = state.viewer === 'admin'
+  const suspended = state.org === 'suspended'
   const mobile = viewport === 'mobile'
+  // A suspended org opens only the leave, because nothing else in it can
+  // change. An org in use has no Leave org.
   const dialogs: Readonly<Record<OrgSettingsState['dialog'], ReactNode>> = {
     none: null,
-    'delete-org': <DeleteOrgDialog viewport={viewport} />,
-    'remove-member': <RemoveMemberDialog viewport={viewport} />,
+    'delete-org': suspended ? null : <DeleteOrgDialog viewport={viewport} />,
+    'remove-member': suspended ? null : (
+      <RemoveMemberDialog viewport={viewport} />
+    ),
+    'leave-org': suspended ? (
+      <LeaveOrgDialog viewer={settingsViewer(state)} viewport={viewport} />
+    ) : null,
   }
+  const dialog = dialogs[state.dialog]
+  const list = suspended ? paths.suspendedOrg : paths.shell
   const page = (
     <Page
-      back={mobile ? { label: 'Workspaces', to: paths.shell } : undefined}
+      back={mobile ? { label: 'Workspaces', to: list } : undefined}
       subtitle="Org settings"
-      tabs={<SettingsTabs tab={state.tab} wrap={mobile} />}
+      tabs={
+        <SettingsTabs
+          links={suspended ? suspendedSettingsLinks : undefined}
+          tab={state.tab}
+          wrap={mobile}
+        />
+      }
       title={org.name}
       viewport={viewport}
     >
+      {suspended ? <SuspendedOrgNotice org={org} /> : null}
       <TabBody state={state} />
     </Page>
   )
@@ -125,7 +112,7 @@ export function OrgSettingsScreen(props: {
     return (
       <MobileFrame>
         {page}
-        {dialogs[state.dialog]}
+        {dialog}
       </MobileFrame>
     )
   }
@@ -133,16 +120,18 @@ export function OrgSettingsScreen(props: {
     <Sidebar
       current="settings"
       org={org}
-      sections={workspaceSections()}
+      sections={suspended ? suspendedSections() : workspaceSections()}
       settingsAlert={state.build === 'failed'}
+      suspended={suspended}
     />
   )
   return (
     <AppFrame
-      overlay={dialogs[state.dialog]}
+      overlay={dialog}
       rail={{
         orgs: orgList,
         current: org.key,
+        suspended: suspended ? org.key : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
       sidebar={sidebar}

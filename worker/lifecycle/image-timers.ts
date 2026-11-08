@@ -1,3 +1,4 @@
+import { activeOrgIdPredicate, activeOrgPredicate } from '../data/org-access'
 import type { ImageSoftwareArtifact } from './image-software'
 import { runningBuild } from './build-data'
 import {
@@ -35,7 +36,7 @@ export async function refreshImagesForPush(
        (SELECT id FROM image_builds WHERE org_id = s.org_id AND state = 'running'))
      JOIN json_each(j.repositories_json) entry
      JOIN repositories r ON r.id = json_extract(entry.value, '$.id') AND r.org_id = s.org_id
-     JOIN orgs ON orgs.id = r.org_id WHERE r.github_repository_id = ? AND orgs.deleted_at IS NULL`,
+     JOIN orgs ON orgs.id = r.org_id WHERE r.github_repository_id = ? AND orgs.deleted_at IS NULL AND ${activeOrgPredicate('orgs')}`,
   )
     .bind(input.githubRepositoryId)
     .all<{ orgId: string; defaultBranch: string }>()
@@ -52,7 +53,7 @@ export async function refreshImagesForPush(
       continue
     if (await runningBuild(runtime.env.DB, repository.orgId)) {
       await runtime.env.DB.prepare(
-        'UPDATE settings SET pending_push_refresh_at = COALESCE(pending_push_refresh_at, ?) WHERE org_id = ?',
+        `UPDATE settings SET pending_push_refresh_at = COALESCE(pending_push_refresh_at, ?) WHERE org_id = ? AND ${activeOrgIdPredicate('settings.org_id')}`,
       )
         .bind(runtime.dependencies.now(), repository.orgId)
         .run()
@@ -60,7 +61,7 @@ export async function refreshImagesForPush(
     }
     const claim = await runtime.env.DB.prepare(
       `UPDATE settings SET last_push_refresh_at = ?, pending_push_refresh_at = NULL WHERE org_id = ?
-       AND org_image_name IS NOT NULL
+       AND org_image_name IS NOT NULL AND ${activeOrgIdPredicate('settings.org_id')}
        AND (last_push_refresh_at IS NULL OR last_push_refresh_at <= ?)`,
     )
       .bind(
@@ -139,7 +140,7 @@ export async function runImageAlarm(
   if (!admin || !next.imageName) return
   if (next.pendingAt <= runtime.dependencies.now()) {
     await runtime.env.DB.prepare(
-      'UPDATE settings SET pending_push_refresh_at = NULL, last_push_refresh_at = ? WHERE org_id = ?',
+      `UPDATE settings SET pending_push_refresh_at = NULL, last_push_refresh_at = ? WHERE org_id = ? AND ${activeOrgIdPredicate('settings.org_id')}`,
     )
       .bind(runtime.dependencies.now(), state.orgId)
       .run()

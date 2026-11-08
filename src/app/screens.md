@@ -23,6 +23,8 @@ New workspace.
   GitHub IDs of the chosen ones.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
+- A suspended org shows its notice, and no action that it refuses, as
+  [A suspended org](suspended-org.md) says.
 - The Cloud computer tab names the software of the base image from the
   settings reply. An older reply without it names no software.
 - A step of a panel, by a key or a drag, starts from the width that the

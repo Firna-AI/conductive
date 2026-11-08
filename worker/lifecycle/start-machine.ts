@@ -1,3 +1,4 @@
+import { requireActiveStartUsers } from './start-access'
 import { providerState } from './provider-state'
 import type { AppDependencies, AppEnv } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
@@ -79,6 +80,7 @@ export async function advanceStartMachine(
         job.workspaceId,
         job.environmentCiphertext,
       )
+      await requireActiveStartUsers(env.DB, job)
       const sandboxId = await allocateWorkspace(
         env,
         provider,
@@ -112,6 +114,7 @@ export async function advanceStartMachine(
           job.workspaceId,
           job.environmentCiphertext,
         )
+        await requireActiveStartUsers(env.DB, job)
         await provider.resume(row.sandboxId, runtimeEnv, 1_800)
       }
     }

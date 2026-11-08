@@ -8,7 +8,7 @@ import { conversations as chats } from '../fixtures/conversations'
 import { safariTest } from '../fixtures/mac'
 import { checkoutAutocomplete } from '../fixtures/workspaces'
 import { AccountScreen } from './AccountScreen'
-import { NewWorkspaceScreen } from './NewWorkspaceScreen'
+import { NewWorkspaceScreen, newWorkspaceForm } from './NewWorkspaceScreen'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace, type WorkspaceState } from './workspaceState'
 
@@ -89,9 +89,7 @@ function pageFor(state: MacAppState): ReactNode {
         />
       )
     case 'new-workspace':
-      return (
-        <NewWorkspaceScreen state={{ result: 'form' }} viewport="desktop" />
-      )
+      return <NewWorkspaceScreen state={newWorkspaceForm} viewport="desktop" />
     case 'account':
       return (
         <AccountScreen

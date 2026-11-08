@@ -1,6 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
 import {
   NewWorkspaceScreen,
+  newWorkspaceForm,
   newWorkspaceSchema,
 } from '../../../screens/NewWorkspaceScreen'
 
@@ -12,7 +13,7 @@ export const newWorkspace = defineScreen({
     "The user writes the task and sends it, and the app does the rest. The app names the branch with the GitHub login of the user and a city with a random suffix, such as calummoore/lisbon-7k2q, as the user chose in decision 53, and names the workspace after the city. The agent's first answer gives the workspace a short name from the task. There is no right column yet, because there are no files until the workspace exists.",
   relatedDocs: [],
   propSchema: newWorkspaceSchema,
-  props: { result: 'form' },
+  props: newWorkspaceForm,
   useCasePaths: ['user-flows/create-workspace'],
   render: (props, context) => (
     <NewWorkspaceScreen state={props} viewport={context.viewport} />

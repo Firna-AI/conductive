@@ -2,6 +2,7 @@ import { API_PATHS, orgPath } from '../src/shared/api'
 import { bootRoute } from './app-api/boot'
 import { chatLifecycleRoute } from './app-api/lifecycle'
 import { shellRoute } from './app-api/shell'
+import { leaveOrgRoute } from './app-api/leave-org'
 import { createOrg, listOrgs } from './data/orgs'
 import type { AppDependencies, AppEnv } from './env'
 import { HttpError, requiredString } from './http'
@@ -25,6 +26,8 @@ export async function route(
     dependencies,
   )
   if (operator) return operator
+  const leave = await leaveOrgRoute(request, env, context, dependencies)
+  if (leave) return leave
   const boot = await bootRoute(request, env, context, dependencies)
   if (boot) return boot
   const shell = await shellRoute(request, env, context, dependencies)

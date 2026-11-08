@@ -46,6 +46,8 @@ const BANNERS = [
  *   Create org runs. In each first run, no agent login is connected.
  * - `login=none`: no agent login is connected.
  * - `deleted=1`: Acme is deleted, as its admins see it.
+ * - `suspended=1`: the operator suspended Acme. Each write of Acme gets
+ *   `org_suspended`, except a leave, as the Worker does.
  * - `signedOut=1`: the Worker refuses the session, so the sign-in shows.
  * - `stop=<seconds>`: an open workspace stops that many seconds after it
  *   opens, as a sandbox does that stops while its workspace is open.
@@ -57,6 +59,7 @@ export interface DevOptions {
   firstRun: GetStartedStep | null
   noAgentLogin: boolean
   deleted: boolean
+  suspended: boolean
   signedOut: boolean
   /** The wait before an open workspace stops, or `null` for no stop. */
   stopAfterMs: number | null
@@ -84,6 +87,7 @@ export function readDevOptions(search: string): DevOptions {
     firstRun: pick(params, 'firstRun', getStartedOrder) ?? null,
     noAgentLogin: params.get('login') === 'none',
     deleted: params.get('deleted') === '1',
+    suspended: params.get('suspended') === '1',
     signedOut: params.get('signedOut') === '1',
     stopAfterMs: stopAfter(params.get('stop')),
   }

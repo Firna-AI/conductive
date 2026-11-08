@@ -1,3 +1,4 @@
+import { activeOrgPredicate } from '../../data/org-access'
 import type { CommandStatus } from '../../sandbox/provider'
 import { clearImageRetryStatement } from '../image-retry-data'
 
@@ -64,7 +65,7 @@ export async function insertSourceJob(
        SELECT ?, ?, ?, 'layout-starting' WHERE EXISTS (
          SELECT 1 FROM image_builds b JOIN orgs o ON o.id = b.org_id
          WHERE b.id = ? AND b.org_id = ? AND b.sandbox_id = ?
-         AND b.state = 'running' AND o.deleted_at IS NULL)`,
+         AND b.state = 'running' AND o.deleted_at IS NULL AND ${activeOrgPredicate('o')})`,
     )
     .bind(buildId, orgId, sandboxId, buildId, orgId, sandboxId)
     .run()
@@ -135,7 +136,7 @@ export async function storeSourceGrant(
          SELECT 1 FROM image_builds b JOIN orgs o ON o.id = b.org_id
          WHERE b.id = image_source_jobs.build_id AND b.org_id = image_source_jobs.org_id
          AND b.sandbox_id = image_source_jobs.sandbox_id AND b.state = 'running'
-         AND o.deleted_at IS NULL)`,
+         AND o.deleted_at IS NULL AND ${activeOrgPredicate('o')})`,
     )
     .bind(repositoryId, grantHash, ciphertext, job.buildId, job.sourceIndex)
     .run()
@@ -154,7 +155,7 @@ export function claimSourceGrant(db: D1Database, grantHash: string) {
          JOIN orgs o ON o.id = b.org_id
          JOIN repositories r ON r.org_id = b.org_id AND r.id = s.repository_id
          WHERE b.id = s.build_id AND b.org_id = s.org_id AND b.sandbox_id = s.sandbox_id
-         AND b.state = 'running' AND j.phase = 'sources' AND o.deleted_at IS NULL
+         AND b.state = 'running' AND j.phase = 'sources' AND o.deleted_at IS NULL AND ${activeOrgPredicate('o')}
          AND json_extract(j.repositories_json, '$[' || s.source_index || '].id') = r.id
          AND json_extract(j.repositories_json, '$[' || s.source_index || '].fullName') = r.full_name
          AND json_extract(j.repositories_json, '$[' || s.source_index || '].defaultBranch') = r.default_branch

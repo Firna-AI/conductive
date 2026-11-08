@@ -36,6 +36,13 @@ export interface ChatViewProps {
   onConnectAgent?: (agent: Agent) => void
   /** The start steps and the sandbox bar that the app draws, as `ChatHost` says. */
   host?: ChatHost
+  /**
+   * The app shows the workspace read-only, such as while its org is
+   * suspended. The chat then shows its history, changes its tabs in the
+   * browser only, and sends no write. An archived workspace is read-only
+   * without it.
+   */
+  readOnly?: boolean
 }
 
 export interface WorkspaceChatProps extends ChatConnection, ChatViewProps {}
@@ -51,6 +58,8 @@ function ChatBody(
   props: ChatViewProps & { controller: ChatController; snapshot: ChatSnapshot },
 ) {
   const { controller, snapshot } = props
+  const readOnly =
+    snapshot.workspace?.state === 'archived' || (props.readOnly ?? false)
   const mobile = props.viewport === 'mobile'
   const active = snapshot.activeSessionId
   const running = active ? sessionState(snapshot, active).transcript.turn : null
@@ -66,7 +75,7 @@ function ChatBody(
     [controller],
   )
   const history = historyEntries(
-    historySessions(snapshot),
+    historySessions(snapshot, readOnly),
     now,
     reopen,
     (item) => endedAt(snapshot, item),
@@ -86,7 +95,7 @@ function ChatBody(
         onSelect={controller.select}
         onShowHistory={controller.showHistory}
         onStartRename={controller.startRename}
-        readOnly={snapshot.workspace?.state === 'archived'}
+        readOnly={readOnly}
         renaming={overlay.kind === 'rename' ? overlay.sessionId : null}
         tabs={tabSessions(snapshot).map((session) => ({
           id: session.id,
@@ -101,6 +110,7 @@ function ChatBody(
         now={now}
         onConnectAgent={props.onConnectAgent}
         onOpenDiff={props.onOpenDiff}
+        readOnly={readOnly}
         snapshot={snapshot}
       />
       <ChatOverlays
@@ -128,7 +138,10 @@ function ChatBody(
  * and `subscribe`, as `useChatController` says.
  */
 export function WorkspaceChat(props: WorkspaceChatProps) {
-  const { controller, snapshot } = useChatController(props)
+  const { controller, snapshot } = useChatController(
+    props,
+    props.readOnly ?? false,
+  )
   return <ChatBody {...props} controller={controller} snapshot={snapshot} />
 }
 

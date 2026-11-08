@@ -106,10 +106,46 @@ export function newOrgSections(): SidebarSection[] {
 }
 
 /**
- * The sections after the open workspace was archived. It leaves its section
- * for the open Archived group.
+ * The row of a workspace in a suspended org. The suspension a minute ago
+ * stops every cloud computer of the org and refuses every start, so the row
+ * shows stopped, as a refused start does, and a row that had activity shows
+ * that minute. The row opens the workspace in the suspended org.
  */
-export function archivedSections(open: Workspace): {
+function suspendedRow(workspace: Workspace, open?: Workspace): WorkspaceRow {
+  return {
+    workspace:
+      workspace.updated === 'now' ? { ...workspace, updated: '1m' } : workspace,
+    status: 'stopped',
+    selected: workspace.key === open?.key,
+    to:
+      workspace.key === 'checkout-autocomplete'
+        ? paths.suspendedWorkspace
+        : undefined,
+  }
+}
+
+/**
+ * The sections of a suspended org, with every row stopped. `open` is the
+ * workspace that the main area shows.
+ */
+export function suspendedSections(open?: Workspace): SidebarSection[] {
+  return sectionKeys.map((key) => ({
+    section: sections[key],
+    rows: workspaceList
+      .filter((workspace) => workspace.section === key)
+      .map((workspace) => suspendedRow(workspace, open)),
+  }))
+}
+
+/**
+ * The sections after the open workspace was archived. It leaves its section
+ * for the open Archived group. In a suspended org the other rows show
+ * stopped.
+ */
+export function archivedSections(
+  open: Workspace,
+  suspended = false,
+): {
   sections: SidebarSection[]
   archived: WorkspaceRow[]
 } {
@@ -117,7 +153,7 @@ export function archivedSections(open: Workspace): {
     section: sections[key],
     rows: workspaceList
       .filter((item) => item.section === key && item.key !== open.key)
-      .map((item) => rowFor(item)),
+      .map((item) => (suspended ? suspendedRow(item) : rowFor(item))),
   }))
   const archived: WorkspaceRow = {
     workspace: open,

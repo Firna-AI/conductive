@@ -62,13 +62,15 @@ function RenameField(props: {
 /**
  * The header of a section: its name, which collapses it, its count while
  * collapsed, and its menu with Rename, New workspace, New section, and
- * Delete section. General, the default section, cannot be deleted.
+ * Delete section. General, the default section, cannot be deleted. A
+ * read-only list, as in a suspended org, shows no menu.
  */
 export function SectionHeader(props: {
   section: Section
   count: number
   variant: RowVariant
   actions: SectionActions
+  readOnly: boolean
 }) {
   const { section, actions } = props
   const [renaming, setRenaming] = useState(false)
@@ -113,7 +115,8 @@ export function SectionHeader(props: {
       )}
     >
       <h3 className={styles.heading}>
-        {renaming ? (
+        {/* A page that learns of a suspension while a rename is open drops it. */}
+        {renaming && !props.readOnly ? (
           <RenameField
             cancel={() => setRenaming(false)}
             name={section.name}
@@ -137,22 +140,24 @@ export function SectionHeader(props: {
           </button>
         )}
       </h3>
-      <MenuButton
-        entries={entries}
-        label={section.name}
-        trigger={({ open, toggle }) => (
-          <span className={classes(styles.more, open && styles.moreOpen)}>
-            <IconButton
-              expanded={open}
-              icon={MoreHorizontal}
-              label={`More for ${section.name}`}
-              menu
-              onPress={toggle}
-              quiet
-            />
-          </span>
-        )}
-      />
+      {props.readOnly ? null : (
+        <MenuButton
+          entries={entries}
+          label={section.name}
+          trigger={({ open, toggle }) => (
+            <span className={classes(styles.more, open && styles.moreOpen)}>
+              <IconButton
+                expanded={open}
+                icon={MoreHorizontal}
+                label={`More for ${section.name}`}
+                menu
+                onPress={toggle}
+                quiet
+              />
+            </span>
+          )}
+        />
+      )}
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, SearchX } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
+import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
 import { failedCreate } from '../../app/creations'
@@ -11,7 +12,7 @@ import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp } from '../context'
+import { useApp, useOrgAccess } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { useAction } from '../ui/useAction'
@@ -20,11 +21,8 @@ import { ArchiveDialog } from './ArchiveDialog'
 import { ChatArea } from './ChatArea'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
-import {
-  refusedStart,
-  SandboxPanel,
-  type SandboxNoticeState,
-} from './SandboxNotice'
+import { sandboxView } from './sandbox-view'
+import { SandboxPanel } from './SandboxNotice'
 import { shownWorkspaces } from './shown-workspaces'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
@@ -63,6 +61,11 @@ function Unavailable(props: { orgId: string; body: string }) {
  * The tab keeps the model, the header notices, and the chat of each
  * workspace that it showed. So a return draws the workspace at once, and
  * each stream asks only for the events after its own last event number.
+ *
+ * In a suspended org the history stays, and the refused bar of the org
+ * takes the place of the composer, also while the stop of its cloud
+ * computer runs. An archived workspace keeps its bar, with the notice of
+ * the org above it.
  */
 export function WorkspaceScreen(props: {
   org: OrgSummary
@@ -71,6 +74,7 @@ export function WorkspaceScreen(props: {
   viewer: User
 }) {
   const app = useApp()
+  const access = useOrgAccess(props.org)
   const [shown] = useState(() =>
     shownWorkspaces(app, props.viewer).get(props.org.id, props.workspaceId),
   )
@@ -140,37 +144,31 @@ export function WorkspaceScreen(props: {
   }
   const { workspace, start } = detail.value
   const sandbox = sandboxState(workspace)
+  const { suspended } = access
+  const sandboxParts = sandboxView({ sandbox, suspended, startError })
   const context: WorkspaceContext = {
     org: props.org,
     workspace,
     viewer: props.viewer,
     sandbox,
+    readOnly: suspended || sandbox === 'archived',
     viewport,
     view: props.view,
     stream: model.stream,
-    archive: mayArchive(props.org, workspace, props.viewer)
+    archive: mayArchive(access, workspace, props.viewer)
       ? () => void model.archive.start()
       : null,
     onReassigned: (updated) => model.reassigned(updated),
   }
   const phone = viewport === 'phone'
-  // A refused start shows while the sandbox is down, until its cause ends.
-  const refusal =
-    sandbox === 'stopped' || sandbox === 'error'
-      ? refusedStart(startError)
-      : null
-  const notice: SandboxNoticeState | null =
-    refusal ??
-    (sandbox === 'ready' || sandbox === 'starting'
-      ? null
-      : { problem: sandbox })
+  const panelState = sandboxParts.panel
   const panel = (content: ReactNode) =>
-    sandbox === 'ready' ? (
+    panelState === null ? (
       content
     ) : (
       <SandboxPanel
         resume={phone ? resume : null}
-        state={refusal ? 'refused' : sandbox}
+        state={panelState}
         workspace={workspace}
       />
     )
@@ -178,9 +176,12 @@ export function WorkspaceScreen(props: {
     <ChatArea
       chat={chat}
       context={context}
-      notice={notice}
+      notice={sandboxParts.bar}
+      orgNotice={
+        sandboxParts.orgNotice ? <SuspendedOrgNotice org={props.org} /> : null
+      }
       resume={resume}
-      start={start}
+      start={sandboxParts.refusal ? null : start}
     />
   )
   const header = (

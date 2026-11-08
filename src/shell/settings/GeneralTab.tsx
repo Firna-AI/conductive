@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import { mayChangeSettings } from '../../app/permissions'
+import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp } from '../context'
+import { useApp, useOrgAccess } from '../context'
 import {
   orgNameFields,
   OrgNameFields,
@@ -14,6 +16,7 @@ import { tileInitials } from '../ui/Avatars'
 import { useAction } from '../ui/useAction'
 import { useSavedDraft } from '../ui/useSavedDraft'
 import { DeleteOrgDialog, deletionDays } from './DeleteOrgDialog'
+import { LeaveOrgSection } from './LeaveOrg'
 
 function sameNames(a: OrgNameDraft, b: OrgNameDraft): boolean {
   return a.name === b.name && a.initials === b.initials
@@ -100,20 +103,29 @@ function DeleteSection(props: { org: OrgSummary }) {
 /**
  * The General tab. An admin renames the org, sets its initials, and
  * deletes it. A member sees the name and the initials without fields,
- * because only an admin changes them (decision 57).
+ * because only an admin changes them (decision 57). A suspended org shows
+ * them without fields to everyone, and offers Leave org, its one change.
  */
-export function GeneralTab(props: { org: OrgSummary }) {
+export function GeneralTab(props: { org: OrgSummary; user: User }) {
   const { org } = props
-  if (org.role !== 'admin') {
+  const access = useOrgAccess(org)
+  if (!mayChangeSettings(access)) {
+    const { suspended } = access
     return (
-      <Section description="Only an admin can change it." title="Org">
-        <DetailList
-          rows={[
-            { term: 'Name', value: org.name },
-            { term: 'Initials', value: tileInitials(org) },
-          ]}
-        />
-      </Section>
+      <>
+        <Section
+          description={suspended ? undefined : 'Only an admin can change it.'}
+          title="Org"
+        >
+          <DetailList
+            rows={[
+              { term: 'Name', value: org.name },
+              { term: 'Initials', value: tileInitials(org) },
+            ]}
+          />
+        </Section>
+        {suspended ? <LeaveOrgSection org={org} user={props.user} /> : null}
+      </>
     )
   }
   return (

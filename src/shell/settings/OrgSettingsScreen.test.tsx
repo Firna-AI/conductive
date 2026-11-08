@@ -8,6 +8,7 @@ import {
   type ImageBuild,
 } from '../../shared/org-settings'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import {
   coreFixtures,
   FAKE_IDS,
@@ -99,6 +100,43 @@ describe('OrgSettingsScreen', () => {
     expect(textOf(pages['cloud computer'])).toContain(
       'Install software Cloud computers run Ubuntu 24.04 and include Node.js 24, npm, pnpm, Bun, Python 3.12, uv, Go, Rust, Java, GCC, Clang, Docker, git, and gh. The install script runs only at a build of the computer.',
     )
+  })
+
+  test('a suspended org shows its notice above each tab, and no edit control, also for its only admin', async () => {
+    const server = new FakeApiServer()
+    serveSuspendedAcme(server)
+    const { app, org, user, model } = await signedIn(server)
+    await model.reload('repositories')
+    await model.reload('builds')
+    const computer = new ComputerModel(model, new ManualDelay().delay)
+    await computer.load()
+    const screen = (tab: SettingsTab) =>
+      renderScreen(app, <OrgSettingsScreen org={org} tab={tab} user={user} />)
+    const notice =
+      'Acme is suspended Its workspaces and settings are read-only. For questions, write to abuse@conductive.build.'
+    const tabs = {
+      general: screen('general'),
+      repositories: screen('repositories'),
+      'cloud computer': screen('cloud-computer'),
+      members: screen('members'),
+    }
+    for (const [tab, html] of Object.entries(tabs)) {
+      expect(textOf(html), tab).toContain(notice)
+    }
+    const pages = {
+      general: tabs.general,
+      repositories: tabs.repositories,
+      'cloud computer': renderScreen(
+        app,
+        <ComputerSettings computer={computer} org={org} />,
+      ),
+    }
+    for (const [page, html] of Object.entries(pages)) {
+      expect(html, page).not.toMatch(/<button|<input|<textarea/)
+      expect(textOf(html), page).not.toMatch(
+        /Save|Build computer|Delete org|Leave org|Only an admin/,
+      )
+    }
   })
 
   test('an older settings reply without the base image names no software', async () => {

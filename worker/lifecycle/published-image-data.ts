@@ -1,3 +1,4 @@
+import { activeOrgIdPredicate } from '../data/org-access'
 import { HttpError } from '../http'
 import { readSavedScript, type SavedScript } from './saved-script'
 import { readRepositories, type SelectedRepository } from './settings-data'
@@ -15,7 +16,8 @@ export const publishedImageSource = `FROM settings s
 export const publishedRepositorySource = `${publishedImageSource}
   JOIN json_each(j.repositories_json) repository
   WHERE s.org_id = ? AND json_extract(repository.value, '$.id') = ?
-    AND json_extract(repository.value, '$.orgId') = s.org_id`
+    AND json_extract(repository.value, '$.orgId') = s.org_id
+    AND ${activeOrgIdPredicate('s.org_id')}`
 
 export type ImageAdmissionFailure = 'image_required' | 'repository_not_found'
 

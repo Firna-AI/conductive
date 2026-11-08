@@ -1,6 +1,8 @@
 import type { Repository } from '../../src/shared/org-settings'
 import type { Section } from '../../src/shared/sections'
 import type { WorkspaceRow } from '../lifecycle/workspace-data'
+import { activeOrgIdPredicate } from '../data/org-access'
+import { requireActiveOrg } from '../data/user-access'
 
 export async function shellSections(
   db: D1Database,
@@ -102,7 +104,8 @@ export async function saveWorkspaceReadMark(
   await db
     .prepare(
       `INSERT INTO workspace_read_states (workspace_id, org_id, user_id, through_event_number, updated_at)
-     VALUES (?, ?, ?, ?, ?) ON CONFLICT(workspace_id, user_id) DO UPDATE SET
+     SELECT ?, ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}
+     ON CONFLICT(workspace_id, user_id) DO UPDATE SET
      through_event_number = MAX(workspace_read_states.through_event_number, excluded.through_event_number),
      updated_at = excluded.updated_at`,
     )
@@ -112,6 +115,8 @@ export async function saveWorkspaceReadMark(
       input.userId,
       input.throughEventNumber,
       input.now,
+      input.orgId,
     )
     .run()
+  await requireActiveOrg(db, input.orgId)
 }

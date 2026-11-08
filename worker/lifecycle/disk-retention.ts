@@ -52,7 +52,7 @@ export async function keepWorkspaceDisk(
     await setRetention(env.DB, workspaceId, 'resume')
     if (status === 'stopping') return false
     if (status === 'stopped') {
-      await requireActiveUser(env.DB, row.ownerUserId)
+      await requireActiveUser(env.DB, row.ownerUserId, orgId)
       await ensureWorkspaceToken(
         env,
         workspaceId,
@@ -67,6 +67,7 @@ export async function keepWorkspaceDisk(
       )
       const token = await readWorkspaceToken(env, workspaceId)
       const locations = await workspaceRepositoryLocations(env.DB, workspaceId)
+      await requireActiveUser(env.DB, row.ownerUserId, orgId)
       await provider.resume(
         sandboxId,
         {

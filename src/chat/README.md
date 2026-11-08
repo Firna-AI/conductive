@@ -61,6 +61,10 @@ stops its own controller:
 - `host` takes the start steps and the sandbox bar that the app draws, as
   `ChatHost` in `components/SessionChat.tsx` says. The chat places them.
   Without a host, the chat draws both from its own record of the workspace.
+- `readOnly` says that the workspace takes no write, such as while its org
+  is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
+  shows its history, as an archived workspace does, and the host's bar
+  takes the place of the composer.
 - Render the chat inside the Firna theme provider and the Graphite token CSS
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position. A dialog or a sheet covers the nearest
@@ -125,14 +129,20 @@ members from the models of the app.
   content, such as live messages, a sent message, a running turn, or the
   start steps, keeps it and shows a failed load as a notice by the composer,
   with Try again. An empty chat shows the failure in place of the chat.
-- An archived workspace keeps its chat read-only, and the backend refuses
-  its writes. So its tabs change in the browser only. The session history
-  opens the stored history of any session as a tab, and a tab closes with
-  no write. A closed tab shows in the session history again, also the tab
-  of a session that was open at the archive. The session records do not
-  change, so a closed session stays closed. The controller's `select`,
-  `requestClose`, and `reopen` take this path while the workspace is
-  archived, and the server path otherwise.
+- A read-only workspace keeps its chat as it is, and the backend refuses
+  its writes: an archived workspace, and one that the app shows read-only,
+  such as in a suspended org. So its tabs change in the browser only. The
+  session history opens the stored history of any session as a tab, and a
+  tab closes with no write. A closed tab shows in the session history
+  again, also the tab of a session that was open at the archive. The
+  session records do not change, so a closed session stays closed. The
+  controller's `select`, `requestClose`, and `reopen` take this path while
+  the workspace is read-only, and the server path otherwise. The controller
+  reads `readOnly` at each action, because a suspension can start during a
+  visit, and it sends no other write then.
+- A read-only chat shows no composer, no +, no Rename, no Try again, and
+  no answer to a Mac command. Its empty state names only the session
+  history.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
   moves, the login of each session, and the linked sessions.
 - A Stop request records the member who pressed Stop, and ends nothing. The
@@ -246,8 +256,8 @@ check in the Mac app.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
-- `state/archive-view.ts`: the tabs and the session history of an archived
-  workspace, which change in the browser only.
+- `state/archive-view.ts`: the tabs and the session history of a
+  read-only workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot
   that first shows the new session.
 - `state/session-records.ts`: the local versions of the session records and

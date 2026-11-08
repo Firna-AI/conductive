@@ -2,13 +2,17 @@ import { useEffect } from 'react'
 import { ArchiveRestore, FolderGit2, PanelLeft, Plus } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import responsive from '../../../docs/mockups/src/components/layout/responsive.module.css'
+import {
+  SuspendedOrgAbove,
+  SuspendedOrgPanel,
+} from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import { formatDay } from '../../app/time'
 import { useServices } from '../../app/services'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp, useOrgModel } from '../context'
+import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { useAction } from '../ui/useAction'
@@ -83,9 +87,12 @@ function ChooseWorkspace(props: { org: OrgSummary }) {
 /**
  * The page of an org that an admin deleted (decision 30). Its cloud
  * computers are stopped, and its members cannot open it. An admin restores
- * it until the day when everything is deleted.
+ * it until the day when everything is deleted. A suspended org refuses a
+ * restore, so its page offers none, and the notice of the org shows above
+ * the day and the facts of the delete.
  */
 export function DeletedOrg(props: { org: OrgSummary }) {
+  const { suspended } = useOrgAccess(props.org)
   const app = useApp()
   const { timeZone } = useServices()
   const restore = useAction(
@@ -93,19 +100,25 @@ export function DeletedOrg(props: { org: OrgSummary }) {
     "The org wasn't restored.",
   )
   const deletion = props.org.deletion
-  return (
+  const page = (
     <EmptyState
       action={
-        <ActionButton
-          busy={restore.pending}
-          icon={ArchiveRestore}
-          onPress={() => restore.run()}
-          tone="primary"
-        >
-          {`Restore ${props.org.name}`}
-        </ActionButton>
+        suspended ? undefined : (
+          <ActionButton
+            busy={restore.pending}
+            icon={ArchiveRestore}
+            onPress={() => restore.run()}
+            tone="primary"
+          >
+            {`Restore ${props.org.name}`}
+          </ActionButton>
+        )
       }
-      body="Its cloud computers are stopped, and its members can't open it. Restore it to bring back its workspaces, chats, and settings."
+      body={
+        suspended
+          ? "Its cloud computers are stopped, and its members can't open it."
+          : "Its cloud computers are stopped, and its members can't open it. Restore it to bring back its workspaces, chats, and settings."
+      }
       icon={ArchiveRestore}
       title={
         deletion
@@ -114,18 +127,25 @@ export function DeletedOrg(props: { org: OrgSummary }) {
       }
     />
   )
+  if (!suspended) return page
+  return <SuspendedOrgAbove org={props.org}>{page}</SuspendedOrgAbove>
 }
 
 /**
  * The main area of an org. On a wide desktop the sidebar lists the
- * workspaces, so the main area waits for a choice. Below 900 px the list
- * moves into the main area.
+ * workspaces, so the main area waits for a choice. A suspended org shows
+ * its notice there instead. Below 900 px the list moves into the main area.
  */
 export function OrgHome(props: { org: OrgSummary; user: User }) {
+  const { suspended } = useOrgAccess(props.org)
   return (
     <>
       <div className={`${responsive.wideOnly} ${list.choose}`}>
-        <ChooseWorkspace org={props.org} />
+        {suspended ? (
+          <SuspendedOrgPanel org={props.org} />
+        ) : (
+          <ChooseWorkspace org={props.org} />
+        )}
       </div>
       <div className={`${responsive.narrowOnly} ${list.narrowList}`}>
         <HomeList org={props.org} user={props.user} />

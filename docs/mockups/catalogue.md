@@ -14,7 +14,7 @@ how a screen is built, and links to the other pages.
 | `app/sign-in`       | The GitHub sign-in with the agreement to the Terms, the page before GitHub, and Get started, the only first run, in three steps |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
-| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted     |
+| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its error, the start, a held second message, the first turn    |
@@ -33,8 +33,8 @@ how a screen is built, and links to the other pages.
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
-`app/sign-in`, `app/orgs`, `app/org-settings`, `app/banner`, and `app/chat`
-do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/sign-in`, `app/orgs`, `app/orgs/suspended`, `app/org-settings`,
+`app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
@@ -48,6 +48,23 @@ of `app/orgs/new`, `app/orgs/empty`, and `app/orgs/deleted` moved into their
 own folders and kept their paths, so `app/orgs` shows only its canonical
 screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
 paid plan went away, and declares `movedFrom`.
+
+`app/orgs/suspended` shows Acme after the operator suspended it, from
+decision 129. Its notice is at the top of the list, and every workspace
+shows stopped. Its child pages:
+
+- `app/orgs/suspended/workspace` has a workspace with the refused bar of the
+  org. Its `archived` variant has an archived workspace, with the notice of
+  the org above the archived bar.
+- `app/orgs/suspended/new-workspace` has the New workspace page, which an
+  old tab can still open. The refused bar takes the place of the composer.
+- `app/orgs/suspended/settings` has the four tabs, read-only also for an
+  admin.
+- `app/orgs/suspended/leave` has Leave org for a member who is not an
+  admin, and its `confirm` variant has the question before the leave.
+- `app/orgs/suspended/deleted` has a deleted org that is also suspended:
+  the notice of the org above the page of the deleted org, with its date,
+  and no Restore.
 
 `app/banner` shows a branch with commits and no pull request. Its child
 pages show the other states of decision 18: `app/banner/checks` has the

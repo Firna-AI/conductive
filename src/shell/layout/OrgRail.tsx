@@ -3,9 +3,12 @@ import { Plus } from 'lucide-react'
 import { LogoTile } from '../../../docs/mockups/src/components/brand/Logo'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/layout/OrgRail.module.css'
+import { isSuspended } from '../../app/permissions'
 import { routes } from '../../app/router'
+import { useStore } from '../../app/store'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
+import { useApp } from '../context'
 import { AppLink } from '../ui/AppLink'
 import { OrgTile, PersonAvatar } from '../ui/Avatars'
 import layout from './layout.module.css'
@@ -34,7 +37,8 @@ function RailLink(props: {
 /**
  * The narrow rail beside the sidebar: the logo, the orgs of the user, Create
  * org, and the account at the bottom. A deleted org stays faded for its
- * admins until the day when everything is deleted.
+ * admins until the day when everything is deleted. A suspended org looks
+ * the same, and the name of its link says that it is suspended.
  */
 export function OrgRail(props: {
   orgs: readonly OrgSummary[]
@@ -47,6 +51,7 @@ export function OrgRail(props: {
     props.current !== null && typeof props.current === 'object'
       ? props.current.org
       : null
+  const refused = useStore(useApp().refusedOrgs)
   return (
     <nav aria-label="Orgs" className={styles.rail}>
       <span className={styles.mark}>
@@ -55,7 +60,11 @@ export function OrgRail(props: {
       <ul className={styles.orgs}>
         {props.orgs.map((org) => {
           const current = org.id === currentOrg
-          const label = org.deletion ? `${org.name}, deleted` : org.name
+          const label = org.deletion
+            ? `${org.name}, deleted`
+            : isSuspended(org, refused)
+              ? `${org.name}, suspended`
+              : org.name
           const tile = <OrgTile current={current} org={org} size={26} />
           return (
             <li className={classes(styles.item, layout.railItem)} key={org.id}>

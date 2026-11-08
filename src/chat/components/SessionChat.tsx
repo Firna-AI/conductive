@@ -51,21 +51,31 @@ export interface SessionChatProps {
   onOpenDiff?: (path: string) => void
   onConnectAgent?: (agent: Agent) => void
   host?: ChatHost
+  /**
+   * The host shows the workspace read-only, such as while its org is
+   * suspended. The chat then shows its history and no control that writes.
+   */
+  readOnly?: boolean
 }
 
-/** The start steps and the sandbox bar: the host's, or the chat's own. */
+/**
+ * The start steps and the sandbox bar: the host's, or the chat's own. A
+ * read-only chat without a host shows only the bar of an archived
+ * workspace, because it offers no Resume.
+ */
 function sandboxParts(props: SessionChatProps): ChatHost {
   if (props.host) return props.host
   const { snapshot, controller, now } = props
   const { workspace } = snapshot
   const problem = problemOf(workspace?.state)
+  const readOnly = props.readOnly ?? false
   return {
     starting:
-      workspace?.state === 'starting' ? (
+      workspace?.state === 'starting' && !readOnly ? (
         <StartingCard now={now} start={snapshot.start} />
       ) : null,
     sandboxBar:
-      problem && workspace ? (
+      problem && workspace && (problem === 'archived' || !readOnly) ? (
         <SandboxBar
           archivedAt={workspace.archivedAt}
           busy={snapshot.resuming}
@@ -84,7 +94,8 @@ function sandboxParts(props: SessionChatProps): ChatHost {
  * failed load. The composer names whose login the session uses. A linked
  * session starts with a link to the session that it started from. The
  * shown record comes from the tabs, so a closed session that an archived
- * workspace shows keeps its link too.
+ * workspace shows keeps its link too. A read-only workspace, archived or of
+ * a suspended org, shows no composer and no control that writes.
  */
 export function SessionChat(props: SessionChatProps) {
   const { snapshot, controller, now } = props
@@ -93,7 +104,9 @@ export function SessionChat(props: SessionChatProps) {
   const session = tabSessions(snapshot).find((item) => item.id === id) ?? null
   const state = sessionState(snapshot, id ?? '')
   const { starting, sandboxBar } = sandboxParts(props)
-  const down = sandboxBar !== null
+  const readOnly = (props.readOnly ?? false) || workspace?.state === 'archived'
+  // A bar or a read-only workspace takes the place of the composer.
+  const down = sandboxBar !== null || readOnly
   const block = sendBlock(snapshot, id)
   const { notice } = snapshot
   const shownNotice =
@@ -148,6 +161,7 @@ export function SessionChat(props: SessionChatProps) {
         onAnswer={(requestId, action) =>
           void controller.answerCommand(requestId, action)
         }
+        readOnly={readOnly}
         readers={{ viewerId, orgName: snapshot.org?.name ?? null }}
         requests={commands.waiting}
       />
@@ -182,7 +196,12 @@ export function SessionChat(props: SessionChatProps) {
   )
   return (
     <ChatPane
-      empty={emptyView({ snapshot, controller, starting: starting !== null })}
+      empty={emptyView({
+        snapshot,
+        controller,
+        starting: starting !== null,
+        readOnly,
+      })}
       footer={footer}
       mobile={props.mobile}
     >
@@ -194,7 +213,7 @@ export function SessionChat(props: SessionChatProps) {
         onRetry={(messageId) => id && void controller.retry(id, messageId)}
         pending={state.pending}
         readers={{ viewerId, members: snapshot.members }}
-        readOnly={workspace?.state === 'archived'}
+        readOnly={readOnly}
         retrying={state.retrying}
         transcript={state.transcript}
       >

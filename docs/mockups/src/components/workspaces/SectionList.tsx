@@ -28,6 +28,8 @@ function SectionHeader(props: {
   variant: Variant
   open: boolean
   menuStyle: MenuStyle
+  /** The org is suspended, so its sections have no menu. */
+  readOnly: boolean
 }) {
   const { section, rows } = props.item
   const Chevron = section.collapsed ? ChevronRight : ChevronDown
@@ -51,15 +53,17 @@ function SectionHeader(props: {
           ) : null}
         </button>
       </h3>
-      <span className={classes(styles.more, props.open && styles.moreOpen)}>
-        <IconButton
-          expanded={props.open}
-          icon={MoreHorizontal}
-          label={`More for ${section.name}`}
-          menu
-          quiet
-        />
-      </span>
+      {props.readOnly ? null : (
+        <span className={classes(styles.more, props.open && styles.moreOpen)}>
+          <IconButton
+            expanded={props.open}
+            icon={MoreHorizontal}
+            label={`More for ${section.name}`}
+            menu
+            quiet
+          />
+        </span>
+      )}
       {props.open && props.menuStyle === 'anchored' ? (
         <Menu
           entries={sectionMenu}
@@ -101,7 +105,8 @@ function DropTarget(props: {
  * A collapsed section shows only its header and its count. A workspace
  * moves to another section by drag and drop. The sidebar uses compact
  * rows; the list page uses taller rows for touch. `archived` adds the
- * Archived group at the end, open.
+ * Archived group at the end, open. `readOnly` drops the menus of the
+ * sections, for a suspended org.
  */
 export function SectionList(props: {
   sections: readonly SidebarSection[]
@@ -110,6 +115,7 @@ export function SectionList(props: {
   menuStyle?: MenuStyle
   drag?: ListDrag
   archived?: readonly WorkspaceRow[]
+  readOnly?: boolean
 }) {
   const { drag } = props
   const dragged = props.sections
@@ -130,6 +136,7 @@ export function SectionList(props: {
               item={item}
               menuStyle={props.menuStyle ?? 'anchored'}
               open={props.menu?.section === section.key}
+              readOnly={props.readOnly ?? false}
               variant={props.variant}
             />
             {section.collapsed ? null : (

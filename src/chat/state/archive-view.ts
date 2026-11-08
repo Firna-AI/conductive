@@ -5,12 +5,13 @@ import { hydrate } from './history'
 import { neighbour } from './sessions'
 
 /**
- * An archived workspace keeps its chat read-only (decision 16), and the
- * backend refuses its writes. So its session tabs change in the browser
- * only: the reader opens the stored history of any session as a tab, and
- * closes that tab again. The stored session records never change, so a
- * closed session stays closed. `archiveTabs` holds the IDs of these tabs,
- * and the records stay in `sessions` and `history`.
+ * A read-only workspace keeps its chat as it is, and the backend refuses
+ * its writes: an archived workspace (decision 16), and a workspace of a
+ * suspended org. So its session tabs change in the browser only: the reader
+ * opens the stored history of any session as a tab, and closes that tab
+ * again. The stored session records never change, so a closed session stays
+ * closed. `archiveTabs` holds the IDs of these tabs, and the records stay in
+ * `sessions` and `history`.
  */
 export function isArchived(snapshot: ChatSnapshot): boolean {
   return snapshot.workspace?.state === 'archived'
@@ -31,13 +32,17 @@ export function tabSessions(snapshot: ChatSnapshot): readonly Session[] {
 }
 
 /**
- * The sessions that the session history lists: the closed sessions. In an
- * archived workspace, it lists each session without a tab, so a tab that
+ * The sessions that the session history lists: the closed sessions. In a
+ * read-only workspace, it lists each session without a tab, so a tab that
  * the reader closed shows there again, also one of a session that was open
- * at the archive.
+ * at the archive. `readOnly` is true for an archived workspace, and for a
+ * workspace that the host shows read-only.
  */
-export function historySessions(snapshot: ChatSnapshot): readonly Session[] {
-  if (!isArchived(snapshot)) return snapshot.history
+export function historySessions(
+  snapshot: ChatSnapshot,
+  readOnly = isArchived(snapshot),
+): readonly Session[] {
+  if (!readOnly) return snapshot.history
   const shown = new Set(tabIds(snapshot))
   return [...snapshot.sessions, ...snapshot.history].filter(
     (item) => !shown.has(item.id),
@@ -59,10 +64,10 @@ export function endedAt(
 }
 
 /**
- * Shows a session of an archived workspace as a tab and as the shown
+ * Shows a session of a read-only workspace as a tab and as the shown
  * session, and loads its stored history. It writes nothing.
  */
-export async function showArchived(
+export async function showLocally(
   context: ChatContext,
   sessionId: string,
 ): Promise<void> {
@@ -80,10 +85,10 @@ export async function showArchived(
 }
 
 /**
- * Closes the tab of a session of an archived workspace. The next tab shows.
+ * Closes the tab of a session of a read-only workspace. The next tab shows.
  * It writes nothing, and the session stays in the session history.
  */
-export function closeArchived(context: ChatContext, sessionId: string): void {
+export function closeLocally(context: ChatContext, sessionId: string): void {
   context.store.update((snapshot) => {
     const shown = tabSessions(snapshot)
     if (!shown.some((item) => item.id === sessionId)) return snapshot

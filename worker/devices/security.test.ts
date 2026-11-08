@@ -54,6 +54,7 @@ it.each([
     401,
   ],
   ['deleted org', 'UPDATE orgs SET deleted_at = 1', 401],
+  ['suspended org', 'UPDATE orgs SET suspended_at = 1', 401],
 ] as const)(
   'rejects a %s after the original turn was stored',
   async (_name, query, status) => {
@@ -167,4 +168,50 @@ it('bounds socket frames and settles work when its Mac connection closes', async
   )
   expect(await outcome).toBe('closed')
   expect((await stored(fixture)).state).toBe('unavailable')
+})
+
+it('refuses suspended org approvals and late Mac results while keeping the account device connected', async () => {
+  const mac = await connected(fixture)
+  const waiting = await command(fixture, mac, 'waiting')
+  await command(fixture, mac, 'running')
+  await sendFrame(mac, { type: 'command.approved', ...ref('running') })
+  await fixture.db
+    .prepare("UPDATE orgs SET suspended_at = 1 WHERE id = 'org'")
+    .run()
+  const approval = await fixture.app(
+    deviceApprovalPath('org', WID, waiting.requestKey),
+    { ...mac.device, action: 'allow' },
+    fixture.senderToken,
+    true,
+  )
+  expect(approval.status).toBe(403)
+  expect(await approval.json()).toMatchObject({
+    error: { code: 'org_suspended' },
+  })
+  mac.socket.send(
+    JSON.stringify({ type: 'command.approved', ...ref('waiting') }),
+  )
+  mac.socket.send(
+    JSON.stringify({ type: 'command.result', ...ref('running'), result }),
+  )
+  mac.socket.send(JSON.stringify({ type: 'device.ping' }))
+  expect(await mac.inbox.next()).toEqual({
+    type: 'command.cancel',
+    ...ref('waiting'),
+  })
+  expect(await mac.inbox.next()).toEqual({
+    type: 'command.cancel',
+    ...ref('running'),
+  })
+  expect(await mac.inbox.next()).toEqual({ type: 'device.pong' })
+  expect(await stored(fixture, 'waiting')).toMatchObject({
+    state: 'unavailable',
+    error: { code: 'device_unavailable' },
+    result: null,
+  })
+  expect(await stored(fixture, 'running')).toMatchObject({
+    state: 'unavailable',
+    error: { code: 'device_unavailable' },
+    result: null,
+  })
 })

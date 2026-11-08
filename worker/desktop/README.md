@@ -18,6 +18,9 @@ continues after that time. Reload and reconnect need a new URL, as the
 [official desktop guide](https://docs.boat.dev/desktop-streaming/urls-and-security#how-long-a-desktop-url-works)
 says. The lifecycle owner must not cache the URL.
 
+An org suspension refuses a new desktop address with 403 `org_suspended` before any provider call.
+The message gives the abuse address.
+
 ### Key Code
 
 - [handler.ts](handler.ts) exports `createDesktopHandler`.

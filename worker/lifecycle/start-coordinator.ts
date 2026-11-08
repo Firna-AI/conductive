@@ -14,7 +14,8 @@ import { startWorkspaceTerminal } from '../terminal/service'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { readWorkspace } from './workspace-data'
-import { finishFailedStart } from './start-failure'
+import { failedStartJob, finishFailedStart } from './start-failure'
+import { requireActiveOrg } from '../data/user-access'
 import { firstOrgAdmin } from './settings-data'
 import { WorkspaceStartError } from './workspace-start'
 import { advanceStartMachine } from './start-machine'
@@ -147,6 +148,8 @@ export class WorkspaceStartCoordinator {
         job.orgId,
         this.dependencies.fetch,
       )
+      if (job.cancelled && !job.failure)
+        await requireActiveOrg(this.env.DB, job.orgId)
       if (job.cancelled || job.failure) {
         const result = await finishFailedStart(
           this.env,
@@ -236,18 +239,7 @@ export class WorkspaceStartCoordinator {
       const current = (await this.storage.job()) ?? job
       const failure =
         error instanceof HttpError ? error : new WorkspaceStartError(null)
-      const failedJob =
-        current.cancelled && failure.code !== 'user_suspended'
-          ? current
-          : {
-              ...current,
-              cancelled: current.cancelled || failure.code === 'user_suspended',
-              failure: current.failure ?? {
-                code: failure.code,
-                message: failure.message,
-                status: failure.status,
-              },
-            }
+      const failedJob = failedStartJob(current, failure)
       await this.storage.update(failedJob)
       const result = await finishFailedStart(
         this.env,

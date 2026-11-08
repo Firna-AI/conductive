@@ -20,7 +20,7 @@ import {
   type ChatSnapshot,
   type Overlay,
 } from './chat-snapshot'
-import { closeArchived, isArchived, showArchived } from './archive-view'
+import { closeLocally, isArchived, showLocally } from './archive-view'
 import { applyEnvelopes, viewWriter, type ChatContext } from './context'
 import { hydrate, watchShownSession } from './history'
 import { loadChat } from './load'
@@ -57,6 +57,12 @@ export interface ChatControllerOptions {
    * the chat reads the account, the org, the models, and the members itself.
    */
   sources?: ChatSources
+  /**
+   * Whether the host shows the workspace read-only, such as while its org
+   * is suspended. The controller reads it at each action, because a
+   * suspension can start during a visit.
+   */
+  readOnly?: () => boolean
 }
 
 /** The Worker records a change of the workspace with each change of a Mac command. */
@@ -182,52 +188,61 @@ export class ChatController {
     this.store.update((snapshot) => ({ ...snapshot, overlay }))
   }
 
-  /** An archived workspace changes its tabs in the browser only. */
-  private archived(): boolean {
-    return isArchived(this.store.get())
+  /**
+   * A read-only workspace, archived or shown read-only by the host, changes
+   * its tabs in the browser only, and sends no write.
+   */
+  private readOnly(): boolean {
+    return isArchived(this.store.get()) || (this.options.readOnly?.() ?? false)
+  }
+
+  /** Runs a write of the user, unless the workspace is read-only. */
+  private write(action: () => Promise<unknown>): Promise<void> {
+    return this.readOnly() ? Promise.resolve() : action().then(() => undefined)
   }
 
   readonly select = (sessionId: string) =>
-    this.archived()
-      ? showArchived(this.context, sessionId)
+    this.readOnly()
+      ? showLocally(this.context, sessionId)
       : selectSession(this.context, sessionId)
-  readonly newSession = () => newSession(this.context)
+  readonly newSession = () => this.write(() => newSession(this.context))
   readonly startRename = (sessionId: string) =>
     this.overlay({ kind: 'rename', sessionId })
   readonly rename = (sessionId: string, title: string) =>
-    renameSession(this.context, sessionId, title)
+    this.write(() => renameSession(this.context, sessionId, title))
   readonly requestClose = async (sessionId: string): Promise<void> => {
-    if (!this.archived()) return requestClose(this.context, sessionId)
-    closeArchived(this.context, sessionId)
+    if (!this.readOnly()) return requestClose(this.context, sessionId)
+    closeLocally(this.context, sessionId)
   }
-  readonly confirmClose = () => confirmClose(this.context)
+  readonly confirmClose = () => this.write(() => confirmClose(this.context))
   readonly showHistory = (open: boolean) =>
     this.overlay(open ? { kind: 'history' } : { kind: 'none' })
   readonly dismissOverlay = () => this.overlay({ kind: 'none' })
-  /** Reopens a closed session, or shows its history in an archived workspace. */
+  /** Reopens a closed session, or shows its history in a read-only workspace. */
   readonly reopen = (sessionId: string) =>
-    this.archived()
-      ? showArchived(this.context, sessionId)
+    this.readOnly()
+      ? showLocally(this.context, sessionId)
       : reopenSession(this.context, sessionId)
   readonly loadHistory = (sessionId: string) =>
     hydrate(this.context, sessionId, true)
   readonly setDraft = (sessionId: string, text: string) =>
     setDraftText(this.context, sessionId, text)
   readonly attachFiles = (sessionId: string, files: readonly File[]) =>
-    attachFiles(this.context, sessionId, files)
+    this.write(() => attachFiles(this.context, sessionId, files))
   readonly removeAttachment = (sessionId: string, attachmentId: string) =>
     removeAttachment(this.context, sessionId, attachmentId)
-  readonly send = (sessionId: string) => sendDraft(this.context, sessionId)
+  readonly send = (sessionId: string) =>
+    this.write(() => sendDraft(this.context, sessionId))
   readonly retry = (sessionId: string, messageId: string) =>
-    retryTurn(this.context, sessionId, messageId)
+    this.write(() => retryTurn(this.context, sessionId, messageId))
   readonly interrupt = (sessionId: string) =>
-    interruptTurn(this.context, sessionId)
+    this.write(() => interruptTurn(this.context, sessionId))
   readonly chooseModel = (sessionId: string, choice: AgentChoice) =>
-    chooseModel(this.context, sessionId, choice)
-  readonly resume = () => resumeWorkspace(this.context)
+    this.write(() => chooseModel(this.context, sessionId, choice))
+  readonly resume = () => this.write(() => resumeWorkspace(this.context))
   /** Sends the answer to a Mac command, from the Mac app on that Mac. */
   readonly answerCommand = (requestId: string, action: DeviceApprovalAction) =>
-    answerCommand(this.context, requestId, action)
+    this.write(() => answerCommand(this.context, requestId, action))
   /** Reads the Mac commands and the pairing again, such as after a failure. */
   readonly loadDevices = () => refreshDevices(this.context)
   readonly dismissNotice = () =>

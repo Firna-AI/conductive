@@ -141,6 +141,7 @@ it('closes idle terminals when the workspace or org no longer permits sandbox ac
     "UPDATE workspaces SET sandbox_id = 'bx_replaced'",
     'UPDATE workspaces SET archived_at = 1',
     'UPDATE orgs SET deleted_at = 1',
+    'UPDATE orgs SET suspended_at = 1',
   ]) {
     const peer = await setup.open()
     await harness.env.DB.prepare(change).run()
@@ -151,7 +152,9 @@ it('closes idle terminals when the workspace or org no longer permits sandbox ac
       harness.env.DB.prepare(
         "UPDATE workspaces SET state = 'ready', sandbox_id = 'bx_one', archived_at = NULL",
       ),
-      harness.env.DB.prepare('UPDATE orgs SET deleted_at = NULL'),
+      harness.env.DB.prepare(
+        'UPDATE orgs SET deleted_at = NULL, suspended_at = NULL',
+      ),
     ])
   }
 })

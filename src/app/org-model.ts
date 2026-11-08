@@ -28,6 +28,11 @@ import { Refresher, type RefreshWait, type Refreshing } from './refresh'
 import { Resource } from './resource'
 import type { AppServices } from './services'
 import { ready, Store, valueOf, type Loadable, type Readable } from './store'
+import {
+  neverSuspended,
+  noteOrgRefusals,
+  type OrgSuspension,
+} from './suspension'
 
 export type OrgPart = 'list' | 'repositories' | 'builds' | 'members'
 
@@ -81,11 +86,14 @@ function partOf<T, P>(
  * The data of one org: its list of sections and workspaces, its
  * repositories, the builds and settings of its cloud computer, and its
  * members. A part reads while a screen shows it, as
- * `watch` says. The Cloud computer tab reads the settings itself.
+ * `watch` says. The Cloud computer tab reads the settings itself. Each
+ * request of the org that the API refuses with `org_suspended` goes to
+ * `suspension`, so a page with an old org list learns of the suspension.
  */
 export class OrgModel {
   readonly orgId: string
   readonly services: AppServices
+  readonly suspension: OrgSuspension
   readonly resources: {
     readonly list: Resource<ListData>
     readonly repositories: Resource<readonly Repository[]>
@@ -109,10 +117,15 @@ export class OrgModel {
   /** The workspaces that the server removed while this tab showed them. */
   private readonly removed = new Set<string>()
 
-  constructor(services: AppServices, orgId: string) {
-    this.services = services
+  constructor(
+    services: AppServices,
+    orgId: string,
+    suspension: OrgSuspension = neverSuspended,
+  ) {
+    this.suspension = suspension
+    const api = noteOrgRefusals(services.api, () => suspension.note())
+    this.services = { ...services, api }
     this.orgId = orgId
-    const { api } = services
     this.resources = {
       list: new Resource<ListData>(async () => {
         const [sections, workspaces] = await Promise.all([
@@ -143,10 +156,10 @@ export class OrgModel {
     this.builds = builds.store
     this.members = members.store
     this.parts = {
-      list: new Refresher(list, listWait, services),
-      repositories: new Refresher(repositories, onEntry, services),
-      builds: new Refresher(builds, buildsWait, services),
-      members: new Refresher(members, onEntry, services),
+      list: new Refresher(list, listWait, this.services),
+      repositories: new Refresher(repositories, onEntry, this.services),
+      builds: new Refresher(builds, buildsWait, this.services),
+      members: new Refresher(members, onEntry, this.services),
     }
     this.creations = new Creations(this)
   }

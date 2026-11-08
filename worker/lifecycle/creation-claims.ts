@@ -1,3 +1,4 @@
+import { requireActiveOrg } from '../data/user-access'
 import type { AgentChoice } from '../../src/shared/agents'
 import type { User } from '../../src/shared/api'
 import type { WorkspaceStartJob } from './start-types'
@@ -84,6 +85,7 @@ export async function claimCreation(
       )
       .bind(...values, ...values, job.orgId),
   ])
+  await requireActiveOrg(db, job.orgId)
   const claim = results[3].results[0]
   if (!claim) throw new Error('The creation claim could not be recorded')
   if (claim.state === 'pending' || claim.state === 'succeeded') return claim

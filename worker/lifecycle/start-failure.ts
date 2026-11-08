@@ -1,3 +1,4 @@
+import type { HttpError } from '../http'
 import { providerState } from './provider-state'
 import type { AppEnv } from '../env'
 import { ProviderError } from '../sandbox/errors'
@@ -120,6 +121,23 @@ export async function finishFailedStart(
         ? 'The cloud computer could not start. Its cleanup will retry. Try again later.'
         : failure.message,
       log: null,
+    },
+  }
+}
+
+export function failedStartJob(
+  current: WorkspaceStartJob,
+  failure: HttpError,
+): WorkspaceStartJob {
+  const suspended = ['user_suspended', 'org_suspended'].includes(failure.code)
+  if (current.cancelled && !suspended) return current
+  return {
+    ...current,
+    cancelled: current.cancelled || suspended,
+    failure: current.failure ?? {
+      code: failure.code,
+      message: failure.message,
+      status: failure.status,
     },
   }
 }

@@ -99,10 +99,13 @@ export class ShownWorkspaces {
       ],
       chat: new ChatController({
         target: { orgId, workspaceId },
-        client: services.api,
+        // The client of the org takes each `org_suspended` refusal of the
+        // chat, so a page with an old org list turns read-only at once.
+        client: org.services.api,
         subscribe: this.subscribe,
         newId: services.newId,
         sources: chatSources(this.app, org),
+        readOnly: () => org.suspension.suspended.get(),
       }),
     }
     this.kept.set(key, shown)

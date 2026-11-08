@@ -1,0 +1,17 @@
+/*
+ * The notice of a suspended org above a page with its own message, such as
+ * the page of a deleted org. The notice keeps the width of a settings page,
+ * so it does not stretch over a wide main area, and the page fills the rest.
+ */
+.above {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 640px;
+  min-height: 0;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+}

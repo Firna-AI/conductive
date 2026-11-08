@@ -54,6 +54,18 @@ plan limits.
 - Delete org asks for the org name. The deleted org stays faded in the rail
   of its admins until the date when everything is deleted, and its page
   offers Restore.
+- The operator can suspend an org, from decision 129. Its members still
+  open it and read its chats, and its notice gives the abuse address.
+  Nothing in it can change, so its screens show no action that it refuses,
+  also for an admin. No notice promises its files. A deleted org that is
+  also suspended shows the notice above its page, keeps the date when
+  everything is deleted, and offers no Restore, as
+  `app/orgs/suspended/deleted` shows.
+- A person whom the last-admin rule of decision 123 lets leave sees Leave
+  org on the General tab of a suspended org, as `app/orgs/suspended/leave`
+  shows. The only active admin sees no Leave org, because the org keeps
+  someone who can manage it. If a leave still gets the last-admin refusal,
+  the screen names no step that the suspended org refuses.
 - Three orgs show: Acme, Firna, the first org of the sign-up, and Acme Labs,
   which Create org makes. The parts live in `src/components/members/`.
 

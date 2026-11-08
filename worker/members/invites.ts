@@ -1,3 +1,4 @@
+import { requireActiveOrg } from '../data/user-access'
 import type { OrgMember } from '../../src/shared/members'
 import { HttpError } from '../http'
 import { guardedMembersWrite } from './guarded-write'
@@ -56,7 +57,7 @@ export async function acceptOrgInvite(
   now: number,
 ): Promise<OrgMember> {
   await guardedMembersWrite({
-    checks: [],
+    checks: [() => requireActiveOrg(db, orgId)],
     write: () => takeInvite(db, orgId, userId, inviteId, now),
     refusal: inviteNotFound,
   })

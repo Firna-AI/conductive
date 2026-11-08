@@ -16,6 +16,12 @@ export interface WorkspaceContext {
   /** The person signed in. */
   viewer: User
   sandbox: SandboxState
+  /**
+   * The workspace takes no change: it is archived, or its org is suspended.
+   * A feature then shows its history only, and sends no write, also none
+   * for a view, such as a switch of the session tab.
+   */
+  readOnly: boolean
   viewport: Viewport
   /** The address after the workspace, such as `['files']` or `['terminal']`. */
   view: readonly string[]

@@ -9,26 +9,27 @@ import { ActionButton } from '../common/actions'
 import { Notice } from '../common/Notice'
 import { BuildSection, type BuildState } from './BuildSection'
 import { EnvVarsSection, ScriptSection } from './EnvironmentSections'
+import type { ReadOnlyCause } from './OrgSections'
 import { TabIntro } from './TabIntro'
 
 /**
  * The org's cloud computer: its builds, its scripts, and its env vars.
  * `readOnly` shows them without edit fields and actions, for a member who
- * is not an admin (decision 57).
+ * is not an admin (decision 57), and for everyone in a suspended org.
  */
 export function ComputerTab(props: {
   org: string
   build: BuildState
-  readOnly?: boolean
+  readOnly?: ReadOnlyCause
 }) {
   const changed = props.build === 'changed'
-  const readOnly = props.readOnly ?? false
+  const readOnly = props.readOnly !== undefined
   return (
     <>
       <TabIntro title="Cloud computer">
         The shared cloud computer of {props.org}. Every workspace starts from
         it, with every repository of the org.
-        {readOnly ? ' Only an admin can change it.' : null}
+        {props.readOnly === 'member' ? ' Only an admin can change it.' : null}
       </TabIntro>
       <BuildSection readOnly={readOnly} state={props.build} />
       <ScriptSection

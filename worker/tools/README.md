@@ -55,6 +55,9 @@ It must use the latest good org image.
 It must use the sender's agent login.
 It must not leave a new workspace when the sandbox cannot start.
 
+An org suspension refuses the shared workspace token rule before agent tool calls.
+The same rule prevents Mac commands and their later approvals and results.
+
 ## Image installer
 
 `installWorkspaceTools` takes source assets and an authorized image command callback.

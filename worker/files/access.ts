@@ -1,3 +1,4 @@
+import { requireActiveOrg } from '../data/user-access'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import type { RequestContext } from '../security/gate'
@@ -18,5 +19,6 @@ export async function filesWorkspace(
       'workspace_not_found',
       'The workspace is not available.',
     )
+  await requireActiveOrg(env.DB, workspace.orgId)
   return workspace
 }

@@ -11,6 +11,7 @@ Each handler returns `null` for a path that it does not own. The
 | Handler | Routes |
 | --- | --- |
 | `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, and `PUT` and `DELETE` of `/api/account/agent-logins/:agent` |
+| `leaveOrgRoute` in [`leave-org.ts`](leave-org.ts) | `POST` of an org’s `leave`, with the existing last-active-admin rule and native owner-change maintenance |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, and `POST` of its `resume` and `activity` |
 
@@ -38,6 +39,10 @@ Each handler returns `null` for a path that it does not own. The
 - `chatLifecycleRoute` gives the lifecycle handler the runner archive as a
   getter, so only a build or a refresh reads it. It gives the first message
   of a create to `acceptLifecycleFirstMessage` of the workspace object.
+
+Org suspension keeps shell reads available.
+The common browser gate refuses every org write except Leave.
+The view and read-mark SQL writes also check stored org state, so an earlier permission read cannot admit a later write.
 
 ## Development
 

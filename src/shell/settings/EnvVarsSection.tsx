@@ -6,7 +6,9 @@ import {
   SectionText,
 } from '../../../docs/mockups/src/components/settings/Section'
 import type { ComputerModel } from '../../app/computer-model'
+import { mayChangeSettings } from '../../app/permissions'
 import type { OrgSummary } from '../../shared/orgs'
+import { useOrgAccess } from '../context'
 import { ActionButton, IconButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { AddVariableForm, ChangeValueRow } from './EnvVarForms'
@@ -53,14 +55,15 @@ function EnvVarRow(props: {
  * The environment variables of the workspaces of the org (decision 17).
  * Values are write-only: the app shows that a value is set, and an admin
  * replaces it, deletes the variable, or adds one. A member who is not an
- * admin sees the names only (decision 57).
+ * admin sees the names only (decision 57), and so does everyone in a
+ * suspended org.
  */
 export function EnvVarsSection(props: {
   org: OrgSummary
   computer: ComputerModel
   vars: readonly { name: string }[]
 }) {
-  const admin = props.org.role === 'admin'
+  const admin = mayChangeSettings(useOrgAccess(props.org))
   const [changing, setChanging] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   return (

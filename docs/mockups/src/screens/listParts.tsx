@@ -4,6 +4,10 @@ import { ActionButton } from '../components/common/actions'
 import a11y from '../components/common/a11y.module.css'
 import { EmptyState } from '../components/common/EmptyState'
 import { OrgTile } from '../components/orgs/OrgTile'
+import {
+  SuspendedOrgAbove,
+  SuspendedOrgNotice,
+} from '../components/orgs/SuspendedOrgNotice'
 import type { MenuStyle } from '../components/workspaces/SectionList'
 import { SectionList } from '../components/workspaces/SectionList'
 import type {
@@ -31,8 +35,14 @@ const newWorkspaceAction = (
 /**
  * The header of the list page on a phone. A phone has no rail, so the org
  * name opens the org switcher. A deleted org has no settings to open.
+ * `settingsTo` is the page of the settings, such as those of a suspended
+ * org.
  */
-export function ListHeader(props: { org: Org; settings?: boolean }) {
+export function ListHeader(props: {
+  org: Org
+  settings?: boolean
+  settingsTo?: string
+}) {
   return (
     <header className={styles.header}>
       <ScreenLink className={styles.switcher} to={paths.orgs}>
@@ -41,28 +51,42 @@ export function ListHeader(props: { org: Org; settings?: boolean }) {
         <span className={styles.orgName}>{props.org.name}</span>
         <ChevronDown aria-hidden className={styles.chevron} size={15} />
       </ScreenLink>
-      {props.settings === false ? null : <SettingsLink />}
+      {props.settings === false ? null : <SettingsLink to={props.settingsTo} />}
     </header>
   )
 }
 
-/** The workspace list as a page: on a phone, and in a narrow window. */
+/**
+ * The workspace list as a page: on a phone, and in a narrow window. A
+ * suspended org shows its notice first, and no New workspace and no
+ * section menus, because nothing in it can change.
+ */
 export function HomeList(props: {
   org: Org
   sections: readonly SidebarSection[]
   menu?: ListMenu
   menuStyle: MenuStyle
   drag?: ListDrag
+  suspended?: boolean
 }) {
+  const suspended = props.suspended ?? false
   return (
     <>
-      <ListHeader org={props.org} />
+      <ListHeader
+        org={props.org}
+        settingsTo={suspended ? paths.suspendedSettings : undefined}
+      />
       <div className={styles.scroll} data-mokly-scroll="workspace-page">
-        <NewWorkspaceLink variant="page" />
+        {suspended ? (
+          <SuspendedOrgNotice org={props.org} />
+        ) : (
+          <NewWorkspaceLink variant="page" />
+        )}
         <SectionList
           drag={props.drag}
           menu={props.menu}
           menuStyle={props.menuStyle}
+          readOnly={suspended}
           sections={props.sections}
           variant="page"
         />
@@ -105,22 +129,33 @@ export function NewOrgEmpty(props: { org: NewOrg }) {
 /**
  * The page of an org that an admin deleted. Its cloud computers are
  * stopped and its members cannot open it. An admin restores it until the
- * date when everything is deleted.
+ * date when everything is deleted. A suspended org refuses a restore, so
+ * its page offers none, and the notice of the org shows above the date.
  */
-export function DeletedOrg() {
+export function DeletedOrg(props: { suspended?: boolean }) {
   const org = orgs[deletedOrg.org]
-  return (
+  const facts =
+    "Its cloud computers are stopped, and its members can't open it."
+  const page = (
     <EmptyState
       action={
-        <ScreenLink asChild to={paths.shell}>
-          <ActionButton icon={ArchiveRestore} tone="primary">
-            {`Restore ${org.name}`}
-          </ActionButton>
-        </ScreenLink>
+        props.suspended ? undefined : (
+          <ScreenLink asChild to={paths.shell}>
+            <ActionButton icon={ArchiveRestore} tone="primary">
+              {`Restore ${org.name}`}
+            </ActionButton>
+          </ScreenLink>
+        )
       }
-      body={`Its cloud computers are stopped, and its members can't open it. Restore it to bring back its workspaces, chats, and settings.`}
+      body={
+        props.suspended
+          ? facts
+          : `${facts} Restore it to bring back its workspaces, chats, and settings.`
+      }
       icon={ArchiveRestore}
       title={`${org.name} is deleted on ${deletedOrg.deletes}`}
     />
   )
+  if (!props.suspended) return page
+  return <SuspendedOrgAbove org={org}>{page}</SuspendedOrgAbove>
 }

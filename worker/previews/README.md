@@ -175,6 +175,10 @@ each name under `__Secure-conductive-preview-`. Responses keep app cookies
 with their domain removed. This makes them specific to the preview hostname.
 The proxy follows no upstream redirect.
 
+An org suspension blocks preview creation and launch with 403 `org_suspended`.
+The message gives the abuse address. The org-wide write gate also blocks preview close.
+The shared sandbox predicate refuses old grants, cookies, and each stream batch while the org is suspended.
+
 ### Key Code
 
 - [handler.ts](handler.ts) exports the API, launch, proxy, revocation, and expiry entry points.

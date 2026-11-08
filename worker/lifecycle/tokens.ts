@@ -1,3 +1,5 @@
+import { activeWorkspaceOwnerPredicate } from '../data/sandbox-access'
+import { requireActiveOrg } from '../data/user-access'
 import type { AppEnv } from '../env'
 import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
 import { HttpError } from '../http'
@@ -31,6 +33,12 @@ export async function storeWorkspaceToken(
   token: string,
   now: number,
 ): Promise<void> {
+  const workspace = await env.DB.prepare(
+    'SELECT org_id AS orgId FROM workspaces WHERE id = ?',
+  )
+    .bind(workspaceId)
+    .first<{ orgId: string }>()
+  if (workspace) await requireActiveOrg(env.DB, workspace.orgId)
   const ciphertext = await encrypt(
     token,
     tokenContext(workspaceId),
@@ -38,13 +46,15 @@ export async function storeWorkspaceToken(
   )
   await env.DB.prepare(
     `INSERT INTO workspace_tokens
-       (workspace_id, token_hash, ciphertext, created_at) VALUES (?, ?, ?, ?)
+       (workspace_id, token_hash, ciphertext, created_at)
+     SELECT ?, ?, ?, ? FROM workspaces w WHERE w.id = ? AND ${activeWorkspaceOwnerPredicate}
      ON CONFLICT(workspace_id) DO UPDATE SET token_hash = excluded.token_hash,
        ciphertext = excluded.ciphertext, created_at = excluded.created_at, revoked_at = NULL
      WHERE workspace_tokens.revoked_at IS NOT NULL`,
   )
-    .bind(workspaceId, await hash(token), ciphertext, now)
+    .bind(workspaceId, await hash(token), ciphertext, now, workspaceId)
     .run()
+  if (workspace) await requireActiveOrg(env.DB, workspace.orgId)
 }
 
 export async function readWorkspaceToken(

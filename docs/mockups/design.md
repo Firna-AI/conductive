@@ -67,11 +67,23 @@ chat, and five tabs at the bottom.
   whose agent waits for the user, such as for the approval of a command,
   shows Needs input: a middle column in the accent colour that pulses.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
-  cloud computer: stopped, error, archived, and refused. A refused start,
-  such as for a suspended workspace owner, shows "The sandbox can't start"
-  with its reason and no action. The history, the tabs, the header, and
-  the owner picker stay, as `app/shell/refused` and its `reassign` variant
-  show. The notice takes any refusal reason.
+  cloud computer: stopped, error, archived, and refused. A refused start
+  shows "The sandbox can't start" with the words of its cause and no
+  action. The notice takes any refusal reason.
+  - For a suspended workspace owner, the history, the tabs, the header, and
+    the owner picker stay, as `app/shell/refused` and its `reassign`
+    variant show.
+  - For a suspended org, the words name the org and the abuse address, as
+    `app/orgs/suspended/workspace` shows. The New workspace page of such an
+    org shows the same bar in place of the composer.
+- `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
+  suspended org, with the mark of a refused start. It names the org and
+  the abuse address, and it offers no action. It is a box at the top of
+  the list and of each settings tab, and above the bar of an archived
+  workspace. `SuspendedOrgPanel` shows the same words in the main area of
+  a wide desktop list. `SuspendedOrgAbove` puts the box above the page of
+  a deleted org, at the width of a settings page. A suspended org shows no
+  action that it refuses.
 - Copy says cloud computer or sandbox. No screen names Boat, also not the
   marketing site or Get started.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in

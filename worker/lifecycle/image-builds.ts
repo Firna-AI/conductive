@@ -1,8 +1,13 @@
+import { insertBuild } from './build-admission-data'
 import type { ImageBuild } from '../../src/shared/org-settings'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import { requireActiveUser, userSuspended } from '../data/user-access'
-import { orgSandboxProvider } from '../sandbox/client'
+import {
+  requireActiveOrg,
+  requireActiveUser,
+  userSuspended,
+} from '../data/user-access'
+import { orgSandboxProvider, sandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
 import {
@@ -24,7 +29,6 @@ import type { SourceCommandPort } from './image-sources/source-commands'
 import { requireOrgMember } from './access'
 import {
   failBuild,
-  insertBuild,
   jobSoftware,
   readBuildJob,
   runningBuild,
@@ -84,6 +88,7 @@ export async function startImageBuild(
   },
 ): Promise<string> {
   const { env, dependencies } = runtime
+  await requireActiveOrg(env.DB, input.orgId)
   await requireOrgMember(env.DB, input.orgId, input.userId, true)
   const software = readImageSoftware(input.software)
   const existing = await runningBuild(env.DB, input.orgId)
@@ -187,6 +192,12 @@ export async function advanceImageBuild(
         throw imageSourceFailure()
       }
     }
+    if (
+      !recoveringAllocation &&
+      job.state === 'running' &&
+      job.phase !== 'cleanup'
+    )
+      await requireActiveOrg(env.DB, orgId)
     const suspended =
       !recoveringAllocation &&
       job.state === 'running' &&
@@ -205,6 +216,12 @@ export async function advanceImageBuild(
       !(await cleanupBuildImageSources(env, dependencies.fetch, buildId))
     )
       return false
+    if (job.phase === 'cleanup' || job.state !== 'running')
+      return await cleanupBuild(
+        runtime,
+        sandboxProvider(env, dependencies.fetch),
+        job,
+      )
     const admin = await firstOrgAdmin(env.DB, orgId)
     if (!admin)
       throw new HttpError(404, 'org_not_found', 'The org is not available.')
@@ -214,8 +231,6 @@ export async function advanceImageBuild(
       orgId,
       dependencies.fetch,
     )
-    if (job.phase === 'cleanup' || job.state !== 'running')
-      return await cleanupBuild(runtime, provider, job)
     if (!recoveringAllocation && job.startedByUserId)
       await requireActiveUser(env.DB, job.startedByUserId)
     if (providerRetryExpired(job.providerRetry, dependencies.now()))
@@ -239,7 +254,10 @@ export async function advanceImageBuild(
       provider &&
       job.phase === 'allocating' &&
       !job.sandboxId &&
-      !(error instanceof HttpError && error.code === 'user_suspended') &&
+      !(
+        error instanceof HttpError &&
+        ['user_suspended', 'org_suspended'].includes(error.code)
+      ) &&
       !(error instanceof ProviderRetryExhausted) &&
       !(error instanceof ProviderError)
     )

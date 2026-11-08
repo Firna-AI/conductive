@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
 import type { ChatHost } from '../../chat/components/SessionChat'
@@ -17,6 +17,7 @@ function KeptChat(props: {
   chat: ChatController
   host: ChatHost
   phone: boolean
+  readOnly: boolean
 }) {
   const services = useServices()
   const go = useGo()
@@ -27,6 +28,7 @@ function KeptChat(props: {
       controller={props.chat}
       host={props.host}
       onConnectAgent={(agent) => go(routes.account(agent))}
+      readOnly={props.readOnly}
       viewport={props.phone ? 'mobile' : 'desktop'}
     />
   )
@@ -37,15 +39,18 @@ function KeptChat(props: {
  * composer. The shell draws the start steps at the end of the chat and the
  * bar of a sandbox that is down, from its own record of the workspace, and
  * the chat places them. `notice` is that bar's state, also for a start that
- * the app refused. A host that gives the `tabs`, `transcript`, or
- * `composer` slot gets the shell's own column with those slots instead. A
- * `center` part takes the place of the chat.
+ * the app refused, such as in a suspended org. `orgNotice` is the notice of
+ * a suspended org above the bar of an archived workspace. A read-only
+ * workspace shows its chat read-only. A host that gives the `tabs`,
+ * `transcript`, or `composer` slot gets the shell's own column with those
+ * slots instead. A `center` part takes the place of the chat.
  */
 export function ChatArea(props: {
   context: WorkspaceContext
   chat: ChatController
   start: WorkspaceStart | null
   notice: SandboxNoticeState | null
+  orgNotice: ReactNode | null
   resume: Action<[]>
 }) {
   const features = useFeatures()
@@ -57,7 +62,10 @@ export function ChatArea(props: {
       <StartingCard start={props.start} />
     ) : null
   const sandboxBar = notice ? (
-    <SandboxBar notice={notice} resume={props.resume} workspace={workspace} />
+    <>
+      {props.orgNotice}
+      <SandboxBar notice={notice} resume={props.resume} workspace={workspace} />
+    </>
   ) : null
   const center = features.center?.(context) ?? null
   if (features.tabs || features.transcript || features.composer) {
@@ -81,6 +89,7 @@ export function ChatArea(props: {
         chat={props.chat}
         host={{ starting, sandboxBar }}
         phone={phone}
+        readOnly={context.readOnly}
       />
     )
   )

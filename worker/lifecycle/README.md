@@ -168,6 +168,12 @@ publication of its events.
 [Image builds](image-builds.md) gives the build entry points, the build steps, the provider retries,
 the log limits, the snapshot leases, and the refresh timers.
 
+The [operator backend](../operator/README.md#suspend-an-org) can suspend an org.
+Every start and build phase checks this with user suspension.
+Guarded admission, publication, token replacement, source grants, and refresh claims also check stored org state.
+Cleanup can still recover uncertain allocations and remove resources.
+Suspended orgs get no disk retention restart, including after an owner change.
+
 ## Settings
 
 The lifecycle code reads `LifecycleEnvironment` from
@@ -226,6 +232,7 @@ object holds the lifecycle state, the turn records, and the events.
   request first, so the lifecycle finds the resource after a lost reply.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
+- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
 - [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,

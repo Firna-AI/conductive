@@ -4,16 +4,13 @@ import type {
   ImageBuild,
 } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
-import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type { CommandStatus } from '../sandbox/provider'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
-import type { SelectedRepository } from './settings-data'
 import { readBuildSnapshot } from './build-log-reader'
 import { buildLogStatements } from './build-log-statements'
-import type { RepositoryLocation } from './repository-locations'
 import { decodeBuildJob, type StoredBuildJob } from './build-job-codec'
 import type { ProviderRetryState } from './provider-retry'
-import { serializeSavedScript, type SavedScript } from './saved-script'
+import type { SavedScript } from './saved-script'
 
 export type BuildPhase =
   | 'create'
@@ -92,67 +89,6 @@ export async function runningBuild(
   return row?.id ?? null
 }
 
-export async function insertBuild(
-  db: D1Database,
-  input: {
-    id: string
-    orgId: string
-    kind: ImageBuild['kind']
-    userId: string | null
-    settingsRevision: number
-    installScript: SavedScript
-    repositories: readonly SelectedRepository[]
-    repositoryLocations: readonly RepositoryLocation[]
-    previousRepositoryLocations: readonly RepositoryLocation[]
-    software: ImageSoftwareArtifact
-    previousImageName: string | null
-    now: number
-    nextImageRefreshAt?: number
-  },
-): Promise<void> {
-  await db.batch([
-    db
-      .prepare(
-        `INSERT INTO image_builds (id, org_id, kind, state, settings_revision,
-       runner_protocol_version, started_by_user_id, started_at)
-       VALUES (?, ?, ?, 'running', ?, ?, ?, ?)`,
-      )
-      .bind(
-        input.id,
-        input.orgId,
-        input.kind,
-        input.settingsRevision,
-        RUNNER_PROTOCOL_VERSION,
-        input.userId,
-        input.now,
-      ),
-    db
-      .prepare(
-        `INSERT INTO image_build_jobs (build_id, phase, install_script, repositories_json, software_json, previous_image_name,
-          repository_locations_json, previous_repository_locations_json)
-       VALUES (?, 'create', ?, ?, ?, ?, ?, ?)`,
-      )
-      .bind(
-        input.id,
-        serializeSavedScript(input.installScript),
-        JSON.stringify(input.repositories),
-        JSON.stringify(input.software),
-        input.previousImageName,
-        JSON.stringify(input.repositoryLocations),
-        JSON.stringify(input.previousRepositoryLocations),
-      ),
-    ...(input.nextImageRefreshAt === undefined
-      ? []
-      : [
-          db
-            .prepare(
-              'UPDATE settings SET next_image_refresh_at = ? WHERE org_id = ?',
-            )
-            .bind(input.nextImageRefreshAt, input.orgId),
-        ]),
-  ])
-}
-
 export async function updateBuildJob(
   db: D1Database,
   buildId: string,
@@ -229,31 +165,6 @@ export async function failBuild(
       )
       .bind(now, message, buildId),
     ...buildLogStatements(db, buildId, message, now),
-  ])
-}
-
-export async function publishBuild(
-  db: D1Database,
-  job: BuildJob,
-  now: number,
-): Promise<void> {
-  await db.batch([
-    db
-      .prepare(
-        `UPDATE settings SET org_image_name = ?, image_build_id = ?, last_refresh_at = ?,
-       next_image_refresh_at = ? WHERE org_id = ?`,
-      )
-      .bind(job.snapshotName, job.buildId, now, now + 86_400_000, job.orgId),
-    db
-      .prepare(
-        "UPDATE image_builds SET state = 'succeeded', completed_at = ?, error = NULL, provider_retry_json = NULL WHERE id = ?",
-      )
-      .bind(now, job.buildId),
-    db
-      .prepare(
-        "UPDATE image_build_jobs SET phase = 'cleanup', process_id = NULL WHERE build_id = ?",
-      )
-      .bind(job.buildId),
   ])
 }
 

@@ -1,31 +1,38 @@
+import type { OrgSummary } from '../../src/shared/orgs'
 import type { Org } from '../../src/shared/api'
 
-export function findMembership(
+export async function findMembership(
   db: D1Database,
   orgId: string,
   userId: string,
-): Promise<Org | null> {
-  return db
+): Promise<OrgSummary | null> {
+  const row = await db
     .prepare(
-      `SELECT orgs.id, orgs.name, org_members.role
+      `SELECT orgs.id, orgs.name, org_members.role,
+       orgs.suspended_at AS suspendedAt
      FROM orgs JOIN org_members ON org_members.org_id = orgs.id
      WHERE orgs.id = ? AND org_members.user_id = ? AND orgs.deleted_at IS NULL`,
     )
     .bind(orgId, userId)
-    .first<Org>()
+    .first<Org & { suspendedAt: number | null }>()
+  return row ? orgSummary(row) : null
 }
 
-export async function listOrgs(db: D1Database, userId: string): Promise<Org[]> {
+export async function listOrgs(
+  db: D1Database,
+  userId: string,
+): Promise<OrgSummary[]> {
   const { results } = await db
     .prepare(
-      `SELECT orgs.id, orgs.name, org_members.role
+      `SELECT orgs.id, orgs.name, org_members.role,
+       orgs.suspended_at AS suspendedAt
      FROM orgs JOIN org_members ON org_members.org_id = orgs.id
      WHERE org_members.user_id = ? AND orgs.deleted_at IS NULL
      ORDER BY orgs.created_at, orgs.id`,
     )
     .bind(userId)
-    .all<Org>()
-  return results
+    .all<Org & { suspendedAt: number | null }>()
+  return results.map(orgSummary)
 }
 
 export async function createOrg(
@@ -51,4 +58,15 @@ export async function createOrg(
       .bind(id, now),
   ])
   return { id, name, role: 'admin' }
+}
+
+function orgSummary(row: Org & { suspendedAt: number | null }): OrgSummary {
+  return {
+    id: row.id,
+    name: row.name,
+    role: row.role,
+    ...(row.suspendedAt !== null
+      ? { suspension: { suspendedAt: row.suspendedAt } }
+      : {}),
+  }
 }

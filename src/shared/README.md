@@ -73,7 +73,8 @@ It can differ from the session of the request.
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
 `acceptedTermsSignInPath()` gives the sign-in path that carries that revision.
 [Terms consent](../../worker/security/README.md#terms-consent) gives the rules of sign-in.
-`operator.ts` defines the path and the reply of the operator's suspension of a user.
+`operator.ts` defines the paths and replies of the operator's user and org suspensions.
+`OrgSummary.suspension` in `orgs.ts` exposes only the org suspension time to its members.
 [Operator actions](../../worker/operator/README.md) gives the access and the reply codes.
 
 `device.ts` defines Mac command paths, socket messages, pairing, and local settings relays.

@@ -10,7 +10,7 @@ export const sandboxRefused = defineScreen({
   description:
     'The app refuses to start the sandbox, because Jonas, the owner of the workspace, is suspended. Cal, an active admin, views it. The chat history, the header, and the owner picker stay. The bar in place of the composer shows the words of the refusal and offers no Resume while the owner stays the same.',
   rationale:
-    'The operator can suspend an account, as the user chose with option D of decision 28. A suspension stops the cloud computers of the workspaces that the account owns and blocks new starts. One notice shows each refused start with the words of the app, so a later suspension of an org can use it too. An admin can assign another member as the owner. The refusal then ends, and Resume comes back.',
+    'The operator can suspend an account, as the user chose with option D of decision 28. A suspension stops the cloud computers of the workspaces that the account owns and blocks new starts. One notice shows each refused start with the words of the app. A suspended org uses it too, with its own words, in app/orgs/suspended/workspace. An admin can assign another member as the owner. The refusal then ends, and Resume comes back.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, sandbox: 'refused' },
