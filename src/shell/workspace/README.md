@@ -45,9 +45,10 @@ the `AppModel` of the tab, for the signed-in user.
   of this tab forgets its kept model, notices, and chat, so its streams
   never open again.
 - In a tab without its form, a workspace whose create start failed shows
-  the unavailable view. It says "This workspace is not available" and "Its
-  sandbox didn't start.", with All workspaces. It offers no Resume, and the
-  list drops its row.
+  the unavailable view. It says "This workspace is not available" and the
+  message that the start saved, or "Its sandbox didn't start." when it has
+  none, with All workspaces. It offers no Resume, and the list drops its
+  row.
 - A create that started keeps its start record. So a later error of its
   sandbox shows the sandbox bar with Try again, as a failed resume does.
 - Nothing goes to browser storage. So a reload or a new tab starts empty,
@@ -81,42 +82,9 @@ says.
 
 ## Notices of a failed repair
 
-The workspace name and the start steps belong to no chat session. The
-workspace can refuse an update of one of them. After such a first loss, it
-asks the runner for a fresh full report, and the screen shows nothing.
-When the workspace refuses that report too, the repair failed. Then a bar
-below the header names the data that is out of date, with the time since
-the repair failed.
-[Lost workspace updates](../../../docs/protocol/chat-and-events.md#lost-workspace-updates)
-gives the rules. The Files panel shows the notices of the file lists, as
-[the Files screens](../../files/README.md#integration) say.
-
-- `HeaderNotices` keeps these failed repairs. It is a store of its own,
-  apart from `WorkspaceModel`. The tab keeps one for each workspace that it
-  showed, as [The kept workspace](#the-kept-workspace) says.
-- Only a marker with `repairFailed: true` and no session adds a failed
-  repair. A first loss adds nothing. The chat owns the markers of a session.
-- Only a later full report of the same kind in the stream clears a failed
-  repair: `workspace.title` for the name, and `start.updated` for the start
-  steps. A report of another kind and `workspace.updated` clear nothing.
-- A reply of a route clears nothing, such as the reply of Resume. Only the
-  order of the stream shows that a report is newer than the failure.
-- The notice of the start steps stays after the start ends, until a full
-  report of the start steps.
-- A further failure of a failed kind keeps the time of the first one.
-- The bar of the name comes first, then the bar of the start steps. On
-  desktop they sit above the session tabs. On a phone they sit above the
-  pull request row, on every tab.
-
-Dismiss hides a bar in the mounted view only:
-
-- It sends nothing to the Worker, and the failed repair stays.
-- A further failure of the same kind stays hidden.
-- Each mount of the screen starts a new view with `newView`, so a return
-  shows the bar again. A new tab reads the stored history, so it shows the
-  bar too.
-- A full report of that kind clears the failed repair. A failure after
-  that report shows again, also in the view where Dismiss hid the bar.
+After a failed repair, a bar below the header names the workspace data
+that is out of date. [Notices of a failed repair](repair-notices.md) says
+how the bars show, clear, and hide.
 
 ## Integration
 
@@ -282,7 +250,7 @@ Run the tests with `npm run test -- src/shell/workspace`.
   states of the cloud computer, the start steps, and the Archive question.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
   the refused notice. `sandbox-view.ts` chooses the bar and the panels,
-  also for a suspended org.
+  also for a suspended org and for the saved message of a failed start.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
 

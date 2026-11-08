@@ -13,6 +13,8 @@ import type { TurnScopes } from './turns'
 import { stopAccessDeniedWorkspaceSandbox } from './workspace-actions'
 import { revokeWorkspacePreviews } from './workspace-data'
 import { reconciledLifecycle } from './durable-reconciliation'
+import { isConfirmedStopped } from './confirmed-stop'
+import { retentionResourceAllowed } from './retention-data'
 
 export interface WorkspaceSuspensionContext {
   env: AppEnv
@@ -68,11 +70,22 @@ export class WorkspaceAccessStop {
   ownerChanged(workspaceId: string): Promise<void> {
     return this.serial(async () => {
       const checked = await this.run(workspaceId)
-      if (
-        checked.result === undefined &&
-        !checked.startPending &&
-        checked.row?.maintenanceAllowed
-      )
+      const state = await checked.input.lifecycle.read()
+      const allowed =
+        checked.row?.maintenanceAllowed ||
+        Boolean(
+          checked.row?.state === 'error' &&
+          checked.row.sandboxId &&
+          state?.workspaceId === workspaceId &&
+          state.orgId === checked.row.orgId &&
+          isConfirmedStopped(state) &&
+          (await retentionResourceAllowed(
+            checked.input.env.DB,
+            workspaceId,
+            checked.row.sandboxId,
+          )),
+        )
+      if (checked.result === undefined && !checked.startPending && allowed)
         await checked.input.lifecycle.rearmStopped()
     })
   }

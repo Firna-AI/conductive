@@ -17,7 +17,7 @@ how a screen is built, and links to the other pages.
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, its error, the start, a held second message, the first turn    |
+| `app/new-workspace` | An empty chat, its errors, the start, a held second message, the first turn   |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
 | `app/chat`          | A finished turn, then running turns, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -33,12 +33,16 @@ how a screen is built, and links to the other pages.
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
-`app/sign-in`, `app/orgs`, `app/orgs/suspended`, `app/org-settings`,
+`app/sign-in`, `app/shell`, `app/orgs`, `app/orgs/suspended`,
+`app/new-workspace`, `app/org-settings`, `app/org-settings/cloud-computer`,
 `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
-and update-failed states, and declare `movedFrom`. `app/sign-in/get-started`
+and update-failed states, and declare `movedFrom`. The states of `app/shell`,
+`app/new-workspace`, and `app/org-settings/cloud-computer` moved into their own
+folders and kept their paths, so that each of those pages shows only its
+canonical screen. `app/sign-in/get-started`
 moved into its own folder and kept its path. Get started is the only first
 run, so the first run of `app/shell` and the not-connected state of
 `app/orgs/new` are gone, and their links lead to Get started. Its second

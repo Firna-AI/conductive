@@ -135,13 +135,25 @@ export function WorkspaceScreen(props: {
   }
   // The server removes a create whose sandbox did not start: it has no
   // Resume, and no files stay. The tab that sent it shows its form instead.
+  // Another tab shows the message that the start saved, when it has one.
   if (failedCreate(detail.value)) {
-    return <Unavailable body="Its sandbox didn't start." orgId={props.org.id} />
+    const saved = detail.value.error?.message
+    return (
+      <Unavailable
+        body={saved ? saved : "Its sandbox didn't start."}
+        orgId={props.org.id}
+      />
+    )
   }
-  const { workspace, start } = detail.value
+  const { workspace, start, error } = detail.value
   const sandbox = sandboxState(workspace)
   const { suspended } = access
-  const sandboxParts = sandboxView({ sandbox, suspended, startError })
+  const sandboxParts = sandboxView({
+    sandbox,
+    suspended,
+    startError,
+    savedError: error?.message ?? null,
+  })
   const context: WorkspaceContext = {
     org: props.org,
     workspace,

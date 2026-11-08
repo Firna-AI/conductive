@@ -1,7 +1,5 @@
-import type { HttpError } from '../http'
-import { providerState } from './provider-state'
 import type { AppEnv } from '../env'
-import { ProviderError } from '../sandbox/errors'
+import { HttpError } from '../http'
 import type { SandboxProvider } from '../sandbox/provider'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type {
@@ -17,6 +15,43 @@ import {
 } from './cleanup'
 import { deleteProvisionalWorkspace } from './workspace-data'
 import { markCreationFailed } from './creation-attempt-data'
+import { startTimeLimitReached } from './start-provider-retry'
+import { JobTimeLimit } from './job-time-limit'
+import { WorkspaceStartError } from './workspace-start'
+
+export type ResumeStartFailure = (
+  error: { code: string; message: string; log: null },
+  cancelled: boolean,
+) => Promise<void>
+
+export function failedStartJob(
+  job: WorkspaceStartJob,
+  error: unknown,
+  now: number,
+): WorkspaceStartJob {
+  const caught =
+    !(
+      error instanceof HttpError &&
+      ['user_suspended', 'org_suspended'].includes(error.code)
+    ) && startTimeLimitReached(job, now)
+      ? new JobTimeLimit('start')
+      : error
+  const failure =
+    caught instanceof HttpError ? caught : new WorkspaceStartError(null)
+  const suspended = ['user_suspended', 'org_suspended'].includes(failure.code)
+  return job.cancelled && !suspended
+    ? job
+    : {
+        ...job,
+        cancelled: job.cancelled || suspended,
+        failure: job.failure ?? {
+          code: failure.code,
+          message: failure.message,
+          status: failure.status,
+          timeLimit: caught instanceof JobTimeLimit,
+        },
+      }
+}
 
 export async function finishFailedStart(
   env: AppEnv,
@@ -24,6 +59,8 @@ export async function finishFailedStart(
   storage: StartJobStorage,
   job: WorkspaceStartJob,
   provider: SandboxProvider | undefined,
+  now: () => number,
+  finishResumeFailure: ResumeStartFailure,
 ): Promise<WorkspaceStartResult | null> {
   const failure = job.failure ?? {
     code: 'workspace_start_stopped',
@@ -31,25 +68,18 @@ export async function finishFailedStart(
     status: 409,
   }
   if (job.kind === 'resume') {
-    if (job.cancelled && provider && job.allocatedSandboxId) {
-      try {
-        if (
-          providerState((await provider.stop(job.allocatedSandboxId)).state) !==
-          'stopped'
-        )
-          return null
-      } catch (error) {
-        if (!(error instanceof ProviderError && error.kind === 'not_found'))
-          return null
-      }
-      await endpoint.lifecycleStopped()
-    }
-    if (!job.cancelled)
-      await endpoint.lifecycleFailed({
+    await finishResumeFailure(
+      {
         code: failure.code,
         message: failure.message,
         log: null,
-      })
+      },
+      Boolean(
+        job.cancelled &&
+        (!job.failure ||
+          ['user_suspended', 'org_suspended'].includes(job.failure.code)),
+      ),
+    )
     return {
       ok: false,
       error: { code: failure.code, message: failure.message, log: null },
@@ -74,20 +104,30 @@ export async function finishFailedStart(
     .bind(job.workspaceId, job.orgId)
     .first<{ sandboxId: string | null }>()
   let sandboxId = job.allocatedSandboxId ?? row?.sandboxId
-  if (!sandboxId && job.createPayloadCiphertext) {
-    if (!provider) return null
-    sandboxId = await allocateWorkspace(
-      env,
-      provider,
-      storage,
-      job,
-      async () => {
-        throw new Error('Missing pinned allocation payload')
-      },
-    )
-    if (!sandboxId) return null
-  }
   let cleanupPending = false
+  let allocationDeferred = false
+  if (!sandboxId && job.createPayloadCiphertext) {
+    const canDefer = () =>
+      job.failure?.timeLimit || startTimeLimitReached(job, now())
+    if (!canDefer()) {
+      if (!provider) return null
+      sandboxId = await allocateWorkspace(
+        env,
+        provider,
+        storage,
+        job,
+        async () => {
+          throw new Error('Missing pinned allocation payload')
+        },
+      )
+    }
+    if (!sandboxId) {
+      if (!canDefer()) return null
+      await storage.deferAllocationCleanup(job)
+      cleanupPending = true
+      allocationDeferred = true
+    }
+  }
   if (sandboxId)
     await recordSandboxCleanup(env.DB, {
       workspaceId: job.workspaceId,
@@ -113,31 +153,16 @@ export async function finishFailedStart(
     }
   }
   if (cleanupPending) await endpoint.retryFailedCreateCleanup(job.workspaceId)
+  const reportCleanup =
+    cleanupPending && !allocationDeferred && !job.failure?.timeLimit
   return {
     ok: false,
     error: {
-      code: cleanupPending ? 'workspace_cleanup_pending' : failure.code,
-      message: cleanupPending
+      code: reportCleanup ? 'workspace_cleanup_pending' : failure.code,
+      message: reportCleanup
         ? 'The cloud computer could not start. Its cleanup will retry. Try again later.'
         : failure.message,
       log: null,
-    },
-  }
-}
-
-export function failedStartJob(
-  current: WorkspaceStartJob,
-  failure: HttpError,
-): WorkspaceStartJob {
-  const suspended = ['user_suspended', 'org_suspended'].includes(failure.code)
-  if (current.cancelled && !suspended) return current
-  return {
-    ...current,
-    cancelled: current.cancelled || suspended,
-    failure: current.failure ?? {
-      code: failure.code,
-      message: failure.message,
-      status: failure.status,
     },
   }
 }

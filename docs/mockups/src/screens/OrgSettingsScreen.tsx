@@ -5,6 +5,7 @@ import { Page } from '../components/layout/Page'
 import { LeaveOrgDialog } from '../components/members/LeaveOrgDialog'
 import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
+import { failedBuildOf } from '../components/settings/BuildSection'
 import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
 import {
   SettingsTabs,
@@ -26,8 +27,11 @@ export const orgSettingsSchema = {
   required: ['tab', 'build', 'dialog', 'viewer', 'org'],
   properties: {
     tab: { enum: ['general', 'repositories', 'computer', 'members'] },
-    /** The builds of the cloud computer, which its tab shows. */
-    build: { enum: ['ready', 'building', 'failed', 'changed'] },
+    /**
+     * The builds of the cloud computer, which its tab shows. `time-limit` is
+     * a build that the app stopped at its 60-minute limit.
+     */
+    build: { enum: ['ready', 'building', 'failed', 'time-limit', 'changed'] },
     /**
      * A dialog over the page: Delete org, the removal of a member, or the
      * leave of a suspended org.
@@ -121,7 +125,7 @@ export function OrgSettingsScreen(props: {
       current="settings"
       org={org}
       sections={suspended ? suspendedSections() : workspaceSections()}
-      settingsAlert={state.build === 'failed'}
+      settingsAlert={failedBuildOf(state.build) !== undefined}
       suspended={suspended}
     />
   )

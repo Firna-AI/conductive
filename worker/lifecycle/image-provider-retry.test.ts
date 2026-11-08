@@ -26,6 +26,7 @@ it('bounds lasting image status faults across alarm restarts while reads and dea
       image.restart()
       await image.requeue(now + 2_000)
       earlyAlarm = image.storage.alarmAt
+      await image.storage.setAlarm(now + 2_000)
       await image.tick(now + 2_000)
       afterEarly = fixture.boat.statusRequests.length
     }
@@ -71,7 +72,7 @@ it('keeps the original failure age when healthy running polls continue beyond th
     phase: 'software',
   })
   fault.fail()
-  await image.tick(now + 610_001)
+  await image.tick(now + 611_000)
   expect(await image.job()).toMatchObject({ state: 'failed', phase: 'done' })
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
 })
@@ -97,15 +98,15 @@ it('honors Retry-After and healthy progress while resetting the window only afte
   expect(image.storage.alarmAt).toBe(now + 7_000)
   fault.recover()
   await image.tick(now + 7_000)
-  await image.tick(now + 610_000)
+  await image.tick(now + 607_003)
   expect(await image.job()).toMatchObject({
     state: 'running',
     phase: 'software',
   })
   fixture.boat.commandRunning = false
-  await image.tick(now + 610_001)
+  await image.tick(now + 608_003)
   expect(await image.job()).toMatchObject({ phase: 'install' })
-  await image.tick(now + 610_002)
+  await image.tick(now + 609_003)
   fault.fail('5')
   await image.tick(now + 610_003)
   expect(await image.job()).toMatchObject({

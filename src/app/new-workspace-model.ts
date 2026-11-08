@@ -1,4 +1,5 @@
 import type { AgentChoice } from '../shared/agents'
+import type { WorkspaceEvent } from '../shared/events'
 import { DRAFT_ATTACHMENTS_PATH, type Attachment } from '../shared/messages'
 import {
   workspacesPath,
@@ -31,12 +32,16 @@ export interface Draft {
   messageId: string
 }
 
+export type CreationStartError = NonNullable<
+  Extract<WorkspaceEvent, { type: 'workspace.updated' }>['error']
+>
+
 export type CreateState =
   | { state: 'idle' }
   | { state: 'sending' }
   | { state: 'failed'; error: ApiError }
   /** The server took the message, and the sandbox of its workspace did not start. */
-  | { state: 'not-started' }
+  | { state: 'not-started'; error?: CreationStartError | null }
 
 /**
  * Whether the draft can go: it has text, and none of its files still
@@ -74,18 +79,35 @@ export class NewWorkspaceModel {
   private readonly org: OrgModel
   /** The workspace whose start failed, for a form that brings it back. */
   private readonly restoredFrom: string | null
+  private restoredFailure: Extract<CreateState, { state: 'not-started' }>
 
-  constructor(org: OrgModel, sectionId: string | null, restored?: Submission) {
+  constructor(
+    org: OrgModel,
+    sectionId: string | null,
+    restored?: Submission,
+    error?: CreationStartError | null,
+  ) {
     this.org = org
     this.sectionId = sectionId
     this.restoredFrom = restored?.workspaceId ?? null
+    this.restoredFailure = {
+      state: 'not-started',
+      ...(error === undefined ? {} : { error }),
+    }
     this.draft = new Store<Draft>(
       restored
         ? { ...restored.draft, upload: { pending: 0, error: null } }
         : this.emptyDraft(),
     )
     this.create = new Store<CreateState>(
-      restored ? { state: 'not-started' } : { state: 'idle' },
+      restored ? this.restoredFailure : { state: 'idle' },
+    )
+  }
+
+  setStartError(error: CreationStartError | null): void {
+    this.restoredFailure = { state: 'not-started', error }
+    this.create.change((state) =>
+      state.state === 'not-started' ? this.restoredFailure : state,
     )
   }
 
@@ -209,7 +231,7 @@ export class NewWorkspaceModel {
       if (!life.live) return null
       const workspaceId = created.workspace.id
       if (workspaceId === this.restoredFrom) {
-        this.create.set({ state: 'not-started' })
+        this.create.set(this.restoredFailure)
         return null
       }
       this.org.putWorkspace(created.workspace)

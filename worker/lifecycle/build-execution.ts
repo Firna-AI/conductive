@@ -16,6 +16,7 @@ import { cleanupBuildImageSources } from './image-sources/cleanup'
 import { lifecycleCommand } from './command-intents'
 import { recordBuildCommand } from './build-command-data'
 import { completeBuildPhase } from './build-phase-data'
+import { recoverImageBuildAllocation } from './image-allocation'
 
 export async function advanceBuildCommand(
   runtime: ImageRuntime,
@@ -76,6 +77,15 @@ export async function cleanupBuild(
     ))
   )
     return false
+  if (job.phase === 'allocating') {
+    job = {
+      ...job,
+      sandboxId:
+        job.sandboxId ??
+        (await recoverImageBuildAllocation(runtime.env.DB, provider, job)),
+    }
+    await updateBuildJob(runtime.env.DB, job.buildId, 'cleanup')
+  }
   if (job.sandboxId) {
     await deleteSandboxIfPresent(provider, job.sandboxId)
     await runtime.env.DB.prepare(

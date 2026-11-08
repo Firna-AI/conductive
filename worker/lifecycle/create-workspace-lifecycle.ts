@@ -5,6 +5,8 @@ import type { TurnScopes } from './turns'
 import type { WorkspaceEventJournal } from './durable-journal'
 import { readWorkspace } from './workspace-data'
 import { WorkspaceStateProjection } from './workspace-state-projection'
+import { hasRetentionAttempt, isConfirmedStopped } from './confirmed-stop'
+import { clearRetention } from './retention-data'
 import {
   extendWorkspaceDeadline,
   stopWorkspaceSandbox,
@@ -31,6 +33,8 @@ export function createWorkspaceLifecycle(
     dependencies.now,
     {
       changed: async (state, publish) => {
+        if (isConfirmedStopped(state) && !hasRetentionAttempt(state))
+          await clearRetention(env.DB, state.workspaceId)
         await projection.changed(publish)
         if (state.state === 'stopped' || state.state === 'error')
           await ctx.stopped?.(state.workspaceId)
@@ -42,9 +46,12 @@ export function createWorkspaceLifecycle(
         if (result !== 'pending') await turns.clear()
         return result
       },
-      keepalive: async () => {
+      keepalive: async (deadlineAt, command, confirmedStopped) => {
         return keepWorkspaceDisk(
           await workspaceActionContext(env, dependencies, lifecycle),
+          deadlineAt,
+          command,
+          confirmedStopped,
         )
       },
       extendDeadline: async () => {

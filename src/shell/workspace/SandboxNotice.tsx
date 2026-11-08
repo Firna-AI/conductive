@@ -25,10 +25,13 @@ export type SandboxProblem = 'stopped' | 'error' | 'refused' | 'archived'
 
 /**
  * What the bar in place of the composer shows. A refused start carries the
- * words of the app's refusal, so one notice serves every reason.
+ * words of the app's refusal, so one notice serves every reason. A start
+ * that failed can carry the message that the workspace saved for it, such
+ * as its time limit.
  */
 export type SandboxNoticeState =
-  | { problem: Exclude<SandboxProblem, 'refused'> }
+  | { problem: 'stopped' | 'archived' }
+  | { problem: 'error'; message?: string | null }
   | { problem: 'refused'; reason: string }
 
 /**
@@ -129,6 +132,19 @@ function useProblem(problem: SandboxProblem, workspace: Workspace): Problem {
   return problemOf(problem, formatDay(archivedAt, timeZone))
 }
 
+/** The text of the bar: the refusal, or the saved message before the body. */
+function barBody(notice: SandboxNoticeState, body: string): string {
+  switch (notice.problem) {
+    case 'refused':
+      return notice.reason
+    case 'error':
+      return notice.message ? `${notice.message} ${body}` : body
+    case 'stopped':
+    case 'archived':
+      return body
+  }
+}
+
 /**
  * The bar of a refused start, with the words of its cause and no action.
  * New workspace shows it too, before a workspace exists.
@@ -148,7 +164,9 @@ export function RefusedBar(props: { reason: string }) {
 /**
  * The bar that takes the place of the composer while the sandbox is down. A
  * refused start shows the words of the refusal, and no action, because the
- * start stays refused until its cause changes.
+ * start stays refused until its cause changes. A start that failed shows
+ * the message that the workspace saved for it, such as its time limit,
+ * before the body.
  */
 export function SandboxBar(props: {
   notice: SandboxNoticeState
@@ -170,7 +188,7 @@ export function SandboxBar(props: {
           </ActionButton>
         ) : undefined
       }
-      body={notice.problem === 'refused' ? notice.reason : problem.body}
+      body={barBody(notice, problem.body)}
       icon={problem.icon}
       title={problem.title}
       tone={problem.tone}

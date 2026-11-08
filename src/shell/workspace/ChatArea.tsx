@@ -38,12 +38,13 @@ function KeptChat(props: {
  * The chat area of the open workspace: the session tabs, the chat, and its
  * composer. The shell draws the start steps at the end of the chat and the
  * bar of a sandbox that is down, from its own record of the workspace, and
- * the chat places them. `notice` is that bar's state, also for a start that
- * the app refused, such as in a suspended org. `orgNotice` is the notice of
- * a suspended org above the bar of an archived workspace. A read-only
- * workspace shows its chat read-only. A host that gives the `tabs`,
- * `transcript`, or `composer` slot gets the shell's own column with those
- * slots instead. A `center` part takes the place of the chat.
+ * the chat places them. `notice` is that bar's state: a start that the app
+ * refused, with its reason, such as in a suspended org, or a start that
+ * failed, with the message that the workspace saved for it. `orgNotice` is
+ * the notice of a suspended org above the bar of an archived workspace. A
+ * read-only workspace shows its chat read-only. A host that gives the
+ * `tabs`, `transcript`, or `composer` slot gets the shell's own column with
+ * those slots instead. A `center` part takes the place of the chat.
  */
 export function ChatArea(props: {
   context: WorkspaceContext

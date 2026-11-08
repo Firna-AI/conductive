@@ -86,6 +86,13 @@ chat, and five tabs at the bottom.
   action that it refuses.
 - Copy says cloud computer or sandbox. No screen names Boat, also not the
   marketing site or Get started.
+- A build of the cloud computer runs for at most 60 minutes, and a start of
+  a sandbox for at most 20 minutes. A build that runs names its limit under
+  its log, and the start card names the limit under its steps. A failed
+  build or start shows the message that the app saved for it, so a job that
+  passed its limit names that limit, as
+  `app/org-settings/cloud-computer/build-failed/time-limit`,
+  `app/shell/error/time-limit`, and `app/new-workspace/time-limit` show.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no

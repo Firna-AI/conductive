@@ -1,4 +1,17 @@
 import type { WorkspaceStartResult } from '../../lifecycle/start-types'
+import type { DurableLifecycleState } from '../../lifecycle/durable-types'
+
+export async function prepareWorkspaceStart(workspace: {
+  advanceStartAlarm(): Promise<void>
+  readLifecycle(): Promise<Pick<DurableLifecycleState, 'start'> | undefined>
+}): Promise<void> {
+  while (
+    !(await workspace.readLifecycle())?.start?.steps.some(
+      (step) => step.id === 'startup' && step.state === 'completed',
+    )
+  )
+    await workspace.advanceStartAlarm()
+}
 
 export async function driveWorkspaceStart<T>(
   workspace: { advanceStartAlarm(): Promise<void> },

@@ -6,17 +6,18 @@ import {
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
 import { reconciledLifecycle } from './durable-reconciliation'
+import { advanceDiskRetentionState } from './disk-retention-state'
+import { writeLifecycleState } from './durable-scheduling'
+import { failedStartStop } from './durable-start-stop'
 import { advanceLifecycleAlarm } from './durable-alarm'
+import { isConfirmedStopped } from './confirmed-stop'
 import {
-  IDLE_MS,
-  TURN_HEARTBEAT_MS,
+  LIFECYCLE_STATE_KEY,
   type DurableLifecycleState,
   type LifecycleHooks,
   type LifecycleStorage,
   type LifecyclePublisher,
 } from './durable-types'
-
-const STATE_KEY = 'lifecycle:state'
 
 /** One instance lives inside each workspace Durable Object. */
 export class DurableLifecycle {
@@ -36,7 +37,7 @@ export class DurableLifecycle {
   }
 
   read(): Promise<DurableLifecycleState | undefined> {
-    return this.storage.get(STATE_KEY)
+    return this.storage.get(LIFECYCLE_STATE_KEY)
   }
 
   initialize(input: {
@@ -70,9 +71,12 @@ export class DurableLifecycle {
       error: null,
       stoppedAt: null,
       nextDiskKeepaliveAt: null,
+      diskRetentionDeadlineAt: undefined,
       runnerConnected: false,
       lastActivityAt: this.now(),
       startupPrepared: false,
+      startStop: undefined,
+      diskRetentionCommand: undefined,
     }))
   }
 
@@ -91,7 +95,10 @@ export class DurableLifecycle {
   runnerReady(publish?: LifecyclePublisher): Promise<void> {
     return this.update(
       (state) =>
-        state.state === 'stopped' || state.state === 'archived'
+        state.state === 'stopped' ||
+        state.state === 'archived' ||
+        state.state === 'error' ||
+        state.startStop !== undefined
           ? state
           : {
               ...state,
@@ -144,7 +151,12 @@ export class DurableLifecycle {
 
   activity(): Promise<void> {
     return this.update(async (state) => {
-      if (state.state === 'stopped' || state.state === 'archived') return state
+      if (
+        state.state === 'stopped' ||
+        state.state === 'archived' ||
+        state.startStop !== undefined
+      )
+        return state
       return reconciledLifecycle(
         { ...state, lastActivityAt: this.now() },
         await this.hooks.extendDeadline(),
@@ -156,7 +168,7 @@ export class DurableLifecycle {
   rearmStopped(): Promise<void> {
     return this.serial(async () => {
       const state = await this.read()
-      if (state?.state === 'stopped') await this.write(state)
+      if (state && isConfirmedStopped(state)) await this.write(state)
     })
   }
 
@@ -183,14 +195,21 @@ export class DurableLifecycle {
 
   stopped(): Promise<void> {
     return this.update((state) =>
-      state.state === 'stopped'
-        ? state
-        : reconciledLifecycle(state, 'stopped', this.now()),
+      reconciledLifecycle(state, 'stopped', this.now()),
     )
   }
 
   fail(error: DurableLifecycleState['error']): Promise<void> {
     return this.update((state) => withStartFailure(state, error, this.now()))
+  }
+
+  stopFailedStart(
+    error: NonNullable<DurableLifecycleState['error']>,
+    cancelled: boolean,
+  ): Promise<void> {
+    return this.update((state) =>
+      failedStartStop(state, error, cancelled, this.now()),
+    )
   }
 
   acknowledgeFirstMessage(publish?: LifecyclePublisher): Promise<void> {
@@ -203,7 +222,15 @@ export class DurableLifecycle {
   clear(preserveAlarm = false): Promise<boolean> {
     return this.serial(async () => {
       if (!preserveAlarm) await this.storage.deleteAlarm()
-      return this.storage.delete(STATE_KEY)
+      return this.storage.delete(LIFECYCLE_STATE_KEY)
+    })
+  }
+
+  finishDiskMaintenance(active: () => Promise<boolean>): Promise<boolean> {
+    return this.serial(async () => {
+      if (!(await active())) return true
+      const state = await this.read()
+      return !state || (await this.keepalive(state)).done
     })
   }
 
@@ -212,15 +239,18 @@ export class DurableLifecycle {
   }
 
   alarm(): Promise<void> {
-    return this.serial(async () =>
-      advanceLifecycleAlarm(
-        await this.read(),
-        this.hooks,
-        this.storage,
-        this.now,
-        (state) => this.write(state),
-      ),
-    )
+    return this.serial(async () => {
+      const state = await this.read()
+      if (state)
+        await advanceLifecycleAlarm(
+          this.storage,
+          this.hooks,
+          state,
+          this.now,
+          (next) => this.write(next),
+          (next) => this.keepalive(next),
+        )
+    })
   }
 
   private update(
@@ -239,30 +269,23 @@ export class DurableLifecycle {
     state: DurableLifecycleState,
     publish?: LifecyclePublisher,
   ): Promise<void> {
-    await this.storage.put(STATE_KEY, state)
-    const alarm =
-      state.state === 'stopped'
-        ? state.nextDiskKeepaliveAt
-        : state.state === 'error'
-          ? this.now() + 5_000
-          : state.runningSessions.length
-            ? this.now() + TURN_HEARTBEAT_MS
-            : state.lastActivityAt + IDLE_MS
-    if (alarm === null || state.state === 'archived')
-      await this.storage.deleteAlarm()
-    else {
-      const startPending = (await this.hooks.startPending?.()) ?? false
-      await this.storage.setAlarm(
-        startPending
-          ? Math.min(alarm, this.now() + 1_000)
-          : !state.runnerConnected &&
-              state.state !== 'stopped' &&
-              this.hooks.reconcile
-            ? Math.min(alarm, this.now() + 5_000)
-            : alarm,
-      )
-    }
-    await this.hooks.changed(state, publish)
+    await writeLifecycleState(
+      this.storage,
+      this.hooks,
+      state,
+      this.now,
+      publish,
+    )
+  }
+
+  private keepalive(state: DurableLifecycleState) {
+    return advanceDiskRetentionState(
+      this.storage,
+      this.hooks,
+      state,
+      this.now,
+      (next) => this.write(next),
+    )
   }
 
   private serial<T>(operation: () => Promise<T>): Promise<T> {

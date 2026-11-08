@@ -18,6 +18,7 @@ import { savedCartsMessage } from '../fixtures/conversations'
 import { you } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { repositories } from '../fixtures/repositories'
+import { startErrors } from '../fixtures/starting'
 import { savedCarts } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import styles from './NewWorkspaceScreen.module.css'
@@ -27,7 +28,11 @@ export const newWorkspaceSchema = {
   additionalProperties: false,
   required: ['result', 'org'],
   properties: {
-    result: { enum: ['form', 'error'] },
+    /**
+     * The empty form, or a create whose first start failed: a failure, or
+     * the 20-minute limit of a start.
+     */
+    result: { enum: ['form', 'error', 'time-limit'] },
     /**
      * The org: in use, or suspended by the operator. A suspended org
      * refuses every create, so the page shows the refused bar of a
@@ -43,6 +48,17 @@ export type NewWorkspaceState = SchemaProps<typeof newWorkspaceSchema>
 export const newWorkspaceForm: NewWorkspaceState = {
   result: 'form',
   org: 'active',
+}
+
+type CreateFailure = Exclude<NewWorkspaceState['result'], 'form'>
+
+/**
+ * The body of a create whose first start failed. A start that passed its
+ * limit shows the message that the app saved for it.
+ */
+const failureBodies: Readonly<Record<CreateFailure, string>> = {
+  error: "Its sandbox didn't start. Your message is kept.",
+  'time-limit': `${startErrors['time-limit']} Your message is kept.`,
 }
 
 const repository = repositories[savedCarts.repository]
@@ -81,11 +97,14 @@ function Start() {
  */
 function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const suspended = props.state.org === 'suspended'
-  const failed = !suspended && props.state.result === 'error'
-  const notice = failed ? (
+  const { result } = props.state
+  // A suspended org refuses each create, so no create of it failed.
+  const failure = suspended || result === 'form' ? null : result
+  const failed = failure !== null
+  const notice = failure ? (
     <Notice
       action={<ActionButton tone="primary">Try again</ActionButton>}
-      body="Its sandbox didn't start. Your message is kept."
+      body={failureBodies[failure]}
       icon={CircleAlert}
       title="The workspace wasn't created"
       tone="danger"

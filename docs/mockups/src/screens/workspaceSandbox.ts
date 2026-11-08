@@ -2,6 +2,7 @@ import { isPendingCommand } from '../components/chat/PendingCommand'
 import type { SandboxNoticeState } from '../components/workspace/SandboxNotice'
 import { orgSuspendedReason } from '../components/orgs/suspension'
 import { conversations } from '../fixtures/conversations'
+import { startErrors } from '../fixtures/starting'
 import { ownerSuspendedRefusal } from '../fixtures/startRefusals'
 import type { ActivityStatus } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
@@ -31,7 +32,8 @@ export function drawnState(state: WorkspaceState): WorkspaceState {
 
 /**
  * The bar in place of the composer while the sandbox is not running. A
- * refused start shows the words of its cause: the org or the owner.
+ * refused start shows the words of its cause: the org or the owner. A
+ * failed start carries the message that the app saved for it.
  */
 export function sandboxNotice(
   state: WorkspaceState,
@@ -45,8 +47,9 @@ export function sandboxNotice(
             ? orgSuspendedReason
             : ownerSuspendedRefusal,
       }
-    case 'stopped':
     case 'error':
+      return { problem: 'error', message: startErrors[state.startError] }
+    case 'stopped':
     case 'archived':
       return { problem: state.sandbox }
     case 'ready':

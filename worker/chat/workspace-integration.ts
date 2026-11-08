@@ -15,7 +15,10 @@ import type { ChatCallbackPublisher, ChatDependencies } from './types'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
-  Pick<ChatDependencies, 'resolveAttachments' | 'scheduleRunnerCheck'>
+  Pick<
+    ChatDependencies,
+    'resolveAttachments' | 'scheduleRunnerCheck' | 'scheduleBrowserCheck'
+  >
 >
 
 function callbackPublisher(publish: ChatCallbackPublisher): LifecyclePublisher {

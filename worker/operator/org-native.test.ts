@@ -174,6 +174,7 @@ it('recovers and removes a native build allocation whose response was lost befor
       },
     },
   )
+  fixture.boat.lostCreateReplies = 1
   await fixture.actor('org-image:runtime-org').scheduleImage({
     orgId: 'runtime-org',
     buildId,
@@ -181,11 +182,13 @@ it('recovers and removes a native build allocation whose response was lost befor
       url: 'https://software.conductive.test/runner.tar.gz',
       sha256: 'a'.repeat(64),
     },
-    nextAt: Date.now() + 3600000,
+    nextAt: Date.now(),
   })
-  fixture.boat.lostCreateReplies = 1
   await fixture.actor('org-image:runtime-org').tick()
   expect(fixture.boat.states.size).toBe(1)
+  expect(
+    await readBuildJob(fixture.env.DB, 'runtime-org', buildId),
+  ).toMatchObject({ state: 'running', phase: 'allocating', sandboxId: null })
   await suspendOrg(workspaceRuntime(fixture.env), 'runtime-org', 'runtime-user')
   await fixture.env.DB.prepare(
     `UPDATE image_builds SET provider_retry_json = json_set(provider_retry_json, '$.retryAt', 0) WHERE id = ?`,

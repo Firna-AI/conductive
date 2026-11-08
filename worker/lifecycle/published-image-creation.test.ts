@@ -160,8 +160,14 @@ it('leases the image and captured branch from the same publication at claim admi
   expect(boat.deletedSnapshots).not.toContain('next-image')
   const repeated = createCompletedWorkspace(runtime, org.id, user, input)
   void repeated.catch(() => {})
-  for (let step = 0; step < 15 && (await actor.job()); step++)
+  for (let step = 0; step < 15 && (await actor.job()); step++) {
+    if ((await actor.job())?.phase === 'runner')
+      await fixture.actors
+        .get(id)
+        ?.endpoint()
+        .reportRunnerLifecycle({ type: 'runner.ready' })
     await actor.advance()
+  }
   const [created, duplicate] = await Promise.all([pending, repeated])
   expect(created.workspace.id).toBe(id)
   expect(duplicate.workspace.id).toBe(id)

@@ -23,12 +23,15 @@ export interface SandboxView {
  * The view of the sandbox. A suspended org refuses each start and each new
  * access to the sandbox, also while the stop of its cloud computer runs.
  * Another refused start shows while the sandbox is down, until its cause
- * ends. An archived workspace keeps its bar in a suspended org too.
+ * ends. An archived workspace keeps its bar in a suspended org too. A
+ * failed start carries the message that the workspace saved for it.
  */
 export function sandboxView(input: {
   sandbox: SandboxState
   suspended: boolean
   startError: ApiError | null
+  /** The message that the workspace saved for a start that failed. */
+  savedError: string | null
 }): SandboxView {
   const { sandbox, suspended } = input
   const refusal =
@@ -39,9 +42,11 @@ export function sandboxView(input: {
         : null
   const bar: SandboxNoticeState | null =
     refusal ??
-    (sandbox === 'ready' || sandbox === 'starting'
-      ? null
-      : { problem: sandbox })
+    (sandbox === 'error'
+      ? { problem: 'error', message: input.savedError }
+      : sandbox === 'ready' || sandbox === 'starting'
+        ? null
+        : { problem: sandbox })
   return {
     refusal,
     bar,
