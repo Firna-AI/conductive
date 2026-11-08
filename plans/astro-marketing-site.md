@@ -48,11 +48,11 @@ Contract owners:
   - `chrome.ts`, `home.ts`, `frames.ts`, `legal.ts`, `actions.ts`, and
     `icons.ts`
   - `assets.ts`, `picture-files.ts`, `routes.ts`, and `sign-in-consent.ts`
-- One inline stylesheet, allowed by its hash in the content security
-  policy → stylesheet files of the site, allowed from the page's own
-  origin. Consumers: the policy of the site pages and of the agreement
-  page, and its test. Moved in Milestones 2 and 3. The hash code goes with
-  `styles.ts` in Milestone 3.
+- The hash of one inline stylesheet, computed by the Worker → the hash of
+  each inline style element, recorded by the build in its file list.
+  Consumers: the policy of the site pages and of the agreement page, and
+  its test. Moved in Milestone 3. The old hash code goes with `styles.ts`
+  in Milestone 3.
 - 26 hand-written picture imports → one glob keyed by the shared picture
   list. Consumer: the picture frames. Moved in Milestone 2. Deleted with
   `picture-files.ts` in Milestone 3.
@@ -94,10 +94,10 @@ Each item marked as an agent call is a design call of the agent, made on
 ### Build
 
 - `astro.config.ts` at the root builds the site from `src/marketing/`.
-  Pages are `.html` files, stylesheets are separate files, and every
-  built file loads from `/_site/`. The settings are `srcDir`, `outDir`,
-  `trailingSlash: 'never'`, `build.format: 'file'`,
-  `build.inlineStylesheets: 'never'`, and `build.assetsPrefix`.
+  Pages are `.html` files that carry their styles inline, as today. Every
+  other built file loads from `/_site/`. The settings are `srcDir`,
+  `outDir`, `trailingSlash: 'never'`, `build.format: 'file'`,
+  `build.inlineStylesheets: 'always'`, and `build.assetsPrefix`.
 - Agent call: the build writes into `public/_site/`, which Git ignores.
   Reason: in `npm run dev`, the assets binding reads HTML only from
   `public/` and the Vite root, so a site under `dist/` is not visible
@@ -111,16 +111,24 @@ Each item marked as an agent call is a design call of the agent, made on
   built files after each build. Reason: the assets binding answers a
   missing file with the app's page and status 200, and it redirects
   `.html` paths. So the Worker must know which files exist.
+- Agent call, 8 November 2026: for each page, the list also holds the
+  SHA-256 hash of each inline style element of the built file. Reason:
+  the content security policy allows each inline style by its hash, as
+  today.
 - Agent call: one module in `src/shared/` names the site folder, the file
   list, and the markers. The site and the Worker both import it.
+- Agent call, 8 November 2026: the site's public folder is
+  `docs/brand/web/`, so the favicons keep fixed paths under `/_site/`.
+  Reason: the Worker maps `/favicon.ico` to a fixed file, and the brand
+  files stay unchanged.
 - Agent call: the pages are `.astro` components. The existing CSS files
   stay as global stylesheets that the layout imports, so the class names
   and the styles stay as they are.
-- Agent call: CSS that today comes from code joins the bundled stylesheet
-  files: the design tokens, the size of each picture, and the font face.
-  Reason: a stylesheet at a page path does not get the `/_site/` prefix,
-  so the agreement page on the app host could not load it. A virtual CSS
-  module in the config is one way.
+- Agent call: CSS that today comes from code joins the bundled styles:
+  the design tokens, the size of each picture, and the font face. Reason:
+  only bundled CSS goes inline. A stylesheet at a page path would be a
+  separate file, which the policy does not allow. A virtual CSS module in
+  the config is one way.
 - Agent call: the data modules keep their paths: `legal-text.ts`,
   `terms.ts`, `privacy.ts`, `links.ts`, `features.ts`, and `tokens.ts`.
   Reason: the app and the mockups import the first four.
@@ -152,12 +160,15 @@ Each item marked as an agent call is a design call of the agent, made on
 - The pages keep today's headers: `Cache-Control: no-cache`, the content
   type, `Referrer-Policy: no-referrer`, and `X-Content-Type-Options:
   nosniff`. `HEAD` gets no body.
-- Agent call: the content security policy allows styles from the page's
-  own origin in place of the hash of one inline stylesheet. The rest of
-  the policy stays: no script, images and fonts from the site only, no
-  base element, no form, and no framing. Reason: Astro writes stylesheet
-  files, and the browser caches them across pages, which matters once
-  docs add pages.
+- The content security policy stays as today. It allows each inline
+  style element of the page by its hash, from the file list. The rest
+  stays too: no script, images and fonts from the site only, no base
+  element, no form, and no framing.
+- Agent call, changed on 8 November 2026: the first call allowed separate
+  stylesheet files from the page's own origin in place of the hash. It
+  changed the policy, but decision 1 B keeps today's security headers.
+  Separate files are cached across pages, so the docs plan can weigh them
+  again.
 - Agent call: the agreement page before GitHub is a page of the same
   build, in a folder that only the app host serves. It keeps
   `Cache-Control: no-store` and its other headers.
@@ -194,12 +205,20 @@ State the new shape of the marketing site component. No protocol doc
 changes, because the change keeps every requirement at the boundary of the
 site.
 
-- [ ] Update "Marketing site" in `docs/architecture.md`: the pages are
+- [x] Update "Marketing site" in `docs/architecture.md`: the pages are
       built ahead of time as static files. The Worker serves them, fills
       in the values of each request, and serves the agreement page before
       GitHub from the same build.
-- [ ] Check `docs/protocol/` for each statement about the site, and
+- [x] Check `docs/protocol/` for each statement about the site, and
       confirm that none changes.
+- [x] Move "Flows" of `docs/architecture.md` to its own linked page, so
+      that the doc stays near the length target of the `documentation`
+      skill. Added on 8 November 2026, because the update took the doc to
+      270 lines.
+
+Milestone completed on 8 November 2026 by the docs implementor. The
+architecture doc has 229 lines. No protocol doc changes. Report:
+`.context/astro-marketing-site/reports/m1-docs.md`.
 
 ## Milestone 2: Build the site with Astro
 
@@ -228,7 +247,9 @@ old pages at the end of this milestone.
   - [ ] The page for an unknown address.
   - [ ] The agreement page before GitHub, with only the wordmark in its
         header and no footer.
-- [ ] Join the generated CSS to the stylesheet files. Read the picture
+- [ ] Join the generated CSS to the bundled styles, so that each page
+      carries it inline. Record the hash of each inline style element of
+      each page in the file list. Read the picture
       files with one glob keyed by the shared list. Read the brand files
       and the font with `?url` imports.
 - [ ] Remove the picture part from
@@ -263,8 +284,8 @@ the old page code.
 - [ ] Add a test helper in `worker/test-support/` that holds a small built
       site and answers as the assets binding does.
 - [ ] Move each assertion of `src/marketing/routes.test.ts` to the new
-      tests. Change the policy assertion to the stylesheet files of the
-      design.
+      tests. The policy assertion now covers each inline style element of
+      the page, not only one.
 - [ ] Add a test that builds the site once into a temporary folder with
       `astro build --outDir`, and serves it through the Worker. It checks
       these cases:
@@ -273,8 +294,9 @@ the old page code.
   - [ ] The Terms and Privacy links of the footer open the draft pages,
         with their draft fields.
   - [ ] No page names the sandbox provider.
-  - [ ] No page holds a script, a style element, or a style attribute.
-        Each file that a page names is served.
+  - [ ] No page holds a script or a style attribute. The policy of each
+        page allows exactly the hashes of its inline style elements. Each
+        file that a page names is served.
 - [ ] Add router cases with the helper:
   - [ ] The methods, and `HEAD` without a body.
   - [ ] The `404` page for `/terms/`, an app file, and an API path.

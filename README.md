@@ -217,7 +217,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
 ## Docs
 
 - [Architecture](docs/architecture.md): the components, the hostnames, the
-  flows, and the terms.
+  [flows](docs/architecture/flows.md), and the terms.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
