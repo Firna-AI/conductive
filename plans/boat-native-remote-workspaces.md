@@ -7358,15 +7358,19 @@ checks of 16 and 16a to the work after the merge.
       image. An existing workspace keeps the launcher of its image, also
       after a resume. So create a new workspace from the rebuilt image,
       and let it stop, for example after 30 minutes without activity.
-      Resume it with another tool open. Wait until `GET /sandboxes/{id}`
-      of Boat gives `hydrated: true`, and only then open the Terminal tab,
-      so that it creates the first shell. In that shell, check these
-      commands:
+      Resume it. Wait until `GET /sandboxes/{id}` of Boat gives
+      `hydrated: true`. Then open the Terminal tab, and do these steps in
+      its shell:
   - `grep -c -F -- '-s workspace -c' /usr/local/lib/conductive/terminal`
     prints `1`. A `0` means that the workspace runs the old launcher.
   - `readlink /proc/$(pgrep -o -x ttyd)/cwd` prints a path under
-    `/var/lib/ascii-lazy/retired/`. Another path means that the restore
-    ended before the terminal started, so the check did not test the
-    fix. Then stop and resume the workspace again.
-  - `pwd -P` prints `/home/user/code/<name>`, not a path under
-    `/var/lib/ascii-lazy/retired/`. The prompt alone does not show it.
+    `/var/lib/ascii-lazy/retired/`. This shows that the terminal started
+    before the restore ended, and that the restore has ended. Another
+    path means that this resume cannot test the fix. Then stop and
+    resume the workspace again.
+  - Run `exit`, and press Reconnect. The next connection creates a new
+    shell after the restore. A page can connect a hidden Terminal tab at
+    the resume, so the first shell can be older than the restore.
+  - In the new shell, `pwd -P` prints `/home/user/code/<name>`, not a
+    path under `/var/lib/ascii-lazy/retired/`. The prompt alone does not
+    show it.
