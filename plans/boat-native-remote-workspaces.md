@@ -4053,6 +4053,24 @@ Added on 8 November 2026 from the check of finding 12 of PR #42
 - **Chosen:** A now, by the user on 8 November 2026, with C as a later
   follow-up: `plans/follow-ups/org-env-values-in-output.md`.
 
+### 135. Choose what blocks the first merge and deploy
+
+Added on 8 November 2026 from the user's request to merge a baseline soon.
+
+- **Background:** Milestone 17 waited for every other milestone, also for
+  the follow-up milestones that do not change what a first user needs.
+- **Options:**
+  - **A.** Only 8m, 16a, and 17 block. The first deploy has the chat
+    only.
+  - **B.** 8m, 15i, 16a, 16, and 17 block. 15i connects the feature
+    screens to the backend, and 16 tests them in a real cloud computer.
+  - **C.** As B, and 15o blocks too.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 8 November 2026. Every other open
+  milestone keeps running and blocks nothing. Each merges into the primary
+  branch while it can, and into `main` after the first merge. Milestone 17
+  moves the open ones into a new plan.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -7073,7 +7091,9 @@ This milestone needs the prerequisites from the user.
 
 ## Milestone 17: Verification, commit, review, and pull request
 
-Depends on: every other milestone except 15e, 15f, and 15n. Milestone 15n waits for a release of `@firna/ui`, so it blocks nothing (the user, 8 November 2026).
+Depends on: 8m, 15i, 16, 16a (decision 135). The other open milestones
+block nothing. They keep running, and Milestone 15n waits for a release of
+`@firna/ui` (the user, 8 November 2026).
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
@@ -7082,6 +7102,9 @@ Depends on: every other milestone except 15e, 15f, and 15n. Milestone 15n waits 
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+- [ ] Move each open milestone that does not block this one, with its
+      follow-up items, into a new plan for the work after the first merge,
+      as decision 135 says.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
