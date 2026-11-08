@@ -162,6 +162,7 @@ export function SessionChat(props: SessionChatProps) {
       {!down && session && !block && login?.kind === 'linked' ? (
         <LinkedSessionNotice
           agent={session.choice.agent}
+          reason={login.reason}
           starter={login.starter}
         />
       ) : null}

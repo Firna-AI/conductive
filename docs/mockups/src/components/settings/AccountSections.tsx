@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { ArrowUpRight, LogOut } from 'lucide-react'
 import {
   agentKeys,
@@ -5,13 +6,20 @@ import {
   defaultChoice,
   type AgentKey,
 } from '../../fixtures/agents'
-import { loginLabels, type AgentLogins } from '../../fixtures/logins'
+import {
+  loginLabels,
+  shareNotSavedCause,
+  sharedByDefault,
+  type AgentLogins,
+} from '../../fixtures/logins'
 import { account, installations } from '../../fixtures/orgs'
+import { noop } from '../../noop'
 import { ModelPicker } from '../chat/ModelPicker'
 import { ActionButton } from '../common/actions'
 import { AccountAvatar } from '../orgs/OrgTile'
 import { StatusText } from '../common/StatusText'
 import { AgentConnectForm } from './AgentConnectForm'
+import { LoginShare } from './LoginShare'
 import { Section } from './Section'
 import styles from './AccountSections.module.css'
 
@@ -69,6 +77,13 @@ export function GitHubSection(props: { connected: boolean }) {
   )
 }
 
+/**
+ * The share setting under each connected login, as on the account. Each
+ * login shows the value that a new login of its kind starts with.
+ * `notSaved` names the agent whose last change the app did not save.
+ */
+type LoginShares = { notSaved: AgentKey | null }
+
 /** The Connect form that is open under the row of an agent. */
 export type OpenAgentForm = {
   agent: AgentKey
@@ -80,18 +95,22 @@ export type OpenAgentForm = {
 /**
  * Claude and Codex, each with Connect, or Connected and the kind of its
  * login. `form` opens the Connect form of an agent under its row.
- * `removable` gives each connected login its Remove, as on the account.
+ * `removable` gives each connected login its Remove, and `shares` its
+ * share setting, as on the account.
  */
 export function AgentList(props: {
   logins: AgentLogins
   form?: OpenAgentForm
   removable?: boolean
+  shares?: LoginShares
 }) {
+  const ids = useId()
   return (
     <ul aria-label="Agents" className={styles.list}>
       {agentKeys.map((key) => {
         const login = props.logins[key]
         const form = props.form?.agent === key ? props.form : undefined
+        const nameId = `${ids}-${key}`
         let action = form ? null : <ActionButton>Connect</ActionButton>
         if (login) {
           action = props.removable ? (
@@ -106,7 +125,9 @@ export function AgentList(props: {
         return (
           <li key={key}>
             <div className={styles.row}>
-              <span className={styles.name}>{agents[key].name}</span>
+              <span className={styles.name} id={nameId}>
+                {agents[key].name}
+              </span>
               <span className={styles.detail}>
                 {login ? (
                   <>
@@ -117,6 +138,16 @@ export function AgentList(props: {
               </span>
               {action}
             </div>
+            {login && props.shares ? (
+              <LoginShare
+                error={
+                  props.shares.notSaved === key ? shareNotSavedCause : null
+                }
+                nameId={nameId}
+                onChange={noop}
+                shared={sharedByDefault[login]}
+              />
+            ) : null}
             {form && !login ? (
               <AgentConnectForm
                 agent={key}
@@ -133,15 +164,22 @@ export function AgentList(props: {
 
 /**
  * The agents that every org uses, Claude and Codex: each connected login
- * with its kind and Remove, or Connect, which opens the form of the agent.
+ * with its kind, Remove, and its share setting, or Connect, which opens the
+ * form of the agent.
  */
 export function AgentsSection(props: {
   logins: AgentLogins
   form?: OpenAgentForm
+  shares: LoginShares
 }) {
   return (
     <Section description="Every org uses these agents." title="Agents">
-      <AgentList form={props.form} logins={props.logins} removable />
+      <AgentList
+        form={props.form}
+        logins={props.logins}
+        removable
+        shares={props.shares}
+      />
     </Section>
   )
 }

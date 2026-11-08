@@ -33,8 +33,9 @@ export function isRunning(state: WorkspaceState): boolean {
  * A session runs on the login of its starter, and a line under the box
  * names that login. When the starter is another member, the own login of
  * the viewer does not matter. When the login of that starter is not
- * available, Send opens a new linked session on the own login of the
- * viewer.
+ * available, or that starter keeps it for their own messages, Send opens a
+ * new linked session on the own login of the viewer. Such a message does
+ * not steer a running turn of the session, and Stop still ends that turn.
  *
  * While the sandbox is not ready, Send queues the message in the
  * workspace, also during the first start and after a failed first start of
@@ -49,14 +50,15 @@ export function composerFor(
   const noLogin =
     state.composer === 'no-agent' || state.composer === 'no-starter-login'
   const needsLogin = !fresh && noLogin && starter === undefined
-  const opensLinked =
-    !fresh && state.composer === 'no-starter-login' && starter !== undefined
+  const linkedState =
+    state.composer === 'no-starter-login' || state.composer === 'not-shared'
+  const opensLinked = !fresh && linkedState && starter !== undefined
   const withFiles =
     !fresh && (state.composer === 'attachments' || state.composer === 'picker')
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (withFiles) draft = attachmentDraft
-  else if (!fresh && noLogin) draft = followUpDraft
+  else if (!fresh && (noLogin || linkedState)) draft = followUpDraft
   else if (!fresh && state.composer === 'draft') {
     draft = isNew(state) ? savedCartsDraft : followUpDraft
   }
@@ -68,6 +70,7 @@ export function composerFor(
     picker: state.composer === 'picker',
     sessionAgent: fresh ? undefined : workspace.choice.agent,
     sendTo: opensLinked ? paths.linkedSession : undefined,
+    startsSession: opensLinked,
     blocked: needsLogin,
     sessionLogin: sessionLoginFor(workspace, opensLinked ? undefined : starter),
   }

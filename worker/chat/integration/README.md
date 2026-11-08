@@ -290,6 +290,10 @@ methods of `Workspace`.
 - When the starter's login, or the sender's access, is gone as a command
   goes out, `turn.failed` ends the turn only while it is queued. The failure
   names the cause. A lost starter login sets `loginAvailable` to false.
+- A starter who stops sharing the login fails the queued command of another
+  member in the same way. That refusal sets `loginShared` to false and keeps
+  `loginAvailable` true. The failure then says that the login is for the
+  messages of the starter only, with the same recovery text.
 - A running or stopping turn keeps the command, and the Durable Object does
   not send it. So the later runner events of that turn stay valid.
 - When that turn finishes, an unanswered message moves to a new queued

@@ -153,7 +153,8 @@ The screens:
 - `DiffPage` shows the diff of one changed file.
 - `FileTabItem` is the closable tab of a file or a diff, as a list item
   for the tab row of the centre column on desktop. `onClose` asks the shell
-  to close the tab.
+  to close the tab. It takes the tab styles of the mockups' `WorkspaceTabs`,
+  as the session tabs do.
 
 A module worker parses the Markdown of a preview: its blocks, its inline
 content, and its link references. Vite bundles the worker, so the shell

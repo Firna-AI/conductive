@@ -4,15 +4,22 @@ import { Check, FolderGit2, Plus, Search, X } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/settings/RepositoryList.module.css'
+import { useStore } from '../../app/store'
+import { useApp } from '../context'
 import { ActionButton, IconButton } from '../ui/actions'
 import { ExternalLink } from '../ui/links'
 import { RepositoryRow, type ListedRepository } from './RepositoryRows'
 
-/** The page of GitHub where a person chooses what the GitHub App reaches. */
-const githubAccessUrl = 'https://github.com/settings/installations'
-
+/**
+ * The page of the GitHub App, which lists the GitHub accounts of the
+ * person, personal and org alike. There the person picks an account and
+ * chooses the repositories that the app reaches.
+ */
 function ManageAccess() {
-  return <ExternalLink href={githubAccessUrl}>Manage access</ExternalLink>
+  const app = useApp()
+  const account = useStore(app.account.account)
+  if (!account) return null
+  return <ExternalLink href={account.githubAppUrl}>Manage access</ExternalLink>
 }
 
 /** Added and Remove, or Add, for one repository. */

@@ -1,6 +1,7 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type { WorkspaceToRunner } from '../../src/shared/runner'
 import { MemoryChatStorage } from './memory-storage.test-support'
+import type { SessionLoginMetadata } from './login-availability'
 import { RunnerChannel } from './runner-channel'
 import { parseRunnerTransport } from './runner-input'
 import { ChatStore, type ChatTransaction } from './store'
@@ -64,7 +65,7 @@ export async function createRunnerLimitsFixture() {
     readConnectionAccess: async () => [],
     randomId: () => `command-${++commandSequence}`,
     randomConnectionId: () => `connection-${++connectionSequence}`,
-    readLoginAvailability: async () => new Set<string>(),
+    readLoginMetadata: async () => new Map<string, SessionLoginMetadata>(),
     resolveLogin: async () => null,
     resolveAttachments: async () => ({ attachments: [], paths: [] }),
     receiveFileResult: async () => undefined,
@@ -130,6 +131,7 @@ export async function createRunnerLimitsFixture() {
         },
         sourceSessionId: null,
         loginAvailable: false,
+        loginShared: false,
       })
       await transaction.saveTurn({
         id: context.turnId,

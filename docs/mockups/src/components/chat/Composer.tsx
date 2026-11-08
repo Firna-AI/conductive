@@ -15,8 +15,13 @@ import styles from './Composer.module.css'
 export type ComposerState = {
   /** The model and the effort of the next message. */
   choice: AgentChoice
-  /** An agent turn runs, so a message steers it. */
+  /** An agent turn runs, so a message steers it, and Stop ends it. */
   running: boolean
+  /**
+   * A message starts a new linked session, so it does not steer a running
+   * turn of this session. Stop still ends that turn.
+   */
+  startsSession?: boolean
   draft: string
   attachments: readonly Attachment[]
   /** The model picker is open. */
@@ -59,14 +64,16 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
 /**
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. While a turn runs, a message
- * steers the turn, and Stop ends it. While the sandbox is not ready, also
+ * steers the turn unless it starts a new linked session. Stop ends the
+ * running turn. While the sandbox is not ready, also
  * during and after a failed first start, Send queues the message in the
  * workspace. A line under the box names whose agent login the session
  * uses.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const { field } = useControlSizes()
-  const placeholder = props.running
+  const steers = props.running && props.startsSession !== true
+  const placeholder = steers
     ? 'Steer the agent while it works'
     : (props.placeholder ?? 'Message the agent')
   const off = props.blocked === true
@@ -109,7 +116,7 @@ export function Composer(props: ComposerState & { lines?: number }) {
         </div>
       </div>
       {props.sessionLogin ? <SessionLoginLine {...props.sessionLogin} /> : null}
-      {props.running && props.draft !== '' ? (
+      {steers && props.draft !== '' ? (
         <span className={styles.hint}>
           The agent reads this at its next step.
         </span>

@@ -19,7 +19,10 @@ import type {
   ConnectionScheduler,
 } from '../security/connection-access'
 import type { AuthenticatedRunner } from './authenticated-runner'
-import type { SessionLoginTarget } from './login-availability'
+import type {
+  SessionLoginMetadata,
+  SessionLoginTarget,
+} from './login-availability'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -148,9 +151,9 @@ export interface ChatDependencies {
   ) => Promise<readonly ConnectionGrant[]>
   randomId: () => string
   randomConnectionId: () => string
-  readLoginAvailability: (
+  readLoginMetadata: (
     targets: readonly SessionLoginTarget[],
-  ) => Promise<ReadonlySet<string>>
+  ) => Promise<ReadonlyMap<string, SessionLoginMetadata>>
   resolveLogin: (
     userId: string | null,
     agent: Agent,
