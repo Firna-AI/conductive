@@ -71,7 +71,8 @@ export function ChoiceMenu<T extends string>(props: {
     () => requestClose(busy, () => onOpenChange(false)),
     [busy, onOpenChange],
   )
-  // The key of the command palette asks the desktop menu to close.
+  // The key of the command palette asks the desktop menu to close. While
+  // a change runs, the menu refuses, and the palette stays closed.
   useMenuLayer(open && !mobile, askToClose)
 
   useEffect(() => {

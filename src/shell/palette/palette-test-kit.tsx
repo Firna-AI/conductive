@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { memoryNavigation } from '../../app/navigation'
 import { windowKeys, type AppServices, type Platform } from '../../app/services'
 import { Store } from '../../app/store'
@@ -30,7 +31,8 @@ const macWindow = {
 /**
  * The whole app in a tab at `href`, over the fake API, or in the Mac app
  * with `mac`. The app hears the keys of the window, as the browser gives
- * them.
+ * them. `beside` mounts a part of a test beside the app, inside its
+ * providers.
  */
 export async function openPaletteTab(
   href: string,
@@ -40,6 +42,7 @@ export async function openPaletteTab(
     server?: FakeApiServer
     events?: AppServices['events']
     mac?: boolean
+    beside?: ReactNode
   } = {},
 ) {
   const server = options.server ?? new FakeApiServer()
@@ -56,10 +59,17 @@ export async function openPaletteTab(
   ) : (
     <Shell />
   )
-  const view = mountScreen(app, shell, {
-    navigation,
-    viewport: options.viewport ?? 'desktop',
-  })
+  const view = mountScreen(
+    app,
+    <>
+      {shell}
+      {options.beside}
+    </>,
+    {
+      navigation,
+      viewport: options.viewport ?? 'desktop',
+    },
+  )
   await settle()
   return { app, server, view, navigation }
 }

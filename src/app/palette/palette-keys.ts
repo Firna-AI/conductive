@@ -25,7 +25,10 @@ export interface KeyContext {
   platform: Platform
   /** The palette is open. */
   open: boolean
-  /** A dialog or a sheet is open, and holds the focus. */
+  /**
+   * A dialog or a sheet other than the palette itself holds the focus,
+   * such as a question of the page, or a filter sheet over the palette.
+   */
   modal: boolean
   /** The press comes from the terminal of a workspace. */
   inTerminal: boolean
@@ -33,14 +36,16 @@ export interface KeyContext {
 
 /**
  * What the palette key does: it closes an open palette, and opens a closed
- * one. It leaves the key to the page while a dialog or a sheet holds the
- * focus, and to the terminal on Windows and Linux, where shells use Ctrl+K.
+ * one. It leaves the key to the page while another dialog or sheet holds
+ * the focus, also over the open palette, and to the terminal on Windows
+ * and Linux, where shells use Ctrl+K. An open that a menu refuses does
+ * nothing either, as `PaletteController.show` says.
  */
 export function paletteKeyOutcome(
   context: KeyContext,
 ): 'open' | 'close' | 'pass' {
-  if (context.open) return 'close'
   if (context.modal) return 'pass'
+  if (context.open) return 'close'
   if (context.inTerminal && context.platform !== 'mac') return 'pass'
   return 'open'
 }

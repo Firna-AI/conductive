@@ -67,10 +67,16 @@ what the palette does.
   the capture phase and not as a passive listener, so the palette can
   stop the browser's own action. Every UI kit of the app notes its open
   menus and modal layers through `useMenuLayer` and `useModalLayer` of
-  `../shell/ui/layers.ts`: the shell, the chat, and the members UI. The
-  key closes the noted menus, and does nothing while a modal layer is
-  open. The owner of the terminal marks its element with
-  `usePaletteTerminal`, where Ctrl+K stays with the terminal.
+  `../shell/ui/layers.ts`: the shell, the chat, and the members UI. A
+  menu says whether it closed, and a menu whose change runs refuses. A
+  modal layer has an owner: the dialog of the palette has the palette.
+  The owner of the terminal marks its element with `usePaletteTerminal`,
+  where Ctrl+K stays with the terminal.
+- `PaletteController.show` is the one way to open the palette, for the
+  key and for the Search row. It opens only when no dialog or sheet of
+  another owner holds the input, and when every open menu closed. The
+  key closes an open palette, and does nothing while a dialog or a sheet
+  of another owner is open over it, such as the sheet of a filter.
 - A part of the page offers its actions to the palette while it shows,
   through `usePaletteOffer`: the workspace screen, the workspace list
   that the page shows, and the sidebar toggle of the Mac app. A row

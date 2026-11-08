@@ -13,8 +13,9 @@ import { usePalette } from './palette-context'
 
 /**
  * The row under New workspace that opens the command palette, also in a
- * suspended org. On desktop it shows the palette key, ⌘K on a Mac and
- * Ctrl K elsewhere, so the row teaches the key. A phone has no key.
+ * suspended org, through `PaletteController.show`, as the key does. On
+ * desktop it shows the palette key, ⌘K on a Mac and Ctrl K elsewhere, so
+ * the row teaches the key. A phone has no key.
  */
 export function SearchRow(props: { variant: RowVariant }) {
   const palette = usePalette()

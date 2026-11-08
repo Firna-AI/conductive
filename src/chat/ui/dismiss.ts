@@ -24,7 +24,10 @@ export function useDismiss(
   close: () => void,
 ): void {
   useEscape(close, open)
-  useMenuLayer(open, close)
+  useMenuLayer(open, () => {
+    close()
+    return true
+  })
   useEffect(() => {
     if (!open) return
     const onPointer = (event: PointerEvent) => {

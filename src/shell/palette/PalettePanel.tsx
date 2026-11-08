@@ -51,7 +51,8 @@ export function PalettePanel(props: { controller: PaletteController }) {
   const now = useNow(30_000)
   const id = useId()
   const close = () => controller.close()
-  useLayerFocus(panel, { modal: true })
+  // The dialog of the palette does not hold the palette key: the key closes it.
+  useLayerFocus(panel, { modal: true, owner: controller })
   usePressOutside(!phone, panel, close)
   const focusField = () => fieldRef.current?.focus()
   // A control that goes away, such as a filter after a change of the tab,

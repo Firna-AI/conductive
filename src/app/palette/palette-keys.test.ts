@@ -39,7 +39,7 @@ describe('the palette key', () => {
     })
   })
 
-  test('closes an open palette, opens a closed one, and leaves the key to a dialog, and to the terminal on Windows and Linux', () => {
+  test('closes an open palette, opens a closed one, and leaves the key to a dialog, also over the open palette, and to the terminal on Windows and Linux', () => {
     const outcome = (overrides: Partial<KeyContext>) =>
       paletteKeyOutcome({
         platform: 'other',
@@ -52,12 +52,14 @@ describe('the palette key', () => {
       closed: outcome({}),
       open: outcome({ open: true }),
       dialog: outcome({ modal: true }),
+      sheetOverPalette: outcome({ open: true, modal: true }),
       terminal: outcome({ inTerminal: true }),
       macTerminal: outcome({ inTerminal: true, platform: 'mac' }),
     }).toEqual({
       closed: 'open',
       open: 'close',
       dialog: 'pass',
+      sheetOverPalette: 'pass',
       terminal: 'pass',
       macTerminal: 'open',
     })

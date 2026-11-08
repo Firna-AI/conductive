@@ -215,13 +215,15 @@ clicks, types, and lets the answers of the fake API settle.
   `page-actions.ts` gives the offers of the parts of the page and
   `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
   `palette-keys.ts` the palette key and what it does, and `controller.ts`
-  the open state and the offers of one tab.
+  the open state and the offers of one tab, with `show`, the one way to
+  open the palette.
 - `../shell/palette/`: the layer of the palette. `PaletteProvider.tsx`
   hears the key and closes the palette, `PaletteLayer.tsx` draws it in a
   frame, `palette-context.ts` gives `usePaletteOffer` and
   `usePaletteTerminal`, and `SearchRow.tsx` is the Search row of the list.
-- `../shell/ui/layers.ts`: `OpenLayers`, the open menus and modal layers
-  of every UI kit, which the palette key reads.
+- `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
+  which say whether they closed, and the modal layers with their owners.
+  The palette reads them before it opens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
   `useDismiss`, the layer of sheets and dialogs.

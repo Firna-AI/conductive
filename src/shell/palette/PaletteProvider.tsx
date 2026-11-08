@@ -22,9 +22,12 @@ function inside(
 
 /**
  * The palette key, ⌘K on a Mac and Ctrl+K elsewhere, opens and closes the
- * palette on each page of the signed-in app. It closes an open menu first.
- * When it opens or closes the palette, the browser does not also run its
- * own action. A held key acts once.
+ * palette on each page of the signed-in app. It does nothing while a
+ * dialog or a sheet other than the palette holds the focus, also over the
+ * open palette. It opens through `PaletteController.show`, which closes
+ * an open menu first, and stays closed when a menu does not close. When
+ * it opens or closes the palette, the browser does not also run its own
+ * action. A held key acts once.
  */
 function usePaletteKey(
   app: AppModel,
@@ -41,18 +44,15 @@ function usePaletteKey(
         const outcome = paletteKeyOutcome({
           platform,
           open: controller.open.get(),
-          modal: layers.modalOpen,
+          modal: layers.modalOpen(controller),
           inTerminal: inside(terminals, press.target),
         })
-        if (outcome === 'pass') return
-        press.preventDefault()
-        if (press.repeat) return
         if (outcome === 'close') {
-          controller.close()
-          return
+          press.preventDefault()
+          if (!press.repeat) controller.close()
+        } else if (outcome === 'open' && !press.repeat && controller.show()) {
+          press.preventDefault()
         }
-        layers.closeMenus()
-        controller.show()
       }),
     [onKey, platform, app, palette, layers],
   )
@@ -83,11 +83,11 @@ function useCloseOnLeave(app: AppModel, controller: PaletteController) {
  */
 export function PaletteProvider(props: { children: ReactNode }) {
   const app = useApp()
+  const [layers] = useState(() => new OpenLayers())
   const [palette] = useState<PaletteHandle>(() => ({
-    controller: new PaletteController(),
+    controller: new PaletteController(layers),
     terminals: new Set(),
   }))
-  const [layers] = useState(() => new OpenLayers())
   const { controller } = palette
   const open = useStore(controller.open)
   usePaletteKey(app, palette, layers)

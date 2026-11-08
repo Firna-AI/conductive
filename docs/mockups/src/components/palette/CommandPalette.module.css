@@ -20,7 +20,11 @@
   background: rgba(4, 6, 8, 0.3);
 }
 
-/* A card with a full hairline outline, as every card of the app. */
+/*
+ * A card with a full hairline outline, as every card of the app. The card
+ * does not clip, so the menu of a filter can reach below a short card. The
+ * results scroll and clip inside it.
+ */
 .dialog {
   display: flex;
   position: relative;
@@ -28,7 +32,6 @@
   width: 100%;
   max-width: 640px;
   max-height: min(540px, 100%);
-  overflow: hidden;
   border: 1px solid var(--ui-border2);
   border-radius: var(--ui-radius-xl);
   background: var(--ui-composer);
@@ -74,6 +77,12 @@
   min-height: 0;
   overflow-y: auto;
   padding: 0 6px 8px;
+}
+
+/* The results clip to the rounded corners at the foot of the card. */
+.dialog .results {
+  border-radius: 0 0 calc(var(--ui-radius-xl) - 1px)
+    calc(var(--ui-radius-xl) - 1px);
 }
 
 .group {

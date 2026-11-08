@@ -10,7 +10,7 @@ import {
   type RefObject,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { useModalLayer } from './layers'
+import { useModalLayer, type LayerOwner } from './layers'
 import styles from './ui.module.css'
 
 /** The elements of a layer that can take the focus, links first among equals. */
@@ -127,16 +127,17 @@ export function useDismiss(
  * the focus goes back. A layer inside another, such as a menu in a sheet,
  * leaves the focus to the outer layer with `enabled: false`. A modal layer
  * also counts as an open dialog for the command palette, whose key then
- * does nothing.
+ * does nothing. `owner` names who holds it, such as the palette for its
+ * own dialog. Without one, the layer is its own owner.
  */
 export function useLayerFocus(
   layer: RefObject<HTMLElement | null>,
-  options: { modal: boolean; enabled?: boolean },
+  options: { modal: boolean; enabled?: boolean; owner?: LayerOwner },
 ): void {
   const { holdModal } = useContext(OverlayContext)
   const enabled = options.enabled ?? true
   const { modal } = options
-  useModalLayer(enabled && modal)
+  useModalLayer(enabled && modal, options.owner)
   useEffect(() => {
     if (!enabled) return
     const node = layer.current

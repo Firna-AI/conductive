@@ -38,6 +38,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   Reason: that layer holds the focus, and the page under it takes no
   input.
 - While a menu is open, the palette key closes it and opens the palette.
+- While an open menu does not close, such as during a change that it runs,
+  the palette key does nothing, as over a dialog.
 - On a Mac, Ctrl+K does not open the palette. Reason: Ctrl+K keeps its
   meaning in the text fields of a Mac.
 - Ctrl+K in the terminal goes to the terminal, and does not open the
