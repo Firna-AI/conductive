@@ -2,9 +2,15 @@ import type { Agent } from '../../src/shared/agents'
 import type { Session } from '../../src/shared/sessions'
 import type { RunnerLogin } from '../../src/shared/runner'
 import { LoginReuseDenied, readLogin } from './login-access'
+import type { SessionLoginMetadata } from './login-availability'
 import type { ChatOperation } from './operation'
 import { sessionFor } from './session-record'
 import type { ChatDependencies } from './types'
+
+const unavailableMetadata: SessionLoginMetadata = {
+  loginAvailable: false,
+  loginShared: false,
+}
 
 export class SessionLogins {
   private readonly operation: ChatOperation
@@ -15,8 +21,16 @@ export class SessionLogins {
     this.dependencies = dependencies
   }
 
-  static initial(dependencies: ChatDependencies, userId: string, agent: Agent) {
-    return readLogin(dependencies, userId, agent)
+  static async initial(
+    dependencies: ChatDependencies,
+    sessionId: string,
+    userId: string,
+    agent: Agent,
+  ): Promise<SessionLoginMetadata> {
+    const metadata = await dependencies.readLoginMetadata([
+      { sessionId, userId, agent },
+    ])
+    return metadata.get(sessionId) ?? unavailableMetadata
   }
 
   forMember(userId: string, agent: Agent) {
@@ -42,11 +56,25 @@ export class SessionLogins {
       )
     } catch (error) {
       if (!(error instanceof LoginReuseDenied)) throw error
-      await this.save(session, true)
+      await this.save(session, { loginAvailable: true, loginShared: false })
       return { session, login: null }
     }
-    await this.save(session, login !== null)
-    return { session, login }
+    const metadata =
+      login && session.startedBy
+        ? await SessionLogins.initial(
+            this.dependencies,
+            session.id,
+            session.startedBy.id,
+            session.choice.agent,
+          )
+        : unavailableMetadata
+    await this.save(session, metadata)
+    const mayUseLogin =
+      metadata.loginAvailable &&
+      (metadata.loginShared ||
+        senderId === undefined ||
+        senderId === session.startedBy?.id)
+    return { session, login: mayUseLogin ? login : null }
   }
 
   async metadata(sessionId: string): Promise<Session> {
@@ -73,16 +101,23 @@ export class SessionLogins {
             },
           ],
     )
-    const available = targets.length
-      ? await this.dependencies.readLoginAvailability(targets)
-      : new Set<string>()
+    const metadata = targets.length
+      ? await this.dependencies.readLoginMetadata(targets)
+      : new Map<string, SessionLoginMetadata>()
     for (const session of open)
-      await this.save(session, available.has(session.id))
+      await this.save(session, metadata.get(session.id) ?? unavailableMetadata)
   }
 
-  private async save(session: Session, available: boolean): Promise<void> {
-    if (session.loginAvailable !== available) {
-      session.loginAvailable = available
+  private async save(
+    session: Session,
+    metadata: SessionLoginMetadata,
+  ): Promise<void> {
+    if (
+      session.loginAvailable !== metadata.loginAvailable ||
+      session.loginShared !== metadata.loginShared
+    ) {
+      session.loginAvailable = metadata.loginAvailable
+      session.loginShared = metadata.loginShared
       await this.operation.change(async (transaction) => {
         await transaction.saveSession(session)
         await transaction.emit({ type: 'session.updated', session })
@@ -97,5 +132,7 @@ export function unavailableLoginMessage(session: Session): string {
     ? `${starter.displayName ?? starter.githubLogin}'s`
     : "The session's"
   const agent = session.choice.agent === 'claude' ? 'Claude' : 'Codex'
+  if (session.loginAvailable && !session.loginShared)
+    return `${owner} ${agent} login is for ${owner} messages only. Try again or send a new message.`
   return `${owner} ${agent} login is not available. Try again or send a new message.`
 }

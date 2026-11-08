@@ -31,7 +31,7 @@ export const composer = defineScreen({
       slug: 'no-agent',
       title: 'Agent not connected',
       description:
-        'Claude is not connected, for example because the user removed its login, so the message for Opus 5.5 waits and Send is off. The notice over the composer leads to the account, with the Connect form of Claude open.',
+        'Claude is not connected, for example because the user removed its login, so the message for Opus 5.5 waits and Send is off. The notice over the composer leads to the account, with the Connect form of Claude open. A member without a Claude login sees the same notice in a session of another member whose login is not available or not shared, because the message would start a new session on the login of that member.',
       rationale:
         'The user chose option D of decision 33: Get started connects an agent, and this notice catches an agent that is not connected later. Picking a model of a connected agent also lets the message go.',
       props: { composer: 'no-agent' },
@@ -42,8 +42,22 @@ export const composer = defineScreen({
       description:
         'Priya, a member of Acme, opens a session that Cal started. Cal turned on the switch that lets other members use the Claude login. The line under the composer box says "Uses Cal\'s Claude login". So a message of Priya spends the login of Cal, also while a turn runs. In a session of Priya, the line says "Uses your Claude login".',
       rationale:
-        'The user chose option F of decision 105 on 7 November 2026. Each session runs on the login of its starter, the member who started it. A message of any member uses that login. A message during a turn joins that turn at once. Every composer of a session names the login, so each member sees whose login a message spends. The message needs no Claude login of Priya, so the composer shows no Connect notice. When Cal does not let other members use the login, Send opens a new, empty session on the login of Priya instead, as app/sessions/linked shows.',
+        'The user chose option F of decision 105 on 7 November 2026. Each session runs on the login of its starter, the member who started it. A message of any member uses that login. A message during a turn joins that turn at once. Every composer of a session names the login, so each member sees whose login a message spends. The message needs no Claude login of Priya, so the composer shows no Connect notice. When Cal keeps the login for the messages of Cal, the composer says before Send that the message starts a new session, as the Login not shared state shows.',
       props: { viewer: 'member' },
+    },
+    {
+      slug: 'not-shared',
+      title: 'Login not shared',
+      description:
+        'Cal started Address autocomplete, and the switch under the Claude login of Cal is off. The turn of Cal runs. Priya opens the session and writes a message. The notice over the composer says that the message starts a new session, because the Claude login of Cal is for the messages of Cal only. The line under the composer says "Uses your Claude login". Stop still ends the turn of Cal, and the message does not steer it. Send opens the new session, as app/sessions/linked shows.',
+      rationale:
+        'Option B of decision 116, which the user chose on 7 November 2026: each login has a switch that lets other members use it, off for a Claude subscription and on for an API key. A message of another member in a session whose starter keeps the login starts a new, empty session on the login of that member, as decision 115 A says. The session record says whether the starter shares the login, so the notice shows before Send, and the line names the login that the message uses. When Priya has no Claude login, the notice that asks to connect takes its place, as the Agent not connected state shows, and Send is off. Cal sees no notice in this session, because it runs on the own login of Cal.',
+      props: {
+        viewer: 'member',
+        composer: 'not-shared',
+        conversation: 'running',
+        banner: 'none',
+      },
     },
   ],
 })

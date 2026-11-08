@@ -225,8 +225,8 @@ Later screens add the frame and connection sources that they need.
   another member never runs on a login that its owner stopped sharing.
 - A message of a sender who left the org never reaches the agent, also
   while the login of the starter works.
-- The session record shows whether the login of its starter can be used. It
-  holds no part of the login.
+- The session record shows whether the login of its starter can be used,
+  and whether the starter shares it. It holds no part of the login.
 - The runner never writes a login to disk.
 - No process that the agent starts inherits the login of its turn. The
   login is not in the environment, the arguments, or an inherited open file

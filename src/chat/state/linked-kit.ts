@@ -76,6 +76,12 @@ export const loginGone = (session: Session): Session => ({
   loginAvailable: false,
 })
 
+/** The starter of a session keeps a login that works for their own messages. */
+export const loginPrivate = (session: Session): Session => ({
+  ...session,
+  loginShared: false,
+})
+
 /**
  * Answers each Send and Try again as the Worker does when the login of the
  * starter is not available: a new linked session takes the message, and the

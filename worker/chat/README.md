@@ -25,7 +25,7 @@ which serves these routes. The path helpers live in
 | `GET` sessions | `sessionsPath` | Lists the open sessions and the session history |
 | `POST` sessions | `sessionsPath` | Creates a session. The requester becomes its starter |
 | `PATCH` session | `sessionPath` | Renames a session |
-| `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn. When the starter's login cannot be used, a new linked session takes it, as [Session logins](integration/README.md#session-logins) says |
+| `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn. When the starter's login cannot be used, or the starter does not share it with the sender, a new linked session takes it, as [Session logins](integration/README.md#session-logins) says |
 | `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again, also to a new linked session. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
 | `POST` interrupt | `sessionPaths.interrupt` | Stops a turn |
 | `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session that the requester starts |
@@ -133,17 +133,22 @@ The Durable Object runs the gates itself.
   agent. `resolveLogin` first checks the workspace, that user, the sender,
   and the runner token in one D1 read. The workspace must pass the token
   rule above, without the token. That user and the sender must be members
-  who are not suspended. The same read checks the login's no-reuse setting
-  before it reads a secret. An override replaces only the login read.
-  A refusal of re-use leaves the starter's own login available. Send uses
-  the existing empty linked session, and queued member commands cannot
-  receive the starter's login while the setting is on.
-- Its metadata path, `readLoginAvailability`, reads only the membership,
-  the suspension, and the stored login kind of each starter, in one D1
-  query. The workspace must also pass the token rule above. So a suspended
-  starter or a refused workspace shows an unavailable login. The result
-  sets only `loginAvailable`, so the session list, the history, and the
-  event subscription stay readable. It reads no ciphertext.
+  who are not suspended. The same read checks the share setting of the
+  login, `agent_logins.no_reuse`, before it reads a secret. An override
+  replaces only the login read. A refusal to share keeps the starter's own
+  login available, so `SessionLogins.observe` stores
+  `loginAvailable: true` and `loginShared: false`. Send uses the existing
+  empty linked session, and queued member commands cannot receive the
+  starter's login while the starter does not share it.
+- Its metadata path, `readLoginMetadata`, reads only the membership, the
+  suspension, the stored login kind, and the share setting of each starter,
+  in one D1 query. It returns a map of `SessionLoginMetadata` by session
+  ID. A valid login gives `loginAvailable: true`, and `loginShared` is true
+  when `no_reuse` is 0. A missing or invalid login gives false for both.
+  The workspace must also pass the token rule above. So a suspended starter
+  or a refused workspace shows an unavailable login. The result sets only
+  `loginAvailable` and `loginShared`, so the session list, the history, and
+  the event subscription stay readable. It reads no ciphertext.
 - A revoked or replaced runner token closes that connection without a
   login, and the command stays queued. A sender who left the org gets no
   login either. [Session logins](integration/README.md#session-logins) says
@@ -254,8 +259,8 @@ tests through the production Worker entry.
 - `queries.ts`: the D1 reads of workspaces, tokens, members, and logins,
   and the title update of a workspace.
 - `login-access.ts`, `login-availability.ts`, and `login-kind.ts`:
-  `readLogin` and the access checks, the metadata query, and the valid
-  login kinds.
+  `readLogin` and the access checks, the metadata query
+  `readLoginMetadata`, and the valid login kinds.
 - `session-login.ts` and `session-storage.ts`: the two login paths of
   `SessionLogins`, and the defaults of older session records.
 - `session-record.ts`: `sessionFor`, the read of one session record.
