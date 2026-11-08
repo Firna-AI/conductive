@@ -284,28 +284,31 @@ Depends on: 2
 The Worker stores the choice, and the account model of the web app reads
 and saves it.
 
-- [ ] Reserve a free range for this plan in `migrations/README.md`, and
+- [x] Reserve a free range for this plan in `migrations/README.md`, and
       add the migration that rebuilds `user_preferences` with an unset
       default model and the nullable `new_workspace_view` column. Describe
       it in the README.
-- [ ] Make `accountDefault` in `worker/app-api/account-data.ts` and the
+- [x] Make `accountDefault` in `worker/app-api/account-data.ts` and the
       default model read in `worker/tools/store.ts` skip an unset default
       model.
-- [ ] Add the view type, `newWorkspaceView` in `AccountResponse`, and the
+- [x] Add the view type, `newWorkspaceView` in `AccountResponse`, and the
       path, the request, and the reply of the write in
       `src/shared/account.ts`.
-- [ ] Serve the choice in the account reply and save it with
+- [x] Serve the choice in the account reply and save it with
       `PUT /api/account/new-workspace-view` in `worker/app-api/boot.ts`.
-- [ ] Test in `worker/app-api/boot.test.ts`: a saved choice comes back in
+- [x] Test in `worker/app-api/boot.test.ts`: a saved choice comes back in
       the account reply, a new account gets the page, a save of the
       choice keeps the configured default model, and an unknown value
       gets HTTP 400.
-- [ ] Read the choice in `src/app/api/read-core.ts`, and save it with
+- [x] Read the choice in `src/app/api/read-core.ts`, and save it with
       `AccountModel.setNewWorkspaceView`. Serve it in the dev fake
       `src/app/dev/account-routes.ts` and in the fake API of
       `src/test-support/`.
-- [ ] Update `worker/app-api/README.md`, `migrations/README.md`, and the
+- [x] Update `worker/app-api/README.md`, `migrations/README.md`, and the
       account model line of `src/app/README.md`.
+
+Report and check logs: `.context/preferences-and-new-workspace-dialog/m3/` and
+`.context/preferences-and-new-workspace-dialog/m3-tests.log`.
 
 ## Milestone 4: The Preferences tab
 

@@ -17,6 +17,9 @@ import {
 } from '../test-support/harness'
 import {
   expectAccountState,
+  expectIndependentPreferences,
+  expectInvalidWorkspaceView,
+  operatorModels,
   putAccountValue,
   type AccountState,
 } from './boot-account.test-support'
@@ -31,23 +34,13 @@ const otherChoice: AgentChoice = {
   model: 'operator-codex',
   effort: 'low',
 }
-const models = [
-  {
-    agent: 'claude',
-    model: 'operator-claude',
-    label: 'Claude',
-    efforts: ['high'],
-  },
-  { agent: 'codex', model: 'operator-codex', label: 'Codex', efforts: ['low'] },
-]
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
 })
 beforeEach(async () => {
   await harness.reset()
-  harness.env.CONDUCTIVE_MODELS = JSON.stringify(models)
+  harness.env.CONDUCTIVE_MODELS = JSON.stringify(operatorModels)
   harness.env.CONDUCTIVE_DEFAULT_CHOICE = JSON.stringify(choice)
 })
 afterAll(async () => harness.dispose())
@@ -60,6 +53,7 @@ it('boots from operator models and persists account preferences and encrypted se
   const initial = readAccount(await account.json())
   expect(initial).toMatchObject({
     defaultChoice: choice,
+    newWorkspaceView: 'page',
     agentLogins: [
       { agent: 'claude', connected: false },
       { agent: 'codex', connected: false },
@@ -67,7 +61,7 @@ it('boots from operator models and persists account preferences and encrypted se
   })
   const catalog = await harness.request(MODELS_PATH, cookie)
   expect(catalog.status).toBe(200)
-  expect(await catalog.json()).toEqual({ models })
+  expect(await catalog.json()).toEqual({ models: operatorModels })
   const saved = await harness.request(agentLoginPath('claude'), cookie, {
     method: 'PUT',
     body: JSON.stringify({
@@ -266,6 +260,14 @@ it('keeps account data and Get started isolated from other users and deleted org
     await (await harness.request(GET_STARTED_PATH, first)).json(),
   ).toMatchObject({ orgId: null })
   expect((await harness.request(ACCOUNT_PATHS.account, '')).status).toBe(401)
+})
+
+it('keeps workspace view and model preferences independent of each other and app defaults', async () => {
+  await expectIndependentPreferences(harness, choice, otherChoice)
+})
+
+it('rejects an unknown workspace view with invalid_input', async () => {
+  await expectInvalidWorkspaceView(harness)
 })
 
 it('reports missing operator model configuration without blocking unrelated routes', async () => {

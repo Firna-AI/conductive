@@ -5,10 +5,22 @@ import {
   type AccountResponse,
   type SaveAgentLoginRequest,
   type SetDefaultModelRequest,
+  type SetNewWorkspaceViewRequest,
 } from '../../src/shared/account'
+import type { AgentChoice } from '../../src/shared/agents'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import { readAccount } from '../../src/app/api/read-core'
 import type { TestHarness } from '../test-support/harness'
+
+export const operatorModels = [
+  {
+    agent: 'claude',
+    model: 'operator-claude',
+    label: 'Claude',
+    efforts: ['high'],
+  },
+  { agent: 'codex', model: 'operator-codex', label: 'Codex', efforts: ['low'] },
+]
 
 export interface AccountState extends Pick<
   AccountResponse,
@@ -53,11 +65,73 @@ export async function putAccountValue(
   harness: TestHarness,
   cookie: string,
   path: string,
-  body: SaveAgentLoginRequest | SetDefaultModelRequest,
+  body:
+    SaveAgentLoginRequest | SetDefaultModelRequest | SetNewWorkspaceViewRequest,
 ): Promise<void> {
   const response = await harness.request(path, cookie, {
     method: 'PUT',
     body: JSON.stringify(body),
   })
   expect(response.status).toBe(200)
+}
+
+export async function expectIndependentPreferences(
+  harness: TestHarness,
+  configuredChoice: AgentChoice,
+  otherChoice: AgentChoice,
+): Promise<void> {
+  const cookie = await harness.login()
+  const saved = await harness.request(ACCOUNT_PATHS.newWorkspaceView, cookie, {
+    method: 'PUT',
+    body: JSON.stringify({ view: 'dialog' }),
+  })
+  expect(saved.status).toBe(200)
+  expect(await saved.json()).toEqual({ view: 'dialog' })
+  const account = async () =>
+    readAccount(
+      await (await harness.request(ACCOUNT_PATHS.account, cookie)).json(),
+    )
+  expect(await account()).toMatchObject({
+    defaultChoice: configuredChoice,
+    newWorkspaceView: 'dialog',
+  })
+
+  harness.env.CONDUCTIVE_DEFAULT_CHOICE = JSON.stringify(otherChoice)
+  expect(await account()).toMatchObject({
+    defaultChoice: otherChoice,
+    newWorkspaceView: 'dialog',
+  })
+
+  await putAccountValue(harness, cookie, ACCOUNT_PATHS.defaultModel, {
+    choice: configuredChoice,
+  })
+  expect(await account()).toMatchObject({
+    defaultChoice: configuredChoice,
+    newWorkspaceView: 'dialog',
+  })
+  await putAccountValue(harness, cookie, ACCOUNT_PATHS.newWorkspaceView, {
+    view: 'page',
+  })
+  expect(await account()).toMatchObject({
+    defaultChoice: configuredChoice,
+    newWorkspaceView: 'page',
+  })
+}
+
+export async function expectInvalidWorkspaceView(
+  harness: TestHarness,
+): Promise<void> {
+  const cookie = await harness.login()
+  const response = await harness.request(
+    ACCOUNT_PATHS.newWorkspaceView,
+    cookie,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ view: 'drawer' }),
+    },
+  )
+  expect(response.status).toBe(400)
+  expect(await response.json()).toMatchObject({
+    error: { code: 'invalid_input' },
+  })
 }

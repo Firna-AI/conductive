@@ -1,9 +1,11 @@
 import {
   ACCOUNT_PATHS,
+  NEW_WORKSPACE_VIEWS,
   agentLoginPath,
   type AccountResponse,
   type SaveAgentLoginResponse,
   type SaveAgentLoginRequest,
+  type SetNewWorkspaceViewResponse,
 } from '../../src/shared/account'
 import { MODELS_PATH } from '../../src/shared/agents'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
@@ -16,9 +18,11 @@ import type { RequestContext } from '../security/gate'
 import {
   accountDefault,
   accountLogins,
+  accountNewWorkspaceView,
   removeAccountLogin,
   saveAccountDefault,
   saveAccountLogin,
+  saveAccountNewWorkspaceView,
 } from './account-data'
 import { getStartedData } from './get-started-data'
 import { configuredDefaultChoice, configuredModels } from './models'
@@ -44,6 +48,7 @@ export async function bootRoute(
           (await accountDefault(env.DB, userId)) ??
           configuredDefaultChoice(env),
         agentLogins: await accountLogins(env.DB, userId),
+        newWorkspaceView: await accountNewWorkspaceView(env.DB, userId),
       } satisfies AccountResponse)
     }
   }
@@ -51,6 +56,12 @@ export async function bootRoute(
     const selected = choice(context.body?.choice)
     await saveAccountDefault(env.DB, userId, selected, dependencies.now())
     return Response.json({ choice: selected })
+  }
+  if (path === ACCOUNT_PATHS.newWorkspaceView && request.method === 'PUT') {
+    const view = NEW_WORKSPACE_VIEWS.find((view) => view === context.body?.view)
+    if (view === undefined) return invalidInput()
+    await saveAccountNewWorkspaceView(env.DB, userId, view, dependencies.now())
+    return Response.json({ view } satisfies SetNewWorkspaceViewResponse)
   }
   const agent = (['claude', 'codex'] as const).find(
     (agent) => path === agentLoginPath(agent),

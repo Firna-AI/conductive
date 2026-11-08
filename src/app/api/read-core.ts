@@ -1,10 +1,12 @@
-import type {
-  AccountResponse,
-  AgentLoginStatus,
-  GitHubInstallation,
-  GitHubInstallationsResponse,
-  GitHubRepositoriesResponse,
-  GitHubRepository,
+import {
+  NEW_WORKSPACE_VIEWS,
+  type AccountResponse,
+  type AgentLoginStatus,
+  type GitHubInstallation,
+  type GitHubInstallationsResponse,
+  type GitHubRepositoriesResponse,
+  type GitHubRepository,
+  type SetNewWorkspaceViewResponse,
 } from '../../shared/account'
 import type {
   Agent,
@@ -144,8 +146,15 @@ export function readAccount(value: unknown): AccountResponse {
   return {
     user: nested(account, 'user', readUser),
     defaultChoice: nested(account, 'defaultChoice', readChoice),
+    newWorkspaceView: choice(account, 'newWorkspaceView', NEW_WORKSPACE_VIEWS),
     agentLogins: items(account, 'agentLogins', readLogin),
   }
+}
+
+export function readNewWorkspaceView(
+  value: unknown,
+): SetNewWorkspaceViewResponse {
+  return { view: choice(record(value), 'view', NEW_WORKSPACE_VIEWS) }
 }
 
 function readInstallation(value: unknown): GitHubInstallation {

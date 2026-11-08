@@ -58,6 +58,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
   const account: AccountResponse = {
     user: role === 'member' ? fakeUsers[1] : fakeUser,
     defaultChoice,
+    newWorkspaceView: 'page',
     agentLogins: [
       { agent: 'claude', connected: true, kind: 'token', updatedAt: FAKE_TIME },
       {
