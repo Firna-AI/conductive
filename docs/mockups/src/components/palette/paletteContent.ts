@@ -56,8 +56,8 @@ export type PaletteContent = {
 export type PaletteContext = { open?: OpenWorkspace; archivable: boolean }
 
 /**
- * The workspaces that the person opened or used last, the latest first.
- * Every rule of decision 146 can give this order. The open one is left out.
+ * The workspaces with the latest activity, the latest first, as decision
+ * 146 chose. The open one is left out.
  */
 const recentKeys = [
   'email-dark-mode',

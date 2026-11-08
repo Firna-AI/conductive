@@ -9,7 +9,7 @@ export const paletteActions = defineScreen({
   description:
     'Over the list, the actions of Acme come first: New workspace and New section. Create org and a switch to each other org follow. A switch to an org opens its list.',
   rationale:
-    'The palette offers only what the page offers to the person, from the actions that the app has today, which every option of decision 144 keeps. The pull request actions stay on the pull request bar.',
+    'The palette offers only what the page offers to the person, from the main actions that the app has today, as the user chose in decision 144. Resume, the owner picker, Sign out, and the pull request actions stay where they are.',
   relatedDocs: [],
   propSchema: commandPaletteSchema,
   props: { over: 'list', view: 'actions' },

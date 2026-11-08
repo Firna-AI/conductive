@@ -9,7 +9,7 @@ export const commandPalette = defineScreen({
   description:
     '⌘K, or Search under New workspace, opens one search over the app. The All tab starts with the recent workspaces, then the actions of the page, then the settings. The first row is highlighted, so Enter runs it, and the arrows move the highlight. On a phone the palette is a page in place of the list, and Cancel goes back.',
   rationale:
-    'The user asked for a palette like the one in Conductor on 8 November 2026, with the tabs All, Workspaces, Actions, and Settings. It finds the workspaces of the current org. A workspace row shows the state mark, the name, the repository, and the age of the last activity, as the list does, and no coloured bar at its edge. The rows show no keys while decision 145 is open, and decision 146 chooses the order of the recent workspaces. The open workspace is never among them.',
+    'The user asked for a palette like the one in Conductor on 8 November 2026, with the tabs All, Workspaces, Actions, and Settings. It finds the workspaces of the current org. A workspace row shows the state mark, the name, the repository, and the age of the last activity, as the list does, and no coloured bar at its edge. Only the palette has a key, from decision 145. The recent workspaces come by their latest activity, from decision 146, and the open workspace is never among them.',
   relatedDocs: [],
   propSchema: commandPaletteSchema,
   props: { over: 'list', view: 'all' },

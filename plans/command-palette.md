@@ -15,9 +15,9 @@ This change adds the palette to the web app, and so to the Mac app, which
 shows the web app. A key or the new Search row of the workspace list opens
 it. It finds the workspaces of the current org, runs the actions of the
 current page, and opens the settings pages. It does not cover a search of
-chat text or of files, or a search across orgs. Decisions 144, 145, and
-146 hold the open questions: new view commands, keys for each command, and
-the order of recent workspaces.
+chat text or of files, a search across orgs, new view commands, or keys
+for each command. The user chose this scope on 8 November 2026, in
+decisions 144, 145, and 146. More keys come later, in another workspace.
 
 Contract owners:
 
@@ -63,6 +63,12 @@ approved.
 - Agent call: the palette opens on the All tab with an empty field each
   time. It has no address, and it closes when the address changes, such
   as after Back.
+- Agent call: ⌘K works on each page of the signed-in app. On a page
+  without an org, such as the Account page, the palette works on the org
+  that the person opened last in this tab, or else on the first org that
+  is not deleted, as the Mac app keeps its sidebar. Without such an org,
+  it offers Create org and the settings of the Account. A deleted org
+  offers no workspace and no action of the org.
 
 ### Layout
 
@@ -107,7 +113,7 @@ approved.
   show in their own group after the other results, so the person finds an
   old workspace without a change of tab, and the active ones stay first.
 - Agent call: Recent workspaces shows up to five workspaces, without the
-  open one. Decision 146 chooses their order.
+  open one. They come by their latest activity, as decision 146 chose.
 
 ### Actions and settings
 
@@ -162,10 +168,10 @@ So this plan starts its decisions at 144.
 
 ## Decisions
 
-The decisions wait for the user. The mockups of Milestone 1 show only
-what every option of each decision keeps: the main actions that the app
-has today, no keys on the rows, and an order of recent workspaces that
-every option of decision 146 can give.
+The user answered the three decisions on 8 November 2026: option A of
+each. The mockups of Milestone 1 already show these answers: the main
+actions that the app has today, no keys on the rows, and recent
+workspaces by their latest activity.
 
 The options check of the `plans` skill ran over the three decisions on 8
 November 2026. It added option D to decisions 144 and 145, and option E to
@@ -174,11 +180,8 @@ and of decision 146 from B to E. It also corrected facts about the keys of
 the Mac app and the read time of the Worker. Its report is
 `.context/command-palette/options-check.md`.
 
-Some answers add milestones. Option D or E of decision 146 adds a backend
-milestone before Milestone 3, for the new time in the list reply. Options
-B, C, and D of decision 144, and options B, C, and D of decision 145, add
-their own mockup, documentation, and implementation milestones. Each new
-mockup milestone comes first among them, as the `plans` skill says.
+The answers add no milestone. The user plans more keys in another
+workspace, so this plan adds no follow-up item for them.
 
 ### 144. Choose the commands of the first palette
 
@@ -203,6 +206,7 @@ mockup milestone comes first among them, as the `plans` skill says.
 - **Related:** Decision 145, the same scope: the keys of view commands wait for this answer.
 - **Recommendation:** A. It ships the palette with the main actions of the app, and each view command is a feature that deserves its own mockups. When the user wants a theme, D gives it without the layout commands.
 - **Action:** ask the user, because the request points at Conductor's palette, whose actions include view commands that Conductive lacks, and a wrong guess wastes the work.
+- **Chosen:** A, by the user on 8 November 2026.
 
 ### 145. Choose the keys of the commands
 
@@ -225,6 +229,7 @@ mockup milestone comes first among them, as the `plans` skill says.
 - **Related:** Decision 144, the same scope: view commands would need keys too.
 - **Recommendation:** D. The options check changed it from A. D gives the Mac app the keys that the screenshots show, and it takes no key from a browser, the terminal, or the composer. A stays the smallest first step.
 - **Action:** ask the user, because the screenshots show a key beside each action, and speed and scope pull in opposite directions.
+- **Chosen:** A, by the user on 8 November 2026. The user plans more keys in another workspace.
 
 ### 146. Choose the order of recent workspaces
 
@@ -250,6 +255,7 @@ mockup milestone comes first among them, as the `plans` skill says.
 - **Previous examples:** None found.
 - **Recommendation:** E. The options check changed it from B. E keeps the order of the person, as Conductor does, also after a reload or in a new tab, with data that the Worker already stores.
 - **Action:** ask the user, because each option trades effort against how long the order lasts, and no option is clearly best.
+- **Chosen:** A, by the user on 8 November 2026.
 
 ## Milestone 1: Mockups
 
@@ -286,7 +292,7 @@ its desktop and its phone view.
 
 ## Milestone 2: Documentation and protocol
 
-Depends on: 1, and the answers to decisions 144, 145, and 146
+Depends on: 1
 
 The protocol states the palette before the code changes.
 
@@ -297,9 +303,6 @@ The protocol states the palette before the code changes.
       keys inside the palette, and the empty state.
 - [ ] Link the new doc from the protocol lists of `docs/architecture.md`
       and `README.md`.
-- [ ] Add the rules of the palette layer to `src/app/screens.md`: the
-      focus, the inert frame, Escape, and the close on a change of
-      address.
 
 ## Milestone 3: The palette in the web app
 
@@ -332,7 +335,10 @@ actions.
       Create org, the switch of org, New session, Session history, the
       tabs of the right column, Archive, and the sidebar toggle of the
       Mac app.
-- [ ] Order Recent workspaces as decision 146 says.
+- [ ] Order Recent workspaces by their latest activity, as decision 146
+      chose.
+- [ ] Keep the org that the person opened last in the tab, for the pages
+      without an org, as the Mac app does for its sidebar.
 - [ ] Test with happy-dom: the key opens and closes the palette, Escape
       closes it, and the focus goes back. The arrows and Enter run a row.
       The tabs and the filters work. A search finds a workspace by its
@@ -344,6 +350,10 @@ actions.
       as [the marketing site README](../src/marketing/README.md) says. The
       Search row changes the sidebar and the phone list that the pictures
       show.
+- [ ] Add the rules of the palette layer to `src/app/screens.md`: the
+      focus, the inert frame, Escape, and the close on a change of
+      address. Milestone 2 left this to the code, because the page
+      describes the code.
 - [ ] Update the Key code of `src/app/README.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
