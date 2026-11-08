@@ -1,6 +1,6 @@
 # Boat-Native Remote Workspaces
 
-Status: Active. On branch `calummoore/conductor-alternative-architecture`. Pull request #57 brings the first version into `main` and keeps this plan for the later pull requests (decision 141). The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/conductor-alternative-architecture`. Pull request #57 merged the first version into `main` on 8 November 2026, and this plan stays for the later pull requests (decision 141). The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Conductor Cloud goes read-only on 13 November 2026 and shuts down on
 20 November 2026. This change builds Conductive, a browser-only replacement, at
@@ -3649,6 +3649,8 @@ Added on 7 November 2026 from the review of Milestone 15f.
 - **Recommendation:** A.
 - **Chosen:** A now, and C as a later follow-up, by the user on 7 November
   2026: `plans/follow-ups/unused-export-check.md`.
+- **Applied:** Milestone 15p added the check to the complete gate on
+  8 November 2026, and deleted that follow-up item.
 
 ### 113. Give the Worker tests a longer hang guard
 
