@@ -18,8 +18,8 @@ The tab keeps a `ShownWorkspace` for each workspace that it showed: its
 `shownWorkspaces(app, user)` in `shown-workspaces.ts` gives the memory of
 the `AppModel` of the tab, for the signed-in user.
 
-- Each mount of the screen calls `notices.newView()`, `model.open()`, and
-  `chat.show()`. Each unmount calls `model.close()` and `chat.hide()`.
+- Each mount of the screen shows the kept parts through a new
+  `WorkspaceView`, after the render, as [Integration](#integration) says.
 - An unmount closes the socket of the model and the socket of the chat.
   Each stream keeps its last event number.
 - A return draws the kept header, notices, and chat at once. Then each
@@ -120,30 +120,51 @@ Dismiss hides a bar in the mounted view only:
 
 ## Integration
 
-`ShownWorkspaces.get` makes the parts of a workspace at its first show.
-The notices then follow the stream of the model before its first open. So
-they get the stored history of the workspace from its first event, then the
-live events, in event order. Each mount of the screen takes the kept parts:
+The screen gets a view of its kept workspace through `useWorkspaceStore`
+of [the web app](../../app/README.md#data-lifecycle). The stable `create`
+calls `ShownWorkspaces.view`, and the stable `connect` is the module
+function `connectView`:
 
 ```tsx
+function connectView(view: WorkspaceView): () => void {
+  return view.connect()
+}
+
 const app = useApp()
-const [shown] = useState(() =>
-  shownWorkspaces(app, viewer).get(orgId, workspaceId),
+const create = useCallback(
+  (workspace: WorkspaceIdentity) =>
+    shownWorkspaces(app, viewer).view(workspace),
+  [app, viewer],
+)
+const { store: shown, snapshot: detail } = useWorkspaceStore(
+  { orgId, workspaceId },
+  { create, connect: connectView },
 )
 const { model, notices, chat } = shown
-useEffect(() => {
-  notices.newView()
-  void model.open()
-  chat.show()
-  return () => {
-    model.close()
-    chat.hide()
-  }
-}, [notices, model, chat])
 ```
 
-`follow` gives the function that ends the subscription, and `clear` calls
-it. Place `<HeaderNoticeBars notices={notices} />` directly after the
+A new `create` makes a new view, so keep `app` and `viewer` stable.
+
+- `view` gives a `WorkspaceView` over the kept model, notices, and chat.
+  The first view of a workspace makes these parts. `create` starts no read
+  and no subscription, and stops nothing, so a render can call it.
+- The snapshot is the `detail` of the model, or `loading` while a kept
+  failure waits for the open of this view.
+- The hook connects the view after the render. The first connect of a
+  workspace reads the members when they are not ready. It also starts the
+  subscriptions between the kept parts and the creates of the org. They
+  stay until the tab forgets the workspace. The first connect in the tab
+  makes the memory follow the sign-in.
+- Each connect calls `notices.newView()`, makes the notices follow the
+  stream of the model, and calls `model.open()` and `chat.show()`, in this
+  order. The follow comes before the open. So at a first show, the notices
+  get the stored history of the workspace from its first event, then the
+  live events, in event order.
+- The stop of a connect calls `model.close()`, ends the follow, and calls
+  `chat.hide()`. A connect starts nothing for a workspace that the tab no
+  longer keeps.
+
+Place `<HeaderNoticeBars notices={notices} />` directly after the
 header. It draws `notices.shown` with the CSS module of the
 mockups' `LostUpdateBar` and the words of `lostCopy.ts`. Its Dismiss is the
 shell's `IconButton`. The ages use the clock of `AppServices`, and they
@@ -216,14 +237,19 @@ Run the tests with `npm run test -- src/shell/workspace`.
 
 ## Key code
 
-- `WorkspaceScreen.tsx`: the screen of one open workspace. It takes the
-  kept parts of the workspace, shows and hides them, and places the
-  header, the notices, the columns, and the features. Its `Unavailable`
-  view shows a 404 and a failed create.
+- `WorkspaceScreen.tsx`: the screen of one open workspace. It takes a view
+  of the kept workspace through `useWorkspaceStore`, and places the header,
+  the notices, the columns, and the features. Its `Unavailable` view shows
+  a 404 and a failed create.
 - `shown-workspaces.ts`: `ShownWorkspaces`, the kept workspaces of one tab
   and one user, and `shownWorkspaces`, which clears them at a sign-out or a
   sign-in of another user. It gives the events and a 404 of each kept
   workspace to the creates of its org, and forgets a failed create.
+  `ShownWorkspaces.view` gives a view of a workspace, and makes its parts
+  at the first view.
+- `workspace-view.ts`: `WorkspaceView`, the store of one mounted view over
+  the kept parts. Its snapshot is the detail of the model. `connect` shows
+  the parts, and its result hides them.
 - `ChatArea.tsx`: the chat of the centre, with the start steps and the
   sandbox bar of the shell, or the shell's own column for the chat slots.
 - `header-notices.ts`: `HeaderNotices`, the failed repairs of the name and

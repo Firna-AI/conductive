@@ -55,11 +55,13 @@ describe('preview list', () => {
   it('keeps a revoked preview hidden after an event of another workspace, a later list, and a new subscription', async () => {
     const server = serverWithBoth()
     const store = new ToolStore(
-      previewsReducer,
-      initialPreviews,
-      FAKE_IDS.workspace,
+      { reducer: previewsReducer, initialState: initialPreviews },
+      { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace },
     )
-    const stop = store.listen(() => undefined, devSubscribe(server))
+    const stop = store.connect({
+      fetch: server.fetch,
+      subscribe: devSubscribe(server),
+    })
     store.dispatch(await listReply(server))
 
     emitDevEvent(server, 'saved-carts', {
@@ -77,10 +79,13 @@ describe('preview list', () => {
     store.dispatch(await listReply(server))
     expect(visiblePreviews(store.getSnapshot())).toEqual([second])
 
-    // React subscribes again for a new subscription, after the old one stops.
+    // The store connects again for a new subscription, after the old one stops.
     stop()
     const next = serverWithBoth()
-    const stopNext = store.listen(() => undefined, devSubscribe(next))
+    const stopNext = store.connect({
+      fetch: next.fetch,
+      subscribe: devSubscribe(next),
+    })
     emitDevEvent(server, FAKE_IDS.workspace, {
       type: 'preview.revoked',
       previewId: 'preview-2',

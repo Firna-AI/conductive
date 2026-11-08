@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { CircleAlert } from 'lucide-react'
+import { useWorkspaceStore } from '../app/workspace-store'
 import type { Preview } from '../shared/previews'
 import { ToolButton } from '../terminal/tool-parts/ToolButtons'
 import { ToolRoot } from '../terminal/tool-parts/ToolRoot'
 import { ToolMessage, ToolWaiting } from '../terminal/tool-parts/ToolStates'
-import { useToolStore } from '../terminal/tool-parts/useToolStore'
 import {
   workspaceKey,
   type ToolWorkspace,
@@ -12,13 +12,9 @@ import {
 import { PreviewFrame } from './PreviewFrame'
 import { PreviewOpenForm } from './PreviewOpenForm'
 import { PreviewToolbar } from './PreviewToolbar'
-import { closePreview, listPreviews, openPreview } from './previewsApi'
-import {
-  initialPreviews,
-  previewsReducer,
-  selectedPreview,
-  visiblePreviews,
-} from './previewsState'
+import { closePreview, openPreview } from './previewsApi'
+import { selectedPreview, visiblePreviews } from './previewsState'
+import { createPreviewsStore, type PreviewsStore } from './previewsStore'
 import styles from './PreviewTool.module.css'
 
 /**
@@ -51,13 +47,16 @@ export function PreviewTool(props: PreviewToolProps) {
 
 function PreviewToolBody(props: PreviewToolProps) {
   const { workspace, route } = props
-  const { fetch, orgId, workspaceId } = workspace
-  const [state, dispatch] = useToolStore(
-    previewsReducer,
-    initialPreviews,
-    workspace,
+  const { fetch, subscribe } = workspace
+  const connect = useCallback(
+    (store: PreviewsStore) => store.connect({ fetch, subscribe }),
+    [fetch, subscribe],
   )
-  const [attempt, setAttempt] = useState(0)
+  const { store, snapshot: state } = useWorkspaceStore(workspace, {
+    create: createPreviewsStore,
+    connect,
+  })
+  const { dispatch } = store
   /** The form shows after "+", until the address changes. */
   const [adding, setAdding] = useState<{ routeId: string | null } | null>(null)
   const mounted = useRef(false)
@@ -74,21 +73,6 @@ function PreviewToolBody(props: PreviewToolProps) {
   useEffect(() => {
     latestRoute.current = route
   })
-
-  useEffect(() => {
-    const controller = new AbortController()
-    void listPreviews({ fetch, orgId, workspaceId }, controller.signal).then(
-      (result) => {
-        if (controller.signal.aborted) return
-        dispatch(
-          result.ok
-            ? { type: 'loaded', previews: result.value }
-            : { type: 'load-failed', error: result.error },
-        )
-      },
-    )
-    return () => controller.abort()
-  }, [fetch, orgId, workspaceId, attempt, dispatch])
 
   const visible = visiblePreviews(state)
   const formShown = adding !== null && adding.routeId === route.previewId
@@ -133,10 +117,7 @@ function PreviewToolBody(props: PreviewToolProps) {
     })
   }
 
-  const reloadList = () => {
-    dispatch({ type: 'load' })
-    setAttempt((count) => count + 1)
-  }
+  const reloadList = () => dispatch({ type: 'load' })
 
   let content
   if (state.load?.state === 'loading') {
