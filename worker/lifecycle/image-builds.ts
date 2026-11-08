@@ -1,6 +1,7 @@
 import type { ImageBuild } from '../../src/shared/org-settings'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import { errorSummary, warnWorker } from '../warnings'
 import { requireActiveUser, userSuspended } from '../data/user-access'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
@@ -269,6 +270,9 @@ export async function advanceImageBuild(
         error instanceof ProviderError &&
         !transientProviderError(error)
       )
+    warnWorker(
+      `Image build ${buildId} failed in phase ${job.phase}: ${errorSummary(failure)}`,
+    )
     await failBuild(env.DB, buildId, message, dependencies.now())
     if (!unresolvedAllocation) await updateBuildJob(env.DB, buildId, 'cleanup')
     if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))

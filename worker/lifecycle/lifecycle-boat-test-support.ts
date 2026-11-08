@@ -77,6 +77,17 @@ export class LifecycleBoat {
         typeof body.sandboxId !== 'string'
       )
         throw new Error('Invalid test snapshot')
+      // Boat's rule for saved snapshot names, as its 400 reply states it.
+      if (!/^[a-z0-9][a-z0-9-]{0,62}$/.test(body.name))
+        return Response.json(
+          {
+            ok: false,
+            code: 'invalid_name',
+            message:
+              'Snapshot names are 1-63 lowercase letters, digits, or dashes, starting with a letter or digit.',
+          },
+          { status: 400 },
+        )
       this.snapshots.set(body.name, body.sandboxId)
       response = Response.json({
         ok: true,
