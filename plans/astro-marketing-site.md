@@ -86,6 +86,87 @@ Contract owners:
 - **Recommendation:** C, for one drawing of each page.
 - **Chosen:** B, by the user on 8 November 2026 ("1 = B").
 
+### 2. Choose whether developer tools send usage data
+
+Added on 8 November 2026 from the Milestone 2 report. The options check of
+the same day added options D, E, and F, and changed the recommendation.
+Open.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Process.
+- **Location:** the scripts of `package.json` that run Astro: `dev`,
+  `build`, `site:dev`, and `site:build`. The built-site test
+  `worker/marketing/built-site.test.ts`, which runs `astro build`. The
+  scripts `types` and `db:migrate`, and the `npx wrangler` commands of
+  `docs/deployment.md`, which run Wrangler.
+- **Terms:**
+  - **Telemetry:** anonymous usage events that a tool sends to its maker.
+    Astro stops only when `ASTRO_TELEMETRY_DISABLED` or
+    `TELEMETRY_DISABLED` is set, or when a person turns it off on their
+    machine. Wrangler stops with `DO_NOT_TRACK`, `WRANGLER_SEND_METRICS`,
+    or `"send_metrics": false` in `wrangler.jsonc`.
+- **Background:**
+  - Milestone 2 added Astro. `astro build` and `astro dev` send an event
+    on each run, also in CI. `astro check` sends only when it crashes.
+  - Each event holds an anonymous machine ID, a hashed project ID, system
+    facts, the name of the site's own build integration, and the AI agent
+    that runs the tool. Wrangler sends the same kind of event, also in CI.
+  - No other tool sends usage data from the npm scripts. The options check
+    read each installed tool. The Vite plugin already turns off the
+    telemetry of Miniflare.
+  - The picture capture command starts the system Chrome. Nobody checked
+    what Chrome sends.
+- **Problem:** Each developer machine, agent sandbox, and CI run now also
+  sends Astro usage events. No recorded rule says what developer tools may
+  send.
+- **Impact if no action:** The events continue. They hold no code or
+  secrets, but they show tool use, timing, and the agent in use to two
+  third parties.
+- **Root question:** Should the developer tools that this repository runs
+  send usage data to their makers, from each place that runs them?
+- **Options:**
+  - **A.** Change nothing, as the repository does for Wrangler today.
+    Effort: Small.
+  - **B.** Turn off Astro telemetry in the scripts that run Astro, and in
+    the built-site test. Effort: Small.
+  - **C.** Turn off the telemetry of Astro and Wrangler in the scripts and
+    the built-site test, and state the rule under "Repository rules" in
+    `AGENTS.md`. Direct `npx wrangler` commands still send. Effort: Small.
+  - **D.** Added by the options check. Turn off Wrangler with
+    `"send_metrics": false` in `wrangler.jsonc`, which reaches every
+    Wrangler command, also the deployment commands. Turn off Astro with
+    `ASTRO_TELEMETRY_DISABLED=1` in `site:build`, `site:dev`, and the
+    built-site test. Add the rule to `AGENTS.md`: use a tool's own config
+    switch first, and the scripts only when the tool has none. A new place
+    that runs Astro still sends until it sets the variable. Effort: Small.
+  - **E.** Added by the options check. Turn off both tools only in CI,
+    with an `env` block in `.github/workflows/ci.yml`, and leave each
+    machine to its person. Developer machines and agent sandboxes still
+    send. Effort: Small.
+  - **F.** Added by the options check. Put both switches in the config
+    files: `"send_metrics": false` in `wrangler.jsonc`, and
+    `ASTRO_TELEMETRY_DISABLED` set at the top of `astro.config.ts`. Then
+    no script, direct command, test, or API call sends. The Astro line
+    relies on an order inside Astro that Astro does not document, so a
+    later release can break it without a sign. Effort: Small.
+- **Left out:** A setting on each machine with `astro telemetry disable`
+  alone, because it does not reach CI. `DO_NOT_TRACK` for both tools,
+  because Astro ignores it. A gate check of each place, because it would
+  test run strings and the behaviour of third-party tools. A block at the
+  network, because it needs infrastructure. Other tools, because decision
+  1 chose Astro and the Worker deploys with Wrangler.
+- **Wider fix:** F, because it reaches each place that loads the two
+  config files. The first pass named C.
+- **Previous examples:** Wrangler telemetry, which is on by default today.
+- **Recommendation:** D. It uses only the switches that the tools
+  document, and Wrangler's config key also reaches the deployment
+  commands. The first pass recommended C. F protects best against a new
+  place that runs Astro, but it relies on undocumented behaviour.
+- **Action:** ask the user, because the choice sends or keeps data with
+  third parties, and no requirement or recorded decision covers what
+  developer tools may send.
+
 ## Design
 
 Each item marked as an agent call is a design call of the agent, made on
@@ -349,14 +430,18 @@ app fallback and gives `503`. On the app host, an unknown path under
 
 Depends on: 1, 2, 3
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
       Run the new site build test 10 times, and record its run time.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+      Done on 8 November 2026: `npm run check` passed on `705ec32`. The
+      built-site test passed 10 of 10 runs, about 1.8 s each.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+      Done on 8 November 2026: round 1 on `705ec32`, by a Codex reviewer,
+      found no findings and nothing outside the scope.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
