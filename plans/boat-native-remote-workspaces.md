@@ -4137,8 +4137,8 @@ Added on 8 November 2026, when the user saw the terminal prompt
 - **Options:**
   - **A.** Give tmux the folder path when it creates the shell. A shell
     that starts before the restore ends still moves to the old view.
-  - **B.** As A, and add a Bash prompt hook that moves the shell back to
-    the live folder after the restore.
+  - **B.** As A, and add a Bash prompt hook that moves the shell to the
+    live copy of its current folder after the restore.
   - **C.** As A, and start the terminal only after Boat reports the end of
     the restore. The Terminal tab then waits.
 - **Recommendation:** B, after the options check of 8 November 2026. The
@@ -7374,6 +7374,7 @@ checks of 16 and 16a to the work after the merge.
   - Run `exit`, and press Reconnect. The next connection creates a new
     shell after the restore. A page can connect a hidden Terminal tab at
     the resume, so the first shell can be older than the restore.
-  - In the new shell, `pwd -P` prints `/home/user/code/<name>`, not a
-    path under `/var/lib/ascii-lazy/retired/`. The prompt alone does not
-    show it.
+  - In the new shell, `readlink /proc/$$/cwd` prints
+    `/home/user/code/<name>`, not a path under
+    `/var/lib/ascii-lazy/retired/`. The prompt and Bash's `pwd -P` read
+    the path text in `$PWD`, so they do not show the real folder.

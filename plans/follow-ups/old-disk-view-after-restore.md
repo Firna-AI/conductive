@@ -18,14 +18,14 @@
   - The user chose on 8 November 2026 to give tmux the path of the repository folder when a terminal connection creates the workspace shell. So a shell that starts after the restore opens in the live folder.
   - The Terminal is the default tool of the workspace screen, and it connects as soon as the workspace is ready. So its first shell often starts before the restore ends.
   - At each resume, a page that showed the Terminal tab once connects a hidden Terminal tab again, in `src/shell/workspace/tools/ToolsPart.tsx`. So the first shell after a resume often starts before the restore ends, also when another tool is open.
-  - A local simulation with tmux and moved mounts showed that a shell that starts before the restore ends moves to the old view. Its prompt still shows the normal path, because Bash keeps the path text in `PWD`.
+  - A local simulation with tmux and moved mounts showed that a shell that starts before the restore ends moves to the old view. Its prompt still shows the normal path, because Bash keeps the path text in `PWD`. Bash's `pwd -P` also reads that text, so only `readlink /proc/$$/cwd` shows the real folder.
   - The runner gives each agent process the folder path as text, in `runner/src/config.ts`. So each agent process that starts after the restore ends works in the live folder. An agent process lives for one turn. The first turn of a new workspace starts when the workspace is ready, so its process can stay in the old view.
 - **Problem:** A terminal shell that starts before the restore ends, each program that the startup script starts, such as a dev server, and an agent turn that runs past the end of the restore keep the old view. A program in the old view gets the old path when it asks for its current folder. Its file watches can miss changes at the live path. If the old view is a separate copy, it does not see the live files at all.
 - **Impact if no action:** Tools can write the old path into files, such as Python virtual environments, and a dev server can miss file changes. If the old view is a separate copy, users can lose terminal work, and the agent does not see it.
 - **Root question:** How do the terminal shell and the programs that start before the restore ends keep working in the live repository folder?
 - **Options:**
   - **A.** Run the check below. If the old view shares the live files, change nothing and delete this item. Effort: Small.
-  - **B.** Add a Bash prompt hook to the terminal shell. Before each prompt, the hook moves the shell back to the live folder if the restore moved it. Programs that already run keep the old view. Effort: Small.
+  - **B.** Add a Bash prompt hook to the terminal shell. Before each prompt, the hook moves the shell to the live copy of its current folder if the restore moved it. Programs that already run keep the old view. Effort: Small.
   - **C.** Start the terminal only after Boat reports the end of the restore. The Terminal tab then waits for some seconds, or for minutes on a large disk. Effort: Medium.
   - **D.** Run the startup script and start the terminal only after the restore ends. This covers every program that the app starts. Every workspace start then waits for the restore, and that wait counts toward the 20-minute limit of a start. So a very large disk can make a start fail. Effort: Medium.
   - **E.** Apply B now. Then run the check below with its extra probes. The result chooses between no more change, G, and D. The hook runs before each Bash prompt. The check needs a deploy, an image build, and some of the user's time. Effort: Small.
@@ -63,15 +63,16 @@ cd ~/code/<name>
 - When the first `cd` says "No such file or directory", the old view is
   gone at that time. When it says "Permission denied", run the check with
   `sudo`. In both cases, you can also open the Terminal tab as soon as a
-  resumed workspace is ready. After the restore ends, `pwd -P` in that
-  shell gives the path of the old view. Run the check from that path.
+  resumed workspace is ready. After the restore ends,
+  `readlink /proc/$$/cwd` in that shell gives the path of the old view.
+  Run the check from that path.
 
 The extra probes of option E:
 
 - Change a file at the live path, then read it through the old view.
 - Watch a file in the old view, for example with `inotifywait`, while the
   file changes at the live path.
-- Run `pwd -P` in an agent command during a turn that continues past the
-  end of the restore.
+- Run `readlink /proc/$$/cwd` in an agent command during a turn that
+  continues past the end of the restore.
 - Record how long the restore takes, from `hydratedAt` of
   `GET /sandboxes/{id}`.
