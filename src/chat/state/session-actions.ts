@@ -3,7 +3,7 @@ import { isArchived } from './archive-view'
 import { isRunning } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { hydrate } from './history'
-import { beginChange, placeEdit, placeIfNewest } from './session-records'
+import { beginEdit, confirmRecord } from './session-records'
 import { viewShowing } from './sessions'
 
 /** The view already shows these tabs, with the same tab open. */
@@ -84,14 +84,19 @@ export async function newSession(context: ChatContext): Promise<void> {
     snapshot.workspace?.choice
   if (!choice) return
   try {
-    const session = await context.api.createSession(choice)
-    placeIfNewest(context, session, 0)
+    const { session, eventNumber } = await context.api.createSession(choice)
+    confirmRecord(context, session, eventNumber)
     if (context.live()) await showIfOpen(context, session.id)
   } catch (error) {
     showNotice(context, null, "The new session didn't open", error)
   }
 }
 
+/**
+ * Renames a session. The new name shows at once as a pending edit, over
+ * every record that arrives meanwhile, until the reply confirms it or the
+ * request fails. A failed rename takes back only its own edit.
+ */
 export async function renameSession(
   context: ChatContext,
   sessionId: string,
@@ -106,18 +111,13 @@ export async function renameSession(
     overlay: { kind: 'none' },
   }))
   if (!session || name === '' || name === session.title) return
-  const version = placeEdit(context, { ...session, title: name })
+  const end = beginEdit(context, sessionId, { title: name })
   try {
     const saved = await context.api.renameSession(sessionId, name)
-    placeIfNewest(context, saved, version)
+    confirmRecord(context, saved.session, saved.eventNumber)
+    end()
   } catch (error) {
-    if (!context.live()) return
-    const current = context.store
-      .get()
-      .sessions.find((item) => item.id === sessionId)
-    if (current) {
-      placeIfNewest(context, { ...current, title: session.title }, version)
-    }
+    end()
     showNotice(context, sessionId, "The new name didn't save", error)
   }
 }
@@ -127,11 +127,10 @@ async function closeSession(
   sessionId: string,
   stopRunningTurn: boolean,
 ): Promise<void> {
-  const version = beginChange(context, sessionId)
   try {
-    const session = await context.api.closeSession(sessionId, stopRunningTurn)
+    const closed = await context.api.closeSession(sessionId, stopRunningTurn)
     if (!context.live()) return
-    placeIfNewest(context, session, version)
+    confirmRecord(context, closed.session, closed.eventNumber)
     const { view, activeSessionId } = context.store.get()
     if (view) context.saveView(view)
     if (activeSessionId) await hydrate(context, activeSessionId)
@@ -177,11 +176,10 @@ export async function reopenSession(
     ...snapshot,
     overlay: { kind: 'none' },
   }))
-  const version = beginChange(context, sessionId)
   try {
-    const session = await context.api.reopenSession(sessionId)
+    const reopened = await context.api.reopenSession(sessionId)
     if (!context.live()) return
-    placeIfNewest(context, session, version)
+    confirmRecord(context, reopened.session, reopened.eventNumber)
     await showIfOpen(context, sessionId)
   } catch (error) {
     showNotice(context, null, "The session didn't reopen", error)

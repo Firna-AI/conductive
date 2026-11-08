@@ -167,12 +167,13 @@ export function createWorkspaceController(
     async acknowledgeLifecycleFirstMessage(publish): Promise<void> {
       await lifecycle.acknowledgeFirstMessage(publish)
     },
+    recoverLifecycle: (publish) => lifecycle.recoverTurns(publish),
     async registerLifecycleTurn(turn, publish): Promise<void> {
       await registerTrustedTurn(env, lifecycle, turns, turn, publish)
     },
-    async finishLifecycleTurn(turnId, publish): Promise<void> {
+    async finishLifecycleTurn(turnId, publish, occurredAt): Promise<void> {
       const turn = await turns.remove(turnId)
-      if (turn) await lifecycle.turn(turn.sessionId, false, publish)
+      if (turn) await lifecycle.turn(turn.sessionId, false, publish, occurredAt)
     },
     async credentialSender(turnId: string): Promise<string | null> {
       const state = await lifecycle.read()
@@ -188,8 +189,9 @@ export function createWorkspaceController(
         ? job.admission.first.sender.id
         : null
     },
-    async reportRunnerLifecycle(event, publish): Promise<void> {
-      const apply = () => applyRunnerLifecycle(lifecycle, turns, event, publish)
+    async reportRunnerLifecycle(event, publish, occurredAt): Promise<void> {
+      const apply = () =>
+        applyRunnerLifecycle(lifecycle, turns, event, publish, occurredAt)
       if (event.type === 'runner.ready') await starts.reportRunnerReady(apply)
       else await apply()
     },

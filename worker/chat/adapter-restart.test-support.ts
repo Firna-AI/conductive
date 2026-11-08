@@ -218,6 +218,7 @@ export async function verifyAdapterRestart(
   )
   expect(sessions.status).toBe(200)
   expect(await sessions.json()).toEqual({
+    eventNumber: 13,
     sessions: [record(record(record(failedSession).envelope).event).session],
     history: [],
   })

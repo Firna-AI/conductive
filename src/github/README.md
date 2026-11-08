@@ -33,13 +33,16 @@ const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe, delay 
 - `fetch` is the browser's `fetch`. The parts read the banner and the checks
   routes of `githubPaths`, with the session cookie of the app.
 - `subscribe(afterEventNumber, listener)` opens the event stream of the
-  workspace, and returns a function that closes it. The first message holds
-  the stored history, and later messages hold live events, as
-  `WorkspaceSocketMessage` says. The fake API's `server.events.subscribe` has
-  this shape. The workspace screen gives the GitHub events of the ordered
-  stream of the workspace, each checked with the readers of the replies, as
-  live messages with no history, because the store reads the current state
-  when it connects.
+  workspace after `afterEventNumber`, and returns a function that closes it.
+  The stream sends the stored history first, in one or more `history` pages,
+  then live events, as `WorkspaceSocketMessage` says. The pages of one replay
+  share one cutoff, and a page can leave out event numbers. The store holds
+  a live event that comes before the final page, and applies it after that
+  page. The fake API's `server.events.subscribe` has this shape. The
+  workspace screen gives the GitHub events of the ordered stream of the
+  workspace, each checked with the readers of the replies, as live messages
+  with no history, because the store reads the current state when it
+  connects.
 - `delay` is `AppServices.delay`, the timer of the app. The store waits with
   it before each [backup read](#backup-reads). The development page gives
   `browserDelay`.

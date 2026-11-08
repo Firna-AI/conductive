@@ -118,9 +118,8 @@ it('keeps pending file assembly after a post-commit crash and resumes the join a
   const history = await fixture.history()
   expect(history.events.map(({ event }) => event.type)).toEqual([
     'files.snapshot',
-    'files.snapshot',
   ])
-  expect(history.events[1]?.event).toEqual({
+  expect(history.events[0]?.event).toEqual({
     type: 'files.snapshot',
     tree: {
       revision: 2,

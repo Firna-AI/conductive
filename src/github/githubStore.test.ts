@@ -1,4 +1,9 @@
 import { expect, it } from 'vitest'
+import { ManualDelay } from '../app/test-kit'
+import type {
+  WorkspaceEventEnvelope,
+  WorkspaceSocketMessage,
+} from '../shared/events'
 import { githubPaths } from '../shared/github'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FakeWorkspaceEvents } from '../test-support/fake-events'
@@ -176,4 +181,39 @@ it('shows an error for a failed or a broken reply, loads again on Try again, and
     'ready-to-merge',
     'ready-to-merge',
   ])
+})
+
+it('shows the newest state of all history pages after the final page, then the live events that waited', () => {
+  const store = new GitHubStore(target)
+  let send: (message: WorkspaceSocketMessage) => void = () => {}
+  store.connect({
+    fetch: new FakeApiServer().fetch,
+    subscribe: (_after, listener) => {
+      send = listener
+      return () => {}
+    },
+    delay: new ManualDelay().delay,
+  })
+  const states: string[] = []
+  store.subscribe(() => states.push(shown(store)))
+  const page = (
+    events: WorkspaceEventEnvelope[],
+    next?: number,
+  ): WorkspaceSocketMessage => ({
+    type: 'history',
+    history:
+      next === undefined
+        ? { events, throughEventNumber: 10 }
+        : {
+            events,
+            throughEventNumber: 10,
+            hasMore: true,
+            nextAfterEventNumber: next,
+          },
+  })
+  send(page([githubEvent(2, 'checks-running')], 5))
+  send({ type: 'event', envelope: githubEvent(11, 'merged') })
+  expect(states).toEqual([])
+  send(page([githubEvent(8, 'checks-failed')]))
+  expect(states).toEqual(['checks-failed', 'merged'])
 })

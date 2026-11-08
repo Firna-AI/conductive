@@ -1,10 +1,11 @@
 import type { UserMessage } from '../../shared/messages'
 import type {
+  OrderedWorkspaceResponse,
   StartStep,
-  WorkspaceResponse,
   WorkspaceState,
 } from '../../shared/workspaces'
 import type { DevBackend } from './dev-backend'
+import { setActiveTurn } from './dev-sessions'
 
 function setState(backend: DevBackend, state: WorkspaceState): void {
   backend.workspace = {
@@ -24,7 +25,7 @@ function later(backend: DevBackend, delay: number, run: () => void): void {
 }
 
 /** Resume: the sandbox starts again with its files, then becomes ready. */
-export function resume(backend: DevBackend): WorkspaceResponse {
+export function resume(backend: DevBackend): OrderedWorkspaceResponse {
   const now = backend.clock.now()
   backend.start = {
     kind: 'resume',
@@ -42,7 +43,12 @@ export function resume(backend: DevBackend): WorkspaceResponse {
   setState(backend, 'starting')
   backend.stream.emit({ type: 'start.updated', start: backend.start })
   later(backend, 2_500, () => makeReady(backend))
-  return { workspace: backend.workspace, start: backend.start, error: null }
+  return {
+    workspace: backend.workspace,
+    start: backend.start,
+    error: null,
+    eventNumber: backend.stream.last,
+  }
 }
 
 function addStep(backend: DevBackend, id: string, label: string): void {
@@ -111,6 +117,7 @@ function endTurn(backend: DevBackend, sessionId: string): void {
     omittedFileCount: 0,
     userMessageIds: [],
   })
+  setActiveTurn(backend, sessionId, null, null)
 }
 
 /**

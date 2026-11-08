@@ -28,6 +28,7 @@ export async function createSession(
     createdAt: transaction.now,
     closedAt: null,
     activeTurnId: null,
+    activeTurnStartedAt: null,
     retryMessageId: null,
     startedBy: {
       id: startedBy.id,

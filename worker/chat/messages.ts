@@ -46,6 +46,7 @@ export async function responseFor(
   const turnId = await transaction.messageTurn(message.id)
   const turn = turnId ? await transaction.turn(turnId) : undefined
   return {
+    eventNumber: transaction.eventNumber,
     message,
     turnId: turn && turn.state !== 'queued' ? turn.id : null,
     session: await sessionFor(transaction, message.sessionId),

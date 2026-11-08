@@ -9,7 +9,6 @@ import type { AppDependencies, AppEnv } from '../env'
 import { handleLifecycleRequest } from '../lifecycle/browser'
 import { imageRuntime, workspaceRuntime } from '../lifecycle/runtime'
 import { readWorkspace } from '../lifecycle/workspace-data'
-import { workspaceResponse } from '../lifecycle/workspace-response'
 import { requireFeatureResult } from '../features/result'
 import type { RequestContext } from '../security/gate'
 import { workspaceChildId } from './workspace-path'
@@ -61,17 +60,17 @@ export async function chatLifecycleRoute(
         .resumeMemberCreation(orgId, workspaceId, context.user.id),
     )
   ) {
-    const resumed = await workspaceResponse(
-      workspaceRuntime(lifecycleEnv, dependencies),
-      orgId,
-      workspaceId,
-    )
+    const ordered = await binding
+      .getByName(workspaceId, { locationHint: 'weur' })
+      .readChatWorkspaceResponse(orgId, workspaceId)
     return Response.json({
-      ...resumed,
+      ...ordered.response,
       workspace: await workspaceForViewer(
         env,
         context.user.id,
-        resumed.workspace,
+        ordered.response.workspace,
+        undefined,
+        ordered.summary,
       ),
     })
   }
@@ -90,14 +89,30 @@ export async function chatLifecycleRoute(
         binding
           .getByName(first.workspaceId, { locationHint: 'weur' })
           .acceptLifecycleFirstMessage(first),
-      projectWorkspace: async (response) => ({
-        ...response,
-        workspace: await workspaceForViewer(
-          env,
-          context.user.id,
-          response.workspace,
-        ),
-      }),
+      projectWorkspace: async (response) => {
+        if (create)
+          return {
+            ...response,
+            workspace: await workspaceForViewer(
+              env,
+              context.user.id,
+              response.workspace,
+            ),
+          }
+        const ordered = await binding
+          .getByName(response.workspace.id, { locationHint: 'weur' })
+          .readChatWorkspaceResponse(orgId, response.workspace.id)
+        return {
+          ...ordered.response,
+          workspace: await workspaceForViewer(
+            env,
+            context.user.id,
+            ordered.response.workspace,
+            undefined,
+            ordered.summary,
+          ),
+        }
+      },
       waitUntil: (promise) => execution?.waitUntil(promise),
     },
   )

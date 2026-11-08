@@ -39,7 +39,18 @@ function envelope(event: unknown) {
 
 it('reads exact positive omission counts from browser event envelopes', () => {
   for (const event of [tool, completed]) {
-    expect(readEnvelope(envelope(event))).toEqual(envelope(event))
+    expect(readEnvelope(envelope(event))).toEqual({
+      ...envelope(event),
+      late: false,
+    })
+  }
+})
+
+it('keeps the late mark of the workspace, and only the value true', () => {
+  const marked = (late: unknown) => ({ ...envelope(tool), late })
+  expect(readEnvelope(marked(true))).toEqual({ ...envelope(tool), late: true })
+  for (const value of [false, 'true', 1, null]) {
+    expect(readEnvelope(marked(value)).late).toBe(false)
   }
 })
 
@@ -61,7 +72,10 @@ it('reads refusal markers with nullable session and turn context', () => {
     },
   ]
   for (const event of markers) {
-    expect(readEnvelope(envelope(event))).toEqual(envelope(event))
+    expect(readEnvelope(envelope(event))).toEqual({
+      ...envelope(event),
+      late: false,
+    })
   }
 })
 

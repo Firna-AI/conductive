@@ -52,6 +52,7 @@ export function chatDependencies(
     runnerDetached: () => undefined,
     runnerEventStored: async () => undefined,
     runnerReady: async () => undefined,
+    runnerHello: async () => undefined,
     runnerDisconnected: async () => undefined,
     turnDispatching: async () => true,
     turnDispatchFailed: async () => undefined,

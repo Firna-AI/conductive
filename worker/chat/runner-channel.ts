@@ -137,6 +137,10 @@ export class RunnerChannel {
         confirmedThrough: welcome.cursor,
       })
       await this.repairs.flush(active)
+      await this.dependencies.runnerHello(
+        active.workspace.id,
+        this.publisher(active.workspace.id),
+      )
       if (active.ready)
         await this.dependencies.runnerReady(
           active.workspace.id,

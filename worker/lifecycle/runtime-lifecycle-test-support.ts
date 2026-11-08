@@ -5,6 +5,7 @@ import type { WorkspaceStartJob } from './start-types'
 import type { realRuntimeFixture } from './real-runtime-test-support'
 import { readSavedScript } from './saved-script'
 import { serializeStartJob } from './start-job-codec'
+import { connectRuntimeChat } from './runtime-chat-test-support'
 
 export async function runningRuntimeWorkspace(
   fixture: Awaited<ReturnType<typeof realRuntimeFixture>>,
@@ -66,12 +67,7 @@ export async function runningRuntimeWorkspace(
     workspaceId,
   )
   if (!sandboxId) throw new Error('No runtime sandbox')
-  await actor.reportRunnerLifecycle({ type: 'runner.ready' })
-  for (const suffix of ['one', 'two'])
-    await actor.registerLifecycleTurn({
-      turnId: `turn-${suffix}`,
-      sessionId: `session-${suffix}`,
-      senderUserId: 'runtime-user',
-    })
-  return { actor, workspaceId, sandboxId }
+  const chat = await connectRuntimeChat(fixture, workspaceId)
+  await chat.startTurn('two')
+  return { actor, workspaceId, sandboxId, ...chat }
 }

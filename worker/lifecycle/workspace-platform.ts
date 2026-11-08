@@ -1,5 +1,8 @@
 import type { WorkspaceEvent } from '../../src/shared/events'
-import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
+import type {
+  PendingTurn,
+  WorkspaceLifecycleEndpoint,
+} from './workspace-runtime'
 import {
   nativeWorkspaceStorage,
   type WorkspaceStorage,
@@ -9,6 +12,12 @@ export interface WorkspaceEventPublication {
   workspaceId: string
   event: WorkspaceEvent
   occurredAt: number
+}
+
+export interface WorkspaceChatRecovery {
+  runningTurns: readonly PendingTurn[]
+  lastTurnEndedAt: number | null
+  title: { name: string; occurredAt: number } | null
 }
 
 export interface WorkspacePlatform {
@@ -22,6 +31,8 @@ export interface WorkspacePlatform {
   stopped?(workspaceId: string): Promise<void>
   stopping?(workspaceId: string): Promise<void>
   deviceWaiting?(workspaceId: string): Promise<boolean>
+  readChatRecovery?(workspaceId: string): Promise<WorkspaceChatRecovery>
+  chatRecovered?(): void
 }
 
 export function nativeWorkspacePlatform(

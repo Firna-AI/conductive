@@ -28,6 +28,9 @@ export interface ChatData {
   list<T>(options: {
     prefix: string
     startAfter?: string
+    limit?: number
+    end?: string
+    reverse?: boolean
   }): Promise<Map<string, T>>
 }
 
@@ -54,6 +57,7 @@ export interface StoredTurn {
   state: 'queued' | 'running' | 'stopping' | 'finished' | 'stopped' | 'failed'
   /** Retained dispatch evidence. Older records may have no evidence. */
   started?: boolean
+  startedAt?: number
   closeAfterStop: boolean
   /** Internal waiting work. Older records have no successor. */
   nextTurnId?: string | null
@@ -167,6 +171,10 @@ export interface ChatDependencies {
     publish: ChatCallbackPublisher,
   ) => Promise<void>
   runnerReady: (
+    workspaceId: string,
+    publish: ChatCallbackPublisher,
+  ) => Promise<void>
+  runnerHello: (
     workspaceId: string,
     publish: ChatCallbackPublisher,
   ) => Promise<void>

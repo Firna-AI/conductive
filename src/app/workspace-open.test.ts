@@ -135,7 +135,14 @@ test('a confirmed owner reply clears the refusal and keeps the current detail fi
   expect(workspace.startError.get()).toMatchObject({ code: 'user_suspended' })
   const oldReply = workspaceFixtures('starting').detail
   fixture.allowStart()
-  server.json('POST', resumePath, oldReply)
+  // The server took the title at event 1, then the Resume at event 2, so
+  // its reply holds the title. The owner change has no number, and it comes
+  // after the reply was made.
+  server.json('POST', resumePath, {
+    ...oldReply,
+    workspace: { ...oldReply.workspace, name: 'Newer workspace title' },
+    eventNumber: 2,
+  })
   held.holdAnswer('POST', resumePath)
   const resuming = workspace.resume()
   expect(workspace.startError.get()).toMatchObject({ code: 'user_suspended' })
@@ -196,7 +203,10 @@ test('keeps an errored workspace open after a general start failure and permits 
     code: 'workspace_start_failed',
   })
   fixture.allowStart()
-  server.json('POST', resumePath, workspaceFixtures('starting').detail)
+  server.json('POST', resumePath, {
+    ...workspaceFixtures('starting').detail,
+    eventNumber: 0,
+  })
   await workspace.resume()
   expect(workspace.detail.get()).toMatchObject({
     state: 'ready',

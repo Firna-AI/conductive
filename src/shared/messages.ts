@@ -43,6 +43,7 @@ export interface UserMessage {
 }
 
 export interface SendMessageResponse {
+  eventNumber: number
   message: UserMessage
   turnId: string | null
   session: Session

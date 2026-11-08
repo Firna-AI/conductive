@@ -147,14 +147,14 @@ members from the models of the app.
 - A Stop request records the member who pressed Stop, and ends nothing. The
   turn ends when its end says stopped. A stop with no request names nobody:
   "The agent stopped".
-- Session records and the workspace record carry no order from the server,
-  so the chat counts a local version for each session and one for the
-  workspace record with its start steps. A newer action or stream event wins
-  over an older reply or rollback. So a Resume reply never hides a newer
-  state from the stream, such as a failed start with its Try again. The steps
-  after an action, such as a view save, the focus, or a free Resume button,
-  still run when its reply is older. The retry message is the exception: the
-  session log orders its records by event number, as the rules above say.
+- Each reply, read, and event with a session record, or with the workspace
+  record and its start steps, carries the event number of its state. The
+  newest number wins, whatever arrives first. So a Resume reply never
+  hides a newer state from the stream, such as a failed start with its Try
+  again. The steps after an action, such as a view save, the focus, or a
+  free Resume button, still run when its reply is older. The header of
+  [`state/session-records.ts`](state/session-records.ts) gives the pending
+  edits of a rename or a model change.
 - Send waits in every session until the records show that the first start
   of the workspace succeeded. The Worker refuses each new message until
   then, as [Messages](../../docs/protocol/chat-and-events.md#messages) says.
@@ -243,8 +243,9 @@ check in the Mac app.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
-- `state/session-log.ts`: the event log of each session, with the retry
-  message of its newest record and `takeListed` for the session list.
+- `state/session-log.ts`: the event log of each session, with its records
+  in event order and its newest record. `offer` takes the record of a read
+  or a reply.
 - `state/known-turns.ts`: the known turns, their order, their ends, and
   `retryItemId`, the one failed item that offers Try again.
 - `state/placement.ts`: where an item goes in its turn, also a late one.
@@ -259,8 +260,8 @@ check in the Mac app.
   workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot
   that first shows the new session.
-- `state/session-records.ts`: the local versions of the session records and
-  of the workspace record.
+- `state/session-records.ts`: the order of the session records and of the
+  workspace record by event number, and the pending edits of a session.
 - `state/first-start.ts`: the success of the first start of the workspace,
   which the snapshot remembers, and the wait of Send until then.
 - `state/session-login.ts`: whose login a message uses, from the session

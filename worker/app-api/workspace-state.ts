@@ -1,5 +1,6 @@
 import type { Workspace } from '../../src/shared/workspaces'
 import type { AppEnv } from '../env'
+import type { ChatWorkspaceSummary } from '../chat/workspace-summary'
 import { HttpError } from '../http'
 import { workspaceReadMark } from './shell-data'
 
@@ -18,6 +19,7 @@ export async function workspaceForViewer(
   userId: string,
   workspace: Workspace,
   readThroughEventNumber?: number,
+  suppliedSummary?: ChatWorkspaceSummary,
 ): Promise<Workspace> {
   if (workspace.archivedAt !== null || workspace.state === 'archived')
     return { ...workspace, state: 'archived' }
@@ -29,9 +31,10 @@ export async function workspaceForViewer(
   )
     return workspace
   const [summary, readThrough] = await Promise.all([
-    workspaceBinding(env)
-      .getByName(workspace.id, { locationHint: 'weur' })
-      .readChatWorkspaceSummary(),
+    suppliedSummary ??
+      workspaceBinding(env)
+        .getByName(workspace.id, { locationHint: 'weur' })
+        .readChatWorkspaceSummary(),
     readThroughEventNumber === undefined
       ? workspaceReadMark(env.DB, workspace.id, userId)
       : readThroughEventNumber,

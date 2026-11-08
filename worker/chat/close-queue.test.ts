@@ -46,6 +46,7 @@ describe('closing a session with waiting work', () => {
     expect(waitingId).not.toBe(active.turnId)
     const cancelled = await fixture.fetch(interruptPath, { turnId: waitingId })
     expect(await cancelled.json()).toEqual({
+      eventNumber: 14,
       turnId: waitingId,
       state: 'stopped',
     })

@@ -46,8 +46,11 @@ The [archive route](archive.ts) uses the real workspace object to check saved wo
   it stops at the last event number of the workspace.
 - The list and the lifecycle replies give each reader one state.
   Archived, starting, stopped, error, and input come from the workspace
-  record. Otherwise, `readChatWorkspaceSummary` of the workspace object and
-  the reader's read mark give working, unread, or ready.
+  record. Otherwise, the chat summary of the workspace object and the
+  reader's read mark give working, unread, or ready. The list and a create
+  reply read it with `readChatWorkspaceSummary`. A read or a Resume reply
+  takes it from the same read as its record, as
+  [Browser routes](../lifecycle/README.md#browser-routes) says.
 - A workspace path decodes its workspace ID once.
 - An archived workspace keeps its view readable. A view write, a read mark,
   and a lifecycle action get `409 workspace_archived`.

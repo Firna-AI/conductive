@@ -8,8 +8,8 @@ A file name without a folder names a file in `worker/chat/`.
 `WorkspaceChat` takes `ChatDependencies` from `types.ts` as overrides.
 `createWorkspaceIntegration` in `workspace-integration.ts` sets them for
 the workspace object, as [The workspace lifecycle](#the-workspace-lifecycle)
-says. Its `runnerEventStored` also starts device cleanup when a turn ends,
-including a refused turn end. A later handler must keep that call.
+says. Its `runnerEventStored` starts device cleanup at each turn end, also
+after a refused end or a lifecycle error. A later handler must keep it.
 
 ## Trusted workspace calls
 
@@ -160,19 +160,23 @@ methods of `Workspace`.
 
 - Each hook passes its `publish` argument to the lifecycle. So the
   lifecycle events of a hook commit in the task of that hook.
+- `runnerHello(workspaceId, publish)` runs after each `welcome`, also on a
+  stream that is not ready. It repairs the lifecycle, as
+  [Turn recovery](../../lifecycle/workspace-object.md#turn-recovery) says.
 - `runnerReady(workspaceId, publish)` runs after the Durable Object stores
-  each `runner.ready` event. It reports the event to the lifecycle. A
-  runner that is ready before the start is prepared gets its turns only
-  after that. Their messages and model changes wait behind them.
+  each `runner.ready` event, and after `runnerHello` on a stream that sent
+  it before. It reports the event to the lifecycle. A runner that is ready
+  before the start is prepared gets its turns only after that. Their
+  messages and model changes wait behind them.
 - `runnerEventStored(envelope, publish)` runs after each other stored runner
   event or refusal marker. It reports `turn.started`, `turn.completed`,
-  `turn.failed`, and `start.updated`. A refused `turn.completed` or
-  `turn.failed` ends its lifecycle turn.
+  `turn.failed`, and `start.updated`, with their stored `occurredAt`. A
+  refused `turn.completed` or `turn.failed` ends its lifecycle turn.
 - A `workspace.title` updates the name of the workspace in D1. It is not
   unread output.
-- Both runner hooks run after the commit and the confirm. A hook error
-  closes the runner connection, and the runner does not send that event
-  again.
+- `runnerReady` and `runnerEventStored` run after the commit and the
+  confirm. A hook error closes the runner connection, and the runner does
+  not send that event again. The next `hello` repairs the turns and the name.
 - `turnDispatching` registers the sender of a turn with the lifecycle
   before the command goes out. While the lifecycle state allows no turn, it
   returns `false`, and the turn waits. `turnDispatchFailed` removes that

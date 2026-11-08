@@ -165,13 +165,13 @@ export function withSession(
   }
 }
 
-/** A session runs a turn: its transcript says so, or its record before it loads. */
+/**
+ * A session runs a turn. Its transcript says so from the events and the
+ * records of the session, so a record shows a running turn also before the
+ * history loads, or when it fails.
+ */
 export function isRunning(snapshot: ChatSnapshot, sessionId: string): boolean {
-  const state = sessionState(snapshot, sessionId)
-  if (state.transcript.turn) return true
-  if (state.hydration === 'ready') return false
-  const session = snapshot.sessions.find((item) => item.id === sessionId)
-  return session?.activeTurnId != null
+  return sessionState(snapshot, sessionId).transcript.turn !== null
 }
 
 /** Holds the snapshot, and tells React when it changes. */

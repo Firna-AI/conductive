@@ -66,10 +66,11 @@ export async function prepareAgentEvent(
   }
   return async () => {
     if (target.ended) {
-      await transaction.emit(event, occurredAt)
+      await transaction.emit(event, occurredAt, true)
       return
     }
     turn.started = true
+    if (event.type === 'turn.started') turn.startedAt = event.startedAt
     if (event.type === 'turn.started' && turn.state !== 'stopping')
       turn.state = 'running'
     for (const messageId of acknowledged)

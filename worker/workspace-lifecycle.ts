@@ -278,9 +278,11 @@ export class WorkspaceLifecycle
         this.env,
         this.controller,
         (id) => this.env.WORKSPACES.idFromName(id).equals(this.ctx.id),
-        (id, after) =>
+        (id, work) =>
           this.chat.store.run(() =>
-            this.chat.store.read(id, (view) => view.history(after)),
+            work((after, through) =>
+              this.chat.store.read(id, (view) => view.history(after, through)),
+            ),
           ),
       )) ?? response
     )

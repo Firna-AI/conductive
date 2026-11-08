@@ -65,8 +65,8 @@ export function withSessions(
 ): void {
   const { sessions } = workspaceFixtures()
   server.json('GET', sessionsPath(org, ws), {
+    ...sessions,
     sessions: sessions.sessions.map(change),
-    history: sessions.history,
   })
 }
 
@@ -98,6 +98,7 @@ export function opensLinked(server: FakeApiServer) {
       ? acceptedIn(LINKED, text(body.id), text(body.text))
       : acceptedIn(LINKED, 'retry-1', workspaceFixtures().message.text)
     const reply: SendMessageResponse = {
+      eventNumber: 0,
       message,
       turnId: 'turn-9',
       session: linkedRecord(),

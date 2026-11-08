@@ -48,6 +48,7 @@ describe('workspace chat commands', () => {
     )
     const same: ChangeModelResponse = await sameResponse.json()
     expect(same).toEqual({
+      eventNumber: 2,
       session: { ...session, choice: nextChoice },
       created: false,
       draft,
@@ -161,6 +162,7 @@ describe('workspace chat commands', () => {
       { turnId: continued.turnId },
     )
     expect(await stopped.json()).toEqual({
+      eventNumber: 11,
       turnId: continued.turnId,
       state: 'stopping',
     })

@@ -2,6 +2,7 @@ import type { Attachment, UserMessage } from '../../shared/messages'
 import type {
   ArchiveCheckResponse,
   CreateWorkspaceResponse,
+  OrderedWorkspaceResponse,
   StartStep,
   Workspace,
   WorkspaceResponse,
@@ -84,6 +85,21 @@ export function readWorkspaceResponse(value: unknown): WorkspaceResponse {
         log: maybeText(error, 'log'),
       }
     }),
+  }
+}
+
+/**
+ * A read of the workspace or a Resume reply, with the workspace event number
+ * whose state it holds. A create, an Archive, and the other writes carry no
+ * number, so they read with `readWorkspaceResponse`.
+ */
+export function readOrderedWorkspaceResponse(
+  value: unknown,
+): OrderedWorkspaceResponse {
+  const body = record(value, 'workspace response')
+  return {
+    ...readWorkspaceResponse(body),
+    eventNumber: count(body, 'eventNumber'),
   }
 }
 

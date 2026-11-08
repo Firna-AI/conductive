@@ -98,7 +98,12 @@ describe('client-selected model session IDs', () => {
       'PUT',
     )
     expect(retry.status).toBe(200)
-    expect(await retry.json()).toEqual({ created: true, session, draft })
+    expect(await retry.json()).toEqual({
+      eventNumber: 8,
+      created: true,
+      session,
+      draft,
+    })
     expect(await fixture.history('__proto__')).toEqual(history)
     const duplicateSource = await fixture.fetch(
       path,

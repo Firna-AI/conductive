@@ -1,3 +1,4 @@
+import { readChatWorkspaceResponse } from './chat/workspace-response'
 import type {
   WorkspaceCompositionEnv,
   WorkspaceChatResolvers,
@@ -132,6 +133,19 @@ export class Workspace extends WorkspaceLifecycle {
           workspaceId,
           userId,
         ),
+      ),
+    )
+  }
+
+  readChatWorkspaceResponse(orgId: string, workspaceId: string) {
+    return this.chat.runLifecycle(() =>
+      readChatWorkspaceResponse(
+        this.env,
+        this.chat.store,
+        orgId,
+        workspaceId,
+        () => this.controller.readLifecycle(),
+        () => this.controller.readLifecycleStartLog(),
       ),
     )
   }

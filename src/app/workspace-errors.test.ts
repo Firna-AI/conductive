@@ -38,7 +38,7 @@ test('a live failed start keeps its saved cause and steps over an older Resume r
   await workspace.open()
   const before = valueOf(workspace.detail.get())
   if (!before) throw new Error('The workspace did not open.')
-  server.json('POST', resumePath, before)
+  server.json('POST', resumePath, { ...before, eventNumber: 0 })
   held.holdAnswer('POST', resumePath)
   const resuming = workspace.resume()
   events.send({

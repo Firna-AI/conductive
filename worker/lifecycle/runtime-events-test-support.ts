@@ -5,13 +5,17 @@ import type { SocketInbox } from '../chat/adapter-sockets.test-support'
 import { counter, record } from '../chat/inputs'
 import type { StartStep } from '../../src/shared/workspaces'
 
-export function publicHistory(value: unknown) {
-  const message = record(value)
-  expect(message.type).toBe('history')
-  const history = record(message.history)
-  return {
-    events: array(history.events, record),
-    throughEventNumber: counter(history.throughEventNumber),
+export async function publicHistory(inbox: SocketInbox) {
+  const events: Record<string, unknown>[] = []
+  let through: number | undefined
+  while (true) {
+    const message = record(await inbox.next())
+    expect(message.type).toBe('history')
+    const history = record(message.history)
+    through ??= counter(history.throughEventNumber)
+    expect(counter(history.throughEventNumber)).toBe(through)
+    events.push(...array(history.events, record))
+    if (history.hasMore !== true) return { events, throughEventNumber: through }
   }
 }
 

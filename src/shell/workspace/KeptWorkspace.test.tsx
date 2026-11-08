@@ -8,7 +8,7 @@ import type { AgentChoice } from '../../shared/agents'
 import { API_PATHS, orgPath } from '../../shared/api'
 import { membersPath } from '../../shared/members'
 import { sessionsPath } from '../../shared/sessions'
-import { workspacePath } from '../../shared/workspaces'
+import { workspacePath, workspacePaths } from '../../shared/workspaces'
 import {
   byLabel,
   byRole,
@@ -94,7 +94,10 @@ describe('a workspace that the tab showed', () => {
     await settle()
     // The model, the chat, and the files each keep their own socket.
     expect(socket.opens.slice(first)).toEqual([kept, kept, kept])
-    expect(chatRequests(server, before).sort()).toEqual(returnReads)
+    // The events that arrived while away also get their read mark.
+    expect(chatRequests(server, before).sort()).toEqual(
+      [...returnReads, `PUT ${workspacePaths.read(org, id)}`].sort(),
+    )
     expect(headerName(view)).toBe('Saved addresses')
     expect(queryByRole('button', 'Address lookups', view)).not.toBeNull()
     // The name came in a full report, so the failed repair is over.
