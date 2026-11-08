@@ -401,11 +401,16 @@ Depends on: every other milestone
 - [x] Run the targeted tests and the complete gate, `npm run check`.
       Gate log: `.context/preferences-and-new-workspace-dialog/gate-1.log`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+      Round 1 found 2 Medium findings, both fixed in `08449d4`: the focus
+      after the dialog opens another screen, and the account isolation
+      test of the new preference. Round 2 found none. The complete gate
+      passed after the fixes. Reports:
+      `.context/reviews/calummoore/user-preferences-screen/`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
