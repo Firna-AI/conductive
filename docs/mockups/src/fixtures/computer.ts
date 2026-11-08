@@ -59,10 +59,32 @@ export const buildHistory: readonly Build[] = [
   { when: '28 Oct', result: 'succeeded', duration: '7m 13s' },
 ]
 
-/** The build that runs, or the build that failed, in those states. */
+/** The build that runs, in that state. */
 export const runningBuild = { elapsed: '2m 14s' } as const
-export const failedBuild: Build = {
+
+/**
+ * Each build and refresh runs for at most 60 minutes from its start. A
+ * build that runs says so under its log.
+ */
+export const buildLimit = 'Each build has a 60-minute limit.'
+
+/** A build that ended in failure, with the message that the app saved. */
+export type FailedBuild = Build & { result: 'failed'; error: string }
+
+/** The build that failed because its install script failed. */
+export const failedBuild: FailedBuild = {
   when: '12 minutes ago',
   result: 'failed',
   duration: '2m 18s',
+  error:
+    'The cloud computer image could not build. Check the log and try again.',
+}
+
+/** The build that the app stopped at its 60-minute limit. */
+export const timedOutBuild: FailedBuild = {
+  when: '1 hour ago',
+  result: 'failed',
+  duration: '1h 00m',
+  error:
+    'The cloud computer image did not build within the 60-minute limit. Check the log and try again.',
 }

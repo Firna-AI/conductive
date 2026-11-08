@@ -1,6 +1,7 @@
+import { advanceStartStop } from './durable-start-stop'
 import { reconciledLifecycle } from './durable-reconciliation'
+import { isConfirmedStopped } from './confirmed-stop'
 import {
-  DISK_KEEPALIVE_MS,
   IDLE_MS,
   type DurableLifecycleState,
   type LifecycleHooks,
@@ -8,30 +9,30 @@ import {
 } from './durable-types'
 
 export async function advanceLifecycleAlarm(
-  state: DurableLifecycleState | undefined,
-  hooks: LifecycleHooks,
   storage: LifecycleStorage,
+  hooks: LifecycleHooks,
+  initial: DurableLifecycleState,
   now: () => number,
   write: (state: DurableLifecycleState) => Promise<void>,
+  keepalive: (state: DurableLifecycleState) => Promise<unknown>,
 ): Promise<void> {
-  if (!state || state.state === 'archived') return
+  let state = initial
+  if (state.state === 'archived') return
+  if (state.startStop === 'pending') {
+    await write(await advanceStartStop(state, hooks, now))
+    return
+  }
   let stopPending = false
-  if (!state.runnerConnected && state.state !== 'stopped' && hooks.reconcile)
+  if (!state.runnerConnected && !isConfirmedStopped(state) && hooks.reconcile) {
     state = reconciledLifecycle(state, await hooks.reconcile(), now())
-  if (state.state === 'stopped') {
+  }
+  if (isConfirmedStopped(state)) {
     if (
       state.nextDiskKeepaliveAt !== null &&
       state.nextDiskKeepaliveAt <= now()
     ) {
-      if ((await hooks.keepalive()) === false) {
-        await storage.setAlarm(now() + 5_000)
-        return
-      }
-      state = {
-        ...state,
-        stoppedAt: now(),
-        nextDiskKeepaliveAt: now() + DISK_KEEPALIVE_MS,
-      }
+      await keepalive(state)
+      return
     }
   } else if (state.runningSessions.length) {
     state = reconciledLifecycle(state, await hooks.extendDeadline(), now())

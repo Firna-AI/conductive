@@ -36,6 +36,54 @@ function tabLabels(html: string): string[] {
   )
 }
 
+/** The good build that new workspaces start from, built 3 hours ago. */
+const goodBuild: ImageBuild = {
+  id: 'build-good',
+  orgId: FAKE_IDS.org,
+  kind: 'build',
+  state: 'succeeded',
+  startedAt: FAKE_TIME - 3 * hour,
+  completedAt: FAKE_TIME - 3 * hour + 401_000,
+  durationMs: 401_000,
+  error: null,
+}
+
+/**
+ * The Cloud computer tab as text, when `newest` is the newest build and
+ * `goodBuild` the one that workspaces start from. `log` gives the texts of
+ * the log events of the newest build, in their order.
+ */
+async function computerText(
+  server: FakeApiServer,
+  newest: ImageBuild,
+  log: readonly string[],
+): Promise<string> {
+  server.json('GET', orgSettingsPaths.builds(FAKE_IDS.org), {
+    builds: [newest, goodBuild],
+    currentImageBuildId: goodBuild.id,
+  })
+  server.json('GET', buildPath(FAKE_IDS.org, newest.id), {
+    build: newest,
+    log: log.map((text, index) => ({
+      eventNumber: index + 1,
+      occurredAt: newest.startedAt + index,
+      text,
+    })),
+  })
+  const { app, org, model } = await signedIn(server)
+  await model.reload('builds')
+  // The model follows the log of the newest build. Its timer waits on a
+  // manual delay, so the clock of the test stands still.
+  const computer = new ComputerModel(model, new ManualDelay().delay)
+  computer.start()
+  await flushMicrotasks()
+  const text = textOf(
+    renderScreen(app, <ComputerSettings computer={computer} org={org} />),
+  )
+  computer.stop()
+  return text
+}
+
 describe('OrgSettingsScreen', () => {
   test('an admin gets the tabs General, Repositories, Cloud computer, and Members, and fields for the name and the initials', async () => {
     const { app, org, user } = await signedIn(new FakeApiServer())
@@ -81,20 +129,10 @@ describe('OrgSettingsScreen', () => {
     expect(text).not.toContain('Cloud computers run')
   })
 
-  test('a failed newest build shows the end of its log, Try again, and the good build that workspaces still start from', async () => {
+  test('a failed newest build shows its saved message, the end of its log, Try again, and the good build that workspaces still start from', async () => {
     const server = new FakeApiServer()
-    const good: ImageBuild = {
-      id: 'build-good',
-      orgId: FAKE_IDS.org,
-      kind: 'build',
-      state: 'succeeded',
-      startedAt: FAKE_TIME - 3 * hour,
-      completedAt: FAKE_TIME - 3 * hour + 401_000,
-      durationMs: 401_000,
-      error: null,
-    }
     const failed: ImageBuild = {
-      ...good,
+      ...goodBuild,
       id: 'build-failed',
       state: 'failed',
       startedAt: FAKE_TIME - 12 * minute,
@@ -102,38 +140,31 @@ describe('OrgSettingsScreen', () => {
       durationMs: 138_000,
       error: 'The install script stopped with exit code 1.',
     }
-    server.json('GET', orgSettingsPaths.builds(FAKE_IDS.org), {
-      builds: [failed, good],
-      currentImageBuildId: good.id,
-    })
-    server.json('GET', buildPath(FAKE_IDS.org, failed.id), {
-      build: failed,
-      log: [
-        { eventNumber: 1, occurredAt: failed.startedAt, text: 'Running the ' },
-        {
-          eventNumber: 2,
-          occurredAt: failed.startedAt + 1,
-          text: 'install script\nnpm error code ERESOLVE\n',
-        },
-        {
-          eventNumber: 3,
-          occurredAt: failed.startedAt + 2,
-          text: 'The install script stopped with exit code 1.\n',
-        },
-      ],
-    })
-    const { app, org, model } = await signedIn(server)
-    await model.reload('builds')
-    const computer = new ComputerModel(model, new ManualDelay().delay)
-    // The model follows the log of the newest build, which failed.
-    computer.start()
-    await flushMicrotasks()
-    const text = textOf(
-      renderScreen(app, <ComputerSettings computer={computer} org={org} />),
-    )
-    computer.stop()
+    const text = await computerText(server, failed, [
+      'Running the ',
+      'install script\nnpm error code ERESOLVE\n',
+      'The install script stopped with exit code 1.\n',
+    ])
     expect(text).toContain(
-      'Last build 12 minutes ago Failed after 2m 18s Try again Running the install script npm error code ERESOLVE The install script stopped with exit code 1. Workspaces still start from the build of 3 hours ago. History (2)',
+      'Last build 12 minutes ago Failed after 2m 18s Try again The install script stopped with exit code 1. Running the install script npm error code ERESOLVE The install script stopped with exit code 1. Workspaces still start from the build of 3 hours ago. History (2)',
+    )
+  })
+
+  test('a running build names its 60-minute limit under its log', async () => {
+    const server = new FakeApiServer()
+    const running: ImageBuild = {
+      ...goodBuild,
+      id: 'build-running',
+      state: 'running',
+      startedAt: FAKE_TIME - 134_000,
+      completedAt: null,
+      durationMs: null,
+    }
+    const text = await computerText(server, running, [
+      'Running the install script\n',
+    ])
+    expect(text).toContain(
+      'Building · 2m 14s Build computer Running the install script Workspaces start from the build of 3 hours ago until this one finishes. Each build has a 60-minute limit.',
     )
   })
 })

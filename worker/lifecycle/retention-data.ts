@@ -1,3 +1,5 @@
+import { workspaceTokenResourcePredicate } from '../data/workspace-token-access'
+
 export interface RetentionProgress {
   phase: 'resume' | 'wait' | 'startup' | 'stop'
   error: string | null
@@ -37,4 +39,18 @@ export async function clearRetention(
     .prepare('DELETE FROM workspace_retention WHERE workspace_id = ?')
     .bind(workspaceId)
     .run()
+}
+export async function retentionResourceAllowed(
+  db: D1Database,
+  workspaceId: string,
+  sandboxId: string,
+): Promise<boolean> {
+  const resource = await db
+    .prepare(
+      `SELECT w.id FROM workspaces w WHERE w.id = ? AND w.sandbox_id = ?
+     AND ${workspaceTokenResourcePredicate}`,
+    )
+    .bind(workspaceId, sandboxId)
+    .first()
+  return resource !== null
 }

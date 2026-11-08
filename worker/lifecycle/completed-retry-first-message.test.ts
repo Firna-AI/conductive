@@ -61,8 +61,14 @@ it('retries a completed create with the admitted first message after initial cha
   expect(first.request).toEqual(original)
   const actor = fixture.starts.get(first.workspaceId)
   if (!actor) throw new Error('Missing admitted actor')
-  for (let step = 0; step < 16 && (await actor.job()); step++)
+  for (let step = 0; step < 16 && (await actor.job()); step++) {
+    if ((await actor.job())?.phase === 'runner')
+      await fixture.actors
+        .get(first.workspaceId)
+        ?.endpoint()
+        .reportRunnerLifecycle({ type: 'runner.ready' })
     await actor.advance()
+  }
   expect(
     await runtime.workspace(first.workspaceId).waitCreationLifecycle(),
   ).toEqual({ ok: true })

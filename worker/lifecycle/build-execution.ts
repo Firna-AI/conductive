@@ -19,6 +19,7 @@ import { completeBuildPhase } from './build-phase-data'
 import { installWorkspaceTools } from '../tools/image'
 import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { privilegedCommand } from '../terminal/privileged'
+import { recoverImageBuildAllocation } from './image-allocation'
 
 export async function advanceBuildCommand(
   runtime: ImageRuntime,
@@ -83,6 +84,15 @@ export async function cleanupBuild(
     ))
   )
     return false
+  if (job.phase === 'allocating') {
+    job = {
+      ...job,
+      sandboxId:
+        job.sandboxId ??
+        (await recoverImageBuildAllocation(runtime.env.DB, provider, job)),
+    }
+    await updateBuildJob(runtime.env.DB, job.buildId, 'cleanup')
+  }
   if (job.sandboxId) {
     await deleteSandboxIfPresent(provider, job.sandboxId)
     await runtime.env.DB.prepare(

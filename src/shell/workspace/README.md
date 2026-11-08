@@ -48,9 +48,10 @@ the `AppModel` of the tab, for the signed-in user.
   of this tab forgets its kept model, notices, and chat, so its streams
   never open again.
 - In a tab without its form, a workspace whose create start failed shows
-  the unavailable view. It says "This workspace is not available" and "Its
-  sandbox didn't start.", with All workspaces. It offers no Resume, and the
-  list drops its row.
+  the unavailable view. It says "This workspace is not available" and the
+  message that the start saved, or "Its sandbox didn't start." when it has
+  none, with All workspaces. It offers no Resume, and the list drops its
+  row.
 - A create that started keeps its start record. So a later error of its
   sandbox shows the sandbox bar with Try again, as a failed resume does.
 - The tab also keeps the `ToolEvents` of each workspace. Each show makes

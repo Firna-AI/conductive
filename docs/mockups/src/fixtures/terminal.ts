@@ -2,6 +2,7 @@
  * Terminal sessions. Each line is a list of coloured segments.
  */
 
+import { timedOutBuild } from './computer'
 import { checkoutAutocomplete, savedCarts } from './workspaces'
 
 export type TerminalTone =
@@ -75,6 +76,23 @@ export const failedBuildLog: readonly TerminalLine[] = [
   error('npm error ERESOLVE unable to resolve dependency tree'),
   error('npm error peer react@"^18.0.0" from react-day-picker@8.10.1'),
   muted('The install script stopped with exit code 1.'),
+]
+
+/**
+ * The end of a build that passed its 60-minute limit: a postinstall script
+ * watches its files, so the install script never ends. The app then adds
+ * the saved message of the build as the last line.
+ */
+export const timedOutBuildLog: readonly TerminalLine[] = [
+  muted('Running the install script'),
+  prompt('build', 'cd ~/code/storefront && npm ci && npx prisma generate'),
+  plain('added 1184 packages in 41s'),
+  prompt('build', 'cd ~/code/billing-service && pnpm install'),
+  plain('Done in 12.4s'),
+  muted('> billing-service@1.4.0 postinstall'),
+  muted('> prisma generate --watch'),
+  plain('Watching... prisma/schema.prisma'),
+  muted(timedOutBuild.error),
 ]
 
 export const workspaceSessionPrompt = `${workspaceLocation} $ `

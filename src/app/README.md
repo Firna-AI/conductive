@@ -114,6 +114,10 @@ the members of the org again. Delete org and Restore give their answers to
   before a later remove of the same repository.
 - A Resume reply keeps each newer field change that arrived while its
   request ran. A reply after close changes no workspace state.
+- A workspace event applies its saved public error with the workspace
+  state. An older event without the error keeps the current error. An
+  explicit null clears it. Event errors carry no log, so the model keeps
+  a null log for them.
 - An admitted create stays in `OrgModel.creations` until its start ends.
   A failed start takes the workspace out of the list, and gives the first
   message back in a form of its own. A sign-out, or a sign-in of another

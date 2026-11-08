@@ -37,6 +37,31 @@ function createInput(value: unknown): SandboxStart {
   }
 }
 
+function allocationContext(job: WorkspaceStartJob): string {
+  return JSON.stringify([
+    'workspace-create-payload',
+    job.workspaceId,
+    job.attempt,
+  ])
+}
+
+export async function readWorkspaceAllocation(
+  env: AppEnv,
+  job: WorkspaceStartJob,
+): Promise<SandboxStart> {
+  if (!job.createPayloadCiphertext)
+    throw new Error('Missing pinned allocation payload')
+  return createInput(
+    JSON.parse(
+      await decrypt(
+        job.createPayloadCiphertext,
+        allocationContext(job),
+        env.BOAT_KEY_ENCRYPTION_KEY,
+      ),
+    ),
+  )
+}
+
 /** Pin the encrypted body before allocation. A lost reply replays the same body/key. */
 export async function allocateWorkspace(
   env: AppEnv,
@@ -45,27 +70,14 @@ export async function allocateWorkspace(
   job: WorkspaceStartJob,
   input: () => Promise<SandboxStart>,
 ): Promise<string | null> {
-  const context = JSON.stringify([
-    'workspace-create-payload',
-    job.workspaceId,
-    job.attempt,
-  ])
   let payload: SandboxStart
   if (job.createPayloadCiphertext)
-    payload = createInput(
-      JSON.parse(
-        await decrypt(
-          job.createPayloadCiphertext,
-          context,
-          env.BOAT_KEY_ENCRYPTION_KEY,
-        ),
-      ),
-    )
+    payload = await readWorkspaceAllocation(env, job)
   else {
     payload = await input()
     job.createPayloadCiphertext = await encrypt(
       JSON.stringify(payload),
-      context,
+      allocationContext(job),
       env.BOAT_KEY_ENCRYPTION_KEY,
     )
   }

@@ -1,13 +1,21 @@
 import { parseProviderRetry, type ProviderRetryState } from './provider-retry'
+import { IMAGE_BUILD_TIME_LIMIT_MS } from './job-time-limit'
 
-export async function readImageRetry(db: D1Database, buildId: string) {
+async function readImageJobPolicy(db: D1Database, buildId: string) {
   const row = await db
     .prepare(
-      "SELECT provider_retry_json AS retry FROM image_builds WHERE id = ? AND state = 'running'",
+      `SELECT b.provider_retry_json AS retry, b.started_at AS startedAt FROM image_builds b
+       JOIN image_build_jobs j ON j.build_id = b.id
+       WHERE b.id = ? AND b.state = 'running' AND j.phase != 'cleanup'`,
     )
     .bind(buildId)
-    .first<{ retry: string | null }>()
-  return parseProviderRetry(row?.retry ?? null)
+    .first<{ retry: string | null; startedAt: number }>()
+  return row
+    ? {
+        retry: parseProviderRetry(row.retry),
+        deadlineAt: row.startedAt + IMAGE_BUILD_TIME_LIMIT_MS,
+      }
+    : null
 }
 
 export async function saveImageRetry(
@@ -46,5 +54,9 @@ export async function imageRetryAt(
   buildId: string,
   now: number,
 ): Promise<number> {
-  return Math.max(now, (await readImageRetry(db, buildId))?.retryAt ?? now)
+  const policy = await readImageJobPolicy(db, buildId)
+  return Math.min(
+    Math.max(now, policy?.retry?.retryAt ?? now),
+    policy?.deadlineAt ?? Infinity,
+  )
 }

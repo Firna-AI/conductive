@@ -48,8 +48,14 @@ it('recovers an accepted create after its caller closes and the actor restarts',
     })
     await heldRead.entered
     try {
-      for (let step = 0; step < 12 && (await actor.job()); step++)
+      for (let step = 0; step < 12 && (await actor.job()); step++) {
+        if ((await actor.job())?.phase === 'runner')
+          await fixture.actors
+            .get(id)
+            ?.endpoint()
+            .reportRunnerLifecycle({ type: 'runner.ready' })
         await actor.advance()
+      }
       expect(await actor.job()).toBeUndefined()
       expect(settled).toBe(true)
     } finally {
@@ -72,7 +78,7 @@ it('recovers an accepted create after its caller closes and the actor restarts',
       ),
     })
     expect(await fixture.runtime.workspace(id).readLifecycle()).toMatchObject({
-      state: 'starting',
+      state: 'ready',
       startupPrepared: true,
       pendingFirstMessage: FIRST_MESSAGE,
     })
@@ -110,7 +116,7 @@ it('recovers an accepted create after its caller closes and the actor restarts',
     })
     expect((await endpoint.readLifecycle())?.state).toBe('stopped')
     const resumeCount = fixture.boat.resumeIds.length
-    await actor.advance()
+    await fixture.advanceTo(fixture.runtime.dependencies.now() + 1_000, id)
     expect(fixture.boat.resumeIds).toHaveLength(resumeCount)
     expect(fixture.boat.deletedIds).toEqual([])
     const heldAdmission = actor.holdAdmission()

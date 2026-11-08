@@ -5,7 +5,7 @@ import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
 import { createCompletedWorkspace } from './completed-creation-test-support'
-import { keepWorkspaceDisk } from './disk-retention'
+import { readRetention } from './retention-data'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { seedPublishedImage } from './published-image-test-support'
 import { orgEnvironmentContext, workspaceEnvironment } from './settings-data'
@@ -121,14 +121,12 @@ it('supplies each start its repository branch and encrypted org settings without
   await actor.lifecycleStopped()
   boat.states.set('bx_1', 'archived')
   await saveEnvironment(resumedSecret)
-  expect(
-    await keepWorkspaceDisk({
-      env: runtime.env,
-      dependencies: runtime.dependencies,
-      orgId: org.id,
-      workspaceId: id,
-    }),
-  ).toBe(false)
+  fixture.setTime(runtime.dependencies.now() + 1_123_200_000)
+  await actor.alarm()
+  expect(await readRetention(runtime.env.DB, id)).toEqual({
+    phase: 'wait',
+    error: null,
+  })
   expect(resumes).toHaveLength(2)
   const retention: unknown = await resumes[1].json()
   expect(retention).toMatchObject({

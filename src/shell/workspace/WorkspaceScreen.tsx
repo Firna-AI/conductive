@@ -134,10 +134,17 @@ export function WorkspaceScreen(props: {
   }
   // The server removes a create whose sandbox did not start: it has no
   // Resume, and no files stay. The tab that sent it shows its form instead.
+  // Another tab shows the message that the start saved, when it has one.
   if (failedCreate(detail.value)) {
-    return <Unavailable body="Its sandbox didn't start." orgId={props.org.id} />
+    const saved = detail.value.error?.message
+    return (
+      <Unavailable
+        body={saved ? saved : "Its sandbox didn't start."}
+        orgId={props.org.id}
+      />
+    )
   }
-  const { workspace, start } = detail.value
+  const { workspace, start, error } = detail.value
   const sandbox = sandboxState(workspace)
   // A refused start shows while the sandbox is down, until its cause ends.
   const refusal =
@@ -161,11 +168,14 @@ export function WorkspaceScreen(props: {
     onReassigned: (updated) => model.reassigned(updated),
   }
   const phone = viewport === 'phone'
+  // A failed start carries the message that the workspace saved for it.
   const notice: SandboxNoticeState | null =
     refusal ??
-    (sandbox === 'ready' || sandbox === 'starting'
-      ? null
-      : { problem: sandbox })
+    (sandbox === 'error'
+      ? { problem: 'error', message: error?.message ?? null }
+      : sandbox === 'ready' || sandbox === 'starting'
+        ? null
+        : { problem: sandbox })
   const panel = (content: ReactNode) =>
     sandbox === 'ready' ? (
       content

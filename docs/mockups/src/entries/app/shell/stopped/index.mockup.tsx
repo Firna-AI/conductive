@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
-import { WorkspaceScreen } from '../../../screens/WorkspaceScreen'
+import { WorkspaceScreen } from '../../../../screens/WorkspaceScreen'
 import {
   readyWorkspace,
   workspaceStateSchema,
-} from '../../../screens/workspaceState'
+} from '../../../../screens/workspaceState'
 
 export const sandboxStopped = defineScreen({
   title: 'Sandbox stopped',

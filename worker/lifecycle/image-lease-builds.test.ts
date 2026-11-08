@@ -53,8 +53,14 @@ it('keeps a leased image until its workspace starts across a replacement publica
       (await readBuild(runtime.env.DB, org.id, replacement)).build.state,
     ).toBe('succeeded')
     expect(boat.deletedSnapshots).not.toContain(imageA)
-    for (let step = 0; step < 15 && (await actor.job()); step++)
+    for (let step = 0; step < 15 && (await actor.job()); step++) {
+      if ((await actor.job())?.phase === 'runner')
+        await fixture.actors
+          .get(workspaceId)
+          ?.endpoint()
+          .reportRunnerLifecycle({ type: 'runner.ready' })
       await actor.advance()
+    }
     expect(await actor.job()).toBeUndefined()
     expect(await actor.wait()).toEqual({ ok: true })
     expect(boat.starts.at(-1)).toMatchObject({ from: imageA })
