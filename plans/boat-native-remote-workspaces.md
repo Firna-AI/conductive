@@ -4274,6 +4274,23 @@ Added on 8 November 2026 from finding 3 of the review of Milestone 15r.
 - **Recommendation:** D.
 - **Chosen:** A, by the user on 8 November 2026. Milestone 15r applies it.
 
+### 146. Choose whether the desktop stream ends on access loss now
+
+Added on 8 November 2026 from Milestone 15q.
+
+- **Background:** Decision 117 C chose that the desktop stream goes
+  through the Worker, so that the Worker can end it when a viewer loses
+  access. The provider documents its desktop stream as WebRTC, which a
+  Worker cannot relay.
+- **Options:**
+  - **A.** Take the desktop work out of Milestone 15q. The desktop tool
+    stays as it is, with its documented exception and its follow-up item.
+  - **B.** Build a VNC gateway with a noVNC viewer, so that all desktop
+    data passes the Worker's access checks.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026. The follow-up item
+  `plans/follow-ups/desktop-stream-after-access-loss.md` keeps B.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
