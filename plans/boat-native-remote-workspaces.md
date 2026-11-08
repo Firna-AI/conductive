@@ -4226,6 +4226,13 @@ answer.
     from the Worker. The Worker needs R2 access keys as a new secret. The
     bucket needs CORS rules, and the content policy and the Mac app must
     allow the R2 host. Effort: Large.
+  - **F.** Send the raw bytes in parts of 5 MiB, with the content type
+    `application/octet-stream`, and join them with an R2 multipart
+    upload. Each part streams into R2, so memory stays small. A lost
+    connection loses one part, and the app can show progress after each
+    part. It needs three routes, stored part state, and clean-up of
+    abandoned parts. Both protocols change, as in D. Effort: Large.
+    Added by the options check of 8 November 2026.
 - **Left out:** A limit of 1 MB for each file, because it breaks the
   25 MB limit of decision 132 A. An upload route in the workspace Durable
   Object, because the object also has 128 MB, so it has the problem of
@@ -4240,6 +4247,49 @@ answer.
 - **Action:** ask the user, because D changes the rule "a JSON body for
   each write" of the access protocol, and no recorded decision covers
   that change.
+- **Chosen:** D, by the user on 8 November 2026. Milestone 8p builds it,
+  with the conditions of the options check.
+- **Options check, 8 November 2026:** it keeps D. A test in Miniflare
+  confirmed that D streams into R2 through a fixed-length stream, so D
+  needs a required `Content-Length`. D keeps the forged-request
+  protection when the gate refuses a request with no content type and
+  the file name goes in the URL. D also changes
+  `docs/protocol/desktop-app.md`. Report:
+  `.context/options-check-144/report.md`.
+
+### 145. Choose how file paths with a secret value work
+
+Added on 8 November 2026 from finding 3 of the review of Milestone 15r.
+
+- **Background:** Decision 133 C hides each marked org env var in the
+  chat. The filter also masked file paths, so a path that held a marked
+  value could not open, and two paths could become one.
+- **Options:**
+  - **A.** Keep the real paths for every operation, and mask only the
+    shown labels. The access protocol and the privacy page say that a
+    path can show a marked value.
+  - **B.** Use opaque file handles with masked labels.
+  - **C.** Replace a value in a path with a reversible token.
+  - **D.** Leave every repository field unmasked.
+- **Recommendation:** D.
+- **Chosen:** A, by the user on 8 November 2026. Milestone 15r applies it.
+
+### 146. Choose whether the desktop stream ends on access loss now
+
+Added on 8 November 2026 from Milestone 15q.
+
+- **Background:** Decision 117 C chose that the desktop stream goes
+  through the Worker, so that the Worker can end it when a viewer loses
+  access. The provider documents its desktop stream as WebRTC, which a
+  Worker cannot relay.
+- **Options:**
+  - **A.** Take the desktop work out of Milestone 15q. The desktop tool
+    stays as it is, with its documented exception and its follow-up item.
+  - **B.** Build a VNC gateway with a noVNC viewer, so that all desktop
+    data passes the Worker's access checks.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026. The follow-up item
+  `plans/follow-ups/desktop-stream-after-access-loss.md` keeps B.
 
 ## Design
 
@@ -7253,10 +7303,33 @@ Depends on: none.
 Apply the `fix after merge` items of the workspace and section lists.
 Added on 8 November 2026.
 
-- [ ] Apply option A of `plans/follow-ups/new-workspace-position-after-reorder.md`,
+- [x] Apply option A of `plans/follow-ups/new-workspace-position-after-reorder.md`,
       and delete that item.
-- [ ] Apply option B of `plans/follow-ups/atomic-workspace-and-section-moves.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15s`.
+- [x] Apply option B of `plans/follow-ups/atomic-workspace-and-section-moves.md`,
       and delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15s`.
+
+Design calls by the implementor, checked by the orchestrator on 8 November
+2026:
+
+- A position-only workspace move uses its stored section inside the
+  transaction. An earlier read can have a stale section after another move.
+- Keep the existing archive filters and tie order. Workspace ties use
+  creation time, then ID. Section ties use ID. Rank only the target list,
+  so other sections keep their saved positions.
+- Build the workspace snapshot from the guarded moving row. A refused
+  update then changes no sibling position.
+- Remove `orderedSectionWorkspaceIds` after its caller uses the atomic
+  operation. No live caller needs the old read-and-write path.
+- Keep the list reader, app list change, and dev create fake as they are.
+  They already use stored order or put new workspaces first.
+- Change the regression setup to use the new section and index inputs.
+  Keep the same order assertions, so the baseline failures still apply.
+- Keep the list order rule in the app API README. The lifecycle README
+  links to it, so the shared rule has one home.
+
+Evidence: `.context/boat-native-remote-workspaces/15s/orchestrator-checks.md`.
 
 ## Milestone 13c: GitHub follow-ups
 
