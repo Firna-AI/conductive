@@ -5562,11 +5562,8 @@ Apply the `fix after merge` items of the runner. Added on 8 November 2026.
       (decision 114): no tool process inherits the login of the agent.
       Check the Codex program too. Update "Agent logins in a sandbox" in
       `docs/protocol/access-and-security.md`. Branch: `conductor/boat-native-remote-workspaces-milestone-7x`.
-- [ ] Confirm option C in a real sandbox with the real logins of the
-      `LIVE_*` settings: a server that a tool starts cannot read the login
-      after the turn. The orchestrator runs this check in the primary
-      workspace, because only that workspace holds the real-sandbox
-      settings. Then delete `plans/follow-ups/agent-login-in-tool-processes.md`.
+The live check of option C in a real sandbox moved to Milestone 16a on 8
+November 2026.
 
 ## Milestone 8: Chat UI
 
@@ -5997,6 +5994,12 @@ This milestone needs the prerequisites from the user.
 - [ ] Check that chat survives a restart: send a message before the
       runner connects, deploy again, then check the history, the event
       numbers, and the delivery of the waiting message.
+- [ ] Run the live check of `plans/follow-ups/agent-login-in-tool-processes.md`
+      with a Claude subscription token, an Anthropic API key, and an
+      OpenAI API key: a server that a tool starts cannot read the login
+      during or after the turn. Then delete that item. Moved from
+      Milestone 7x on 8 November 2026, because it needs the deployed test
+      app and the three logins from the user.
 
 ## Milestone 9: Files backend
 
