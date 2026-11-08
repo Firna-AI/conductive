@@ -20,6 +20,17 @@ const history = (through: number) => ({
   history: { events: [], throughEventNumber: through },
 })
 
+/** A page of a replay with more to come, as the Worker sends it. */
+const page = (through: number, next: number) => ({
+  type: 'history',
+  history: {
+    events: [],
+    throughEventNumber: through,
+    hasMore: true,
+    nextAfterEventNumber: next,
+  },
+})
+
 const live = (eventNumber: number) => ({
   type: 'event',
   envelope: {
@@ -55,5 +66,30 @@ describe('the event stream of a store that reads raw messages', () => {
     end()
     expect(timers.pending).toBe(0)
     expect(connections).toHaveLength(2)
+  })
+
+  test('opens again after the start of the next page when the connection drops during a paged replay, and after the cutoff once the replay ends', async () => {
+    const { source, connections } = scriptedSource()
+    const timers = new ManualDelay()
+    const received: unknown[] = []
+    const subscribe = replaySubscribe(
+      source,
+      { orgId: 'org-1', workspaceId: 'workspace-1' },
+      timers.delay,
+    )
+    subscribe(0, (message) => received.push(message))
+    connections[0].handlers.message(page(9, 5))
+    // A live event can come before the final page. It waits in the store.
+    connections[0].handlers.message(live(10))
+    connections[0].handlers.closed()
+    await timers.runAll()
+    connections[1].handlers.message(history(12))
+    connections[1].handlers.closed()
+    await timers.runAll()
+
+    expect(received).toEqual([page(9, 5), live(10), history(12)])
+    expect(connections.map((connection) => connection.after)).toEqual([
+      0, 5, 12,
+    ])
   })
 })

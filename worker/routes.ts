@@ -1,4 +1,4 @@
-import { API_PATHS, orgPath } from '../src/shared/api'
+import { API_PATHS } from '../src/shared/api'
 import { bootRoute } from './app-api/boot'
 import { chatLifecycleRoute } from './app-api/lifecycle'
 import { shellRoute } from './app-api/shell'
@@ -71,11 +71,6 @@ export async function route(
   }
   if (path === API_PATHS.signOut && request.method === 'POST') {
     return signOut(env, context.sessionId)
-  }
-  if (context.org) {
-    if (path === orgPath(context.org.id) && request.method === 'GET') {
-      return Response.json({ org: context.org })
-    }
   }
   throw new HttpError(404, 'not_found', 'The page is not available.')
 }

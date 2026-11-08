@@ -45,9 +45,10 @@ const { store: files } = useWorkspaceStore(
 The kept store reads the file routes with the `fetch` of the app's
 `ApiClient`, so the Mac app reads them from its own Worker. Its stream is
 the event source of the app, after the last event number of the store.
-When the connection drops, the stream opens again after the newest event
-that it delivered. So a return shows the lists at once, and the socket
-asks only for the events after the last one. Give `files` to the screens.
+When the connection drops, the stream opens again as
+[Data lifecycle](../app/README.md#data-lifecycle) says. So a return shows
+the lists at once, and the socket asks only for the events after the last
+complete point. Give `files` to the screens.
 
 The store reads each message of the subscription from `unknown`: the stored
 history first, in one or more pages, then the live events. The pages of

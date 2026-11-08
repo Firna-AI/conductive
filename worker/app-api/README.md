@@ -20,7 +20,8 @@ access, org creation with initials and repository choices, shared settings,
 repository selection, sections, and workspace metadata.
 The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
 The [archive route](archive.ts) uses the real workspace object to check saved work and remove its sandbox.
-`membersRoute` serves org recovery, roles, invitations, and workspace ownership.
+`membersRoute` alone serves the org list and one org.
+It also serves org recovery, roles, invitations, and workspace ownership.
 
 ## Rules
 

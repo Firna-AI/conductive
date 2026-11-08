@@ -19,7 +19,9 @@ An unmatched route returns `null` for the next handler.
 Keep the existing private response headers and error handler around dispatch.
 
 The routes use paths from `src/shared/members.ts` and `orgs.ts`.
-They serve member lists, invitation creation and cancellation, role changes,
+`membersRoute` alone serves the org list and one org.
+Org creation stays with `featureShellRoute` of the [app API](../app-api/README.md).
+The routes also serve member lists, invitation creation and cancellation, role changes,
 removal, leave, workspace reassignment, org rename, Delete, and Restore.
 Shared-settings persistence remains with the settings backend.
 That backend must call `assertCanChangeSharedSettings` before writes.

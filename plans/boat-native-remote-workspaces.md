@@ -6689,6 +6689,17 @@ Primary review fixes, 8 November 2026, for the review of `0d1f3ad`:
 Evidence: `.context/milestone-15i/orchestrator-r1/activity/report.md` and
 `.context/milestone-15i/orchestrator-r1/get-started/report.md`.
 
+Primary 8m merge `a6d686a` and its replay fix. Evidence:
+`.context/milestone-15i/orchestrator-r1/8m-ui-merge.md`,
+`.context/milestone-15i/orchestrator-r1/8m-worker-merge.md`,
+`.context/milestone-15i/orchestrator-r1/8m-worker-check.md`,
+`.context/milestone-15i/orchestrator-r1/8m-docs-merge.md`, and
+`.context/milestone-15i/orchestrator-r1/replay-pages/`.
+
+Primary review round 2, finding 21 A. Evidence:
+`.context/milestone-15i/orchestrator-r2/21-report.md` and
+`.context/milestone-15i/orchestrator-r2/docs-report.md`.
+
 ## Milestone 15j: Rename to Conductive
 
 Depends on: none

@@ -218,9 +218,17 @@ the members of the org again. Delete org and Restore give their answers to
   workspace, as the [files integration](../files/README.md#integration)
   shows.
 - A feature store that reads the raw socket messages itself, as the files
-  do, follows the event source of the app through `replaySubscribe`. When
-  the connection drops, it opens again after the newest event that it
-  delivered, after the same growing wait as the ordered stream.
+  do, follows the event source of the app through `replaySubscribe`. Each
+  message reaches the store unchanged.
+- When the connection drops, `replaySubscribe` opens again after the same
+  growing wait as the ordered stream. The new connection starts after the
+  last number that the store holds complete:
+  - While more history pages come, the `nextAfterEventNumber` of the last
+    page, capped at the cutoff of the replay.
+  - After the final page, its cutoff.
+  - After the replay, the newest live event.
+- A live event during an unfinished replay moves no number. The store holds
+  that event until the final page.
 
 ## Screens
 
@@ -281,8 +289,8 @@ clicks, types, and lets the answers of the fake API settle.
   its `fetch`, for a feature client that reads its own replies, so the web
   app and the Mac app keep their transport. `api/read-*.ts`: the readers.
 - `replay-socket.ts`: `replaySubscribe`, the raw event stream of a feature
-  store over the event source of the app, which opens again after the
-  newest event that it delivered.
+  store over the event source of the app, with the reconnect rules of
+  [Data lifecycle](#data-lifecycle).
 - `app-model.ts`: the session, the orgs, the models list, Get started, and
   `putOrg`, which takes a confirmed org record.
 - `invitations-model.ts`: `InvitationsModel`, the pending invitations,

@@ -4,6 +4,7 @@ import { deleteOrgPath, restoreOrgPath } from '../../src/shared/orgs'
 import { workspacePaths } from '../../src/shared/workspaces'
 import { OUTER_ORG } from '../chat/integration/outer-seed.test-support'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
+import { record } from '../chat/inputs'
 import { featureState } from './fixture.test-support'
 import {
   admitRetainedCreation,
@@ -49,14 +50,18 @@ it('gives an allocated create opened after three retained days a fresh 20-minute
     ).status,
   ).toBe(200)
   expect(active.boat.resumeIds).toEqual([])
-  expect(
-    (
-      await active.request(workspacePaths.resume(OUTER_ORG, id), {
-        method: 'POST',
-        body: '{}',
-      })
-    ).status,
-  ).toBe(200)
+  const resumed = await active.request(workspacePaths.resume(OUTER_ORG, id), {
+    method: 'POST',
+    body: '{}',
+  })
+  expect(resumed.status).toBe(200)
+  const summary = await active.actor(id).readChatWorkspaceSummary()
+  expect(record(await resumed.json())).toMatchObject({
+    eventNumber: summary.throughEventNumber,
+    workspace: { id, state: 'starting' },
+    start: { kind: 'create', startedAt: openedAt },
+    error: null,
+  })
   await active.actor(id).advanceTo(openedAt + 1_000)
   expect(
     featureState(await active.actor(id).inspectFeatureState()).get(
