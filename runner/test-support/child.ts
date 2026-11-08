@@ -7,6 +7,13 @@ export class FakeChild extends ChildProcess {
   override stdin = new PassThrough()
   override stdout = new PassThrough()
   override stderr = new PassThrough()
+  override stdio: ChildProcess['stdio'] = [
+    this.stdin,
+    this.stdout,
+    this.stderr,
+    new PassThrough(),
+    null,
+  ]
   override pid = 1
   override killed = false
   override exitCode: number | null = null

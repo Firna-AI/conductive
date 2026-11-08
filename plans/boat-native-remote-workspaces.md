@@ -5556,12 +5556,12 @@ Depends on: none.
 
 Apply the `fix after merge` items of the runner. Added on 8 November 2026.
 
-- [ ] Apply option D of `plans/follow-ups/runner-output-save-failure.md`
-      (decision 131), and delete that item.
-- [ ] Apply option C of `plans/follow-ups/agent-login-in-tool-processes.md`
+- [x] Apply option D of `plans/follow-ups/runner-output-save-failure.md`
+      (decision 131), and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-7x`.
+- [x] Apply option C of `plans/follow-ups/agent-login-in-tool-processes.md`
       (decision 114): no tool process inherits the login of the agent.
       Check the Codex program too. Update "Agent logins in a sandbox" in
-      `docs/protocol/access-and-security.md`.
+      `docs/protocol/access-and-security.md`. Branch: `conductor/boat-native-remote-workspaces-milestone-7x`.
 - [ ] Confirm option C in a real sandbox with the real logins of the
       `LIVE_*` settings: a server that a tool starts cannot read the login
       after the turn. The orchestrator runs this check in the primary
