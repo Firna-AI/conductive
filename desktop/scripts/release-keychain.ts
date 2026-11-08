@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { readReleaseCredentials } from './release-credentials.ts'
 
 /** Do not include command arguments: some security commands contain passwords. */
-export function runReleaseTool(
+function runReleaseTool(
   program: string,
   args: string[],
   env = process.env,
