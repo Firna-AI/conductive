@@ -20,7 +20,7 @@ export interface ChatContext {
   readonly edits: Map<string, readonly PendingEdit[]>
   /**
    * The event number of the workspace record that shows, so an older reply
-   * or event no longer replaces it, as `session-records.ts` says.
+   * or event no longer replaces it, as `workspace-records.ts` says.
    */
   readonly workspaceOrder: { through: number }
   /** The number of the latest model pick of each session. */

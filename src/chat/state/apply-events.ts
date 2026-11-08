@@ -2,7 +2,8 @@ import type { StreamEnvelope } from '../api/read-workspace'
 import type { ChatContext } from './context'
 import { applyMoves, claimMoves, saveMovedView } from './model-moves'
 import { asSessionEvent, sessionOf, type ChatEnvelope } from './session-log'
-import { mergeSession, withWorkspaceChange } from './session-records'
+import { mergeSession } from './session-records'
+import { withWorkspaceChange } from './workspace-records'
 
 /**
  * Applies workspace stream events in order: chat events to the log of their

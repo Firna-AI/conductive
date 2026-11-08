@@ -1,19 +1,17 @@
-import type { Session } from '../../shared/sessions'
-import type {
-  OrderedWorkspaceResponse,
-  Workspace,
-  WorkspaceStart,
-} from '../../shared/workspaces'
+import type { Session, SessionsResponse } from '../../shared/sessions'
 import type { ChatSnapshot } from './chat-snapshot'
 import { withTranscript, type ChatContext } from './context'
-import { noteFirstStart, withFirstStart } from './first-start'
 import { applyMoves, claimMoves, saveMovedView } from './model-moves'
 import { SessionLog, type ChatEnvelope, type PlacedRecord } from './session-log'
-import { placeSession } from './sessions'
+import {
+  orderSessions,
+  pickActive,
+  placeSession,
+  sortHistory,
+} from './sessions'
 
 /**
- * The order of the records that a reply and the stream both write: each
- * session record, and the workspace record with its start steps. Each
+ * The order of the session records that a reply and the stream both write. Each
  * reply, read, and event carries the workspace event number of its state,
  * so the newest number wins, whatever arrives first. The session log of
  * each session keeps its newest record, as `SessionLog.record` says.
@@ -41,7 +39,7 @@ function writableLogOf(context: ChatContext, sessionId: string): SessionLog {
 }
 
 /** Read access to one session's log. Its writes stay with this owner. */
-export function logOf(
+function logOf(
   context: ChatContext,
   sessionId: string,
 ): Pick<SessionLog, 'record' | 'transcript' | 'times'> {
@@ -54,10 +52,7 @@ export interface PendingEdit {
 }
 
 /** The record of a session that the chat shows: the newest, with its edits. */
-export function shownRecord(
-  context: ChatContext,
-  sessionId: string,
-): Session | null {
+function shownRecord(context: ChatContext, sessionId: string): Session | null {
   const newest = logOf(context, sessionId).record?.session ?? null
   if (newest === null) return null
   const edits = context.edits.get(sessionId) ?? []
@@ -111,6 +106,52 @@ export function confirmRecord(
   )
   saveMovedView(context, moves)
   return true
+}
+
+/**
+ * Accepts a complete current list before publishing its records and selection.
+ * The snapshot change supplies the initial view or the load's ready state.
+ */
+export function confirmSessions(
+  context: ChatContext,
+  response: SessionsResponse,
+  change: (snapshot: ChatSnapshot) => ChatSnapshot,
+): void {
+  if (!context.live()) return
+  const listed = [...response.sessions, ...response.history]
+  const accepted: Session[] = []
+  for (const session of listed) {
+    if (
+      writableLogOf(context, session.id).offer(session, response.eventNumber)
+    ) {
+      accepted.push(session)
+    }
+  }
+  const moves = claimMoves(context, accepted)
+  context.store.update((snapshot) => {
+    const current = change(snapshot)
+    const records = listed.map((item) => shownRecord(context, item.id) ?? item)
+    const open = orderSessions(
+      records.filter((item) => item.closedAt === null),
+      current.view,
+    )
+    const shown = open.some((item) => item.id === current.activeSessionId)
+    let next: ChatSnapshot = {
+      ...current,
+      sessions: open,
+      history: sortHistory(records.filter((item) => item.closedAt !== null)),
+      activeSessionId: shown
+        ? current.activeSessionId
+        : pickActive(open, current.view),
+    }
+    for (const { id } of listed) {
+      const log = logOf(context, id)
+      next = withTranscript(next, id, log.transcript, log.times)
+    }
+    for (const session of accepted) next = placeShown(context, next, session.id)
+    return applyMoves(next, moves)
+  })
+  saveMovedView(context, moves)
 }
 
 /**
@@ -191,69 +232,5 @@ export function beginEdit(
         placeShown(context, snapshot, sessionId),
       )
     },
-  }
-}
-
-/**
- * Shows the workspace record and the start steps of a read or a reply when
- * no newer state of them has shown, and says whether they showed. An older
- * one still counts for the first start, whose success the chat remembers.
- */
-export function confirmWorkspace(
-  context: ChatContext,
-  reply: Pick<OrderedWorkspaceResponse, 'workspace' | 'start' | 'eventNumber'>,
-): boolean {
-  if (!context.live()) return false
-  const newer = reply.eventNumber >= context.workspaceOrder.through
-  if (newer) context.workspaceOrder.through = reply.eventNumber
-  context.store.update((snapshot) =>
-    newer
-      ? withFirstStart({
-          ...snapshot,
-          workspace: reply.workspace,
-          start: reply.start,
-        })
-      : noteFirstStart(snapshot, reply.workspace, reply.start),
-  )
-  return newer
-}
-
-/** A change of the workspace record from the stream, at its number. */
-export type WorkspaceChange =
-  | { type: 'workspace.updated'; workspace: Workspace }
-  | { type: 'workspace.title'; name: string }
-  | { type: 'start.updated'; start: WorkspaceStart }
-
-/**
- * The snapshot after a change of the workspace record from the stream. A
- * change that is not newer than the record that shows changes nothing but
- * the success of the first start.
- */
-export function withWorkspaceChange(
-  context: ChatContext,
-  snapshot: ChatSnapshot,
-  change: WorkspaceChange,
-  eventNumber: number,
-): ChatSnapshot {
-  if (eventNumber <= context.workspaceOrder.through) {
-    return change.type === 'workspace.updated'
-      ? noteFirstStart(snapshot, change.workspace, null)
-      : change.type === 'start.updated'
-        ? noteFirstStart(snapshot, null, change.start)
-        : snapshot
-  }
-  context.workspaceOrder.through = eventNumber
-  switch (change.type) {
-    case 'workspace.updated':
-      return withFirstStart({ ...snapshot, workspace: change.workspace })
-    case 'start.updated':
-      return withFirstStart({ ...snapshot, start: change.start })
-    case 'workspace.title':
-      return snapshot.workspace
-        ? {
-            ...snapshot,
-            workspace: { ...snapshot.workspace, name: change.name },
-          }
-        : snapshot
   }
 }

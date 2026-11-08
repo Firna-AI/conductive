@@ -255,8 +255,7 @@ check in the Mac app.
   follows in place of its own reads.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
 - `state/session-log.ts`: the event log of each session, with its records
-  in event order and its newest record. Only the record owner writes the
-  logs. Other modules read them through its `logOf` function.
+  in event order and its newest record. The record owner keeps the logs private.
 - `state/known-turns.ts`: the known turns, their order, their ends, and
   `retryItemId`, the one failed item that offers Try again.
 - `state/placement.ts`: where an item goes in its turn, also a late one.
@@ -272,9 +271,12 @@ check in the Mac app.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot
   that first shows the new session. Its target becomes selected only while
   the source stays selected. A newer session, file, or diff tab stays selected.
-- `state/session-records.ts`: the order of the session records and of the
-  workspace record by event number, and the pending edits of a session.
-  It publishes accepted records from replies, reads, and event merges.
+- `state/session-records.ts`: the order of session records by event number,
+  and the pending edits of a session. It publishes accepted records from
+  replies, complete current lists, and event merges. `confirmSessions`
+  establishes the current records before the shown session starts its history.
+- `state/workspace-records.ts`: the order of the workspace record and its
+  start steps by event number, with the remembered first-start success.
 - `state/first-start.ts`: the success of the first start of the workspace,
   which the snapshot remembers, and the wait of Send until then.
 - `state/session-login.ts`: whose login a message uses, from the session

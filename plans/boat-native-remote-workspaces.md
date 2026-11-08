@@ -6347,6 +6347,19 @@ server commits last wins. The current behaviour stays. No product code
 changes. Milestone 8q deletes the answered follow-up item
 `plans/follow-ups/chat-edit-admission-order.md`.
 
+Fix round 1 on 8 November 2026 applies finding 2 B from the primary
+orchestrator's first review of PR #58. One record-owner operation accepts
+and publishes each complete current session list before history starts
+and at the later list read. It keeps the saved tab order and selection
+while older history pages arrive. The same update keeps current closed
+records and model draft moves in their existing order.
+
+Implementation call: move the unchanged workspace record helpers into
+`src/chat/state/workspace-records.ts`. This keeps the session record owner
+below the file limit after its complete-list operation is added.
+
+Fix evidence: `.context/reviews/conductor/boat-native-remote-workspaces-milestone-8q/fix-round-1/`.
+
 Evidence: `.context/boat-native-remote-workspaces/8q/`, with the delegate
 reports, regression failures, repeat runs, and authorization proof.
 
