@@ -48,6 +48,7 @@ export class FakeRunnerFileReports {
   }
 
   accept(streamId: string, event: RunnerFileEvent): FileEvent | null {
+    if (event.type === 'files.unavailable') return event
     if (event.type === 'files.changed') return structuredClone(event)
     if (event.type === 'files.snapshot') {
       const parts = collectParts(this.trees, streamId, event.tree)

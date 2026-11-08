@@ -4,14 +4,18 @@ import { unavailableText, type UnavailableData } from './lostCopy'
 import styles from './LostUpdate.module.css'
 
 /**
- * Workspace data that a failed repair leaves unavailable (decision 96): an
- * update without a session was lost, and the fresh full report that the
- * workspace asked for was lost too.
+ * Workspace data that a failed repair leaves unavailable: an update without
+ * a session was lost, and the fresh full report that the workspace asked
+ * for was lost too. The same notice shows when the cloud computer could not
+ * read the files, and All files keeps its saved list.
  */
 export type FailedRepair = {
   data: UnavailableData
-  /** The time since the data became unavailable, such as "4m ago". */
-  ago: string
+  /**
+   * The time since the data became unavailable, such as "4m ago". A list
+   * that the cloud computer could not read has no known time.
+   */
+  ago?: string
 }
 
 function Text(props: { repair: FailedRepair }) {
@@ -20,7 +24,7 @@ function Text(props: { repair: FailedRepair }) {
     <>
       <CircleSlash aria-hidden className={styles.icon} size={14} />
       <span className={styles.text}>{unavailableText(repair.data)}</span>
-      <span className={styles.ago}>{repair.ago}</span>
+      {repair.ago ? <span className={styles.ago}>{repair.ago}</span> : null}
     </>
   )
 }
@@ -40,9 +44,9 @@ export function LostUpdateBar(props: { repair: FailedRepair }) {
 }
 
 /**
- * The notice of a failed repair of a file list: a row under the file lists
- * of the Files panel, in the column beside the chat or the Files tab of a
- * phone.
+ * The notice of a file list that is not the latest one, after a failed
+ * repair or a failed read of the files: a row under the file lists of the
+ * Files panel, in the column beside the chat or the Files tab of a phone.
  */
 export function LostUpdateRow(props: { repair: FailedRepair }) {
   return (

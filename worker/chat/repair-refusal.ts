@@ -74,7 +74,8 @@ export async function observeRepairPart(
   streamId: string,
   event: RunnerFileEvent,
 ): Promise<void> {
-  if (event.type === 'files.changed') return
+  if (event.type === 'files.changed' || event.type === 'files.unavailable')
+    return
   const part = event.type === 'files.snapshot' ? event.tree : event.changes
   if (part.partNumber !== 1 || part.partCount === 1) return
   const repair = await transaction.repairs.get(event.type)

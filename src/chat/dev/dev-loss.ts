@@ -150,3 +150,26 @@ export function lossEvents(
     event,
   }))
 }
+
+/**
+ * The `files=unread` option of the development page: each end of a turn of
+ * the recorded chat says that the cloud computer could not read its changed
+ * files, so it lists none and leaves none out. The turns still end.
+ */
+export function withUnreadFiles(
+  events: readonly WorkspaceEventEnvelope[],
+): WorkspaceEventEnvelope[] {
+  return events.map((envelope) =>
+    envelope.event.type === 'turn.completed'
+      ? {
+          ...envelope,
+          event: {
+            ...envelope.event,
+            files: [],
+            filesUnavailable: true,
+            omittedFileCount: 0,
+          },
+        }
+      : envelope,
+  )
+}

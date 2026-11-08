@@ -1,8 +1,11 @@
-import { FileText } from 'lucide-react'
+import { CircleSlash, FileText } from 'lucide-react'
 import type { ChangedFile } from '../../shared/files'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { DiffStat } from '../../../docs/mockups/src/components/files/DiffStat'
-import { moreFiles } from '../../../docs/mockups/src/components/chat/lostCopy'
+import {
+  moreFiles,
+  turnFilesUnavailable,
+} from '../../../docs/mockups/src/components/chat/lostCopy'
 import styles from '../../../docs/mockups/src/components/chat/TurnEnd.module.css'
 import { formatDuration } from '../state/format'
 import controls from '../ui/controls.module.css'
@@ -41,12 +44,14 @@ function FileChip(props: {
  * The end of a finished turn: how long it ran, and the files that it changed.
  * Each file opens its diff when the app gives `onOpenDiff`. The runner lists
  * at most 200 files of a turn, and `omittedFiles` counts the rest as plain
- * text after the list.
+ * text after the list. `filesUnavailable` says that the cloud computer could
+ * not read the changed files, in place of the list. The turn still finished.
  */
 export function TurnEnd(props: {
   durationMs: number
   files: readonly ChangedFile[]
   omittedFiles: number
+  filesUnavailable: boolean
   onOpenDiff?: (path: string) => void
 }) {
   const more = props.omittedFiles
@@ -55,6 +60,12 @@ export function TurnEnd(props: {
       <span className={styles.duration}>
         {formatDuration(props.durationMs)}
       </span>
+      {props.filesUnavailable ? (
+        <span className={styles.unavailable}>
+          <CircleSlash aria-hidden className={styles.icon} size={12} />
+          {turnFilesUnavailable}
+        </span>
+      ) : null}
       {props.files.length > 0 || more > 0 ? (
         <ul aria-label="Files this turn changed" className={styles.chips}>
           {props.files.map((file) => (

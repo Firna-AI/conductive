@@ -33,6 +33,7 @@ export function readRunnerEventIdentity(value: unknown): RunnerEventIdentity {
     case 'start.updated':
     case 'workspace.title':
     case 'files.snapshot':
+    case 'files.unavailable':
     case 'files.changed':
     case 'changes.updated':
       type = value.type

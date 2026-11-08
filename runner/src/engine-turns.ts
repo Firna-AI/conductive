@@ -25,6 +25,9 @@ export class EngineTurns {
               state: 'stopped',
               durationMs: Math.max(0, options.now() - turn.startedAt),
               files: [],
+              ...(turn.startEventNumber !== null
+                ? { filesUnavailable: true }
+                : {}),
               omittedFileCount: 0,
               userMessageIds: turn.messageIds,
             }),

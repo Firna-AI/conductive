@@ -23,6 +23,7 @@ export class FileReporter {
   private readonly revisions: FileRevisions
   private previousTree: RepositorySnapshot | null = null
   private previousChanges: RepositorySnapshot | null = null
+  private treeUnavailable = false
   private pending: Promise<void> = Promise.resolve()
   private readonly repository: Repository
   private readonly branch: string
@@ -55,6 +56,10 @@ export class FileReporter {
     this.pending = this.pending
       .catch(() => {})
       .then(() => this.scan(full, kind, reportCommandId))
+      .catch((error: unknown) => {
+        this.treeUnavailable = true
+        throw error
+      })
     return this.pending
   }
 
@@ -122,14 +127,22 @@ export class FileReporter {
     kind?: ReportKind,
     reportCommandId?: string,
   ): Promise<void> {
-    const current = await this.repository.snapshot(this.branch)
+    let current: RepositorySnapshot
+    try {
+      current = await this.repository.snapshot(this.branch)
+    } catch {
+      this.treeUnavailable = true
+      this.warn('The file tree could not be read.')
+      await this.emit({ type: 'files.unavailable' }, reportCommandId)
+      return
+    }
     const events: RunnerFileEvent[] = []
     if (kind !== 'changes.updated') {
       const update = treeUpdate(
         this.previousTree,
         current,
         this.revisions.tree + 1,
-        full,
+        full || this.treeUnavailable,
       )
       if (update) events.push(update)
     }
@@ -156,19 +169,22 @@ export class FileReporter {
         return
       }
       for (const [index, part] of parts.entries()) {
-        await this.emit(
-          part,
-          index === parts.length - 1 ? reportCommandId : undefined,
-        )
         if (part.type === 'files.snapshot')
           this.revisions.tree = part.tree.revision
         if (part.type === 'files.changed')
           this.revisions.tree = part.delta.revision
         if (part.type === 'changes.updated')
           this.revisions.changes = part.changes.revision
+        await this.emit(
+          part,
+          index === parts.length - 1 ? reportCommandId : undefined,
+        )
       }
     }
-    if (kind !== 'changes.updated') this.previousTree = current
+    if (kind !== 'changes.updated') {
+      this.previousTree = current
+      this.treeUnavailable = false
+    }
     if (kind !== 'files.snapshot') this.previousChanges = current
   }
 }

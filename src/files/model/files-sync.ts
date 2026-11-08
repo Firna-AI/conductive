@@ -14,6 +14,13 @@ import { applyTreeDelta, treeFromSnapshot, type FileTree } from './tree-model'
 export interface FilesSync {
   tree: FileTree | null
   treeFromStream: boolean
+  /**
+   * The cloud computer could not read the files. The tree is the saved one,
+   * or empty when none was saved, and its entries can be out of date. Only a
+   * full tree of the stream clears the mark. A tree update and a reply of
+   * the tree route clear nothing.
+   */
+  treeUnavailable: boolean
   /** Updates that wait for a tree, or for a tree read after a gap. */
   pending: readonly FileTreeDelta[]
   /** An update skipped a revision, so the tree must be read again. */
@@ -33,6 +40,7 @@ export interface SyncStep {
 export const emptySync: FilesSync = {
   tree: null,
   treeFromStream: false,
+  treeUnavailable: false,
   pending: [],
   treeStale: false,
   changes: null,
@@ -85,8 +93,10 @@ export function syncFetchedTree(
 ): SyncStep {
   if (sync.treeFromStream && !sync.treeStale) return unchanged(sync)
   const tree = withPending(treeFromSnapshot(response), sync.pending)
+  // A reply can be older than a mark of the stream, so it only adds one.
+  const treeUnavailable = sync.treeUnavailable || response.unavailable === true
   return {
-    sync: { ...sync, tree, pending: [], treeStale: false },
+    sync: { ...sync, tree, treeUnavailable, pending: [], treeStale: false },
     touched: none,
     allTouched: sync.tree !== null,
   }
@@ -134,6 +144,7 @@ export function syncEvent(sync: FilesSync, event: FileEvent): SyncStep {
           ...sync,
           tree: treeFromSnapshot(event.tree),
           treeFromStream: true,
+          treeUnavailable: event.tree.unavailable === true,
           pending: [],
           treeStale: false,
         },
@@ -142,6 +153,9 @@ export function syncEvent(sync: FilesSync, event: FileEvent): SyncStep {
       }
     case 'files.changed':
       return syncDelta(sync, event.delta)
+    case 'files.unavailable':
+      // The saved tree stays, and no file content changes.
+      return unchanged({ ...sync, treeUnavailable: true })
     case 'changes.updated':
       return {
         sync: { ...sync, changes: event.changes, changesFromStream: true },

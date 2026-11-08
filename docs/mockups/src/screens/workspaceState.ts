@@ -1,5 +1,5 @@
 import type { SchemaProps } from '@mokly/mokly'
-import { fileLists } from '../components/files/FilesPanel'
+import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversations'
 import { bannerStates } from '../fixtures/pullRequests'
@@ -29,6 +29,7 @@ export const workspaceStateSchema = {
     'overlay',
     'viewer',
     'lostUpdate',
+    'tree',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -113,6 +114,13 @@ export const workspaceStateSchema = {
      * under the header.
      */
     lostUpdate: { enum: ['none', 'failed-repair'] },
+    /**
+     * The list of All files: the latest one, or the cloud computer could not
+     * read the files. Then All files keeps the list that it saved before,
+     * under a notice, or says that the list is unavailable when it saved
+     * none. The next complete list returns to `latest`.
+     */
+    tree: { enum: treeStates },
   },
 } as const
 
@@ -135,6 +143,7 @@ export const readyWorkspace: WorkspaceState = {
   overlay: 'none',
   viewer: 'admin',
   lostUpdate: 'none',
+  tree: 'latest',
 }
 
 /**

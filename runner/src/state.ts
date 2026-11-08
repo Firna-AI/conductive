@@ -12,7 +12,13 @@ import {
 import { jsonBytes } from './event-limits'
 import { parseEnvelope, parseEvent } from './stored-events'
 import { array, integer, object, oneOf, string } from './parse'
-import { parseSavedTurn, recordTurn, type SavedTurn } from './state-turns'
+import {
+  parseSavedTurn,
+  pendingTurnEnd,
+  recordTurn,
+  turnKey,
+  type SavedTurn,
+} from './state-turns'
 import { SerialQueue } from './serial-queue'
 import {
   emptyReports,
@@ -150,6 +156,15 @@ export class EventStore {
     occurredAt: number,
     reportCommandId?: string,
   ): Promise<RunnerEventEnvelope | null> {
+    const pendingEnd = pendingTurnEnd(
+      this.state.turns,
+      this.state.outbox,
+      event,
+    )
+    if (pendingEnd) {
+      await this.save()
+      return structuredClone(pendingEnd)
+    }
     const envelope: RunnerEventEnvelope = {
       type: 'event',
       streamId: this.state.streamId,
@@ -174,7 +189,12 @@ export class EventStore {
     if (event.type === 'changes.updated')
       this.state.fileRevisions.changes = event.changes.revision
     this.state.outbox.push(envelope)
-    recordTurn(this.state.turns, envelope.event, envelope.eventNumber)
+    recordTurn(
+      this.state.turns,
+      envelope.event,
+      envelope.eventNumber,
+      occurredAt,
+    )
     retainReport(this.state.reports, envelope.event)
     if (reportCommandId !== undefined)
       this.state.reports.commands.push(reportCommandId)
@@ -202,6 +222,22 @@ export class EventStore {
     )
     this.state.sessions.push(structuredClone(session))
     await this.save()
+  }
+
+  async acceptTurn(
+    turn: Omit<SavedTurn, 'startEventNumber' | 'endEventNumber'>,
+  ): Promise<void> {
+    if (!this.state.turns.some((saved) => turnKey(saved) === turnKey(turn)))
+      this.state.turns.push({
+        ...structuredClone(turn),
+        startEventNumber: null,
+        endEventNumber: null,
+      })
+    await this.save()
+  }
+
+  persist(): Promise<void> {
+    return this.save()
   }
 
   async rememberReportCommand(commandId: string): Promise<void> {

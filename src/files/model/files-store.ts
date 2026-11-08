@@ -32,6 +32,11 @@ export interface FilesSnapshot {
   tree: FileTree | null
   /** Why the tree did not load, while no tree shows. */
   treeError: FilesError | null
+  /**
+   * The cloud computer could not read the files. `tree` is the saved tree,
+   * or empty when none was saved. Only a full tree of the stream clears it.
+   */
+  treeUnavailable: boolean
   changes: ChangesResponse | null
   changesError: FilesError | null
   /** The folders that the user opened or closed in this page session. */
@@ -61,6 +66,7 @@ export class WorkspaceFiles {
   private snapshot: FilesSnapshot = {
     tree: null,
     treeError: null,
+    treeUnavailable: false,
     changes: null,
     changesError: null,
     folders: new Map(),
@@ -119,11 +125,12 @@ export class WorkspaceFiles {
   getSnapshot = (): FilesSnapshot => this.snapshot
 
   private publish(change: Partial<FilesSnapshot>): void {
-    const { tree, changes } = this.sync
+    const { tree, treeUnavailable, changes } = this.sync
     const failedRepairs = this.repairs
     this.snapshot = {
       ...this.snapshot,
       tree,
+      treeUnavailable,
       changes,
       failedRepairs,
       ...change,

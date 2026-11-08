@@ -9,6 +9,7 @@ import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
+import { unavailableConversations } from './unavailableConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
@@ -50,6 +51,8 @@ export type ChatItem =
       by?: PersonKey
       /** The changed files of the turn past the 200 that the runner lists. */
       omittedFiles?: number
+      /** The cloud computer could not read the changed files. */
+      filesUnavailable?: true
     }
   | { kind: 'error'; id: string; text: string }
   | { kind: 'working'; id: string; elapsed: string }
@@ -60,6 +63,8 @@ export type ChatItem =
       files: readonly ChangedFile[]
       /** The files of the turn past the 200 that the runner lists. */
       omittedFiles?: number
+      /** The cloud computer could not read the changed files: none listed. */
+      filesUnavailable?: true
     }
   | {
       /** A runner event that the workspace refused (decision 76). */
@@ -103,6 +108,8 @@ export const conversationKeys = [
   'files-left-out',
   'lost-lines',
   'lost-turn-end',
+  'files-unavailable',
+  'stopped-files-unavailable',
   'linked',
 ] as const
 
@@ -260,6 +267,7 @@ export const conversations: Readonly<
   ],
   ...macConversations(history),
   ...lostConversations(history),
+  ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...linkedConversations(followUpDraft),
 }
 

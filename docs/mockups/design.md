@@ -102,6 +102,13 @@ chat, and five tabs at the bottom.
   place, which names the lost data and why, such as "A tool update was lost
   because it was too large". It never shows the lost data, and a phone wraps
   it into balanced lines.
+- Files that the cloud computer could not read never show as an empty list.
+  A finished turn still ends with its duration, then "Changed files
+  unavailable" in muted text in place of its files. A stopped turn ends its
+  line with the same words. All files keeps the list that it saved before,
+  under the notice "The latest list of all files is unavailable", which has
+  no time. With no saved list, All files says "The list of all files is
+  unavailable" in place of the tree. `lostCopy.ts` holds these words too.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the

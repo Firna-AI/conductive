@@ -74,6 +74,8 @@ export type AgentChatEvent = TurnEventContext &
          * Apply both TURN_COMPLETED_MAX_FILES and TURN_COMPLETED_FILES_MAX_BYTES.
          */
         files: readonly ChangedFile[]
+        /** Unknown changed files. When present, files is empty and omittedFileCount is zero. */
+        filesUnavailable?: true
         /** Full list length minus files.length. A non-negative safe integer. */
         omittedFileCount: number
         userMessageIds: readonly string[]
