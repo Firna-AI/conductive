@@ -91,9 +91,13 @@ refresh reads the archive variables. It gives `acceptFirstMessage` to
 - The [member checkpoint adapter](../members/creation-checkpoint.ts) retains a create that Delete interrupted, before or after allocation.
   The production resume route continues that create when the workspace opens after Restore.
   It keeps the allocation attempt, the first message, and the sender. It renews a revoked workspace token.
+  The requeue gives the create a fresh `deadlineAt`, `WORKSPACE_START_TIME_LIMIT_MS` after that open.
+  `creation.createdAt` keeps the original creation date.
   A create without a sandbox continues from its pinned image.
   A create with a retained sandbox resumes that sandbox through the same readiness step as a resume, with the current env vars of the org.
   It then continues at the saved creation step in `afterReadyPhase`. Its commands use a fresh journal key, `commandAttempt`, and the allocation keeps `attempt`.
+  A checkpoint that waited for runner readiness repeats the startup step after sandbox readiness, to rebuild the runtime files.
+  Its finished fetch and branch steps stay complete.
   The branch step uses the branch when it already exists.
 - Resume restarts only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it

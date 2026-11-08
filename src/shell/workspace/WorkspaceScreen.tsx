@@ -31,6 +31,7 @@ import {
   type SandboxNoticeState,
 } from './SandboxNotice'
 import { shownWorkspaces } from './shown-workspaces'
+import { ToolsPart } from './tools/ToolsPart'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { WorkspaceMacBar } from './WorkspaceMacBar'
@@ -176,16 +177,24 @@ export function WorkspaceScreen(props: {
       : sandbox === 'ready' || sandbox === 'starting'
         ? null
         : { problem: sandbox })
-  const panel = (content: ReactNode) =>
-    sandbox === 'ready' ? (
-      content
-    ) : (
+  // The state of a sandbox that does not run, in place of a part.
+  const down =
+    sandbox === 'ready' ? null : (
       <SandboxPanel
         resume={phone ? resume : null}
         state={refusal ? 'refused' : sandbox}
         workspace={workspace}
       />
     )
+  const panel = (content: ReactNode) => down ?? content
+  // The shell's own tools keep their tabs on desktop around the state of a
+  // sandbox that does not run, and mount no tool then. A tools part of the
+  // host shows the state in its place.
+  const tools = features.tools ? (
+    panel(features.tools(context))
+  ) : (
+    <ToolsPart context={context} placeholder={down} />
+  )
   // The Files part keeps the lists of a stopped sandbox, from the copy that
   // the workspace keeps, and shows a start in their place. An archived
   // workspace has no lists.
@@ -212,7 +221,7 @@ export function WorkspaceScreen(props: {
     const content = {
       chat: chatArea,
       files,
-      tool: panel(features.tools?.(context)),
+      tool: tools,
     }
     const screen = (
       <div className={page.mobileBody}>
@@ -248,11 +257,7 @@ export function WorkspaceScreen(props: {
         <RightColumn
           files={files}
           pullRequest={features.pullRequest?.(context)}
-          tools={
-            sandbox === 'archived'
-              ? undefined
-              : panel(features.tools?.(context))
-          }
+          tools={sandbox === 'archived' ? undefined : tools}
         />
         {dialog}
       </div>

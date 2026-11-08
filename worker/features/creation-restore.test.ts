@@ -20,6 +20,7 @@ import {
   type FeatureFixture,
 } from './fixture.test-support'
 import type { Workspace } from './entry.test-support'
+import { completeRetainedCreation } from './retained-creation.test-support'
 
 let bundle: string
 let fixture: FeatureFixture | undefined
@@ -120,11 +121,7 @@ it('continues a sandbox-free admitted create only when opened after Restore, wit
     imageName: 'outer-image',
     creation: { sender: { id: 'member' } },
   })
-  expect(
-    await driveWorkspaceStart<
-      Awaited<ReturnType<Workspace['waitCreationLifecycle']>>
-    >(active.actor(id), active.actor(id).waitCreationLifecycle()),
-  ).toEqual({ ok: true })
+  expect(await completeRetainedCreation(active, id)).toEqual({ ok: true })
   expect(active.boat.starts).toHaveLength(1)
   expect(active.boat.starts[0]).toMatchObject({ from: 'outer-image' })
   expect(

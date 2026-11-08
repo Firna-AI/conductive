@@ -8,7 +8,6 @@ import {
   OUTER_REPOSITORY,
 } from '../chat/integration/outer-seed.test-support'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
-import { driveWorkspaceStart } from '../chat/integration/workspace-start.test-support'
 import { orgEnvironmentContext } from '../lifecycle/settings-data'
 import {
   readRepositoryLocations,
@@ -17,10 +16,10 @@ import {
 import { readWorkspaceToken, revokeWorkspaceToken } from '../lifecycle/tokens'
 import { encrypt } from '../security/crypto'
 import { featureFixture, type FeatureFixture } from './fixture.test-support'
-import type { Workspace } from './entry.test-support'
 import {
   admitRetainedCreation,
   advanceRetainedCreation,
+  completeRetainedCreation,
   deleteAndRestoreCreation,
   retainedCreationJob,
   RETAINED_CONFIGURATION,
@@ -89,13 +88,21 @@ it.each(['ready', 'fetch'] as const)(
       admission: original.admission,
       creation: original.creation,
     })
-    const result = await driveWorkspaceStart<
-      Awaited<ReturnType<Workspace['waitCreationLifecycle']>>
-    >(active.actor(id), active.actor(id).waitCreationLifecycle())
-    expect(result).toEqual({ ok: true })
+    await advanceRetainedCreation(active, id, 'runner')
     expect(await active.actor(id).readLifecycle()).toMatchObject({
       state: 'starting',
       runnerConnected: false,
+      pendingFirstMessage: null,
+    })
+    expect(
+      await active.env.DB.prepare(
+        'SELECT state, sandbox_id AS sandboxId FROM workspaces WHERE id = ?',
+      )
+        .bind(id)
+        .first(),
+    ).toEqual({ state: 'starting', sandboxId })
+    expect(await completeRetainedCreation(active, id)).toEqual({ ok: true })
+    expect(await active.actor(id).readLifecycle()).toMatchObject({
       startupPrepared: true,
       pendingFirstMessage: null,
     })
@@ -124,13 +131,6 @@ it.each(['ready', 'fetch'] as const)(
       expect.stringContaining('/run/conductive/startup.sh'),
       expect.stringContaining('terminal'),
     ])
-    expect(
-      await active.env.DB.prepare(
-        'SELECT state, sandbox_id AS sandboxId FROM workspaces WHERE id = ?',
-      )
-        .bind(id)
-        .first(),
-    ).toEqual({ state: 'starting', sandboxId })
     const history = await active.request(
       chatHistoryPath(OUTER_ORG, id, sessionId),
     )

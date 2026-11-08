@@ -6442,6 +6442,25 @@ requirements in force, so they add no numbered decision.
   that the provider does not document.
   [Frame sources](../docs/deployment.md#frame-sources) gives the input.
 
+Primary integration call, 8 November 2026, for the start time limits of
+Milestone 5d:
+
+- The primary orchestrator asked for a fresh 20-minute start budget for
+  each restored allocated create, or a budget without the stopped time.
+- Root chose the fresh budget. A create gets it when its saved checkpoint
+  is requeued on the first open after Restore.
+- Reason: Restore itself starts no sandbox, as
+  [Delete org](../docs/protocol/orgs-and-members.md#delete-org) says.
+- The allocation attempt, the pinned payload and image, and the original
+  creation date stay unchanged.
+- A new real-object regression must keep the create alive at once after
+  days of retention. It must fail the create after 20 minutes without
+  progress.
+
+Evidence: `.context/milestone-15i/5d-worker-merge.md`,
+`.context/milestone-15i/5d-restore-budget/report.md`, and
+`.context/milestone-15i/5d-ui-check.md`.
+
 ## Milestone 15j: Rename to Conductive
 
 Depends on: none

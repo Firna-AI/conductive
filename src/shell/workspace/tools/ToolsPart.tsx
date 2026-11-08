@@ -1,4 +1,4 @@
-import { useMemo, useState, type MouseEvent } from 'react'
+import { useMemo, useState, type MouseEvent, type ReactNode } from 'react'
 import { classes } from '../../../../docs/mockups/src/components/common/classes'
 import tabs from '../../../../docs/mockups/src/components/common/LinkTabs.module.css'
 import { PanelBar } from '../../../../docs/mockups/src/components/workspace/PanelBar'
@@ -78,9 +78,14 @@ function useTerminalConnect(): ConnectTerminal {
  * reads the routes through the fetch of the app, and the events of the
  * workspace in order. The terminal stays mounted after its first show, so
  * its connection stays while another tool shows. The Desktop tool mounts
- * at each show, so it reads a new desktop address.
+ * at each show, so it reads a new desktop address. A `placeholder`, such as
+ * the state of a sandbox that does not run, takes the place of the tools:
+ * the tabs stay on desktop, and no tool mounts.
  */
-export function ToolsPart(props: { context: WorkspaceContext }) {
+export function ToolsPart(props: {
+  context: WorkspaceContext
+  placeholder?: ReactNode
+}) {
   const { context } = props
   const services = useServices()
   const navigation = useToolNavigation(context)
@@ -99,7 +104,7 @@ export function ToolsPart(props: { context: WorkspaceContext }) {
   const { tool } = navigation
   const [terminalShown, setTerminalShown] = useState(tool === 'terminal')
   if (tool === 'terminal' && !terminalShown) setTerminalShown(true)
-  const body = (
+  const body = props.placeholder ?? (
     <>
       {terminalShown ? (
         <div className={styles.tool} hidden={tool !== 'terminal'}>

@@ -4,6 +4,7 @@ import { requireActiveWorkspaceOwner } from '../data/user-access'
 import { readWorkspace } from '../lifecycle/workspace-data'
 import { leasedCreationImage } from '../lifecycle/image-leases'
 import { readImageSettings } from '../lifecycle/settings-data'
+import { WORKSPACE_START_TIME_LIMIT_MS } from '../lifecycle/job-time-limit'
 import { ensureWorkspaceToken, readWorkspaceToken } from '../lifecycle/tokens'
 import {
   readStartJob,
@@ -53,7 +54,9 @@ export async function resumeCreationCheckpoint(
   job.stderrOffset = 0
   job.requestedByUserId = userId
   job.commandAttempt = `${job.attempt}:restore:${generation}`
-  if (
+  // Sandbox resume must rebuild runtime files before the runner reconnects.
+  if (job.phase === 'runner') job.afterReadyPhase = 'startup'
+  else if (
     job.phase === 'fetch' ||
     job.phase === 'branch' ||
     job.phase === 'startup'
@@ -117,6 +120,7 @@ export async function resumeCreationCheckpoint(
       status: error.status,
     }
   }
+  job.deadlineAt = dependencies.now() + WORKSPACE_START_TIME_LIMIT_MS
   const accepted = await controller.queueLifecycleStart(job)
   if (accepted)
     await nativeWorkspaceStorage(storage, {

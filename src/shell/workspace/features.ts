@@ -79,7 +79,11 @@ export interface WorkspaceFeatures {
   pullRequest?: WorkspaceSlot
   /** All files, Changes, and Checks (Milestones 10 and 14). */
   files?: WorkspaceSlot
-  /** The Terminal, Preview, and Desktop tabs (Milestone 12). */
+  /**
+   * A part in place of the shell's own Terminal, Preview, and Desktop tools.
+   * While the sandbox does not run, the shell shows its state in place of
+   * this part.
+   */
   tools?: WorkspaceSlot
   /** The owner picker that reassigns the workspace (Milestone 15c). */
   owner?: WorkspaceSlot

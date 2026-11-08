@@ -5,9 +5,10 @@ import { requestLines } from '../../../app/test-kit'
 import { routes } from '../../../app/router'
 import { readView } from '../../../chat/api/read-responses'
 import { desktopPath } from '../../../shared/desktop'
+import { previewsPath } from '../../../shared/previews'
 import { terminalPaths } from '../../../shared/terminal'
 import { workspaceViewPath } from '../../../shared/workspace-view'
-import { byRole, queryByRole } from '../../../test-support/dom-queries'
+import { byLabel, byRole, queryByRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../../test-support/fixtures/core'
 import {
@@ -72,6 +73,34 @@ describe('the tools in the workspace', () => {
       from,
     )
     expect(saved.map(toolOf)).toEqual(['preview', 'desktop', 'terminal'])
+  })
+
+  test('keep the tool tabs around a stopped sandbox on desktop, and mount no tool', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ workspaceState: 'stopped' })
+    const { events, opened } = socketsOf(server)
+    const { view } = await openTab(server, routes.workspace(org, id), {
+      events,
+    })
+
+    const column = byLabel('Files and tools', view)
+    const tools = (['terminal', 'preview', 'desktop'] as const).map((tool) =>
+      currents(column, toolHref(org, id, tool)),
+    )
+    expect(tools).toEqual([['page'], [null], [null]])
+    expect(queryByRole('region', 'Tools', view)?.textContent).toContain(
+      'Sandbox stopped',
+    )
+    const toolPaths = [
+      terminalPaths.connection(org, id),
+      previewsPath(org, id),
+      desktopPath(org, id),
+    ]
+    const toolReads = requestLines(server).filter((line) =>
+      toolPaths.some((path) => line === `GET ${path}`),
+    )
+    expect(toolReads).toEqual([])
+    expect(opened).toEqual([])
   })
 
   test('keep a preview gone that the workspace revoked before the Preview tool showed', async () => {

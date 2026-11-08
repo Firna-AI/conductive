@@ -6,7 +6,6 @@ import {
   OUTER_REPOSITORY,
 } from '../chat/integration/outer-seed.test-support'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
-import { driveWorkspaceStart } from '../chat/integration/workspace-start.test-support'
 import { shellQuote } from '../lifecycle/commands'
 import {
   readRepositoryLocations,
@@ -15,10 +14,10 @@ import {
 import { localSavedScriptFixture } from '../lifecycle/saved-script-test-support'
 import type { CommandResult } from '../sandbox/provider'
 import { featureFixture, type FeatureFixture } from './fixture.test-support'
-import type { Workspace } from './entry.test-support'
 import {
   admitRetainedCreation,
   advanceRetainedCreation,
+  completeRetainedCreation,
   deleteAndRestoreCreation,
   retainedCreationJob,
   RETAINED_CONFIGURATION,
@@ -97,11 +96,7 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
       })
     ).status,
   ).toBe(200)
-  expect(
-    await driveWorkspaceStart<
-      Awaited<ReturnType<Workspace['waitCreationLifecycle']>>
-    >(active.actor(id), active.actor(id).waitCreationLifecycle()),
-  ).toEqual({ ok: true })
+  expect(await completeRetainedCreation(active, id)).toEqual({ ok: true })
   expect(results.map((result) => result.exitCode)).toEqual([0, 0])
   const commands = active.boat.commandRequests
     .slice(commandsBefore)
@@ -178,11 +173,7 @@ it('runs interrupted saved startup after Restore instead of following its dead j
       })
     ).status,
   ).toBe(200)
-  expect(
-    await driveWorkspaceStart<
-      Awaited<ReturnType<Workspace['waitCreationLifecycle']>>
-    >(active.actor(id), active.actor(id).waitCreationLifecycle()),
-  ).toEqual({ ok: true })
+  expect(await completeRetainedCreation(active, id)).toEqual({ ok: true })
   expect(results.map((result) => result.exitCode)).toEqual([125, 0])
   expect(await sandbox.file('completed')).toBe('continued\n')
   expect(await sandbox.ready()).toBe('')

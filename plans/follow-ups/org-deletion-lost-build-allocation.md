@@ -4,7 +4,7 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-08, a problem outside the scope of the check of finding 8, branch `conductor/boat-native-remote-workspaces-milestone-5d`, round 1. The same day, the item grew to cover the workspace cleanup owners.
 - **Location:** `worker/members/deletion-data.ts:120-129` (`recordSuspendedResources`), `worker/members/deletion.ts:62-81` (`stopDeletedOrg`), `worker/members/cleanup.ts:58-110` (the purge), `worker/members/purge-data.ts:11-37`, `worker/lifecycle/settings-data.ts:150-160` (`firstOrgAdmin`), `worker/lifecycle/start-allocation-cleanup.ts:16-25` (`retryAllocationCleanup`), `worker/lifecycle/cleanup.ts:25-37` (`retrySandboxCleanup`), and `worker/members/README.md:82-85` (the `suspendOrg` contract).
-- **Reason:** Delete org had this gap before the time-limit work that found it, and the hook that must drain builds and starts is not written yet.
+- **Reason:** Delete org had this gap before the time-limit work that found it, and the production hooks now drain starts and builds.
 
 - **Source:** Review. **Category:** Product bug.
 - **Terms:**
@@ -17,7 +17,7 @@
   - The protocol says that Delete org stops every sandbox of the org at once. It also says that the app deletes everything of the org after 7 days, unless an admin restores the org. See the "Delete org" section of `docs/protocol/orgs-and-members.md`.
   - `stopDeletedOrg` runs the `suspendOrg` hook, then fills the deletion list with `recordSuspendedResources`, then stops each listed sandbox. It fills the list only once, before it marks the org suspended.
   - The `suspendOrg` contract in `worker/members/README.md` says that the hook must drain pending workspace starts and image builds, and keep their sandbox IDs in D1. It does not say what the drain does with a cleanup owner.
-  - No production code implements `suspendOrg` yet. The main Worker does not dispatch the Members routes yet either, so no real org meets this problem today.
+  - `productionMembersHooks` in `worker/members/composition.ts` implements `suspendOrg`. It suspends the lifecycle of the org image and of each workspace of the org, which drains their starts and builds. The main Worker dispatches the Members routes with these hooks, through `worker/routes.ts`. Its Cron Trigger runs the purge with the same hooks.
   - An image build prepares the org's cloud computer image in its own build sandbox. It saves its create request in `image_build_jobs`, as phase `allocating`, before it calls the provider.
   - After a failed build, `cleanupBuild` in `worker/lifecycle/build-execution.ts` replays that saved request and deletes the returned sandbox. So the build row is the cleanup owner of a build.
   - `finishFailedStart` in `worker/lifecycle/start-failure.ts` hands the cleanup of a failed create to its workspace object, and then removes the workspace row.

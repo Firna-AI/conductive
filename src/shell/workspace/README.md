@@ -144,12 +144,18 @@ Each folder of a path is a part of the address. Another address under
 
 ## The tools part
 
-The shell gives the Terminal, Preview, and Desktop tools as its own
-`tools` part, with the [terminal](../../terminal/README.md), the
+The shell gives its own Terminal, Preview, and Desktop tools, with the
+[terminal](../../terminal/README.md), the
 [previews](../../previews/README.md), and the
-[desktop](../../desktop/README.md). A `tools` part of the host takes its
-place. The tools show only while the sandbox runs, and an archived
-workspace has none.
+[desktop](../../desktop/README.md). A `tools` part of the host takes their
+place. An archived workspace has no tools.
+
+- While the sandbox does not run, the tools show its state: starting,
+  stopped, failed, or refused. On desktop the panel keeps its tabs around
+  the state. A phone shows the state on the tool page. No tool mounts then,
+  so no tool reads its route or opens the terminal.
+- A `tools` part of the host shows only while the sandbox runs. The shell
+  shows the state of the sandbox in its place.
 
 | Address | What shows |
 | ------- | ---------- |
@@ -396,14 +402,16 @@ Run the tests with `npm run test -- src/shell/workspace`.
   the saved view. It also checks a failed chat load, the diff of a turn on
   a phone, a stopped, starting, and refused sandbox, and an archived
   workspace.
-- `app-features.tsx`: the shell's own parts, which `useFeatures` puts under
-  the parts of the host.
+- `app-features.tsx`: the shell's own files, pull request, and owner
+  parts, which `useFeatures` puts under the parts of the host. The screen
+  draws its own tools panel when the host gives no `tools` part.
 - `WorkspaceOwner.tsx` and `WorkspaceMacBar.tsx`: the owner picker of the
   members UI, and the bar of the 15 minutes in the Mac app.
 - `saved-view.ts`: the saved view of the kept chat, and `saveView`, which
   writes a change only once the chat read the view.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
-  `tools/tool-address.ts`: the tools panel, the tool and preview of the
+  `tools/tool-address.ts`: the tools panel and its `placeholder`, which
+  takes the place of the tools inside the tabs, the tool and preview of the
   address or the saved view, and their addresses.
 - `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
   ordered stream, with the kept revokes of previews.
@@ -412,7 +420,8 @@ Run the tests with `npm run test -- src/shell/workspace`.
   the ordered stream.
 - `tools/ToolsWiring.test.tsx` and `github/GitHubWiring.test.tsx`: mount
   the whole app over the fake API. They check the terminal socket across
-  tool switches, the saved tool, a revoke before the Preview tool shows, a
+  tool switches, the saved tool, the tabs and the state of a stopped
+  sandbox with no tool mounted, a revoke before the Preview tool shows, a
   preview address on a phone, one GitHub read for the bar and Checks with a
   live event, the Checks row of a phone, and an archived phone.
   `wiring-test-kit.tsx` holds their helpers.

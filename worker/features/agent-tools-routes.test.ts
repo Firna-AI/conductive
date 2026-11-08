@@ -23,8 +23,8 @@ import {
   OuterFakeRunner,
   requestRunner,
 } from '../chat/integration/runner-socket.test-support'
-import { driveWorkspaceStart } from '../chat/integration/workspace-start.test-support'
 import { featureFixture, type FeatureFixture } from './fixture.test-support'
+import { completeRetainedCreation } from './retained-creation.test-support'
 
 let bundle: string
 let fixture: FeatureFixture | undefined
@@ -120,7 +120,8 @@ it('uses the active stored sender and inherited owner when a machine tool create
   expect((await request('stale-turn')).status).toBe(403)
   const creating = request(turnId)
   const newId = await allocation
-  const response = await driveWorkspaceStart(active.actor(newId), creating)
+  expect(await completeRetainedCreation(active, newId)).toEqual({ ok: true })
+  const response = await creating
   expect(response.status).toBe(201)
   const created = record(await response.json())
   expect(record(created.workspace)).toMatchObject({
