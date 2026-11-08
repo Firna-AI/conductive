@@ -306,6 +306,12 @@ Later screens add the frame and connection sources that they need.
 - The app stores the env var values and the agent logins encrypted.
 - The values of env vars are write-only. The browser never gets a stored
   value back.
+- Agent output can show an env var value. The output filter of the runner
+  hides only the workspace token and the agent logins. So a value that an
+  agent repeats stays in the chat history, and each reader of the chat
+  sees it (decision 133).
+- A start log hides each env var value of the org, also a short value,
+  before the app shows the log (decision 133).
 
 ## Agent logins
 
