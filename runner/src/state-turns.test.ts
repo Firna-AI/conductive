@@ -141,7 +141,7 @@ it('prevents duplicate replay and interrupt ends while a recovered completion sa
     await Promise.all([replay, duplicate, interrupted, repeatedStop])
   }
   await engine.idle()
-  expect(events).toEqual([stoppedEvent()])
+  expect(events).toEqual([{ ...stoppedEvent(), filesUnavailable: true }])
   expect(store.snapshot.turns).toEqual([
     {
       sessionId: 'saved',
@@ -154,7 +154,7 @@ it('prevents duplicate replay and interrupt ends while a recovered completion sa
   ])
   expect(store.snapshot.outbox.map(({ event }) => event)).toEqual([
     startEvent(),
-    stoppedEvent(),
+    { ...stoppedEvent(), filesUnavailable: true },
   ])
   expect(h.providers.processes).toEqual([])
 })

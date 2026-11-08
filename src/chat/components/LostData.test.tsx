@@ -7,6 +7,7 @@ import {
   refused,
   streamId,
   turn,
+  unreadEnd,
   update,
 } from './event-kit'
 import { renderChat, textOf } from './render-kit'
@@ -94,6 +95,39 @@ describe('data that the runner left out', () => {
     expect(text()).toContain('not listed The agent stopped 1s ')
     expect(count(text(), 'more files')).toBe(1)
     expect(count(text(), 'not listed')).toBe(1)
+  })
+})
+
+describe('changed files that the cloud computer could not read', () => {
+  const unavailable = 'Changed files unavailable'
+
+  it('ends a finished and a stopped turn, and says that their files are unavailable', async () => {
+    const { chat, text } = await renderChat({ conversation: 'running' })
+    chat.emit(unreadEnd('turn-1', 'finished', 252_000))
+    expect(text()).toContain(`4m 12s ${unavailable}`)
+    expect(text()).not.toMatch(/Working|Try again|This turn stopped|more files/)
+
+    const stopped = { ...turn, turnId: 'turn-2' }
+    chat.emit({
+      ...stopped,
+      type: 'turn.stop-requested',
+      requestedById: 'jonas',
+    })
+    chat.emit(unreadEnd('turn-2', 'stopped'))
+    expect(text()).toContain(`Jonas Weber stopped the agent · ${unavailable}`)
+
+    // An empty list that the runner read is no unread list.
+    chat.emit({
+      ...turn,
+      turnId: 'turn-3',
+      type: 'turn.completed',
+      state: 'finished',
+      durationMs: 1_000,
+      files: [],
+      omittedFileCount: 0,
+      userMessageIds: [],
+    })
+    expect(count(text(), unavailable)).toBe(2)
   })
 })
 

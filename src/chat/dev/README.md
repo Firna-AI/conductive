@@ -40,6 +40,7 @@ The address chooses the state. The first value of each option is the default:
 | `app` | `browser`, `mac` (the Mac app on the Mac that got the requests) |
 | `change` | `done`, `done-not-saved`, `failed` (what the page's Mac does with a change of its settings) |
 | `page` | `chat`, `this-mac` (the This Mac section of the account) |
+| `files` | `listed`, `unread` (each end of a turn of the chat says that the cloud computer could not read its changed files) |
 
 ## What the page does
 

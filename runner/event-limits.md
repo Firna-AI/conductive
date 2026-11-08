@@ -22,6 +22,8 @@ byte budget measures the event or field after the output filter.
 - Tree and changes reports have separate revision counters, which survive
   a reconnect or a restart. The refresh after each connect sends a full tree
   and a full changes report with newer revisions.
+- A failed repository scan sends `files.unavailable` and still permits
+  `runner.ready`. The next successful tree scan sends a full snapshot.
 - Before the outbox takes an event number, it checks the complete envelope
   against [`RUNNER_EVENT_MAX_BYTES`](../src/shared/runner.ts). An event
   that does not fit gets a local warning and no number, so later events

@@ -22,6 +22,8 @@ export function parseFileEvent(value: unknown): FileEvent | null {
       const delta = parseTreeDelta(value.delta)
       return delta ? { type: 'files.changed', delta } : null
     }
+    case 'files.unavailable':
+      return { type: 'files.unavailable' }
     case 'changes.updated': {
       const changes = parseChanges(value.changes)
       return changes ? { type: 'changes.updated', changes } : null

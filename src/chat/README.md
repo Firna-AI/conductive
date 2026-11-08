@@ -114,8 +114,9 @@ members from the models of the app.
 ## Rules for this code
 
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
-  the session logs, the transcript items and their counts, the lost lines,
-  the turns, and Try again.
+  the session logs, the transcript items and their counts, the changed
+  files that the cloud computer could not read, the lost lines, the turns,
+  and Try again.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
   stream. One load runs at a time for each session, and a failed load waits

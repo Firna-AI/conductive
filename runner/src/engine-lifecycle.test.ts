@@ -183,15 +183,18 @@ it('acknowledges unmatched interrupts without stopping another running turn', as
   })
   await h.engine.command({ ...interrupt, commandId: 'stop-idle' })
   await h.engine.idle()
+  expect(
+    h.events.filter((event) => event.turnId === 'turn-other'),
+  ).toHaveLength(1)
   expect(h.events.at(-1)).toEqual({
     type: 'turn.completed',
     sessionId: 'session-1',
-    turnId: 'turn-other',
-    state: 'stopped',
+    turnId: 'turn-active',
+    state: 'finished',
     durationMs: 0,
     files: [],
     omittedFileCount: 0,
-    userMessageIds: [],
+    userMessageIds: ['message-active'],
   })
   expect(h.store.snapshot.sessions.map((session) => session.sessionId)).toEqual(
     ['session-1'],

@@ -10,7 +10,7 @@ import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
-import { unlistedFiles } from './lostCopy'
+import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
 import { ToolGroup } from './ToolGroup'
 import { TurnEnd } from './TurnEnd'
@@ -77,6 +77,7 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
         <TurnEnd
           duration={item.duration}
           files={item.files}
+          filesUnavailable={item.filesUnavailable}
           omittedFiles={item.omittedFiles}
         />
       )
@@ -96,6 +97,7 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
           <CircleStop size={13} />
           {stoppedLine(item.by, viewer)}
           {item.omittedFiles ? ` · ${unlistedFiles(item.omittedFiles)}` : null}
+          {item.filesUnavailable ? ` · ${turnFilesUnavailable}` : null}
         </div>
       )
     case 'error':

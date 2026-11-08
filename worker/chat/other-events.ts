@@ -44,6 +44,7 @@ export function parseOtherEvent(value: unknown): RunnerEvent | null {
       }
     }
     case 'files.snapshot':
+    case 'files.unavailable':
     case 'files.changed':
     case 'changes.updated':
       try {

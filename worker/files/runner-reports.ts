@@ -128,6 +128,10 @@ export class RunnerFileReports {
 
   async accept(event: RunnerFileEvent): Promise<FileEvent | null> {
     const state = await this.state()
+    if (event.type === 'files.unavailable') {
+      await this.apply(state, event)
+      return event
+    }
     if (event.type === 'files.changed') {
       const sequence = state.tree
       if (

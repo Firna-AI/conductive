@@ -77,6 +77,7 @@ export function FilesContent(props: {
       edited={!isNew(state)}
       open={open}
       placeholder={placeholder}
+      tree={state.tree}
       view={state.files}
     />
   )

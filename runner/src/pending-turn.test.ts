@@ -69,7 +69,16 @@ it('stops a turn during its own session save without late starts or duplicate en
       },
     ])
     expect(h.providers.processes).toEqual([])
-    expect(h.store.snapshot.turns).toEqual([])
+    expect(h.store.snapshot.turns).toEqual([
+      {
+        sessionId: 'saving',
+        turnId: 'turn-saving',
+        startedAt: 100,
+        messageIds: ['message-saving'],
+        startEventNumber: null,
+        endEventNumber: 1,
+      },
+    ])
   } finally {
     release.resolve()
     await starting
