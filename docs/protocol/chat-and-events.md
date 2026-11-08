@@ -59,7 +59,31 @@ says.
 - "+" starts a new session on the same branch and in the same sandbox.
 - The open session tabs show in the order of creation. A new session
   opens as the last tab (decision 77).
-- The user can rename a session.
+- The tab of a session shows the title of the session.
+- The first session of a new workspace starts with the name of the
+  workspace, the city name (decision 143).
+- When the workspace takes the agent's title as its name, as
+  [Messages](#messages) says, the first session takes the title too. It
+  takes only the first title of the workspace, and only while it still
+  has the city name.
+- Each other session starts with the title "New session" (decision 143).
+- When the workspace accepts a message with text in such a session, the
+  first line with text of that message becomes its title. The session
+  takes that title only while it still has the title "New session".
+- A message with no text, such as a message with only a screenshot, gives
+  no title.
+- In a title from a message, each run of spaces becomes one space. The app
+  removes one final full stop, but it keeps an ellipsis.
+- A title from a message holds at most 60 characters. The limit counts
+  Unicode code points. The app cuts a longer line after its last whole
+  word that fits the limit. When the first word does not fit, the app cuts
+  the line at the limit.
+- The user can rename a session. The app never replaces a title that a
+  member gave a session.
+- Reason: the first session does the task of the workspace, and each other
+  session does the task of its own first message. A title request for each
+  session was rejected, because the first message names that task with no
+  model call.
 - Each session has its own model picker.
 - Closing the tab of a session without a running turn moves the session to
   the session history (decision 31).
@@ -177,10 +201,28 @@ says.
 - Reason: a tab that missed newer events can still show an older Try again.
   A check in the chat alone was rejected, because such a tab could send an
   older message again. The agent would then answer out of order.
-- After the first answer of the agent in a new workspace, the app asks the
-  agent for a title of three to five words. The chat does not show that
-  request.
+- When the first turn of a new workspace starts, the app asks the agent of
+  that turn for a title of three to five words (decision 142). The agent
+  writes the title from the text of the first message.
+- The title request runs at the same time as the turn. The turn does not
+  wait for it. The request uses the agent login of the turn. The chat does
+  not show it.
 - The workspace then takes the title as its name.
+- When the request fails, the workspace keeps its name. The app then asks
+  again when the next turn of the workspace starts, until the workspace
+  has a title.
+- A later request also uses the text of the first message. After a restart
+  of the runner, it can use the text of the message that starts its turn
+  instead.
+- A first message with no text starts no request. The next turn whose
+  message has text then asks, from that text.
+- Reason: the title needs only the first message. A request after the
+  first answer was rejected, because an agent can write its first answer
+  only at the end of a long turn.
+- A name that the Worker makes from the first words of the message was
+  rejected, because such names are weaker than the agent's title. A model
+  call from the Worker was rejected, because it needs a new path for the
+  logins of the members, or a new key of the operator.
 
 ## What the chat shows
 
