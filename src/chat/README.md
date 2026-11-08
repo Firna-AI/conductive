@@ -3,8 +3,9 @@
 The chat of a workspace: the session tabs with the session history, and the
 chat of the open session with its composer. It shows messages, folded tool
 calls, the running turn, steer, Stop, failures with Try again, the start
-steps of the sandbox, the Mac commands of each turn, and the bar that takes
-the composer's place while the sandbox does not run. The workspace screen
+steps of the sandbox, the wait of Send during the first start of a new
+workspace, the Mac commands of each turn, and the bar that takes the
+composer's place while the sandbox does not run. The workspace screen
 of the app shell mounts it by default, as
 [the workspace screen](../shell/workspace/README.md#the-chat-of-the-workspace)
 says. It builds against the fake API and the recorded chat events of
@@ -144,6 +145,23 @@ members from the models of the app.
   after an action, such as a view save, the focus, or a free Resume button,
   still run when its reply is older. The retry message is the exception: the
   session log orders its records by event number, as the rules above say.
+- Send waits in every session until the records show that the first start
+  of the workspace succeeded. The Worker refuses each new message until
+  then, as [Messages](../../docs/protocol/chat-and-events.md#messages) says.
+  The box keeps each draft, and the reason shows beside Send: "You can send
+  when the sandbox is ready", from the mockups' `SendWait`.
+- A state that the Worker sets only after that start shows the success:
+  ready, working, input, or unread. The record of a resume shows it too. A
+  stop or an error does not, because a first start can stop or fail before
+  it succeeds.
+- The chat remembers the success. So a resume never waits, also when its
+  workspace record comes before its start record, while the record of the
+  first start still shows. A message during a resume goes, and the
+  workspace queues it for the sandbox.
+- No draft sends on its own when the start succeeds. The user sends it.
+- A send that the Worker refuses with `409 workspace_starting` keeps its
+  text, its files, and its message ID. The notice "Your message didn't send"
+  shows the Worker's plain message.
 - The chat loads the session list and the view, then the full history of the
   shown session, then the workspace and the session list again. The stream
   starts after the history's `throughEventNumber`, so no change between the
@@ -192,6 +210,11 @@ line and its notices. `components/SourceLink.dom.test.tsx` presses the link
 of a linked session to its open and its closed source. In an archived
 workspace, it opens a linked session that closed before the archive from the
 session history. Its source link writes nothing.
+`state/first-start.test.ts` drives Send in two sessions during the first
+start, a stop before its success, and a resume whose workspace record comes
+first. It also checks a send that the Worker refuses during the first start.
+`components/FirstStart.dom.test.tsx` mounts the chat during the first start,
+presses Enter, and then sends after the start succeeds.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -228,6 +251,8 @@ check in the Mac app.
   that first shows the new session.
 - `state/session-records.ts`: the local versions of the session records and
   of the workspace record.
+- `state/first-start.ts`: the success of the first start of the workspace,
+  which the snapshot remembers, and the wait of Send until then.
 - `state/session-login.ts`: whose login a message uses, from the session
   record and the reader, and the words of the line under the composer.
 - `state/linked-replies.ts`: the message and the focus of a reply that names

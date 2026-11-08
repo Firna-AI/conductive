@@ -3,6 +3,7 @@ import type { WorkspaceResponse } from '../../shared/workspaces'
 import { refreshDevices } from '../device/device-actions'
 import type { ChatSnapshot } from './chat-snapshot'
 import { logOf, messageOf, withTranscript, type ChatContext } from './context'
+import { withFirstStart } from './first-start'
 import { hydrate } from './history'
 import { orderSessions, pickActive, sortHistory } from './sessions'
 
@@ -98,7 +99,7 @@ export async function loadChat(context: ChatContext): Promise<void> {
   store.update((snapshot) => {
     const open = orderSessions(sessions.sessions, snapshot.view)
     const shown = open.some((item) => item.id === snapshot.activeSessionId)
-    let next: ChatSnapshot = {
+    let next: ChatSnapshot = withFirstStart({
       ...snapshot,
       load: { state: 'ready' },
       workspace: detail.workspace,
@@ -108,7 +109,7 @@ export async function loadChat(context: ChatContext): Promise<void> {
       activeSessionId: shown
         ? snapshot.activeSessionId
         : pickActive(open, snapshot.view),
-    }
+    })
     for (const id of listed) {
       const log = logOf(context, id)
       next = withTranscript(next, id, log.transcript, log.times)

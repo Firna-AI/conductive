@@ -58,6 +58,21 @@ A cross-agent model change uses the client's `newSessionId`. A repeated
 request gets the same session. An unrelated occupied ID is refused. A
 same-agent change ignores this field.
 
+## Message admission
+
+The public Send and Retry routes check the workspace creation attempt
+before login checks or message writes. A pending or failed attempt gets
+`409 workspace_starting` in every session. A repeat of an accepted
+message request returns its stored acceptance before this check.
+
+The creation attempt stays successful during later stops and resumes.
+Messages on a resume still enter the stored queue. A workspace without
+a creation attempt keeps its existing send behaviour.
+
+The check reads the creation result published in D1. A delayed success
+publication can keep new sends waiting after the native start succeeds.
+The separate trusted first-message path does not use this public route.
+
 ## Access
 
 The Durable Object runs the gates itself.
