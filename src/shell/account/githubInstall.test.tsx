@@ -3,7 +3,7 @@
 import { describe, expect, test, vi } from 'vitest'
 import { getStartedCopy } from '../../../docs/mockups/src/screens/getStartedCopy'
 import { Store } from '../../app/store'
-import { ManualFocus } from '../../app/test-kit'
+import { ManualFocus, requestLines } from '../../app/test-kit'
 import {
   ACCOUNT_PATHS,
   type GitHubInstallationsResponse,
@@ -82,6 +82,17 @@ function newUserServer(): FakeApiServer {
   return server
 }
 
+/** How many reads of the steps and of the installs the server got. */
+function reads(server: FakeApiServer): { steps: number; installs: number } {
+  const lines = requestLines(server)
+  const count = (path: string) =>
+    lines.filter((line) => line === `GET ${path}`).length
+  return {
+    steps: count(GET_STARTED_PATH),
+    installs: count(ACCOUNT_PATHS.githubInstallations),
+  }
+}
+
 /** The install button of a screen, once the installs give its address. */
 function installButton(view: HTMLElement): Promise<HTMLElement> {
   return waitFor(() => {
@@ -111,7 +122,7 @@ describe('the install of the GitHub App', () => {
     ])
   })
 
-  test('the Mac app opens GitHub with its own state, and shows the install when its window gets the focus again', async () => {
+  test('the Mac app opens GitHub with its own state, and one return of the focus reads and shows the install once', async () => {
     holdAnimationFrames()
     const left: string[] = []
     const focus = new ManualFocus()
@@ -130,6 +141,9 @@ describe('the install of the GitHub App', () => {
     expect(left).toEqual([`${installUrl}?state=mac`])
     server.json('GET', ACCOUNT_PATHS.githubInstallations, installs(true))
     server.json('GET', GET_STARTED_PATH, steps(true))
+    const before = reads(server)
+    // One return to a browser tab fires both `focus` and `visibilitychange`.
+    focus.focus()
     focus.focus()
     await waitFor(
       () => view.textContent?.includes('Installed on firna'),
@@ -139,5 +153,10 @@ describe('the install of the GitHub App', () => {
       'Installed on firna, with 3 repositories.',
     )
     expect(queryByRole('button', install, view)).toBeNull()
+    const after = reads(server)
+    expect({
+      steps: after.steps - before.steps,
+      installs: after.installs - before.installs,
+    }).toEqual({ steps: 1, installs: 1 })
   })
 })

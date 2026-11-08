@@ -37,6 +37,8 @@ export class AccountModel {
   private readonly services: AppServices
   private readonly app: AppModel
   private readonly installationReads: Refresher<GitHubInstallationsResponse>
+  /** The read of the steps that a return to the page started, while it runs. */
+  private stepsOnReturn: Promise<void> | null = null
 
   constructor(services: AppServices, app: AppModel) {
     this.services = services
@@ -56,13 +58,27 @@ export class AccountModel {
    */
   watchInstallations(): () => void {
     const stopReads = this.installationReads.watch()
-    const stopSteps = this.services.onFocus(() => {
-      void this.app.refreshGetStarted().catch(() => undefined)
-    })
+    const stopSteps = this.services.onFocus(() => this.readStepsOnReturn())
     return () => {
       stopReads()
       stopSteps()
     }
+  }
+
+  /**
+   * Reads the steps of Get started after a return to the page. One return
+   * to a browser tab can call the focus listener twice, once for the focus
+   * and once for the page that shows again, so a return shares a read that
+   * runs already. A read after a step does not share it, so that it reads
+   * the change of that step.
+   */
+  private readStepsOnReturn(): void {
+    this.stepsOnReturn ??= this.app
+      .refreshGetStarted()
+      .catch(() => undefined)
+      .finally(() => {
+        this.stepsOnReturn = null
+      })
   }
 
   /** Reads the installs now, such as for Try again after a failed read. */
