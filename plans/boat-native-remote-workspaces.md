@@ -4247,6 +4247,8 @@ answer.
 - **Action:** ask the user, because D changes the rule "a JSON body for
   each write" of the access protocol, and no recorded decision covers
   that change.
+- **Chosen:** D, by the user on 8 November 2026. Milestone 8p builds it,
+  with the conditions of the options check.
 - **Options check, 8 November 2026:** it keeps D. A test in Miniflare
   confirmed that D streams into R2 through a fixed-length stream, so D
   needs a required `Content-Length`. D keeps the forged-request
