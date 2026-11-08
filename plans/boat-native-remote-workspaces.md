@@ -6151,7 +6151,8 @@ Orchestrator call: finish the chat recovery fixes before the first
 deployment. The confirmed read-mark failure affects normal live output
 and replay in a new tab.
 
-This milestone needs the prerequisites from the user.
+This milestone needs the prerequisites from the user. Decision 141 moves
+its open checks to the work after the first merge into `main`.
 
 - [x] Use [the deployment input guide](../docs/deployment.md) for each Worker
       variable and secret, the public runner archive and digest, and the
@@ -7217,7 +7218,8 @@ three implementation reports under `.context/boat-native-remote-workspaces/repor
 
 Depends on: 15i, 15d, 16a
 
-This milestone needs the prerequisites from the user.
+This milestone needs the prerequisites from the user. Decision 141 moves
+its open checks to the work after the first merge into `main`.
 
 - [ ] Deploy the Worker, D1, and the web app to the user's Cloudflare
       account, with GitHub sign-in.
@@ -7248,18 +7250,25 @@ This milestone needs the prerequisites from the user.
 
 Depends on: 8m, 15i, 16, 16a (decision 135). The other open milestones
 block nothing. They keep running, and Milestone 15n waits for a release of
-`@firna/ui` (the user, 8 November 2026).
+`@firna/ui` (the user, 8 November 2026). Decision 141 moves the open
+checks of 16 and 16a to the work after the merge.
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
-      `implementation-review` skill after the push. Report the findings,
-      then apply the fix rule: fix the `fix now` findings, record
-      follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
-- [ ] Move each open milestone that does not block this one, with its
-      follow-up items, into a new plan for the work after the first merge,
-      as decision 135 says.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      Done on 8 November 2026: the complete gate passed on `24146f2`.
+      Evidence: `.context/boat-native-remote-workspaces/checks/gate-final-24146f2.log`.
+      Branch: `calummoore/conductor-alternative-architecture`.
+- [x] Commit with Conventional Commits and push the branch. Done on
+      8 November 2026. Branch: `calummoore/conductor-alternative-architecture`.
+- [ ] Review the commits that no milestone review covered, the deploy
+      fixes `a145db0..c54c8dd`, with the `implementation-review` skill, as
+      decision 141 says. Report the findings, then apply the fix rule: fix
+      the `fix now` findings, record follow-up items under
+      `plans/follow-ups/` for the rest, re-review once, and report.
+- [ ] Keep the open milestones in this plan for the later pull requests.
+      Each open milestone merges into `main` through a later pull request.
+      Orchestrator call on 8 November 2026, in place of the new plan that
+      decision 135 named: decision 141 keeps this plan for the later pull
+      requests, so a second plan would split the same work.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
