@@ -63,12 +63,24 @@ approved.
 - Agent call: the palette opens on the All tab with an empty field each
   time. It has no address, and it closes when the address changes, such
   as after Back.
+- Agent call, from a question of Milestone 2: a press outside the dialog
+  closes the palette, as it closes the other dialogs. A row closes the
+  palette first, then runs its action, so the result of the action, such
+  as the Archive question, shows alone.
+- Agent call, from a question of Milestone 2: while a dialog or a sheet is
+  open, the palette key does nothing, because that layer holds the focus
+  and the frame under it is inert. An open menu closes, and the palette
+  opens.
 - Agent call: ⌘K works on each page of the signed-in app. On a page
   without an org, such as the Account page, the palette works on the org
   that the person opened last in this tab, or else on the first org that
   is not deleted, as the Mac app keeps its sidebar. Without such an org,
   it offers Create org and the settings of the Account. A deleted org
   offers no workspace and no action of the org.
+- Agent call, from a question of Milestone 2: the palette treats a deleted
+  org as absent. The memory of the tab never makes it the org of the
+  palette, it has no Switch to row, and its settings do not show. This is
+  one rule, and the Mac app sidebar also skips a deleted org.
 
 ### Layout
 
@@ -78,6 +90,8 @@ approved.
   palette is a quick tool. On a phone it is a page that fills the screen,
   with the search field and Cancel at the top, because the phone keyboard
   leaves no room for a dialog.
+- Agent call: the Search row shows ⌘K on a Mac, and "Ctrl K" on Windows
+  and Linux, in the style of a key cap.
 - Agent call: the empty search field of the All tab says "Search
   workspaces, actions, and settings" on desktop, and only "Search" on a
   phone, which has no room for the long words. Each other tab names what
@@ -114,6 +128,21 @@ approved.
   old workspace without a change of tab, and the active ones stay first.
 - Agent call: Recent workspaces shows up to five workspaces, without the
   open one. They come by their latest activity, as decision 146 chose.
+  An archived workspace never shows there, because archived workspaces
+  have their own group in a search.
+- Agent call, from a question of Milestone 2: the query stays when the
+  person changes the tab. Each tab shows only its rows that match, in its
+  own groups, and hides a group without a match. The filters start at All
+  repositories and Active each time that the palette opens. So the person
+  narrows a search without typing it again.
+- Agent call, from a question of Milestone 2: rows of the same rank keep
+  the order that the tab shows without a query. The Switch to rows follow
+  the org rail.
+- Agent call, from a question of Milestone 2: when the Workspaces tab has
+  no workspace to show while the field is empty, one line says where they
+  show, such as "Archived workspaces of acme/marketing-site show here". An
+  empty list without words looks like a failed load, and the `product-ui`
+  skill asks for an explicit empty state. Milestone 2a draws it.
 
 ### Actions and settings
 
@@ -130,7 +159,16 @@ approved.
   actions stay where they are in this version. Resume shows on the
   stopped workspace itself. The owner picker acts on a person. Sign out
   sits on the Account page, which the Sign-in row opens. A pull request
-  action changes GitHub.
+  action leads to GitHub, from the pull request bar.
+- Agent call, from a question of Milestone 2: New workspace shows on each
+  page where the palette has an org that takes changes, because it opens a
+  page. New section shows only where the page shows the workspace list.
+  The Go to rows show only where the page shows the right column. So each
+  row does something that the person sees.
+- Agent call, from a question of Milestone 2: in the Mac app, the last
+  group of the Actions tab is "Window", with "Hide the sidebar" or "Show
+  the sidebar", the labels of the toggle of the Mac app. It shows where a
+  sidebar shows.
 - Agent call: the Settings tab groups the four tabs of the org settings
   under the name of the org, such as "Acme settings". It groups the
   sections of the Account page under "Account": Sign-in, GitHub, Agents,
@@ -146,6 +184,9 @@ approved.
   highlighted. Up and Down move the highlight, and Enter runs it. The
   pointer can choose any row. Tab moves to the tabs and the filters, and
   the focus stays inside the palette, as in the other dialogs of the app.
+- Agent call, from a question of Milestone 2: Down on the last row moves
+  the highlight to the first row, and Up on the first row moves it to the
+  last, as the menus of the app do.
 
 ### States
 
@@ -296,19 +337,39 @@ Depends on: 1
 
 The protocol states the palette before the code changes.
 
-- [ ] Add `docs/protocol/command-palette.md` with the requirements and
+- [x] Add `docs/protocol/command-palette.md` with the requirements and
       the decisions in force: the keys, the entry points, the layouts,
       the tabs, what a search finds, the archived results, the commands
       of each person and page, the settings, the recent workspaces, the
       keys inside the palette, and the empty state.
-- [ ] Link the new doc from the protocol lists of `docs/architecture.md`
+- [x] Link the new doc from the protocol lists of `docs/architecture.md`
       and `README.md`.
+
+## Milestone 2a: Mockup of the empty Workspaces tab
+
+Tags: mockup
+
+Depends on: 1
+
+Milestone 2 found a state that no mockup draws: the Workspaces tab with
+nothing to show while the field is empty.
+
+- [ ] Move the archived Black Friday banner of Acme to `acme/storefront`
+      in the fixtures, so that `acme/marketing-site` has no archived
+      workspace.
+- [ ] Add the `empty` variant to `app/command-palette/workspaces`: the
+      Archived filter with `acme/marketing-site` chosen, and the line
+      "Archived workspaces of acme/marketing-site show here".
+- [ ] Update `docs/mockups/catalogue.md`.
+- [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
+      and `npm run file-length:check`. Smoke-test the page in light and
+      dark, on desktop and on a phone.
 
 ## Milestone 3: The palette in the web app
 
 Tags: ui
 
-Depends on: 2
+Depends on: 2 and 2a
 
 The web app and the Mac app get the palette, wired to the existing
 actions.
@@ -350,10 +411,10 @@ actions.
       as [the marketing site README](../src/marketing/README.md) says. The
       Search row changes the sidebar and the phone list that the pictures
       show.
-- [ ] Add the rules of the palette layer to `src/app/screens.md`: the
-      focus, the inert frame, Escape, and the close on a change of
-      address. Milestone 2 left this to the code, because the page
-      describes the code.
+- [ ] Add the mechanics of the palette layer to `src/app/screens.md`:
+      the inert frame, the focus trap, and the key listener. The protocol
+      doc states the visible rules.
+- [ ] Add the palette to the feature list of `README.md`.
 - [ ] Update the Key code of `src/app/README.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request

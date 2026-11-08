@@ -262,3 +262,5 @@ the merge.
 - [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
 - [Operator actions](protocol/operator-actions.md): the operator, the
   suspension of a user, and abuse reports.
+- [Command palette](protocol/command-palette.md): the key and the search
+  that finds the workspaces, the actions, and the settings.

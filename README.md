@@ -227,5 +227,6 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Orgs and members](docs/protocol/orgs-and-members.md)
   - [Mac app](docs/protocol/desktop-app.md)
   - [Operator actions](docs/protocol/operator-actions.md)
+  - [Command palette](docs/protocol/command-palette.md)
 - [Mockups](docs/mockups/README.md): the design and the catalogue.
 - [AGENTS.md](AGENTS.md): the rules for agents in this repository.
