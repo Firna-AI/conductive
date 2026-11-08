@@ -1,0 +1,52 @@
+# Queued chat writes trust stale access checks
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-08, from PR #52, branch `conductor/boat-native-remote-workspaces-milestone-15o`, review round 2. It is the split wider fix C of finding 7, with the new problem of its check.
+- **Location:** `worker/chat/backend.ts:105`, the queued callback of `WorkspaceChat.fetch`. `worker/security/gate.ts:54`, `gate`. `worker/chat/browser-authorization.ts:14`, `authorizeChatBrowser`. `worker/chat/queries.ts:14`, `findChatWorkspace`. The lines are those of commit `f8e1e56`.
+- **Reason:** The stale checks of sign-in, membership, user suspension, deletion, and archive are older than the org suspension change, so their fix reaches beyond it.
+
+- **Terms:**
+  - **Workspace object:** the Durable Object of one workspace. Its serial queue, `ChatStore.run`, orders the chat writes, the lifecycle steps, and the cleanup of that workspace.
+  - **Gate:** `gate` in `worker/security/gate.ts`, the access check of each browser request to the app. It returns the user, the sign-in session, the org, and the JSON body.
+  - **Browser chat write:** a request of a signed-in member that changes the saved chat. It creates a session, sends or retries a message, renames, stops a turn, closes, reopens, or changes the model.
+  - **Trusted work:** an internal change in the queue that does not process a member's chat write. Examples are a lifecycle stop or cleanup, an alarm's stop retry, a runner disconnect, and a build cleanup. The login refresh that each new event subscription writes is trusted work too.
+- **Background:**
+  - These rules require each refusal. In `docs/protocol/access-and-security.md`, "Orgs and workspaces" lets a request reach an org and its workspaces only for a member. It also says that a sign-out, a removal from the org, and a deleted org end access.
+  - `docs/protocol/operator-actions.md` says that a user suspension ends every sign-in session at once, and that no member can change anything in a suspended org. `docs/protocol/chat-and-events.md` says that an archived workspace shows its chat read-only.
+  - `WorkspaceChat.fetch` in `worker/chat/backend.ts` serves each browser chat request. It calls `authorizeChatBrowser` in `worker/chat/browser-authorization.ts`. That function runs `gate`, then reads the workspace row with `findChatWorkspace`.
+  - `gate` reads the sign-in session with `sessionUser`, which also refuses a suspended user. It reads the membership with `findMembership`, which also refuses a deleted org. For a write, it checks the org suspension. Only then does it read the JSON body.
+  - The Worker streams the body into the gate. So the sender of the request decides how long the body read takes.
+  - `WorkspaceChat.fetch` then enters the queue of the workspace object. A write can wait there behind other work, for example a lifecycle step.
+  - In the queue, the callback checks only the archive value that `findChatWorkspace` read before the queue. Then `chatRoute` in `worker/chat/http-routes.ts` saves the change.
+  - The change that adds this item fixes the org suspension case directly, with option B below. The queued callback checks the org suspension again, for browser chat writes only. Reads and trusted work keep their path.
+  - A message send also checks the membership and the suspension of the sender again before it saves, through `senderLoginAccess` in `worker/chat/queries.ts`. It does not check the sign-in session again. A refused sender gets `409 agent_login_required`.
+  - Evidence: a read of the code at commit `f8e1e56`. No test holds a chat write across a sign-out, a removal from the org, a user suspension, an org deletion, or an archive.
+- **Problem:** Every access fact except the org suspension can end while a browser chat write waits for its body or for the queue. A held write of any kind, also a send, can then save after its sign-out or the end of its sign-in session. A held rename or new session can also save after a user suspension, a removal from the org, an org deletion, or an archive.
+- **Impact if no action:** A member who lost access can still change a saved chat for as long as they hold a request open. A user suspension or a removal from the org does not stop a write that started before it.
+- **Root question:** How does Conductive keep each browser chat write from saving once one of its access facts has ended, also when its request started earlier?
+- **Options:**
+  - **A.** Check the current access inside each chat write handler, in `worker/chat/http-routes.ts` and `worker/chat/send-message.ts`. Each handler must keep its own check, and a new handler can miss it. Add a regression case for each handler. Effort: Medium.
+  - **C.** Check the whole browser access again inside the queue, for each browser chat write. Split the access part of `gate` from its body read. Call that access part in the queued callback of `WorkspaceChat.fetch`, after the body read and the queue wait, with a fresh workspace row.
+    - One D1 query can read the sign-in session, the membership, the user suspension, the org suspension, the org deletion, and the archive state.
+    - A held write then gets the refusal that a new request would get, such as `401 sign_in_required` after a sign-out.
+    - Keep the early refusal of the gate, so a refused request sends no body to the parser.
+    - Reads, event subscriptions, and trusted work keep their current path, so the chat history and the cleanup stay available.
+    - `runWorkspaceOperation` in `worker/chat/workspace-operation.ts` already runs an authorize step inside the queue before its work. The GitHub state uses it through `authorizedWorkspaceOperation`.
+    - Cost: one D1 query for each chat write while the queue waits, which can take the place of the org check of option B. It needs a regression case for each access fact. Effort: Medium.
+- **Left out:**
+  - Option B alone, the org suspension check that the change applies. It fails the goal, because the other access facts stay as the gate read them.
+  - Option D: the change also weighed it for the org suspension case. Under D, when a suspension cancels a pending start, the operator's reply waits for the chat queue. It fails the goal of this item, because it reads no access fact again. It answers another question: the order of that reply and a write that passed its check just before the suspension record. It was not selected on 8 November 2026, and this item does not cover it.
+  - A check in the shared store queue, in `ChatStore.run`, `ChatStore.change`, or `ChatOperation.change`. It breaks requirements that stay. Trusted work passes there, so the check would refuse the stop of a suspension and the build cleanup. It would also refuse the login refresh that each new event subscription writes, at `worker/chat/browser-subscription.ts:26`. The chat history of a suspended org would then stop loading.
+  - A second check in `gate` after the body read only. It fails the goal, because a write can still wait in the queue and save after an access fact ends.
+  - A fence on the side that ends access, such as a call into each workspace queue at a sign-out. It fails the goal, because a write that still waits for its body enters the queue after the fence. It would also need a call to each workspace of each org of the user.
+  - A shorter limit on the body read. It fails the goal, because the queue wait stays.
+  - A change in the client. It fails the goal, because a member can send the request from any HTTP client.
+- **Wider fix:** C. One queued access check covers every browser chat write and every access fact. Option A protects only the handlers that keep their checks.
+- **Previous examples:**
+  - Commit `8cc681f`, 7 November 2026: GitHub commits and receipt replays enter the chat queue first, then run their authorization through `authorizedWorkspaceOperation`. Before it, two queued operations returned 200 after a removal from the org, in place of `404 workspace_not_found`.
+  - Commit `fb42989`, 6 November 2026: an org key save checks the current admin in the same SQL statement as the write.
+  - Commit `5774dc4`, 7 November 2026: the members commands use one guarded write helper, which checks permission and membership in the write itself.
+  - The org suspension change guards its own D1 writes in atomic SQL. `worker/operator/org-writes.test.ts` and `worker/operator/org-shell-race.test.ts` hold such races.
+- **Recommendation:** C. It closes the window for every access fact at the one boundary that each browser chat write passes. It also reuses the existing queued authorize step. The protocol already requires each of these refusals, so C adds no new rejection.
+- **Action:** fix after merge, apply C, because it reaches access behaviour that is older than the org suspension change.

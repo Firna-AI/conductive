@@ -145,6 +145,7 @@ The Durable Object runs the gates itself.
 
 An org suspension keeps chat history and event subscriptions readable.
 The common browser write gate refuses session and message changes with `org_suspended`.
+The same check runs inside the browser write queue before session or message changes.
 The shared token rule refuses runners and agent logins for the org.
 
 ## History and event order
