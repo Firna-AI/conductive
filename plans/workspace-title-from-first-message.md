@@ -596,11 +596,15 @@ Evidence: `.context/workspace-title-from-first-message/gate-1.log`.
 - [x] Run the runner tests, the targeted Worker tests, and the complete
       gate `npm run check`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+      Two rounds ran. Findings 1, 3, and 4 are fixed. Finding 2 and the
+      wider fixes are follow-up items. Findings file:
+      `.context/reviews/calummoore/chat-title-rename/findings.md`. The
+      gate passed again on `3b2ff8c`: `gate-2.log`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
