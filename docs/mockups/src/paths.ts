@@ -37,6 +37,8 @@ export const paths = {
   operator: 'app/operator',
   operatorMenu: 'app/operator/menu',
   operatorError: 'app/operator/error',
+  operatorLift: 'app/operator/lift',
+  operatorLiftOrg: 'app/operator/lift/org',
   newWorkspace: 'app/new-workspace',
   creating: 'app/new-workspace/creating',
   firstTurn: 'app/new-workspace/first-turn',

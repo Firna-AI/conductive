@@ -13,7 +13,7 @@
   - On 8 November 2026 the user chose to skip the disk restart for the workspaces of a suspended owner, and to tell the members that an admin can move such a workspace to another member. That choice covers a suspended user only.
   - The org suspension came later the same day. Its rule in `docs/protocol/operator-actions.md` says that a stopped workspace of the org gets no disk restart, also after an owner change, and cites that same choice.
   - In a suspended org, no owner change helps, so the reason of the user's choice does not carry over.
-  - No route lifts a suspension today. A later lift, which the operator section plans, finds no disk of a workspace that stopped more than 14 days earlier.
+  - A lift of a suspension, which the operator page adds, finds no disk of a workspace that stopped more than 14 days earlier.
 - **Problem:** A rule that lets the provider delete every disk of a suspended org rests on a decision about suspended users only.
 - **Impact if no action:** A wrongly suspended org can lose the unpushed work of all its members, and the protocol names a decision that did not cover it.
 - **Root question:** Does an org suspension keep the disks of the org, and which user decision says so?
@@ -24,6 +24,6 @@
 - **Left out:** A saved snapshot of each suspended disk, because the user chose against snapshots for suspended owners on 8 November 2026.
 - **Wider fix:** C. It brings the restart back however a suspension ends.
 - **Previous examples:** None found.
-- **Related:** The operator section plan asks how the operator recovers from a wrong suspension. Its options include B and C of this item.
+- **Related:** On 8 November 2026 the user chose a Lift action on the operator page. A lift sets the disk restart again for each stopped workspace, but a disk that the provider already deleted stays lost. Option C of this item would also cover a suspension that ends in another way.
 - **Recommendation:** A. The org rule then rests on a real decision, at the lowest cost. C protects the codebase best.
 - **Action:** ask the user, because the rule can delete the work of every member, and no user decision covers it.

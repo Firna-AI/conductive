@@ -16,7 +16,7 @@ how a screen is built, and links to the other pages.
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
-| `app/operator`      | The numbers of every org for the operator, where an operator opens the page, and its error and loading states |
+| `app/operator`      | The numbers of every org for the operator, the suspended users and orgs with Lift, where an operator opens the page, and its error and loading states |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its errors, the start, a held second message, the first turn   |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
@@ -80,6 +80,9 @@ decision 144 chose for now. Its child pages:
 
 - `app/operator/menu` has Operator in the rail, above the account, and in
   the org switcher of a phone, under Account. Only an operator sees it.
+- `app/operator/lift` has the question before the lift of a suspended
+  user, from decision 145. Its `org` variant has the question for an org,
+  and its `nobody` variant has the page with no suspension.
 - `app/operator/error` has the numbers that could not load, with Try
   again. Its `loading` variant has the page while it reads the numbers.
 

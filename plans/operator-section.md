@@ -12,9 +12,9 @@ This change adds an operator page to the web app at `/operator`, for the
 people in `OPERATOR_GITHUB_IDS`. The first version holds the layout of the
 section and live numbers from D1: users, orgs, workspaces, the workspaces
 in each state, the running cloud computers, new workspaces and new users
-each day, and the largest orgs. It does not cover editable settings, the
-suspend actions on the page, a lift of a suspension, trends over time, or
-costs. The brainstorm notes and sources are in
+each day, and the largest orgs. The page also lists the suspended users and
+orgs, and lifts a suspension, as decision 145 chose. It does not cover
+editable settings, Suspend on the page, trends over time, or costs. The brainstorm notes and sources are in
 `.context/admin-section/brainstorm.md`. The options check of the decisions
 is in `.context/operator-section/options-check.md`.
 
@@ -133,8 +133,8 @@ Contract owners:
 - **Previous examples:** `worker/operator/README.md` says that no route lifts a user suspension or an org suspension. `plans/follow-ups/chat-open-edits-after-read-only.md` notes the same.
 - **Related:** Decision 142. `plans/follow-ups/org-disk-restart-has-no-decision.md` shares option F: the org rule of the disk restart cites decision 125, which decided only the owner case.
 - **Recommendation:** D, after the options check. The first recommendation was B. D gives the same undo for less effort, and it also covers the `curl` suspensions of today. B's screen can come with the later suspend actions. E protects the codebase best.
-- **Action:** ask the user, because a lift is new behaviour that no requirement covers.
-- **Open.** It blocks no milestone of this plan, because the first version has no suspend actions. It blocks the later suspend actions of the section.
+- **Action:** asked the user, because a lift is new behaviour that no requirement covers.
+- **Chosen:** B, by the user on 8 November 2026: "145 = B". The options check had recommended D. Milestones 1a, 4, and 5 build it.
 
 ### 146. Choose what other people see at the operator address
 
@@ -155,8 +155,8 @@ Contract owners:
 - **Previous examples:** None found.
 - **Related:** Decision 142.
 - **Recommendation:** A. It adds no screen, and it treats the address like any other address that the person cannot open.
-- **Action:** ask the user, because this adds behaviour at a boundary that no requirement covers.
-- **Open.** It blocks the text of Milestone 2 and the route of Milestone 4.
+- **Action:** asked the user, because this adds behaviour at a boundary that no requirement covers.
+- **Chosen:** A, by the user on 8 November 2026: "146 = A".
 
 ## Design
 
@@ -211,6 +211,39 @@ on 8 November 2026:
 - One shared reader of `OPERATOR_GITHUB_IDS` serves the operator check of
   the routes and the operator flag of the account reply.
 
+The agent's calls for the lift of decision 145 B, on 8 November 2026:
+
+- The page lists the suspended users and orgs in a Suspended box, with the
+  time, the operator, and Lift. Only a suspended target can be lifted, so
+  this list is the way to find the target.
+- Lift asks first, in the confirm dialog of the app. The dialog says what
+  comes back, and that a workspace that stopped 14 days ago or more may
+  have lost its files.
+- Suspend stays a `curl` call for now, because decision 145 chose only the
+  lift on the page, and the user asked for the layout and some numbers
+  first.
+- One append-only table records each suspension and each lift, with its
+  time and its operator. The suspend routes write their rows too.
+- A lift runs the owner-change check of each workspace that the user owns,
+  or of each workspace of the org, so that each stopped workspace gets its
+  disk restart again.
+- A lift brings back no sign-in session, workspace token, preview, or
+  failed build. The user signs in again, and each workspace gets a new
+  token at its next start, as now.
+- A lift of a deleted org leaves it deleted. An admin can then restore it
+  while its 7 days last.
+- An open page of a member learns of a lift at its next load, because the
+  app keeps the suspended mark of an org until then, and lifts are rare.
+- The page reads its numbers and its suspensions in one read,
+  `GET /api/operator/overview`, so that one loading state and one error
+  state cover both.
+- From the mockups of Milestone 1a: the Suspended box comes right after
+  the tiles, because it holds the only action of the page, and the Lift
+  dialog then opens over it. With no suspension, the box says "Every user
+  and org has access."
+- A user shows on a disc and an org on a square, as in the rest of the
+  app, and each row also names its kind.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -238,13 +271,38 @@ and on a phone.
 Evidence: `.context/operator-section/mockups-check.log` and the screenshots
 in `.context/operator-section/shots/`.
 
-## Milestone 2: Documentation and protocol
+## Milestone 1a: Lift mockups
+
+Tags: mockup
 
 Depends on: 1
 
+The lift of decision 145 B on the operator page, on desktop and on a phone.
+
+- [x] Add the Suspended box to `app/operator`: each suspended user and
+      org, with the time, the operator, and Lift.
+- [x] Add `app/operator/lift`: the confirm dialog of a lift for a user,
+      with variants for an org and for a page with no suspension.
+- [x] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
+- [x] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
+      and `npm run file-length:check`. Smoke-test the changed pages in
+      both schemes and both viewports.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+Evidence: `.context/operator-section/mockups-check.log` and the `lift-`
+screenshots in `.context/operator-section/shots/`.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: 1a
+
 - [ ] Add "The operator page" to `docs/protocol/operator-actions.md`: who
-      sees it, the numbers that it shows, the app-wide reads, metadata
-      only, and what other people see, as decision 146 chooses.
+      sees it, the numbers and the suspensions that it shows, the app-wide
+      reads, metadata only, and the not-found page for everyone else.
+- [ ] Add "Lift a suspension" to `docs/protocol/operator-actions.md`: only
+      an operator lifts, what comes back, what stays lost, the record of
+      each suspension and lift, and the disk restart.
 - [ ] Add the operator exception to "Orgs and workspaces" in
       `docs/protocol/access-and-security.md`: the operator page reads
       counts and org names across every org.
@@ -256,10 +314,10 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add `GET /api/operator/stats` behind the gate and the operator
+- [ ] Add `GET /api/operator/overview` behind the gate and the operator
       check. It reads the counts of the design from D1 in one batch: the
       unfinished builds, and the new workspaces and new users of each UTC
-      day as dates. The type `OperatorStats` lives in
+      day as dates. The type `OperatorOverview` lives in
       `src/shared/operator.ts`.
 - [ ] Add `operator: boolean` to the account reply. One shared reader of
       `OPERATOR_GITHUB_IDS` serves it and the route check.
@@ -270,21 +328,42 @@ Depends on: 2
 - [ ] Update `worker/operator/README.md`, `worker/README.md`, and the
       `OPERATOR_GITHUB_IDS` row of `docs/deployment.md`.
 
-## Milestone 4: Operator page in the web app
-
-Tags: ui
+## Milestone 4: Lift a suspension in the Worker
 
 Depends on: 3
 
+- [ ] Add a migration with an append-only table of suspension events: the
+      user or the org, the kind, suspend or lift, the time, and the
+      operator. The two suspend routes write their rows.
+- [ ] Add `DELETE` on the user and the org suspension paths, behind the
+      gate and the operator check. Each lift clears the suspension, writes
+      its row, and runs the owner-change check of each affected workspace.
+      A repeat changes nothing.
+- [ ] Add the current suspensions to `GET /api/operator/overview`, with
+      the time and the operator of each.
+- [ ] Test with local D1 and the workspace object: a lift of a user and of
+      an org, a repeat, an unknown target, 403 `operator_required` for
+      another user, the disk restart set again, a deleted org that stays
+      deleted, and a revoked token that stays revoked.
+- [ ] Update `worker/operator/README.md`, `worker/README.md`, and the path
+      helpers in `src/shared/operator.ts`.
+
+## Milestone 5: Operator page in the web app
+
+Tags: ui
+
+Depends on: 3, 4
+
 - [ ] Add the `/operator` route and its screen, with the parts of the
-      mockup. Other people see what decision 146 chooses.
+      mockups. Other people see the not-found page.
 - [ ] Add Operator to the rail and to the org switcher of a phone, for
       operators only.
 - [ ] Add the loading and error states, and Refresh.
-- [ ] Test the screen, the route, and the links.
+- [ ] Add the Suspended box and the Lift dialog.
+- [ ] Test the screen, the route, the links, and the lift.
 - [ ] Add a README for the new area, and update `src/app/README.md`.
 
-## Milestone 5: Verification, commit, review, and pull request
+## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 

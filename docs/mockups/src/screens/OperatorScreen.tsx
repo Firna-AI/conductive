@@ -5,12 +5,14 @@ import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import type { RailState } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
 import { LargestOrgs } from '../components/operator/LargestOrgs'
+import { LiftDialog } from '../components/operator/LiftDialog'
 import { DailyChart } from '../components/operator/DailyChart'
 import { OperatorTiles } from '../components/operator/OperatorTiles'
 import {
   OperatorError,
   OperatorLoading,
 } from '../components/operator/OperatorStates'
+import { Suspensions } from '../components/operator/Suspensions'
 import { WorkspaceStates } from '../components/operator/WorkspaceStates'
 import {
   newUsersByDay,
@@ -23,13 +25,17 @@ import { paths } from '../paths'
 export const operatorSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['numbers'],
+  required: ['numbers', 'suspended', 'dialog'],
   properties: {
     /**
      * The numbers of the page: shown, loading when the page opens, or
      * failed to load.
      */
     numbers: { enum: ['ready', 'loading', 'error'] },
+    /** The users and orgs that are suspended now: some, or none. */
+    suspended: { enum: ['some', 'none'] },
+    /** The question before the lift of a user or of an org. */
+    dialog: { enum: ['none', 'lift-user', 'lift-org'] },
   },
 } as const
 
@@ -52,6 +58,7 @@ function OperatorBody(props: { state: OperatorState; viewport: Viewport }) {
       return (
         <>
           <OperatorTiles />
+          <Suspensions empty={props.state.suspended === 'none'} />
           <WorkspaceStates />
           <DailyChart
             rows={newWorkspacesByDay}
@@ -69,11 +76,24 @@ function OperatorBody(props: { state: OperatorState; viewport: Viewport }) {
   }
 }
 
+/** The question before a lift, over the page. */
+function dialogOf(state: OperatorState, viewport: Viewport) {
+  switch (state.dialog) {
+    case 'none':
+      return null
+    case 'lift-user':
+      return <LiftDialog kind="user" viewport={viewport} />
+    case 'lift-org':
+      return <LiftDialog kind="org" viewport={viewport} />
+  }
+}
+
 /**
  * The page of the operator, the person who runs the app for everyone: the
- * numbers of every org at the moment the page opened. Only an operator
- * reaches it, from the rail on desktop and the org switcher on a phone.
- * It shows counts and names only, never the content of an org.
+ * numbers of every org at the moment the page opened, and the users and
+ * orgs that are suspended, with Lift. Only an operator reaches it, from the
+ * rail on desktop and the org switcher on a phone. It shows counts and
+ * names only, never the content of an org.
  */
 export function OperatorScreen(props: {
   state: OperatorState
@@ -98,6 +118,18 @@ export function OperatorScreen(props: {
       <OperatorBody state={props.state} viewport={props.viewport} />
     </Page>
   )
-  if (mobile) return <MobileFrame>{page}</MobileFrame>
-  return <AppFrame rail={operatorRail}>{page}</AppFrame>
+  const dialog = dialogOf(props.state, props.viewport)
+  if (mobile) {
+    return (
+      <MobileFrame>
+        {page}
+        {dialog}
+      </MobileFrame>
+    )
+  }
+  return (
+    <AppFrame overlay={dialog} rail={operatorRail}>
+      {page}
+    </AppFrame>
+  )
 }

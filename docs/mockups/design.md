@@ -137,6 +137,10 @@ chat, and five tabs at the bottom.
   no script, so the chart keeps the width that the page column gives it.
   The workspaces by state reuse `StatusGlyph`. A phone leaves out the
   Members column of the largest orgs, so each org name keeps one line.
+  The Suspended box comes right after the tiles, because it holds the
+  only action of the page. Its Lift asks first, with `ConfirmDialog`. A
+  person shows on a disc and an org on a square, with `PersonAvatar` and
+  `InitialsTile` from `src/components/orgs/`.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its rename and close buttons.
