@@ -6369,6 +6369,10 @@ an owner-picker reply. Serialize access recovery and owner reconciliation,
 so an older stop cannot remove the new owner's disk alarm. The refused
 notice promises chat history, because decision 125 permits disk expiry.
 
+Documentation call, 8 November 2026: move the long mockup README details
+to linked design and catalogue pages. Preserve every fact and old anchor,
+so the README stays short without changing the screens.
+
 ## Milestone 15n: Use the new shared UI parts
 
 Depends on: 15m
