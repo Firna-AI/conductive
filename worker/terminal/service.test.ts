@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 
 import { createToolsHarness, type ToolsHarness } from '../previews/test-support'
 import { decrypt } from '../security/crypto'
@@ -10,6 +18,9 @@ beforeAll(async () => {
 })
 beforeEach(async () => {
   await harness.resetTools()
+})
+afterEach(() => {
+  vi.restoreAllMocks()
 })
 afterAll(async () => {
   await harness.dispose()
@@ -119,4 +130,36 @@ it('refuses to cache a terminal password when the sandbox changes during its rea
       'SELECT COUNT(*) AS count FROM terminal_credentials',
     ).first<number>('count'),
   ).toBe(0)
+})
+
+// The command output comes from the sandbox, so it can hold a secret.
+it('names only the exit code and the time-out when the terminal does not start', async () => {
+  const seed = await harness.seed()
+  const base = harness.dependencies.fetch
+  harness.dependencies.fetch = async (request) => {
+    if (new URL(request.url).pathname.endsWith('/commands'))
+      return Response.json({
+        ok: true,
+        type: 'command.finished',
+        exitCode: 1,
+        stdout: '',
+        stderr: 'password=private-marker',
+        timedOut: false,
+      })
+    return base(request)
+  }
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+  await expect(
+    startWorkspaceTerminal(
+      harness.env,
+      seed.orgId,
+      seed.workspaceId,
+      harness.dependencies,
+    ),
+  ).rejects.toMatchObject({ kind: 'unavailable', status: 502 })
+  expect(warn.mock.calls).toEqual([
+    [
+      `The terminal of workspace ${seed.workspaceId} did not start: exit code 1, timed out false`,
+    ],
+  ])
 })

@@ -10,11 +10,11 @@
   - **`warnWorker`:** the one function that writes a warning of the Worker to the log.
   - **Workers Logs:** Cloudflare's store that keeps each warning of the Worker for some days.
 - **Background:** Finding 1 found warnings that copied command output and error messages, which can hold a secret. Commit `24146f2` removed that text, and `errorSummary` now gives only an error's class, status, and known code. `worker/README.md` states the rule: each message is fixed safe text.
-- **Problem:** `warnWorker` still takes any string. Nothing stops the next warning from adding command output, an error message, or a reply body. Finding 6 adds that the two changed warnings have no test that fails when the removed text comes back.
+- **Problem:** `warnWorker` still takes any string. Nothing stops the next warning from adding command output, an error message, or a reply body. Finding 6 found that no test failed when the removed command output came back. Its fix added that test for the terminal start warning.
 - **Impact if no action:** A later change can write a secret to the log again, and no check catches it.
 - **Root question:** How does the type of the warning API stop free text from reaching the log?
 - **Options:**
-  - **D.** Make `warnWorker` accept only fixed text with typed values: IDs, phases, numbers, booleans, and known or checked codes. A tagged template can carry them, or one JSON object for each warning, which Workers Logs can filter by field. `errorSummary` returns such values. Then command output, an error message, or a reply body does not compile at any call site without a cast. Effort: Medium.
+  - **D.** Make `warnWorker` accept only fixed text with typed values: IDs, phases, numbers, booleans, and known or checked codes. A tagged template can carry them, or one JSON object for each warning, which Workers Logs can filter by field. `errorSummary` returns such values. Then command output, an error message, or a reply body does not compile at any call site without a cast. The API accepts IDs and codes only as checked or branded values, as `MaskedStartLog` accepts only masked text, so that command output cannot pass as an ID. Keep the regression test of finding 6 in `worker/terminal/service.test.ts`. Effort: Medium.
 - **Left out:** Masking known secret patterns, because it misses unknown formats. A test for every warning, because the type removes the case.
 - **Wider fix:** D.
 - **Previous examples:** findings 1 and 6 of that review, and commit `6b723c7`, which built `MaskedStartLog` for output that can hold secrets.
