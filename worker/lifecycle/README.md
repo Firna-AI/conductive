@@ -115,6 +115,11 @@ object holds the lifecycle state, the turn records, and the events.
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
+- [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
+  workspace record. In the `records` phase of a create, `insertWorkspace`
+  writes the new row and its runtime record in one D1 batch. The new row
+  lists first in its section, as
+  [List order](../app-api/README.md#list-order) says.
 - [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
   answers once the start is queued.
 - [`workspace-state-projection.ts`](workspace-state-projection.ts):

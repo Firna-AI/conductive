@@ -4274,6 +4274,23 @@ Added on 8 November 2026 from finding 3 of the review of Milestone 15r.
 - **Recommendation:** D.
 - **Chosen:** A, by the user on 8 November 2026. Milestone 15r applies it.
 
+### 146. Choose whether the desktop stream ends on access loss now
+
+Added on 8 November 2026 from Milestone 15q.
+
+- **Background:** Decision 117 C chose that the desktop stream goes
+  through the Worker, so that the Worker can end it when a viewer loses
+  access. The provider documents its desktop stream as WebRTC, which a
+  Worker cannot relay.
+- **Options:**
+  - **A.** Take the desktop work out of Milestone 15q. The desktop tool
+    stays as it is, with its documented exception and its follow-up item.
+  - **B.** Build a VNC gateway with a noVNC viewer, so that all desktop
+    data passes the Worker's access checks.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026. The follow-up item
+  `plans/follow-ups/desktop-stream-after-access-loss.md` keeps B.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -7300,10 +7317,33 @@ Depends on: none.
 Apply the `fix after merge` items of the workspace and section lists.
 Added on 8 November 2026.
 
-- [ ] Apply option A of `plans/follow-ups/new-workspace-position-after-reorder.md`,
+- [x] Apply option A of `plans/follow-ups/new-workspace-position-after-reorder.md`,
       and delete that item.
-- [ ] Apply option B of `plans/follow-ups/atomic-workspace-and-section-moves.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15s`.
+- [x] Apply option B of `plans/follow-ups/atomic-workspace-and-section-moves.md`,
       and delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15s`.
+
+Design calls by the implementor, checked by the orchestrator on 8 November
+2026:
+
+- A position-only workspace move uses its stored section inside the
+  transaction. An earlier read can have a stale section after another move.
+- Keep the existing archive filters and tie order. Workspace ties use
+  creation time, then ID. Section ties use ID. Rank only the target list,
+  so other sections keep their saved positions.
+- Build the workspace snapshot from the guarded moving row. A refused
+  update then changes no sibling position.
+- Remove `orderedSectionWorkspaceIds` after its caller uses the atomic
+  operation. No live caller needs the old read-and-write path.
+- Keep the list reader, app list change, and dev create fake as they are.
+  They already use stored order or put new workspaces first.
+- Change the regression setup to use the new section and index inputs.
+  Keep the same order assertions, so the baseline failures still apply.
+- Keep the list order rule in the app API README. The lifecycle README
+  links to it, so the shared rule has one home.
+
+Evidence: `.context/boat-native-remote-workspaces/15s/orchestrator-checks.md`.
 
 ## Milestone 13c: GitHub follow-ups
 
