@@ -6,6 +6,8 @@ import type { ImageCoordinator } from './image-coordinator'
 import type { WorkspaceStartCoordinator } from './start-coordinator'
 import type { TurnScopes } from './turns'
 import { START_JOB_KEY } from './start-storage'
+import { retryAllocationCleanup } from './start-allocation-cleanup'
+import { startAlarmDeadline } from './start-provider-retry'
 import type { WorkspaceAccessStop } from './workspace-suspension'
 
 export async function runWorkspaceAlarm(input: {
@@ -28,11 +30,19 @@ export async function runWorkspaceAlarm(input: {
     try {
       if (!(await input.starts.advance())) {
         const job = await storage.get('job', START_JOB_KEY)
+        const now = dependencies.now()
         const retryAt =
           job && !job.cancelled && !job.failure
             ? (job.providerRetry?.retryAt ?? 0)
             : 0
-        await storage.setAlarm(Math.max(dependencies.now() + 1_000, retryAt))
+        await storage.setAlarm(
+          job?.phase === 'runner' && !job.cancelled && !job.failure
+            ? startAlarmDeadline(job, now)
+            : Math.min(
+                Math.max(now + 1_000, retryAt),
+                startAlarmDeadline(job, now),
+              ),
+        )
         return
       }
       advancedStart = true
@@ -44,11 +54,14 @@ export async function runWorkspaceAlarm(input: {
   const state = await input.lifecycle.read()
   if (state && (await input.accessStop.check(state.workspaceId)) !== undefined)
     return
-  if (advancedStart) return
+  if (advancedStart && state?.startStop !== 'pending') return
   const cleanupId = await storage.get('text', 'lifecycle:cleanup')
   if (cleanupId) {
     try {
-      if (await retrySandboxCleanup(env, dependencies, cleanupId)) {
+      if (
+        (await retryAllocationCleanup(storage, env, dependencies)) &&
+        (await retrySandboxCleanup(env, dependencies, cleanupId))
+      ) {
         await storage.delete('lifecycle:cleanup')
         return
       }
@@ -61,6 +74,12 @@ export async function runWorkspaceAlarm(input: {
   try {
     await input.lifecycle.alarm()
   } catch {
-    await storage.setAlarm(dependencies.now() + 30_000)
+    const deadlineAt = (await input.lifecycle.read())?.diskRetentionDeadlineAt
+    const now = dependencies.now()
+    await storage.setAlarm(
+      deadlineAt !== undefined && deadlineAt > now
+        ? Math.min(now + 30_000, deadlineAt)
+        : now + 30_000,
+    )
   }
 }

@@ -16,7 +16,14 @@ export async function applyRunnerLifecycle(
   occurredAt?: number,
 ): Promise<void> {
   const state = await lifecycle.read()
-  if (!state || state.state === 'stopped' || state.state === 'archived') return
+  if (
+    !state ||
+    state.state === 'stopped' ||
+    state.state === 'archived' ||
+    state.state === 'error' ||
+    state.startStop !== undefined
+  )
+    return
   if (event.type === 'runner.ready') {
     await lifecycle.step('runner', 'Starting the agent', 'completed', publish)
     await lifecycle.runnerReady(publish)

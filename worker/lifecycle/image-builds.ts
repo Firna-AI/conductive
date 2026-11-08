@@ -5,11 +5,13 @@ import { requireActiveUser, userSuspended } from '../data/user-access'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
+import { IMAGE_BUILD_TIME_LIMIT_MS, JobTimeLimit } from './job-time-limit'
 import {
   nextProviderRetry,
   providerRetryPending,
   providerRetryExpired,
   ProviderRetryExhausted,
+  transientProviderError,
 } from './provider-retry'
 import {
   progressImageRetry,
@@ -177,8 +179,11 @@ export async function advanceImageBuild(
   let job = await readBuildJob(env.DB, orgId, buildId)
   let provider: SandboxProvider | undefined
   const recoveringAllocation = job.phase === 'allocating' && !job.sandboxId
+  const firstAllocation = job.phase === 'create'
   try {
-    if (job.phase === 'sources' && job.state === 'running') {
+    const expired =
+      dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS
+    if (job.phase === 'sources' && job.state === 'running' && !expired) {
       const source = await readSourceJob(env.DB, buildId)
       if (source && (source.failed || source.phase === 'abort')) {
         await clearImageRetryStatement(env.DB, buildId).run()
@@ -196,6 +201,7 @@ export async function advanceImageBuild(
     if (
       job.state === 'running' &&
       job.phase !== 'cleanup' &&
+      !expired &&
       !suspended &&
       providerRetryPending(job.providerRetry, dependencies.now())
     )
@@ -218,6 +224,7 @@ export async function advanceImageBuild(
       return await cleanupBuild(runtime, provider, job)
     if (!recoveringAllocation && job.startedByUserId)
       await requireActiveUser(env.DB, job.startedByUserId)
+    if (expired) throw new JobTimeLimit('build')
     if (providerRetryExpired(job.providerRetry, dependencies.now()))
       throw new ProviderRetryExhausted()
     const done = await advanceBuildStep(runtime, provider, job)
@@ -226,9 +233,14 @@ export async function advanceImageBuild(
   } catch (error) {
     job = await readBuildJob(env.DB, orgId, buildId)
     if (job.phase === 'cleanup' || job.state !== 'running') throw error
+    const failure =
+      !(error instanceof HttpError && error.code === 'user_suspended') &&
+      dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS
+        ? new JobTimeLimit('build')
+        : error
     const retry = nextProviderRetry(
       job.providerRetry,
-      error,
+      failure,
       dependencies.now(),
     )
     if (retry) {
@@ -239,21 +251,30 @@ export async function advanceImageBuild(
       provider &&
       job.phase === 'allocating' &&
       !job.sandboxId &&
-      !(error instanceof HttpError && error.code === 'user_suspended') &&
-      !(error instanceof ProviderRetryExhausted) &&
-      !(error instanceof ProviderError)
+      !(failure instanceof HttpError && failure.code === 'user_suspended') &&
+      !(failure instanceof ProviderRetryExhausted) &&
+      !(failure instanceof JobTimeLimit) &&
+      !(failure instanceof ProviderError)
     )
       return false
     const message =
-      error instanceof HttpError
-        ? error.message
+      failure instanceof HttpError
+        ? failure.message
         : 'The cloud computer image could not build. Check the log and try again.'
+    const unresolvedAllocation =
+      job.phase === 'allocating' &&
+      !job.sandboxId &&
+      !(
+        firstAllocation &&
+        error instanceof ProviderError &&
+        !transientProviderError(error)
+      )
     await failBuild(env.DB, buildId, message, dependencies.now())
-    await updateBuildJob(env.DB, buildId, 'cleanup')
+    if (!unresolvedAllocation) await updateBuildJob(env.DB, buildId, 'cleanup')
     if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))
       return false
     if (!provider) {
-      if (job.sandboxId) return false
+      if (job.sandboxId || unresolvedAllocation) return false
       await updateBuildJob(env.DB, buildId, 'done')
       await scheduleIdleImage(runtime, orgId, jobSoftware(job))
       return true

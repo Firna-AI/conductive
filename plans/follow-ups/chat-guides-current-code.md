@@ -68,7 +68,7 @@ The checked fix of option A changes only false text, and it adds no new rule to 
 6. `worker/chat/tests.md`: the `MemoryChatStorage` bullet changes, and a new bullet follows it, with a link to `commit-boundary.test-support.ts`.
    - "Set `beforeCommit` to delay a commit and test a late commit."
    - "To test that a failed commit rolls back the whole receipt of an action, use `checkCommitBoundaries` in `commit-boundary.test-support.ts`."
-7. `worker/chat/README.md`: the count becomes "three trusted chat RPCs with no HTTP path". A third bullet links to `../lifecycle/README.md#browser-routes`, which gives the event number and the name of that reply.
+7. `worker/chat/README.md`: the introduction has no fixed count: "trusted chat RPCs with no HTTP path". The new bullet links to `../lifecycle/README.md#browser-routes`, which gives the event number and the name of that reply.
    - "`readChatWorkspaceResponse(orgId, workspaceId)` returns the reply of a workspace read or Resume and that summary, as Browser routes says."
 8. `worker/app-api/README.md`: the old sentence becomes three sentences, with the same link.
    - "Otherwise, the chat summary of the workspace object and the reader's read mark give working, unread, or ready."

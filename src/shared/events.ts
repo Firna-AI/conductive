@@ -5,6 +5,7 @@ import type { GitHubBanner, GitHubChecksResponse } from './github'
 import {
   workspacePath,
   type Workspace,
+  type WorkspaceResponse,
   type WorkspaceStart,
 } from './workspaces'
 
@@ -34,7 +35,14 @@ export function chatHistoryPath(
 export type WorkspaceEvent =
   | ChatEvent
   | FileEvent
-  | { type: 'workspace.updated'; workspace: Workspace }
+  | {
+      type: 'workspace.updated'
+      workspace: Workspace
+      error?: Pick<
+        NonNullable<WorkspaceResponse['error']>,
+        'code' | 'message'
+      > | null
+    }
   | { type: 'workspace.title'; name: string }
   | { type: 'start.updated'; start: WorkspaceStart }
   | {

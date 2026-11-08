@@ -20,6 +20,9 @@ import { inSentence, useWhen } from './when'
 
 const noEvents: readonly BuildLogEvent[] = []
 
+/** The time limit of each build, which the Worker applies. */
+const buildLimit = 'Each build has a 60-minute limit.'
+
 /** The state of the newest build: its time and result, or its run time. */
 function Head(props: { latest: ImageBuild; now: number; when: string }) {
   const { latest } = props
@@ -60,13 +63,15 @@ function HeadAction(props: { latest: ImageBuild; build: Action<[]> }) {
 
 /**
  * Which build new workspaces start from while a build runs or after it
- * failed. `since` is the time of the last good build, if there is one.
+ * failed. `since` is the time of the last good build, if there is one. A
+ * build that runs also names its time limit.
  */
 function startsFrom(latest: ImageBuild, since: string | null): string | null {
   if (latest.state === 'running') {
-    return since
+    const startsFromBuild = since
       ? `Workspaces start from the build of ${since} until this one finishes.`
       : 'Workspaces start from this build when it finishes.'
+    return `${startsFromBuild} ${buildLimit}`
   }
   return since ? `Workspaces still start from the build of ${since}.` : null
 }
@@ -93,8 +98,9 @@ function FirstBuild(props: { admin: boolean; build: Action<[]> }) {
  * The builds of the org's cloud computer: the newest build with its result,
  * the log of a build that runs or failed, and the history. The computer
  * model chooses and follows the log, so the card only shows it. A failed
- * build leaves the last good build in use (decision 9). Only an admin
- * builds.
+ * build shows the message that the Worker saved for it, such as its time
+ * limit, above its log. A failed build leaves the last good build in use.
+ * Only an admin builds.
  */
 export function BuildCard(props: {
   admin: boolean
@@ -128,6 +134,9 @@ export function BuildCard(props: {
       </div>
       {latest.state === 'succeeded' ? null : (
         <div className={styles.body}>
+          {latest.state === 'failed' && latest.error ? (
+            <SectionText>{latest.error}</SectionText>
+          ) : null}
           {log?.error ? (
             <LoadFailure
               error={log.error}

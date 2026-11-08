@@ -254,14 +254,28 @@ export class WorkspaceModel {
   }
 }
 
-/** The detail after an event of the stream. */
+/**
+ * The detail after an event of the stream. A workspace record applies its
+ * saved public error with its state: a record without the error keeps the
+ * current error, and null clears it. An event error carries no log, so the
+ * detail keeps a null log for it.
+ */
 function changed(
   detail: WorkspaceResponse,
   event: ShellEvent,
 ): WorkspaceResponse {
   switch (event.type) {
     case 'workspace.updated':
-      return { ...detail, workspace: event.workspace }
+      return {
+        ...detail,
+        workspace: event.workspace,
+        ...(event.error === undefined
+          ? {}
+          : {
+              error:
+                event.error === null ? null : { ...event.error, log: null },
+            }),
+      }
     case 'start.updated':
       return { ...detail, start: event.start }
     case 'workspace.title':

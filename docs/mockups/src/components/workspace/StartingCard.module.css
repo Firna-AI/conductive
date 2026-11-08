@@ -59,3 +59,12 @@
   font-size: var(--ui-text-sm);
   font-variant-numeric: tabular-nums;
 }
+
+/* The time limit of each start, a quiet note under the steps. */
+.limit {
+  margin: -6px 0 0;
+  padding-left: 12px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}

@@ -1,6 +1,10 @@
 import type { WorkspaceResponse, WorkspaceState } from '../shared/workspaces'
 import type { StreamEnvelope } from './api/read-events'
-import { NewWorkspaceModel, type Draft } from './new-workspace-model'
+import {
+  NewWorkspaceModel,
+  type CreationStartError,
+  type Draft,
+} from './new-workspace-model'
 import type { OrgModel } from './org-model'
 import { Store, type Readable } from './store'
 
@@ -120,7 +124,10 @@ export class Creations {
   observe(workspaceId: string, envelope: StreamEnvelope): void {
     const event = envelope.shell
     if (event?.type !== 'workspace.updated') return
-    if (event.workspace.state === 'error') this.fail(workspaceId)
+    const entry = this.entries.get().get(workspaceId)
+    if (entry?.state === 'failed' && event.error !== undefined)
+      entry.form.setStartError(event.error)
+    if (event.workspace.state === 'error') this.fail(workspaceId, event.error)
     else if (started.has(event.workspace.state)) this.release(workspaceId)
   }
 
@@ -147,7 +154,7 @@ export class Creations {
     if (this.entries.get().size > 0) this.entries.set(new Map())
   }
 
-  private fail(workspaceId: string): void {
+  private fail(workspaceId: string, error?: CreationStartError | null): void {
     const entry = this.entries.get().get(workspaceId)
     if (entry?.state !== 'starting') return
     const { submission } = entry
@@ -155,6 +162,7 @@ export class Creations {
       this.org,
       submission.sectionId,
       submission,
+      error,
     )
     this.org.removeWorkspace(workspaceId)
     this.put(workspaceId, { state: 'failed', submission, form })

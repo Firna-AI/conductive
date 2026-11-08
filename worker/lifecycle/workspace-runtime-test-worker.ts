@@ -17,19 +17,21 @@ import { ManualChatClock } from '../chat/chat-clock.test-support'
 import { CONNECTION_CHECK_MS } from '../security/connection-access'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { authenticateWorkspaceToken } from './tokens'
+import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
 
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
   private heldMachine: ReturnType<typeof holdMachineCheckpoint> | undefined
-  private readonly runnerClock: ManualChatClock
+  private readonly clock: ManualChatClock
   private readonly chatIds: string[]
 
   constructor(context: DurableObjectState, env: LifecycleEnvironment) {
     const clock = new ManualChatClock(Date.now())
     const chatIds: string[] = []
-    super(context, env, Date.now, {
+    super(context, env, clock.now, {
       randomId: () => chatIds.shift() ?? crypto.randomUUID(),
       scheduleRunnerCheck: clock.schedule,
+      scheduleBrowserCheck: clock.schedule,
       resolveAttachments: async (_userId, _workspaceId, ids) => ({
         attachments: ids.map((id) => ({
           id,
@@ -44,7 +46,7 @@ export class WorkspaceRuntimeFixture extends Workspace {
         })),
       }),
     })
-    this.runnerClock = clock
+    this.clock = clock
     this.chatIds = chatIds
   }
 
@@ -53,7 +55,7 @@ export class WorkspaceRuntimeFixture extends Workspace {
   }
 
   tickRunnerAccess(): Promise<void> {
-    return this.runnerClock.advance(CONNECTION_CHECK_MS)
+    return this.clock.advance(CONNECTION_CHECK_MS)
   }
   holdMachineCheckpoint(): void {
     this.heldMachine = holdMachineCheckpoint(this.ctx.storage)
@@ -67,8 +69,22 @@ export class WorkspaceRuntimeFixture extends Workspace {
   ): Promise<UserMessage> {
     return this.acceptLifecycleFirstMessage(first)
   }
-  async tick(): Promise<void> {
-    await this.alarm()
+  async tick(at?: number): Promise<void> {
+    const target =
+      at ??
+      Math.max(
+        this.clock.now(),
+        (await this.ctx.storage.getAlarm()) ?? this.clock.now(),
+      )
+    await advanceScheduledAlarms(
+      {
+        now: this.clock.now,
+        setTime: (value) =>
+          this.clock.advance(Math.max(0, value - this.clock.now())),
+      },
+      target,
+      () => [{ storage: this.ctx.storage, fire: () => this.alarm() }],
+    )
   }
   alarmAt(): Promise<number | null> {
     return this.ctx.storage.getAlarm()
@@ -82,11 +98,7 @@ export class WorkspaceRuntimeFixture extends Workspace {
   async becomeIdle(): Promise<void> {
     const state = await this.readLifecycle()
     if (!state) throw new Error('No workspace lifecycle')
-    await this.ctx.storage.put('lifecycle:state', {
-      ...state,
-      lastActivityAt: Date.now() - IDLE_MS - 1,
-    })
-    await this.alarm()
+    await this.tick(Math.max(this.clock.now(), state.lastActivityAt + IDLE_MS))
   }
 }
 

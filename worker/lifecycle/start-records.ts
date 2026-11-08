@@ -5,9 +5,38 @@ import { insertWorkspace, workspaceExists } from './workspace-data'
 import { leasedCreationImage } from './image-leases'
 import { ensureWorkspaceToken } from './tokens'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
-import type { WorkspaceStartJob } from './start-types'
+import type { StartJobStorage, WorkspaceStartJob } from './start-types'
+import { creationAdmissionResponse } from './creation-admission-response'
 import { previousFailedCreation } from './creation-attempt-data'
 import { workspaceRepositoryLocations } from './repository-location-data'
+
+export async function advanceStartRecords(
+  env: AppEnv,
+  dependencies: AppDependencies,
+  endpoint: WorkspaceLifecycleEndpoint,
+  storage: StartJobStorage,
+  job: Extract<WorkspaceStartJob, { phase: 'records' }>,
+) {
+  const imageName = await prepareWorkspaceRecords(
+    env,
+    dependencies,
+    endpoint,
+    job,
+  )
+  if (imageName === null) return undefined
+  const admission = await creationAdmissionResponse(env, endpoint, job)
+  await storage.update({
+    ...job,
+    phase: 'machine',
+    providerRetry: null,
+    imageName,
+    admission,
+    processId: null,
+    stdoutOffset: 0,
+    stderrOffset: 0,
+  })
+  return storage.admission()
+}
 
 export async function prepareWorkspaceRecords(
   env: AppEnv,

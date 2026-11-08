@@ -3,8 +3,9 @@
 This page belongs to the [workspace lifecycle README](README.md). It
 describes the Durable Object of each workspace and of each image
 coordinator. It gives their names, the lifecycle steps, the alarm, the
-start logs, the event socket, the event publication, the turn recovery,
-and the shown state.
+start logs, the event socket, and the event publication. It also gives the
+creates and resumes, the git credential sender, the turn recovery, and the
+shown state.
 
 `Workspace` in [`worker/workspace.ts`](../workspace.ts) is the Durable
 Object class of the `WORKSPACES` binding. [`runtime.ts`](runtime.ts) gets
@@ -27,7 +28,7 @@ says:
   goes out, after a check of the org membership, and marks its session as
   running. `finishLifecycleTurn`, or a report that the turn ended, removes
   it. These records keep the running sessions. They give no GitHub access,
-  as the [machine route](README.md#machine-route) says.
+  as [The git credential sender](#the-git-credential-sender) says.
 - `reportRunnerLifecycle` takes each runner event that ordered runner
   ingestion accepts. `runnerLifecycleDisconnected` takes a disconnect.
 - `acknowledgeLifecycleFirstMessage` clears the pending first message of
@@ -48,6 +49,8 @@ command start. For a workspace object, it:
 - reads the sandbox state from Boat while the runner is not connected
 - runs the disk retention restart 13 days after each confirmed stop
 - retries the sandbox delete of a failed create
+- recovers and deletes an unresolved allocation after a start reaches its limit
+- keeps failed or cancelled resume stop cleanup after the start result ends
 
 The deadline and stop actions use the sandbox state in each Boat reply.
 When Boat refuses an action, they read the sandbox state once. The
@@ -83,10 +86,79 @@ its first message in memory, as
 
 `WorkspaceEventJournal` in [`durable-journal.ts`](durable-journal.ts) keeps
 ordered lifecycle publication and suppresses unchanged updates. The
+workspace update includes its saved public error code and message, or null
+to clear an error. The event carries no error log. The
 production `Workspace` sends each `workspace.updated` and `start.updated`
 event to `WorkspaceChat`, through `commitWorkspaceEvent` or the `publish`
 argument of a chat hook. Chat stores and numbers the only workspace event
 history, with chat and lifecycle events.
+
+## Creates and resumes
+
+The [browser routes](README.md#browser-routes) queue the start of each
+create and resume. The workspace object runs that start:
+
+- A create or a resume queues its start with `queueLifecycleStart`. The
+  workspace object runs the start, so a closed browser does not cancel it.
+- A create waits only for its admission, with `waitCreationAdmission`.
+  Admission makes the workspace, its token, and the first message durable.
+  The sandbox can still be starting. `waitCreationLifecycle` waits for the
+  end of a create, and `waitLifecycleStart` for the end of a resume.
+- Resume answers when the start is queued, with the workspace in
+  `starting`. No browser route waits for the end of a start. The events of
+  the workspace carry the start steps and the result. A failed resume
+  keeps the workspace and its chat, with an error and a valid Try again.
+- A test that needs the end of a resume uses `resumeCompletedWorkspace` in
+  [`completed-resume-test-support.ts`](completed-resume-test-support.ts).
+  It waits for the job that its call queued, and reads the real result.
+- The write that ends the `records` phase stores the admission in the start
+  job. The end of the create moves it to the completed creation record. A
+  repeat with other content still gets the admitted first message.
+- Resume restarts only a stopped or failed workspace. A resumed
+  sandbox gets fresh env vars and runs the startup script again, but it
+  fetches no code. A start older than the last stop cannot restart it.
+- Each start gives the sandbox the default branch of its repository. It
+  gives no setting for the computer tools, because Boat writes the entry
+  of the `computer` server into the sandbox, as
+  [What it does](../../runner/README.md#what-it-does) says.
+- After the startup script succeeds at create and each resume, the start
+  calls the start hook of the [terminal backend](../terminal/README.md).
+  The hook starts the terminal and caches its encrypted password before
+  the workspace becomes ready. Builds and disk retention restarts skip it.
+- The start then saves its runner phase. Its success waits for the runner
+  readiness report within the original start deadline. The readiness wait
+  runs no startup command again and schedules its alarm at that deadline.
+  Each alarm and readiness report still checks the owner and requester.
+  The shared success path prepares the lifecycle only after its final
+  access, cancellation, and deadline checks. That lifecycle write restores
+  the alarm before the job saves success, also after a runner-phase restart.
+- A failed or cancelled resume records its result separately from its
+  stop cleanup. Native lifecycle state keeps the pending stop across
+  restarts. The lifecycle retries the existing stop operation every 30
+  seconds, and a later resume waits for confirmation. Cleanup keeps the
+  saved failure message. Late runner reports cannot revive that failed
+  start.
+
+## The git credential sender
+
+`Workspace.credentialSender` maps the turn ID of a git credential request
+to a sender, in the chat queue. The [machine route](README.md#machine-route)
+gives the handler, which reads that turn ID from a request header.
+
+- A create that prepares its repository has its own grant. The start job
+  is a create in the `fetch` or `branch` phase, not cancelled or failed,
+  and its `turnId` matches. The grant gives the sender of the admitted
+  first message.
+- Otherwise the turn must be the running stored chat turn: the active
+  turn of an open session. `activeStoredTurn` in
+  [`access.ts`](../devices/access.ts) reads it. So access ends with the
+  turn, also after a queued Stop, a session close, or a login failure.
+- A stopped or archived workspace gives no sender. The lifecycle admission
+  keeps no turn record for the queued first message.
+
+`machine.test.ts` runs the route with `machineCredentialFixture` in
+[`machine-test-support.ts`](machine-test-support.ts), over the production
+chat and runner boundaries.
 
 ## Turn recovery
 
@@ -129,7 +201,8 @@ archived workspace.
   hide a waiting Mac request.
 - An error in the repair at a `hello` closes the runner connection, and
   the next `hello` repairs again. An error in the alarm sets the next
-  alarm in 30 seconds.
+  alarm in 30 seconds, or at the saved disk retention deadline when that
+  comes sooner.
 
 The chat keeps these values in its summary record:
 
@@ -175,8 +248,9 @@ queue of its own.
   effort, and the hello, the readiness, and the live text stay available.
 - Each other lifecycle change throws the title error to its caller. In the
   lifecycle step of the alarm, the existing catch sets the next alarm in 30
-  seconds. The error also delays the chat stop and the device cleanup of a
-  `stopped` or `error` state until the writer succeeds.
+  seconds, or at a sooner saved disk retention deadline. The error also
+  delays the chat stop and the device cleanup of a `stopped` or `error`
+  state until the writer succeeds.
 - A change of a Mac request throws that error too. So the device feature
   keeps its durable publication marker and tries again, as the
   [Mac device README](../devices/README.md#workspace-state) says.

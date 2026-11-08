@@ -1,7 +1,8 @@
-import type { Workspace, WorkspaceStart } from '../../shared/workspaces'
+import type { WorkspaceEvent } from '../../shared/events'
 import {
   count,
   items,
+  maybeNested,
   nested,
   ParseError,
   record,
@@ -11,10 +12,10 @@ import {
 import { readStart, readWorkspace } from './read-workspaces'
 
 /** The events of a workspace that the shell itself draws. */
-export type ShellEvent =
-  | { type: 'workspace.updated'; workspace: Workspace }
-  | { type: 'start.updated'; start: WorkspaceStart }
-  | { type: 'workspace.title'; name: string }
+export type ShellEvent = Extract<
+  WorkspaceEvent,
+  { type: 'workspace.updated' | 'start.updated' | 'workspace.title' }
+>
 
 /**
  * One numbered event of the stream. `event` keeps the raw payload, so that
@@ -43,12 +44,20 @@ export type StreamMessage =
     }
   | { type: 'event'; envelope: StreamEnvelope }
 
+function readPublicError(value: unknown) {
+  const error = record(value, 'error')
+  return { code: text(error, 'code'), message: text(error, 'message') }
+}
+
 function readShellEvent(event: JsonObject): ShellEvent | null {
   switch (event.type) {
     case 'workspace.updated':
       return {
         type: 'workspace.updated',
         workspace: nested(event, 'workspace', readWorkspace),
+        ...(event.error === undefined
+          ? {}
+          : { error: maybeNested(event, 'error', readPublicError) }),
       }
     case 'start.updated':
       return { type: 'start.updated', start: nested(event, 'start', readStart) }

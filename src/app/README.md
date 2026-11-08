@@ -105,8 +105,16 @@ and removal are not wired into this tab yet.
 - A repository save adds or removes that repository only. It keeps the
   choices from other saves and other clients. The save queue keeps an add
   before a later remove of the same repository.
-- A Resume reply keeps each newer field change that arrived while its
-  request ran. A reply after close changes no workspace state.
+- A read or a Resume reply carries the event number of its state. It shows
+  only when no newer state has shown, from the stream or another reply.
+  After it, an older stream event changes nothing. A new owner, an
+  Archive, or a cleared unread state carries no number. Each shows at once
+  and stays over the reply of a pending Resume. A reply after close
+  changes no workspace state.
+- A workspace event applies its saved public error with the workspace
+  state. An older event without the error keeps the current error. An
+  explicit null clears it. Event errors carry no log, so the model keeps
+  a null log for them.
 - An admitted create stays in `OrgModel.creations` until its start ends.
   A failed start takes the workspace out of the list, and gives the first
   message back in a form of its own. A sign-out, or a sign-in of another

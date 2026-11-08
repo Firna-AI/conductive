@@ -17,7 +17,10 @@ export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
   Pick<
     ChatDependencies,
-    'resolveAttachments' | 'scheduleRunnerCheck' | 'randomId'
+    | 'resolveAttachments'
+    | 'scheduleRunnerCheck'
+    | 'scheduleBrowserCheck'
+    | 'randomId'
   >
 >
 

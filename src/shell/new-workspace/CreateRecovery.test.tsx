@@ -133,6 +133,42 @@ describe('the first message of a create whose start fails', () => {
     expect(headerName(view)).toBe(detail.workspace.name)
   })
 
+  test('shows the message that the start saved, such as its time limit, in its own form', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const app = await startedApp(server, {
+      events: recordingSocket(server).source,
+    })
+    const { view, go } = mountTab(app)
+    await settle()
+    go(routes.newWorkspace(org))
+    await settle()
+    typeText(messageField(view), 'Let shoppers save their cart.')
+    click(byLabel('Send', view))
+    await settle()
+    expect(headerName(view)).toBe(created.workspace.name)
+    const passedLimit: WorkspaceEvent = {
+      type: 'workspace.updated',
+      workspace: { ...created.workspace, state: 'error' },
+      error: {
+        code: 'workspace_start_failed',
+        message:
+          'The cloud computer did not start within the 20-minute limit. Try again.',
+      },
+    }
+
+    createdEvent(passedLimit, server)
+    await settle()
+
+    expect(view.textContent).toContain("The workspace wasn't created")
+    expect(view.textContent).toContain(
+      'The cloud computer did not start within the 20-minute limit. Try again. Your message is kept.',
+    )
+    expect(view.textContent).not.toContain("Its sandbox didn't start.")
+    expect(draftOf(view)).toBe('Let shoppers save their cart.')
+    expect(queryByRole('button', 'Try again', view)).not.toBeNull()
+  })
+
   test('shows as not available in a tab that did not send it, and Resume and Try again stay for other starts', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ workspaceState: 'stopped' })
@@ -181,5 +217,45 @@ describe('the first message of a create whose start fails', () => {
     emit(server, { type: 'start.updated', start: resume })
     emit(server, broken)
     expect(queryByRole('button', 'Try again', view)).not.toBeNull()
+  })
+
+  test('shows the message that the start saved in the not-available view of a tab that did not send it', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const app = await startedApp(server, {
+      events: recordingSocket(server).source,
+    })
+    const { view, go } = mountTab(app)
+    await settle()
+    go(routes.workspace(org, createdId))
+    await settle()
+    expect(headerName(view)).toBe(created.workspace.name)
+    const passedLimit: WorkspaceEvent = {
+      type: 'workspace.updated',
+      workspace: { ...created.workspace, state: 'error' },
+      error: {
+        code: 'workspace_start_failed',
+        message:
+          'The cloud computer did not start within the 20-minute limit. Try again.',
+      },
+    }
+
+    // The server publishes the error state with its saved cause, then the
+    // failed step.
+    createdEvent(passedLimit, server)
+    createdEvent(
+      { type: 'start.updated', start: createStart('failed') },
+      server,
+    )
+    await settle()
+
+    expect(view.textContent).toContain('This workspace is not available')
+    expect(view.textContent).toContain(
+      'The cloud computer did not start within the 20-minute limit. Try again.',
+    )
+    expect(view.textContent).not.toContain("Its sandbox didn't start.")
+    expect(queryByRole('button', 'All workspaces', view)).not.toBeNull()
+    expect(queryByRole('button', 'Resume', view)).toBeNull()
+    expect(queryByRole('button', 'Try again', view)).toBeNull()
   })
 })

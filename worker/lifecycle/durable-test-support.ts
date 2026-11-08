@@ -3,6 +3,7 @@ import { vi } from 'vitest'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import { DurableLifecycle } from './durable'
 import type {
+  DiskRetentionResult,
   DurableLifecycleState,
   LifecycleStorage,
   LifecycleTurnRecovery,
@@ -40,8 +41,13 @@ export function lifecycleFixture() {
     changed: vi.fn<(state: DurableLifecycleState) => void>(),
     stop: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
     keepalive: vi
-      .fn<() => Promise<boolean | void>>()
-      .mockResolvedValue(undefined),
+      .fn<(deadlineAt: number) => Promise<DiskRetentionResult>>()
+      .mockImplementation(async () => ({
+        done: true,
+        error: null,
+        stoppedAt: now,
+        eligible: true,
+      })),
     extendDeadline: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
     recoverTurns: vi
       .fn<() => Promise<LifecycleTurnRecovery | undefined>>()

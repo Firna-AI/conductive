@@ -26,7 +26,10 @@ import styles from './ChatPane.module.css'
 export function ChatPane(props: {
   items: readonly ChatItem[]
   composer: ComposerState
-  /** The sandbox is not running: the bar takes the place of the composer. */
+  /**
+   * The sandbox is not running: the bar takes the place of the composer. A
+   * failed start carries its saved message, and a refused start its reason.
+   */
   problem?: SandboxNoticeState
   starting?: StartingLog
   empty?: ReactNode

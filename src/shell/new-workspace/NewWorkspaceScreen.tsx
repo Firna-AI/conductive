@@ -165,7 +165,11 @@ export function NewWorkspaceScreen(props: {
         <div className={chat.footer}>
           {create.state === 'failed' || create.state === 'not-started' ? (
             <CreateFailed
-              error={create.state === 'failed' ? create.error : null}
+              error={
+                create.state === 'failed'
+                  ? create.error
+                  : (create.error ?? null)
+              }
               ready={ready !== null}
               retry={() => void send()}
             />

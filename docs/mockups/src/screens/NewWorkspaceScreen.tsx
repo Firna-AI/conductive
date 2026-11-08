@@ -13,6 +13,7 @@ import { savedCartsMessage } from '../fixtures/conversations'
 import { you } from '../fixtures/members'
 import { orgs } from '../fixtures/orgs'
 import { repositories } from '../fixtures/repositories'
+import { startErrors } from '../fixtures/starting'
 import { savedCarts } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import styles from './NewWorkspaceScreen.module.css'
@@ -22,11 +23,26 @@ export const newWorkspaceSchema = {
   additionalProperties: false,
   required: ['result'],
   properties: {
-    result: { enum: ['form', 'error'] },
+    /**
+     * The empty form, or a create whose first start failed: a failure, or
+     * the 20-minute limit of a start.
+     */
+    result: { enum: ['form', 'error', 'time-limit'] },
   },
 } as const
 
 export type NewWorkspaceState = SchemaProps<typeof newWorkspaceSchema>
+
+type CreateFailure = Exclude<NewWorkspaceState['result'], 'form'>
+
+/**
+ * The body of a create whose first start failed. A start that passed its
+ * limit shows the message that the app saved for it.
+ */
+const failureBodies: Readonly<Record<CreateFailure, string>> = {
+  error: "Its sandbox didn't start. Your message is kept.",
+  'time-limit': `${startErrors['time-limit']} Your message is kept.`,
+}
 
 const repository = repositories[savedCarts.repository]
 
@@ -58,16 +74,21 @@ function Start() {
 }
 
 /** The empty chat and its composer. The first message creates the workspace. */
-function NewChat(props: { failed: boolean; viewport: Viewport }) {
-  const notice = props.failed ? (
-    <Notice
-      action={<ActionButton tone="primary">Try again</ActionButton>}
-      body="Its sandbox didn't start. Your message is kept."
-      icon={CircleAlert}
-      title="The workspace wasn't created"
-      tone="danger"
-    />
-  ) : undefined
+function NewChat(props: {
+  result: NewWorkspaceState['result']
+  viewport: Viewport
+}) {
+  const failed = props.result !== 'form'
+  const notice =
+    props.result === 'form' ? undefined : (
+      <Notice
+        action={<ActionButton tone="primary">Try again</ActionButton>}
+        body={failureBodies[props.result]}
+        icon={CircleAlert}
+        title="The workspace wasn't created"
+        tone="danger"
+      />
+    )
   return (
     <ChatPane
       composer={{
@@ -76,7 +97,7 @@ function NewChat(props: { failed: boolean; viewport: Viewport }) {
         draft: savedCartsMessage,
         placeholder: 'Describe the task',
         running: false,
-        sendTo: props.failed ? undefined : paths.creating,
+        sendTo: failed ? undefined : paths.creating,
       }}
       empty={<Start />}
       items={[]}
@@ -106,10 +127,7 @@ export function NewWorkspaceScreen(props: {
       title="New workspace"
       viewport={props.viewport}
     >
-      <NewChat
-        failed={props.state.result === 'error'}
-        viewport={props.viewport}
-      />
+      <NewChat result={props.state.result} viewport={props.viewport} />
     </Page>
   )
   if (mobile) return <MobileFrame>{page}</MobileFrame>

@@ -4,7 +4,6 @@ import type { CommandResult } from '../sandbox/provider'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
 import { readBuildJob } from './build-data'
-import { keepWorkspaceDisk } from './disk-retention'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { readRetention } from './retention-data'
@@ -125,9 +124,11 @@ it('runs retention startup in Bash with its org environment without marking read
       if (local.contains(command, 'retention'))
         results.push(await local.run(command))
     }
-    await keepWorkspaceDisk(context)
-    await keepWorkspaceDisk(context)
-    await keepWorkspaceDisk(context)
+    fixture.setTime(fixture.runtime.dependencies.now() + 1_123_200_000)
+    await actor.alarm()
+    await actor.alarm()
+    await actor.alarm()
+    await actor.alarm()
     expect(results).toEqual([
       {
         exitCode: 0,

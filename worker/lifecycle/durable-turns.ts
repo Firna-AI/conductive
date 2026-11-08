@@ -1,4 +1,25 @@
 import type { DurableLifecycleState, LifecycleHooks } from './durable-types'
+import { reconciledLifecycle } from './durable-reconciliation'
+
+export async function applyLifecycleTurn(
+  state: DurableLifecycleState,
+  change: { sessionId: string; running: boolean; occurredAt: number },
+  hooks: LifecycleHooks,
+  now: () => number,
+): Promise<DurableLifecycleState> {
+  if (state.state === 'stopped' || state.state === 'archived') return state
+  const remote = await hooks.extendDeadline()
+  if (remote) return reconciledLifecycle(state, remote, now())
+  const sessions = new Set(state.runningSessions)
+  if (change.running) sessions.add(change.sessionId)
+  else sessions.delete(change.sessionId)
+  return {
+    ...state,
+    runningSessions: [...sessions],
+    state: sessions.size ? 'working' : 'ready',
+    lastActivityAt: Math.max(state.lastActivityAt, change.occurredAt),
+  }
+}
 
 export async function recoverLifecycleTurns(
   state: DurableLifecycleState,

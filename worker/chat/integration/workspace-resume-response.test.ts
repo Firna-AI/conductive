@@ -6,6 +6,8 @@ import { sandboxProvider } from '../../sandbox/client'
 import type { WorkspaceStartResult } from '../../lifecycle/start-types'
 import { orgEnvironmentContext } from '../../lifecycle/settings-data'
 import { encrypt } from '../../security/crypto'
+import { readWorkspaceToken } from '../../lifecycle/tokens'
+import { closeSockets } from '../adapter-sockets.test-support'
 import { record } from '../inputs'
 import { array } from '../agent-events'
 import { outerWorkerBundle } from './outer-runtime.test-support'
@@ -15,7 +17,11 @@ import {
   driveToRunningStartup,
   type ReviewWorkspaceFixture,
 } from './workspace-review.test-support'
-import { driveWorkspaceStart } from './workspace-start.test-support'
+import {
+  driveWorkspaceStart,
+  prepareWorkspaceStart,
+} from './workspace-start.test-support'
+import { connectShellRunner } from './shell-runner.test-support'
 
 let bundle: string
 let fixture: ReviewWorkspaceFixture | undefined
@@ -165,12 +171,29 @@ it('answers resume and retry with durable starting state while chat and startup 
       workspace: { id: OUTER_WORKSPACE, state: 'starting' },
       error: null,
     })
-    expect(
-      await driveWorkspaceStart<WorkspaceStartResult<unknown>>(
-        active.actor(),
-        active.actor().waitLifecycleStart(),
-      ),
-    ).toEqual({ ok: true })
+    await prepareWorkspaceStart(active.actor())
+    const retryRunner = await connectShellRunner(
+      active,
+      OUTER_WORKSPACE,
+      await readWorkspaceToken(active.env, OUTER_WORKSPACE),
+      'response-retry-stream',
+    )
+    try {
+      expect(await retryRunner.inbox.next()).toMatchObject({ type: 'welcome' })
+      retryRunner.emit({ type: 'runner.ready' })
+      expect(await retryRunner.inbox.next()).toMatchObject({
+        type: 'confirm',
+        throughEventNumber: 1,
+      })
+      expect(
+        await driveWorkspaceStart<WorkspaceStartResult<unknown>>(
+          active.actor(),
+          active.actor().waitLifecycleStart(),
+        ),
+      ).toEqual({ ok: true })
+    } finally {
+      await closeSockets(retryRunner.socket)
+    }
   } finally {
     active.boat.commandRunning = false
     active.boat.commandExitCode = 0
