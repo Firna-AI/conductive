@@ -66,7 +66,3 @@ export interface ChatHistoryResponse {
 export type WorkspaceSocketMessage =
   | { type: 'history'; history: ChatHistoryResponse }
   | { type: 'event'; envelope: WorkspaceEventEnvelope }
-
-export interface WorkspaceSocketRequest {
-  afterEventNumber: number
-}

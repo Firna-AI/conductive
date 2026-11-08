@@ -6672,17 +6672,33 @@ Depends on: none.
 Apply the small `fix after merge` items of the gate, the tests, and the
 marketing site. Added on 8 November 2026.
 
-- [ ] Apply option C of `plans/follow-ups/unused-export-check.md` (decision
+Agent calls on 8 November 2026, within the approved options:
+
+- Use Knip for value exports and type exports. Reason: the approved check
+  concerns exports, not dependencies or files.
+- Keep `src/marketing/features.ts` as the shared owner of the feature
+  text. Reason: the site already reads this module, and the mockups can
+  read it too.
+- Keep exports that pending branches or documented work need, with narrow
+  public markers. Reason: an unused export is not dead when work keeps it
+  on purpose.
+- Keep the module-load failure for a missing listed picture. Reason: the
+  glob lists existing files, and the complete gate still catches a missing
+  file. Detection moves from the build to the tests.
+- Let the chosen glob emit each matching file. Reason: the marketing host
+  still serves only the files that the shared list names.
+
+- [x] Apply option C of `plans/follow-ups/unused-export-check.md` (decision
       112): add an unused-export check to the complete gate. Delete that
-      item.
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-15p`.
 - [ ] Apply option A of `plans/follow-ups/mac-top-navigation-flake.md`, and
       delete that item.
-- [ ] Apply option A of `plans/follow-ups/workspace-store-hook-test-store.md`,
-      and delete that item.
-- [ ] Apply option D of `plans/follow-ups/legal-pages-follow-protocol.md`,
-      and delete that item.
-- [ ] Apply option C of `plans/follow-ups/marketing-site-copies.md`, and
-      delete that item.
+- [x] Apply option A of `plans/follow-ups/workspace-store-hook-test-store.md`,
+      and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15p`.
+- [x] Apply option D of `plans/follow-ups/legal-pages-follow-protocol.md`,
+      and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15p`.
+- [x] Apply option C of `plans/follow-ups/marketing-site-copies.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15p`.
 
 ## Milestone 15q: Access follow-ups
 

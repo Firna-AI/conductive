@@ -24,12 +24,9 @@ export interface RenameOrgRequest {
   name: string
   initials?: string
 }
-export type RenameOrgResponse = OrgResponse
 export interface DeleteOrgRequest {
   name: string
 }
-export type DeleteOrgResponse = OrgResponse
-export type RestoreOrgResponse = OrgResponse
 
 export function deleteOrgPath(orgId: string): string {
   return `${orgPath(orgId)}/delete`

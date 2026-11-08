@@ -18,7 +18,7 @@ import {
 import { cleanupOrgImageSources } from './image-sources/cleanup'
 import { imageRetryAt } from './image-retry-data'
 
-export { IMAGE_DAY_MS, IMAGE_POLL_MS } from './image-schedule'
+export { IMAGE_POLL_MS } from './image-schedule'
 
 /** Only the verified GitHub webhook dispatcher calls this entry point. */
 export async function refreshImagesForPush(

@@ -3,7 +3,7 @@ import { ParseError, record, text } from './parse'
 /** The fetch that the client uses: the browser's, or a fake in development. */
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>
 
-export type WriteMethod = 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+type WriteMethod = 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 /** A failed request, with the error code of the API when it sent one. */
 export class ApiError extends Error {

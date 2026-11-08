@@ -1,5 +1,4 @@
 import { workspacePath } from './workspaces'
-import type { Attachment, UploadAttachmentResponse } from './messages'
 
 function fileQuery(orgId: string, id: string, route: string, path: string) {
   return `${workspacePath(orgId, id)}/${route}?${new URLSearchParams({ path })}`
@@ -115,13 +114,6 @@ export type RunnerFileEvent =
   | { type: 'files.unavailable' }
   | { type: 'files.changed'; delta: FileTreeDelta }
   | { type: 'changes.updated'; changes: RunnerChangesPart }
-
-export interface ReadFileRequest {
-  path: string
-}
-export interface ReadDiffRequest {
-  path: string
-}
 export interface FileResponse {
   path: string
   mediaType: string
@@ -161,8 +153,3 @@ export interface DiffResponse {
   patch: string
   binary: boolean
 }
-
-export interface AttachmentsResponse {
-  attachments: readonly Attachment[]
-}
-export type AttachFileResponse = UploadAttachmentResponse

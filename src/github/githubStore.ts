@@ -16,6 +16,7 @@ import {
  * The event stream of one workspace. The first message holds the stored
  * history after `afterEventNumber`. Later messages hold live events. The
  * returned function ends the subscription.
+ * @public The workspace GitHub adapter imports this subscription boundary.
  */
 export type SubscribeToWorkspace = (
   afterEventNumber: number,

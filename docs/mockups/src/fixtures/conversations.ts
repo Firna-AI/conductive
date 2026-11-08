@@ -13,7 +13,7 @@ import { unavailableConversations } from './unavailableConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
-export type ToolCallStatus = 'done' | 'running' | 'stopped'
+type ToolCallStatus = 'done' | 'running' | 'stopped'
 
 export type ChatItem =
   | { kind: 'user'; id: string; text: string; queued?: boolean }

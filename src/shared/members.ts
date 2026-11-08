@@ -1,5 +1,5 @@
 import { orgPath, type OrgRole, type Timestamp, type User } from './api'
-import { workspacePath, type Workspace } from './workspaces'
+import { workspacePath } from './workspaces'
 
 export function membersPath(orgId: string): string {
   return `${orgPath(orgId)}/members`
@@ -43,12 +43,6 @@ export interface InviteMemberResponse {
 export interface ChangeMemberRoleRequest {
   role: OrgRole
 }
-export interface MemberResponse {
-  member: OrgMember
-}
 export interface ReassignWorkspaceRequest {
   userId: string
-}
-export interface ReassignWorkspaceResponse {
-  workspace: Workspace
 }

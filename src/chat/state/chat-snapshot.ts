@@ -54,7 +54,7 @@ export interface ChatNotice {
   message: string
 }
 
-export type LoadState =
+type LoadState =
   | { state: 'loading' }
   | { state: 'ready' }
   | { state: 'failed'; message: string }

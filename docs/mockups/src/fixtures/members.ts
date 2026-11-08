@@ -7,9 +7,7 @@
 
 import { account } from './orgs'
 
-export const personKeys = ['cal', 'priya', 'jonas'] as const
-
-export type PersonKey = (typeof personKeys)[number]
+export type PersonKey = 'cal' | 'priya' | 'jonas'
 
 export type Person = {
   key: PersonKey

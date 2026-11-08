@@ -21,7 +21,7 @@ import {
 } from './read-chat'
 
 /** What the composer needs to know about the agent logins of the user. */
-export type AgentLogin = Pick<AgentLoginStatus, 'agent' | 'connected'>
+type AgentLogin = Pick<AgentLoginStatus, 'agent' | 'connected'>
 
 export interface AccountSummary {
   /** The signed-in user, who reads the chat. */

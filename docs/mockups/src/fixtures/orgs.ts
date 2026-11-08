@@ -3,9 +3,7 @@
  * sign-in, the GitHub App, and the agent connections.
  */
 
-export const orgKeys = ['acme', 'futex', 'firna', 'labs'] as const
-
-export type OrgKey = (typeof orgKeys)[number]
+export type OrgKey = 'acme' | 'futex' | 'firna' | 'labs'
 
 export type Org = {
   key: OrgKey

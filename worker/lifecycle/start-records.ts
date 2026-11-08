@@ -38,6 +38,7 @@ export async function advanceStartRecords(
   return storage.admission()
 }
 
+/** @public The start coordinator can call this records phase directly. */
 export async function prepareWorkspaceRecords(
   env: AppEnv,
   dependencies: AppDependencies,

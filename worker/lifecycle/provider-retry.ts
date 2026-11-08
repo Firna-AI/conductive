@@ -1,7 +1,7 @@
 import { ProviderError } from '../sandbox/errors'
 import { isRecord } from '../http'
 
-export const PROVIDER_RETRY_WINDOW_MS = 600_000
+const PROVIDER_RETRY_WINDOW_MS = 600_000
 
 export interface ProviderRetryState {
   openedAt: number

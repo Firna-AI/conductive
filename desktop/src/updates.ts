@@ -1,4 +1,4 @@
-export const UPDATE_FEED = {
+const UPDATE_FEED = {
   provider: 'github',
   owner: 'Firna-AI',
   repo: 'conductive-desktop',

@@ -30,7 +30,7 @@ export interface WorkspaceContext {
   onReassigned: (workspace: Workspace) => void
 }
 
-export type WorkspaceSlot = (context: WorkspaceContext) => ReactNode
+type WorkspaceSlot = (context: WorkspaceContext) => ReactNode
 
 /**
  * The parts that later milestones put into the shell of a workspace. The

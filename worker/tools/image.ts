@@ -5,11 +5,12 @@ import {
 import type { CommandResult } from '../sandbox/provider'
 import { imageNodeExecutable } from '../lifecycle/image-runtime'
 
+/** @public Image installation checks identify the tools by this path. */
 export const WORKSPACE_TOOLS_DIRECTORY = '/opt/conductive/agent-tools'
 export const WORKSPACE_TOOLS_COMMAND = '/usr/local/bin/conductive'
 export const WORKSPACE_TOOLS_SECRETS_FILE = '/run/ascii-secrets/env.sh'
 
-/** Merge this server into each agent's MCP configuration at runtime. */
+/** @public Merge this server into each agent's MCP configuration at runtime. */
 export const WORKSPACE_TOOLS_MCP = {
   command: WORKSPACE_TOOLS_COMMAND,
   args: ['mcp'],

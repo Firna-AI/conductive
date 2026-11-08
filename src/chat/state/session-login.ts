@@ -18,7 +18,7 @@ export type SessionLoginView =
   | { kind: 'linked'; starter: string | null }
 
 /** The name of a member: the display name, or else the GitHub login. */
-export function memberName(
+function memberName(
   person: Pick<MessageSender, 'displayName' | 'githubLogin'>,
 ): string {
   return person.displayName?.trim() || person.githubLogin

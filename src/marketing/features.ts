@@ -1,20 +1,26 @@
 import type { MarketingPictureKey } from '../../docs/mockups/src/screens/marketingPictureList'
 import type { IconName } from './icons'
 
+/**
+ * The words of the features of the home page. The site renders them as HTML,
+ * and the mockups render them with React in
+ * docs/mockups/src/screens/marketingFeatures.tsx, so both show the same
+ * words, icons, and pictures, in the same order.
+ */
+
 /** One feature of the app: what it does, and a real screen that shows it. */
 export type Feature = {
-  label: string
-  title: string
-  text: string
-  picture: MarketingPictureKey
+  readonly label: string
+  readonly title: string
+  readonly text: string
+  readonly picture: MarketingPictureKey
   /** The picture runs off the bottom of its stage, as a tall phone does. */
-  bleed?: boolean
+  readonly bleed?: boolean
 }
 
 /**
- * The features of the home page, as docs/mockups/src/screens/
- * marketingFeatures.tsx writes them. Each claim is one that the plan
- * decides.
+ * The features of the home page, in their order. Each claim is one that the
+ * plan decides.
  */
 export const features: readonly Feature[] = [
   {
@@ -56,8 +62,15 @@ export const features: readonly Feature[] = [
   },
 ]
 
-/** A smaller feature: an icon, a short title, and one sentence. */
-export type FeatureItem = { icon: IconName; title: string; text: string }
+/**
+ * A smaller feature: an icon, a short title, and one sentence. The icon is
+ * the name of a lucide icon, which each surface draws in its own way.
+ */
+export type FeatureItem = {
+  readonly icon: IconName
+  readonly title: string
+  readonly text: string
+}
 
 /** The smaller features, in a grid under the large ones. */
 export const smallerFeatures: readonly FeatureItem[] = [

@@ -54,7 +54,7 @@ export class MemoryChatStorage implements ChatStorage {
 
 const encoder = new TextEncoder()
 
-export function compareUtf8(left: string, right: string): number {
+function compareUtf8(left: string, right: string): number {
   const a = encoder.encode(left)
   const b = encoder.encode(right)
   for (let index = 0; index < Math.min(a.length, b.length); index++) {
