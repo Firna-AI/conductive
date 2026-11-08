@@ -356,14 +356,19 @@ Depends on: 1
 
 `image/package-runner.mjs` can name the archive URL by its digest.
 
-- [ ] Add `--base-url`, as the design says. Pass exactly one of `--url`
+- [x] Add `--base-url`, as the design says. Pass exactly one of `--url`
       and `--base-url`. Update the usage text.
-- [ ] Fix the file modes of the archive entries in the `tar` call, as the
-      design says. Say so in `image/developer-scripts.md`.
-- [ ] Run the typecheck, the lint, the format check, and the file length
-      check named in `AGENTS.md`.
-- [ ] Prove once that two runs on a clean install give the same digest and
-      URL. Save the output under `.context/deploy-on-main/`.
+- [x] Fix the file modes of the archive entries in the `tar` call, as the
+      design says. Say so in `image/developer-scripts.md`. Milestone 1
+      wrote the sentence.
+- [x] Run the typecheck, the lint, the format check, and the file length
+      check named in `AGENTS.md`. Done on 8 November 2026: all pass. No
+      config type-checks `image/*.mjs`, so a one-time `tsc --checkJs` run
+      with `--ignoreConfig` checked the file, with no finding.
+- [x] Prove once that two runs on a clean install give the same digest and
+      URL. Save the output under `.context/deploy-on-main/`. Done on
+      8 November 2026: installs with the umasks 0002 and 0022 gave the same
+      digest and URL. Evidence: `.context/deploy-on-main/proof/m2/`.
 
 ## Milestone 3: Deploy workflow
 
