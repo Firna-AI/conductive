@@ -1,4 +1,5 @@
 import type { Agent, AgentChoice } from '../../src/shared/agents'
+import type { PendingTurn } from '../lifecycle/workspace-runtime'
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
 import type { Attachment, MessageDraft } from '../../src/shared/messages'
 import type {
@@ -17,6 +18,8 @@ import type {
   ConnectionIdentity,
   ConnectionScheduler,
 } from '../security/connection-access'
+import type { AuthenticatedRunner } from './authenticated-runner'
+import type { SessionLoginTarget } from './login-availability'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -82,7 +85,7 @@ export interface RunnerPeer {
 }
 
 export interface ActiveRunner {
-  peer: RunnerPeer
+  peer: AuthenticatedRunner
   workspace: RunnerWorkspaceRecord
   streamId: string | null
   ready: boolean
@@ -106,17 +109,41 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  waitUntil(promise: Promise<unknown>): void
+  runnerDisconnected(
+    workspaceId: string,
+    publish: ChatCallbackPublisher,
+  ): Promise<void>
+  turnDispatching(
+    workspaceId: string,
+    turn: PendingTurn,
+    publish: ChatCallbackPublisher,
+  ): Promise<boolean>
+  turnDispatchFailed(
+    workspaceId: string,
+    turnId: string,
+    publish: ChatCallbackPublisher,
+  ): Promise<void>
+  browserOpened(workspaceId: string, tabId: string): Promise<void>
+  browserClosed(workspaceId: string, tabId: string): Promise<void>
   now: () => number
   scheduleBrowserCheck: ConnectionScheduler
+  scheduleRunnerCheck: ConnectionScheduler
+  readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
   readConnectionAccess: (
     identities: readonly ConnectionIdentity[],
     now: number,
   ) => Promise<readonly ConnectionGrant[]>
+  firstStartIncomplete: (workspaceId: string) => Promise<boolean>
   randomId: () => string
+  readLoginAvailability: (
+    targets: readonly SessionLoginTarget[],
+  ) => Promise<ReadonlySet<string>>
   resolveLogin: (
-    userId: string,
+    userId: string | null,
     agent: Agent,
     runnerTokenHash?: string,
+    senderId?: string,
   ) => Promise<RunnerLogin | null>
   resolveAttachments: (
     userId: string,

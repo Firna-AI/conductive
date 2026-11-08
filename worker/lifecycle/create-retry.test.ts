@@ -7,7 +7,7 @@ import { workspacesPath } from '../../src/shared/workspaces'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { createWorkspace } from './workspaces'
 import { createCompletedWorkspace } from './completed-creation-test-support'
-import { resumeWorkspace } from './workspace-resume'
+import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 
 const fixtureForTest = setupBackendTests()
 

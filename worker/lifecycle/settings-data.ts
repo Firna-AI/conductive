@@ -1,11 +1,13 @@
 import type { AppEnv } from '../env'
+import { activeAdminMemberPredicate } from '../data/active-admin'
 import { HttpError, isRecord } from '../http'
 import { decrypt } from '../security/crypto'
+import { readSavedScript, type SavedScript } from './saved-script'
 
 export interface ImageSettings {
   orgId: string
-  installScript: string
-  startupScript: string
+  installScript: SavedScript
+  startupScript: SavedScript
   envVarsCiphertext: string | null
   imageName: string | null
   imageBuildId: string | null
@@ -57,10 +59,19 @@ export async function readImageSettings(
      FROM settings WHERE org_id = ?`,
     )
     .bind(orgId)
-    .first<ImageSettings>()
+    .first<
+      Omit<ImageSettings, 'installScript' | 'startupScript'> & {
+        installScript: string
+        startupScript: string
+      }
+    >()
   if (!row)
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
-  return row
+  return {
+    ...row,
+    installScript: readSavedScript(row.installScript),
+    startupScript: readSavedScript(row.startupScript),
+  }
 }
 
 export async function selectedRepositories(
@@ -144,6 +155,21 @@ export function firstOrgAdmin(
     .prepare(
       `SELECT user_id AS userId FROM org_members JOIN orgs ON orgs.id = org_members.org_id
      WHERE org_id = ? AND role = 'admin' AND orgs.deleted_at IS NULL ORDER BY joined_at, user_id LIMIT 1`,
+    )
+    .bind(orgId)
+    .first<{ userId: string }>()
+}
+
+export function firstActiveOrgAdmin(
+  db: D1Database,
+  orgId: string,
+): Promise<{ userId: string } | null> {
+  return db
+    .prepare(
+      `SELECT m.user_id AS userId FROM org_members m
+       JOIN orgs o ON o.id = m.org_id
+       WHERE m.org_id = ? AND ${activeAdminMemberPredicate('m')} AND o.deleted_at IS NULL
+       ORDER BY m.joined_at, m.user_id LIMIT 1`,
     )
     .bind(orgId)
     .first<{ userId: string }>()

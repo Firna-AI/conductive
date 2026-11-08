@@ -104,10 +104,6 @@ export function readBuildResponse(value: unknown): BuildResponse {
   }
 }
 
-export function readBuildEvents(value: unknown): BuildLogEvent[] {
-  return items(record(value, 'build events'), 'events', readLogEvent)
-}
-
 function readMember(value: unknown): OrgMember {
   const member = record(value, 'member')
   return {

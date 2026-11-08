@@ -2,14 +2,16 @@ import { productName } from '../../docs/mockups/src/brand'
 import { startButton } from './actions'
 import { lockupSize, siteFiles } from './assets'
 import { html, type Html } from './html'
+import { abuseAddress } from './legal-text'
 import { sitePaths, type SiteLinks } from './links'
 
 /**
- * The lockup of the brand, as a link to the home page. The browser picks
- * the lockup for the colour scheme. The files stay as the brand made them.
+ * The lockup of the brand, as a link to the home page at `home`. The
+ * browser picks the lockup for the colour scheme. The files stay as the
+ * brand made them.
  */
-function wordmark(): Html {
-  return html`<a class="wordmark" href="${sitePaths.home}"
+export function wordmark(home: string): Html {
+  return html`<a class="wordmark" href="${home}"
     ><picture
       ><source
         media="(prefers-color-scheme: light)"
@@ -30,7 +32,7 @@ function wordmark(): Html {
 export function siteHeader(links: SiteLinks): Html {
   return html`<header class="header">
     <div class="header-inner">
-      ${wordmark()}
+      ${wordmark(sitePaths.home)}
       <nav aria-label="Site" class="header-nav">
         <a class="header-link header-wide" href="${links.features}">Features</a
         ><a class="header-link" href="${links.signIn}">Sign in</a
@@ -58,14 +60,14 @@ function legalLinks(): Html {
 }
 
 /**
- * The foot of each page: the lockup, the sections, the sign-in, and the
- * legal pages beside the copyright.
+ * The foot of each page: the lockup, the sections, the sign-in, the address
+ * for abuse reports, and the legal pages beside the copyright.
  */
 export function siteFooter(links: SiteLinks, year: number): Html {
   return html`<footer class="footer">
     <div class="footer-inner">
       <div class="footer-brand">
-        ${wordmark()}
+        ${wordmark(sitePaths.home)}
         <p class="footer-tagline">
           Coding agents on cloud computers, in your browser.
         </p>
@@ -77,6 +79,10 @@ export function siteFooter(links: SiteLinks, year: number): Html {
           >Start free with GitHub</a
         >`,
         html`<a class="footer-link" href="${links.signIn}">Sign in</a>`,
+      ])}${footerColumn('Report abuse', [
+        html`<a class="footer-link" href="mailto:${abuseAddress}"
+          >${abuseAddress}</a
+        >`,
       ])}
     </div>
     <div class="footer-inner footer-bottom">

@@ -73,6 +73,11 @@ export class RunnerLink {
     this.sendSaved(envelope)
   }
 
+  async persist(): Promise<void> {
+    await this.store.persist()
+    if (this.welcomed) this.resend(this.store.snapshot.confirmedThrough + 1)
+  }
+
   async refreshReport(
     kind: RetainedReportKind,
     commandId: string,

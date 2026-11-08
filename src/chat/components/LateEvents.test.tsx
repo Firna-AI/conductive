@@ -3,7 +3,15 @@ import type { AgentChatEvent } from '../../shared/chat-events'
 import type { ChangedFile } from '../../shared/files'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import { count, failed, recordNaming, refused, turn, update } from './event-kit'
+import {
+  count,
+  failed,
+  recordNaming,
+  refused,
+  turn,
+  unreadEnd,
+  update,
+} from './event-kit'
 import { renderChat } from './render-kit'
 
 const { message } = workspaceFixtures()
@@ -114,6 +122,25 @@ describe('accepted events of a turn that has ended', () => {
     })
     expect(text()).toContain('The second turn failed. Try again')
     expect(inOrder(text(), ['Late words of turn one.', later.text])).toBe(true)
+  })
+
+  it('marks the files of a late end that the cloud computer could not read', async () => {
+    const { chat, text } = await renderChat({ conversation: 'running' })
+    chat.emit({ type: 'message.accepted', message: later })
+    // The second turn starts, so the first one has ended.
+    chat.emit(secondStarts)
+    chat.emit(unreadEnd('turn-1', 'finished'))
+    expect(inOrder(text(), ['1s Changed files unavailable', later.text])).toBe(
+      true,
+    )
+
+    // The second turn ends without its files. A late end of the same turn
+    // then says that the cloud computer could not read them.
+    chat.emit(stoppedEnd('turn-2', []))
+    expect(text()).not.toContain('stopped · ')
+    chat.emit(unreadEnd('turn-2', 'stopped'))
+    expect(text()).toContain('The agent stopped · Changed files unavailable')
+    expect(text()).not.toMatch(/Working|Try again/)
   })
 
   it('shows one Try again, on the newer failure, when a late failure of an older turn names the same message', async () => {

@@ -56,6 +56,7 @@ export async function createChatFixture(
   const dependencies = {
     now: clock.now,
     scheduleBrowserCheck: clock.schedule,
+    scheduleRunnerCheck: clock.schedule,
     randomId: () => `chat-${String(++sequence).padStart(4, '0')}`,
     ...overrides,
   }
@@ -140,8 +141,12 @@ export async function createChatFixture(
     await drain()
     return runner
   }
-  const createSession = async (choice = CLAUDE) => {
-    const response = await fetch(sessionsPath(org.id, WORKSPACE_ID), { choice })
+  const createSession = async (choice = CLAUDE, cookie = ownerCookie) => {
+    const response = await fetch(
+      sessionsPath(org.id, WORKSPACE_ID),
+      { choice },
+      cookie,
+    )
     if (response.status !== 201)
       throw new Error(
         `Create returned ${response.status}: ${await response.text()}`,

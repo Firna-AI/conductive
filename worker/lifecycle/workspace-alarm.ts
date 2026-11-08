@@ -4,6 +4,9 @@ import { retrySandboxCleanup } from './cleanup'
 import type { DurableLifecycle } from './durable'
 import type { ImageCoordinator } from './image-coordinator'
 import type { WorkspaceStartCoordinator } from './start-coordinator'
+import type { TurnScopes } from './turns'
+import { START_JOB_KEY } from './start-storage'
+import type { WorkspaceAccessStop } from './workspace-suspension'
 
 export async function runWorkspaceAlarm(input: {
   storage: WorkspaceStorage
@@ -12,21 +15,36 @@ export async function runWorkspaceAlarm(input: {
   images: ImageCoordinator
   starts: WorkspaceStartCoordinator
   lifecycle: DurableLifecycle
+  turns: TurnScopes
+  accessStop: WorkspaceAccessStop
 }): Promise<void> {
   const { storage, env, dependencies } = input
   if (await input.images.read()) {
     await input.images.alarm()
     return
   }
+  let advancedStart = false
   if (await input.starts.pending()) {
     try {
-      if (!(await input.starts.advance()))
-        await storage.setAlarm(dependencies.now() + 1_000)
+      if (!(await input.starts.advance())) {
+        const job = await storage.get('job', START_JOB_KEY)
+        const retryAt =
+          job && !job.cancelled && !job.failure
+            ? (job.providerRetry?.retryAt ?? 0)
+            : 0
+        await storage.setAlarm(Math.max(dependencies.now() + 1_000, retryAt))
+        return
+      }
+      advancedStart = true
     } catch {
       await storage.setAlarm(dependencies.now() + 30_000)
+      return
     }
-    return
   }
+  const state = await input.lifecycle.read()
+  if (state && (await input.accessStop.check(state.workspaceId)) !== undefined)
+    return
+  if (advancedStart) return
   const cleanupId = await storage.get('text', 'lifecycle:cleanup')
   if (cleanupId) {
     try {

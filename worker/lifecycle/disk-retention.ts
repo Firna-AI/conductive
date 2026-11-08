@@ -1,5 +1,6 @@
 import { providerState, type ProviderState } from './provider-state'
 import type { SandboxProvider } from '../sandbox/provider'
+import { requireActiveUser } from '../data/user-access'
 import { WorkspaceStartError } from './workspace-start'
 import { DISK_KEEPALIVE_MS } from './durable-types'
 import {
@@ -8,8 +9,12 @@ import {
 } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
 import { workspaceStartupCommand } from './image-software'
-import { readImageSettings, workspaceEnvironment } from './settings-data'
-import { readWorkspaceToken } from './tokens'
+import {
+  readImageSettings,
+  workspaceEnvironment,
+  workspaceRepository,
+} from './settings-data'
+import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
 import { readRetention, setRetention, clearRetention } from './retention-data'
 import {
   actionResources,
@@ -47,7 +52,19 @@ export async function keepWorkspaceDisk(
     await setRetention(env.DB, workspaceId, 'resume')
     if (status === 'stopping') return false
     if (status === 'stopped') {
+      await requireActiveUser(env.DB, row.ownerUserId)
+      await ensureWorkspaceToken(
+        env,
+        workspaceId,
+        context.dependencies.randomToken,
+        context.dependencies.now(),
+      )
       const environment = await workspaceEnvironment(env, orgId)
+      const repository = await workspaceRepository(
+        env.DB,
+        orgId,
+        row.repositoryId,
+      )
       const token = await readWorkspaceToken(env, workspaceId)
       const locations = await workspaceRepositoryLocations(env.DB, workspaceId)
       await provider.resume(
@@ -58,6 +75,7 @@ export async function keepWorkspaceDisk(
           WORKSPACE_TOKEN: token,
           CONDUCTIVE_WORKSPACE_ID: workspaceId,
           CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
+          CONDUCTIVE_DEFAULT_BRANCH: repository.defaultBranch,
           CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
             locations,
             row.repositoryId,

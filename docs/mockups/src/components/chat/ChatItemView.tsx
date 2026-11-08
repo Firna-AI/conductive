@@ -3,11 +3,14 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, CircleStop, Clock } from 'lucide-react'
 import type { ChatItem } from '../../fixtures/conversations'
 import { people, type PersonKey } from '../../fixtures/members'
+import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { InlineText } from '../common/InlineText'
 import { Notice } from '../common/Notice'
+import { ScreenLink } from '../common/ScreenLink'
+import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
-import { unlistedFiles } from './lostCopy'
+import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
 import { ToolGroup } from './ToolGroup'
 import { TurnEnd } from './TurnEnd'
@@ -74,17 +77,27 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
         <TurnEnd
           duration={item.duration}
           files={item.files}
+          filesUnavailable={item.filesUnavailable}
           omittedFiles={item.omittedFiles}
         />
       )
     case 'lost':
       return <LostLine reason={item.reason} what={item.what} />
+    case 'linked':
+      // The mockups draw one linked session. Its link leads to the view of
+      // its first session that the member sees without the starter's login.
+      return (
+        <LinkedLine
+          link={<ScreenLink to={paths.noStarterLogin}>{item.from}</ScreenLink>}
+        />
+      )
     case 'stopped':
       return (
         <div className={styles.event}>
           <CircleStop size={13} />
           {stoppedLine(item.by, viewer)}
           {item.omittedFiles ? ` · ${unlistedFiles(item.omittedFiles)}` : null}
+          {item.filesUnavailable ? ` · ${turnFilesUnavailable}` : null}
         </div>
       )
     case 'error':

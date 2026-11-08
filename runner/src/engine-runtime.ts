@@ -9,6 +9,7 @@ import { disposeProvider } from './engine-disposal'
 import { providerEvent } from './engine-events'
 import { finishTurn } from './engine-finish'
 import { inputCommand } from './engine-input'
+import { PendingTurns, stoppedBeforeStart } from './engine-pending'
 import {
   deliverInput,
   startProvider,
@@ -24,19 +25,19 @@ export class SessionEngine {
   private readonly options: EngineOptions
   private session: SessionRuntime | null = null
   private pending: Promise<void> = Promise.resolve()
-  private readonly starts = new Map<string, AbortController>()
-  private readonly stoppedBeforeStart = new Set<string>()
+  private readonly starts: PendingTurns
   private closed = false
   private closing: Promise<void> | null = null
 
   constructor(options: EngineOptions) {
     this.options = options
+    this.starts = new PendingTurns(options)
   }
 
   command(command: Command): Promise<void> {
     if (this.closed) return Promise.resolve()
     if (command.type === 'interrupt') {
-      if (this.stoppedBeforeStart.has(command.turnId)) return Promise.resolve()
+      if (this.starts.hasEnded(command.turnId)) return Promise.resolve()
       const turn = this.session?.active
       if (turn?.first.turnId === command.turnId) {
         this.cancel(turn)
@@ -49,38 +50,17 @@ export class SessionEngine {
             })
         })
       }
-      const start = this.starts.get(command.turnId)
-      if (start) {
-        this.stoppedBeforeStart.add(command.turnId)
-        start.abort()
-        return this.emit({
-          type: 'turn.completed',
-          sessionId: command.sessionId,
-          turnId: command.turnId,
-          state: 'stopped',
-          durationMs: 0,
-          files: [],
-          omittedFileCount: 0,
-          userMessageIds: [],
-        })
-      }
-      return this.enqueue(() =>
-        this.emit({
-          type: 'turn.completed',
-          sessionId: command.sessionId,
-          turnId: command.turnId,
-          state: 'stopped',
-          durationMs: 0,
-          files: [],
-          omittedFileCount: 0,
-          userMessageIds: [],
-        }),
+      const stopped = this.starts.stop(command.turnId)
+      if (stopped) return stopped
+      return this.starts.end(command.turnId, () =>
+        this.enqueue(() => this.emit(stoppedBeforeStart(command))),
       )
     }
-    if (command.type === 'turn')
-      this.starts.set(command.turnId, new AbortController())
+    if (command.type === 'turn') this.starts.accept(command)
     const controller =
-      command.type === 'turn' ? this.starts.get(command.turnId) : undefined
+      command.type === 'turn'
+        ? this.starts.controller(command.turnId)
+        : undefined
     return this.enqueue(async () => {
       try {
         if (command.type === 'model') {
@@ -95,7 +75,10 @@ export class SessionEngine {
               )
             }
           }
-        } else await this.input(command)
+        } else {
+          if (command.type === 'turn') await this.starts.wait(command.turnId)
+          await this.input(command)
+        }
       } catch (error) {
         if (
           command.type !== 'model' &&
@@ -103,12 +86,27 @@ export class SessionEngine {
           this.session?.active?.first.turnId !== command.turnId
         )
           return
-        if (!this.closed && this.session?.active)
+        if (
+          !this.closed &&
+          this.session?.active &&
+          (command.type === 'model' ||
+            this.session.active.first.turnId === command.turnId)
+        )
           await this.finish(failureCause(error))
-        else if (!this.closed)
+        else if (!this.closed && command.type === 'turn') {
+          const failure = failureCause(error)
+          await this.emit({
+            type: 'turn.failed',
+            sessionId: command.sessionId,
+            turnId: command.turnId,
+            error: { code: failure.code, message: failure.message },
+            retryMessageId: command.message.id,
+            durationMs: 0,
+          })
+        } else if (!this.closed)
           this.options.warn('The agent command could not finish.')
       } finally {
-        if (command.type === 'turn') this.starts.delete(command.turnId)
+        if (command.type === 'turn') this.starts.remove(command.turnId)
       }
     })
   }
@@ -125,14 +123,15 @@ export class SessionEngine {
   close(): Promise<void> {
     if (this.closing) return this.closing
     this.closed = true
-    for (const start of this.starts.values()) start.abort()
     const session = this.session
     const turn = session?.active
+    if (turn) this.starts.remove(turn.first.turnId)
+    const pendingEnds = this.starts.close()
     if (turn) {
       turn.shutdown = true
       this.cancel(turn)
     }
-    this.closing = this.pending.then(async () => {
+    this.closing = Promise.all([this.pending, pendingEnds]).then(async () => {
       if (turn && session?.active === turn)
         await this.finish({
           type: 'result',
@@ -171,7 +170,7 @@ export class SessionEngine {
       controller:
         command.type === 'message' && this.session?.active
           ? this.session.active.controller
-          : (this.starts.get(command.turnId) ?? new AbortController()),
+          : (this.starts.controller(command.turnId) ?? new AbortController()),
       emit: (event) => this.emit(event),
       enqueue: (action) => {
         void this.enqueue(action)

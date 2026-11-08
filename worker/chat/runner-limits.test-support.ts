@@ -45,10 +45,22 @@ export async function createRunnerLimitsFixture() {
   let commandSequence = 0
   let store = new ChatStore(storage, () => 25)
   const dependencies: ChatDependencies = {
+    waitUntil: (promise) => {
+      void promise.catch(() => undefined)
+    },
+    runnerDisconnected: async () => undefined,
+    turnDispatching: async () => true,
+    turnDispatchFailed: async () => undefined,
+    browserOpened: async () => undefined,
+    browserClosed: async () => undefined,
     now: () => 25,
     scheduleBrowserCheck: () => () => undefined,
+    scheduleRunnerCheck: () => () => undefined,
+    readRunnerAccess: async () => true,
     readConnectionAccess: async () => [],
+    firstStartIncomplete: async () => false,
     randomId: () => `command-${++commandSequence}`,
+    readLoginAvailability: async () => new Set<string>(),
     resolveLogin: async () => null,
     resolveAttachments: async () => ({ attachments: [], paths: [] }),
     receiveFileResult: async () => undefined,
@@ -104,6 +116,14 @@ export async function createRunnerLimitsFixture() {
         closedAt: null,
         activeTurnId: context.turnId,
         retryMessageId: null,
+        startedBy: {
+          id: 'sender',
+          githubLogin: 'sender',
+          displayName: null,
+          avatarUrl: null,
+        },
+        sourceSessionId: null,
+        loginAvailable: false,
       })
       await transaction.saveTurn({
         id: context.turnId,

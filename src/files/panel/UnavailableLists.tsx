@@ -13,33 +13,51 @@ const lists: readonly (readonly [FileReportKind, UnavailableData])[] = [
   ['changes.updated', 'changes'],
 ]
 
-function Rows(props: { failed: FailedRepairs; now: () => number }) {
+interface ListsProps {
+  failed: FailedRepairs
+  /** All files shows the saved tree, because the files could not be read. */
+  savedTree: boolean
+  now: () => number
+}
+
+function Rows(props: ListsProps) {
   const { failed, now: clock } = props
   const [now, setNow] = useState(clock)
+  const aged = lists.some(([report]) => failed[report] !== undefined)
   // The ages move on while the notices show.
   useEffect(() => {
+    if (!aged) return
     const timer = setInterval(() => setNow(clock()), minute / 2)
     return () => clearInterval(timer)
-  }, [clock])
+  }, [aged, clock])
   return lists.map(([report, data]) => {
     const at = failed[report]
-    if (at === undefined) return null
-    return (
-      <LostUpdateRow key={report} repair={{ data, ago: formatAgo(at, now) }} />
-    )
+    if (at !== undefined) {
+      return (
+        <LostUpdateRow
+          key={report}
+          repair={{ data, ago: formatAgo(at, now) }}
+        />
+      )
+    }
+    // A failed read has no time that the browser knows.
+    if (report === 'files.snapshot' && props.savedTree) {
+      return <LostUpdateRow key={report} repair={{ data }} />
+    }
+    return null
   })
 }
 
 /**
- * The notices of the file lists whose fresh full report was lost too, under
- * the lists of the panel. Each names the list that is out of date and the
- * time since its repair failed.
+ * The notices of the file lists that are not the latest ones, under the
+ * lists of the panel, in the order of the tabs. A list whose fresh full
+ * report was lost too shows the time since its repair failed. The saved tree
+ * of a failed read of the files shows the same notice of All files, with no
+ * time. One list shows one notice.
  */
-export function UnavailableLists(props: {
-  failed: FailedRepairs
-  now: () => number
-}) {
+export function UnavailableLists(props: ListsProps) {
   const { failed } = props
-  if (lists.every(([report]) => failed[report] === undefined)) return null
-  return <Rows failed={failed} now={props.now} />
+  const none = lists.every(([report]) => failed[report] === undefined)
+  if (none && !props.savedTree) return null
+  return <Rows {...props} />
 }

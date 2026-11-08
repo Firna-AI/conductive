@@ -14,6 +14,7 @@ import type {
 import type { Session } from '../../shared/sessions'
 import {
   count,
+  flag,
   list,
   nullable,
   oneOf,
@@ -63,6 +64,7 @@ const readRunnerEventType = oneOf<RunnerEventRefused['runnerEventType']>({
   'turn.completed': true,
   'turn.failed': true,
   'files.snapshot': true,
+  'files.unavailable': true,
   'files.changed': true,
   'changes.updated': true,
   'runner.ready': true,
@@ -144,6 +146,9 @@ export function readSession(value: unknown): Session {
     closedAt: nullable(count)(source.closedAt),
     activeTurnId: nullable(text)(source.activeTurnId),
     retryMessageId: nullable(text)(source.retryMessageId),
+    startedBy: nullable(readSender)(source.startedBy),
+    sourceSessionId: nullable(text)(source.sourceSessionId),
+    loginAvailable: flag(source.loginAvailable),
   }
 }
 
@@ -249,6 +254,8 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
         state: oneOf({ finished: true, stopped: true })(source.state),
         durationMs: count(source.durationMs),
         files: list(readChangedFile)(source.files),
+        // Only the value true marks files that the runner could not read.
+        ...(source.filesUnavailable === true ? { filesUnavailable: true } : {}),
         omittedFileCount: safeCount(source.omittedFileCount),
         userMessageIds: list(text)(source.userMessageIds),
       }

@@ -36,7 +36,16 @@ describe('ChatController actions', () => {
       createdAt: FAKE_TIME,
       state: 'queued' as const,
     }
-    chat.server.json('POST', messages, { message: queued, turnId: null }, 202)
+    // The reply names the session that took the message, as the Worker does.
+    const session = chat.controller
+      .getSnapshot()
+      .sessions.find((item) => item.id === id)
+    chat.server.json(
+      'POST',
+      messages,
+      { message: queued, turnId: null, session },
+      202,
+    )
     await chat.controller.send(id)
     expect(await chat.bodies('POST', messages)).toEqual([
       {

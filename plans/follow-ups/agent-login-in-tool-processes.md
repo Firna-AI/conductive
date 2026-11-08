@@ -1,4 +1,4 @@
-# Tool processes keep the sender's login after the turn
+# Tool processes keep the login after a turn
 
 - **Severity:** High. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
@@ -7,15 +7,15 @@
 - **Reason:** each fix changes a protocol rule, how the tools run, or needs a run in a real sandbox.
 
 - **Terms:**
-  - **Agent login:** the Claude subscription token, the Anthropic API key, or the OpenAI API key of the member who sent a turn.
+  - **Agent login:** the Claude subscription token, the Anthropic API key, or the OpenAI API key of the member who started a session. Every turn of that session uses it.
   - **Tool process:** a program that the agent starts for a tool, such as a shell command or a dev server.
 - **Background:**
-  - The runner gives the agent the login of the turn's sender in its environment.
+  - The runner gives the agent the login of the turn in its environment. That login belongs to the session starter, whoever sent the message.
   - The access doc accepts that each process in the sandbox can read the login of the turn that runs now. A proxy that keeps every login out of the sandbox was rejected as a much larger build.
   - PR #30 closes the agent at the end of each turn.
 - **Problem:** Each tool process inherits the environment of the agent, with the login. A server that a tool starts keeps running after the turn, and it keeps the login. The pinned Claude program removes the login from its tool processes only with a setting that the runner does not set. Nobody has checked the Codex program.
 - **Impact if no action:** After a turn, a dev server can hold a member's login for days. Each member with a terminal in that sandbox can read it.
-- **Root question:** How does a member's login stay readable only while that member's turn runs?
+- **Root question:** How does the login of a session starter stay readable only while a turn on that login runs?
 - **Options:**
   - **A.** Accept the risk, and state it in the access doc: a process that a tool started can keep the login of its turn after the turn ends. Effort: Small.
   - **B.** Turn on the Claude program's setting that removes the login from its tool processes. That setting needs bubblewrap and runs each tool command in isolation, so tool commands behave differently. Effort: Medium.

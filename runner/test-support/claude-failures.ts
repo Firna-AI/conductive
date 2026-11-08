@@ -160,13 +160,13 @@ export async function checkClaudeFailures(
   )({
     cwd: root,
     home,
-    computerMcpUrl: 'http://computer.test/mcp',
     login: turn().login,
     choice: turn().message.choice,
     conversationId: null,
     event: (event) => {
       events.push(event)
     },
+    warn: () => {},
   })
   try {
     await provider.interrupt()

@@ -61,10 +61,6 @@ export interface SessionResponse {
   user: User
 }
 
-export interface AgentLoginsResponse {
-  agentLogins: readonly AgentLoginStatus[]
-}
-
 export type SaveAgentLoginResponse = AgentLoginStatus
 export interface SetDefaultModelRequest {
   choice: AgentChoice

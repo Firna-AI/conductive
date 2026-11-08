@@ -35,12 +35,9 @@ it('batches queued socket frames using a new authorization read after their arri
       get(target, name) {
         if (name === 'bind')
           return (...values: unknown[]) => wrap(target.bind(...values))
-        if (name !== 'first') return Reflect.get(target, name)
-        return async (column?: string) => {
-          const result =
-            column === undefined
-              ? await target.first()
-              : await target.first(column)
+        if (name !== 'all') return Reflect.get(target, name)
+        return async () => {
+          const result = await target.all()
           reads++
           if (reads === 1) {
             started.resolve()
@@ -52,7 +49,7 @@ it('batches queued socket frames using a new authorization read after their arri
     })
   const observedPrepare = (query: string) => {
     const statement = prepare(query)
-    return query.includes('SELECT p.id') ? wrap(statement) : statement
+    return query.includes('WITH requested') ? wrap(statement) : statement
   }
   harness.env.DB = new Proxy(database, {
     get(target, name) {
@@ -96,9 +93,9 @@ it('drains buffered socket data before forwarding the peer close code and reason
         get(target, name) {
           if (name === 'bind')
             return (...values: unknown[]) => wrap(target.bind(...values))
-          if (name !== 'first') return Reflect.get(target, name)
+          if (name !== 'all') return Reflect.get(target, name)
           return async () => {
-            const result = await target.first()
+            const result = await target.all()
             started.resolve()
             await release.promise
             return result
@@ -109,7 +106,7 @@ it('drains buffered socket data before forwarding the peer close code and reason
       get(target, name) {
         return name === 'prepare'
           ? (query: string) =>
-              query.includes('SELECT p.id')
+              query.includes('WITH requested')
                 ? wrap(prepare(query))
                 : prepare(query)
           : Reflect.get(target, name)

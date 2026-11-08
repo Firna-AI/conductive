@@ -57,7 +57,9 @@ says.
 - The Cloud computer tab lists the builds, each with its time, its result,
   and its length.
 - A push to the default branch of a chosen repository refreshes the org
-  image, at most once in 30 minutes. A daily timer refreshes it too.
+  image, at most once in 30 minutes. A daily timer refreshes it too. Each
+  automatic refresh needs an admin who is not suspended, as
+  [Operator actions](operator-actions.md#starts-stops-and-builds) says.
 - A refresh fetches the new commits of every chosen repository. It does
   not run the install script.
 - Reason: a new workspace then needs only a small fetch. The limit of one
@@ -138,6 +140,10 @@ says.
   attachments.
 - Try again creates the workspace with a new workspace ID. The message
   keeps its message ID.
+- The first message is the only message that a new workspace accepts
+  before its first start succeeds, as
+  [Messages](chat-and-events.md#messages) says (decision 130). So the
+  removal of a failed workspace loses no accepted message.
 - After the removal, only the member who sent the first message can still
   get the events of the failed workspace. That member gets the stored
   events once, and the connection then closes.
@@ -178,7 +184,9 @@ says.
   not cut off real work.
 - A stop ends every process in the sandbox. Its files and its agent
   sessions stay.
-- Opening a stopped workspace resumes its sandbox.
+- Opening a stopped workspace resumes its sandbox. A workspace whose owner
+  is suspended does not start, as
+  [Operator actions](operator-actions.md#starts-stops-and-builds) says.
 - When a sandbox stops while its workspace is open, the tab shows the
   stopped state with Resume (decision 11).
 - A resume at once when the tab shows again was rejected. Resume avoids a
@@ -188,7 +196,10 @@ says.
 - A start that fails shows the error state with Try again. The chat history
   stays.
 - Near day 14 of a stop, the app starts the sandbox briefly and stops it
-  again, so that Boat keeps its disk (decision 43).
+  again, so that Boat keeps its disk (decision 43). A workspace whose owner
+  is suspended gets no such restart, as
+  [Starts, stops, and builds](operator-actions.md#starts-stops-and-builds)
+  says (decision 125).
 - Reason: Boat can delete the disk of a sandbox that is stopped for more
   than 14 days, and a resume then fails.
 - Each such restart uses a start and some minutes of the app's Boat
@@ -280,6 +291,26 @@ says.
   still show them while the sandbox sleeps.
 - Reason: Boat's API can run `git` and read files only while the sandbox
   runs, one request at a time, and with no live updates.
+- When the runner cannot read the repository, it sends `files.unavailable`
+  (decision 109). The event holds no other data. A failed scan after a
+  connect does not stop `runner.ready`, as
+  [The agent runner](chat-and-events.md#the-agent-runner) says.
+- The workspace then marks the file tree as unavailable, and each open tab
+  gets the mark. The changes list keeps its last complete report.
+- The tree that the workspace serves then carries `unavailable: true`. It
+  keeps the entries and the revision of the last tree. Before the first
+  complete tree, it has revision 0 and no entries.
+- These empty entries mean an unknown tree, not an empty branch.
+- Only a complete full tree clears the mark. A tree delta and an incomplete
+  full tree keep it.
+- After a failed scan, the next scan that succeeds sends a full tree.
+- The mark is never a replacement, and it never ends or fails a repair.
+- All files then keeps the last tree, and a notice says that the latest list
+  is unavailable. Before the first complete tree, All files says that the
+  list is unavailable, in place of the tree.
+- Reason: the user can tell an old or unknown tree from the latest one. A
+  failed scan with no mark was rejected, because the tab then shows an old
+  tree as the latest one.
 
 ### Terminal
 

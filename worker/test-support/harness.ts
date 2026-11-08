@@ -1,6 +1,7 @@
 import { Miniflare } from 'miniflare'
 
 import { API_PATHS, type Org } from '../../src/shared/api'
+import { acceptedTermsSignInPath } from '../../src/shared/terms'
 import { createApp } from '../application'
 import type { AppEnv } from '../env'
 import { OAUTH_COOKIE, SESSION_COOKIE } from '../security/cookies'
@@ -70,7 +71,7 @@ export async function createHarness() {
     return fetch(path, { ...init, headers })
   }
   const beginSignIn = async () => {
-    const response = await fetch(API_PATHS.githubSignIn)
+    const response = await fetch(acceptedTermsSignInPath())
     const location = response.headers.get('Location')
     if (!location) throw new Error(`Sign-in returned ${response.status}`)
     return {

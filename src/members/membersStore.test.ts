@@ -200,6 +200,30 @@ describe('createMembersStore', () => {
     }).toEqual({ removing: 'jonas', failures: others })
   })
 
+  it('drops_a_role_failure_that_arrives_after_its_member_leaves', async () => {
+    const server = new FakeApiServer()
+    fails(server, 'PATCH', memberPath(org, 'priya'), 'Priya keeps her role.')
+    const { fetch, hold } = holdingFetch(server)
+    const roleReply = hold('PATCH', memberPath(org, 'priya'))
+    const { store } = await loadedStore(server, fetch)
+    const roleChange = store.changeRole('priya', 'admin')
+    expect(await store.remove('priya')).toBe(true)
+    roleReply.resolve()
+    expect(await roleChange).toBe(false)
+    expect({
+      members: roles(store),
+      failures: failures(store),
+      pending: ready(store).pending,
+    }).toEqual({
+      members: [
+        ['cal', 'admin'],
+        ['jonas', 'member'],
+      ],
+      failures: {},
+      pending: [],
+    })
+  })
+
   it('invites_by_email_without_the_spaces_at_its_ends_and_lists_the_answer', async () => {
     const server = new FakeApiServer()
     const invite = { id: 'invite-9', email: 'ana@example.com', createdAt: 5 }

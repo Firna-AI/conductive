@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
+import { abuseAddress } from '../../../../../src/marketing/legal-text'
 import { productName } from '../../brand'
 import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../common/classes'
+import { MailLink } from './CatalogueText'
 import { LegalLinks } from './LegalLinks'
 import type { SiteLinks } from './SiteHeader'
 import { Wordmark } from './Wordmark'
@@ -18,8 +20,8 @@ function Column(props: { title: string; children: ReactNode }) {
 }
 
 /**
- * The foot of the site: the wordmark, the sections, the sign-in, and the
- * legal pages beside the copyright.
+ * The foot of the site: the wordmark, the sections, the sign-in, the
+ * address for abuse reports, and the legal pages beside the copyright.
  */
 export function SiteFooter(props: {
   links: SiteLinks
@@ -37,9 +39,13 @@ export function SiteFooter(props: {
         </div>
         <Column title="Product">
           <li>
-            <a className={styles.link} href="#features">
+            <ScreenLink
+              className={styles.link}
+              fragment="features"
+              to={props.links.home}
+            >
               Features
-            </a>
+            </ScreenLink>
           </li>
         </Column>
         <Column title="Account">
@@ -52,6 +58,13 @@ export function SiteFooter(props: {
             <ScreenLink className={styles.link} to={props.links.signIn}>
               Sign in
             </ScreenLink>
+          </li>
+        </Column>
+        <Column title="Report abuse">
+          <li>
+            <MailLink address={abuseAddress} className={styles.link}>
+              {abuseAddress}
+            </MailLink>
           </li>
         </Column>
       </div>

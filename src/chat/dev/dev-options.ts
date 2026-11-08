@@ -11,6 +11,12 @@ export interface DevOptions {
   state: WorkspaceState
   role: OrgRole
   login: boolean
+  /**
+   * The login of the member who started each session: it works, it is not
+   * available, older records name no starter, or the reader's message has
+   * opened a linked session from the first session.
+   */
+  starter: 'on' | 'off' | 'none' | 'linked'
   replay: 'stored' | 'live'
   viewport: 'desktop' | 'mobile'
   scheme: 'dark' | 'light'
@@ -26,6 +32,11 @@ export interface DevOptions {
   change: 'done' | 'done-not-saved' | 'failed'
   /** The chat, or the This Mac section of the Mac app's account. */
   page: 'chat' | 'this-mac'
+  /**
+   * The changed files of each end of a turn: the runner listed them, or the
+   * cloud computer could not read them.
+   */
+  files: 'listed' | 'unread'
 }
 
 export const choices = {
@@ -52,6 +63,7 @@ export const choices = {
   ],
   role: ['admin', 'member'],
   login: ['on', 'off'],
+  starter: ['on', 'off', 'none', 'linked'],
   replay: ['stored', 'live'],
   viewport: ['desktop', 'mobile'],
   scheme: ['dark', 'light'],
@@ -75,6 +87,7 @@ export const choices = {
   app: ['browser', 'mac'],
   change: ['done', 'done-not-saved', 'failed'],
   page: ['chat', 'this-mac'],
+  files: ['listed', 'unread'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 
 /** The options in the order that the page lists them. */
@@ -84,6 +97,7 @@ export const optionNames = [
   'state',
   'role',
   'login',
+  'starter',
   'replay',
   'viewport',
   'scheme',
@@ -92,6 +106,7 @@ export const optionNames = [
   'app',
   'change',
   'page',
+  'files',
 ] as const satisfies readonly (keyof DevOptions)[]
 
 function pick<T extends string>(
@@ -110,6 +125,7 @@ export function readOptions(search: string): DevOptions {
     state: pick(choices.state, get('state')),
     role: pick(choices.role, get('role')),
     login: pick(choices.login, get('login')) === 'on',
+    starter: pick(choices.starter, get('starter')),
     replay: pick(choices.replay, get('replay')),
     viewport: pick(choices.viewport, get('viewport')),
     scheme: pick(choices.scheme, get('scheme')),
@@ -118,6 +134,7 @@ export function readOptions(search: string): DevOptions {
     app: pick(choices.app, get('app')),
     change: pick(choices.change, get('change')),
     page: pick(choices.page, get('page')),
+    files: pick(choices.files, get('files')),
   }
 }
 

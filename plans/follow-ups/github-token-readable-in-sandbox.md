@@ -2,7 +2,7 @@
 
 - **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-07, from the options check of `plans/follow-ups/agent-logins-readable-in-sandbox.md` on branch `calummoore/conductor-alternative-architecture`, a problem outside its scope.
+- **Added:** 2026-11-07, from the options check of `plans/follow-ups/agent-logins-readable-in-sandbox.md` on branch `calummoore/conductor-alternative-architecture`, a problem outside its scope. The user sees it as item 121.
 - **Location:** `handleGitCredential` in `worker/lifecycle/machine.ts:10`, the stored token read in `worker/security/github-tokens.ts:104`, `image/git-credential-helper.sh`, the section "Start in a workspace" of `image/README.md`, and the section "GitHub tokens" of `docs/protocol/access-and-security.md`.
 - **Reason:** each option states or changes a security rule of the access protocol, and the user decides those rules.
 
@@ -53,4 +53,4 @@
 - **Previous examples:** the agent logins in `plans/follow-ups/agent-login-in-tool-processes.md` and `plans/follow-ups/agent-logins-readable-in-sandbox.md`, the Mac command risk in the section "Mac commands" of `docs/protocol/agent-tools.md`, and the clone token risk of builds (decision 107 D).
 - **Related:** `plans/follow-ups/agent-logins-readable-in-sandbox.md` has the same class: a member's secret that sandbox code can take. Its Worker proxy and the Git proxy of option C can share the check of the running turn.
 - **Recommendation:** D, and B on D's tokens as the next step. A taken token then reaches only the workspace's repositories, decision 50 stays, and no Git data passes through the Worker. The first recommendation was A. C best protects the product, because no GitHub token then enters the sandbox. If GitHub's scoped-token call fails its check, use A now and C later.
-- **Action:** ask the user, because each option states or changes a security rule of the access protocol, and the user decides those rules.
+- **Action:** ask the user later, because the user chose A now on 8 November 2026 (decision 121), and asked to consider a different approach later. Milestone 15m states the risk. The other options stay open: D, then B, and C.

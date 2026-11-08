@@ -4,7 +4,6 @@ import { pictureFrame } from './frames'
 import { html, type Html } from './html'
 import { icon } from './icons'
 import type { SiteLinks } from './links'
-import { pictures } from './pictures'
 
 /** The start of a section: a label in capitals, a headline, and a sentence. */
 function sectionIntro(label: string, title: string, text: string): Html {
@@ -26,7 +25,7 @@ function hero(links: SiteLinks): Html {
       </p>
       ${siteActions(links)}
     </div>
-    <div class="hero-picture">${pictureFrame(pictures.hero, 'eager')}</div>
+    <div class="hero-picture">${pictureFrame('hero', 'eager')}</div>
   </section>`
 }
 
@@ -34,9 +33,7 @@ function featureSection(feature: Feature): Html {
   const stage = feature.bleed ? 'stage stage-bleed' : 'stage'
   return html`<section class="feature">
     ${sectionIntro(feature.label, feature.title, feature.text)}
-    <div class="${stage}">
-      ${pictureFrame(pictures[feature.picture], 'lazy')}
-    </div>
+    <div class="${stage}">${pictureFrame(feature.picture, 'lazy')}</div>
   </section>`
 }
 

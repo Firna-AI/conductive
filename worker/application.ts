@@ -1,13 +1,22 @@
 import { API_PATHS } from '../src/shared/api'
+import { MACHINE_PATHS } from '../src/shared/agent-tools'
 import { HEALTH_PATH, type HealthResponse } from '../src/shared/health'
 import type { AppDependencies, AppEnv } from './env'
 import { hostStub, hostSurface, marketingResponse } from './hosts'
 import { errorResponse, HttpError, privateResponse } from './http'
 import { requestBodyEntry } from './http/request-body'
 import { route, routeDevice } from './routes'
+import { workspaceBinding } from './app-api/workspace-state'
+import { routeChat, routeRunner } from './chat/router'
 import { isDeviceAppPath, isDeviceMachinePath } from './devices/paths'
 import { routeMacCommand } from './tools/mac-command'
 import { appOrigin } from './security/app-origin'
+import { handleGitCredential } from './lifecycle/machine'
+import {
+  handleImageSourceCredential,
+  IMAGE_SOURCE_CREDENTIAL_PATH,
+} from './lifecycle/image-sources/credential'
+import { workspaceRuntime } from './lifecycle/runtime'
 import { finishSignIn, startSignIn } from './security/auth'
 import { appContentSecurityPolicy } from './security/content-security'
 import { cookie, OAUTH_COOKIE } from './security/cookies'
@@ -25,7 +34,11 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
     ...overrides,
   }
   const application = {
-    async fetch(request: Request, env?: AppEnv): Promise<Response> {
+    async fetch(
+      request: Request,
+      env?: AppEnv,
+      execution?: Pick<ExecutionContext, 'waitUntil'>,
+    ): Promise<Response> {
       const path = new URL(request.url).pathname
       const upgrade = request.headers.has('Upgrade')
       const health =
@@ -73,6 +86,25 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         if (surface === 'machine' && isDeviceMachinePath(path)) {
           return respond(await routeMacCommand(request, env))
         }
+        if (surface === 'machine') {
+          if (path === MACHINE_PATHS.gitCredential) {
+            const machineEnv = env
+            const runtime = workspaceRuntime(
+              {
+                ...machineEnv,
+                get WORKSPACES() {
+                  return workspaceBinding(machineEnv)
+                },
+              },
+              dependencies,
+            )
+            return respond(await handleGitCredential(request, runtime))
+          }
+          if (path === IMAGE_SOURCE_CREDENTIAL_PATH)
+            return respond(await handleImageSourceCredential(request, env))
+          const runnerResponse = await routeRunner(request, env)
+          if (runnerResponse) return respond(runnerResponse)
+        }
         if (surface !== 'app' || !path.startsWith('/api/')) {
           return privateResponse(hostStub(surface))
         }
@@ -97,8 +129,12 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         }
         if (isDeviceAppPath(path))
           return respond(await routeDevice(request, env))
+        const chatResponse = await routeChat(request, env)
+        if (chatResponse) return respond(chatResponse)
         const context = await gate(request, env, dependencies.now())
-        return respond(await route(request, env, context, dependencies))
+        return respond(
+          await route(request, env, context, dependencies, execution),
+        )
       } catch (error) {
         const response = errorResponse(error)
         if (path === API_PATHS.githubCallback) {

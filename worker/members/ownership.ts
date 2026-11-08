@@ -1,5 +1,7 @@
 import type { MessageSender } from '../../src/shared/messages'
 import { HttpError } from '../http'
+import { userSuspended } from '../data/user-access'
+import { suspendedOwnerRecipientError } from './errors'
 import { guardedMembersWrite } from './guarded-write'
 import { requireMember } from './membership'
 import { updateWorkspaceOwner } from './ownership-data'
@@ -29,12 +31,12 @@ export async function reassignWorkspace(
   workspaceId: string,
   userId: string,
   now: number,
-  hooks: Pick<MembersHooks, 'readWorkspace'>,
+  hooks: Pick<MembersHooks, 'readWorkspace' | 'workspaceOwnerChanged'>,
 ) {
   await guardedMembersWrite({
     checks: [
       () => requireOrgAdmin(db, orgId, actorId),
-      () => requireMember(db, orgId, userId),
+      () => requireOwnerRecipient(db, orgId, userId),
     ],
     write: () =>
       updateWorkspaceOwner(db, orgId, actorId, workspaceId, userId, now),
@@ -45,5 +47,15 @@ export async function reassignWorkspace(
         'The workspace is not available.',
       ),
   })
+  await hooks.workspaceOwnerChanged(workspaceId)
   return hooks.readWorkspace(orgId, workspaceId, actorId)
+}
+
+async function requireOwnerRecipient(
+  db: D1Database,
+  orgId: string,
+  userId: string,
+) {
+  await requireMember(db, orgId, userId)
+  if (await userSuspended(db, userId)) throw suspendedOwnerRecipientError()
 }

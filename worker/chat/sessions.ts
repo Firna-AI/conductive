@@ -1,28 +1,25 @@
 import type { AgentChoice } from '../../src/shared/agents'
+import type { MessageSender } from '../../src/shared/messages'
 import type { Session } from '../../src/shared/sessions'
 import { HttpError } from '../http'
+import { SessionLogins } from './session-login'
 import type { ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
-
-export async function sessionFor(
-  transaction: ChatTransaction,
-  id: string,
-): Promise<Session> {
-  const session = await transaction.session(id)
-  if (!session)
-    throw new HttpError(
-      404,
-      'session_not_found',
-      'The session is not available.',
-    )
-  return session
-}
+import type { ChatDependencies } from './types'
 
 export async function createSession(
   transaction: ChatTransaction,
   choice: AgentChoice,
   id: string,
+  startedBy: MessageSender,
+  dependencies: ChatDependencies,
+  sourceSessionId: string | null = null,
 ): Promise<Session> {
+  const login = await SessionLogins.initial(
+    dependencies,
+    startedBy.id,
+    choice.agent,
+  )
   const session: Session = {
     id,
     workspaceId: transaction.workspaceId,
@@ -32,6 +29,14 @@ export async function createSession(
     closedAt: null,
     activeTurnId: null,
     retryMessageId: null,
+    startedBy: {
+      id: startedBy.id,
+      githubLogin: startedBy.githubLogin,
+      displayName: startedBy.displayName,
+      avatarUrl: startedBy.avatarUrl,
+    },
+    sourceSessionId,
+    loginAvailable: login !== null && login.agent === choice.agent,
   }
   await transaction.saveSession(session)
   await transaction.emit({ type: 'session.updated', session })

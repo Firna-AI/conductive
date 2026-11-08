@@ -1,4 +1,5 @@
 import type { AppEnv } from '../env'
+import { runnerTokenAllowed } from '../data/workspace-token-access'
 import { HttpError } from '../http'
 import { randomToken } from '../security/crypto'
 import {
@@ -6,6 +7,8 @@ import {
   scheduleConnectionCheck,
 } from '../security/connection-access'
 import { loginResolver } from './login-access'
+import { readLoginAvailability } from './login-availability'
+import { firstStartIncomplete } from './queries'
 import type { ChatDependencies } from './types'
 
 /**
@@ -21,9 +24,19 @@ export function chatDependencies(
   return {
     now: Date.now,
     scheduleBrowserCheck: scheduleConnectionCheck,
+    scheduleRunnerCheck: scheduleConnectionCheck,
+    readRunnerAccess: (id, tokenHash) =>
+      runnerTokenAllowed(env.DB, id, tokenHash),
     readConnectionAccess: (tabs, now) =>
       readConnectionAccess(env.DB, tabs, now),
+    firstStartIncomplete: (id) => firstStartIncomplete(env.DB, id),
     randomId: randomToken,
+    readLoginAvailability: (targets) => {
+      const id = workspaceId()
+      return id === null
+        ? Promise.resolve(new Set<string>())
+        : readLoginAvailability(env.DB, id, targets)
+    },
     resolveAttachments: async (_userId, _workspaceId, ids) => {
       if (ids.length)
         throw new HttpError(
@@ -36,6 +49,14 @@ export function chatDependencies(
     receiveFileResult: async () => undefined,
     runnerEventStored: async () => undefined,
     runnerReady: async () => undefined,
+    runnerDisconnected: async () => undefined,
+    turnDispatching: async () => true,
+    turnDispatchFailed: async () => undefined,
+    browserOpened: async () => undefined,
+    browserClosed: async () => undefined,
+    waitUntil: (promise) => {
+      void promise.catch(() => undefined)
+    },
     matchesObject: () => true,
     ...overrides,
     resolveLogin: loginResolver(env, workspaceId, overrides.resolveLogin),

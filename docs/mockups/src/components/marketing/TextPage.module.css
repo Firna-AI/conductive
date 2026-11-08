@@ -1,0 +1,56 @@
+/* A page of text uses the type of the home page. */
+.page {
+  padding: 72px 32px 112px;
+}
+
+.article {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: var(--ui-label-case);
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 40px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.lead {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.mobile {
+  padding: 40px 20px 72px;
+}
+
+.mobile .article {
+  gap: 32px;
+}
+
+.mobile .title {
+  font-size: 30px;
+}

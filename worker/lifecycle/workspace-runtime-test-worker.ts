@@ -6,63 +6,69 @@ import { refreshGitHubTokens } from '../security/github-refresh'
 import { installationToken } from './image-sources/github-app'
 import { HttpError } from '../http'
 import type { LifecycleEnvironment } from './runtime'
-import type { WorkspaceStartJob } from './start-types'
+import type { StoredWorkspaceStartJob } from './start-job-codec'
 import { START_JOB_KEY } from './start-storage'
 import { IDLE_MS } from './durable-types'
-import { ChatStore } from '../chat/store'
 import type { FirstWorkspaceMessage } from './workspace-runtime'
 import type { UserMessage } from '../../src/shared/messages'
+import { holdMachineCheckpoint } from './runtime-checkpoint-test-support'
+import type { ImageCoordinatorState } from './image-timers'
+import { ManualChatClock } from '../chat/chat-clock.test-support'
+import { CONNECTION_CHECK_MS } from '../security/connection-access'
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import { authenticateWorkspaceToken } from './tokens'
 
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
+  private heldMachine: ReturnType<typeof holdMachineCheckpoint> | undefined
+  private readonly runnerClock: ManualChatClock
+
+  constructor(context: DurableObjectState, env: LifecycleEnvironment) {
+    const clock = new ManualChatClock(Date.now())
+    super(context, env, Date.now, {
+      scheduleRunnerCheck: clock.schedule,
+      resolveAttachments: async (_userId, _workspaceId, ids) => ({
+        attachments: ids.map((id) => ({
+          id,
+          name: `${id}.txt`,
+          kind: 'file',
+          mediaType: 'text/plain',
+          sizeBytes: 7,
+        })),
+        paths: ids.map((id) => ({
+          attachmentId: id,
+          path: `/attachments/${id}.txt`,
+        })),
+      }),
+    })
+    this.runnerClock = clock
+  }
+
+  tickRunnerAccess(): Promise<void> {
+    return this.runnerClock.advance(CONNECTION_CHECK_MS)
+  }
+  holdMachineCheckpoint(): void {
+    this.heldMachine = holdMachineCheckpoint(this.ctx.storage)
+  }
+  async machineCheckpointReached(): Promise<void> {
+    if (!this.heldMachine) throw new Error('No held machine checkpoint')
+    await this.heldMachine.entered
+  }
   async acceptFirstFixtureMessage(
     first: FirstWorkspaceMessage,
   ): Promise<UserMessage> {
-    const store = new ChatStore(this.ctx.storage, Date.now)
-    return store.run(() =>
-      store.change(
-        first.workspaceId,
-        async (transaction) => {
-          const stored = await transaction.message(first.request.id)
-          if (stored) return stored
-          const message: UserMessage = {
-            id: first.request.id,
-            sessionId: first.sessionId,
-            sender: first.sender,
-            text: first.request.text,
-            attachments: first.request.attachmentIds.map((id) => ({
-              id,
-              name: `${id}.txt`,
-              kind: 'file',
-              mediaType: 'text/plain',
-              sizeBytes: 7,
-            })),
-            choice: first.request.choice,
-            createdAt: Date.now(),
-            state: 'queued',
-          }
-          await transaction.saveSession({
-            id: first.sessionId,
-            workspaceId: first.workspaceId,
-            title: 'Session',
-            choice: message.choice,
-            createdAt: message.createdAt,
-            closedAt: null,
-            activeTurnId: null,
-            retryMessageId: null,
-          })
-          await transaction.saveMessage(message)
-          await transaction.emit({ type: 'message.accepted', message })
-          return message
-        },
-        () => {},
-      ),
-    )
+    return this.acceptLifecycleFirstMessage(first)
   }
   async tick(): Promise<void> {
     await this.alarm()
   }
-  checkpoint(): Promise<WorkspaceStartJob | undefined> {
+  alarmAt(): Promise<number | null> {
+    return this.ctx.storage.getAlarm()
+  }
+  imageSchedule(): Promise<ImageCoordinatorState | undefined> {
+    return this.ctx.storage.get('org-image:coordinator')
+  }
+  checkpoint(): Promise<StoredWorkspaceStartJob | undefined> {
     return this.ctx.storage.get(START_JOB_KEY)
   }
   async becomeIdle(): Promise<void> {
@@ -79,6 +85,13 @@ export class WorkspaceRuntimeFixture extends Workspace {
 export default {
   async fetch(request: Request, env: LifecycleEnvironment): Promise<Response> {
     const path = new URL(request.url).pathname
+    if (path === MACHINE_PATHS.runner) {
+      const bearer = request.headers
+        .get('Authorization')
+        ?.match(/^Bearer (.+)$/i)?.[1]
+      const identity = await authenticateWorkspaceToken(env, bearer ?? '')
+      return env.WORKSPACES.getByName(identity.workspaceId).fetch(request)
+    }
     const events = path.match(
       /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/events$/,
     )

@@ -4,7 +4,7 @@ import type { ChatStorage } from '../chat/types'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { hash } from '../security/crypto'
-import { publishDeviceState } from './state'
+import { publishDeviceState, type DeviceStateProjection } from './state'
 import { readDeviceRecord } from '../../src/shared/device-read'
 import { readDeviceValue, writeDeviceValue } from './storage'
 
@@ -21,16 +21,19 @@ export class DeviceRecords {
   private readonly chat: WorkspaceChat
   private readonly env: AppEnv
   private readonly now: () => number
+  private readonly projection: DeviceStateProjection | undefined
   constructor(
     storage: ChatStorage,
     chat: WorkspaceChat,
     env: AppEnv,
     now: () => number,
+    projection?: DeviceStateProjection,
   ) {
     this.storage = storage
     this.chat = chat
     this.env = env
     this.now = now
+    this.projection = projection
   }
 
   run<T>(work: () => Promise<T>): Promise<T> {
@@ -148,16 +151,15 @@ export class DeviceRecords {
       )
       const record = value === undefined ? undefined : readDeviceRecord(value)
       if (record) {
-        const waiting = (await this.list()).some(
-          (item) => item.state === 'waiting',
-        )
         await publishDeviceState(
           this.storage,
           this.chat,
           this.env,
           record,
-          waiting,
+          async () =>
+            (await this.list()).some((item) => item.state === 'waiting'),
           this.now(),
+          this.projection,
         )
       }
       await this.storage.delete(key)

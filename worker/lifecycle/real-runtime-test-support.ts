@@ -5,13 +5,16 @@ import { build } from 'vite'
 
 import { workspaceEventsPath } from '../../src/shared/events'
 import { closeSockets, SocketInbox } from '../chat/adapter-sockets.test-support'
-import type { AppEnv } from '../env'
+import type { LifecycleEnvironment } from './runtime'
 import { LifecycleBoat } from './lifecycle-boat-test-support'
 import type { WorkspaceRuntimeFixture } from './workspace-runtime-test-worker'
 import { SESSION_COOKIE } from '../security/cookies'
-import { sign } from '../security/crypto'
+import { encrypt, sign } from '../security/crypto'
+import { agentLoginContext } from '../chat/queries'
 import { applyMigrations } from '../test-support/migrations'
 import { seedPublishedImage } from './published-image-test-support'
+import { readWorkspaceToken } from './tokens'
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 
 export async function runtimeBundle(): Promise<string> {
   const output = await build({
@@ -39,7 +42,7 @@ interface RuntimeBindings {
 }
 
 export async function realRuntimeFixture(bundle: string) {
-  const root = `${import.meta.dirname}/../../.context/boat-native-remote-workspaces/milestone-5/orchestrator-round-1/terminal-state/runtime`
+  const root = `${import.meta.dirname}/../../.context/boat-native-remote-workspaces/8i/completion/legacy-runtime`
   await mkdir(root, { recursive: true })
   const directory = await mkdtemp(`${root}/case-`)
   const boat = new LifecycleBoat()
@@ -120,8 +123,9 @@ export async function realRuntimeFixture(bundle: string) {
   let bindings = await runtime.getBindings<RuntimeBindings>()
   const database = bindings.DB
   await applyMigrations(database)
-  const env: AppEnv = {
+  const env: LifecycleEnvironment = {
     DB: database,
+    WORKSPACES: bindings.WORKSPACES,
     APP_ORIGIN: 'https://app.conductive.test',
     MACHINE_ORIGIN: 'https://machine.conductive.test',
     GITHUB_CLIENT_ID: 'runtime-client',
@@ -151,6 +155,20 @@ export async function realRuntimeFixture(bundle: string) {
       "INSERT INTO settings (org_id, org_image_name, updated_at) VALUES ('runtime-org', 'base-runtime-image', 0)",
     ),
   ])
+  await database
+    .prepare(
+      `INSERT INTO agent_logins
+    (user_id, agent, kind, ciphertext, created_at, updated_at)
+    VALUES ('runtime-user', 'codex', 'api-key', ?, 0, 0)`,
+    )
+    .bind(
+      await encrypt(
+        'runtime-agent-key',
+        agentLoginContext('runtime-user', 'codex'),
+        env.BOAT_KEY_ENCRYPTION_KEY,
+      ),
+    )
+    .run()
   await seedPublishedImage(database, {
     orgId: 'runtime-org',
     buildId: 'base-runtime-build',
@@ -178,6 +196,39 @@ export async function realRuntimeFixture(bundle: string) {
     await closeSockets(...sockets)
     sockets.clear()
   }
+  const openSocket = async (url: string, headers: Record<string, string>) => {
+    const response = await runtime.dispatchFetch(url, {
+      headers: { Upgrade: 'websocket', ...headers },
+    })
+    const socket = response.webSocket
+    if (!socket) throw new Error(`No socket. Status: ${response.status}`)
+    const inbox = new SocketInbox(socket)
+    sockets.add(socket)
+    let isClosed = false
+    const closed = new Promise<void>((resolve) => {
+      socket.addEventListener(
+        'close',
+        () => {
+          isClosed = true
+          if (socket.readyState === WebSocket.READY_STATE_CLOSING)
+            socket.close(1000, 'Connection closed.')
+          sockets.delete(socket)
+          resolve()
+        },
+        { once: true },
+      )
+    })
+    socket.accept()
+    return {
+      response,
+      inbox,
+      closed,
+      send: (value: unknown) => socket.send(JSON.stringify(value)),
+      get isClosed() {
+        return isClosed
+      },
+    }
+  }
   return {
     boat,
     requests,
@@ -189,38 +240,19 @@ export async function realRuntimeFixture(bundle: string) {
       id: string,
       after = 0,
       headers: Record<string, string> = {},
-    ) => {
-      const response = await runtime.dispatchFetch(
+    ) =>
+      openSocket(
         `${env.APP_ORIGIN}${workspaceEventsPath('runtime-org', id, after)}`,
         {
-          headers: {
-            Origin: env.APP_ORIGIN,
-            Cookie: `${SESSION_COOKIE}=${sessionToken}`,
-            Upgrade: 'websocket',
-            ...headers,
-          },
+          Origin: env.APP_ORIGIN,
+          Cookie: `${SESSION_COOKIE}=${sessionToken}`,
+          ...headers,
         },
-      )
-      const socket = response.webSocket
-      if (!socket)
-        throw new Error(`No browser socket. Status: ${response.status}`)
-      const inbox = new SocketInbox(socket)
-      sockets.add(socket)
-      const closed = new Promise<void>((resolve) => {
-        socket.addEventListener(
-          'close',
-          () => {
-            if (socket.readyState === WebSocket.READY_STATE_CLOSING)
-              socket.close(1000, 'Connection closed.')
-            sockets.delete(socket)
-            resolve()
-          },
-          { once: true },
-        )
-      })
-      socket.accept()
-      return { response, inbox, closed }
-    },
+      ),
+    openRunner: async (id: string) =>
+      openSocket(`${env.MACHINE_ORIGIN}${MACHINE_PATHS.runner}`, {
+        Authorization: `Bearer ${await readWorkspaceToken(env, id)}`,
+      }),
     refuseRedirects: () => {
       redirects = true
       requests.length = 0
@@ -231,6 +263,7 @@ export async function realRuntimeFixture(bundle: string) {
       runtime = create()
       bindings = await runtime.getBindings<RuntimeBindings>()
       env.DB = bindings.DB
+      env.WORKSPACES = bindings.WORKSPACES
     },
     dispose: async () => {
       await closeBrowsers()

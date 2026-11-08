@@ -5,12 +5,21 @@ import { filePaths } from '../../shared/files'
 import type { WorkspaceTab } from '../../shared/workspace-view'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { toolFixtures } from '../../test-support/fixtures/tools'
 import {
   nextEnvelope,
   refusedReport,
 } from '../../test-support/recorded-repairs'
+import type { WorkspaceFiles } from '../model/files-store'
 import type { FileListKind } from '../navigation'
-import { filesFor, slow, startFiles, testNavigation } from '../files-test-kit'
+import {
+  filesAfterHistory,
+  filesFor,
+  heldTree,
+  slow,
+  startFiles,
+  testNavigation,
+} from '../files-test-kit'
 import { FilesPanel } from './FilesPanel'
 
 const org = FAKE_IDS.org
@@ -36,6 +45,15 @@ async function panel(
         ),
       )
   await startFiles(files)
+  return render(files, list, activeTab, now)
+}
+
+function render(
+  files: WorkspaceFiles,
+  list: FileListKind,
+  activeTab: WorkspaceTab | null = null,
+  now?: () => number,
+) {
   return renderToStaticMarkup(
     <FilesPanel
       activeTab={activeTab}
@@ -143,6 +161,37 @@ it(
     expect(text(await panel(server, 'changes'))).toContain(
       'Changes show here Files that the agent edits appear as it works.',
     )
+  },
+)
+
+it(
+  'keeps a saved tree under its notice when the files could not be read, and names a list that no tree saved',
+  slow,
+  async () => {
+    const server = new FakeApiServer()
+    const tree = filePaths.tree(org, id)
+    server.json('GET', tree, { ...toolFixtures().files, unavailable: true })
+    const saved = text(await panel(server, 'all'))
+    expect(saved).toContain('package.json')
+    expect(saved).toMatch(/ The latest list of all files is unavailable$/)
+
+    server.json('GET', tree, { revision: 0, entries: [], unavailable: true })
+    const none = text(await panel(server, 'all'))
+    const unread =
+      /Checks The list of all files is unavailable The list shows after a successful read\.$/
+    expect(none).toMatch(unread)
+    expect(none).not.toContain('Files show here')
+
+    // A live mark arrives while the first reply of the tree route waits.
+    const held = heldTree(server)
+    const files = filesAfterHistory(server, held.fetch)
+    files.start()
+    server.events.emit(
+      nextEnvelope(server.events, { type: 'files.unavailable' }, FAKE_TIME),
+    )
+    expect(text(render(files, 'all'))).toMatch(unread)
+    files.stop()
+    held.release()
   },
 )
 

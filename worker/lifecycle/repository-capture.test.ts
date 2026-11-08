@@ -11,7 +11,7 @@ import { finishImageBuild } from './image-test-support'
 import { orgEnvironmentContext } from './settings-data'
 import { readWorkspace } from './workspace-data'
 import { workspaceRepositoryLocations } from './repository-location-data'
-import { resumeWorkspace } from './workspace-resume'
+import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 
 const fixtureForTest = setupBackendTests()
 

@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, MessageSquarePlus } from 'lucide-react'
-import type { Workspace } from '../../shared/workspaces'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
@@ -24,16 +23,16 @@ export function historyStatus(
     : null
 }
 
-/** The chat shows something: messages, a running turn, or the start steps. */
-export function showsContent(
-  state: SessionState,
-  workspace: Workspace | null,
-): boolean {
+/**
+ * The chat shows something: messages, a running turn, or the start steps.
+ * `starting` says whether the start steps show.
+ */
+export function showsContent(state: SessionState, starting: boolean): boolean {
   return (
     state.transcript.items.length > 0 ||
     state.pending.length > 0 ||
     state.transcript.turn !== null ||
-    workspace?.state === 'starting'
+    starting
   )
 }
 
@@ -91,11 +90,13 @@ function Waiting(props: { text: string }) {
 /**
  * What takes the place of the transcript: the load of the chat, no open
  * session, the history of a session with nothing to show yet, or a new
- * session. A chat with content shows its history status beside it.
+ * session. A chat with content shows its history status beside it. The
+ * start steps count as content while `starting` holds.
  */
 export function emptyView(props: {
   snapshot: ChatSnapshot
   controller: ChatController
+  starting: boolean
 }): ReactNode {
   const { snapshot, controller } = props
   const { load, workspace } = snapshot
@@ -125,7 +126,7 @@ export function emptyView(props: {
     )
   }
   const state = sessionState(snapshot, id)
-  if (showsContent(state, workspace)) return null
+  if (showsContent(state, props.starting)) return null
   const status = historyStatus(state)
   if (status === 'loading') return <Waiting text="Loading the session" />
   if (status === 'failed') {

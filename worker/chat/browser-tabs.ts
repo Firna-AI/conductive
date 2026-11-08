@@ -11,6 +11,14 @@ interface BrowserRegistration {
   deadline: number
 }
 
+type TabDependencies = Pick<
+  ChatDependencies,
+  'now' | 'scheduleBrowserCheck' | 'readConnectionAccess'
+> &
+  Partial<
+    Pick<ChatDependencies, 'browserOpened' | 'browserClosed' | 'waitUntil'>
+  >
+
 function accessLost() {
   return new HttpError(
     404,
@@ -22,26 +30,20 @@ function accessLost() {
 /** The same authenticated registration serves native sockets and test peers. */
 export class BrowserTabs {
   private readonly peers = new Map<BrowserPeer, BrowserRegistration>()
+  private readonly tabIds = new Map<BrowserPeer, string>()
   private cancelPoll: (() => void) | null = null
   private cancelExpiry: (() => void) | null = null
   private checking = false
-  private readonly dependencies: Pick<
-    ChatDependencies,
-    'now' | 'scheduleBrowserCheck' | 'readConnectionAccess'
-  >
+  private readonly dependencies: TabDependencies
 
-  constructor(
-    dependencies: Pick<
-      ChatDependencies,
-      'now' | 'scheduleBrowserCheck' | 'readConnectionAccess'
-    >,
-  ) {
+  constructor(dependencies: TabDependencies) {
     this.dependencies = dependencies
   }
 
   async add(
     peer: BrowserPeer,
     identity: ConnectionIdentity,
+    tabId?: string,
   ): Promise<() => void> {
     const started = this.dependencies.now()
     const [access] = await this.dependencies.readConnectionAccess(
@@ -50,7 +52,10 @@ export class BrowserTabs {
     )
     if (!access || access.deadline <= this.dependencies.now())
       throw accessLost()
+    if (tabId)
+      await this.dependencies.browserOpened?.(identity.workspaceId, tabId)
     this.peers.set(peer, { identity, deadline: access.deadline })
+    if (tabId) this.tabIds.set(peer, tabId)
     this.schedulePoll(CONNECTION_CHECK_MS)
     this.scheduleExpiry()
     return () => this.remove(peer)
@@ -142,7 +147,18 @@ export class BrowserTabs {
   }
 
   private remove(peer: BrowserPeer): void {
+    const registration = this.peers.get(peer)
+    const tabId = this.tabIds.get(peer)
     this.peers.delete(peer)
+    this.tabIds.delete(peer)
+    if (registration && tabId && this.dependencies.browserClosed) {
+      const closed = this.dependencies.browserClosed(
+        registration.identity.workspaceId,
+        tabId,
+      )
+      if (this.dependencies.waitUntil) this.dependencies.waitUntil(closed)
+      else void closed.catch(() => undefined)
+    }
     if (this.peers.size === 0) {
       this.cancelPoll?.()
       this.cancelPoll = null

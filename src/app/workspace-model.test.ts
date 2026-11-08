@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { workspacePaths } from '../shared/workspaces'
+import { workspacePath, workspacePaths } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
 import { OrgModel } from './org-model'
@@ -16,7 +16,7 @@ import { WorkspaceModel } from './workspace-model'
 
 const org = FAKE_IDS.org
 const id = FAKE_IDS.workspace
-const openPath = workspacePaths.open(org, id)
+const openPath = workspacePath(org, id)
 
 function setup(server: FakeApiServer, visible = new ManualVisibility()) {
   const held = new HeldRequests(server)
@@ -44,10 +44,10 @@ function readMarks(server: FakeApiServer): Promise<unknown[]> {
 describe('WorkspaceModel', () => {
   test('an open that answers after close starts no event stream', async () => {
     const { held, events, workspace } = setup(new FakeApiServer())
-    held.hold('POST', openPath)
+    held.hold('GET', openPath)
     const opening = workspace.open()
     workspace.close()
-    held.release('POST', openPath)
+    held.release('GET', openPath)
     await opening
     expect(events.opened).toEqual([])
     expect(workspace.detail.get()).toEqual({ state: 'loading' })
@@ -132,7 +132,7 @@ describe('WorkspaceModel', () => {
     workspace.archive.cancel()
     await workspace.archive.confirm()
     expect(requestLines(server)).toEqual([
-      `POST ${openPath}`,
+      `GET ${openPath}`,
       `GET ${workspacePaths.archiveCheck(org, id)}`,
     ])
   })

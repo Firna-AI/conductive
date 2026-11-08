@@ -28,14 +28,26 @@ These facts belong to this implementation, not to the protocol docs.
   `codex app-server` from the `@openai/codex` package, which
   `@openai/codex-sdk` installs.
 - Both agents run without approval prompts, with the rights of the service
-  user. Both get the `computer` MCP server of the sandbox.
-- The runner gives the login of a turn only to the agent process of its
-  sender. Each end of a turn closes its agent process, so no idle agent
-  process keeps a login. The next turn starts a new agent process on the
-  saved conversation, when one exists. A part of a turn from another sender
-  also starts a new agent process on the same conversation. If a part fails,
-  the turn fails, and its retry names the first message of that part. Input
-  that still waits does not run, so the other member must send it again.
+  user.
+- Both agents get the `computer` MCP server of the sandbox. Boat writes its
+  `mcpServers.computer` entry to `/home/user/.claude.json` at each sandbox
+  start. The entry names a local stdio server that talks over a Unix
+  socket, with no URL and no credential.
+- The runner reads that entry again at each agent start. Claude gets it as
+  it is, and Codex gets its command and arguments as a stdio server.
+  Without a valid entry, the runner writes a warning, and the agent starts
+  without computer tools.
+- The runner starts each turn with the login of its `turn` command. That
+  login stays for the whole turn, also when a `message` command carries
+  another login. Each `message` command of the turn goes to the running
+  agent process at once, whoever sent it. Each end of a turn closes its
+  agent process, so no idle agent process keeps a login. The next turn
+  starts a new agent process on the saved conversation, when one exists.
+- When the running agent cannot take the model or the effort of a message
+  at once, that message waits for the result of the agent. A new agent
+  process then takes the waiting input on the same conversation and login.
+  If that process fails, the turn fails. Its retry names the first message
+  of that process, and the input that still waits does not run.
 - To close an agent process, the runner sends `SIGTERM` and waits until the
   process exits. A process that still runs 5 seconds after `SIGTERM` gets
   `SIGKILL`. The end of a turn goes out only after its agent process exits,
@@ -63,11 +75,13 @@ These facts belong to this implementation, not to the protocol docs.
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, the
-  conversation references, and `turns` records of started turns. It also
+  conversation references, and `turns` records of accepted turns. It also
   holds the last `start.updated` and `workspace.title` events, and the ID of
   each answered [report request](#report-requests). It holds no other
-  command data and no login. The saves of `turn.started` and its end write
-  that record, and the confirm of the end removes it.
+  command data and no login. The runner saves a turn record before the
+  session save. The saves of `turn.started` and its end update that record.
+  A turn stopped before its start also has a saved end record.
+  The confirm of the end removes the record.
 - A failed save rejects only its own call, and later saves and events
   continue. Each save writes the whole state from memory, so a later save
   includes the change of the failed call. A send and a resend use only saved
@@ -75,12 +89,21 @@ These facts belong to this implementation, not to the protocol docs.
   works. One event can leave the output filter as several events, because
   the filter first releases its held text. The runner tries to save each of
   them, also after an earlier one fails.
+  The turn text buffer uses the same rule. Its drain tries each buffered
+  message, the next agent event, and each final tool update in order before
+  it reports the first save error. It never appends the same text again.
+  A failed turn-end, ready, or unavailable-tree event save gets one more
+  save of the pending state. That save sends the same numbered event.
+  A failed start step ends the turn with its cause.
 - At a normal shutdown, the runner sends one stopped end for each running
-  turn, before it closes the connection. Each of these ends lists the files
-  that the turn changed. After a restart, an ended turn never runs again. An
+  turn, before it closes the connection. Each end lists the changed files
+  when the runner can read them. Otherwise, it marks them as unavailable.
+  After a restart, a turn with a saved end never runs again. An
   unfinished turn, such as after a crash, gets one stopped end, and no agent
-  starts for it. That end lists no files, because the state file holds no
-  record of the files at the start of the turn.
+  starts for it. A recovered started turn marks its changed files as
+  unavailable. The state file holds no record of its initial files.
+  A changed-file read failure also keeps the turn's completed state and
+  marks its files as unavailable.
 - File reads and diffs use the shared UTF-8 decoder and keep a leading byte
   order mark. A valid path can hold a tab, a newline, or a backslash. Each
   path must still resolve inside the repository and pass the `.git` check.
@@ -92,32 +115,9 @@ These facts belong to this implementation, not to the protocol docs.
 
 ## Event limits
 
-The runner keeps each event within the limits that
-[Chat and events](../docs/protocol/chat-and-events.md#the-agent-runner) and
-[Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
-state. The [shared contracts](../src/shared/README.md) hold the constants.
-No variable changes them, and the runner protocol stays at version 1. Each
-byte budget measures the event or field after the output filter.
-
-- A tool detail keeps the longest prefix that fits
-  [`TOOL_DETAIL_MAX_BYTES`](../src/shared/chat-events.ts), and
-  `omittedDetailBytes` counts the rest. A turn summary keeps the first whole
-  files within `TURN_COMPLETED_MAX_FILES` and `TURN_COMPLETED_FILES_MAX_BYTES`.
-  `omittedFileCount` counts the rest, and the Changes report lists every file.
-- Each file event fits [`FILE_EVENT_MAX_BYTES`](../src/shared/files.ts). A
-  full tree or changes report goes as numbered parts of one revision. A
-  large tree update goes as deltas of at most `FILE_TREE_DELTA_MAX_CHANGES`
-  changes, with consecutive revisions.
-- Tree and changes reports have separate revision counters, which survive
-  a reconnect or a restart. The refresh after each connect sends a full tree
-  and a full changes report with newer revisions.
-- Before the outbox takes an event number, it checks the complete envelope
-  against [`RUNNER_EVENT_MAX_BYTES`](../src/shared/runner.ts). An event
-  that does not fit gets a local warning and no number, so later events
-  continue. This check covers the size of an event only.
-- A confirm can also cover a refusal marker that the workspace stored for
-  an event. The runner then removes that event from its outbox and does
-  not send it again. The runner never sends a refusal marker.
+[Event limits](event-limits.md) gives the byte and count limits of each
+event, the parts of the file reports, the unavailable file reports, and
+the outbox size check.
 
 ## Report requests
 
@@ -193,15 +193,14 @@ The runner reads these variables when the service starts.
 | `CONDUCTIVE_RUNNER_URL`       | Yes      | The `https:` or `wss:` URL of the runner route.                       |
 | `CONDUCTIVE_REPOSITORY`       | Yes      | The folder of the workspace repository.                               |
 | `CONDUCTIVE_DEFAULT_BRANCH`   | Yes      | The default branch, as a name that Git resolves in that folder.       |
-| `CONDUCTIVE_COMPUTER_MCP_URL` | Yes      | The absolute URL of the `computer` MCP server of the sandbox.         |
 | `CONDUCTIVE_HOME`             | No       | The home folder of the agents. The default is the home of the user.   |
 | `CONDUCTIVE_STATE_PATH`       | No       | The state file. The default is `.conductive/runner-state.json` there. |
 
 - The runner route is the path `MACHINE_PATHS.runner`, which is
   `/v1/runner`, from [`agent-tools.ts`](../src/shared/agent-tools.ts) on
   the hostname for machines, `api.conductive.build`.
-- This repository does not record the URL of the `computer` MCP server.
-  The image integration must supply it.
+- No variable configures the computer tools. The runner reads the entry
+  that Boat writes, as [What it does](#what-it-does) says.
 - `CONDUCTIVE_DEFAULT_BRANCH` is the base of the file marks, the Changes
   list, and the changed files of each turn. Each diff request names its own
   base branch. File reports compare the commit of that branch, the Git ID
@@ -235,6 +234,8 @@ The runner could not start. Check its configuration and saved state.
   `engine.ts` and the wire fixture in `wire.ts` use the production
   `DiskStorage` in a temporary folder. `disk.ts` supplies the controlled
   disk fixture for the recovery tests, and it can hold one chosen write.
+  `mockComputerServer` in `computer-mcp.ts` makes `readComputerServer` give
+  the fixed test entry `fakeComputerServer`.
 - The tests need Git. They need no network, no agent login, no cloud
   account, and no cloud computer. No test starts a real agent program, a
   real Worker, or a real sandbox. So a passing run does not show that a
@@ -267,12 +268,16 @@ tools that time the first agent start after a resume.
 - `src/report-state.ts`: the saved `start.updated` and `workspace.title`
   events and the answered report request IDs of the state file.
 - `src/engine.ts`, `src/engine-runtime.ts`, and `src/turn-output.ts`:
-  session queues, cancelable turns, sender changes, controls, and text deltas.
-- `src/engine-disposal.ts`: one close path for sender changes, turn ends,
-  Stop, and shutdown.
+  session queues, cancelable turns, message delivery, controls, and text deltas.
+- `src/engine-disposal.ts`: one close path for deferred model changes, turn
+  ends, Stop, and shutdown.
+- `src/engine-pending.ts`: accepted turn saves and the ends of pending starts.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
+  `computer-mcp.ts` gives `readComputerServer`, which reads the `computer`
+  entry of the sandbox at each agent start. It warns through the `warn`
+  callback of `ProviderOptions`.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
   queue, the file tree, the branch changes, bounded reads, and the files of
   one turn.

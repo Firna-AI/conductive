@@ -25,6 +25,7 @@ That backend must call `assertCanChangeSharedSettings` before writes.
 It must also include `activeAdminPredicate` in its D1 mutation.
 Bind the org ID and actor ID for that predicate.
 This keeps a concurrent role change or deletion from permitting a stale write.
+`activeAdminPredicate` counts only an admin whose account is not suspended.
 
 Deleted-org work gets its provider from `deletedOrgProvider` in `cleanup-provider.ts`.
 It first checks the cleanup lease of the org.
@@ -69,10 +70,15 @@ Retention capabilities use that same call ownership.
 Their D1 writes and lifecycle checkpoints also check the generation atomically.
 Cooperative renewal changes no Restore deadline.
 
-Supply all five `MembersHooks` callbacks:
+Supply all six `MembersHooks` callbacks:
 
 - `readWorkspace` returns the lifecycle backend's current `Workspace` record.
   It must authorize the viewer. All current org members can read all workspaces.
+- `workspaceOwnerChanged` runs after each workspace that gets a new owner, by a reassignment or by a member who leaves or is removed.
+  `workspaceOwnerChangedHook` in [`ownership-maintenance.ts`](../lifecycle/ownership-maintenance.ts) supplies it.
+  It calls `reconcileLifecycleAccess` of the workspace object, which checks the workspace at once, in every state.
+  The check stops a workspace that must still stop, such as a running workspace with a revoked token, and rearms the lifecycle alarm of a stopped workspace whose new owner is not suspended.
+  [The stop of one workspace](../operator/README.md#the-stop-of-one-workspace) says how.
 - `suspendOrg` stops org access before resource enumeration.
   It must reject new starts and writes for the deleted org.
   It must drain pending workspace starts and image builds.
@@ -139,6 +145,8 @@ An expired lease permits a later attempt after a worker stops.
 
 The maintenance capability accepts only workspace IDs from its callback.
 It checks the current lease before every operation.
+The disk lists of maintenance, retention, and Restore leave out each workspace whose owner the [operator suspended](../operator/README.md).
+The capability also refuses to restart such a workspace, so retention starts no cloud computer of a suspended user.
 A restart must be due at its stored keepalive date.
 It resumes with `noEnv` and empty env vars, then stops the sandbox.
 It supplies no workspace token, agent login, or org secret.
@@ -181,7 +189,20 @@ It runs in the same statement as the membership delete, so the removal and the c
 Call `workspaceCreator` when the lifecycle creates a workspace.
 Store its ID in `owner_user_id` in the creation transaction.
 Reassignment changes the owner and update time only.
-The sender's agent login stays with the turn runner.
+Each session keeps the agent login of its starter.
+
+`activeAdminMemberPredicate(alias)` in [`active-admin.ts`](../data/active-admin.ts) is the one SQL rule of an active admin: the admin role, and a user whose account is not suspended.
+It accepts only the trusted aliases `m`, `access_member`, `org_members`, `remaining`, and `candidate`.
+`activeAdminPredicate`, the last-admin guards, the recipient of a leave, and `firstActiveOrgAdmin` use it.
+
+- A leave, a removal, or a role change can end the admin role of an active admin only while another active admin remains.
+  Otherwise it fails with 409 `last_admin`, which asks to make another member whose account is not suspended an admin.
+- A leave gives the workspaces to the earliest active admin, else to the earliest member who is not suspended, else to the earliest admin.
+  A removal gives them to the admin who removes the member.
+- A reassignment checks its recipient in the same write. A suspended recipient gets 409 `owner_suspended`, and nothing changes.
+- `firstOrgAdmin` and the account-deletion guard of `account.ts` do not use the rule. So that guard still counts every admin.
+
+[Owners and admins](../../docs/protocol/operator-actions.md#owners-and-admins) states the requirements.
 
 Account deletion must call `assertCanDeleteAccount` first.
 Its final D1 mutation must also use `accountDeletionAllowedPredicate`.
@@ -200,6 +221,8 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - `gate.ts` extends the request gate for deleted-org access and shared writes.
 - `route.ts` defines HTTP dispatch and the required integration hooks.
 - `membership.ts` manages roles, removal, leave, and the last-admin rule.
+- `errors.ts` defines `lastActiveAdminError` and `suspendedOwnerRecipientError`.
+- [`active-admin.ts`](../data/active-admin.ts) defines `activeAdminMemberPredicate`, the shared SQL rule of an active admin.
 - `invites.ts` manages pending invitations and explicit acceptance.
 - `ownership.ts` supplies creation ownership and workspace reassignment.
 - `deletion.ts` implements Delete, suspension, and provider stops.

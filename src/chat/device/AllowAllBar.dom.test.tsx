@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
-import { act } from 'react'
+import { act, useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createApiClient } from '../../app/api/client'
 import { DEVICE_CURRENT_PATH, DEVICE_SETTINGS_PATH } from '../../shared/device'
 import {
   byRole,
@@ -50,7 +51,8 @@ function Bar(props: {
   clock: Clock
   found?: (controller: MacSettingsController) => void
 }) {
-  const { controller, state } = useMacSettings(props.fetch)
+  const [client] = useState(() => createApiClient(props.fetch))
+  const { controller, state } = useMacSettings(client)
   props.found?.(controller)
   return (
     <AllowAllBar

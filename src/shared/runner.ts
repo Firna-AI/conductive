@@ -39,7 +39,10 @@ export interface RunnerEventEnvelope {
   event: RunnerEvent
 }
 
-/** Workspace refusal markers never enter this union or the runner outbox. */
+/**
+ * Workspace refusal markers never enter this union or the runner outbox.
+ * A failed tree scan sends files.unavailable before runner.ready.
+ */
 export type RunnerEvent =
   | AgentChatEvent
   | RunnerFileEvent
@@ -102,7 +105,7 @@ export interface RunnerTurn {
   turnId: string
   message: UserMessage
   attachments: readonly RunnerAttachment[]
-  /** The sender owns this login. The workspace owner does not supply it. */
+  /** The session starter owns this login, whoever sent the message. */
   login: RunnerLogin
 }
 

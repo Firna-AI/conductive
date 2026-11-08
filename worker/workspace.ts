@@ -1,38 +1,40 @@
 import { DurableObject } from 'cloudflare:workers'
 import type { RunnerEvent } from '../src/shared/runner'
+import type { UserMessage } from '../src/shared/messages'
+import type { ChatWorkspaceSummary } from './chat/workspace-summary'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
 import { WorkspaceChat } from './chat/backend'
 import type { DeviceOperationResult } from './devices/internal'
+import {
+  createWorkspaceIntegration,
+  type WorkspaceCompositionEnv,
+  type WorkspaceChatResolvers,
+} from './chat/workspace-integration'
 import { DeviceRuntime } from './devices/runtime'
+import { activeStoredTurn } from './devices/access'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
 import type { FailedCreationDraft } from './lifecycle/failed-creations'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
-import {
-  lifecycleDependencies,
-  type LifecycleEnvironment,
-} from './lifecycle/runtime'
 import type {
   PendingTurn,
+  FirstWorkspaceMessage,
   WorkspaceLifecycleEndpoint,
 } from './lifecycle/workspace-runtime'
-import type { WorkspaceStartJob } from './lifecycle/start-types'
+import {
+  readStartJob,
+  type StoredWorkspaceStartJob,
+} from './lifecycle/start-job-codec'
 import { nativeWorkspaceStorage } from './lifecycle/platform-storage'
 import { readEncryptedStartLog } from './lifecycle/start-storage'
 import {
   startResultForTransport,
   type WorkspaceLifecycleTransport,
 } from './lifecycle/workspace-transport'
-import { createWorkspaceController } from './lifecycle/workspace-controller'
 import type { WorkspaceController } from './lifecycle/workspace-controller-types'
-import { nativeWorkspacePlatform } from './lifecycle/workspace-platform'
 import { failedCreationEvents } from './lifecycle/failed-creation-events'
 
-interface WorkspaceEnv extends Omit<LifecycleEnvironment, 'WORKSPACES'> {
-  WORKSPACES: DurableObjectNamespace<Workspace>
-}
-
 export class Workspace
-  extends DurableObject<WorkspaceEnv>
+  extends DurableObject<WorkspaceCompositionEnv>
   implements WorkspaceLifecycleTransport
 {
   private readonly chat: WorkspaceChat
@@ -42,49 +44,43 @@ export class Workspace
 
   constructor(
     context: DurableObjectState,
-    env: WorkspaceEnv,
+    env: WorkspaceCompositionEnv,
     now: () => number = Date.now,
+    resolvers: WorkspaceChatResolvers = {},
   ) {
     super(context, env)
     this.context = context
-    this.chat = new WorkspaceChat(context.storage, env, {
-      matchesObject: (workspaceId) =>
-        env.WORKSPACES.idFromName(workspaceId).equals(context.id),
-      runnerEventStored: async (envelope) => {
-        const event = envelope.event
-        if (
-          event.type === 'turn.completed' ||
-          event.type === 'turn.failed' ||
-          (event.type === 'runner.event-refused' &&
-            (event.runnerEventType === 'turn.completed' ||
-              event.runnerEventType === 'turn.failed'))
-        )
-          context.waitUntil(this.devices.reconcile())
-      },
-    })
-    this.devices = new DeviceRuntime(
-      env,
-      context.storage,
-      this.chat,
-      (name) => env.WORKSPACES.idFromName(name).equals(context.id),
-      (when) => context.storage.setAlarm(when),
-      now,
-    )
-    this.controller = createWorkspaceController(
-      env,
-      lifecycleDependencies(),
-      nativeWorkspacePlatform(context, (envelope) =>
-        this.chat.appendWorkspaceEvent(
-          envelope.workspaceId,
-          envelope.event,
-          envelope.occurredAt,
-        ),
-      ),
-    )
+    const integration = createWorkspaceIntegration(context, env, now, resolvers)
+    this.chat = integration.chat
+    this.devices = integration.devices
+    this.controller = integration.controller
   }
 
-  async queueLifecycleStart(job: WorkspaceStartJob): Promise<boolean> {
-    return this.controller.queueLifecycleStart(job)
+  private run<T>(operation: () => Promise<T>): Promise<T> {
+    return this.chat.runLifecycle(async () => {
+      const result = await operation()
+      await this.chat.flushRunner()
+      return result
+    })
+  }
+
+  async queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean> {
+    const parsed = readStartJob(job)
+    return this.run(() => this.controller.queueLifecycleStart(parsed))
+  }
+
+  async acceptLifecycleFirstMessage(
+    first: FirstWorkspaceMessage,
+  ): Promise<UserMessage> {
+    return this.run(async () => {
+      const message = await this.chat.acceptFirstMessage(first)
+      await this.controller.acknowledgeLifecycleFirstMessage()
+      return message
+    })
+  }
+
+  async readChatWorkspaceSummary(): Promise<ChatWorkspaceSummary> {
+    return this.chat.workspaceSummary()
   }
 
   async waitLifecycleStart() {
@@ -117,7 +113,9 @@ export class Workspace
     error: FailedCreationDraft['error'],
     fallback?: Omit<FailedCreationDraft, 'error'>,
   ): Promise<void> {
-    return this.controller.retainLifecycleFailedCreation(error, fallback)
+    return this.run(() =>
+      this.controller.retainLifecycleFailedCreation(error, fallback),
+    )
   }
 
   async failedLifecycleCreation(
@@ -130,87 +128,109 @@ export class Workspace
   async initializeLifecycle(
     input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
   ): Promise<void> {
-    return this.controller.initializeLifecycle(input)
+    return this.run(() => this.controller.initializeLifecycle(input))
   }
 
   readLifecycle() {
-    return this.controller.readLifecycle()
+    return this.chat.runLifecycle(() => this.controller.readLifecycle())
   }
 
   async beginLifecycleStart(kind: WorkspaceStart['kind']) {
-    return this.controller.beginLifecycleStart(kind)
+    return this.run(() => this.controller.beginLifecycleStart(kind))
   }
 
   lifecycleStep(id: string, label: string, state: StartStep['state']) {
-    return this.controller.lifecycleStep(id, label, state)
+    return this.run(() => this.controller.lifecycleStep(id, label, state))
   }
 
   async lifecyclePrepared() {
-    return this.controller.lifecyclePrepared()
+    return this.run(() => this.controller.lifecyclePrepared())
   }
 
   lifecycleFailed(error: NonNullable<DurableLifecycleState['error']>) {
-    return this.controller.lifecycleFailed(error)
+    return this.run(() => this.controller.lifecycleFailed(error))
   }
 
   lifecycleActivity() {
-    return this.controller.lifecycleActivity()
-  }
-
-  async openLifecycleTab(tabId: string) {
-    return this.controller.openLifecycleTab(tabId)
-  }
-
-  async closeLifecycleTab(tabId: string) {
-    return this.controller.closeLifecycleTab(tabId)
+    return this.run(() => this.controller.lifecycleActivity())
   }
 
   async lifecycleStopped(): Promise<void> {
-    return this.controller.lifecycleStopped()
+    return this.run(() => this.controller.lifecycleStopped())
+  }
+
+  async suspendLifecycle(
+    workspaceId: string,
+    ownerUserId: string,
+  ): Promise<boolean> {
+    if (
+      await this.controller.cancelSuspendedLifecycleStart(
+        workspaceId,
+        ownerUserId,
+      )
+    )
+      return false
+    return this.run(() =>
+      this.controller.suspendLifecycle(workspaceId, ownerUserId),
+    )
+  }
+
+  reconcileLifecycleAccess(workspaceId: string): Promise<void> {
+    return this.run(() => this.controller.reconcileLifecycleAccess(workspaceId))
   }
 
   async clearLifecycle(): Promise<void> {
-    return this.controller.clearLifecycle()
+    return this.run(() => this.controller.clearLifecycle())
   }
 
   async acknowledgeLifecycleFirstMessage(): Promise<void> {
-    return this.controller.acknowledgeLifecycleFirstMessage()
+    return this.run(() => this.controller.acknowledgeLifecycleFirstMessage())
   }
 
   async registerLifecycleTurn(turn: PendingTurn): Promise<void> {
-    return this.controller.registerLifecycleTurn(turn)
+    return this.run(() => this.controller.registerLifecycleTurn(turn))
   }
 
   async finishLifecycleTurn(turnId: string): Promise<void> {
-    return this.controller.finishLifecycleTurn(turnId)
+    return this.run(() => this.controller.finishLifecycleTurn(turnId))
   }
 
   async credentialSender(turnId: string): Promise<string | null> {
-    return this.controller.credentialSender(turnId)
+    return this.chat.runLifecycle(async () => {
+      const preparing = await this.controller.credentialSender(turnId)
+      if (preparing) return preparing
+      const state = await this.controller.readLifecycle()
+      if (!state || state.state === 'stopped' || state.state === 'archived')
+        return null
+      return (
+        (await activeStoredTurn(this.chat, state.workspaceId, turnId))
+          ?.senderId ?? null
+      )
+    })
   }
 
   async reportRunnerLifecycle(event: RunnerEvent): Promise<void> {
-    return this.controller.reportRunnerLifecycle(event)
+    return this.run(() => this.controller.reportRunnerLifecycle(event))
   }
 
   async runnerLifecycleDisconnected(): Promise<void> {
-    return this.controller.runnerLifecycleDisconnected()
+    return this.run(() => this.controller.runnerLifecycleDisconnected())
   }
 
   async scheduleImage(state: ImageCoordinatorState): Promise<void> {
-    return this.controller.scheduleImage(state)
+    return this.run(() => this.controller.scheduleImage(state))
   }
 
   async retryFailedCreateCleanup(workspaceId: string): Promise<void> {
-    return this.controller.retryFailedCreateCleanup(workspaceId)
+    return this.run(() => this.controller.retryFailedCreateCleanup(workspaceId))
   }
 
   async finishDiskMaintenance(): Promise<void> {
-    return this.controller.finishDiskMaintenance()
+    return this.run(() => this.controller.finishDiskMaintenance())
   }
 
   async alarm(): Promise<void> {
-    await this.controller.alarm()
+    await this.run(() => this.controller.alarm())
     await this.devices.alarm()
   }
 

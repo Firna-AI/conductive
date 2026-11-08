@@ -1,9 +1,13 @@
 import { API_PATHS, orgPath } from '../src/shared/api'
+import { bootRoute } from './app-api/boot'
+import { chatLifecycleRoute } from './app-api/lifecycle'
+import { shellRoute } from './app-api/shell'
 import { createOrg, listOrgs } from './data/orgs'
 import type { AppDependencies, AppEnv } from './env'
 import { HttpError, requiredString } from './http'
 import { signOut } from './security/auth'
 import type { RequestContext } from './security/gate'
+import { handleOperatorRequest } from './operator/route'
 
 export { routeDevice } from './devices/router'
 
@@ -12,7 +16,27 @@ export async function route(
   env: AppEnv,
   context: RequestContext,
   dependencies: AppDependencies,
+  execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const operator = await handleOperatorRequest(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (operator) return operator
+  const boot = await bootRoute(request, env, context, dependencies)
+  if (boot) return boot
+  const shell = await shellRoute(request, env, context, dependencies)
+  if (shell) return shell
+  const lifecycle = await chatLifecycleRoute(
+    request,
+    env,
+    context,
+    dependencies,
+    execution,
+  )
+  if (lifecycle) return lifecycle
   const path = new URL(request.url).pathname
   if (path === API_PATHS.session && request.method === 'GET') {
     return Response.json({ user: context.user })

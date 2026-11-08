@@ -1,7 +1,7 @@
 import { object, string, type Browser } from './cdp.ts'
 
 export type Clip = { x: number; y: number; width: number; height: number }
-type Viewport = { width: number; height: number; mobile: boolean }
+export type Viewport = { width: number; height: number; mobile: boolean }
 
 /** Open a page at two device pixels per CSS pixel, with animations stopped. */
 export async function openPage(browser: Browser, viewport: Viewport) {
@@ -49,6 +49,12 @@ export async function openPage(browser: Browser, viewport: Viewport) {
           for (const image of document.images) image.loading = 'eager'
           await document.fonts.ready
           await Promise.all([...document.images].map((image) => image.decode()))
+          // Reset CSS animations to the same phase, including negative delays.
+          for (const animation of document.getAnimations()) {
+            animation.pause()
+            animation.currentTime = 0
+          }
+          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
         })()`)
       },
       async screenshot(clip: Clip): Promise<Buffer> {

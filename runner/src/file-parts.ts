@@ -36,6 +36,7 @@ function groups<T>(
 export function splitFileReport(
   event: RunnerFileEvent,
 ): RunnerFileEvent[] | null {
+  if (event.type === 'files.unavailable') return [event]
   if (event.type === 'files.snapshot') {
     const { tree } = event
     const maximumParts = Math.max(1, tree.entries.length)

@@ -1,19 +1,21 @@
 # Chat backend integration
 
-This README gives the seams of the chat backend for other features. The
-[chat backend README](../README.md) names the code and its guarantees.
+This README gives the seams of the chat backend for other features, and
+its test fixtures. The [chat backend README](../README.md) names the code
+and its guarantees.
 A file name without a folder names a file in `worker/chat/`.
 
 `WorkspaceChat` takes `ChatDependencies` from `types.ts` as overrides.
-`Workspace` sets `matchesObject` and `runnerEventStored`. The latter starts
-device cleanup when a turn ends, including a refused turn end.
-A later handler must keep that call.
-The other hooks keep their defaults until their owners set them.
+`createWorkspaceIntegration` in `workspace-integration.ts` sets them for
+the workspace object, as [The workspace lifecycle](#the-workspace-lifecycle)
+says. Its `runnerEventStored` also starts device cleanup when a turn ends,
+including a refused turn end. A later handler must keep that call.
 
 ## Trusted workspace calls
 
-Trusted Worker code can call six methods of `WorkspaceChat`. They run no
-gate.
+Trusted Worker code can call these methods of `WorkspaceChat`. They run no
+gate. [The workspace lifecycle](#the-workspace-lifecycle) gives the methods
+that the workspace object adds for the lifecycle.
 
 - `appendWorkspaceEvent(workspaceId, event, occurredAt)` stores one
   `WorkspaceEvent` with the next workspace event number. Then it pushes
@@ -61,37 +63,139 @@ depends on where the code runs:
   committed event again, use the `publish` of
   `authorizedWorkspaceOperation`.
 
-## Milestone 8i: the outer Worker
+## The outer Worker
 
 - `createApp` in `worker/application.ts` forwards the Mac device routes to
-  the Durable Object. Other machine routes still get a stub. See
-  [Mac device commands](../../devices/README.md).
-- Forward each chat route and the runner route to
-  `env.WORKSPACES.get(env.WORKSPACES.idFromName(workspaceId))`.
-- Use the decoded workspace ID as the name.
-- Forward the original request, with its URL, its headers, and its unread
-  body. The Durable Object runs the gate again.
+  the Durable Object. See [Mac device commands](../../devices/README.md).
+- After the host and `Origin` checks, `createApp` gives each other app API
+  request to `routeChat` in `router.ts`. This happens before the app
+  request gate.
+- `routeChat` matches the `sessions` path of a workspace and each path below
+  it. It also matches the `history` and `events` paths. Each other path goes
+  on to the app request gate.
+- `routeChat` decodes the workspace ID of the path once. An ID that does not
+  decode gets `404 workspace_not_found`.
+- `forwardWorkspaceRequest` sends the original request to
+  `env.WORKSPACES.get(env.WORKSPACES.idFromName(workspaceId))`. The request
+  keeps its URL, its headers, and its unread body. The body limit of the
+  Worker entry still bounds that body. The Durable Object runs the gate
+  itself.
+- `forwardWorkspaceRequest` copies the response into a new `Response`, with
+  the WebSocket of an upgrade. So the outer Worker can add its private
+  response headers.
 - Do not run `gate` on a request that you forward. `gate` reads the JSON
   body of each write.
-- A chat route has the workspace ID in its path. The runner request has
-  only its bearer token. Find its workspace with `tokenWorkspace`.
+- On the machine hostname, `createApp` serves the Mac command route, then
+  `MACHINE_PATHS.gitCredential` and `IMAGE_SOURCE_CREDENTIAL_PATH` through
+  their lifecycle handlers. It gives each other path to `routeRunner` in
+  `router.ts`. `routeRunner` matches only `MACHINE_PATHS.runner`,
+  `/v1/runner`. Each other machine path gets a `501` stub.
+- The runner request has only its bearer token. `routeRunner` reads only
+  the `Authorization` header, and finds the workspace with `tokenWorkspace`.
+  A missing, unknown, or revoked token gets `401 workspace_token_required`.
+- `routeRunner` uses the workspace ID from D1 as the object name, with no
+  decode. It forwards the request with `forwardWorkspaceRequest`, without
+  the browser gate.
+- The Durable Object checks the machine origin and the token again. So a
+  token reaches only the object of its own workspace. A `hello` that names
+  another workspace closes the connection before a welcome, a command, or a
+  login goes out.
+- After the app request gate, `chatLifecycleRoute` in
+  `worker/app-api/lifecycle.ts` gives the create, read, resume, and
+  activity routes of a workspace to the lifecycle handler. It gives the
+  first message of a create to `acceptLifecycleFirstMessage` of the
+  workspace object. The
+  [lifecycle README](../../lifecycle/README.md#browser-routes) gives the
+  handler and its options.
 
-## Milestone 5: workspace lifecycle
+[Outer Worker tests](outer-worker-tests.md) gives the tests of these
+routes through the production Worker entry, and the browser harness.
 
-- `Workspace.fetch` tries device routes, then gives the remaining requests
-  to chat. Match lifecycle routes before the chat call.
-- `authorizeBrowser` gives a lifecycle route the same gate and workspace
-  check. It reads the body, so do not pass that request on to `fetch`.
-- `runnerReady(workspaceId, publish)` runs after the Durable Object stores
-  each `runner.ready` event.
-- `runnerEventStored(envelope, publish)` runs after each other stored runner
-  event or refusal marker. Examples are `start.updated` and `workspace.title`.
-- Both hooks run after the commit and the confirm. A hook error closes the
-  runner connection, and the runner does not send that event again.
-- Add the start steps and `workspace.updated` with `appendWorkspaceEvent`.
-  Inside a hook, use its `publish` argument.
-- Call `closeRunner()` when the sandbox stops.
+## The workspace lifecycle
+
+`createWorkspaceIntegration` joins chat, the lifecycle, and the Mac devices
+in the workspace object. The outer Worker calls the lifecycle through RPC
+methods of `Workspace`.
+
+- Chat and the lifecycle share the serial queue of `ChatStore`. Each
+  lifecycle change of `Workspace` runs in it through `runLifecycle`, then
+  calls `flushRunner`. So a waiting turn goes out when the lifecycle state
+  allows it.
+- `acceptFirstMessage`, `stopWorkspace`, `commitWorkspaceEvent`, and
+  `flushRunner` do not enter the queue. Call them only inside it.
+  `workspaceSummary` enters the queue.
+- `waitCreationAdmission`, `waitCreationLifecycle`, and `waitLifecycleStart`
+  do not hold the queue. So they cannot block the alarm that they wait for.
+- A change of a Mac request enters `authorizedWorkspaceOperation` once.
+  Inside it, the projection callback of `createWorkspaceIntegration` reads
+  the stored session with `chat.store.read`, then calls
+  `projectDeviceState` of the controller. The lifecycle reads the waiting
+  requests through `deviceWaiting`. Neither read enters the queue again.
+  [The shown state](../../lifecycle/workspace-object.md#the-shown-state)
+  gives the one writer of the D1 state and its event.
 - Keep the lifecycle records outside the `chat:v1:` key prefix.
+
+### The first message
+
+- `initializeLifecycle` checks the workspace and the org membership of the
+  sender. Then its admission hook gives the assigned first message to
+  `acceptFirstMessage`.
+- `requireFirstMessage` in `first-message.ts` checks the stored creator,
+  the session, the turn, the message ID, and the model choice. A mismatch
+  gets `404 workspace_not_found`, and nothing is stored.
+- `admitFirstMessage` of the same file needs a stored agent login of the
+  sender. One chat transaction stores the session, the message, its first
+  turn, and their events. It commits before `initializeLifecycle` returns.
+  So the first message is durable before a browser can lose the create
+  reply.
+- A repeat returns the stored message and adds no history. An archived
+  workspace can return its stored first message, but admits no new one.
+- The RPC `acceptLifecycleFirstMessage`, or a `runner.ready` event, clears
+  the pending first message of the lifecycle.
+
+### Hooks and events
+
+- Each hook passes its `publish` argument to the lifecycle. So the
+  lifecycle events of a hook commit in the task of that hook.
+- `runnerReady(workspaceId, publish)` runs after the Durable Object stores
+  each `runner.ready` event. It reports the event to the lifecycle. A
+  runner that is ready before the start is prepared gets its turns only
+  after that. Their messages and model changes wait behind them.
+- `runnerEventStored(envelope, publish)` runs after each other stored runner
+  event or refusal marker. It reports `turn.started`, `turn.completed`,
+  `turn.failed`, and `start.updated`. A refused `turn.completed` or
+  `turn.failed` ends its lifecycle turn.
+- A `workspace.title` updates the name of the workspace in D1. It is not
+  unread output.
+- Both runner hooks run after the commit and the confirm. A hook error
+  closes the runner connection, and the runner does not send that event
+  again.
+- `turnDispatching` registers the sender of a turn with the lifecycle
+  before the command goes out. While the lifecycle state allows no turn, it
+  returns `false`, and the turn waits. `turnDispatchFailed` removes that
+  turn after a failed send. It also removes it when the runner disconnects
+  while `turnDispatching` registers the turn, before the send.
+- `runnerDisconnected` reports a closed runner connection. It runs later in
+  the queue, through `waitUntil`.
+- The other lifecycle events go through `commitWorkspaceEvent`, with the
+  one chat publisher. No hook calls `appendWorkspaceEvent` while it holds
+  the queue.
+
+### Stop and summary
+
+- When the lifecycle state becomes `stopped` or `error`, or a failed create
+  clears the lifecycle, `stopWorkspace` closes the runner. It ends each
+  running or stopping turn as stopped. Queued turns stay for the resume.
+  Device cleanup starts too.
+- `workspaceSummary` gives the last event number, the last event number
+  with visible output, and whether a dispatched turn runs. Its record
+  commits with the events and the turns. Queued turns do not count as
+  working.
+- Known limit: `Workspace.alarm` holds the queue during one lifecycle
+  phase. A phase can make several provider requests. Each can take up to 30
+  seconds, 65 for a file read, or 610 for a command. So a slow phase
+  delays the chat reads, the messages, and the runner receipts of that
+  workspace.
 
 ## Milestone 9: files
 
@@ -146,8 +250,9 @@ depends on where the code runs:
 - After a text-only turn, each unanswered message moves to a new turn. So
   one message can come first in a `message` command, then in a new `turn`
   command with a new command ID.
-- Each `turn` and `message` command carries the login of its message's
-  sender. When the sender of a turn changes, start the agent again.
+- Each `turn` and `message` command carries the agent login of the session
+  starter, whoever sent the message. The runner keeps the login of the
+  first command of a turn for the whole turn.
 - An interrupt for a turn that the runner does not run still gets
   `turn.completed` with state `stopped`.
 - A new stream gets each command other than `report.refresh` only after its
@@ -163,15 +268,28 @@ depends on where the code runs:
   `agentLoginContext(userId, agent)`, and `BOAT_KEY_ENCRYPTION_KEY`.
 - `readAgentLogin` decrypts with the same context and key. It accepts the
   kinds `token` and `api-key` for Claude, and only `api-key` for Codex.
-- A message without a stored login gets `409 agent_login_required`.
-- When the login is gone as a command goes out, `turn.failed` ends the
-  turn only while it is queued.
+- A message whose login is missing gets `409 agent_login_required`, and no
+  session is created, as [Session logins](#session-logins) says.
+- When the starter's login, or the sender's access, is gone as a command
+  goes out, `turn.failed` ends the turn only while it is queued. The failure
+  names the cause. A lost starter login sets `loginAvailable` to false.
 - A running or stopping turn keeps the command, and the Durable Object does
   not send it. So the later runner events of that turn stay valid.
 - When that turn finishes, an unanswered message moves to a new queued
   turn. That turn then fails with `agent_login_required`.
-- `resolveAttachments(userId, workspaceId, ids)` returns the attachment
-  records and the sandbox path of each attachment. The command gives the
-  paths to the runner.
+- `resolveAttachments(userId, workspaceId, ids)` gets the ID of the sender,
+  not of the starter. It returns the attachment records and the sandbox path
+  of each attachment. The command gives the paths to the runner.
 - By default, a message with an attachment gets
   `503 attachments_unavailable`.
+
+## Session logins
+
+[Session logins](session-logins.md) gives the starter of each session, the
+two login paths of `SessionLogins`, and the linked sessions.
+
+## Test fixtures
+
+[Chat backend tests](../tests.md) names the test support files and what
+each group of tests covers. [Outer Worker tests](outer-worker-tests.md)
+gives the tests through the production Worker entry.

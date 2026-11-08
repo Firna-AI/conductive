@@ -5,26 +5,28 @@ import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { requireOrgMember } from './access'
 import type { PendingTurn } from './workspace-runtime'
+import type { LifecyclePublisher } from './durable-types'
 
 /** Call only after Milestone 7 accepts an ordered runner event. */
 export async function applyRunnerLifecycle(
   lifecycle: DurableLifecycle,
   turns: TurnScopes,
   event: RunnerEvent,
+  publish?: LifecyclePublisher,
 ): Promise<void> {
   const state = await lifecycle.read()
   if (!state || state.state === 'stopped' || state.state === 'archived') return
   if (event.type === 'runner.ready') {
-    await lifecycle.step('runner', 'Starting the agent', 'completed')
-    await lifecycle.runnerReady()
+    await lifecycle.step('runner', 'Starting the agent', 'completed', publish)
+    await lifecycle.runnerReady(publish)
   } else if (event.type === 'turn.started') {
     const turn = await turns.find(event.turnId)
-    if (turn) await lifecycle.turn(turn.sessionId, true)
+    if (turn) await lifecycle.turn(turn.sessionId, true, publish)
   } else if (event.type === 'turn.completed' || event.type === 'turn.failed') {
     const turn = await turns.remove(event.turnId)
-    if (turn) await lifecycle.turn(turn.sessionId, false)
+    if (turn) await lifecycle.turn(turn.sessionId, false, publish)
   } else if (event.type === 'start.updated') {
-    await lifecycle.reportStart(event.start)
+    await lifecycle.reportStart(event.start, publish)
   }
 }
 
@@ -33,6 +35,7 @@ export async function registerTrustedTurn(
   lifecycle: DurableLifecycle,
   turns: TurnScopes,
   turn: PendingTurn,
+  publish?: LifecyclePublisher,
 ): Promise<void> {
   const state = await lifecycle.read()
   if (!state)
@@ -49,5 +52,5 @@ export async function registerTrustedTurn(
     )
   await requireOrgMember(env.DB, state.orgId, turn.senderUserId)
   await turns.register(turn)
-  await lifecycle.turn(turn.sessionId, true)
+  await lifecycle.turn(turn.sessionId, true, publish)
 }

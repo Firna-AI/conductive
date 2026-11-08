@@ -1,7 +1,11 @@
 /** The catalogue paths that screens link to. */
 export const paths = {
   marketing: 'marketing',
+  terms: 'marketing/terms',
+  privacy: 'marketing/privacy',
+  notFound: 'marketing/not-found',
   signIn: 'app/sign-in',
+  signInTerms: 'app/sign-in/terms',
   getStarted: 'app/sign-in/get-started',
   getStartedInstalled: 'app/sign-in/get-started/installed',
   getStartedOrgCreated: 'app/sign-in/get-started/org-created',
@@ -32,6 +36,8 @@ export const paths = {
   chat: 'app/chat',
   sessions: 'app/sessions',
   sessionHistory: 'app/sessions/history',
+  noStarterLogin: 'app/sessions/no-starter-login',
+  linkedSession: 'app/sessions/linked',
   reassign: 'app/reassign',
   archive: 'app/archive',
   archivePushed: 'app/archive/pushed',

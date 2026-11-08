@@ -9,6 +9,7 @@ import { WorkspaceFiles, type FilesSubscribe } from '../model/files-store'
 import { registerDevFiles } from './dev-fixtures'
 import { devTargets } from './dev-targets'
 import { DevApp } from './DevApp'
+import { storeUnreadTree } from './dev-unread'
 import { readView } from './dev-view'
 import { devNow } from './RepairControls'
 
@@ -31,6 +32,7 @@ storeFailedRepairs(
   ),
   devNow(),
 )
+storeUnreadTree(server, view.tree, devNow())
 // Mockup data reads the routes only. Live data replays the recorded events.
 const subscribe: FilesSubscribe = (after, listener) =>
   server.events.subscribe(live ? after : Math.max(after, baseline), listener)

@@ -60,7 +60,6 @@ export function fakeWorkspaceRoutes(
     }
     routes.json('GET', workspacePath(org, id), detail)
     routes.json('PATCH', workspacePath(org, id), detail)
-    routes.json('POST', workspacePaths.open(org, id), detail)
     routes.json('POST', workspacePaths.resume(org, id), detail)
     routes.empty('POST', workspacePaths.activity(org, id))
     routes.empty('PUT', workspacePaths.read(org, id))
@@ -98,16 +97,17 @@ export function fakeWorkspaceRoutes(
         created: false,
         draft: { text: '', attachmentIds: [] },
       })
+      // A reply names the session where the message went: here its own.
       routes.json(
         'POST',
         sessionPaths.messages(org, id, session.id),
-        { message, turnId: 'turn-1' },
+        { message, turnId: 'turn-1', session },
         202,
       )
       routes.json(
         'POST',
         retryMessagePath(org, id, session.id, data.message.id),
-        { message, turnId: 'turn-1' },
+        { message, turnId: 'turn-1', session },
         202,
       )
       routes.json('POST', sessionPaths.interrupt(org, id, session.id), {

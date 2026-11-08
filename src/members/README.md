@@ -82,7 +82,8 @@ with the message of the API.
   when the answer has them. The shell shows it as an active org again. Its
   workspaces start only when they open.
 - `onReassigned` gets the workspace of the API's answer. The header shows its
-  new owner. The cloud computer keeps running.
+  new owner. The cloud computer keeps running. One exception: a workspace
+  whose stop for a suspended owner has not finished still stops.
 - `onMemberRemoved` tells the shell that the member's workspaces now belong
   to the viewer, so it can load the workspace list again.
 - On desktop, a menu opens as a popover in the top layer of the page. So a
@@ -136,6 +137,14 @@ under the `pendingKey` of that change, such as `remove:priya`. So, in any
 order of the answers, a removal can close only the question of its own
 member. Each change can set or remove only the errors of its own member or
 invite.
+
+After each state change, the store keeps an error or the open removal
+question only while its owner is in the loaded list. The owner of a role
+change, a removal, or the removal question is its member. The owner of an
+invite cancellation is its invite. So the errors and the question of a
+member end when the member leaves. An error that arrives after the member
+left does not show. A new invitation has no existing owner, so its error
+stays.
 
 When a removal question opens, only the last error of that removal goes. A
 close request for one member never closes the question of another member. A
@@ -201,6 +210,8 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 - `api/parseCore.ts` and `api/parseSettings.ts`: the parsers of the replies.
   The settings parser keeps only the names of the env vars.
 - `membersStore.ts`: the state of the Members tab and each change.
+- `actionOwners.ts`: the owner of each action, and `keepExistingOwners`,
+  the owner rule that the store applies after each state change.
 - `MemberComputerView.tsx`: the controlled read-only Cloud computer tab.
 - `useMounted.ts`: the ref that drops the answers of an old scope.
 - `ui/`: the local dense controls of the design, such as `ChoiceMenu`,

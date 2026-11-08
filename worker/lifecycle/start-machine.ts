@@ -1,5 +1,5 @@
 import { providerState } from './provider-state'
-import type { AppEnv } from '../env'
+import type { AppDependencies, AppEnv } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
 import type { WorkspaceRow } from './workspace-data'
 import { allocateWorkspace } from './start-allocation'
@@ -14,23 +14,34 @@ import {
 } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
 import { workspaceEnvironment } from './settings-data'
-import { readWorkspaceToken } from './tokens'
+import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
 import { WorkspaceStartError } from './workspace-start'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
-import type { WorkspaceStartJob, StartJobStorage } from './start-types'
+import type {
+  WorkspaceStartJob,
+  WorkspaceMachinePhase,
+  StartJobStorage,
+} from './start-types'
 
 export async function advanceStartMachine(
   env: AppEnv,
+  dependencies: AppDependencies,
   endpoint: WorkspaceLifecycleEndpoint,
   provider: SandboxProvider,
   row: WorkspaceRow,
   job: WorkspaceStartJob,
   storage: StartJobStorage,
 ): Promise<{
-  phase: WorkspaceStartJob['phase']
+  phase: WorkspaceMachinePhase
   environmentCiphertext: string | null
 } | null> {
   if (job.phase === 'machine') {
+    await ensureWorkspaceToken(
+      env,
+      job.workspaceId,
+      dependencies.randomToken,
+      dependencies.now(),
+    )
     const environment = await workspaceEnvironment(
       env,
       job.orgId,
@@ -47,6 +58,7 @@ export async function advanceStartMachine(
       WORKSPACE_TOKEN: token,
       CONDUCTIVE_WORKSPACE_ID: job.workspaceId,
       CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
+      CONDUCTIVE_DEFAULT_BRANCH: job.defaultBranch,
       CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
         locations,
         row.repositoryId,
@@ -105,10 +117,7 @@ export async function advanceStartMachine(
     }
     return {
       phase: 'ready',
-      environmentCiphertext:
-        job.kind === 'resume'
-          ? await runningEnvironment(env.DB, job.workspaceId)
-          : job.environmentCiphertext,
+      environmentCiphertext: await runningEnvironment(env.DB, job.workspaceId),
     }
   }
   if (!row.sandboxId) throw new WorkspaceStartError(null)

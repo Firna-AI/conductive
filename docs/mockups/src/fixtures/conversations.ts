@@ -4,10 +4,12 @@
 
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import { changedFiles, type ChangedFile } from './files'
+import { linkedConversations } from './linkedConversations'
 import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
+import { unavailableConversations } from './unavailableConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
@@ -49,6 +51,8 @@ export type ChatItem =
       by?: PersonKey
       /** The changed files of the turn past the 200 that the runner lists. */
       omittedFiles?: number
+      /** The cloud computer could not read the changed files. */
+      filesUnavailable?: true
     }
   | { kind: 'error'; id: string; text: string }
   | { kind: 'working'; id: string; elapsed: string }
@@ -59,6 +63,8 @@ export type ChatItem =
       files: readonly ChangedFile[]
       /** The files of the turn past the 200 that the runner lists. */
       omittedFiles?: number
+      /** The cloud computer could not read the changed files: none listed. */
+      filesUnavailable?: true
     }
   | {
       /** A runner event that the workspace refused (decision 76). */
@@ -66,6 +72,17 @@ export type ChatItem =
       id: string
       what: LostWhat
       reason: LostReason
+    }
+  | {
+      /**
+       * The first line of a linked session. A member's message in another
+       * session opened it, because the login of the starter of that session
+       * was not available. `from` is the title of that session, which the
+       * line links to.
+       */
+      kind: 'linked'
+      id: string
+      from: string
     }
 
 /** One tool call of an agent turn. */
@@ -91,6 +108,9 @@ export const conversationKeys = [
   'files-left-out',
   'lost-lines',
   'lost-turn-end',
+  'files-unavailable',
+  'stopped-files-unavailable',
+  'linked',
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -192,6 +212,13 @@ const cutOffTurn: readonly ChatItem[] = [
   { ...e2eRunning, status: 'stopped' },
 ]
 
+/**
+ * The next message that a user writes after the turn ends. In the linked
+ * session, it is the message of the member who opened that session.
+ */
+export const followUpDraft =
+  'Show a loading state under the address line while the lookup runs.'
+
 export const conversations: Readonly<
   Record<ConversationKey, readonly ChatItem[]>
 > = {
@@ -240,12 +267,10 @@ export const conversations: Readonly<
   ],
   ...macConversations(history),
   ...lostConversations(history),
+  ...unavailableConversations({ history, cutOff: cutOffTurn }),
+  ...linkedConversations(followUpDraft),
 }
 
 /** The steer message that the user types while a turn runs. */
 export const steerDraft =
   'Also debounce the lookups to 250 ms, so we stay under the rate limit.'
-
-/** The next message that the user writes after the turn ends. */
-export const followUpDraft =
-  'Show a loading state under the address line while the lookup runs.'

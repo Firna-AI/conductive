@@ -46,7 +46,9 @@ export function useBlockingNotice(
   return null
 }
 
-function failureBody(error: ApiError): string {
+/** `null`: the server took the message, and its sandbox did not start. */
+function failureBody(error: ApiError | null): string {
+  if (error === null) return "Its sandbox didn't start. Your message is kept."
   if (error.status === 0) {
     return "The app can't reach the server. Your message is kept."
   }
@@ -57,10 +59,11 @@ function failureBody(error: ApiError): string {
 
 /**
  * A create that failed. The draft stays, and Try again sends it again. Try
- * again is off while the message cannot go, as Send is.
+ * again is off while the message cannot go, as Send is. `error` is `null`
+ * when the server took the message and its sandbox then did not start.
  */
 export function CreateFailed(props: {
-  error: ApiError
+  error: ApiError | null
   ready: boolean
   retry: () => void
 }) {

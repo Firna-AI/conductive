@@ -44,6 +44,7 @@ export async function localSavedScriptFixture(
     ['/run/ascii-secrets/env.sh', environment],
     [scriptPaths.install, install],
     ['/home/user/code', join(directory, 'code')],
+    ['/tmp/conductive-lifecycle', join(directory, 'command-journal')],
   ])
   await mkdir(repository)
   await writeFile(
@@ -90,7 +91,10 @@ export async function localSavedScriptFixture(
     },
     contains: (command: string, kind: ScriptKind) =>
       command.includes(scriptPaths[kind]),
-    run: async (command: string): Promise<CommandResult> => {
+    run: async (
+      command: string,
+      onOutput?: (text: string) => void,
+    ): Promise<CommandResult> => {
       let mapped = command
         .replaceAll(
           'sudo -n install -d -m 700 -o user -g user /run/conductive',
@@ -98,7 +102,7 @@ export async function localSavedScriptFixture(
         )
         .replaceAll(
           'sudo -n systemctl restart conductive-runner.service',
-          `printf '%s\\n' runner-restarted >> ${shellQuote(runnerCalls)}`,
+          `printf "%s\\n" runner-restarted >> "${runnerCalls}"`,
         )
       for (const [source, target] of mappedPaths)
         mapped = mapped.replaceAll(source, target)
@@ -108,7 +112,7 @@ export async function localSavedScriptFixture(
       if (mapped.includes(scriptPaths.install) || mapped.includes('sudo '))
         throw new Error('A script command keeps an unmapped operation')
       return new Promise((resolve, reject) => {
-        execFile(
+        const child = execFile(
           '/bin/sh',
           ['-c', mapped],
           {
@@ -129,7 +133,49 @@ export async function localSavedScriptFixture(
             resolve({ exitCode, stdout, stderr, timedOut: false })
           },
         )
+        child.stdout?.on('data', (chunk: Buffer) =>
+          onOutput?.(chunk.toString()),
+        )
       })
+    },
+    file: (name: string) => readOptional(join(directory, name)),
+    buildJournal: async (buildId: string) => {
+      const path = join(
+        directory,
+        'command-journal',
+        'build',
+        encodeURIComponent(buildId),
+      )
+      try {
+        await stat(path)
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          'code' in error &&
+          error.code === 'ENOENT'
+        )
+          return null
+        throw error
+      }
+      return { stdout: await readOptional(join(path, 'install', 'stdout')) }
+    },
+    gate: async () => {
+      const path = join(directory, 'continue-script')
+      await new Promise<void>((resolve, reject) => {
+        execFile('/usr/bin/mkfifo', [path], (error) => {
+          if (error) reject(error)
+          else resolve()
+        })
+      })
+      let released = false
+      return {
+        path,
+        release: async () => {
+          if (released) return
+          released = true
+          await writeFile(path, 'continue\n')
+        },
+      }
     },
     script: async (kind: ScriptKind) => {
       const path = mapPath(scriptPaths[kind])

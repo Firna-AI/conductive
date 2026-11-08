@@ -94,14 +94,22 @@ async function withRequestBodyLimit(
 }
 
 export function requestBodyEntry(
-  handle: (request: Request, env?: AppEnv) => Promise<Response>,
+  handle: (
+    request: Request,
+    env?: AppEnv,
+    context?: Pick<ExecutionContext, 'waitUntil'>,
+  ) => Promise<Response>,
 ) {
-  return async (request: Request, env?: AppEnv): Promise<Response> => {
+  return async (
+    request: Request,
+    env?: AppEnv,
+    context?: Pick<ExecutionContext, 'waitUntil'>,
+  ): Promise<Response> => {
     try {
       return await withRequestBodyLimit(
         request,
         requestBodyBudget(request, env?.MACHINE_ORIGIN),
-        (bounded) => handle(bounded, env),
+        (bounded) => handle(bounded, env, context),
       )
     } catch (error) {
       const response = privateResponse(errorResponse(error))

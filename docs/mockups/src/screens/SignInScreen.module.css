@@ -52,6 +52,15 @@
   line-height: 1.55;
 }
 
+/* The agreement to the terms, just above Continue with GitHub. */
+.agreement {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 13px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
 .mark {
   color: var(--ui-on-solid);
 }
@@ -101,4 +110,8 @@
 
 .mobile .text {
   font-size: 15px;
+}
+
+.mobile .agreement {
+  font-size: 14px;
 }

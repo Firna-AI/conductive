@@ -28,6 +28,9 @@ app and a top-level tab use different cookie partitions. The app gate checks
 the session. The handler then checks the membership, the running workspace,
 and the active preview. The GET returns trusted HTML that posts the preview
 hostname and a 60-second grant to the authorizer.
+A create or a launch for a workspace whose owner is suspended gets 403
+`user_suspended`, as [Sandbox access](../operator/README.md#sandbox-access)
+says. The list and the close of previews stay open to members.
 
 The Mac app frames the same launch page from its desktop origin,
 `conductive-app://desktop`. Its frame load has no `Origin` header. On a GET of
@@ -82,6 +85,12 @@ a previewed app can see a grant.
 Grants and cookies use AES-GCM with `BOAT_KEY_ENCRYPTION_KEY`. The authenticated
 data binds the app origin, the hostname, the preview ID, and the purpose.
 So a grant cannot act as a cookie, and a cookie cannot move to another preview.
+Each grant and each cookie also seals its viewer: the user ID and the session
+ID that launched the preview, with the org and workspace IDs and the expiry.
+So each credential belongs to one viewer session. It seals no sandbox ID, so it
+keeps working after the workspace gets a new sandbox. Each access read still
+needs a sandbox in a running state and an owner who is not suspended. An open
+stream closes when the sandbox that it reached changes.
 
 Each grant works once.
 `launchGrant` saves a SHA-256 hash of `preview:<grant>` with `saveOAuthState`
@@ -92,7 +101,8 @@ Each record expires with its grant, and each save deletes the expired records.
 D1 is shared, so a grant works once across isolates and restarts.
 
 Both POST modes call `redeemLaunchGrant`, the one redemption operation.
-It first checks the grant against the active preview.
+It first checks the grant and its viewer against the current access, with
+`readPreviewAccess`.
 It then deletes the record of the grant with `takeOAuthState`.
 It returns the credential cookie only when that delete finds the record.
 The delete is atomic, so only one request can use a grant.
@@ -106,6 +116,13 @@ a check leaves its grant unused. Keep each new check before the redemption.
 The proxy reads only the cookie of the requested preview ID. A duplicate of
 that cookie counts as no cookie. The proxy checks the D1 record and the cookie
 before any sandbox call. A leaked hostname alone gets a 404.
+`readPreviewAccess` in [viewer-access.ts](viewer-access.ts) reads the preview and
+the access of the cookie's viewer together, in one D1 read. It uses the
+`preview` kind of the [shared connection reader](../security/README.md#open-connections).
+The D1 reads of an active preview use the shared `sandboxAccessPredicate`.
+So a preview of a workspace whose owner is suspended gets the same 404.
+So does each request of a viewer who is suspended, leaves or is removed from
+the org, or signs out.
 
 Preview open, document loads, iframe loads, and cache misses resolve the listener.
 The resolver checks `ss` output for loopback and wildcard addresses.
@@ -138,7 +155,11 @@ alarm after a preview opens. Call `expire()` from that alarm and schedule
 the next expiry. Keep the handler instance with its live connections so these
 hooks also cancel its fetches, HTTP streams, and sockets.
 Each data batch waits for a D1 check that starts after the data arrives.
-This also blocks data after another instance revokes the preview.
+This also blocks data after another instance revokes the preview, or after
+the owner of the workspace is suspended.
+Each check reads the access of its viewer session again, with no cached grant.
+A denied viewer loses only the connections of that viewer session. Other
+viewers of the same preview keep theirs.
 The request and response streams read only when their consumer requests data.
 They read one chunk at a time. No cached authorization or time window permits data.
 Completed HTTP connections release their registry entries.
@@ -161,15 +182,18 @@ The proxy follows no upstream redirect.
 - [launch-document.ts](launch-document.ts) builds the launch page markup and its CSP.
 - [browser-launch.ts](browser-launch.ts) builds the authorizer page for a browser launch.
 - [preview-launch-path.ts](../security/preview-launch-path.ts) matches the exact launch path for the gate and the Mac app.
-- [credentials.ts](credentials.ts) issues grants with `launchGrant`, redeems each grant once with `redeemLaunchGrant`, and checks the credential cookies.
+- [credentials.ts](credentials.ts) issues grants with `launchGrant`, redeems each grant once with `redeemLaunchGrant`, and checks the credential cookies. Each one seals a `PreviewViewer`.
 - [proxy.ts](proxy.ts) routes the authorizer page and POST, checks the credential cookie, and owns the request flow.
-- [registry.ts](registry.ts) scopes HTTP and socket cancellation by workspace and preview.
+- [registry.ts](registry.ts) scopes HTTP and socket cancellation by workspace, preview, and viewer session.
+- [viewer-access.ts](viewer-access.ts) exports `readPreviewAccess`, the one D1 read of a preview and its viewer.
 - [connection.ts](connection.ts) wraps both HTTP directions with authorization and backpressure.
 - [authorization.ts](authorization.ts) shares fresh reads across queued data.
 - [ports.ts](ports.ts) caches private port descriptors and refreshes their listener modes.
 - [listeners.ts](listeners.ts) resolves explicit localhost or network exposure.
 - [store.ts](store.ts) and [workspace-store.ts](workspace-store.ts) hold the D1 queries.
   `publicPreview` in `store.ts` builds `Preview.url`.
+  `readWorkspaceTarget` returns a `WorkspaceAccessTarget` with the `ownerActive` and `sandboxAllowed` flags. It keeps the row of a suspended owner's workspace, so the metadata reads still work.
+- [sandbox-access.ts](../data/sandbox-access.ts) exports `sandboxAccessPredicate`, the shared rule of the preview, terminal, and desktop access.
 - [provider.ts](provider.ts) exports the typed `WorkspaceTools` adapter.
 - [headers.ts](headers.ts) builds private upstream requests and safe responses.
 - [origins.ts](origins.ts) maps request Origins and private redirects.
@@ -178,6 +202,7 @@ The proxy follows no upstream redirect.
 - [launch-test-support.ts](launch-test-support.ts) runs the real launch GET and authorizer POST in tests.
 
 The feature adapter checks workspace access before each provider operation.
+It refuses a workspace whose owner is suspended with 403 `user_suspended`.
 The [sandbox provider](../sandbox/README.md) owns the fixed `host` and `desktop`
 routes, provider factory, organization pin, parsers, transport, commands, and file reads.
 The feature adapter holds a `SandboxProvider`. It holds no plaintext key.

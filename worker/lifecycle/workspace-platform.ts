@@ -1,4 +1,5 @@
 import type { WorkspaceEvent } from '../../src/shared/events'
+import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import {
   nativeWorkspaceStorage,
   type WorkspaceStorage,
@@ -15,6 +16,11 @@ export interface WorkspacePlatform {
   blockConcurrencyWhile<T>(operation: () => Promise<T>): Promise<T>
   waitUntil(promise: Promise<unknown>): void
   publish(event: WorkspaceEventPublication): Promise<void>
+  admitFirstMessage?(
+    input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
+  ): Promise<void>
+  stopped?(workspaceId: string): Promise<void>
+  deviceWaiting?(workspaceId: string): Promise<boolean>
 }
 
 export function nativeWorkspacePlatform(

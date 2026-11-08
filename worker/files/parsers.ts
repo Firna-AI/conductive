@@ -50,7 +50,11 @@ export function parseTree(value: unknown): FileTreeResponse {
   ) {
     throw invalidFileResponse()
   }
-  return { revision: value.revision, entries: value.entries.map(fileEntry) }
+  return {
+    revision: value.revision,
+    entries: value.entries.map(fileEntry),
+    ...(value.unavailable === true ? { unavailable: true } : {}),
+  }
 }
 
 function treeChange(value: unknown): FileTreeChange {
@@ -118,6 +122,7 @@ export function parseChanges(value: unknown): ChangesResponse {
 
 export function parseFileEvent(value: unknown): FileEvent {
   if (!isRecord(value)) throw invalidFileResponse()
+  if (value.type === 'files.unavailable') return { type: value.type }
   if (value.type === 'files.snapshot')
     return { type: value.type, tree: parseTree(value.tree) }
   if (value.type === 'changes.updated')

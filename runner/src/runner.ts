@@ -22,7 +22,6 @@ export interface RunnerOptions {
   cwd: string
   home: string
   defaultBranch: string
-  computerMcpUrl: string
   providers: EngineOptions['providers']
   warm: () => Promise<unknown>
   now: () => number
@@ -74,7 +73,12 @@ export class Runner {
     this.link = new RunnerLink(options.store, {
       ...options,
       connected: async () => {
-        await this.files.refresh(true)
+        try {
+          await this.files.refresh(true)
+        } catch {
+          options.warn('The initial file reports could not be saved.')
+          await this.emit({ type: 'files.unavailable' })
+        }
         await this.emit({ type: 'runner.ready' })
       },
       disconnected: () => {
@@ -124,6 +128,7 @@ export class Runner {
     this.stopped = true
     this.stopWatching?.()
     await this.engine.close()
+    await this.link.persist()
     this.link.close()
   }
 
@@ -141,7 +146,16 @@ export class Runner {
           failures.push(error)
         }
       }
-      if (failures.length) throw failures[0]
+      if (failures.length) {
+        if (
+          event.type === 'turn.completed' ||
+          event.type === 'turn.failed' ||
+          event.type === 'runner.ready' ||
+          event.type === 'files.unavailable'
+        )
+          await this.link.persist()
+        else throw failures[0]
+      }
     })
   }
 

@@ -1,11 +1,17 @@
-import { expect, it, onTestFinished, vi } from 'vitest'
+import { beforeEach, expect, it, onTestFinished, vi } from 'vitest'
 
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { checkClaudeFailures } from '../../test-support/claude-failures'
+import {
+  fakeComputerServer,
+  mockComputerServer,
+} from '../../test-support/computer-mcp'
 import { runnerHarness, turn } from '../../test-support/harness'
 import { string } from '../parse'
 import { Runner } from '../runner'
 import { createClaudeFactory } from './claude'
+
+beforeEach(mockComputerServer)
 
 it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', async () => {
   const h = await runnerHarness()
@@ -47,7 +53,7 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
       CLAUDE_CODE_OAUTH_TOKEN: 'secret-alice',
       CLAUDE_CONFIG_DIR: `${h.home}/.conductive/claude`,
     },
-    mcpServers: { computer: { type: 'http', url: 'http://computer.test/mcp' } },
+    mcpServers: { computer: fakeComputerServer },
   })
   expect(sdk.parameters?.options?.env?.ANTHROPIC_API_KEY).toBeUndefined()
   await sdk.raw({ type: 'system', subtype: 'init', session_id: 'sdk-session' })

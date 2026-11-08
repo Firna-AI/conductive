@@ -9,6 +9,8 @@ import { ActionButton, IconButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
 import { AttachmentChips } from './AttachmentChips'
 import { ModelPicker } from './ModelPicker'
+import { SendWait } from './SendWait'
+import { SessionLoginLine, type SessionLogin } from './SessionLogin'
 import styles from './Composer.module.css'
 
 export type ComposerState = {
@@ -31,6 +33,17 @@ export type ComposerState = {
   sendTo?: string
   /** The agent of the chosen model is not connected, so Send is off. */
   blocked?: boolean
+  /**
+   * The sandbox of a new workspace starts for the first time, so Send waits.
+   * The box keeps the message, and a short reason beside Send says that the
+   * user can send it when the sandbox is ready.
+   */
+  waits?: boolean
+  /**
+   * Whose agent login the session uses: the login of its starter. The line
+   * under the box names it.
+   */
+  sessionLogin?: SessionLogin
 }
 
 function SendButton(props: { draft: string; blocked?: boolean }) {
@@ -53,13 +66,17 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
 /**
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. While a turn runs, a message
- * steers the turn, and Stop ends it.
+ * steers the turn, and Stop ends it. While Send waits for the first start
+ * of a new workspace, a message in the box shows the reason beside Send. A
+ * line under the box names whose agent login the session uses.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const { field } = useControlSizes()
   const placeholder = props.running
     ? 'Steer the agent while it works'
     : (props.placeholder ?? 'Message the agent')
+  const off = props.blocked === true || props.waits === true
+  const written = props.draft !== '' || props.attachments.length > 0
   return (
     <div className={styles.wrap}>
       <div className={styles.composer}>
@@ -89,15 +106,17 @@ export function Composer(props: ComposerState & { lines?: number }) {
           {props.running ? (
             <ActionButton icon={Square}>Stop</ActionButton>
           ) : null}
-          {props.sendTo ? (
+          {props.waits && written ? <SendWait /> : null}
+          {props.sendTo && !off ? (
             <ScreenLink asChild to={props.sendTo}>
               <SendButton draft={props.draft} />
             </ScreenLink>
           ) : (
-            <SendButton blocked={props.blocked} draft={props.draft} />
+            <SendButton blocked={off} draft={props.draft} />
           )}
         </div>
       </div>
+      {props.sessionLogin ? <SessionLoginLine {...props.sessionLogin} /> : null}
       {props.running && props.draft !== '' ? (
         <span className={styles.hint}>
           The agent reads this at its next step.

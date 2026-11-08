@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { createApiClient, type FetchLike } from '../../app/api/client'
 import {
   DEVICE_CURRENT_PATH,
   type DevicePairing,
@@ -11,7 +12,6 @@ import {
   FAKE_PAIRING,
   fakeMacSettings,
 } from '../../test-support/fixtures/devices'
-import type { FetchLike } from '../api/client'
 import { createDeviceApi } from './device-api'
 import { MacSettingsController } from './mac-settings'
 import { controlOf } from './settings-results'
@@ -103,7 +103,9 @@ const stopControl = controlOf(stop)
 describe('MacSettingsController', () => {
   it('sends one read or change at a time, so the reply of the last one holds every change', async () => {
     const mac = gatedMac()
-    const controller = new MacSettingsController(createDeviceApi(mac.fetch))
+    const controller = new MacSettingsController(
+      createDeviceApi(createApiClient(mac.fetch)),
+    )
     await controller.start()
     mac.hold()
     const work = Promise.all([
@@ -131,7 +133,9 @@ describe('MacSettingsController', () => {
 
   it('keeps the failure of a control through a read, a Mac that goes away, and a new pairing, until the next change of that control', async () => {
     const mac = gatedMac([failed])
-    const controller = new MacSettingsController(createDeviceApi(mac.fetch))
+    const controller = new MacSettingsController(
+      createDeviceApi(createApiClient(mac.fetch)),
+    )
     await controller.start()
     await controller.change(removeLint)
     const kept = {
@@ -165,7 +169,9 @@ describe('MacSettingsController', () => {
 
   it('never sends a Stop that waited while the Mac reconnected, and keeps its failure until the user stops again', async () => {
     const mac = gatedMac()
-    const controller = new MacSettingsController(createDeviceApi(mac.fetch))
+    const controller = new MacSettingsController(
+      createDeviceApi(createApiClient(mac.fetch)),
+    )
     await controller.start()
     mac.hold()
     const next = { ...FAKE_PAIRING, connectionId: 'connection-2' }

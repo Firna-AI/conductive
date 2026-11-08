@@ -2110,6 +2110,20 @@ from C to D.
 - **Action:** ask the user, because D changes decision 24, and each
   option adds behaviour that no requirement covers.
 - **Chosen:** D, by the user on 6 November 2026. It changes decision 24.
+- **Changed on 7 November 2026:** decision 105 F changes this decision for
+  sessions:
+  - Each session runs on the agent login of its starter, the member who
+    started the session. A session never moves to the login of another
+    member.
+  - A message of any member during a turn joins that turn at once, and the
+    other members spend the login of the starter. So the runner no longer
+    starts the agent again when the sender changes.
+  - When the login of the starter cannot be used, a message of another
+    member opens a new, empty session on that member's own login. This
+    happens, for example, after the starter leaves the org or removes the
+    login. The new session links to the first session (decision 115 A).
+  - A member cannot refuse the use of their login by others for now
+    (decision 116 A).
 
 ### 50. Decide the reach of a cloud computer's GitHub token
 
@@ -3728,6 +3742,266 @@ Added on 7 November 2026 from option C of the follow-up item
 - **Recommendation:** B.
 - **Chosen:** B, by the user on 7 November 2026. Milestone 11c builds it.
 
+### 119. Move the missing parts into the shared UI library
+
+Added on 7 November 2026 from Milestone 15m and the follow-up item
+`firna-ui-missing-parts`.
+
+- **Background:** `@firna/ui` lacks parts that the Graphite design needs,
+  so this app keeps local copies. A library change and its release happen
+  in the `futex-ai/ui` repository.
+- **Options:**
+  - **A.** Keep the local copies in this app for now.
+  - **B.** Add the parts to `@firna/ui`, publish a new version, and then
+    replace the local copies.
+- **Recommendation:** A now, and B after the first deployment.
+- **Chosen:** A now, and B in parallel, by the user on 8 November 2026.
+  The orchestrator starts a workspace on `futex-ai/ui`, merges its pull
+  request and its release when they are ready, and Milestone 15n then
+  replaces the local copies.
+
+### 120. Keep agent logins out of the sandbox
+
+Added on 7 November 2026 from the user's request after a read of
+Conductor's sandbox worker.
+
+- **Background:** The runner puts the real login into the agent program's
+  environment, so each process and each member's terminal in the sandbox
+  can read it while a turn runs.
+- **Options:**
+  - **A.** A model proxy in the Worker, with a turn token in the sandbox.
+  - **B.** An HTTPS proxy on a new server outside the sandbox.
+  - **C.** Boat's AI credentials proxy.
+  - **D.** Run the agent programs outside the sandbox.
+- **Recommendation:** A.
+- **Chosen:** A, as a later follow-up, by the user on 8 November 2026:
+  `plans/follow-ups/agent-logins-readable-in-sandbox.md`. It reverses the
+  earlier rejection of a login proxy when it lands. Before it covers
+  Claude subscription tokens, check that the permission of decision 37
+  covers a proxy.
+
+### 121. Accept that the GitHub token can be read in the sandbox
+
+Added on 7 November 2026 from the options check of decision 120.
+
+- **Background:** The git credential helper gets the sender's GitHub user
+  token from the Worker during a turn, so each process and each member's
+  terminal in the sandbox can get it. The token works after the turn, on
+  that person's repositories.
+- **Options:**
+  - **A.** State the risk in the access doc and on the privacy page.
+  - **B.** Revoke each token at the end of its turn.
+  - **D.** A token for each turn, limited to the workspace's repositories.
+  - **C.** A Git proxy in the Worker.
+- **Recommendation:** D, then B.
+- **Chosen:** A now, by the user on 8 November 2026, after the question of
+  what Conductor does: Conductor also gives the sender's token to its
+  sandbox. Milestone 15m states the risk. The user asked to consider
+  another approach later: `plans/follow-ups/github-token-readable-in-sandbox.md`.
+
+### 122. Publish the pending 5.0.0 library release first
+
+Added on 8 November 2026 from the `futex-ai/ui` workspace of decision 119.
+
+- **Background:** `futex-ai/ui` had an open release pull request, #180, for
+  5.0.0, with a breaking drag-select change. If the new parts merged
+  first, release-please would put them into that release.
+- **Options:**
+  - **A.** Merge #180 first, so that the new parts ship as 5.1.0.
+  - **B.** Ship the new parts inside 5.0.0.
+  - **C.** Hold the new parts until the user publishes 5.0.0.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026. The orchestrator merged
+  #180 as `3cc857c` in `futex-ai/ui`.
+
+### 123. Decide who may receive a workspace when admins are suspended
+
+Added on 8 November 2026 from finding 12 of PR #45 (Milestone 15m).
+
+- **Background:** A member's workspaces move to the earliest admin when the
+  member leaves, and the last-admin check counts suspended admins. A
+  workspace whose owner is suspended cannot start, and it gets no disk
+  restart near day 14.
+- **Options:**
+  - **A.** Keep the rules, and state that the workspace stays blocked.
+  - **B.** Never give a workspace to a suspended member. Block the leave
+    when no active admin exists.
+  - **C.** Skip suspended admins in the automatic move. Confirm a manual
+    move to a suspended member.
+  - **D.** Skip suspended admins when an active admin exists. A manual
+    move to a suspended member fails.
+  - **E.** One shared rule of an active admin: the automatic move picks
+    the earliest active admin, the last-admin check counts only active
+    admins, an org with no active admin gives the workspaces to the
+    earliest member who is not suspended, and a manual move to a
+    suspended member fails.
+- **Recommendation:** E.
+- **Chosen:** E, by the user on 8 November 2026. Milestone 15m applies it
+  in PR #45.
+
+### 124. Accept that a copied workspace token outlives access
+
+Added on 8 November 2026 from the check of finding 5 of PR #45.
+
+- **Background:** Each member with a terminal in a cloud computer can read
+  its workspace token. A copied token keeps the runner connection, the git
+  credential route, and the agent tools after its member is removed or
+  suspended. So that member can collect the agent logins and GitHub tokens
+  of later turns.
+- **Options:**
+  - **A.** State the risk in the access protocol.
+  - **B.** Replace the tokens of the org's workspaces when a member loses
+    access.
+  - **C.** A machine identity that a copied token cannot reuse.
+- **Recommendation:** B.
+- **Chosen:** A now, by the user on 8 November 2026. Milestone 15m states
+  the risk. The user asked to review the other approaches later:
+  `plans/follow-ups/workspace-token-after-access-loss.md`.
+
+### 125. Decide the disk restart of a suspended owner's workspaces
+
+Added on 8 November 2026 from the check of finding 10 of PR #45.
+
+- **Background:** Milestone 15m skips the disk restart near day 14 for the
+  workspaces of a suspended owner, so their disks can be deleted with the
+  members' unpushed work.
+- **Options:**
+  - **A.** Keep the disk restart.
+  - **B.** Skip it, and tell the members that an admin can move the
+    workspace.
+  - **C.** Skip it, and keep the disk with a saved snapshot.
+- **Recommendation:** B.
+- **Chosen:** B, by the user on 8 November 2026, after an explanation.
+  Milestone 15m states the rule in the protocol, and the error of such a
+  workspace says that an admin can give it to another member.
+
+### 126. Decide when a changed Terms revision applies
+
+Added on 8 November 2026 from the check of finding 7 of PR #45.
+
+- **Options:**
+  - **A.** At the next sign-in, within 7 days.
+  - **B.** At once, with a consent page that blocks the app.
+  - **C.** At the next sign-in, with an email about the change.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026. Milestone 15m states the
+  rule in the Sign-in section of the access protocol.
+
+### 127. Keep the marketing pictures fresh by hand
+
+Added on 8 November 2026 from the check of finding 8 of PR #46
+(Milestone 7w).
+
+- **Background:** The marketing site shows 26 stored pictures of mockup
+  screens. Nothing finds a stale picture.
+- **Options:**
+  - **A.** Keep the README rule, and capture again by hand.
+  - **D.** A picture drift check in the gate.
+  - **E.** Make the pictures in the build.
+  - **F.** Draw the screens on the site as HTML.
+- **Recommendation:** D.
+- **Chosen:** A, by the user on 8 November 2026.
+
+### 128. Give each build and start a time limit
+
+Added on 8 November 2026 from the check of finding 2 of PR #47
+(Milestone 5c).
+
+- **Background:** Builds and starts run as saved jobs that alarms move
+  forward. A script that never exits, or a cloud computer that never
+  becomes ready, keeps a job running forever, and an org's first build
+  then blocks every new workspace.
+- **Options:**
+  - **A.** Change nothing beyond the retry limit of Milestone 5c.
+  - **B.** A Cancel action for a running build and start.
+  - **C.** A time limit for each whole job from its start, for example 60
+    minutes for a build and 20 minutes for a start.
+  - **D.** A time limit for each script.
+- **Recommendation:** C.
+- **Chosen:** C, by the user on 8 November 2026, who also asked that the
+  app tell the user of the limit. Milestone 5d applies it.
+- **Design call of the orchestrator, 8 November 2026:** the start limit
+  also covers the disk restart near day 14 (decision 43 D), because the
+  protocol counts that restart as a start, and an unfinished restart
+  blocks every resume.
+
+### 129. Choose what the operator turns off after an abuse report
+
+Added on 8 November 2026 from the user's question about Milestone 15m:
+"we would probably disable the entire workspace rather than an
+individual user?"
+
+- **Background:** Milestone 15m suspends one user: the user's sign-in
+  ends, and the workspaces that the user owns stop. An abuse report names
+  a cloud computer or a preview address, not a person, and every member
+  can run code in a shared workspace. Orgs are free with no limits.
+- **Options:**
+  - **A.** Suspend a user, as Milestone 15m builds.
+  - **B.** Disable one workspace only.
+  - **C.** Disable an org only.
+  - **D.** Two separate actions: disable a workspace or an org, which
+    stops the cloud computers, and ban a user, which only ends the
+    sign-in.
+  - **E.** A, plus the workspace disable of B.
+- **Recommendation:** D.
+- **Chosen:** a user and an org, by the user on 8 November 2026: "sorry
+  I meant user and org". The orchestrator reads this as A plus C. The
+  user suspension stays as Milestone 15m builds it, because decisions
+  123 E and 125 B rely on it, and an org suspension comes on top of it.
+  Milestone 15o adds the org suspension. Notes:
+  `.context/suspension-unit/brainstorm.md`.
+
+### 130. Recover messages after a failed first start
+
+Added on 8 November 2026 from the 8i review of PR #42. The progress chat
+first called it decision 123, which the plan uses for another question.
+
+- **Background:** The first message creates a workspace, and the server
+  accepts later messages before the first start finishes (decisions 14 A
+  and 91 D). A failed first start removes the workspace and returns only
+  the first message to its sender. Later accepted messages stay in the
+  chat storage, but no product path returns them, and other members lose
+  access.
+- **Options:**
+  - **A.** Hold later sends until the first start succeeds. The composer
+    keeps the text, and the server refuses such sends.
+  - **B.** Archive a failed create, and keep its chat read-only for the
+    members.
+  - **D.** Keep the failed workspace in its error state. Try again starts
+    the create again in the same workspace, with the stored messages.
+  - **E.** Keep undelivered messages in a lasting list for each sender,
+    outside the removed workspace.
+- **Left out:** C, which returned another sender's messages only to an
+  open tab, because a reload loses them.
+- **Recommendation:** A. D is the wider fix.
+- **Chosen:** A now, by the user on 8 November 2026, with D as a later
+  follow-up: `plans/follow-ups/failed-first-start-keeps-workspace.md`. The
+  user first chose D, after the question "can't we store the messages in
+  a queue for that workspace, and then replay them when the server
+  starts?", and then changed to A now. Milestone 8n applies A in
+  parallel with Milestone 8i, so that it does not block PR #42, as the
+  user asked.
+  Records:
+  `.context/boat-native-remote-workspaces/initial-create-decision-130.md`
+  and `initial-create-final-report.md`.
+
+### 131. Decide what a failed save of agent output does to a turn
+
+Added on 8 November 2026 from the check of finding 2 of PR #48
+(Milestone 7v).
+
+- **Background:** The runner saves each event before it sends it. A
+  failed save keeps the event in memory, and the next save that works
+  writes it. Today a failed save of agent output still fails the running
+  turn.
+- **Options:**
+  - **A.** Keep the rule: the turn fails.
+  - **D.** Keep the event, try one more save, warn, and let the turn go
+    on.
+- **Recommendation:** D.
+- **Chosen:** A now, by the user on 8 November 2026, with D as a later
+  follow-up: `plans/follow-ups/runner-output-save-failure.md`.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -4745,20 +5019,74 @@ Depends on: 5
 Apply the `fix after merge` items of the Milestone 5 review and of the
 build logs. Added on 7 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/creation-admission-restart.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/completed-retry-first-message.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-race-tests-storage.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/lifecycle-resource-intents.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/build-log-total-size.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/build-log-follower.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/script-command-type.md`, and
-      delete that item.
+Design call, 7 November 2026: Each build log uses a 4 MiB budget, with
+space for its rows and omission line. Complete UTF-8 rows from each end
+share that budget.
+
+Evidence: `.context/milestone-5b/` holds the implementation reports and checks.
+
+The review also fixed recovery of a snapshot intent stored before dispatch.
+
+- [x] Apply the recorded option of `plans/follow-ups/creation-admission-restart.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/completed-retry-first-message.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/lifecycle-race-tests-storage.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/lifecycle-resource-intents.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/build-log-total-size.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/build-log-follower.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+- [x] Apply the recorded option of `plans/follow-ups/script-command-type.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5b`.
+
+## Milestone 5c: Lifecycle, build log, and members fixes
+
+Depends on: 5b
+
+Apply the `fix after merge` items of the Milestone 5b and 15l reviews.
+Added on 8 November 2026.
+
+Agent calls, 7 November 2026: keep the Worker build event route, because
+it remains a public API. Reuse the saved build phases and job identities,
+because they already record progress and command intent.
+Use a source command interface, because starts must fail closed and
+polls of saved processes can resume.
+The shared provider retry window lasts 10 minutes from the first error
+of an unfinished step. Only a completed step resets it. This bounds
+lasting faults without limiting a healthy build or start.
+
+- [x] Apply the recorded option of `plans/follow-ups/build-log-stream-format.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.
+- [x] Apply the recorded option of `plans/follow-ups/image-build-transient-errors.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.
+- [x] Apply the recorded option of `plans/follow-ups/lifecycle-command-repeat-after-restart.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.
+- [x] Apply the recorded option of `plans/follow-ups/members-late-role-failure-after-removal.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5c`.
+
+Verification evidence: `.context/boat-native-remote-workspaces/5c-checks/summary.md`.
+
+
+## Milestone 5d: Time limits for builds and starts
+
+Tags: ui
+
+Depends on: 5c
+
+Apply decision 128 C. Added on 8 November 2026.
+
+- [ ] Draw the limits in the mockups: the build screen and the workspace
+      start screen say how long a build and a start can run, and a failed
+      build or start says that it passed its limit. Then build both
+      screens, and compare each with its mockup.
+- [ ] Apply the recorded option of
+      `plans/follow-ups/lifecycle-job-time-limit.md`: a time limit for each
+      whole build and start, from its start, with the existing failure
+      handling. State the limits in
+      `docs/protocol/workspaces-and-sandboxes.md`, and delete that item.
 
 ## Milestone 6: App shell and workspaces
 
@@ -5088,22 +5416,43 @@ Depends on: 7t
 Apply decision 105 F. Added on 7 November 2026. Merge the primary
 branch after Milestone 8k merges, before the chat changes.
 
-- [ ] Run each turn of a session on the login of the member who started
+- [x] Run each turn of a session on the login of the member who started
       the session, whoever sends the message. A message of any member
       during a running turn joins that turn at once. Update the chat
       protocol and the section "Agent logins in a sandbox" of the access
       protocol, and add a note to decision 49.
-- [ ] Remove the login switch inside a turn from the runner, so that a
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+- [x] Remove the login switch inside a turn from the runner, so that a
       session never changes its login.
-- [ ] Show in the composer whose login the session uses. When the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+- [x] Show in the composer whose login the session uses. When the
       starter's login cannot be used, such as after the starter leaves the
       org or removes the login, a member's message opens a new, empty
       session on the member's own login, with a link to the first session
       (decision 115 A). Draw it in the chat mockups first, and compare the
       screens with them.
-- [ ] Test a second member's message during a turn, and a starter whose
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+- [x] Test a second member's message during a turn, and a starter whose
       login cannot be used, in two tabs. Delete
       `plans/follow-ups/one-sender-per-turn.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-7w`.
+
+Agent calls, 7 November 2026:
+
+- Store the starter from session creation, separate from message senders.
+- Return the target session with each Send or Retry reply. This lets the
+  browser open a linked session before its events arrive.
+- Treat an older session with no known starter as having no usable login.
+  Keep its history. Its next message starts a linked session. The first
+  message cannot prove who created an empty session.
+- Keep accepted input in its session after a later login removal. Use the
+  existing queued failure and running hold. Retry can start a linked
+  session later.
+- Move the request draft with automatic linked-session navigation.
+  Preserve a newer source draft and existing target work. This keeps
+  typing with the accepted message.
+
+Evidence: `.context/boat-native-remote-workspaces/7w/verification.md`.
 
 ## Milestone 7v: Reports after a failed file read
 
@@ -5114,21 +5463,35 @@ Depends on: 7w
 Apply decision 109 D, and the shutdown fix that the review of Milestone
 7u deferred. Added on 7 November 2026.
 
-- [ ] End each runner step after a failed file read or save: a failed
+Implementation note, 7 November 2026: the start event already preceded
+the checkpoint. Acceptance now saves before the session save.
+
+Orchestrator call, 7 November 2026: use optional `true` marks to keep the
+successful payloads. `files.unavailable` keeps the saved tree. Only a
+complete successful full tree clears its mark.
+The runner reuses a pending terminal event with its first number and
+payload, so a later Stop cannot add a second end.
+
+UI call, 7 November 2026: reuse the existing unavailable-data notice.
+The saved-tree notice has no age, because its mark carries no time.
+
+- [x] End each runner step after a failed file read or save: a failed
       turn start sends `turn.failed` with a cause, a failed turn end sends
       its end with a mark that the runner could not read the changed
       files, and a failed scan after a connect still sends `runner.ready`
       with a mark that the tree could not be read. A later scan sends the
       tree. Add the mark to `src/shared/runner.ts`, the fakes, the
-      workspace, and the chat and files protocol docs.
-- [ ] Draw the mark in the mockups: a finished turn whose changed files
+      workspace, and the chat and files protocol docs. Branch: `conductor/boat-native-remote-workspaces-milestone-7v`.
+- [x] Draw the mark in the mockups: a finished turn whose changed files
       could not be read, and a Files panel whose tree could not be read.
-      Then build both screens, and compare each with its mockup.
-- [ ] Save each turn when the runner accepts its command, so that a
+      Then build both screens, and compare each with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-7v`.
+- [x] Save each turn when the runner accepts its command, so that a
       shutdown, Stop, and the next start end it once, as option D of
       `plans/follow-ups/runner-shutdown-pending-turn.md` says. Delete that
-      item.
-- [ ] Delete `plans/follow-ups/runner-file-and-save-errors.md`.
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-7v`.
+- [x] Delete `plans/follow-ups/runner-file-and-save-errors.md`. Branch: `conductor/boat-native-remote-workspaces-milestone-7v`.
+
+Evidence: `.context/boat-native-remote-workspaces/7v/verification.md`.
 
 ## Milestone 8: Chat UI
 
@@ -5338,19 +5701,124 @@ Evidence: `.context/boat-native-remote-workspaces/8l/ui-report.md` and
 
 Depends on: 5, 6, 7, 7r, 8, 8j
 
-- [ ] Wire the app shell, the chat screens, the chat backend, and the
-      runner together, with a real Boat sandbox.
-- [ ] Keep the chat of each workspace that the tab showed in memory, as
+- [x] Wire the app shell, the chat screens, the chat backend, and the
+      runner together. The run with a real Boat sandbox moved to Milestone
+      16a on 9 November 2026, because it needs the deployed app.
+  - [x] Forward the browser chat routes to the object named by the decoded
+        workspace ID, before the outer browser gate.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Forward the versioned runner route with bearer-token lookup and no
+        browser gate. Test queued dispatch, live output, Stop, and token
+        isolation through the production Worker.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Mount the chat in the workspace screen and use the app's JSON client
+        for chat and Mac command requests. Move the components, development
+        pages, and tests to that client, and remove the chat-only transport.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Add a runner archive packager for the existing URL and SHA-256
+        artifact contract. Include the runtime packages and the measurement
+        tools. Document the external archive supply that a build needs.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Map the sandbox token, repository directory, and machine origin to
+        the runner settings in the staged launcher. Insert the shared
+        runner path and keep build and retention starts idle.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Add one script for the real app and sandbox check and the repeated
+        resume measurements in both placements. Check it with local fake
+        endpoints. Keep the real runs open.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Connect durable first-message admission and the chat/lifecycle hooks.
+        Keep lifecycle publication in the chat event queue, and register
+        trusted turns before dispatch.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Serve the shell boot APIs and the workspace list, view, read, open,
+        create, and resume paths needed by chat.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Load the runner artifact and runtime settings. Document each
+        deployment variable and secret for the first deployment.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Restore the first message of an admitted create when its start
+      fails, through one owner in the sending tab. Preserve attachments,
+      the message ID, newer drafts, and other pending submissions. Retry
+      with a new workspace ID. Check a failure after admission with a
+      leave and return in the production browser journey.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Keep the chat of each workspace that the tab showed in memory, as
       decision 87 says. A return to the workspace shows the chat at once,
       then gets only the events after its last event number. A reload or a
       new tab starts empty.
-- [ ] Test the chat end to end: create a workspace, send a message, stream
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Test the chat end to end: create a workspace, send a message, stream
       the answer, stop and resume, and send again.
-- [ ] Measure the first agent start after a resume over several runs,
-      with the runner inside and outside the home folder. Keep the faster
-      place.
-      Moved from Milestone 7r on 6 November 2026, because it needs a real sandbox and real logins.
-      Branch: `conductor/boat-native-remote-workspaces-milestone-7r`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+  - [x] Test unread chat writes, the object gate, and stored and live events
+        through the production Worker and real local objects. Add a local
+        browser harness with fake external services.
+        Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Apply the checked production review fixes 9 B, 10 D, and 11 A.
+      Authorize GitHub from stored running turns and separate preparation
+      access. Keep commands behind their turn. Test account isolation with
+      two signed-in users.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Apply finding 12 F. Read the sandbox's computer stdio entry for
+      each agent start. Start without computer tools and give one warning
+      when the entry is absent. Remove the obsolete computer URL inputs.
+      Keep the org env filtering and start-log masking rules.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+
+Agent calls on 7 November 2026:
+
+- Use `AppServices.api` for the chat, its device controls, and their
+  development pages and tests. Reason: the shell already owns that JSON
+  client, and it supplies no separate fetch function.
+- Keep each shown workspace's model, header notices, and chat controller
+  with the tab's app model and signed-in user. Reason: both workspace
+  streams must retain their cursors, and a return must draw before its
+  open request finishes. A sign-out clears the memory.
+- Keep the shell's start card and sandbox bar in the mounted chat. Reason:
+  the shell's start card shows the required step times.
+- Give kept chats the account, org, models, and members from their existing
+  app owners. Reason: same-tab settings changes must reach the kept chat
+  without a history reload or an older independent reply.
+- Use the same private Node for both measurement placements. Move only
+  the runner and its packages. Reason: the comparison changes runner
+  placement while the runtime stays fixed.
+
+Scope update on 7 November 2026: the primary orchestrator chose option A
+and assigned the production chat/lifecycle integration, shell boot APIs,
+runtime configuration, deployment inputs, and read-mark follow-up record
+to this workspace. This is an ownership call, not a new product decision.
+Milestone 15i still owns the other feature screens. Merge Milestones 4f
+and 7w from the primary branch when they land. Keep their current provider
+and sender-login paths until those merges.
+
+The retry rules from primary commit `822f4bc` and the Conductive rename at
+`61ff6d8` are included. The runner route and launcher use the versioned
+machine paths. No real sandbox or measurement run has completed here.
+
+The app-wide Boat account at `ac05a6c` and the private Node runtime at
+`03af6ce` are included. The archive holds the runner and its runtime
+packages. The image installs Node separately. The live measurement uses
+that same Node for both runner placements. Today's sender-login behavior
+stays until Milestone 7w merges.
+
+Primary Milestone 7w is included through `d923fe0`. Each session now uses
+its starter's login. The production admission passes its checked first
+sender to that session factory. The primary registration at `e58c914`
+keeps decision 130 open and records the later 8m recovery work.
+
+Review summary: finding 2 is addressed with app-owned inputs for each
+kept chat. The regression checks preserve the draft, current login and
+default model, org and member data, and both event cursors.
+
+Evidence: `.context/boat-native-remote-workspaces/8i/worker-report.md`,
+`ui-report.md`, `image-report.md`, `docs-report.md`, `scope-gap.md`, and
+`browser-smoke.json` in the same folder.
+Final scoped reports: `worker-final-report.md`, `image-final-report.md`,
+`ui-fix-2-report.md`, and `docs-final-report.md` in that folder.
+Production completion reports are in its `completion/` folder:
+`workspace-report.md`, `boot-api-report.md`, `runtime-report.md`,
+`browser-report.md`, `browser-verified.md`, and `docs-report.md`.
 
 ## Milestone 8m: Chat fixes from the reviews
 
@@ -5373,16 +5841,68 @@ Apply the `fix after merge` items of the chat. Added on 7 November
       delete that item.
 - [ ] Apply the recorded option of `plans/follow-ups/workspace-read-mark-retry.md`, and
       delete that item.
+- [ ] After Milestone 8i merges, apply option D of the
+      [confirmed runner projection follow-up](https://github.com/Firna-AI/remote-code/blob/d0faa9422c83cab6d7e08ad55dc7cef08d26c4b5/plans/follow-ups/confirmed-runner-projection-retry.md),
+      and delete `plans/follow-ups/confirmed-runner-projection-retry.md`.
+
+
+## Milestone 8n: Hold messages during a first start
+
+Tags: ui
+
+Depends on: none. It runs in parallel with Milestone 8i (PR #42), as the
+user asked on 8 November 2026, and merges the primary branch when 8i
+lands.
+
+Apply decision 130 A. Added on 8 November 2026. A failed first start
+removes the new workspace (decision 91 D), so a message that a member
+sends during the first start must not be accepted before it succeeds.
+
+Implementation calls, 7 November 2026: use the existing creation result
+for server admission. This keeps the resume queue. The chat remembers
+observed start success, so later resume events do not hold its composer.
+
+- [x] Draw the waiting composer in the mockups: during the first start of
+      a new workspace, the composer keeps its text, and Send waits with a
+      short reason. Then build it, and compare it with its mockup.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8n`.
+- [x] Hold the later messages: the server refuses a new message to a
+      workspace whose first start has not succeeded, in every session,
+      with a clear 409 error. A repeat of an accepted request with the
+      same message ID still succeeds. Normal resumes keep their queue
+      (decision 14 A). The user sends the held text when the start
+      succeeds. The app does not send it automatically.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8n`.
+- [x] Update `docs/protocol/chat-and-events.md` and the failed-create rules
+      in `docs/protocol/workspaces-and-sandboxes.md`, with "(decision 130)".
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8n`.
+
+Evidence: `.context/boat-native-remote-workspaces/8n-report.md`.
 
 ## Milestone 16a: First deployment
 
-Depends on: 8i
+Depends on: 8i, 8m
+
+Orchestrator call: finish the chat recovery fixes before the first
+deployment. The confirmed read-mark failure affects normal live output
+and replay in a new tab.
 
 This milestone needs the prerequisites from the user.
 
+- [ ] Use [the deployment input guide](../docs/deployment.md) for each Worker
+      variable and secret, the public runner archive and digest, and the
+      runtime settings given to each workspace.
 - [ ] Deploy the chat path to the user's Cloudflare account, with GitHub
       sign-in, so that the user can work in Conductive.
-- [ ] Smoke-test it with a real Boat sandbox.
+- [ ] Smoke-test it with a real Boat sandbox: run `npm ci --prefix runner`,
+      `npm --prefix runner run build`, `node image/live-check.mjs --prepare`,
+      and `node image/live-check.mjs` with the `LIVE_*` settings of the
+      deployment guide. Moved from Milestone 8i on 9 November 2026.
+- [ ] Measure the first agent start after a resume over several runs,
+      with the runner inside and outside the home folder. Keep the faster
+      place. Moved from Milestone 7r on 6 November 2026 and from Milestone
+      8i on 9 November 2026, because it needs a real sandbox and real
+      logins.
 - [ ] Check that chat survives a restart: send a message before the
       runner connects, deploy again, then check the history, the event
       numbers, and the delivery of the waiting message.
@@ -5904,14 +6424,154 @@ Depends on: 4f, 15j
 Apply the `fix after merge` items of the marketing site and the
 mockups. Added on 7 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/marketing-pictures-one-list.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/marketing-mockup-gaps.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/firna-ui-missing-parts.md`, and
-      delete that item.
+User choice, 7 November 2026: complete the first three items here. Keep the
+shared UI item open. Its change and release belong to `futex-ai/ui` and
+need the user's go-ahead.
+
+Decision 119 moves the shared UI work to Milestone 15n. Its follow-up
+item stays unchanged.
+
+User choice, 8 November 2026: apply decision 121 A here. Disclose the
+GitHub token risk in the access protocol and name the token in the
+privacy page. The orchestrator owns its follow-up item.
+
+Agent calls, 7 November 2026: record consent only for new accounts, without
+inventing consent for existing users. Identify operators by configured,
+immutable GitHub IDs. Keep allocation intent until cleanup can recover a
+lost reply. Capture each picture at its source screen viewport, then clip
+the shared crop, so viewport units keep the screen's layout. Keep the
+desktop agents crop and correct its label, because the screen's menu
+covers one attachment.
+
+Review calls, 7 November 2026: use one persistent owner check for
+interactive sandbox access while a stop waits. Keep history and cleanup
+available. Select an active admin for automatic image starts, while
+cleanup keeps its membership-based admin selection.
+
+Review round 1 choice, 8 November 2026: apply findings 4 C, 5 B and E,
+7 D, 9 C, 10 C, and 11 B. Rearm the alarm after transfer to an active
+owner, and use an owner-specific suspension message.
+
+User choice, 8 November 2026: apply decision 123 E to owner selection and
+the active-admin checks. Apply decision 124 A to the copied workspace
+token risk. Apply decision 126 A to acceptance of a changed Terms
+revision at the next sign-in, within 7 days. Apply decision 125 B: keep
+the current rule that gives a suspended owner's workspaces no disk restart. State
+the rule and the admin reassignment recovery in the suspension protocol.
+
+Agent call, 8 November 2026: move the chat README's report-repair details
+to a linked page, so the README stays below 300 lines. Keep every rule.
+
+- [x] Apply the recorded option of `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply the recorded option of `plans/follow-ups/marketing-pictures-one-list.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply the recorded option of `plans/follow-ups/marketing-mockup-gaps.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Fix the confirmed suspension review findings for interactive sandbox
+      access and automatic image refreshes.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 121 A to the GitHub token risk disclosure and privacy
+      text. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply the approved findings of PR #45 review round 1 and its legal
+      text fixes. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 123 E to the shared active-admin rule, owner
+      selection, and atomic membership writes.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 124 A to the copied workspace token risk disclosure.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 126 A to the changed-Terms sign-in rule.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 125 B to the suspended-owner disk-restart rule and
+      its admin reassignment recovery text.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Merge Milestone 7w, keep both sides' legal facts, and capture the
+      marketing pictures with the desktop agents crop at y 444 and height
+      456. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+
+Evidence: `.context/milestone-15m/reports/`,
+`.context/milestone-15m/marketing-pictures.log`,
+`.context/milestone-15m/picture-dimensions.json`,
+`.context/milestone-15m/preview-smoke.json`,
+`.context/milestone-15m/check.log`,
+`.context/milestone-15m/check-review-fix.log`, and
+`.context/milestone-15m/check-final.log`.
+
+Fix round evidence: `.context/milestone-15m/orchestrator-round1/`.
+
+Final review round, 8 November 2026: apply findings 13 B, 14 E, and 15 B.
+Keep workspace detail and history before a start. Recover pending stops
+after ownership changes. Correct the latest-consent legal copy.
+
+- [x] Draw the refused sandbox notice for finding 13 before its screen
+      implementation. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply finding 13 B to detail, history, owner recovery, and the dead
+      open route. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply finding 14 E to pending stop recovery, owner changes, alarms,
+      and operator results. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply finding 15 B to the latest consent record and privacy text.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+
+Final round evidence: `.context/milestone-15m/orchestrator-round2/`.
+
+Agent calls of the final round, 8 November 2026: keep start failures in a
+separate store, tied to the owner ID. Apply only the confirmed owner from
+an owner-picker reply. Serialize access recovery and owner reconciliation,
+so an older stop cannot remove the new owner's disk alarm. The refused
+notice promises chat history, because decision 125 permits disk expiry.
+
+Documentation call, 8 November 2026: move the long mockup README details
+to linked design and catalogue pages. Preserve every fact and old anchor,
+so the README stays short without changing the screens.
+
+## Milestone 15n: Use the new shared UI parts
+
+Depends on: 15m
+
+Apply option B of decision 119 in this app. It starts when `@firna/ui`
+publishes the parts. Added on 8 November 2026.
+
+- [ ] Update `@firna/ui` to the version that adds the parts of
+      `plans/follow-ups/firna-ui-missing-parts.md`.
+- [ ] Replace the local copies in `docs/mockups/src/components/common/`,
+      `docs/mockups/src/design/`, and the app under `src/` with the
+      library's parts. Keep each screen as its mockup draws it, and compare
+      each changed screen. Delete the follow-up item.
+
+
+## Milestone 15o: Suspend an org
+
+Tags: ui
+
+Depends on: 15m
+
+Apply decision 129: the operator can suspend an org, beside the user
+suspension of Milestone 15m. Added on 8 November 2026.
+
+Design calls of the orchestrator, 8 November 2026:
+
+- The operator suspends an org through the operator route, as for a
+  user.
+- Every cloud computer of the org stops. Its previews, terminals, and
+  runner connections close, its workspace tokens are revoked, and no
+  start, build, or image refresh runs.
+- Members keep their accounts and their other orgs. They can open the
+  suspended org and read its chats. A notice says that the org is
+  suspended, and it gives the abuse address.
+- Nothing in the org can change while it is suspended. A member can
+  still leave.
+- Decision 125 B also holds for the org: its workspaces get no disk
+  restart near day 14.
+
+- [ ] Draw the suspended org in the mockups: the notice in the org and
+      on its workspaces, and the refused actions. Then build the screens,
+      and compare each with its mockup.
+- [ ] Add the org suspension: the operator route, one shared check that
+      every start, build, refresh, connection, preview, tool, and token
+      path uses with the user suspension, and native tests through the
+      production objects.
+- [ ] Add the org suspension to the suspension page of the protocol and
+      to the Terms page.
 
 ## Milestone 15d: Marketing site
 
@@ -6098,7 +6758,7 @@ This milestone needs the prerequisites from the user.
 
 ## Milestone 17: Verification, commit, review, and pull request
 
-Depends on: every other milestone except 15e and 15f
+Depends on: every other milestone except 15e, 15f, and 15n. Milestone 15n waits for a release of `@firna/ui`, so it blocks nothing (the user, 8 November 2026).
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { API_PATHS, orgPath } from '../../src/shared/api'
+import { acceptedTermsSignInPath } from '../../src/shared/terms'
 import { createApp } from '../application'
 import {
   createHarness,
@@ -57,7 +58,7 @@ it('uses the local command origin for gated requests and GitHub sign-in', async 
       error: { code: 'sign_in_required' },
     })
     const signIn = await app.fetch(
-      new Request(`${input.origin}${API_PATHS.githubSignIn}`),
+      new Request(`${input.origin}${acceptedTermsSignInPath()}`),
       env,
     )
     expect(signIn.status, input.origin).toBe(302)
@@ -176,12 +177,22 @@ it('routes site, app, and machine hosts before dispatch', async () => {
     expect(site.status).toBe(404)
     expect(site.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
     for (const input of [
-      { host: TEST_ORIGIN, path: '/', status: 501, surface: 'app' },
+      {
+        host: TEST_ORIGIN,
+        path: '/',
+        status: 501,
+        body: { surface: 'app', status: 'not-implemented' },
+      },
       {
         host: env.MACHINE_ORIGIN,
         path: MACHINE_PATHS.runner,
-        status: 501,
-        surface: 'machine',
+        status: 401,
+        body: {
+          error: {
+            code: 'workspace_token_required',
+            message: 'The connection is not available.',
+          },
+        },
       },
     ]) {
       const response = await app.fetch(
@@ -189,10 +200,7 @@ it('routes site, app, and machine hosts before dispatch', async () => {
         env,
       )
       expect(response.status, input.host).toBe(input.status)
-      expect(await response.json()).toEqual({
-        surface: input.surface,
-        status: 'not-implemented',
-      })
+      expect(await response.json()).toEqual(input.body)
     }
     const unknown = await app.fetch(
       new Request('https://untrusted.test/api/session'),

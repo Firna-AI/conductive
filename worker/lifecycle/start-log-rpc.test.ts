@@ -9,6 +9,8 @@ import { orgEnvironmentContext } from './settings-data'
 import type { WorkspaceStartJob } from './start-types'
 import { workspaceResponse } from './workspace-response'
 import { workspaceLifecycleEndpoint } from './workspace-transport'
+import { readSavedScript } from './saved-script'
+import { serializeStartJob } from './start-job-codec'
 
 let bundle: string
 beforeAll(async () => {
@@ -36,7 +38,7 @@ it('keeps failure logs masked across Worker RPC and storage reloads', async () =
       orgId: 'runtime-org',
       kind: 'create',
       imageName: 'base-runtime-image',
-      startupScript: '',
+      startupScript: readSavedScript(''),
       environmentCiphertext,
       defaultBranch: 'main',
       turnId: 'runtime-log-turn',
@@ -66,7 +68,7 @@ it('keeps failure logs masked across Worker RPC and storage reloads', async () =
       job,
     )
     const actor = fixture.actor(id)
-    expect(await actor.queueLifecycleStart(job)).toBe(true)
+    expect(await actor.queueLifecycleStart(serializeStartJob(job))).toBe(true)
     for (let step = 0; step < 20 && (await actor.checkpoint()); step++)
       await actor.tick()
     expect(await actor.waitCreationLifecycle()).toEqual({ ok: true })
@@ -74,14 +76,16 @@ it('keeps failure logs masked across Worker RPC and storage reloads', async () =
     fixture.boat.commandOutput = 'failed rpc-secret'
     fixture.boat.commandExitCode = 1
     expect(
-      await actor.queueLifecycleStart({
-        ...job,
-        kind: 'resume',
-        phase: 'machine',
-        attempt: 'runtime-log-resume',
-        creation: undefined,
-        allocatedSandboxId: 'bx_1',
-      }),
+      await actor.queueLifecycleStart(
+        serializeStartJob({
+          ...job,
+          kind: 'resume',
+          phase: 'machine',
+          attempt: 'runtime-log-resume',
+          creation: undefined,
+          allocatedSandboxId: 'bx_1',
+        }),
+      ),
     ).toBe(true)
     for (let step = 0; step < 20 && (await actor.checkpoint()); step++)
       await actor.tick()

@@ -28,6 +28,8 @@ export interface FileEntry {
 }
 export interface FileTreeResponse {
   revision: number
+  /** The last scan failed. Entries retain the last complete tree, if any. */
+  unavailable?: true
   /** A full, flat list. Each path is relative to the repository root. */
   entries: readonly FileEntry[]
 }
@@ -47,9 +49,10 @@ export interface FileTreeDelta {
   changes: readonly FileTreeChange[]
 }
 
-/** Browser events contain complete reports. Runner parts use RunnerFileEvent. */
+/** Browser events carry complete reports or unavailable marks. Runner parts use RunnerFileEvent. */
 export type FileEvent =
   | { type: 'files.snapshot'; tree: FileTreeResponse }
+  | { type: 'files.unavailable' }
   | { type: 'files.changed'; delta: FileTreeDelta }
   | { type: 'changes.updated'; changes: ChangesResponse }
 
@@ -109,6 +112,7 @@ export type RunnerChangesPart = ChangesResponse & RunnerFileRevisionPart
  */
 export type RunnerFileEvent =
   | { type: 'files.snapshot'; tree: RunnerFileTreePart }
+  | { type: 'files.unavailable' }
   | { type: 'files.changed'; delta: FileTreeDelta }
   | { type: 'changes.updated'; changes: RunnerChangesPart }
 

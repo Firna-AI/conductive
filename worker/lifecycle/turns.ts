@@ -26,10 +26,6 @@ export class TurnScopes {
     })
   }
 
-  async sender(turnId: string): Promise<string | null> {
-    return (await this.find(turnId))?.senderUserId ?? null
-  }
-
   async find(turnId: string): Promise<PendingTurn | undefined> {
     await this.pending
     return (await this.storage.read()).find((turn) => turn.turnId === turnId)

@@ -40,14 +40,19 @@ describe('client-selected model session IDs', () => {
     const response = await fixture.fetch(
       path,
       request,
-      fixture.ownerCookie,
+      fixture.memberCookie,
       'PUT',
     )
     expect(response.status).toBe(200)
     const created: ChangeModelResponse = await response.json()
     expect(created).toMatchObject({
       created: true,
-      session: { id: '__proto__', choice: CODEX },
+      session: {
+        id: '__proto__',
+        choice: CODEX,
+        startedBy: { id: fixture.member.id },
+        sourceSessionId: null,
+      },
       draft,
     })
     const same = await fixture.fetch(
@@ -59,7 +64,7 @@ describe('client-selected model session IDs', () => {
     expect(same.status).toBe(200)
     expect(await same.json()).toMatchObject({
       created: false,
-      session: { id: source.id },
+      session: { id: source.id, startedBy: { id: fixture.owner.id } },
       draft,
     })
     await fixture.fetch(
@@ -86,7 +91,12 @@ describe('client-selected model session IDs', () => {
       view.session('__proto__'),
     )
     fixture.restart()
-    const retry = await fixture.fetch(path, request, fixture.ownerCookie, 'PUT')
+    const retry = await fixture.fetch(
+      path,
+      request,
+      fixture.memberCookie,
+      'PUT',
+    )
     expect(retry.status).toBe(200)
     expect(await retry.json()).toEqual({ created: true, session, draft })
     expect(await fixture.history('__proto__')).toEqual(history)

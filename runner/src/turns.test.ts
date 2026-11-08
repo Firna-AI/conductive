@@ -154,6 +154,7 @@ it('stops a turn without an error and keeps the session on its original agent', 
     state: 'stopped',
     durationMs: 0,
     files: [],
+    filesUnavailable: true,
     omittedFileCount: 0,
     userMessageIds: ['message-1', 'message-queued'],
   })

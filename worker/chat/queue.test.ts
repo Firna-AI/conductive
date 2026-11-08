@@ -1,7 +1,15 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { sessionPaths } from '../../src/shared/sessions'
-import { createHarness, type TestHarness } from '../test-support/harness'
+import {
+  completeCreationAttempt,
+  registerCreationAttempt,
+} from '../lifecycle/creation-attempt-data'
+import {
+  createHarness,
+  TEST_TIME,
+  type TestHarness,
+} from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
 
 describe('workspace chat queue', () => {
@@ -16,15 +24,43 @@ describe('workspace chat queue', () => {
     await harness.dispose()
   })
 
-  it('keeps queued messages across restart and retries opaque message IDs once', async () => {
+  it('keeps resumed queues across restart and retries opaque message IDs once', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
+    await registerCreationAttempt(harness.env.DB, {
+      id: WORKSPACE_ID,
+      orgId: fixture.org.id,
+      senderUserId: fixture.owner.id,
+      messageId: 'first-message',
+      now: TEST_TIME,
+    })
+    const waiting = await fixture.fetch(
+      sessionPaths.messages(fixture.org.id, WORKSPACE_ID, session.id),
+      {
+        id: '__proto__',
+        text: 'Check this code',
+        choice: CLAUDE,
+        attachmentIds: [],
+      },
+    )
+    expect(waiting.status).toBe(409)
+    await completeCreationAttempt(harness.env.DB, WORKSPACE_ID)
+    await harness.env.DB.prepare(
+      "UPDATE workspaces SET state = 'stopped' WHERE id = ?",
+    )
+      .bind(WORKSPACE_ID)
+      .run()
     const accepted = await fixture.send(session.id, '__proto__')
     expect(accepted.message.state).toBe('queued')
     expect(accepted.turnId).toBeNull()
     const beforeRetry = await fixture.history(session.id)
     expect(await fixture.send(session.id, '__proto__')).toEqual(accepted)
     expect(await fixture.history(session.id)).toEqual(beforeRetry)
+    await harness.env.DB.prepare(
+      "UPDATE workspaces SET state = 'starting' WHERE id = ?",
+    )
+      .bind(WORKSPACE_ID)
+      .run()
     await fixture.send(session.id, 'constructor')
     fixture.restart()
     const runner = await fixture.connect()
@@ -97,7 +133,7 @@ describe('workspace chat queue', () => {
     })
   })
 
-  it('uses each sender login during a turn and on the next turn', async () => {
+  it('uses the starter login during a shared turn and on the next turn', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
     const runner = await fixture.connect()
@@ -126,7 +162,7 @@ describe('workspace chat queue', () => {
     expect(steer.login).toEqual({
       agent: 'claude',
       kind: 'api-key',
-      secret: `secret-${fixture.member.id}-claude`,
+      secret: `secret-${fixture.owner.id}-claude`,
     })
     runner.emit({
       type: 'turn.completed',
@@ -145,7 +181,7 @@ describe('workspace chat queue', () => {
     if (next?.type !== 'turn') throw new Error('Expected the next turn.')
     expect(next.sessionId).toBe(session.id)
     expect(next.turnId).not.toBe(initial.turnId)
-    expect(next.login.secret).toBe(`secret-${fixture.member.id}-claude`)
+    expect(next.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
     expect(JSON.stringify(await fixture.history(session.id))).not.toContain(
       'secret-',
     )

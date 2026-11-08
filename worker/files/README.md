@@ -22,6 +22,10 @@ The projection is the last complete tree and branch changes that the API serves.
 The assembly state holds the stored report parts and the revision progress of the current runner stream.
 Both use storage keys that start with `files:`.
 Keep one instance active in an object.
+An unavailable-tree event marks the stored tree and keeps its entries and revision.
+Before any complete tree, the marked tree has revision zero and no cached entries.
+Only a complete snapshot clears the mark.
+A delta or an incomplete report keeps it.
 
 Runner file events reach this module through one of two integrations.
 The combined integration joins report parts in the runner transaction of the chat backend.
@@ -54,7 +58,7 @@ For each refused file event, the chat backend stores a refusal marker and calls 
 That call discards the incomplete report of the refused kind. A tree delta has the tree kind.
 `storedReportGenerations` gives the newest applied or incomplete revision of a kind, and the revision of its incomplete report.
 The chat backend reads it and the refused report identity before that call.
-The [report repairs](../chat/README.md#report-repairs) compare its stream, revision, and part number with the stored revisions.
+The [report repairs](../chat/report-repairs.md) compare its stream, revision, and part number with the stored revisions.
 The last complete tree and changes stay in the projection while parts are pending or refused.
 The chat backend's `runnerEventStored` hook is a notification after the commit and the confirm.
 It must not apply a file report again.
@@ -105,7 +109,7 @@ It checks sign-in, host, Origin, org membership, workspace ownership, and archiv
 Each org member can read its active workspaces.
 The handler serves the shared tree, content, download, changes, and diff paths.
 It returns the last stored lists while the sandbox sleeps.
-Before the first report, it returns `file_unavailable`.
+Before the first tree report or unavailable-tree mark, it returns `file_unavailable` for the tree.
 
 Required options:
 

@@ -32,6 +32,7 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
       return state.tab
     case 'session':
     case 'new-session':
+    case 'linked-session':
       return undefined
   }
 }
@@ -76,6 +77,7 @@ export function FilesContent(props: {
       edited={!isNew(state)}
       open={open}
       placeholder={placeholder}
+      tree={state.tree}
       view={state.files}
     />
   )

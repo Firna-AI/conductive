@@ -3,9 +3,10 @@
 The web app is the React app under `src/`. `src/app/` holds its data: the
 typed API client, the models that screens read, the router, the event
 stream, and the services that the app gets from outside. `src/shell/` holds
-the screens of the app shell, which Milestone 6 built against the fake API.
-The chat, the files, the tools, and the pull request bar plug into the shell
-as features, as [Composition](#composition) says.
+the screens of the app shell.
+The workspace screen mounts the chat. The files, the tools, and the pull
+request bar plug into the shell as features, as [Composition](#composition)
+says.
 
 ## Run it
 
@@ -20,6 +21,16 @@ as features, as [Composition](#composition) says.
   `?login=none`, or `?deleted=1`. `dev/options.ts` lists them. A new org
   of the dev fake gets every repository of the account's list, and keeps
   its custom initials through rename, delete, and restore.
+- The workspace screen shows the real chat over the dev fake. The fake
+  answers each chat write with a recorded reply, changes no state, and
+  sends no event. So a sent message stays pending, and a new session adds
+  no tab.
+- One counter numbers the events of all workspaces of the dev fake, and its
+  event source ignores the workspace. So after the first event of another
+  workspace, the chat applies no more live events. Use `npm run dev` for
+  the chat load and the kept chat. The
+  [chat development page](../chat/dev/README.md) has a fake with state for
+  live events and writes.
 - The production build uses `live-services.ts`: the Worker on the origin of
   the page, and its event socket.
 
@@ -34,26 +45,30 @@ as features, as [Composition](#composition) says.
 | `features`   | `WorkspaceFeatures` from `../shell/workspace/features.ts`: the workspace parts |
 
 The workspace screen draws the frame, the header, the start steps, the
-Archive question, and the states of the sandbox. Each feature is a function
+Archive question, and the states of the sandbox. The real chat fills the
+centre by default. The `tabs`, `transcript`, and `composer` slots replace it
+with the shell's own chat column, as
+[The chat of the workspace](../shell/workspace/README.md#the-chat-of-the-workspace)
+says. Each feature is a function
 of `WorkspaceContext`, which gives the org, the workspace, the viewer, the
 sandbox state, the layout, the address after the workspace, the ordered
 event stream, and the Archive action. A missing feature leaves its place
 empty.
 
-| Feature       | Place                                         | Milestone |
-| ------------- | --------------------------------------------- | --------- |
-| `tabs`        | The session and file tabs of the centre       | 8         |
-| `transcript`  | The chat history, before the start steps      | 8         |
-| `composer`    | The composer while the sandbox runs or starts | 8         |
-| `center`      | A file or diff tab in place of the chat       | 10        |
-| `files`       | All files, Changes, and Checks                | 10 and 14 |
-| `tools`       | Terminal, Preview, and Desktop                | 12        |
-| `pullRequest` | The pull request bar, or the row on a phone   | 14        |
-| `owner`       | The owner picker that reassigns a workspace   | 15c       |
+| Feature       | Place |
+| ------------- | ----- |
+| `tabs`        | The tabs of the shell's own chat column, in place of the chat |
+| `transcript`  | The history of that column, before the start steps |
+| `composer`    | The composer of that column while the sandbox runs or starts |
+| `center`      | A file or diff tab in place of the chat |
+| `files`       | All files, Changes, and Checks |
+| `tools`       | Terminal, Preview, and Desktop |
+| `pullRequest` | The pull request bar, or the row on a phone |
+| `owner`       | The owner picker that reassigns a workspace |
 
 The Members tab of the org settings is `MembersTab` in
-`../shell/settings/`. It shows the members read-only, and Milestone 15c adds
-the invite, the roles, and the removal there.
+`../shell/settings/`. It shows the members read-only. Invite, role changes,
+and removal are not wired into this tab yet.
 
 ## Data lifecycle
 
@@ -89,12 +104,46 @@ the invite, the roles, and the removal there.
   before a later remove of the same repository.
 - A Resume reply keeps each newer field change that arrived while its
   request ran. A reply after close changes no workspace state.
+- An admitted create stays in `OrgModel.creations` until its start ends.
+  A failed start takes the workspace out of the list, and gives the first
+  message back in a form of its own. A sign-out, or a sign-in of another
+  person, forgets every create.
+  [Creation recovery](creation-recovery.md) gives the rules.
+- The tab keeps the `WorkspaceModel` of each workspace that it showed, for
+  the signed-in user, as
+  [The kept workspace](../shell/workspace/README.md#the-kept-workspace)
+  says. A return opens the model again, and its stream starts after its
+  last event number. A sign-out, or a sign-in of another user, closes and
+  forgets every kept model.
+- An open reads the workspace detail, shows it, and starts the event
+  stream. Only then does a stopped or failed workspace get its Resume. So
+  a refused or failed start keeps the detail and the stream, and
+  `startError` of `WorkspaceModel` holds the error. A manual Resume still
+  rejects for its caller.
+- A `user_suspended` refusal holds only while the owner stays the same. A
+  new owner in the detail, or from `reassigned(workspace)`, clears it. A
+  late refusal for a former owner sets nothing.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.
 - The Cloud computer tab follows the builds while it shows. When the newest
   build ends, by any path, the tab reads the settings again, because the
   server changes them at a build, such as `needsBuild`.
+- While the tab shows, `ComputerModel` owns one `BuildLogFollower` for the
+  log of the newest build that runs or failed. A newer build replaces the
+  follower, so an answer for an older build changes neither the log nor
+  the timer. When the builds show the end of the build before the log
+  does, the follower reads the final log. When this update arrives during
+  an active read, the follower keeps it. After that read, the follower
+  reads again, unless that answer already shows the new state.
+- Each read of the follower gets the build details at `buildPath`: the
+  build with its full log, in one answer. The follower takes the state and
+  the lines from the same answer, never from two reads. The follower sends
+  this read at the start, on its timer, for Try again, and when the builds
+  show a new state. While a read runs, a new read waits for its answer and
+  sends nothing. The Worker also serves an event stream of each build, as
+  the [lifecycle routes](../../worker/lifecycle/README.md#browser-routes)
+  say. The app does not read it.
 - The read mark of an open workspace follows the applied state, the
   number of the newest event, and the visibility of the page, so their
   order does not count. A hidden page sends no read mark. When the page
@@ -114,48 +163,9 @@ the invite, the roles, and the removal there.
 
 ## Screens
 
-- The app runs every cloud computer in its own Boat account, so no org has
-  a Boat key. The app has no key screen, tab, notice, or Get started step,
-  and no text of the app names Boat.
-- Get started has three steps: the GitHub App, the first org, and Claude or
-  Codex. A reply of the API names only these steps.
-- Create org asks for the name and the initials, and lists the
-  repositories that the person and the GitHub App both reach, from
-  `AccountModel.repositories`, before the org exists. The create sends the
-  GitHub IDs of the chosen ones.
-- The rail, the org switcher, and General show the saved initials of an
-  org. An org without them shows the initials of its name.
-- The Cloud computer tab names the software of the base image from the
-  settings reply. An older reply without it names no software.
-- A step of a panel, by a key or a drag, starts from the width that the
-  panel shows. It stays in a range that holds that width, so a shrink
-  never widens a panel that the layout shows narrower than its range. A
-  step that ends at its start width stores nothing.
-- A sheet or a dialog makes the rest of its frame inert through
-  `OverlayHost`. It keeps Tab and Shift+Tab inside, also from the layer
-  itself and from a text field. When it closes, the frame is active again
-  before the focus goes back to the trigger. A desktop menu leaves the
-  frame active.
-- A move of a workspace row by keys keeps the focus on the row. The list
-  gives back only a lost focus, as a layer does: when a render takes the
-  focused row link out of the page and the focus falls to the page, the
-  new link of the same workspace takes it, also after a failed move puts
-  the row back. When the user moves the focus away, a later read of the
-  list leaves the focus there.
-- An editor of a saved value, such as a script or the org name, stays
-  mounted through its saves (`useSavedDraft`). When the saved value
-  changes, a draft that the user did not change takes the new value, and
-  an edited draft stays. A draft that equals the one that went out for a
-  save takes the value of the answer. A failed save keeps the draft.
-- Save keeps the focus when a save leaves nothing to save
-  (`ActionButton` with `keepFocus`). A browser takes the focus from a
-  natively disabled button, so Save stays a native button while it has
-  the focus: it looks off, its wrapper says `aria-disabled`, and a press
-  does nothing. When the focus leaves, Save is natively disabled.
-- New workspace sends and uploads one at a time: the create waits for the
-  files, and the paperclip is off while the create runs. Send and Try
-  again read one readiness: the text, the files, the agent login, the
-  repository, and the model.
+[Screens](screens.md) gives the rules of the screens of the app shell:
+the account and Get started, sign-in, orgs, panels and layers, the
+focus, saved drafts, and New workspace.
 
 ## Rules for this code
 
@@ -168,11 +178,12 @@ the invite, the roles, and the removal there.
   the save. No answer brings a stored secret back.
 - The browser keeps only the panel widths (`panels.ts`). A browser that
   refuses its storage keeps them until the page closes.
-- The open of a workspace, its read mark, the Archive check, the poll of a
-  build log, and the settings reads of the Cloud computer tab count a
-  generation. An answer that arrives after their screen closed or the user
-  cancelled starts no stream, writes no older state, opens no question,
-  and schedules no request.
+- The open of a workspace, its read mark, the Archive check, and the
+  settings reads of the Cloud computer tab count a generation. An answer
+  that arrives after their screen closed or the user cancelled starts no
+  stream, writes no older state, opens no question, and schedules no
+  request. One follower owns the requests and the timer of a build log.
+  After it stops, an answer changes nothing and schedules nothing.
 - Timers, the focus, the visibility, and the input of the page come from
   `AppServices` (`delay`, `onFocus`, `visible`, and `onInput`), so that no
   unit test runs a real timer or needs a browser page. The browser hears
@@ -213,9 +224,14 @@ clicks, types, and lets the answers of the fake API settle.
   while screens show it.
 - `section-actions.ts`, `list-changes.ts`, and `sections.ts`: the list
   writes, their changes, moves, and the Archived group.
-- `workspace-model.ts` and `archive-model.ts`: an open workspace and Archive.
+- `workspace-model.ts` and `archive-model.ts`: an open workspace, its
+  `startError` and `reassigned`, and Archive.
 - `new-workspace-model.ts`: the first message that creates a workspace.
+  `creations.ts`: `Creations`, the admitted creates of an org in this tab,
+  and `failedCreate`, which tells a create whose start failed.
 - `computer-model.ts`: the scripts, the env vars, the builds, and the log.
+- `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
+  the log of one build.
 - `events.ts`: the ordered event stream and the event socket.
 - `workspace-store.ts`: `useWorkspaceStore`, which gives a connected view
   the store of its workspace, and the `create` and `connect` functions that

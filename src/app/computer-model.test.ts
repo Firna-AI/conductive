@@ -1,9 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import {
-  buildEventsPath,
-  buildPath,
-  orgSettingsPaths,
-} from '../shared/org-settings'
+import { buildPath, orgSettingsPaths } from '../shared/org-settings'
 import type { FetchLike } from './api/client'
 import { FakeApiServer } from '../test-support/fake-api'
 import {
@@ -57,6 +53,8 @@ async function buildingTab(server: FakeApiServer, fetch?: FetchLike) {
   computer.start()
   await flushMicrotasks()
   await computer.startBuild()
+  // The tab follows the new build: its log answers, and the timer waits.
+  await flushMicrotasks()
   return { model, computer, delay }
 }
 
@@ -69,17 +67,22 @@ function buildSucceeds(server: FakeApiServer): void {
 describe('ComputerModel', () => {
   test('a log refresh that answers after stop schedules no more requests', async () => {
     const server = new FakeApiServer()
+    server.json('GET', buildsPath, {
+      builds: [running.build],
+      currentImageBuildId: null,
+    })
     server.json('GET', buildPath(org, FAKE_IDS.build), running)
     const held = new HeldRequests(server)
     const delay = new ManualDelay()
     const model = new OrgModel(testServices(server, { fetch: held.fetch }), org)
     const computer = new ComputerModel(model, delay.delay)
-    await computer.showLog(running.build)
+    computer.start()
+    await flushMicrotasks()
     expect(delay.pending).toBe(1)
-    held.hold('GET', buildEventsPath(org, FAKE_IDS.build))
+    held.hold('GET', buildPath(org, FAKE_IDS.build))
     const refreshing = delay.runAll()
     computer.stop()
-    held.release('GET', buildEventsPath(org, FAKE_IDS.build))
+    held.release('GET', buildPath(org, FAKE_IDS.build))
     await refreshing
     expect(delay.pending).toBe(0)
   })
@@ -141,9 +144,8 @@ describe('ComputerModel', () => {
     buildSucceeds(server)
     held.hold('GET', buildsPath)
     const reopened = new ComputerModel(model, new ManualDelay().delay)
+    // The tab follows the log of the build that it still shows as running.
     reopened.start()
-    // The card asks for the log of the build that it still shows as running.
-    await reopened.showLog(running.build)
     await flushMicrotasks()
     const builds = valueOf(model.builds.get())
     expect({

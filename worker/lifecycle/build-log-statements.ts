@@ -1,3 +1,5 @@
+import { buildLogRetentionStatements } from './build-log-retention'
+
 const LOG_ROW_BYTES = 262_144
 
 /** Slice the original string only between complete UTF-8 characters. */
@@ -28,12 +30,15 @@ export function buildLogStatements(
   text: string,
   now: number,
 ): D1PreparedStatement[] {
-  return splitLog(text).map((chunk) =>
-    db
-      .prepare(
-        `INSERT INTO image_build_logs (build_id, event_number, occurred_at, text)
+  return [
+    ...splitLog(text).map((chunk) =>
+      db
+        .prepare(
+          `INSERT INTO image_build_logs (build_id, event_number, occurred_at, text)
      SELECT ?, COALESCE(MAX(event_number), 0) + 1, ?, ? FROM image_build_logs WHERE build_id = ?`,
-      )
-      .bind(buildId, now, chunk, buildId),
-  )
+        )
+        .bind(buildId, now, chunk, buildId),
+    ),
+    ...buildLogRetentionStatements(db, buildId, now),
+  ]
 }

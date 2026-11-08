@@ -3,18 +3,27 @@
 The chat of a workspace: the session tabs with the session history, and the
 chat of the open session with its composer. It shows messages, folded tool
 calls, the running turn, steer, Stop, failures with Try again, the start
-steps of the sandbox, the Mac commands of each turn, and the bar that takes
-the composer's place while the sandbox does not run. It builds against the
-fake API and the recorded chat events of `src/test-support/`. No app screen
-mounts it yet.
+steps of the sandbox, the wait of Send during the first start of a new
+workspace, the Mac commands of each turn, and the bar that takes the
+composer's place while the sandbox does not run. The workspace screen
+of the app shell mounts it by default, as
+[the workspace screen](../shell/workspace/README.md#the-chat-of-the-workspace)
+says. It builds against the fake API and the recorded chat events of
+`src/test-support/`.
 
 ## Use it in the app
+
+The tab keeps one `ChatController` for each workspace that it showed. The
+workspace screen draws it with `WorkspaceChatView`, as
+[A chat that the app keeps](#a-chat-that-the-app-keeps) says. A part that
+needs a chat of its own mounts `WorkspaceChat`, which makes, starts, and
+stops its own controller:
 
 ```tsx
 <WorkspaceChat
   orgId={orgId}
   workspaceId={workspaceId}
-  fetch={appFetch}
+  client={services.api}
   subscribe={openWorkspaceEvents}
   viewport={phone ? 'mobile' : 'desktop'}
   onWorkspaceChange={(workspace) => showInHeader(workspace)}
@@ -24,16 +33,23 @@ mounts it yet.
 />
 ```
 
-- `fetch` and `subscribe` must be stable functions. A new one starts a new
-  chat, so give the component a module function or a memoized one.
+- `client` and `subscribe` must be stable. A new one starts a new chat.
+  `client` is an `ApiClient`: `AppServices.api` in the app, or one from
+  `createApiClient` over a fake.
+- Each call of the chat goes through that client. A failure shows the
+  message of its `ApiError`, such as the message of the Worker. A reply that
+  a reader of the chat refuses shows "The request failed. Try again."
 - `subscribe(target, afterEventNumber, listener)` opens the stream of
-  `workspaceEventsPath` after the event number. It gives each message to
-  `listener.message`, the stored history first, and calls `listener.closed()`
-  when the connection drops. The chat checks each message as `unknown`.
+  `workspaceEventsPath` after the event number. In the app, it opens
+  `AppServices.events`. It gives each message to `listener.message`, the
+  stored history first, and calls `listener.closed()` when the connection
+  drops. The chat checks each message as `unknown`.
 - The chat reads the signed-in user from the account route and the members
-  of the org from the members route. A stopped turn then says "You stopped
-  the agent" to the member who pressed Stop, and names that member to the
-  others. When the members do not load, it names nobody but the reader.
+  of the org from the members route, or it takes both from its `sources`,
+  as [A chat that the app keeps](#a-chat-that-the-app-keeps) says. A
+  stopped turn then says "You stopped the agent" to the member who pressed
+  Stop, and names that member to the others. When the members do not load,
+  it names nobody but the reader.
 - `onWorkspaceChange` gets the workspace record after each change: its state,
   and the title that the agent writes through `workspace.title` and
   `workspace.updated` events. The header and the list of the app show it.
@@ -42,6 +58,9 @@ mounts it yet.
   has the workspace name, and the agent's title renames both. The
   development page does the same.
 - `extraTabs` takes `<li>` tabs, such as open files, after the session tabs.
+- `host` takes the start steps and the sandbox bar that the app draws, as
+  `ChatHost` in `components/SessionChat.tsx` says. The chat places them.
+  Without a host, the chat draws both from its own record of the workspace.
 - Render the chat inside the Firna theme provider and the Graphite token CSS
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position. A dialog or a sheet covers the nearest
@@ -60,53 +79,44 @@ mounts it yet.
   unmount. When a new controller replaces it, the hook stops the old
   controller before the new controller starts.
 
+### A chat that the app keeps
+
+`WorkspaceChatView` draws a `ChatController` that the app keeps, such as
+across the pages of a tab. It takes the props of `WorkspaceChat` other than
+the connection. The app makes the controller with a stable `client` and
+`subscribe`, and calls `show` and `hide` itself:
+
+- The first `show` loads the chat, as `start` does. A `show` after a failed
+  load loads it again.
+- A later `show` opens the stream again after its cursor. So the chat shows
+  at once, and it reads no history, no session list, and no view again.
+- `hide` closes the stream while the app shows another page. The chat keeps
+  its sessions, drafts, transcripts, and cursor. Actions and loads that run
+  still finish.
+- A load that ends while the chat is hidden opens no stream until the next
+  `show`.
+- `stop` ends the controller, as at a sign-out. Late replies then change
+  nothing.
+
+The app can also give the controller `sources`, a `ChatSources` from
+`state/sources.ts`. It gives the account, the org, the models, and the
+members from the models of the app.
+
+- With sources, the load sends none of these four reads and writes none of
+  these values. So no reply of an old read replaces a newer value of the
+  app. The view read stays.
+- Each change of a source shows at once, also while the chat is hidden. So
+  a login that the account screen saves shows in a kept chat on a return.
+- `start` copies the sources into the snapshot and follows them. `stop`
+  ends the subscriptions. `hide` and `show` keep them.
+- A chat without sources reads the four values at each load.
+
 ## Rules for this code
 
-- The stream cursor spans the whole workspace: every session, file, and
-  workspace event. It drops a resent event, holds an event after a gap until
-  the gap fills, and ignores the events of another workspace.
-- Each session keeps its own event log. A session that opens later loads its
-  full stored history, whose numbers can be older than the stream's cursor,
-  so a history never goes through the stream's duplicate check.
-- Browser readers preserve the required tool-detail and turn-file omission counts.
-  These new counts are non-negative safe integers. Missing counts make an event unreadable.
-- Tool transcript items keep `tool.omittedDetailBytes`.
-  `Transcript.turnCompletions` keeps each completion event by turn ID, including stopped completions and `omittedFileCount`.
-- A tool call shows the size of output that the runner left out, such as "1.2 MB left out".
-  A folded run of calls shows the total of its calls' current counts, so a finished run still names it.
-- A finished turn ends its file list with the files that the runner left out, such as "47 more files".
-  A stopped line adds the count of its stopped completion: "You stopped the agent · 5 changed files not listed".
-  The counts come from `turnCompletions`. A zero count shows nothing.
-- Each refusal marker of a session becomes one `lost` item at its place among the events, which shows one line.
-  The transcript keeps the marker only in that item. A repeat of the same marker replaces its item.
-  The line names the lost data and the reason in plain words, and never the stream, number, or event type.
-  No line says "this turn", because a line can follow a newer turn.
-  Nullable turn context stays intact. Markers without a session stay outside per-session logs.
-  The chat keeps no marker without a session, and shows nothing after such a loss.
-  A notice beside the data shows only when the fresh full report that repairs it is lost too. The chat builds no such notice.
-- `Transcript.turns` lists the turns that accepted events named, in the order of their first event, and whether each one ended.
-  The last one is the newest turn. A turn ends with its completion or failure, with a refused end while it runs, or when a newer turn starts.
-- Each item stays with its turn: before any request or item of a later turn, and before a message that no turn has taken yet.
-- An accepted event of a turn that has ended shows inside that turn, before the row where the turn ended.
-  It brings back no Working row and no Stop, and it changes neither a running turn nor the newest turn.
-  A running tool of an ended turn shows as stopped. The files of a late end show as a file row, and the stopped line keeps its member.
-- A refusal marker starts no turn. A refused `turn.completed` or `turn.failed` ends its turn only while that turn runs.
-  Its running calls show as stopped, its Stop request clears, and no time, files, or Try again appear.
-  A marker of an ended turn, of a turn that never started, or without a turn ends nothing.
-- Try again shows only on the failed item that names the retry message of the newest session record, as
-  [Messages](../../docs/protocol/chat-and-events.md#messages) says. The order of the transcript items gives no permission.
-  A read-only chat offers no Try again.
-- Each session log takes the `session.updated` records of its session with its other events.
-  It keeps the `retryMessageId` of the record with the highest event number as `Transcript.retryMessageId`.
-  So a record that arrives late, such as in a history load, never brings back an older Try again or hides a newer one.
-- `SessionLog.takeListed` takes the record of the session list that the chat reads after the history.
-  That record counts at the event number that the stream starts after.
-  When the log already holds a newer record, the listed record changes nothing. A later `session.updated` event replaces it.
-- `retryItemId` picks one failed item. A turn that continues the unanswered messages of a finished turn takes their IDs.
-  So a late failure of the older turn can name the same message. Then only the item of the newer known turn offers Try again.
-- The Worker refuses an old Try again, such as from a second tab that missed newer events, with `409 retry_not_available`.
-  The chat then shows the notice "The turn didn't restart" with the Worker's plain message.
-- Ordered history folding preserves these fields and lines across completion and failure events.
+- [Transcript rules](transcript.md) give the rules of the stream cursor,
+  the session logs, the transcript items and their counts, the changed
+  files that the cloud computer could not read, the lost lines, the turns,
+  and Try again.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
   stream. One load runs at a time for each session, and a failed load waits
@@ -123,14 +133,8 @@ mounts it yet.
   change, so a closed session stays closed. The controller's `select`,
   `requestClose`, and `reopen` take this path while the workspace is
   archived, and the server path otherwise.
-- Each draft has an identity. When a model of the other agent moves the draft
-  to a new session, its files that still upload and its send in flight
-  finish on the draft there.
-- The chat chooses the ID of that new session, so the draft moves in the
-  same snapshot that first shows the session, from the stream or from the
-  reply. A later record or reply never moves a draft again, so a tab that
-  the user types in keeps its text. The reply then removes the sent files
-  that the backend did not keep from the draft that moved, wherever it is.
+- [Sessions, logins, and drafts](sessions.md) give the rules of the draft
+  moves, the login of each session, and the linked sessions.
 - A Stop request records the member who pressed Stop, and ends nothing. The
   turn ends when its end says stopped. A stop with no request names nobody:
   "The agent stopped".
@@ -142,12 +146,31 @@ mounts it yet.
   after an action, such as a view save, the focus, or a free Resume button,
   still run when its reply is older. The retry message is the exception: the
   session log orders its records by event number, as the rules above say.
+- Send waits in every session until the records show that the first start
+  of the workspace succeeded. The Worker refuses each new message until
+  then, as [Messages](../../docs/protocol/chat-and-events.md#messages) says.
+  The box keeps each draft, and the reason shows beside Send: "You can send
+  when the sandbox is ready", from the mockups' `SendWait`.
+- A state that the Worker sets only after that start shows the success:
+  ready, working, input, or unread. The record of a resume shows it too. A
+  stop or an error does not, because a first start can stop or fail before
+  it succeeds.
+- The chat remembers the success. So a resume never waits, also when its
+  workspace record comes before its start record, while the record of the
+  first start still shows. A message during a resume goes, and the
+  workspace queues it for the sandbox.
+- No draft sends on its own when the start succeeds. The user sends it.
+- A send that the Worker refuses with `409 workspace_starting` keeps its
+  text, its files, and its message ID. The notice "Your message didn't send"
+  shows the Worker's plain message.
 - The chat loads the session list and the view, then the full history of the
   shown session, then the workspace and the session list again. The stream
   starts after the history's `throughEventNumber`, so no change between the
   reads and the stream gets lost.
 - The chat writes no browser storage. The drafts stay in memory, and the
-  server keeps the open tabs through the view route.
+  server keeps the open tabs through the view route. A kept controller
+  lives only in the memory of its tab, so a reload or a new tab starts
+  empty.
 - [The Mac commands](device/README.md) hold the rules of the requests,
   their answers, and the settings of the Mac.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
@@ -166,71 +189,50 @@ mounts it yet.
 
 ## Development page
 
-Run the page from the repository root:
-
-```sh
-npx vite --config src/chat/dev/vite.config.js --port 5181 --strictPort
-```
-
-Then open `http://127.0.0.1:5181/src/chat/dev/`. This Vite configuration
-serves the page with React on the fake API alone, without the Worker and its
-sign-in gate.
-
-The address chooses the state. The first value of each option is the default:
-
-| Option | Values |
-| --- | --- |
-| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `loss` (left-out output and files, lost events, and a lost turn end) |
-| `workspace` | `existing`, `new` (Lisbon, which starts) |
-| `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
-| `role` | `admin`, `member` |
-| `login` | `on`, `off` |
-| `replay` | `stored`, `live` (the recorded chat arrives event by event) |
-| `viewport` | `desktop`, `mobile` |
-| `scheme` | `dark`, `light` |
-| `clock` | `running`, `frozen` |
-| `mac` | `none`, `waiting`, `longer`, `several`, `many` (four requests, the first a long script), `running`, `denied`, `done`, `exit-code`, `cut`, `timed-out`, `failed`, `unavailable`, `literal` (a two-line command and a U+00A0 command, also saved) |
-| `app` | `browser`, `mac` (the Mac app on the Mac that got the requests) |
-| `change` | `done`, `done-not-saved`, `failed` (what the page's Mac does with a change of its settings) |
-| `page` | `chat`, `this-mac` (the This Mac section of the account) |
-
-The desktop page keeps the mockup's columns, so the chat column is 718 px wide
-in a 1440 px window. The buttons of the page make the sandbox ready, stop it,
-fail its start, write the title, drop the connection, resend the last event,
-send two parts out of order, and connect the Mac again under a new pairing,
-whose next read the page then makes. Writes of the page change the fake's state:
-new sessions, rename, close, reopen, messages, steer, Stop, Try again, model
-changes, uploads, Resume, and the view. As in the Worker, Try again sends the
-message that the session record names again, as a new message. It refuses
-each other message with 409. Each accepted message sets that record's
-`retryMessageId` to null. A model change opens its session under the ID that
-the chat chose. Stop and the close of a running tab
-record the member of the `role` option as the one who pressed Stop. Stop
-the sandbox ends a running turn with no Stop request. With `app=mac`, the
-page's Mac acts on each answer: Deny ends the request, and the other choices
-run the command and keep the choice. The bar of the 15 minutes shows above
-the header while they run. The Mac refuses a change of an older pairing, as
-the Worker does.
+The [development page README](dev/README.md) gives the command that runs
+the page, the options of its address, and what the page does. The page
+shows the chat on a fake API with state, with no Worker. `npm run dev` also
+shows the chat, in the whole app, with the limits that
+[Run it](../app/README.md#run-it) gives.
 
 ## Tests
 
 Run `npm run test -- src/chat`. The tests drive the controller and the stream
 on `FakeApiServer` and the recorded events, and render the chat with
-`react-dom/server`. `state/test-kit.ts` holds their helpers.
+`react-dom/server`. `state/test-kit.ts` holds their helpers. The
+[workspace screen](../shell/workspace/README.md#key-code) tests the kept
+chat in the whole app.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
+`state/linked-replies.test.tsx` drives replies of Send and Try again that
+name a linked session, in both orders, and two chats with different readers
+on one fake stream. `components/SessionLogin.test.tsx` renders the login
+line and its notices. `components/SourceLink.dom.test.tsx` presses the link
+of a linked session to its open and its closed source. In an archived
+workspace, it opens a linked session that closed before the archive from the
+session history. Its source link writes nothing.
+`state/first-start.test.ts` drives Send in two sessions during the first
+start, a stop before its success, and a resume whose workspace record comes
+first. It also checks a send that the Worker refuses during the first start.
+`components/FirstStart.dom.test.tsx` mounts the chat during the first start,
+presses Enter, and then sends after the start succeeds.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
 
 ### Key code
 
-- `WorkspaceChat.tsx`: the integration component and its callbacks.
+- `WorkspaceChat.tsx`: `WorkspaceChat`, which owns its controller, and
+  `WorkspaceChatView`, which draws a kept one, with their callbacks.
 - `useChatController.ts`: the controller of one workspace and its snapshot,
   through `useWorkspaceStore`.
 - `state/controller.ts`: `ChatController`, the public boundary of the chat
-  state and its actions.
+  state and its actions, with `show` and `hide` for a kept chat.
+- `components/SessionChat.tsx`: the chat of the open session, and
+  `ChatHost`, the start steps and the sandbox bar that the app can draw.
 - `state/load.ts`: the order of the first reads and the stream start.
+- `state/sources.ts`: `ChatSources`, the app values that a kept chat
+  follows in place of its own reads.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
 - `state/session-log.ts`: the event log of each session, with the retry
   message of its newest record and `takeListed` for the session list.
@@ -250,21 +252,31 @@ check in the Mac app.
   that first shows the new session.
 - `state/session-records.ts`: the local versions of the session records and
   of the workspace record.
+- `state/first-start.ts`: the success of the first start of the workspace,
+  which the snapshot remembers, and the wait of Send until then.
+- `state/session-login.ts`: whose login a message uses, from the session
+  record and the reader, and the words of the line under the composer.
+- `state/linked-replies.ts`: the message and the focus of a reply that names
+  a linked session.
+- `components/SourceLine.tsx`: the line that links a linked session to its
+  source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
   event from the mockups' `lostCopy.ts`.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
-  and the reconnect of the workspace stream.
+  the reconnect, and the `hold` and `release` of the workspace stream.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
-  route builders, and the readers of their responses.
+  route builders and the app's `ApiClient`, and the readers of their
+  responses.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
 - `device/`: the Mac commands. Their [README](device/README.md) names
   their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its
-  Mac, and the `loss` scenario in `dev/dev-loss.ts`.
+  Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
+  in `dev/dev-logins.ts`.
 
 
 ### Related docs

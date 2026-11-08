@@ -45,10 +45,31 @@ export class AppModel {
   readonly services: AppServices
   private readonly orgModels = new Map<string, OrgModel>()
   private started = false
+  /** The person of the last ready boot, whose creates the org models keep. */
+  private userId: string | null = null
 
   constructor(services: AppServices) {
     this.services = services
     this.account = new AccountModel(services, this)
+    // The model lives as long as its store, so it never unsubscribes.
+    this.boot.subscribe(() => this.followPerson())
+  }
+
+  /**
+   * A sign-out, or a sign-in of another person, forgets the admitted
+   * creates of every org, with the messages that they keep.
+   */
+  private followPerson(): void {
+    const boot = this.boot.get()
+    const person = boot.state === 'ready' ? boot.user.id : null
+    if (
+      boot.state !== 'signed-out' &&
+      (person === null || person === this.userId)
+    ) {
+      return
+    }
+    for (const org of this.orgModels.values()) org.creations.clear()
+    this.userId = person
   }
 
   /** Starts the first load once, also when React runs an effect twice. */
