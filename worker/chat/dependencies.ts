@@ -1,4 +1,5 @@
 import type { AppEnv } from '../env'
+import { runnerTokenAllowed } from '../data/workspace-token-access'
 import { HttpError } from '../http'
 import { randomToken } from '../security/crypto'
 import {
@@ -23,6 +24,9 @@ export function chatDependencies(
   return {
     now: Date.now,
     scheduleBrowserCheck: scheduleConnectionCheck,
+    scheduleRunnerCheck: scheduleConnectionCheck,
+    readRunnerAccess: (id, tokenHash) =>
+      runnerTokenAllowed(env.DB, id, tokenHash),
     readConnectionAccess: (tabs, now) =>
       readConnectionAccess(env.DB, tabs, now),
     firstStartIncomplete: (id) => firstStartIncomplete(env.DB, id),

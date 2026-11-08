@@ -10,7 +10,7 @@ export const reassign = defineScreen({
   description:
     'The header names the owner of the workspace, Cal. An admin of the org opens the menu and picks another member to own it. The menu says that each session runs on the agent login of the member who started it. On a phone the owner is an avatar in the header, and the menu is a sheet.',
   rationale:
-    'The user decided on 5 November 2026 that each workspace belongs to the member who created it until an admin of the org reassigns it. The user chose option F of decision 105 on 7 November 2026, which changes option D of decision 49 for sessions: each session runs on the login of the member who started it. So a new owner changes no login, and the cloud computer keeps running. A member who is not an admin sees the owner without the menu.',
+    'The user decided on 5 November 2026 that each workspace belongs to the member who created it until an admin of the org reassigns it. The user chose option F of decision 105 on 7 November 2026, which changes option D of decision 49 for sessions: each session runs on the login of the member who started it. So a new owner changes no login, and the cloud computer keeps running. One exception: a workspace whose stop for a suspended owner has not finished still stops. A member who is not an admin sees the owner without the menu.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, overlay: 'reassign' },

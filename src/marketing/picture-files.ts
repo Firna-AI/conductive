@@ -1,4 +1,9 @@
 /// <reference types="vite/client" />
+import type {
+  MarketingPictureKey,
+  PictureLayout,
+  PictureScheme,
+} from '../../docs/mockups/src/screens/marketingPictureList'
 import agentsDesktopDark from './pictures/agents-desktop-dark.webp'
 import agentsDesktopLight from './pictures/agents-desktop-light.webp'
 import agentsMobileDark from './pictures/agents-mobile-dark.webp'
@@ -26,14 +31,10 @@ import toolsDesktopLight from './pictures/tools-desktop-light.webp'
 import toolsMobileDark from './pictures/tools-mobile-dark.webp'
 import toolsMobileLight from './pictures/tools-mobile-light.webp'
 
-/** A still picture in both colour schemes: the address of each file. */
-export type SchemeFiles = { readonly dark: string; readonly light: string }
-
-/** One picture of the home page in both layouts of the site. */
-export type LayoutFiles = {
-  readonly desktop: SchemeFiles
-  readonly mobile: SchemeFiles
-}
+/** The address of the file of one picture in each layout and scheme. */
+type PictureFiles = Readonly<
+  Record<PictureLayout, Readonly<Record<PictureScheme, string>>>
+>
 
 /**
  * The still pictures of the home page. Each one is a real screen of the
@@ -69,7 +70,7 @@ export const pictureFiles = {
     desktop: { dark: phoneDark, light: phoneLight },
     mobile: { dark: phoneDark, light: phoneLight },
   },
-} as const satisfies Record<string, LayoutFiles>
+} as const satisfies Readonly<Record<MarketingPictureKey, PictureFiles>>
 
 /** Every address of a picture file, for the asset routes of the site. */
 export const pictureFileUrls: readonly string[] = Object.values(

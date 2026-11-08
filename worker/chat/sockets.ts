@@ -65,10 +65,11 @@ export async function runnerUpgrade(
       message = JSON.parse(event.data)
     } catch {
       chat.disconnectRunner(peer)
-      peer.close()
       return
     }
-    void chat.receiveRunner(peer, message).catch(() => peer.close())
+    void chat
+      .receiveRunner(peer, message)
+      .catch(() => chat.disconnectRunner(peer))
   })
   server.addEventListener('close', () => chat.disconnectRunner(peer))
   server.addEventListener('error', () => chat.disconnectRunner(peer))

@@ -2,6 +2,7 @@ import type { OrgRole } from '../../src/shared/api'
 import type { MembersResponse } from '../../src/shared/members'
 import { HttpError } from '../http'
 import { guardedMembersWrite } from './guarded-write'
+import { lastActiveAdminError } from './errors'
 import { listInvites } from './invite-data'
 import {
   orgMember,
@@ -10,6 +11,7 @@ import {
   updateRole,
 } from './member-data'
 import { requireOrgAdmin, requireOrgMember } from './permissions'
+import type { MembersHooks } from './route'
 
 export async function listMembers(
   db: D1Database,
@@ -36,7 +38,7 @@ export async function changeMemberRole(
       () => requireMember(db, orgId, userId),
     ],
     write: () => updateRole(db, orgId, actorId, userId, role),
-    refusal: lastAdminError,
+    refusal: lastActiveAdminError,
   })
   return requireMember(db, orgId, userId)
 }
@@ -47,9 +49,10 @@ export async function removeOrgMember(
   actorId: string,
   userId: string,
   now: number,
+  hooks?: Pick<MembersHooks, 'workspaceOwnerChanged'>,
 ) {
   const voluntary = actorId === userId
-  await guardedMembersWrite({
+  const workspaceIds = await guardedMembersWrite({
     checks: [
       () =>
         voluntary
@@ -58,8 +61,9 @@ export async function removeOrgMember(
       () => requireMember(db, orgId, userId),
     ],
     write: () => removeMembership(db, orgId, actorId, userId, voluntary, now),
-    refusal: lastAdminError,
+    refusal: lastActiveAdminError,
   })
+  for (const id of workspaceIds) await hooks?.workspaceOwnerChanged(id)
 }
 
 export async function requireMember(

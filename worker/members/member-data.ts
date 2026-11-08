@@ -1,5 +1,6 @@
 import type { OrgRole, User } from '../../src/shared/api'
 import type { OrgMember } from '../../src/shared/members'
+import { activeAdminMemberPredicate } from '../data/active-admin'
 import { activeAdminPredicate } from './org-data'
 
 interface MemberRow extends User {
@@ -8,6 +9,11 @@ interface MemberRow extends User {
 }
 const memberColumns = `u.id, u.github_id AS githubId, u.github_login AS githubLogin,
   u.display_name AS displayName, u.avatar_url AS avatarUrl, m.role, m.joined_at AS joinedAt`
+
+const membershipMayEnd = `NOT (${activeAdminMemberPredicate('org_members')}) OR EXISTS (
+  SELECT 1 FROM org_members remaining WHERE remaining.org_id = org_members.org_id
+    AND remaining.user_id <> org_members.user_id AND ${activeAdminMemberPredicate('remaining')}
+)`
 
 function member(row: MemberRow): OrgMember {
   const { role, joinedAt, ...user } = row
@@ -54,10 +60,7 @@ export function updateRole(
     .prepare(
       `UPDATE org_members SET role = ? WHERE org_id = ? AND user_id = ?
      AND ${activeAdminPredicate}
-     AND (? = 'admin' OR role <> 'admin' OR EXISTS (
-       SELECT 1 FROM org_members remaining WHERE remaining.org_id = org_members.org_id
-       AND remaining.role = 'admin' AND remaining.user_id <> org_members.user_id
-     )) RETURNING user_id`,
+     AND (? = 'admin' OR (${membershipMayEnd})) RETURNING user_id`,
     )
     .bind(role, orgId, userId, orgId, actorId, role)
     .first<{ user_id: string }>()
@@ -72,19 +75,36 @@ export async function removeMembership(
   now: number,
 ) {
   const recipient = voluntary
-    ? `SELECT user_id FROM org_members WHERE org_id = ? AND role = 'admin'
-       AND user_id <> ? ORDER BY joined_at, user_id LIMIT 1`
-    : "SELECT user_id FROM org_members WHERE org_id = ? AND user_id = ? AND role = 'admin'"
+    ? `SELECT candidate.user_id FROM org_members candidate
+       JOIN users recipient_user ON recipient_user.id = candidate.user_id
+       WHERE candidate.org_id = ? AND candidate.user_id <> ?
+         AND (recipient_user.suspended_at IS NULL OR candidate.role = 'admin')
+       ORDER BY CASE WHEN ${activeAdminMemberPredicate('candidate')} THEN 0
+         WHEN recipient_user.suspended_at IS NULL THEN 1 ELSE 2 END,
+         candidate.joined_at, candidate.user_id LIMIT 1`
+    : `SELECT candidate.user_id FROM org_members candidate
+       WHERE candidate.org_id = ? AND candidate.user_id = ?
+         AND ${activeAdminMemberPredicate('candidate')}`
   const recipientId = voluntary ? userId : actorId
-  const permission = voluntary
-    ? `EXISTS (SELECT 1 FROM orgs WHERE id = ? AND deleted_at IS NULL)`
+  const actorPermission = voluntary
+    ? `EXISTS (
+       SELECT 1 FROM orgs access_org
+       JOIN org_members access_member ON access_member.org_id = access_org.id
+       JOIN users access_user ON access_user.id = access_member.user_id
+       WHERE access_org.id = ? AND access_member.user_id = ?
+         AND access_org.deleted_at IS NULL AND access_user.suspended_at IS NULL
+     )`
     : activeAdminPredicate
-  const access = voluntary ? [orgId] : [orgId, actorId]
-  const result = await db.batch([
+  const permission = `${actorPermission} AND EXISTS (
+    SELECT 1 FROM org_members WHERE org_id = ? AND user_id = ? AND (${membershipMayEnd})
+  )`
+  const access = [orgId, actorId, orgId, userId]
+  const result = await db.batch<{ id: string }>([
     db
       .prepare(
         `UPDATE workspaces SET owner_user_id = (${recipient}), updated_at = ?
-       WHERE org_id = ? AND owner_user_id = ? AND EXISTS (${recipient}) AND ${permission}`,
+       WHERE org_id = ? AND owner_user_id = ? AND EXISTS (${recipient}) AND ${permission}
+       RETURNING id`,
       )
       .bind(
         orgId,
@@ -104,4 +124,6 @@ export async function removeMembership(
       .bind(orgId, userId, ...access, orgId, recipientId),
   ])
   return result[1].meta.changes > 0
+    ? result[0].results.map((row) => row.id)
+    : null
 }

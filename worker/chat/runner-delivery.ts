@@ -103,7 +103,7 @@ export class RunnerDelivery {
       }
       const beganTurn = await this.dispatch.begin(active.workspace.id, command)
       try {
-        active.peer.send(outbound)
+        await active.peer.send(outbound)
       } catch {
         detach()
         await this.dispatch.unsent(active.workspace.id, command, beganTurn)

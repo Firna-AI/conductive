@@ -7,6 +7,7 @@ import type { AppDependencies, AppEnv } from './env'
 import { HttpError, requiredString } from './http'
 import { signOut } from './security/auth'
 import type { RequestContext } from './security/gate'
+import { handleOperatorRequest } from './operator/route'
 
 export { routeDevice } from './devices/router'
 
@@ -17,6 +18,13 @@ export async function route(
   dependencies: AppDependencies,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const operator = await handleOperatorRequest(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (operator) return operator
   const boot = await bootRoute(request, env, context, dependencies)
   if (boot) return boot
   const shell = await shellRoute(request, env, context, dependencies)

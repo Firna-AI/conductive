@@ -62,16 +62,14 @@ function updateWorkspace(
   return detailReply(org, workspaceId)
 }
 
-/** Open. A stopped workspace resumes, as opening it does in the product. */
-function openWorkspace(
+/** Reads detail and starts the stop preview for an active workspace. */
+function readWorkspace(
   backend: DevBackend,
   org: OrgState,
   workspaceId: string,
 ): Response {
   const current = requireWorkspace(org, workspaceId)
-  if (current.state === 'stopped') {
-    resumeWorkspace(backend, org, workspaceId)
-  } else if (backend.state.stopAfterMs !== null) {
+  if (current.state !== 'stopped' && backend.state.stopAfterMs !== null) {
     stopLater(backend, org, workspaceId, backend.state.stopAfterMs)
   }
   return detailReply(org, workspaceId)
@@ -134,19 +132,14 @@ export function workspaceRoutes(backend: DevBackend): Route[] {
     {
       method: 'GET',
       path: one,
-      answer: ({ params }) => detailReply(orgOf(params), params.workspace),
+      answer: ({ params }) =>
+        readWorkspace(backend, orgOf(params), params.workspace),
     },
     {
       method: 'PATCH',
       path: one,
       answer: ({ params, body }) =>
         updateWorkspace(backend, orgOf(params), params.workspace, body),
-    },
-    {
-      method: 'POST',
-      path: workspacePaths.open(ID.org, ID.workspace),
-      answer: ({ params }) =>
-        openWorkspace(backend, orgOf(params), params.workspace),
     },
     {
       method: 'POST',

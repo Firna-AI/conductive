@@ -155,16 +155,28 @@ export class Workspace
     return this.run(() => this.controller.lifecycleActivity())
   }
 
-  async openLifecycleTab(tabId: string) {
-    return this.run(() => this.controller.openLifecycleTab(tabId))
-  }
-
-  async closeLifecycleTab(tabId: string) {
-    return this.run(() => this.controller.closeLifecycleTab(tabId))
-  }
-
   async lifecycleStopped(): Promise<void> {
     return this.run(() => this.controller.lifecycleStopped())
+  }
+
+  async suspendLifecycle(
+    workspaceId: string,
+    ownerUserId: string,
+  ): Promise<boolean> {
+    if (
+      await this.controller.cancelSuspendedLifecycleStart(
+        workspaceId,
+        ownerUserId,
+      )
+    )
+      return false
+    return this.run(() =>
+      this.controller.suspendLifecycle(workspaceId, ownerUserId),
+    )
+  }
+
+  reconcileLifecycleAccess(workspaceId: string): Promise<void> {
+    return this.run(() => this.controller.reconcileLifecycleAccess(workspaceId))
   }
 
   async clearLifecycle(): Promise<void> {

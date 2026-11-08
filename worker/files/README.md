@@ -54,7 +54,7 @@ For each refused file event, the chat backend stores a refusal marker and calls 
 That call discards the incomplete report of the refused kind. A tree delta has the tree kind.
 `storedReportGenerations` gives the newest applied or incomplete revision of a kind, and the revision of its incomplete report.
 The chat backend reads it and the refused report identity before that call.
-The [report repairs](../chat/README.md#report-repairs) compare its stream, revision, and part number with the stored revisions.
+The [report repairs](../chat/report-repairs.md) compare its stream, revision, and part number with the stored revisions.
 The last complete tree and changes stay in the projection while parts are pending or refused.
 The chat backend's `runnerEventStored` hook is a notification after the commit and the confirm.
 It must not apply a file report again.

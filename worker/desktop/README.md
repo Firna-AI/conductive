@@ -7,6 +7,8 @@ The browser uses the [shared desktop contract](../../src/shared/desktop.ts).
 Call `createDesktopHandler(env, dependencies).fetch(request)` for the shared
 desktop GET path. The handler checks sign-in, Origin, current org membership,
 and workspace ownership. It calls the desktop API on each load.
+A workspace whose owner is suspended gets 403 `user_suspended` before any
+call to Boat, as [Sandbox access](../operator/README.md#sandbox-access) says.
 It returns the URL and its expiry with `Cache-Control: no-store`.
 It accepts only HTTPS URLs with a fragment token and no URL credentials.
 It keeps query-token URLs and provider error details out of the response.

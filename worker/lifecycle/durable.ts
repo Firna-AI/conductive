@@ -21,7 +21,6 @@ const STATE_KEY = 'lifecycle:state'
 /** One instance lives inside each workspace Durable Object. */
 export class DurableLifecycle {
   private pending: Promise<unknown> = Promise.resolve()
-  private readonly tabs = new Set<string>()
   private readonly storage: LifecycleStorage
   private readonly now: () => number
   private readonly hooks: LifecycleHooks
@@ -61,16 +60,6 @@ export class DurableLifecycle {
         error: null,
       })
     })
-  }
-
-  openTab(tabId: string): number {
-    this.tabs.add(tabId)
-    return this.tabs.size
-  }
-
-  closeTab(tabId: string): number {
-    this.tabs.delete(tabId)
-    return this.tabs.size
   }
 
   beginStart(kind: WorkspaceStart['kind']): Promise<void> {
@@ -161,6 +150,13 @@ export class DurableLifecycle {
         await this.hooks.extendDeadline(),
         this.now(),
       )
+    })
+  }
+
+  rearmStopped(): Promise<void> {
+    return this.serial(async () => {
+      const state = await this.read()
+      if (state?.state === 'stopped') await this.write(state)
     })
   }
 

@@ -15,7 +15,7 @@ import type { ChatCallbackPublisher, ChatDependencies } from './types'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
-  Pick<ChatDependencies, 'resolveAttachments'>
+  Pick<ChatDependencies, 'resolveAttachments' | 'scheduleRunnerCheck'>
 >
 
 function callbackPublisher(publish: ChatCallbackPublisher): LifecyclePublisher {
@@ -32,9 +32,7 @@ export function createWorkspaceIntegration(
   const matches = (name: string) =>
     env.WORKSPACES.idFromName(name).equals(context.id)
   const chat: WorkspaceChat = new WorkspaceChat(context.storage, env, {
-    ...(resolvers.resolveAttachments
-      ? { resolveAttachments: resolvers.resolveAttachments }
-      : {}),
+    ...resolvers,
     now,
     matchesObject: matches,
     waitUntil: (promise) => context.waitUntil(promise),
@@ -60,9 +58,6 @@ export function createWorkspaceIntegration(
     },
     turnDispatchFailed: async (_id, turnId, publish) =>
       controller.finishLifecycleTurn(turnId, callbackPublisher(publish)),
-    browserOpened: async (_id, tabId) => controller.openLifecycleTab(tabId),
-    browserClosed: async (_id, tabId) =>
-      chat.runLifecycle(() => controller.closeLifecycleTab(tabId)),
     runnerEventStored: async (envelope, publish) => {
       const event = envelope.event
       const lifecyclePublish = callbackPublisher(publish)

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { orgPath } from '../../src/shared/api'
 import { deleteOrgPath } from '../../src/shared/orgs'
+import { userSuspensionPath } from '../../src/shared/operator'
 import {
   createHarness,
   TEST_TIME,
@@ -158,4 +159,29 @@ it('performs only due retention under a temporary lease capability and retries f
     code: 'org_cleanup_busy',
   })
   expect(providerRequests(harness)).toHaveLength(3)
+})
+
+it('skips a suspended owner during deleted-org disk retention', async () => {
+  const { org, admin, member, client } = await deletionFixture(harness)
+  lifecycleFixture(client)
+  await stopWorkspace(harness, 'workspace-one', 13)
+  const deleted = await client.request(
+    deleteOrgPath(org.id),
+    admin.session,
+    write({ name: org.name }),
+  )
+  expect(deleted.status).toBe(200)
+  harness.env.OPERATOR_GITHUB_IDS = String(admin.user.githubId)
+  const suspended = await harness.request(
+    userSuspensionPath(member.user.githubId),
+    admin.session,
+    write({}),
+  )
+  expect(suspended.status).toBe(202)
+  client.setTime(TEST_TIME + 23 * 3600000)
+  harness.boat.requests = []
+  expect(
+    await cleanupDeletedOrgs(harness.env, client.dependencies, client.hooks),
+  ).toEqual({ purged: [], pending: [] })
+  expect(providerRequests(harness)).toEqual([])
 })

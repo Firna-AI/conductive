@@ -51,7 +51,7 @@ async function openWorkspace() {
   await workspace.open()
   server.json('POST', resumePath, starting)
   held.holdAnswer('POST', resumePath)
-  return { held, events, org, workspace }
+  return { held, events, org, workspace, server }
 }
 
 describe('WorkspaceModel Resume', () => {
@@ -128,5 +128,47 @@ describe('WorkspaceModel Resume', () => {
     await resuming
     expect(workspace.detail.get()).toEqual(before)
     expect(org.workspace(workspaceId)).toEqual(listed)
+  })
+
+  test('an owner reply stays newer than a late refusal for the previous owner', async () => {
+    const { held, org, workspace, server } = await openWorkspace()
+    server.json(
+      'POST',
+      resumePath,
+      { error: { code: 'user_suspended', message: 'The owner is suspended.' } },
+      403,
+    )
+    const resuming = expect(workspace.resume()).rejects.toMatchObject({
+      code: 'user_suspended',
+    })
+    const owner = { ...starting.workspace.owner, id: 'new-owner' }
+    workspace.reassigned({ ...starting.workspace, owner })
+    held.release('POST', resumePath)
+    await resuming
+    expect(valueOf(workspace.detail.get())?.workspace.owner).toEqual(owner)
+    expect(org.workspace(workspaceId)?.owner).toEqual(owner)
+    expect(workspace.startError.get()).toBe(null)
+    workspace.close()
+  })
+
+  test('a start refusal after close changes neither the detail nor the start error', async () => {
+    const { held, org, workspace, server } = await openWorkspace()
+    server.json(
+      'POST',
+      resumePath,
+      { error: { code: 'user_suspended', message: 'The owner is suspended.' } },
+      403,
+    )
+    const before = workspace.detail.get()
+    const listed = org.workspace(workspaceId)
+    const resuming = expect(workspace.resume()).rejects.toMatchObject({
+      code: 'user_suspended',
+    })
+    workspace.close()
+    held.release('POST', resumePath)
+    await resuming
+    expect(workspace.detail.get()).toEqual(before)
+    expect(org.workspace(workspaceId)).toEqual(listed)
+    expect(workspace.startError.get()).toBe(null)
   })
 })

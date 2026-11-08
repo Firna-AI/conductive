@@ -40,9 +40,10 @@ npm run test -- worker/chat/integration
 - `chat-create-journey.test.ts` boots the app shell and creates a
   workspace. It delivers the first message through a Stop and a resume. It
   waits for the reply of the resume and for the end of its start apart.
-- `workspace-resume-response.test.ts` checks that an open and a retried
-  resume answer with the stored `starting` state. The chat and a failed
-  start stay on the event path, and a retry after the failure is valid.
+- `workspace-resume-response.test.ts` reads a stopped workspace, then
+  checks that a resume and a retried resume answer with the stored
+  `starting` state. The chat and a failed start stay on the event path,
+  and a retry after the failure is valid.
 - `workspace-device-projection.test.ts` keeps the `input` state of a
   waiting Mac request through lifecycle activity, a start-step update, a
   heartbeat, and a reopen. When the turn ends, D1 shows `ready`.

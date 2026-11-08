@@ -13,6 +13,7 @@ The [sandbox area](sandbox/README.md) owns the Boat adapter and the use of the a
 The Worker reads that key from the Worker secret `BOAT_API_KEY`.
 The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
+The [operator area](operator/README.md) owns the operator's suspension of a user.
 
 ## Routes
 
@@ -22,9 +23,10 @@ On the app hostname, the Worker serves these API routes:
 - The session, sign-out, the org list, a new org, and one org.
 - The account, its default model, its agent logins, the model list, and Get started.
 - The sections, the repositories, the members, and the workspace list of an org.
-- The create, read, open, resume, and activity routes of a workspace.
+- The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
 - The Mac device routes.
+- The operator's suspension of a user, as the [operator area](operator/README.md) says.
 - The chat routes of a workspace: its sessions and their actions, the chat history, and the events socket.
 
 The [app API](app-api/README.md) serves the account, shell, and workspace routes after the request gate.
@@ -55,6 +57,7 @@ Run `npm run test -- worker/chat/integration` to check the forwarding, the shell
 It also checks the runner start script.
 Run `node worker/chat/integration/run-browser-harness.mjs` to serve a production app build through the local Worker, with fake Boat and GitHub.
 [Outer Worker tests](chat/integration/outer-worker-tests.md#browser-harness) gives its settings.
+Run `npm run test -- worker/operator` to check the suspension of a user.
 The [test support area](test-support/README.md) supplies local D1 and fake providers.
 [Deployment inputs](../docs/deployment.md) lists the bindings, variables, and secrets of a deployment.
 
@@ -67,6 +70,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) holds `Workspace`, the Durable Object class of each workspace.
+- [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
 - [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
 - [http/request-body.ts](http/request-body.ts) applies the default and declared request body limits.
 - [http/json-body.ts](http/json-body.ts) owns the shared JSON object parsing policy.

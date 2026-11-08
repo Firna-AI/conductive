@@ -20,7 +20,11 @@ import { ArchiveDialog } from './ArchiveDialog'
 import { ChatArea } from './ChatArea'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
-import { SandboxPanel } from './SandboxNotice'
+import {
+  refusedStart,
+  SandboxPanel,
+  type SandboxNoticeState,
+} from './SandboxNotice'
 import { shownWorkspaces } from './shown-workspaces'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
@@ -77,6 +81,7 @@ export function WorkspaceScreen(props: {
     () => model.detail.get().state === 'failed',
   )
   const detail = useStore(model.detail)
+  const startError = useStore(model.startError)
   const features = useFeatures()
   const viewport = useViewport()
   const theme = useSharedUiTheme()
@@ -146,20 +151,37 @@ export function WorkspaceScreen(props: {
     archive: mayArchive(props.org, workspace, props.viewer)
       ? () => void model.archive.start()
       : null,
+    onReassigned: (updated) => model.reassigned(updated),
   }
   const phone = viewport === 'phone'
+  // A refused start shows while the sandbox is down, until its cause ends.
+  const refusal =
+    sandbox === 'stopped' || sandbox === 'error'
+      ? refusedStart(startError)
+      : null
+  const notice: SandboxNoticeState | null =
+    refusal ??
+    (sandbox === 'ready' || sandbox === 'starting'
+      ? null
+      : { problem: sandbox })
   const panel = (content: ReactNode) =>
     sandbox === 'ready' ? (
       content
     ) : (
       <SandboxPanel
         resume={phone ? resume : null}
-        state={sandbox}
+        state={refusal ? 'refused' : sandbox}
         workspace={workspace}
       />
     )
   const chatArea = (
-    <ChatArea chat={chat} context={context} resume={resume} start={start} />
+    <ChatArea
+      chat={chat}
+      context={context}
+      notice={notice}
+      resume={resume}
+      start={start}
+    />
   )
   const header = (
     <WorkspaceHeader

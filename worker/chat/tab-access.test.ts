@@ -165,6 +165,32 @@ describe('open workspace tab access', () => {
     first.close()
     second.close()
   })
+
+  it('keeps active member history readable after the workspace owner is suspended', async () => {
+    const fixture = await createChatFixture(harness)
+    const member = await fixture.tab(0, undefined, fixture.memberCookie)
+    await harness.env.DB.prepare(
+      'UPDATE users SET suspended_at = ? WHERE id = ?',
+    )
+      .bind(fixture.clock.now(), fixture.owner.id)
+      .run()
+    await fixture.clock.advance(15_000)
+    expect(member.closed).toBe(0)
+    await fixture.chat.appendWorkspaceEvent(WORKSPACE_ID, {
+      type: 'workspace.title',
+      name: 'History stays available',
+    })
+    expect(member.messages.at(-1)).toMatchObject({
+      type: 'event',
+      envelope: {
+        event: { type: 'workspace.title', name: 'History stays available' },
+      },
+    })
+    const reopened = await fixture.tab(0, undefined, fixture.memberCookie)
+    expect(reopened.closed).toBe(0)
+    member.close()
+    reopened.close()
+  })
 })
 
 function signal() {

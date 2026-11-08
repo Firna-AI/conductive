@@ -84,9 +84,18 @@ start.
 ## Refresh timers
 
 `refreshImagesForPush` in [`image-timers.ts`](image-timers.ts) starts a
-refresh for each org whose current image holds the pushed repository. It
+refresh for each org whose current image holds the pushed repository, and
+that has an admin who is not suspended. It
 acts on a push to the default branch, at most once in 30 minutes for each
 org. A push during a running job waits for a later refresh. Only the
 verified GitHub webhook receiver may call it, and that receiver does not
 exist yet. The image coordinator starts the daily refresh by itself.
 A daily refresh sets the saved daily deadline 24 hours after its start.
+
+Both refreshes start with the first admin who is not suspended, from
+`firstActiveOrgAdmin` in [`settings-data.ts`](settings-data.ts). An org
+without such an admin gets neither refresh. Its push uses no part of the
+30-minute limit, a recorded push refresh stays pending, and the image
+coordinator sets no new alarm.
+[Operator actions](../../docs/protocol/operator-actions.md#starts-stops-and-builds)
+states the rule.

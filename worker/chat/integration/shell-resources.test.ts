@@ -142,11 +142,11 @@ it('decodes opaque workspace IDs for lifecycle reads and keeps archived writes r
     start: null,
     error: null,
   })
-  const opened = await fixture.request(
-    workspacePaths.open(OUTER_ORG, OUTER_WORKSPACE),
+  const resumed = await fixture.request(
+    workspacePaths.resume(OUTER_ORG, OUTER_WORKSPACE),
     { method: 'POST', body: '{}' },
   )
-  expect(opened.status).toBe(200)
+  expect(resumed.status).toBe(200)
   await fixture.env.DB.prepare(
     `UPDATE workspaces SET archived_at = 1, state = 'archived' WHERE id = ?`,
   )

@@ -6,6 +6,9 @@ import { readBuildJob, readBuildHistory } from './build-data'
 import { startImageBuild, advanceImageBuild } from './image-builds'
 import { refreshImagesForPush, runImageAlarm } from './image-timers'
 import { finishImageBuild as finish } from './image-test-support'
+import { joinedMember } from '../operator/suspension-test-support'
+import { suspendUser } from '../operator/suspend-user'
+import { readImageSettings } from './settings-data'
 
 const backendFixture = setupBackendTests()
 
@@ -118,4 +121,70 @@ it('refreshes the captured repositories and revision with push throttling and a 
   } finally {
     await fixture.dispose()
   }
+})
+
+it('uses an active admin for automatic refreshes and leaves timers unchanged when no admin remains active', async () => {
+  const fixture = backendFixture()
+  const { runtime, images, org, user } = fixture
+  const admin = await joinedMember(fixture)
+  await runtime.env.DB.prepare(
+    "UPDATE org_members SET role = 'admin', joined_at = ? WHERE org_id = ? AND user_id = ?",
+  )
+    .bind(TEST_TIME + 1, org.id, admin.id)
+    .run()
+  await suspendUser(runtime, user.githubId, user.id)
+  const pushing = refreshImagesForPush(images, {
+    githubRepositoryId: 1,
+    ref: 'refs/heads/main',
+    software: SOFTWARE,
+  })
+  await expect(pushing).resolves.toHaveLength(1)
+  const [pushId] = await pushing
+  expect(await readBuildJob(runtime.env.DB, org.id, pushId)).toMatchObject({
+    startedByUserId: admin.id,
+    kind: 'refresh',
+  })
+  await finish(fixture, pushId)
+  const daily = fixture.scheduled.at(-1)
+  if (!daily) throw new Error('Missing daily refresh schedule')
+  fixture.setTime(daily.nextAt)
+  await expect(runImageAlarm(images, daily)).resolves.toBeUndefined()
+  const dailyId = fixture.scheduled.at(-1)?.buildId
+  if (!dailyId) throw new Error('Missing daily refresh build')
+  expect(await readBuildJob(runtime.env.DB, org.id, dailyId)).toMatchObject({
+    startedByUserId: admin.id,
+    kind: 'refresh',
+  })
+  await finish(fixture, dailyId)
+  const noAdminAt = TEST_TIME + 172_800_000
+  fixture.setTime(noAdminAt)
+  await runtime.env.DB.batch([
+    runtime.env.DB.prepare(
+      'UPDATE users SET suspended_at = ? WHERE id = ?',
+    ).bind(noAdminAt, admin.id),
+    runtime.env.DB.prepare(
+      'UPDATE settings SET pending_push_refresh_at = ? WHERE org_id = ?',
+    ).bind(noAdminAt, org.id),
+  ])
+  await expect(
+    refreshImagesForPush(images, {
+      githubRepositoryId: 1,
+      ref: 'refs/heads/main',
+      software: SOFTWARE,
+    }),
+  ).resolves.toEqual([])
+  const before = fixture.scheduled.length
+  const pending = fixture.scheduled.at(-1)
+  if (!pending) throw new Error('Missing idle image schedule')
+  await expect(runImageAlarm(images, pending)).resolves.toBeUndefined()
+  expect(fixture.scheduled).toHaveLength(before)
+  expect(await readImageSettings(runtime.env.DB, org.id)).toMatchObject({
+    lastPushRefreshAt: TEST_TIME,
+    pendingPushRefreshAt: noAdminAt,
+  })
+  expect(
+    (await readBuildHistory(runtime.env.DB, org.id)).builds.filter(
+      (build) => build.state === 'running',
+    ),
+  ).toEqual([])
 })

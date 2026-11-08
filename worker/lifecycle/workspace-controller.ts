@@ -26,6 +26,7 @@ import { initializeWorkspaceLifecycle } from './lifecycle-admission'
 import { createWorkspaceLifecycle } from './create-workspace-lifecycle'
 import { finishDiskMaintenance } from './disk-retention'
 import { clearRetention } from './retention-data'
+import { WorkspaceAccessStop } from './workspace-suspension'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { WorkspacePlatform } from './workspace-platform'
 import type { WorkspaceController } from './workspace-controller-types'
@@ -50,11 +51,21 @@ export function createWorkspaceController(
     turns,
     journal,
   )
+  const accessStop = new WorkspaceAccessStop(() => ({
+    env,
+    dependencies,
+    storage: platform.storage,
+    lifecycle,
+    starts,
+    turns,
+  }))
   const drafts: FailedCreationStorage = {
     get: (key) => platform.storage.get('draft', key),
     put: (key, value) => platform.storage.put('draft', key, value),
   }
   const controller: WorkspaceController = {
+    cancelSuspendedLifecycleStart: (id, ownerId) =>
+      accessStop.cancelPending(id, ownerId),
     projectDeviceState: (id, choice, now, publish) =>
       projection.deviceChanged(id, choice, now, publish),
     async queueLifecycleStart(job: WorkspaceStartJob): Promise<boolean> {
@@ -124,16 +135,19 @@ export function createWorkspaceController(
     lifecycleActivity() {
       return lifecycle.activity()
     },
-    async openLifecycleTab(tabId: string) {
-      lifecycle.openTab(tabId)
-    },
-    async closeLifecycleTab(tabId: string) {
-      lifecycle.closeTab(tabId)
-    },
     async lifecycleStopped(): Promise<void> {
       await starts.cancel()
       await turns.clear()
       await lifecycle.stopped()
+    },
+    async suspendLifecycle(
+      workspaceId: string,
+      ownerUserId: string,
+    ): Promise<boolean> {
+      return (await accessStop.check(workspaceId, ownerUserId)) === true
+    },
+    reconcileLifecycleAccess(workspaceId: string): Promise<void> {
+      return accessStop.ownerChanged(workspaceId)
     },
     async clearLifecycle(): Promise<void> {
       const state = await lifecycle.read()
@@ -195,6 +209,8 @@ export function createWorkspaceController(
         images: images,
         starts: starts,
         lifecycle: lifecycle,
+        turns,
+        accessStop,
       })
     },
   }

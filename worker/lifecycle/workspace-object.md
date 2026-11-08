@@ -31,8 +31,6 @@ says:
   ingestion accepts. `runnerLifecycleDisconnected` takes a disconnect.
 - `acknowledgeLifecycleFirstMessage` clears the pending first message of
   the create. The admission keeps its own copy for repeats.
-- `openLifecycleTab` and `closeLifecycleTab` keep the IDs of the open tabs.
-  The open route also calls `openLifecycleTab`.
 
 The `alarm` of the class serves both roles. For an image coordinator, it
 advances the running build or refresh by one step, or starts the daily

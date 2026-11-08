@@ -14,6 +14,11 @@ describes the structure that the [protocol docs](#protocol-docs) require.
   repositories, and an org image.
 - **Admin** and **member:** the two roles in an org. Each person in an org
   has one of them.
+- **Operator:** the person who runs the app, as opposed to the admin of an
+  org. Only an operator can suspend a user.
+- **Suspension:** the block of one user by the operator. It ends the
+  sign-in sessions of the user, stops the sandboxes of the workspaces that
+  the user owns, and blocks new starts.
 - **Workspace:** one task in an org. It has one repository, one branch,
   one sandbox, and one or more sessions.
 - **Workspace owner:** the person who is responsible for a workspace. It is
@@ -255,3 +260,5 @@ the merge.
 - [Orgs and members](protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
 - [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
+- [Operator actions](protocol/operator-actions.md): the operator, the
+  suspension of a user, and abuse reports.

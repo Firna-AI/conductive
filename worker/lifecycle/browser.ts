@@ -19,7 +19,7 @@ import { buildEventsResponse } from './build-stream'
 import { startImageBuild, type ImageRuntime } from './image-builds'
 import type { ImageSoftwareArtifact } from './image-software'
 import { createWorkspaceInput } from './request-parser'
-import { openWorkspace, resumeWorkspace } from './workspace-resume'
+import { resumeWorkspace } from './workspace-resume'
 import { workspaceResponse } from './workspace-response'
 import type {
   FirstWorkspaceMessage,
@@ -153,23 +153,6 @@ export async function handleLifecycleRequest(
       Response.json(
         await project(
           await resumeWorkspace(runtime, orgId, workspaceId, context.user.id),
-        ),
-      ),
-    )
-  if (
-    path === workspacePaths.open(orgId, workspaceId) &&
-    request.method === 'POST'
-  )
-    return privateResponse(
-      Response.json(
-        await project(
-          await openWorkspace(
-            runtime,
-            orgId,
-            workspaceId,
-            context.user.id,
-            runtime.dependencies.randomToken(),
-          ),
         ),
       ),
     )

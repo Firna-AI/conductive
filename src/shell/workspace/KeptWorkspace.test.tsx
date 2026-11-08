@@ -8,7 +8,7 @@ import type { AgentChoice } from '../../shared/agents'
 import { API_PATHS, orgPath } from '../../shared/api'
 import { membersPath } from '../../shared/members'
 import { sessionsPath } from '../../shared/sessions'
-import { workspacePath, workspacePaths } from '../../shared/workspaces'
+import { workspacePath } from '../../shared/workspaces'
 import {
   byLabel,
   byRole,
@@ -80,7 +80,7 @@ describe('a workspace that the tab showed', () => {
       session: { ...sessions[0], title: 'Address lookups' },
     })
     const before = server.requests.length
-    held.hold('POST', workspacePaths.open(org, id))
+    held.hold('GET', workspacePath(org, id))
 
     go(here)
 
@@ -89,11 +89,11 @@ describe('a workspace that the tab showed', () => {
     expect(view.textContent).toContain(answer)
     expect(draftOf(view)).toBe('Keep this draft')
     expect(notices(view)).toEqual([`${nameLost} now`])
-    await act(async () => held.release('POST', workspacePaths.open(org, id)))
+    await act(async () => held.release('GET', workspacePath(org, id)))
     await settle()
     expect(socket.opens.slice(first)).toEqual([kept, kept])
     expect(chatRequests(server, before)).toEqual([
-      `POST ${workspacePaths.open(org, id)}`,
+      `GET ${workspacePath(org, id)}`,
     ])
     expect(headerName(view)).toBe('Saved addresses')
     expect(queryByRole('button', 'Address lookups', view)).not.toBeNull()
@@ -110,8 +110,11 @@ describe('a workspace that the tab showed', () => {
       fetch: held.fetch,
       events: socket.source,
     })
+    // The open reads first, so the second hold catches the chat's load.
+    held.holdAnswer('GET', workspacePath(org, id))
     held.holdAnswer('GET', workspacePath(org, id))
     const { view, go } = mountTab(app)
+    await act(async () => held.release('GET', workspacePath(org, id)))
     await settle()
     go(away)
     await settle()
@@ -134,20 +137,20 @@ describe('a workspace that the tab showed', () => {
       fetch: held.fetch,
       events: recordingSocket(server).source,
     })
-    const open = workspacePaths.open(org, id)
+    const open = workspacePath(org, id)
     const busy = { error: { code: 'internal_error', message: 'Busy.' } }
-    server.json('POST', open, busy, 500)
+    server.json('GET', open, busy, 500)
     const { view, go } = mountTab(app)
     await settle()
     expect(view.textContent).toContain("The workspace didn't open")
     go(away)
     await settle()
-    server.json('POST', open, workspaceFixtures().detail)
-    held.hold('POST', open)
+    server.json('GET', open, workspaceFixtures().detail)
+    held.hold('GET', open)
     go(here)
     expect(view.textContent).not.toContain("The workspace didn't open")
     expect(queryByLabel('Opening the workspace', view)).not.toBeNull()
-    await act(async () => held.release('POST', open))
+    await act(async () => held.release('GET', open))
     await settle()
     expect(headerName(view)).toBe(workspaceFixtures().detail.workspace.name)
   })
@@ -166,7 +169,7 @@ describe('a workspace that the tab showed', () => {
     expect(draftOf(other.view)).toBe('')
     expect(second.opens[0]).toBe(0)
     expect(chatRequests(server, before)).toContain(
-      `GET ${workspacePath(org, id)}`,
+      `GET ${sessionsPath(org, id)}`,
     )
   })
 
@@ -237,7 +240,7 @@ describe('a workspace that the tab showed', () => {
     await settle()
     expect(socket.opens.slice(first)).toEqual([kept, kept])
     expect(chatRequests(server, before)).toEqual([
-      `POST ${workspacePaths.open(org, id)}`,
+      `GET ${workspacePath(org, id)}`,
     ])
   })
 

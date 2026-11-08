@@ -1,4 +1,5 @@
 import { API_PATHS } from '../../src/shared/api'
+import { acceptedTermsSignInPath } from '../../src/shared/terms'
 import { createApp } from '../application'
 import type { AppDependencies, HttpFetch } from '../env'
 import { isRecord } from '../http'
@@ -77,7 +78,7 @@ export class GitHubTokenTestApp {
   }
 
   async authorize(): Promise<Response> {
-    const start = await this.request(API_PATHS.githubSignIn)
+    const start = await this.request(acceptedTermsSignInPath())
     const location = start.headers.get('Location')
     if (!location) throw new Error(`Sign-in returned ${start.status}`)
     const state = new URL(location).searchParams.get('state')

@@ -27,7 +27,7 @@ afterEach(async () => {
   fixture = undefined
 })
 
-it('answers open and retry resume with durable starting state while chat and startup failure stay on the event path', async () => {
+it('answers resume and retry with durable starting state while chat and startup failure stay on the event path', async () => {
   const active = (fixture = await reviewWorkspaceFixture(bundle))
   active.runner.emit({
     type: 'assistant.delta',
@@ -52,21 +52,26 @@ it('answers open and retry resume with durable starting state while chat and sta
   await active.actor().lifecycleStopped()
   await active.runner.closed
   await active.browser()
+  const opened = await active.request(workspacePath(OUTER_ORG, OUTER_WORKSPACE))
+  expect(opened.status).toBe(200)
+  expect(await opened.json()).toMatchObject({
+    workspace: { id: OUTER_WORKSPACE, state: 'stopped' },
+  })
   active.boat.commandRunning = true
-  const opening = active.request(
-    workspacePaths.open(OUTER_ORG, OUTER_WORKSPACE),
+  const resuming = active.request(
+    workspacePaths.resume(OUTER_ORG, OUTER_WORKSPACE),
     { method: 'POST', body: '{}' },
   )
   await active.actor().waitForQueuedStart(0)
   const startup = driveToRunningStartup(active.actor())
   try {
     const first = await Promise.race([
-      opening.then((response) => ({ kind: 'reply' as const, response })),
+      resuming.then((response) => ({ kind: 'reply' as const, response })),
       startup.then(() => ({ kind: 'startup' as const })),
     ])
     expect(first.kind).toBe('reply')
     if (first.kind !== 'reply')
-      throw new Error('The early open reply is missing.')
+      throw new Error('The early resume reply is missing.')
     expect(first.response.status).toBe(200)
     expect(await first.response.json()).toMatchObject({
       workspace: { id: OUTER_WORKSPACE, state: 'starting' },
@@ -148,6 +153,6 @@ it('answers open and retry resume with durable starting state while chat and sta
     active.boat.commandExitCode = 0
     await startup
     await active.actor().advanceStartAlarm()
-    await opening
+    await resuming
   }
 })

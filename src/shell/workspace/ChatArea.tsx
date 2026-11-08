@@ -8,7 +8,7 @@ import type { WorkspaceStart } from '../../shared/workspaces'
 import { useGo } from '../ui/AppLink'
 import type { Action } from '../ui/useAction'
 import { useFeatures, type WorkspaceContext } from './features'
-import { SandboxBar } from './SandboxNotice'
+import { SandboxBar, type SandboxNoticeState } from './SandboxNotice'
 import { StartingCard } from './StartingCard'
 import { ChatColumn } from './WorkspaceColumns'
 
@@ -36,7 +36,8 @@ function KeptChat(props: {
  * The chat area of the open workspace: the session tabs, the chat, and its
  * composer. The shell draws the start steps at the end of the chat and the
  * bar of a sandbox that is down, from its own record of the workspace, and
- * the chat places them. A host that gives the `tabs`, `transcript`, or
+ * the chat places them. `notice` is that bar's state, also for a start that
+ * the app refused. A host that gives the `tabs`, `transcript`, or
  * `composer` slot gets the shell's own column with those slots instead. A
  * `center` part takes the place of the chat.
  */
@@ -44,19 +45,19 @@ export function ChatArea(props: {
   context: WorkspaceContext
   chat: ChatController
   start: WorkspaceStart | null
+  notice: SandboxNoticeState | null
   resume: Action<[]>
 }) {
   const features = useFeatures()
-  const { context } = props
+  const { context, notice } = props
   const { sandbox, workspace } = context
   const phone = context.viewport === 'phone'
-  const problem = sandbox === 'ready' || sandbox === 'starting' ? null : sandbox
   const starting =
     sandbox === 'starting' && props.start ? (
       <StartingCard start={props.start} />
     ) : null
-  const sandboxBar = problem ? (
-    <SandboxBar problem={problem} resume={props.resume} workspace={workspace} />
+  const sandboxBar = notice ? (
+    <SandboxBar notice={notice} resume={props.resume} workspace={workspace} />
   ) : null
   const center = features.center?.(context) ?? null
   if (features.tabs || features.transcript || features.composer) {

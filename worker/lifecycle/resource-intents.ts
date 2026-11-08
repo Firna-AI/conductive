@@ -102,8 +102,13 @@ export function buildSandboxIntent(
       idempotencyKey: `image-${job.buildId}`,
       labels: { org: job.orgId, build: job.buildId },
     },
-    // The durable build already pins the body. Its create phase records outstanding allocation.
-    persist: () => updateBuildJob(db, job.buildId, 'create'),
+    // The durable build pins the body. Preserve a recorded allocation before replay.
+    persist: () =>
+      updateBuildJob(
+        db,
+        job.buildId,
+        job.phase === 'allocating' ? 'allocating' : 'create',
+      ),
   }
 }
 

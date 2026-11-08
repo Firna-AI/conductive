@@ -6385,14 +6385,105 @@ Depends on: 4f, 15j
 Apply the `fix after merge` items of the marketing site and the
 mockups. Added on 7 November 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/marketing-pictures-one-list.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/marketing-mockup-gaps.md`, and
-      delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/firna-ui-missing-parts.md`, and
-      delete that item.
+User choice, 7 November 2026: complete the first three items here. Keep the
+shared UI item open. Its change and release belong to `futex-ai/ui` and
+need the user's go-ahead.
+
+Decision 119 moves the shared UI work to Milestone 15n. Its follow-up
+item stays unchanged.
+
+User choice, 8 November 2026: apply decision 121 A here. Disclose the
+GitHub token risk in the access protocol and name the token in the
+privacy page. The orchestrator owns its follow-up item.
+
+Agent calls, 7 November 2026: record consent only for new accounts, without
+inventing consent for existing users. Identify operators by configured,
+immutable GitHub IDs. Keep allocation intent until cleanup can recover a
+lost reply. Capture each picture at its source screen viewport, then clip
+the shared crop, so viewport units keep the screen's layout. Keep the
+desktop agents crop and correct its label, because the screen's menu
+covers one attachment.
+
+Review calls, 7 November 2026: use one persistent owner check for
+interactive sandbox access while a stop waits. Keep history and cleanup
+available. Select an active admin for automatic image starts, while
+cleanup keeps its membership-based admin selection.
+
+Review round 1 choice, 8 November 2026: apply findings 4 C, 5 B and E,
+7 D, 9 C, 10 C, and 11 B. Rearm the alarm after transfer to an active
+owner, and use an owner-specific suspension message.
+
+User choice, 8 November 2026: apply decision 123 E to owner selection and
+the active-admin checks. Apply decision 124 A to the copied workspace
+token risk. Apply decision 126 A to acceptance of a changed Terms
+revision at the next sign-in, within 7 days. Apply decision 125 B: keep
+the current rule that gives a suspended owner's workspaces no disk restart. State
+the rule and the admin reassignment recovery in the suspension protocol.
+
+Agent call, 8 November 2026: move the chat README's report-repair details
+to a linked page, so the README stays below 300 lines. Keep every rule.
+
+- [x] Apply the recorded option of `plans/follow-ups/user-terms-suspension-and-abuse-reports.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply the recorded option of `plans/follow-ups/marketing-pictures-one-list.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply the recorded option of `plans/follow-ups/marketing-mockup-gaps.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Fix the confirmed suspension review findings for interactive sandbox
+      access and automatic image refreshes.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 121 A to the GitHub token risk disclosure and privacy
+      text. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply the approved findings of PR #45 review round 1 and its legal
+      text fixes. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 123 E to the shared active-admin rule, owner
+      selection, and atomic membership writes.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 124 A to the copied workspace token risk disclosure.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 126 A to the changed-Terms sign-in rule.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply decision 125 B to the suspended-owner disk-restart rule and
+      its admin reassignment recovery text.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Merge Milestone 7w, keep both sides' legal facts, and capture the
+      marketing pictures with the desktop agents crop at y 444 and height
+      456. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+
+Evidence: `.context/milestone-15m/reports/`,
+`.context/milestone-15m/marketing-pictures.log`,
+`.context/milestone-15m/picture-dimensions.json`,
+`.context/milestone-15m/preview-smoke.json`,
+`.context/milestone-15m/check.log`,
+`.context/milestone-15m/check-review-fix.log`, and
+`.context/milestone-15m/check-final.log`.
+
+Fix round evidence: `.context/milestone-15m/orchestrator-round1/`.
+
+Final review round, 8 November 2026: apply findings 13 B, 14 E, and 15 B.
+Keep workspace detail and history before a start. Recover pending stops
+after ownership changes. Correct the latest-consent legal copy.
+
+- [x] Draw the refused sandbox notice for finding 13 before its screen
+      implementation. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply finding 13 B to detail, history, owner recovery, and the dead
+      open route. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply finding 14 E to pending stop recovery, owner changes, alarms,
+      and operator results. Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+- [x] Apply finding 15 B to the latest consent record and privacy text.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15m`.
+
+Final round evidence: `.context/milestone-15m/orchestrator-round2/`.
+
+Agent calls of the final round, 8 November 2026: keep start failures in a
+separate store, tied to the owner ID. Apply only the confirmed owner from
+an owner-picker reply. Serialize access recovery and owner reconciliation,
+so an older stop cannot remove the new owner's disk alarm. The refused
+notice promises chat history, because decision 125 permits disk expiry.
+
+Documentation call, 8 November 2026: move the long mockup README details
+to linked design and catalogue pages. Preserve every fact and old anchor,
+so the README stays short without changing the screens.
 
 ## Milestone 15n: Use the new shared UI parts
 

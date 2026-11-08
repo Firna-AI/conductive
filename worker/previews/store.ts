@@ -1,6 +1,7 @@
 import { previewPath, type Preview } from '../../src/shared/previews'
 import type { WorkspaceTarget } from './types'
 import type { PortMode } from '../sandbox/provider'
+import { sandboxAccessPredicate } from '../data/sandbox-access'
 
 export interface PreviewRecord extends WorkspaceTarget {
   id: string
@@ -32,9 +33,9 @@ export async function insertPreview(
     .prepare(
       `INSERT INTO preview_hostnames (id, hostname, org_id, workspace_id, port, created_at, expires_at, listener_mode, listener_sandbox_id)
      SELECT ?, ?, w.org_id, w.id, ?, ?, ?, ?, w.sandbox_id FROM workspaces w
-     JOIN orgs o ON o.id = w.org_id JOIN org_members m ON m.org_id = o.id
-     WHERE w.id = ? AND w.org_id = ? AND w.sandbox_id = ? AND w.archived_at IS NULL
-     AND w.state IN ('ready', 'working', 'unread', 'input') AND o.deleted_at IS NULL AND m.user_id = ?`,
+     JOIN org_members m ON m.org_id = w.org_id
+     WHERE w.id = ? AND w.org_id = ? AND w.sandbox_id = ?
+     AND ${sandboxAccessPredicate} AND m.user_id = ?`,
     )
     .bind(
       row.id,
@@ -77,32 +78,14 @@ export async function previewForLaunch(
 ): Promise<PreviewRecord | null> {
   const row = await db
     .prepare(
-      `SELECT id, hostname, port, expires_at AS expiresAt FROM preview_hostnames
-     WHERE org_id = ? AND workspace_id = ? AND id = ? AND revoked_at IS NULL AND expires_at > ?`,
+      `SELECT p.id, p.hostname, p.port, p.expires_at AS expiresAt FROM preview_hostnames p
+     JOIN workspaces w ON w.id = p.workspace_id AND w.org_id = p.org_id
+     WHERE p.org_id = ? AND p.workspace_id = ? AND p.id = ?
+       AND p.revoked_at IS NULL AND p.expires_at > ? AND ${sandboxAccessPredicate}`,
     )
     .bind(target.orgId, target.workspaceId, id, now)
     .first<PreviewRecord>()
   return row ? { ...target, ...row } : null
-}
-
-export function activePreview(
-  db: D1Database,
-  hostname: string,
-  now: number,
-): Promise<PreviewRecord | null> {
-  return db
-    .prepare(
-      `SELECT p.id, p.hostname, p.org_id AS orgId, p.workspace_id AS workspaceId,
-     p.port, p.expires_at AS expiresAt, p.listener_mode AS listenerMode,
-     p.listener_sandbox_id AS listenerSandboxId, w.sandbox_id AS sandboxId, w.state
-     FROM preview_hostnames p JOIN workspaces w ON w.id = p.workspace_id AND w.org_id = p.org_id
-     JOIN orgs o ON o.id = p.org_id
-     WHERE p.hostname = ? AND p.revoked_at IS NULL AND p.expires_at > ?
-     AND w.archived_at IS NULL AND w.sandbox_id IS NOT NULL
-     AND w.state IN ('ready', 'working', 'unread', 'input') AND o.deleted_at IS NULL`,
-    )
-    .bind(hostname, now)
-    .first<PreviewRecord>()
 }
 
 export async function savePreviewMode(

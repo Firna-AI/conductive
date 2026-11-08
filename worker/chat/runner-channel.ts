@@ -3,6 +3,7 @@ import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import { HttpError } from '../http'
 import { RunnerFileReports } from '../files/runner-reports'
+import { AuthenticatedRunner } from './authenticated-runner'
 import { RunnerDelivery } from './runner-delivery'
 import { parseRunnerTransport } from './runner-input'
 import type { ChatStore } from './store'
@@ -40,33 +41,39 @@ export class RunnerChannel {
     return this.store.run(async () => {
       await this.store.read(workspace.id, async () => undefined)
       this.close()
-      this.current = {
-        peer,
+      const active: ActiveRunner = {
+        peer: new AuthenticatedRunner(
+          peer,
+          workspace,
+          this.dependencies,
+          () => {
+            if (this.current !== active) return
+            this.current = null
+            this.dependencies.waitUntil(
+              this.store.run(() =>
+                this.dependencies.runnerDisconnected(
+                  active.workspace.id,
+                  this.publisher(active.workspace.id),
+                ),
+              ),
+            )
+          },
+        ),
         workspace,
         streamId: null,
         ready: false,
         delivered: new Set(),
       }
+      this.current = active
     })
   }
 
   disconnect(peer: RunnerPeer): void {
-    const active = this.current
-    if (!active || active.peer !== peer) return
-    this.current = null
-    this.dependencies.waitUntil(
-      this.store.run(() =>
-        this.dependencies.runnerDisconnected(
-          active.workspace.id,
-          this.publisher(active.workspace.id),
-        ),
-      ),
-    )
+    if (this.current?.peer.matches(peer)) this.close()
   }
 
   close(): void {
     const active = this.current
-    if (active) this.disconnect(active.peer)
     try {
       active?.peer.close()
     } catch {
@@ -77,12 +84,12 @@ export class RunnerChannel {
   receive(peer: RunnerPeer, value: unknown): Promise<void> {
     return this.store.run(async () => {
       const active = this.current
-      if (!active || active.peer !== peer) return
+      if (!active || !active.peer.matches(peer)) return
+      if (!(await active.peer.authorize())) return
       try {
         await this.handle(active, value)
       } catch (error) {
-        this.disconnect(peer)
-        peer.close()
+        active.peer.close()
         throw error
       }
     })
@@ -116,7 +123,7 @@ export class RunnerChannel {
       )
       active.streamId = message.streamId
       active.ready = welcome.ready
-      active.peer.send({
+      await active.peer.send({
         type: 'welcome',
         protocolVersion: RUNNER_PROTOCOL_VERSION,
         streamId: message.streamId,
@@ -131,7 +138,7 @@ export class RunnerChannel {
       void this.store
         .run(() => this.flush())
         .catch(() => {
-          this.disconnect(active.peer)
+          if (this.current === active) this.close()
           active.peer.close()
         })
       return
@@ -177,7 +184,7 @@ export class RunnerChannel {
       this.publish,
     )
     if (message.eventNumber > cursor) {
-      active.peer.send({
+      await active.peer.send({
         type: 'resend',
         streamId: message.streamId,
         fromEventNumber: cursor + 1,
@@ -185,7 +192,7 @@ export class RunnerChannel {
       return
     }
     await this.repairs.flush(active)
-    active.peer.send({
+    await active.peer.send({
       type: 'confirm',
       streamId: message.streamId,
       throughEventNumber: cursor,
@@ -202,6 +209,7 @@ export class RunnerChannel {
   async flush(): Promise<void> {
     const active = this.current
     if (active) {
+      if (!(await active.peer.authorize())) return
       try {
         await this.repairs.flush(active)
       } catch (error) {
@@ -226,11 +234,14 @@ export class RunnerChannel {
     }
   }
 
-  sendFileCommand(workspaceId: string, command: RunnerFileCommand): boolean {
+  async sendFileCommand(
+    workspaceId: string,
+    command: RunnerFileCommand,
+  ): Promise<boolean> {
     const active = this.current
     if (!active?.ready || active.workspace.id !== workspaceId) return false
     try {
-      active.peer.send(command)
+      await active.peer.send(command)
       return true
     } catch {
       this.close()

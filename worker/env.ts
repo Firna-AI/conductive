@@ -21,6 +21,7 @@ export interface AppEnv {
   BOAT_ORG_ID: string
   BOAT_KEY_ENCRYPTION_KEY: string
   RESEND_API_KEY?: string
+  OPERATOR_GITHUB_IDS?: string
 }
 
 export type HttpFetch = (request: Request) => Promise<Response>

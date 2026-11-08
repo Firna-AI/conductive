@@ -24,8 +24,8 @@ the `AppModel` of the tab, for the signed-in user.
   Each stream keeps its last event number.
 - A return draws the kept header, notices, and chat at once. Then each
   socket asks only for the events after its own last event number.
-- On a return, the model sends its open again, as at each open. The chat
-  reads nothing again: no history, no session list, and no view.
+- On a return, the model reads the workspace again, as at each open. The
+  chat reads nothing again: no history, no session list, and no view.
 - Each kept chat takes the account, the models, its org, and the members of
   the org from the app models, as its `sources`. So a login that the
   account screen saves, a new default model, or a new org name shows in
@@ -65,10 +65,12 @@ says.
 - The shell draws the start steps, with the time of each step, and the
   sandbox bar, with Resume. It draws them from its own record of the
   workspace, and gives them to the chat as `host`. The chat places them.
-- An open or a Resume answers when the server queued the start, with the
-  state `starting`. The stored chat shows during the start. The stream
-  then brings the start steps and the result. A failed resume keeps the
-  workspace and its chat, with Try again.
+- An open reads the workspace, shows it, and starts the stream. Only then
+  does a stopped or failed workspace resume. A Resume answers when the
+  server queued the start, with the state `starting`. The stored chat
+  shows during the start, and the stream brings the start steps and the
+  result. A failed resume keeps the workspace and its chat, with Try
+  again.
 - Connect, on the notice of a missing agent login, opens the Connect form
   of the account.
 - The shell gives the chat no `onOpenDiff` or `extraTabs` yet. So a file
@@ -146,6 +148,22 @@ header. It draws `notices.shown` with the CSS module of the
 mockups' `LostUpdateBar` and the words of `lostCopy.ts`. Its Dismiss is the
 shell's `IconButton`. The ages use the clock of `AppServices`, and they
 move on every 30 seconds.
+
+## A refused start
+
+`WorkspaceScreen` reads `model.startError`. While the sandbox is stopped or
+failed, a start error whose code is in `refusalCodes` of `SandboxNotice.tsx`
+shows the refused bar and panels: "The sandbox can't start", with the
+reason of the error and no action. Today the only such code is
+`user_suspended`. Other start errors keep the stopped and error notices.
+The header, the history, and the owner control stay. The Resume action and
+its failure toast stay as they were.
+
+`WorkspaceContext.onReassigned(workspace)` passes a confirmed new owner to
+`model.reassigned`. A feature that composes the owner slot must call it
+from the `onReassigned` of the owner picker.
+[Starts, stops, and builds](../../../docs/protocol/operator-actions.md#starts-stops-and-builds)
+states the refusal.
 
 ## Development page
 
@@ -225,6 +243,8 @@ Run the tests with `npm run test -- src/shell/workspace`.
   columns, and the tab bar of a phone.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
   states of the cloud computer, the start steps, and the Archive question.
+  `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
+  the refused notice.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
 

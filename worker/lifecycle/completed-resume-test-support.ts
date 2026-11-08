@@ -1,6 +1,6 @@
-import { openWorkspace, resumeWorkspace } from './workspace-resume'
+import { resumeWorkspace } from './workspace-resume'
 import { workspaceResponse } from './workspace-response'
-import { WorkspaceStartError } from './workspace-start'
+import { workspaceStartFailure } from './workspace-start'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
 
@@ -28,8 +28,7 @@ async function completed(
   const response = await operation(tracked)
   if (!accepted) return response
   const result = await runtime.workspace(workspaceId).waitLifecycleStart()
-  if (!result.ok)
-    throw Object.assign(new WorkspaceStartError(result.error.log), result.error)
+  if (!result.ok) throw workspaceStartFailure(result.error)
   return workspaceResponse(runtime, orgId, workspaceId)
 }
 
@@ -39,9 +38,4 @@ export const resumeCompletedWorkspace: typeof resumeWorkspace = async (
 ) =>
   completed(args[0], args[1], args[2], (runtime) =>
     resumeWorkspace(runtime, args[1], args[2], args[3]),
-  )
-
-export const openCompletedWorkspace: typeof openWorkspace = async (...args) =>
-  completed(args[0], args[1], args[2], (runtime) =>
-    openWorkspace(runtime, args[1], args[2], args[3], args[4]),
   )

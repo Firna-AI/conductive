@@ -9,7 +9,7 @@ with the app's one Boat key, as the [sandbox area](../sandbox/README.md)
 says.
 
 `chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
-gives the create, read, open, resume, and activity routes of a workspace to
+gives the create, read, resume, and activity routes of a workspace to
 `handleLifecycleRequest`. The root Worker also serves the
 [machine route](#machine-route). It routes no build route yet.
 
@@ -31,7 +31,7 @@ gives the create, read, open, resume, and activity routes of a workspace to
 `handleLifecycleRequest` in [`browser.ts`](browser.ts) serves these routes
 of the shared contracts:
 
-- create, read, open, resume, and activity of a workspace, from
+- create, read, resume, and activity of a workspace, from
   `src/shared/workspaces.ts`
 - the build list, a new build, a refresh, one build, and its log stream,
   from `src/shared/org-settings.ts`
@@ -70,14 +70,13 @@ refresh reads the archive variables. It gives `acceptFirstMessage` to
   Admission makes the workspace, its token, and the first message durable.
   The sandbox can still be starting. `waitCreationLifecycle` waits for the
   end of a create, and `waitLifecycleStart` for the end of a resume.
-- Open and resume answer when the start is queued, with the workspace in
+- Resume answers when the start is queued, with the workspace in
   `starting`. No browser route waits for the end of a start. The events of
   the workspace carry the start steps and the result. A failed resume
   keeps the workspace and its chat, with an error and a valid Try again.
-- A test that needs the end of a resume uses `resumeCompletedWorkspace` or
-  `openCompletedWorkspace` in
+- A test that needs the end of a resume uses `resumeCompletedWorkspace` in
   [`completed-resume-test-support.ts`](completed-resume-test-support.ts).
-  Each waits for the job that its call queued, and reads the real result.
+  It waits for the job that its call queued, and reads the real result.
 - The write that ends the `records` phase stores the admission in the start
   job. The end of the create moves it to the completed creation record. A
   repeat with other content still gets the admitted first message.
@@ -89,7 +88,7 @@ refresh reads the archive variables. It gives `acceptFirstMessage` to
   and the org purge. Lifecycle cleanup leaves the attachments to their owner.
 - A retry gets a fresh workspace ID with the same first message ID. Its
   start waits until the records of the failed attempt are gone.
-- Open and resume restart only a stopped or failed workspace. A resumed
+- Resume restarts only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
 - Each start gives the sandbox the default branch of its repository. It
@@ -198,8 +197,8 @@ object holds the lifecycle state, the turn records, and the events.
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
-- [`workspace-resume.ts`](workspace-resume.ts): `openWorkspace` and
-  `resumeWorkspace`, which answer once the start is queued.
+- [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
+  answers once the start is queued.
 - [`workspace-state-projection.ts`](workspace-state-projection.ts):
   `WorkspaceStateProjection`, the one writer of the shown state, as
   [Workspace Durable Object](workspace-object.md#the-shown-state) says.
@@ -266,3 +265,4 @@ object holds the lifecycle state, the turn records, and the events.
 - [Shared contracts](../../src/shared/README.md): the browser and runner
   payloads.
 - [Migrations](../../migrations/README.md): the D1 tables.
+- [Operator actions](../operator/README.md#lifecycle-checks): the suspension checks.

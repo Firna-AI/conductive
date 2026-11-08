@@ -115,6 +115,14 @@ and removal are not wired into this tab yet.
   says. A return opens the model again, and its stream starts after its
   last event number. A sign-out, or a sign-in of another user, closes and
   forgets every kept model.
+- An open reads the workspace detail, shows it, and starts the event
+  stream. Only then does a stopped or failed workspace get its Resume. So
+  a refused or failed start keeps the detail and the stream, and
+  `startError` of `WorkspaceModel` holds the error. A manual Resume still
+  rejects for its caller.
+- A `user_suspended` refusal holds only while the owner stays the same. A
+  new owner in the detail, or from `reassigned(workspace)`, clears it. A
+  late refusal for a former owner sets nothing.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.
@@ -156,52 +164,9 @@ and removal are not wired into this tab yet.
 
 ## Screens
 
-- The app runs every cloud computer in its own Boat account, so no org has
-  a Boat key. The app has no key screen, tab, notice, or Get started step,
-  and no text of the app names Boat.
-- Get started has three steps: the GitHub App, the first org, and Claude or
-  Codex. A reply of the API names only these steps.
-- Create org asks for the name and the initials, and lists the
-  repositories that the person and the GitHub App both reach, from
-  `AccountModel.repositories`, before the org exists. The create sends the
-  GitHub IDs of the chosen ones.
-- The rail, the org switcher, and General show the saved initials of an
-  org. An org without them shows the initials of its name.
-- The Cloud computer tab names the software of the base image from the
-  settings reply. An older reply without it names no software.
-- A step of a panel, by a key or a drag, starts from the width that the
-  panel shows. It stays in a range that holds that width, so a shrink
-  never widens a panel that the layout shows narrower than its range. A
-  step that ends at its start width stores nothing.
-- A sheet or a dialog makes the rest of its frame inert through
-  `OverlayHost`. It keeps Tab and Shift+Tab inside, also from the layer
-  itself and from a text field. When it closes, the frame is active again
-  before the focus goes back to the trigger. A desktop menu leaves the
-  frame active.
-- A move of a workspace row by keys keeps the focus on the row. The list
-  gives back only a lost focus, as a layer does: when a render takes the
-  focused row link out of the page and the focus falls to the page, the
-  new link of the same workspace takes it, also after a failed move puts
-  the row back. When the user moves the focus away, a later read of the
-  list leaves the focus there.
-- An editor of a saved value, such as a script or the org name, stays
-  mounted through its saves (`useSavedDraft`). When the saved value
-  changes, a draft that the user did not change takes the new value, and
-  an edited draft stays. A draft that equals the one that went out for a
-  save takes the value of the answer. A failed save keeps the draft.
-- Save keeps the focus when a save leaves nothing to save
-  (`ActionButton` with `keepFocus`). A browser takes the focus from a
-  natively disabled button, so Save stays a native button while it has
-  the focus: it looks off, its wrapper says `aria-disabled`, and a press
-  does nothing. When the focus leaves, Save is natively disabled.
-- New workspace sends and uploads one at a time: the create waits for the
-  files, and the paperclip is off while the create runs. Send and Try
-  again read one readiness: the text, the files, the agent login, the
-  repository, and the model.
-- A create whose sandbox did not start gets its own New workspace form in
-  the tab that sent it. The address of that workspace shows the form, with
-  "The workspace wasn't created". Try again sends the same message ID, as
-  [Creation recovery](creation-recovery.md#the-returned-form) says.
+[Screens](screens.md) gives the rules of the screens of the app shell:
+the account and Get started, sign-in, orgs, panels and layers, the
+focus, saved drafts, and New workspace.
 
 ## Rules for this code
 
@@ -260,7 +225,8 @@ clicks, types, and lets the answers of the fake API settle.
   while screens show it.
 - `section-actions.ts`, `list-changes.ts`, and `sections.ts`: the list
   writes, their changes, moves, and the Archived group.
-- `workspace-model.ts` and `archive-model.ts`: an open workspace and Archive.
+- `workspace-model.ts` and `archive-model.ts`: an open workspace, its
+  `startError` and `reassigned`, and Archive.
 - `new-workspace-model.ts`: the first message that creates a workspace.
   `creations.ts`: `Creations`, the admitted creates of an org in this tab,
   and `failedCreate`, which tells a create whose start failed.

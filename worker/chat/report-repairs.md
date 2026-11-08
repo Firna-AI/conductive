@@ -42,7 +42,9 @@ one `RunnerReportKind`.
   event again, and the channel confirms it as a duplicate.
 - After the `welcome`, the channel sends the repairs before the other
   commands. A repair needs no `runner.ready` and carries no login, so its
-  send runs no login or token check.
+  send runs no login check. Like each send, it first passes the token
+  check of `AuthenticatedRunner`, as the
+  [chat backend README](README.md#access) says.
 - Turn, message, interrupt, model, and file commands still wait for
   `runner.ready`.
 - Each new connection gets each `pending` record again, with the same

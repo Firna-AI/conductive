@@ -1,5 +1,5 @@
 import { providerState } from './provider-state'
-import type { AppEnv } from '../env'
+import type { AppDependencies, AppEnv } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
 import type { WorkspaceRow } from './workspace-data'
 import { allocateWorkspace } from './start-allocation'
@@ -14,7 +14,7 @@ import {
 } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
 import { workspaceEnvironment } from './settings-data'
-import { readWorkspaceToken } from './tokens'
+import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
 import { WorkspaceStartError } from './workspace-start'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type {
@@ -25,6 +25,7 @@ import type {
 
 export async function advanceStartMachine(
   env: AppEnv,
+  dependencies: AppDependencies,
   endpoint: WorkspaceLifecycleEndpoint,
   provider: SandboxProvider,
   row: WorkspaceRow,
@@ -35,6 +36,12 @@ export async function advanceStartMachine(
   environmentCiphertext: string | null
 } | null> {
   if (job.phase === 'machine') {
+    await ensureWorkspaceToken(
+      env,
+      job.workspaceId,
+      dependencies.randomToken,
+      dependencies.now(),
+    )
     const environment = await workspaceEnvironment(
       env,
       job.orgId,

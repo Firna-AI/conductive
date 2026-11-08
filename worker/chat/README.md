@@ -97,8 +97,8 @@ The Durable Object runs the gates itself.
   an expired grant closes and gets no event.
 - Every 15 seconds, one D1 query refreshes the grants of all open tabs.
   The refresh closes each tab without a new grant. Sign-out, membership
-  removal, session expiry, and org deletion end access. A failed read
-  closes each tab of its batch.
+  removal, a suspension of the user, session expiry, and org deletion end
+  access. A failed read closes each tab of its batch.
 - A separate expiry timer closes each tab at its grant deadline, also
   while a refresh read waits. A late read result cannot reopen a closed
   tab.
@@ -109,9 +109,17 @@ The Durable Object runs the gates itself.
   `Authorization: Bearer <workspace token>`.
 - `tokenWorkspace` hashes the token. It accepts a token that is not
   revoked, of a workspace that is not archived, in an org that is not
-  deleted.
+  deleted, with an owner who is not suspended.
+  `workspaceTokenAccessPredicate` in
+  [`workspace-token-access.ts`](../data/workspace-token-access.ts) holds
+  that rule. The agent tools, the git credential route, and the Mac
+  commands use it too.
 - The runner sends `hello` first, with `RUNNER_PROTOCOL_VERSION` and its
   workspace ID. A new runner connection closes the previous one.
+- `AuthenticatedRunner` keeps the token hash of its connection. It checks
+  the token rule again before each message that it sends or receives, and
+  every 15 seconds while the connection is idle, with no cached result. A
+  failed rule or a failed read closes the connection.
 - The first workspace that passes a gate binds the Durable Object. Each
   other workspace gets `404 workspace_not_found`. So does a workspace that
   `matchesObject` refuses, because `WORKSPACES.idFromName` names another
@@ -120,10 +128,15 @@ The Durable Object runs the gates itself.
   `readLogin` in `login-access.ts`, the only caller of `resolveLogin`. It
   reads the agent login of a starter or of a linked-session member, for one
   agent. `resolveLogin` first checks the workspace, that user, the sender,
-  and the runner token in one D1 read. An override replaces only the login
-  read.
-- Its metadata path reads only the membership and the stored login kind of
-  each starter, in one D1 query. It reads no ciphertext.
+  and the runner token in one D1 read. The workspace must pass the token
+  rule above, without the token. That user and the sender must be members
+  who are not suspended. An override replaces only the login read.
+- Its metadata path, `readLoginAvailability`, reads only the membership,
+  the suspension, and the stored login kind of each starter, in one D1
+  query. The workspace must also pass the token rule above. So a suspended
+  starter or a refused workspace shows an unavailable login. The result
+  sets only `loginAvailable`, so the session list, the history, and the
+  event subscription stay readable. It reads no ciphertext.
 - A revoked or replaced runner token closes that connection without a
   login, and the command stays queued. A sender who left the org gets no
   login either. [Session logins](integration/README.md#session-logins) says
@@ -132,60 +145,9 @@ The Durable Object runs the gates itself.
 
 ## History and event order
 
-- `ChatStore.run` is one serial queue. Each request, each runner message,
-  each command send, and each trusted read, change, or replay runs in it,
-  one at a time.
-- `ChatStore.change` commits the new events, the runner cursor, and the
-  changed records in one storage transaction. The tabs get the events
-  only after the commit.
-- One publisher of `WorkspaceChat` pushes the events of each commit to the
-  open tabs, in the queue task of that commit. So the tabs get the events
-  in commit order.
-- A failed send closes its tab. When the tab connects again, it gets the
-  missed events from the stored history.
-- Each event gets the next workspace event number. The numbers start at 1,
-  have no gaps, and span all sessions and runner streams.
-- A tab connects with `after`, the last event number that it has. It gets
-  one `history` message with the stored events after that number. Then it
-  gets one `event` message for each new event.
-- The history read and the new subscription run in the queue. So no event
-  falls between them, and no event comes twice.
-- The records use the `chat:v1:` key prefix of the Durable Object storage.
-- Each runner stream numbers its events from 1. The Durable Object stores
-  a runner event, or its refusal marker, only when its number is the stream
-  cursor plus one.
-- A duplicate gets a new confirm and is not stored again. A gap gets a
-  `resend` from the first missing number. The `welcome` gives the cursor,
-  or less while a [report repair](#report-repairs) waits for its first send.
-- The `turn_not_active` reason means that the turn never started.
-- Valid late events append to a started turn that ended. They change no
-  turn, session, message, or command state.
-- A refused `turn.completed` or `turn.failed` ends its started active turn as `failed`.
-- A message and its command commit together. The Durable Object sends the
-  commands in order when the runner is ready.
-- `TurnLifecycle.canDispatch` keeps each command behind its turn. A `turn`
-  command needs a queued or running turn, and a `message` command needs a
-  running turn. A `model` command waits while the active turn of its
-  session is queued. An `interrupt` command needs a stopping turn.
-- Only a `turn` command starts a turn, in `DeliveryState.begin`. So a
-  follow-up message or model change never overtakes a held turn.
-- After the login checks, delivery commits the turn state before sending.
-  If sending a newly dispatched turn throws, delivery restores its queued
-  state. `message.sent` follows a successful send.
-- The internal `StoredTurn.started` marker keeps dispatch evidence after an end.
-- The interrupt route stores and pushes `turn.stop-requested` with the
-  authenticated member's ID before it interrupts the runner. Runner events
-  cannot set that member.
-- A message accepted while the active turn stops waits in another stored
-  turn. Its commands go out only after that turn becomes active.
-- After a finished turn, its unanswered messages run before later waiting
-  work. Closing a session records its waiting turns as stopped in history.
-- A command stays pending until the Durable Object removes it. A new runner
-  connection gets each pending command again, with the same command ID.
-- An active agent event that lists a message ID removes that message's
-  command. The first end of a turn removes each command of that turn.
-- A new `model` command replaces the pending `model` command of its
-  session.
+[History and event order](history.md) gives the serial queue, the one
+publisher, the event numbers, the runner streams, and the order of the
+runner commands.
 
 ## Retries
 
@@ -194,10 +156,9 @@ retry route for `Session.retryMessageId`.
 
 ## Report repairs
 
-[Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
-states the rules. A report repair is the stored `report.refresh` command of
-one `RunnerReportKind`. [Report repairs](report-repairs.md) describes the
-stored records, the refusal checks, and the sends before each confirm.
+[Report repairs](report-repairs.md) says how the chat backend asks the
+runner for one fresh full report after it refuses an update. It describes
+the stored records, the refusal checks, and the sends before each confirm.
 
 ## Tests
 
@@ -242,8 +203,8 @@ tests through the production Worker entry.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
   the object.
 - `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
-  a browser tab: the login refresh, the tab with its lifecycle tab ID, the
-  close after a failed start, and the grant check before the history.
+  a browser tab: the login refresh, the tab registration, the close after
+  a failed start, and the grant check before the history.
 - `http-routes.ts`, `send-message.ts`, `messages.ts`, and `sessions.ts`: the
   routes, Send and Retry with linked sessions, the turns, and session state.
 - `model-changes.ts`: client session IDs, the creation records that repeated
@@ -254,6 +215,8 @@ tests through the production Worker entry.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event.
+- `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
+  runner connection before each message and while it is idle.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
 - `runner-delivery.ts`: the sends of pending commands, with the login
@@ -297,6 +260,7 @@ tests through the production Worker entry.
 - [GitHub banner backend](../github/README.md)
 - [Access and security: Agent logins in a sandbox](../../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
 - [Access and security: The workspace token](../../docs/protocol/access-and-security.md#the-workspace-token)
+- [Operator actions: Workspace tokens and runners](../../docs/protocol/operator-actions.md#workspace-tokens-and-runners)
 - [Architecture: Workspace Durable Object](../../docs/architecture.md#workspace-durable-object)
 - [Shared contracts](../../src/shared/README.md)
 - [Backend and runner fakes](../test-support/README.md)

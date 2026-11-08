@@ -4,7 +4,11 @@ import {
   DEVICE_COMMAND_PATH,
   deviceCommandsPath,
 } from '../../../src/shared/device'
-import { workspacePaths, workspacesPath } from '../../../src/shared/workspaces'
+import {
+  workspacePath,
+  workspacePaths,
+  workspacesPath,
+} from '../../../src/shared/workspaces'
 import { TOOL_TURN_HEADER } from '../../../tools/context'
 import { orgWorkspaces } from '../../tools/store'
 import { closeSockets } from '../adapter-sockets.test-support'
@@ -112,8 +116,7 @@ it('keeps current Mac input across lifecycle activity, heartbeat, retained retur
     .throughEventNumber
   await closeSockets(tab.socket)
   const reopened = await active.request(
-    workspacePaths.open(OUTER_ORG, OUTER_WORKSPACE),
-    { method: 'POST', body: '{}' },
+    workspacePath(OUTER_ORG, OUTER_WORKSPACE),
   )
   expect(reopened.status).toBe(200)
   expect(await reopened.json()).toMatchObject({ workspace: { state: 'input' } })

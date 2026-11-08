@@ -101,7 +101,7 @@ depends on where the code runs:
   another workspace closes the connection before a welcome, a command, or a
   login goes out.
 - After the app request gate, `chatLifecycleRoute` in
-  `worker/app-api/lifecycle.ts` gives the create, read, open, resume, and
+  `worker/app-api/lifecycle.ts` gives the create, read, resume, and
   activity routes of a workspace to the lifecycle handler. It gives the
   first message of a create to `acceptLifecycleFirstMessage` of the
   workspace object. The
@@ -177,8 +177,6 @@ methods of `Workspace`.
   while `turnDispatching` registers the turn, before the send.
 - `runnerDisconnected` reports a closed runner connection. It runs later in
   the queue, through `waitUntil`.
-- `browserOpened` and `browserClosed` give the open tab IDs to the
-  lifecycle. The access checks and the timers of each tab stay as they are.
 - The other lifecycle events go through `commitWorkspaceEvent`, with the
   one chat publisher. No hook calls `appendWorkspaceEvent` while it holds
   the queue.

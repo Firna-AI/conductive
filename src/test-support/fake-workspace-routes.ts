@@ -60,7 +60,6 @@ export function fakeWorkspaceRoutes(
     }
     routes.json('GET', workspacePath(org, id), detail)
     routes.json('PATCH', workspacePath(org, id), detail)
-    routes.json('POST', workspacePaths.open(org, id), detail)
     routes.json('POST', workspacePaths.resume(org, id), detail)
     routes.empty('POST', workspacePaths.activity(org, id))
     routes.empty('PUT', workspacePaths.read(org, id))

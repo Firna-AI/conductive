@@ -9,6 +9,10 @@ import type { ImageCoordinatorState } from './image-timers'
 import type { LifecyclePublisher } from './durable-types'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
+  cancelSuspendedLifecycleStart(
+    workspaceId: string,
+    ownerUserId: string,
+  ): Promise<boolean>
   projectDeviceState(
     workspaceId: string,
     choice: AgentChoice | undefined,

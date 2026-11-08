@@ -36,7 +36,6 @@ export async function chatLifecycleRoute(
     workspaceId &&
     request.method === 'POST' &&
     [
-      workspacePaths.open(orgId, workspaceId),
       workspacePaths.resume(orgId, workspaceId),
       workspacePaths.activity(orgId, workspaceId),
     ].includes(path)

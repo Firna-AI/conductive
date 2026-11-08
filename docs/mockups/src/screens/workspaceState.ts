@@ -30,8 +30,14 @@ export const workspaceStateSchema = {
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
-    /** The cloud computer. An archived workspace has none. */
-    sandbox: { enum: ['ready', 'starting', 'stopped', 'error', 'archived'] },
+    /**
+     * The cloud computer. An archived workspace has none. `refused` is a
+     * stopped cloud computer whose start the app refuses, such as while the
+     * owner of the workspace is suspended.
+     */
+    sandbox: {
+      enum: ['ready', 'starting', 'stopped', 'error', 'refused', 'archived'],
+    },
     conversation: { enum: conversationKeys },
     banner: { enum: bannerStates },
     /** The list of the files panel: All files, Changes, or Checks. */
