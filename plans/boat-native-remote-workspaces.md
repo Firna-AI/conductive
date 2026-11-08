@@ -4226,6 +4226,13 @@ answer.
     from the Worker. The Worker needs R2 access keys as a new secret. The
     bucket needs CORS rules, and the content policy and the Mac app must
     allow the R2 host. Effort: Large.
+  - **F.** Send the raw bytes in parts of 5 MiB, with the content type
+    `application/octet-stream`, and join them with an R2 multipart
+    upload. Each part streams into R2, so memory stays small. A lost
+    connection loses one part, and the app can show progress after each
+    part. It needs three routes, stored part state, and clean-up of
+    abandoned parts. Both protocols change, as in D. Effort: Large.
+    Added by the options check of 8 November 2026.
 - **Left out:** A limit of 1 MB for each file, because it breaks the
   25 MB limit of decision 132 A. An upload route in the workspace Durable
   Object, because the object also has 128 MB, so it has the problem of
@@ -4240,6 +4247,13 @@ answer.
 - **Action:** ask the user, because D changes the rule "a JSON body for
   each write" of the access protocol, and no recorded decision covers
   that change.
+- **Options check, 8 November 2026:** it keeps D. A test in Miniflare
+  confirmed that D streams into R2 through a fixed-length stream, so D
+  needs a required `Content-Length`. D keeps the forged-request
+  protection when the gate refuses a request with no content type and
+  the file name goes in the URL. D also changes
+  `docs/protocol/desktop-app.md`. Report:
+  `.context/options-check-144/report.md`.
 
 ## Design
 
