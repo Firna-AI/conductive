@@ -19,5 +19,6 @@
 - **Left out:** A shorter desktop URL, because an open stream keeps playing after its URL expires.
 - **Wider fix:** C.
 - **Previous examples:** finding 1 of PR #6, and finding 4 of PR #9.
+- **Related:** `plans/follow-ups/desktop-stream-on-own-domain.md`: the same build. Its option B sends the stream through the Worker on the app's own domain, so that the frame policy can drop `https://*.on.boat.dev`. One proxy closes both items.
 - **Recommendation:** A now. A removal is rare, and the stream ends when the sandbox stops. C protects best, at the cost of a large build.
 - **Action:** fix after merge, apply C, because the user chose A now and C as a later follow-up on 7 November 2026 (decision 117). The access protocol states the exception until C lands.
