@@ -1,30 +1,12 @@
 import { ApiError } from '../../app/api/client'
-import type { Session } from '../../shared/sessions'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { ChatApi, WorkspaceTarget } from '../api/client'
-import type { StreamEnvelope } from '../api/read-workspace'
 import type { DeviceChannel } from '../device/device-actions'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
-import { withFirstStart } from './first-start'
-import {
-  applyMoves,
-  claimMoves,
-  saveMovedView,
-  type PendingMove,
-} from './model-moves'
-import {
-  asSessionEvent,
-  sessionOf,
-  SessionLog,
-  type ChatEnvelope,
-} from './session-log'
-import {
-  beginChange,
-  WORKSPACE_RECORD,
-  type RecordKey,
-} from './session-records'
-import { placeSession } from './sessions'
+import type { PendingMove } from './model-moves'
+import { SessionLog } from './session-log'
+import type { PendingEdit } from './session-records'
 import type { Transcript } from './transcript'
 
 /** What the chat's actions share: the API, the store, the logs, and the stream. */
@@ -36,8 +18,13 @@ export interface ChatContext {
   readonly logs: Map<string, SessionLog>
   /** The running history load of each session, so that loads are shared. */
   readonly loading: Map<string, Promise<number | null>>
-  /** The local version of each record, as `session-records.ts` says. */
-  readonly versions: Map<RecordKey, number>
+  /** The rename and model edits that wait for their replies, by session. */
+  readonly edits: Map<string, readonly PendingEdit[]>
+  /**
+   * The event number of the workspace record that shows, so an older reply
+   * or event no longer replaces it, as `session-records.ts` says.
+   */
+  readonly workspaceOrder: { through: number }
   /** The number of the latest model pick of each session. */
   readonly picks: Map<string, number>
   /** The model changes whose new session has not shown yet, by its ID. */
@@ -71,6 +58,15 @@ export function messageOf(error: unknown): string {
   return error instanceof ApiError ? error.message : RETRY_MESSAGE
 }
 
+/**
+ * The server answered and refused the request. A failure with no answer, an
+ * answer of a server error, or an answer that the chat cannot read is no
+ * refusal, because the server can still have made the change.
+ */
+export function isRefusal(error: unknown): boolean {
+  return error instanceof ApiError && error.status >= 400 && error.status < 500
+}
+
 export function showNotice(
   context: ChatContext,
   sessionId: string | null,
@@ -84,7 +80,11 @@ export function showNotice(
   }))
 }
 
-/** Shows a new transcript, and drops sent messages that it now holds. */
+/**
+ * Shows a new transcript, and drops sent messages that it now holds. A Stop
+ * that waits belongs to its turn, so it ends when that turn no longer runs,
+ * also when another turn runs now.
+ */
 export function withTranscript(
   snapshot: ChatSnapshot,
   sessionId: string,
@@ -96,91 +96,18 @@ export function withTranscript(
       item.kind === 'user' ? [item.message.id] : [],
     ),
   )
-  return withSession(snapshot, sessionId, (state) => ({
-    ...state,
-    transcript,
-    times,
-    pending: state.pending.filter((message) => !shown.has(message.id)),
-    stopping: transcript.turn ? state.stopping : false,
-  }))
-}
-
-/**
- * The last record of each session in a batch of the stream, in the order of
- * those last records. A batch, such as the history after a reconnect, then
- * shows only where each session ends. An older close in the batch can then
- * not move the focus away from a session that the batch leaves open.
- */
-function lastRecords(
-  envelopes: readonly StreamEnvelope[],
-): Map<string, Session> {
-  const records = new Map<string, Session>()
-  for (const { event } of envelopes) {
-    if (event?.type !== 'session.updated') continue
-    records.delete(event.session.id)
-    records.set(event.session.id, event.session)
-  }
-  return records
-}
-
-const changesWorkspace = (event: StreamEnvelope['event']) =>
-  event?.type === 'workspace.updated' ||
-  event?.type === 'workspace.title' ||
-  event?.type === 'start.updated'
-
-/**
- * Applies workspace stream events in order: chat events to the log of their
- * session, and records of the workspace, its start, and its sessions. Each
- * session record also goes to the log of its session, which keeps the retry
- * message of the newest record. A record from the stream starts a new
- * version of its session, and an event of the workspace or its start a new
- * version of the workspace record, so an older reply no longer applies. The
- * first record of a session that a model change opens moves the draft in the
- * same snapshot.
- */
-export function applyEnvelopes(
-  context: ChatContext,
-  envelopes: readonly StreamEnvelope[],
-): void {
-  const bySession = new Map<string, ChatEnvelope[]>()
-  for (const { eventNumber, occurredAt, event } of envelopes) {
-    const chat = asSessionEvent(event)
-    if (!chat) continue
-    const events = bySession.get(sessionOf(chat)) ?? []
-    events.push({ eventNumber, occurredAt, event: chat })
-    bySession.set(sessionOf(chat), events)
-  }
-  const changed = [...bySession].filter(([id, events]) =>
-    logOf(context, id).merge(events),
-  )
-  const records = lastRecords(envelopes)
-  for (const id of records.keys()) beginChange(context, id)
-  const moves = claimMoves(context, records.values())
-  if (envelopes.some(({ event }) => changesWorkspace(event))) {
-    beginChange(context, WORKSPACE_RECORD)
-  }
-  context.store.update((snapshot) => {
-    let next = snapshot
-    for (const { event } of envelopes) {
-      if (event?.type === 'workspace.updated') {
-        next = { ...next, workspace: event.workspace }
-      } else if (event?.type === 'workspace.title' && next.workspace) {
-        next = { ...next, workspace: { ...next.workspace, name: event.name } }
-      } else if (event?.type === 'start.updated') {
-        next = { ...next, start: event.start }
-      }
-      // Each record of a batch counts, also one that a later record replaces.
-      next = withFirstStart(next)
+  return withSession(snapshot, sessionId, (state) => {
+    const running = transcript.turn?.turnId
+    const same =
+      running !== undefined && running === state.transcript.turn?.turnId
+    return {
+      ...state,
+      transcript,
+      times,
+      pending: state.pending.filter((message) => !shown.has(message.id)),
+      stopping: same ? state.stopping : false,
     }
-    for (const record of records.values()) next = placeSession(next, record)
-    next = applyMoves(next, moves)
-    for (const [id] of changed) {
-      const log = logOf(context, id)
-      next = withTranscript(next, id, log.transcript, log.times)
-    }
-    return next
   })
-  saveMovedView(context, moves)
 }
 
 /** Saves the view one request at a time. A newer view replaces one that waits. */

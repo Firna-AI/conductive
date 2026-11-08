@@ -2,7 +2,11 @@ import { vi } from 'vitest'
 
 import type { SendMessageRequest } from '../../src/shared/messages'
 import { DurableLifecycle } from './durable'
-import type { DurableLifecycleState, LifecycleStorage } from './durable-types'
+import type {
+  DurableLifecycleState,
+  LifecycleStorage,
+  LifecycleTurnRecovery,
+} from './durable-types'
 
 export const FIRST_MESSAGE: SendMessageRequest = {
   id: 'message-one',
@@ -39,6 +43,9 @@ export function lifecycleFixture() {
       .fn<() => Promise<boolean | void>>()
       .mockResolvedValue(undefined),
     extendDeadline: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    recoverTurns: vi
+      .fn<() => Promise<LifecycleTurnRecovery | undefined>>()
+      .mockResolvedValue(undefined),
   }
   const create = () => new DurableLifecycle(storage, () => now, hooks)
   return {

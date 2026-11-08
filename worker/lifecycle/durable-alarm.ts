@@ -1,4 +1,5 @@
 import { reconciledLifecycle } from './durable-reconciliation'
+import { recoverLifecycleTurns } from './durable-turns'
 import {
   DISK_KEEPALIVE_MS,
   IDLE_MS,
@@ -15,6 +16,7 @@ export async function advanceLifecycleAlarm(
   write: (state: DurableLifecycleState) => Promise<void>,
 ): Promise<void> {
   if (!state || state.state === 'archived') return
+  state = await recoverLifecycleTurns(state, hooks)
   let stopPending = false
   if (!state.runnerConnected && state.state !== 'stopped' && hooks.reconcile)
     state = reconciledLifecycle(state, await hooks.reconcile(), now())

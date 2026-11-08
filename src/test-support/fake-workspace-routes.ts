@@ -14,9 +14,25 @@ import {
   type WorkspaceState,
 } from '../shared/workspaces'
 import type { FakeRouteWriter } from './fake-api-routes'
-import { FAKE_IDS } from './fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from './fixtures/core'
 import { workspaceFixtures } from './fixtures/workspaces'
 import { recordedChatEvents, type RecordedChatScenario } from './recorded-chat'
+
+/**
+ * The recorded chats whose turn still runs at their end. Each session record
+ * names that turn and its start, as the Worker does.
+ */
+const runningAtEnd: ReadonlySet<RecordedChatScenario> = new Set([
+  'running',
+  'first-turn',
+  'refused-events',
+])
+
+/**
+ * The event number of each recorded reply and read. The recorded state
+ * holds before the events that a test sends, so each sent event is newer.
+ */
+const eventNumber = 0
 
 export function fakeWorkspaceRoutes(
   routes: FakeRouteWriter,
@@ -36,10 +52,14 @@ export function fakeWorkspaceRoutes(
       workspace.id === data.created.workspace.id
         ? data.created
         : { ...data.detail, workspace }
+    const running = runningAtEnd.has(conversation)
     const sessions = {
+      eventNumber,
       sessions: data.sessions.sessions.map((session) => ({
         ...session,
         workspaceId: id,
+        activeTurnId: running ? 'turn-1' : session.activeTurnId,
+        activeTurnStartedAt: running ? FAKE_TIME : session.activeTurnStartedAt,
         retryMessageId: conversation === 'failed' ? data.message.id : null,
       })),
       history: data.sessions.history.map((session) => ({
@@ -53,14 +73,24 @@ export function fakeWorkspaceRoutes(
           ...sessions.sessions[0],
           id: data.created.sessionId,
           title: 'New session',
+          activeTurnId: null,
+          activeTurnStartedAt: null,
           retryMessageId: null,
         },
       ]
       sessions.history = []
     }
-    routes.json('GET', workspacePath(org, id), detail)
-    routes.json('PATCH', workspacePath(org, id), detail)
-    routes.json('POST', workspacePaths.resume(org, id), detail)
+    // A read and a Resume carry the order of their state. A create, a
+    // rename, and an Archive do not.
+    const reply = {
+      workspace: detail.workspace,
+      start: detail.start,
+      error: detail.error,
+    }
+    const ordered = { ...reply, eventNumber }
+    routes.json('GET', workspacePath(org, id), ordered)
+    routes.json('PATCH', workspacePath(org, id), reply)
+    routes.json('POST', workspacePaths.resume(org, id), ordered)
     routes.empty('POST', workspacePaths.activity(org, id))
     routes.empty('PUT', workspacePaths.read(org, id))
     routes.json('GET', workspacePaths.archiveCheck(org, id), {
@@ -68,7 +98,7 @@ export function fakeWorkspaceRoutes(
       unpushedCommits: 1,
     })
     routes.json('POST', workspacePaths.archive(org, id), {
-      ...detail,
+      ...reply,
       workspace: {
         ...workspace,
         state: 'archived',
@@ -84,16 +114,17 @@ export function fakeWorkspaceRoutes(
     routes.json(
       'POST',
       sessionsPath(org, id),
-      { session: sessions.sessions[0] },
+      { session: sessions.sessions[0], eventNumber },
       201,
     )
     for (const session of [...sessions.sessions, ...sessions.history]) {
       const message = { ...data.message, sessionId: session.id }
-      routes.json('PATCH', sessionPath(org, id, session.id), { session })
-      routes.json('POST', sessionPaths.close(org, id, session.id), { session })
-      routes.json('POST', sessionPaths.reopen(org, id, session.id), { session })
+      const reply = { session, eventNumber }
+      routes.json('PATCH', sessionPath(org, id, session.id), reply)
+      routes.json('POST', sessionPaths.close(org, id, session.id), reply)
+      routes.json('POST', sessionPaths.reopen(org, id, session.id), reply)
       routes.json('PUT', sessionPaths.model(org, id, session.id), {
-        session,
+        ...reply,
         created: false,
         draft: { text: '', attachmentIds: [] },
       })
@@ -101,18 +132,19 @@ export function fakeWorkspaceRoutes(
       routes.json(
         'POST',
         sessionPaths.messages(org, id, session.id),
-        { message, turnId: 'turn-1', session },
+        { message, turnId: 'turn-1', ...reply },
         202,
       )
       routes.json(
         'POST',
         retryMessagePath(org, id, session.id, data.message.id),
-        { message, turnId: 'turn-1', session },
+        { message, turnId: 'turn-1', ...reply },
         202,
       )
       routes.json('POST', sessionPaths.interrupt(org, id, session.id), {
         turnId: 'turn-1',
         state: 'stopping',
+        eventNumber,
       })
       const events = recordedChatEvents(conversation, id, session.id)
       routes.json('GET', chatHistoryPath(org, id, session.id), {

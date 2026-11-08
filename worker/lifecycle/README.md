@@ -21,6 +21,8 @@ gives the create, read, resume, and activity routes of a workspace to
 - Keep the state of each workspace in its Durable Object: the starts, the
   activity, the idle stop, and the disk retention restart. That restart
   starts a stopped sandbox briefly, so that Boat keeps its disk.
+- Repair the running turns, the idle time, and the name of a workspace
+  from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
   the current turn.
 
@@ -50,8 +52,8 @@ from [`runtime.ts`](runtime.ts). The caller gives these options:
   and returns it. So it must be idempotent for the message and session IDs.
   In production, the admission has already stored that message in chat, so
   the hook adds no history.
-- `projectWorkspace`: optional. It changes the workspace record of each
-  reply, such as its state for the reader.
+- `projectWorkspace`: optional. It changes each reply, such as the state
+  of the workspace for the reader.
 - `waitUntil`: the `waitUntil` of the Worker's execution context. A create
   gives it its work, so the work continues when the browser closes.
 
@@ -59,6 +61,12 @@ from [`runtime.ts`](runtime.ts). The caller gives these options:
 `imageRuntime`. It gives `software` as a getter, so only a build or a
 refresh reads the archive variables. It gives `acceptFirstMessage` to
 `acceptLifecycleFirstMessage` of the workspace object.
+
+For a read or a resume, the `projectWorkspace` of `chatLifecycleRoute`
+takes the reply from `readChatWorkspaceResponse` of the workspace object,
+in one task of the chat queue. That reply has the event number of its state. Its name comes
+from the latest committed agent title, when there is one. The state for
+the reader uses the chat summary of the same read.
 
 - A create needs a published org image and a repository that its build
   loaded. A change to the chosen repositories takes effect after the next
@@ -151,8 +159,8 @@ runner socket, with the private error response wrapper.
 
 [Workspace Durable Object](workspace-object.md) describes the Durable
 Object of each workspace and of each image coordinator: its names, its
-lifecycle steps, its alarm, its start logs, its event socket, and the
-publication of its events.
+lifecycle steps, its alarm, its start logs, its event socket, the
+publication of its events, and the turn recovery.
 
 ### Builds and refreshes
 
@@ -200,7 +208,8 @@ object holds the lifecycle state, the turn records, and the events.
 - [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
   answers once the start is queued.
 - [`workspace-state-projection.ts`](workspace-state-projection.ts):
-  `WorkspaceStateProjection`, the one writer of the shown state, as
+  `WorkspaceStateProjection`, the one writer of the shown state and of the
+  repaired name, as
   [Workspace Durable Object](workspace-object.md#the-shown-state) says.
 - [`workspace-controller.ts`](workspace-controller.ts):
   `createWorkspaceController`, the lifecycle methods of the workspace
@@ -219,6 +228,16 @@ object holds the lifecycle state, the turn records, and the events.
   creates, and `failedCreationForSender`.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
+- [`durable-turns.ts`](durable-turns.ts): `recoverLifecycleTurns`, which
+  rebuilds the running sessions and the idle time from the committed chat.
+  [`durable-alarm.ts`](durable-alarm.ts): `advanceLifecycleAlarm`, the
+  lifecycle step of the alarm, which runs that repair before its deadline
+  and idle decisions. The
+  [turn recovery](workspace-object.md#turn-recovery) gives the rules.
+- [`create-workspace-lifecycle.ts`](create-workspace-lifecycle.ts):
+  `createWorkspaceLifecycle`, the lifecycle with its hooks and the shared
+  state writer. Its `recoverTurns` hook reads the committed chat through
+  `readChatRecovery` of [`workspace-platform.ts`](workspace-platform.ts).
 - [`workspace-actions.ts`](workspace-actions.ts): the stop, deadline, and
   state read actions on the sandbox.
 - [`resource-intents.ts`](resource-intents.ts): `createResource`, the only

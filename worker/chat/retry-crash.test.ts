@@ -62,6 +62,7 @@ async function runningFixture() {
     closeAfterStop: false,
     nextTurnId: null,
     started: true,
+    startedAt: TEST_TIME,
   }
   const sentMessage = { ...message, state: 'sent' as const }
   return {
@@ -234,8 +235,11 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
     },
   ])
   expect(await lifecycleSnapshot(fixture)).toEqual({
-    sessions: [retrySession],
-    turns: [failedTurn, { ...retryTurn, state: 'running', started: true }],
+    sessions: [{ ...retrySession, activeTurnStartedAt: TEST_TIME }],
+    turns: [
+      failedTurn,
+      { ...retryTurn, state: 'running', started: true, startedAt: TEST_TIME },
+    ],
     commands: [retryCommand],
     messages: [sentMessage, { ...retryMessage, state: 'sent' }],
   })

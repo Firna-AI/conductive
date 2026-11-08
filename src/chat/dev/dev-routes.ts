@@ -17,6 +17,10 @@ import {
 
 const reply = (body: unknown, status = 200) => Response.json(body, { status })
 
+/** A session reply, with the number of the last event, as the Worker's. */
+const recordReply = (backend: DevBackend, body: object, status = 200) =>
+  reply({ ...body, eventNumber: backend.stream.last }, status)
+
 /** The Worker's answer to a retry of a message that the record does not name. */
 const RETRY_REFUSED = {
   error: {
@@ -69,7 +73,8 @@ function accept(backend: DevBackend, session: Session, outgoing: Outgoing) {
   if (!steered) backend.stream.emit({ type: 'message.accepted', message })
   clearRetry(backend, session.id)
   const answer = (turnId: string | null) =>
-    reply(
+    recordReply(
+      backend,
       { message, turnId, session: recordOf(backend, session.id) ?? session },
       202,
     )
@@ -104,29 +109,30 @@ async function sessionWrite(
   if (method === 'PATCH' && action === '') {
     const title = text((await bodyOf(request)).title)
     place(backend, { ...session, title })
-    return reply({ session: { ...session, title } })
+    return recordReply(backend, { session: { ...session, title } })
   }
   if (method === 'POST' && action === 'close') {
     if ((await bodyOf(request)).stopRunningTurn === true)
       requestStop(backend, session.id)
     const closed = {
-      ...session,
+      ...(recordOf(backend, session.id) ?? session),
       closedAt: backend.clock.now(),
       activeTurnId: null,
+      activeTurnStartedAt: null,
     }
     place(backend, closed)
-    return reply({ session: closed })
+    return recordReply(backend, { session: closed })
   }
   if (method === 'POST' && action === 'reopen') {
     const reopened = { ...session, closedAt: null }
     place(backend, reopened)
-    return reply({ session: reopened })
+    return recordReply(backend, { session: reopened })
   }
   if (method === 'POST' && action === 'messages')
     return send(backend, session, request)
   if (method === 'POST' && action === 'interrupt' && running) {
     requestStop(backend, session.id)
-    return reply({ turnId: running, state: 'stopping' })
+    return recordReply(backend, { turnId: running, state: 'stopping' })
   }
   if (method === 'POST' && action === 'retry' && messageId) {
     // As the Worker does, a retry sends the named message again as a new one.
@@ -146,7 +152,7 @@ async function sessionWrite(
     const choice = readChoice(body.choice)
     if (choice.agent === session.choice.agent) {
       place(backend, { ...session, choice })
-      return reply({
+      return recordReply(backend, {
         session: { ...session, choice },
         created: false,
         draft: body.draft,
@@ -156,8 +162,9 @@ async function sessionWrite(
     const known = [...backend.open, ...backend.closed].find(
       (item) => item.id === id,
     )
-    return reply({
-      session: known ?? newSession(backend, choice, { id }),
+    const opened = known ?? newSession(backend, choice, { id })
+    return recordReply(backend, {
+      session: opened,
       created: true,
       draft: body.draft,
     })
@@ -177,15 +184,8 @@ export async function handleWrite(
   const path = new URL(request.url).pathname
   const { method } = request
   if (method === 'POST' && path === sessionsPath(orgId, workspaceId)) {
-    return reply(
-      {
-        session: newSession(
-          backend,
-          readChoice((await bodyOf(request)).choice),
-        ),
-      },
-      201,
-    )
+    const choice = readChoice((await bodyOf(request)).choice)
+    return recordReply(backend, { session: newSession(backend, choice) }, 201)
   }
   if (method === 'PUT' && path === workspaceViewPath(orgId, workspaceId)) {
     const view = await bodyOf(request)

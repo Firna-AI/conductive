@@ -169,3 +169,54 @@ it('extends the safety deadline for input and every running session', async () =
   await lifecycle.alarm()
   expect(fixture.hooks.stop).toHaveBeenCalledTimes(1)
 })
+
+it.each([
+  { idleSource: 'turn end', activityAt: null, idleAt: 100 },
+  { idleSource: 'newer activity', activityAt: 200, idleAt: 200 },
+])(
+  'recovers committed turn ends and keeps the original $idleSource idle stop across restart and hello',
+  async ({ activityAt, idleAt }) => {
+    const fixture = lifecycleFixture()
+    const lifecycle = fixture.lifecycle
+    const startedAt = fixture.now()
+    await lifecycle.initialize({
+      workspaceId: 'workspace-one',
+      orgId: 'org-one',
+      firstMessage: FIRST_MESSAGE,
+    })
+    await lifecycle.runnerReady()
+    await lifecycle.turn('session-one', true)
+    if (activityAt !== null) {
+      fixture.setTime(startedAt + activityAt)
+      await lifecycle.activity()
+    }
+    fixture.setTime(startedAt + 300)
+    fixture.hooks.extendDeadline.mockRejectedValueOnce(
+      new Error('Deadline failed'),
+    )
+    await expect(lifecycle.turn('session-one', false)).rejects.toThrow(
+      'Deadline failed',
+    )
+    fixture.hooks.recoverTurns.mockResolvedValue({
+      runningSessions: [],
+      lastTurnEndedAt: startedAt + 100,
+    })
+    fixture.setTime(startedAt + 1_200_000)
+    const restored = fixture.recreate()
+    await restored.alarm()
+    await restored.runnerReady()
+    expect(await restored.read()).toMatchObject({
+      state: 'ready',
+      runningSessions: [],
+      lastActivityAt: startedAt + idleAt,
+    })
+    expect(fixture.alarmAt()).toBe(startedAt + idleAt + 1_800_000)
+    fixture.setTime(startedAt + idleAt + 1_799_999)
+    await restored.alarm()
+    expect(fixture.hooks.stop).toHaveBeenCalledTimes(0)
+    fixture.setTime(startedAt + idleAt + 1_800_000)
+    await restored.alarm()
+    expect(fixture.hooks.stop).toHaveBeenCalledTimes(1)
+    expect((await restored.read())?.state).toBe('stopped')
+  },
+)

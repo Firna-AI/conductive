@@ -4,7 +4,6 @@ import type { ChatData, ChatStorage } from './types'
 export class MemoryChatStorage implements ChatStorage {
   records = new Map<string, unknown>()
   writes: string[] = []
-  failCommit = false
   crashAfterCommit = false
   beforeCommit: ((staged: MemoryChatStorage) => Promise<void>) | null = null
 
@@ -24,15 +23,23 @@ export class MemoryChatStorage implements ChatStorage {
   async list<T>(options: {
     prefix: string
     startAfter?: string
+    limit?: number
+    end?: string
+    reverse?: boolean
   }): Promise<Map<string, T>> {
     const entries = [...this.records.entries()]
       .filter(
         ([key]) =>
           key.startsWith(options.prefix) &&
+          (options.end === undefined || compareUtf8(key, options.end) < 0) &&
           (options.startAfter === undefined ||
             compareUtf8(key, options.startAfter) > 0),
       )
-      .sort(([left], [right]) => compareUtf8(left, right))
+      .sort(
+        ([left], [right]) =>
+          (options.reverse ? -1 : 1) * compareUtf8(left, right),
+      )
+      .slice(0, options.limit)
     return structuredClone(new Map(entries)) as Map<string, T>
   }
 
@@ -41,7 +48,6 @@ export class MemoryChatStorage implements ChatStorage {
     transaction.records = structuredClone(this.records)
     const result = await work(transaction)
     await this.beforeCommit?.(transaction)
-    if (this.failCommit) throw new Error('Injected storage failure')
     this.records = transaction.records
     this.writes.push(...transaction.writes)
     if (this.crashAfterCommit) {

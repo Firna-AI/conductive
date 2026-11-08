@@ -25,6 +25,7 @@ export class DeliveryState {
         if (!turn || turn.state !== 'queued') return false
         turn.state = 'running'
         turn.started = true
+        turn.startedAt = transaction.now
         await transaction.saveTurn(turn)
         return true
       },
@@ -45,6 +46,7 @@ export class DeliveryState {
         if (turn?.state === 'running') {
           turn.state = 'queued'
           turn.started = false
+          delete turn.startedAt
           await transaction.saveTurn(turn)
         }
       },

@@ -20,11 +20,14 @@ export function chatHistoryPath(
   workspaceId: string,
   sessionId: string,
   afterEventNumber = 0,
+  throughEventNumber?: number,
 ): string {
   const query = new URLSearchParams({
     sessionId,
     after: String(afterEventNumber),
   })
+  if (throughEventNumber !== undefined)
+    query.set('through', String(throughEventNumber))
   return `${workspacePath(orgId, workspaceId)}/history?${query}`
 }
 
@@ -47,13 +50,21 @@ export interface WorkspaceEventEnvelope {
   eventNumber: number
   occurredAt: Timestamp
   event: WorkspaceEvent
+  /** Only the workspace marks an agent event whose turn already ended. */
+  late?: true
 }
 
-/** Store history before subscribing to live events after throughEventNumber. */
-export interface ChatHistoryResponse {
+interface ChatHistoryPage {
   events: readonly WorkspaceEventEnvelope[]
+  /** All pages together hold the state through this fixed snapshot number. */
   throughEventNumber: number
 }
+
+export type ChatHistoryResponse = ChatHistoryPage &
+  (
+    | { hasMore: true; nextAfterEventNumber: number }
+    | { hasMore?: never; nextAfterEventNumber?: never }
+  )
 
 export type WorkspaceSocketMessage =
   | { type: 'history'; history: ChatHistoryResponse }

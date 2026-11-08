@@ -7,6 +7,7 @@ import type { SendMessageRequest } from '../../src/shared/messages'
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
 import { reconciledLifecycle } from './durable-reconciliation'
 import { advanceLifecycleAlarm } from './durable-alarm'
+import { recoverLifecycleTurns } from './durable-turns'
 import {
   IDLE_MS,
   TURN_HEARTBEAT_MS,
@@ -113,10 +114,11 @@ export class DurableLifecycle {
   }
 
   runnerDisconnected(publish?: LifecyclePublisher): Promise<void> {
-    return this.update(
-      (state) => ({ ...state, runnerConnected: false }),
-      publish,
-    )
+    return this.serial(async () => {
+      const state = await this.read()
+      if (state?.runnerConnected)
+        await this.write({ ...state, runnerConnected: false }, publish)
+    })
   }
 
   reportStart(
@@ -160,10 +162,18 @@ export class DurableLifecycle {
     })
   }
 
+  recoverTurns(publish?: LifecyclePublisher): Promise<void> {
+    return this.update(
+      (state) => recoverLifecycleTurns(state, this.hooks),
+      publish,
+    )
+  }
+
   turn(
     sessionId: string,
     running: boolean,
     publish?: LifecyclePublisher,
+    occurredAt = this.now(),
   ): Promise<void> {
     return this.update(async (state) => {
       if (state.state === 'stopped' || state.state === 'archived') return state
@@ -176,7 +186,7 @@ export class DurableLifecycle {
         ...state,
         runningSessions: [...sessions],
         state: sessions.size ? 'working' : 'ready',
-        lastActivityAt: this.now(),
+        lastActivityAt: Math.max(state.lastActivityAt, occurredAt),
       }
     }, publish)
   }

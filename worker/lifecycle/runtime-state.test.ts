@@ -30,7 +30,7 @@ it.each([
       runnerConnected: true,
       runningSessions: ['session-one', 'session-two'],
     })
-    await fixture.restart()
+    await fixture.restart(false)
     fixture.boat.states.set(sandboxId, native)
     fixture.boat.failDeadline = refused
     const readCount = fixture.boat.sandboxReads.length
@@ -55,22 +55,18 @@ it.each([
 )
 
 it('keeps a running sandbox active after input and a refused deadline update', async () => {
-  const { actor, workspaceId, sandboxId } =
+  const { actor, workspaceId, sandboxId, startTurn, finishTurn } =
     await runningRuntimeWorkspace(fixture)
-  await actor.finishLifecycleTurn('turn-one')
-  await actor.finishLifecycleTurn('turn-two')
+  await finishTurn('one')
+  await finishTurn('two')
   await actor.lifecycleActivity()
   expect(await actor.readLifecycle()).toMatchObject({
     state: 'ready',
     runningSessions: [],
     runnerConnected: true,
   })
-  await actor.registerLifecycleTurn({
-    turnId: 'turn-three',
-    sessionId: 'session-three',
-    senderUserId: 'runtime-user',
-  })
-  await fixture.restart()
+  await startTurn('three')
+  await fixture.restart(false)
   fixture.boat.failDeadline = true
   const readCount = fixture.boat.sandboxReads.length
   const restored = fixture.actor(workspaceId)

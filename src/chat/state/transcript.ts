@@ -12,6 +12,7 @@ import { hasEnded, noteTurn, takeMessage, type KnownTurn } from './known-turns'
 import { foldLate } from './late-events'
 import { foldRefused } from './refused-events'
 import { foldTurn, markSent, replaceAt } from './turn-events'
+import { foldMarkedLate, foldRecord } from './turn-records'
 
 /** One part of a chat transcript, in the order that the chat shows it. */
 export type TranscriptItem =
@@ -65,7 +66,7 @@ export interface Transcript {
   /**
    * The message that Try again may send again, as the newest record of the
    * session names it, or null. Only the failed item of that message offers
-   * Try again. The session log sets it from the records in event order.
+   * Try again. Each record sets it at its place in the event order.
    */
   retryMessageId: string | null
   /** Complete terminal data, including omitted files, without new rendering. */
@@ -91,17 +92,19 @@ export const emptyTranscript: Transcript = {
 /**
  * Applies one chat event of a session to its transcript. The chat shows only
  * the messages that people sent. A message ID that no accepted message has,
- * such as one that the agent SDK added, shows nothing. A session record
- * changes nothing here: the session log keeps its retry message.
+ * such as one that the agent SDK added, shows nothing. A session record ends
+ * and starts turns, as `foldRecord` says. An agent event that the workspace
+ * marked `late` belongs to a turn that has ended, as `foldMarkedLate` says.
  */
 export function foldEvent(
   transcript: Transcript,
   event: ChatEvent,
   occurredAt: number,
+  late = false,
 ): Transcript {
   switch (event.type) {
     case 'session.updated':
-      return transcript
+      return foldRecord(transcript, event.session)
     case 'runner.event-refused':
       if (event.sessionId === null) return transcript
       return foldRefused(transcript, event)
@@ -136,6 +139,7 @@ export function foldEvent(
         },
       }
     default:
+      if (late) return foldMarkedLate(transcript, event)
       if (hasEnded(transcript, event.turnId)) return foldLate(transcript, event)
       return foldTurn(
         { ...transcript, turns: noteTurn(transcript.turns, event) },

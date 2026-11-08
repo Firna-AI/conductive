@@ -76,6 +76,12 @@ export class GitHubStore {
   private source: GitHubSource | null = null
   /** The last event number of the workspace stream that the store read. */
   private lastEventNumber = 0
+  /** The cutoff of a replay that has more pages to come, or null. */
+  private replay: number | null = null
+  /** The newest GitHub state of the pages of a replay so far. */
+  private replayed: GitHubSnapshot | null = null
+  /** The live events that wait for the final page of a replay. */
+  private waiting: WorkspaceEventEnvelope[] = []
   /** Whether the shown state came from a read, not from the stream. */
   private shownFromRead = false
   private running: Read | null = null
@@ -102,6 +108,9 @@ export class GitHubStore {
    */
   connect(source: GitHubSource): () => void {
     this.source = source
+    this.replay = null
+    this.replayed = null
+    this.waiting = []
     const unsubscribe = source.subscribe(this.lastEventNumber, this.receive)
     void this.load()
     return () => {
@@ -163,25 +172,51 @@ export class GitHubStore {
     )
   }
 
+  /**
+   * Takes a live event, or one page of the stored history. The pages of one
+   * replay share a cutoff, and a page can leave out numbers. The newest state
+   * of the pages shows as history after the final page. Live events wait
+   * until then, in their order.
+   */
   private receive = (message: WorkspaceSocketMessage): void => {
     if (message.type === 'event') {
-      const live = this.next(message.envelope)
-      if (!live) return
-      // A live event is newer than the reply of any read that runs.
-      this.cancelRead()
-      this.show(live, false)
-      this.schedule()
+      if (this.replay !== null) this.waiting.push(message.envelope)
+      else this.live(message.envelope)
       return
     }
-    let latest: GitHubSnapshot | null = null
-    for (const envelope of message.history.events) {
-      latest = this.next(envelope) ?? latest
+    const { history } = message
+    for (const envelope of history.events) {
+      if (envelope.eventNumber > history.throughEventNumber) continue
+      this.replayed = this.next(envelope) ?? this.replayed
     }
+    if (history.hasMore) {
+      this.replay = history.throughEventNumber
+      this.lastEventNumber = Math.max(
+        this.lastEventNumber,
+        Math.min(history.nextAfterEventNumber, history.throughEventNumber),
+      )
+      return
+    }
+    this.replay = null
     this.lastEventNumber = Math.max(
       this.lastEventNumber,
-      message.history.throughEventNumber,
+      history.throughEventNumber,
     )
+    const latest = this.replayed
+    this.replayed = null
     if (latest) this.readHistory(latest)
+    const waiting = this.waiting.sort((a, b) => a.eventNumber - b.eventNumber)
+    this.waiting = []
+    for (const envelope of waiting) this.live(envelope)
+  }
+
+  private live(envelope: WorkspaceEventEnvelope): void {
+    const live = this.next(envelope)
+    if (!live) return
+    // A live event is newer than the reply of any read that runs.
+    this.cancelRead()
+    this.show(live, false)
+    this.schedule()
   }
 
   /**

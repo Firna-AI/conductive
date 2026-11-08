@@ -5833,23 +5833,50 @@ Depends on: 7w, 8i, 8k
 Apply the `fix after merge` items of the chat. Added on 7 November
 2026.
 
-- [ ] Apply the recorded option of `plans/follow-ups/chat-late-event-mark.md`, and
+- [x] Apply the recorded option of `plans/follow-ups/chat-late-event-mark.md`, and
       delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/chat-refused-turn-end.md`, and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8m`.
+- [x] Apply the recorded option of `plans/follow-ups/chat-refused-turn-end.md`, and
       delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/agent-event-rollback-test.md`, and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8m`.
+- [x] Apply the recorded option of `plans/follow-ups/agent-event-rollback-test.md`, and
       delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/chat-client-stale-records.md`, and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8m`.
+- [x] Apply the recorded option of `plans/follow-ups/chat-client-stale-records.md`, and
       delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/chat-history-read-memory.md`, and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8m`.
+- [x] Apply the recorded option of `plans/follow-ups/chat-history-read-memory.md`, and
       delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/chat-stop-after-failed-history.md`, and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8m`.
+- [x] Apply the recorded option of `plans/follow-ups/chat-stop-after-failed-history.md`, and
       delete that item.
-- [ ] Apply the recorded option of `plans/follow-ups/workspace-read-mark-retry.md`, and
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8m`.
+- [x] Apply the recorded option of `plans/follow-ups/workspace-read-mark-retry.md`, and
       delete that item.
-- [ ] After Milestone 8i merges, apply option D of the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8m`.
+- [x] After Milestone 8i merges, apply option D of the
       [confirmed runner projection follow-up](https://github.com/Firna-AI/remote-code/blob/d0faa9422c83cab6d7e08ad55dc7cef08d26c4b5/plans/follow-ups/confirmed-runner-projection-retry.md),
       and delete `plans/follow-ups/confirmed-runner-projection-retry.md`.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8m`.
+
+Orchestrator implementation calls, 8 November 2026:
+
+- Use one history cutoff for all pages. Keep page progress in
+  `nextAfterEventNumber`.
+- Keep a minimal first answer or tool record and the final full content.
+  This keeps the first positions and times that the merged chat uses.
+- Keep unnumbered local owner, Archive, and read changes over pending
+  Resume replies.
+- Recover each runner hello through a separate hook. The existing
+  readiness hook does not run for every new stream.
+- Read each ordered workspace reply in one chat queue task. Take its name
+  from committed chat and its start log from the local masking reader.
+- Move the app, Files, GitHub, and development workspace readers to the new
+  history and reply contracts.
+
+Evidence: `.context/boat-native-remote-workspaces/8m/`, with the implementor
+reports, regression proofs, repeat results, the browser smoke check, and
+the primary integration audit.
 
 
 ## Milestone 8n: Hold messages during a first start

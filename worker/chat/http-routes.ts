@@ -33,22 +33,24 @@ export async function chatRoute(
   if (suffix === '/history' && request.method === 'GET') {
     const sessionId = identifier(url.searchParams.get('sessionId'))
     await operation.read((view) => sessionFor(view, sessionId))
+    const through = url.searchParams.get('through')
     const history = await operation.read((view) =>
-      view.history(afterNumber(url)),
-    )
-    history.events = history.events.filter(
-      ({ event }) =>
-        ('sessionId' in event && event.sessionId === sessionId) ||
-        (event.type === 'message.accepted' &&
-          event.message.sessionId === sessionId) ||
-        (event.type === 'session.updated' && event.session.id === sessionId),
+      view.history(
+        afterNumber(url),
+        through === null ? undefined : counter(Number(through)),
+        sessionId,
+      ),
     )
     return Response.json(history)
   }
   if (suffix === '/sessions') {
     if (request.method === 'GET') {
-      const sessions = await operation.read((view) => view.sessions())
+      const { sessions, eventNumber } = await operation.read(async (view) => ({
+        sessions: await view.sessions(),
+        eventNumber: view.eventNumber,
+      }))
       return Response.json({
+        eventNumber,
         sessions: sessions
           .filter((session) => session.closedAt === null)
           .sort((left, right) => left.createdAt - right.createdAt),
@@ -68,6 +70,7 @@ export async function chatRoute(
               context.user,
               dependencies,
             ),
+            eventNumber: transaction.eventNumber,
           },
           { status: 201 },
         ),
@@ -103,7 +106,7 @@ export async function chatRoute(
       session.title = requiredString(context.body?.title)
       await transaction.saveSession(session)
       await transaction.emit({ type: 'session.updated', session })
-      return Response.json({ session })
+      return Response.json({ session, eventNumber: transaction.eventNumber })
     }
     if (action === 'interrupt' && request.method === 'POST') {
       const turnId = identifier(context.body?.turnId)
@@ -113,9 +116,13 @@ export async function chatRoute(
         turnId,
         requestedById: context.user.id,
       })
-      return Response.json(
-        await stopTurn(transaction, session, turnId, dependencies.randomId()),
+      const stopped = await stopTurn(
+        transaction,
+        session,
+        turnId,
+        dependencies.randomId(),
       )
+      return Response.json({ ...stopped, eventNumber: transaction.eventNumber })
     }
     if (action === 'close' && request.method === 'POST') {
       if (typeof context.body?.stopRunningTurn !== 'boolean')
@@ -127,13 +134,14 @@ export async function chatRoute(
           context.body.stopRunningTurn,
           dependencies.randomId(),
         ),
+        eventNumber: transaction.eventNumber,
       })
     }
     if (action === 'reopen' && request.method === 'POST') {
       session.closedAt = null
       await transaction.saveSession(session)
       await transaction.emit({ type: 'session.updated', session })
-      return Response.json({ session })
+      return Response.json({ session, eventNumber: transaction.eventNumber })
     }
     if (action === 'model' && request.method === 'PUT') {
       return Response.json(

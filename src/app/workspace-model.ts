@@ -1,13 +1,14 @@
 import {
   workspacePath,
   workspacePaths,
+  type OrderedWorkspaceResponse,
   type Workspace,
   type WorkspaceResponse,
 } from '../shared/workspaces'
 import type { ApiError } from './api/client'
 import { ignore } from './api/parse'
 import type { ShellEvent } from './api/read-events'
-import { readWorkspaceResponse } from './api/read-workspaces'
+import { readOrderedWorkspaceResponse } from './api/read-workspaces'
 import { ArchiveModel } from './archive-model'
 import { WorkspaceStream, type Delay } from './events'
 import type { OrgModel } from './org-model'
@@ -20,6 +21,7 @@ import {
   valueOf,
   type Loadable,
 } from './store'
+import { WorkspaceReadMarks } from './workspace-read-marks'
 
 const activityInterval = 60_000
 
@@ -35,9 +37,18 @@ export class WorkspaceModel {
   private readonly stops: (() => void)[] = []
   /** Each open and each close counts one up, so an old open knows it is obsolete. */
   private generation = 0
-  private reading = false
+  private readonly readMarks: WorkspaceReadMarks
   private refusedOwnerId: string | null = null
-  /** Newer field changes to replay over each pending Resume answer. */
+  /**
+   * The workspace event number whose state the detail shows, from its read,
+   * a Resume reply, or an event of the stream. A reply or an event that is
+   * older changes nothing, whatever order they arrive in.
+   */
+  private through = 0
+  /**
+   * The local changes that carry no number, such as a new owner, an Archive,
+   * or a read mark, that came while a Resume waits. They stay over its reply.
+   */
   private readonly resuming = new Set<Change<WorkspaceResponse>[]>()
 
   constructor(org: OrgModel, workspaceId: string, delay?: Delay) {
@@ -49,8 +60,17 @@ export class WorkspaceModel {
       delay ?? org.services.delay,
     )
     this.archive = new ArchiveModel(org, workspaceId, (detail) => {
-      this.setDetail(detail)
+      this.local(() => detail)
     })
+    this.readMarks = new WorkspaceReadMarks(
+      org.services,
+      workspacePaths.read(org.orgId, workspaceId),
+      {
+        detail: this.detail,
+        last: this.stream.last,
+        clearUnread: () => this.clearUnread(),
+      },
+    )
   }
 
   private get api() {
@@ -66,9 +86,9 @@ export class WorkspaceModel {
   async open(): Promise<void> {
     const run = ++this.generation
     const path = workspacePath(this.org.orgId, this.workspaceId)
-    let detail: WorkspaceResponse
+    let detail: OrderedWorkspaceResponse
     try {
-      detail = await this.api.get(path, readWorkspaceResponse)
+      detail = await this.api.get(path, readOrderedWorkspaceResponse)
     } catch (error) {
       if (run === this.generation) {
         this.detail.set({ state: 'failed', error: asApiError(error) })
@@ -76,21 +96,15 @@ export class WorkspaceModel {
       return
     }
     if (run !== this.generation) return
-    this.setDetail(detail)
-    // The read mark follows all its inputs, so their order does not count:
-    // the number of an event changes before the event applies, and a page
-    // that shows again marks the output that arrived while it was hidden.
-    const markRead = () => void this.markRead()
+    this.confirm(detail)
     this.stops.push(
       this.stream.subscribe((envelope) => {
-        if (envelope.shell) this.apply(envelope.shell)
+        if (envelope.shell) this.apply(envelope.shell, envelope.eventNumber)
       }),
-      this.stream.last.subscribe(markRead),
-      this.detail.subscribe(markRead),
-      this.org.services.visible.subscribe(markRead),
       // Input anywhere on the page counts, also in a field that stops it.
       this.org.services.onInput(() => this.reportActivity()),
     )
+    this.readMarks.open()
     this.stream.start()
     if (run !== this.generation) return
     const state = valueOf(this.detail.get())?.workspace.state
@@ -103,33 +117,50 @@ export class WorkspaceModel {
     this.generation += 1
     this.resuming.clear()
     this.archive.cancel()
+    this.readMarks.close()
     this.stream.stop()
     for (const stop of this.stops.splice(0)) stop()
   }
 
-  private apply(event: ShellEvent): void {
-    const change: Change<WorkspaceResponse> = (detail) => {
-      switch (event.type) {
-        case 'workspace.updated':
-          return { ...detail, workspace: event.workspace }
-        case 'start.updated':
-          return { ...detail, start: event.start }
-        case 'workspace.title':
-          return {
-            ...detail,
-            workspace: { ...detail.workspace, name: event.name },
-          }
-      }
-    }
+  /** Applies an event of the stream that is newer than the detail. */
+  private apply(event: ShellEvent, eventNumber: number): void {
     const detail = valueOf(this.detail.get())
-    if (detail) this.setDetail(change(detail), change)
+    if (!detail || eventNumber <= this.through) return
+    this.through = eventNumber
+    this.setDetail(changed(detail, event))
   }
 
-  private setDetail(
-    detail: WorkspaceResponse,
-    change: Change<WorkspaceResponse> = () => detail,
+  /**
+   * Shows a read or a Resume reply when no newer state has shown, with the
+   * local changes that came after it. The first read shows in any case,
+   * because no detail shows before it.
+   */
+  private confirm(
+    reply: OrderedWorkspaceResponse,
+    local: readonly Change<WorkspaceResponse>[] = [],
   ): void {
+    const shown = valueOf(this.detail.get()) !== undefined
+    if (shown && reply.eventNumber < this.through) return
+    this.through = reply.eventNumber
+    const { workspace, start, error } = reply
+    this.setDetail(
+      local.reduce((value, change) => change(value), {
+        workspace,
+        start,
+        error,
+      }),
+    )
+  }
+
+  /** A local change with no number, which also stays over a pending Resume. */
+  private local(change: Change<WorkspaceResponse>): void {
+    const detail = valueOf(this.detail.get())
+    if (!detail) return
     for (const changes of this.resuming) changes.push(change)
+    this.setDetail(change(detail))
+  }
+
+  private setDetail(detail: WorkspaceResponse): void {
     if (
       this.refusedOwnerId !== null &&
       this.refusedOwnerId !== detail.workspace.owner.id
@@ -142,16 +173,16 @@ export class WorkspaceModel {
   }
 
   reassigned(workspace: Workspace): void {
-    const detail = valueOf(this.detail.get())
-    if (!detail) return
-    const change: Change<WorkspaceResponse> = (current) => ({
+    this.local((current) => ({
       ...current,
       workspace: { ...current.workspace, owner: workspace.owner },
-    })
-    this.setDetail(change(detail), change)
+    }))
   }
 
-  /** Resume of a stopped sandbox, and Try again after a start that failed. */
+  /**
+   * Resume of a stopped sandbox, and Try again after a start that failed. Its
+   * reply shows only when no newer state of the workspace came first.
+   */
   async resume(): Promise<void> {
     const run = this.generation
     const ownerId = valueOf(this.detail.get())?.workspace.owner.id
@@ -159,13 +190,13 @@ export class WorkspaceModel {
       this.startError.set(null)
     const changes: Change<WorkspaceResponse>[] = []
     this.resuming.add(changes)
-    let detail: WorkspaceResponse
+    let detail: OrderedWorkspaceResponse
     try {
       detail = await this.api.send(
         'POST',
         workspacePaths.resume(this.org.orgId, this.workspaceId),
         {},
-        readWorkspaceResponse,
+        readOrderedWorkspaceResponse,
       )
     } catch (error) {
       const problem = asApiError(error)
@@ -187,7 +218,7 @@ export class WorkspaceModel {
     if (run !== this.generation) return
     this.refusedOwnerId = null
     this.startError.set(null)
-    this.setDetail(changes.reduce((value, change) => change(value), detail))
+    this.confirm(detail, changes)
   }
 
   /** Counts input in the open workspace, at most once a minute. */
@@ -210,42 +241,30 @@ export class WorkspaceModel {
       })
   }
 
-  /**
-   * Output that the open workspace shows counts as read. It runs when the
-   * applied state, the number of the newest event, or the visibility of the
-   * page changes. A hidden page shows no output, so it sends no read mark.
-   * The answer changes the state only while the workspace is still unread
-   * through the same event, so an older answer never hides a newer update.
-   */
-  private async markRead(): Promise<void> {
-    const detail = valueOf(this.detail.get())
-    const through = this.stream.last.get()
-    if (!this.org.services.visible.get()) return
-    if (this.reading || !detail || through === 0) return
-    if (detail.workspace.state !== 'unread') return
-    const run = this.generation
-    this.reading = true
-    try {
-      await this.api.send(
-        'PUT',
-        workspacePaths.read(this.org.orgId, this.workspaceId),
-        { throughEventNumber: through },
-        ignore,
-      )
-    } catch {
-      return
-    } finally {
-      this.reading = false
-    }
-    const current = valueOf(this.detail.get())
-    if (run !== this.generation || current?.workspace.state !== 'unread') return
-    if (this.stream.last.get() !== through) {
-      void this.markRead()
-      return
-    }
-    this.apply({
-      type: 'workspace.updated',
-      workspace: { ...current.workspace, state: 'ready' },
-    })
+  private clearUnread(): void {
+    if (valueOf(this.detail.get())?.workspace.state !== 'unread') return
+    // A read that is newer than the stream can name output that no read mark
+    // covers yet. It clears after the stream and a mark reach its number.
+    if (this.through > this.stream.last.get()) return
+    this.local((current) =>
+      current.workspace.state === 'unread'
+        ? { ...current, workspace: { ...current.workspace, state: 'ready' } }
+        : current,
+    )
+  }
+}
+
+/** The detail after an event of the stream. */
+function changed(
+  detail: WorkspaceResponse,
+  event: ShellEvent,
+): WorkspaceResponse {
+  switch (event.type) {
+    case 'workspace.updated':
+      return { ...detail, workspace: event.workspace }
+    case 'start.updated':
+      return { ...detail, start: event.start }
+    case 'workspace.title':
+      return { ...detail, workspace: { ...detail.workspace, name: event.name } }
   }
 }

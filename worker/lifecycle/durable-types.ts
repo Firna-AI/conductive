@@ -44,6 +44,12 @@ export interface LifecycleHooks {
   extendDeadline(): Promise<LifecycleReconciliation | void>
   reconcile?(): Promise<LifecycleReconciliation>
   startPending?(): Promise<boolean>
+  recoverTurns?(workspaceId: string): Promise<LifecycleTurnRecovery | undefined>
+}
+
+export interface LifecycleTurnRecovery {
+  runningSessions: readonly string[]
+  lastTurnEndedAt: number | null
 }
 
 export type LifecycleReconciliation = 'stopped' | 'error' | undefined

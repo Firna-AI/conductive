@@ -2,6 +2,7 @@ import type { AgentChoice } from '../../src/shared/agents'
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import { updateWorkspaceTitle } from '../chat/queries'
 import type { DurableLifecycleState, LifecyclePublisher } from './durable-types'
 import type { WorkspaceEventJournal } from './durable-journal'
 import {
@@ -16,7 +17,13 @@ interface ProjectionOptions {
   journal: WorkspaceEventJournal
   readLifecycle(): Promise<DurableLifecycleState | undefined>
   deviceWaiting(workspaceId: string): Promise<boolean>
+  latestTitle(
+    workspaceId: string,
+  ): Promise<{ name: string; occurredAt: number } | null>
 }
+
+type ProjectionWrite =
+  { response: WorkspaceResponse } | { titleError: unknown } | undefined
 
 /** Both callers already own the workspace chat queue. This class adds no queue. */
 export class WorkspaceStateProjection {
@@ -28,7 +35,7 @@ export class WorkspaceStateProjection {
   private async write(
     now: number,
     workspaceId?: string,
-  ): Promise<WorkspaceResponse | undefined> {
+  ): Promise<ProjectionWrite> {
     const { env, readLifecycle, deviceWaiting } = this.options
     const current = await readLifecycle()
     if (!current) return undefined
@@ -53,20 +60,36 @@ export class WorkspaceStateProjection {
       this.options.dependencies.now(),
       before.updatedAt,
     )
+    const title = await this.options.latestTitle(current.workspaceId)
+    if (title && before.name !== title.name) {
+      try {
+        await updateWorkspaceTitle(
+          env.DB,
+          current.workspaceId,
+          title.name,
+          updatedAt,
+        )
+      } catch (titleError) {
+        return { titleError }
+      }
+    }
     await persistLifecycleState(env.DB, { ...current, state }, updatedAt)
     const row = await readWorkspace(env.DB, current.orgId, current.workspaceId)
     return {
-      workspace: workspaceView(row),
-      start: current.start,
-      error: current.error,
+      response: {
+        workspace: workspaceView(row),
+        start: current.start,
+        error: current.error,
+      },
     }
   }
 
   async changed(publish?: LifecyclePublisher): Promise<void> {
     const now = this.options.dependencies.now()
-    const response = await this.write(now)
-    if (response)
-      await this.options.journal.publishLifecycle(response, now, publish)
+    const result = await this.write(now)
+    if (result && 'titleError' in result && !publish) throw result.titleError
+    if (result && 'response' in result)
+      await this.options.journal.publishLifecycle(result.response, now, publish)
   }
 
   async deviceChanged(
@@ -75,8 +98,10 @@ export class WorkspaceStateProjection {
     now: number,
     publish: LifecyclePublisher,
   ): Promise<boolean> {
-    const response = await this.write(now, workspaceId)
-    if (!response) return false
+    const result = await this.write(now, workspaceId)
+    if (!result) return false
+    if ('titleError' in result) throw result.titleError
+    const { response } = result
     await publish({
       workspaceId,
       occurredAt: now,

@@ -3,7 +3,6 @@ import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { ACCOUNT_PATHS } from '../../../src/shared/account'
 import { MODELS_PATH } from '../../../src/shared/agents'
-import { chatHistoryPath } from '../../../src/shared/events'
 import { GET_STARTED_PATH } from '../../../src/shared/onboarding'
 import { sessionPaths } from '../../../src/shared/sessions'
 import {
@@ -26,6 +25,7 @@ import {
 } from './outer-runtime.test-support'
 import { OUTER_ORG, OUTER_REPOSITORY } from './outer-seed.test-support'
 import { connectShellRunner } from './shell-runner.test-support'
+import { readChatHistoryPages } from './history-pages.test-support'
 import {
   driveWorkspaceStart,
   completeWorkspaceResume,
@@ -238,11 +238,12 @@ it('boots the production shell and delivers the durable first message through st
     message: { id: 'http-second-message' },
     login: { secret: 'outer-secret-member' },
   })
-  const history = await active.request(
-    chatHistoryPath(OUTER_ORG, created.workspace.id, created.sessionId),
+  const body = await readChatHistoryPages(
+    active.request,
+    OUTER_ORG,
+    created.workspace.id,
+    created.sessionId,
   )
-  expect(history.status).toBe(200)
-  const body: unknown = await history.json()
   expect(body).toMatchObject({
     events: expect.arrayContaining([
       expect.objectContaining({

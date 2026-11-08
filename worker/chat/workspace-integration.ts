@@ -15,7 +15,10 @@ import type { ChatCallbackPublisher, ChatDependencies } from './types'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
-  Pick<ChatDependencies, 'resolveAttachments' | 'scheduleRunnerCheck'>
+  Pick<
+    ChatDependencies,
+    'resolveAttachments' | 'scheduleRunnerCheck' | 'randomId'
+  >
 >
 
 function callbackPublisher(publish: ChatCallbackPublisher): LifecyclePublisher {
@@ -36,6 +39,8 @@ export function createWorkspaceIntegration(
     now,
     matchesObject: matches,
     waitUntil: (promise) => context.waitUntil(promise),
+    runnerHello: async (_id, publish) =>
+      controller.recoverLifecycle(callbackPublisher(publish)),
     runnerReady: async (_id, publish) => {
       await controller.reportRunnerLifecycle(
         { type: 'runner.ready' },
@@ -61,36 +66,47 @@ export function createWorkspaceIntegration(
     runnerEventStored: async (envelope, publish) => {
       const event = envelope.event
       const lifecyclePublish = callbackPublisher(publish)
-      if (event.type === 'runner.event-refused') {
+      try {
+        if (event.type === 'runner.event-refused') {
+          if (
+            event.turnId &&
+            (event.runnerEventType === 'turn.completed' ||
+              event.runnerEventType === 'turn.failed')
+          )
+            await controller.finishLifecycleTurn(
+              event.turnId,
+              lifecyclePublish,
+              envelope.occurredAt,
+            )
+        } else if (
+          event.type === 'turn.started' ||
+          event.type === 'turn.completed' ||
+          event.type === 'turn.failed' ||
+          event.type === 'start.updated'
+        ) {
+          await controller.reportRunnerLifecycle(
+            event,
+            lifecyclePublish,
+            envelope.occurredAt,
+          )
+        }
+        if (event.type === 'workspace.title')
+          await updateWorkspaceTitle(
+            env.DB,
+            envelope.workspaceId,
+            event.name,
+            now(),
+          )
+      } finally {
         if (
-          event.turnId &&
-          (event.runnerEventType === 'turn.completed' ||
-            event.runnerEventType === 'turn.failed')
+          event.type === 'turn.completed' ||
+          event.type === 'turn.failed' ||
+          (event.type === 'runner.event-refused' &&
+            (event.runnerEventType === 'turn.completed' ||
+              event.runnerEventType === 'turn.failed'))
         )
-          await controller.finishLifecycleTurn(event.turnId, lifecyclePublish)
-      } else if (
-        event.type === 'turn.started' ||
-        event.type === 'turn.completed' ||
-        event.type === 'turn.failed' ||
-        event.type === 'start.updated'
-      ) {
-        await controller.reportRunnerLifecycle(event, lifecyclePublish)
+          context.waitUntil(devices.reconcile())
       }
-      if (event.type === 'workspace.title')
-        await updateWorkspaceTitle(
-          env.DB,
-          envelope.workspaceId,
-          event.name,
-          now(),
-        )
-      if (
-        event.type === 'turn.completed' ||
-        event.type === 'turn.failed' ||
-        (event.type === 'runner.event-refused' &&
-          (event.runnerEventType === 'turn.completed' ||
-            event.runnerEventType === 'turn.failed'))
-      )
-        context.waitUntil(devices.reconcile())
     },
   })
   const devices = new DeviceRuntime(
@@ -123,6 +139,19 @@ export function createWorkspaceIntegration(
     {
       ...platform,
       deviceWaiting: (id) => devices.waiting(id),
+      readChatRecovery: (id) =>
+        chat.store.read(id, async (view) => {
+          const recovery = await view.lifecycleRecovery()
+          return {
+            ...recovery,
+            runningTurns: recovery.runningTurns.map((turn) => ({
+              turnId: turn.id,
+              sessionId: turn.sessionId,
+              senderUserId: turn.senderId,
+            })),
+          }
+        }),
+      chatRecovered: () => context.waitUntil(devices.reconcile()),
       admitFirstMessage: async (input) => {
         const identity = await firstMessageIdentity(env, input.workspaceId)
         if (

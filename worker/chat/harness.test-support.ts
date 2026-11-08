@@ -3,6 +3,7 @@ import type { AgentChoice } from '../../src/shared/agents'
 import type {
   WorkspaceSocketMessage,
   ChatHistoryResponse,
+  WorkspaceEventEnvelope,
 } from '../../src/shared/events'
 import { chatHistoryPath, workspaceEventsPath } from '../../src/shared/events'
 import type { SendMessageResponse } from '../../src/shared/messages'
@@ -177,12 +178,20 @@ export async function createChatFixture(
     sessionId: string,
     after = 0,
   ): Promise<ChatHistoryResponse> => {
-    const response = await fetch(
-      chatHistoryPath(org.id, WORKSPACE_ID, sessionId, after),
-    )
-    if (response.status !== 200)
-      throw new Error(`History returned ${response.status}`)
-    return response.json()
+    const events: WorkspaceEventEnvelope[] = []
+    let through: number | undefined
+    while (true) {
+      const response = await fetch(
+        chatHistoryPath(org.id, WORKSPACE_ID, sessionId, after, through),
+      )
+      if (response.status !== 200)
+        throw new Error(`History returned ${response.status}`)
+      const page: ChatHistoryResponse = await response.json()
+      events.push(...page.events)
+      through = page.throughEventNumber
+      if (!page.hasMore) return { events, throughEventNumber: through }
+      after = page.nextAfterEventNumber
+    }
   }
   const tab = async (
     after = 0,

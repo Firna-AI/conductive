@@ -61,6 +61,7 @@ describe('ChatController', () => {
     const closed = chat.controller.getSnapshot().history[0]
     chat.server.json('POST', sessionPaths.reopen(org, ws, closed.id), {
       session: { ...closed, closedAt: null },
+      eventNumber: chat.nextEventNumber(),
     })
     await chat.controller.reopen(closed.id)
     const snapshot = chat.controller.getSnapshot()
@@ -97,6 +98,7 @@ describe('ChatController', () => {
   it('opens a new session with the default model as the current tab, and saves the view', async () => {
     const chat = chatFor({ conversation: 'history' })
     chat.server.json('GET', sessionsPath(org, ws), {
+      eventNumber: 0,
       sessions: [
         {
           id: 'autocomplete',
@@ -106,6 +108,7 @@ describe('ChatController', () => {
           createdAt: FAKE_TIME,
           closedAt: null,
           activeTurnId: null,
+          activeTurnStartedAt: null,
           retryMessageId: null,
           startedBy: senderSnapshot(fakeUser),
           sourceSessionId: null,
@@ -120,6 +123,7 @@ describe('ChatController', () => {
         createdAt: 1,
         closedAt,
         activeTurnId: null,
+        activeTurnStartedAt: null,
         retryMessageId: null,
         startedBy: senderSnapshot(fakeUser),
         sourceSessionId: null,
@@ -138,12 +142,18 @@ describe('ChatController', () => {
       createdAt: FAKE_TIME,
       closedAt: null,
       activeTurnId: null,
+      activeTurnStartedAt: null,
       retryMessageId: null,
       startedBy: senderSnapshot(fakeUser),
       sourceSessionId: null,
       loginAvailable: true,
     }
-    chat.server.json('POST', sessionsPath(org, ws), { session: fresh }, 201)
+    chat.server.json(
+      'POST',
+      sessionsPath(org, ws),
+      { session: fresh, eventNumber: 0 },
+      201,
+    )
     chat.server.json('GET', chatHistoryPath(org, ws, 'third'), {
       events: [],
       throughEventNumber: 0,
@@ -180,6 +190,7 @@ describe('ChatController', () => {
     const [running] = chat.controller.getSnapshot().sessions
     chat.server.json('POST', close, {
       session: { ...running, closedAt: FAKE_TIME + 1 },
+      eventNumber: chat.nextEventNumber(),
     })
     await chat.controller.requestClose('autocomplete')
     await chat.controller.confirmClose()

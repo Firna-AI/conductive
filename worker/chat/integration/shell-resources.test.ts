@@ -138,6 +138,7 @@ it('decodes opaque workspace IDs for lifecycle reads and keeps archived writes r
   )
   expect(detail.status).toBe(200)
   expect(await detail.json()).toMatchObject({
+    eventNumber: 0,
     workspace: { id: OUTER_WORKSPACE },
     start: null,
     error: null,
@@ -147,6 +148,10 @@ it('decodes opaque workspace IDs for lifecycle reads and keeps archived writes r
     { method: 'POST', body: '{}' },
   )
   expect(resumed.status).toBe(200)
+  expect(await resumed.json()).toMatchObject({
+    eventNumber: 0,
+    workspace: { id: OUTER_WORKSPACE },
+  })
   await fixture.env.DB.prepare(
     `UPDATE workspaces SET archived_at = 1, state = 'archived' WHERE id = ?`,
   )
