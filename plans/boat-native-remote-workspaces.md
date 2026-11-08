@@ -5200,10 +5200,17 @@ path that this milestone changes.
 Apply the `fix after merge` items of the workspace lifecycle. Added on 8
 November 2026.
 
-- [ ] Apply option B of `plans/follow-ups/shared-object-alarm.md`: one
-      alarm scheduler sets the next alarm at the end of each run. Delete
-      that item.
+- [ ] Apply option B of `plans/follow-ups/shared-object-alarm.md`, and
+      delete that item. The one alarm scheduler stores a due time for each
+      pending task, also for each failed `changed` hook. Each write that
+      changes a due time sets the alarm to the earliest one.
 - [ ] Apply option B of `plans/follow-ups/terminal-setup-passes-start-limit.md`,
+      and delete that item.
+- [ ] Apply option E of `plans/follow-ups/lifecycle-turn-times-from-chat.md`,
+      and delete that item.
+- [ ] Apply option C of `plans/follow-ups/native-entries-advance-alarms.md`,
+      and delete that item.
+- [ ] Apply option C of `plans/follow-ups/terminal-replies-count-as-activity.md`,
       and delete that item.
 
 ## Milestone 5f: Tests on the real workspace object
@@ -5215,7 +5222,7 @@ Apply the `fix after merge` items of the Worker tests. Added on 8 November
 2026. One native harness serves the chat tests and the lifecycle tests, as
 both items recommend.
 
-- [ ] Apply option C of `plans/follow-ups/chat-tests-on-real-object.md` and
+- [ ] Apply option D of `plans/follow-ups/chat-tests-on-real-object.md` and
       option E of `plans/follow-ups/lifecycle-tests-on-real-object.md`, with
       one native harness. Delete both items.
 - [ ] Apply option C of `plans/follow-ups/harness-test-speed.md` (decision
@@ -6098,6 +6105,25 @@ Apply decision 132 A. Added on 8 November 2026.
       and `docs/protocol/access-and-security.md`, and the stored files on
       the privacy page, with "(decision 132)".
 
+## Milestone 8q: Chat client follow-ups
+
+Depends on: none.
+
+Apply the `fix after merge` items of the chat client. Added on 8 November
+2026.
+
+- [ ] Apply option B of `plans/follow-ups/github-store-reconnect-replay.md`,
+      and delete that item.
+- [ ] Apply option B of `plans/follow-ups/chat-session-record-owner.md`, and
+      delete that item.
+- [ ] Apply option A of `plans/follow-ups/model-change-reply-focus.md`, and
+      delete that item. Do it after the record owner fix, because both
+      change the model-change actions under `src/chat/state/`.
+- [ ] Apply option B of `plans/follow-ups/chat-edit-admission-order.md`:
+      reproduce the reversed commits, and find the required order of two
+      quick edits. Record the result and the next option in that item.
+      Ask the user when no requirement sets the order.
+
 ## Milestone 16a: First deployment
 
 Depends on: 8i, 8m
@@ -6108,9 +6134,13 @@ and replay in a new tab.
 
 This milestone needs the prerequisites from the user.
 
-- [ ] Use [the deployment input guide](../docs/deployment.md) for each Worker
+- [x] Use [the deployment input guide](../docs/deployment.md) for each Worker
       variable and secret, the public runner archive and digest, and the
-      runtime settings given to each workspace.
+      runtime settings given to each workspace. Done on 8 November 2026:
+      the variables of decisions 137 and 138 and `GITHUB_APP_SLUG`, six
+      secrets, and the runner archive of `a145db0` at
+      `runner.conductive.build`. Resend and the desktop stream origins wait.
+      Branch: `calummoore/conductor-alternative-architecture`.
 - [ ] Deploy the chat path to the user's Cloudflare account, with GitHub
       sign-in, so that the user can work in Conductive.
 - [ ] Smoke-test it with a real Boat sandbox: run `npm ci --prefix runner`,
@@ -6960,6 +6990,9 @@ Apply the `fix after merge` items of the access rules. Added on 8 November
       116), with the access protocol and the Terms page. Delete that item.
 - [ ] Apply option C of `plans/follow-ups/desktop-stream-after-access-loss.md`
       (decision 117), and delete that item.
+- [ ] Apply option B of `plans/follow-ups/restore-for-suspended-admin.md`,
+      with its lines in `docs/protocol/operator-actions.md` and
+      `worker/members/README.md`. Delete that item.
 
 ## Milestone 15r: Secret org env vars
 

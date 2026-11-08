@@ -1,0 +1,57 @@
+# A reconnect loses a received GitHub update
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-08, from PR #53, branch `conductor/boat-native-remote-workspaces-milestone-8m`, round 1, finding 17.
+- **Location:** `connect` at `src/github/githubStore.ts:111-125`, `receive` at `src/github/githubStore.ts:183-213`, and `next` at `src/github/githubStore.ts:228-235`.
+- **Reason:** The bug needs a reconnect between two history pages and a failed read. No source of the app sends the store more than one page today.
+
+- **Terms:**
+  - **GitHubStore:** the browser state owner of the pull request bar, the pull request row, and the Checks tab of one workspace, in `src/github/githubStore.ts`.
+  - **Replay:** the stored workspace events that the stream sends before its live events, in one or more `history` pages with one shared cutoff.
+  - **Source:** the `fetch`, `subscribe`, and `delay` functions that `useGitHubState` gives the store. A new source function connects the same store again.
+- **Background:**
+  - The store shows the GitHub state of a replay only after its final page. It holds the newest state of the pages so far in `replayed`. It holds the live events that come before the final page in `waiting`.
+  - Each event moves `lastEventNumber`, at `src/github/githubStore.ts:231`. Each page with more to come moves it to the page position, at `src/github/githubStore.ts:194-200`.
+  - `connect` clears `replay`, `replayed`, and `waiting`. Then it subscribes after `lastEventNumber`, at `src/github/githubStore.ts:111-116`.
+  - The hook connects the same store again when a source function changes, as `src/app/workspace-store.ts:34-35` and `src/github/README.md:49-50` say.
+  - The type `SubscribeToWorkspace` and `src/github/README.md:35-41` promise history in one or more pages.
+  - Today no source sends the store more than one page. The workspace screen gives it only live GitHub events, through `githubSubscribe` in `src/shell/workspace/github/github-events.ts:33-45`.
+  - The fake event server of the GitHub development page sends one page, in `src/test-support/fake-events.ts:17-33`.
+- **Problem:**
+  - Page one comes through event 32, and its only GitHub update is event 2. The store holds that state in `replayed`.
+  - A reconnect clears `replayed`, and the new subscription starts after 32.
+  - When the API read fails and the later pages hold no GitHub update, the final page has no state to show. So the store loses the update of event 2.
+  - A run of the real store with a fetch that always fails showed it. Without a reconnect, the store showed `checks-failed`, the state of event 2. With a reconnect after page one, it showed `error`.
+  - With two reconnects, the store kept the older `checks-running`, and it never showed the received `merged`.
+  - No test covers it. The only paged test in `src/github/githubStore.test.ts` has no reconnect. The reconnect test in `src/github/freshReads.test.ts` sends one page.
+- **Impact if no action:** The bar shows an older state or an error until another GitHub update or a successful read. Only a source with more than one history page can cause it.
+- **Root question:** How does a reconnect resume the stream without passing a GitHub state that the store has not shown yet?
+- **Options:**
+  - **A.** Keep the pending replay state across the connections of the same workspace. This keeps the current position model. Effort: Small.
+  - **B.** Resume only after the last state that the store applied. Effort: Small.
+    - Keep the resume position apart from the page position of a replay.
+    - Move the resume position only when no replay state waits: at the final page, and for each live event outside a replay.
+    - At a reconnect, set the event position back to the resume position, and subscribe after it. The stream then sends the held pages again.
+    - Add a regression that reconnects between two pages while each read fails.
+  - **C.** Share one ordered replay owner across the shell, chat, files, and GitHub consumers. This also removes repeated buffer rules. Effort: Large, because the app, chat, and files streams each have different hold, gap, and replay rules.
+  - **D.** Keep one replay record that holds the cutoff, the page position, and the pending GitHub state. Effort: Small.
+    - Move the shown position only at the final page and for live events.
+    - At a reconnect, keep the record and resume after its page position. When there is no record, resume after the shown position.
+    - Cost: a small change of the store structure, the regression of B, and a README update. The fix is safe only while all pending replay state stays in the record.
+  - **E.** Add a `github.updated` rule to the history compaction in `worker/chat/history-compaction.ts`. Effort: Medium.
+    - Each replay then holds only the newest GitHub event up to its cutoff. The store shows that state when its page arrives, and the `replayed` buffer goes away.
+    - Live events still wait for the final page.
+    - Cost: changes in the Worker and in the browser, a new compaction index with its tests, and a change of the history contract.
+    - Benefit: the history gets smaller, because each GitHub event holds all the checks. Only the GitHub store reads these events.
+- **Left out:**
+  - Relying on the fresh API read fails the goal, because the read can fail, as in the run above.
+  - Waiting for another webhook fails the goal. It leaves the received update unshown.
+  - A new store for each new source. A is better on every point, because a new store shows loading again and reads the whole history again.
+  - Showing the GitHub state of each page at once, with no Worker change. A is better on every point. A page can hold several GitHub states, which would then show one after another and start extra reads.
+  - A fallback in the Worker to the stored state when the GitHub API fails. It fails the goal when the read between the browser and the Worker fails.
+- **Wider fix:** B. The resume position cannot pass a state that the store has not shown. D is as wide only while all pending replay state stays in its record.
+- **Previous examples:** Commit `8f72972` fixed the order of a delayed GitHub history and the reads. No earlier loss of a part of a replay was found.
+- **Related:** [chat-tests-on-real-object.md](chat-tests-on-real-object.md), for option E only: the test of the new compaction index would use the native chat fixture of that item.
+- **Recommendation:** B. It gives the simplest rule that blocks the class: the store never resumes past what it has shown. D avoids a second read of the received pages, but that read happens only at a rare reconnect. D is also safe only while all replay state stays in its record.
+- **Action:** fix after merge, apply B, because the bug needs a reconnect between two history pages and a failed read.
