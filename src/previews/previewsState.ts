@@ -4,6 +4,8 @@ import type { ToolError } from '../terminal/tool-parts/request'
 
 export interface PreviewsState {
   load: { state: 'loading' } | { state: 'failed'; error: ToolError } | null
+  /** The list read that counts. Try again starts a new read. */
+  read: number
   previews: readonly Preview[]
   /** Revoked previews stay hidden, also when a later list still has them. */
   revoked: ReadonlySet<string>
@@ -29,6 +31,7 @@ export type PreviewsAction =
 
 export const initialPreviews: PreviewsState = {
   load: { state: 'loading' },
+  read: 1,
   previews: [],
   revoked: new Set(),
   opening: false,
@@ -80,7 +83,7 @@ export function previewsReducer(
 ): PreviewsState {
   switch (action.type) {
     case 'load':
-      return { ...state, load: { state: 'loading' } }
+      return { ...state, load: { state: 'loading' }, read: state.read + 1 }
     case 'loaded':
       return { ...state, load: null, previews: action.previews }
     case 'load-failed':
