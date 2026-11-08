@@ -24,6 +24,13 @@ It carries no login. A redelivery keeps its command ID.
 Runner commands carry the agent login of the session starter, whoever sent the message. Browser response types do not.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
 
+`messages.ts` owns the attachment metadata and target identity.
+`AttachmentUploadTarget` names a workspace or stable first-message ID.
+`attachmentUploadPath` selects the workspace or org-scoped draft base path.
+`ATTACHMENT_MAX_BYTES` is the decoded file limit.
+`attachmentUploadUrl` appends the filename, media type, and first-message target as URL data.
+The browser posts one raw file as `application/octet-stream` with its known byte length.
+
 `files.ts` defines full trees, tree updates, and branch changes.
 A full tree contains paths relative to the repository root.
 A move names its old path and its new entry.

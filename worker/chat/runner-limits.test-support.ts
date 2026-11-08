@@ -68,6 +68,8 @@ export async function createRunnerLimitsFixture() {
     readLoginAvailability: async () => new Set<string>(),
     resolveLogin: async () => null,
     resolveAttachments: async () => ({ attachments: [], paths: [] }),
+    prepareAttachments: async () => null,
+    attachmentSandboxId: async () => null,
     receiveFileResult: async () => undefined,
     runnerEventStored: async (envelope) => {
       hooks.push(structuredClone(envelope))

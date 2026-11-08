@@ -8,6 +8,7 @@ import { ActionButton } from '../common/actions'
 import { InlineText } from '../common/InlineText'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
+import { AttachmentChips } from './AttachmentChips'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
@@ -41,6 +42,9 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
           <div className={styles.bubble}>
             <InlineText text={item.text} />
           </div>
+          {item.attachments ? (
+            <AttachmentChips attachments={item.attachments} sent />
+          ) : null}
           {item.queued ? (
             <span className={styles.queued}>
               <Clock size={12} />

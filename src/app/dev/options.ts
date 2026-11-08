@@ -5,6 +5,7 @@ import type { FakeApiOptions } from '../../test-support/fake-api'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
+import type { DevUploadMode } from './attachment-routes'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
@@ -17,6 +18,8 @@ const CONVERSATIONS = [
   'queued',
   'first-turn',
 ] as const satisfies readonly RecordedChatScenario[]
+
+const UPLOADS = ['wait', 'fail'] as const satisfies readonly DevUploadMode[]
 
 const BANNERS = [
   'none',
@@ -51,6 +54,8 @@ const BANNERS = [
  * - `signedOut=1`: the Worker refuses the session, so the sign-in shows.
  * - `stop=<seconds>`: an open workspace stops that many seconds after it
  *   opens, as a sandbox does that stops while its workspace is open.
+ * - `upload=wait|fail`: each file upload never ends, or the first upload of
+ *   each file name fails once, so Try again works.
  */
 export interface DevOptions {
   /** The options of the recorded server. */
@@ -63,6 +68,8 @@ export interface DevOptions {
   signedOut: boolean
   /** The wait before an open workspace stops, or `null` for no stop. */
   stopAfterMs: number | null
+  /** What each file upload does. */
+  upload: DevUploadMode
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -90,6 +97,7 @@ export function readDevOptions(search: string): DevOptions {
     suspended: params.get('suspended') === '1',
     signedOut: params.get('signedOut') === '1',
     stopAfterMs: stopAfter(params.get('stop')),
+    upload: pick(params, 'upload', UPLOADS) ?? 'ready',
   }
 }
 

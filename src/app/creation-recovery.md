@@ -13,7 +13,8 @@ The server side of a failed create is in the
   browser storage, and it opens no socket of its own.
 - At a 201 reply, `NewWorkspaceModel.send` admits the sent draft as a
   `Submission`. It holds the workspace ID, the section, the text, the
-  attachment records, the message ID, the repository, and the model. Then
+  ready files with their attachments, the message ID, the repository, and
+  the model. Then
   it calls `opened`, which goes to the new address. So the move and the
   forget of a failed create land in one render.
 - The kept workspace of the shell gives each ordered event of its stream to
@@ -92,8 +93,8 @@ The server side of a failed create is in the
   of another tab.
 - The browser harness has controls that fail a held create start, as
   [Harness controls](../../worker/chat/integration/outer-worker-tests.md#harness-controls)
-  says. The Worker routes no attachment upload yet, so only the tests in
-  this folder and `../shell/` cover the files of a returned form.
+  says. The tests in this folder and `../shell/` cover the files of a
+  returned form, with the fake upload of `../test-support/`.
 
 ## Key code
 

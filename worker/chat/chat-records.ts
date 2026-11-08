@@ -69,7 +69,37 @@ export class ChatRecords {
     return this.data.put(chatKey('model-session', id), creation)
   }
   saveMessage(message: UserMessage): Promise<void> {
-    return this.data.put(chatKey('message', message.id), message)
+    return this.saveMessageWithAttachments(message)
+  }
+  private async saveMessageWithAttachments(
+    message: UserMessage,
+  ): Promise<void> {
+    await this.data.put(chatKey('message', message.id), message)
+    for (const attachment of message.attachments)
+      await this.data.put(chatKey('attachment-use', attachment.id), {
+        messageId: message.id,
+        userId: message.sender.id,
+      })
+  }
+  attachmentUse(
+    id: string,
+  ): Promise<{ messageId: string; userId: string } | undefined> {
+    return this.data.get(chatKey('attachment-use', id))
+  }
+  async usedAttachments(
+    ids: readonly string[],
+    userId: string,
+  ): Promise<string[]> {
+    const used: string[] = []
+    for (const id of ids)
+      if ((await this.attachmentUse(id))?.userId === userId) used.push(id)
+    return used
+  }
+  attachmentCopy(commandId: string): Promise<string | undefined> {
+    return this.data.get(chatKey('attachment-copy', commandId))
+  }
+  saveAttachmentCopy(commandId: string, sandboxId: string): Promise<void> {
+    return this.data.put(chatKey('attachment-copy', commandId), sandboxId)
   }
   messageSource(messageId: string): Promise<string | undefined> {
     return this.data.get(chatKey('message-source', messageId))

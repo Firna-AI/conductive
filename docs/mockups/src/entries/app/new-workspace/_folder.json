@@ -1,1 +1,3 @@
-{ "order": ["error", "time-limit", "creating", "waiting", "first-turn"] }
+{
+  "order": ["error", "time-limit", "files", "creating", "waiting", "first-turn"]
+}

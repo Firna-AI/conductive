@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { readyIds } from '../../app/draft-files'
 import type { AgentChoice } from '../../shared/agents'
 import { filePaths } from '../../shared/files'
 import { sessionPaths } from '../../shared/sessions'
@@ -50,7 +51,7 @@ function type(chat: Chat, sessionId: string, words: string) {
 }
 
 const files = (chat: Chat, sessionId: string) =>
-  chat.draftOf(sessionId)?.attachments.map((item) => item.id)
+  readyIds(chat.draftOf(sessionId)?.files ?? [])
 
 /**
  * A chat whose draft has a file that the backend keeps and one that it drops.

@@ -1,6 +1,5 @@
 import type { AppEnv } from '../env'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
-import { HttpError } from '../http'
 import { randomToken } from '../security/crypto'
 import {
   readConnectionAccess,
@@ -10,6 +9,9 @@ import { loginResolver } from './login-access'
 import { readLoginAvailability } from './login-availability'
 import { firstStartIncomplete } from './queries'
 import type { ChatDependencies } from './types'
+import { resolveMessageAttachments } from './attachment-claims'
+import { prepareMessageAttachments } from './attachment-copy'
+import { attachmentWorkspace } from './attachment-claim-data'
 
 /**
  * The default seams of `WorkspaceChat`. A feature owner replaces one with an
@@ -38,15 +40,27 @@ export function chatDependencies(
         ? Promise.resolve(new Set<string>())
         : readLoginAvailability(env.DB, id, targets)
     },
-    resolveAttachments: async (_userId, _workspaceId, ids) => {
-      if (ids.length)
-        throw new HttpError(
-          503,
-          'attachments_unavailable',
-          'Attachments are not available. Try again.',
-        )
-      return { attachments: [], paths: [] }
-    },
+    resolveAttachments: (userId, id, ids, messageId, usedIds) =>
+      resolveMessageAttachments(
+        env,
+        userId,
+        id,
+        ids,
+        messageId,
+        usedIds,
+        (overrides.now ?? Date.now)(),
+      ),
+    prepareAttachments: (id, userId, messageId, attachments, copiedSandboxId) =>
+      prepareMessageAttachments(
+        env,
+        id,
+        userId,
+        messageId,
+        attachments,
+        copiedSandboxId,
+      ),
+    attachmentSandboxId: async (id, userId) =>
+      (await attachmentWorkspace(env.DB, id, userId))?.sandboxId ?? null,
     receiveFileResult: async () => undefined,
     runnerAttached: () => undefined,
     runnerDetached: () => undefined,

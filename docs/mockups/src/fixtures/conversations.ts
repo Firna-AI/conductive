@@ -3,6 +3,8 @@
  */
 
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
+import { attachmentConversations } from './attachmentConversations'
+import type { Attachment } from './attachments'
 import { changedFiles, type ChangedFile } from './files'
 import { linkedConversations } from './linkedConversations'
 import { lostConversations } from './lostConversations'
@@ -16,7 +18,14 @@ export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 type ToolCallStatus = 'done' | 'running' | 'stopped'
 
 export type ChatItem =
-  | { kind: 'user'; id: string; text: string; queued?: boolean }
+  | {
+      kind: 'user'
+      id: string
+      text: string
+      /** The files of the message, which show under it. */
+      attachments?: readonly Attachment[]
+      queued?: boolean
+    }
   | {
       kind: 'agent'
       id: string
@@ -111,6 +120,8 @@ export const conversationKeys = [
   'files-unavailable',
   'stopped-files-unavailable',
   'linked',
+  'sent-files',
+  'queued-files',
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -269,6 +280,7 @@ export const conversations: Readonly<
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...linkedConversations(followUpDraft),
+  ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
 }
 
 /** The steer message that the user types while a turn runs. */

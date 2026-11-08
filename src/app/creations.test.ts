@@ -87,7 +87,7 @@ describe('Creations', () => {
     if (failed?.state !== 'failed') throw new Error('The create did not fail.')
     expect(failed.form.draft.get()).toMatchObject({
       text: 'Let shoppers save their cart.',
-      attachments: [{ id: 'draft-attachment-1' }],
+      files: [{ state: 'ready', attachment: { id: 'draft-attachment-1' } }],
       messageId: 'client-1',
       repositoryId: 'storefront',
       choice,

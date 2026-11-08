@@ -127,7 +127,7 @@ describe('messages during the first start of a new workspace', () => {
     await chat.controller.send(first)
     expect(chat.draftOf(first)).toMatchObject({
       text: 'Keep a saved cart for 30 days.',
-      attachments: [{ id: 'attachment-1' }],
+      files: [{ state: 'ready', attachment: { id: 'attachment-1' } }],
       sending: false,
     })
     expect(chat.controller.getSnapshot().notice).toEqual({

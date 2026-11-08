@@ -74,7 +74,7 @@ test('the returned first-message form keeps the saved public cause through a ret
   })
   expect(recovered.form.draft.get()).toMatchObject({
     text: 'Keep the cart changes.',
-    attachments: [{ id: 'draft-attachment-1' }],
+    files: [{ state: 'ready', attachment: { id: 'draft-attachment-1' } }],
     messageId: 'client-1',
   })
   expect(await recovered.form.send(defaults)).toBeNull()

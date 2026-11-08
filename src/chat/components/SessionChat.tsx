@@ -168,7 +168,6 @@ export function SessionChat(props: SessionChatProps) {
       {sandboxBar}
       {!down && session && snapshot.load.state === 'ready' ? (
         <Composer
-          attaching={state.draft.uploads > 0}
           blocked={block !== null}
           waits={waitsForFirstStart(snapshot)}
           choice={session.choice}
@@ -180,9 +179,8 @@ export function SessionChat(props: SessionChatProps) {
           onChooseModel={(choice) =>
             void controller.chooseModel(session.id, choice)
           }
-          onRemoveAttachment={(file) =>
-            controller.removeAttachment(session.id, file)
-          }
+          onRemoveFile={(file) => controller.removeFile(session.id, file)}
+          onRetryFile={(file) => void controller.retryFile(session.id, file)}
           onSend={() => void controller.send(session.id)}
           onStop={() => void controller.interrupt(session.id)}
           running={state.transcript.turn !== null}

@@ -179,7 +179,12 @@ limits, their results, and what the chat shows.
   origin.
 - Every API response carries `Vary: Origin`.
 - A preflight from the desktop origin needs no sign-in, and it gives no
-  access. It allows only JSON requests with the methods of the API.
+  access. It allows the methods of the API, and `Content-Type` as the only
+  request header outside the CORS safelist.
+- The gate then needs a JSON body, or raw bytes on the two attachment
+  upload routes, as
+  [Attachment uploads](access-and-security.md#attachment-uploads) says
+  (decision 144).
 - The hostname for machines, `api.conductive.build`, and the preview
   domain, `conductive.page`, never accept the desktop origin.
 

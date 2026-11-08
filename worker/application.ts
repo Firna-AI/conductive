@@ -143,7 +143,12 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         }
         if (isDeviceAppPath(path))
           return respond(await routeDevice(request, env))
-        const chatResponse = await routeChat(request, env)
+        const chatResponse = await routeChat(
+          request,
+          env,
+          dependencies.now,
+          dependencies.randomToken,
+        )
         if (chatResponse) return respond(chatResponse)
         const featureResponse = await routeWorkspaceFeatures(request, env)
         if (featureResponse) return respond(featureResponse)

@@ -81,7 +81,7 @@ says.
 - A change to another model of the same agent stays in the session
   (decision 51).
 - A model of the other agent opens a new session with that agent, and the
-  draft moves there.
+  draft moves there with its files.
 - Reason: neither SDK can switch agents inside one session. A hand-over of
   the transcript to the other agent was rejected. The user chose the way
   that Conductor works.
@@ -108,7 +108,8 @@ says.
   says before the send that the message starts a new session.
 - The composer names the member whose login its message runs on, such as
   "Uses Priya's Claude login", or "Uses your Claude login" to Priya.
-- The composer attaches files to a message.
+- The composer attaches files to a message, as [Attachments](#attachments)
+  says.
 - The composer shows a notice when the user has no login for the agent of
   the chosen model (decision 33). It shows no such notice when the message
   runs on the login of another member.
@@ -181,6 +182,52 @@ says.
   agent for a title of three to five words. The chat does not show that
   request.
 - The workspace then takes the title as its name.
+
+## Attachments
+
+- Each file of a message can contain at most 25 MB, or 25,000,000 bytes
+  (decision 132).
+- The composer refuses a larger file before its upload, and names the
+  limit. The Worker refuses a larger file too, with HTTP 413 and the error
+  code `attachment_too_large`.
+- The composer shows each upload while it runs. A failed upload offers Try
+  again and Remove. Send waits while a file uploads, and while a failed
+  upload waits for Try again or Remove.
+- An upload works also before the cloud computer of its workspace exists,
+  and while that cloud computer starts or is stopped (decision 132).
+- The Worker stores each uploaded file in one R2 bucket of the app, outside
+  the cloud computer (decision 132).
+- Storage in the object of each workspace was rejected, because each file
+  must then go in chunks. Uploads only into a running cloud computer were
+  rejected, because a message to a new or stopped workspace could then not
+  carry files at once.
+- [Orgs and workspaces](access-and-security.md#orgs-and-workspaces) states
+  which messages can use an uploaded file.
+  [Attachment uploads](access-and-security.md#attachment-uploads) states
+  how the browser sends a file (decision 144).
+- When the turn of a message starts, the Worker copies each file of the
+  message into the cloud computer of the workspace (decision 132).
+- The agent gets a message only after each of its files is in the cloud
+  computer. This holds also for a message that joins a running turn.
+- With the message, the agent gets the path, the name, and the media type
+  of each file. The copy holds the exact bytes of the upload.
+- A turn cannot start when a file of its message cannot reach the cloud
+  computer. That turn fails and names the cause. Try again copies the
+  files again.
+- A copy that fails during a running turn does not end that turn. The
+  workspace keeps the message, and the message waits.
+- The chat shows the name and the size of each file of a sent message.
+- The app deletes the files of a workspace with the workspace, also in the
+  purge of a deleted org (decision 132).
+- A failed first start deletes no file of the first message. The files go
+  back to the composer with the message, as
+  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  says. Try again uses them.
+- The app deletes an unsent file 7 days after its upload (decision 132). A
+  file is unsent while no accepted message uses it.
+- When a send names a draft file that the app deleted, the composer shows
+  that file as a failed upload. Its Try again uploads the file again from
+  the device.
 
 ## What the chat shows
 

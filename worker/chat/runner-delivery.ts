@@ -7,8 +7,10 @@ import { ChatOperation } from './operation'
 import type { ChatStore, ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
 import type { ActiveRunner, ChatDependencies, PendingCommand } from './types'
+import { AttachmentPreparation } from './attachment-delivery'
 
 export class RunnerDelivery {
+  private readonly preparations: AttachmentPreparation
   private readonly dispatch: DeliveryState
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
@@ -18,11 +20,18 @@ export class RunnerDelivery {
     store: ChatStore,
     dependencies: ChatDependencies,
     publish: (events: readonly WorkspaceEventEnvelope[]) => void,
+    resume: () => Promise<void>,
   ) {
     this.store = store
     this.dependencies = dependencies
     this.publish = publish
     this.dispatch = new DeliveryState(store, publish)
+    this.preparations = new AttachmentPreparation(
+      store,
+      dependencies,
+      publish,
+      resume,
+    )
   }
 
   /** Called inside the store's serial queue, after the request commits. */
@@ -69,6 +78,11 @@ export class RunnerDelivery {
           advanced = true
         continue
       }
+      if (
+        (outbound.type === 'turn' || outbound.type === 'message') &&
+        !(await this.preparations.ready(active, outbound, isCurrent))
+      )
+        continue
       const publish = async (
         event: WorkspaceEventEnvelope['event'],
         occurredAt?: number,

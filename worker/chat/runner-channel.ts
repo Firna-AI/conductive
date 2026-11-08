@@ -35,7 +35,9 @@ export class RunnerChannel {
     this.store = store
     this.dependencies = dependencies
     this.publish = publish
-    this.delivery = new RunnerDelivery(store, dependencies, publish)
+    this.delivery = new RunnerDelivery(store, dependencies, publish, () =>
+      this.flush(),
+    )
     this.repairs = new RepairDelivery(store, publish)
   }
 

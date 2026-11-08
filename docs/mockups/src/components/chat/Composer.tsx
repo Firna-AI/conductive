@@ -19,7 +19,14 @@ export type ComposerState = {
   /** An agent turn runs, so a message steers it. */
   running: boolean
   draft: string
+  /**
+   * The attached files. Send waits while a file uploads, and while a failed
+   * upload waits for Try again or Remove, so a message goes with all of its
+   * files.
+   */
   attachments: readonly Attachment[]
+  /** The screen that the attach button leads to, when the mockups draw it. */
+  attachTo?: string
   /** The model picker is open. */
   picker?: boolean
   /**
@@ -67,16 +74,19 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. While a turn runs, a message
  * steers the turn, and Stop ends it. While Send waits for the first start
- * of a new workspace, a message in the box shows the reason beside Send. A
- * line under the box names whose agent login the session uses.
+ * of a new workspace, a message in the box shows the reason beside Send.
+ * Send also waits for the uploads of the files, whose chips show their
+ * state. A line under the box names whose agent login the session uses.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const { field } = useControlSizes()
   const placeholder = props.running
     ? 'Steer the agent while it works'
     : (props.placeholder ?? 'Message the agent')
-  const off = props.blocked === true || props.waits === true
+  const uploads = props.attachments.some((file) => file.state !== undefined)
+  const off = props.blocked === true || props.waits === true || uploads
   const written = props.draft !== '' || props.attachments.length > 0
+  const attach = <IconButton icon={Paperclip} label="Attach files" />
   return (
     <div className={styles.wrap}>
       <div className={styles.composer}>
@@ -96,7 +106,13 @@ export function Composer(props: ComposerState & { lines?: number }) {
           variant="seamless"
         />
         <div className={styles.bar}>
-          <IconButton icon={Paperclip} label="Attach files" />
+          {props.attachTo ? (
+            <ScreenLink asChild to={props.attachTo}>
+              {attach}
+            </ScreenLink>
+          ) : (
+            attach
+          )}
           <ModelPicker
             choice={props.choice}
             open={props.picker}

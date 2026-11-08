@@ -48,7 +48,7 @@ export interface DevState {
   orgs: readonly OrgState[]
   /** `false` until the user installs the GitHub App. */
   githubAppInstalled: boolean
-  /** The uploads of New workspace, by ID. */
+  /** The file uploads of the fake, by ID, which a create or a send names. */
   attachments: Map<string, Attachment>
   /** The wait before an open workspace stops, from `stop=<seconds>`. */
   stopAfterMs: number | null

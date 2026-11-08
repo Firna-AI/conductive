@@ -1,5 +1,11 @@
 # Chat backend tests
 
+The `attachment-*.test.ts` files use local R2 and D1 through the internal storage boundary.
+They cover exact bytes, ownership, first-message recovery, expiry races, copy proof, and Stop during a held transfer.
+`attachment.test-support.ts` supplies the shared fixture and explicit fake preparation seams.
+`integration/attachment-raw.test.ts` checks native fixed-length R2 writes, raw metadata and ownership, interrupted transfers, and desktop admission.
+The HTTP and security raw-upload tests check shared route budgets and admission before body reads.
+
 This guide belongs to the [chat backend](README.md). Run the tests from
 the repository root:
 

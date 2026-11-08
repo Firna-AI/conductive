@@ -75,7 +75,7 @@ describe('AppModel', () => {
     expect(opened).not.toHaveBeenCalled()
     expect(reply).toBeNull()
     expect(free.create).toEqual({ state: 'idle' })
-    expect(free.draft).toMatchObject({ text: '', attachments: [] })
+    expect(free.draft).toMatchObject({ text: '', files: [] })
     expect(free.draft.messageId).not.toBe(sent.messageId)
     expect(form.create.get()).toEqual({ state: 'idle' })
     expect(form.draft.get().text).toBe('A newer draft')
@@ -88,7 +88,7 @@ describe('AppModel', () => {
     const admitted = org.creations.of('gift-cards').get()
     expect(admitted?.submission.draft).toMatchObject({
       text: 'A newer draft',
-      attachments: [],
+      files: [],
       messageId: free.draft.messageId,
     })
   })

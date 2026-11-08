@@ -69,10 +69,11 @@ how the app runs in development and in the production build.
    `{"status":"ok"}`.
 6. Run `npm run check` before you submit a change.
 
-Local development needs no Cloudflare account. Wrangler provides local D1
-and Durable Object storage under `.wrangler/`. The D1 ID in
-`wrangler.jsonc` names the production database. Local commands, such as
-`npm run db:migrate` and `npm run dev`, use only the local storage.
+Local development needs no Cloudflare account. Wrangler provides local D1,
+R2, and Durable Object storage under `.wrangler/`. The D1 ID and the R2
+bucket name in `wrangler.jsonc` name the production database and bucket.
+Local commands, such as `npm run db:migrate` and `npm run dev`, use only
+the local storage.
 This setup creates no Cloudflare resources and includes no deploy command.
 Put local secrets in `.dev.vars`, which Git ignores.
 

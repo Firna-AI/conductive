@@ -21,7 +21,8 @@ export function workspaceName(
   state: WorkspaceState,
   workspace: Workspace,
 ): string {
-  const waiting = state.conversation === 'queued'
+  const waiting =
+    state.conversation === 'queued' || state.conversation === 'queued-files'
   return waiting && workspace.generatedName
     ? workspace.generatedName
     : workspace.name

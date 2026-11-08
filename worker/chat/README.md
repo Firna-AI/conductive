@@ -180,6 +180,8 @@ group of tests covers.
 
 ## Seams for other milestones
 
+[Chat attachments](attachments.md) gives the internal storage boundary, acceptance proof, copy preparation, and cleanup integration.
+
 [Chat backend integration](integration/README.md) gives the seams for other
 features. It covers the hooks, the trusted workspace calls, the workspace
 events, the outer Worker, and the lifecycle. It also covers the files, the

@@ -128,11 +128,11 @@ describe('committed session login observations', () => {
       },
       fixture.memberCookie,
     )
-    expect(response.status).toBe(503)
+    expect(response.status).toBe(404)
     expect(await response.json()).toEqual({
       error: {
-        code: 'attachments_unavailable',
-        message: 'Attachments are not available. Try again.',
+        code: 'attachment_not_found',
+        message: 'The attached file is not available. Upload it again.',
       },
     })
     const stored = await fixture.chat.store.read(WORKSPACE_ID, (view) =>

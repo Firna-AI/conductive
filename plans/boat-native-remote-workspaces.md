@@ -4296,6 +4296,54 @@ Added on 8 November 2026 from Milestone 15q.
 Each item below is an agent call of 5 November 2026 unless it says
 otherwise. The user can override any of them.
 
+**Chat attachments.** Orchestrator calls of 8 November 2026 for decision
+132 A and the user's choice D of decision 144 on the same day.
+
+- Send one raw file per request with `application/octet-stream`. Keep one
+  shared list of the two raw routes and their 25,000,000-byte limit for
+  the Worker entry and the app gate. Reason: a JSON route must not get the
+  raised limit. Every other write keeps its JSON rule and existing limit.
+- Require `Content-Length` and pipe the entry's counted body through
+  `FixedLengthStream` into R2. Reason: R2 requires a known stream length,
+  and the Worker must not buffer a complete file.
+- Put the name and media type in the URL. Put the first-message ID there
+  for a new workspace, under its org path. Reason: the desktop preflight
+  allows no extra metadata header, and the gate must check the org first.
+- Use `XMLHttpRequest` for measured upload progress. Keep the file pending
+  until the server accepts it. Reason: `fetch` reports no upload progress,
+  and sent bytes alone do not prove that the file reached storage.
+
+- Keep file bytes in one private R2 bucket and indexed ownership, upload,
+  claim, and cleanup records in D1. Check accepted use in the chat queue
+  before an expired claim can delete a file. Reason: the file store and
+  chat store cannot commit together, so a claim alone does not prove
+  message acceptance.
+- Use the fixed provider route `POST /sandboxes/{id}/files/upload-url`
+  for a copy into the cloud computer. Stream the R2 object to the exact
+  signed address that the route returns before the agent command goes
+  out. Keep the address inside the provider adapter, send no provider
+  credential with the transfer, and follow no redirect. Reason: the
+  [provider reference](https://docs.boat.dev/api/reference/agent/create-upload-url)
+  permits files of any size and a streamed body. The runner connection
+  would need a new protocol for chunks, acknowledgements, and recovery.
+- Run the provider copy outside the serial chat queue. Re-enter the queue
+  for stored copy proof, current access checks, and dispatch. Reason: Stop
+  and runner event confirmations must continue while a file transfers.
+- Give each accepted message its own safe file paths. Keep copy proof for
+  the command and sandbox identity. Reason: another message or a
+  redelivery must not overwrite a file that an agent is reading.
+- Use 25,000,000 bytes for 25 MB, as the existing request body policy uses
+  decimal MB. The limit notice gives no formatted file size, because the
+  shared size formatter uses units of 1024.
+- Copy the files of a message that joins a running turn before its command
+  goes out. Reason: that message can arrive after the turn starts. A turn
+  that cannot start after a failed copy uses the existing failed-turn and
+  Try again behaviour. A copy failure during a running turn keeps the
+  pending message.
+- A draft whose stored file is gone uses the failed file chip and Try
+  again. Try again uploads its kept local file. Reason: this keeps the
+  approved draft expiry and the existing file recovery in one flow.
+
 **Components.**
 
 - The web app is React with Vite, and it uses `futex-ai/ui` components,
@@ -6278,26 +6326,46 @@ Tags: ui
 Depends on: 8m, 15i. They change the chat path, the composer, and the
 deletion purge that this milestone extends.
 
-Apply decision 132 A. Added on 8 November 2026.
+Apply decisions 132 A and 144 D. Added on 8 November 2026.
 
-- [ ] Draw each missing attachment state in the mockups, such as upload
+Completed on 8 November 2026 after the complete gate and the phone and
+desktop app/mockup comparison.
+
+Scope decision, 8 November 2026: The user chose A, extending this
+workspace to the shared attachment contracts, request body budget,
+first-message composer, metadata migration, cleanup RPC, test support,
+architecture, Terms, and mockup catalogue docs. The alternative was to
+wait for the primary orchestrator to land those shared changes first.
+Reason: one branch can verify the complete attachment flow. Changes in
+the workspace object and the first-start path stay specific to
+attachments, so that Milestones 5e and 8o can change the nearby code.
+
+- [x] Draw each missing attachment state in the mockups, such as upload
       progress, a failed upload with Try again, a file over the limit, and
       the files of a sent message. Then build them, and compare each with
       its mockup.
-- [ ] Store each upload in one R2 bucket, with a limit of 25 MB for each
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8p`.
+- [x] Store each upload in one R2 bucket, with a limit of 25 MB for each
       file and a record of each file. Only a message of the uploader, in
       the workspace or the new workspace that the upload names, can use
       the file.
-- [ ] When the turn of a message starts, copy each of its files into the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8p`.
+- [x] When the turn of a message starts, copy each of its files into the
       cloud computer at its path. The Worker has no provider route that
       writes a file yet. Add one to the fixed list of provider routes, or
       send the file through the runner connection, as a design call.
-- [ ] Delete the files of a workspace with the workspace, also in the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8p`.
+- [x] Delete the files of a workspace with the workspace, also in the
       purge of a deleted org, and an unsent draft file after 7 days.
-- [ ] Add the bucket to `docs/deployment.md` and to the Worker
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8p`.
+- [x] Add the bucket to `docs/deployment.md` and to the Worker
       configuration. State the rules in `docs/protocol/chat-and-events.md`
       and `docs/protocol/access-and-security.md`, and the stored files on
       the privacy page, with "(decision 132)".
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8p`.
+
+Evidence: `.context/milestone-8p/reports/` and
+`.context/milestone-8p/compare/` in the milestone workspace.
 
 ## Milestone 8q: Chat client follow-ups
 

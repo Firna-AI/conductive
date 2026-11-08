@@ -12,6 +12,7 @@ import type { WorkspaceIdentity } from '../../../app/workspace-store'
 import { createFilesClient } from '../../../files/api/files-client'
 import { WorkspaceFiles } from '../../../files/model/files-store'
 import { FakeApiServer } from '../../../test-support/fake-api'
+import { fetchFiles } from '../../../test-support/fake-files'
 import { FAKE_TIME } from '../../../test-support/fixtures/core'
 import { storeFailedRepairs } from '../../../test-support/recorded-repairs'
 import { readDevOptions } from './dev-options'
@@ -28,7 +29,7 @@ const now = () => FAKE_TIME
 const server = new FakeApiServer()
 storeFailedRepairs(server.events, options.repair, now())
 const app = new AppModel({
-  api: createApiClient(server.fetch),
+  api: createApiClient(server.fetch, fetchFiles(server.fetch)),
   events: {
     open: (target, handlers) =>
       server.events.subscribe(target.afterEventNumber, handlers.message),

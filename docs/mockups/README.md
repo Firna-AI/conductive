@@ -50,6 +50,12 @@ share.
 shows. It also gives the rules of the folder pages, the entries that moved,
 and the child pages of `app/banner` and `app/chat`.
 
+`app/attachments` shows uploads, failed uploads with Try again, files over
+25 MB, sent files, and the files of a queued first message. Its shared
+words live in [attachmentCopy.ts](src/components/chat/attachmentCopy.ts).
+`app/new-workspace/files` shows the same chips on the first message of a new
+workspace, before the workspace exists.
+
 ## Folder layout
 
 | Folder or file            | Contents                                                            |
