@@ -38,7 +38,10 @@ export const people: Readonly<Record<PersonKey, Person>> = {
 /** The person signed in, an admin of both orgs that the mockups draw. */
 export const you: PersonKey = 'cal'
 
-/** The member of Acme who is not an admin, whose view the mockups draw. */
+/**
+ * The member of Acme and Firna who is not an admin, whose view the mockups
+ * draw.
+ */
 export const memberViewer: PersonKey = 'priya'
 
 /** The roles of an org, as in Conductor (decision 54). */
@@ -62,6 +65,15 @@ export const acmeMembers: readonly Membership[] = [
   { person: 'cal', role: 'admin' },
   { person: 'priya', role: 'member' },
   { person: 'jonas', role: 'member' },
+]
+
+/**
+ * The members of Firna, the new org of the sign-up: Cal, who created it,
+ * and Priya, whom Cal invited as a member who is not an admin.
+ */
+export const firnaMembers: readonly Membership[] = [
+  { person: 'cal', role: 'admin' },
+  { person: 'priya', role: 'member' },
 ]
 
 export const acmeInvites: readonly Invite[] = [

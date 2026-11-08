@@ -7,19 +7,12 @@ import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { failedBuildOf } from '../components/settings/BuildSection'
 import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
-import {
-  SettingsTabs,
-  suspendedSettingsLinks,
-} from '../components/settings/OrgSections'
-import {
-  suspendedSections,
-  workspaceSections,
-} from '../components/workspaces/sections'
+import { SettingsTabs } from '../components/settings/OrgSections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { memberViewer, people } from '../fixtures/members'
-import { type Org, orgList, orgs } from '../fixtures/orgs'
-import { paths } from '../paths'
+import { type Org, orgList } from '../fixtures/orgs'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
+import { settingsOrg } from './settingsOrgs'
 
 export const orgSettingsSchema = {
   type: 'object',
@@ -29,9 +22,12 @@ export const orgSettingsSchema = {
     tab: { enum: ['general', 'repositories', 'computer', 'members'] },
     /**
      * The builds of the cloud computer, which its tab shows. `time-limit` is
-     * a build that the app stopped at its 60-minute limit.
+     * a build that the app stopped at its 60-minute limit. `none` is an org
+     * with no build yet, such as a new org whose first build did not start.
      */
-    build: { enum: ['ready', 'building', 'failed', 'time-limit', 'changed'] },
+    build: {
+      enum: ['ready', 'building', 'failed', 'time-limit', 'changed', 'none'],
+    },
     /**
      * A dialog over the page: Delete org, the removal of a member, or the
      * leave of a suspended org.
@@ -44,12 +40,14 @@ export const orgSettingsSchema = {
      */
     viewer: { enum: ['admin', 'member'] },
     /**
-     * The org: in use, or suspended by the operator. A suspended org shows
-     * its notice above every tab, and every person, also an admin, sees
-     * the settings read-only, without Delete org. Its one action is Leave
-     * org, for each person whom the last-admin rule lets leave.
+     * The org: Acme in use, Acme suspended by the operator, or Firna, the
+     * new org of the sign-up, whose builds start with its first build. A
+     * suspended org shows its notice above every tab, and every person,
+     * also an admin, sees the settings read-only, without Delete org. Its
+     * one action is Leave org, for each person whom the last-admin rule
+     * lets leave.
      */
-    org: { enum: ['active', 'suspended'] },
+    org: { enum: ['active', 'suspended', 'new'] },
   },
 } as const
 
@@ -63,8 +61,6 @@ export const acmeSettings: OrgSettingsState = {
   viewer: 'admin',
   org: 'active',
 }
-
-const org = orgs.acme
 
 /**
  * The settings of an org: its name and initials, the repositories that it
@@ -82,6 +78,8 @@ export function OrgSettingsScreen(props: {
   const admin = state.viewer === 'admin'
   const suspended = state.org === 'suspended'
   const mobile = viewport === 'mobile'
+  const settings = settingsOrg(state)
+  const { org } = settings
   // A suspended org opens only the leave, because nothing else in it can
   // change. An org in use has no Leave org.
   const dialogs: Readonly<Record<OrgSettingsState['dialog'], ReactNode>> = {
@@ -95,17 +93,12 @@ export function OrgSettingsScreen(props: {
     ) : null,
   }
   const dialog = dialogs[state.dialog]
-  const list = suspended ? paths.suspendedOrg : paths.shell
   const page = (
     <Page
-      back={mobile ? { label: 'Workspaces', to: list } : undefined}
+      back={mobile ? { label: 'Workspaces', to: settings.list } : undefined}
       subtitle="Org settings"
       tabs={
-        <SettingsTabs
-          links={suspended ? suspendedSettingsLinks : undefined}
-          tab={state.tab}
-          wrap={mobile}
-        />
+        <SettingsTabs links={settings.links} tab={state.tab} wrap={mobile} />
       }
       title={org.name}
       viewport={viewport}
@@ -125,8 +118,9 @@ export function OrgSettingsScreen(props: {
   const sidebar = (
     <Sidebar
       current="settings"
+      newWorkspaceTo={settings.newWorkspace}
       org={org}
-      sections={suspended ? suspendedSections() : workspaceSections()}
+      sections={settings.sections}
       settingsAlert={failedBuildOf(state.build) !== undefined}
       suspended={suspended}
     />

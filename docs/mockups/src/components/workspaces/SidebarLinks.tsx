@@ -30,10 +30,14 @@ export function SettingsLink(props: {
   )
 }
 
-/** The row at the top of the workspace list that starts a new workspace. */
+/**
+ * The row at the top of the workspace list that starts a new workspace.
+ * `to` is the New workspace page of the org, such as that of a new org.
+ */
 export function NewWorkspaceLink(props: {
   current?: boolean
   variant: 'sidebar' | 'page'
+  to?: string
 }) {
   return (
     <ScreenLink
@@ -43,7 +47,7 @@ export function NewWorkspaceLink(props: {
         props.variant === 'page' && styles.page,
         props.current && styles.selected,
       )}
-      to={paths.newWorkspace}
+      to={props.to ?? paths.newWorkspace}
     >
       <Plus aria-hidden className={styles.plus} size={14} />
       New workspace

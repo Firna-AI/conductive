@@ -1,32 +1,24 @@
+import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { ChevronDown, CircleAlert, FolderGit2, Sparkles } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
 import { ActionButton } from '../components/common/actions'
 import { Notice } from '../components/common/Notice'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import { acmeRail } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
 import { useMacApp } from '../components/mac/MacApp'
-import {
-  suspendedSections,
-  workspaceSections,
-} from '../components/workspaces/sections'
 import { orgSuspendedReason } from '../components/orgs/suspension'
-import { Sidebar } from '../components/workspaces/Sidebar'
-import { lastBuild } from '../fixtures/computer'
-import { savedCartsMessage } from '../fixtures/conversations'
-import { you } from '../fixtures/members'
-import { orgs, suspendedOrg } from '../fixtures/orgs'
-import { repositories } from '../fixtures/repositories'
+import { firstBuildStates } from '../fixtures/computer'
+import { memberViewer, you } from '../fixtures/members'
 import { startErrors } from '../fixtures/starting'
-import { savedCarts } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import styles from './NewWorkspaceScreen.module.css'
+import { FirstBuildNotice } from './firstBuildNotice'
+import { pageOrg, railOf, sidebarOf, Start } from './newWorkspaceParts'
 
 export const newWorkspaceSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['result', 'org'],
+  required: ['result', 'org', 'firstBuild', 'viewer'],
   properties: {
     /**
      * The empty form, or a create whose first start failed: a failure, or
@@ -34,11 +26,23 @@ export const newWorkspaceSchema = {
      */
     result: { enum: ['form', 'error', 'time-limit'] },
     /**
-     * The org: in use, or suspended by the operator. A suspended org
+     * The org: Acme in use, Acme suspended by the operator, or Firna, the
+     * new org of the sign-up, before its first workspace. A suspended org
      * refuses every create, so the page shows the refused bar of a
      * workspace in place of the composer, with the words of the org.
      */
-    org: { enum: ['active', 'suspended'] },
+    org: { enum: ['active', 'suspended', 'new'] },
+    /**
+     * The first build of the cloud computer of Firna. Until it succeeds,
+     * a notice over the composer shows its state, and Send is off. Acme
+     * has a good build, so a later build leaves its page as it is.
+     */
+    firstBuild: { enum: firstBuildStates },
+    /**
+     * The person signed in: Cal, an admin, or Priya, a member who is not.
+     * Only an admin gets the link of the notice to the Cloud computer tab.
+     */
+    viewer: { enum: ['admin', 'member'] },
   },
 } as const
 
@@ -48,6 +52,8 @@ export type NewWorkspaceState = SchemaProps<typeof newWorkspaceSchema>
 export const newWorkspaceForm: NewWorkspaceState = {
   result: 'form',
   org: 'active',
+  firstBuild: 'succeeded',
+  viewer: 'admin',
 }
 
 type CreateFailure = Exclude<NewWorkspaceState['result'], 'form'>
@@ -61,32 +67,29 @@ const failureBodies: Readonly<Record<CreateFailure, string>> = {
   'time-limit': `${startErrors['time-limit']} Your message is kept.`,
 }
 
-const repository = repositories[savedCarts.repository]
-
-/** The start of an empty chat, with the repository of the new workspace. */
-function Start() {
+/**
+ * The notice over the composer: the first build of a new org while the
+ * org has no good image, or a create whose first start failed.
+ */
+function notice(state: NewWorkspaceState): ReactNode {
+  if (state.org === 'new' && state.firstBuild !== 'succeeded') {
+    return (
+      <FirstBuildNotice
+        admin={state.viewer === 'admin'}
+        build={state.firstBuild}
+      />
+    )
+  }
+  // A suspended org refuses each create, so no create of it failed.
+  if (state.org === 'suspended' || state.result === 'form') return undefined
   return (
-    <div className={styles.start}>
-      <Sparkles aria-hidden className={styles.icon} size={26} />
-      <h2 className={styles.title}>Start a workspace</h2>
-      <p className={styles.body}>
-        Your first message creates it, on a new branch of the repository.
-      </p>
-      <ActionButton
-        accessibilityLabel={`Repository: ${repository.name}`}
-        icon={FolderGit2}
-        menu
-        trailing={
-          <ChevronDown aria-hidden className={styles.chevron} size={13} />
-        }
-      >
-        {repository.name}
-      </ActionButton>
-      <p className={styles.note}>
-        Starts from the cloud computer of {orgs.acme.name}, built{' '}
-        {lastBuild.when}.
-      </p>
-    </div>
+    <Notice
+      action={<ActionButton tone="primary">Try again</ActionButton>}
+      body={failureBodies[state.result]}
+      icon={CircleAlert}
+      title="The workspace wasn't created"
+      tone="danger"
+    />
   )
 }
 
@@ -94,41 +97,35 @@ function Start() {
  * The empty chat and its composer. The first message creates the workspace.
  * In a suspended org the refused bar takes the place of the composer, and
  * the chat invites no first message, because the org refuses the create.
+ * While a new org has no good image, Send is off and the draft stays.
  */
 function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
-  const suspended = props.state.org === 'suspended'
-  const { result } = props.state
-  // A suspended org refuses each create, so no create of it failed.
-  const failure = suspended || result === 'form' ? null : result
-  const failed = failure !== null
-  const notice = failure ? (
-    <Notice
-      action={<ActionButton tone="primary">Try again</ActionButton>}
-      body={failureBodies[failure]}
-      icon={CircleAlert}
-      title="The workspace wasn't created"
-      tone="danger"
-    />
-  ) : undefined
+  const { state } = props
+  const page = pageOrg(state)
+  const suspended = state.org === 'suspended'
+  const waits = state.org === 'new' && state.firstBuild !== 'succeeded'
+  const failed = !suspended && state.result !== 'form'
   return (
     <ChatPane
       composer={{
         attachments: [],
-        choice: savedCarts.choice,
-        draft: savedCartsMessage,
+        blocked: waits,
+        choice: page.choice,
+        draft: page.draft,
         placeholder: 'Describe the task',
         running: false,
-        sendTo: failed ? undefined : paths.creating,
+        // Send leads to the start of Lisbon, a new workspace of Acme.
+        sendTo: failed || state.org === 'new' ? undefined : paths.creating,
       }}
-      empty={suspended ? undefined : <Start />}
+      empty={suspended ? undefined : <Start page={page} />}
       items={[]}
-      notice={notice}
+      notice={notice(state)}
       problem={
         suspended
           ? { problem: 'refused', reason: orgSuspendedReason }
           : undefined
       }
-      viewer={you}
+      viewer={state.viewer === 'admin' ? you : memberViewer}
       viewport={props.viewport}
     />
   )
@@ -144,40 +141,24 @@ export function NewWorkspaceScreen(props: {
   viewport: Viewport
 }) {
   const mac = useMacApp()
+  const { state } = props
   const mobile = props.viewport === 'mobile'
-  const suspended = props.state.org === 'suspended'
-  const list = suspended ? paths.suspendedOrg : paths.shell
+  const org = pageOrg(state)
   const page = (
     <Page
-      back={mobile ? { label: 'Workspaces', to: list } : undefined}
+      back={mobile ? { label: 'Workspaces', to: org.list } : undefined}
       fill
-      subtitle={orgs.acme.name}
+      subtitle={org.org.name}
       title="New workspace"
       viewport={props.viewport}
     >
-      <NewChat state={props.state} viewport={props.viewport} />
+      <NewChat state={state} viewport={props.viewport} />
     </Page>
   )
   if (mobile) return <MobileFrame>{page}</MobileFrame>
-  if (suspended) {
-    // The sidebar of a suspended org has no New workspace to select.
-    return (
-      <AppFrame
-        rail={{ ...acmeRail, suspended: suspendedOrg }}
-        sidebar={
-          <Sidebar org={orgs.acme} sections={suspendedSections()} suspended />
-        }
-      >
-        {page}
-      </AppFrame>
-    )
-  }
-  const sidebar = (
-    <Sidebar
-      current="new-workspace"
-      org={orgs.acme}
-      sections={workspaceSections(undefined, mac?.needsInput)}
-    />
+  return (
+    <AppFrame rail={railOf(state)} sidebar={sidebarOf(state, mac?.needsInput)}>
+      {page}
+    </AppFrame>
   )
-  return <AppFrame sidebar={sidebar}>{page}</AppFrame>
 }

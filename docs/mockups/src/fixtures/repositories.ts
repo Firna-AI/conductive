@@ -89,6 +89,10 @@ export const newOrg = {
   ],
 } as const
 
+/** The task that Cal types for the first workspace of Firna. */
+export const newOrgDraft =
+  'Add a loading state to the Button component, with a spinner and tests.'
+
 /** Another org that Create org makes beside the user's orgs. */
 export const anotherOrg = {
   name: 'Acme Labs',

@@ -11,14 +11,14 @@ how a screen is built, and links to the other pages.
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
-| `app/sign-in`       | The GitHub sign-in with the agreement to the Terms, the page before GitHub, the invitations that wait after it, and Get started, the only first run, in three steps |
+| `app/sign-in`       | The GitHub sign-in with the agreement to the Terms, the page before GitHub, the invitations that wait after it, and Get started, the only first run, in three steps, with the first build of the new org |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, its errors, the start, a held second message, the first turn   |
-| `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
+| `app/new-workspace` | An empty chat, the first build of a new org, its errors, the start, a held second message, the first turn |
+| `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
 | `app/chat`          | A finished turn, then running turns, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
@@ -33,17 +33,19 @@ how a screen is built, and links to the other pages.
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
-`app/sign-in`, `app/shell`, `app/orgs`, `app/orgs/suspended`,
-`app/new-workspace`, `app/org-settings`, `app/org-settings/cloud-computer`,
-`app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/sign-in`, `app/sign-in/get-started`, `app/shell`, `app/orgs`,
+`app/orgs/suspended`, `app/new-workspace`, `app/org-settings`,
+`app/org-settings/cloud-computer`, `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/new-workspace`, and `app/org-settings/cloud-computer` moved into their own
 folders and kept their paths, so that each of those pages shows only its
-canonical screen. `app/sign-in/get-started`
-moved into its own folder and kept its path. Get started is the only first
+canonical screen. `app/sign-in/get-started` moved into its own folder and
+kept its path. Its saved states `installed`, `org-created`, `connected`,
+and `no-org` moved into their own folders and kept their paths, so that
+the page shows only its canonical screen. Get started is the only first
 run, so the first run of `app/shell` and the not-connected state of
 `app/orgs/new` are gone, and their links lead to Get started. Its second
 step opens `app/orgs/new/first`, whose Create org and Cancel return to Get
@@ -52,6 +54,29 @@ of `app/orgs/new`, `app/orgs/empty`, and `app/orgs/deleted` moved into their
 own folders and kept their paths, so `app/orgs` shows only its canonical
 screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
 paid plan went away, and declares `movedFrom`.
+
+The first build of a new org shows in three places, from decision 142.
+Create org starts it when the org has a repository. The mockups draw it
+for Firna, the first org of the sign-up:
+
+- Get started shows it in the org step. `app/sign-in/get-started/org-created`
+  has the build that runs, with its time, while the person connects an
+  agent. `preparing` has every step done while the build runs: Open Firna
+  stays on, and the finish says that the cloud computer is still being
+  prepared. `connected` has the good build, and the finish says that Firna
+  is ready. `build-failed` has the saved message of a failed build, with
+  Try again and a link to its log, and the finish does not say ready.
+  `no-build` has an org with repositories and no build, such as after a
+  first build that did not start, with Build computer.
+- `app/new-workspace/first-build` has a notice over the composer with the
+  time of the build, and Send is off. The notice shows only while the org
+  has no good image. Its `ready` variant has the good build, without a
+  notice. `failed` and `no-build` link an admin to the Cloud computer tab,
+  and `member` shows a failed build to a member, without the link.
+- `app/org-settings/cloud-computer/first-build` has the Cloud computer tab
+  of Firna: the first build with its log, then its `failed` and `no-build`
+  variants. A new org has empty scripts and no env vars, and its history
+  shows once a build has ended.
 
 `app/orgs/suspended` shows Acme after the operator suspended it, from
 decision 129. Its notice is at the top of the list, and every workspace

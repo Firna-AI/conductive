@@ -72,7 +72,8 @@ plan limits.
   someone who can manage it. If a leave still gets the last-admin refusal,
   the screen names no step that the suspended org refuses.
 - Three orgs show: Acme, Firna, the first org of the sign-up, and Acme Labs,
-  which Create org makes. The parts live in `src/components/members/`.
+  which Create org makes. Priya is a member of Acme and of Firna who is not
+  an admin. The parts live in `src/components/members/`.
 
 ## Logins
 
@@ -85,6 +86,24 @@ plan limits.
   shows its kind and Remove.
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.
+- Create org starts the first build of the cloud computer of the org when
+  the org has a repository, from decision 142. The org step shows that
+  build under the org: preparing with its time, then ready, or the failure
+  with its saved message, Try again, and a link to its log. An org with
+  repositories and no build, such as after a build that did not start,
+  shows No build yet with Build computer. The person connects an agent
+  while the build runs.
+- The finish says that the org is ready for a new workspace only after the
+  first build succeeded. While the build runs, it says that the cloud
+  computer is still being prepared, as `app/sign-in/get-started/preparing`
+  shows. After a failed build, it says that the cloud computer did not
+  build, and with no build, that it needs a build. Open ‹org› stays on in
+  each state.
+- Until the first build succeeds, New workspace shows its state over the
+  composer and keeps Send off, as `app/new-workspace/first-build` shows.
+  Only an admin gets the link to the Cloud computer tab. The app and the
+  mockups take the words of that notice from
+  `src/screens/firstBuildCopy.ts`.
 - A login belongs to the person, so the agent step has its own state. A
   person who leaves the last org returns to Get started with the agent
   still connected, as `app/sign-in/get-started/no-org` shows.

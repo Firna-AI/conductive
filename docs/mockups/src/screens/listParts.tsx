@@ -23,14 +23,19 @@ import { deletedOrg, orgs, type Org } from '../fixtures/orgs'
 import { paths } from '../paths'
 import styles from './WorkspaceListScreen.module.css'
 
-/** The action that starts a new workspace, in an empty main area. */
-const newWorkspaceAction = (
-  <ScreenLink asChild to={paths.newWorkspace}>
-    <ActionButton icon={Plus} tone="primary">
-      New workspace
-    </ActionButton>
-  </ScreenLink>
-)
+/**
+ * The action that starts a new workspace, in an empty main area. `to` is
+ * the New workspace page of the org.
+ */
+function NewWorkspaceAction(props: { to?: string }) {
+  return (
+    <ScreenLink asChild to={props.to ?? paths.newWorkspace}>
+      <ActionButton icon={Plus} tone="primary">
+        New workspace
+      </ActionButton>
+    </ScreenLink>
+  )
+}
 
 /**
  * The header of the list page on a phone. A phone has no rail, so the org
@@ -59,7 +64,8 @@ export function ListHeader(props: {
 /**
  * The workspace list as a page: on a phone, and in a narrow window. A
  * suspended org shows its notice first, and no New workspace and no
- * section menus, because nothing in it can change.
+ * section menus, because nothing in it can change. `newWorkspaceTo` is
+ * the New workspace page of the org, such as that of a new org.
  */
 export function HomeList(props: {
   org: Org
@@ -68,6 +74,7 @@ export function HomeList(props: {
   menuStyle: MenuStyle
   drag?: ListDrag
   suspended?: boolean
+  newWorkspaceTo?: string
 }) {
   const suspended = props.suspended ?? false
   return (
@@ -80,7 +87,7 @@ export function HomeList(props: {
         {suspended ? (
           <SuspendedOrgNotice org={props.org} />
         ) : (
-          <NewWorkspaceLink variant="page" />
+          <NewWorkspaceLink to={props.newWorkspaceTo} variant="page" />
         )}
         <SectionList
           drag={props.drag}
@@ -99,7 +106,7 @@ export function HomeList(props: {
 export function ChooseWorkspace() {
   return (
     <EmptyState
-      action={newWorkspaceAction}
+      action={<NewWorkspaceAction />}
       icon={PanelLeft}
       title="Choose a workspace"
     />
@@ -112,13 +119,16 @@ export type NewOrg = {
   repositories: readonly { name: string; used: boolean }[]
 }
 
-/** The main area of a new org, which has no workspaces yet. */
-export function NewOrgEmpty(props: { org: NewOrg }) {
+/**
+ * The main area of a new org, which has no workspaces yet. `newWorkspaceTo`
+ * is the New workspace page of the org.
+ */
+export function NewOrgEmpty(props: { org: NewOrg; newWorkspaceTo?: string }) {
   const { org } = props
   const used = org.repositories.filter((item) => item.used)
   return (
     <EmptyState
-      action={newWorkspaceAction}
+      action={<NewWorkspaceAction to={props.newWorkspaceTo} />}
       body={`Workspaces of ${org.name} start in ${used.map((item) => item.name).join(' or ')}.`}
       icon={Plus}
       title={`Start the first workspace in ${org.name}`}

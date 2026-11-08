@@ -1,16 +1,23 @@
 import { Hammer } from 'lucide-react'
-import {
-  changedInstallScript,
-  includedSoftware,
-  installScript,
-  startupScript,
-} from '../../fixtures/computer'
+import { type EnvVar, includedSoftware } from '../../fixtures/computer'
 import { ActionButton } from '../common/actions'
 import { Notice } from '../common/Notice'
-import { BuildSection, type BuildState } from './BuildSection'
+import { BuildSection, type BuildState, type OrgBuilds } from './BuildSection'
 import { EnvVarsSection, ScriptSection } from './EnvironmentSections'
 import type { ReadOnlyCause } from './OrgSections'
 import { TabIntro } from './TabIntro'
+
+/**
+ * The cloud computer of an org: its builds, its scripts, and its env vars.
+ * A new org starts with empty scripts and no env vars.
+ */
+export type OrgComputer = OrgBuilds & {
+  installScript: string
+  /** The install script after an admin changed it, which the next build runs. */
+  changedInstallScript: string
+  startupScript: string
+  envVars: readonly EnvVar[]
+}
 
 /**
  * The org's cloud computer: its builds, its scripts, and its env vars.
@@ -20,8 +27,10 @@ import { TabIntro } from './TabIntro'
 export function ComputerTab(props: {
   org: string
   build: BuildState
+  computer: OrgComputer
   readOnly?: ReadOnlyCause
 }) {
+  const { computer } = props
   const changed = props.build === 'changed'
   const readOnly = props.readOnly !== undefined
   return (
@@ -31,7 +40,7 @@ export function ComputerTab(props: {
         it, with every repository of the org.
         {props.readOnly === 'member' ? ' Only an admin can change it.' : null}
       </TabIntro>
-      <BuildSection readOnly={readOnly} state={props.build} />
+      <BuildSection builds={computer} readOnly={readOnly} state={props.build} />
       <ScriptSection
         description={
           readOnly
@@ -55,16 +64,22 @@ export function ComputerTab(props: {
           ) : undefined
         }
         readOnly={readOnly}
-        script={changed ? changedInstallScript : installScript}
+        script={
+          changed ? computer.changedInstallScript : computer.installScript
+        }
         title="Install software"
       />
       <ScriptSection
         description="Runs in the cloud computer of each workspace, at each start and resume."
         readOnly={readOnly}
-        script={startupScript}
+        script={computer.startupScript}
         title="Startup script"
       />
-      <EnvVarsSection org={props.org} readOnly={readOnly} />
+      <EnvVarsSection
+        org={props.org}
+        readOnly={readOnly}
+        vars={computer.envVars}
+      />
     </>
   )
 }
