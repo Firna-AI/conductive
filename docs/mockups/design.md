@@ -132,6 +132,11 @@ chat, and five tabs at the bottom.
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
   frame of a picture on the marketing site.
+- The operator page uses the stat tiles, the line chart, the table, and
+  the skeletons of `@firna/ui`, in `src/components/operator/`. A view runs
+  no script, so the chart keeps the width that the page column gives it.
+  The workspaces by state reuse `StatusGlyph`. A phone leaves out the
+  Members column of the largest orgs, so each org name keeps one line.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its rename and close buttons.

@@ -16,6 +16,7 @@ how a screen is built, and links to the other pages.
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
+| `app/operator`      | The numbers of every org for the operator, where an operator opens the page, and its error and loading states |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its errors, the start, a held second message, the first turn   |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
@@ -35,7 +36,7 @@ A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/shell`, `app/orgs`, `app/orgs/suspended`,
 `app/new-workspace`, `app/org-settings`, `app/org-settings/cloud-computer`,
-`app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/operator`, `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
@@ -72,6 +73,15 @@ shows stopped. Its child pages:
 - `app/orgs/suspended/deleted` has a deleted org that is also suspended:
   the notice of the org above the page of the deleted org, with its date,
   and no Restore.
+
+`app/operator` shows the page of the operator, the person who runs the app
+for everyone, from decision 142. It holds live counts across every org, as
+decision 144 chose for now. Its child pages:
+
+- `app/operator/menu` has Operator in the rail, above the account, and in
+  the org switcher of a phone, under Account. Only an operator sees it.
+- `app/operator/error` has the numbers that could not load, with Try
+  again. Its `loading` variant has the page while it reads the numbers.
 
 `app/banner` shows a branch with commits and no pull request. Its child
 pages show the other states of decision 18: `app/banner/checks` has the
