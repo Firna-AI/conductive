@@ -10,6 +10,7 @@ import {
   type RefObject,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { requestScreenFocus } from './screen-focus'
 import styles from './ui.module.css'
 
 /** The elements of a layer that can take the focus, links first among equals. */
@@ -124,10 +125,11 @@ export interface Focusable {
  * Moves the focus into a layer as it opens: to `initial`, else to its
  * element with `data-autofocus`, else to the first one that can take the
  * focus. When the layer closes, the focus goes back to the element that
- * had it, unless the user moved it elsewhere, or `giveBack` says no, such
- * as when another screen opened. A modal layer, a sheet or a dialog, makes
- * the content of the frame inert while it shows, and active again before
- * the focus goes back. A layer inside another, such as a menu in a sheet,
+ * had it, unless the user moved it elsewhere. When `moved` says that the
+ * address changed as the layer closed, the main area of the new screen
+ * takes the focus instead. A modal layer, a sheet or a dialog, makes the
+ * content of the frame inert while it shows, and active again before the
+ * focus goes back. A layer inside another, such as a menu in a sheet,
  * leaves the focus to the outer layer with `enabled: false`.
  */
 export function useLayerFocus(
@@ -137,16 +139,19 @@ export function useLayerFocus(
     enabled?: boolean
     /** The part that takes the focus as the layer opens. */
     initial?: RefObject<Focusable | null>
-    /** Whether the focus goes back as the layer closes. It reads the close. */
-    giveBack?: () => boolean
+    /**
+     * Whether the address changed as the layer closed, such as after a
+     * create or Back. It reads the close.
+     */
+    moved?: () => boolean
   },
 ): void {
   const { holdModal } = useContext(OverlayContext)
   const enabled = options.enabled ?? true
   const { modal, initial } = options
-  const giveBack = useRef(options.giveBack)
+  const moved = useRef(options.moved)
   useEffect(() => {
-    giveBack.current = options.giveBack
+    moved.current = options.moved
   })
   useEffect(() => {
     if (!enabled) return
@@ -163,11 +168,12 @@ export function useLayerFocus(
     ;(first ?? node)?.focus()
     return () => {
       release?.()
-      if (giveBack.current?.() === false) return
       const active = document.activeElement
       const lost = active === null || active === document.body
       const inLayer = active instanceof Node && node?.contains(active)
-      if ((lost || inLayer) && before?.isConnected) before.focus()
+      if (!lost && !inLayer) return
+      if (moved.current?.()) requestScreenFocus()
+      else if (before?.isConnected) before.focus()
     }
   }, [layer, enabled, modal, initial, holdModal])
 }
@@ -183,7 +189,7 @@ export function useModalLayer(
   close: () => void,
   focus: {
     initial?: RefObject<Focusable | null>
-    giveBack?: () => boolean
+    moved?: () => boolean
   } = {},
 ): void {
   useDismiss(true, layer, close, { modal: true })

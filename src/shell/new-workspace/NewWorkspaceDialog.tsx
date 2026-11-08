@@ -74,8 +74,9 @@ function CreateButton(props: {
  * The card of the dialog. While the create runs, Escape and a press outside
  * leave it open. An action that opens another page closes it first. The
  * message takes the focus as it opens. As it closes, the focus goes back to
- * the control that opened it, unless another screen opened. In a suspended
- * org, the refused bar takes the place of the composer.
+ * the control that opened it. When another screen opened, the main area of
+ * that screen takes the focus. In a suspended org, the refused bar takes
+ * the place of the composer.
  */
 function DialogCard(props: {
   org: OrgSummary
@@ -104,7 +105,7 @@ function DialogCard(props: {
     () => {
       if (!sending) props.close()
     },
-    { initial: message, giveBack: () => navigation.href() === openedAt },
+    { initial: message, moved: () => navigation.href() !== openedAt },
   )
   const sendKey = useSendKey(form.ready, form.send)
   const unchosen = form.repositories?.length === 0

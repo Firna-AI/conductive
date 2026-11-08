@@ -100,8 +100,12 @@ drafts, and New workspace as a page or a dialog.
   keeps the dialog open with Try again.
 - The message field of the dialog takes the focus as the dialog opens.
   When the dialog closes and the address stays, the focus goes back to
-  the control that opened it. When the address changes, the focus does
-  not go back, and the new screen has it.
+  the control that opened it. When the address changes, such as after
+  Connect, Choose repositories, a create, or Back, the main area of the
+  new screen takes the focus (`requestScreenFocus`), so the next Tab
+  moves into that screen. The main area is no tab stop: it can take the
+  focus only for such a move, until the focus leaves it. On a phone, no
+  main area takes it.
 - The page and the dialog share their form (`useNewWorkspaceForm`): the
   repository picker, the notices, the send, and one readiness. In an org
   without chosen repositories, an admin gets Choose repositories, and a

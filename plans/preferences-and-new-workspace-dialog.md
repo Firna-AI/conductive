@@ -147,14 +147,19 @@ on 8 November 2026. The user can change it before the plan is approved.
     does.
   - A window with the phone layout gets the key rule of a phone, as the
     chat does today.
-  - When the dialog closes and another screen opens, that screen takes the
-    focus. The trigger gets the focus back only when the screen stays.
   - While the screen shows a New workspace form, New workspace opens the
     page, because a dialog over a form would show a second message field.
   - An open app uses a choice that the user saved in another browser after
     its next start, as for Model and effort.
   - While the message cannot go, Enter does nothing. While an input method
     composes a word, Enter belongs to the input method, as in the chat.
+- Agent call, after review round 1: when the dialog closes and the screen
+  stays, the focus goes back to the trigger. When the dialog closes because
+  the address changed, the main area of the new screen takes the focus, so
+  the next Tab starts there. The other moves of the app leave the focus on
+  the page body, as on `origin/main`. The follow-up item
+  [Focus lands on the page after a move](follow-ups/focus-after-navigation.md)
+  asks the user about them.
 
 ### The protocol doc
 
@@ -393,8 +398,9 @@ Agent calls during Milestone 5, on 8 November 2026:
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate, `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and the complete gate, `npm run check`.
+      Gate log: `.context/preferences-and-new-workspace-dialog/gate-1.log`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

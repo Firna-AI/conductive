@@ -1,10 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import {
-  ACCOUNT_PATHS,
-  agentLoginPath,
-  type AgentLoginStatus,
-} from '../../src/shared/account'
+import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
 import { MODELS_PATH, type AgentChoice } from '../../src/shared/agents'
 import { API_PATHS } from '../../src/shared/api'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
@@ -19,6 +15,7 @@ import {
   expectAccountState,
   expectIndependentPreferences,
   expectInvalidWorkspaceView,
+  isolationAccountStates,
   operatorModels,
   putAccountValue,
   type AccountState,
@@ -168,22 +165,6 @@ it('keeps account data and Get started isolated from other users and deleted org
       ],
     },
   )
-  const noLogins: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: false },
-    { agent: 'codex', connected: false },
-  ]
-  const firstLogins: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: true, kind: 'token', updatedAt: TEST_TIME },
-    { agent: 'codex', connected: false },
-  ]
-  const otherClaudeLogin: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
-    { agent: 'codex', connected: false },
-  ]
-  const otherLogins: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
-    { agent: 'codex', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
-  ]
   const expectBoth = async (
     firstState: AccountState,
     otherState: AccountState,
@@ -199,29 +180,8 @@ it('keeps account data and Get started isolated from other users and deleted org
       githubComplete: false,
     })
   }
-  const empty: AccountState = {
-    defaultChoice: choice,
-    agentLogins: noLogins,
-    agentLoginComplete: false,
-  }
-  const firstConnected: AccountState = {
-    defaultChoice: choice,
-    agentLogins: firstLogins,
-    agentLoginComplete: true,
-  }
-  const firstSaved: AccountState = {
-    ...firstConnected,
-    defaultChoice: otherChoice,
-  }
-  const otherConnected: AccountState = {
-    defaultChoice: choice,
-    agentLogins: otherClaudeLogin,
-    agentLoginComplete: true,
-  }
-  const otherSaved: AccountState = {
-    ...otherConnected,
-    agentLogins: otherLogins,
-  }
+  const { empty, firstConnected, firstSaved, otherConnected, otherSaved } =
+    isolationAccountStates(choice, otherChoice)
   await expectBoth(empty, empty)
   await putAccountValue(harness, first, agentLoginPath('claude'), {
     agent: 'claude',
@@ -247,12 +207,27 @@ it('keeps account data and Get started isolated from other users and deleted org
   await expectBoth(firstSaved, otherSaved)
   await putAccountValue(harness, other, ACCOUNT_PATHS.defaultModel, { choice })
   await expectBoth(firstSaved, otherSaved)
+  await putAccountValue(harness, first, ACCOUNT_PATHS.newWorkspaceView, {
+    view: 'dialog',
+  })
+  const firstDialog: AccountState = {
+    ...firstSaved,
+    newWorkspaceView: 'dialog',
+  }
+  await expectBoth(firstDialog, otherSaved)
+  await putAccountValue(harness, other, ACCOUNT_PATHS.newWorkspaceView, {
+    view: 'page',
+  })
+  await expectBoth(firstDialog, otherSaved)
   const removed = await harness.request(agentLoginPath('claude'), first, {
     method: 'DELETE',
     body: '{}',
   })
   expect(removed.status).toBe(204)
-  await expectBoth({ ...empty, defaultChoice: otherChoice }, otherSaved)
+  await expectBoth(
+    { ...empty, defaultChoice: otherChoice, newWorkspaceView: 'dialog' },
+    otherSaved,
+  )
   await harness.env.DB.prepare('UPDATE orgs SET deleted_at = 1 WHERE id = ?')
     .bind(org.id)
     .run()

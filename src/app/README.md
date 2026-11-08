@@ -209,6 +209,9 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
   `useDismiss`, the layer of sheets and dialogs, and `useModalLayer`, which
   every sheet and dialog uses. Escape closes only the newest layer.
+  `../shell/ui/screen-focus.ts`: `requestScreenFocus`, the focus of a new
+  screen after a layer closes with a move, which the main area of a
+  desktop frame takes through `useScreenFocus`.
 - `../shell/new-workspace/NewWorkspaceHost.tsx`: `NewWorkspaceHost`, the
   New workspace dialog of a desktop frame, and `useNewWorkspace`, the one
   way that each place opens New workspace as the dialog or the page.

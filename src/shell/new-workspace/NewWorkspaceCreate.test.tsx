@@ -20,6 +20,7 @@ import { away, bodiesOf, headerName, org } from '../workspace/kept-test-kit'
 import {
   createCount,
   dialogIn,
+  focusIn,
   keyDown,
   mainOf,
   messageIn,
@@ -38,7 +39,7 @@ const { created } = workspaceFixtures()
 const createdAt = routes.workspace(org, created.workspace.id)
 
 describe('a create from the New workspace dialog', () => {
-  test('that fails keeps the dialog with the message and Try again, and Try again creates the workspace in the section of the menu and opens it', async () => {
+  test('that fails keeps the dialog with the message and Try again, and Try again creates the workspace in the section of the menu and opens it, whose main area takes the focus', async () => {
     const server = serverWith('dialog')
     let reachable = false
     // The create request does not reach the server until the test says so.
@@ -74,6 +75,7 @@ describe('a create from the New workspace dialog', () => {
       address: tab.address(),
       header: headerName(tab.view),
       focusBack: document.activeElement === more,
+      focusInMain: focusIn(mainOf(tab.view)),
     }).toEqual({
       sent: expect.objectContaining({
         sectionId: 'checkout',
@@ -83,10 +85,11 @@ describe('a create from the New workspace dialog', () => {
       address: createdAt,
       header: created.workspace.name,
       focusBack: false,
+      focusInMain: true,
     })
   })
 
-  test('goes on when the address changes while it runs, which closes the dialog, and the accepted create opens the new workspace', async () => {
+  test('goes on when the address changes while it runs, which closes the dialog and gives the focus to the main area of the new screen, and the accepted create opens the new workspace', async () => {
     const server = serverWith('dialog')
     const held = new HeldRequests(server)
     const tab = await openTab(server, { fetch: held.fetch })
@@ -106,7 +109,11 @@ describe('a create from the New workspace dialog', () => {
     await settle()
     const running = dialogIn(tab.view) !== null
     await tab.go(away)
-    const closed = { dialog: dialogIn(tab.view), address: tab.address() }
+    const closed = {
+      dialog: dialogIn(tab.view),
+      address: tab.address(),
+      focusInMain: focusIn(mainOf(tab.view)),
+    }
     held.release('POST', workspacesPath(org))
     await settle()
     expect({
@@ -117,7 +124,7 @@ describe('a create from the New workspace dialog', () => {
       creates: createCount(server),
     }).toEqual({
       running: true,
-      closed: { dialog: null, address: away },
+      closed: { dialog: null, address: away, focusInMain: true },
       address: createdAt,
       header: created.workspace.name,
       creates: 1,

@@ -7,6 +7,8 @@ import mac from '../mac/mac.module.css'
 import { WindowControls, WindowStrip } from '../mac/WindowControls'
 import { NewWorkspaceHost } from '../new-workspace/NewWorkspaceHost'
 import { OverlayHost } from '../ui/Overlay'
+import { useScreenFocus } from '../ui/screen-focus'
+import layout from './layout.module.css'
 import { usePanelWidths } from './panels'
 import { ResizeHandle } from './ResizeHandle'
 
@@ -46,6 +48,21 @@ function SidebarPanel(props: {
   )
 }
 
+/**
+ * The main area of a desktop frame. When a layer closes with a move to
+ * another screen, it takes the focus, so the next Tab starts in the new
+ * screen.
+ */
+function MainArea(props: { children: ReactNode }) {
+  const main = useRef<HTMLElement>(null)
+  useScreenFocus(main)
+  return (
+    <main className={classes(frame.main, layout.screen)} ref={main}>
+      {props.children}
+    </main>
+  )
+}
+
 /** The desktop app in a browser. */
 function BrowserFrame(props: FrameProps) {
   return (
@@ -54,7 +71,7 @@ function BrowserFrame(props: FrameProps) {
         <NewWorkspaceHost>
           {props.rail}
           {props.sidebar ? <SidebarPanel>{props.sidebar}</SidebarPanel> : null}
-          <main className={frame.main}>{props.children}</main>
+          <MainArea>{props.children}</MainArea>
         </NewWorkspaceHost>
       </OverlayHost>
     </div>
@@ -96,7 +113,7 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
               ) : null}
             </div>
           </div>
-          <main className={frame.main}>{props.children}</main>
+          <MainArea>{props.children}</MainArea>
         </NewWorkspaceHost>
       </OverlayHost>
     </div>

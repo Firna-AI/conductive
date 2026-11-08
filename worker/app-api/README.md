@@ -72,8 +72,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 
 - `boot.test.ts` checks the boot routes, the saved preferences, the
   encrypted logins, and a missing model list. Two users save different
-  defaults and logins, both with a Claude login. After each save and a
-  delete, each reads only their own account and Get started step.
+  defaults, New workspace views, and logins, both with a Claude login.
+  After each save and a delete, each reads only their own account and
+  Get started step.
   `boot-account.test-support.ts` holds the account helpers of that test.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.

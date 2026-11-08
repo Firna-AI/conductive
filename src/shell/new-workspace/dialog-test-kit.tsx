@@ -132,6 +132,10 @@ export function mainOf(view: HTMLElement): HTMLElement {
   return main
 }
 
+/** Whether the focus is on `area` or inside it. */
+export const focusIn = (area: HTMLElement) =>
+  area.contains(document.activeElement)
+
 /**
  * Presses a key on an element, as the keyboard does. It gives whether the
  * app kept the key from the element, so that, in a text field, the key adds
