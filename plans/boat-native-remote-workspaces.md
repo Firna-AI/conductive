@@ -5077,15 +5077,17 @@ Depends on: 5c
 
 Apply decision 128 C. Added on 8 November 2026.
 
-- [ ] Draw the limits in the mockups: the build screen and the workspace
+- [x] Draw the limits in the mockups: the build screen and the workspace
       start screen say how long a build and a start can run, and a failed
       build or start says that it passed its limit. Then build both
       screens, and compare each with its mockup.
-- [ ] Apply the recorded option of
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5d`.
+- [x] Apply the recorded option of
       `plans/follow-ups/lifecycle-job-time-limit.md`: a time limit for each
       whole build and start, from its start, with the existing failure
       handling. State the limits in
       `docs/protocol/workspaces-and-sandboxes.md`, and delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5d`.
 
 ## Milestone 6: App shell and workspaces
 

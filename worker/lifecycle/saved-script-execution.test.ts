@@ -125,9 +125,10 @@ it('runs retention startup in Bash with its org environment without marking read
       if (local.contains(command, 'retention'))
         results.push(await local.run(command))
     }
-    await keepWorkspaceDisk(context)
-    await keepWorkspaceDisk(context)
-    await keepWorkspaceDisk(context)
+    const deadlineAt = fixture.runtime.dependencies.now() + 1_200_000
+    await keepWorkspaceDisk(context, deadlineAt)
+    await keepWorkspaceDisk(context, deadlineAt)
+    await keepWorkspaceDisk(context, deadlineAt)
     expect(results).toEqual([
       {
         exitCode: 0,

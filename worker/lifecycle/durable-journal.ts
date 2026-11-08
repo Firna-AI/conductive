@@ -28,7 +28,13 @@ export class WorkspaceEventJournal {
       if ((await this.storage.get('text', LAST_PUBLISHED)) === signature) return
       await this.publish({
         workspaceId: response.workspace.id,
-        event: { type: 'workspace.updated', workspace: response.workspace },
+        event: {
+          type: 'workspace.updated',
+          workspace: response.workspace,
+          error: response.error
+            ? { code: response.error.code, message: response.error.message }
+            : null,
+        },
         occurredAt: now,
       })
       if (response.start)

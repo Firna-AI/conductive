@@ -7,6 +7,7 @@ import type {
 export const IDLE_MS = 30 * 60 * 1_000
 export const DISK_KEEPALIVE_MS = 13 * 24 * 60 * 60 * 1_000
 export const TURN_HEARTBEAT_MS = 5 * 60 * 1_000
+export const LIFECYCLE_STATE_KEY = 'lifecycle:state'
 
 export interface LifecycleStorage {
   get(key: string): Promise<DurableLifecycleState | undefined>
@@ -28,13 +29,19 @@ export interface DurableLifecycleState {
   startupPrepared?: boolean
   stoppedAt: number | null
   nextDiskKeepaliveAt: number | null
+  diskRetentionDeadlineAt?: number
   error: { code: string; message: string; log: string | null } | null
+}
+
+export interface DiskRetentionResult {
+  done: boolean
+  error: string | null
 }
 
 export interface LifecycleHooks {
   changed(state: DurableLifecycleState): void | Promise<void>
   stop(): Promise<LifecycleStopResult | void>
-  keepalive(): Promise<boolean | void>
+  keepalive(deadlineAt: number): Promise<DiskRetentionResult>
   extendDeadline(): Promise<LifecycleReconciliation | void>
   reconcile?(): Promise<LifecycleReconciliation>
   startPending?(): Promise<boolean>

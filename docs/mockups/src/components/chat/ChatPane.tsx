@@ -27,6 +27,8 @@ export function ChatPane(props: {
   items: readonly ChatItem[]
   composer: ComposerState
   problem?: SandboxProblem
+  /** The message that the app saved for a start that failed. */
+  startError?: string
   starting?: StartingLog
   empty?: ReactNode
   /** A message above the composer, such as a failed create. */
@@ -86,7 +88,7 @@ export function ChatPane(props: {
         {mac?.choicesOpen && pending.length > 0 ? <DrawnChoices /> : null}
         {props.notice}
         {props.problem ? (
-          <SandboxBar problem={props.problem} />
+          <SandboxBar message={props.startError} problem={props.problem} />
         ) : (
           <Composer {...props.composer} />
         )}

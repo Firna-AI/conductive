@@ -46,10 +46,19 @@ export function useBlockingNotice(
   return null
 }
 
+/**
+ * The code of a create whose first start failed before the create answered.
+ * Its message is the one that the Worker saved for the start, such as its
+ * time limit.
+ */
+const startFailed = 'workspace_start_failed'
+
 function failureBody(error: ApiError): string {
   if (error.status === 0) {
     return "The app can't reach the server. Your message is kept."
   }
+  if (error.code === startFailed)
+    return `${error.message} Your message is kept.`
   if (error.status >= 500)
     return "Its sandbox didn't start. Your message is kept."
   return `${error.message} Your message is kept.`
@@ -57,7 +66,8 @@ function failureBody(error: ApiError): string {
 
 /**
  * A create that failed. The draft stays, and Try again sends it again. Try
- * again is off while the message cannot go, as Send is.
+ * again is off while the message cannot go, as Send is. A first start that
+ * failed shows the message that the Worker saved for it.
  */
 export function CreateFailed(props: {
   error: ApiError

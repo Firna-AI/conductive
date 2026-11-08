@@ -4,6 +4,7 @@ import { HttpError } from '../http'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
+import { IMAGE_BUILD_TIME_LIMIT_MS, JobTimeLimit } from './job-time-limit'
 import {
   nextProviderRetry,
   providerRetryPending,
@@ -176,7 +177,9 @@ export async function advanceImageBuild(
   let job = await readBuildJob(env.DB, orgId, buildId)
   let provider: SandboxProvider | undefined
   try {
-    if (job.phase === 'sources' && job.state === 'running') {
+    const expired =
+      dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS
+    if (job.phase === 'sources' && job.state === 'running' && !expired) {
       const source = await readSourceJob(env.DB, buildId)
       if (source && (source.failed || source.phase === 'abort')) {
         await clearImageRetryStatement(env.DB, buildId).run()
@@ -188,6 +191,7 @@ export async function advanceImageBuild(
     if (
       job.state === 'running' &&
       job.phase !== 'cleanup' &&
+      !expired &&
       providerRetryPending(job.providerRetry, dependencies.now())
     )
       return false
@@ -207,6 +211,7 @@ export async function advanceImageBuild(
     )
     if (job.phase === 'cleanup' || job.state !== 'running')
       return await cleanupBuild(runtime, provider, job)
+    if (expired) throw new JobTimeLimit('build')
     if (providerRetryExpired(job.providerRetry, dependencies.now()))
       throw new ProviderRetryExhausted()
     const done = await advanceBuildStep(runtime, provider, job)
@@ -215,9 +220,13 @@ export async function advanceImageBuild(
   } catch (error) {
     job = await readBuildJob(env.DB, orgId, buildId)
     if (job.phase === 'cleanup' || job.state !== 'running') throw error
+    const failure =
+      dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS
+        ? new JobTimeLimit('build')
+        : error
     const retry = nextProviderRetry(
       job.providerRetry,
-      error,
+      failure,
       dependencies.now(),
     )
     if (retry) {
@@ -228,13 +237,14 @@ export async function advanceImageBuild(
       provider &&
       job.phase === 'create' &&
       !job.sandboxId &&
-      !(error instanceof ProviderRetryExhausted) &&
-      !(error instanceof ProviderError)
+      !(failure instanceof ProviderRetryExhausted) &&
+      !(failure instanceof JobTimeLimit) &&
+      !(failure instanceof ProviderError)
     )
       return false
     const message =
-      error instanceof HttpError
-        ? error.message
+      failure instanceof HttpError
+        ? failure.message
         : 'The cloud computer image could not build. Check the log and try again.'
     await failBuild(env.DB, buildId, message, dependencies.now())
     await updateBuildJob(env.DB, buildId, 'cleanup')

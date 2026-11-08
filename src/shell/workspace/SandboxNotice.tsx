@@ -64,11 +64,16 @@ function useProblem(problem: SandboxProblem, workspace: Workspace): Problem {
   return problemOf(problem, formatDay(archivedAt, timeZone))
 }
 
-/** The bar that takes the place of the composer while the sandbox is down. */
+/**
+ * The bar that takes the place of the composer while the sandbox is down.
+ * `message` is the message that the workspace saved for a start that
+ * failed, such as its time limit. The bar shows it before the body.
+ */
 export function SandboxBar(props: {
   problem: SandboxProblem
   workspace: Workspace
   resume: Action<[]>
+  message?: string | null
 }) {
   const problem = useProblem(props.problem, props.workspace)
   return (
@@ -84,7 +89,7 @@ export function SandboxBar(props: {
           </ActionButton>
         ) : undefined
       }
-      body={problem.body}
+      body={props.message ? `${props.message} ${problem.body}` : problem.body}
       icon={problem.icon}
       title={problem.title}
       tone={problem.tone}

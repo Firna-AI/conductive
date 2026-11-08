@@ -142,12 +142,15 @@ it('keeps the workspace image folder map at resume and retention after a later s
   })
   boat.states.set(row.sandboxId, 'archived')
   await runtime.workspace(id).lifecycleStopped()
-  await keepWorkspaceDisk({
-    env: runtime.env,
-    dependencies: runtime.dependencies,
-    orgId: org.id,
-    workspaceId: id,
-  })
+  await keepWorkspaceDisk(
+    {
+      env: runtime.env,
+      dependencies: runtime.dependencies,
+      orgId: org.id,
+      workspaceId: id,
+    },
+    runtime.dependencies.now() + 1_200_000,
+  )
   expect(resumedEnvironments[1]).toMatchObject({
     APP_SECRET: 'fresh-secret',
     CONDUCTIVE_REPOSITORY_DIR: '/home/user/code/storefront',

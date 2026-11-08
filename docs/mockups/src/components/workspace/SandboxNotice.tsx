@@ -54,15 +54,22 @@ function RecoveryButton(props: { label: string }) {
   return <ActionButton tone="primary">{props.label}</ActionButton>
 }
 
-/** The bar that replaces the composer while the sandbox is not running. */
-export function SandboxBar(props: { problem: SandboxProblem }) {
+/**
+ * The bar that replaces the composer while the sandbox is not running. A
+ * start that failed shows the message that the app saved for it, such as
+ * the 20-minute limit of a start, before the body.
+ */
+export function SandboxBar(props: {
+  problem: SandboxProblem
+  message?: string
+}) {
   const problem = problems[props.problem]
   return (
     <Notice
       action={
         problem.action ? <RecoveryButton label={problem.action} /> : undefined
       }
-      body={problem.body}
+      body={props.message ? `${props.message} ${problem.body}` : problem.body}
       icon={problem.icon}
       title={problem.title}
       tone={problem.tone}

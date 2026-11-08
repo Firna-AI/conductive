@@ -1,7 +1,8 @@
 import { providerState, type ProviderState } from './provider-state'
 import type { SandboxProvider } from '../sandbox/provider'
 import { WorkspaceStartError } from './workspace-start'
-import { DISK_KEEPALIVE_MS } from './durable-types'
+import { DISK_KEEPALIVE_MS, type DiskRetentionResult } from './durable-types'
+import { JobTimeLimit } from './job-time-limit'
 import {
   repositoryEnvironment,
   repositoryLocation,
@@ -10,7 +11,12 @@ import { workspaceRepositoryLocations } from './repository-location-data'
 import { workspaceStartupCommand } from './image-software'
 import { readImageSettings, workspaceEnvironment } from './settings-data'
 import { readWorkspaceToken } from './tokens'
-import { readRetention, setRetention, clearRetention } from './retention-data'
+import {
+  readRetention,
+  setRetention,
+  clearRetention,
+  type RetentionProgress,
+} from './retention-data'
 import {
   actionResources,
   type WorkspaceActionContext,
@@ -21,31 +27,51 @@ import type { DurableLifecycle } from './durable'
 /** The caller serializes this action with user starts in the workspace object. */
 export async function keepWorkspaceDisk(
   context: WorkspaceActionContext,
-): Promise<boolean> {
+  deadlineAt: number,
+): Promise<DiskRetentionResult> {
   const { env, workspaceId, orgId } = context
   const { provider, sandboxId, row } = await actionResources(context)
   if (row.state !== 'stopped') {
     await clearRetention(env.DB, workspaceId)
-    return true
+    return { done: true, error: null }
   }
-  const progress = (await readRetention(env.DB, workspaceId)) ?? {
+  let progress: RetentionProgress = (await readRetention(
+    env.DB,
+    workspaceId,
+  )) ?? {
     phase: 'resume',
     error: null,
   }
-  const machine = await provider.get(sandboxId)
-  const status = providerState(machine.state)
-  if (status === 'error' && progress.phase !== 'stop') {
+  progress = await expireRetention(context, progress, deadlineAt)
+  let status: ProviderState
+  try {
+    status = providerState((await provider.get(sandboxId)).state)
+  } catch (error) {
+    if (progress.phase === 'stop' && progress.error !== null)
+      return { done: false, error: progress.error }
+    throw error
+  }
+  progress = await expireRetention(context, progress, deadlineAt)
+  if (progress.phase === 'stop')
+    return stopWithResult(context, provider, sandboxId, status, progress.error)
+  if (status === 'error') {
     await setRetention(
       env.DB,
       workspaceId,
       'stop',
       'The cloud computer failed during disk retention.',
     )
-    return stopMaintenance(context, provider, sandboxId, status)
+    return stopWithResult(
+      context,
+      provider,
+      sandboxId,
+      status,
+      'The cloud computer failed during disk retention.',
+    )
   }
   if (progress.phase === 'resume') {
     await setRetention(env.DB, workspaceId, 'resume')
-    if (status === 'stopping') return false
+    if (status === 'stopping') return { done: false, error: null }
     if (status === 'stopped') {
       const environment = await workspaceEnvironment(env, orgId)
       const token = await readWorkspaceToken(env, workspaceId)
@@ -69,22 +95,22 @@ export async function keepWorkspaceDisk(
       )
     }
     await setRetention(env.DB, workspaceId, 'wait')
-    return false
+    return { done: false, error: null }
   }
   if (progress.phase === 'wait') {
     if (status === 'stopped') {
       await setRetention(env.DB, workspaceId, 'resume')
-      return false
+      return { done: false, error: null }
     }
     if (status === 'ready') await setRetention(env.DB, workspaceId, 'startup')
-    return false
+    return { done: false, error: null }
   }
   if (progress.phase === 'startup') {
     if (status === 'stopped') {
       await setRetention(env.DB, workspaceId, 'resume')
-      return false
+      return { done: false, error: null }
     }
-    if (status !== 'ready') return false
+    if (status !== 'ready') return { done: false, error: null }
     const settings = await readImageSettings(env.DB, orgId)
     let error: string | null = null
     try {
@@ -97,10 +123,42 @@ export async function keepWorkspaceDisk(
     } catch {
       error = 'The startup script could not run during disk retention.'
     }
+    if (context.dependencies.now() >= deadlineAt)
+      error = new JobTimeLimit('start').message
     await setRetention(env.DB, workspaceId, 'stop', error)
-    return false
+    return { done: false, error }
   }
-  return stopMaintenance(context, provider, sandboxId, status)
+  return { done: false, error: null }
+}
+
+async function expireRetention(
+  context: WorkspaceActionContext,
+  progress: RetentionProgress,
+  deadlineAt: number,
+): Promise<RetentionProgress> {
+  if (progress.phase === 'stop' || context.dependencies.now() < deadlineAt)
+    return progress
+  const error = new JobTimeLimit('start').message
+  await setRetention(context.env.DB, context.workspaceId, 'stop', error)
+  return { phase: 'stop', error }
+}
+
+async function stopWithResult(
+  context: WorkspaceActionContext,
+  provider: SandboxProvider,
+  sandboxId: string,
+  status: ProviderState,
+  error: string | null,
+): Promise<DiskRetentionResult> {
+  try {
+    return {
+      done: await stopMaintenance(context, provider, sandboxId, status),
+      error,
+    }
+  } catch (failure) {
+    if (error !== null) return { done: false, error }
+    throw failure
+  }
 }
 
 async function stopMaintenance(
@@ -136,13 +194,15 @@ export async function finishDiskMaintenance(
   context: WorkspaceActionContext,
   lifecycle: DurableLifecycle,
 ): Promise<void> {
-  await lifecycle.exclusive(async () => {
-    if (!(await readRetention(context.env.DB, context.workspaceId))) return
-    try {
-      if (await keepWorkspaceDisk(context)) return
-    } catch {
-      throw new WorkspaceStartError(null)
-    }
+  try {
+    if (
+      await lifecycle.finishDiskMaintenance(async () =>
+        Boolean(await readRetention(context.env.DB, context.workspaceId)),
+      )
+    )
+      return
+  } catch {
     throw new WorkspaceStartError(null)
-  })
+  }
+  throw new WorkspaceStartError(null)
 }

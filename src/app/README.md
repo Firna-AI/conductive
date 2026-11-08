@@ -89,6 +89,10 @@ the invite, the roles, and the removal there.
   before a later remove of the same repository.
 - A Resume reply keeps each newer field change that arrived while its
   request ran. A reply after close changes no workspace state.
+- A workspace event applies its saved public error with the workspace
+  state. An older event without the error keeps the current error. An
+  explicit null clears it. Event errors carry no log, so the model keeps
+  a null log for them.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.

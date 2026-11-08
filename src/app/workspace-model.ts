@@ -111,7 +111,16 @@ export class WorkspaceModel {
     const change: Change<WorkspaceResponse> = (detail) => {
       switch (event.type) {
         case 'workspace.updated':
-          return { ...detail, workspace: event.workspace }
+          return {
+            ...detail,
+            workspace: event.workspace,
+            ...(event.error === undefined
+              ? {}
+              : {
+                  error:
+                    event.error === null ? null : { ...event.error, log: null },
+                }),
+          }
         case 'start.updated':
           return { ...detail, start: event.start }
         case 'workspace.title':

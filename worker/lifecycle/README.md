@@ -153,6 +153,7 @@ refresh. A transient Boat error keeps the job step for the next alarm, within th
 - reads the sandbox state from Boat while the runner is not connected
 - runs the disk retention restart 13 days after each confirmed stop
 - retries the sandbox delete of a failed create
+- recovers and deletes an unresolved allocation after a start reaches its limit
 
 The deadline and stop actions use the sandbox state in each Boat reply.
 When Boat refuses an action, they read the sandbox state once. The
@@ -183,7 +184,9 @@ first message, and then closes. The browser does not restore the composer
 from it yet. The owner of `src/app/` and `src/shell/` adds that recovery.
 
 `WorkspaceEventJournal` in [`durable-journal.ts`](durable-journal.ts) keeps
-ordered lifecycle publication and suppresses unchanged updates. The
+ordered lifecycle publication and suppresses unchanged updates. Each
+workspace update includes the saved public error code and message, or null
+to clear an error. The event carries no error log. The
 production `Workspace` must send each `workspace.updated` and
 `start.updated` event to `WorkspaceChat`. Chat stores and numbers the only
 workspace event history, with chat and lifecycle events.
@@ -241,7 +244,13 @@ object holds the lifecycle state, the turn records, and the events.
   `resumeWorkspace`.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
-  phases, admission, process IDs, output offsets, retry state, and results.
+  phases, admission, process IDs, output offsets, retry state, deadline, and results.
+- [`job-time-limit.ts`](job-time-limit.ts): the build and start time limits
+  and their public failure messages.
+- [`start-allocation-cleanup.ts`](start-allocation-cleanup.ts):
+  `retryAllocationCleanup` recovers a timed-out allocation from its saved
+  encrypted request, then deletes the sandbox. Its separate durable job
+  keeps cleanup ownership after the start publishes its failure.
 - [`start-job-codec.ts`](start-job-codec.ts): `serializeStartJob` and
   `readStartJob`, which convert the start job for storage and internal RPC.
 - [`start-logs.ts`](start-logs.ts): `releasedStartLog`, which masks the
@@ -257,7 +266,15 @@ object holds the lifecycle state, the turn records, and the events.
 - [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
   path to a Boat call that creates a sandbox or a snapshot. It stores the
   request first, so the lifecycle finds the resource after a lost reply.
-- [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`.
+- [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`, the
+  maintenance resume, startup, and stop phases. Its D1 progress retains a
+  failure while stop cleanup retries.
+- [`disk-retention-state.ts`](disk-retention-state.ts):
+  `advanceDiskRetentionState` saves the original maintenance deadline in
+  native lifecycle state before the first provider call. It keeps the
+  failure after cleanup and caps active maintenance alarms at the deadline.
+- [`durable-scheduling.ts`](durable-scheduling.ts): `writeLifecycleState`,
+  the shared lifecycle state and alarm write.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.

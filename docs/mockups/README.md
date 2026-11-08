@@ -105,6 +105,13 @@ chat, and five tabs at the bottom.
   shows Needs input: a middle column in the accent colour that pulses.
 - Copy says cloud computer or sandbox. No screen names Boat, also not the
   marketing site or Get started.
+- A build of the cloud computer runs for at most 60 minutes, and a start of
+  a sandbox for at most 20 minutes. A build that runs names its limit under
+  its log, and the start card names the limit under its steps. A failed
+  build or start shows the message that the app saved for it, so a job that
+  passed its limit names that limit, as
+  `app/org-settings/cloud-computer/build-failed/time-limit`,
+  `app/shell/error/time-limit`, and `app/new-workspace/time-limit` show.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no
@@ -146,7 +153,7 @@ chat, and five tabs at the bottom.
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted     |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, its error, the start, a held second message, the first turn    |
+| `app/new-workspace` | An empty chat, its errors, the start, a held second message, the first turn   |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
 | `app/chat`          | A finished turn, then running turns, lost data, and lost updates              |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -162,9 +169,14 @@ chat, and five tabs at the bottom.
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `app`, `app/sign-in`,
-`app/orgs`, `app/org-settings`, `app/banner`, and `app/chat` do. `app/org-settings/cloud-computer` and its building
+`app/shell`, `app/orgs`, `app/new-workspace`, `app/org-settings`,
+`app/org-settings/cloud-computer`, `app/banner`, and `app/chat` do.
+`app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
-and update-failed states, and declare `movedFrom`. `app/sign-in/get-started`
+and update-failed states, and declare `movedFrom`. The states of `app/shell`,
+`app/new-workspace`, and `app/org-settings/cloud-computer` moved into their own
+folders and kept their paths, so that each of those pages shows only its
+canonical screen. `app/sign-in/get-started`
 moved into its own folder and kept its path. Get started is the only first
 run, so the first run of `app/shell` and the not-connected state of
 `app/orgs/new` are gone, and their links lead to Get started. Its second

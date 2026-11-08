@@ -1,13 +1,21 @@
-import type { AppEnv } from '../env'
+import type { AppDependencies, AppEnv } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
+import { startWorkspaceTerminal } from '../terminal/service'
 import { lifecycleCommand } from './command-intents'
 import { workspacePhaseCommand } from './start-command'
 import { workspaceEnvironment } from './settings-data'
 import { readWorkspaceToken } from './tokens'
-import type { StartJobStorage, WorkspaceStartJob } from './start-types'
+import type {
+  StartJobStorage,
+  WorkspaceStartJob,
+  WorkspaceMachinePhase,
+  WorkspaceRunningStartJob,
+} from './start-types'
 import type { WorkspaceRow } from './workspace-data'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { WorkspaceStartError } from './workspace-start'
+import { JobTimeLimit } from './job-time-limit'
+import { startTimeLimitReached } from './start-provider-retry'
 
 export async function advanceStartCommand(
   env: AppEnv,
@@ -59,4 +67,39 @@ export async function advanceStartCommand(
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut)
     throw new WorkspaceStartError(null)
   return true
+}
+
+export async function nextStartCommand(
+  storage: StartJobStorage,
+  job: WorkspaceRunningStartJob,
+  phase: WorkspaceMachinePhase,
+): Promise<void> {
+  await storage.update({
+    ...job,
+    phase,
+    providerRetry: null,
+    processId: null,
+    stdoutOffset: 0,
+    stderrOffset: 0,
+  })
+}
+
+export async function prepareStartTerminal(
+  env: AppEnv,
+  dependencies: AppDependencies,
+  job: WorkspaceStartJob,
+): Promise<void> {
+  if (startTimeLimitReached(job, dependencies.now()))
+    throw new JobTimeLimit('start')
+  await startWorkspaceTerminal(env, job.orgId, job.workspaceId, dependencies)
+  if (startTimeLimitReached(job, dependencies.now()))
+    throw new JobTimeLimit('start')
+}
+
+export function startStepLabel(phase: WorkspaceStartJob['phase']): string {
+  return phase === 'fetch'
+    ? 'Fetching the default branch'
+    : phase === 'branch'
+      ? 'Creating your branch'
+      : 'Applying your startup script'
 }

@@ -27,6 +27,7 @@ export type BuildPhase =
 
 export interface BuildJob {
   providerRetry: ProviderRetryState | null
+  startedAt: number
   buildId: string
   orgId: string
   kind: ImageBuild['kind']
@@ -47,7 +48,7 @@ export interface BuildJob {
   previousImageName: string | null
 }
 
-const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state,
+const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.started_at AS startedAt,
   b.sandbox_id AS sandboxId, b.snapshot_name AS snapshotName,
   b.settings_revision AS settingsRevision, b.started_by_user_id AS startedByUserId,
   j.phase, j.process_id AS processId, j.stdout_offset AS stdoutOffset,

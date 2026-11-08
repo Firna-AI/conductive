@@ -40,15 +40,21 @@ export function statusFault(fixture: Fixture) {
   }
 }
 
-export async function imageRetryFixture(fixture: Fixture) {
+export async function imageRetryFixture(
+  fixture: Fixture,
+  {
+    kind = 'build',
+    steps = 3,
+  }: { kind?: 'build' | 'refresh'; steps?: number } = {},
+) {
   const { images, runtime, org, user } = fixture
   const id = await startImageBuild(images, {
     orgId: org.id,
     userId: user.id,
-    kind: 'build',
+    kind,
     software: SOFTWARE,
   })
-  for (let step = 0; step < 3; step++)
+  for (let step = 0; step < steps; step++)
     await advanceImageBuild(images, org.id, id)
   const storage = new MemoryWorkspaceStorage()
   const create = () =>

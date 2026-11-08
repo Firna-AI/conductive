@@ -23,8 +23,14 @@ interface WorkspaceStartData {
   createPayloadCiphertext?: string
   allocatedSandboxId?: string
   cancelled?: boolean
-  failure?: { code: string; message: string; status: number }
+  failure?: {
+    code: string
+    message: string
+    status: number
+    timeLimit?: boolean
+  }
   providerRetry?: ProviderRetryState | null
+  deadlineAt?: number
 }
 
 export type WorkspaceMachinePhase =
@@ -88,6 +94,7 @@ export interface StartJobStorage {
     attempt: string,
     state: ProviderRetryState | null | 'progress',
   ): Promise<boolean>
+  deferAllocationCleanup(job: WorkspaceStartJob): Promise<void>
   result(): Promise<WorkspaceStartResult | undefined>
   creationResult(): Promise<WorkspaceStartResult | undefined>
   admission(): Promise<WorkspaceCreationAdmission | undefined>

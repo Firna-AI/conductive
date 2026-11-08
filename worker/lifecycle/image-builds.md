@@ -59,6 +59,8 @@ transient. Other errors keep their existing handling.
   command can run past the age of the window. A later fault in the same
   step still uses the first window.
 - The window does not limit a whole job or a healthy command.
+- The whole-job deadline takes precedence over a retry wait. The limits
+  are in [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md).
 - Cancellation and terminal cleanup do not wait for a pending retry.
 - A source command start never retries. It fails closed, as the source
   loader says.
@@ -80,6 +82,19 @@ an image job, and `completeBuildPhase` in
 `retryStartError` in [`start-provider-retry.ts`](start-provider-retry.ts)
 and `retry` in [`start-storage.ts`](start-storage.ts) do the same for a
 start.
+
+[`job-time-limit.ts`](job-time-limit.ts) supplies the job limits. An image
+job uses its saved `started_at` value. A start saves one absolute deadline
+beside its retry state. A phase change clears retry state and keeps the
+job deadline. The image and workspace alarm schedulers cap their next
+retry at that deadline. Terminal cleanup keeps its own retries after the
+job fails.
+
+An old start without a saved deadline uses its saved creation time or
+lifecycle start time. The start coordinator saves the restored deadline
+before it advances the job. A timed-out start with an unresolved
+allocation moves its encrypted request to a separate cleanup job, as
+[`retryAllocationCleanup`](start-allocation-cleanup.ts) handles.
 
 ## Refresh timers
 

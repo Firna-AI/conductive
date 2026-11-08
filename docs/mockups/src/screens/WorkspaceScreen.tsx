@@ -17,6 +17,7 @@ import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { conversations } from '../fixtures/conversations'
 import { memberViewer, people } from '../fixtures/members'
+import { startErrors } from '../fixtures/starting'
 import {
   openableWorkspaceRecords,
   type ActivityStatus,
@@ -89,6 +90,9 @@ export function WorkspaceScreen(props: {
       items={fresh ? [] : conversations[state.conversation]}
       notice={composerNotice(state, workspace)}
       problem={problem}
+      startError={
+        problem === 'error' ? startErrors[state.startError] : undefined
+      }
       starting={startingLogFor(state)}
       viewer={viewer}
       viewport={viewport}

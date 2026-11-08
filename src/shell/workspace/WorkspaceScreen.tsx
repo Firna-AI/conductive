@@ -96,7 +96,7 @@ export function WorkspaceScreen(props: {
       />
     )
   }
-  const { workspace, start } = detail.value
+  const { workspace, start, error } = detail.value
   const sandbox = sandboxState(workspace)
   const context: WorkspaceContext = {
     org: props.org,
@@ -126,7 +126,12 @@ export function WorkspaceScreen(props: {
     <ChatColumn
       footer={
         problem ? (
-          <SandboxBar problem={problem} resume={resume} workspace={workspace} />
+          <SandboxBar
+            message={problem === 'error' ? error?.message : null}
+            problem={problem}
+            resume={resume}
+            workspace={workspace}
+          />
         ) : (
           features.composer?.(context)
         )

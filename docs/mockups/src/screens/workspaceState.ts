@@ -3,6 +3,7 @@ import { fileLists } from '../components/files/FilesPanel'
 import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversations'
 import { bannerStates } from '../fixtures/pullRequests'
+import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/workspaces'
 
 /**
@@ -15,6 +16,7 @@ export const workspaceStateSchema = {
   required: [
     'workspace',
     'sandbox',
+    'startError',
     'conversation',
     'banner',
     'files',
@@ -32,6 +34,11 @@ export const workspaceStateSchema = {
     workspace: { enum: openableWorkspaces },
     /** The cloud computer. An archived workspace has none. */
     sandbox: { enum: ['ready', 'starting', 'stopped', 'error', 'archived'] },
+    /**
+     * The message that the app saved for a start that failed, which the
+     * error state shows: a failure, or the 20-minute limit of a start.
+     */
+    startError: { enum: startErrorKeys },
     conversation: { enum: conversationKeys },
     banner: { enum: bannerStates },
     /** The list of the files panel: All files, Changes, or Checks. */
@@ -109,6 +116,7 @@ export type WorkspaceState = SchemaProps<typeof workspaceStateSchema>
 export const readyWorkspace: WorkspaceState = {
   workspace: 'checkout-autocomplete',
   sandbox: 'ready',
+  startError: 'failed',
   conversation: 'history',
   banner: 'ready-to-merge',
   files: 'changes',

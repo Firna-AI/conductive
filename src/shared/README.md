@@ -54,6 +54,9 @@ states the rules of the request and of a failed repair.
 `events.ts` defines the browser stream. Its event numbers span all sessions
 and runner connections of one workspace. A reconnect uses the last stored number.
 The history response gives the point after which live events continue.
+The optional `error` of `workspace.updated` carries only the saved public
+code and message. A null error clears the previous error. An older event
+without this field keeps the previous error.
 
 `sessions.ts` defines the session paths, their requests and replies, and the `Session` record.
 `Session.retryMessageId` names the one message that `retryMessagePath` accepts.

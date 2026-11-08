@@ -8,6 +8,7 @@ import {
 } from './start-logs'
 import type { MaskedStartLog } from './masked-start-log'
 import { readStartJob, serializeStartJob } from './start-job-codec'
+import { START_ALLOCATION_CLEANUP_KEY } from './start-allocation-cleanup'
 import type {
   StartJobStorage,
   WorkspaceStartResult,
@@ -140,6 +141,8 @@ export function durableStartStorage(
         })
         return true
       }),
+    deferAllocationCleanup: (job) =>
+      storage.put('job', START_ALLOCATION_CLEANUP_KEY, serializeStartJob(job)),
     result: async () => storedResult(await storage.get('result', RESULT)),
     creationResult: async () =>
       storedResult((await storage.get('creation', CREATE_RESULT))?.result),

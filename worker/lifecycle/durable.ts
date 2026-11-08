@@ -6,16 +6,15 @@ import {
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
 import { reconciledLifecycle } from './durable-reconciliation'
+import { advanceDiskRetentionState } from './disk-retention-state'
+import { writeLifecycleState } from './durable-scheduling'
 import {
-  DISK_KEEPALIVE_MS,
   IDLE_MS,
-  TURN_HEARTBEAT_MS,
+  LIFECYCLE_STATE_KEY,
   type DurableLifecycleState,
   type LifecycleHooks,
   type LifecycleStorage,
 } from './durable-types'
-
-const STATE_KEY = 'lifecycle:state'
 
 /** One instance lives inside each workspace Durable Object. */
 export class DurableLifecycle {
@@ -36,7 +35,7 @@ export class DurableLifecycle {
   }
 
   read(): Promise<DurableLifecycleState | undefined> {
-    return this.storage.get(STATE_KEY)
+    return this.storage.get(LIFECYCLE_STATE_KEY)
   }
 
   initialize(input: {
@@ -80,6 +79,7 @@ export class DurableLifecycle {
       error: null,
       stoppedAt: null,
       nextDiskKeepaliveAt: null,
+      diskRetentionDeadlineAt: undefined,
       runnerConnected: false,
       lastActivityAt: this.now(),
       startupPrepared: false,
@@ -185,12 +185,16 @@ export class DurableLifecycle {
   clear(preserveAlarm = false): Promise<boolean> {
     return this.serial(async () => {
       if (!preserveAlarm) await this.storage.deleteAlarm()
-      return this.storage.delete(STATE_KEY)
+      return this.storage.delete(LIFECYCLE_STATE_KEY)
     })
   }
 
-  exclusive<T>(operation: () => Promise<T>): Promise<T> {
-    return this.serial(operation)
+  finishDiskMaintenance(active: () => Promise<boolean>): Promise<boolean> {
+    return this.serial(async () => {
+      if (!(await active())) return true
+      const state = await this.read()
+      return !state || (await this.keepalive(state)).done
+    })
   }
 
   alarm(): Promise<void> {
@@ -214,15 +218,8 @@ export class DurableLifecycle {
           state.nextDiskKeepaliveAt !== null &&
           state.nextDiskKeepaliveAt <= this.now()
         ) {
-          if ((await this.hooks.keepalive()) === false) {
-            await this.storage.setAlarm(this.now() + 5_000)
-            return
-          }
-          state = {
-            ...state,
-            stoppedAt: this.now(),
-            nextDiskKeepaliveAt: this.now() + DISK_KEEPALIVE_MS,
-          }
+          await this.keepalive(state)
+          return
         }
       } else if (state.runningSessions.length) {
         state = reconciledLifecycle(
@@ -259,30 +256,17 @@ export class DurableLifecycle {
   }
 
   private async write(state: DurableLifecycleState): Promise<void> {
-    await this.storage.put(STATE_KEY, state)
-    const alarm =
-      state.state === 'stopped'
-        ? state.nextDiskKeepaliveAt
-        : state.state === 'error'
-          ? this.now() + 5_000
-          : state.runningSessions.length
-            ? this.now() + TURN_HEARTBEAT_MS
-            : state.lastActivityAt + IDLE_MS
-    if (alarm === null || state.state === 'archived')
-      await this.storage.deleteAlarm()
-    else {
-      const startPending = (await this.hooks.startPending?.()) ?? false
-      await this.storage.setAlarm(
-        startPending
-          ? Math.min(alarm, this.now() + 1_000)
-          : !state.runnerConnected &&
-              state.state !== 'stopped' &&
-              this.hooks.reconcile
-            ? Math.min(alarm, this.now() + 5_000)
-            : alarm,
-      )
-    }
-    await this.hooks.changed(state)
+    await writeLifecycleState(this.storage, this.hooks, state, this.now)
+  }
+
+  private keepalive(state: DurableLifecycleState) {
+    return advanceDiskRetentionState(
+      this.storage,
+      this.hooks,
+      state,
+      this.now,
+      (next) => this.write(next),
+    )
   }
 
   private serial<T>(operation: () => Promise<T>): Promise<T> {

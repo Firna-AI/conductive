@@ -52,9 +52,10 @@ export function createWorkspaceLifecycle(
         if (result !== 'pending') await turns.clear()
         return result
       },
-      keepalive: async () => {
+      keepalive: async (deadlineAt) => {
         return keepWorkspaceDisk(
           await workspaceActionContext(env, dependencies, lifecycle),
+          deadlineAt,
         )
       },
       extendDeadline: async () => {

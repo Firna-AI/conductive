@@ -1,12 +1,20 @@
 import { ChevronRight, CircleAlert, Hammer, RotateCw } from 'lucide-react'
 import {
   buildHistory,
+  buildLimit,
   failedBuild,
   lastBuild,
   runningBuild,
+  timedOutBuild,
   type Build,
+  type FailedBuild,
 } from '../../fixtures/computer'
-import { buildLog, failedBuildLog } from '../../fixtures/terminal'
+import {
+  buildLog,
+  failedBuildLog,
+  timedOutBuildLog,
+  type TerminalLine,
+} from '../../fixtures/terminal'
 import { ActionButton } from '../common/actions'
 import { StatusText } from '../common/StatusText'
 import { TerminalView } from '../tools/TerminalView'
@@ -14,10 +22,26 @@ import { SectionText } from './Section'
 import styles from './BuildSection.module.css'
 
 /**
- * The state of the cloud computer: built, building, failed, or with a
- * saved script that the next build runs.
+ * The state of the cloud computer: built, building, failed, stopped at the
+ * 60-minute limit of a build, or with a saved script that the next build
+ * runs.
  */
-export type BuildState = 'ready' | 'building' | 'failed' | 'changed'
+export type BuildState =
+  'ready' | 'building' | 'failed' | 'time-limit' | 'changed'
+
+/** The build that failed in a state, with its saved message, or none. */
+export function failedBuildOf(state: BuildState): FailedBuild | undefined {
+  switch (state) {
+    case 'failed':
+      return failedBuild
+    case 'time-limit':
+      return timedOutBuild
+    case 'ready':
+    case 'building':
+    case 'changed':
+      return undefined
+  }
+}
 
 function Result(props: { build: Build }) {
   const { build } = props
@@ -52,14 +76,10 @@ function History(props: { open: boolean }) {
   )
 }
 
-function Log(props: { failed: boolean }) {
+function Log(props: { lines: readonly TerminalLine[]; live: boolean }) {
   return (
     <div className={styles.log}>
-      <TerminalView
-        cursor={!props.failed}
-        extraKeys={false}
-        lines={props.failed ? failedBuildLog : buildLog}
-      />
+      <TerminalView cursor={props.live} extraKeys={false} lines={props.lines} />
     </div>
   )
 }
@@ -75,6 +95,7 @@ function HeadAction(props: { state: BuildState; readOnly: boolean }) {
         </ActionButton>
       )
     case 'failed':
+    case 'time-limit':
       return (
         <ActionButton icon={RotateCw} tone="primary">
           Try again
@@ -96,13 +117,45 @@ function Head(props: { state: BuildState }) {
       />
     )
   }
-  const build = props.state === 'failed' ? failedBuild : lastBuild
+  const build = failedBuildOf(props.state) ?? lastBuild
   return (
     <>
       <span className={styles.label}>Last build</span>
       <span className={styles.when}>{build.when}</span>
       <Result build={build} />
     </>
+  )
+}
+
+/**
+ * The log and the notes of a build that runs or failed. A build that runs
+ * names its time limit. A failed build shows the message that the app
+ * saved for it, such as the 60-minute limit, above the end of its log.
+ */
+function Body(props: { state: BuildState }) {
+  if (props.state === 'building') {
+    return (
+      <div className={styles.body}>
+        <Log lines={buildLog} live />
+        <SectionText muted>
+          {`Workspaces start from the build of ${lastBuild.when} until this one finishes. ${buildLimit}`}
+        </SectionText>
+      </div>
+    )
+  }
+  const failed = failedBuildOf(props.state)
+  if (!failed) return null
+  return (
+    <div className={styles.body}>
+      <SectionText>{failed.error}</SectionText>
+      <Log
+        lines={props.state === 'time-limit' ? timedOutBuildLog : failedBuildLog}
+        live={false}
+      />
+      <SectionText muted>
+        {`Workspaces still start from the build of ${lastBuild.when}.`}
+      </SectionText>
+    </div>
   )
 }
 
@@ -121,16 +174,7 @@ export function BuildSection(props: { state: BuildState; readOnly?: boolean }) {
         <span className={styles.spacer} />
         <HeadAction readOnly={props.readOnly ?? false} state={state} />
       </div>
-      {state === 'building' || state === 'failed' ? (
-        <div className={styles.body}>
-          <Log failed={state === 'failed'} />
-          <SectionText muted>
-            {state === 'building'
-              ? `Workspaces start from the build of ${lastBuild.when} until this one finishes.`
-              : `Workspaces still start from the build of ${lastBuild.when}.`}
-          </SectionText>
-        </div>
-      ) : null}
+      <Body state={state} />
       <History open={state === 'ready'} />
     </section>
   )
