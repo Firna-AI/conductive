@@ -119,46 +119,6 @@ These facts belong to this implementation, not to the protocol docs.
 event, the parts of the file reports, the unavailable file reports, and
 the outbox size check.
 
-## Workspace titles
-
-After a turn sends `turn.started`, the runner asks its agent for a title
-when no `workspace.title` report is saved. Only one title request runs at
-a time. A resent turn that does not start makes no request.
-
-The request is a separate conversation, hidden from the chat. It gets only
-the first 4,000 characters of the filtered first message with text, without
-attachments. The prompt treats that text as data and asks for a title of
-three to five words. The runner keeps that text in memory until a request
-succeeds. A later turn retries with that text. After a runner restart, a
-retry uses the message of its own turn. Blank text starts no request.
-
-Claude uses the model of the turn, with thinking off, no tools, no MCP
-servers, no project settings, and no saved session. Codex uses the model
-and effort of the turn in an ephemeral, read-only thread. Its shell tool,
-delegation, code mode, plugins, hooks, and memory are off. It has no MCP
-servers. A probe of the pinned Codex version found that the model still
-gets five built-in tools: `request_user_input`, `view_image`, `get_goal`,
-`create_goal`, and `update_goal`. None of them runs a command or changes a
-file, and the runner refuses each request that the App Server sends it.
-Check this list again at each Codex update. Its process and thread use the
-agent home folder to avoid project settings. Both requests use the [login of their turn](agent-logins.md).
-
-The runner keeps the first line with text from the answer. It removes
-surrounding quotes, backticks, Markdown marks, a leading `Title:` label,
-and one final full stop. It makes each run of spaces one space. It cuts a
-long title to 60 characters at a word boundary. A longer single word ends
-at 60 characters. The runner filters the complete message text before it
-cuts it. It filters the complete answer before it cleans it. The output
-filter also removes known secrets before the runner saves and sends
-`workspace.title`. A title saved during the request
-stops that request from sending another title.
-
-The request has a time limit of 60 seconds. A shutdown stops it. Each
-request closes its agent process and waits for its exit. A failed, empty,
-timed-out, or stopped request writes one local warning and sends no title.
-The next turn can try again. The title request never blocks or stops the
-coding turn. `Runner.idle()` waits for a running title request.
-
 ## Report requests
 
 The workspace sends a `report.refresh` command when it needs a fresh full
@@ -185,8 +145,8 @@ states the requirements.
   report and appends its filtered copy in one store operation. It saves
   the copy before it sends it, with a new event number.
 - Until the runner accepts an event of that kind, such a request sends
-  nothing. The runner has no source of new start steps yet. Its hidden
-  title request supplies new workspace names.
+  nothing. The runner has no source of new start steps or new workspace
+  names yet.
 - The runner skips a command ID that it has seen. When the runner answers
   with a report, the save of the last report event also saves the ID. So a
   repeat of that ID after a reconnect or a restart sends nothing. If the
@@ -307,9 +267,6 @@ tools that time the first agent start after a resume.
   failed step rejects only its own call, and later steps still run.
 - `src/report-state.ts`: the saved `start.updated` and `workspace.title`
   events and the answered report request IDs of the state file.
-- `src/workspace-title.ts` and `src/title-text.ts`: title requests, retries,
-  the time limit, and answer cleaning. The service injects one title
-  request function for each agent through `RunnerOptions.titles`.
 - `src/engine.ts`, `src/engine-runtime.ts`, and `src/turn-output.ts`:
   session queues, cancelable turns, message delivery, controls, and text deltas.
 - `src/engine-disposal.ts`: one close path for deferred model changes, turn
@@ -318,8 +275,6 @@ tools that time the first agent start after a resume.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
-  `claude-title.ts` and `codex-title.ts` make the hidden title requests.
-  `codex-server.ts` starts, initializes, and logs in each Codex App Server.
   The [tool entry points](agent-tools.md#key-code) cover both MCP servers.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
   queue, the file tree, the branch changes, bounded reads, and the files of

@@ -1,8 +1,6 @@
 import { configuration } from './config'
 import { createClaudeFactory } from './providers/claude'
 import { createCodexFactory } from './providers/codex'
-import { createClaudeTitle } from './providers/claude-title'
-import { createCodexTitle } from './providers/codex-title'
 import { warmClaude } from './providers/binaries'
 import { Runner } from './runner'
 import { connectWebSocket } from './socket'
@@ -30,7 +28,6 @@ async function main(): Promise<void> {
     store,
     connect: connectWebSocket,
     providers: { claude: createClaudeFactory(), codex: createCodexFactory() },
-    titles: { claude: createClaudeTitle(), codex: createCodexTitle() },
     warm: warmClaude,
     now: Date.now,
     warn,

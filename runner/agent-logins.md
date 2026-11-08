@@ -15,18 +15,10 @@ in the commands of the workspace Durable Object.
   login stays for the whole turn, also when a `message` command carries
   another login. Each `message` command of the turn goes to the running
   agent process at once, whoever sent it. Each end of a turn closes its
-  agent process, so no idle agent process keeps a login. A title request
-  keeps its own process for at most 60 seconds, as the next bullet but one
-  says. The next turn
+  agent process, so no idle agent process keeps a login. The next turn
   starts a new agent process on the saved conversation, when one exists.
 - Each new agent process gets the login again through the route of its
   agent program. A resumed conversation uses the same route.
-- A hidden workspace title request uses the login of the turn that starts
-  it. It has its own agent process and conversation. Claude gets that
-  login through file descriptor 3. Codex gets it through
-  `account/login/start`. A later turn retries on its own login. Each
-  request closes its process and waits for its exit after success or
-  failure. The 60-second time limit and a runner shutdown also close it.
 - The runner puts no login in the environment or the arguments of an agent
   program. It writes no login to a file.
 - The output filter keeps each login that a command carries, so that it can
@@ -115,10 +107,6 @@ in the commands of the workspace Durable Object.
 - `src/providers/claude.ts`: the Claude adapter. It gives the SDK the agent
   environment and the custom spawn.
 - `src/providers/codex.ts`: the Codex adapter, its model provider settings,
-  and its conversation. `src/providers/codex-server.ts` shares the process
-  start, model provider settings, initialization, and login with the title
-  request.
-- `src/providers/claude-title.ts` and `src/providers/codex-title.ts`: the
-  hidden title requests on the same login routes as their coding turns.
+  and the login request.
 - `src/output-sanitizer.ts`: `OutputSanitizer`, which keeps each login for
   the output filter.

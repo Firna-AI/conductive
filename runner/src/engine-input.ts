@@ -109,7 +109,6 @@ export async function inputCommand(
     startedAt: turn.startedAt,
     messageIds: turn.messageIds,
   })
-  options.turnStarted?.(turn.first)
   turn.baseline = await cancelable(controller.signal, () =>
     options.checkpoint(controller.signal),
   )

@@ -13,21 +13,22 @@ with its city name after 22 minutes, and wrote: "should rename based on the
 first message".
 
 With the options that the user chose on 8 November 2026, this change makes
-the agent runner ask the agent of the first turn for a title, from the text
-of the first message. The runner sends the title as `workspace.title`, and
-the Worker renames the workspace as it does now. The first session tab
-takes the title too. Each later session tab takes the first line of its own
-first message. The change does not rename branches.
-It does not rename the workspaces that exist now, because each sandbox
-keeps the runner of the org image that it started from. A new runner
-archive and a new build of each org image bring the change to new
-workspaces.
+the Worker ask a small model of Workers AI, Cloudflare's model service on
+the account that hosts the app, for a title from the text of the first
+message, as soon as it accepts that message (decision 146 C). The Worker
+stores the title as a `workspace.title` event and renames the workspace as
+it does now. The first session tab takes the title too. Each later session
+tab takes the first line of its own first message. The change does not
+rename branches, and it does not rename the workspaces that exist now. It
+reaches users with the next deploy of the Worker, and needs no new runner.
+The branch first built a title request in the runner on the member's login
+(decision 142 B). Decision 146 C replaced it, and the branch removed it.
 
 Contract owners:
 
 - [Chat and events](../docs/protocol/chat-and-events.md#messages).
-- The [agent runner README](../runner/README.md) and its
-  [Agent logins](../runner/agent-logins.md) page.
+- [Deployment](../docs/deployment.md), for the model service and the title
+  model.
 - The [Worker chat README](../worker/chat/README.md) and the
   [chat README](../src/chat/README.md).
 
@@ -48,8 +49,52 @@ Contract owners:
 ## Design
 
 Each call below is an agent call of 8 November 2026. The calls follow the
-user's choices for decisions 142 and 143. The calls about decision 144
+user's choices for decisions 143 and 146. The calls about decision 144
 assume its recommended option, and wait for its answer.
+
+### The title request in the Worker (decision 146 C)
+
+- The Worker asks for the title when it accepts the first message of a new
+  workspace, after the create answers. Reason: the send never waits for the
+  title, and the name shows while the sandbox starts.
+- The model is operator data, in the Worker variable `CONDUCTIVE_TITLE_MODEL`,
+  a Workers AI model ID. The Worker calls it through the Workers AI binding
+  of the Cloudflare account that hosts the app. Reason: the Worker has no
+  built-in model list, as [Models](../docs/deployment.md#models) says for
+  the agent models, and a model ID goes stale.
+- Without the binding or the variable, or after a failed call, the
+  workspace keeps its city name, and the Worker logs one warning. Local
+  development and the tests then work with no Cloudflare login. Reason:
+  a missing title is recoverable, so the app warns and continues.
+- The request gets only the first 4,000 characters of the text of the first
+  message, as data, and asks for a title of three to five words. It gets no
+  attachments. It has a time limit of 15 seconds. Reason: a title needs
+  only the request, and Workers AI answers a short request in about a
+  second.
+- The Worker cleans the answer with the clean-up that the runner used:
+  the first line with text, no surrounding quotes, Markdown marks, or
+  `Title:` label, and the shared steps of `sessionTitleFrom`. An empty
+  result counts as a failed call. Reason: one rule for every title.
+- After a failed call, or after a first message with no text, the Worker
+  asks again when it accepts the next message with text, until the
+  workspace has a title. At most one call runs at a time for a workspace.
+  Reason: the rule of decision 142 that the next turn asks again stays in
+  force, now for the next message.
+- The title goes through the existing `workspace.title` event of the chat
+  stream. So the stored workspace name, the first session tab, the history,
+  and each open tab update as before. Reason: the Worker already projects
+  that event, and tabs already read it.
+- The Worker still accepts `workspace.title` from the runner. Reason:
+  that is behaviour on `origin/main`, and the follow-up item
+  `plans/follow-ups/workspace-title-from-sandbox-unchecked.md` owns the
+  choice to stop it.
+- The runner keeps no title code. Reason: decision 146 C replaced the
+  runner request, so that code would be dead.
+
+### The title request in the runner (decision 142 B, replaced)
+
+These calls of 8 November 2026 applied to the runner request that decision
+146 C replaced. The branch built that request and then removed it.
 
 - The runner starts the title request. Reason: the runner already holds
   the agent programs, the login of the turn, and the saved
@@ -91,6 +136,8 @@ assume its recommended option, and wait for its answer.
 - At most one title request runs at a time. The runner asks only while it
   has no saved `workspace.title`. Reason: the saved report tells a titled
   workspace from a new one, also after a restart.
+### Session names (decision 143 C)
+
 - The Worker gives the first session its name at the create, and renames
   it when it stores the title. Reason: one rule in the Worker serves every
   client.
@@ -136,11 +183,12 @@ assume its recommended option, and wait for its answer.
 - A first message with no text starts no title request. The next turn
   whose message has text then asks, from that text. Reason: decision 142
   already says that the next turn asks again, and a later session follows
-  the same rule for a message with no text.
-- The protocol does not state the clean-up of the agent's answer. The
-  runner README keeps it. Reason: the protocol asks for a title of three
-  to five words, and the clean-up only guards an answer that ignores that
-  request.
+  the same rule for a message with no text. Decision 146 C keeps this rule
+  for the next message.
+- The protocol does not state the clean-up of the model's answer. The
+  Worker chat README keeps it. Reason: the protocol asks for a title of
+  three to five words, and the clean-up only guards an answer that ignores
+  that request.
 
 ## Decisions
 
@@ -241,7 +289,8 @@ Options check reports: `.context/workspace-title-from-first-message/`.
 - **Action:** ask the user, because B changes the protocol rule that the
   title request comes after the first answer, and no user decision covers
   that change.
-- **Decision:** The user chose B on 8 November 2026.
+- **Decision:** The user chose B on 8 November 2026. Decision 146 replaced
+  B with C on the same day.
 
 ### 143. The first session tab keeps "New session"
 
@@ -455,6 +504,58 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   recommendation from B to D.
 - **Action:** ask the user, because D adds a requirement at a boundary
   that no requirement covers, and the user reviews each new requirement.
+- **Closed:** On 8 November 2026, decision 146 C removed the hidden request
+  in the sandbox, so this question no longer applies. No option of this
+  decision was applied.
+
+### 146. Who runs the title request
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design. The user asked on 8 November 2026: "would it be
+  better if we provided the rename functionality ourselves rather than
+  using the customers sub? we could better control the model and make
+  sure its fast?"
+- **Category:** Performance.
+- **Location:** The runner title request that decision 142 B built, and
+  "Messages" in `docs/protocol/chat-and-events.md`.
+- **Background:** Under decision 142 B, the runner asked the agent on the
+  member's login when the first turn started. Each title spent part of the
+  member's subscription, on the model and effort of the member. The name
+  showed only after the sandbox was ready. The operator already pays for
+  every cloud computer.
+- **Problem:** The name waits for the sandbox and the member's login, and
+  the operator cannot choose the model or its speed.
+- **Impact if no action:** Names show only after the sandbox starts. A
+  failed or used-up login leaves the city name.
+- **Root question:** Who runs the title request, and where, so that a new
+  workspace gets a good name fast and reliably?
+- **Options:**
+  - **A.** Keep the runner request on the member's login. Effort: Small.
+  - **B.** The Worker asks a small Claude model with an operator API key
+    when it accepts the first message. Anthropic then gets every first
+    message on the operator's account, also for Codex workspaces. Effort:
+    Medium.
+  - **C.** The Worker asks a small model through Workers AI, on the
+    Cloudflare account that hosts the app, when it accepts the first
+    message. No new key and no new company. The models are smaller open
+    models. Effort: Medium.
+  - **D.** B or C, with the runner request as a fallback. Effort: Large.
+  - **E.** The Worker takes the first words of the message, with no model.
+    Effort: Small.
+- **Left out:** The runner with an operator key, because sandbox code could
+  read it. The Worker with the member's login, because it is a new path for
+  member logins. A call from the browser, because it needs a key there.
+- **Wider fix:** None.
+- **Previous examples:** Decision 142 listed this choice as its options E
+  and F.
+- **Related:** 145: no longer needed with C. 144: stays.
+- **Recommendation:** C. It is fast and under the operator's control, needs
+  no new key or company, and keeps the text with the host that already
+  stores the chat.
+- **Decision:** The user chose C on 8 November 2026. Cloudflare runs the
+  models on its own GPUs. Its Workers AI privacy page says that it does not
+  train on prompts or outputs, and does not keep them after the request.
+  Notes: `.context/workspace-title-from-first-message/brainstorm-operator-title.md`.
 
 ## Milestone 1: Mockups
 
@@ -503,8 +604,8 @@ Evidence: `.context/workspace-title-from-first-message/reports/m2-docs.md`.
 - [x] In [Sessions](../docs/protocol/chat-and-events.md#sessions), state
       the name of the first session tab and when it takes the title, and
       the name of each later session tab (decision 143).
-- [ ] Waits for decision 145. State the limits of the hidden title request
-      in [Messages](../docs/protocol/chat-and-events.md#messages).
+- [x] Not needed: decision 146 C removed the hidden request in the
+      sandbox, so decision 145 closed.
 - [ ] Waits for decision 144. In the same doc, state which name a
       workspace keeps when a member names it and the agent also titles it.
       Give the rule in
@@ -605,6 +706,80 @@ Evidence: `.context/workspace-title-from-first-message/gate-1.log`.
       wider fixes are follow-up items. Findings file:
       `.context/reviews/calummoore/chat-title-rename/findings.md`. The
       gate passed again on `3b2ff8c`: `gate-2.log`.
+- [x] The plan deletion and the pull request moved to Milestone 11,
+      because decision 146 added work.
+
+## Milestone 7: Mockups for the title from the Worker
+
+Tags: mockup
+
+Depends on: none
+
+The workspace takes its title within seconds of the first message, while
+the sandbox starts (decision 146 C).
+
+- [ ] Show the title during the start in the "Creating" and "Second
+      message" mockups, and in any other state that shows the city name
+      after the first message.
+- [ ] Change each mockup text that says the agent writes the title when
+      the first turn starts.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages. Capture the
+      site pictures again when a captured screen changed.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 8: Documentation for the title from the Worker
+
+Depends on: 7
+
+- [ ] In [Messages](../docs/protocol/chat-and-events.md#messages), state
+      the rule of decision 146 C in place of the rule of decision 142 B.
+- [ ] In [Deployment](../docs/deployment.md), give the Workers AI binding
+      and the variable `CONDUCTIVE_TITLE_MODEL`.
+- [ ] On the privacy page, `src/marketing/privacy.ts`, say that Cloudflare
+      also writes a short name for each workspace from its first message.
+
+## Milestone 9: The title request in the Worker
+
+Depends on: 8
+
+- [ ] Add the Workers AI binding and `CONDUCTIVE_TITLE_MODEL`.
+- [ ] When the Worker accepts the first message of a new workspace, ask the
+      model after the create answers. Clean the answer, and store it as a
+      `workspace.title` event, so that the workspace, the first session,
+      and each open tab take it.
+- [ ] Ask again when the next message with text arrives, while the
+      workspace has no title.
+- [ ] Move the answer clean-up from the runner to the Worker.
+- [ ] Add Worker tests with a fake model binding: a first message gives
+      the title; a failed call keeps the city name, and the next message
+      asks again; a message with no text asks nothing; a missing
+      configuration keeps the city name.
+- [ ] Remove the runner title request of this branch, so `runner/` matches
+      `origin/main`.
+- [ ] Update the [Worker chat README](../worker/chat/README.md).
+
+## Milestone 10: The web app for the title from the Worker
+
+Tags: ui
+
+Depends on: 9
+
+- [ ] Make the development page write the title soon after it accepts the
+      first message, during the start. Update the
+      [chat README](../src/chat/README.md).
+
+## Milestone 11: Verification, review, and pull request
+
+Depends on: every other milestone
+
+- [ ] Run the targeted tests and the complete gate `npm run check`.
+- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Report the findings,
+      then apply the fix rule: fix the `fix now` findings, record
+      follow-up items under `plans/follow-ups/` for the rest, re-review
+      once, and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
@@ -613,7 +788,7 @@ Evidence: `.context/workspace-title-from-first-message/gate-1.log`.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Publish a new runner archive, set its Worker variables, and build
-      each org image again. Then create one workspace with Claude and one
-      with Codex. Check that each takes a name from its first message soon
-      after its sandbox is ready.
+- [ ] Turn on Workers AI for the Cloudflare account, set
+      `CONDUCTIVE_TITLE_MODEL`, and deploy the Worker. Then create one
+      workspace with Claude and one with Codex. Check that each takes a
+      name from its first message within a few seconds.

@@ -14,10 +14,6 @@ export class OutputSanitizer {
     if (secret) this.secrets.add(secret)
   }
 
-  text(value: string): string {
-    return this.filter(value, true).text
-  }
-
   fileReport(event: RunnerFileEvent): RunnerFileEvent {
     const result = this.clean(event)
     if (

@@ -51,7 +51,6 @@ export interface EngineOptions {
   store: EventStore
   now: () => number
   emit: (event: AgentChatEvent) => Promise<void>
-  turnStarted?: (command: ProviderInput) => void
   checkpoint: (signal: AbortSignal) => Promise<Checkpoint>
   changedSince: (
     baseline: Checkpoint,

@@ -17,8 +17,9 @@ export class FakeClaudeQuery implements ClaudeQuery {
 
   open: ClaudeQueryFactory = (parameters) => {
     this.parameters = parameters
-    if (typeof parameters.prompt !== 'string')
-      this.input = parameters.prompt[Symbol.asyncIterator]()
+    if (typeof parameters.prompt === 'string')
+      throw new Error('The test requires streamed input.')
+    this.input = parameters.prompt[Symbol.asyncIterator]()
     return this
   }
 

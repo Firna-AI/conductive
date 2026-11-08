@@ -12,7 +12,6 @@ export class FakeAppServer implements ProcessPort {
   closed = false
   closeWait: Promise<void> | null = null
   onClosing: () => void = () => {}
-  onRequest: (method: string) => void = () => {}
 
   write(line: string): void {
     const value: unknown = JSON.parse(line)
@@ -27,7 +26,6 @@ export class FakeAppServer implements ProcessPort {
       result = { turn: { id: `codex-turn-${++this.turns}` } }
     if (method === 'turn/steer') result = { turnId: `codex-turn-${this.turns}` }
     queueMicrotask(() => this.line(JSON.stringify({ id: request.id, result })))
-    this.onRequest(method)
   }
 
   notify(method: string, params: unknown): void {
