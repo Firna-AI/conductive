@@ -591,9 +591,11 @@ Evidence: `.context/workspace-title-from-first-message/dev-page/`.
 
 Depends on: every other milestone
 
-- [ ] Run the runner tests, the targeted Worker tests, and the complete
+Evidence: `.context/workspace-title-from-first-message/gate-1.log`.
+
+- [x] Run the runner tests, the targeted Worker tests, and the complete
       gate `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
