@@ -168,6 +168,17 @@ export class LifecycleBoat {
         const path = url.searchParams.get('path')
         if (!path) throw new Error('Missing test file path')
         this.fileReads.push(path)
+        // Boat's file API reads only under /home/user or /tmp.
+        if (!/^\/(home\/user|tmp)(\/|$)/.test(path))
+          return Response.json(
+            {
+              ok: false,
+              code: 'invalid_path',
+              message:
+                'Path must resolve under /home/user or /tmp (work directory: /home/user).',
+            },
+            { status: 400 },
+          )
         response = Response.json({
           ok: true,
           type: 'file.read',

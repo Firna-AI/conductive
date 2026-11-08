@@ -87,8 +87,11 @@ in both units keeps the runtime folder, with the password and the tmux
 socket, when a unit stops or restarts. The readiness command returns no
 password in stdout or command history.
 
-The hook reads `/run/conductive-terminal/password` through the provider's
-bounded file API, with a 64-byte limit. It refuses a password that is not
+The provider's file API reads only under `/home/user` or `/tmp`, and both
+are on disk. So the hook binds the memory folder `/run/conductive-terminal`
+at `/home/user/.conductive-terminal`, and it reads the password there
+through the provider's bounded file API, with a 64-byte limit. The password
+stays in memory, and the disk holds only the empty mount point. It refuses a password that is not
 exactly 64 lowercase hexadecimal characters. It caches that password
 encrypted in D1. The cache update checks that the workspace still owns the
 same sandbox.

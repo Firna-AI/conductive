@@ -11,6 +11,7 @@ import {
   launcherScript,
   sessionServerScript,
   TERMINAL_RUNTIME,
+  TERMINAL_RUNTIME_VIEW,
 } from './scripts'
 
 export const TERMINAL_PORT = 7681
@@ -110,11 +111,13 @@ install -d -m 700 -o user -g user /run/conductive-terminal
 touch /run/conductive-terminal/enabled
 systemctl stop ttyd.service 2>/dev/null || true
 systemctl start conductive-terminal.service
-systemctl is-active --quiet conductive-terminal.service`
+systemctl is-active --quiet conductive-terminal.service
+install -d -m 700 -o user -g user ${TERMINAL_RUNTIME_VIEW}
+mountpoint -q ${TERMINAL_RUNTIME_VIEW} || mount --bind ${TERMINAL_RUNTIME} ${TERMINAL_RUNTIME_VIEW}`
   const result = await provider.command(privilegedCommand(command))
   if (result.exitCode !== 0 || result.timedOut)
     throw new ProviderError('unavailable', 502)
-  const file = await provider.readFile(`${TERMINAL_RUNTIME}/password`, 64)
+  const file = await provider.readFile(`${TERMINAL_RUNTIME_VIEW}/password`, 64)
   if (file.kind !== 'file') throw new ProviderError('invalid_response', 502)
   let password: string
   try {

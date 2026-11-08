@@ -56,7 +56,7 @@ it('installs an enabled ttyd service without an image password and starts with a
   const command: { command: string } = await harness.requests[0].json()
   expect(command.command).not.toContain('/run/conductive-terminal/password')
   expect(new URL(harness.requests[1].url).searchParams.get('path')).toBe(
-    '/run/conductive-terminal/password',
+    '/home/user/.conductive-terminal/password',
   )
   expect(command.command).toContain(
     'systemctl start conductive-terminal.service',

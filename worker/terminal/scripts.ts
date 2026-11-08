@@ -1,6 +1,11 @@
 import { shellArgument } from './privileged'
 
 export const TERMINAL_RUNTIME = '/run/conductive-terminal'
+/**
+ * The provider's file API reads only under /home/user or /tmp. The start hook
+ * binds the memory folder here, so the password stays out of the disk.
+ */
+export const TERMINAL_RUNTIME_VIEW = '/home/user/.conductive-terminal'
 
 export interface TerminalScriptOptions {
   runtimeDirectory: string
