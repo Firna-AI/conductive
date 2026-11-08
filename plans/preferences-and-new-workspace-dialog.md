@@ -318,17 +318,19 @@ Depends on: 3
 
 The Account page gets its tabs, and Preferences saves the choice.
 
-- [ ] Give the account route a tab in `src/app/router.ts`, with the
+- [x] Give the account route a tab in `src/app/router.ts`, with the
       address `/account/preferences`.
-- [ ] Show General and Preferences with `LinkTabs` in
+- [x] Show General and Preferences with `LinkTabs` in
       `src/shell/account/AccountScreen.tsx`, as in the mockup.
-- [ ] Add the Preferences tab with the New workspaces section, moved
+- [x] Add the Preferences tab with the New workspaces section, moved
       from General, and the new choice in it.
-- [ ] Test in `src/shell/account/AccountScreen.test.tsx` and
+- [x] Test in `src/shell/account/AccountScreen.test.tsx` and
       `src/app/router.test.ts`: the address opens Preferences, the tab
       shows the saved choice, a change saves it, and a failed save shows
       the error and keeps the saved choice.
-- [ ] Update `src/app/screens.md` with the tabs of the account.
+- [x] Update `src/app/screens.md` with the tabs of the account.
+
+Screenshots, test proofs, and logs: `.context/preferences-and-new-workspace-dialog/m4/`.
 
 ## Milestone 5: The New workspace dialog
 

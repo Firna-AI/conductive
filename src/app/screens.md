@@ -28,6 +28,12 @@ drafts, and New workspace.
   Continue to workspaces. Without invitations, or after Continue to
   workspaces, it opens Get started or the org of Get started. The
   `?invite=` link of an invitation email leads there.
+- The account has two tabs, General and Preferences, as the org settings
+  have. Each tab is a link with its own address. General holds the
+  sign-in, This Mac, GitHub, and the agents. The `?connect=` address of an
+  agent opens its Connect form on General. Preferences holds the New
+  workspaces section: Model and effort, and
+  [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
 - The account of the Mac app shows This Mac after the sign-in section. A
   browser shows none and asks no Mac.
 - Create org asks for the name and the initials, and lists the

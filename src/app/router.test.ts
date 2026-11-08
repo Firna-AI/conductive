@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'vitest'
-import { parseRoute, routes, SETTINGS_TABS, type Route } from './router'
+import {
+  ACCOUNT_TABS,
+  parseRoute,
+  routes,
+  SETTINGS_TABS,
+  type Route,
+} from './router'
 
 function parse(path: string): Route {
   const url = new URL(path, 'https://app.conductive.test')
@@ -10,7 +16,14 @@ describe('routes', () => {
   test('each screen and tab has an address that leads back to it', () => {
     const cases: readonly [string, Route][] = [
       [routes.home(), { screen: 'home' }],
-      [routes.account('codex'), { screen: 'account', connect: 'codex' }],
+      [
+        routes.account('codex'),
+        { screen: 'account', tab: 'general', connect: 'codex' },
+      ],
+      ...ACCOUNT_TABS.map((tab): [string, Route] => [
+        routes.accountTab(tab),
+        { screen: 'account', tab, connect: null },
+      ]),
       [routes.createOrg(true), { screen: 'create-org', first: true }],
       [
         routes.newWorkspace('acme', 'checkout'),
