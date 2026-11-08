@@ -7268,12 +7268,16 @@ checks of 16 and 16a to the work after the merge.
       Branch: `calummoore/conductor-alternative-architecture`.
 - [x] Commit with Conventional Commits and push the branch. Done on
       8 November 2026. Branch: `calummoore/conductor-alternative-architecture`.
-- [ ] Review the commits that no milestone review covered, the deploy
+- [x] Review the commits that no milestone review covered, the deploy
       fixes `a145db0..c54c8dd`, with the `implementation-review` skill, as
       decision 141 says. Report the findings, then apply the fix rule: fix
       the `fix now` findings, record follow-up items under
-      `plans/follow-ups/` for the rest, re-review once, and report.
-- [ ] Keep the open milestones in this plan for the later pull requests.
+      `plans/follow-ups/` for the rest, re-review once, and report. Done on
+      8 November 2026: two rounds found six findings, and `24146f2`,
+      `8485fc3`, and `834e1d3` fix all six. Evidence:
+      `.context/reviews/calummoore/conductor-alternative-architecture/findings.md`.
+      Branch: `calummoore/conductor-alternative-architecture`.
+- [x] Keep the open milestones in this plan for the later pull requests.
       Each open milestone merges into `main` through a later pull request.
       Orchestrator call on 8 November 2026, in place of the new plan that
       decision 135 named: decision 141 keeps this plan for the later pull
