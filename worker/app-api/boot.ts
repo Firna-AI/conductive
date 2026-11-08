@@ -8,7 +8,7 @@ import {
 import { MODELS_PATH } from '../../src/shared/agents'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import { choice, invalidInput } from '../chat/inputs'
-import { agentLoginContext } from '../chat/queries'
+import { loginSecret, agentLoginContext } from '../chat/queries'
 import type { AppDependencies, AppEnv } from '../env'
 import { requiredString } from '../http'
 import { encrypt } from '../security/crypto'
@@ -69,7 +69,7 @@ export async function bootRoute(
     return invalidInput()
   const kind: SaveAgentLoginRequest['kind'] = body.kind
   const ciphertext = await encrypt(
-    requiredString(body.secret),
+    loginSecret(requiredString(body.secret)),
     agentLoginContext(userId, agent),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )

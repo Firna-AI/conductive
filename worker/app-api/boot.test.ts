@@ -285,3 +285,24 @@ it('reports missing operator model configuration without blocking unrelated rout
   expect((await harness.request(API_PATHS.orgs, cookie)).status).toBe(200)
   expect((await harness.request(GET_STARTED_PATH, cookie)).status).toBe(200)
 })
+
+it('removes the spaces and line breaks that a wrapped token brings into a saved login', async () => {
+  const cookie = await harness.login()
+  const account = readAccount(
+    await (await harness.request(ACCOUNT_PATHS.account, cookie)).json(),
+  )
+  const saved = await harness.request(agentLoginPath('claude'), cookie, {
+    method: 'PUT',
+    body: JSON.stringify({
+      agent: 'claude',
+      kind: 'token',
+      secret: 'sk-ant-oat01-first part\n second part',
+    }),
+  })
+  expect(saved.status).toBe(200)
+  expect(await readAgentLogin(harness.env, account.user.id, 'claude')).toEqual({
+    agent: 'claude',
+    kind: 'token',
+    secret: 'sk-ant-oat01-firstpartsecondpart',
+  })
+})
