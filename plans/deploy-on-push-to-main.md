@@ -12,8 +12,8 @@ Worker, and checks the health route.
 
 The user chose the approach in a brainstorm on 8 November 2026: decision
 1 B and decision 2 B below. Decisions 3 and 4 came from the options check.
-The user chose decision 3 B on 8 November 2026. Decision 4 waits for the
-user. The survey of the other repositories is in
+The user chose decision 3 B on 8 November 2026, and answered decision 4 on
+the same day. The survey of the other repositories is in
 `.context/deploy-on-main/notes.md`. The change does not cover the Mac app,
 a staging deployment, pull request previews, or a clean-up of old runner
 archives.
@@ -164,6 +164,7 @@ Added on 8 November 2026 from option G of the options check.
 - **Related:** Decision 1. B closes the hand-deploy path that decision 1 B leaves open. Decision 3: the agents can also reach `main` through GitHub, so B protects the live app only together with decision 3 B or D.
 - **Recommendation:** B. It stops branch deploys, and the agents keep their tools to debug the live app. The options check kept B.
 - **Action:** ask the user, because the change needs your Cloudflare credentials, and it changes the tools of the agents in another workspace.
+- **Chosen:** No action, by the user on 8 November 2026. The hand token expires at midnight that night, so it stops working with no revoke. The plan adds no read-only token. The effect is as C.
 
 ## Design
 
@@ -289,8 +290,10 @@ so.
   is off.
 - The docs say that only `main` deploys. A hand deploy of Worker code from
   another branch stays live only until the next merge. A hand migration, a
-  D1 write, or a secret change stays after it. Decision 4 asks whether a
-  token should enforce this. Changed by the options check.
+  D1 write, or a secret change stays after it. Changed by the options
+  check. The hand token expires at midnight on 8 November 2026, as the
+  user said for decision 4. After that, the agents hold no Cloudflare
+  token that this plan knows of.
 
 **Tests.**
 
