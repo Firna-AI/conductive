@@ -148,6 +148,7 @@ export function readAccount(value: unknown): AccountResponse {
     user: nested(account, 'user', readUser),
     defaultChoice: nested(account, 'defaultChoice', readChoice),
     agentLogins: items(account, 'agentLogins', readLogin),
+    githubAppUrl: text(account, 'githubAppUrl'),
   }
 }
 

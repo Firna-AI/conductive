@@ -64,6 +64,7 @@ it('boots from operator models and persists account preferences and encrypted se
       { agent: 'claude', connected: false },
       { agent: 'codex', connected: false },
     ],
+    githubAppUrl: 'https://github.com/apps/conductive/installations/new',
   })
   const catalog = await harness.request(MODELS_PATH, cookie)
   expect(catalog.status).toBe(200)

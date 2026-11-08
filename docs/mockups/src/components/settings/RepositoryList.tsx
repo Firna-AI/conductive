@@ -7,7 +7,11 @@ import { ExternalLink } from '../common/ExternalLink'
 import { useControlSizes } from '../common/touch'
 import styles from './RepositoryList.module.css'
 
-const githubAccessUrl = 'https://github.com/settings/installations'
+/**
+ * The page of the GitHub App, which lists the person's GitHub accounts.
+ * The app gets the slug of its GitHub App from the Worker.
+ */
+const githubAccessUrl = 'https://github.com/apps/conductive/installations/new'
 
 /** One repository. `readOnly` drops its Add or Remove. */
 function Row(props: { repository: ReachableRepository; readOnly?: boolean }) {

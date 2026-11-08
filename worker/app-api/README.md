@@ -31,9 +31,10 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
   [Deployment inputs](../../docs/deployment.md#models) says. A missing or
   invalid value gives a 503 on its own route only.
 - An account reply reads `user_preferences` and the records of the agent
-  logins. A login write encrypts the secret with
-  `agentLoginContext(userId, agent)` and `BOAT_KEY_ENCRYPTION_KEY`. No reply
-  holds a stored secret.
+  logins. It also gives the page of the GitHub App from `GITHUB_APP_SLUG`,
+  so a screen links to that page without a GitHub read. A login write
+  encrypts the secret with `agentLoginContext(userId, agent)` and
+  `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
 - A new login or a change of kind sets `noReuse` to true for a Claude
   subscription token and false for an API key. Replacing a secret of the
   same kind keeps its preference. A `PATCH` changes only that login's
