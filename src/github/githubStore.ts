@@ -13,9 +13,11 @@ import {
 } from './githubClient'
 
 /**
- * The event stream of one workspace. The first message holds the stored
- * history after `afterEventNumber`. Later messages hold live events. The
- * returned function ends the subscription.
+ * The event stream of one workspace after `afterEventNumber`. It sends the
+ * stored history first, in one or more `history` pages, then live events.
+ * The pages of one replay share one cutoff, and a page can leave out event
+ * numbers. A page with more to come has `hasMore` and `nextAfterEventNumber`.
+ * The returned function ends the subscription.
  */
 export type SubscribeToWorkspace = (
   afterEventNumber: number,

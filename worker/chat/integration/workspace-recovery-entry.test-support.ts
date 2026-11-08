@@ -1,6 +1,7 @@
 import { readDeviceRecord } from '../../../src/shared/device-read'
 import { readDeviceValue } from '../../devices/storage'
 import { DEVICE_TEST_NOW } from '../../devices/clock.test-support'
+import { advanceScheduledAlarms } from '../../lifecycle/scheduled-alarms.test-support'
 import type { WorkspaceCompositionEnv } from '../workspace-integration'
 import { Workspace as ReviewWorkspace } from './workspace-review-entry.test-support'
 
@@ -9,6 +10,7 @@ export { default } from './workspace-review-entry.test-support'
 export class Workspace extends ReviewWorkspace {
   private readonly pendingWork: Promise<unknown>[]
   private readonly recoveryClock: { now: number }
+  private advanceRuns = 0
 
   constructor(context: DurableObjectState, env: WorkspaceCompositionEnv) {
     const pending: Promise<unknown>[] = []
@@ -23,8 +25,21 @@ export class Workspace extends ReviewWorkspace {
     this.recoveryClock = clock
   }
 
-  setRecoveryTime(now: number): void {
-    this.recoveryClock.now = now
+  override async advanceStartAlarm(at = this.recoveryClock.now): Promise<void> {
+    this.advanceRuns = await advanceScheduledAlarms(
+      {
+        now: () => this.recoveryClock.now,
+        setTime: (now) => {
+          this.recoveryClock.now = now
+        },
+      },
+      at,
+      () => [{ storage: this.ctx.storage, fire: () => this.alarm() }],
+    )
+  }
+
+  recoveryAdvanceRuns(): number {
+    return this.advanceRuns
   }
 
   recoveryAlarmAt(): Promise<number | null> {

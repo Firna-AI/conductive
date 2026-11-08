@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { sessionPaths } from '../../../src/shared/sessions'
+import { DEVICE_TEST_NOW } from '../../devices/clock.test-support'
 import { CLAUDE } from '../harness.test-support'
 import { record, string } from '../inputs'
 import { outerWorkerBundle } from './outer-runtime.test-support'
@@ -37,7 +38,12 @@ it('repairs a confirmed turn end in the alarm after a deadline update fails', as
     working: false,
   })
   active.boat.failDeadline = false
-  await actor.advanceStartAlarm()
+  await actor.advanceStartAlarm(DEVICE_TEST_NOW + 4_999)
+  expect(await actor.recoveryAdvanceRuns()).toBe(0)
+  expect(await actor.recoveryAlarmAt()).toBe(DEVICE_TEST_NOW + 5_000)
+  await actor.advanceStartAlarm(DEVICE_TEST_NOW + 5_000)
+  expect(await actor.recoveryAdvanceRuns()).toBe(1)
+  expect(await actor.recoveryAlarmAt()).toBe(DEVICE_TEST_NOW + 10_000)
   expect(await actor.readLifecycle()).toMatchObject({
     state: 'ready',
     runningSessions: [],

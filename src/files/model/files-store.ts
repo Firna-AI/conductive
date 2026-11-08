@@ -19,9 +19,10 @@ import {
 import type { FileTree } from './tree-model'
 
 /**
- * The workspace event stream. The first message holds the stored events
- * after `afterEventNumber`. Live events follow. The shell injects its
- * socket adapter, or `FakeWorkspaceEvents.subscribe` in development.
+ * The workspace event stream after `afterEventNumber`. It sends stored
+ * history in one or more pages, then live events. Live events wait for the
+ * final history page. The shell injects its socket adapter, or
+ * `FakeWorkspaceEvents.subscribe` in development.
  */
 export type FilesSubscribe = (
   afterEventNumber: number,
