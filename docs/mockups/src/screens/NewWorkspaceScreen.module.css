@@ -1,0 +1,41 @@
+.start {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.icon {
+  margin-bottom: 4px;
+  color: var(--ui-faint);
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-xl);
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: var(--ui-tracking-heading);
+}
+
+.body {
+  max-width: 340px;
+  margin: 0 0 8px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-md);
+  line-height: 1.5;
+}
+
+.chevron {
+  color: var(--ui-muted);
+}
+
+.note {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}

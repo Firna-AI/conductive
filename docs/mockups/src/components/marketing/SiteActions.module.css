@@ -1,0 +1,16 @@
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* The mark on the filled button takes the colour of the label. */
+.mark {
+  color: var(--ui-on-solid);
+}

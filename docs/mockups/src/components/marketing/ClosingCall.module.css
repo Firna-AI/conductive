@@ -1,0 +1,41 @@
+.call {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 34px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.028em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.text {
+  max-width: 520px;
+  margin: 0 0 12px;
+  color: var(--ui-muted);
+  font-size: 16px;
+  line-height: 1.6;
+  text-wrap: balance;
+}
+
+.mobile {
+  align-items: stretch;
+}
+
+.mobile .title {
+  font-size: 26px;
+}
+
+.mobile .text {
+  font-size: 15px;
+}

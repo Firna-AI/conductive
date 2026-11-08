@@ -1,0 +1,70 @@
+.settings {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  height: calc(var(--ui-control-height) - 4px);
+  min-height: var(--ui-touch-min);
+  padding: 0 8px;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.settings:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+.current,
+.current:hover {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+}
+
+.alert {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ui-rose);
+}
+
+.newWorkspace {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: var(--ui-row-height);
+  min-height: var(--ui-touch-min);
+  padding: 0 10px;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+  text-decoration: none;
+}
+
+.newWorkspace:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+.selected,
+.selected:hover {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+}
+
+/* The icon fills the 12 px column of the status marks below it. */
+.plus {
+  flex-shrink: 0;
+  width: 12px;
+  color: var(--ui-muted);
+}
+
+.page {
+  gap: 11px;
+  height: calc(var(--ui-row-height) + 14px);
+  padding: 0 12px;
+  font-size: var(--ui-text-lg);
+}

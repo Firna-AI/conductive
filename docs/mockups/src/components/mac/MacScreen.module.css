@@ -1,0 +1,97 @@
+/*
+ * The view holds the screen of the Mac, which lays out at 1440 × 900.
+ * `--mac-scale` fits it into the width of the view, in steps.
+ */
+.viewport {
+  --mac-scale: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--ui-screen-height);
+  overflow: hidden;
+  background: var(--ui-bg);
+}
+
+@media (max-width: 1439px) {
+  .viewport {
+    --mac-scale: 0.88;
+  }
+}
+
+@media (max-width: 1267px) {
+  .viewport {
+    --mac-scale: 0.7;
+  }
+}
+
+@media (max-width: 1007px) {
+  .viewport {
+    --mac-scale: 0.52;
+  }
+}
+
+@media (max-width: 748px) {
+  .viewport {
+    --mac-scale: 0.33;
+  }
+}
+
+@media (max-width: 474px) {
+  .viewport {
+    --mac-scale: 0.27;
+  }
+}
+
+.stage {
+  position: relative;
+  flex-shrink: 0;
+  width: calc(1440px * var(--mac-scale));
+  height: calc(900px * var(--mac-scale));
+}
+
+.screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1440px;
+  height: 900px;
+  overflow: hidden;
+  transform: scale(var(--mac-scale));
+  transform-origin: 0 0;
+}
+
+/* The desktop of macOS behind a window, in the tones of the scheme. */
+.desktop {
+  background:
+    radial-gradient(
+      110% 90% at 18% 8%,
+      var(--ui-primary-soft),
+      transparent 62%
+    ),
+    linear-gradient(160deg, var(--ui-bg2), var(--ui-bg));
+}
+
+/* A window of macOS: rounded corners, a hairline edge, and a shadow. */
+.window {
+  --ui-screen-height: 100%;
+
+  position: absolute;
+  top: 44px;
+  left: 72px;
+  width: 1296px;
+  height: 812px;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px var(--ui-border2),
+    0 28px 70px -18px rgba(0, 0, 0, 0.45);
+}
+
+/* In full screen the app fills the screen, without a window edge. */
+.fullScreen {
+  --ui-screen-height: 100%;
+
+  position: absolute;
+  inset: 0;
+}

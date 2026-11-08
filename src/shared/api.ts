@@ -1,0 +1,37 @@
+export const API_PATHS = {
+  githubSignIn: '/api/auth/github',
+  githubCallback: '/api/auth/github/callback',
+  signOut: '/api/auth/logout',
+  session: '/api/session',
+  orgs: '/api/orgs',
+} as const
+
+export function orgPath(orgId: string): string {
+  return `${API_PATHS.orgs}/${encodeURIComponent(orgId)}`
+}
+
+export interface User {
+  id: string
+  githubId: number
+  githubLogin: string
+  displayName: string | null
+  avatarUrl: string | null
+}
+
+export type OrgRole = 'admin' | 'member'
+
+export interface Org {
+  id: string
+  name: string
+  role: OrgRole
+}
+
+export interface ApiErrorBody {
+  error: { code: string; message: string }
+}
+
+/** Wire dates are Unix milliseconds. IDs and model names are opaque strings. */
+export type Timestamp = number
+
+/** Writes with no fields still send an empty JSON object through the app gate. */
+export type EmptyRequest = Record<string, never>

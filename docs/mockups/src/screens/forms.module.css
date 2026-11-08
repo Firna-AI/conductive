@@ -1,0 +1,42 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 560px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* A field that Firna does not draw, labelled as Firna labels its fields. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.fieldHint {
+  color: var(--ui-placeholder);
+  font-size: var(--ui-text-xs);
+  line-height: 16.5px;
+}
+
+/* A page that stands alone on desktop, without the rail and the sidebar. */
+.standalone {
+  display: flex;
+  flex-direction: column;
+  height: var(--ui-screen-height);
+  overflow: hidden;
+  background: var(--ui-surface);
+}

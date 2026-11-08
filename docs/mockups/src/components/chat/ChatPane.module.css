@@ -1,0 +1,134 @@
+.chat {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/*
+ * Column-reverse keeps the newest messages in view, as a chat scrolls. A
+ * short transcript still starts at the top, through its auto bottom margin.
+ */
+.scroll {
+  display: flex;
+  flex: 1;
+  flex-direction: column-reverse;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.transcript {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-chat-gap);
+  width: 100%;
+  max-width: var(--ui-chat-width);
+  margin: 0 auto auto;
+  padding: 24px 28px 14px;
+  box-sizing: border-box;
+}
+
+.empty {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/*
+ * A short chat shrinks the region of the requests first, so the composer
+ * and the notices keep their full height.
+ */
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-height: 0;
+  max-width: var(--ui-chat-width);
+  margin: 0 auto;
+  padding: 0 20px 16px;
+  box-sizing: border-box;
+}
+
+/*
+ * The requests that wait, just above the composer. The region takes at most
+ * 40% of the window, so the transcript and the composer stay in view, and a
+ * long command or many requests scroll inside it. The keyboard scrolls it
+ * from any control in it, and the focus keeps a control clear of the fade.
+ * The menu of a request opens in the top layer, so the region never cuts it.
+ */
+.requests {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  max-height: 40dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 24px;
+}
+
+/*
+ * An edge that cuts requests fades out, so the region shows that it holds
+ * more. Its scroll position drives each fade, and a region that holds all
+ * of its requests shows none.
+ */
+@property --requests-fade-start {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --requests-fade-end {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes requests-fade-start {
+  from {
+    --requests-fade-start: 0px;
+  }
+
+  to {
+    --requests-fade-start: 24px;
+  }
+}
+
+@keyframes requests-fade-end {
+  from {
+    --requests-fade-end: 24px;
+  }
+
+  to {
+    --requests-fade-end: 0px;
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .requests {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--requests-fade-start),
+      #000 calc(100% - var(--requests-fade-end)),
+      transparent
+    );
+    animation:
+      requests-fade-start linear both,
+      requests-fade-end linear both;
+    animation-timeline: scroll(self), scroll(self);
+    animation-range:
+      0 24px,
+      calc(100% - 24px) 100%;
+  }
+}
+
+.mobile .transcript {
+  padding: 16px 16px 10px;
+}
+
+.mobile .footer {
+  padding: 0 10px 10px;
+}

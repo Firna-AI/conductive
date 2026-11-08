@@ -1,0 +1,70 @@
+/*
+ * The frame is a size container, so the layout narrows with the frame, not
+ * the window. In the app the frame fills the window; on the marketing site it
+ * fills a picture of the screen.
+ */
+.frame {
+  display: flex;
+  position: relative;
+  height: var(--ui-screen-height);
+  overflow: hidden;
+  container: app-frame / inline-size;
+}
+
+.sidebar {
+  display: flex;
+  position: relative;
+  flex-shrink: 0;
+  flex-direction: column;
+  width: var(--ui-sidebar-width);
+  min-height: 0;
+  border-right: 1px solid var(--ui-border);
+  background: var(--ui-sidebar);
+}
+
+/* The left panel of the Mac app: the window controls over the rail and the sidebar. */
+.left {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.leftBody {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--ui-surface);
+}
+
+@container app-frame (max-width: 1279px) {
+  .sidebar {
+    width: calc(var(--ui-sidebar-width) - 24px);
+  }
+}
+
+@container app-frame (max-width: 899px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+/* A phone raises every local touch target to 44px. */
+.mobile {
+  --ui-touch-min: 44px;
+
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  height: var(--ui-screen-height);
+  overflow: hidden;
+  background: var(--ui-surface);
+}

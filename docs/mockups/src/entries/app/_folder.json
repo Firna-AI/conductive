@@ -1,0 +1,21 @@
+{
+  "order": [
+    "sign-in",
+    "shell",
+    "sections",
+    "orgs",
+    "account",
+    "banner",
+    "new-workspace",
+    "org-settings",
+    "chat",
+    "mac-commands",
+    "sessions",
+    "reassign",
+    "archive",
+    "composer",
+    "files",
+    "tools",
+    "panels"
+  ]
+}

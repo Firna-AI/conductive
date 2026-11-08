@@ -1,0 +1,27 @@
+/*
+ * The page before the app draws, in the colour of the window, so that no
+ * flash shows. The shell draws the window controls.
+ */
+:root {
+  color-scheme: dark light;
+  --desktop-bg: #0b0c0e;
+  --desktop-ink: #e7e9ec;
+}
+
+body {
+  margin: 0;
+  background: var(--desktop-bg);
+  color: var(--desktop-ink);
+  font:
+    13px Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --desktop-bg: #f3f5f7;
+    --desktop-ink: #121519;
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "title": "User flows",
+  "order": [
+    "sign-up",
+    "create-workspace",
+    "reopen-stopped-workspace",
+    "create-org",
+    "mac-command"
+  ]
+}

@@ -1,0 +1,212 @@
+/* The header and the footer of every page, with the lockup of the brand. */
+.header {
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 1184px;
+  height: 64px;
+  margin: 0 auto;
+  padding: 0 32px;
+  box-sizing: border-box;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.header-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ui-touch-min);
+  padding: 6px 10px;
+  border-radius: var(--ui-radius-lg);
+  color: var(--ui-ink2);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.header-link:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+.header-nav > :last-child {
+  margin-left: 8px;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ui-touch-min);
+  text-decoration: none;
+}
+
+/*
+ * The lockup of the brand: the tile and the name, unchanged. It scales with
+ * its own proportions. Its tile is 20px high, so the 10px gap under it in
+ * the footer keeps the clear space of half a tile that the brand asks for.
+ */
+.wordmark picture,
+.wordmark img {
+  display: block;
+}
+
+.wordmark img {
+  width: auto;
+  height: 20px;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 56px 0 40px;
+  border-top: 1px solid var(--ui-border);
+  background: var(--ui-sidebar);
+}
+
+/* A narrow desktop window wraps the last columns under the others. */
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px;
+  width: 100%;
+  max-width: 1184px;
+  margin: 0 auto;
+  padding: 0 32px;
+  box-sizing: border-box;
+}
+
+.footer-brand {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.footer-tagline {
+  max-width: 300px;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.footer-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 160px;
+}
+
+.footer-heading {
+  margin: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: var(--ui-label-case);
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ui-touch-min);
+  color: var(--ui-ink2);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  color: var(--ui-ink);
+}
+
+/* The copyright, and the legal pages after it. */
+.footer-bottom {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+}
+
+.footer-legal {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 13px;
+}
+
+.legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 18px;
+}
+
+.legal-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ui-touch-min);
+  color: var(--ui-muted);
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.legal-link:hover {
+  color: var(--ui-ink);
+}
+
+/* A phone keeps the wordmark and Sign in: the main action follows at once. */
+@media (max-width: 759.98px) {
+  .header-inner {
+    height: 56px;
+    padding: 0 12px 0 20px;
+  }
+
+  .header-nav > :last-child {
+    margin-left: 0;
+  }
+
+  .header-wide {
+    display: none;
+  }
+
+  .footer {
+    gap: 28px;
+    padding: 40px 0 32px;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    gap: 28px;
+    padding: 0 20px;
+  }
+
+  .footer-links {
+    gap: 0;
+  }
+
+  .footer-bottom {
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

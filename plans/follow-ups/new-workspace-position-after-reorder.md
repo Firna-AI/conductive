@@ -1,0 +1,60 @@
+# New workspace sorts second after a reorder
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-08, from branch `conductor/boat-native-remote-workspaces-milestone-15i`, review round 2, a new problem of the finding 5 check.
+- **Location:** `worker/lifecycle/workspace-data.ts:125`, `worker/app-api/shell-data.ts:70`, `worker/app-api/feature-workspaces-data.ts:11`, `src/app/list-changes.ts:24`, and `src/app/dev/create-routes.ts:146`.
+- **Reason:** The fix changes one insert with no migration, so waiting does not make it harder.
+
+- **Terms:**
+  - **Section:** a named group of workspaces in the workspace list of an org.
+  - **Position:** the stored integer `workspaces.position` that orders the workspaces of a section, with the default 0.
+  - **List read:** `shellWorkspaces` in `worker/app-api/shell-data.ts`, which gives the app the workspace list of an org.
+- **Background:**
+  - The create path inserts the new workspace row at `worker/lifecycle/workspace-data.ts:125`.
+  - The insert names no `position`, so the row takes the default 0 from `migrations/202611060100_contracts.sql:34`.
+  - The list read sorts the rows of each section by `w.position`, then `w.created_at`, then `w.id`.
+  - The move route reads a section in the same order, in `orderedSectionWorkspaceIds` of `worker/app-api/feature-workspaces-data.ts`.
+  - A workspace move writes the positions 0, 1, 2, and so on, for its whole target section.
+  - The visual spec puts a new workspace at the top of its section.
+  - `workspaceSections` in `docs/mockups/src/components/workspaces/sections.ts` says that "a new one joins the top of its section".
+  - The app does the same. `workspaceUpdated` in `src/app/list-changes.ts:24` puts a new workspace first.
+  - The dev fake does too, at `src/app/dev/create-routes.ts:146`.
+  - The protocol says only which section a new workspace joins, in the Sections rules of `docs/protocol/orgs-and-members.md`.
+- **Problem:**
+  - After a move in a section, a new workspace of that section reads second.
+  - The first row of the move keeps position 0. It is older than the new row, so it sorts first.
+  - Before any move in a section, each row has position 0, so the new row reads last.
+  - The base branch had this order before the move routes existed.
+  - So the app shows the new row first. The next list read, or another tab, shows it second or last.
+  - Evidence:
+    - A one-time run used the real data functions with an in-memory Miniflare D1 and every migration.
+    - It inserted the new row `n` as `workspace-data.ts` does.
+    - With rows `a`, `b`, and `c` at position 0, the read gave `a, b, c, n`, all at position 0.
+    - A move of `c` to index 0 gave `c:0, a:1, b:2`. The new row `n` then read as `c, n, a, b`.
+    - No route-level run took place.
+- **Impact if no action:** A new workspace jumps from the top to second place, or to the last place, at the next list read. People look for it in the wrong place.
+- **Root question:** How does a new workspace take the top place of its section in every list read?
+- **Options:**
+  - **A.** Give the new row a position below each active row of its section, inside the insert batch.
+    - For example, use the lowest position minus 1, or 0 for an empty section.
+    - A later move numbers the section from 0 again.
+    - Add one regression for each case above: before a move and after a move.
+    - Effort: Small.
+  - **B.** Number the section again in the insert batch.
+    - Add 1 to the position of each row of the section.
+    - Insert the new row at 0.
+    - It writes every row of the section at each create.
+    - Effort: Small.
+  - **C.** Sort ties newest first, in the list read and in the move route.
+    - A new row with position 0 then sorts first.
+    - It also reverses each section that nobody moved, which shows the oldest row first today.
+    - Effort: Small.
+- **Left out:**
+  - Put new workspaces last in the server, the app, and the dev fake: it changes the visual spec. So it needs the user.
+  - Change nothing: the app and the list read keep disagreeing.
+- **Wider fix:** A. The insert gives the new row its place, so no reader or client needs a rule for ties.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/atomic-workspace-and-section-moves.md`. Both items change how rows get a `position`. Either can go first. The second fix must keep the rule of the first.
+- **Recommendation:** A. It writes one row. It keeps the order of the other rows. It meets the visual spec before and after a move.
+- **Action:** fix after merge, apply A, because a manual move corrects the place until the fix lands.

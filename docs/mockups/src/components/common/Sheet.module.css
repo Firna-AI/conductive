@@ -1,0 +1,59 @@
+.layer {
+  display: flex;
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 8, 0.55);
+}
+
+/*
+ * A long sheet stops below the top of the screen, so a strip of the dimmed
+ * page still shows. Its body scrolls, and its handle and title stay.
+ */
+.sheet {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 88%;
+  padding: 8px 8px 22px;
+  border: 1px solid var(--ui-border2);
+  border-bottom: 0;
+  border-radius: var(--ui-radius-xxl) var(--ui-radius-xxl) 0 0;
+  background: var(--ui-composer);
+  box-shadow: 0 -8px 28px var(--ui-shadow);
+}
+
+.handle {
+  flex-shrink: 0;
+  width: 36px;
+  height: 4px;
+  margin: 0 auto 8px;
+  border-radius: 2px;
+  background: var(--ui-border2);
+}
+
+.title {
+  flex-shrink: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 2px 12px 8px;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-lg);
+  font-weight: var(--ui-weight-heading);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The content of a sheet, which scrolls when the sheet reaches its limit. */
+.body {
+  min-height: 0;
+  overflow-y: auto;
+}

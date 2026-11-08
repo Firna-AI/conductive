@@ -1,0 +1,39 @@
+.bar {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 6px 4px 12px;
+  border-top: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-height: var(--ui-touch-min);
+  color: var(--ui-muted);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 13px;
+  text-decoration: none;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 26px;
+  border-radius: var(--ui-radius-md);
+}
+
+.selected {
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-strong);
+}
+
+.selected .icon {
+  background: var(--ui-selected);
+}

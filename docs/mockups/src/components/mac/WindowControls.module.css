@@ -1,0 +1,63 @@
+/*
+ * The top of the left panel, as high as the top bars of the app. It moves
+ * the window, as the other top bars do, and its buttons do not.
+ */
+.controls {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  height: var(--ui-bar-height);
+  padding: 0 6px 0 8px;
+  border-right: 1px solid var(--ui-border);
+  background: var(--ui-sidebar);
+  box-sizing: border-box;
+}
+
+/* The space that the window buttons take, in a window only. */
+.reserved {
+  flex-shrink: 0;
+  width: 64px;
+}
+
+/*
+ * The window buttons sit inset at the top left of the window, centred in
+ * the height of the top bars.
+ */
+.buttons {
+  display: flex;
+  position: absolute;
+  z-index: 60;
+  top: calc((var(--ui-bar-height) - 12px) / 2);
+  left: 14px;
+  gap: 8px;
+}
+
+/* The native colours of macOS, in every colour scheme of the app. */
+.button {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.18);
+}
+
+.close {
+  background: #ff5f57;
+}
+
+.minimize {
+  background: #febc2e;
+}
+
+.zoom {
+  background: #28c840;
+}
+
+/* Behind another app the buttons turn grey. */
+.inactive .button {
+  background: var(--ui-border2);
+}
+
+.spacer {
+  flex: 1;
+}

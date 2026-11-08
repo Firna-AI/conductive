@@ -1,0 +1,85 @@
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.code {
+  margin: 0;
+  padding: 10px 0;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  line-height: 1.6;
+}
+
+.line {
+  display: flex;
+  min-width: max-content;
+}
+
+.number {
+  flex-shrink: 0;
+  width: 42px;
+  padding-right: 12px;
+  color: var(--ui-faint);
+  text-align: right;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.text {
+  padding-right: 16px;
+  white-space: pre;
+}
+
+.keyword {
+  color: var(--ui-code-keyword);
+}
+
+.string {
+  color: var(--ui-code-string);
+}
+
+.comment {
+  color: var(--ui-code-comment);
+  font-style: italic;
+}
+
+.number-token {
+  color: var(--ui-code-number);
+}
+
+.type {
+  color: var(--ui-code-type);
+}
+
+.added {
+  background: var(--ui-diff-added);
+}
+
+.removed {
+  background: var(--ui-diff-removed);
+}
+
+.hunk {
+  padding: 3px 16px;
+  background: var(--ui-diff-hunk);
+  color: var(--ui-muted);
+  white-space: pre;
+}
+
+.sign {
+  flex-shrink: 0;
+  width: 16px;
+  color: var(--ui-muted);
+  text-align: center;
+}
+
+.added .sign {
+  color: var(--ui-success);
+}
+
+.removed .sign {
+  color: var(--ui-rose);
+}

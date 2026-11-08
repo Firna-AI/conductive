@@ -1,0 +1,127 @@
+/*
+ * The desktop page keeps the mockup's columns: 281 px where the rail and the
+ * sidebar sit, the chat column, and a 441 px right column. It is positioned,
+ * so a dialog covers the whole page, as it covers the app frame.
+ */
+.desktop {
+  display: flex;
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--ui-surface);
+}
+
+.centre {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.right {
+  flex-shrink: 0;
+  width: 441px;
+  border-left: 1px solid var(--ui-border);
+  background: var(--ui-panel);
+  box-sizing: border-box;
+}
+
+.panel {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 8px;
+  width: 281px;
+  padding: 12px;
+  overflow-y: auto;
+  border-right: 1px solid var(--ui-border);
+  background: var(--ui-sidebar);
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  box-sizing: border-box;
+}
+
+.heading {
+  margin: 6px 0 2px;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-transform: uppercase;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+}
+
+.select {
+  width: 150px;
+  height: 24px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.log {
+  margin: 4px 0 0;
+  padding: 0 0 0 14px;
+  color: var(--ui-muted);
+}
+
+/* The phone page: a 390 px screen, with the controls beside or under it. */
+.mobileRoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  min-height: 100vh;
+  background: var(--ui-bg);
+}
+
+.phone {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  width: 390px;
+  max-width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--ui-surface);
+}
+
+.mobileRoot .panel {
+  width: 390px;
+  max-width: 100vw;
+  min-height: 100vh;
+  border-right: 0;
+}
+
+/* The place of the back button of the app's phone header. */
+.back {
+  flex-shrink: 0;
+  width: 44px;
+}
+
+/* The This Mac section, as the account of the Mac app places it. */
+.account {
+  overflow: auto;
+  flex: 1;
+  padding: 24px;
+}

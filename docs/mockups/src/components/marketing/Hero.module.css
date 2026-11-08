@@ -1,0 +1,112 @@
+/*
+ * The picture of the app is a 1440 px screen. `--frame-scale` fits it into
+ * the width of the page, in steps, because a view runs no script.
+ */
+.hero {
+  --frame-scale: 0.42;
+
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+  gap: 64px;
+  padding: 96px 32px 112px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+@media (min-width: 760px) {
+  .hero {
+    --frame-scale: 0.5;
+  }
+}
+
+@media (min-width: 980px) {
+  .hero {
+    --frame-scale: 0.625;
+  }
+}
+
+@media (min-width: 1180px) {
+  .hero {
+    --frame-scale: 0.75;
+  }
+}
+
+@media (min-width: 1440px) {
+  .hero {
+    --frame-scale: 0.85;
+  }
+}
+
+/* A faint dot grid, like the dot marks of the app, that fades out. */
+.hero::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image: radial-gradient(
+    circle,
+    var(--ui-border2) 1px,
+    transparent 1.4px
+  );
+  background-size: 20px 20px;
+  content: '';
+  mask-image: radial-gradient(
+    ellipse 75% 55% at 50% 0%,
+    black 20%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 720px;
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 56px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+.text {
+  max-width: 600px;
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 18px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.copy > :last-child {
+  margin-top: 10px;
+}
+
+.picture {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.mobile {
+  gap: 44px;
+  padding: 40px 20px 64px;
+}
+
+.mobile .title {
+  font-size: 36px;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+.mobile .text {
+  font-size: 16px;
+}

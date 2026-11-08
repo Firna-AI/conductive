@@ -1,0 +1,36 @@
+.intro {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-lg);
+  line-height: 1.55;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.strong {
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-strong);
+}
+
+/* The way into the first org, after the last step. */
+.finish {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 2px;
+}
+
+.finishText {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-lg);
+}

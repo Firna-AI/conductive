@@ -1,0 +1,48 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "conductive",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-11-06",
+  "triggers": { "crons": ["*/15 * * * *"] },
+  // The deployment serves only its own hostnames.
+  "workers_dev": false,
+  "preview_urls": false,
+  // The other public variables of docs/deployment.md are set on the Worker
+  // itself, so that each deploy keeps them.
+  "keep_vars": true,
+  // Workers Logs keeps each log line, also of the workspace objects.
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    // A query string can hold a sign-in code or a preview credential.
+    "redact_query_string": true,
+  },
+  "routes": [
+    { "pattern": "conductive.build", "custom_domain": true },
+    { "pattern": "app.conductive.build", "custom_domain": true },
+    { "pattern": "api.conductive.build", "custom_domain": true },
+    { "pattern": "*.conductive.page/*", "zone_name": "conductive.page" },
+  ],
+  "vars": {
+    "MACHINE_ORIGIN": "https://api.conductive.build",
+    "PREVIEW_DOMAIN": "conductive.page",
+  },
+  "assets": {
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true,
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "WORKSPACES", "class_name": "Workspace" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Workspace"] }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "conductive",
+      // The production database, created in Western Europe.
+      "database_id": "50e387ff-2b37-4221-a0dc-fe999703e559",
+      "migrations_dir": "migrations",
+    },
+  ],
+}

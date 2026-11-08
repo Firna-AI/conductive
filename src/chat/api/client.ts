@@ -1,0 +1,145 @@
+import type { ApiClient } from '../../app/api/client'
+import { ACCOUNT_PATHS } from '../../shared/account'
+import { MODELS_PATH, type AgentChoice } from '../../shared/agents'
+import { orgPath, type EmptyRequest } from '../../shared/api'
+import { chatHistoryPath } from '../../shared/events'
+import { filePaths } from '../../shared/files'
+import { membersPath } from '../../shared/members'
+import type {
+  SendMessageRequest,
+  UploadAttachmentRequest,
+} from '../../shared/messages'
+import {
+  retryMessagePath,
+  sessionPath,
+  sessionPaths,
+  sessionsPath,
+  type ChangeModelRequest,
+  type CloseSessionRequest,
+  type CreateSessionRequest,
+  type InterruptRequest,
+  type RenameSessionRequest,
+} from '../../shared/sessions'
+import {
+  workspaceViewPath,
+  type UpdateWorkspaceViewRequest,
+} from '../../shared/workspace-view'
+import { workspacePath, workspacePaths } from '../../shared/workspaces'
+import {
+  readAccount,
+  readAttachmentResponse,
+  readChangeModel,
+  readInterrupt,
+  readMembers,
+  readModels,
+  readOrg,
+  readSendResponse,
+  readSessionResponse,
+  readSessions,
+  readView,
+} from './read-responses'
+import { readStoredEvents, readWorkspaceResponse } from './read-workspace'
+
+export interface WorkspaceTarget {
+  orgId: string
+  workspaceId: string
+}
+
+const empty: EmptyRequest = {}
+
+/**
+ * The chat routes of one workspace, through the shared route builders and
+ * the JSON client of the app. A failure throws the client's `ApiError`, with
+ * the Worker's code and product message.
+ */
+export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
+  const { orgId, workspaceId } = target
+  const session = (id: string) => sessionPath(orgId, workspaceId, id)
+  const routes = (id: string) => ({
+    close: sessionPaths.close(orgId, workspaceId, id),
+    reopen: sessionPaths.reopen(orgId, workspaceId, id),
+    messages: sessionPaths.messages(orgId, workspaceId, id),
+    interrupt: sessionPaths.interrupt(orgId, workspaceId, id),
+    model: sessionPaths.model(orgId, workspaceId, id),
+  })
+
+  return {
+    workspace: () =>
+      client.get(workspacePath(orgId, workspaceId), readWorkspaceResponse),
+    resume: () =>
+      client.send(
+        'POST',
+        workspacePaths.resume(orgId, workspaceId),
+        empty,
+        readWorkspaceResponse,
+      ),
+    sessions: () => client.get(sessionsPath(orgId, workspaceId), readSessions),
+    /**
+     * One page of the stored history of one session. A later page names the
+     * cutoff of the first page, so all pages hold the state through it.
+     */
+    history: (sessionId: string, after = 0, through?: number) =>
+      client.get(
+        chatHistoryPath(orgId, workspaceId, sessionId, after, through),
+        readStoredEvents,
+      ),
+    view: () => client.get(workspaceViewPath(orgId, workspaceId), readView),
+    saveView: (view: UpdateWorkspaceViewRequest) =>
+      client.send('PUT', workspaceViewPath(orgId, workspaceId), view, readView),
+    models: () => client.get(MODELS_PATH, readModels),
+    account: () => client.get(ACCOUNT_PATHS.account, readAccount),
+    org: () => client.get(orgPath(orgId), readOrg),
+    /** The members of the org, so the chat names the member who pressed Stop. */
+    members: () => client.get(membersPath(orgId), readMembers),
+    createSession: (choice: AgentChoice) =>
+      client.send(
+        'POST',
+        sessionsPath(orgId, workspaceId),
+        { choice } satisfies CreateSessionRequest,
+        readSessionResponse,
+      ),
+    renameSession: (id: string, title: string) =>
+      client.send(
+        'PATCH',
+        session(id),
+        { title } satisfies RenameSessionRequest,
+        readSessionResponse,
+      ),
+    closeSession: (id: string, stopRunningTurn: boolean) =>
+      client.send(
+        'POST',
+        routes(id).close,
+        { stopRunningTurn } satisfies CloseSessionRequest,
+        readSessionResponse,
+      ),
+    reopenSession: (id: string) =>
+      client.send('POST', routes(id).reopen, empty, readSessionResponse),
+    send: (id: string, request: SendMessageRequest) =>
+      client.send('POST', routes(id).messages, request, readSendResponse),
+    retry: (id: string, messageId: string) =>
+      client.send(
+        'POST',
+        retryMessagePath(orgId, workspaceId, id, messageId),
+        empty,
+        readSendResponse,
+      ),
+    interrupt: (id: string, turnId: string) =>
+      client.send(
+        'POST',
+        routes(id).interrupt,
+        { turnId } satisfies InterruptRequest,
+        readInterrupt,
+      ),
+    changeModel: (id: string, request: ChangeModelRequest) =>
+      client.send('PUT', routes(id).model, request, readChangeModel),
+    attach: (request: UploadAttachmentRequest) =>
+      client.send(
+        'POST',
+        filePaths.attachments(orgId, workspaceId),
+        request,
+        readAttachmentResponse,
+      ),
+  }
+}
+
+export type ChatApi = ReturnType<typeof createChatApi>

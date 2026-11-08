@@ -1,0 +1,164 @@
+/*
+ * A compact card with a full hairline outline, as the other cards of the
+ * chat. It is a container, so a narrow chat moves the actions under the
+ * command.
+ */
+.pending {
+  container: pending / inline-size;
+
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px 6px 12px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+}
+
+/* The command, with the actions or the state at its end. */
+.head {
+  display: flex;
+  align-items: flex-start;
+  column-gap: 8px;
+  row-gap: 4px;
+}
+
+/* The icon and the first line of the command centre on the buttons. */
+.icon {
+  flex-shrink: 0;
+  margin-top: 6px;
+  color: var(--ui-muted);
+}
+
+.command {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  padding-top: 4px;
+}
+
+/*
+ * The actions, or the state. The menu of the actions opens from them. Each
+ * request scopes the name, so a menu keeps to the actions of its request.
+ */
+.end {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--ui-control-height);
+  anchor-name: --command-actions;
+  anchor-scope: --command-actions;
+}
+
+/*
+ * The actions of the request that draws its menu open also name the menu
+ * that the chat draws outside the region of the requests.
+ */
+.endDrawn {
+  anchor-name: --command-actions, --drawn-choices;
+}
+
+/* The Mac, the time limit, and Details, under the command. */
+.details {
+  margin-left: 22px;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  width: fit-content;
+  min-height: var(--ui-touch-min);
+  margin-left: -4px;
+  padding: 1px 4px;
+  border-radius: var(--ui-radius-sm);
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary:hover {
+  background: var(--ui-soft);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 10px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--ui-ink2);
+  font-weight: 500;
+}
+
+.chevron {
+  flex-shrink: 0;
+  transition: transform 120ms ease;
+}
+
+.details[open] .chevron {
+  transform: rotate(180deg);
+}
+
+/* The reason of a longer time limit. */
+.why {
+  color: var(--ui-ink2);
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 4px 0 4px;
+}
+
+.fact {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.term {
+  flex-shrink: 0;
+  width: 72px;
+  color: var(--ui-muted);
+}
+
+.value,
+.mono {
+  min-width: 0;
+  margin: 0;
+  color: var(--ui-ink);
+  overflow-wrap: anywhere;
+}
+
+.mono {
+  font-family: var(--ui-font-mono);
+}
+
+/* A narrow chat, such as on a phone, puts the end under the command. */
+@container pending (max-width: 440px) {
+  .head {
+    flex-wrap: wrap;
+  }
+
+  .end {
+    flex-basis: 100%;
+    padding-left: 22px;
+    box-sizing: border-box;
+  }
+}

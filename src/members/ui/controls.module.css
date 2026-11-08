@@ -1,0 +1,9 @@
+/* The scope takes no box, so the sections stay children of the page column. */
+.scope {
+  display: contents;
+}
+
+/* A phone raises every local touch target to 44 px. */
+.touch {
+  --ui-touch-min: 44px;
+}

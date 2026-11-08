@@ -1,0 +1,104 @@
+/*
+ * The window controls of the Mac app, and the top bars that move its
+ * window. A browser never gets these classes.
+ */
+
+/* A drag region moves the window. The controls in it take the pointer. */
+.drag,
+.bar {
+  -webkit-app-region: drag;
+}
+
+:is(.drag, .bar)
+  :is(
+    a,
+    button,
+    input,
+    label,
+    select,
+    summary,
+    textarea,
+    [contenteditable],
+    [role='button'],
+    [role='checkbox'],
+    [role='combobox'],
+    [role='link'],
+    [role='menuitem'],
+    [role='radio'],
+    [role='switch'],
+    [role='tab'],
+    [role='textbox'],
+    [tabindex]
+  ) {
+  -webkit-app-region: no-drag;
+}
+
+/* A top bar of the main area starts after the window controls in the corner. */
+.bar {
+  margin-left: var(--mac-bar-inset, 0px);
+}
+
+/* The window controls at the top of the left panel. */
+.slot {
+  flex-shrink: 0;
+}
+
+/*
+ * Without a sidebar that shows, the window controls keep their own width
+ * in the top left corner of the window. They continue the top bar of the
+ * main area, and the rail starts below them.
+ */
+.corner {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: var(--mac-controls-width);
+}
+
+.corner > nav {
+  border-right: 0;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+}
+
+/*
+ * The width of the controls in the corner: 8px and 6px of padding, the 64px
+ * space of the window buttons, three buttons of 26px, and four gaps of 2px.
+ */
+.cornerFrame {
+  --mac-controls-width: 164px;
+  --mac-bar-inset: calc(var(--mac-controls-width) - var(--ui-rail-width));
+}
+
+/* Full screen drops the space of the window buttons and its gap. */
+.cornerFrame.fullScreen {
+  --mac-controls-width: 98px;
+}
+
+.cornerLeft {
+  padding-top: var(--ui-bar-height);
+}
+
+/* The slot of the sidebar toggle. */
+.panelSlot {
+  display: flex;
+  flex-shrink: 0;
+}
+
+/* The sidebar that the user hid with the toggle. */
+.sidebar[hidden] {
+  display: none;
+}
+
+/* The top of a page without the rail: a strip that holds the window controls. */
+.strip {
+  display: flex;
+  flex-shrink: 0;
+  height: var(--ui-bar-height);
+}
+
+.strip > nav {
+  border-right: 0;
+  background: none;
+}

@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.worker.tsbuildinfo",
+    "types": []
+  },
+  "include": ["worker", "src/shared", ".wrangler/worker-configuration.d.ts"],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test-support.ts",
+    "**/test-support/**",
+    "**/test-support.ts",
+    "**/*-test-support.ts",
+    "worker/**/fake-*.ts",
+    "worker/github/test-harness.ts",
+    "worker/github/reader-test-harness.ts",
+    "worker/github/memory-workspace.ts",
+    "worker/github/recorded-webhooks.ts",
+    "worker/members/test-pause.ts",
+    "worker/tools/image-test-process.ts"
+  ]
+}

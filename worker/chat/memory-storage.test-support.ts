@@ -1,0 +1,71 @@
+import type { ChatData, ChatStorage } from './types'
+
+/** Each key keeps the type supplied to put(), as Durable Object KV does. */
+export class MemoryChatStorage implements ChatStorage {
+  records = new Map<string, unknown>()
+  writes: string[] = []
+  crashAfterCommit = false
+  beforeCommit: ((staged: MemoryChatStorage) => Promise<void>) | null = null
+
+  async get<T>(key: string): Promise<T | undefined> {
+    return structuredClone(this.records.get(key)) as T | undefined
+  }
+
+  async put<T>(key: string, value: T): Promise<void> {
+    this.records.set(key, structuredClone(value))
+    this.writes.push(key)
+  }
+
+  async delete(key: string): Promise<boolean> {
+    return this.records.delete(key)
+  }
+
+  async list<T>(options: {
+    prefix: string
+    startAfter?: string
+    limit?: number
+    end?: string
+    reverse?: boolean
+  }): Promise<Map<string, T>> {
+    const entries = [...this.records.entries()]
+      .filter(
+        ([key]) =>
+          key.startsWith(options.prefix) &&
+          (options.end === undefined || compareUtf8(key, options.end) < 0) &&
+          (options.startAfter === undefined ||
+            compareUtf8(key, options.startAfter) > 0),
+      )
+      .sort(
+        ([left], [right]) =>
+          (options.reverse ? -1 : 1) * compareUtf8(left, right),
+      )
+      .slice(0, options.limit)
+    return structuredClone(new Map(entries)) as Map<string, T>
+  }
+
+  async transaction<T>(work: (data: ChatData) => Promise<T>): Promise<T> {
+    const transaction = new MemoryChatStorage()
+    transaction.records = structuredClone(this.records)
+    const result = await work(transaction)
+    await this.beforeCommit?.(transaction)
+    this.records = transaction.records
+    this.writes.push(...transaction.writes)
+    if (this.crashAfterCommit) {
+      this.crashAfterCommit = false
+      throw new Error('Injected post-commit crash')
+    }
+    return result
+  }
+}
+
+const encoder = new TextEncoder()
+
+export function compareUtf8(left: string, right: string): number {
+  const a = encoder.encode(left)
+  const b = encoder.encode(right)
+  for (let index = 0; index < Math.min(a.length, b.length); index++) {
+    const difference = a[index] - b[index]
+    if (difference !== 0) return difference
+  }
+  return a.length - b.length
+}

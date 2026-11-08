@@ -1,0 +1,106 @@
+.desktop {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  height: calc(var(--ui-bar-height) - 4px);
+  padding: 0 var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+.stage {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 10px;
+  background: var(--ui-sidebar);
+}
+
+/* The desktop stream of the sandbox: always a dark desktop. */
+.screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--ui-radius-lg);
+  background: linear-gradient(135deg, #2b3a4a 0%, #1d2731 60%, #172029 100%);
+  font-family: var(--ui-font-sans);
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35em 0.8em;
+  background: rgba(0, 0, 0, 0.55);
+  color: #e5e7eb;
+  font-size: 9px;
+}
+
+.window {
+  position: absolute;
+  inset: 9% 6% 6% 6%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: #e8eaed;
+  color: #3c4043;
+  font-size: 9px;
+}
+
+.lights {
+  display: flex;
+  gap: 4px;
+}
+
+.lights span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #bdc1c6;
+}
+
+.tab {
+  padding: 2px 10px;
+  border-radius: 5px 5px 0 0;
+  background: #ffffff;
+}
+
+.address {
+  padding: 3px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #5f6368;
+  font-size: 9px;
+}
+
+.page {
+  flex: 1;
+  min-height: 0;
+}
+
+.pointer {
+  position: absolute;
+  top: 47%;
+  left: 38%;
+  color: #111827;
+  fill: #ffffff;
+}

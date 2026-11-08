@@ -1,0 +1,38 @@
+/* Development page only: the controls over the app. */
+.controls {
+  display: flex;
+  position: fixed;
+  z-index: 20;
+  bottom: 12px;
+  left: 12px;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 420px;
+  padding: 8px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.label {
+  min-width: 76px;
+}
+
+.controls button {
+  padding: 4px 8px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+  cursor: pointer;
+}

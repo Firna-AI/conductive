@@ -1,0 +1,57 @@
+/* A notification of macOS: a rounded card at the top right of the screen. */
+.notification {
+  display: flex;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  gap: 10px;
+  width: 356px;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border2);
+  border-radius: 16px;
+  background: var(--ui-composer);
+  box-shadow: 0 14px 38px -10px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+  color: var(--ui-ink);
+  text-decoration: none;
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.title {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.body {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}

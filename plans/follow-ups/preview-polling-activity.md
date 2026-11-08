@@ -1,0 +1,62 @@
+# A polling preview keeps its sandbox running
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-08, from PR #54, branch `conductor/boat-native-remote-workspaces-milestone-15i`, round 2, a new problem of the check of finding 20.
+- **Location:** the `recordActivity` call at `worker/previews/proxy.ts:99-102`, the activity paragraph at `worker/previews/README.md:171-175`, and "Stop and resume" at `docs/protocol/workspaces-and-sandboxes.md:202-209`.
+- **Reason:** On 5 November 2026, the user chose that each request to a port preview counts as activity. A change of that rule needs the answer of the user.
+
+- **Terms:**
+  - **Port preview:** a web server of the sandbox that the app shows on its own hostname under the preview domain, through the preview proxy of the Worker.
+  - **Page load:** a request that the browser makes to open a page in a tab or a frame. The browser marks it with the header `Sec-Fetch-Mode: navigate`, which page code cannot set.
+  - **Input owner:** `InputActivityOwner` in `worker/lifecycle/input-activity-owner.ts`. It keeps the newest input time of a workspace, which sets its idle stop.
+- **Background:**
+  - Decision 29, which the user chose on 5 November 2026, says that any user activity on a workspace keeps its sandbox running. The chosen option counts terminal input and requests to a port preview.
+  - The options check of that decision kept open connections out, because the live-reload connection of a dev server would keep the sandbox running forever.
+  - "Stop and resume" in `docs/protocol/workspaces-and-sandboxes.md:202-209` states the rule and its reason. A forgotten tab must not keep a sandbox running, and a stop must not cut off real work.
+  - The proxy reports each preview HTTP request and each WebSocket handshake that passes its access checks, at `worker/previews/proxy.ts:102`.
+  - The input owner then moves the idle stop to 30 minutes later. It also sets the auto-stop of the provider to 1,860 seconds, as "Input activity" in `worker/lifecycle/README.md` says.
+  - The workspace screen shows a preview in a frame while its Preview tool shows, in `src/previews/PreviewFrame.tsx`. "Open in new tab" opens the same preview in a tab of its own, and the Mac app can open it in the default browser.
+  - Input in the frame does not reach the input listener of the app page, because the events of a frame stay in the frame. So the requests of a preview are the only sign of work in it today.
+  - The Worker revokes a preview when its sandbox stops, when the user closes it, and 24 hours after it opens. "Port previews" in `docs/protocol/access-and-security.md` states this. A request of a revoked preview gets 404 and does not count.
+  - The proxy already tells a page load from other requests with the `Sec-Fetch-Dest` header, for the refresh of its port listener, at `worker/previews/proxy.ts:99-101`.
+- **Problem:**
+  - A page can send requests by itself. Examples are a dashboard that polls its server every few seconds, and a script that retries a lost connection. Each such request or handshake counts as activity.
+  - A browser slows the timers of a hidden tab, but it often keeps them running. So a forgotten tab or frame with such a page keeps the sandbox running.
+  - This breaks the reason of decision 29, which the protocol states. The code follows the rule, so the conflict is in the rule.
+- **Impact if no action:** A forgotten preview of a polling page can keep its sandbox running for up to 24 hours after the preview opened. The app's Boat account pays for that time. The sandbox also takes a place in the shared limit of sandboxes at once, as "The provider" in `docs/protocol/workspaces-and-sandboxes.md` says.
+- **Root question:** Which use of a preview counts as activity, so that real work in a preview keeps the sandbox running and a forgotten preview does not?
+- **Options:**
+  - **A.** Keep decision 29 as it is. Each preview request and socket handshake counts. State in the protocol that a preview page which sends requests by itself keeps the sandbox running until the preview ends. Effort: Small.
+    - Benefit: no real work in a preview ever stops.
+    - Cost: each forgotten polling preview can keep a sandbox running for up to 24 hours. The rule keeps a known conflict with its own reason.
+  - **B.** Count only page loads. Effort: Small.
+    - The proxy reports a request only when the browser marks it as a page load. A load, a reload, and a link or a form that opens a page are page loads.
+    - Fetches, loads of scripts and images, and socket handshakes do not count. A request without fetch metadata counts, as today.
+    - Benefit: a timer in a page can no longer keep the sandbox running. The app of the user stays as it is, in the frame, in a new tab, and in the browser of the Mac app.
+    - Cost: a single-page app makes no page load when the user clicks in it. So 30 minutes of such tests, with no page load, no other input, and no agent turn, end in a stop.
+    - That stop is the case that decision 29 was made for. Resume starts the sandbox again, but a dev server starts again only when something starts it.
+    - A page that reloads itself on a timer still counts. That is rare.
+  - **C.** Count page loads as in B. Count the other preview requests only for a limited time after the last page load or other activity, such as 2 hours. Effort: Medium.
+    - Benefit: a test of a single-page app keeps the sandbox running for that time. A forgotten polling preview runs at most that time and 30 minutes more.
+    - Cost: the user chooses the time, and the protocol gains a new limit.
+    - Cost: the input owner keeps one more time, the last activity that is not a timed preview request.
+  - **D.** Count the input of the user in the preview page. Effort: Large.
+    - The proxy adds a small script to each HTML page of the preview, for example with the `HTMLRewriter` of Workers.
+    - While the page shows, the script reports keys, clicks, and scrolling to a reserved path of the preview host, at most once a minute. The proxy counts those reports and page loads, as in B, and no other request.
+    - Benefit: it counts input in each place that shows a preview, as the input listener of the app counts input in the workspace tabs. A timed fetch never counts.
+    - A page that reloads itself on a timer still counts, as in B.
+    - Cost: the proxy changes the HTML of the app of the user for the first time. If the Content Security Policy of an app blocks the script, only its page loads count, unless the proxy also changes that policy.
+    - Page code can call the reserved path too. That is no access problem, because activity is not an access check.
+    - D adds a requirement to "Port previews" in `docs/protocol/access-and-security.md`, and it needs a security review.
+- **Left out:**
+  - A rule that finds polling by its timing. A timer with a random wait escapes it, and a user who repeats an action looks like a timer. It fails the goal.
+  - A report from the app page while the preview frame has the focus and the page shows. It counts focus, not input, so a page left with the focus in the frame keeps counting. It also misses a preview in a tab of its own, so it fails the goal.
+  - A warning before the stop, alone. A polling page keeps moving the stop, so the warning never shows, and it fails the goal. It can join B or C later, as its own decision.
+  - A shorter preview life. It ends a preview in the middle of real work, so it fails the goal. C limits the run time without that.
+  - A count of preview requests only while a tab of the workspace is open. An open tab alone is not activity, and that rule of decision 29 stays.
+- **Wider fix:** D. Only page loads and input then count. So no timed fetch, script load, or socket retry can count, and real work in a single-page app still counts. B is the smaller form of the same rule, without the input.
+- **Previous examples:** Automatic replies of the browser terminal also count as activity without input of the user, as [terminal-replies-count-as-activity.md](terminal-replies-count-as-activity.md) records. The options check of decision 29 kept open connections out for the same reason.
+- **Related:** [terminal-replies-count-as-activity.md](terminal-replies-count-as-activity.md): the same activity rule, for the terminal. The two fixes do not conflict. Both change "Input activity" in `worker/lifecycle/README.md`.
+- **Recommendation:** C. It keeps the case that decision 29 was made for, a member who tests a preview. It also ends a forgotten preview after a known time. D best protects the rule, because only page loads and input count. But D is Large, and it changes the HTML of the app of the user. B is the Small choice if a stop during a long test of a single-page app is acceptable.
+- **Action:** ask the user later, because the user deferred this choice on 8 November 2026. B, C, and D change a rule that the user chose on 5 November 2026: each preview request counts.

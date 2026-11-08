@@ -1,0 +1,43 @@
+/* The work that is not pushed, in a list with a full outline. */
+.list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 4px 10px;
+  box-sizing: border-box;
+}
+
+.item + .item {
+  border-top: 1px solid var(--ui-border);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.path {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--ui-warning);
+  font-size: var(--ui-text-sm);
+}

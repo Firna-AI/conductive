@@ -1,0 +1,10 @@
+.waiting {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}

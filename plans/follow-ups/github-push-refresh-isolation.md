@@ -1,0 +1,68 @@
+# One workspace refresh can stop a push delivery
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-08, from branch `conductor/boat-native-remote-workspaces-milestone-15i`, review round 2, a new problem of the finding 4 check.
+- **Location:** `worker/github/webhook.ts:116`, `:124`, `:136`, and `:141`, `worker/github/composition.ts:24` and `:30`, `worker/github/refresh.ts:85`, `worker/github/banner.ts:126`, and `worker/github/data.ts:43`.
+- **Reason:** The daily refresh limits the effect of a missed push refresh.
+
+- **Terms:**
+  - **Push delivery:** one signed `push` event that GitHub sends to the webhook route on the machine hostname.
+  - **Workspace refresh:** a fresh read of the GitHub state of one workspace, for its banner and its Checks list.
+  - **Image refresh:** `refreshImagesForPush`, which refreshes the org image after a push to the default branch.
+  - **Delivery record:** a row of the D1 table `github_webhook_deliveries`, whose `processed_at` stays empty until the delivery completes.
+- **Background:**
+  - The image refresh runs at most once in 30 minutes for each org.
+  - `handleGitHubWebhook` in `worker/github/webhook.ts` checks the signature, parses the event, and records the delivery.
+    - A delivery with `processed_at` set gets 204. Nothing more happens.
+    - A delivery that is recorded but not processed runs again when GitHub sends it again.
+    - In each workspace, a stored delivery receipt makes a repeated refresh replay its committed result. It does not read GitHub again.
+  - For a push, the handler refreshes each active workspace of the repository, one at a time, with `await`, from line 124.
+  - After that loop, it calls `pushed`, at line 136.
+  - `productionGitHubWebhook` in `worker/github/composition.ts` maps `pushed` to the image refresh.
+  - Then it sets `processed_at` with `completeDelivery`, at line 141. It answers 204.
+  - While GitHub still computes the merge state of a pull request, the banner read in `worker/github/banner.ts` throws `503 github_pending`.
+  - The message of that error is "GitHub is updating this pull request. Try again."
+  - `worker/github/refresh.ts` then schedules a later read of that workspace. It throws the error again.
+- **Problem:**
+  - One workspace refresh that throws ends the loop.
+  - The handler then skips the later workspaces. It skips the image refresh. It leaves `processed_at` empty.
+  - It answers with the error of that refresh.
+  - Evidence:
+    - A one-time route run used the feature test fixture, in-memory Miniflare, and fake GitHub replies.
+    - It had a valid PKCS#8 key and a waiting pull request.
+    - A signed push to `main` got `503 github_pending`. No image refresh started.
+  - Limits of the evidence:
+    - That run had one workspace.
+    - The claim that the later workspaces lose their refresh comes from a read of the loop, not from a run.
+    - No run used a deployed Worker or real GitHub.
+- **Impact if no action:**
+  - A push to the default branch can miss its image refresh.
+  - The org image then waits for the next push or the daily refresh.
+  - The later workspaces of the repository miss the refresh of that delivery.
+  - GitHub records a failed delivery.
+- **Root question:** How should one push delivery refresh each workspace and the org image when one workspace refresh fails or waits?
+- **Options:**
+  - **A.** Call `pushed` before the workspace loop. The image refresh then runs for each verified push. The later workspaces still miss their refresh after an error. Effort: Small.
+  - **B.** Keep each workspace refresh apart.
+    - Catch the error of each refresh.
+    - Go on with the next workspace.
+    - After the loop, call `pushed`.
+    - Set `processed_at` when each refresh worked or scheduled its own later read, as a `github_pending` refresh does.
+    - When a step failed without its own retry, leave the delivery unprocessed. Answer with an error.
+    - A new delivery of the same event then runs that step again.
+    - The receipts keep the finished workspaces from reading GitHub again.
+    - Keep the signature check before any parse or D1 access, the delivery record, and the 204 for a processed delivery.
+    - Add a route regression with two workspaces, one of them with a waiting pull request.
+    - Effort: Small.
+  - **C.** Turn each workspace refresh and the image refresh into a separate stored job with its own retry. Complete the delivery once the jobs are stored. Effort: Medium.
+- **Left out:**
+  - Change nothing: one waiting pull request keeps stopping the image refresh.
+  - Ignore each refresh error and always complete the delivery: a failure without its own retry is then lost.
+    - A new delivery of the same event then does nothing.
+  - Answer 204 at once and do the work after the reply: the Worker can drop that work.
+    - GitHub then gets no error to show.
+- **Wider fix:** B. Each step of a delivery stands alone, so one step cannot stop another.
+- **Previous examples:** None found.
+- **Recommendation:** B. It keeps the image refresh and each workspace refresh. It keeps the retry for a failure that has no other retry.
+- **Action:** fix after merge, apply B, because the daily refresh still updates the org image in the meantime.

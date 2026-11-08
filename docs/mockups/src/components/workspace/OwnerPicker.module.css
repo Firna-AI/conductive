@@ -1,0 +1,33 @@
+.anchor {
+  display: flex;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.name {
+  color: var(--ui-ink2);
+  font-weight: 500;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+/* The owner without the menu, as a member who is not an owner sees it. */
+.plain {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+}

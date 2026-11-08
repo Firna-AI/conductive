@@ -1,0 +1,90 @@
+.rail {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  width: var(--ui-rail-width);
+  padding: 6px 0 10px;
+  border-right: 1px solid var(--ui-border);
+  background: var(--ui-rail);
+  box-sizing: border-box;
+}
+
+.mark {
+  display: flex;
+  align-items: center;
+  height: calc(var(--ui-bar-height) - 6px);
+  margin-bottom: 8px;
+}
+
+.orgs {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  position: relative;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--ui-radius-lg);
+  color: var(--ui-muted);
+  text-decoration: none;
+}
+
+a.link:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+/* The current item sits in a filled pill. */
+.current,
+a.current:hover {
+  background: var(--ui-selected);
+  color: var(--ui-primary);
+}
+
+.create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px dashed var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+}
+
+/* A deleted org fades until its owner restores it. */
+.deleted {
+  display: flex;
+  opacity: 0.45;
+}
+
+/* The name of an org, as the rail shows it on hover. */
+.hint {
+  position: absolute;
+  z-index: 20;
+  top: 50%;
+  left: calc(100% + 8px);
+  padding: 4px 8px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-composer);
+  box-shadow: 0 4px 14px var(--ui-shadow);
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  transform: translateY(-50%);
+}

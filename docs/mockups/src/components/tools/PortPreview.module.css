@@ -1,0 +1,47 @@
+.preview {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  height: calc(var(--ui-bar-height) - 4px);
+  padding: 0 6px;
+  border-bottom: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  min-height: var(--ui-touch-min);
+  padding: 0 6px;
+}
+
+.frame {
+  flex: 1;
+  min-height: 0;
+  margin: 8px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+}
+
+.open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.port {
+  width: 88px;
+}

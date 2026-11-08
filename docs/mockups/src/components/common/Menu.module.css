@@ -1,0 +1,165 @@
+.menu {
+  display: flex;
+  z-index: 20;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 176px;
+  padding: 4px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-composer);
+  box-shadow: 0 10px 28px var(--ui-shadow);
+  box-sizing: border-box;
+  text-align: left;
+}
+
+/* A long menu beside its trigger scrolls, so its rows stay on the screen. */
+.below-start,
+.below-end,
+.above-start,
+.above-end {
+  position: absolute;
+  max-height: 70dvh;
+  overflow-y: auto;
+}
+
+/* The rows keep their height in a menu that scrolls. */
+.menu > * {
+  flex-shrink: 0;
+}
+
+.below-start,
+.below-end {
+  top: calc(100% + 4px);
+}
+
+.above-start,
+.above-end {
+  bottom: calc(100% + 6px);
+}
+
+.below-start,
+.above-start {
+  left: 0;
+}
+
+.below-end,
+.above-end {
+  right: 0;
+}
+
+/* A wide menu fits long rows, such as the titles of sessions. */
+.wide {
+  width: 340px;
+}
+
+/* In a phone sheet the rows fill the width and are tall enough to touch. */
+.sheet {
+  width: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--ui-row-height);
+  min-height: var(--ui-touch-min);
+  padding: 0 8px;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  white-space: nowrap;
+  cursor: default;
+}
+
+.sheet .item {
+  height: 44px;
+  padding: 0 12px;
+  font-size: var(--ui-text-lg);
+}
+
+.item:hover,
+.highlighted {
+  background: var(--ui-soft);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.mark {
+  display: flex;
+  flex-shrink: 0;
+}
+
+/* Muted text after the label, such as a time, in the label font. */
+.detail {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+.check {
+  flex-shrink: 0;
+  color: var(--ui-primary);
+}
+
+.danger,
+.danger .icon {
+  color: var(--ui-rose);
+}
+
+.group {
+  padding: 6px 8px 3px;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-transform: var(--ui-label-case);
+}
+
+.sheet .group {
+  padding: 10px 12px 4px;
+}
+
+.note {
+  max-width: 260px;
+  margin: 0;
+  padding: 4px 8px 6px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.wide .note {
+  max-width: none;
+}
+
+.sheet .note {
+  max-width: none;
+  padding: 6px 12px 8px;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  margin: 3px 0;
+  border: 0;
+  background: var(--ui-border);
+}

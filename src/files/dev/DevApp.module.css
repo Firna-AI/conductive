@@ -1,0 +1,95 @@
+/* Development page only: a frame that stands in for the app shell. */
+.desktop {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--ui-surface);
+  container: app-frame / inline-size;
+}
+
+.center {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.right {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  width: clamp(280px, 34cqw, var(--ui-right-width));
+  min-height: 0;
+  border-left: 1px solid var(--ui-border);
+  background: var(--ui-panel);
+  container-type: inline-size;
+}
+
+.tabBar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  min-height: var(--ui-bar-height);
+  padding: 0 8px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  box-sizing: border-box;
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+}
+
+.waiting {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.phone {
+  display: flex;
+  flex-direction: column;
+  width: 390px;
+  height: 100vh;
+  margin: 0 auto;
+  overflow: hidden;
+  border-right: 1px solid var(--ui-border);
+  border-left: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+}
+
+.controls {
+  display: flex;
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 360px;
+  padding: 8px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-raised);
+  font-size: var(--ui-text-sm);
+}
+
+.controls button {
+  padding: 4px 8px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+  cursor: pointer;
+}

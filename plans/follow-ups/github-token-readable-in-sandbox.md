@@ -1,0 +1,56 @@
+# Sandbox code can take the turn's GitHub token
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-07, from the options check of `plans/follow-ups/agent-logins-readable-in-sandbox.md` on branch `calummoore/conductor-alternative-architecture`, a problem outside its scope. The user sees it as item 121.
+- **Location:** `handleGitCredential` in `worker/lifecycle/machine.ts:10`, the stored token read in `worker/security/github-tokens.ts:104`, `image/git-credential-helper.sh`, the section "Start in a workspace" of `image/README.md`, and the section "GitHub tokens" of `docs/protocol/access-and-security.md`.
+- **Reason:** each option states or changes a security rule of the access protocol, and the user decides those rules.
+
+- **Terms:**
+  - **Workspace token:** the secret that a workspace sandbox uses to prove itself to the Worker. The sandbox gets it as `WORKSPACE_TOKEN` in `/run/ascii-secrets/env.sh`.
+  - **Turn ID:** the ID of the running turn. The design gives it to each agent process as `CONDUCTIVE_TURN_ID`. Members also see turn IDs in the browser.
+  - **GitHub user token:** a GitHub App token that acts as one person. It reaches each repository that both the person and the app can reach, with every permission of the app. Since decision 103 B of 7 November 2026, that includes the Workflows permission.
+  - **Scoped token:** a user token that GitHub's call `POST /applications/{client_id}/token/scoped` makes from another user token. It reaches only the named repositories, with only the named permissions.
+- **Background:**
+  - The git credential helper in the sandbox posts to the Worker's git credential route, with the workspace token and the turn ID. Without a running turn, the Worker gives no token.
+  - The Worker returns the stored GitHub user token of the turn's sender, so pushes and pull requests show as that person (decision 50). It renews the token only shortly before it expires. So every workspace and every turn of that person gets the same token.
+  - GitHub user tokens expire after 8 hours when the app has expiry on. The code also accepts tokens with no expiry, in `worker/security/github-token-data.ts`.
+  - The access doc says that a limit to the org's repositories "was rejected for now, because GitHub cannot set it on a user token". GitHub's scoped-token call contradicts that reason. Nobody has checked it with the real app.
+  - The runner and the terminal run as the system user `user`, and Boat gives `user` passwordless sudo (`image/README.md`). The terminal loads `/run/ascii-secrets/env.sh` into each shell (`worker/terminal/scripts.ts`).
+  - The runner redacts only the workspace token and the agent logins from tool output (`runner/src/runner.ts`). A GitHub token that a tool prints goes into the chat history that every member sees.
+  - The route is not wired yet. The machine hostname serves a stub (`worker/application.ts`), and the runner does not set `CONDUCTIVE_TURN_ID`. So the risk comes from the design, and it starts when the wiring lands.
+  - For agent logins, decision 49 D of 6 November 2026 accepted that processes can read the login during a turn. Decision 114 of 7 November 2026 states the risk for tool processes after the turn now, and fixes it later.
+- **Problem:** While a turn runs, each process in the sandbox, and each member with a terminal there, can get the sender's GitHub user token, for example with `git credential fill`. The token works after the turn, and on the person's repositories outside the org. The access doc does not state this risk.
+- **Impact if no action:** Sandbox code or another member can take a member's GitHub token and use it outside the product, also after the turn. With the Workflows permission, a taken token can push a workflow that reads the Actions secrets of each repository that it reaches.
+- **Root question:** How does git in the sandbox push as the turn's sender, while other code there can use that person's GitHub access only on the workspace's repositories, and only during the turn?
+- **Options:**
+  - **A.** State the risk in the access doc, as it does for agent logins. Each process in the sandbox can get the sender's GitHub user token during a turn. The privacy page in `src/marketing/privacy.ts` must name the GitHub token beside the agent login. Effort: Small.
+  - **B.** Revoke each token soon. The Worker revokes each token that it gave the helper, at the end of the turn or a few minutes later. This works only on tokens for one turn, such as the tokens of option D. A revoke of the stored token ends the person's GitHub access in every workspace, also during turns that still run. Unchecked: GitHub's call that deletes one app token, with the real app. Effort: Medium.
+  - **D.** Limit the token to the workspace. Effort: Medium.
+    - For each turn, the Worker makes a scoped token from the stored token, with the client secret that it already holds.
+    - The scoped token reaches only the workspace's repositories, with the permissions for contents, workflows, and pull requests.
+    - The Worker keeps the scoped token encrypted with the turn record, and gives it for each helper call of that turn. The stored token never enters the sandbox.
+    - Pushes still show as the person (decision 50). No Git data passes through the Worker.
+    - GitHub limits a scoped token to the repositories of one owner. So repositories of two owners need two tokens. The helper can send the repository path, because `image/install.sh` already sets `credential.useHttpPath`.
+    - The access doc must drop "GitHub cannot set it on a user token", and state the risk that remains: during a turn, sandbox code can use the token on the workspace's repositories.
+    - Unchecked: how long a scoped token lives, whether a renewal of the stored token ends it, whether git over HTTPS accepts it, and whether GitHub caps the live tokens of one person. The check needs the app's client secret and a real user, so the user must take part.
+  - **C.** A Git proxy in the Worker. Effort: Large.
+    - Git in the sandbox sends its requests to a Worker route. The route checks the running turn and refuses each repository outside the workspace. It adds the user token and forwards the request to GitHub.
+    - No GitHub token enters the sandbox.
+    - Cost: it reverses the reason of decision 90, which keeps Git data out of the Worker.
+    - Cost: the route needs its own body limit, because the Worker's default limit is 1,000,000 bytes. Cloudflare limits a request body to 100 MB on its Free and Pro plans, so a large push can fail. A runtime update can end a long stream. Unchecked against the deployed plan.
+    - Cost: the privacy page says that code stays in the cloud computers. It must say that Git data passes through the app.
+- **Left out:**
+  - Installation tokens for pushes: they break decision 50, which makes pushes and pull requests show as the person.
+  - Installation tokens for fetches only: it is a variant of C that keeps fetches off the Worker, and it breaks the access rule "A workspace sandbox never gets an installation token".
+  - A sign-in for each workspace with GitHub's repository limit: D is better on every point, because D needs no extra sign-in, and decision 50 records that a renewal drops that limit.
+  - A fine-grained personal access token from each person: it fails the goal, because a taken token works for its whole life, often months.
+  - One GitHub App for each org: it breaks the access rule that one app gives both the identity and the repository access, and decision 101 A.
+  - The sender approves each token request, as for Mac commands: it fails the goal, because a token that is taken after an approval still works after the turn.
+  - A process in the sandbox that holds the token under another system user: the agent's own tools must run git, and each terminal has root through passwordless sudo.
+  - Change nothing: it fails the goal.
+- **Wider fix:** C. It keeps every GitHub token out of the sandbox, whatever program asks for GitHub access. D is a direct fix, because it must know which repositories and permissions git needs.
+- **Previous examples:** the agent logins in `plans/follow-ups/agent-login-in-tool-processes.md` and `plans/follow-ups/agent-logins-readable-in-sandbox.md`, the Mac command risk in the section "Mac commands" of `docs/protocol/agent-tools.md`, and the clone token risk of builds (decision 107 D).
+- **Related:** `plans/follow-ups/agent-logins-readable-in-sandbox.md` has the same class: a member's secret that sandbox code can take. Its Worker proxy and the Git proxy of option C can share the check of the running turn.
+- **Recommendation:** D, and B on D's tokens as the next step. A taken token then reaches only the workspace's repositories, decision 50 stays, and no Git data passes through the Worker. The first recommendation was A. C best protects the product, because no GitHub token then enters the sandbox. If GitHub's scoped-token call fails its check, use A now and C later.
+- **Action:** ask the user later, because the user chose A now on 8 November 2026 (decision 121), and asked to consider a different approach later. Milestone 15m states the risk. The other options stay open: D, then B, and C.

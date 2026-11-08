@@ -1,0 +1,26 @@
+.anchor {
+  display: flex;
+  position: relative;
+  min-width: 0;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.model {
+  color: var(--ui-ink);
+  font-weight: 500;
+}
+
+.effort {
+  color: var(--ui-muted);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}

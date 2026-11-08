@@ -1,0 +1,113 @@
+/*
+ * A 3 × 3 grid of 3 px cells with 1 px gaps. The box is 12 px, so it sits
+ * on whole pixels when a 26 px row centres it.
+ */
+.glyph {
+  display: inline-grid;
+  flex-shrink: 0;
+  grid-template-columns: repeat(3, 3px);
+  grid-template-rows: repeat(3, 3px);
+  gap: 1px;
+  align-content: start;
+  justify-content: start;
+  width: 12px;
+  height: 12px;
+}
+
+.cell {
+  border-radius: 0.75px;
+  background: currentColor;
+  opacity: 0.16;
+}
+
+.on {
+  opacity: 1;
+}
+
+.working {
+  color: var(--ui-primary);
+}
+
+/*
+ * The agent waits for the user, such as for the approval of a command: a
+ * column in the accent colour that pulses.
+ */
+.input {
+  color: var(--ui-primary);
+}
+
+/* A finished turn: every cell in bright green. */
+.unread {
+  color: var(--ui-success);
+}
+
+/* Ready: one bright cell over a faint green grid. */
+.ready {
+  color: var(--ui-success);
+}
+
+.starting,
+.stopped,
+.archived {
+  color: var(--ui-muted);
+}
+
+.error {
+  color: var(--ui-rose);
+}
+
+/* A bright head runs clockwise around the ring, with a fading tail. */
+@keyframes chase {
+  0% {
+    opacity: 1;
+  }
+
+  45%,
+  100% {
+    opacity: 0.3;
+  }
+}
+
+/* The column of a workspace that needs input dims, then lights again. */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* The middle row lights from left to right, then fades. */
+@keyframes fill {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  40% {
+    opacity: 1;
+  }
+}
+
+.working .on {
+  animation: chase 960ms linear infinite;
+}
+
+.starting .on {
+  animation: fill 1200ms ease-in-out infinite;
+}
+
+.input .on {
+  animation: pulse 1600ms ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .working .on,
+  .starting .on,
+  .input .on {
+    animation: none;
+  }
+}

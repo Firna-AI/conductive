@@ -1,0 +1,64 @@
+/*
+ * The visible part of a picture. The screen inside lays out at its own size
+ * and fills it, because `--ui-screen-height` follows the screen box.
+ */
+.view {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--ui-surface);
+}
+
+/* The screen starts from the tokens of the app, whatever page holds it. */
+.screen {
+  --ui-screen-height: 100%;
+  --ui-touch-min: 0px;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+/* A large window, such as the screen of the hero. */
+.window {
+  border: 1px solid var(--ui-border2);
+  border-radius: 12px;
+  box-shadow: 0 40px 90px -40px var(--ui-shadow);
+}
+
+/* A quiet excerpt of a screen, such as one panel. */
+.excerpt {
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xxl);
+  box-shadow: 0 18px 44px -22px var(--ui-shadow);
+}
+
+/* A phone: a dark body with a hairline outline, so it shows in both schemes. */
+.phone {
+  display: inline-flex;
+  flex-shrink: 0;
+  background: var(--ui-device);
+  box-shadow:
+    0 0 0 1px var(--ui-border2),
+    0 40px 80px -36px var(--ui-shadow);
+}
+
+.phoneScreen {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ui-bar);
+}
+
+.band {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.notch {
+  border-radius: 999px;
+  background: var(--ui-device);
+}

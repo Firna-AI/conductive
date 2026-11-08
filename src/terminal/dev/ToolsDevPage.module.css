@@ -1,0 +1,116 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--ui-bg);
+  color: var(--ui-ink);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  font-size: var(--ui-text-sm);
+}
+
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ui-muted);
+}
+
+.stage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 24px;
+}
+
+/* The tools of the right column at 1440 x 900: 440 x 389 with the tab bar. */
+.panel,
+.phone {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  outline: 1px solid var(--ui-border);
+  background: var(--ui-panel);
+}
+
+.panel {
+  width: 440px;
+  height: 389px;
+}
+
+/* The tool page of a phone at 390 x 800, between its bars. */
+.phone {
+  width: 390px;
+  height: 636px;
+  background: var(--ui-surface);
+}
+
+.tabs {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  height: var(--ui-bar-height);
+  padding: 0 8px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  box-sizing: border-box;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  height: calc(var(--ui-control-height) - 2px);
+  padding: 0 10px;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-decoration: none;
+  text-transform: var(--ui-label-case);
+}
+
+.tab[aria-current='page'] {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.log {
+  flex: 1;
+  min-width: 280px;
+  max-width: 640px;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  overflow-wrap: anywhere;
+}
+
+.log h2 {
+  margin: 0 0 6px;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+  font-size: var(--ui-text-md);
+}
+
+.log ol {
+  margin: 0 0 16px;
+  padding-left: 18px;
+}

@@ -1,0 +1,46 @@
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: var(--ui-label-case);
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 30px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.022em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.text {
+  max-width: 640px;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 16px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.centred {
+  align-items: center;
+  text-align: center;
+}
+
+.mobile .title {
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.mobile .text {
+  font-size: 15px;
+}

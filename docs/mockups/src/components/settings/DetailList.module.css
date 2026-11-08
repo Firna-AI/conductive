@@ -1,0 +1,38 @@
+/* One row for each fact, in a box with a full outline. */
+.details {
+  margin: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 12px;
+}
+
+.row + .row {
+  border-top: 1px solid var(--ui-border);
+}
+
+.term {
+  flex-shrink: 0;
+  width: 92px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.value,
+.mono {
+  min-width: 0;
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  overflow-wrap: anywhere;
+}
+
+.mono {
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+}

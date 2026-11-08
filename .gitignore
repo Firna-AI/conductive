@@ -1,0 +1,16 @@
+# Scratch output
+.context/
+
+# Dependencies
+node_modules/
+
+# Mokly build output
+mokly-static/
+.mokly-export-reservations/
+
+# App build output: Vite, Wrangler, TypeScript, and test coverage
+dist/
+.wrangler/
+*.tsbuildinfo
+coverage/
+.dev.vars

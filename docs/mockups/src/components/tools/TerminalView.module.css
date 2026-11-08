@@ -1,0 +1,67 @@
+.terminal {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--ui-surface);
+}
+
+.screen {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 10px var(--ui-pad-x);
+  overflow: auto;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.line {
+  min-height: 1.6em;
+}
+
+.prompt {
+  color: var(--ui-term-prompt);
+  font-weight: 600;
+}
+
+.plain {
+  color: var(--ui-ink);
+}
+
+.muted {
+  color: var(--ui-muted);
+}
+
+.success {
+  color: var(--ui-success);
+}
+
+.accent {
+  color: var(--ui-warning);
+  font-weight: 600;
+}
+
+.error {
+  color: var(--ui-rose);
+}
+
+.cursor {
+  display: inline-block;
+  width: 7px;
+  height: 1.15em;
+  vertical-align: text-bottom;
+  background: var(--ui-ink);
+}
+
+.keys {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+}

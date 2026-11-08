@@ -1,0 +1,54 @@
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/*
+ * Every tab shows: the tabs fill a grid of three columns, so a second line
+ * lines up with the first, as on a phone.
+ */
+.wrap {
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  overflow: visible;
+}
+
+.tab {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  height: calc(var(--ui-control-height) - 2px);
+  min-height: var(--ui-touch-min);
+  padding: 0 10px;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-decoration: none;
+  text-transform: var(--ui-label-case);
+  white-space: nowrap;
+}
+
+.tab:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+.selected,
+.selected:hover {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+}
+
+.count {
+  color: var(--ui-muted);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}

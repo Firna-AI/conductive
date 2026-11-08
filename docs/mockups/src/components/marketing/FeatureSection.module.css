@@ -1,0 +1,50 @@
+.feature {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* A quiet stage with a full hairline outline and a faint dot grid. */
+.stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+  padding: 44px 32px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: 14px;
+  background-color: var(--ui-sidebar);
+  background-image: radial-gradient(
+    circle,
+    var(--ui-border) 1px,
+    transparent 1.4px
+  );
+  background-size: 18px 18px;
+  box-sizing: border-box;
+}
+
+/* A tall picture starts near the top and runs off the bottom edge. */
+.bleed {
+  align-items: flex-start;
+  height: 460px;
+  padding-bottom: 0;
+}
+
+.mobile {
+  gap: 22px;
+}
+
+.mobile .stage {
+  min-height: 0;
+  padding: 24px 12px;
+  border-radius: 12px;
+}
+
+.mobile .bleed {
+  height: 420px;
+  padding-bottom: 0;
+}

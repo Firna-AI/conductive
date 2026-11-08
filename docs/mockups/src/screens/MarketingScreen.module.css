@@ -1,0 +1,12 @@
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 144px;
+  padding: 24px 32px 144px;
+  scroll-margin-top: 16px;
+}
+
+.mobile {
+  gap: 88px;
+  padding: 8px 20px 88px;
+}
