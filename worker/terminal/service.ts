@@ -19,6 +19,10 @@ export function terminalInstallCommand(): string {
   return privilegedCommand(`set -eu
 apt-get update
 apt-get install -y ttyd tmux
+# The ttyd package enables its own service on port 7681, which the
+# workspace terminal needs. Stop it and keep it from starting.
+systemctl disable --now ttyd.service 2>/dev/null || true
+systemctl mask ttyd.service
 install -d -m 755 /usr/local/lib/conductive
 cat > /usr/local/lib/conductive/terminal <<'CONDUCTIVE_TERMINAL'
 ${launcherScript()}
@@ -104,6 +108,7 @@ export async function startWorkspaceTerminal(
   const command = `set -eu
 install -d -m 700 -o user -g user /run/conductive-terminal
 touch /run/conductive-terminal/enabled
+systemctl stop ttyd.service 2>/dev/null || true
 systemctl start conductive-terminal.service
 systemctl is-active --quiet conductive-terminal.service`
   const result = await provider.command(privilegedCommand(command))

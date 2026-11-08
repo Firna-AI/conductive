@@ -20,7 +20,9 @@ exec "$@"
     'apt-get': `#!/bin/sh
 printf '%s\\n' "$*" >> '${packages}'
 `,
-    systemctl: '#!/bin/sh\nexit 0\n',
+    systemctl: `#!/bin/sh
+printf '%s\\n' "$*" >> '${units}/systemctl.log'
+`,
   }
   for (const [name, content] of Object.entries(programs)) {
     await writeFile(`${bin}/${name}`, content)

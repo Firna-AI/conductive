@@ -31,3 +31,16 @@ it('installs the workspace shell server and starts it with the repository enviro
     'off',
   ])
 })
+
+it('stops and masks the ttyd service of the package, which holds the terminal port', async () => {
+  const fixture = await installationFixture()
+  expect(await fixture.install()).toEqual({ code: 0, stdout: '', stderr: '' })
+  const calls = (
+    await readFile(`${fixture.units}/systemctl.log`, 'utf8')
+  ).split('\n')
+  expect(calls).toContain('disable --now ttyd.service')
+  expect(calls.indexOf('mask ttyd.service')).toBeGreaterThan(-1)
+  expect(calls.indexOf('mask ttyd.service')).toBeLessThan(
+    calls.indexOf('enable conductive-terminal.service'),
+  )
+})

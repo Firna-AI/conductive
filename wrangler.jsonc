@@ -10,6 +10,8 @@
   // The other public variables of docs/deployment.md are set on the Worker
   // itself, so that each deploy keeps them.
   "keep_vars": true,
+  // Workers Logs keeps each log line, also of the workspace objects.
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
   "routes": [
     { "pattern": "conductive.build", "custom_domain": true },
     { "pattern": "app.conductive.build", "custom_domain": true },
