@@ -126,6 +126,7 @@ it('serves terminal and fresh desktop URLs and launches a preview through its se
   expect(upstream.map((request) => request.headers.get('Cookie'))).toEqual([
     '_port_auth=server-port-token',
   ])
+  await active.actor().waitForActivity()
   expect(
     await active.env.DB.prepare(
       'SELECT last_activity_at AS activity FROM workspaces WHERE id = ?',

@@ -37,6 +37,10 @@ export class Workspace extends ProductionWorkspace {
     return [...(await this.ctx.storage.list()).entries()]
   }
 
+  waitForActivity(): Promise<void> {
+    return this.activity.settled()
+  }
+
   lateSummaryOutcome() {
     return featureResult(() => this.readChatWorkspaceSummary())
   }

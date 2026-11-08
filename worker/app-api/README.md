@@ -33,6 +33,14 @@ The [archive route](archive.ts) uses the real workspace object to check saved wo
   `agentLoginContext(userId, agent)` and `BOAT_KEY_ENCRYPTION_KEY`. No reply
   holds a stored secret.
 - Get started has only the steps `github-app`, `org`, and `agent-login`.
+- `getStartedGitHubComplete` owns the `github-app` step in every org state.
+  The step is complete when an org of the user that is not deleted has a
+  repository through an installation that is not suspended.
+- Otherwise the step reads only `/user/installations`, page by page, with
+  the fresh GitHub user token. A suspended installation does not count.
+- A failed GitHub read leaves the step incomplete and writes one fixed
+  warning through `warnWorker`. The account and Get started still load. The
+  installation list of the account shows its own error.
 - A repository without a GitHub installation is not in the list.
 - Each member has a view of their own. A read mark only moves forward, and
   it stops at the last event number of the workspace.
@@ -77,6 +85,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [`get-started-data.ts`](get-started-data.ts), and
   [`models.ts`](models.ts): the account, its logins, Get started, and the
   model variables.
+- [`get-started-github.ts`](get-started-github.ts):
+  `getStartedGitHubComplete`, the one owner of the `github-app` step.
 - [`shell.ts`](shell.ts) and [`shell-data.ts`](shell-data.ts): the lists of
   an org and the read marks.
 - [`workspace-view.ts`](workspace-view.ts): the saved view of each member.

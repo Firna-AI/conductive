@@ -168,9 +168,11 @@ The request and response streams read only when their consumer requests data.
 They read one chunk at a time. No cached authorization or time window permits data.
 Completed HTTP connections release their registry entries.
 
-Set `dependencies.onActivity` to notify the workspace lifecycle owner.
-The proxy also updates the D1 activity time. Each preview HTTP request and
-WebSocket handshake counts. Socket frames and idle connections do not count.
+Set `dependencies.onActivity` to report each input to the input owner of the
+workspace, as [Input activity](../lifecycle/README.md#input-activity) says.
+That call returns at once. The proxy writes no D1 activity time. Each preview
+HTTP request and WebSocket handshake counts. Socket frames and idle
+connections do not count.
 
 The header allowlists live in `headers.ts`. The cookie allowlist filters
 request and response cookies. It accepts valid app cookie names. It excludes

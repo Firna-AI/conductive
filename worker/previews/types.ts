@@ -22,10 +22,7 @@ export interface ToolDependencies {
   fetch: HttpFetch
   now: () => number
   sockets?: SocketRuntime
-  onActivity?: (
-    workspaceId: string,
-    source: 'terminal' | 'preview',
-  ) => Promise<void>
+  onActivity?: (workspaceId: string, at: number) => void
 }
 
 export interface WorkspaceTarget {

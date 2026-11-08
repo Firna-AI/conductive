@@ -97,8 +97,8 @@ The app supplies no extra terminal secret at start. The workspace token
 keeps its existing scope and does not authenticate terminal access.
 `/run` must stay temporary memory storage in the org image.
 
-Set `dependencies.onActivity` to notify the workspace lifecycle owner.
-The handler also updates the D1 activity time. Only terminal input counts.
+Set `dependencies.onActivity` to report each input to the input owner of the workspace, as [Input activity](../lifecycle/README.md#input-activity) says.
+That call returns at once. The handler writes no D1 activity time. Only terminal input counts.
 The initial handshake, window changes, output, and idle sockets do not count.
 
 `TerminalConnections` owns each authenticated session and workspace/sandbox

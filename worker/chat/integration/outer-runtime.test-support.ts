@@ -1,4 +1,8 @@
-import { Miniflare, Response as RuntimeResponse } from 'miniflare'
+import {
+  Miniflare,
+  Response as RuntimeResponse,
+  type StructuredLogsHandler,
+} from 'miniflare'
 import { build } from 'vite'
 
 import type { AppEnv, HttpFetch } from '../../env'
@@ -57,7 +61,11 @@ export async function createOuterRuntime(
     https?: boolean
     configuration?: OuterConfiguration
     persistencePath?: string
-    outbound?: (request: Request, fallback: HttpFetch) => Promise<Response>
+    handleStructuredLogs?: StructuredLogsHandler
+    outbound?: (
+      request: Request,
+      fallback: HttpFetch,
+    ) => Promise<Response | RuntimeResponse>
   } = {},
 ) {
   const appOrigin = options.appOrigin ?? TEST_ORIGIN
@@ -77,6 +85,7 @@ export async function createOuterRuntime(
       enableDevRegistry: false,
       telemetry: { enabled: false },
       cf: false,
+      handleStructuredLogs: options.handleStructuredLogs,
       resourcePersistencePath: options.persistencePath,
       workers: [
         {
@@ -141,6 +150,12 @@ export async function createOuterRuntime(
                 const response = await (options.outbound
                   ? options.outbound(request, fallback)
                   : fallback(request))
+                if (
+                  response instanceof RuntimeResponse &&
+                  response.status === 101 &&
+                  response.webSocket
+                )
+                  return response
                 return new RuntimeResponse(await response.arrayBuffer(), {
                   status: response.status,
                   headers: [...response.headers.entries()],

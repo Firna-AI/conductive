@@ -1,9 +1,13 @@
 import type { GetStartedResponse } from '../../src/shared/onboarding'
+import type { AppDependencies, AppEnv } from '../env'
+import { getStartedGitHubComplete } from './get-started-github'
 
 export async function getStartedData(
-  db: D1Database,
+  env: AppEnv,
   userId: string,
+  dependencies: AppDependencies,
 ): Promise<GetStartedResponse> {
+  const db = env.DB
   const org = await db
     .prepare(
       `SELECT o.id FROM orgs o JOIN org_members m ON m.org_id = o.id
@@ -13,20 +17,15 @@ export async function getStartedData(
     .first<{ id: string }>()
   const setup = await db
     .prepare(
-      `SELECT
-       EXISTS(SELECT 1 FROM repositories r
-         JOIN orgs o ON o.id = r.org_id
-         JOIN org_members m ON m.org_id = o.id
-         JOIN github_installations i ON i.id = r.installation_id
-         WHERE m.user_id = ? AND o.deleted_at IS NULL AND i.suspended_at IS NULL) AS github,
-       EXISTS(SELECT 1 FROM agent_logins WHERE user_id = ?) AS login`,
+      `SELECT EXISTS(SELECT 1 FROM agent_logins WHERE user_id = ?) AS login`,
     )
-    .bind(userId, userId)
-    .first<{ github: number; login: number }>()
+    .bind(userId)
+    .first<{ login: number }>()
+  const github = await getStartedGitHubComplete(env, userId, dependencies)
   return {
     orgId: org?.id ?? null,
     steps: [
-      { step: 'github-app', complete: setup?.github === 1 },
+      { step: 'github-app', complete: github },
       { step: 'org', complete: org !== null },
       { step: 'agent-login', complete: setup?.login === 1 },
     ],

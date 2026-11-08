@@ -28,6 +28,7 @@ import { HttpError } from './http'
 import { featureResult } from './features/result'
 import { orgLifecycleActive } from './members/composition-data'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
+import type { ConnectionScheduler } from './security/connection-access'
 
 export class Workspace extends WorkspaceLifecycle {
   private readonly features: WorkspaceFeatures
@@ -40,10 +41,15 @@ export class Workspace extends WorkspaceLifecycle {
     env: WorkspaceCompositionEnv,
     now: () => number = Date.now,
     resolvers: WorkspaceChatResolvers = {},
+    activitySchedule?: ConnectionScheduler,
   ) {
-    super(context, env, now, resolvers)
+    super(context, env, now, resolvers, activitySchedule)
     this.now = now
-    const dependencies = { ...lifecycleDependencies(), now }
+    const dependencies = {
+      ...lifecycleDependencies(),
+      now,
+      terminalSchedule: activitySchedule,
+    }
     const matches = (id: string) =>
       env.WORKSPACES.idFromName(id).equals(context.id)
     this.features = new WorkspaceFeatures(
@@ -55,7 +61,7 @@ export class Workspace extends WorkspaceLifecycle {
         await this.integration.storage.put('previews:workspace-id', workspaceId)
         await this.integration.alarms.set('previews', at)
       },
-      () => this.lifecycleActivity(),
+      (id, at) => this.activity.record(id, at),
       (id, ids, queueOwned) =>
         queueOwned
           ? this.chat.commitPreviewRevocations(id, ids)

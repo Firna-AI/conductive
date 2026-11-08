@@ -1,7 +1,7 @@
 import { HttpError, isRecord } from '../http'
 
 /** ttyd also authenticates its first JSON message, after HTTP Basic auth. */
-export function terminalFrames(auth: string, activity: () => Promise<void>) {
+export function terminalFrames(auth: string, activity: () => void) {
   let initialized = false
   return async (data: string | ArrayBuffer): Promise<string | ArrayBuffer> => {
     if (!initialized) {
@@ -30,7 +30,7 @@ export function terminalFrames(auth: string, activity: () => Promise<void>) {
       typeof data === 'string'
         ? data.length > 1 && data.charCodeAt(0) === 48
         : data.byteLength > 1 && new Uint8Array(data)[0] === 48
-    if (input) await activity()
+    if (input) activity()
     return data
   }
 }

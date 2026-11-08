@@ -22,8 +22,6 @@ import {
 } from './account-data'
 import { getStartedData } from './get-started-data'
 import { configuredDefaultChoice, configuredModels } from './models'
-import { readGitHubConnection } from '../security/github-connection-store'
-import { shellGitHubAccess } from './feature-github'
 
 export async function bootRoute(
   request: Request,
@@ -37,22 +35,7 @@ export async function bootRoute(
     if (path === MODELS_PATH)
       return Response.json({ models: configuredModels(env) })
     if (path === GET_STARTED_PATH) {
-      const setup = await getStartedData(env.DB, userId)
-      if (
-        setup.orgId === null &&
-        (await readGitHubConnection(env.DB, userId))
-      ) {
-        const access = await shellGitHubAccess(env, userId, dependencies)
-        return Response.json({
-          ...setup,
-          steps: setup.steps.map((step) =>
-            step.step === 'github-app'
-              ? { ...step, complete: access.installations.length > 0 }
-              : step,
-          ),
-        })
-      }
-      return Response.json(setup)
+      return Response.json(await getStartedData(env, userId, dependencies))
     }
     if (path === ACCOUNT_PATHS.account) {
       return Response.json({

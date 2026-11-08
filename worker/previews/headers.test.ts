@@ -53,6 +53,7 @@ it('proxies HTTP with explicit headers and keeps only preview app cookies', asyn
   expect(upstream.headers.get('X-Private')).toBe(null)
   expect(upstream.headers.get('If-Match')).toBe('version-1')
   expect(await upstream.text()).toBe('cart=2')
+  await harness.activity()
   expect(await harness.status()).toEqual({ activity: TEST_TIME + 1000 })
 })
 

@@ -34,7 +34,7 @@ export class WorkspaceFeatures {
     files: WorkspaceFiles,
     matches: (id: string) => boolean,
     schedulePreview: (workspaceId: string, at: number | null) => Promise<void>,
-    activity: (workspaceId: string) => Promise<void>,
+    activity: (workspaceId: string, at: number) => void,
     publishPreviews: (
       workspaceId: string,
       ids: readonly string[],

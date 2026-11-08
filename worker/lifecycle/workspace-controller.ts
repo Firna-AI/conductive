@@ -64,6 +64,11 @@ export function createWorkspaceController(
     put: (key, value) => platform.storage.put('draft', key, value),
   }
   const controller: WorkspaceController = {
+    recordLifecycleInput: (at) => lifecycle.input.record(at),
+    captureLifecycleActivity: () => lifecycle.input.capture(),
+    reconcileLifecycleActivity: async (snapshot, remote) => {
+      if (await lifecycle.input.reconcile(snapshot, remote)) await turns.clear()
+    },
     cancelLifecycleWaiters: () => starts.abortWaiters(),
     cancelSuspendedLifecycleStart: (id, ownerId) =>
       accessStop.cancelPending(id, ownerId),

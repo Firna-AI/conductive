@@ -6524,6 +6524,17 @@ Evidence: `.context/milestone-15i/5d-worker-merge.md`,
 `.context/milestone-15i/5d-restore-budget/report.md`, and
 `.context/milestone-15i/5d-ui-check.md`.
 
+Primary review fixes, 8 November 2026, for the review of `0d1f3ad`:
+
+- 17 D: one input owner in each workspace object updates D1 and the
+  provider at most once a minute. No input path waits for them.
+- 18 D: one server owner computes the GitHub step of Get started in every
+  org state.
+- 19 A: the dead `worker/lifecycle/start-next-phase.ts` is deleted.
+
+Evidence: `.context/milestone-15i/orchestrator-r1/activity/report.md` and
+`.context/milestone-15i/orchestrator-r1/get-started/report.md`.
+
 ## Milestone 15j: Rename to Conductive
 
 Depends on: none

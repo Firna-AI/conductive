@@ -11,6 +11,7 @@ import { writeLifecycleState } from './durable-scheduling'
 import { failedStartStop } from './durable-start-stop'
 import { advanceLifecycleAlarm } from './durable-alarm'
 import { isConfirmedStopped } from './confirmed-stop'
+import { LifecycleInputState } from './input-activity-local'
 import {
   LIFECYCLE_STATE_KEY,
   type DurableLifecycleState,
@@ -22,6 +23,7 @@ import {
 /** One instance lives inside each workspace Durable Object. */
 export class DurableLifecycle {
   private pending: Promise<unknown> = Promise.resolve()
+  readonly input: LifecycleInputState
   private readonly storage: LifecycleStorage
   private readonly now: () => number
   private readonly hooks: LifecycleHooks
@@ -34,6 +36,12 @@ export class DurableLifecycle {
     this.storage = storage
     this.now = now
     this.hooks = hooks
+    this.input = new LifecycleInputState({
+      storage,
+      now,
+      serial: (operation) => this.serial(operation),
+      write: (state) => this.write(state),
+    })
   }
 
   read(): Promise<DurableLifecycleState | undefined> {
@@ -150,19 +158,7 @@ export class DurableLifecycle {
   }
 
   activity(): Promise<void> {
-    return this.update(async (state) => {
-      if (
-        state.state === 'stopped' ||
-        state.state === 'archived' ||
-        state.startStop !== undefined
-      )
-        return state
-      return reconciledLifecycle(
-        { ...state, lastActivityAt: this.now() },
-        await this.hooks.extendDeadline(),
-        this.now(),
-      )
-    })
+    return this.input.activity(() => this.hooks.extendDeadline())
   }
 
   rearmStopped(): Promise<void> {
@@ -221,6 +217,7 @@ export class DurableLifecycle {
 
   clear(preserveAlarm = false): Promise<boolean> {
     return this.serial(async () => {
+      this.input.invalidate()
       if (!preserveAlarm) await this.storage.deleteAlarm()
       return this.storage.delete(LIFECYCLE_STATE_KEY)
     })
@@ -269,6 +266,7 @@ export class DurableLifecycle {
     state: DurableLifecycleState,
     publish?: LifecyclePublisher,
   ): Promise<void> {
+    this.input.invalidate()
     await writeLifecycleState(
       this.storage,
       this.hooks,

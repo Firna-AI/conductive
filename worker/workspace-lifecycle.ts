@@ -32,6 +32,9 @@ import {
 } from './lifecycle/workspace-transport'
 import type { WorkspaceController } from './lifecycle/workspace-controller-types'
 import { failedCreationEvents } from './lifecycle/failed-creation-events'
+import { createWorkspaceInputActivity } from './lifecycle/create-input-activity'
+import { lifecycleDependencies } from './lifecycle/runtime'
+import type { ConnectionScheduler } from './security/connection-access'
 
 export class WorkspaceLifecycle
   extends DurableObject<WorkspaceCompositionEnv>
@@ -41,6 +44,8 @@ export class WorkspaceLifecycle
   protected readonly controller: WorkspaceController
   protected readonly devices: DeviceRuntime
   protected readonly context: DurableObjectState
+  protected readonly activity: ReturnType<typeof createWorkspaceInputActivity>
+  private readonly activityNow: () => number
 
   protected readonly integration: ReturnType<typeof createWorkspaceIntegration>
 
@@ -49,14 +54,25 @@ export class WorkspaceLifecycle
     env: WorkspaceCompositionEnv,
     now: () => number = Date.now,
     resolvers: WorkspaceChatResolvers = {},
+    activitySchedule?: ConnectionScheduler,
   ) {
     super(context, env)
     this.context = context
+    this.activityNow = now
     const integration = createWorkspaceIntegration(context, env, now, resolvers)
     this.integration = integration
     this.chat = integration.chat
     this.devices = integration.devices
     this.controller = integration.controller
+    this.activity = createWorkspaceInputActivity(
+      context,
+      env,
+      { ...lifecycleDependencies(), now },
+      integration,
+      (operation) =>
+        this.chat.runLifecycle(() => integration.withGeneration(operation)),
+      activitySchedule,
+    )
   }
 
   protected run<T>(operation: () => Promise<T>): Promise<T> {
@@ -158,8 +174,10 @@ export class WorkspaceLifecycle
     return this.run(() => this.controller.lifecycleFailed(error))
   }
 
-  lifecycleActivity() {
-    return this.run(() => this.controller.lifecycleActivity())
+  async lifecycleActivity() {
+    const at = this.activityNow()
+    const state = await this.readLifecycle()
+    if (state) this.activity.record(state.workspaceId, at)
   }
 
   async lifecycleStopped(): Promise<void> {
