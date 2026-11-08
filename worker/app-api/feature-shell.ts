@@ -5,7 +5,7 @@ import { sectionsPath } from '../../src/shared/sections'
 import { workspacePath } from '../../src/shared/workspaces'
 import type { AppDependencies, AppEnv } from '../env'
 import type { RequestContext } from '../security/gate'
-import { shellGitHubAccess, GITHUB_INSTALL_URL } from './feature-github'
+import { shellGitHubAccess, githubInstallUrl } from './feature-github'
 import { createShellOrg } from './feature-org'
 import {
   changeShellRepository,
@@ -36,7 +36,7 @@ export async function featureShellRoute(
       path === ACCOUNT_PATHS.githubInstallations
         ? {
             installations: access.installations,
-            installUrl: GITHUB_INSTALL_URL,
+            installUrl: githubInstallUrl(env),
           }
         : { repositories: access.repositories },
     )

@@ -9,18 +9,14 @@ import {
 } from '../data/user-access'
 import { orgSandboxProvider, sandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
-import { ProviderError } from '../sandbox/errors'
 import { IMAGE_BUILD_TIME_LIMIT_MS, JobTimeLimit } from './job-time-limit'
 import {
-  nextProviderRetry,
   providerRetryPending,
   providerRetryExpired,
   ProviderRetryExhausted,
-  transientProviderError,
 } from './provider-retry'
 import {
   progressImageRetry,
-  saveImageRetry,
   clearImageRetryStatement,
 } from './image-retry-data'
 import { readSourceJob } from './image-sources/source-data'
@@ -29,16 +25,11 @@ import { advanceBuildStep } from './image-build-steps'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
 import type { SourceCommandPort } from './image-sources/source-commands'
 import { requireOrgMember } from './access'
-import {
-  failBuild,
-  jobSoftware,
-  readBuildJob,
-  runningBuild,
-  updateBuildJob,
-} from './build-data'
+import { jobSoftware, readBuildJob, runningBuild } from './build-data'
 import { cleanupBuild } from './build-execution'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
-import { IMAGE_DAY_MS, scheduleIdleImage } from './image-schedule'
+import { IMAGE_DAY_MS } from './image-schedule'
+import { handleImageBuildFailure } from './image-build-failure'
 import {
   firstOrgAdmin,
   readImageSettings,
@@ -181,7 +172,7 @@ export async function advanceImageBuild(
   buildId: string,
 ): Promise<boolean> {
   const { env, dependencies } = runtime
-  let job = await readBuildJob(env.DB, orgId, buildId)
+  const job = await readBuildJob(env.DB, orgId, buildId)
   let provider: SandboxProvider | undefined
   const recoveringAllocation = job.phase === 'allocating' && !job.sandboxId
   const firstAllocation = job.phase === 'create'
@@ -240,61 +231,12 @@ export async function advanceImageBuild(
     if (!done) await progressImageRetry(env.DB, buildId)
     return done
   } catch (error) {
-    job = await readBuildJob(env.DB, orgId, buildId)
-    if (job.phase === 'cleanup' || job.state !== 'running') throw error
-    const suspended =
-      error instanceof HttpError &&
-      ['user_suspended', 'org_suspended'].includes(error.code)
-    const failure =
-      !suspended &&
-      dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS
-        ? new JobTimeLimit('build')
-        : error
-    const retry = nextProviderRetry(
-      job.providerRetry,
-      failure,
-      dependencies.now(),
-    )
-    if (retry) {
-      await saveImageRetry(env.DB, buildId, retry)
-      return false
-    }
-    if (
-      provider &&
-      job.phase === 'allocating' &&
-      !job.sandboxId &&
-      !suspended &&
-      !(failure instanceof ProviderRetryExhausted) &&
-      !(failure instanceof JobTimeLimit) &&
-      !(failure instanceof ProviderError)
-    )
-      return false
-    const message =
-      failure instanceof HttpError
-        ? failure.message
-        : 'The cloud computer image could not build. Check the log and try again.'
-    const unresolvedAllocation =
-      job.phase === 'allocating' &&
-      !job.sandboxId &&
-      !(
-        firstAllocation &&
-        error instanceof ProviderError &&
-        !transientProviderError(error)
-      )
-    await failBuild(env.DB, buildId, message, dependencies.now())
-    if (!unresolvedAllocation) await updateBuildJob(env.DB, buildId, 'cleanup')
-    if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))
-      return false
-    if (!provider) {
-      if (job.sandboxId || unresolvedAllocation) return false
-      await updateBuildJob(env.DB, buildId, 'done')
-      await scheduleIdleImage(runtime, orgId, jobSoftware(job))
-      return true
-    }
-    return await cleanupBuild(
-      runtime,
+    return handleImageBuildFailure(runtime, {
+      orgId,
+      buildId,
       provider,
-      await readBuildJob(env.DB, orgId, buildId),
-    )
+      firstAllocation,
+      error,
+    })
   }
 }

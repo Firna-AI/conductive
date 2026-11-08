@@ -196,6 +196,7 @@ object holds the lifecycle state, the turn records, and the events.
 - [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
+- [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
 - [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
   replays a saved allocation request and saves the recovered sandbox ID.
   Failed image jobs retain their unresolved allocation phase until cleanup

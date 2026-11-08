@@ -10,6 +10,7 @@ import { readBuildHistory, readBuildJob } from './build-data'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { finishImageBuild } from './image-test-support'
 import { buildSnapshotIntent } from './resource-intents'
+import { savedImageName } from './image-names'
 
 const backendFixture = setupBackendTests()
 
@@ -31,7 +32,7 @@ it.each([
       const save = boatRoute({ operation: 'saveSnapshot' })
       const lookup = boatRoute({
         operation: 'getSnapshot',
-        name: `image-${buildId}`,
+        name: savedImageName(buildId),
       })
       let intentAtSave: string | null = null
       images.dependencies = {
@@ -62,14 +63,14 @@ it.each([
       await expect(finishImageBuild(fixture, buildId)).resolves.toBeUndefined()
 
       expect(boat.deletedSnapshots).toEqual([
-        refuseLookup ? `image-${buildId}` : 'last-good-image',
+        refuseLookup ? savedImageName(buildId) : 'last-good-image',
       ])
-      expect(intentAtSave).toBe(`image-${buildId}`)
+      expect(intentAtSave).toBe(savedImageName(buildId))
       expect(await readBuildJob(runtime.env.DB, org.id, buildId)).toMatchObject(
         {
           state,
           phase: 'done',
-          snapshotName: `image-${buildId}`,
+          snapshotName: savedImageName(buildId),
           sandboxId: null,
         },
       )
@@ -88,7 +89,7 @@ it.each([
       )
       expect(await cleanupResources(runtime.env.DB, org.id)).toContainEqual({
         kind: 'snapshot',
-        id: `image-${buildId}`,
+        id: savedImageName(buildId),
         stoppedAt: null,
         removedAt: null,
       })
@@ -116,7 +117,7 @@ it('replays an undispatched snapshot intent and waits for a racing save before p
     expect(job.phase).toBe('snapshot')
     const intent = buildSnapshotIntent(runtime.env.DB, job)
     await intent.persist(intent.input)
-    const name = `image-${buildId}`
+    const name = savedImageName(buildId)
     const save = boatRoute({ operation: 'saveSnapshot' })
     const lookup = boatRoute({ operation: 'getSnapshot', name })
     expect(

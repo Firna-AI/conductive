@@ -65,7 +65,9 @@ export async function advanceBuildCommand(
   )
   if (status.more || status.running) return false
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut)
-    throw new Error('Image command failed')
+    throw new Error(
+      `Image command failed: state ${status.state}, exit code ${status.exitCode ?? 'none'}, timed out ${status.timedOut}`,
+    )
   const next: BuildPhase = job.phase === 'software' ? 'install' : 'snapshot'
   await completeBuildPhase(runtime.env.DB, job.buildId, next)
   return false
