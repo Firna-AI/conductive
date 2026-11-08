@@ -6532,20 +6532,29 @@ Orchestrator calls of 8 November 2026:
   moves to the restore.
 - A disk retention restart starts no watch, because it starts no terminal.
 
-- [ ] Parse `hydrated` in the sandbox provider's `get` reply, as `true`,
-      `false`, or absent.
-- [ ] Add the restore watch to the lifecycle state and to the alarm of the
+- [x] Parse `hydrated` in the sandbox provider's `get` reply, as `true`,
+      `false`, or absent. Branch: `calummoore/directory-path-length`.
+- [x] Add the restore watch to the lifecycle state and to the alarm of the
       workspace object, with its schedule and its end at a stop, an error,
       an archive, and a new start. Write the marker through the terminal
-      area when the restore ends.
-- [ ] Make the folder hook wait for the marker, and check once.
-- [ ] Test the parser, the watch, and the hook.
-- [ ] Update `worker/terminal/README.md`, the lifecycle docs, the sandbox
+      area when the restore ends. The orchestrator check added the end at
+      an access stop, which an org suspension found.
+      Branch: `calummoore/directory-path-length`.
+- [x] Make the folder hook wait for the marker, and check once.
+      Branch: `calummoore/directory-path-length`.
+- [x] Test the parser, the watch, and the hook. Evidence:
+      `.context/boat-native-remote-workspaces/milestone-11f/non-ui/report.txt`.
+      Branch: `calummoore/directory-path-length`.
+- [x] Update `worker/terminal/README.md`, the lifecycle docs, the sandbox
       README, the "Terminal" section of
       `docs/protocol/workspaces-and-sandboxes.md`, and the post-merge
       check. Delete `plans/follow-ups/folder-hook-outside-restores.md`, and
-      update `plans/follow-ups/old-disk-view-after-restore.md`.
-- [ ] Run the complete gate. Commit and push the branch.
+      update `plans/follow-ups/old-disk-view-after-restore.md`. The sandbox
+      README needed no change, because it does not list the reply fields.
+      Branch: `calummoore/directory-path-length`.
+- [x] Run the complete gate. Commit and push the branch. Done on
+      8 November 2026. Evidence: `.context/gate-directory-path-length-6.log`.
+      Branch: `calummoore/directory-path-length`.
 - [ ] Review the new commits against `origin/main` with the
       `implementation-review` skill. The two fix rounds of the branch are
       used, so a `fix now` finding becomes `fix after merge`, and a
@@ -7471,8 +7480,8 @@ checks of 16 and 16a to the work after the merge.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After the deploy of Milestones 11d and 11e, build the org image
-      again. A change to the terminal files reaches a workspace only
+- [ ] After the deploy of Milestones 11d, 11e, and 11f, build the org
+      image again. A change to the terminal files reaches a workspace only
       through a new image. An existing workspace keeps the terminal
       programs of its image, also after a resume. So create a new
       workspace from the rebuilt image, and let it stop, for example after
@@ -7481,17 +7490,34 @@ checks of 16 and 16a to the work after the merge.
       `GET /sandboxes/{id}` of Boat gives `hydrated: true`. Then do these
       steps in that shell:
   - `grep -c -F -- '-s workspace -c' /usr/local/lib/conductive/terminal`
-    and `grep -c -F -- 'set-environment -g PROMPT_COMMAND' /usr/local/lib/conductive/terminal-sessions`
+    and `grep -c -F -- '/run/conductive-terminal/restore-ended' /usr/local/lib/conductive/terminal-sessions`
     each print `1`. A `0` means that the workspace runs the old programs.
   - `readlink /proc/$(pgrep -o -x ttyd)/cwd` prints a path under
     `/var/lib/ascii-lazy/retired/`. This shows that the terminal started
     before the restore ended, and that the restore has ended. Another
     path means that this resume cannot test the fix. Then stop and
     resume the workspace again.
+  - `ps -o lstart= -p $$` prints a time before `hydratedAt` of
+    `GET /sandboxes/{id}`. This shows that the shell itself started before
+    the restore ended. A later time means that this shell cannot test the
+    hook. Then stop and resume the workspace again.
+  - Wait until the restore marker `/run/conductive-terminal/restore-ended`
+    exists, for example with `ls -l /run/conductive-terminal/restore-ended`.
+    The Worker writes it up to about 5 seconds after Boat gives
+    `hydrated: true`. Then press Enter on an empty line, so that the
+    folder hook runs at a prompt after the marker exists.
   - `readlink /proc/$$/cwd` prints `/home/user/code/<name>`. This shows
-    that the folder hook moved the early shell after the first command
-    of the steps above. The prompt and Bash's `pwd -P` read the path text
-    in `$PWD`, so they do not show the real folder.
+    that the folder hook moved the early shell at its first prompt after
+    the marker. The prompt and Bash's `pwd -P` read the path text in
+    `$PWD`, so they do not show the real folder.
+  - Run `mkdir conductive-once && cd conductive-once`. Then run
+    `(cd .. && rmdir conductive-once && mkdir conductive-once)`. This
+    subshell removes the folder of the shell and makes it again. Then
+    `readlink /proc/$$/cwd` prints
+    `/home/user/code/<name>/conductive-once (deleted)`. The folder hook
+    ran at the prompt after the subshell, but it did not move the shell to
+    the new folder. This shows that the hook moves a shell only once. Run
+    `cd .. && rmdir conductive-once` to remove the test folder.
   - Run `exit`, and press Reconnect. The next connection creates a new
     shell after the restore. In the new shell, `readlink /proc/$$/cwd`
     prints `/home/user/code/<name>`, not a path under

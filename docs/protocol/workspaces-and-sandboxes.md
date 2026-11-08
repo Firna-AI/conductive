@@ -354,11 +354,19 @@ says.
 - After a start from a saved snapshot, the sandbox provider restores the
   disk in the background. A shell that starts after the restore ends opens
   in the live repository folder. A shell that started earlier moves to the
-  live copy of its own folder before its next prompt (decision 142).
+  live copy of its own folder once, at its first prompt after the app sees
+  the end of the restore (decisions 142 and 144).
 - Reason: when the restore ends, a running program keeps an old view of
   the disk at another path. A restart of the shell was rejected, because it
   ends running commands. A terminal that waits for the end of the restore
   was rejected, because the Terminal tab then waits too.
+- Apart from that one move, the terminal never moves a running shell by
+  itself. The app learns the end of the restore from a signal that the
+  sandbox provider documents (decision 144).
+- Reason: a move each time that the real folder of a shell differs from
+  the path in its prompt was rejected, because it also moves a shell
+  outside a restore. A check of the provider's path of the old view was
+  rejected, because the provider does not document that path.
 - When the user ends the shell, such as with `exit`, the next connection
   opens a new shell.
 - A stop of the sandbox ends the shell and its commands, as

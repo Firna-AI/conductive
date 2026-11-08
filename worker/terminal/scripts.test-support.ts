@@ -51,6 +51,7 @@ printf '%s\\0' "$PWD" "$CONDUCTIVE_LAUNCH_TEST" "$@"
   )
   const options: TerminalScriptOptions = {
     runtimeDirectory: `${root}/runtime folder`,
+    restoreMarker: `${root}/runtime folder/restore-ended`,
     environmentFile,
     owner: String(process.getuid?.()),
     group: String(process.getgid?.()),

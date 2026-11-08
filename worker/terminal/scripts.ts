@@ -1,6 +1,7 @@
 import { shellArgument } from './privileged'
 
 export const TERMINAL_RUNTIME = '/run/conductive-terminal'
+export const TERMINAL_RESTORE_MARKER = `${TERMINAL_RUNTIME}/restore-ended`
 /**
  * The provider's file API reads only under /home/user or /tmp. The start hook
  * binds the memory folder here, so the password stays out of the disk.
@@ -9,6 +10,7 @@ export const TERMINAL_RUNTIME_VIEW = '/home/user/.conductive-terminal'
 
 export interface TerminalScriptOptions {
   runtimeDirectory: string
+  restoreMarker: string
   environmentFile: string
   owner: string
   group: string
@@ -18,16 +20,19 @@ export interface TerminalScriptOptions {
 }
 
 /**
- * Bash runs this before each prompt of a workspace shell. When the shell's
- * real folder is not the folder that `$PWD` names, it moves the shell there
- * and keeps `OLDPWD`. A shell that starts before the provider's restore ends
- * otherwise stays in the old view of the disk, as `launcherScript` says.
+ * Bash checks once, at the first prompt after the restore marker exists.
+ * If the real folder differs from `$PWD`, it moves there and keeps `OLDPWD`.
+ * The check flag stays local to this shell, so new shells check for themselves.
  */
-export const terminalPromptCommand =
-  '[ -z "${PWD-}" ] || builtin test . -ef "$PWD" || { __conductive_oldpwd=${OLDPWD-}; builtin cd -- "$PWD" 2>/dev/null && OLDPWD=$__conductive_oldpwd; unset __conductive_oldpwd; }'
+export function terminalPromptCommand(
+  restoreMarker = TERMINAL_RESTORE_MARKER,
+): string {
+  return `builtin test -n "\${__conductive_restore_checked-}" || ! builtin test -f ${shellArgument(restoreMarker)} || { __conductive_restore_checked=1; [ -z "\${PWD-}" ] || builtin test . -ef "$PWD" || { __conductive_oldpwd=\${OLDPWD-}; builtin cd -- "$PWD" 2>/dev/null && OLDPWD=$__conductive_oldpwd; unset __conductive_oldpwd; }; }`
+}
 
 export const terminalScriptDefaults: TerminalScriptOptions = {
   runtimeDirectory: TERMINAL_RUNTIME,
+  restoreMarker: TERMINAL_RESTORE_MARKER,
   environmentFile: '/run/ascii-secrets/env.sh',
   owner: 'user',
   group: 'user',
@@ -105,6 +110,6 @@ set -a
 . ${shellArgument(options.environmentFile)}
 set +a
 cd "$CONDUCTIVE_REPOSITORY_DIR"
-exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand)}
+exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand(options.restoreMarker))}
 `
 }

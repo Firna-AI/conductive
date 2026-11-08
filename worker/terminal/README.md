@@ -56,7 +56,7 @@ configuration file. It changes one default option: it keeps running when
 no session exists. So the screen shows the default tmux status line, and
 Ctrl-b is the tmux prefix key. Each new shell gets the workspace variables
 from this server. The server also sets `PROMPT_COMMAND` in the global tmux
-environment to `terminalPromptCommand`, the folder hook below.
+environment to the folder hook below.
 
 The launcher loads the same variables, moves to the repository folder, and
 checks the password before it runs ttyd. For each connection, ttyd runs a
@@ -74,22 +74,37 @@ A shell that starts before the restore ends also stays in the old view
 when the restore ends. Its prompt still shows the normal path, because
 Bash keeps the path text in `$PWD`. Bash's `pwd -P` also reads that text,
 so only `readlink /proc/$$/cwd` shows the real folder. The folder hook
-fixes such a shell. Bash runs it before each prompt. When the real folder
-of the shell is not the folder that `$PWD` names, the hook moves the shell
-there with `builtin cd`, and it keeps `OLDPWD`. So a shell in a subfolder
-moves to the live copy of that subfolder, not to the repository folder.
+fixes such a shell, and it moves a shell only for the restore.
+
+Call `markTerminalRestoreEnded(provider, sandboxId)` when Boat reports the
+end of the restore of a create or a resume. It writes the restore marker
+`/run/conductive-terminal/restore-ended`. It runs `touch` as root, through
+the privileged-command helper and the provider's `runCommand`. It throws a
+provider error when the command fails or times out. The
+[restore watch](../lifecycle/workspace-object.md#creates-and-resumes) of
+the workspace object calls it. `/run` is memory, so each start begins
+without the marker.
+
+Bash runs the folder hook before each prompt. The hook does nothing until
+the restore marker exists. At the first prompt after that, it checks the
+shell once. When the real folder of the shell is not the folder that
+`$PWD` names, the hook moves the shell there with `builtin cd`, and it
+keeps `OLDPWD`. So a shell in a subfolder moves to the live copy of that
+subfolder, not to the repository folder. After that check, the hook never
+moves that shell again. It records the check in a shell variable that it
+does not export. So each new shell, also a nested one, checks for itself.
 The hook has these limits:
 
-- The first command after the end of the restore, in a shell that waited
-  at its prompt, still runs in the old view. The hook moves the shell when
-  that command ends.
+- In a shell that waits at its prompt when the restore ends, the commands
+  until its first prompt after the marker still run in the old view. The
+  marker comes up to about 5 seconds after Boat reports the end of the
+  restore. Each failed Boat read or marker command delays it by about 30
+  seconds.
 - A program that the shell started earlier, such as a dev server, keeps
   the old view.
 - A startup file that replaces `PROMPT_COMMAND` turns the hook off.
 - As each prompt command does, the hook resets `PIPESTATUS` before Bash
   shows the prompt. Bash keeps `$?`.
-- The shell also follows its path when a folder is deleted and made again,
-  or when a symbolic link in the path changes.
 
 So every connection of a workspace attaches to the same session, with its
 running commands and its screen. Concurrent connections share it too. A
@@ -153,12 +168,19 @@ installed in the image. Its trusted options select paths, account names,
 and executables, such as ttyd and tmux. The password program captures
 entropy before conversion and commits a complete password through a
 temporary file. The launcher checks the password before it executes ttyd.
-`terminalPromptCommand` holds the folder hook.
+`terminalPromptCommand(restoreMarker)` builds the folder hook for the path
+of the restore marker.
 
 Tests execute the three programs with fake ttyd and tmux in isolated
-runtime folders. One test runs the folder hook in a real interactive Bash,
-and moves the folder of the shell as a restore does. The install test runs `terminalInstallCommand()` with fake
-`sudo`, `apt-get`, and `systemctl` commands. Run the tests of this area with
+runtime folders. One test runs the folder hook in a real interactive Bash.
+It moves the folder of the shell as a restore does, and it writes the
+marker later. It checks that the shell stays in the old view until the
+marker exists, moves once, keeps `OLDPWD`, and stays at a later move of
+the folder. It also checks that the hook exports no variable. The install
+test runs `terminalInstallCommand()` with fake `sudo`, `apt-get`, and
+`systemctl` commands. The
+[restore watch tests](../lifecycle/restore-watch.test.ts) of the lifecycle
+check when the Worker writes the marker. Run the tests of this area with
 `npm run test -- worker/terminal`.
 
 An org suspension refuses new sockets with 403 `org_suspended`.
@@ -170,8 +192,8 @@ Terminal status reads remain available.
 - [handler.ts](handler.ts) exports `createTerminalHandler`.
 - [connections.ts](connections.ts) owns terminal registration, expiry, and scheduled access checks.
 - [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.
-- [service.ts](service.ts) exports `terminalInstallCommand`, which installs both packages, the three programs, and both units. It also exports the image and start hooks, and `TERMINAL_PORT`.
-- [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`. It also holds the folder hook, `terminalPromptCommand`.
+- [service.ts](service.ts) exports `terminalInstallCommand`, which installs both packages, the three programs, and both units. It also exports the image and start hooks, the marker writer `markTerminalRestoreEnded`, and `TERMINAL_PORT`.
+- [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`. It also holds the marker path `TERMINAL_RESTORE_MARKER`, and it builds the folder hook with `terminalPromptCommand`.
 - [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
 - [store.ts](store.ts) binds each cached password to its current sandbox.
 - [privileged.ts](privileged.ts) quotes installation and service control commands.
@@ -179,7 +201,7 @@ Terminal status reads remain available.
 - [scripts.test.ts](scripts.test.ts) and [install.test.ts](install.test.ts) run the programs and the install command with fakes.
 - [The tools adapter](../previews/provider.ts) exposes the private port.
 - [The sandbox provider](../sandbox/README.md) owns credentials, fixed routes, and bounded file reads.
-- [The workspace lifecycle](../lifecycle/README.md) runs the install command in each build and the start hook after each startup script.
+- [The workspace lifecycle](../lifecycle/README.md) runs the install command in each build and the start hook after each startup script. Its restore watch calls `markTerminalRestoreEnded`.
 
 See [access and security](../../docs/protocol/access-and-security.md) and
 [workspace tools](../../docs/protocol/workspaces-and-sandboxes.md#terminal).

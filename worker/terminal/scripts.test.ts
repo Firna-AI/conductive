@@ -122,26 +122,37 @@ printf '%s\\0' "$@"
   ])
 })
 
-it('moves a running shell to the live copy of its folder when a restore replaces that folder', async () => {
+it('waits for the restore marker before moving a running shell once and keeps OLDPWD', async () => {
   const fixture = await scriptFixture()
   const folder = `${fixture.repository}/src`
   const oldView = `${fixture.root}/old view`
+  const laterView = `${fixture.root}/later view`
   await mkdir(folder)
+  await mkdir(fixture.options.runtimeDirectory)
+  await writeFile(`${folder}/old file`, '')
   const result = await runInteractiveBash(
     [
       `cd ${shellArgument(folder)}`,
       `mv ${shellArgument(fixture.repository)} ${shellArgument(oldView)} && mkdir -p ${shellArgument(folder)} && : > ${shellArgument(`${folder}/live file`)}`,
       'ls',
+      `: > ${shellArgument(fixture.options.restoreMarker)}`,
+      'ls',
       'printf "%s\\n" "$OLDPWD"',
+      `mv ${shellArgument(fixture.repository)} ${shellArgument(laterView)} && mkdir -p ${shellArgument(folder)} && : > ${shellArgument(`${folder}/later file`)}`,
+      'ls',
+      'printf "%s\\n" "$OLDPWD"',
+      'env | cut -d= -f1 | grep "^__conductive_" || :',
       'exit',
     ],
     {
       folder: fixture.repository,
       home: fixture.root,
-      promptCommand: terminalPromptCommand,
+      promptCommand: terminalPromptCommand(fixture.options.restoreMarker),
     },
   )
   expect(result.code).toBe(0)
-  expect(result.stdout).toBe(`live file\n${fixture.repository}\n`)
+  expect(result.stdout).toBe(
+    `old file\nlive file\n${fixture.repository}\nlive file\n${fixture.repository}\n`,
+  )
   expect(result.stderr).not.toContain('PROMPT_COMMAND')
 })
