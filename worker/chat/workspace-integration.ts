@@ -1,4 +1,14 @@
 import { HttpError } from '../http'
+import { WorkspaceFiles } from '../files/workspace'
+import { durableFilesStorage } from '../files/storage'
+import { WorkspaceAlarms } from '../features/alarms'
+import { nativeWorkspaceStorage } from '../lifecycle/platform-storage'
+import {
+  assertReceiverActive,
+  LIFECYCLE_FENCE_KEY,
+  type ReceiverFence,
+} from '../members/receiver-fence'
+import { receiverStorage } from '../members/receiver-storage'
 import { DeviceRuntime } from '../devices/runtime'
 import { createWorkspaceController } from '../lifecycle/workspace-controller'
 import { nativeWorkspacePlatform } from '../lifecycle/workspace-platform'
@@ -28,14 +38,53 @@ export function createWorkspaceIntegration(
   now: () => number,
   resolvers: WorkspaceChatResolvers = {},
 ) {
-  const dependencies = { ...lifecycleDependencies(), now }
+  const storage = receiverStorage(context.storage)
+  let generation: number | undefined
+  const original = lifecycleDependencies()
+  const dependencies = {
+    ...original,
+    now,
+    fetch: async (request: Request) => {
+      await assertReceiverActive(storage, generation)
+      const response = await original.fetch(request)
+      // An allocated resource must retain its returned ID before a suspension drains the phase.
+      if (!(
+        request.method === 'POST' &&
+        new URL(request.url).pathname === '/api/v1/sandboxes'
+      ))
+        await assertReceiverActive(storage, generation)
+      return response
+    },
+  }
+  const alarms = new WorkspaceAlarms(storage)
+  const stoppedHooks: ((id: string) => Promise<void>)[] = []
+  const files = new WorkspaceFiles(
+    durableFilesStorage(storage),
+    dependencies.randomToken,
+  )
   const matches = (name: string) =>
     env.WORKSPACES.idFromName(name).equals(context.id)
-  const chat: WorkspaceChat = new WorkspaceChat(context.storage, env, {
+  const chat: WorkspaceChat = new WorkspaceChat(storage, env, {
     ...resolvers,
     now,
     matchesObject: matches,
     waitUntil: (promise) => context.waitUntil(promise),
+    runnerAttached: (_workspaceId, connectionId, send) => {
+      files.runner.attach(connectionId, (command) => {
+        context.waitUntil(
+          send(command).then(
+            (sent) => {
+              if (!sent) files.runner.detach(connectionId)
+            },
+            () => files.runner.detach(connectionId),
+          ),
+        )
+      })
+    },
+    runnerDetached: (connectionId) => files.runner.detach(connectionId),
+    receiveFileResult: async (value, connectionId) => {
+      files.runner.receive(connectionId, value)
+    },
     runnerReady: async (_id, publish) => {
       await controller.reportRunnerLifecycle(
         { type: 'runner.ready' },
@@ -95,27 +144,42 @@ export function createWorkspaceIntegration(
   })
   const devices = new DeviceRuntime(
     env,
-    context.storage,
+    storage,
     chat,
     matches,
-    (when) => context.storage.setAlarm(when),
+    (when) => alarms.set('devices', when),
     now,
     async (request, at, publish) => {
       const session = await chat.store.read(request.workspaceId, (view) =>
         view.session(request.sessionId),
       )
-      return controller.projectDeviceState(
-        request.workspaceId,
-        session?.choice,
-        at,
-        callbackPublisher(publish),
-      )
+      try {
+        return await controller.projectDeviceState(
+          request.workspaceId,
+          session?.choice,
+          at,
+          callbackPublisher(publish),
+        )
+      } catch (error) {
+        if (
+          error instanceof HttpError &&
+          error.status === 404 &&
+          error.code === 'workspace_not_found'
+        )
+          return true
+        throw error
+      }
     },
   )
   const platform = nativeWorkspacePlatform(
     context,
     ({ workspaceId, event, occurredAt }) =>
       chat.commitWorkspaceEvent(workspaceId, event, occurredAt),
+    nativeWorkspaceStorage(storage, {
+      lifecycleAlarms: true,
+      guarded: true,
+      generation: () => generation,
+    }),
   )
   const controller: WorkspaceController = createWorkspaceController(
     env,
@@ -123,6 +187,9 @@ export function createWorkspaceIntegration(
     {
       ...platform,
       deviceWaiting: (id) => devices.waiting(id),
+      stopping: async (id) => {
+        for (const hook of stoppedHooks) await hook(id)
+      },
       admitFirstMessage: async (input) => {
         const identity = await firstMessageIdentity(env, input.workspaceId)
         if (
@@ -144,10 +211,30 @@ export function createWorkspaceIntegration(
         })
       },
       stopped: async (id) => {
+        for (const hook of stoppedHooks) await hook(id)
         await chat.stopWorkspace(id)
         context.waitUntil(devices.reconcile())
       },
     },
   )
-  return { chat, devices, controller }
+  return {
+    storage,
+    chat,
+    devices,
+    controller,
+    files,
+    alarms,
+    withGeneration: async <T>(operation: () => Promise<T>): Promise<T> => {
+      const prior = generation
+      generation =
+        (await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY))?.generation ?? 0
+      try {
+        return await operation()
+      } finally {
+        generation = prior
+      }
+    },
+    reconcileStopped: () => devices.reconcile(),
+    onStopped: (hook: (id: string) => Promise<void>) => stoppedHooks.push(hook),
+  }
 }

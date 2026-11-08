@@ -1,9 +1,11 @@
 import { describe, expect, test } from 'vitest'
 import { WorkspaceModel } from '../../app/workspace-model'
+import { ChatController } from '../../chat/state/controller'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, fakeUser } from '../../test-support/fixtures/core'
 import { renderScreen, startedApp, textOf } from '../test-render'
 import { sandboxState } from '../workspace/features'
+import { ToolEvents } from '../workspace/tools/tool-events'
 import { WorkspaceHeader } from '../workspace/WorkspaceHeader'
 import { OrgList } from './OrgList'
 
@@ -41,6 +43,14 @@ describe('workspace states', () => {
             viewport: 'desktop',
             view: [],
             stream: open.stream,
+            // The header reads no saved view and no tool events, so the chat
+            // never starts and the tool events follow no stream.
+            savedView: new ChatController({
+              target: { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace },
+              client: app.services.api,
+              subscribe: () => () => undefined,
+            }),
+            toolEvents: new ToolEvents().subscribe,
             archive: null,
             onReassigned: () => undefined,
           }}

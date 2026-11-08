@@ -63,8 +63,8 @@ To supply an archive:
 A build fails when the file at the URL does not match the digest. So a
 versioned URL for each archive is a good choice.
 
-The Worker does not serve the archive. No route reads the two variables
-yet, because the Worker does not route the image builds.
+The Worker does not serve the archive. Image builds and refreshes read the
+two variables.
 
 ## The private Node runtime
 

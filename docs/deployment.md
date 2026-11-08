@@ -47,6 +47,7 @@ examples.
 | `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, for a user with no saved default | The JSON default choice, as [Models](#models) says. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
+| `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
 | `OPERATOR_GITHUB_IDS` | The operator's suspension of a user | Optional. The numeric GitHub user IDs of the operators, separated by commas. It is not a secret. Without it, each operator request gets `403 operator_required`, as the [operator area](../worker/operator/README.md#suspend-a-user) says. |
 
 - Without `MACHINE_ORIGIN`, the Worker refuses each request on the machine
@@ -66,6 +67,8 @@ examples.
 | `SESSION_SIGNING_KEY` | Sign-in, the sign-in of the Mac app, and every signed-in route | 32 random bytes, encoded as Base64. |
 | `BOAT_KEY_ENCRYPTION_KEY` | Every route that stores or reads a stored secret | A separate 32 random bytes, encoded as Base64. |
 | `GITHUB_APP_PRIVATE_KEY` | Image builds and refreshes of an org that chose a repository | The private key of the GitHub App, as PEM. The PEM file from GitHub works as it is. |
+| `GITHUB_WEBHOOK_SECRET` | GitHub webhooks on the machine hostname | The webhook secret of the GitHub App. The Worker checks each delivery with it. Without it, each delivery gets `503 github_unavailable`. |
+| `RESEND_API_KEY` | The invitation emails of the member routes | An API key of Resend. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. |
 
 - `BOAT_KEY_ENCRYPTION_KEY` encrypts the agent logins, the GitHub user
   tokens, the env vars of each org, and the workspace tokens. It also
@@ -124,13 +127,41 @@ and publish it.
   or invalid value, it gives `503 runner_software_unavailable`.
 - Only a build or a refresh needs the two values. A workspace read, a
   history read, and the start of the app need no archive setting.
-- The Worker does not route the image builds yet, as the
-  [Worker README](../worker/README.md#routes) says. So no route reads the
-  two values yet.
+- Image builds and refreshes run through the Worker routes that the
+  [Worker README](../worker/README.md#routes) lists.
 - The archive holds no Node. Each build downloads one pinned Node release
   from `nodejs.org` into the image, as
   [The private Node runtime](../image/runtime.md) says. That download needs
   no deployment input.
+
+## Frame sources
+
+`CONDUCTIVE_FRAME_SOURCES` lists the origins that the pages of the app can
+show in a frame, in addition to the port previews. The Desktop tab shows
+the desktop stream of a sandbox in such a frame.
+
+- The value is a list of HTTPS origins, separated by spaces. An origin is
+  `https://`, a host, and an optional port, with no path.
+- List only the origins of trusted desktop stream hosts. A desktop URL
+  carries its token in the fragment. Copy only its origin. Put no token or
+  other secret in the value.
+- Boat's [desktop guide](https://docs.boat.dev/desktop-streaming/urls-and-security)
+  shows the stream host only as `<sandbox-desktop-host>`. Boat generates
+  that host for the running sandbox. The guide gives no wildcard for these
+  hosts. So list only the origins that Boat confirms for the app's account.
+  Add no wildcard of your own.
+- The Worker gives each page of the app a content security policy. Its
+  frame sources are the page's own origin, `https://*.<PREVIEW_DOMAIN>`,
+  and each origin of the value. The Worker leaves out each entry that is
+  not an HTTPS origin, such as an `http://` address or an address with a
+  path.
+- Without the variable, a page frames only its own origin and the port
+  previews. The Desktop tab then cannot show a stream.
+- The Mac build reads its own `CONDUCTIVE_FRAME_SOURCES`, as the
+  [Mac app README](../desktop/README.md#development) says. It does not add
+  the preview domain itself. So give the Worker and the Mac build the same
+  value: `https://*.<PREVIEW_DOMAIN>`, then each desktop stream origin. The
+  Worker lists the preview origin only once.
 
 ## Settings of each workspace sandbox
 
@@ -148,13 +179,6 @@ with no URL and no credential, and the runner reads it, as
 gives the default branch of the repository of the workspace, from its
 queued start. A disk retention restart gives the current default branch of
 that repository.
-
-## Inputs that no route reads yet
-
-- `GITHUB_WEBHOOK_SECRET`: the GitHub webhook handler checks each delivery
-  with it. No route calls that handler yet.
-- `RESEND_API_KEY`: the invitation emails of the member routes use it. The
-  Worker serves the member list, but not the invite routes yet.
 
 ## The app's Boat account
 

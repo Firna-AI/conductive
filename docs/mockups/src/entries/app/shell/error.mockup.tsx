@@ -8,7 +8,7 @@ import {
 export const sandboxError = defineScreen({
   title: 'Sandbox error',
   description:
-    "The sandbox didn't start. The chat history stays, and Try again retries the start.",
+    "The sandbox didn't start. The chat history stays, and Try again retries the start. All files and Changes keep the lists that the workspace saved.",
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, sandbox: 'error' },

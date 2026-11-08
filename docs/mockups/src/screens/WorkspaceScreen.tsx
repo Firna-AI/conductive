@@ -154,7 +154,9 @@ export function WorkspaceScreen(props: {
     return (
       <MobileFrame>
         {header}
-        <PullRequestRow state={state.banner} workspace={workspace} />
+        {archived ? null : (
+          <PullRequestRow state={state.banner} workspace={workspace} />
+        )}
         <div className={styles.mobileBody}>
           {archived ? body.chat : body[state.focus]}
         </div>

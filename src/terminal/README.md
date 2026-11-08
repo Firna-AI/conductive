@@ -2,8 +2,8 @@
 
 The Terminal tool shows a shell in the cloud computer of a workspace. It uses
 xterm.js. The workspace screen shows it in the tools panel of the right
-column, and on a phone as the Terminal page. Milestone 15i mounts it and
-wires it to the backend.
+column, and on a phone as the Terminal page, as
+[the tools part](../shell/workspace/README.md#the-tools-part) says.
 
 This folder also holds the parts that the three tools share, in
 `tool-parts/`, and the development page of the three tools, in `dev/`. They
@@ -46,12 +46,15 @@ change can move the shared parts to the app's shared components.
 />
 ```
 
-- `connect` opens the decoded transport of a ready terminal. Milestone 15i
-  supplies it: a socket at `socketPath` that decodes the ttyd protocol into
+- `connect` opens the decoded transport of a ready terminal. The shell
+  gives `createTerminalConnector` of `src/app/terminal-transport.ts` over
+  `openSocket` of the app's event source. It opens `socketPath` on the
+  Worker of the app, also in the Mac app, and decodes the ttyd protocol into
   the `TerminalTransport` of the
   [shared contracts](../shared/README.md). Keep the function stable. A
   transport that closes, or a `connect` that throws, shows Disconnected with
-  Reconnect. The transport takes text only, so the tool does not send the
+  Reconnect. A source without `openSocket`, as in the development fake,
+  throws. The transport takes text only, so the tool does not send the
   mouse reports that xterm.js sends as binary data, in the old X10 format.
 - `onActivity` runs for each input of the user: keys, text, paste, and mouse
   reports. It does not run for the replies of xterm.js. The shell can count

@@ -2,6 +2,8 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import type { RunnerLogin } from '../../../src/shared/runner'
+import { TOOL_ENV } from '../../../tools/context'
+import type { WorkspaceToolContext } from './workspace-tools'
 
 export async function prepareProviderHome(home: string): Promise<void> {
   await Promise.all(
@@ -14,7 +16,8 @@ export async function prepareProviderHome(home: string): Promise<void> {
 /** Remove inherited provider accounts before adding the session starter's login. */
 export function providerEnvironment(
   home: string,
-  login?: RunnerLogin,
+  login: RunnerLogin,
+  tools: WorkspaceToolContext,
 ): Record<string, string | undefined> {
   const env = { ...process.env }
   for (const key of Object.keys(env)) {
@@ -26,6 +29,9 @@ export function providerEnvironment(
   env.CODEX_HOME = `${home}/.conductive/codex`
   env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = '1'
   env.DISABLE_AUTOUPDATER = '1'
+  env[TOOL_ENV.machineOrigin] = tools.machineOrigin
+  env[TOOL_ENV.workspaceToken] = tools.workspaceToken
+  env[TOOL_ENV.turnId] = tools.turnId
   if (login?.agent === 'claude')
     env[
       login.kind === 'token' ? 'CLAUDE_CODE_OAUTH_TOKEN' : 'ANTHROPIC_API_KEY'

@@ -11,11 +11,13 @@ import { ActionButton, IconButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { AddVariableForm, ChangeValueRow } from './EnvVarForms'
 
-/** A variable: its name, and dots for its value, which the app never shows. */
+/**
+ * A variable: its name, dots for its value, which the app never shows, and
+ * the actions of an admin.
+ */
 function EnvVarRow(props: {
   name: string
   computer: ComputerModel
-  admin: boolean
   change: () => void
 }) {
   const remove = useAction(
@@ -28,23 +30,21 @@ function EnvVarRow(props: {
       <span aria-label="Value set" className={styles.value} role="img">
         ••••••••
       </span>
-      {props.admin ? (
-        <span className={styles.actions}>
-          <IconButton
-            disabled={remove.pending}
-            icon={Pencil}
-            label={`Change the value of ${props.name}`}
-            onPress={props.change}
-          />
-          <IconButton
-            busy={remove.pending}
-            disabled={remove.pending}
-            icon={Trash2}
-            label={`Delete ${props.name}`}
-            onPress={() => remove.run()}
-          />
-        </span>
-      ) : null}
+      <span className={styles.actions}>
+        <IconButton
+          disabled={remove.pending}
+          icon={Pencil}
+          label={`Change the value of ${props.name}`}
+          onPress={props.change}
+        />
+        <IconButton
+          busy={remove.pending}
+          disabled={remove.pending}
+          icon={Trash2}
+          label={`Delete ${props.name}`}
+          onPress={() => remove.run()}
+        />
+      </span>
     </li>
   )
 }
@@ -52,25 +52,23 @@ function EnvVarRow(props: {
 /**
  * The environment variables of the workspaces of the org (decision 17).
  * Values are write-only: the app shows that a value is set, and an admin
- * replaces it, deletes the variable, or adds one. A member who is not an
- * admin sees the names only (decision 57).
+ * replaces it, deletes the variable, or adds one (decision 57).
  */
 export function EnvVarsSection(props: {
   org: OrgSummary
   computer: ComputerModel
   vars: readonly { name: string }[]
 }) {
-  const admin = props.org.role === 'admin'
   const [changing, setChanging] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   return (
     <Section
       actions={
-        admin && !adding ? (
+        adding ? undefined : (
           <ActionButton icon={Plus} onPress={() => setAdding(true)}>
             Add variable
           </ActionButton>
-        ) : undefined
+        )
       }
       description={`Workspaces of ${props.org.name} get these each time their cloud computer starts. Builds run without them.`}
       title="Environment variables"
@@ -80,7 +78,7 @@ export function EnvVarsSection(props: {
       ) : (
         <ul aria-label="Environment variables" className={styles.list}>
           {props.vars.map((item) =>
-            admin && changing === item.name ? (
+            changing === item.name ? (
               <ChangeValueRow
                 close={() => setChanging(null)}
                 computer={props.computer}
@@ -89,7 +87,6 @@ export function EnvVarsSection(props: {
               />
             ) : (
               <EnvVarRow
-                admin={admin}
                 change={() => setChanging(item.name)}
                 computer={props.computer}
                 key={item.name}

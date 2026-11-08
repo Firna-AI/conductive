@@ -1,3 +1,5 @@
+import { WORKSPACE_TOOLS_MCP } from '../../../src/shared/agent-tools'
+import { TOOL_ENV } from '../../../tools/context'
 import { object, string } from '../parse'
 import { codexBinary } from './binaries'
 import { codexNotification } from './codex-events'
@@ -45,6 +47,9 @@ export function createCodexFactory(
       'model_providers.conductive.wire_api': 'responses',
       'model_providers.conductive.requires_openai_auth': false,
       cli_auth_credentials_store: 'ephemeral',
+      'mcp_servers.conductive.command': WORKSPACE_TOOLS_MCP.command,
+      'mcp_servers.conductive.args': WORKSPACE_TOOLS_MCP.args,
+      'mcp_servers.conductive.env_vars': Object.values(TOOL_ENV),
       ...(computer
         ? {
             'mcp_servers.computer.command': computer.command,
@@ -72,7 +77,7 @@ export function createCodexFactory(
         command: process.execPath,
         args,
         cwd: options.cwd,
-        env: providerEnvironment(options.home, options.login),
+        env: providerEnvironment(options.home, options.login, options.tools),
         signal: options.signal,
         lifetime,
       }),

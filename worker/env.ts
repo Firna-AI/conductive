@@ -7,6 +7,7 @@ export interface AppEnv {
   MARKETING_ORIGIN?: string
   MACHINE_ORIGIN?: string
   PREVIEW_DOMAIN?: string
+  CONDUCTIVE_FRAME_SOURCES?: string
   ASSETS?: { fetch(request: Request): Promise<Response> }
   WORKSPACES?: DurableObjectNamespace<Workspace>
   CONDUCTIVE_MODELS?: string
@@ -14,6 +15,7 @@ export interface AppEnv {
   CONDUCTIVE_RUNNER_ARCHIVE_URL?: string
   CONDUCTIVE_RUNNER_ARCHIVE_SHA256?: string
   GITHUB_APP_PRIVATE_KEY?: string
+  GITHUB_WEBHOOK_SECRET?: string
   GITHUB_CLIENT_ID: string
   GITHUB_CLIENT_SECRET: string
   SESSION_SIGNING_KEY: string

@@ -26,6 +26,12 @@ export interface ChatViewProps {
   clock?: Clock
   /** Tabs that the app adds after the sessions, such as open files. */
   extraTabs?: ReactNode
+  /**
+   * A page that the app shows in place of the chat of the open session, such
+   * as an open file. The session tabs and the overlays stay, and no session
+   * tab shows as the current one.
+   */
+  content?: ReactNode
   /** The workspace record, its state, and the title that the agent writes. */
   onWorkspaceChange?: (workspace: Workspace) => void
   /** The open tabs, as the chat saves them through the view route. */
@@ -52,6 +58,7 @@ function ChatBody(
 ) {
   const { controller, snapshot } = props
   const mobile = props.viewport === 'mobile'
+  const content = props.content ?? null
   const active = snapshot.activeSessionId
   const running = active ? sessionState(snapshot, active).transcript.turn : null
   const ticking =
@@ -91,18 +98,20 @@ function ChatBody(
         tabs={tabSessions(snapshot).map((session) => ({
           id: session.id,
           title: session.title,
-          selected: session.id === active,
+          selected: content === null && session.id === active,
         }))}
       />
-      <SessionChat
-        controller={controller}
-        host={props.host}
-        mobile={mobile}
-        now={now}
-        onConnectAgent={props.onConnectAgent}
-        onOpenDiff={props.onOpenDiff}
-        snapshot={snapshot}
-      />
+      {content ?? (
+        <SessionChat
+          controller={controller}
+          host={props.host}
+          mobile={mobile}
+          now={now}
+          onConnectAgent={props.onConnectAgent}
+          onOpenDiff={props.onOpenDiff}
+          snapshot={snapshot}
+        />
+      )}
       <ChatOverlays
         history={history}
         mobile={mobile}

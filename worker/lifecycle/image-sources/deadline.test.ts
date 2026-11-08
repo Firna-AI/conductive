@@ -6,6 +6,7 @@ import { createHarness, type TestHarness } from '../../test-support/harness'
 import { advanceImageBuild } from '../image-builds'
 import { readBuild } from '../build-data'
 import { readImageSettings } from '../settings-data'
+import { WORKSPACE_TOOLS_DIRECTORY } from '../../tools/image'
 import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'
 import { readSourceJob } from './source-data'
@@ -79,11 +80,13 @@ it('returns each alarm while native Git runs and renews the builder before allow
           ?.tokenCiphertext,
       ).toBeNull()
       order.push(
-        !detached
-          ? 'cleanup'
-          : command.includes('/tmp/conductive-install.sh')
-            ? 'install'
-            : 'software',
+        !detached && command.includes(WORKSPACE_TOOLS_DIRECTORY)
+          ? 'tools'
+          : !detached
+            ? 'cleanup'
+            : command.includes('/tmp/conductive-install.sh')
+              ? 'install'
+              : 'software',
       )
     }
     let complete = false
@@ -92,7 +95,7 @@ it('returns each alarm while native Git runs and renews the builder before allow
       complete = await advance()
     }
     expect(complete).toBe(true)
-    expect(order).toEqual(['software', 'install', 'cleanup'])
+    expect(order).toEqual(['tools', 'software', 'install', 'cleanup'])
     expect(
       (await readBuild(fixture.env.DB, fixture.org.id, fixture.input.buildId))
         .build.state,

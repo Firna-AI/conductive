@@ -31,6 +31,7 @@ export function chatDependencies(
       readConnectionAccess(env.DB, tabs, now),
     firstStartIncomplete: (id) => firstStartIncomplete(env.DB, id),
     randomId: randomToken,
+    randomConnectionId: randomToken,
     readLoginAvailability: (targets) => {
       const id = workspaceId()
       return id === null
@@ -47,6 +48,8 @@ export function chatDependencies(
       return { attachments: [], paths: [] }
     },
     receiveFileResult: async () => undefined,
+    runnerAttached: () => undefined,
+    runnerDetached: () => undefined,
     runnerEventStored: async () => undefined,
     runnerReady: async () => undefined,
     runnerDisconnected: async () => undefined,

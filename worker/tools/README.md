@@ -84,28 +84,22 @@ It removes `NODE_OPTIONS` after it reads the rooted secrets file and before it s
 The installer adds no Node runtime.
 `WORKSPACE_TOOLS_MCP` supplies the executable and arguments for agent registration.
 The runner supplies credentials and active turn context at runtime.
+The installed launcher preserves explicitly supplied origin, workspace token, and turn ID while it loads the saved env file.
+Only an absent runtime value falls back to that file.
 
 ## Production composition
 
-Production code does not use the create/list handler, the installer, or `WORKSPACE_TOOLS_MCP` yet.
-The Mac-command machine handler is already dispatched.
-Production use requires this composition work:
+The production machine route calls `productionAgentTools` in [composition.ts](composition.ts).
+It resolves the calling turn through `Workspace.callingToolTurn` and the real chat store.
+It reads the configured account default model when the owner has no saved preference.
+Creation calls the normal workspace lifecycle with a separate owner and sender.
+It waits for creation to finish before it returns the workspace and session.
 
-1. In `worker/application.ts`, route the machine workspace path to this handler before the machine surface stub.
-2. Supply `MACHINE_ORIGIN` and `DB` from `AppEnv`.
-3. Add the lifecycle and active-turn service dependencies to the composition root.
-4. Implement `callingTurn` through the calling workspace Durable Object.
-5. Implement `createWorkspace` through the normal workspace lifecycle and chat queue.
-6. Supply the account service's default model policy when saved preferences are absent.
-7. Pass `WORKSPACE_TOOL_SOURCES` to the installer during each image build, before the image snapshot is saved.
-8. Add `WORKSPACE_TOOLS_MCP` to both agents' MCP configuration.
-9. Launch a new workspace MCP process for each active turn with that turn's `turnId`.
-10. Stop that MCP process when its turn ends.
-
-The runner passes `CONDUCTIVE_MACHINE_ORIGIN`, `CONDUCTIVE_WORKSPACE_TOKEN`, and `CONDUCTIVE_TURN_ID`.
-The CLI inherits the same environment from the active agent process.
-The MCP process cannot keep one fixed turn ID across turns or concurrent sessions.
-The active-turn resolver must reject stale IDs.
+Each image build calls `installWorkspaceTools` with `WORKSPACE_TOOL_SOURCES`
+before it installs the rest of the image software.
+The two runner providers register [`WORKSPACE_TOOLS_MCP`](../../src/shared/agent-tools.ts) beside `computer`.
+The [runner](../../runner/README.md) supplies the machine origin, workspace token,
+and active turn ID at runtime. The image stores no such credential.
 
 No git credential endpoint is implemented here.
 [GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens) states its rule.
@@ -116,7 +110,8 @@ Run `npm run test -- worker/tools` from the repository root.
 The handler tests use the existing real local D1 harness.
 The CLI and MCP tests call `runToolProcess` and reach this handler.
 The tests inject the lifecycle and active-turn services.
-These services have no production implementation yet.
+The production services live in [composition.ts](composition.ts).
+The real-object route tests live in [worker/features](../features/).
 
 ## Key code
 

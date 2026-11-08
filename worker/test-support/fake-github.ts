@@ -36,6 +36,12 @@ export class FakeGitHub {
     }
     if (
       url.origin === 'https://api.github.com' &&
+      url.pathname === '/user/installations'
+    ) {
+      return Response.json({ total_count: 0, installations: [] })
+    }
+    if (
+      url.origin === 'https://api.github.com' &&
       url.pathname === '/user/emails'
     ) {
       const page = Number(url.searchParams.get('page') ?? '1')

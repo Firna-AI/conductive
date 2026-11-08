@@ -2,12 +2,10 @@ import { ACCOUNT_PATHS } from '../shared/account'
 import { MODELS_PATH, type AgentModel } from '../shared/agents'
 import { API_PATHS, orgPath, type User } from '../shared/api'
 import { GET_STARTED_PATH, type GetStartedResponse } from '../shared/onboarding'
-import {
-  deleteOrgPath,
-  restoreOrgPath,
-  type CreateOrgRequest,
-  type OrgSummary,
-  type RenameOrgRequest,
+import type {
+  CreateOrgRequest,
+  OrgSummary,
+  RenameOrgRequest,
 } from '../shared/orgs'
 import { ApiError } from './api/client'
 import { items, nested, record } from './api/parse'
@@ -19,6 +17,7 @@ import {
   readUser,
 } from './api/read-core'
 import { AccountModel } from './account-model'
+import { InvitationsModel } from './invitations-model'
 import { OrgModel } from './org-model'
 import type { AppServices } from './services'
 import { asApiError, Store } from './store'
@@ -42,6 +41,8 @@ export class AppModel {
   readonly models = new Store<readonly AgentModel[]>([])
   readonly getStarted = new Store<GetStartedResponse | null>(null)
   readonly account: AccountModel
+  /** The invitations that wait for the user, which Home shows first. */
+  readonly invitations: InvitationsModel
   readonly services: AppServices
   private readonly orgModels = new Map<string, OrgModel>()
   private started = false
@@ -51,6 +52,7 @@ export class AppModel {
   constructor(services: AppServices) {
     this.services = services
     this.account = new AccountModel(services, this)
+    this.invitations = new InvitationsModel(this)
     // The model lives as long as its store, so it never unsubscribes.
     this.boot.subscribe(() => this.followPerson())
   }
@@ -124,7 +126,12 @@ export class AppModel {
     )
   }
 
-  private putOrg(org: OrgSummary): void {
+  /**
+   * Puts a newer record of an org in the list of the user, such as the
+   * answer of Delete org or Restore. The rail and the screens of the org
+   * follow it.
+   */
+  putOrg(org: OrgSummary): void {
     this.orgs.change((orgs) =>
       orgs.some((item) => item.id === org.id)
         ? orgs.map((item) => (item.id === org.id ? org : item))
@@ -154,29 +161,6 @@ export class AppModel {
         'PATCH',
         orgPath(orgId),
         request,
-        readOrgResponse,
-      ),
-    )
-  }
-
-  /** Delete org asks for the name of the org, which the request repeats. */
-  async deleteOrg(orgId: string, name: string): Promise<void> {
-    this.putOrg(
-      await this.services.api.send(
-        'POST',
-        deleteOrgPath(orgId),
-        { name },
-        readOrgResponse,
-      ),
-    )
-  }
-
-  async restoreOrg(orgId: string): Promise<void> {
-    this.putOrg(
-      await this.services.api.send(
-        'POST',
-        restoreOrgPath(orgId),
-        {},
         readOrgResponse,
       ),
     )

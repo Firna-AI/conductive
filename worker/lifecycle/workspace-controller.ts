@@ -64,6 +64,7 @@ export function createWorkspaceController(
     put: (key, value) => platform.storage.put('draft', key, value),
   }
   const controller: WorkspaceController = {
+    cancelLifecycleWaiters: () => starts.abortWaiters(),
     cancelSuspendedLifecycleStart: (id, ownerId) =>
       accessStop.cancelPending(id, ownerId),
     projectDeviceState: (id, choice, now, publish) =>

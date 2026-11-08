@@ -5,11 +5,12 @@ import type {
   RunnerFileCommand,
   RunnerFileResponse,
 } from '../../src/shared/runner-files'
-import { FileAccessError } from './file-access'
+import { FileAccessError, fileTooLarge } from './file-access'
 import { splitFileReport } from './file-parts'
 import { changesUpdated, treeUpdate } from './file-updates'
 import type { Repository, RepositorySnapshot } from './repository'
 import type { FileRevisions } from './state'
+import { GitOutputLimitError } from './git'
 
 interface FileReporterOptions {
   revisions?: FileRevisions
@@ -113,10 +114,12 @@ export class FileReporter {
           error:
             error instanceof FileAccessError
               ? error.detail
-              : {
-                  code: 'file_unavailable',
-                  message: 'The file cannot be read.',
-                },
+              : error instanceof GitOutputLimitError
+                ? fileTooLarge(error.limitBytes + 1, error.limitBytes).detail
+                : {
+                    code: 'file_unavailable',
+                    message: 'The file cannot be read.',
+                  },
         },
       }
     }

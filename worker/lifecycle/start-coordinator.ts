@@ -3,8 +3,6 @@ import type {
   WorkspaceStartResult,
   StartJobStorage,
   WorkspaceCreationAdmission,
-  WorkspaceRunningStartJob,
-  WorkspaceMachinePhase,
 } from './start-types'
 import type { AppDependencies, AppEnv } from '../env'
 import { prepareWorkspaceRecords } from './start-records'
@@ -23,6 +21,7 @@ import { creationAdmissionResponse } from './creation-admission-response'
 import { StartWaiters } from './start-waiters'
 import { requireActiveStartUsers } from './start-access'
 import { stepLabel } from './start-step-label'
+import { nextStartPhase } from './start-next-phase'
 import { advanceStartCommand } from './start-command-execution'
 import {
   providerRetryPending,
@@ -218,7 +217,11 @@ export class WorkspaceStartCoordinator {
         'completed',
       )
       if (job.phase === 'fetch' || job.phase === 'branch') {
-        await this.next(job, job.phase === 'fetch' ? 'branch' : 'startup')
+        await nextStartPhase(
+          this.storage,
+          job,
+          job.phase === 'fetch' ? 'branch' : 'startup',
+        )
         return false
       }
       if (!(await this.endpoint.readLifecycle())?.runnerConnected)
@@ -265,18 +268,18 @@ export class WorkspaceStartCoordinator {
     if (await this.storage.stop()) await this.storage.schedule()
   }
 
-  private async next(
-    job: WorkspaceRunningStartJob,
-    phase: WorkspaceMachinePhase,
-  ): Promise<void> {
-    await this.storage.update({
-      ...job,
-      phase,
-      providerRetry: null,
-      processId: null,
-      stdoutOffset: 0,
-      stderrOffset: 0,
-    })
+  abortWaiters(): void {
+    const result = {
+      ok: false as const,
+      error: {
+        code: 'org_not_found',
+        message: 'The org is not available.',
+        log: null,
+      },
+    }
+    this.waiters.publish(result)
+    this.creationWaiters.publish(result)
+    this.admissionWaiters.publish(result)
   }
 
   private async finish(result: WorkspaceStartResult): Promise<void> {

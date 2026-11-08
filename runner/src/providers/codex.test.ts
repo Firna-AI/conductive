@@ -3,6 +3,7 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 import { FakeAppServers } from '../../test-support/app-server'
 import { mockComputerServer } from '../../test-support/computer-mcp'
 import { runnerHarness, turn } from '../../test-support/harness'
+import { fakeToolContext } from '../../test-support/providers'
 import { Runner } from '../runner'
 import { createCodexFactory } from './codex'
 
@@ -232,6 +233,7 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     login: turn('close', 'bob', 'codex').login,
     choice: { agent: 'codex', model: 'test-model', effort: 'high' },
     conversationId: null,
+    tools: fakeToolContext,
     event: () => {},
     warn: h.options.warn,
   })

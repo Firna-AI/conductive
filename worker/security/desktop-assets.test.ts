@@ -46,6 +46,8 @@ it('serves app assets and same-origin local modules with the actual desktop poli
             : '',
       MACHINE_ORIGIN: 'https://machines.conductive.test',
       PREVIEW_DOMAIN: previewDomain,
+      CONDUCTIVE_FRAME_SOURCES:
+        'https://desktop.on.boat.dev http://untrusted.test https://good.test;script-src',
       ASSETS: {
         fetch: async (request: Request) => {
           requests.push(request.url)
@@ -65,7 +67,10 @@ it('serves app assets and same-origin local modules with the actual desktop poli
     const desktopPolicy = contentSecurityPolicy(
       readConfiguration({
         appOrigin: requestOrigin,
-        frameSources: [`https://*.${previewDomain}`],
+        frameSources: [
+          `https://*.${previewDomain}`,
+          'https://desktop.on.boat.dev',
+        ],
       }),
     )
     expect(desktopPolicy, binding).not.toBe('')
@@ -73,10 +78,15 @@ it('serves app assets and same-origin local modules with the actual desktop poli
     const desktop = policyParts(desktopPolicy)
     expect(web.other, binding).toEqual(desktop.other)
     expect(web.frames, binding).toEqual([
-      ["'self'", `https://*.${previewDomain}`],
+      ["'self'", `https://*.${previewDomain}`, 'https://desktop.on.boat.dev'],
     ])
     expect(desktop.frames, binding).toEqual([
-      ["'self'", requestOrigin, `https://*.${previewDomain}`],
+      [
+        "'self'",
+        requestOrigin,
+        `https://*.${previewDomain}`,
+        'https://desktop.on.boat.dev',
+      ],
     ])
     for (const path of ['/@vite/client', '/src/main.tsx']) {
       const module = await app.fetch(

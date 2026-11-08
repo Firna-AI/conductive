@@ -5,7 +5,10 @@ steps, the states of its cloud computer, the Archive question, and its
 chat. On desktop the chat column sits beside the right column. A phone
 shows one view at a time, with a tab bar. The chat fills the centre by
 default, as [The chat of the workspace](#the-chat-of-the-workspace) says.
-The files, the tools, and the pull request bar plug in as features, as
+The shell gives its own parts: the Files screens, the tools, the pull
+request bar, and the owner picker, as [The Files part](#the-files-part),
+[The tools part](#the-tools-part), and [The GitHub part](#the-github-part)
+say. A host can give its own parts instead, as
 [Composition](../../app/README.md#composition) says. The visual spec is the
 `app` page of the [mockup catalogue](../../../docs/mockups/README.md). The
 states of the cloud computer are in `app/shell`, and the notices are in
@@ -50,6 +53,15 @@ the `AppModel` of the tab, for the signed-in user.
   list drops its row.
 - A create that started keeps its start record. So a later error of its
   sandbox shows the sandbox bar with Try again, as a failed resume does.
+- The tab also keeps the `ToolEvents` of each workspace. Each show makes
+  them follow the stream of the model before it opens, as the notices do.
+  They keep the revokes of previews, and give each tool the kept revokes
+  first, then the live events.
+- The tab also keeps the `WorkspaceFiles` of each workspace whose Files
+  part showed. The Files part connects it while it shows, so a return
+  shows the lists at once, and its socket asks only for the events after
+  its last event number. A sign-out and a failed create stop and forget it
+  with the other kept parts.
 - Nothing goes to browser storage. So a reload or a new tab starts empty,
   and reads the stored history again.
 - The memory has no size limit. It keeps each workspace that the tab
@@ -73,11 +85,116 @@ says.
   again.
 - Connect, on the notice of a missing agent login, opens the Connect form
   of the account.
-- The shell gives the chat no `onOpenDiff` or `extraTabs` yet. So a file
-  of a finished turn opens no diff, and the chat shows no file tabs.
-- A `center` part takes the place of the chat.
+- On desktop, the chat shows the file and diff tabs of the saved view
+  after the session tabs. The file or diff tab of the address shows in
+  place of the chat of the session, and the tabs stay. No session tab is
+  the current one then.
+- A click on a session tab, a new session, or a reopened session makes
+  that session the active tab of the view. The address then goes back to
+  the chat.
+- Close on a file tab takes it out of the view. When it shows, the next
+  file tab shows, else the one before, else the chat.
+- A file of a finished turn opens its diff tab. A phone shows it in the
+  Files tab.
+- An archived workspace shows no file tabs and no file page.
+- A `center` part of the host takes the place of the whole chat, also of
+  its tabs.
 - When the features give the `tabs`, `transcript`, or `composer` slot, the
   shell draws its own chat column with those slots, in place of the chat.
+
+## The Files part
+
+The shell gives All files, Changes, and Checks as its own `files` part,
+with the [Files screens](../../files/README.md). A `files` part of the host
+takes its place. The address after the workspace names what shows:
+
+| Address | What shows |
+| ------- | ---------- |
+| `files` | The Files tab of a phone, with the list of the saved view |
+| `files/all`, `files/changes`, `files/checks` | That list |
+| `files/preview/<path>`, `files/source/<path>` | The file tab, in that mode |
+| `files/diff/<path>` | The diff tab |
+
+Each folder of a path is a part of the address. Another address under
+`files` shows the list of the saved view.
+
+- The kept chat loads and saves the workspace view. The shell reads the
+  tabs and the list from the chat, and changes them only through the
+  chat's `updateView`, so the view has one writer.
+- While the chat has not read the view, as during its load or after a
+  failed load, the shell saves nothing, so the saved tabs stay. The file
+  page still reads its file.
+- A click on a file or a diff saves its tab as the open and active tab,
+  then moves the address. A page that shows from an address, such as a
+  link or the browser history, saves its tab too.
+- A click on a list saves the list. On desktop the list belongs to the
+  right column, so the address keeps the tab of the centre. On a phone a
+  list is a page with its own address. An address that names a list saves
+  that list.
+- On a phone, a file or a diff shows as a page of the Files tab, with a
+  link back to All files or Changes.
+- The lists show while the sandbox is stopped or failed, from the copy
+  that the workspace keeps. While the sandbox starts, and while the app
+  refuses its start, the sandbox panel shows in place of All files and
+  Changes, and Checks stays. An archived workspace has no file lists, and
+  its right column shows the archived panel.
+- Copy and Download use the services of the app, as
+  [the Files screens](../../files/README.md#integration) say.
+
+## The tools part
+
+The shell gives the Terminal, Preview, and Desktop tools as its own
+`tools` part, with the [terminal](../../terminal/README.md), the
+[previews](../../previews/README.md), and the
+[desktop](../../desktop/README.md). A `tools` part of the host takes its
+place. The tools show only while the sandbox runs, and an archived
+workspace has none.
+
+| Address | What shows |
+| ------- | ---------- |
+| `terminal`, `desktop` | That tool |
+| `preview`, `preview/<previewId>` | The Preview tool, with that preview |
+
+- An address that names a tool shows it and saves it as `tool` of the
+  view. Without one, the saved view names the tool.
+- On desktop the panel has a tab for each tool. A click saves the tool,
+  and the address keeps the tab of the centre. Only a tool address follows
+  the new tool. A preview tab changes the address only from a preview
+  address, and otherwise picks the preview in the panel.
+- On a phone each tool is a page of the tab bar, with its own address.
+- The terminal mounts at its first show, then stays mounted and hidden
+  while another tool shows, so its connection stays. Its socket opens at
+  the `socketPath` of the terminal state through `openSocket` of the app's
+  event source, so the Mac app reaches its own Worker.
+- The Desktop tool mounts at each show, so it reads a new desktop URL.
+- Each tool reads its routes with the `fetch` of the app's `ApiClient`,
+  and the events of the kept `ToolEvents`.
+
+## The GitHub part
+
+The workspace screen keeps one GitHub store, through `useGitHubState` of
+[the GitHub screens](../../github/README.md), for the pull request bar or
+row and the Checks tab of the Files part. It reads with the `fetch` of
+the app, waits with the timer of the app, and takes the GitHub events of
+the ordered stream of the workspace.
+
+- On desktop, the bar tops the right column. After a merge, its Archive
+  opens the Archive question of the screen.
+- On a phone, the row sits under the header on every tab. A pull request
+  opens the Checks tab at its address.
+- An archived workspace keeps the bar on desktop. On a phone it shows only
+  its chat, so the screen reads no GitHub state there.
+
+## The Mac bar and the owner
+
+- The owner picker of the header is the shell's own `owner` part,
+  `WorkspaceOwner`. It mounts `OwnerPicker` of the
+  [members UI](../../members/README.md).
+- In the Mac app, `WorkspaceMacBar` tops the main area above the whole
+  workspace, also while a file shows in place of the chat. It mounts
+  `AllowAllBar`, the bar of the 15 minutes, of the
+  [Mac commands](../../chat/device/README.md). A browser draws nothing
+  there.
 
 ## Notices of a failed repair
 
@@ -140,14 +257,15 @@ const { store: shown, snapshot: detail } = useWorkspaceStore(
   { orgId, workspaceId },
   { create, connect: connectView },
 )
-const { model, notices, chat } = shown
+const { model, notices, chat, toolEvents } = shown
 ```
 
 A new `create` makes a new view, so keep `app` and `viewer` stable.
 
-- `view` gives a `WorkspaceView` over the kept model, notices, and chat.
-  The first view of a workspace makes these parts. `create` starts no read
-  and no subscription, and stops nothing, so a render can call it.
+- `view` gives a `WorkspaceView` over the kept model, notices, chat, and
+  tool events. The first view of a workspace makes these parts. `create`
+  starts no read and no subscription, and stops nothing, so a render can
+  call it.
 - The snapshot is the `detail` of the model, or `loading` while a kept
   failure waits for the open of this view.
 - The hook connects the view after the render. The first connect of a
@@ -155,14 +273,20 @@ A new `create` makes a new view, so keep `app` and `viewer` stable.
   subscriptions between the kept parts and the creates of the org. They
   stay until the tab forgets the workspace. The first connect in the tab
   makes the memory follow the sign-in.
-- Each connect calls `notices.newView()`, makes the notices follow the
-  stream of the model, and calls `model.open()` and `chat.show()`, in this
-  order. The follow comes before the open. So at a first show, the notices
-  get the stored history of the workspace from its first event, then the
-  live events, in event order.
-- The stop of a connect calls `model.close()`, ends the follow, and calls
-  `chat.hide()`. A connect starts nothing for a workspace that the tab no
-  longer keeps.
+- Each connect calls `notices.newView()`, makes the notices and the tool
+  events follow the stream of the model, and calls `model.open()` and
+  `chat.show()`, in this order. The follows come before the open. So at a
+  first show, the notices and the tool events get the stored history of
+  the workspace from its first event, then the live events, in event
+  order.
+- The stop of a connect calls `model.close()`, ends both follows, and
+  calls `chat.hide()`. A connect starts nothing for a workspace that the
+  tab no longer keeps.
+
+The context of the features gives the kept chat as `savedView`, and the
+tool events as `toolEvents`. The Files part takes the kept files of the tab
+through `useWorkspaceStore`, as
+[the Files screens](../../files/README.md#integration) show.
 
 Place `<HeaderNoticeBars notices={notices} />` directly after the
 header. It draws `notices.shown` with the CSS module of the
@@ -229,9 +353,11 @@ Changes.
   tab. The kept notices start a new view, so a bar that Dismiss hid shows
   again, with no new read of the stored history.
 
-The page gives only the Files feature, so the real chat fills the centre.
-It has no tools panel and no pull request row, so on desktop the notices
-of the file lists sit at the end of the right column.
+The page gives its own Files part, so the real chat fills the centre.
+`dev/main.tsx` makes the store of that part in a stable `create`, and
+`DevPage` connects it through `useWorkspaceStore`. The other parts are the
+app's own: the tools, the pull request bar, and the owner picker. The fake
+has no terminal socket, so the terminal shows Disconnected.
 
 Run the tests with `npm run test -- src/shell/workspace`.
 
@@ -251,7 +377,44 @@ Run the tests with `npm run test -- src/shell/workspace`.
   the kept parts. Its snapshot is the detail of the model. `connect` shows
   the parts, and its result hides them.
 - `ChatArea.tsx`: the chat of the centre, with the start steps and the
-  sandbox bar of the shell, or the shell's own column for the chat slots.
+  sandbox bar of the shell, the open file tabs, and the file page in place
+  of the chat of the session, or the shell's own column for the chat slots.
+- `files/files-features.tsx`: the Files part, which connects the kept
+  files, and the file or diff page of the centre.
+- `files/chat-files.tsx`: the file tabs and the diff links of the kept
+  chat, and the way back to the chat when a session becomes active.
+- `files/files-navigation.ts`: the navigation of the Files screens, and
+  the changes of the saved view that the address and the pages make.
+- `files/files-address.ts` and `files/view-tabs.ts`: the addresses of the
+  Files screens, and the tabs and the list of a view.
+- `files/files-store.ts` and `files/workspace-files.ts`: the store of one
+  workspace over the transport of the app, its connection, and Copy and
+  Download.
+- `files/FilesWiring.test.tsx`: mounts the whole app over the fake API. It
+  opens a file beside the sessions, goes back by a session tab, and checks
+  the saved view. It also checks a failed chat load, the diff of a turn on
+  a phone, a stopped, starting, and refused sandbox, and an archived
+  workspace.
+- `app-features.tsx`: the shell's own parts, which `useFeatures` puts under
+  the parts of the host.
+- `WorkspaceOwner.tsx` and `WorkspaceMacBar.tsx`: the owner picker of the
+  members UI, and the bar of the 15 minutes in the Mac app.
+- `saved-view.ts`: the saved view of the kept chat, and `saveView`, which
+  writes a change only once the chat read the view.
+- `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
+  `tools/tool-address.ts`: the tools panel, the tool and preview of the
+  address or the saved view, and their addresses.
+- `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
+  ordered stream, with the kept revokes of previews.
+- `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
+  GitHub store of the screen, the bar or the row, and the GitHub events of
+  the ordered stream.
+- `tools/ToolsWiring.test.tsx` and `github/GitHubWiring.test.tsx`: mount
+  the whole app over the fake API. They check the terminal socket across
+  tool switches, the saved tool, a revoke before the Preview tool shows, a
+  preview address on a phone, one GitHub read for the bar and Checks with a
+  live event, the Checks row of a phone, and an archived phone.
+  `wiring-test-kit.tsx` holds their helpers.
 - `header-notices.ts`: `HeaderNotices`, the failed repairs of the name and
   the start steps. `follow` reads a stream, `dismiss` hides a notice in
   this view, `newView` shows each notice again, and `shown` gives the
@@ -263,8 +426,9 @@ Run the tests with `npm run test -- src/shell/workspace`.
   checks a return, the event number of each socket, a new tab, the clear at
   a sign-out, and the app values that change while the tab is away.
   `kept-test-kit.tsx` holds its helpers.
-- `features.ts`: `WorkspaceFeatures`, the parts that plug in, and
-  `WorkspaceContext`, what each part gets.
+- `features.ts`: `WorkspaceFeatures`, the parts that plug in,
+  `WorkspaceContext`, what each part gets, and `useFeatures`, the parts of
+  the host over the app's own parts.
 - `WorkspaceHeader.tsx` and `WorkspaceColumns.tsx`: the header, the
   columns, and the tab bar of a phone.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the

@@ -5,6 +5,7 @@ import {
   type StreamMessage,
 } from './api/read-events'
 import { Store } from './store'
+import type { OpenTerminalSocket } from './terminal-transport'
 
 export interface StreamTarget {
   orgId: string
@@ -22,6 +23,12 @@ export interface StreamHandlers {
 /** Opens the event stream of one workspace. The result closes it. */
 export interface WorkspaceEventSource {
   open(target: StreamTarget, handlers: StreamHandlers): () => void
+  /**
+   * Opens the terminal socket at its path on the Worker, on the same origin
+   * as the event stream. A source without a Worker, as in a test or the
+   * development fake, leaves it out.
+   */
+  openSocket?: OpenTerminalSocket
 }
 
 /** Runs a function later, and returns its cancel. Tests run it themselves. */
@@ -30,6 +37,14 @@ export type Delay = (ms: number, run: () => unknown) => () => void
 export const browserDelay: Delay = (ms, run) => {
   const timer = setTimeout(run, ms)
   return () => clearTimeout(timer)
+}
+
+/**
+ * The wait before a stream opens again after a dropped connection, in ms.
+ * It doubles with each drop in a row, up to 15 seconds.
+ */
+export function reconnectWait(failures: number): number {
+  return Math.min(15_000, 1_000 * 2 ** failures)
 }
 
 /**
@@ -98,7 +113,7 @@ export class WorkspaceStream {
   private retryLater(): void {
     this.closeSource = null
     if (!this.running) return
-    const wait = Math.min(15_000, 1_000 * 2 ** this.failures)
+    const wait = reconnectWait(this.failures)
     this.failures += 1
     this.cancelRetry = this.delay(wait, () => {
       this.cancelRetry = null
@@ -141,20 +156,29 @@ export class WorkspaceStream {
   }
 }
 
-/** The event socket of the Worker, on the origin of the app. */
+/** The socket address of a path of the Worker at `origin`. */
+function socketUrl(path: string, origin: string): URL {
+  const url = new URL(path, origin)
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+  return url
+}
+
+/**
+ * The sockets of the Worker at `origin`: the event socket of a workspace,
+ * and its terminal. The Mac app gives the origin of its Worker, so both
+ * reach the same Worker as its API.
+ */
 export function socketEventSource(origin: string): WorkspaceEventSource {
   return {
+    openSocket: (path, protocol) =>
+      new WebSocket(socketUrl(path, origin), protocol),
     open(target, handlers) {
-      const url = new URL(
-        workspaceEventsPath(
-          target.orgId,
-          target.workspaceId,
-          target.afterEventNumber,
-        ),
-        origin,
+      const path = workspaceEventsPath(
+        target.orgId,
+        target.workspaceId,
+        target.afterEventNumber,
       )
-      url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
-      const socket = new WebSocket(url)
+      const socket = new WebSocket(socketUrl(path, origin))
       const onMessage = (event: MessageEvent) => {
         if (typeof event.data !== 'string') return
         let value: unknown

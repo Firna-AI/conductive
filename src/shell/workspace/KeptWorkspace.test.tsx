@@ -47,6 +47,7 @@ import {
   notices,
   org,
   recordingSocket,
+  returnReads,
 } from './kept-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -91,10 +92,9 @@ describe('a workspace that the tab showed', () => {
     expect(notices(view)).toEqual([`${nameLost} now`])
     await act(async () => held.release('GET', workspacePath(org, id)))
     await settle()
-    expect(socket.opens.slice(first)).toEqual([kept, kept])
-    expect(chatRequests(server, before)).toEqual([
-      `GET ${workspacePath(org, id)}`,
-    ])
+    // The model, the chat, and the files each keep their own socket.
+    expect(socket.opens.slice(first)).toEqual([kept, kept, kept])
+    expect(chatRequests(server, before).sort()).toEqual(returnReads)
     expect(headerName(view)).toBe('Saved addresses')
     expect(queryByRole('button', 'Address lookups', view)).not.toBeNull()
     // The name came in a full report, so the failed repair is over.
@@ -237,10 +237,8 @@ describe('a workspace that the tab showed', () => {
     expect(draftOf(view)).toBe('Keep this draft')
     expect(isOff(byLabel('Send', view))).toBe(false)
     await settle()
-    expect(socket.opens.slice(first)).toEqual([kept, kept])
-    expect(chatRequests(server, before)).toEqual([
-      `GET ${workspacePath(org, id)}`,
-    ])
+    expect(socket.opens.slice(first)).toEqual([kept, kept, kept])
+    expect(chatRequests(server, before).sort()).toEqual(returnReads)
   })
 
   test('follows the default model, the org name, and the members that the app holds', async () => {

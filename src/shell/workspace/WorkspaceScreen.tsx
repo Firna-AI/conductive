@@ -23,6 +23,7 @@ import { useViewport } from '../ui/viewport'
 import { ArchiveDialog } from './ArchiveDialog'
 import { ChatArea } from './ChatArea'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
+import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
 import {
   refusedStart,
@@ -32,6 +33,7 @@ import {
 import { shownWorkspaces } from './shown-workspaces'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
+import { WorkspaceMacBar } from './WorkspaceMacBar'
 import type { WorkspaceView } from './workspace-view'
 import workspaceStyles from './workspace.module.css'
 
@@ -67,12 +69,13 @@ function connectView(view: WorkspaceView): () => void {
  * An open workspace. Desktop shows the chat column beside the right column;
  * a phone shows one view at a time, with five tabs to switch. The shell draws
  * the header, the start steps, and the states of the sandbox, and the chat
- * fills the centre. Later milestones fill the files, the tools, and the pull
- * request bar.
+ * fills the centre. The app's own parts fill the files, the tools, the pull
+ * request bar, and the owner picker, unless the host gives its own.
  *
- * The tab keeps the model, the header notices, and the chat of each
- * workspace that it showed. So a return draws the workspace at once, and
- * each stream asks only for the events after its own last event number.
+ * The tab keeps the model, the header notices, the chat, and the tool
+ * events of each workspace that it showed. So a return draws the workspace
+ * at once, and each stream asks only for the events after its own last
+ * event number.
  */
 export function WorkspaceScreen(props: {
   org: OrgSummary
@@ -90,7 +93,7 @@ export function WorkspaceScreen(props: {
     { orgId: props.org.id, workspaceId: props.workspaceId },
     { create, connect: connectView },
   )
-  const { model, notices, chat } = shown
+  const { model, notices, chat, toolEvents } = shown
   const startError = useStore(model.startError)
   const features = useFeatures()
   const viewport = useViewport()
@@ -136,25 +139,28 @@ export function WorkspaceScreen(props: {
   }
   const { workspace, start } = detail.value
   const sandbox = sandboxState(workspace)
+  // A refused start shows while the sandbox is down, until its cause ends.
+  const refusal =
+    sandbox === 'stopped' || sandbox === 'error'
+      ? refusedStart(startError)
+      : null
   const context: WorkspaceContext = {
     org: props.org,
     workspace,
     viewer: props.viewer,
     sandbox,
+    startRefused: refusal !== null,
     viewport,
     view: props.view,
     stream: model.stream,
+    savedView: chat,
+    toolEvents: toolEvents.subscribe,
     archive: mayArchive(props.org, workspace, props.viewer)
       ? () => void model.archive.start()
       : null,
     onReassigned: (updated) => model.reassigned(updated),
   }
   const phone = viewport === 'phone'
-  // A refused start shows while the sandbox is down, until its cause ends.
-  const refusal =
-    sandbox === 'stopped' || sandbox === 'error'
-      ? refusedStart(startError)
-      : null
   const notice: SandboxNoticeState | null =
     refusal ??
     (sandbox === 'ready' || sandbox === 'starting'
@@ -170,6 +176,10 @@ export function WorkspaceScreen(props: {
         workspace={workspace}
       />
     )
+  // The Files part keeps the lists of a stopped sandbox, from the copy that
+  // the workspace keeps, and shows a start in their place. An archived
+  // workspace has no lists.
+  const files = sandbox === 'archived' ? panel(null) : features.files?.(context)
   const chatArea = (
     <ChatArea
       chat={chat}
@@ -191,10 +201,10 @@ export function WorkspaceScreen(props: {
     const archived = sandbox === 'archived'
     const content = {
       chat: chatArea,
-      files: panel(features.files?.(context)),
+      files,
       tool: panel(features.tools?.(context)),
     }
-    return (
+    const screen = (
       <div className={page.mobileBody}>
         {header}
         <HeaderNoticeBars notices={notices} />
@@ -210,22 +220,32 @@ export function WorkspaceScreen(props: {
         {dialog}
       </div>
     )
+    // An archived workspace on a phone shows only its chat: no pull request
+    // row and no Checks, so it reads no GitHub state.
+    if (archived) return screen
+    return <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
   }
+  // The bar of the Mac app tops the main area, above the whole workspace.
   return (
-    <div className={body.body}>
-      <div className={body.chat}>
-        {header}
-        <HeaderNoticeBars notices={notices} />
-        {chatArea}
+    <WorkspaceGitHub context={context}>
+      <WorkspaceMacBar context={context} />
+      <div className={body.body}>
+        <div className={body.chat}>
+          {header}
+          <HeaderNoticeBars notices={notices} />
+          {chatArea}
+        </div>
+        <RightColumn
+          files={files}
+          pullRequest={features.pullRequest?.(context)}
+          tools={
+            sandbox === 'archived'
+              ? undefined
+              : panel(features.tools?.(context))
+          }
+        />
+        {dialog}
       </div>
-      <RightColumn
-        files={panel(features.files?.(context))}
-        pullRequest={features.pullRequest?.(context)}
-        tools={
-          sandbox === 'archived' ? undefined : panel(features.tools?.(context))
-        }
-      />
-      {dialog}
-    </div>
+    </WorkspaceGitHub>
   )
 }

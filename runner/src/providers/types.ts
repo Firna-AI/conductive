@@ -6,6 +6,7 @@ import type {
   RunnerTurn,
 } from '../../../src/shared/runner'
 import type { ProviderLifetime } from './lifetime'
+import type { WorkspaceToolContext } from './workspace-tools'
 
 export type ProviderInput = RunnerTurn | RunnerMessageDuringTurn
 export type ProviderEvent =
@@ -42,6 +43,7 @@ export interface ProviderOptions {
   login: RunnerLogin
   choice: AgentChoice
   conversationId: string | null
+  tools: WorkspaceToolContext
   event: (event: ProviderEvent) => void
   warn: (message: string) => void
   signal?: AbortSignal

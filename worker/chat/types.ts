@@ -109,6 +109,14 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  runnerAttached(
+    workspaceId: string,
+    connectionId: string,
+    send: (
+      command: import('../../src/shared/runner-files').RunnerFileCommand,
+    ) => Promise<boolean>,
+  ): void
+  runnerDetached(connectionId: string): void
   waitUntil(promise: Promise<unknown>): void
   runnerDisconnected(
     workspaceId: string,
@@ -136,6 +144,7 @@ export interface ChatDependencies {
   ) => Promise<readonly ConnectionGrant[]>
   firstStartIncomplete: (workspaceId: string) => Promise<boolean>
   randomId: () => string
+  randomConnectionId: () => string
   readLoginAvailability: (
     targets: readonly SessionLoginTarget[],
   ) => Promise<ReadonlySet<string>>
@@ -151,7 +160,7 @@ export interface ChatDependencies {
     ids: readonly string[],
   ) => Promise<ResolvedAttachments>
   /** File owners validate results here. Results never enter history. */
-  receiveFileResult: (value: unknown) => Promise<void>
+  receiveFileResult: (value: unknown, connectionId: string) => Promise<void>
   /** The supplied publisher preserves the callback's place in the serial task. */
   runnerEventStored: (
     envelope: WorkspaceEventEnvelope,

@@ -1,7 +1,7 @@
 import { Miniflare, Response as RuntimeResponse } from 'miniflare'
 import { build } from 'vite'
 
-import type { AppEnv } from '../../env'
+import type { AppEnv, HttpFetch } from '../../env'
 import { LifecycleBoat } from '../../lifecycle/lifecycle-boat-test-support'
 import { FakeGitHub } from '../../test-support/fake-github'
 import { TEST_ORIGIN } from '../../test-support/harness'
@@ -18,6 +18,8 @@ type OuterConfiguration = Partial<
     | 'CONDUCTIVE_RUNNER_ARCHIVE_URL'
     | 'CONDUCTIVE_RUNNER_ARCHIVE_SHA256'
     | 'GITHUB_APP_PRIVATE_KEY'
+    | 'GITHUB_WEBHOOK_SECRET'
+    | 'PREVIEW_DOMAIN'
   >
 >
 
@@ -55,6 +57,7 @@ export async function createOuterRuntime(
     https?: boolean
     configuration?: OuterConfiguration
     persistencePath?: string
+    outbound?: (request: Request, fallback: HttpFetch) => Promise<Response>
   } = {},
 ) {
   const appOrigin = options.appOrigin ?? TEST_ORIGIN
@@ -131,11 +134,13 @@ export async function createOuterRuntime(
                     : await incoming.arrayBuffer(),
                   redirect: 'manual',
                 })
-                const response = await (
+                const fallback =
                   new URL(request.url).hostname === 'boat.dev'
                     ? boat.fetch
                     : github.fetch
-                )(request)
+                const response = await (options.outbound
+                  ? options.outbound(request, fallback)
+                  : fallback(request))
                 return new RuntimeResponse(await response.arrayBuffer(), {
                   status: response.status,
                   headers: [...response.headers.entries()],

@@ -7,7 +7,8 @@ It is the only owner of the terminal software in a sandbox. That software
 is ttyd, tmux, their two systemd services, the launcher, the shell server,
 and the password program.
 The [sandbox software](../../image/README.md) holds no terminal file.
-The production route dispatcher does not call these handlers yet.
+The production Worker forwards both terminal paths to the workspace object.
+Its feature handler keeps one terminal connection owner and reports input activity to the lifecycle.
 The browser uses the [shared terminal contract](../../src/shared/terminal.ts).
 
 Call `createTerminalHandler(env, dependencies).fetch(request)` for both

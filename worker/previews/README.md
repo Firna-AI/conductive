@@ -1,7 +1,11 @@
 # Preview backend
 
 This area issues preview hostnames, launches previews, and proxies private
-sandbox ports. The production route dispatcher does not call these handlers yet.
+sandbox ports. The production Worker forwards API and proxy requests to the workspace object.
+That object keeps the live proxy, its alarm deadline, and lifecycle revocation hooks.
+Close, expiry, and lifecycle revocation publish `preview.revoked` in the common chat stream.
+A marker commits with each revocation event, so retries keep one stored event for each preview.
+The close response waits for that commit. Lifecycle callbacks use the queue-owned publisher.
 The browser uses the [shared preview contract](../../src/shared/previews.ts).
 
 Create one `createPreviewHandler(env, dependencies)` for the route owner.
@@ -177,6 +181,7 @@ The proxy follows no upstream redirect.
 
 ### Key Code
 
+- [revocation-events.ts](revocation-events.ts) stores each publication marker with its common-stream event.
 - [handler.ts](handler.ts) exports the API, launch, proxy, revocation, and expiry entry points.
 - [launch.ts](launch.ts) builds the launch replies and the authorizer page response, and handles both authorizer POST modes.
 - [launch-document.ts](launch-document.ts) builds the launch page markup and its CSP.

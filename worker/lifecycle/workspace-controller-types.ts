@@ -9,6 +9,7 @@ import type { ImageCoordinatorState } from './image-timers'
 import type { LifecyclePublisher } from './durable-types'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
+  cancelLifecycleWaiters(): void
   cancelSuspendedLifecycleStart(
     workspaceId: string,
     ownerUserId: string,

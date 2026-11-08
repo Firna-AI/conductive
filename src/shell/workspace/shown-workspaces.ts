@@ -7,8 +7,11 @@ import type { WorkspaceIdentity } from '../../app/workspace-store'
 import { ChatController } from '../../chat/state/controller'
 import type { ChatSources } from '../../chat/state/sources'
 import type { SubscribeToWorkspace } from '../../chat/stream/workspace-stream'
+import type { WorkspaceFiles } from '../../files/model/files-store'
 import type { User } from '../../shared/api'
+import { createWorkspaceFiles } from './files/files-store'
 import { HeaderNotices } from './header-notices'
+import { ToolEvents } from './tools/tool-events'
 import { WorkspaceView } from './workspace-view'
 
 /**
@@ -20,6 +23,8 @@ export interface ShownWorkspace {
   readonly model: WorkspaceModel
   readonly notices: HeaderNotices
   readonly chat: ChatController
+  /** The events that the tools read, with the revokes that they keep. */
+  readonly toolEvents: ToolEvents
 }
 
 interface KeptWorkspace extends ShownWorkspace {
@@ -62,6 +67,8 @@ export class ShownWorkspaces {
   private readonly onShow: () => boolean
   private readonly subscribe: SubscribeToWorkspace
   private readonly kept = new Map<string, KeptWorkspace>()
+  /** The kept files of each workspace, made when a Files part first shows. */
+  private readonly keptFiles = new Map<string, WorkspaceFiles>()
 
   /**
    * `onShow` runs at the first show of each workspace, after its render. It
@@ -95,6 +102,7 @@ export class ShownWorkspaces {
     const shown: KeptWorkspace = {
       model: new WorkspaceModel(org, workspaceId),
       notices: new HeaderNotices(),
+      toolEvents: new ToolEvents(),
       chat: new ChatController({
         target: { orgId, workspaceId },
         client: services.api,
@@ -141,10 +149,29 @@ export class ShownWorkspaces {
     return true
   }
 
+  /**
+   * The kept files of a workspace. The first call makes the store, which
+   * starts nothing. The Files part connects it while it shows, so a return
+   * shows the lists at once and reads only the events after the last one.
+   */
+  files(orgId: string, workspaceId: string): WorkspaceFiles {
+    const key = `${orgId}/${workspaceId}`
+    const known = this.keptFiles.get(key)
+    if (known) return known
+    const files = createWorkspaceFiles(this.app.services, {
+      orgId,
+      workspaceId,
+    })
+    this.keptFiles.set(key, files)
+    return files
+  }
+
   /** Stops every kept workspace and forgets it, as at a sign-out. */
   clear(): void {
     for (const shown of this.kept.values()) stop(shown)
     this.kept.clear()
+    for (const files of this.keptFiles.values()) files.stop()
+    this.keptFiles.clear()
   }
 
   /**
@@ -166,6 +193,8 @@ export class ShownWorkspaces {
 
   /** Stops a kept workspace for good, so that its streams never open again. */
   private forget(key: string): void {
+    this.keptFiles.get(key)?.stop()
+    this.keptFiles.delete(key)
     const shown = this.kept.get(key)
     if (!shown) return
     this.kept.delete(key)

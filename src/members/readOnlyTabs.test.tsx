@@ -39,6 +39,11 @@ function running(id: string, seconds: number): ImageBuild {
   }
 }
 
+/** A refresh, which only fetches commits and runs no install script. */
+function refresh(source: ImageBuild): ImageBuild {
+  return { ...source, kind: 'refresh' }
+}
+
 describe('the read-only settings of a member', () => {
   it('list_only_the_repositories_that_the_org_chose', () => {
     const repository = (fullName: string, selected: boolean): Repository => ({
@@ -72,9 +77,9 @@ describe('the read-only settings of a member', () => {
       build('b2', Date.UTC(2026, 10, 3, 15), 138, 'failed'),
       build('b1', Date.UTC(2026, 9, 28, 12), 433, 'succeeded'),
     ]
-    const card = (builds: ImageBuild[]) => (
+    const card = (builds: ImageBuild[], currentImageBuildId = 'b4') => (
       <BuildCard
-        builds={{ builds, currentImageBuildId: 'b4' }}
+        builds={{ builds, currentImageBuildId }}
         log={[]}
         now={now}
         timeZone="UTC"
@@ -103,6 +108,26 @@ describe('the read-only settings of a member', () => {
         ['Last build'],
       ),
     ).toEqual({ missing: [], unwanted: [] })
+    // A newer refresh is no build: the head and the history skip it.
+    expect(
+      check(
+        card([refresh(running('r1', 30)), ...history]),
+        ['Last build 8 hours ago Succeeded in 6m 41s', 'History (4)'],
+        ['Building', 'History (5)'],
+      ),
+    ).toEqual({ missing: [], unwanted: [] })
+    // Workspaces start from the current image, also when a refresh made it.
+    const refreshed = refresh(build('r2', now - 3_600_000, 30, 'succeeded'))
+    expect(
+      check(
+        card([running('b5', 134), refreshed, ...history], 'r2'),
+        [
+          'Building · 2m 14s',
+          'Workspaces start from the build of 1 hour ago until this one finishes.',
+        ],
+        ['Workspaces can start when this build finishes.'],
+      ),
+    ).toEqual({ missing: [], unwanted: [] })
   })
 
   it('show_the_newest_build_and_its_log_from_their_props', () => {
@@ -119,13 +144,17 @@ describe('the read-only settings of a member', () => {
       text: `${text}\n`,
     })
     const done = build('b1', now - 8 * 3_600_000, 401, 'succeeded')
-    const view = (builds: ImageBuild[], log: BuildLogEvent[] | null) => (
+    const view = (
+      builds: ImageBuild[],
+      log: BuildLogEvent[] | null,
+      shown: OrgSettings = settings,
+    ) => (
       <MemberComputerView
         builds={{ builds, currentImageBuildId: 'b1' }}
         log={log}
         now={now}
         org={{ id: 'acme', name: 'Acme', role: 'member' }}
-        settings={settings}
+        settings={shown}
         timeZone="UTC"
         viewport="desktop"
       />
@@ -151,7 +180,22 @@ describe('the read-only settings of a member', () => {
           'The install script changed',
           'DATABASE_URL',
         ],
-        absent: ['The log of this build did not load.'],
+        // These settings name no base image, so the tab names no software.
+        absent: ['The log of this build did not load.', 'Cloud computers run'],
+      },
+      {
+        name: 'base image of the settings',
+        element: view([done], [], {
+          ...settings,
+          baseImage: {
+            operatingSystem: 'Ubuntu 26.04',
+            software: ['Node.js 26', 'uv'],
+          },
+        }),
+        present: [
+          'Cloud computers run Ubuntu 26.04 and include Node.js 26 and uv. The install script runs only at a build of the computer.',
+        ],
+        absent: ['Ubuntu 24.04'],
       },
       {
         name: 'log that did not load',

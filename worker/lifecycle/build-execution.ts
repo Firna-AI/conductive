@@ -16,6 +16,9 @@ import { cleanupBuildImageSources } from './image-sources/cleanup'
 import { lifecycleCommand } from './command-intents'
 import { recordBuildCommand } from './build-command-data'
 import { completeBuildPhase } from './build-phase-data'
+import { installWorkspaceTools } from '../tools/image'
+import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
+import { privilegedCommand } from '../terminal/privileged'
 
 export async function advanceBuildCommand(
   runtime: ImageRuntime,
@@ -25,6 +28,10 @@ export async function advanceBuildCommand(
   const sandboxId = job.sandboxId
   if (!sandboxId) throw new Error('Missing build sandbox')
   if (job.processId === null) {
+    if (job.phase === 'software')
+      await installWorkspaceTools(WORKSPACE_TOOL_SOURCES, (command) =>
+        provider.runCommand(sandboxId, privilegedCommand(command)),
+      )
     let command: string
     if (job.phase === 'software')
       command = installImageSoftware(jobSoftware(job))

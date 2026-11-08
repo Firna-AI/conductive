@@ -1,4 +1,5 @@
 import type { WorkspaceView } from '../../shared/workspace-view'
+import { isArchived } from './archive-view'
 import { isRunning } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { hydrate } from './history'
@@ -37,6 +38,27 @@ export async function selectSession(
   }))
   context.saveView(view)
   await hydrate(context, sessionId)
+}
+
+/**
+ * Changes the view with a change of the app, such as an open file tab, and
+ * saves it through the same writer as the session tabs. Until the load
+ * reads the view, the saved tabs are unknown, so it changes nothing. A
+ * change that returns the same view saves nothing. An archived workspace
+ * changes its view in the browser only, as its session tabs do.
+ */
+export function updateView(
+  context: ChatContext,
+  change: (view: WorkspaceView) => WorkspaceView,
+): void {
+  if (!context.live()) return
+  const snapshot = context.store.get()
+  const current = snapshot.view
+  if (current === null) return
+  const view = change(current)
+  if (view === current) return
+  context.store.update((latest) => ({ ...latest, view }))
+  if (!isArchived(snapshot)) context.saveView(view)
 }
 
 /** Shows a session that an action opened, when it is open now. */

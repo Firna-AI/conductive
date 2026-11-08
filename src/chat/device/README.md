@@ -10,11 +10,15 @@ top of the workspace. See [the chat](../README.md) for the whole chat.
 
 `ThisMacSection` goes in the account, and `AllowAllBar` goes at the top of
 the workspace. Mount them only in the Mac app, because a browser has no
-Mac. No screen of the app mounts them yet. Both read the Mac's settings
-through `useMacSettings(client)`. Give it a stable `ApiClient`, such as
-`AppServices.api`, because a new client makes a new settings controller.
-Call its `refresh` from `onWorkspaceChange`, which follows each change of a
-Mac command, so the bar shows the 15 minutes that an answer started.
+Mac. The account of the Mac app mounts `ThisMacSection`, and
+`WorkspaceMacBar` in `src/shell/workspace/` mounts `AllowAllBar` at the top
+of the workspace. In a browser both draw nothing and send no request. Both
+read the Mac's settings through `useMacSettings(client)`. Give it a stable
+`ApiClient`, such as `AppServices.api`, because a new client makes a new
+settings controller. `WorkspaceMacBar` calls `refresh` after the
+`workspace.updated` events of the workspace stream, which follow each change
+of a Mac command, so the bar shows the 15 minutes that an answer started.
+One burst of events, such as the stored history, gives one read.
 
 ```tsx
 <ThisMacSection client={services.api} viewport="desktop" />

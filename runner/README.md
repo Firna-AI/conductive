@@ -29,14 +29,9 @@ These facts belong to this implementation, not to the protocol docs.
   `@openai/codex-sdk` installs.
 - Both agents run without approval prompts, with the rights of the service
   user.
-- Both agents get the `computer` MCP server of the sandbox. Boat writes its
-  `mcpServers.computer` entry to `/home/user/.claude.json` at each sandbox
-  start. The entry names a local stdio server that talks over a Unix
-  socket, with no URL and no credential.
-- The runner reads that entry again at each agent start. Claude gets it as
-  it is, and Codex gets its command and arguments as a stdio server.
-  Without a valid entry, the runner writes a warning, and the agent starts
-  without computer tools.
+- Both agents get the sandbox's `computer` MCP server and the `conductive`
+  workspace MCP server. The [agent tools guide](agent-tools.md) gives
+  their settings, runtime context, and process lifetime.
 - The runner starts each turn with the login of its `turn` command. That
   login stays for the whole turn, also when a `message` command carries
   another login. Each `message` command of the turn goes to the running
@@ -107,6 +102,11 @@ These facts belong to this implementation, not to the protocol docs.
 - File reads and diffs use the shared UTF-8 decoder and keep a leading byte
   order mark. A valid path can hold a tab, a newline, or a backslash. Each
   path must still resolve inside the repository and pass the `.git` check.
+- File reads cap bytes at `FILE_READ_MAX_BYTES`, also when a caller asks
+  for more. Diffs use the same cap for each file version and for the patch.
+  The runner checks file and blob sizes before it loads their bytes.
+  Git stops patch output at the cap. An oversized result returns
+  `file_too_large`. Patch size reports the first byte over the limit.
 - Before it connects, the runner reads the `claude` program file once, so
   that the disk loads it early. It uses no login and starts no agent.
 - The runner protocol carries no GitHub token.
@@ -200,7 +200,7 @@ The runner reads these variables when the service starts.
   `/v1/runner`, from [`agent-tools.ts`](../src/shared/agent-tools.ts) on
   the hostname for machines, `api.conductive.build`.
 - No variable configures the computer tools. The runner reads the entry
-  that Boat writes, as [What it does](#what-it-does) says.
+  that Boat writes, as [Computer tools](agent-tools.md#computer-tools) says.
 - `CONDUCTIVE_DEFAULT_BRANCH` is the base of the file marks, the Changes
   list, and the changed files of each turn. Each diff request names its own
   base branch. File reports compare the commit of that branch, the Git ID
@@ -275,9 +275,7 @@ tools that time the first agent start after a resume.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
-  `computer-mcp.ts` gives `readComputerServer`, which reads the `computer`
-  entry of the sandbox at each agent start. It warns through the `warn`
-  callback of `ProviderOptions`.
+  The [tool entry points](agent-tools.md#key-code) cover both MCP servers.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
   queue, the file tree, the branch changes, bounded reads, and the files of
   one turn.
@@ -296,5 +294,6 @@ tools that time the first agent start after a resume.
 - [Access and security: agent logins in a sandbox](../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
 - [Workspaces and sandboxes: files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
 - [Agent tools: computer tools](../docs/protocol/agent-tools.md#computer-tools)
+- [Agent tools: workspace tools](../docs/protocol/agent-tools.md#workspace-tools)
 - [Shared contracts](../src/shared/README.md)
 - [Backend and runner fakes](../worker/test-support/README.md)

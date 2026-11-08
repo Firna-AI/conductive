@@ -20,6 +20,7 @@ import {
 import { contentSecurityPolicy, readConfiguration } from './config.js'
 import { startMacDevice } from './device/main.js'
 import { workspaceDeviceAddress } from './device/notification.js'
+import { installDownloads } from './downloads.js'
 import { exportHandler, registerScheme } from './export-handler.js'
 import { startDesktop } from './lifecycle.js'
 import { installMenu } from './menu.js'
@@ -95,7 +96,9 @@ startDesktop({
       )
     const rendererSession = session.fromPartition('persist:conductive')
     installPermissions(rendererSession)
-    rendererSession.on('will-download', (event) => event.preventDefault())
+    installDownloads(rendererSession, () =>
+      active && !active.isDestroyed() ? active.webContents : undefined,
+    )
     rendererSession.protocol.handle(
       DESKTOP_SCHEME,
       exportHandler(

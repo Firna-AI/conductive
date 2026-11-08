@@ -11,7 +11,7 @@ says.
 `chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
 gives the create, read, resume, and activity routes of a workspace to
 `handleLifecycleRequest`. The root Worker also serves the
-[machine route](#machine-route). It routes no build route yet.
+[machine route](#machine-route), image builds, refreshes, and build log streams.
 
 ## Responsibilities
 
@@ -88,6 +88,9 @@ refresh reads the archive variables. It gives `acceptFirstMessage` to
   and the org purge. Lifecycle cleanup leaves the attachments to their owner.
 - A retry gets a fresh workspace ID with the same first message ID. Its
   start waits until the records of the failed attempt are gone.
+- The [member checkpoint adapter](../members/creation-checkpoint.ts) retains a create that Delete interrupted before allocation.
+  The production resume route continues that create from its pinned image after Restore.
+  It keeps the first message and sender. It renews a revoked workspace token before a new allocation.
 - Resume restarts only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
@@ -250,7 +253,9 @@ object holds the lifecycle state, the turn records, and the events.
   `authenticateWorkspaceToken`.
 - [`runtime.ts`](runtime.ts): `LifecycleEnvironment`, `workspaceRuntime`,
   and `imageRuntime`.
-- [`worker/workspace.ts`](../workspace.ts): the `Workspace` class.
+- [`worker/workspace.ts`](../workspace.ts): the composed `Workspace` class.
+  [`worker/workspace-lifecycle.ts`](../workspace-lifecycle.ts) exposes its lifecycle methods.
+- [Member receivers](../members/workspace-receiver.ts) install durable generations, drain active phases, and restore maintenance timers.
 
 ### Related Docs
 

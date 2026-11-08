@@ -45,6 +45,7 @@ export interface MembersHooks extends OrgMaintenanceHooks {
     workspaceId: string,
     ownership: LifecycleOwnership,
   ): Promise<void>
+  deleteOrgState?(orgId: string, ownership: LifecycleOwnership): Promise<void>
 }
 
 export async function membersRoute(
@@ -70,7 +71,17 @@ export async function membersRoute(
       })
     if (request.method === 'PATCH') {
       await requireOrgAdmin(db, orgId, actorId)
-      if (!(await renameOrg(db, orgId, actorId, requiredString(body?.name)))) {
+      if (
+        !(await renameOrg(
+          db,
+          orgId,
+          actorId,
+          requiredString(body?.name),
+          body?.initials === undefined
+            ? undefined
+            : requiredString(body.initials),
+        ))
+      ) {
         await requireOrgAdmin(db, orgId, actorId)
       }
       return Response.json({ org: await requireOrgMember(db, orgId, actorId) })

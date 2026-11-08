@@ -9,6 +9,12 @@ export const MACHINE_PATHS = {
   workspaces: '/v1/tools/workspaces',
 } as const
 
+/** Register this local server. Runtime environment supplies its turn and token. */
+export const WORKSPACE_TOOLS_MCP = {
+  command: '/usr/local/bin/conductive',
+  args: ['mcp'],
+} as const
+
 export interface AgentCreateWorkspaceRequest {
   repositoryId: string
   firstMessage: string

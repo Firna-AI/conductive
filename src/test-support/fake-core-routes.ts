@@ -7,6 +7,7 @@ import {
   invitesPath,
   memberPath,
   membersPath,
+  PENDING_ORG_INVITES_PATH,
 } from '../shared/members'
 import { GET_STARTED_PATH } from '../shared/onboarding'
 import {
@@ -43,6 +44,7 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
     routes.empty('DELETE', agentLoginPath(login.agent))
   }
   routes.json('GET', GET_STARTED_PATH, data.getStarted)
+  routes.json('GET', PENDING_ORG_INVITES_PATH, { invites: [] })
   routes.json('GET', API_PATHS.orgs, data.orgs)
   routes.json('POST', API_PATHS.orgs, data.createdOrg, 201)
   routes.json('GET', orgPath(id), { org })

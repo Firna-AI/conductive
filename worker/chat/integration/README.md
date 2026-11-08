@@ -34,6 +34,8 @@ that the workspace object adds for the lifecycle.
   `publish` pushes one committed envelope to the open tabs again. It
   stores nothing, so the event keeps its number. Neither enters the queue
   again.
+- `commitPreviewRevocations(workspaceId, previewIds)` stores each missing revocation event and its marker in one transaction.
+  It uses the common publisher and does not enter the queue.
 - `sendFileCommand(workspaceId, command)` sends one `file.read` or
   `file.diff` command to the ready runner. It resolves to `false` when no
   runner is ready or the send fails.
@@ -89,7 +91,8 @@ depends on where the code runs:
   `MACHINE_PATHS.gitCredential` and `IMAGE_SOURCE_CREDENTIAL_PATH` through
   their lifecycle handlers. It gives each other path to `routeRunner` in
   `router.ts`. `routeRunner` matches only `MACHINE_PATHS.runner`,
-  `/v1/runner`. Each other machine path gets a `501` stub.
+  `/v1/runner`. The workspace tools and signed GitHub webhook use their own handlers.
+  Each unknown machine path gets a `501` stub.
 - The runner request has only its bearer token. `routeRunner` reads only
   the `Authorization` header, and finds the workspace with `tokenWorkspace`.
   A missing, unknown, or revoked token gets `401 workspace_token_required`.
@@ -113,8 +116,8 @@ routes through the production Worker entry, and the browser harness.
 
 ## The workspace lifecycle
 
-`createWorkspaceIntegration` joins chat, the lifecycle, and the Mac devices
-in the workspace object. The outer Worker calls the lifecycle through RPC
+`createWorkspaceIntegration` joins chat, the lifecycle, the file broker, and the Mac devices
+in the workspace object. The object also owns the preview, terminal, desktop, and GitHub handlers. The outer Worker calls the lifecycle through RPC
 methods of `Workspace`.
 
 - Chat and the lifecycle share the serial queue of `ChatStore`. Each
@@ -187,6 +190,8 @@ methods of `Workspace`.
   clears the lifecycle, `stopWorkspace` closes the runner. It ends each
   running or stopping turn as stopped. Queued turns stay for the resume.
   Device cleanup starts too.
+- During org deletion, a missing workspace ends only the state projection.
+  Device reconciliation still settles the request and sends its broker cancellation.
 - `workspaceSummary` gives the last event number, the last event number
   with visible output, and whether a dispatched turn runs. Its record
   commits with the events and the turns. Queued turns do not count as
@@ -205,8 +210,10 @@ methods of `Workspace`.
   part. It must not apply them to the files projection again.
 - Send each `file.read` and `file.diff` request with `sendFileCommand`. A
   `false` result means that no runner got the request.
-- `receiveFileResult(value)` gets each `file.read.result` and
-  `file.diff.result` message without checks. Validate the message in the
+- `runnerAttached(workspaceId, connectionId, send)` attaches the file broker when a physical runner is ready.
+  The callback keeps the physical identity across commands. `runnerDetached(connectionId)` removes that connection.
+- `receiveFileResult(value, connectionId)` gets each `file.read.result` and
+  `file.diff.result` message from that physical connection without payload checks. Validate the message in the
   hook. File results never enter the history.
 - [The files integration](../../files/README.md#integration) says how to attach
   file reads. Do not call `WorkspaceFiles.connect` on this path.

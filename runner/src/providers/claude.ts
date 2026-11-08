@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 
 import { query } from '@anthropic-ai/claude-agent-sdk'
 
+import { WORKSPACE_TOOLS_MCP } from '../../../src/shared/agent-tools'
 import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
 import { ClaudeInputWindow } from './claude-input-window'
@@ -48,7 +49,7 @@ export function createClaudeFactory(
       prompt: input,
       options: {
         cwd: options.cwd,
-        env: providerEnvironment(options.home, options.login),
+        env: providerEnvironment(options.home, options.login, options.tools),
         pathToClaudeCodeExecutable: binary(),
         model: options.choice.model,
         ...(options.choice.effort === 'none'
@@ -60,7 +61,13 @@ export function createClaudeFactory(
         includePartialMessages: true,
         persistSession: true,
         settingSources: ['project'],
-        mcpServers: computer ? { computer } : {},
+        mcpServers: {
+          conductive: {
+            command: WORKSPACE_TOOLS_MCP.command,
+            args: [...WORKSPACE_TOOLS_MCP.args],
+          },
+          ...(computer ? { computer } : {}),
+        },
         spawnClaudeCodeProcess: (request) => {
           options.signal?.throwIfAborted()
           const child = spawn(request.command, request.args, {

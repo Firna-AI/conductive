@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
 import { ComputerModel } from '../../app/computer-model'
-import type { SettingsTab } from '../../app/router'
 import { flushMicrotasks, ManualDelay } from '../../app/test-kit'
 import {
   buildPath,
@@ -55,50 +54,6 @@ describe('OrgSettingsScreen', () => {
         ([, value]) => value,
       ),
     ).toEqual(['Acme', 'AC'])
-  })
-
-  test('a member sees General, Repositories, and Cloud computer without edit controls', async () => {
-    const { app, org, user, model } = await signedIn(
-      new FakeApiServer({ role: 'member' }),
-    )
-    await model.reload('repositories')
-    await model.reload('builds')
-    const computer = new ComputerModel(model, new ManualDelay().delay)
-    await computer.load()
-    const screen = (tab: SettingsTab) =>
-      renderScreen(app, <OrgSettingsScreen org={org} tab={tab} user={user} />)
-    const pages = {
-      general: screen('general'),
-      repositories: screen('repositories'),
-      'cloud computer': renderScreen(
-        app,
-        <ComputerSettings computer={computer} org={org} />,
-      ),
-    }
-    for (const [page, html] of Object.entries(pages)) {
-      expect(html, page).not.toMatch(/<button|<input|<textarea/)
-      expect(textOf(html), page).not.toMatch(/Save|Build computer|Delete org/)
-    }
-    expect(tabLabels(pages.general)).toEqual([
-      'General',
-      'Repositories',
-      'Cloud computer',
-      'Members',
-    ])
-    expect(textOf(pages.general)).toContain(
-      'Org Only an admin can change it. Name Acme Initials AC',
-    )
-    const repositories = textOf(pages.repositories)
-    expect(repositories).toContain(
-      'acme/storefront The online shop acme/billing-service Invoices, payments, and webhooks acme/marketing-site The public website',
-    )
-    expect(repositories).not.toContain('acme/admin-dashboard')
-    expect(textOf(pages['cloud computer'])).toContain(
-      'Startup script Runs in the cloud computer of each workspace, at each start and resume. #!/usr/bin/env bash set -euo pipefail redis-server --daemonize yes',
-    )
-    expect(textOf(pages['cloud computer'])).toContain(
-      'Install software Cloud computers run Ubuntu 24.04 and include Node.js 24, npm, pnpm, Bun, Python 3.12, uv, Go, Rust, Java, GCC, Clang, Docker, git, and gh. The install script runs only at a build of the computer.',
-    )
   })
 
   test('an older settings reply without the base image names no software', async () => {

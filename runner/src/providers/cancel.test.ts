@@ -3,6 +3,7 @@ import { beforeEach, expect, it } from 'vitest'
 import { FakeAppServers } from '../../test-support/app-server'
 import { mockComputerServer } from '../../test-support/computer-mcp'
 import { turn } from '../../test-support/harness'
+import { fakeToolContext } from '../../test-support/providers'
 import { deferred } from '../../test-support/runtime'
 import { repositoryFixture } from '../../test-support/repository'
 import { object } from '../parse'
@@ -42,6 +43,7 @@ it('closes Codex startup and in-flight requests when their session signal is can
       login: turn().login,
       choice: turn().message.choice,
       conversationId: null,
+      tools: fakeToolContext,
       event: () => {},
       warn: () => {},
       signal: controller.signal,

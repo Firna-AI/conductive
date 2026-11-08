@@ -1,6 +1,7 @@
 import type { ApiClient } from '../../app/api/client'
 import type { AgentChoice } from '../../shared/agents'
 import type { DeviceApprovalAction } from '../../shared/device'
+import type { WorkspaceView } from '../../shared/workspace-view'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { StreamEnvelope } from '../api/read-workspace'
 import {
@@ -42,6 +43,7 @@ import {
   reopenSession,
   requestClose,
   selectSession,
+  updateView,
 } from './session-actions'
 
 export interface ChatControllerOptions {
@@ -230,6 +232,13 @@ export class ChatController {
     answerCommand(this.context, requestId, action)
   /** Reads the Mac commands and the pairing again, such as after a failure. */
   readonly loadDevices = () => refreshDevices(this.context)
+  /**
+   * Changes the saved view with a change of the app, such as an open file
+   * tab, through the one writer of the view. Until the load reads the view,
+   * it changes nothing, so the saved tabs stay.
+   */
+  readonly updateView = (change: (view: WorkspaceView) => WorkspaceView) =>
+    updateView(this.context, change)
   readonly dismissNotice = () =>
     this.store.update((snapshot) => ({ ...snapshot, notice: null }))
 }

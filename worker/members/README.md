@@ -3,7 +3,8 @@
 This area implements org roles, invitations, workspace responsibility, and
 Delete org. It uses the fixed browser contracts in
 [shared types](../../src/shared/README.md).
-The main Worker does not dispatch these handlers yet.
+The main Worker dispatches these handlers after `membersGate`.
+Its production hooks use the real workspace and image coordinator objects.
 
 ## Integration
 
@@ -54,6 +55,8 @@ After an await, read the fence again inside the next write transaction.
 A prior lease check or a cached fence cannot authorize a later write.
 The helper rejects a generation from another org.
 Concurrent calls must be safe, including a late call whose lease has expired.
+Production lifecycle phases capture their receiver generation before provider work.
+Restore installs a newer suspended fence and drains those phases before it arms active timers.
 
 Restore must install its generation in every org, build, and workspace receiver before its callback returns.
 Its input includes every workspace ID, including archived and sandbox-free workspaces.
@@ -61,6 +64,14 @@ Install the generation even when no timer or payload needs changing.
 Only then can Members activate the org with a guarded SQL write for that same generation.
 A late older suspension must therefore fail at its receiver write.
 Payload deletion must preserve its rejection of stale calls while older calls can still arrive.
+Purge reads and deletes small batches. Each batch checks the same generation and preserves the fence.
+The normal storage adapter rejects chat, device, feature, and alarm writes after that fence is purged.
+Late summary reads cannot recreate chat metadata. Suspended stop callbacks can still write their final events.
+The production receiver keeps a stopped create checkpoint after Delete.
+Restore starts no sandbox. The normal resume route requeues that create when the workspace opens.
+The checkpoint keeps its sender, first message, image pin, and allocation identity.
+A missing pin uses the existing failed-create draft and cleanup path.
+Hidden attempts and pending lifecycle cleanup sandboxes also enter suspension and purge.
 
 A hook calls `ownership.renew()` as it makes progress.
 Renewal requires the current generation, current lease token, and an unexpired lease.
@@ -70,7 +81,8 @@ Retention capabilities use that same call ownership.
 Their D1 writes and lifecycle checkpoints also check the generation atomically.
 Cooperative renewal changes no Restore deadline.
 
-Supply all six `MembersHooks` callbacks:
+Supply the required `MembersHooks` callbacks.
+Production also supplies `deleteOrgState` to remove the image coordinator payload, including an org with no workspaces:
 
 - `readWorkspace` returns the lifecycle backend's current `Workspace` record.
   It must authorize the viewer. All current org members can read all workspaces.
@@ -175,7 +187,9 @@ An insert trigger on `org_invites` records a match for each user with a stored v
 An insert trigger on `user_verified_emails` records a match for each invitation that names an email that a sign-in stores.
 A later sign-in without that email keeps the match.
 Only the deletion of its invitation or its user removes a match.
-Invitation acceptance and the pending invitation list have no browser route in the fixed contracts.
+The shared browser contracts expose `GET /api/invites` for the pending list.
+`POST /api/invites/:inviteId/accept` explicitly accepts an invitation.
+The [invitation route](../app-api/invitations.ts) uses the signed-in user and the existing verified-email checks.
 Call `pendingOrgInvites` with the signed-in user's ID to list their pending invitations.
 The list holds the invitations of active orgs that name one of the user's current verified emails.
 It leaves out the invitations of orgs where the user is already a member.
@@ -218,6 +232,11 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 
 ### Key Code
 
+- [composition.ts](composition.ts) supplies the production lifecycle hooks.
+- [workspace-receiver.ts](workspace-receiver.ts) preserves the receiver fence while it removes workspace payloads.
+- [receiver-fence.ts](receiver-fence.ts) checks generations in storage transactions.
+- [receiver-storage.ts](receiver-storage.ts) prevents normal data and alarm writes after purge.
+- [creation-checkpoint.ts](creation-checkpoint.ts) requeues a retained create only after current access, image, and token checks.
 - `gate.ts` extends the request gate for deleted-org access and shared writes.
 - `route.ts` defines HTTP dispatch and the required integration hooks.
 - `membership.ts` manages roles, removal, leave, and the last-admin rule.

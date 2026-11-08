@@ -58,6 +58,28 @@ test('the bundled workspace aligns its draggable bars and keeps sidebar, resize,
     })
     await expect(settingsTitle).toBeVisible()
     await expectDraggableHeader(settingsTitle)
+    const deleteOrg = page.getByRole('button', {
+      name: 'Delete org',
+      exact: true,
+    })
+    await deleteOrg.click()
+    const question = page.getByRole('dialog', {
+      name: 'Delete Acme?',
+      exact: true,
+    })
+    const confirmation = question.getByRole('textbox', {
+      name: 'Type Acme to confirm',
+      exact: true,
+    })
+    await expect(confirmation).toBeFocused()
+    await page.keyboard.press('Shift+Tab')
+    await expect(
+      question.getByRole('button', { name: 'Cancel', exact: true }),
+    ).toBeFocused()
+    await confirmation.click()
+    await page.keyboard.press('Escape')
+    await expect(question).toBeHidden()
+    await expect(deleteOrg).toBeFocused()
     const back = controls.getByRole('button', { name: 'Back', exact: true })
     const forward = controls.getByRole('button', {
       name: 'Forward',
