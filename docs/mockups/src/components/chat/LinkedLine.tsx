@@ -5,8 +5,9 @@ import styles from './LinkedLine.module.css'
 /**
  * The first line of a linked session. A member's message in another
  * session opened it, because the login of the starter of that session was
- * not available. `link` leads to that session, with its title as the text.
- * The line gives the link its colour.
+ * not available, or that starter did not let other members use it. `link`
+ * leads to that session, with its title as the text. The line gives the
+ * link its colour.
  */
 export function LinkedLine(props: { link: ReactNode }) {
   return (
