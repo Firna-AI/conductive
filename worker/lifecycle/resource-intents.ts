@@ -1,3 +1,4 @@
+import { savedImageName } from './image-names'
 import type {
   Sandbox,
   SandboxProvider,
@@ -122,7 +123,7 @@ export function buildSnapshotIntent(
     recorded: job.snapshotName !== null,
     input: {
       sandboxId: job.sandboxId,
-      name: job.snapshotName ?? `image-${job.buildId}`,
+      name: job.snapshotName ?? savedImageName(job.buildId),
     },
     persist: ({ name }) => assignBuildSnapshot(db, job.buildId, name),
   }
