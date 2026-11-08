@@ -45,7 +45,7 @@ it('uses HTTP backpressure to read one response chunk only when the browser requ
   expect(source.cancelled).toBe(true)
 })
 
-it('rechecks preview access after an asynchronous activity callback before opening the upstream', async () => {
+it('rechecks preview access after resolving the private port before opening the upstream', async () => {
   const setup = await openPreview(harness)
   const started = barrier<void>()
   const release = barrier<void>()
@@ -55,11 +55,11 @@ it('rechecks preview access after an asynchronous activity callback before openi
     ...harness.dependencies,
     fetch: async (request: Request) => {
       if (new URL(request.url).hostname !== 'boat.dev') upstreamCalls++
+      if (new URL(request.url).pathname.endsWith('/host')) {
+        started.resolve()
+        await release.promise
+      }
       return base(request)
-    },
-    onActivity: async () => {
-      started.resolve()
-      await release.promise
     },
   }
   const handler = createPreviewHandler(harness.env, dependencies)

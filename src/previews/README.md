@@ -3,7 +3,8 @@
 The Preview tool shows the web servers of a workspace's cloud computer. Each
 preview shows in a frame, with an "Open in new tab" link. The workspace
 screen shows the tool in the tools panel of the right column, and on a phone
-as the Preview page. Milestone 15i mounts it and wires it to the backend.
+as the Preview page, as
+[the tools part](../shell/workspace/README.md#the-tools-part) says.
 
 ## Behaviour
 

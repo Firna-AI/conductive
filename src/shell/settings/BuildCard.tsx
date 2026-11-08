@@ -77,15 +77,13 @@ function startsFrom(latest: ImageBuild, since: string | null): string | null {
 }
 
 /** The card of an org whose computer has no build yet. */
-function FirstBuild(props: { admin: boolean; build: Action<[]> }) {
+function FirstBuild(props: { build: Action<[]> }) {
   return (
     <section aria-label="Builds" className={styles.card}>
       <div className={styles.head}>
         <span className={styles.label}>No build yet</span>
         <span className={styles.spacer} />
-        {props.admin ? (
-          <BuildButton action={props.build} running={false} tone="primary" />
-        ) : null}
+        <BuildButton action={props.build} running={false} tone="primary" />
       </div>
       <div className={styles.body}>
         <SectionText muted>Workspaces start from the first build.</SectionText>
@@ -95,15 +93,14 @@ function FirstBuild(props: { admin: boolean; build: Action<[]> }) {
 }
 
 /**
- * The builds of the org's cloud computer: the newest build with its result,
- * the log of a build that runs or failed, and the history. The computer
- * model chooses and follows the log, so the card only shows it. A failed
- * build shows the message that the Worker saved for it, such as its time
- * limit, above its log. A failed build leaves the last good build in use.
- * Only an admin builds.
+ * The builds of the org's cloud computer, as an admin sees them: the newest
+ * build with its result and Build computer or Try again, the log of a build
+ * that runs or failed, and the history. The computer model chooses and
+ * follows the log, so the card only shows it. A failed build shows the
+ * message that the Worker saved for it, such as its time limit, above its
+ * log. A failed build leaves the last good build in use.
  */
 export function BuildCard(props: {
-  admin: boolean
   builds: BuildsResponse
   build: Action<[]>
   computer: ComputerModel
@@ -115,7 +112,7 @@ export function BuildCard(props: {
   const running = latest?.state === 'running'
   const { now, when } = useWhen(running ? 1_000 : 60_000)
   const log = useStore(props.computer.log)
-  if (!latest) return <FirstBuild admin={props.admin} build={props.build} />
+  if (!latest) return <FirstBuild build={props.build} />
   const history = props.builds.builds
     .filter((build) => build.kind === 'build')
     .toSorted((a, b) => b.startedAt - a.startedAt)
@@ -128,9 +125,7 @@ export function BuildCard(props: {
       <div className={styles.head}>
         <Head latest={latest} now={now} when={when(latest.startedAt)} />
         <span className={styles.spacer} />
-        {props.admin ? (
-          <HeadAction build={props.build} latest={latest} />
-        ) : null}
+        <HeadAction build={props.build} latest={latest} />
       </div>
       {latest.state === 'succeeded' ? null : (
         <div className={styles.body}>

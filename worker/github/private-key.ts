@@ -1,16 +1,29 @@
+export async function appSigningKey(pem: string): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
+    'pkcs8',
+    privateKeyBytes(pem),
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+}
+
 /** GitHub downloads PKCS#1 keys. Web Crypto imports the PKCS#8 envelope. */
-export function privateKeyBytes(pem: string): Uint8Array<ArrayBuffer> {
+function privateKeyBytes(pem: string): Uint8Array<ArrayBuffer> {
   const match = pem
     .trim()
     .match(
-      /^-----BEGIN (RSA PRIVATE KEY|PRIVATE KEY)-----\s+([A-Za-z0-9+/=\s]+)\s+-----END \1-----$/u,
+      /^-----BEGIN (RSA PRIVATE KEY|PRIVATE KEY)-----([A-Za-z0-9+/=\s]*)-----END \1-----$/u,
     )
-  if (!match) throw new Error('Invalid App private key')
-  const bytes = Uint8Array.from(
-    atob(match[2].replaceAll(/\s/gu, '')),
-    (value) => value.charCodeAt(0),
-  )
-  if (match[1] === 'PRIVATE KEY') return bytes
+  // Keep PKCS#8 bodies with no frame or an incomplete frame readable.
+  const encoded = (
+    match?.[2] ??
+    pem
+      .replace('-----BEGIN PRIVATE KEY-----', '')
+      .replace('-----END PRIVATE KEY-----', '')
+  ).replaceAll(/\s/gu, '')
+  const bytes = Uint8Array.from(atob(encoded), (value) => value.charCodeAt(0))
+  if (match?.[1] !== 'RSA PRIVATE KEY') return bytes
   const version = new Uint8Array([0x02, 0x01, 0x00])
   // rsaEncryption OID 1.2.840.113549.1.1.1 with NULL parameters.
   const algorithm = new Uint8Array([

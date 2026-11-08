@@ -11,7 +11,7 @@ says.
 `chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
 gives the create, read, resume, and activity routes of a workspace to
 `handleLifecycleRequest`. The root Worker also serves the
-[machine route](#machine-route). It routes no build route yet.
+[machine route](#machine-route), image builds, refreshes, and build log streams.
 
 ## Responsibilities
 
@@ -86,8 +86,19 @@ readiness, and the stop cleanup of a failed resume.
   and the org purge. Lifecycle cleanup leaves the attachments to their owner.
 - A retry gets a fresh workspace ID with the same first message ID. Its
   start waits until the records of the failed attempt are gone.
-- Activity from the `input`, `terminal`, and `preview` sources resets the
-  idle time.
+- The [member checkpoint adapter](../members/creation-checkpoint.ts) retains a create that Delete interrupted, before or after allocation.
+  The production resume route continues that create when the workspace opens after Restore.
+  It keeps the allocation attempt, the first message, and the sender. It renews a revoked workspace token.
+  The requeue gives the create a fresh `deadlineAt`, `WORKSPACE_START_TIME_LIMIT_MS` after that open.
+  `creation.createdAt` keeps the original creation date.
+  A create without a sandbox continues from its pinned image.
+  A create with a retained sandbox resumes that sandbox through the same readiness step as a resume, with the current env vars of the org.
+  It then continues at the saved creation step in `afterReadyPhase`. Its commands use a fresh journal key, `commandAttempt`, and the allocation keeps `attempt`.
+  A checkpoint that waited for runner readiness repeats the startup step after sandbox readiness, to rebuild the runtime files.
+  Its finished fetch and branch steps stay complete.
+  The branch step uses the branch when it already exists.
+- Input from the browser, the terminal, and previews resets the idle time,
+  as [Input activity](#input-activity) says.
 - The build log is a stream of server-sent events. It continues after the
   `Last-Event-ID` header or the `after` value, and it ends with a `build`
   event when the job ends. One D1 batch reads the build state and its log,
@@ -97,6 +108,33 @@ readiness, and the stop cleanup of a failed resume.
 trusted `sender` as its last argument. The agent tools need it for a
 workspace that an agent creates. The `user` stays the owner, and the first
 turn and the branch step use the sender.
+
+### Input activity
+
+[Stop and resume](../../docs/protocol/workspaces-and-sandboxes.md#stop-and-resume)
+says which input counts as activity. One `InputActivityOwner` in each
+workspace object receives the input times of the browser `activity` route,
+the terminal, and previews. The terminal and preview handlers report each
+input through `ToolDependencies.onActivity(workspaceId, at)`. That call
+returns at once.
+
+- The owner saves the newest input time in the durable lifecycle state,
+  fenced by the member generation. This local write publishes no shown
+  state, and it does not wait for D1 or the provider.
+- The idle stop still comes 30 minutes after `lastActivityAt`.
+- The owner updates D1 and the provider at most once a minute. The first
+  input after a quiet minute starts an update. One more update follows for
+  the newest input of that minute.
+- An update moves `last_activity_at` forward only, while the workspace, its
+  sandbox, and the org generation stay active. It then sets the provider's
+  auto-stop to 1,860 seconds, which covers the minute of collection.
+- When the provider reports a stopped or failed sandbox, the update
+  reconciles the durable lifecycle state.
+- A failed update keeps its input time for the next minute, also without
+  newer input. It writes one fixed warning through `warnWorker`.
+- Each update runs through `waitUntil`. No input path waits for D1 or the
+  provider. No update holds the chat queue or the durable queue during a
+  network call.
 
 ### Machine route
 
@@ -210,6 +248,17 @@ object holds the lifecycle state, the turn records, and the events.
 - [`durable-turns.ts`](durable-turns.ts): `recoverLifecycleTurns`, which
   rebuilds the running sessions and the idle time from the committed chat.
   The [turn recovery](workspace-object.md#turn-recovery) gives the rules.
+- [`input-activity-owner.ts`](input-activity-owner.ts): `InputActivityOwner`,
+  the one input owner of a workspace object, with its minute updates and
+  retries. [`create-input-activity.ts`](create-input-activity.ts) connects
+  it to the lifecycle hooks, the member fence, and `warnWorker`.
+- [`input-activity-local.ts`](input-activity-local.ts): `LifecycleInputState`,
+  the fenced input time in the durable lifecycle state, with its capture
+  and its reconciliation.
+- [`input-activity-update.ts`](input-activity-update.ts) and
+  [`input-activity-data.ts`](input-activity-data.ts): one D1 and provider
+  update. `writeWorkspaceActivity` moves `last_activity_at` forward with
+  `MAX`.
 - [`durable-start-stop.ts`](durable-start-stop.ts): the saved stop owner of
   failed and cancelled resumes.
 - [`durable-alarm.ts`](durable-alarm.ts): `advanceLifecycleAlarm`, the
@@ -279,7 +328,9 @@ object holds the lifecycle state, the turn records, and the events.
   `authenticateWorkspaceToken`.
 - [`runtime.ts`](runtime.ts): `LifecycleEnvironment`, `workspaceRuntime`,
   and `imageRuntime`.
-- [`worker/workspace.ts`](../workspace.ts): the `Workspace` class.
+- [`worker/workspace.ts`](../workspace.ts): the composed `Workspace` class.
+  [`worker/workspace-lifecycle.ts`](../workspace-lifecycle.ts) exposes its lifecycle methods.
+- [Member receivers](../members/workspace-receiver.ts) install durable generations, drain active phases, and restore maintenance timers.
 
 ### Related Docs
 

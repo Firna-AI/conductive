@@ -16,7 +16,7 @@ export function activeWorkspace(
   userId?: string,
 ): Promise<GitHubWorkspace | null> {
   const membership = userId
-    ? ' AND EXISTS (SELECT 1 FROM org_members m WHERE m.org_id = w.org_id AND m.user_id = ?)'
+    ? ' AND EXISTS (SELECT 1 FROM org_members m JOIN users viewer ON viewer.id = m.user_id AND viewer.suspended_at IS NULL WHERE m.org_id = w.org_id AND m.user_id = ?)'
     : ''
   const query = db.prepare(
     `${WORKSPACES} AND w.id = ? AND w.org_id = ?${membership}`,

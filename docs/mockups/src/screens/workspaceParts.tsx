@@ -44,9 +44,12 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
 }
 
 /**
- * The files panel, or the sandbox state in place of the file lists. On a
- * phone, an open file shows as a page of the Files tab. An archived
- * workspace has no file lists: its files went with the cloud computer.
+ * The files panel. After a stop or a failed start, All files and Changes
+ * keep the lists that the workspace saved. While the sandbox starts, or
+ * when its start is refused, the sandbox state takes the place of the
+ * lists. On a phone, an open file shows as a page of the Files tab. An
+ * archived workspace has no file lists: its files went with the cloud
+ * computer.
  */
 export function FilesContent(props: {
   state: WorkspaceState
@@ -65,12 +68,12 @@ export function FilesContent(props: {
     return <FilePage back={back} view={open} />
   }
   const placeholder =
-    state.sandbox === 'ready' ? undefined : (
+    state.sandbox === 'starting' || state.sandbox === 'refused' ? (
       <SandboxPanel
         action={props.viewport === 'mobile'}
         state={state.sandbox}
       />
-    )
+    ) : undefined
   return (
     <FilesPanel
       banner={state.banner}

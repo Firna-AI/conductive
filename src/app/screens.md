@@ -2,8 +2,8 @@
 
 This guide belongs to [Web app: data and composition](README.md). It
 gives the rules of the screens of the app shell: the account and Get
-started, sign-in, orgs, panels and layers, the focus, saved drafts, and
-New workspace.
+started, sign-in, invitations, orgs, panels and layers, the focus, saved
+drafts, and New workspace.
 
 - The app runs every cloud computer in its own Boat account, so no org has
   a Boat key. The app has no key screen, tab, notice, or Get started step,
@@ -17,6 +17,13 @@ New workspace.
   carries the current revision of the Terms, as
   [Terms consent](../../worker/security/README.md#terms-consent) says.
   `../shell/auth/SignInScreen.test.tsx` checks that address.
+- The address `/` shows the invitations of the user first, in the frame of
+  the app: each org with its invited email and Accept invitation, then
+  Continue to workspaces. Without invitations, or after Continue to
+  workspaces, it opens Get started or the first org. The `?invite=` link of
+  an invitation email leads there.
+- The account of the Mac app shows This Mac after the sign-in section. A
+  browser shows none and asks no Mac.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
   `AccountModel.repositories`, before the org exists. The create sends the

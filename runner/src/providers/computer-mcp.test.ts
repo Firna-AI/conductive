@@ -6,6 +6,7 @@ import type { Agent } from '../../../src/shared/agents'
 import { FakeAppServers } from '../../test-support/app-server'
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { turn } from '../../test-support/harness'
+import { fakeToolContext } from '../../test-support/providers'
 import { createClaudeFactory } from './claude'
 import { createCodexFactory } from './codex'
 import * as environment from './environment'
@@ -44,6 +45,7 @@ function providerFixture(agent: Agent) {
     login: command.login,
     choice: command.message.choice,
     conversationId: null,
+    tools: fakeToolContext,
     event: () => {},
     warn: (message: string) => warnings.push(message),
   }
@@ -52,7 +54,7 @@ function providerFixture(agent: Agent) {
     start: () => factory(options),
     computer: () =>
       agent === 'claude'
-        ? queries.at(-1)?.parameters?.options?.mcpServers
+        ? queries.at(-1)?.parameters?.options?.mcpServers?.computer
         : servers.requests
             .at(-1)
             ?.args.filter((arg) => arg.startsWith('mcp_servers.computer.')),
@@ -87,7 +89,7 @@ it.each(['claude', 'codex'] as const)(
       try {
         expect(h.computer()).toEqual(
           agent === 'claude'
-            ? { computer }
+            ? computer
             : [
                 `mcp_servers.computer.command="/fake/${version}/computer-server"`,
                 `mcp_servers.computer.args=["--socket","/run/test-${version}.sock"]`,
@@ -123,7 +125,7 @@ it.each(['claude', 'codex'] as const)(
       else read.mockResolvedValueOnce(entry)
       const provider = await h.start()
       try {
-        expect(h.computer()).toEqual(agent === 'claude' ? {} : [])
+        expect(h.computer()).toEqual(agent === 'claude' ? undefined : [])
         expect(h.warnings).toHaveLength(index + 1)
         expect(await h.send(provider)).toMatchObject(
           agent === 'claude'

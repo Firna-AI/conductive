@@ -1,13 +1,17 @@
-import { API_PATHS, orgPath } from '../src/shared/api'
+import { API_PATHS } from '../src/shared/api'
 import { bootRoute } from './app-api/boot'
 import { chatLifecycleRoute } from './app-api/lifecycle'
 import { shellRoute } from './app-api/shell'
-import { createOrg, listOrgs } from './data/orgs'
 import type { AppDependencies, AppEnv } from './env'
-import { HttpError, requiredString } from './http'
+import { HttpError } from './http'
 import { signOut } from './security/auth'
 import type { RequestContext } from './security/gate'
 import { handleOperatorRequest } from './operator/route'
+import { featureShellRoute } from './app-api/feature-shell'
+import { invitationsRoute } from './app-api/invitations'
+import { membersRoute } from './members/route'
+import { productionMembersHooks } from './members/composition'
+import { archiveRoute } from './app-api/archive'
 
 export { routeDevice } from './devices/router'
 
@@ -25,6 +29,30 @@ export async function route(
     dependencies,
   )
   if (operator) return operator
+  const invitations = await invitationsRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (invitations) return invitations
+  const members = await membersRoute(
+    request,
+    env,
+    context,
+    dependencies,
+    productionMembersHooks(env, dependencies),
+  )
+  if (members) return members
+  const featureShell = await featureShellRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (featureShell) return featureShell
+  const archive = await archiveRoute(request, env, context)
+  if (archive) return archive
   const boot = await bootRoute(request, env, context, dependencies)
   if (boot) return boot
   const shell = await shellRoute(request, env, context, dependencies)
@@ -43,26 +71,6 @@ export async function route(
   }
   if (path === API_PATHS.signOut && request.method === 'POST') {
     return signOut(env, context.sessionId)
-  }
-  if (path === API_PATHS.orgs) {
-    if (request.method === 'GET') {
-      return Response.json({ orgs: await listOrgs(env.DB, context.user.id) })
-    }
-    if (request.method === 'POST') {
-      const org = await createOrg(
-        env.DB,
-        dependencies.randomToken(),
-        requiredString(context.body?.name),
-        context.user.id,
-        dependencies.now(),
-      )
-      return Response.json({ org }, { status: 201 })
-    }
-  }
-  if (context.org) {
-    if (path === orgPath(context.org.id) && request.method === 'GET') {
-      return Response.json({ org: context.org })
-    }
   }
   throw new HttpError(404, 'not_found', 'The page is not available.')
 }

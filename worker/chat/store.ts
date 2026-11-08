@@ -11,6 +11,7 @@ import type { FilesStorage } from '../files/storage'
 import type { GitHubStateTransaction } from '../github/contracts'
 import { ReportRepairs } from './report-repairs'
 import { WorkspaceSummaryProjection } from './workspace-summary'
+import { PreviewRevocations } from '../previews/revocation-events'
 import {
   CHAT_ROOT as ROOT,
   CHAT_META as META,
@@ -32,6 +33,7 @@ export class ChatTransaction extends ChatRecords {
   readonly files: FilesStorage
   readonly github: GitHubStateTransaction
   readonly repairs: ReportRepairs
+  readonly previews: PreviewRevocations
   private readonly summary: WorkspaceSummaryProjection
   private readonly pages: HistoryPages
   private through: number
@@ -47,6 +49,7 @@ export class ChatTransaction extends ChatRecords {
       emit: (event) => this.emit(event),
     }
     this.repairs = new ReportRepairs(data)
+    this.previews = new PreviewRevocations(data, (event) => this.emit(event))
     this.summary = new WorkspaceSummaryProjection(
       data,
       () => this.turns(),

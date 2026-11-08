@@ -88,8 +88,10 @@ function Log(props: { log: readonly BuildLogEvent[] | null }) {
 /**
  * The builds of the org's cloud computer, read-only: the last build with
  * its result, the log of a build that runs or failed, and the history. A
- * failed build leaves the last good build in use. A member who is not an
- * admin gets no actions here (decision 57).
+ * refresh only fetches commits, so the card counts the runs of the install
+ * script, as the tab of an admin does. A failed build leaves the last good
+ * build in use. A member who is not an admin gets no actions here
+ * (decision 57).
  */
 export function BuildCard(props: {
   builds: BuildsResponse
@@ -99,11 +101,13 @@ export function BuildCard(props: {
   timeZone?: string
 }) {
   const clock: Clock = { now: props.now, timeZone: props.timeZone }
-  const history = [...props.builds.builds].sort(
+  const builds = [...props.builds.builds].sort(
     (first, second) => second.startedAt - first.startedAt,
   )
+  const history = builds.filter((build) => build.kind === 'build')
   const newest = history.at(0)
-  const current = history.find(
+  // New workspaces start from the current image, also when a refresh made it.
+  const current = builds.find(
     (build) => build.id === props.builds.currentImageBuildId,
   )
   const finished = history.filter((build) => build.state !== 'running')

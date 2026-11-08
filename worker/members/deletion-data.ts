@@ -126,9 +126,10 @@ export async function recordSuspendedResources(
       .prepare(
         `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id, sort_order)
        SELECT org_id, 'sandbox', sandbox_id, 0 FROM workspaces WHERE org_id = ? AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}
-       UNION ALL SELECT org_id, 'sandbox', sandbox_id, 1 FROM image_builds WHERE org_id = ? AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}`,
+       UNION ALL SELECT org_id, 'sandbox', sandbox_id, 1 FROM image_builds WHERE org_id = ? AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}
+       UNION ALL SELECT org_id, 'sandbox', sandbox_id, 0 FROM lifecycle_sandbox_cleanup WHERE org_id = ? AND ${lifecycleWritePredicate}`,
       )
-      .bind(orgId, ...ownership, orgId, ...ownership),
+      .bind(orgId, ...ownership, orgId, ...ownership, orgId, ...ownership),
     db
       .prepare(
         `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id)

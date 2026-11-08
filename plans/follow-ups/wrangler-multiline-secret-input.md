@@ -1,0 +1,56 @@
+# Pasted PEM secret may keep only one line
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-08, from branch `conductor/boat-native-remote-workspaces-milestone-15i`, review round 2, a new problem of the finding 4 check, outside the scope of that change.
+- **Location:** `docs/deployment.md:20`, and the `wrangler` dev dependency at `package.json:57`.
+- **Reason:** The problem rests only on a source reading, so a local check must come first.
+
+- **Terms:**
+  - **Wrangler:** the Cloudflare command-line tool that deploys the Worker and sets its secrets.
+  - **PEM:** the text format of the GitHub App private key, with many lines between a `-----BEGIN ...-----` line and an `-----END ...-----` line.
+- **Background:**
+  - `package.json` asks for wrangler `^4.158.0`. Version 4.158.0 is installed.
+  - The section "How to set the inputs" of `docs/deployment.md` says: "Set each secret with `npx wrangler secret put <NAME>`. The command asks for the value."
+  - `GITHUB_APP_PRIVATE_KEY` is a PEM.
+  - The secrets table of the same guide says that the PEM file from GitHub works as it is.
+  - The installed prompt of wrangler 4.158.0 maps both the return key and the enter key to "submit".
+  - That code is in `node_modules/wrangler/wrangler-dist/cli.js`, near line 135930.
+- **Problem:**
+  - Source fact: that prompt ends its answer at the first line break.
+  - Inference: a PEM that a person pastes at the prompt probably keeps only its first line.
+  - Limits: the problem rests on that source reading only. No terminal test ran.
+  - Nobody knows of a deployed secret that failed in this way.
+- **Impact if no action:**
+  - If the inference holds, an operator who pastes the key stores only its first line.
+  - Each GitHub App feature then fails: the banner, the Checks list, the push refresh of the org image, and the repository copies of image builds.
+- **Root question:** How does an operator set a multiline secret, so that the Worker gets the whole value?
+- **Options:**
+  - **A.** Check locally first, then document.
+    - Build a local harness for the installed wrangler prompt.
+    - Use a dummy multiline value, never a real key.
+    - Stub the external API transport, so that no request leaves the machine.
+    - No credential, account, or deployed Worker is then needed.
+    - The stub captures the secret value that wrangler submits.
+    - Run `wrangler secret put DUMMY_PEM` twice.
+    - First, drive the prompt through a local pseudo-terminal. Paste the dummy value there.
+    - Then send the same dummy file through stdin: `wrangler secret put DUMMY_PEM < dummy.pem`.
+    - Compare the two captured values with the dummy file.
+    - If the paste keeps only one line, change the guide to the stdin form for each multiline secret.
+    - Until the check runs, the problem stays unverified. The guide stays as it is.
+    - Effort: Small.
+  - **B.** Change the guide now to the stdin form for each multiline secret, without the check. A pipe sends the whole file. Effort: Small.
+  - **C.** Tell operators to set multiline secrets in the Cloudflare dashboard.
+    - Nobody checked how the dashboard field keeps line breaks.
+    - A check needs a Cloudflare account and a dummy secret write.
+    - Both need the user's approval for credentials and infrastructure.
+    - Effort: Small.
+- **Left out:**
+  - A one-line key text, such as a bare PKCS#8 Base64 body, which the key importer accepts: it adds an `openssl` step.
+    - The guide also promises that the downloaded file works as it is.
+  - A Worker check that refuses a short key at start: it adds a new rejection, which needs the user.
+    - It also does not set the secret correctly.
+- **Wider fix:** None. One guide line tells how to set every secret.
+- **Previous examples:** None found.
+- **Recommendation:** A. It needs no account, credential, or deployed Worker. It keeps a real key out of the check. It changes the guide only after the local check shows the problem.
+- **Action:** fix after merge, apply A, because the guide should change only after the local check.

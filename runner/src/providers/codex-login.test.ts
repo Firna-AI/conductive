@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, it, onTestFinished, vi } from 'vitest'
 import { FakeAppServers } from '../../test-support/app-server'
 import { mockComputerServer } from '../../test-support/computer-mcp'
 import { turn } from '../../test-support/harness'
+import { fakeToolContext } from '../../test-support/providers'
 import { deferred } from '../../test-support/runtime'
 import { object } from '../parse'
 import { createCodexFactory } from './codex'
@@ -49,6 +50,7 @@ function fixture() {
     login: command.login,
     choice: command.message.choice,
     conversationId: null,
+    tools: fakeToolContext,
     event: () => {},
     warn: () => {},
   }

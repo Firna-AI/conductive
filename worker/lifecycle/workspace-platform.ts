@@ -29,6 +29,7 @@ export interface WorkspacePlatform {
     input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
   ): Promise<void>
   stopped?(workspaceId: string): Promise<void>
+  stopping?(workspaceId: string): Promise<void>
   deviceWaiting?(workspaceId: string): Promise<boolean>
   readChatRecovery?(workspaceId: string): Promise<WorkspaceChatRecovery>
   chatRecovered?(): void
@@ -37,9 +38,10 @@ export interface WorkspacePlatform {
 export function nativeWorkspacePlatform(
   ctx: DurableObjectState,
   publish: WorkspacePlatform['publish'],
+  storage = nativeWorkspaceStorage(ctx.storage),
 ): WorkspacePlatform {
   return {
-    storage: nativeWorkspaceStorage(ctx.storage),
+    storage,
     blockConcurrencyWhile: (operation) => ctx.blockConcurrencyWhile(operation),
     waitUntil: (promise) => ctx.waitUntil(promise),
     publish,

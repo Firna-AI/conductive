@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { domBackendCss } from '@firna/ui'
 import { SharedUiThemeProvider } from '@firna/ui/theme'
 import { themeFor, tokensCss } from '../../../docs/mockups/src/theme'
+import {
+  useWorkspaceStore,
+  type WorkspaceIdentity,
+} from '../../app/workspace-store'
 import type { FakeApiServer } from '../../test-support/fake-api'
+import { FAKE_IDS } from '../../test-support/fixtures/core'
 import type { WorkspaceFiles } from '../model/files-store'
 import type { FilesNavigation, FilesTab, FilesTarget } from '../navigation'
 import { DiffPage } from '../page/DiffPage'
@@ -21,6 +26,18 @@ import {
   type DevView,
 } from './dev-view'
 import styles from './DevApp.module.css'
+
+/** The workspace of the fake API. */
+const workspace: WorkspaceIdentity = {
+  orgId: FAKE_IDS.org,
+  workspaceId: FAKE_IDS.workspace,
+}
+
+/** Starts the store: its first reads and its events. The result stops them. */
+function startFiles(files: WorkspaceFiles): () => void {
+  files.start()
+  return () => files.stop()
+}
 
 /** The code tab that the mockup keeps open beside the other tabs. */
 const codeTab: FilesTab = {
@@ -57,20 +74,21 @@ function Page(props: {
  */
 export function DevApp(props: {
   server: FakeApiServer
-  files: WorkspaceFiles
+  /** Makes the store of the page. Keep it stable, as a module function. */
+  createFiles: (workspace: WorkspaceIdentity) => WorkspaceFiles
   /** The Copy and Download of the page, created once. */
   targets: FileActionTargets
 }) {
-  const { server, files } = props
+  const { server } = props
+  const { store: files } = useWorkspaceStore(workspace, {
+    create: props.createFiles,
+    connect: startFiles,
+  })
   const [view, setView] = useState(() => readView(location.search))
   const [tabs, setTabs] = useState(() =>
     view.active ? withTab([codeTab], view.active) : [codeTab],
   )
   const [edits, setEdits] = useState(0)
-  useEffect(() => {
-    files.start()
-    return () => files.stop()
-  }, [files])
   useEffect(() => {
     const onPop = () => {
       const next = readView(location.search)

@@ -58,6 +58,15 @@ stops its own controller:
   has the workspace name, and the agent's title renames both. The
   development page does the same.
 - `extraTabs` takes `<li>` tabs, such as open files, after the session tabs.
+- `content` takes a page that the app shows in place of the chat of the
+  open session, such as an open file. The session tabs and the overlays
+  stay, and no session tab is the current one.
+- The controller's `updateView(change)` changes the saved view with a
+  change of the app, such as an open file tab or the list of the Files
+  panel. It saves through the same writer as the session tabs, so a later
+  write of the chat keeps the change. Until the load reads the view, it
+  changes nothing, so the saved tabs stay. In an archived workspace it
+  changes the view in the browser only.
 - `host` takes the start steps and the sandbox bar that the app draws, as
   `ChatHost` in `components/SessionChat.tsx` says. The chat places them.
   Without a host, the chat draws both from its own record of the workspace.

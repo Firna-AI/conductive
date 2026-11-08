@@ -8,10 +8,11 @@ import {
   windowInput,
   windowVisibility,
 } from '../../../app/services'
+import type { WorkspaceIdentity } from '../../../app/workspace-store'
 import { createFilesClient } from '../../../files/api/files-client'
 import { WorkspaceFiles } from '../../../files/model/files-store'
 import { FakeApiServer } from '../../../test-support/fake-api'
-import { FAKE_IDS, FAKE_TIME } from '../../../test-support/fixtures/core'
+import { FAKE_TIME } from '../../../test-support/fixtures/core'
 import { storeFailedRepairs } from '../../../test-support/recorded-repairs'
 import { readDevOptions } from './dev-options'
 import { DevPage } from './DevPage'
@@ -42,14 +43,17 @@ const app = new AppModel({
   leave: () => undefined,
   copy: (text) => navigator.clipboard.writeText(text),
 })
-const files = new WorkspaceFiles({
-  client: createFilesClient({
-    fetch: server.fetch,
-    orgId: FAKE_IDS.org,
-    workspaceId: FAKE_IDS.workspace,
-  }),
-  subscribe: (after, listener) => server.events.subscribe(after, listener),
-})
+
+/** Makes the store of the Files panel over the fake API. It starts nothing. */
+function createFiles({
+  orgId,
+  workspaceId,
+}: WorkspaceIdentity): WorkspaceFiles {
+  return new WorkspaceFiles({
+    client: createFilesClient({ fetch: server.fetch, orgId, workspaceId }),
+    subscribe: (after, listener) => server.events.subscribe(after, listener),
+  })
+}
 
 const root = document.getElementById('root')
 if (root) {
@@ -57,7 +61,7 @@ if (root) {
     <StrictMode>
       <DevPage
         app={app}
-        files={files}
+        createFiles={createFiles}
         now={now}
         options={options}
         server={server}

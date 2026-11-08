@@ -1,14 +1,15 @@
 # Members UI
 
-This folder holds the members UI of Milestone 15c: the Members tab with
+This folder holds the members UI: the Members tab with
 invites, role menus, and Remove, the owner picker that reassigns a
 workspace, Delete org with its restore page, and the read-only Repositories
 and Cloud computer tabs that a member who is not an admin sees. The
 [orgs and members protocol](../../docs/protocol/orgs-and-members.md) states
 the rules, and the [mockups](../../docs/mockups/README.md) draw the screens.
 
-Milestone 15i mounts these components in the app shell and wires them to the
-backend. The production components import no fixture, no fake, and no mockup
+The app shell mounts these components over the transport of the app, as
+[Composition](../app/README.md#composition) says. The production components
+import no fixture, no fake, and no mockup
 component. The dev page and the tests both use the fake API, from `dev/` and
 the `*.test.*` files.
 
@@ -44,7 +45,7 @@ button low in the window, so the menu opens above it.
 The dev page keeps its state in the address. Back and Forward change the
 scope without a reload, so the mounted parts get new props, as in the app
 shell. The dev page draws blank stand-ins for the rail, the sidebar, the
-settings header, and the workspace header, which Milestone 6 builds. Use the
+settings header, and the workspace header, which the app shell draws. Use the
 page at 1440 × 900 or 390 × 800 to compare it with the mockups.
 
 ## Mount the components
@@ -108,10 +109,14 @@ and `BuildLogEvent`. `log` is the log of the newest build of `builds` while
 it runs or after it failed, oldest event first. `null` shows that the log did
 not load. Each new value of a prop shows at once in the mounted view. So the
 shell can give it the same live builds and log events as the admin Cloud
-computer tab of Milestone 6. This folder has no transport and no polling:
-`MemberComputerTab` loads the settings, the builds, and the log once, and
-does not follow a running build. The wiring to a live backend belongs to
-Milestone 15i.
+computer tab. This folder has no transport and no polling. The shell gives
+the view the live builds, log, and settings of `ComputerModel`.
+`MemberComputerTab` loads them once, and does not follow a running build.
+The card counts the runs of the install script, as the tab of an admin
+does: a refresh is neither the newest build nor a row of the history. The
+line about where new workspaces start uses the current image, also when a
+refresh made it. The view names the software of the base image from
+`settings.baseImage`. An older reply without it names no software.
 
 ### Scope
 
@@ -201,8 +206,6 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 
 - The avatars show initials. The contracts give no initials, so they come
   from the display name or the GitHub login.
-- The General tab of a member, with the read-only org name, waits for the
-  General tab of Milestone 6.
 
 ## Key code
 
@@ -213,6 +216,8 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 - `actionOwners.ts`: the owner of each action, and `keepExistingOwners`,
   the owner rule that the store applies after each state change.
 - `MemberComputerView.tsx`: the controlled read-only Cloud computer tab.
+- `software.ts`: `softwareSentence`, the base image as one sentence, which
+  the admin tab of the shell also uses.
 - `useMounted.ts`: the ref that drops the answers of an old scope.
 - `ui/`: the local dense controls of the design, such as `ChoiceMenu`,
   `ConfirmDialog`, and `Sheet`, where `@firna/ui` has none. They copy the

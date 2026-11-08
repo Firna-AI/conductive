@@ -34,8 +34,7 @@ test('the bundled app keeps one isolated window and restores its bounds and sign
     await expect(page).toHaveURL(`${DESKTOP_ORIGIN}/`)
     const nav = page.getByRole('navigation', { name: 'Window controls' })
     await expect(nav).toBeVisible()
-    const box = await nav.boundingBox()
-    expect(box?.height).toBe(34)
+    await expect.poll(async () => (await nav.boundingBox())?.height).toBe(34)
     await expect(
       page.getByRole('button', { name: 'Back', exact: true }),
     ).toBeDisabled()

@@ -182,6 +182,7 @@ it('authenticates the ttyd handshake on the server and counts only terminal inpu
   const input = upstream.nextMessage()
   browser.emit(Uint8Array.of(48, 108, 115, 13).buffer)
   expect(await input).toEqual(Uint8Array.of(48, 108, 115, 13).buffer)
+  await harness.activity()
   expect(await harness.status()).toEqual({ activity: TEST_TIME + 1000 })
   browser.close(1000, 'closed')
   await upstream.end

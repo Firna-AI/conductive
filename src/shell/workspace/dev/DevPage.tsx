@@ -1,9 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { AppModel } from '../../../app/app-model'
 import { memoryNavigation, NavigationContext } from '../../../app/navigation'
 import { PanelWidths } from '../../../app/panels'
 import { routes } from '../../../app/router'
 import { ServicesContext } from '../../../app/services'
+import {
+  useWorkspaceStore,
+  type WorkspaceIdentity,
+} from '../../../app/workspace-store'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
 import type { FileListKind, FilesNavigation } from '../../../files/navigation'
 import { FilesPanel } from '../../../files/panel/FilesPanel'
@@ -19,8 +23,15 @@ import {
   type WorkspaceContext,
   type WorkspaceFeatures,
 } from '../features'
+import { startFiles } from '../files/files-store'
 import type { DevOptions } from './dev-options'
 import { DevControls } from './DevControls'
+
+/** The workspace of the fake API. */
+const devWorkspace: WorkspaceIdentity = {
+  orgId: FAKE_IDS.org,
+  workspaceId: FAKE_IDS.workspace,
+}
 
 /** The Files panel in its place, with its list in the memory of the page. */
 function DevFiles(props: {
@@ -59,11 +70,16 @@ function DevFiles(props: {
 export function DevPage(props: {
   app: AppModel
   server: FakeApiServer
-  files: WorkspaceFiles
+  /** Makes the store of the Files panel. Keep it stable, as a module function. */
+  createFiles: (workspace: WorkspaceIdentity) => WorkspaceFiles
   options: DevOptions
   now: () => number
 }) {
-  const { app, files, options, now } = props
+  const { app, options, now } = props
+  const { store: files } = useWorkspaceStore(devWorkspace, {
+    create: props.createFiles,
+    connect: startFiles,
+  })
   const measured = useViewport()
   const [mounts, setMounts] = useState(0)
   const [navigation] = useState(() =>
@@ -89,10 +105,6 @@ export function DevPage(props: {
     }),
     [files, options.list, now],
   )
-  useEffect(() => {
-    files.start()
-    return () => files.stop()
-  }, [files])
   return (
     <ServicesContext.Provider value={app.services}>
       <AppModelContext.Provider value={app}>

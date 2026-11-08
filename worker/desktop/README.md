@@ -1,7 +1,7 @@
 # Desktop backend
 
 This area gets a new desktop stream URL for a workspace.
-The production route dispatcher does not call this handler yet.
+The production Worker forwards this path to the workspace object and its desktop handler.
 The browser uses the [shared desktop contract](../../src/shared/desktop.ts).
 
 Call `createDesktopHandler(env, dependencies).fetch(request)` for the shared

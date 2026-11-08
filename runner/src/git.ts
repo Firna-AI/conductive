@@ -2,6 +2,15 @@ import { execFile } from 'node:child_process'
 export interface GitRunOptions {
   input?: Buffer
   literalPathspecs?: boolean
+  maxBytes?: number
+}
+
+export class GitOutputLimitError extends Error {
+  readonly limitBytes: number
+  constructor(limitBytes: number) {
+    super('The repository output exceeds the read limit.')
+    this.limitBytes = limitBytes
+  }
 }
 
 export class Git {
@@ -31,12 +40,18 @@ export class Git {
         {
           cwd: this.root,
           encoding: 'buffer',
-          maxBuffer: 64 * 1024 * 1024,
+          maxBuffer: options.maxBytes ?? 64 * 1024 * 1024,
           signal: this.signal,
           env: { ...process.env, ...this.environment, GIT_OPTIONAL_LOCKS: '0' },
         },
         (error, stdout) => {
-          if (error)
+          if (
+            error?.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER' &&
+            error.message.startsWith('stdout') &&
+            options.maxBytes !== undefined
+          )
+            reject(new GitOutputLimitError(options.maxBytes))
+          else if (error)
             reject(
               new Error('The repository command failed.', { cause: error }),
             )

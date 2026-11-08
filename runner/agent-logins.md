@@ -33,6 +33,10 @@ in the commands of the workspace Durable Object.
 - It sets `HOME`, `CLAUDE_CONFIG_DIR`, and `CODEX_HOME` for the home folder
   of the agents. It sets `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` and
   `DISABLE_AUTOUPDATER` to `1`.
+- It also sets the workspace tool context of the turn: its machine origin,
+  workspace token, and turn ID, as
+  [Workspace tools](agent-tools.md#workspace-tools) says. That context holds
+  no agent login.
 - This environment holds no login. A tool process inherits the environment
   of its agent program, so it gets no login from it.
 

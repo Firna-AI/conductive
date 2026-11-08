@@ -7,7 +7,6 @@ import { gate } from '../security/gate'
 import type { ToolDependencies, WorkspaceTarget } from './types'
 import {
   readWorkspaceTarget,
-  writeWorkspaceActivity,
   type WorkspaceAccessTarget,
 } from './workspace-store'
 
@@ -92,14 +91,11 @@ export async function toolRequest(
   return { context, target, tail }
 }
 
-export async function recordActivity(
-  env: AppEnv,
+export function recordActivity(
   dependencies: ToolDependencies,
   workspaceId: string,
-  source: 'terminal' | 'preview',
-): Promise<void> {
-  await writeWorkspaceActivity(env.DB, workspaceId, dependencies.now())
-  await dependencies.onActivity?.(workspaceId, source)
+): void {
+  dependencies.onActivity?.(workspaceId, dependencies.now())
 }
 
 export function toolError(error: unknown): Response {

@@ -1,87 +1,140 @@
-import { DurableObject } from 'cloudflare:workers'
-import type { RunnerEvent } from '../src/shared/runner'
-import type { UserMessage } from '../src/shared/messages'
-import type { ChatWorkspaceSummary } from './chat/workspace-summary'
 import { readChatWorkspaceResponse } from './chat/workspace-response'
-import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
-import { WorkspaceChat } from './chat/backend'
-import type { DeviceOperationResult } from './devices/internal'
-import {
-  createWorkspaceIntegration,
-  type WorkspaceCompositionEnv,
-  type WorkspaceChatResolvers,
-} from './chat/workspace-integration'
-import { DeviceRuntime } from './devices/runtime'
-import { activeStoredTurn } from './devices/access'
-import type { DurableLifecycleState } from './lifecycle/durable-types'
-import type { FailedCreationDraft } from './lifecycle/failed-creations'
-import type { ImageCoordinatorState } from './lifecycle/image-timers'
 import type {
-  PendingTurn,
-  FirstWorkspaceMessage,
-  WorkspaceLifecycleEndpoint,
-} from './lifecycle/workspace-runtime'
+  WorkspaceCompositionEnv,
+  WorkspaceChatResolvers,
+} from './chat/workspace-integration'
+import { WorkspaceLifecycle } from './workspace-lifecycle'
+import { lifecycleDependencies } from './lifecycle/runtime'
+import { WorkspaceFeatures } from './features/workspace'
+import { WorkspaceGitHub } from './features/github'
 import {
-  readStartJob,
-  type StoredWorkspaceStartJob,
-} from './lifecycle/start-job-codec'
-import { nativeWorkspaceStorage } from './lifecycle/platform-storage'
-import { readEncryptedStartLog } from './lifecycle/start-storage'
+  WorkspaceMembersReceiver,
+  type ReceiverOwnership,
+} from './members/workspace-receiver'
+import type { WorkspaceDisk } from './members/maintenance-contract'
+import type { ImageCoordinatorState } from './lifecycle/image-timers'
+import type { GitHubRefresh, GitHubWorkspace } from './github/contracts'
+import { handleGitHubRead } from './github/app-handler'
+import { hostSurface } from './hosts'
+import { activeStoredTurn } from './devices/access'
+import { readWorkspace, workspaceView } from './lifecycle/workspace-data'
+import { readArchiveCheck } from './app-api/archive'
 import {
-  startResultForTransport,
-  type WorkspaceLifecycleTransport,
-} from './lifecycle/workspace-transport'
-import type { WorkspaceController } from './lifecycle/workspace-controller-types'
-import { failedCreationEvents } from './lifecycle/failed-creation-events'
+  archiveWorkspaceAccess,
+  markWorkspaceArchived,
+} from './app-api/archive-data'
+import { orgSandboxProvider } from './sandbox/client'
+import { deleteSandboxIfPresent } from './lifecycle/cleanup'
+import { HttpError } from './http'
+import { featureResult } from './features/result'
+import { orgLifecycleActive } from './members/composition-data'
+import { resumeCreationCheckpoint } from './members/creation-checkpoint'
+import type { ConnectionScheduler } from './security/connection-access'
 
-export class Workspace
-  extends DurableObject<WorkspaceCompositionEnv>
-  implements WorkspaceLifecycleTransport
-{
-  private readonly chat: WorkspaceChat
-  private readonly controller: WorkspaceController
-  private readonly devices: DeviceRuntime
-  private readonly context: DurableObjectState
+export class Workspace extends WorkspaceLifecycle {
+  private readonly features: WorkspaceFeatures
+  private readonly github: WorkspaceGitHub
+  private readonly members: WorkspaceMembersReceiver
+  private readonly now: () => number
 
   constructor(
     context: DurableObjectState,
     env: WorkspaceCompositionEnv,
     now: () => number = Date.now,
     resolvers: WorkspaceChatResolvers = {},
+    activitySchedule?: ConnectionScheduler,
   ) {
-    super(context, env)
-    this.context = context
-    const integration = createWorkspaceIntegration(context, env, now, resolvers)
-    this.chat = integration.chat
-    this.devices = integration.devices
-    this.controller = integration.controller
+    super(context, env, now, resolvers, activitySchedule)
+    this.now = now
+    const dependencies = {
+      ...lifecycleDependencies(),
+      now,
+      terminalSchedule: activitySchedule,
+    }
+    const matches = (id: string) =>
+      env.WORKSPACES.idFromName(id).equals(context.id)
+    this.features = new WorkspaceFeatures(
+      env,
+      dependencies,
+      this.integration.files,
+      matches,
+      async (workspaceId, at) => {
+        await this.integration.storage.put('previews:workspace-id', workspaceId)
+        await this.integration.alarms.set('previews', at)
+      },
+      (id, at) => this.activity.record(id, at),
+      (id, ids, queueOwned) =>
+        queueOwned
+          ? this.chat.commitPreviewRevocations(id, ids)
+          : this.chat.runLifecycle(() =>
+              this.chat.commitPreviewRevocations(id, ids),
+            ),
+    )
+    this.integration.onStopped((id) => this.features.revokeWorkspace(id, true))
+    this.github = new WorkspaceGitHub(
+      this.integration.storage,
+      env,
+      dependencies,
+      this.chat,
+      matches,
+      this.integration.alarms,
+    )
+    this.members = new WorkspaceMembersReceiver(
+      context.storage,
+      this.chat,
+      this.features,
+      now,
+    )
   }
 
-  private run<T>(operation: () => Promise<T>): Promise<T> {
+  async callingToolTurn(workspaceId: string, turnId: string) {
+    if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id))
+      return null
     return this.chat.runLifecycle(async () => {
-      const result = await operation()
-      await this.chat.flushRunner()
-      return result
+      const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
+      return turn ? { workspaceId, turnId, senderUserId: turn.senderId } : null
     })
   }
 
-  async queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean> {
-    const parsed = readStartJob(job)
-    return this.run(() => this.controller.queueLifecycleStart(parsed))
+  refreshGitHub(workspace: GitHubWorkspace, signal: GitHubRefresh) {
+    return featureResult(() => this.github.refresh(workspace, signal))
   }
 
-  async acceptLifecycleFirstMessage(
-    first: FirstWorkspaceMessage,
-  ): Promise<UserMessage> {
-    return this.run(async () => {
-      const message = await this.chat.acceptFirstMessage(first)
-      await this.controller.acknowledgeLifecycleFirstMessage()
-      return message
+  suspendMemberLifecycle(
+    ownership: ReceiverOwnership,
+    workspaceId: string | null,
+  ) {
+    return featureResult(async () => {
+      await this.members.suspend(ownership, workspaceId)
+      this.controller.cancelLifecycleWaiters()
+      await this.integration.reconcileStopped()
     })
   }
+  restoreMemberLifecycle(
+    ownership: ReceiverOwnership,
+    disk: WorkspaceDisk | null,
+    image: ImageCoordinatorState | null,
+  ) {
+    return featureResult(() => this.members.restore(ownership, disk, image))
+  }
+  deleteMemberWorkspaceState(ownership: ReceiverOwnership) {
+    return featureResult(() => this.members.remove(ownership))
+  }
 
-  async readChatWorkspaceSummary(): Promise<ChatWorkspaceSummary> {
-    return this.chat.workspaceSummary()
+  resumeMemberCreation(orgId: string, workspaceId: string, userId: string) {
+    return featureResult(() =>
+      this.run(() =>
+        resumeCreationCheckpoint(
+          this.integration.storage,
+          this.env,
+          { ...lifecycleDependencies(), now: this.now },
+          this.controller,
+          orgId,
+          workspaceId,
+          userId,
+        ),
+      ),
+    )
   }
 
   readChatWorkspaceResponse(orgId: string, workspaceId: string) {
@@ -97,184 +150,149 @@ export class Workspace
     )
   }
 
-  async waitLifecycleStart() {
-    return startResultForTransport(
-      await this.controller.waitLifecycleStart(),
-      () => this.readLifecycleStartLog(),
-    )
-  }
-  async waitCreationLifecycle() {
-    return startResultForTransport(
-      await this.controller.waitCreationLifecycle(),
-      () => this.readLifecycleStartLog(),
-    )
-  }
-  async waitCreationAdmission() {
-    return this.controller.waitCreationAdmission()
-  }
-  async readCreationLifecycleResult() {
-    const result = await this.controller.readCreationLifecycleResult()
-    return result
-      ? startResultForTransport(result, () => this.readLifecycleStartLog())
-      : undefined
-  }
-
-  readLifecycleStartLog() {
-    return readEncryptedStartLog(nativeWorkspaceStorage(this.ctx.storage))
-  }
-
-  async retainLifecycleFailedCreation(
-    error: FailedCreationDraft['error'],
-    fallback?: Omit<FailedCreationDraft, 'error'>,
-  ): Promise<void> {
-    return this.run(() =>
-      this.controller.retainLifecycleFailedCreation(error, fallback),
-    )
-  }
-
-  async failedLifecycleCreation(
+  async publishWorkspaceMetadata(
     orgId: string,
-    senderUserId: string,
-  ): Promise<FailedCreationDraft | undefined> {
-    return this.controller.failedLifecycleCreation(orgId, senderUserId)
-  }
-
-  async initializeLifecycle(
-    input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
-  ): Promise<void> {
-    return this.run(() => this.controller.initializeLifecycle(input))
-  }
-
-  readLifecycle() {
-    return this.chat.runLifecycle(() => this.controller.readLifecycle())
-  }
-
-  async beginLifecycleStart(kind: WorkspaceStart['kind']) {
-    return this.run(() => this.controller.beginLifecycleStart(kind))
-  }
-
-  lifecycleStep(id: string, label: string, state: StartStep['state']) {
-    return this.run(() => this.controller.lifecycleStep(id, label, state))
-  }
-
-  async lifecyclePrepared() {
-    return this.run(() => this.controller.lifecyclePrepared())
-  }
-
-  lifecycleFailed(error: NonNullable<DurableLifecycleState['error']>) {
-    return this.run(() => this.controller.lifecycleFailed(error))
-  }
-
-  lifecycleActivity() {
-    return this.run(() => this.controller.lifecycleActivity())
-  }
-
-  async lifecycleStopped(): Promise<void> {
-    return this.run(() => this.controller.lifecycleStopped())
-  }
-
-  async suspendLifecycle(
     workspaceId: string,
-    ownerUserId: string,
-  ): Promise<boolean> {
-    if (
-      await this.controller.cancelSuspendedLifecycleStart(
-        workspaceId,
-        ownerUserId,
+  ): Promise<void> {
+    if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id)) return
+    await this.chat.runLifecycle(async () => {
+      const workspace = workspaceView(
+        await readWorkspace(this.env.DB, orgId, workspaceId),
       )
-    )
-      return false
-    return this.run(() =>
-      this.controller.suspendLifecycle(workspaceId, ownerUserId),
-    )
-  }
-
-  reconcileLifecycleAccess(workspaceId: string): Promise<void> {
-    return this.run(() => this.controller.reconcileLifecycleAccess(workspaceId))
-  }
-
-  async clearLifecycle(): Promise<void> {
-    return this.run(() => this.controller.clearLifecycle())
-  }
-
-  async acknowledgeLifecycleFirstMessage(): Promise<void> {
-    return this.run(() => this.controller.acknowledgeLifecycleFirstMessage())
-  }
-
-  async registerLifecycleTurn(turn: PendingTurn): Promise<void> {
-    return this.run(() => this.controller.registerLifecycleTurn(turn))
-  }
-
-  async finishLifecycleTurn(turnId: string): Promise<void> {
-    return this.run(() => this.controller.finishLifecycleTurn(turnId))
-  }
-
-  async credentialSender(turnId: string): Promise<string | null> {
-    return this.chat.runLifecycle(async () => {
-      const preparing = await this.controller.credentialSender(turnId)
-      if (preparing) return preparing
-      const state = await this.controller.readLifecycle()
-      if (!state || state.state === 'stopped' || state.state === 'archived')
-        return null
-      return (
-        (await activeStoredTurn(this.chat, state.workspaceId, turnId))
-          ?.senderId ?? null
-      )
+      await this.chat.commitWorkspaceEvent(workspaceId, {
+        type: 'workspace.updated',
+        workspace,
+      })
     })
   }
 
-  async reportRunnerLifecycle(event: RunnerEvent): Promise<void> {
-    return this.run(() => this.controller.reportRunnerLifecycle(event))
-  }
-
-  async runnerLifecycleDisconnected(): Promise<void> {
-    return this.run(() => this.controller.runnerLifecycleDisconnected())
-  }
-
-  async scheduleImage(state: ImageCoordinatorState): Promise<void> {
-    return this.run(() => this.controller.scheduleImage(state))
-  }
-
-  async retryFailedCreateCleanup(workspaceId: string): Promise<void> {
-    return this.run(() => this.controller.retryFailedCreateCleanup(workspaceId))
-  }
-
-  async finishDiskMaintenance(): Promise<void> {
-    return this.run(() => this.controller.finishDiskMaintenance())
-  }
-
   async alarm(): Promise<void> {
-    await this.run(() => this.controller.alarm())
+    if (!(await this.members.active())) return
+    const fence = await this.members.readFence()
+    if (
+      fence &&
+      !(await orgLifecycleActive(this.env.DB, fence.orgId, fence.generation))
+    ) {
+      await this.integration.storage.setAlarm(this.now() + 30_000)
+      return
+    }
+    const due = await this.integration.alarms.take(this.now())
+    if (!due.size || due.has('lifecycle')) await this.alarmLifecycle()
+    if (due.has('github')) await this.github.alarm()
+    if (due.has('previews')) {
+      await this.features.previews.expire()
+      const id = await this.integration.storage.get<string>(
+        'previews:workspace-id',
+      )
+      if (id)
+        await this.integration.alarms.set(
+          'previews',
+          await this.features.previews.nextExpiry(id),
+        )
+    }
     await this.devices.alarm()
-  }
-
-  deviceOperation(
-    target: string,
-    operation: unknown,
-  ): Promise<DeviceOperationResult> {
-    return this.devices.operation(target, operation)
+    const previewWorkspace = await this.integration.storage.get<string>(
+      'previews:workspace-id',
+    )
+    if (previewWorkspace)
+      await this.features.publishRevocations(previewWorkspace)
   }
 
   async fetch(request: Request): Promise<Response> {
-    const deviceResponse = await this.devices.fetch(request)
-    if (deviceResponse) return deviceResponse
-    const response = await this.chat.fetch(request)
-    if (request.method !== 'GET' && request.method !== 'HEAD')
-      this.context.waitUntil(this.devices.reconcile())
-    if (response.status !== 404) return response
-    return (
-      (await failedCreationEvents(
-        request,
-        this.env,
-        this.controller,
-        (id) => this.env.WORKSPACES.idFromName(id).equals(this.ctx.id),
-        (id, work) =>
-          this.chat.store.run(() =>
-            work((after, through) =>
-              this.chat.store.read(id, (view) => view.history(after, through)),
-            ),
-          ),
-      )) ?? response
+    if (hostSurface(request, this.env) === 'preview')
+      return this.features.previews.proxy(request)
+    const feature = await this.features.fetch(request)
+    if (feature) return feature
+    if (/\/github(?:\/checks)?$/.test(new URL(request.url).pathname))
+      return handleGitHubRead(request, this.env, {
+        now: this.now,
+        refresh: (workspace, signal) => this.github.refresh(workspace, signal),
+      })
+    return this.fetchChat(request)
+  }
+
+  checkWorkspaceArchive(orgId: string, workspaceId: string, userId: string) {
+    return featureResult(() =>
+      this.run(() =>
+        readArchiveCheck(
+          this.env,
+          { ...lifecycleDependencies(), now: this.now },
+          orgId,
+          workspaceId,
+          userId,
+        ),
+      ),
+    )
+  }
+
+  archiveWorkspace(
+    orgId: string,
+    workspaceId: string,
+    userId: string,
+    discard: boolean,
+  ) {
+    return featureResult(() =>
+      this.run(async () => {
+        const dependencies = { ...lifecycleDependencies(), now: this.now }
+        const row = await archiveWorkspaceAccess(
+          this.env,
+          orgId,
+          workspaceId,
+          userId,
+        )
+        if (row.archivedAt === null) {
+          const check = await readArchiveCheck(
+            this.env,
+            dependencies,
+            orgId,
+            workspaceId,
+            userId,
+          )
+          if (
+            !discard &&
+            (check.uncommittedFiles.length || check.unpushedCommits)
+          )
+            throw new HttpError(
+              409,
+              'workspace_has_unpushed_work',
+              'Check the saved work before you archive this workspace.',
+            )
+          await this.features.revokeWorkspace(workspaceId, true)
+          await this.chat.stopWorkspace(workspaceId)
+          if (row.sandboxId) {
+            await archiveWorkspaceAccess(this.env, orgId, workspaceId, userId)
+            const provider = await orgSandboxProvider(
+              this.env,
+              userId,
+              orgId,
+              dependencies.fetch,
+            )
+            await deleteSandboxIfPresent(provider, row.sandboxId)
+          }
+          await archiveWorkspaceAccess(this.env, orgId, workspaceId, userId)
+          await markWorkspaceArchived(
+            this.env,
+            orgId,
+            workspaceId,
+            userId,
+            this.now(),
+          )
+          await this.integration.storage.delete([
+            'lifecycle:start-job',
+            'lifecycle:create-publication',
+          ])
+          this.controller.cancelLifecycleWaiters()
+          await this.controller.clearLifecycle()
+        }
+        const workspace = workspaceView(
+          await readWorkspace(this.env.DB, orgId, workspaceId),
+        )
+        await this.chat.commitWorkspaceEvent(workspaceId, {
+          type: 'workspace.updated',
+          workspace,
+        })
+        return { workspace, start: null, error: null }
+      }),
     )
   }
 }

@@ -36,6 +36,10 @@ export class BrowserTabs {
   private checking = false
   private readonly dependencies: TabDependencies
 
+  closeAll(): void {
+    for (const peer of this.peers.keys()) this.close(peer)
+  }
+
   constructor(dependencies: TabDependencies) {
     this.dependencies = dependencies
   }

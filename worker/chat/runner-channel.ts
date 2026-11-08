@@ -18,6 +18,7 @@ import type {
 } from './types'
 
 export class RunnerChannel {
+  private connectionId: string | null = null
   private current: ActiveRunner | null = null
   private readonly delivery: RunnerDelivery
   private readonly repairs: RepairDelivery
@@ -49,6 +50,9 @@ export class RunnerChannel {
           () => {
             if (this.current !== active) return
             this.current = null
+            if (this.connectionId)
+              this.dependencies.runnerDetached(this.connectionId)
+            this.connectionId = null
             this.dependencies.waitUntil(
               this.store.run(() =>
                 this.dependencies.runnerDisconnected(
@@ -65,6 +69,8 @@ export class RunnerChannel {
         delivered: new Set(),
       }
       this.current = active
+      const connectionId = this.dependencies.randomConnectionId()
+      this.connectionId = connectionId
     })
   }
 
@@ -123,6 +129,7 @@ export class RunnerChannel {
       )
       active.streamId = message.streamId
       active.ready = welcome.ready
+      if (active.ready) this.attachFiles(active)
       await active.peer.send({
         type: 'welcome',
         protocolVersion: RUNNER_PROTOCOL_VERSION,
@@ -157,7 +164,11 @@ export class RunnerChannel {
       message.type === 'file.read.result' ||
       message.type === 'file.diff.result'
     ) {
-      await this.dependencies.receiveFileResult(message.value)
+      if (this.connectionId)
+        await this.dependencies.receiveFileResult(
+          message.value,
+          this.connectionId,
+        )
       return
     }
     if (message.streamId !== active.streamId)
@@ -204,6 +215,7 @@ export class RunnerChannel {
     const publish = this.publisher(active.workspace.id)
     if (becameReady) {
       active.ready = true
+      this.attachFiles(active)
       await this.dependencies.runnerReady(active.workspace.id, publish)
     }
     if (stored) await this.dependencies.runnerEventStored(stored, publish)
@@ -236,6 +248,18 @@ export class RunnerChannel {
         this.publish,
       )
     }
+  }
+
+  private attachFiles(active: ActiveRunner): void {
+    const id = this.connectionId
+    if (!id) return
+    this.dependencies.runnerAttached(active.workspace.id, id, (command) =>
+      this.store.run(() =>
+        this.current === active && this.connectionId === id
+          ? this.sendFileCommand(active.workspace.id, command)
+          : Promise.resolve(false),
+      ),
+    )
   }
 
   async sendFileCommand(

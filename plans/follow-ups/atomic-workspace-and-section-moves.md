@@ -1,0 +1,118 @@
+# Concurrent list moves can overwrite saved order
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-08, from branch `conductor/boat-native-remote-workspaces-milestone-15i`, review round 2, finding 5 and its finding check.
+- **Location:** `worker/app-api/feature-workspaces.ts:43`, `:49`, and `:53`, `worker/app-api/feature-workspaces-data.ts:3` and `:70`, `worker/app-api/feature-sections.ts:29`, `:83`, and `:86`, and `worker/app-api/feature-sections-data.ts:31` and `:78`.
+- **Reason:** The fix keeps the request format and the schema, so waiting does not make it harder.
+
+- **Terms:**
+  - **Section:** a named group of workspaces in the workspace list of an org, such as the default section General.
+  - **Position:** the stored integer, `sections.position` or `workspaces.position` in D1, that orders sections or workspaces.
+  - **D1 batch:** a list of SQL statements that D1 runs as one transaction, with no other write inside it.
+  - **`AS MATERIALIZED`:** a SQLite keyword that makes a `WITH` query compute its rows once, before the statement changes a row.
+- **Background:**
+  - The workspace move route in `worker/app-api/feature-workspaces.ts` takes a target section and an index in it.
+    - It reads the order of the target section with `orderedSectionWorkspaceIds`, at line 43.
+    - It puts the moved workspace at the index, at line 49.
+    - It writes the whole order with `updateShellWorkspace`, at line 53.
+  - `updateShellWorkspace` in `worker/app-api/feature-workspaces-data.ts` sets the section of the moved row.
+  - It then writes one `UPDATE workspaces SET position = ?` for each saved ID, at line 70.
+  - Its guard checks the org, the member, the archive state, and that the target section exists.
+  - The guard does not check that each saved ID is still in the target section.
+  - The section move route in `worker/app-api/feature-sections.ts` reads all sections with `shellSections`, at line 29.
+  - It builds the complete new order at line 83.
+  - `updateShellSection` writes each position, at line 78 of `worker/app-api/feature-sections-data.ts`.
+  - Each route reads and writes in two D1 round trips. Another request can commit between them.
+  - The app sends a workspace move on each drag, through `moveToSection` in `src/app/section-actions.ts`.
+  - List writes do not wait for each other, as the Data lifecycle section of `src/app/README.md` says.
+  - So two quick drags in one tab can overlap. Two people can overlap in the same way.
+  - No client sends a section move. Only a direct API request does.
+  - `deleteShellSection` in `worker/app-api/feature-sections-data.ts` already ranks sections from an `AS MATERIALIZED` snapshot inside its one write batch.
+  - A one-time check measured 27 wrong orders in 200 trials for the same query without that keyword.
+- **Problem:**
+  - A move that read the list before another move committed writes an order from its old read.
+  - Both requests answer with success.
+  - Cross-section case:
+    - General holds `a:0, b:1, c:2`. Review holds `x:0, y:1`.
+    - Request R reads General to move `c` to index 0. Its order is `c, a, b`.
+    - Request S moves `b` to Review index 0, and commits.
+    - R then writes `c:0, a:1, b:2`.
+    - The result is General `c:0, a:1`, and Review `x:1, b:2, y:2`.
+    - Both serial orders give Review `b:0, x:1, y:2`.
+    - So R changed the order of a section that it did not move into.
+  - Same-section case:
+    - General holds `a, b, c`. R moves `c` to index 0. S moves `a` to index 2. Both read first.
+    - When R writes first, the result is `b, c, a`. R's move is lost.
+    - When S writes first, the result is `c, a, b`. S's move is lost.
+    - Both serial orders give `c, b, a`.
+  - Section case:
+    - The sections are General 0, A 1, and B 2. P moves A to index 0. Q moves B to index 1. Both read first.
+    - When P writes first, the result is `General, B, A`. P's move is lost.
+    - When Q writes first, the result equals the serial result of Q then P.
+    - The serial results are `A, B, General` and `A, General, B`.
+  - Evidence:
+    - A one-time check ran the real data functions `orderedSectionWorkspaceIds`, `updateShellWorkspace`, `shellSections`, `updateShellSection`, and `shellWorkspaces`.
+    - It used an in-memory Miniflare D1 with every repository migration.
+    - It replayed the route steps between each read and its write.
+    - A wrapper around D1 committed the other move once, just before the first batch of the move under test.
+    - On the current code, this reproduced the cross-section case and the section case on every run.
+    - 300 random trials used 2 or 3 sections and 3 to 7 workspaces.
+    - Each trial committed another workspace move between the read and the batch of the move under test.
+    - A reference model applied the other move, then this move, to the current lists.
+    - The table counts the trials that ended in another order than the model.
+
+      | The other move | Trials | Current code wrong | Another section changed | Option A wrong | Option B wrong |
+      | --- | --- | --- | --- | --- | --- |
+      | Outside the target section | 111 | 0 | 0 | 0 | 0 |
+      | Out of the target section | 82 | 36 | 29 | 12 | 0 |
+      | Into the target section | 64 | 43 | 0 | 43 | 0 |
+      | Inside the target section | 43 | 21 | 0 | 21 | 0 |
+
+    - Each of the 12 remaining deviations of option A puts the moved row between the two neighbours of the old read.
+    - The model puts that row one place later.
+  - Limits of the evidence:
+    - No test of real concurrent requests through the routes ran.
+    - The route runtime runs the production bundle. It has no point between the read and the batch of one request.
+    - The trials used one seed and one interleaving shape. They checked workspace moves only.
+    - Only the section case above checked section moves.
+    - Miniflare D1 stands in for production D1. Nobody measured the real timing window or the real rate of the race.
+- **Impact if no action:**
+  - One person's move can silently change the saved order of another section.
+  - Two overlapping moves can lose one accepted move, also inside one section.
+  - A person must then move the rows again. No workspace or file is lost.
+- **Root question:** How can overlapping moves keep every other accepted change to the list?
+- **Options:**
+  - **A.** Restrict each sibling write to its target section, with `AND section_id = ?`. Add the cross-section regression. This stops the change to another section. It keeps the lost moves of the same-section and into-section cases. Effort: Small.
+  - **B.** Pass the requested section and index into atomic SQL move operations, for workspaces and for sections.
+    - One batch moves the row.
+    - A second statement ranks the current rows of the target from an `AS MATERIALIZED` snapshot. It puts the moved row at its index.
+    - No move computes positions outside its write transaction.
+    - Make the read and the write of each route one data operation, so that a test can wrap its D1.
+    - Add three regressions with the D1 wrapper: the cross-section case, the same-section case, and the section case.
+    - The cross-section case alone also passes under A. So the same-section case is necessary.
+    - Keep `deleteShellSection` as it is.
+    - Add the rule to `worker/app-api/README.md`.
+    - Effort: Medium.
+  - **C.** Serialize all list writes of one org through one durable owner.
+    - The owner can be a named instance of the existing `Workspace` Durable Object class, as `org-image:<orgId>` already is.
+    - Every list writer must use it, also the section delete.
+    - Otherwise a stale move can tie with the rows that a delete moves into General.
+    - It needs an explicit queue, because a Durable Object can take another call while it waits for D1.
+    - Effort: Medium.
+- **Left out:**
+  - A browser queue: it cannot coordinate tabs or people.
+  - A section check that is not atomic: it still races with the write.
+  - Change nothing: it loses accepted moves.
+  - A request that names the neighbour of the drop in place of an index: B is better on every point of the root question.
+    - It changes the shared request types, the client, and the dev fake.
+    - It changes only where the moved row lands.
+    - Bring it back if a drop must keep the neighbours that the person saw.
+  - Sparse order keys, so that a move writes only its own row: they need a migration and key rebalancing. B gives the same guarantee without them.
+  - A comparison of the read list inside the batch: with a 409 reply, it adds a new rejection, which needs the user. With a retry in the route, B is better on every point.
+  - A lint or a test for the class: it needs the user's approval. A structural option exists.
+- **Wider fix:** B. No move computes positions outside its write transaction, so the class cannot come back in these writers.
+- **Previous examples:** `deleteShellSection` in `worker/app-api/feature-sections-data.ts` had a related defect. Its rank update counted rows that the same statement changed. Its fix ranks from an `AS MATERIALIZED` snapshot inside the write batch, which is the pattern of B.
+- **Related:** `plans/follow-ups/new-workspace-position-after-reorder.md`. Both items change how rows get a `position`. Either can go first. The second fix must keep the rule of the first.
+- **Recommendation:** B. Atomic move operations keep every other accepted change for both list types. They need no new owner, no migration, and no new rejection. B does not repair an order that a race already saved.
+- **Action:** fix after merge, apply B, because a rare race whose fix does not get harder can wait.

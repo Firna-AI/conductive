@@ -99,7 +99,7 @@ export async function advanceStartMachine(
         }),
       )
       if (!sandboxId) return null
-    } else if (job.kind === 'resume') {
+    } else {
       job.allocatedSandboxId = row.sandboxId
       await storage.update(job)
       const current = await provider.get(row.sandboxId)
@@ -124,13 +124,12 @@ export async function advanceStartMachine(
   if (job.phase === 'ready') {
     const machine = await provider.get(row.sandboxId)
     const status = providerState(machine.state)
-    if (status === 'stopped' && job.kind === 'resume')
+    if (status === 'stopped')
       return {
         phase: 'machine',
         environmentCiphertext: job.environmentCiphertext,
       }
-    if (status === 'stopped' || status === 'error')
-      throw new WorkspaceStartError(null)
+    if (status === 'error') throw new WorkspaceStartError(null)
     if (status !== 'ready') return null
     await provider.setAutoStop(row.sandboxId, 1_800)
     if (job.kind === 'create')
@@ -143,7 +142,8 @@ export async function advanceStartMachine(
       'completed',
     )
     return {
-      phase: job.kind === 'create' ? 'fetch' : 'startup',
+      phase:
+        job.afterReadyPhase ?? (job.kind === 'create' ? 'fetch' : 'startup'),
       environmentCiphertext: job.environmentCiphertext,
     }
   }

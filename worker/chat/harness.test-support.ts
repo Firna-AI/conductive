@@ -53,12 +53,14 @@ export async function createChatFixture(
   const storage = new MemoryChatStorage()
   const env = { ...harness.env, MACHINE_ORIGIN }
   let sequence = 0
+  let connectionSequence = 0
   const clock = new ManualChatClock(TEST_TIME)
   const dependencies = {
     now: clock.now,
     scheduleBrowserCheck: clock.schedule,
     scheduleRunnerCheck: clock.schedule,
     randomId: () => `chat-${String(++sequence).padStart(4, '0')}`,
+    randomConnectionId: () => `connection-${++connectionSequence}`,
     ...overrides,
   }
   let chat = new WorkspaceChat(storage, env, dependencies)

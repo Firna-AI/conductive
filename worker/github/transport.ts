@@ -12,7 +12,7 @@ export function githubRequest(
 ): Request {
   return new Request(`https://api.github.com${path}`, {
     ...init,
-    redirect: 'error',
+    redirect: 'manual',
     signal: AbortSignal.timeout(30_000),
     headers: {
       Accept: 'application/vnd.github+json',

@@ -2,10 +2,7 @@ import type { ReactNode } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import {
-  MonoBlock,
-  Section,
-} from '../../../docs/mockups/src/components/settings/Section'
+import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import type { ComputerModel, ScriptKind } from '../../app/computer-model'
 import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
@@ -23,10 +20,11 @@ interface ScriptProps {
 }
 
 /**
- * The script in a code field, with Save script, which waits for a change.
- * The field keeps the text that the user types while a save runs.
+ * A script of the org, which an admin edits in a code field (decision 57).
+ * Save script waits for a change. The field keeps the text that the user
+ * types while a save runs.
  */
-function ScriptEditor(props: ScriptProps) {
+export function ScriptSection(props: ScriptProps) {
   const theme = useSharedUiTheme()
   const { field } = useControlSizes()
   const script = useSavedDraft(props.script)
@@ -63,21 +61,6 @@ function ScriptEditor(props: ScriptProps) {
         value={script.draft}
       />
       {props.notice}
-    </Section>
-  )
-}
-
-/**
- * A script of the org. An admin edits it in a code field and saves it. A
- * member who is not an admin sees it as text (decision 57).
- */
-export function ScriptSection(props: ScriptProps & { admin: boolean }) {
-  const { admin, ...script } = props
-  if (admin) return <ScriptEditor {...script} />
-  return (
-    <Section description={script.description} title={script.title}>
-      <MonoBlock text={script.script} />
-      {script.notice}
     </Section>
   )
 }

@@ -27,17 +27,3 @@ export function readWorkspaceTarget(
     .bind(orgId, workspaceId, userId ?? null, userId ?? null)
     .first<WorkspaceAccessTarget>()
 }
-
-export async function writeWorkspaceActivity(
-  db: D1Database,
-  workspaceId: string,
-  now: number,
-): Promise<void> {
-  await db
-    .prepare(
-      `UPDATE workspaces SET last_activity_at = MAX(COALESCE(last_activity_at, 0), ?)
-     WHERE id = ? AND archived_at IS NULL`,
-    )
-    .bind(now, workspaceId)
-    .run()
-}

@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { createMembersApi } from '../members/api/client'
 import { API_PATHS } from '../shared/api'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_ORIGIN, FAKE_TIME } from '../test-support/fixtures/core'
@@ -65,8 +66,10 @@ describe('org forms', () => {
     await app.renameOrg(created.id, { name: 'Acme Lab' })
     const renamed = tile(created.id)
     await app.renameOrg(created.id, { name: 'Acme Lab', initials: 'LB' })
-    await app.deleteOrg(created.id, 'Acme Lab')
-    await app.restoreOrg(created.id)
+    // Delete org and Restore of the members UI give their answers to the app.
+    const members = createMembersApi(app.services.api.fetch)
+    app.putOrg(await members.deleteOrg(created.id, { name: 'Acme Lab' }))
+    app.putOrg(await members.restoreOrg(created.id))
     expect({
       request: sent[0],
       created: listed,

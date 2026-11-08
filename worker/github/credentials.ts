@@ -2,10 +2,11 @@ import type { AppEnv, HttpFetch } from '../env'
 import { base64Url } from '../security/crypto'
 import type { GitHubTokenProvider } from './contracts'
 import { githubFailure, object, text } from './parsers'
+import { appSigningKey } from './private-key'
 import { githubJson, githubRequest } from './transport'
 
 export interface GitHubAppCredentials extends Pick<AppEnv, 'GITHUB_CLIENT_ID'> {
-  /** PKCS#8 PEM. This secret stays in the Worker and never reaches a sandbox. */
+  /** GitHub App PEM. This secret stays in the Worker and never reaches a sandbox. */
   GITHUB_APP_PRIVATE_KEY: string
 }
 
@@ -18,7 +19,7 @@ export function installationTokenProvider(
   let privateKey: Promise<CryptoKey> | undefined
   return async (workspace) => {
     try {
-      privateKey ??= importKey(env.GITHUB_APP_PRIVATE_KEY)
+      privateKey ??= appSigningKey(env.GITHUB_APP_PRIVATE_KEY)
       const seconds = Math.floor(now() / 1000)
       const encode = (value: unknown) =>
         base64Url(new TextEncoder().encode(JSON.stringify(value)))
@@ -62,21 +63,4 @@ export function installationTokenProvider(
       throw githubFailure()
     }
   }
-}
-
-async function importKey(pem: string): Promise<CryptoKey> {
-  const encoded = pem
-    .replace('-----BEGIN PRIVATE KEY-----', '')
-    .replace('-----END PRIVATE KEY-----', '')
-    .replace(/\s/g, '')
-  const bytes = Uint8Array.from(atob(encoded), (character) =>
-    character.charCodeAt(0),
-  )
-  return crypto.subtle.importKey(
-    'pkcs8',
-    bytes,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  )
 }

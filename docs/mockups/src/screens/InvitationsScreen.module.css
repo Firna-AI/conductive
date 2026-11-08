@@ -1,0 +1,12 @@
+.intro {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-lg);
+  line-height: 1.55;
+}
+
+/* Continue to workspaces, under the list at its end. */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
