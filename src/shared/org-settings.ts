@@ -1,4 +1,4 @@
-import { orgPath, type EmptyRequest, type Timestamp } from './api'
+import { orgPath, type Timestamp } from './api'
 import type { BaseImage } from './base-image'
 
 export const orgSettingsPaths = {
@@ -32,11 +32,6 @@ export interface Repository {
 export interface RepositoriesResponse {
   repositories: readonly Repository[]
 }
-/** PUT adds one repository. DELETE removes it. Each answer lists the current choices. */
-export type AddRepositoryRequest = EmptyRequest
-export type RemoveRepositoryRequest = EmptyRequest
-export type AddRepositoryResponse = RepositoriesResponse
-export type RemoveRepositoryResponse = RepositoriesResponse
 
 export interface OrgSettings {
   /** Software included before the install script. Older replies may omit it. */
@@ -59,7 +54,6 @@ export interface UpdateOrgSettingsRequest {
     | { operation: 'remove'; name: string }
   )[]
 }
-export type UpdateOrgSettingsResponse = OrgSettingsResponse
 
 export interface ImageBuild {
   id: string

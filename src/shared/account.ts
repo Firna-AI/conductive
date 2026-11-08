@@ -57,10 +57,6 @@ export interface AccountResponse {
   agentLogins: readonly AgentLoginStatus[]
 }
 
-export interface SessionResponse {
-  user: User
-}
-
 export type SaveAgentLoginResponse = AgentLoginStatus
 export interface SetDefaultModelRequest {
   choice: AgentChoice
@@ -72,8 +68,4 @@ export interface GitHubInstallationsResponse {
 }
 export interface GitHubRepositoriesResponse {
   repositories: readonly GitHubRepository[]
-}
-
-export interface DeleteAccountResponse {
-  deleted: true
 }

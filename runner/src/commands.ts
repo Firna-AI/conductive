@@ -47,7 +47,7 @@ function parseAttachment(value: unknown): Attachment {
   }
 }
 
-export function parseUserMessage(value: unknown): UserMessage {
+function parseUserMessage(value: unknown): UserMessage {
   const input = object(value)
   const sender = object(input.sender)
   return {

@@ -41,7 +41,7 @@ export function equalPairing(
 }
 
 /** This window is the Mac app on the Mac that got the request. */
-export function isThisMac(
+function isThisMac(
   devices: DeviceSnapshot,
   request: DeviceCommandRecord,
 ): boolean {

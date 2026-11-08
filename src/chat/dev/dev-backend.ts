@@ -35,7 +35,7 @@ import { takeState } from './dev-sandbox'
 import { followTitle, setActiveTurn } from './dev-sessions'
 import { DevStream } from './dev-stream'
 
-export const NEW_WORKSPACE = 'saved-carts'
+const NEW_WORKSPACE = 'saved-carts'
 
 /** The fake API of the development page, with writes that change its state. */
 export class DevBackend {

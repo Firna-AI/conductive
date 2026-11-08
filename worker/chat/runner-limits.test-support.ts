@@ -7,6 +7,7 @@ import { ChatStore, type ChatTransaction } from './store'
 import type { ChatDependencies, RunnerPeer } from './types'
 
 export const context = { sessionId: 'session', turnId: 'turn' }
+/** @public Shared by the history compaction and ordering fixtures. */
 export const choice = {
   agent: 'claude',
   model: 'test',

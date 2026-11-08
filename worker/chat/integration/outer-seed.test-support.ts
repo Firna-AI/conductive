@@ -12,6 +12,7 @@ export const OUTER_TOKEN = 'outer-workspace-token'
 export const OTHER_TOKEN = 'other-workspace-token'
 export const OUTER_REPOSITORY = 'chat-repository'
 export const OUTER_SECTION = 'chat-section'
+/** @public Shared runner archive fixture for the composed feature routes. */
 export const OUTER_SOFTWARE = {
   url: 'https://software.conductive.test/runner.tar.gz',
   sha256: 'a'.repeat(64),

@@ -166,20 +166,6 @@ export async function insertWorkspace(
   return leasedImage(db, input.orgId, input.id)
 }
 
-export function findCreatedWorkspace(
-  db: D1Database,
-  orgId: string,
-  userId: string,
-  messageId: string,
-): Promise<{ id: string } | null> {
-  return db
-    .prepare(
-      'SELECT workspace_id AS id FROM workspace_runtime WHERE org_id = ? AND created_by_user_id = ? AND first_message_id = ?',
-    )
-    .bind(orgId, userId, messageId)
-    .first<{ id: string }>()
-}
-
 export async function assignSandbox(
   db: D1Database,
   orgId: string,
