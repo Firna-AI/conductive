@@ -110,16 +110,15 @@ describe('a workspace that the tab showed', () => {
       fetch: held.fetch,
       events: socket.source,
     })
-    // The open reads first, so the second hold catches the chat's load.
-    held.holdAnswer('GET', workspacePath(org, id))
-    held.holdAnswer('GET', workspacePath(org, id))
+    // The model's open also reads the workspace, so the hold catches the
+    // chat's own first read.
+    held.holdAnswer('GET', sessionsPath(org, id))
     const { view, go } = mountTab(app)
-    await act(async () => held.release('GET', workspacePath(org, id)))
     await settle()
     go(away)
     await settle()
     const opened = [...socket.opens]
-    await act(async () => held.release('GET', workspacePath(org, id)))
+    await act(async () => held.release('GET', sessionsPath(org, id)))
     await settle()
     expect(socket.opens).toEqual(opened)
     expect(socket.connected()).toBe(0)
