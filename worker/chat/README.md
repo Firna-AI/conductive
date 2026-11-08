@@ -61,6 +61,26 @@ A cross-agent model change uses the client's `newSessionId`. A repeated
 request gets the same session. An unrelated occupied ID is refused. A
 same-agent change ignores this field.
 
+## Session names
+
+`first-message.ts` reads the assigned first session ID from
+`workspace_runtime.session_id` and the workspace name from D1. It saves
+both in chat storage when it accepts the first message. `sessions.ts`
+gives that session the workspace name, which starts as a city name.
+
+`session-titles.ts` applies the first stored `workspace.title` to that
+session while its title still equals the saved workspace name. It records
+the receipt in the same transaction. A member's name stays.
+A later workspace title leaves the session unchanged.
+
+Each other session starts as "New session". `messages.ts` uses
+`sessionTitleFrom` in `src/shared/session-title.ts` when it accepts text
+while the session still has that default title. The shared function makes
+a title from the first line with text and limits it to 60 Unicode code
+points. An attachment-only message leaves the title for the next text
+message. A member's name stays. Repeated message IDs change nothing.
+The numbered `session.updated` event sends each changed title to open tabs.
+
 ## Message admission
 
 The public Send and Retry routes check the workspace creation attempt
@@ -204,6 +224,8 @@ tests through the production Worker entry.
   lifecycle events.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
+- `session-titles.ts`: the first session rename in the transaction that
+  stores the workspace title.
 - `workspace-summary.ts`: `WorkspaceSummaryProjection`, the summary that
   `readChatWorkspaceSummary` returns.
 - `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched

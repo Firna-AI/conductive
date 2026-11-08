@@ -9,6 +9,7 @@ import type { ChatTransaction } from './store'
 import type { ChatDependencies } from './types'
 
 interface FirstMessageIdentity extends User {
+  workspaceName: string
   archivedAt: number | null
   orgId: string
   sessionId: string
@@ -26,7 +27,8 @@ export function firstMessageIdentity(
   return env.DB.prepare(
     `SELECT u.id, u.github_id AS githubId, u.github_login AS githubLogin,
     u.display_name AS displayName, u.avatar_url AS avatarUrl,
-    w.archived_at AS archivedAt, r.org_id AS orgId, r.session_id AS sessionId, r.first_turn_id AS turnId,
+    w.name AS workspaceName, w.archived_at AS archivedAt,
+    r.org_id AS orgId, r.session_id AS sessionId, r.first_turn_id AS turnId,
     r.first_message_id AS messageId, r.agent, r.model, r.effort
     FROM workspace_runtime r JOIN workspaces w ON w.id = r.workspace_id
     JOIN orgs o ON o.id = w.org_id
@@ -41,7 +43,7 @@ export function firstMessageIdentity(
 export function requireFirstMessage(
   identity: FirstMessageIdentity | null,
   first: FirstWorkspaceMessage,
-): User {
+): User & { workspaceName: string } {
   if (
     !identity ||
     identity.id !== first.sender.id ||
@@ -58,6 +60,7 @@ export function requireFirstMessage(
       'The workspace is not available.',
     )
   return {
+    workspaceName: identity.workspaceName,
     id: identity.id,
     githubId: identity.githubId,
     githubLogin: identity.githubLogin,
@@ -72,6 +75,7 @@ export async function admitFirstMessage(
   sender: User,
   dependencies: ChatDependencies,
   archived: boolean,
+  workspaceName: string,
 ): Promise<UserMessage> {
   const existing = await existingMessage(
     transaction,
@@ -118,6 +122,11 @@ export async function admitFirstMessage(
     first.workspaceId,
     first.request.attachmentIds,
   )
+  await transaction.saveFirstSession({
+    id: first.sessionId,
+    workspaceName,
+    titleReceived: false,
+  })
   await createSession(
     transaction,
     first.request.choice,

@@ -59,6 +59,7 @@ export class WorkspaceOperations {
           sender,
           dependencies,
           identity?.archivedAt !== null,
+          sender.workspaceName,
         ),
       publish,
     )

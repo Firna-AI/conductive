@@ -4,6 +4,7 @@ import type {
   SendMessageResponse,
   UserMessage,
 } from '../../src/shared/messages'
+import { sessionTitleFrom } from '../../src/shared/session-title'
 import { HttpError } from '../http'
 import { sessionFor } from './session-record'
 import { queueModel, sameAgent } from './sessions'
@@ -71,6 +72,12 @@ export async function acceptMessage(
       'session_closed',
       'Reopen the session to send a message.',
     )
+  }
+  if (
+    session.title === 'New session' &&
+    (await transaction.firstSession())?.id !== sessionId
+  ) {
+    session.title = sessionTitleFrom(input.text) ?? session.title
   }
   const message: UserMessage = {
     id: input.id,

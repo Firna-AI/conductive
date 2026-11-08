@@ -92,6 +92,15 @@ describe('workspace chat commands', () => {
       'claude',
       'codex',
     ])
+    expect(changed.session.title).toBe('New session')
+    const accepted = await fixture.send(
+      changed.session.id,
+      'other-agent-message',
+      fixture.ownerCookie,
+      CODEX,
+      'Title the other agent session.',
+    )
+    expect(accepted.session.title).toBe('Title the other agent session')
   })
 
   it('stops a running session before closing and reopens its stored history', async () => {
@@ -136,7 +145,12 @@ describe('workspace chat commands', () => {
     ).json()
     expect(closed.sessions).toEqual([])
     expect(closed.history).toEqual([
-      { ...session, activeTurnId: null, closedAt: 1_800_000_000_000 },
+      {
+        ...session,
+        title: 'Check this code',
+        activeTurnId: null,
+        closedAt: 1_800_000_000_000,
+      },
     ])
     const history = await fixture.history(session.id)
     expect(history.events.map(({ event }) => event.type)).toContain(

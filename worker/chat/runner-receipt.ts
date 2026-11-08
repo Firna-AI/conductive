@@ -10,6 +10,7 @@ import { refuseRunnerEvent } from './runner-refusal'
 import type { ChatTransaction } from './store'
 import { prepareAgentEvent } from './turn-events'
 import { observeRepairPart } from './repair-refusal'
+import { applyWorkspaceSessionTitle } from './session-titles'
 
 /** Only validation errors become permanent refusals. Storage and sends must retry. */
 export async function storeRunnerReceipt(
@@ -96,6 +97,12 @@ export async function storeRunnerReceipt(
     await apply()
   } else if (!('sessionId' in event)) {
     await transaction.emit(event, parsed.occurredAt)
+    if (event.type === 'workspace.title')
+      await applyWorkspaceSessionTitle(
+        transaction,
+        event.name,
+        parsed.occurredAt,
+      )
     if (event.type === 'start.updated' || event.type === 'workspace.title')
       await transaction.repairs.remove(event.type)
   }
