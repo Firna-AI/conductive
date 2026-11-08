@@ -4008,6 +4008,31 @@ Added on 8 November 2026 from the check of finding 2 of PR #48
 - **Chosen:** A now, by the user on 8 November 2026, with D as a later
   follow-up: `plans/follow-ups/runner-output-save-failure.md`.
 
+### 132. Store chat attachments until the turn
+
+Added on 8 November 2026 from Milestone 15i, which found that no
+milestone built the attachment storage.
+
+- **Background:** The composer attaches files to a message, and every
+  upload fails today. A file must wait between the upload and the turn:
+  a new workspace has no cloud computer yet, and a message can wait while
+  its computer starts. The Worker can read files in a cloud computer, but
+  it cannot write them yet.
+- **Options:**
+  - **A.** One R2 bucket. Each upload goes there, with a limit of 25 MB
+    for each file. The Worker copies each file into the cloud computer
+    when the turn starts. A file is deleted with its workspace, and an
+    unsent draft file after 7 days.
+  - **B.** The storage of each workspace's own object, in chunks.
+  - **C.** Upload only into a running cloud computer. The first message
+    of a new workspace, and a message to a stopped workspace, cannot carry
+    files.
+  - **D.** As C, but a message with files waits as an unsent draft until
+    the cloud computer runs, as in decision 130 A. A new workspace starts
+    its computer before its first message.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026. Milestone 8p builds it.
+
 ### 133. Decide which org env values count as secrets
 
 Added on 8 November 2026 from the check of finding 12 of PR #42
@@ -5556,17 +5581,14 @@ Depends on: none.
 
 Apply the `fix after merge` items of the runner. Added on 8 November 2026.
 
-- [ ] Apply option D of `plans/follow-ups/runner-output-save-failure.md`
-      (decision 131), and delete that item.
-- [ ] Apply option C of `plans/follow-ups/agent-login-in-tool-processes.md`
+- [x] Apply option D of `plans/follow-ups/runner-output-save-failure.md`
+      (decision 131), and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-7x`.
+- [x] Apply option C of `plans/follow-ups/agent-login-in-tool-processes.md`
       (decision 114): no tool process inherits the login of the agent.
       Check the Codex program too. Update "Agent logins in a sandbox" in
-      `docs/protocol/access-and-security.md`.
-- [ ] Confirm option C in a real sandbox with the real logins of the
-      `LIVE_*` settings: a server that a tool starts cannot read the login
-      after the turn. The orchestrator runs this check in the primary
-      workspace, because only that workspace holds the real-sandbox
-      settings. Then delete `plans/follow-ups/agent-login-in-tool-processes.md`.
+      `docs/protocol/access-and-security.md`. Branch: `conductor/boat-native-remote-workspaces-milestone-7x`.
+The live check of option C in a real sandbox moved to Milestone 16a on 8
+November 2026.
 
 ## Milestone 8: Chat UI
 
@@ -5970,6 +5992,34 @@ November 2026. Added on 8 November 2026.
       with the changes to `docs/protocol/chat-and-events.md` and
       `docs/protocol/workspaces-and-sandboxes.md`. Delete that item.
 
+## Milestone 8p: Chat attachments
+
+Tags: ui
+
+Depends on: 8m, 15i. They change the chat path, the composer, and the
+deletion purge that this milestone extends.
+
+Apply decision 132 A. Added on 8 November 2026.
+
+- [ ] Draw each missing attachment state in the mockups, such as upload
+      progress, a failed upload with Try again, a file over the limit, and
+      the files of a sent message. Then build them, and compare each with
+      its mockup.
+- [ ] Store each upload in one R2 bucket, with a limit of 25 MB for each
+      file and a record of each file. Only a message of the uploader, in
+      the workspace or the new workspace that the upload names, can use
+      the file.
+- [ ] When the turn of a message starts, copy each of its files into the
+      cloud computer at its path. The Worker has no provider route that
+      writes a file yet. Add one to the fixed list of provider routes, or
+      send the file through the runner connection, as a design call.
+- [ ] Delete the files of a workspace with the workspace, also in the
+      purge of a deleted org, and an unsent draft file after 7 days.
+- [ ] Add the bucket to `docs/deployment.md` and to the Worker
+      configuration. State the rules in `docs/protocol/chat-and-events.md`
+      and `docs/protocol/access-and-security.md`, and the stored files on
+      the privacy page, with "(decision 132)".
+
 ## Milestone 16a: First deployment
 
 Depends on: 8i, 8m
@@ -5997,6 +6047,12 @@ This milestone needs the prerequisites from the user.
 - [ ] Check that chat survives a restart: send a message before the
       runner connects, deploy again, then check the history, the event
       numbers, and the delivery of the waiting message.
+- [ ] Run the live check of `plans/follow-ups/agent-login-in-tool-processes.md`
+      with a Claude subscription token, an Anthropic API key, and an
+      OpenAI API key: a server that a tool starts cannot read the login
+      during or after the turn. Then delete that item. Moved from
+      Milestone 7x on 8 November 2026, because it needs the deployed test
+      app and the three logins from the user.
 
 ## Milestone 9: Files backend
 

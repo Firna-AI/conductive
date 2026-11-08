@@ -16,6 +16,41 @@ it('rejects a failed output call and accepts a later report', async () => {
   expect(h.warnings).toEqual([])
 })
 
+it('fails the turn after a failed turn.started save and starts the next turn', async () => {
+  const h = await wireFixture()
+  await h.runner.start(false)
+  const write = h.storage.write.bind(h.storage)
+  let rejected = 0
+  vi.spyOn(h.storage, 'write').mockImplementation(async (state) => {
+    if (rejected === 0 && state.outbox.at(-1)?.event.type === 'turn.started') {
+      rejected++
+      throw new Error('The turn start cannot be saved.')
+    }
+    await write(state)
+  })
+  h.endpoint.send(turn())
+  await h.runner.idle()
+  expect(rejected).toBe(1)
+  expect(h.providers.processes).toHaveLength(0)
+  expect(
+    h.endpoint.runnerEvents.slice(3).map(({ event }) => event.type),
+  ).toEqual(['turn.started', 'turn.failed'])
+  expect(h.endpoint.runnerEvents.at(-1)?.event).toEqual({
+    type: 'turn.failed',
+    sessionId: 'session-1',
+    turnId: 'turn-1',
+    error: { code: 'agent_failed', message: 'The turn start cannot be saved.' },
+    retryMessageId: 'message-1',
+    durationMs: 0,
+  })
+  h.endpoint.send(turn('next'))
+  await h.runner.idle()
+  expect(h.providers.latest.messages.map(({ turnId }) => turnId)).toEqual([
+    'turn-next',
+  ])
+  expect(h.warnings).toEqual([])
+})
+
 it('saves the terminal part after a held text save fails and never ends that turn twice', async () => {
   const h = await wireFixture()
   await h.runner.start(false)
@@ -74,5 +109,7 @@ it('saves the terminal part after a held text save fails and never ends that tur
   expect(h.endpoint.runnerEvents.map(({ eventNumber }) => eventNumber)).toEqual(
     [1, 2, 3, 4, 5, 6, 7, 8],
   )
-  expect(h.warnings).toEqual([])
+  expect(h.warnings).toEqual([
+    'The agent output save failed. The turn will continue.',
+  ])
 })
