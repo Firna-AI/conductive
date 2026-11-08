@@ -5,8 +5,8 @@ task with its own branch and its own cloud computer, a Boat sandbox.
 Agents powered by Claude and Codex work only in the sandbox. The user
 follows them in the browser or in the Mac app, which shows the web app.
 This doc describes the components, their responsibilities, and the
-boundaries between them. The app has no product features yet, so the doc
-describes the structure that the [protocol docs](#protocol-docs) require.
+boundaries between them. The [protocol docs](#protocol-docs) hold the
+requirements of each feature.
 
 ## Terms
 
