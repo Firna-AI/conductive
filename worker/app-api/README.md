@@ -120,7 +120,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - `feature-workspaces-data.test.ts` and `feature-sections-data.test.ts`
   commit a second move just before the batch of a first move. They check
   that the order keeps both moves: a move out of the target section, two
-  moves in one section, and two section moves.
+  moves in one section, and two section moves. They also check refused
+  moves when an org suspension commits before the batch, and a move
+  without `sectionId` after the workspace moved to another section.
 - [`workspace-data.test.ts`](../lifecycle/workspace-data.test.ts) in the
   lifecycle folder checks that a new workspace lists first, before and
   after a move. It runs with the lifecycle tests.

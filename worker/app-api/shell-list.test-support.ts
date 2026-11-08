@@ -145,3 +145,13 @@ export function beforeFirstListBatch(
   })
   return { db, calls: () => calls }
 }
+
+export function suspendBeforeFirstListBatch(fixture: ShellListFixture) {
+  const { db, orgId } = fixture
+  return beforeFirstListBatch(db, async () => {
+    await db
+      .prepare('UPDATE orgs SET suspended_at = ? WHERE id = ?')
+      .bind(TEST_TIME + 100, orgId)
+      .run()
+  })
+}
