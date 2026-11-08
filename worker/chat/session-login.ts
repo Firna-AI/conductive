@@ -1,6 +1,7 @@
 import type { Agent } from '../../src/shared/agents'
 import type { Session } from '../../src/shared/sessions'
-import { readLogin } from './login-access'
+import type { RunnerLogin } from '../../src/shared/runner'
+import { LoginReuseDenied, readLogin } from './login-access'
 import type { ChatOperation } from './operation'
 import { sessionFor } from './session-record'
 import type { ChatDependencies } from './types'
@@ -30,13 +31,20 @@ export class SessionLogins {
     const session = await this.operation.read((view) =>
       sessionFor(view, sessionId),
     )
-    const login = await readLogin(
-      this.dependencies,
-      session.startedBy?.id ?? null,
-      session.choice.agent,
-      runnerTokenHash,
-      senderId,
-    )
+    let login: RunnerLogin | null
+    try {
+      login = await readLogin(
+        this.dependencies,
+        session.startedBy?.id ?? null,
+        session.choice.agent,
+        runnerTokenHash,
+        senderId,
+      )
+    } catch (error) {
+      if (!(error instanceof LoginReuseDenied)) throw error
+      await this.save(session, true)
+      return { session, login: null }
+    }
     await this.save(session, login !== null)
     return { session, login }
   }

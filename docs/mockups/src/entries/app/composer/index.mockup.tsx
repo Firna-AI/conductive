@@ -40,9 +40,9 @@ export const composer = defineScreen({
       slug: 'login',
       title: "Another member's login",
       description:
-        'Priya, a member of Acme, opens a session that Cal started. The line under the composer box says "Uses Cal\'s Claude login". So a message of Priya spends the login of Cal, also while a turn runs. In a session of Priya, the line says "Uses your Claude login".',
+        'Priya, a member of Acme, opens a session that Cal started. Cal turned on the switch that lets other members use the Claude login. The line under the composer box says "Uses Cal\'s Claude login". So a message of Priya spends the login of Cal, also while a turn runs. In a session of Priya, the line says "Uses your Claude login".',
       rationale:
-        'The user chose option F of decision 105 on 7 November 2026. Each session runs on the login of its starter, the member who started it. A message of any member uses that login. A message during a turn joins that turn at once. Every composer of a session names the login, so each member sees whose login a message spends. The message needs no Claude login of Priya, so the composer shows no Connect notice.',
+        'The user chose option F of decision 105 on 7 November 2026. Each session runs on the login of its starter, the member who started it. A message of any member uses that login. A message during a turn joins that turn at once. Every composer of a session names the login, so each member sees whose login a message spends. The message needs no Claude login of Priya, so the composer shows no Connect notice. When Cal does not let other members use the login, Send opens a new, empty session on the login of Priya instead, as app/sessions/linked shows.',
       props: { viewer: 'member' },
     },
   ],

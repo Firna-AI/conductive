@@ -3,12 +3,54 @@ import { expect } from 'vitest'
 import {
   ACCOUNT_PATHS,
   type AccountResponse,
+  type AgentLoginStatus,
   type SaveAgentLoginRequest,
   type SetDefaultModelRequest,
 } from '../../src/shared/account'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import { readAccount } from '../../src/app/api/read-core'
-import type { TestHarness } from '../test-support/harness'
+import { TEST_TIME, type TestHarness } from '../test-support/harness'
+
+export const noLogins: readonly AgentLoginStatus[] = [
+  { agent: 'claude', connected: false },
+  { agent: 'codex', connected: false },
+]
+export const firstLogins: readonly AgentLoginStatus[] = [
+  {
+    agent: 'claude',
+    connected: true,
+    kind: 'token',
+    noReuse: true,
+    updatedAt: TEST_TIME,
+  },
+  { agent: 'codex', connected: false },
+]
+export const otherClaudeLogin: readonly AgentLoginStatus[] = [
+  {
+    agent: 'claude',
+    connected: true,
+    kind: 'api-key',
+    noReuse: false,
+    updatedAt: TEST_TIME,
+  },
+  { agent: 'codex', connected: false },
+]
+export const otherLogins: readonly AgentLoginStatus[] = [
+  {
+    agent: 'claude',
+    connected: true,
+    kind: 'api-key',
+    noReuse: false,
+    updatedAt: TEST_TIME,
+  },
+  {
+    agent: 'codex',
+    connected: true,
+    kind: 'api-key',
+    noReuse: false,
+    updatedAt: TEST_TIME,
+  },
+]
 
 export interface AccountState extends Pick<
   AccountResponse,

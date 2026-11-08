@@ -52,6 +52,8 @@ export interface DevState {
   attachments: Map<string, Attachment>
   /** The wait before an open workspace stops, from `stop=<seconds>`. */
   stopAfterMs: number | null
+  /** Each change of a share setting fails, from `shareSave=fail`. */
+  shareSaveFails: boolean
 }
 
 /**

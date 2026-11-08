@@ -7059,15 +7059,35 @@ the desktop paths.
 Apply the `fix after merge` items of the access rules. Added on 8 November
 2026.
 
+Scope extension approved on 8 November 2026: this workspace also owns
+`worker/app-api/boot.ts`, `worker/app-api/account-data.ts`, one new
+migration, and their tests and README lines. The primary orchestrator
+chose option A of the workspace's scope question.
+
+Design calls by the agent on 8 November 2026:
+
+- Save the share setting without sending the secret again. Reason: a
+  stored secret never returns to the browser.
+- Keep the saved share setting when a replacement has the same login
+  kind. Apply the new kind's default when the kind changes. Reason: a key
+  rotation must keep the owner's choice.
+- Keep `loginAvailable` about the starter's login. Reason: a refusal to
+  share does not stop the starter from using that login.
+
+The desktop transport and the scope for session reuse metadata and its
+related documentation remain blocked. The workspace report records the
+required decisions. Evidence: `.context/boat-native-remote-workspaces/reports/`.
+
 - [ ] Draw the "no re-use" login setting and the linked session in the
       mockups. Then build them, and compare them with their mockups.
 - [ ] Apply option B of `plans/follow-ups/login-reuse-setting.md` (decision
       116), with the access protocol and the Terms page. Delete that item.
 - [ ] Apply option C of `plans/follow-ups/desktop-stream-after-access-loss.md`
       (decision 117), and delete that item.
-- [ ] Apply option B of `plans/follow-ups/restore-for-suspended-admin.md`,
+- [x] Apply option B of `plans/follow-ups/restore-for-suspended-admin.md`,
       with its lines in `docs/protocol/operator-actions.md` and
       `worker/members/README.md`. Delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15q`.
 
 ## Milestone 15r: Secret org env vars
 

@@ -133,7 +133,11 @@ The Durable Object runs the gates itself.
   agent. `resolveLogin` first checks the workspace, that user, the sender,
   and the runner token in one D1 read. The workspace must pass the token
   rule above, without the token. That user and the sender must be members
-  who are not suspended. An override replaces only the login read.
+  who are not suspended. The same read checks the login's no-reuse setting
+  before it reads a secret. An override replaces only the login read.
+  A refusal of re-use leaves the starter's own login available. Send uses
+  the existing empty linked session, and queued member commands cannot
+  receive the starter's login while the setting is on.
 - Its metadata path, `readLoginAvailability`, reads only the membership,
   the suspension, and the stored login kind of each starter, in one D1
   query. The workspace must also pass the token rule above. So a suspended

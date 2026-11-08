@@ -18,6 +18,22 @@ export type AgentLogins = Readonly<Partial<Record<AgentKey, LoginKind>>>
 /** The logins of the account: Claude with a token, Codex with an API key. */
 export const accountLogins: AgentLogins = { claude: 'token', codex: 'api-key' }
 
+/**
+ * Whether a new login lets other members use it in the sessions of its
+ * owner. A Claude subscription is for one person, so it starts off. An API
+ * key starts on, because its owner may let a team use it.
+ */
+export const sharedByDefault: Readonly<Record<LoginKind, boolean>> = {
+  token: false,
+  'api-key': true,
+}
+
+/**
+ * The cause of a change of the share setting that the app did not save: the
+ * message of a failed save of the server.
+ */
+export const shareNotSavedCause = 'The request failed. Try again.'
+
 /** The command that makes a Claude subscription token on the own computer. */
 export const claudeTokenCommand = 'claude setup-token'
 

@@ -19,6 +19,7 @@ import {
   removeAccountLogin,
   saveAccountDefault,
   saveAccountLogin,
+  updateAccountLoginReuse,
 } from './account-data'
 import { getStartedData } from './get-started-data'
 import { configuredDefaultChoice, configuredModels } from './models'
@@ -60,6 +61,17 @@ export async function bootRoute(
     await removeAccountLogin(env.DB, userId, agent)
     return new Response(null, { status: 204 })
   }
+  if (request.method === 'PATCH') {
+    if (typeof context.body?.noReuse !== 'boolean') return invalidInput()
+    return Response.json(
+      await updateAccountLoginReuse(
+        env.DB,
+        userId,
+        agent,
+        context.body.noReuse,
+      ),
+    )
+  }
   if (request.method !== 'PUT') return null
   const body = context.body
   if (
@@ -74,10 +86,17 @@ export async function bootRoute(
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
   const updatedAt = dependencies.now()
-  await saveAccountLogin(env.DB, userId, agent, kind, ciphertext, updatedAt)
+  const noReuse = await saveAccountLogin(
+    env.DB,
+    userId,
+    agent,
+    kind,
+    ciphertext,
+    updatedAt,
+  )
   const login: SaveAgentLoginResponse =
     agent === 'claude'
-      ? { agent, connected: true, kind, updatedAt }
-      : { agent, connected: true, kind: 'api-key', updatedAt }
+      ? { agent, connected: true, kind, noReuse, updatedAt }
+      : { agent, connected: true, kind: 'api-key', noReuse, updatedAt }
   return Response.json(login)
 }

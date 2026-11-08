@@ -1,10 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import {
-  ACCOUNT_PATHS,
-  agentLoginPath,
-  type AgentLoginStatus,
-} from '../../src/shared/account'
+import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
 import { MODELS_PATH, type AgentChoice } from '../../src/shared/agents'
 import { API_PATHS } from '../../src/shared/api'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
@@ -17,6 +13,10 @@ import {
 } from '../test-support/harness'
 import {
   expectAccountState,
+  firstLogins,
+  noLogins,
+  otherClaudeLogin,
+  otherLogins,
   putAccountValue,
   type AccountState,
 } from './boot-account.test-support'
@@ -81,6 +81,7 @@ it('boots from operator models and persists account preferences and encrypted se
     agent: 'claude',
     connected: true,
     kind: 'token',
+    noReuse: true,
     updatedAt: TEST_TIME,
   })
   expect(await readAgentLogin(harness.env, initial.user.id, 'claude')).toEqual({
@@ -109,7 +110,13 @@ it('boots from operator models and persists account preferences and encrypted se
   expect(reloadedBody).toMatchObject({
     defaultChoice: otherChoice,
     agentLogins: [
-      { agent: 'claude', connected: true, kind: 'token', updatedAt: TEST_TIME },
+      {
+        agent: 'claude',
+        connected: true,
+        kind: 'token',
+        noReuse: true,
+        updatedAt: TEST_TIME,
+      },
       { agent: 'codex', connected: false },
     ],
   })
@@ -174,22 +181,6 @@ it('keeps account data and Get started isolated from other users and deleted org
       ],
     },
   )
-  const noLogins: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: false },
-    { agent: 'codex', connected: false },
-  ]
-  const firstLogins: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: true, kind: 'token', updatedAt: TEST_TIME },
-    { agent: 'codex', connected: false },
-  ]
-  const otherClaudeLogin: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
-    { agent: 'codex', connected: false },
-  ]
-  const otherLogins: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
-    { agent: 'codex', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
-  ]
   const expectBoth = async (
     firstState: AccountState,
     otherState: AccountState,
