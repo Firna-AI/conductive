@@ -1,3 +1,4 @@
+import { errorSummary, warnWorker } from '../warnings'
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
@@ -95,6 +96,9 @@ export class RunnerChannel {
       try {
         await this.handle(active, value)
       } catch (error) {
+        warnWorker(
+          `The runner of workspace ${active.workspace.id} closes after a failed message: ${errorSummary(error)}`,
+        )
         active.peer.close()
         throw error
       }

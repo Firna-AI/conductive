@@ -1,3 +1,4 @@
+import { warnWorker } from '../warnings'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import type { SandboxProvider } from '../sandbox/provider'
@@ -64,6 +65,9 @@ export async function finishFailedStart(
     message: 'The cloud computer stopped.',
     status: 409,
   }
+  warnWorker(
+    `Workspace start ${job.workspaceId} ends as failed in phase ${job.phase}: ${failure.code}, ${failure.message}${job.cancelled ? ', cancelled' : ''}`,
+  )
   if (job.kind === 'resume') {
     await finishResumeFailure(
       {

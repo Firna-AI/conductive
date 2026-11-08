@@ -8,6 +8,7 @@ import type { AppDependencies, AppEnv } from '../env'
 import { advanceStartRecords } from './start-records'
 import { publishCreationResult } from './creation-publication'
 import { HttpError } from '../http'
+import { errorSummary, warnWorker } from '../warnings'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { readWorkspace } from './workspace-data'
@@ -241,6 +242,9 @@ export class WorkspaceStartCoordinator {
       if (await retryStartError(this.storage, error, this.dependencies.now()))
         return false
       const current = (await this.storage.job()) ?? job
+      warnWorker(
+        `Workspace start ${current.workspaceId} failed in phase ${current.phase}: ${errorSummary(error)}`,
+      )
       const failedJob = failedStartJob(current, error, this.dependencies.now())
       await this.storage.update(failedJob)
       const result = await finishFailedStart(
