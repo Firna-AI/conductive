@@ -28,8 +28,14 @@ export type OrgPage = {
 
 const hexwaveMembers: readonly OrgMember[] = [
   { login: 'vex-ops', initials: 'VO', role: 'Admin' },
-  { login: 'kt-null', initials: 'KN', role: 'Member' },
-  { login: 'dana-k', initials: 'DK', role: 'Member', suspended: true },
+  { login: 'kt-null', name: 'Kai Tanaka', initials: 'KT', role: 'Member' },
+  {
+    login: 'dana-k',
+    name: 'Dana Kim',
+    initials: 'DK',
+    role: 'Member',
+    suspended: true,
+  },
 ]
 
 const hexwave = {
@@ -62,8 +68,8 @@ export const orgPages: Readonly<Record<TargetStatus, OrgPage>> = {
     builds: 0,
     states: { running: 0, stopped: 4, failed: 0, archived: 0 },
     members: [
-      { login: 'ana-p', initials: 'AP', role: 'Admin' },
-      { login: 'joe-q', initials: 'JQ', role: 'Member' },
+      { login: 'ana-p', name: 'Ana Pereira', initials: 'AP', role: 'Admin' },
+      { login: 'joe-q', name: 'Joe Quinn', initials: 'JQ', role: 'Member' },
     ],
     deleted: { on: '5 Nov', purge: '12 Nov' },
   },

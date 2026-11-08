@@ -9,7 +9,6 @@ import {
   OperatorLoading,
 } from '../components/operator/OperatorStates'
 import { OperatorTiles } from '../components/operator/OperatorTiles'
-import { Suspensions } from '../components/operator/Suspensions'
 import { WorkspaceStates } from '../components/operator/WorkspaceStates'
 import {
   newUsersByDay,
@@ -22,15 +21,13 @@ import {
 export const operatorSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['numbers', 'suspended'],
+  required: ['numbers'],
   properties: {
     /**
      * The numbers of the page: shown, loading when the page opens, or
      * failed to load.
      */
     numbers: { enum: ['ready', 'loading', 'error'] },
-    /** The users and orgs that are suspended now: some, or none. */
-    suspended: { enum: ['some', 'none'] },
   },
 } as const
 
@@ -46,7 +43,6 @@ function OperatorBody(props: { state: OperatorState; viewport: Viewport }) {
       return (
         <>
           <OperatorTiles />
-          <Suspensions empty={props.state.suspended === 'none'} />
           <WorkspaceStates
             builds={runningComputers.builds}
             counts={workspaceStates}
@@ -69,10 +65,9 @@ function OperatorBody(props: { state: OperatorState; viewport: Viewport }) {
 
 /**
  * The Overview tab of the operator, the person who runs the app for
- * everyone: the numbers of every org at the moment the page opened, and
- * the users and orgs that are suspended. Only an operator reaches it, from
- * the rail on desktop and the org switcher on a phone. It shows counts and
- * names only, never the content of an org.
+ * everyone: the numbers of every org at the moment the page opened. Only
+ * an operator reaches it, from the rail on desktop and the org switcher on
+ * a phone. It shows counts and names only, never the content of an org.
  */
 export function OperatorScreen(props: {
   state: OperatorState

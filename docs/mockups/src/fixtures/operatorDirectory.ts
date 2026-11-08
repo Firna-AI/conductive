@@ -122,6 +122,8 @@ export const orgSearches = {
 /** A member of an org, as the page of the org lists it. */
 export type OrgMember = {
   login: string
+  /** The name on GitHub, which some accounts do not give. */
+  name?: string
   initials: string
   role: 'Admin' | 'Member'
   suspended?: boolean

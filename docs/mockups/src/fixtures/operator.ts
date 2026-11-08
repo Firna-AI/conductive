@@ -117,42 +117,6 @@ export const newUsersByDay: readonly DailyCount[] = [
   { date: '2026-11-08', count: 4 },
 ]
 
-/** A user or an org that an operator suspended. */
-export type Suspension = {
-  kind: 'user' | 'org'
-  /** The GitHub login of a user, or the name of an org. */
-  name: string
-  initials: string
-  /** The day of the suspension. */
-  since: string
-  /** The GitHub login of the operator who suspended it. */
-  by: string
-}
-
-/** A user whom the operator suspended. */
-export const suspendedUser: Suspension = {
-  kind: 'user',
-  name: 'dana-k',
-  initials: 'DK',
-  since: '6 Nov',
-  by: 'calummoore',
-}
-
-/** An org that the operator suspended. */
-export const suspendedOrgTarget: Suspension = {
-  kind: 'org',
-  name: 'Hexwave',
-  initials: 'HW',
-  since: '8 Nov',
-  by: 'calummoore',
-}
-
-/** The users and orgs that are suspended now, newest first. */
-export const suspensions: readonly Suspension[] = [
-  suspendedOrgTarget,
-  suspendedUser,
-]
-
 /** An org of the largest orgs, with its counts. */
 export type OrgCounts = {
   name: string

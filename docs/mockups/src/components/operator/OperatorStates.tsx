@@ -45,9 +45,6 @@ export function OperatorLoading(props: { viewport: Viewport }) {
   return (
     <>
       <TilePlaceholders />
-      <Section title="Suspended">
-        <SkeletonBar height={12} width="60%" />
-      </Section>
       <Section title="Workspaces">
         <ul aria-hidden className={list.list}>
           {stateKeys.map((key) => (

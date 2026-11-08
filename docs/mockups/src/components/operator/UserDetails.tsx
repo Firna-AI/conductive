@@ -22,9 +22,10 @@ function UserNotice(props: { user: UserPage }) {
 }
 
 /**
- * The page of a user for the operator: their state, their details, the
- * workspaces that they own, and their orgs with their roles. Each org
- * opens the page of that org.
+ * The page of a user for the operator: their state, their name and other
+ * details, the workspaces that they own, and their orgs with their roles.
+ * Each org opens the page of that org. A user without a name on GitHub
+ * has no Name row.
  */
 export function UserDetails(props: { user: UserPage }) {
   const { user } = props
@@ -34,6 +35,7 @@ export function UserDetails(props: { user: UserPage }) {
       <Section title="Details">
         <DetailList
           rows={[
+            ...(user.name ? [{ term: 'Name', value: user.name }] : []),
             { term: 'GitHub ID', value: String(user.githubId), mono: true },
             { term: 'Joined', value: user.joined },
             {

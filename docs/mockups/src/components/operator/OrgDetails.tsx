@@ -5,6 +5,7 @@ import { paths } from '../../paths'
 import { Notice } from '../common/Notice'
 import { DetailList } from '../settings/DetailList'
 import { Section } from '../settings/Section'
+import { TargetState } from './directory'
 import { TargetList, TargetRow } from './targets'
 import { WorkspaceStates } from './WorkspaceStates'
 
@@ -37,11 +38,30 @@ function OrgNotice(props: { org: OrgPage }) {
   return null
 }
 
+/**
+ * The line under a login: the name on GitHub, and the state of a
+ * suspended member.
+ */
+function MemberLine(props: { member: OrgMember }) {
+  const { name, suspended } = props.member
+  return (
+    <>
+      {name}
+      {name && suspended ? ' · ' : null}
+      {suspended ? <TargetState status="suspended" /> : null}
+    </>
+  )
+}
+
 function MemberRow(props: { member: OrgMember }) {
   const { member } = props
   return (
     <TargetRow
-      detail={member.suspended ? 'Suspended' : undefined}
+      detail={
+        member.name || member.suspended ? (
+          <MemberLine member={member} />
+        ) : undefined
+      }
       end={member.role}
       target={{ kind: 'user', name: member.login, initials: member.initials }}
       to={member.suspended ? paths.operatorUserSuspended : paths.operatorUser}
@@ -51,8 +71,8 @@ function MemberRow(props: { member: OrgMember }) {
 
 /**
  * The page of an org for the operator: its state, its details, its
- * workspaces in each state, and its members with their roles. Each member
- * opens the page of that user.
+ * workspaces in each state, and its members with their names and roles.
+ * Each member opens the page of that user.
  */
 export function OrgDetails(props: { org: OrgPage }) {
   const { org } = props

@@ -7,9 +7,9 @@ import {
 export const operatorUser = defineScreen({
   title: 'User page',
   description:
-    'The page of one user for the operator: the GitHub ID, the join day, the workspaces that the user owns, and their orgs with their roles. Each org opens its org page. Suspend user in the header asks first. The way back leads to the Users tab.',
+    'The page of one user for the operator: the name, the GitHub ID, the join day, the workspaces that the user owns, and their orgs with their roles. Each org opens its org page. Suspend user in the header asks first. The way back leads to the Users tab.',
   rationale:
-    'The user asked for a page for each user, where the operator suspends the user or lifts the suspension, in decision 147. It shows no email address and no content of a workspace.',
+    'The user asked for a page for each user, where the operator suspends the user or lifts the suspension, in decision 147, and for the name, in decision 149. It shows no email address and no content of a workspace.',
   relatedDocs: [],
   propSchema: operatorUserSchema,
   props: { status: 'active', viewer: 'other', dialog: 'none' },

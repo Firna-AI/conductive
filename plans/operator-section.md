@@ -178,6 +178,36 @@ Added on 8 November 2026 from the user's message.
 - **Options check:** skipped, because this records a direct request of the
   user, with no options to check.
 
+### 148. Remove the Suspended box from the overview
+
+Added on 8 November 2026 from the user's message.
+
+- **Chosen by the user on 8 November 2026:** "nice - we can remove
+  suspended list from the overview", with a screenshot of the Suspended
+  box.
+- **Effects:**
+  - The overview lists no suspensions. The Orgs and Users tabs find a
+    suspended org or user, and its page shows the suspension and Lift.
+  - `GET /api/operator/overview` returns no suspensions.
+  - Milestone 1c removes the box from the mockups.
+- **Options check:** skipped, because this records a direct request of the
+  user, with no options to check.
+
+### 149. Show the names on the org and user pages
+
+Added on 8 November 2026 from the user's message.
+
+- **Chosen by the user on 8 November 2026:** "also org and user detail
+  pages should include the names". The agent reads "names" as the names
+  that people give on GitHub.
+- **Effects:**
+  - Each member on the page of an org shows their name under their login.
+  - The page of a user shows the name in a Name row of its Details.
+  - An account with no name on GitHub shows no name.
+  - Milestone 1c draws it. Milestones 4 and 6 return and show the names.
+- **Options check:** skipped, because this records a direct request of the
+  user, with no options to check.
+
 ## Design
 
 The agent's calls, on 8 November 2026:
@@ -232,9 +262,8 @@ on 8 November 2026:
 
 The agent's calls for the lift of decision 145 B, on 8 November 2026:
 
-- The overview lists the suspended users and orgs in a Suspended box, with
-  the time and the operator. Since decision 147, each row opens the page
-  of its user or org, which holds Lift.
+- The overview lists no suspensions, as decision 148 chose. The Orgs and
+  Users tabs find a suspended org or user, and its page holds Lift.
 - Lift asks first, in the confirm dialog of the app. The dialog says what
   comes back, and that a workspace that stopped 14 days ago or more may
   have lost its files.
@@ -252,12 +281,10 @@ The agent's calls for the lift of decision 145 B, on 8 November 2026:
   while its 7 days last.
 - An open page of a member learns of a lift at its next load, because the
   app keeps the suspended mark of an org until then, and lifts are rare.
-- The page reads its numbers and its suspensions in one read,
-  `GET /api/operator/overview`, so that one loading state and one error
-  state cover both.
-- From the mockups of Milestone 1a: the Suspended box comes right after
-  the tiles, because it lists what can need action. With no suspension,
-  the box says "Every user and org has access."
+- The overview reads its numbers in one read, `GET /api/operator/overview`,
+  so that one loading state and one error state cover the page.
+- The Suspended box of Milestone 1a is gone from the overview, as decision
+  148 chose.
 - A user shows on a disc and an org on a square, as in the rest of the
   app, and each row also names its kind.
 
@@ -379,13 +406,33 @@ Evidence: `.context/operator-section/mockups-check.log` and the `orgs-`,
 `org-`, `users-`, and `user-` screenshots in
 `.context/operator-section/shots/`.
 
-## Milestone 2: Documentation and protocol
+## Milestone 1c: Mockup feedback on the overview and the names
+
+Tags: mockup
 
 Depends on: 1b
 
+- [x] Remove the Suspended box and its placeholder from `app/operator`, as
+      decision 148 chose.
+- [x] Show the names of the members on `app/operator/org`, and a Name row
+      on `app/operator/user`, as decision 149 chose.
+- [x] Update `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
+      and `npm run file-length:check`. Smoke-test the overview in both
+      schemes and both viewports.
+- [x] Update the design and the TODOs of this plan.
+
+Evidence: `.context/operator-section/mockups-check.log`, and the
+`overview-` and `-names-` screenshots in
+`.context/operator-section/shots/`.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: 1c
+
 - [ ] Add "The operator page" to `docs/protocol/operator-actions.md`: who
-      sees it, the numbers and the suspensions that it shows, the app-wide
-      reads, metadata only, and the not-found page for everyone else.
+      sees it, the numbers that it shows, the app-wide reads, metadata
+      only, and the not-found page for everyone else.
 - [ ] Add "Lift a suspension" to `docs/protocol/operator-actions.md`: only
       an operator lifts, what comes back, what stays lost, the record of
       each suspension and lift, and the disk restart.
@@ -426,9 +473,10 @@ Depends on: 3
       results, newest first, and a cursor for Show more. The keys are
       those of the design.
 - [ ] Add `GET /api/operator/orgs/<orgId>` and
-      `GET /api/operator/users/<githubId>`: the details, the workspaces by
-      state, the running cloud computers, the members or the orgs with
-      their roles, and the suspension with its time and its operator.
+      `GET /api/operator/users/<githubId>`: the details with the name of a
+      user, the workspaces by state, the running cloud computers, the
+      members with their names and roles or the orgs with their roles, and
+      the suspension with its time and its operator.
 - [ ] Test with local D1: each search key, an empty search, Show more, a
       deleted org, a suspended user and org, an unknown target, and 403
       `operator_required` for another user.
@@ -446,8 +494,6 @@ Depends on: 4
       gate and the operator check. Each lift clears the suspension, writes
       its row, and runs the owner-change check of each affected workspace.
       A repeat changes nothing.
-- [ ] Add the current suspensions to `GET /api/operator/overview`, with
-      the time and the operator of each.
 - [ ] Test with local D1 and the workspace object: a lift of a user and of
       an org, a repeat, an unknown target, 403 `operator_required` for
       another user, the disk restart set again, a deleted org that stays
@@ -466,7 +512,6 @@ Depends on: 3, 4, 5
 - [ ] Add Operator to the rail and to the org switcher of a phone, for
       operators only.
 - [ ] Add the loading and error states, and Refresh.
-- [ ] Add the Suspended box, and its links to the pages.
 - [ ] Add the Orgs and Users tabs, their searches, and the page of an org
       and of a user, with Suspend and Lift and their dialogs.
 - [ ] Test the screens, the routes, the links, the suspend, and the lift.
