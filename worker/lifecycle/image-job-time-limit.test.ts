@@ -94,7 +94,7 @@ it('fails a build when its final provider read returns at the deadline before pu
   const image = await imageRetryFixture(fixture)
   for (let step = 0; step < 8; step++) {
     if ((await image.job()).phase === 'publish') break
-    await image.tick(TEST_TIME + 3_000_000)
+    await image.tick(TEST_TIME + 3_000_000 + step * 1_000)
   }
   const publishing = await image.job()
   expect(publishing).toMatchObject({ phase: 'publish' })

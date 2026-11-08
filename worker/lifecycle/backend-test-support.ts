@@ -19,6 +19,7 @@ import type { WorkspaceRuntime } from './workspace-runtime'
 import type { ImageRuntime, PrepareImageSources } from './image-builds'
 import type { ImageCoordinatorState } from './image-timers'
 import { seedPublishedImage } from './published-image-test-support'
+import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
 
 export const SOFTWARE = {
   url: 'https://software.conductive.test/runner.tar.gz',
@@ -76,6 +77,19 @@ export async function backendFixture(sharedHarness?: TestHarness) {
     now: () => now,
     randomToken: () => `lifecycle-${++sequence}`,
   }
+  const setTime = (value: number) => {
+    now = value
+    harness.setTime(value)
+  }
+  const advanceTo = (at: number, workspaceId?: string) =>
+    advanceScheduledAlarms({ now: dependencies.now, setTime }, at, () =>
+      [...actors.entries()]
+        .filter(([id]) => workspaceId === undefined || workspaceId === id)
+        .map(([, actor]) => ({
+          storage: actor.storage,
+          fire: () => actor.endpoint().alarm(),
+        })),
+    )
   const workspace = (id: string) => {
     let actor = actors.get(id)
     if (!actor) {
@@ -135,10 +149,7 @@ export async function backendFixture(sharedHarness?: TestHarness) {
         ])
         continue
       }
-      now = Math.max(now, next.storage.alarmAt ?? now)
-      harness.setTime(now)
-      await next.storage.deleteAlarm()
-      await next.endpoint().alarm()
+      await advanceTo(Math.max(now, next.storage.alarmAt ?? now))
     }
     return result
   }
@@ -166,7 +177,9 @@ export async function backendFixture(sharedHarness?: TestHarness) {
           const job = await actor.storage.get('job', START_JOB_KEY)
           return job ? readStartJob(job) : undefined
         },
-        advance: () => actor.endpoint().alarm(),
+        advance: async () => {
+          await advanceTo(Math.max(now, actor.storage.alarmAt ?? now), id)
+        },
         wait: () => actor.endpoint().waitLifecycleStart(),
         restart: actor.restart,
         lastAccepted: () => {
@@ -225,10 +238,8 @@ export async function backendFixture(sharedHarness?: TestHarness) {
         : new Promise<string>((resolve) => queueWaiters.push(resolve))
     },
     pauseStarts: () => {},
-    setTime: (value: number) => {
-      now = value
-      harness.setTime(value)
-    },
+    setTime,
+    advanceTo,
     dispose: async () => {
       if (!sharedHarness) await harness.dispose()
     },

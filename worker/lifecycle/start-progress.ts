@@ -45,8 +45,5 @@ export async function advanceStartSteps(
     return false
   }
   await nextStartCommand(storage, job, 'runner')
-  if (!(await endpoint.readLifecycle())?.runnerConnected)
-    await endpoint.lifecycleStep('runner', 'Starting the agent', 'running')
-  await endpoint.lifecyclePrepared()
   return true
 }

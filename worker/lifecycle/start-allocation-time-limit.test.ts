@@ -25,12 +25,10 @@ it('ends endless allocation retries and preserves encrypted cleanup ownership ac
   if (!start || !actor) throw new Error('Missing start actor')
   const token = await readWorkspaceToken(fixture.runtime.env, id)
   await start.advance()
-  fixture.setTime(TEST_TIME + 1_199_999)
-  await start.advance()
+  await fixture.advanceTo(TEST_TIME + 1_199_999, id)
   const before = await start.job()
   start.restart()
-  fixture.setTime(TEST_TIME + 1_200_000)
-  await start.advance()
+  await fixture.advanceTo(TEST_TIME + 1_200_000, id)
 
   expect(await start.job()).toBeUndefined()
   expect(await start.wait()).toMatchObject({
@@ -61,8 +59,7 @@ it('ends endless allocation retries and preserves encrypted cleanup ownership ac
   start.restart()
   fixture.boat.lostCreateReplies = 0
   fixture.boat.deleteFailures = 1
-  fixture.setTime(TEST_TIME + 1_205_000)
-  await start.advance()
+  await fixture.advanceTo(TEST_TIME + 1_205_000, id)
   const allocations = fixture.boat.starts.length
   expect(fixture.boat.deletedIds).toEqual([])
   expect(
@@ -73,8 +70,7 @@ it('ends endless allocation retries and preserves encrypted cleanup ownership ac
       .first('sandboxId'),
   ).toBe('bx_1')
   start.restart()
-  fixture.setTime(TEST_TIME + 1_235_000)
-  await start.advance()
+  await fixture.advanceTo(TEST_TIME + 1_235_000, id)
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
   expect(fixture.boat.starts).toHaveLength(allocations)
   expect(fixture.boat.starts).toEqual(
@@ -159,8 +155,7 @@ it.each([
       deadlineAt: TEST_TIME + 1_200_000,
     })
     start.restart()
-    fixture.setTime(TEST_TIME + 1_199_999)
-    await start.advance()
+    await fixture.advanceTo(TEST_TIME + 1_199_999, id)
     expect(await start.job()).toMatchObject({
       ...saved,
       phase: 'machine',
@@ -169,8 +164,7 @@ it.each([
     const beforeDeadlineAlarm = actor.storage.alarmAt
     const requests = keys.length
     start.restart()
-    fixture.setTime(TEST_TIME + 1_200_000)
-    await start.advance()
+    await fixture.advanceTo(TEST_TIME + 1_200_000, id)
 
     expect(await start.job()).toBeUndefined()
     expect(beforeDeadlineAlarm).toBe(TEST_TIME + 1_200_000)
@@ -207,8 +201,7 @@ it.each([
 
     unavailable = false
     start.restart()
-    fixture.setTime(TEST_TIME + 1_230_000)
-    await start.advance()
+    await fixture.advanceTo(TEST_TIME + 1_230_000, id)
     expect(fixture.boat.deletedIds).toEqual(['bx_1'])
     expect(new Set(keys)).toEqual(new Set([earlier?.attempt]))
     expect(await actor.storage.list('job')).toEqual(new Map())

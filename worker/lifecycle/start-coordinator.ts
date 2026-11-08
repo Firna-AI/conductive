@@ -35,6 +35,7 @@ import {
 } from './start-provider-retry'
 import { JobTimeLimit } from './job-time-limit'
 import { applyStartRunnerReady } from './start-runner'
+import { prepareStartSuccess, runnerStartConnected } from './start-completion'
 
 /** The actor's alarm owns progress. Waiting HTTP requests own no phase. */
 export class WorkspaceStartCoordinator {
@@ -143,8 +144,8 @@ export class WorkspaceStartCoordinator {
     try {
       if (job.phase === 'runner' && !job.cancelled && !job.failure) {
         await requireActiveStartUsers(this.env.DB, job)
-        if (!expired && !(await this.endpoint.readLifecycle())?.runnerConnected)
-          return false
+        const connected = await runnerStartConnected(this.endpoint)
+        if (!expired && !connected) return false
       }
       if (job.phase === 'records' && !job.cancelled && !job.failure) {
         await requireActiveStartUsers(this.env.DB, job)
@@ -198,8 +199,7 @@ export class WorkspaceStartCoordinator {
       if (!state?.start || state.state === 'stopped' || state.state === 'error')
         await this.endpoint.beginLifecycleStart(job.kind)
       if (job.phase === 'runner') {
-        await this.finish({ ok: true })
-        return true
+        return await this.finish({ ok: true })
       }
       if (job.phase === 'machine' || job.phase === 'ready') {
         const next = await advanceStartMachine(
@@ -235,9 +235,8 @@ export class WorkspaceStartCoordinator {
         ))
       )
         return false
-      if (!(await this.endpoint.readLifecycle())?.runnerConnected) return false
-      await this.finish({ ok: true })
-      return true
+      if (!(await runnerStartConnected(this.endpoint))) return false
+      return await this.finish({ ok: true })
     } catch (error) {
       if (await retryStartError(this.storage, error, this.dependencies.now()))
         return false
@@ -262,11 +261,18 @@ export class WorkspaceStartCoordinator {
     if (await this.storage.stop()) await this.storage.schedule()
   }
 
-  private async finish(result: WorkspaceStartResult): Promise<void> {
+  private async finish(result: WorkspaceStartResult): Promise<boolean> {
     const job = await this.storage.job()
-    if (result.ok && job?.cancelled) return
-    if (result.ok && job && startTimeLimitReached(job, this.dependencies.now()))
-      throw new JobTimeLimit('start')
+    if (
+      result.ok &&
+      !(await prepareStartSuccess(
+        this.env,
+        this.endpoint,
+        this.storage,
+        this.dependencies.now,
+      ))
+    )
+      return false
     await this.storage.complete(result)
     const stored = (await this.storage.result()) ?? result
     if (job?.kind === 'create') {
@@ -277,5 +283,6 @@ export class WorkspaceStartCoordinator {
       await publishCreationResult(this.env, this.storage)
     }
     this.waiters.publish(stored)
+    return true
   }
 }

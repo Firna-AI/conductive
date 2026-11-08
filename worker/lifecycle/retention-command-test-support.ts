@@ -20,17 +20,15 @@ export async function retentionCommandFixture(
   fixture.setTime(TEST_TIME)
   fixture.boat.states.set('bx_1', 'archived')
   await platform.endpoint().lifecycleStopped()
-  fixture.setTime(TEST_TIME + 1_123_260_000)
-  await platform.endpoint().alarm()
-  await platform.endpoint().alarm()
+  await fixture.advanceTo(TEST_TIME + 1_123_260_000, id)
+  await fixture.advanceTo(TEST_TIME + 1_123_265_000, id)
   return {
     ...fixture,
     id,
     platform,
     progress: () => readRetention(runtime.env.DB, id),
     tick: async (at: number) => {
-      fixture.setTime(at)
-      await platform.endpoint().alarm()
+      await fixture.advanceTo(at, id)
     },
   }
 }

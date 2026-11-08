@@ -27,16 +27,14 @@ async function retentionFixture() {
   fixture.setTime(TEST_TIME)
   fixture.boat.states.set('bx_1', 'archived')
   await platform.endpoint().lifecycleStopped()
-  fixture.setTime(STARTED_AT)
-  await platform.endpoint().alarm()
+  await fixture.advanceTo(STARTED_AT, id)
   return {
     ...fixture,
     id,
     platform,
     progress: () => readRetention(fixture.runtime.env.DB, id),
     tick: async (at: number) => {
-      fixture.setTime(at)
-      await platform.endpoint().alarm()
+      await fixture.advanceTo(at, id)
     },
   }
 }
@@ -48,7 +46,7 @@ it('ends an unready retention restart at its original deadline through phase cha
   boat.states.set('bx_1', 'archived')
   await fixture.tick(STARTED_AT + 600_000)
   expect(await fixture.progress()).toMatchObject({ phase: 'resume' })
-  await fixture.tick(STARTED_AT + 600_000)
+  await fixture.tick(STARTED_AT + 605_000)
   boat.states.set('bx_1', 'provisioning')
   await fixture.tick(DEADLINE - 1)
   const before = await fixture.progress()
@@ -92,7 +90,7 @@ it('ends an unready retention restart at its original deadline through phase cha
 
 it('records retention timeout when startup finishes at the original deadline and preserves it after stop cleanup', async () => {
   const fixture = await retentionFixture()
-  await fixture.tick(STARTED_AT)
+  await fixture.tick(STARTED_AT + 5_000)
   expect(await fixture.progress()).toEqual({ phase: 'startup', error: null })
   fixture.boat.beforeCommand = async (_command, detached) => {
     if (detached) fixture.setTime(DEADLINE)

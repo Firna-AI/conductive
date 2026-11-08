@@ -5,6 +5,7 @@ import { advanceImageBuild, startImageBuild } from './image-builds'
 import { ImageCoordinator } from './image-coordinator'
 import { MemoryWorkspaceStorage } from './platform-test-storage'
 import { createWorkspace } from './workspaces'
+import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
 
 type Fixture = Awaited<ReturnType<typeof backendFixture>>
 
@@ -81,9 +82,11 @@ export async function imageRetryFixture(
         nextAt: at,
       }),
     tick: async (at: number) => {
-      fixture.setTime(at)
-      await storage.deleteAlarm()
-      await actor.alarm()
+      await advanceScheduledAlarms(
+        { now: runtime.dependencies.now, setTime: fixture.setTime },
+        at,
+        () => [{ storage, fire: () => actor.alarm() }],
+      )
     },
   }
 }
@@ -109,8 +112,7 @@ export async function startRetryFixture(fixture: Fixture) {
     endpoint: runtime.workspace(created.workspace.id),
     storage: actor.storage,
     tick: async (at: number) => {
-      fixture.setTime(at)
-      await start.advance()
+      await fixture.advanceTo(at, created.workspace.id)
     },
   }
 }

@@ -6,6 +6,7 @@ import { claimCreation } from './creation-claims'
 import type { WorkspaceStartJob } from './start-types'
 import { readSavedScript } from './saved-script'
 import { serializeStartJob } from './start-job-codec'
+import { IDLE_MS } from './durable-types'
 import {
   hasStartStep,
   liveEvents,
@@ -163,6 +164,8 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     pendingFirstMessage: FIRST_MESSAGE,
   })
   await restored.tick()
+  const ready = await restored.readLifecycle()
+  expect(await restored.alarmAt()).toBe((ready?.lastActivityAt ?? 0) + IDLE_MS)
   const completedBrowser = await fixture.openEvents(id)
   const before = publicHistory(await completedBrowser.inbox.next())
   expect(

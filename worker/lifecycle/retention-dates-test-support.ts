@@ -29,8 +29,7 @@ export async function stoppedRetentionFixture(fixture: Fixture) {
     platform,
     progress: () => readRetention(runtime.env.DB, id),
     tick: async (now: number) => {
-      fixture.setTime(now)
-      await platform.endpoint().alarm()
+      await fixture.advanceTo(now, id)
     },
   }
 }

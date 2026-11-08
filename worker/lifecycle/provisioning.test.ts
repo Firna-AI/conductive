@@ -116,7 +116,7 @@ it('recovers an accepted create after its caller closes and the actor restarts',
     })
     expect((await endpoint.readLifecycle())?.state).toBe('stopped')
     const resumeCount = fixture.boat.resumeIds.length
-    await actor.advance()
+    await fixture.advanceTo(fixture.runtime.dependencies.now() + 1_000, id)
     expect(fixture.boat.resumeIds).toHaveLength(resumeCount)
     expect(fixture.boat.deletedIds).toEqual([])
     const heldAdmission = actor.holdAdmission()

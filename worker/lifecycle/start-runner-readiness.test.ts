@@ -16,7 +16,7 @@ it('keeps the create pending through runner readiness and fails at its original 
   if (!before) throw new Error('Missing create job')
   const actor = fixture.actors.get(before.workspaceId)?.endpoint()
   if (!actor) throw new Error('Missing workspace actor')
-  await start.tick(TEST_TIME + 1_000)
+  await start.tick(fixture.runtime.dependencies.now() + 1_000)
   expect(await start.job()).toMatchObject({
     phase: 'runner',
     deadlineAt: TEST_TIME + 1_200_000,
@@ -60,14 +60,15 @@ it('keeps the create pending through runner readiness and fails at its original 
 it('completes a resume only after runner readiness without rerunning its startup script', async () => {
   const fixture = fixtureForTest()
   const start = await resumedStartup(fixture)
-  await start.tick(TEST_TIME + 31_000)
+  const startupAt = fixture.runtime.dependencies.now()
+  await start.tick(startupAt + 1_000)
   expect(await start.job()).toMatchObject({ phase: 'runner' })
   const commands = fixture.boat.commandRequests.length
-  await start.tick(TEST_TIME + 32_000)
+  await start.tick(startupAt + 2_000)
   expect(await start.job()).toMatchObject({ phase: 'runner' })
   expect(fixture.boat.commandRequests).toHaveLength(commands)
   await start.actor.reportRunnerLifecycle({ type: 'runner.ready' })
-  await start.tick(TEST_TIME + 33_000)
+  await start.tick(startupAt + 3_000)
   expect(await start.job()).toBeUndefined()
   expect(await start.wait()).toEqual({ ok: true })
   expect(await start.actor.readLifecycle()).toMatchObject({
@@ -85,14 +86,16 @@ it.each(['alarm', 'report'] as const)(
     const fixture = fixtureForTest()
     const member = await joinedMember(fixture)
     const start = await resumedStartup(fixture, member.id)
-    await start.tick(TEST_TIME + 31_000)
+    await start.tick(fixture.runtime.dependencies.now() + 1_000)
     expect(await start.job()).toMatchObject({ phase: 'runner' })
     await suspendUser(fixture.runtime, member.githubId, fixture.user.id)
     if (boundary === 'report') {
       await start.actor.reportRunnerLifecycle({ type: 'runner.ready' })
+    } else {
+      await start.storage.setAlarm(fixture.runtime.dependencies.now() + 1_000)
     }
     expect((await start.actor.readLifecycle())?.state).toBe('starting')
-    await start.tick(TEST_TIME + 32_000)
+    await start.tick(fixture.runtime.dependencies.now() + 1_000)
     expect(await start.job()).toBeUndefined()
     expect(await start.wait()).toMatchObject({
       ok: false,

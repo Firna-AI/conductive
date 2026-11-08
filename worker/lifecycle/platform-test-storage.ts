@@ -114,6 +114,9 @@ export class MemoryWorkspaceStorage implements WorkspaceStorage {
     this.alarmGeneration++
     this.changed()
   }
+  async getAlarm(): Promise<number | null> {
+    return this.alarmAt
+  }
   async deleteAlarm(): Promise<void> {
     this.alarmAt = null
     this.alarmGeneration++

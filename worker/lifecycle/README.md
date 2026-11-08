@@ -103,6 +103,9 @@ refresh reads the archive variables. It gives `acceptFirstMessage` to
   readiness report within the original start deadline. The readiness wait
   runs no startup command again and schedules its alarm at that deadline.
   Each alarm and readiness report still checks the owner and requester.
+  The shared success path prepares the lifecycle only after its final
+  access, cancellation, and deadline checks. That lifecycle write restores
+  the alarm before the job saves success, also after a runner-phase restart.
 - A failed or cancelled resume records its result separately from its
   stop cleanup. Native lifecycle state keeps the pending stop across
   restarts. The lifecycle retries the existing stop operation every 30
@@ -221,6 +224,8 @@ object holds the lifecycle state, the turn records, and the events.
   phases, admission, process IDs, output offsets, retry state, deadline, and results.
 - [`start-progress.ts`](start-progress.ts): the command steps and the move
   into the saved runner readiness phase.
+- [`start-completion.ts`](start-completion.ts): restores runner-step progress
+  and prepares successful starts through the lifecycle writer.
 - [`start-runner.ts`](start-runner.ts): readiness admission, the original
   deadline, and the active owner and requester checks for runner reports.
 - [`job-time-limit.ts`](job-time-limit.ts): the build and start time limits

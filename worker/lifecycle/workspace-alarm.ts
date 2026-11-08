@@ -74,6 +74,12 @@ export async function runWorkspaceAlarm(input: {
   try {
     await input.lifecycle.alarm()
   } catch {
-    await storage.setAlarm(dependencies.now() + 30_000)
+    const deadlineAt = (await input.lifecycle.read())?.diskRetentionDeadlineAt
+    const now = dependencies.now()
+    await storage.setAlarm(
+      deadlineAt !== undefined && deadlineAt > now
+        ? Math.min(now + 30_000, deadlineAt)
+        : now + 30_000,
+    )
   }
 }

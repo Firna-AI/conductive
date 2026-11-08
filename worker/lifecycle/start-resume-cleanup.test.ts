@@ -102,7 +102,7 @@ it('completes cancellation while failed stops retry beyond the original resume d
   fixture.boat.commandRunning = true
   fixture.boat.failStop = true
   await start.actor.lifecycleStopped()
-  await start.tick(TEST_TIME + 31_000)
+  await start.tick(fixture.runtime.dependencies.now() + 1_000)
   expect(await start.job()).toBeUndefined()
   const cancelled = {
     ok: false,

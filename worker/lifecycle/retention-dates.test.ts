@@ -42,26 +42,26 @@ it('restarts a physically stopped failed resume on day thirteen and keeps its sa
   expect(fixture.boat.resumeIds).toEqual(['bx_1', 'bx_1'])
   fixture.boat.commandRunning = false
   fixture.boat.commandExitCode = 1
-  for (const offset of [1_000, 2_000, 3_000, 4_000])
+  for (const offset of [5_000, 10_000, 15_000, 20_000])
     await start.tick(TEST_TIME + 1_124_430_000 + offset)
   expect(await start.actor.readLifecycle()).toMatchObject({
     state: 'error',
     error: stopped?.error,
-    stoppedAt: TEST_TIME + 1_124_434_000,
-    nextDiskKeepaliveAt: TEST_TIME + 2_247_634_000,
+    stoppedAt: TEST_TIME + 1_124_450_000,
+    nextDiskKeepaliveAt: TEST_TIME + 2_247_650_000,
     diskRetentionDeadlineAt: undefined,
     diskRetentionCommand: undefined,
   })
   await addRetentionAdmin(fixture)
-  fixture.setTime(TEST_TIME + 1_124_440_000)
+  fixture.setTime(TEST_TIME + 1_124_460_000)
   await suspendUser(fixture.runtime, fixture.user.githubId, 'retention-admin')
   expect(platform.storage.alarmAt).toBeNull()
   await reassignRetentionOwner(fixture, job.workspaceId)
-  expect(platform.storage.alarmAt).toBe(TEST_TIME + 2_247_634_000)
+  expect(platform.storage.alarmAt).toBe(TEST_TIME + 2_247_650_000)
   expect(await start.actor.readLifecycle()).toMatchObject({
     error: { message: TIMEOUT },
-    stoppedAt: TEST_TIME + 1_124_434_000,
-    nextDiskKeepaliveAt: TEST_TIME + 2_247_634_000,
+    stoppedAt: TEST_TIME + 1_124_450_000,
+    nextDiskKeepaliveAt: TEST_TIME + 2_247_650_000,
   })
 })
 
@@ -139,47 +139,47 @@ it('keeps the real disk date when maintenance resume is refused through its orig
 
 it('renews disk retention from its own saved stop request across stopping replies, reconstruction, and external confirmation', async () => {
   const fixture = await stoppedRetentionFixture(fixtureForTest())
-  for (const offset of [0, 1_000, 2_000, 3_000])
+  for (const offset of [0, 5_000, 10_000, 15_000])
     await fixture.tick(DUE + offset)
   fixture.boat.stopReplyState = 'archiving'
-  await fixture.tick(DUE + 4_000)
+  await fixture.tick(DUE + 20_000)
   expect(fixture.boat.stopIds).toEqual(['bx_1'])
   fixture.platform.restart()
-  await fixture.tick(DUE + 5_000)
+  await fixture.tick(DUE + 25_000)
   expect(fixture.boat.stopIds).toEqual(['bx_1'])
   fixture.boat.states.set('bx_1', 'archived')
   await fixture.tick(DUE + 30_000)
   expect(await fixture.platform.endpoint().readLifecycle()).toMatchObject({
-    stoppedAt: DUE + 4_000,
-    nextDiskKeepaliveAt: TEST_TIME + 2_246_404_000,
+    stoppedAt: DUE + 20_000,
+    nextDiskKeepaliveAt: TEST_TIME + 2_246_420_000,
     diskRetentionDeadlineAt: undefined,
     diskRetentionCommand: undefined,
   })
   expect(await retentionDates(fixture, fixture.id)).toMatchObject({
-    stoppedAt: DUE + 4_000,
-    nextDiskKeepaliveAt: TEST_TIME + 2_246_404_000,
+    stoppedAt: DUE + 20_000,
+    nextDiskKeepaliveAt: TEST_TIME + 2_246_420_000,
   })
   expect(await fixture.progress()).toBeNull()
 
-  const nextDue = TEST_TIME + 2_246_404_000
-  for (const offset of [0, 1_000, 2_000, 3_000, 4_000])
+  const nextDue = TEST_TIME + 2_246_420_000
+  for (const offset of [0, 5_000, 10_000, 15_000, 20_000])
     await fixture.tick(nextDue + offset)
   expect(await fixture.platform.endpoint().readLifecycle()).toMatchObject({
-    diskRetentionCommand: { stopRequestedAt: TEST_TIME + 2_246_408_000 },
+    diskRetentionCommand: { stopRequestedAt: TEST_TIME + 2_246_440_000 },
   })
   fixture.boat.states.set('bx_1', 'archived')
   fixture.setTime(nextDue + 30_000)
   fixture.platform.restart()
   await fixture.platform.endpoint().lifecycleStopped()
   expect(await fixture.platform.endpoint().readLifecycle()).toMatchObject({
-    stoppedAt: TEST_TIME + 2_246_408_000,
-    nextDiskKeepaliveAt: TEST_TIME + 3_369_608_000,
+    stoppedAt: TEST_TIME + 2_246_440_000,
+    nextDiskKeepaliveAt: TEST_TIME + 3_369_640_000,
     diskRetentionDeadlineAt: undefined,
     diskRetentionCommand: undefined,
   })
   expect(await retentionDates(fixture, fixture.id)).toEqual({
-    stoppedAt: TEST_TIME + 2_246_408_000,
-    nextDiskKeepaliveAt: TEST_TIME + 3_369_608_000,
+    stoppedAt: TEST_TIME + 2_246_440_000,
+    nextDiskKeepaliveAt: TEST_TIME + 3_369_640_000,
   })
   expect(await fixture.progress()).toBeNull()
 })
