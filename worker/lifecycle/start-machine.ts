@@ -1,7 +1,6 @@
 import { providerState } from './provider-state'
 import type { AppEnv } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
-import { encrypt } from '../security/crypto'
 import type { WorkspaceRow } from './workspace-data'
 import { allocateWorkspace } from './start-allocation'
 import { releaseImageLease } from './image-leases'
@@ -14,7 +13,7 @@ import {
   repositoryLocation,
 } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
-import { orgEnvironmentContext, workspaceEnvironment } from './settings-data'
+import { workspaceEnvironment } from './settings-data'
 import { readWorkspaceToken } from './tokens'
 import { WorkspaceStartError } from './workspace-start'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
@@ -41,17 +40,6 @@ export async function advanceStartMachine(
       job.orgId,
       job.environmentCiphertext,
     )
-    // A pinned create retries the same runtime settings.
-    if (!job.createPayloadCiphertext) {
-      environment.CONDUCTIVE_COMPUTER_MCP_URL =
-        env.CONDUCTIVE_COMPUTER_MCP_URL ?? ''
-      job.environmentCiphertext = await encrypt(
-        JSON.stringify(environment),
-        orgEnvironmentContext(job.orgId),
-        env.BOAT_KEY_ENCRYPTION_KEY,
-      )
-      await storage.update(job)
-    }
     const token = await readWorkspaceToken(env, job.workspaceId)
     const locations =
       job.repositoryLocations ??

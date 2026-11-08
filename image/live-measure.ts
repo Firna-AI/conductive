@@ -109,7 +109,6 @@ export async function measurePlacements(
         CONDUCTIVE_MEASURE_LOGIN_KIND: config.loginKind,
         CONDUCTIVE_MEASURE_PLACEMENT: placement,
         CONDUCTIVE_MEASURE_RESUME_ID: resumeId,
-        CONDUCTIVE_COMPUTER_MCP_URL: config.computerMcpUrl,
         CONDUCTIVE_REPOSITORY: repository,
       })
       const output = await boat.command(

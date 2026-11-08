@@ -11,7 +11,6 @@ export interface AppEnv {
   WORKSPACES?: DurableObjectNamespace<Workspace>
   CONDUCTIVE_MODELS?: string
   CONDUCTIVE_DEFAULT_CHOICE?: string
-  CONDUCTIVE_COMPUTER_MCP_URL?: string
   CONDUCTIVE_RUNNER_ARCHIVE_URL?: string
   CONDUCTIVE_RUNNER_ARCHIVE_SHA256?: string
   GITHUB_APP_PRIVATE_KEY?: string

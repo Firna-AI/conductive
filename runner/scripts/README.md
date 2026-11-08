@@ -32,7 +32,6 @@ The agent mode needs these variables:
 | `CONDUCTIVE_MEASURE_LOGIN_KIND` | `token` or `api-key`, for Claude only |
 | `CONDUCTIVE_MEASURE_PLACEMENT`  | `home` or `system`                    |
 | `CONDUCTIVE_MEASURE_RESUME_ID`  | A label of the real resume            |
-| `CONDUCTIVE_COMPUTER_MCP_URL`   | The URL of the `computer` MCP server  |
 
 `CONDUCTIVE_REPOSITORY` and `CONDUCTIVE_HOME` are optional. Their
 defaults are the current folder and the home folder of the user.

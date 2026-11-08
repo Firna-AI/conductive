@@ -32,11 +32,7 @@ afterEach(async () => {
 })
 
 it('keeps private repository preparation authorized after a member stops its queued first turn', async () => {
-  const active = (fixture = await createOuterRuntime(bundle, {
-    configuration: {
-      CONDUCTIVE_COMPUTER_MCP_URL: 'https://computer.conductive.test/mcp',
-    },
-  }))
+  const active = (fixture = await createOuterRuntime(bundle))
   await saveGitHubTokens(
     active.env,
     'owner',

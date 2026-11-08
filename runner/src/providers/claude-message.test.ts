@@ -1,11 +1,14 @@
-import { expect, it, onTestFinished } from 'vitest'
+import { beforeEach, expect, it, onTestFinished } from 'vitest'
 
 import { FakeClaudeQuery } from '../../test-support/claude-query'
+import { mockComputerServer } from '../../test-support/computer-mcp'
 import { runnerHarness, turn } from '../../test-support/harness'
 import { Runner } from '../runner'
 import { createClaudeFactory } from './claude'
 import { ClaudeEvents } from './claude-events'
 import type { ProviderEvent } from './types'
+
+beforeEach(mockComputerServer)
 
 it('completes a whole Claude message after both blocks without storing a split credential', async () => {
   const h = await runnerHarness()

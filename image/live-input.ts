@@ -58,7 +58,6 @@ export const requiredInputs = [
   'LIVE_AGENT',
   'LIVE_MODEL',
   'LIVE_AGENT_LOGIN',
-  'LIVE_COMPUTER_MCP_URL',
 ] as const
 
 export function liveConfiguration(env: NodeJS.ProcessEnv, root: string) {
@@ -115,7 +114,6 @@ export function liveConfiguration(env: NodeJS.ProcessEnv, root: string) {
     boatOrg: required(env, 'LIVE_BOAT_ORG'),
     boatApi: boatApi.href,
     login: required(env, 'LIVE_AGENT_LOGIN'),
-    computerMcpUrl: required(env, 'LIVE_COMPUTER_MCP_URL'),
     software: env.LIVE_SOFTWARE_DIR ?? '/opt/conductive/software',
   }
 }

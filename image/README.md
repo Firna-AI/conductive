@@ -88,7 +88,6 @@ each resume, together with the org's env vars:
 | `CONDUCTIVE_WORKSPACE_ID` | The workspace ID. |
 | `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
 | `CONDUCTIVE_DEFAULT_BRANCH` | The default branch of the workspace's repository. |
-| `CONDUCTIVE_COMPUTER_MCP_URL` | The URL of the `computer` MCP server, from the Worker secret of the same name. It is empty when the Worker has no such secret. |
 | `CONDUCTIVE_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
 | `CONDUCTIVE_TURN_ID` | Empty. The runner sets it for each agent process. |
@@ -157,9 +156,9 @@ Each value replaces a saved variable of the same name.
 | `CONDUCTIVE_REPOSITORY` | `CONDUCTIVE_REPOSITORY_DIR` |
 | `CONDUCTIVE_RUNNER_URL` | `CONDUCTIVE_MACHINE_ORIGIN` without a trailing slash, then the path of `MACHINE_PATHS.runner` |
 
-Without `CONDUCTIVE_COMPUTER_MCP_URL`, the runner fails at its start.
-[Deployment inputs](../docs/deployment.md#the-mcp-url) says how the Worker
-protects that URL.
+The Worker gives no setting for the computer tools. Boat writes the entry
+of the `computer` server into each sandbox at its start, and the runner
+reads it, as [What it does](../runner/README.md#what-it-does) says.
 
 ## Git credentials
 

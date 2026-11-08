@@ -60,9 +60,10 @@ npm run test -- worker/chat/integration
 - `createOuterRuntime` in `outer-runtime.test-support.ts` bundles the entry
   with Vite and starts it, with `https://api.conductive.test` as the
   machine origin. It sets a fake app-wide Boat key and Boat organization.
-- `createOuterRuntime` takes the model, MCP, and archive settings as
-  `configuration`. With `persistencePath`, its `restart()` starts a new
-  runtime on the same stored data, and keeps the fake Boat and GitHub state.
+- `createOuterRuntime` takes the model, archive, and GitHub App key
+  settings as `configuration`. With `persistencePath`, its `restart()`
+  starts a new runtime on the same stored data, and keeps the fake Boat
+  and GitHub state.
 - `seedOuterRuntime` in `outer-seed.test-support.ts` adds three users with
   sessions, two orgs, two workspaces with tokens, stored agent logins, and
   a published org image.
@@ -102,8 +103,8 @@ CHAT_HARNESS_ASSETS=path/to/client CHAT_HARNESS_PORT=5181 \
 - It reads the built app from `dist/client`. `CHAT_HARNESS_ASSETS` sets
   another folder, which must hold `index.html`.
 - `startBrowserHarness` in `browser-server.test-support.ts` starts the
-  runtime with one test model, its default choice, and a fake MCP URL. It
-  keeps the normal timers of the lifecycle.
+  runtime with one test model and its default choice. It keeps the normal
+  timers of the lifecycle.
 - It writes `browser-harness.json` to a folder under `.context/`, and
   prints its path. The file holds the session cookie of the seeded owner,
   the org and new workspace URLs, and the machine origin. It also holds

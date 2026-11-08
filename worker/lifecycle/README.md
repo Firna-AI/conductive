@@ -92,10 +92,10 @@ refresh reads the archive variables. It gives `acceptFirstMessage` to
 - Open and resume restart only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
-- Each start gives the sandbox the default branch of its repository and
-  the MCP URL of the Worker. The start keeps that URL only in its encrypted
-  settings, as [Deployment inputs](../../docs/deployment.md#the-mcp-url)
-  says.
+- Each start gives the sandbox the default branch of its repository. It
+  gives no setting for the computer tools, because Boat writes the entry
+  of the `computer` server into the sandbox, as
+  [What it does](../../runner/README.md#what-it-does) says.
 - After the startup script succeeds at create and each resume, the start
   calls the start hook of the [terminal backend](../terminal/README.md).
   The hook starts the terminal and caches its encrypted password before
@@ -175,8 +175,7 @@ The lifecycle code reads `LifecycleEnvironment` from
 [`runtime.ts`](runtime.ts). [Deployment inputs](../../docs/deployment.md)
 gives each binding, variable, and secret that it reads, such as
 `WORKSPACES`, `MACHINE_ORIGIN`, `BOAT_API_KEY`, `BOAT_ORG_ID`,
-`GITHUB_APP_PRIVATE_KEY`, `CONDUCTIVE_COMPUTER_MCP_URL`, and the runner
-archive variables.
+`GITHUB_APP_PRIVATE_KEY`, and the runner archive variables.
 
 ## Development
 

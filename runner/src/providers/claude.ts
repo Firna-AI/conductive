@@ -6,6 +6,7 @@ import { query } from '@anthropic-ai/claude-agent-sdk'
 import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
 import { ClaudeInputWindow } from './claude-input-window'
+import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
@@ -34,6 +35,8 @@ export function createClaudeFactory(
     const lifetime = options.lifetime ?? new ProviderLifetime()
     await prepareProviderHome(options.home)
     options.signal?.throwIfAborted()
+    const computer = await readComputerServer(options.warn)
+    options.signal?.throwIfAborted()
     const input = new ClaudeInputWindow()
     let resultReceived = false
     const mapper = new ClaudeEvents(input.ids, (event) => {
@@ -57,7 +60,7 @@ export function createClaudeFactory(
         includePartialMessages: true,
         persistSession: true,
         settingSources: ['project'],
-        mcpServers: { computer: { type: 'http', url: options.computerMcpUrl } },
+        mcpServers: computer ? { computer } : {},
         spawnClaudeCodeProcess: (request) => {
           options.signal?.throwIfAborted()
           const child = spawn(request.command, request.args, {

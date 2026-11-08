@@ -53,7 +53,6 @@ it('boots the production shell and delivers the durable first message through st
         { ...CLAUDE, label: 'Operator model', efforts: ['high'] },
       ]),
       CONDUCTIVE_DEFAULT_CHOICE: JSON.stringify(CLAUDE),
-      CONDUCTIVE_COMPUTER_MCP_URL: 'https://computer.conductive.test/mcp',
     },
   }))
   await active.env.DB.prepare(

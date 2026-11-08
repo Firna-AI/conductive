@@ -65,15 +65,12 @@ examples.
 | `SESSION_SIGNING_KEY` | Sign-in, the sign-in of the Mac app, and every signed-in route | 32 random bytes, encoded as Base64. |
 | `BOAT_KEY_ENCRYPTION_KEY` | Every route that stores or reads a stored secret | A separate 32 random bytes, encoded as Base64. |
 | `GITHUB_APP_PRIVATE_KEY` | Image builds and refreshes of an org that chose a repository | The private key of the GitHub App, as PEM. The PEM file from GitHub works as it is. |
-| `CONDUCTIVE_COMPUTER_MCP_URL` | Workspace creates and resumes, and disk retention restarts | The URL of the `computer` MCP server, as each workspace sandbox reaches it. |
 
 - `BOAT_KEY_ENCRYPTION_KEY` encrypts the agent logins, the GitHub user
   tokens, the env vars of each org, and the workspace tokens. It also
   encrypts the start logs, the credentials of each image source copy, and
   the terminal and preview credentials. It encrypts no Boat key. A new key cannot read the values
   that the old key encrypted.
-- [The MCP URL](#the-mcp-url) below says how the Worker protects
-  `CONDUCTIVE_COMPUTER_MCP_URL`.
 
 ## Models
 
@@ -134,33 +131,17 @@ and publish it.
   [The private Node runtime](../image/runtime.md) says. That download needs
   no deployment input.
 
-## The MCP URL
-
-`CONDUCTIVE_COMPUTER_MCP_URL` is the address of the MCP server `computer`.
-The runner gives that server to the agents as their
-[computer tools](protocol/agent-tools.md#computer-tools). Set it as a
-secret, because a URL can carry a capability.
-
-- At each workspace create and resume, the Worker adds the value to the
-  settings of that start, together with the env vars of the org. It stores
-  those settings only as ciphertext.
-- A create that the Worker retries keeps the value of its first attempt. A
-  resume of a stopped sandbox takes the current value. A resume that finds
-  the sandbox still running keeps the value of that sandbox.
-- Before the Worker releases a start log, it masks each saved setting of
-  that start in the log, also the complete MCP URL.
-- No browser response, org image, or image build gets the value.
-- Without the secret, the setting stays empty, and the runner of each
-  workspace fails at its start.
-
 ## Settings of each workspace sandbox
 
 The Worker gives each workspace sandbox its settings at each start, as
-[Start in a workspace](../image/README.md#start-in-a-workspace) says. Two
-of them come from this guide:
+[Start in a workspace](../image/README.md#start-in-a-workspace) says. One
+of them comes from this guide: `CONDUCTIVE_MACHINE_ORIGIN` is
+`MACHINE_ORIGIN`.
 
-- `CONDUCTIVE_MACHINE_ORIGIN` is `MACHINE_ORIGIN`.
-- `CONDUCTIVE_COMPUTER_MCP_URL` is the secret of the same name.
+The computer tools need no deployment input. Boat writes the entry of the
+`computer` server into each sandbox at its start. It names a local server
+with no URL and no credential, and the runner reads it, as
+[What it does](../runner/README.md#what-it-does) says.
 
 `CONDUCTIVE_DEFAULT_BRANCH` needs no deployment input. A create or a resume
 gives the default branch of the repository of the workspace, from its

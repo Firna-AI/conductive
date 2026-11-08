@@ -68,8 +68,7 @@ node image/live-check.mjs
 
 - An externally reachable test Worker, with its app and machine origins,
   and the inputs of [Deployment inputs](../docs/deployment.md). Each
-  sandbox must reach the machine origin. The runner of each workspace needs
-  the Worker secret `CONDUCTIVE_COMPUTER_MCP_URL`.
+  sandbox must reach the machine origin.
 - A signed-in test account with a stored agent login for `LIVE_AGENT`.
 - An org with a published org image. A build with an archive from
   `package-runner.mjs` must make that image. The check makes no image.
@@ -97,7 +96,6 @@ These variables are required:
 | `LIVE_AGENT` | `claude` or `codex`. |
 | `LIVE_MODEL` | A model of that agent. |
 | `LIVE_AGENT_LOGIN` | A login of that agent, only for the measurement forks. The app uses the login that it stored for the account. |
-| `LIVE_COMPUTER_MCP_URL` | The URL of the `computer` MCP server, as each fork reaches it. |
 
 These variables are optional:
 

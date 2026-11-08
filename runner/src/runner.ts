@@ -22,7 +22,6 @@ export interface RunnerOptions {
   cwd: string
   home: string
   defaultBranch: string
-  computerMcpUrl: string
   providers: EngineOptions['providers']
   warm: () => Promise<unknown>
   now: () => number

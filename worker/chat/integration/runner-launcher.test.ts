@@ -90,7 +90,6 @@ process.stdout.write(JSON.stringify({
   repository: config.cwd,
   cwd: process.cwd(),
   defaultBranch: config.defaultBranch,
-  computerMcpUrl: config.computerMcpUrl,
 }))
 `,
     )
@@ -143,7 +142,6 @@ it('maps sandbox settings into the runner configuration through its staged priva
       CONDUCTIVE_REPOSITORY: '/stale-repository',
       CONDUCTIVE_RUNNER_URL: 'https://stale.conductive.test/v1/runner',
       CONDUCTIVE_DEFAULT_BRANCH: 'main',
-      CONDUCTIVE_COMPUTER_MCP_URL: 'http://127.0.0.1:7777/computer',
     })
     expect(result.exitCode, String(result.stderr)).toBe(0)
     expect(result.stderr).toBe('')
@@ -155,7 +153,6 @@ it('maps sandbox settings into the runner configuration through its staged priva
       repository: launcher.repository,
       cwd: launcher.repository,
       defaultBranch: 'main',
-      computerMcpUrl: 'http://127.0.0.1:7777/computer',
     })
   } finally {
     await launcher.dispose()
@@ -171,7 +168,6 @@ it('starts no runner in a build, retention restart, or unfinished workspace', as
       CONDUCTIVE_REPOSITORY_DIR: launcher.repository,
       CONDUCTIVE_MACHINE_ORIGIN: 'https://api.conductive.test',
       CONDUCTIVE_DEFAULT_BRANCH: 'main',
-      CONDUCTIVE_COMPUTER_MCP_URL: 'http://127.0.0.1:7777/computer',
     }
     const scenarios: readonly {
       name: string

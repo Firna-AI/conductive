@@ -43,7 +43,6 @@ export async function startBrowserHarness(
         model: 'test-claude',
         effort: 'high',
       }),
-      CONDUCTIVE_COMPUTER_MCP_URL: 'https://computer.conductive.test/mcp',
     },
   })
   await fixture.env.DB.prepare(

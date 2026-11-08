@@ -5744,6 +5744,11 @@ Depends on: 5, 6, 7, 7r, 8, 8j
       access. Keep commands behind their turn. Test account isolation with
       two signed-in users.
       Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
+- [x] Apply finding 12 F. Read the sandbox's computer stdio entry for
+      each agent start. Start without computer tools and give one warning
+      when the entry is absent. Remove the obsolete computer URL inputs.
+      Keep the org env filtering and start-log masking rules.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8i`.
 - [ ] Measure the first agent start after a resume over several runs,
       with the runner inside and outside the home folder. Keep the faster
       place.

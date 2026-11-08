@@ -20,7 +20,6 @@ export async function engineFixture(overrides: Partial<EngineOptions> = {}) {
   const options: EngineOptions = {
     cwd: '/repo',
     home: '/home/agent',
-    computerMcpUrl: 'http://computer.test/mcp',
     store,
     providers: { claude: providers.open, codex: providers.open },
     now: () => 100,
