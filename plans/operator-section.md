@@ -12,9 +12,10 @@ This change adds an operator page to the web app at `/operator`, for the
 people in `OPERATOR_GITHUB_IDS`. The first version holds the layout of the
 section and live numbers from D1: users, orgs, workspaces, the workspaces
 in each state, the running cloud computers, new workspaces and new users
-each day, and the largest orgs. The page also lists the suspended users and
-orgs, and lifts a suspension, as decision 145 chose. It does not cover
-editable settings, Suspend on the page, trends over time, or costs. The brainstorm notes and sources are in
+each day, and the largest orgs. The section also has Orgs and Users tabs,
+with a search and a page for each org and each user, where the operator
+suspends it or lifts its suspension, as decisions 145 and 147 chose. It
+does not cover editable settings, trends over time, or costs. The brainstorm notes and sources are in
 `.context/admin-section/brainstorm.md`. The options check of the decisions
 is in `.context/operator-section/options-check.md`.
 
@@ -134,7 +135,7 @@ Contract owners:
 - **Related:** Decision 142. `plans/follow-ups/org-disk-restart-has-no-decision.md` shares option F: the org rule of the disk restart cites decision 125, which decided only the owner case.
 - **Recommendation:** D, after the options check. The first recommendation was B. D gives the same undo for less effort, and it also covers the `curl` suspensions of today. B's screen can come with the later suspend actions. E protects the codebase best.
 - **Action:** asked the user, because a lift is new behaviour that no requirement covers.
-- **Chosen:** B, by the user on 8 November 2026: "145 = B". The options check had recommended D. Milestones 1a, 4, and 5 build it.
+- **Chosen:** B, by the user on 8 November 2026: "145 = B". The options check had recommended D. Decision 147 moves the Lift action to the page of each user and org. Milestones 1a, 1b, 5, and 6 build it.
 
 ### 146. Choose what other people see at the operator address
 
@@ -158,6 +159,25 @@ Contract owners:
 - **Action:** asked the user, because this adds behaviour at a boundary that no requirement covers.
 - **Chosen:** A, by the user on 8 November 2026: "146 = A".
 
+### 147. Search orgs and users, and suspend or lift from their pages
+
+Added on 8 November 2026 from the user's message.
+
+- **Chosen by the user on 8 November 2026:** "admin should be able to
+  search orgs and see an org detail page to suspend or unspend an org -
+  same with users". "Admin" here means the operator.
+- **Effects:**
+  - The operator section gets the tabs Overview, Orgs, and Users.
+  - Orgs and Users each have a search and a page for each org or user.
+  - Each page has Suspend, or Lift for a target that is suspended, each
+    with a confirm step. Lift stays as decision 145 B chose, on that page.
+  - It replaces the design call that kept Suspend a `curl` call, and the
+    call of one page with no tabs.
+  - Milestone 1b draws the screens. Milestones 2, 4, and 6 add the
+    requirements, the routes, and the screens.
+- **Options check:** skipped, because this records a direct request of the
+  user, with no options to check.
+
 ## Design
 
 The agent's calls, on 8 November 2026:
@@ -170,9 +190,8 @@ The agent's calls, on 8 November 2026:
   agent logins. The largest orgs show their names and counts only.
 - An operator opens the page from the rail, above the account, and on a
   phone from the org switcher, below Account. Other people see no change.
-- The first version is one page with no tabs. Later pages, such as users
-  and orgs or settings, become tabs under the header, as in the org
-  settings.
+- The section has the tabs Overview, Orgs, and Users under its header, as
+  the org settings have, since decision 147. Settings can be a later tab.
 - The page reads the numbers once when it opens. Refresh reads them again.
   No cache and no history, as decision 144 chose.
 - The workspaces by state are Running, Stopped, Failed, and Archived. They
@@ -213,15 +232,14 @@ on 8 November 2026:
 
 The agent's calls for the lift of decision 145 B, on 8 November 2026:
 
-- The page lists the suspended users and orgs in a Suspended box, with the
-  time, the operator, and Lift. Only a suspended target can be lifted, so
-  this list is the way to find the target.
+- The overview lists the suspended users and orgs in a Suspended box, with
+  the time and the operator. Since decision 147, each row opens the page
+  of its user or org, which holds Lift.
 - Lift asks first, in the confirm dialog of the app. The dialog says what
   comes back, and that a workspace that stopped 14 days ago or more may
   have lost its files.
-- Suspend stays a `curl` call for now, because decision 145 chose only the
-  lift on the page, and the user asked for the layout and some numbers
-  first.
+- Suspend is on the pages of decision 147. Before that answer, it stayed a
+  `curl` call.
 - One append-only table records each suspension and each lift, with its
   time and its operator. The suspend routes write their rows too.
 - A lift runs the owner-change check of each workspace that the user owns,
@@ -238,11 +256,49 @@ The agent's calls for the lift of decision 145 B, on 8 November 2026:
   `GET /api/operator/overview`, so that one loading state and one error
   state cover both.
 - From the mockups of Milestone 1a: the Suspended box comes right after
-  the tiles, because it holds the only action of the page, and the Lift
-  dialog then opens over it. With no suspension, the box says "Every user
-  and org has access."
+  the tiles, because it lists what can need action. With no suspension,
+  the box says "Every user and org has access."
 - A user shows on a disc and an org on a square, as in the rest of the
   app, and each row also names its kind.
+
+The agent's calls for decision 147, on 8 November 2026:
+
+- The org search finds an org by its name or its ID. It also finds the org
+  of a cloud computer ID or of a preview address, because an abuse report
+  names one of those, not an org.
+- The user search finds a user by GitHub login, name, or numeric GitHub
+  ID.
+- With an empty search, each list shows the newest first, 20 at a time,
+  with Show more.
+- The lists and the pages show counts, names, roles, and states only. They
+  show no email address, so that the section holds the least personal
+  data.
+- The page of an org shows its ID, its creation day, its repositories, its
+  workspaces by state, and its members with their roles. Each member opens
+  the page of that user.
+- The page of a user shows the GitHub ID, the join day, the workspaces
+  that the user owns, and the orgs of the user with the roles. Each org
+  opens the page of that org.
+- Suspend asks first, in the confirm dialog, with the danger tone. The
+  dialog says what stops, what the members keep, and that the files of a
+  stopped workspace can be deleted after day 14.
+- Suspend of the operator's own account warns that the operator is then
+  signed out, and that another operator must lift it. The page still
+  allows it, because a warning is enough.
+- After a suspend, the page shows the suspension, and the count of cloud
+  computers that are still stopping, from the reply of the route.
+- A deleted org can still be suspended from its page, as the operator
+  protocol allows.
+- The largest orgs of the overview open their org pages.
+- From the mockups of Milestone 1b: in the tables of the Orgs and Users
+  tabs, the state of a suspended or deleted target sits under its name,
+  not in a column of its own, so that the columns stay apart.
+- Suspend and Lift sit in the header of each page, and in its footer on a
+  phone, as the actions of a page do.
+- Each page of an org or a user keeps the tabs, with Orgs or Users
+  selected, and adds a way back to its list.
+- The org search also shows what matched when the match is not a name,
+  such as a preview address.
 
 ## Milestone 1: Mockups
 
@@ -293,9 +349,39 @@ The lift of decision 145 B on the operator page, on desktop and on a phone.
 Evidence: `.context/operator-section/mockups-check.log` and the `lift-`
 screenshots in `.context/operator-section/shots/`.
 
-## Milestone 2: Documentation and protocol
+## Milestone 1b: Search and page mockups
+
+Tags: mockup
 
 Depends on: 1a
+
+The Orgs and Users tabs of decision 147: their searches, the page of an
+org and of a user, and Suspend and Lift on those pages.
+
+- [x] Add the tabs Overview, Orgs, and Users to the operator page. Make
+      the rows of the Suspended box and the largest orgs open their pages.
+- [x] Add `app/operator/orgs`: the newest orgs, a search with a match, and
+      a search with no match.
+- [x] Add `app/operator/org`: the page of an org with Suspend, its
+      confirm dialog, the org after the suspension with Lift, the Lift
+      dialog, and a deleted org.
+- [x] Add `app/operator/users` and `app/operator/user` in the same way,
+      with the warning before the operator suspends their own account.
+- [x] Remove `app/operator/lift`, whose dialogs move to the two pages.
+- [x] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
+- [x] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
+      and `npm run file-length:check`. Smoke-test the changed pages in
+      both schemes and both viewports.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+Evidence: `.context/operator-section/mockups-check.log` and the `orgs-`,
+`org-`, `users-`, and `user-` screenshots in
+`.context/operator-section/shots/`.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: 1b
 
 - [ ] Add "The operator page" to `docs/protocol/operator-actions.md`: who
       sees it, the numbers and the suspensions that it shows, the app-wide
@@ -303,6 +389,9 @@ Depends on: 1a
 - [ ] Add "Lift a suspension" to `docs/protocol/operator-actions.md`: only
       an operator lifts, what comes back, what stays lost, the record of
       each suspension and lift, and the disk restart.
+- [ ] Add the Orgs and Users tabs to the operator page part: the search
+      keys, what each page shows, and Suspend and Lift from the pages,
+      each with its confirm step.
 - [ ] Add the operator exception to "Orgs and workspaces" in
       `docs/protocol/access-and-security.md`: the operator page reads
       counts and org names across every org.
@@ -328,9 +417,27 @@ Depends on: 2
 - [ ] Update `worker/operator/README.md`, `worker/README.md`, and the
       `OPERATOR_GITHUB_IDS` row of `docs/deployment.md`.
 
-## Milestone 4: Lift a suspension in the Worker
+## Milestone 4: Org and user pages in the Worker
 
 Depends on: 3
+
+- [ ] Add `GET /api/operator/orgs` and `GET /api/operator/users` with a
+      search, behind the gate and the operator check. Each gives 20
+      results, newest first, and a cursor for Show more. The keys are
+      those of the design.
+- [ ] Add `GET /api/operator/orgs/<orgId>` and
+      `GET /api/operator/users/<githubId>`: the details, the workspaces by
+      state, the running cloud computers, the members or the orgs with
+      their roles, and the suspension with its time and its operator.
+- [ ] Test with local D1: each search key, an empty search, Show more, a
+      deleted org, a suspended user and org, an unknown target, and 403
+      `operator_required` for another user.
+- [ ] Update `worker/operator/README.md`, and the path helpers and types
+      in `src/shared/operator.ts`.
+
+## Milestone 5: Lift a suspension in the Worker
+
+Depends on: 4
 
 - [ ] Add a migration with an append-only table of suspension events: the
       user or the org, the kind, suspend or lift, the time, and the
@@ -348,22 +455,24 @@ Depends on: 3
 - [ ] Update `worker/operator/README.md`, `worker/README.md`, and the path
       helpers in `src/shared/operator.ts`.
 
-## Milestone 5: Operator page in the web app
+## Milestone 6: Operator section in the web app
 
 Tags: ui
 
-Depends on: 3, 4
+Depends on: 3, 4, 5
 
 - [ ] Add the `/operator` route and its screen, with the parts of the
       mockups. Other people see the not-found page.
 - [ ] Add Operator to the rail and to the org switcher of a phone, for
       operators only.
 - [ ] Add the loading and error states, and Refresh.
-- [ ] Add the Suspended box and the Lift dialog.
-- [ ] Test the screen, the route, the links, and the lift.
+- [ ] Add the Suspended box, and its links to the pages.
+- [ ] Add the Orgs and Users tabs, their searches, and the page of an org
+      and of a user, with Suspend and Lift and their dialogs.
+- [ ] Test the screens, the routes, the links, the suspend, and the lift.
 - [ ] Add a README for the new area, and update `src/app/README.md`.
 
-## Milestone 6: Verification, commit, review, and pull request
+## Milestone 7: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 

@@ -1,4 +1,4 @@
-/* One row for each suspended user or org, in a box with a full outline. */
+/* One row for each user or org, in a box with a full outline. */
 .list {
   margin: 0;
   padding: 0;
@@ -11,7 +11,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px 8px 12px;
+  min-height: var(--ui-touch-min);
+  padding: 8px 12px;
+  box-sizing: border-box;
 }
 
 .row + .row {
@@ -26,16 +28,28 @@
   min-width: 0;
 }
 
-.name {
+.nameLink {
   overflow: hidden;
   color: var(--ui-ink);
   font-size: var(--ui-text-md);
   font-weight: 500;
+  text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.nameLink:hover {
+  color: var(--ui-link);
+  text-decoration: underline;
+}
+
 .detail {
   color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.end {
+  flex-shrink: 0;
+  color: var(--ui-ink2);
   font-size: var(--ui-text-sm);
 }

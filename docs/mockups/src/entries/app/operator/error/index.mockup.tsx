@@ -12,7 +12,7 @@ export const operatorError = defineScreen({
     'A count that the page could not read is not zero, so the page shows no number until a read works.',
   relatedDocs: [],
   propSchema: operatorSchema,
-  props: { numbers: 'error', suspended: 'some', dialog: 'none' },
+  props: { numbers: 'error', suspended: 'some' },
   render: (props, context) => (
     <OperatorScreen state={props} viewport={context.viewport} />
   ),

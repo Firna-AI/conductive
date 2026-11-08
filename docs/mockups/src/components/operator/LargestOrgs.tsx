@@ -1,7 +1,9 @@
 import type { Viewport } from '@mokly/mokly'
 import { Table, TableCell, type TableColumn } from '@firna/ui/table'
 import { largestOrgs, type OrgCounts } from '../../fixtures/operator'
+import { paths } from '../../paths'
 import { Section } from '../settings/Section'
+import { NameLink } from './targets'
 
 const allColumns: TableColumn[] = [
   { key: 'name', label: 'Org', flex: 1 },
@@ -25,7 +27,7 @@ export const orgTableSize = { desktop: 'sm', mobile: 'md' } as const
 function cell(org: OrgCounts, key: string) {
   switch (key) {
     case 'name':
-      return <TableCell>{org.name}</TableCell>
+      return <NameLink to={paths.operatorOrg}>{org.name}</NameLink>
     case 'members':
       return <TableCell numeric>{org.members}</TableCell>
     case 'workspaces':
@@ -37,7 +39,7 @@ function cell(org: OrgCounts, key: string) {
 
 /**
  * The five orgs with the most workspaces: their names and their counts
- * only. The operator page shows nothing else of an org.
+ * only. Each name opens the page of its org.
  */
 export function LargestOrgs(props: { viewport: Viewport }) {
   return (

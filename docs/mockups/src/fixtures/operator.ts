@@ -28,16 +28,16 @@ export const runningComputers = { workspaces: 37, builds: 2 } as const
 /** The states that the page counts the workspaces in. */
 export type WorkspaceStateKey = 'running' | 'stopped' | 'failed' | 'archived'
 
-/** The workspaces in each state. They add up to the workspace total. */
-export const workspaceStateCounts: readonly {
-  key: WorkspaceStateKey
-  count: number
-}[] = [
-  { key: 'running', count: runningComputers.workspaces },
-  { key: 'stopped', count: 1604 },
-  { key: 'failed', count: 12 },
-  { key: 'archived', count: 828 },
-]
+/** The workspaces of one scope in each state. */
+export type StateCounts = Readonly<Record<WorkspaceStateKey, number>>
+
+/** The workspaces of every org in each state. They add up to the total. */
+export const workspaceStates: StateCounts = {
+  running: runningComputers.workspaces,
+  stopped: 1604,
+  failed: 12,
+  archived: 828,
+}
 
 /**
  * The new workspaces of each day in UTC, for the 30 days up to Sunday
@@ -143,14 +143,14 @@ export const suspendedOrgTarget: Suspension = {
   kind: 'org',
   name: 'Hexwave',
   initials: 'HW',
-  since: '2 Nov',
+  since: '8 Nov',
   by: 'calummoore',
 }
 
 /** The users and orgs that are suspended now, newest first. */
 export const suspensions: readonly Suspension[] = [
-  suspendedUser,
   suspendedOrgTarget,
+  suspendedUser,
 ]
 
 /** An org of the largest orgs, with its counts. */

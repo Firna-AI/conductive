@@ -1,24 +1,12 @@
 import type { Viewport } from '@mokly/mokly'
 import { LockOpen } from 'lucide-react'
-import {
-  suspendedOrgTarget,
-  suspendedUser,
-  type Suspension,
-} from '../../fixtures/operator'
-import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { ScreenLink } from '../common/ScreenLink'
-import { targetName } from './Suspensions'
-
-/** The suspended target of each kind of lift. */
-const targets: Readonly<Record<Suspension['kind'], Suspension>> = {
-  user: suspendedUser,
-  org: suspendedOrgTarget,
-}
+import { targetName, type Target } from './targets'
 
 /** What a lift gives back, for each kind of target. */
-function givesBack(target: Suspension): string {
+function givesBack(target: Target): string {
   return target.kind === 'user'
     ? `${targetName(target)} can sign in again, and their workspaces can start again.`
     : `Members can change ${target.name} again, and its workspaces can start again.`
@@ -29,28 +17,30 @@ function givesBack(target: Suspension): string {
  * the files of a workspace that stopped 14 days ago or more can be gone.
  */
 export function LiftDialog(props: {
-  kind: Suspension['kind']
+  target: Target
   viewport: Viewport
+  /** The page that Cancel returns to, and the page after the lift. */
+  cancel: string
+  done: string
 }) {
-  const target = targets[props.kind]
   return (
     <ConfirmDialog
       actions={
         <>
-          <ScreenLink asChild to={paths.operator}>
+          <ScreenLink asChild to={props.cancel}>
             <ActionButton>Cancel</ActionButton>
           </ScreenLink>
-          <ScreenLink asChild to={paths.operator}>
+          <ScreenLink asChild to={props.done}>
             <ActionButton icon={LockOpen} tone="primary">
               Lift suspension
             </ActionButton>
           </ScreenLink>
         </>
       }
-      title={`Lift the suspension of ${targetName(target)}?`}
+      title={`Lift the suspension of ${targetName(props.target)}?`}
       viewport={props.viewport}
     >
-      <DialogText>{givesBack(target)}</DialogText>
+      <DialogText>{givesBack(props.target)}</DialogText>
       <DialogText>
         A workspace that stopped 14 days ago or more may have lost its files.
       </DialogText>

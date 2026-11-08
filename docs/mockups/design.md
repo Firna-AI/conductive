@@ -132,15 +132,18 @@ chat, and five tabs at the bottom.
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
   frame of a picture on the marketing site.
-- The operator page uses the stat tiles, the line chart, the table, and
-  the skeletons of `@firna/ui`, in `src/components/operator/`. A view runs
-  no script, so the chart keeps the width that the page column gives it.
-  The workspaces by state reuse `StatusGlyph`. A phone leaves out the
-  Members column of the largest orgs, so each org name keeps one line.
-  The Suspended box comes right after the tiles, because it holds the
-  only action of the page. Its Lift asks first, with `ConfirmDialog`. A
-  person shows on a disc and an org on a square, with `PersonAvatar` and
-  `InitialsTile` from `src/components/orgs/`.
+- The operator section has the tabs Overview, Orgs, and Users, from
+  `OperatorPage` in `src/components/operator/`. The overview uses the stat
+  tiles, the line chart, the table, and the skeletons of `@firna/ui`. A
+  view runs no script, so the chart keeps the width that the page column
+  gives it. The workspaces by state reuse `StatusGlyph`.
+- A table of the operator keeps fewer columns on a phone, so that each
+  name keeps one line. The line under a name gives the state of a
+  suspended or deleted target. A person shows on a disc and an org on a
+  square, with `PersonAvatar` and `InitialsTile` from
+  `src/components/orgs/`.
+- Suspend and Lift sit in the header of the page of an org or a user, and
+  in its footer on a phone. Each asks first, with `ConfirmDialog`.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its rename and close buttons.
