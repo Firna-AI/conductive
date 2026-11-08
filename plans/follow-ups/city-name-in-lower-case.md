@@ -9,9 +9,9 @@
 - **Source:** Implementation. **Category:** Product bug.
 - **Terms:**
   - **City name:** the first name of a new workspace. The Worker picks it from a fixed list of cities, and the branch name uses it too, such as `calummoore/lisbon-7k2q`.
-- **Background:** A new workspace starts with a city name until the agent's title renames it, as `docs/protocol/workspaces-and-sandboxes.md` says under "Create a workspace". The Worker keeps the cities in lower case, because the branch name uses them. It stores the same lower-case word as the workspace name. The mockups show the first name with a capital letter: the fixture `savedCarts` in `docs/mockups/src/fixtures/workspaces.ts` has `generatedName: 'Lisbon'`.
+- **Background:** A new workspace starts with a city name until a title from its first message renames it, as `docs/protocol/workspaces-and-sandboxes.md` says under "Create a workspace". Since decision 146 C of 8 November 2026, a Workers AI model writes that title about a second after the send. The Worker keeps the cities in lower case, because the branch name uses them. It stores the same lower-case word as the workspace name. The mockups show the first name with a capital letter: the fixture `savedCarts` in `docs/mockups/src/fixtures/workspaces.ts` has `generatedName: 'Lisbon'`.
 - **Problem:** The workspace list and the workspace header show `delft`, where the mockups show `Delft`.
-- **Impact if no action:** A new workspace shows a lower-case name until its title arrives, unlike the mockups.
+- **Impact if no action:** A new workspace shows a lower-case name for about a second, unlike the mockups. The name stays after a failed title, after a first message with no text, and when the Worker has no title model set.
 - **Root question:** How does the first name of a new workspace look in the app?
 - **Options:**
   - **A.** Store the city with a capital first letter as the workspace name, and keep the lower-case city in the branch. Effort: Small.

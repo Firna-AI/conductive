@@ -91,6 +91,23 @@ assume its recommended option, and wait for its answer.
 - The runner keeps no title code. Reason: decision 146 C replaced the
   runner request, so that code would be dead.
 
+- The mockups show the city name only in a new "First second" variant of
+  the Creating state, with a start log at 1 second. Creating and Second
+  message show the title. A failed title and a first message with no text
+  look the same as the first second, and get no view of their own.
+  Reason: the mockups of 8 November 2026 show the name change, and a
+  failed title is rare.
+- After a failed title, the Worker asks again only at the next message with
+  text, and not after a wait. Reason: failures are rare, and the rule
+  stays simple. The mockup check of 8 November 2026 raised a retry after a
+  short wait as an option.
+- The Worker reads Workers AI with a 32-token answer limit, and keeps a
+  title that the runner stored first. Reason: a title of five words needs
+  few tokens, and one title per workspace stays.
+- Local development turns off remote bindings in `vite.config.ts`, so it
+  never calls Workers AI and needs no Cloudflare login. Reason: the
+  binding is remote only, and the post-merge check tests real titles.
+
 ### The title request in the runner (decision 142 B, replaced)
 
 These calls of 8 November 2026 applied to the runner request that decision
@@ -718,46 +735,48 @@ Depends on: none
 The workspace takes its title within seconds of the first message, while
 the sandbox starts (decision 146 C).
 
-- [ ] Show the title during the start in the "Creating" and "Second
+Evidence: `.context/workspace-title-from-first-message/mockups-146/`.
+
+- [x] Show the title during the start in the "Creating" and "Second
       message" mockups, and in any other state that shows the city name
       after the first message.
-- [ ] Change each mockup text that says the agent writes the title when
+- [x] Change each mockup text that says the agent writes the title when
       the first turn starts.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages. Capture the
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages. Capture the
       site pictures again when a captured screen changed.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 8: Documentation for the title from the Worker
 
 Depends on: 7
 
-- [ ] In [Messages](../docs/protocol/chat-and-events.md#messages), state
+- [x] In [Messages](../docs/protocol/chat-and-events.md#messages), state
       the rule of decision 146 C in place of the rule of decision 142 B.
-- [ ] In [Deployment](../docs/deployment.md), give the Workers AI binding
+- [x] In [Deployment](../docs/deployment.md), give the Workers AI binding
       and the variable `CONDUCTIVE_TITLE_MODEL`.
-- [ ] On the privacy page, `src/marketing/privacy.ts`, say that Cloudflare
+- [x] On the privacy page, `src/marketing/privacy.ts`, say that Cloudflare
       also writes a short name for each workspace from its first message.
 
 ## Milestone 9: The title request in the Worker
 
 Depends on: 8
 
-- [ ] Add the Workers AI binding and `CONDUCTIVE_TITLE_MODEL`.
-- [ ] When the Worker accepts the first message of a new workspace, ask the
+- [x] Add the Workers AI binding and `CONDUCTIVE_TITLE_MODEL`.
+- [x] When the Worker accepts the first message of a new workspace, ask the
       model after the create answers. Clean the answer, and store it as a
       `workspace.title` event, so that the workspace, the first session,
       and each open tab take it.
-- [ ] Ask again when the next message with text arrives, while the
+- [x] Ask again when the next message with text arrives, while the
       workspace has no title.
-- [ ] Move the answer clean-up from the runner to the Worker.
-- [ ] Add Worker tests with a fake model binding: a first message gives
+- [x] Move the answer clean-up from the runner to the Worker.
+- [x] Add Worker tests with a fake model binding: a first message gives
       the title; a failed call keeps the city name, and the next message
       asks again; a message with no text asks nothing; a missing
       configuration keeps the city name.
-- [ ] Remove the runner title request of this branch, so `runner/` matches
+- [x] Remove the runner title request of this branch, so `runner/` matches
       `origin/main`.
-- [ ] Update the [Worker chat README](../worker/chat/README.md).
+- [x] Update the [Worker chat README](../worker/chat/README.md).
 
 ## Milestone 10: The web app for the title from the Worker
 

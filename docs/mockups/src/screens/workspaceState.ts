@@ -15,6 +15,7 @@ export const workspaceStateSchema = {
   additionalProperties: false,
   required: [
     'workspace',
+    'name',
     'sandbox',
     'startError',
     'conversation',
@@ -34,6 +35,13 @@ export const workspaceStateSchema = {
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
+    /**
+     * The name of a new workspace: its title, or its city name, which its
+     * branch also uses. The city name shows from the send until the title
+     * comes, about a second later. So a start with the city name shows only
+     * its first step. A workspace without a city name shows its own name.
+     */
+    name: { enum: ['title', 'city'] },
     /**
      * The cloud computer. An archived workspace has none. `refused` is a
      * stopped cloud computer whose start the app refuses, such as while the
@@ -137,6 +145,7 @@ export type WorkspaceState = SchemaProps<typeof workspaceStateSchema>
 /** The ready workspace of the canonical screen. Entries change from here. */
 export const readyWorkspace: WorkspaceState = {
   workspace: 'checkout-autocomplete',
+  name: 'title',
   sandbox: 'ready',
   startError: 'failed',
   conversation: 'history',

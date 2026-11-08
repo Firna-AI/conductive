@@ -47,9 +47,10 @@ export type Workspace = {
    */
   owner: PersonKey
   /**
-   * The name that the app gives a new workspace, a city. When the first
-   * turn starts, the agent writes a title from the first message, and that
-   * title replaces the city as the name.
+   * The name that the app gives a new workspace, a city, which its branch
+   * also uses. About a second after the first message, a small model writes
+   * a title from that message, and the title replaces the city as the name
+   * while the sandbox still starts. A failed title request keeps the city.
    */
   generatedName?: string
 }

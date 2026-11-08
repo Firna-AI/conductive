@@ -14,16 +14,16 @@ export function isNew(state: WorkspaceState): boolean {
 }
 
 /**
- * The name of the workspace: the city that the app gave it while the first
- * message waits for the sandbox. When the first turn starts, the agent
- * writes a title from that message, and the title replaces the city.
+ * The name of the workspace. A new workspace shows its city name from the
+ * send until its title comes, about a second later, while the sandbox
+ * starts. After a failed title request it keeps the city name until a
+ * later message gets a title.
  */
 export function workspaceName(
   state: WorkspaceState,
   workspace: Workspace,
 ): string {
-  const waiting = state.conversation === 'queued'
-  return waiting && workspace.generatedName
+  return state.name === 'city' && workspace.generatedName
     ? workspace.generatedName
     : workspace.name
 }

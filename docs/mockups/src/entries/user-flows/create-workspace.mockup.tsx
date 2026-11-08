@@ -19,10 +19,16 @@ export const createWorkspace = defineUseCase({
         'An empty chat opens. The user picks the repository, writes the first message, and sends it.',
     },
     {
-      screenPath: 'app/new-workspace/creating',
+      screenPath: 'app/new-workspace/creating/first-second',
       title: 'The workspace opens',
       description:
         'The workspace opens at once as Lisbon, on a new branch, and joins General. The first message waits for the sandbox.',
+    },
+    {
+      screenPath: 'app/new-workspace/creating',
+      title: 'The workspace takes its title',
+      description:
+        'About a second later, the workspace and its session tab take the title Saved carts from the first message. The sandbox still starts.',
     },
     {
       screenPath: 'app/new-workspace/waiting',
@@ -34,7 +40,7 @@ export const createWorkspace = defineUseCase({
       screenPath: 'app/new-workspace/first-turn',
       title: 'The agent starts',
       description:
-        'The sandbox is ready, and the agent works on the message. The agent writes the title Saved carts from that message, and the workspace and its session tab take it.',
+        'The sandbox is ready, and the agent works on the message. The workspace keeps the title Saved carts.',
     },
   ],
 })
