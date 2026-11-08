@@ -17,6 +17,15 @@ export interface TerminalScriptOptions {
   multiplexerCommand: readonly string[]
 }
 
+/**
+ * Bash runs this before each prompt of a workspace shell. When the shell's
+ * real folder is not the folder that `$PWD` names, it moves the shell there
+ * and keeps `OLDPWD`. A shell that starts before the provider's restore ends
+ * otherwise stays in the old view of the disk, as `launcherScript` says.
+ */
+export const terminalPromptCommand =
+  '[ -z "${PWD-}" ] || builtin test . -ef "$PWD" || { __conductive_oldpwd=${OLDPWD-}; builtin cd -- "$PWD" 2>/dev/null && OLDPWD=$__conductive_oldpwd; unset __conductive_oldpwd; }'
+
 export const terminalScriptDefaults: TerminalScriptOptions = {
   runtimeDirectory: TERMINAL_RUNTIME,
   environmentFile: '/run/ascii-secrets/env.sh',
@@ -96,6 +105,6 @@ set -a
 . ${shellArgument(options.environmentFile)}
 set +a
 cd "$CONDUCTIVE_REPOSITORY_DIR"
-exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off
+exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand)}
 `
 }

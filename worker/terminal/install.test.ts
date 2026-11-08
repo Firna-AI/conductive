@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { expect, it } from 'vitest'
 
 import { installationFixture } from './install.test-support'
+import { terminalPromptCommand } from './scripts'
 import { runScript } from './scripts.test-support'
 
 it('installs the workspace shell server and starts it with the repository environment and private socket', async () => {
@@ -29,6 +30,11 @@ it('installs the workspace shell server and starts it with the repository enviro
     '-s',
     'exit-empty',
     'off',
+    ';',
+    'set-environment',
+    '-g',
+    'PROMPT_COMMAND',
+    terminalPromptCommand,
   ])
 })
 

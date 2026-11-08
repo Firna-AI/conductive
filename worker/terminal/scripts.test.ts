@@ -1,9 +1,25 @@
-import { chmod, readdir, readFile, writeFile, unlink } from 'node:fs/promises'
+import {
+  chmod,
+  mkdir,
+  readdir,
+  readFile,
+  writeFile,
+  unlink,
+} from 'node:fs/promises'
 
 import { expect, it } from 'vitest'
 
-import { credentialScript, launcherScript } from './scripts'
-import { runScript, scriptFixture } from './scripts.test-support'
+import { shellArgument } from './privileged'
+import {
+  credentialScript,
+  launcherScript,
+  terminalPromptCommand,
+} from './scripts'
+import {
+  runInteractiveBash,
+  runScript,
+  scriptFixture,
+} from './scripts.test-support'
 
 it('creates and reuses a local runtime credential without new entropy and keeps separate runtime storage', async () => {
   const first = await scriptFixture()
@@ -104,4 +120,28 @@ printf '%s\\0' "$@"
     '/bin/bash',
     '-l',
   ])
+})
+
+it('moves a running shell to the live copy of its folder when a restore replaces that folder', async () => {
+  const fixture = await scriptFixture()
+  const folder = `${fixture.repository}/src`
+  const oldView = `${fixture.root}/old view`
+  await mkdir(folder)
+  const result = await runInteractiveBash(
+    [
+      `cd ${shellArgument(folder)}`,
+      `mv ${shellArgument(fixture.repository)} ${shellArgument(oldView)} && mkdir -p ${shellArgument(folder)} && : > ${shellArgument(`${folder}/live file`)}`,
+      'ls',
+      'printf "%s\\n" "$OLDPWD"',
+      'exit',
+    ],
+    {
+      folder: fixture.repository,
+      home: fixture.root,
+      promptCommand: terminalPromptCommand,
+    },
+  )
+  expect(result.code).toBe(0)
+  expect(result.stdout).toBe(`live file\n${fixture.repository}\n`)
+  expect(result.stderr).not.toContain('PROMPT_COMMAND')
 })

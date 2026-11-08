@@ -36,7 +36,9 @@ The command puts no password in the image, and it starts nothing.
 caller that needs a synchronous install hook. A refresh does not run the
 command. So a change to these files reaches the new workspaces of an org
 only after its next build. A workspace keeps the files of the image that it
-started from.
+started from, also after a resume. So the pull request of each change to
+these files says that an existing workspace needs a new workspace to get
+the change.
 
 One quoted privileged-command helper owns the root commands.
 Both units require a nonsecret enable marker under `/run`.
@@ -53,7 +55,8 @@ repository folder. Then it starts one tmux server on the socket
 configuration file. It changes one default option: it keeps running when
 no session exists. So the screen shows the default tmux status line, and
 Ctrl-b is the tmux prefix key. Each new shell gets the workspace variables
-from this server.
+from this server. The server also sets `PROMPT_COMMAND` in the global tmux
+environment to `terminalPromptCommand`, the folder hook below.
 
 The launcher loads the same variables, moves to the repository folder, and
 checks the password before it runs ttyd. For each connection, ttyd runs a
@@ -63,11 +66,30 @@ with a login Bash shell in the repository folder. The client gives tmux the
 path of that folder, not its own current folder. After a start from a saved
 snapshot, Boat restores the disk in the background. When the restore ends,
 the current folder of the launcher can be an old view of the disk at
-another path, such as `/var/lib/ascii-lazy/retired/home/code/<name>`. A
-shell that starts before the restore ends can still stay in that old view.
-The client never starts
-a tmux server. Without a running server, the client exits, and ttyd closes
-the connection.
+another path, such as `/var/lib/ascii-lazy/retired/home/code/<name>`.
+The client never starts a tmux server. Without a running server, the client
+exits, and ttyd closes the connection.
+
+A shell that starts before the restore ends also stays in the old view
+when the restore ends. Its prompt still shows the normal path, because
+Bash keeps the path text in `$PWD`. Bash's `pwd -P` also reads that text,
+so only `readlink /proc/$$/cwd` shows the real folder. The folder hook
+fixes such a shell. Bash runs it before each prompt. When the real folder
+of the shell is not the folder that `$PWD` names, the hook moves the shell
+there with `builtin cd`, and it keeps `OLDPWD`. So a shell in a subfolder
+moves to the live copy of that subfolder, not to the repository folder.
+The hook has these limits:
+
+- The first command after the end of the restore, in a shell that waited
+  at its prompt, still runs in the old view. The hook moves the shell when
+  that command ends.
+- A program that the shell started earlier, such as a dev server, keeps
+  the old view.
+- A startup file that replaces `PROMPT_COMMAND` turns the hook off.
+- As each prompt command does, the hook resets `PIPESTATUS` before Bash
+  shows the prompt. Bash keeps `$?`.
+- The shell also follows its path when a folder is deleted and made again,
+  or when a symbolic link in the path changes.
 
 So every connection of a workspace attaches to the same session, with its
 running commands and its screen. Concurrent connections share it too. A
@@ -131,9 +153,11 @@ installed in the image. Its trusted options select paths, account names,
 and executables, such as ttyd and tmux. The password program captures
 entropy before conversion and commits a complete password through a
 temporary file. The launcher checks the password before it executes ttyd.
+`terminalPromptCommand` holds the folder hook.
 
 Tests execute the three programs with fake ttyd and tmux in isolated
-runtime folders. The install test runs `terminalInstallCommand()` with fake
+runtime folders. One test runs the folder hook in a real interactive Bash,
+and moves the folder of the shell as a restore does. The install test runs `terminalInstallCommand()` with fake
 `sudo`, `apt-get`, and `systemctl` commands. Run the tests of this area with
 `npm run test -- worker/terminal`.
 
@@ -147,7 +171,7 @@ Terminal status reads remain available.
 - [connections.ts](connections.ts) owns terminal registration, expiry, and scheduled access checks.
 - [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.
 - [service.ts](service.ts) exports `terminalInstallCommand`, which installs both packages, the three programs, and both units. It also exports the image and start hooks, and `TERMINAL_PORT`.
-- [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`.
+- [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`. It also holds the folder hook, `terminalPromptCommand`.
 - [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
 - [store.ts](store.ts) binds each cached password to its current sandbox.
 - [privileged.ts](privileged.ts) quotes installation and service control commands.

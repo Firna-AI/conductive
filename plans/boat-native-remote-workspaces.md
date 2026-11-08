@@ -4147,10 +4147,26 @@ Added on 8 November 2026, when the user saw the terminal prompt
   before the restore ends, and A does not cover that shell. The first
   recommendation was A.
 - **Chosen:** A, by the user on 8 November 2026, before the options check.
-  B adds a hook to A, so the answer on B is open. The follow-up item
-  `plans/follow-ups/old-disk-view-after-restore.md` holds the check in a
-  real sandbox and the options for the other programs that start before
-  the restore ends.
+  Then B, by the user on 8 November 2026, after the options check. The
+  user also chose option E of the follow-up item
+  `plans/follow-ups/old-disk-view-after-restore.md`: B now, then a check
+  in a real sandbox that chooses what the other programs need.
+
+### 143. Choose how terminal fixes reach existing workspaces
+
+Added on 8 November 2026, from the blocked wider fix of review finding 1
+of branch `calummoore/directory-path-length`.
+
+- **Background:** Only an org image build installs the terminal programs.
+  A resume restores the workspace's own disk, so an existing workspace
+  keeps the terminal programs of its image and their bugs.
+- **Options:**
+  - **A.** Keep the rule. Say in each terminal fix that an existing
+    workspace needs a new workspace to get it.
+  - **B.** Install the terminal programs at each workspace start.
+  - **C.** As B, but only when a version marker in the sandbox is older.
+- **Recommendation:** B.
+- **Chosen:** A, by the user on 8 November 2026.
 
 ## Design
 
@@ -6436,6 +6452,34 @@ moved mounts. `.context/gate-directory-path-length.log`, the gate.
 `.context/boat-native-remote-workspaces/options-check-decision-142.md`,
 the options check.
 
+## Milestone 11e: Shells that started before the restore ended
+
+Depends on: 11d.
+
+Apply decision 142 B and decision 143 A. Added on 8 November 2026.
+
+- [x] Add the folder hook `terminalPromptCommand`. The shell server sets
+      it as `PROMPT_COMMAND` in the global tmux environment. Test it in a
+      real interactive Bash, and update `worker/terminal/README.md` and
+      the "Terminal" section of `docs/protocol/workspaces-and-sandboxes.md`.
+      Branch: `calummoore/directory-path-length`.
+- [x] Record option E in `plans/follow-ups/old-disk-view-after-restore.md`,
+      and make the check of that item a post-merge task. Record the first
+      command after the restore, which still runs in the old view.
+      Branch: `calummoore/directory-path-length`.
+- [x] Apply decision 143 A in `worker/terminal/README.md`, and delete
+      `plans/follow-ups/terminal-fixes-reach-existing-workspaces.md`.
+      Branch: `calummoore/directory-path-length`.
+- [x] Run the complete gate. Commit and push the branch. Done on
+      8 November 2026: the complete gate passed. Evidence:
+      `.context/gate-directory-path-length-3.log`.
+      Branch: `calummoore/directory-path-length`.
+- [ ] Review the new commits against `origin/main` with the
+      `implementation-review` skill. The two fix rounds of the branch are
+      used, so a `fix now` finding becomes `fix after merge`, and a
+      critical finding goes to the user. Update pull request #67.
+      Branch: `calummoore/directory-path-length`.
+
 ## Milestone 12: Terminal, previews, and desktop UI
 
 Tags: ui
@@ -7356,25 +7400,28 @@ checks of 16 and 16a to the work after the merge.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After the deploy of Milestone 11d, build the org image again. A
-      change to the terminal files reaches a workspace only through a new
-      image. An existing workspace keeps the launcher of its image, also
-      after a resume. So create a new workspace from the rebuilt image,
-      and let it stop, for example after 30 minutes without activity.
-      Resume it. Wait until `GET /sandboxes/{id}` of Boat gives
-      `hydrated: true`. Then open the Terminal tab, and do these steps in
-      its shell:
+- [ ] After the deploy of Milestones 11d and 11e, build the org image
+      again. A change to the terminal files reaches a workspace only
+      through a new image. An existing workspace keeps the terminal
+      programs of its image, also after a resume. So create a new
+      workspace from the rebuilt image, and let it stop, for example after
+      30 minutes without activity. Resume it, and open the Terminal tab at
+      once, so that its shell starts before the restore ends. Wait until
+      `GET /sandboxes/{id}` of Boat gives `hydrated: true`. Then do these
+      steps in that shell:
   - `grep -c -F -- '-s workspace -c' /usr/local/lib/conductive/terminal`
-    prints `1`. A `0` means that the workspace runs the old launcher.
+    and `grep -c -F -- 'set-environment -g PROMPT_COMMAND' /usr/local/lib/conductive/terminal-sessions`
+    each print `1`. A `0` means that the workspace runs the old programs.
   - `readlink /proc/$(pgrep -o -x ttyd)/cwd` prints a path under
     `/var/lib/ascii-lazy/retired/`. This shows that the terminal started
     before the restore ended, and that the restore has ended. Another
     path means that this resume cannot test the fix. Then stop and
     resume the workspace again.
+  - `readlink /proc/$$/cwd` prints `/home/user/code/<name>`. This shows
+    that the folder hook moved the early shell after the first command
+    of the steps above. The prompt and Bash's `pwd -P` read the path text
+    in `$PWD`, so they do not show the real folder.
   - Run `exit`, and press Reconnect. The next connection creates a new
-    shell after the restore. A page can connect a hidden Terminal tab at
-    the resume, so the first shell can be older than the restore.
-  - In the new shell, `readlink /proc/$$/cwd` prints
-    `/home/user/code/<name>`, not a path under
-    `/var/lib/ascii-lazy/retired/`. The prompt and Bash's `pwd -P` read
-    the path text in `$PWD`, so they do not show the real folder.
+    shell after the restore. In the new shell, `readlink /proc/$$/cwd`
+    prints `/home/user/code/<name>`, not a path under
+    `/var/lib/ascii-lazy/retired/`.

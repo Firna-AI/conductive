@@ -73,6 +73,41 @@ printf '%s\\0' "$PWD" "$CONDUCTIVE_LAUNCH_TEST" "$@"
   }
 }
 
+/**
+ * Runs the lines in an interactive Bash, which runs PROMPT_COMMAND before
+ * each line. Its error output also holds the prompts and the echoed lines.
+ */
+export function runInteractiveBash(
+  lines: readonly string[],
+  options: { folder: string; home: string; promptCommand: string },
+) {
+  return new Promise<{ code: number | null; stdout: string; stderr: string }>(
+    (done, reject) => {
+      const child = spawn('/bin/bash', ['--norc', '--noprofile', '-i'], {
+        cwd: options.folder,
+        env: {
+          ...process.env,
+          HOME: options.home,
+          HISTFILE: '',
+          PS1: '',
+          PROMPT_COMMAND: options.promptCommand,
+        },
+      })
+      let stdout = ''
+      let stderr = ''
+      child.stdout.on('data', (chunk) => {
+        stdout += String(chunk)
+      })
+      child.stderr.on('data', (chunk) => {
+        stderr += String(chunk)
+      })
+      child.once('error', reject)
+      child.once('close', (code) => done({ code, stdout, stderr }))
+      child.stdin.end(`${lines.join('\n')}\n`)
+    },
+  )
+}
+
 export function runScript(
   script: string,
   ordinaryPermissions = false,
