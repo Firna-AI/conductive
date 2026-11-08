@@ -314,13 +314,29 @@ Later screens add the frame and connection sources that they need.
 
 - The app stores the env var values and the agent logins encrypted.
 - The values of env vars are write-only. The browser never gets a stored
-  value back.
-- Agent output can show an env var value. The output filter of the runner
-  hides only the workspace token and the agent logins. So a value that an
-  agent repeats stays in the chat history, and each reader of the chat
-  sees it (decision 133).
-- A start log hides each env var value of the org, also a short value,
-  before the app shows the log (decision 133).
+  value back, whatever the mark of the env var.
+- An admin marks each env var of the org as secret or not secret
+  (decision 133). Each env var is secret until an admin clears its mark.
+  The value of a secret env var is a secret value.
+- An admin can change the mark of an env var without a new value.
+- A changed mark applies at the next start of each sandbox, as a changed
+  value does. The chat history and the start logs from before that start
+  keep their text.
+- The runner hides each exact copy of a secret value in the text that the
+  app shows from each runner event. It does this before it saves or sends
+  the event. It also hides the workspace token and the agent logins there.
+- A start log hides each exact copy of a secret value and of the workspace
+  token before a browser gets it.
+- The app does not hide the value of an env var that is not secret. So
+  each reader of the chat or of a start log can see such a value.
+- Reason: the admin knows which values are secrets. A length rule, where
+  only values of 8 or more characters count, was rejected, because it
+  guesses. A mask of every value was rejected, because it also hides
+  short, common values, such as `1`, in ordinary text.
+- Risk: the app hides only exact copies of a value. A changed or encoded
+  value still shows. File reads, diffs, and the terminal hide no value.
+  The mark does not keep a value from the agent or from a member with a
+  terminal, because each sandbox gets every env var.
 
 ## Agent logins
 

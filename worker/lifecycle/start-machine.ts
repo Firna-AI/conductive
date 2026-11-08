@@ -14,7 +14,8 @@ import {
   repositoryLocation,
 } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
-import { workspaceEnvironment } from './settings-data'
+import { workspaceEnvironmentSettings } from './settings-data'
+import { environmentSecrets, environmentValues } from './org-environment'
 import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
 import { WorkspaceStartError } from './workspace-start'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
@@ -43,7 +44,7 @@ export async function advanceStartMachine(
       dependencies.randomToken,
       dependencies.now(),
     )
-    const environment = await workspaceEnvironment(
+    const environment = await workspaceEnvironmentSettings(
       env,
       job.orgId,
       job.environmentCiphertext,
@@ -54,7 +55,7 @@ export async function advanceStartMachine(
       (await workspaceRepositoryLocations(env.DB, job.workspaceId))
     job.repositoryLocations = locations
     const runtimeEnv = {
-      ...environment,
+      ...environmentValues(environment),
       ...repositoryEnvironment(locations),
       WORKSPACE_TOKEN: token,
       CONDUCTIVE_WORKSPACE_ID: job.workspaceId,
@@ -66,6 +67,9 @@ export async function advanceStartMachine(
       ),
       CONDUCTIVE_TURN_ID: '',
       CONDUCTIVE_DISK_KEEPALIVE: '0',
+      CONDUCTIVE_OUTPUT_SECRETS: JSON.stringify(
+        environmentSecrets(environment),
+      ),
     }
     await endpoint.lifecycleStep(
       job.kind === 'create' ? 'image' : 'disk',

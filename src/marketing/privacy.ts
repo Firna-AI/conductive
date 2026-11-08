@@ -122,9 +122,17 @@ export const privacyDocument: LegalDocument = {
             encrypted.`,
           text`It does not send the key of its cloud computer provider to
             your browser or into a cloud computer.`,
-          text`Your browser does not get a stored secret back.`,
-          text`An agent can repeat an env var value in its answer. The chat
-            history then shows that value to each member who reads the chat.`,
+          text`Your browser does not get a stored secret back, such as an agent
+            login or the value of any env var.`,
+          text`An env var is secret until an admin clears its mark.
+            ${productName} hides each exact copy of a secret value in agent
+            output and in the start logs of the cloud computers. It does not
+            hide a changed or encoded value. A change of the mark applies at
+            the next start of a cloud computer.`,
+          text`Agent output and start logs can show the value of an env var
+            that is not secret. Each member who reads them then sees that
+            value. The agents and each member with a terminal can read every
+            env var value in the cloud computers.`,
         ),
       ],
     },

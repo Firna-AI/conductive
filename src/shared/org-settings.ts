@@ -39,7 +39,7 @@ export interface OrgSettings {
   installScript: string
   startupScript: string
   /** A stored value never goes back to the browser. */
-  envVars: readonly { name: string }[]
+  envVars: readonly { name: string; secret: boolean }[]
   updatedAt: Timestamp
   needsBuild: boolean
 }
@@ -50,7 +50,8 @@ export interface UpdateOrgSettingsRequest {
   installScript?: string
   startupScript?: string
   envVars?: readonly (
-    | { operation: 'set'; name: string; value: string }
+    | { operation: 'set'; name: string; value: string; secret: boolean }
+    | { operation: 'classify'; name: string; secret: boolean }
     | { operation: 'remove'; name: string }
   )[]
 }

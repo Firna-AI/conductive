@@ -7079,11 +7079,49 @@ org settings.
 Apply decision 133 C, which the user chose as a later follow-up on 8
 November 2026. Added on 8 November 2026.
 
-- [ ] Draw the "secret" mark of an org env var in the mockups of the org
+Design calls by the agent on 8 November 2026:
+
+- Keep every stored env value write-only, whatever its mark. Reason: the
+  existing browser boundary already protects every value.
+- Start new variables as secret, and read old values without a mark as
+  secret. Reason: an absent mark must not remove existing protection.
+- Save a changed mark without a new value. Reason: an admin cannot read
+  a stored value from the settings to send it again.
+- Use the Firna Secret switch in each admin row and the add form. Show
+  a lock mark without a control to members. Reason: the switch saves
+  the mark directly, while the member view stays read-only.
+- Keep dots for both kinds of value, and share one note about the mark.
+  Reason: every value stays write-only, and the timing needs to show once.
+- Give narrow rows one line for the name and one for the controls. Give
+  an open value field its own line. Keep the 40 px desktop and 44 px phone
+  control targets. Reason: names and touch targets must fit the list.
+- Let the mark save without a question. While a row saves, disable its
+  other writes. Restore its saved mark and show a toast after a failure.
+  Reason: the mark is reversible, and two writes must not use an old mark.
+- Use the env settings captured at each actual start for both filters.
+  Pass the marked values through the runner's start environment before
+  its first scan. Reason: later settings can differ from the values in
+  the running computer, and the first report must hide secrets too.
+- Store marks beside values in the existing encrypted settings. Keep old
+  clients and accepted names working. Reason: this needs no migration,
+  new name validation, or change to the runner handshake.
+- Filter displayed text and keep event types and IDs. Keep redaction
+  markers stable. Reason: a marked value can be one character long.
+- Move the runner configuration reference to its own page and keep its
+  old heading as a link. Reason: the README stays short, and links work.
+
+- [x] Draw the "secret" mark of an org env var in the mockups of the org
       settings. Then build it, and compare it with its mockup.
-- [ ] Apply option C of `plans/follow-ups/org-env-values-in-output.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+- [x] Apply option C of `plans/follow-ups/org-env-values-in-output.md`,
       with the changes to `docs/protocol/access-and-security.md` and the
       privacy page. Delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+
+Evidence: `.context/milestone-15r/ui-report.md`,
+`.context/milestone-15r/non-ui-report.md`,
+`.context/milestone-15r/docs-report.md`, and
+`.context/milestone-15r/check.log`.
 
 ## Milestone 8r: Chat write follow-ups
 

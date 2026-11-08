@@ -188,7 +188,14 @@ clicks, types, and lets the answers of the fake API settle.
 - `new-workspace-model.ts`: the first message that creates a workspace.
   `creations.ts`: `Creations`, the admitted creates of an org in this tab,
   and `failedCreate`, which tells a create whose start failed.
-- `computer-model.ts`: the scripts, the env vars, the builds, and the log.
+- `computer-model.ts`: the scripts, the env vars with their Secret marks,
+  the builds, and the log. `classifyEnvVar` changes only the mark of a
+  variable, and sends no value.
+- `../shell/settings/EnvVarsSection.tsx`, `EnvVarForms.tsx`, and
+  `EnvVarMark.tsx`: the env var editor of an admin. The Secret switch of a
+  row saves its mark at once, Add variable starts secret, and a new value
+  keeps the saved mark. The switch, Change, and Delete of a row wait while
+  one of them saves.
 - `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
   the log of one build.
 - `events.ts`: the ordered event stream, the event socket, and

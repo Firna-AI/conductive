@@ -5,6 +5,7 @@ import { Plus, X } from 'lucide-react'
 import { productName } from '../../../docs/mockups/src/brand'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { SecretSwitch } from '../../../docs/mockups/src/components/settings/EnvVarParts'
 import styles from '../../../docs/mockups/src/components/settings/EnvironmentSections.module.css'
 import sections from '../../../docs/mockups/src/components/settings/Section.module.css'
 import type { ComputerModel } from '../../app/computer-model'
@@ -12,14 +13,14 @@ import { SecretForm } from '../../app/secret-form'
 import { useStore } from '../../app/store'
 import { isOrgRefusal } from '../../app/suspension'
 import { ActionButton, IconButton } from '../ui/actions'
-import local from './settings.module.css'
+import { MarkSwitch, useMark, type EnvVar } from './EnvVarMark'
 
 /**
- * Saves the value of a variable through a secret form, and closes the form
- * after the save. The value leaves the browser once and never comes back.
- * A failed save shows its message under the field. A refusal because the
- * org is suspended also ends the permission, so the form closes, and a
- * toast shows the message instead.
+ * Saves the value of a variable with its Secret mark through a secret
+ * form, and closes the form after the save. The value leaves the browser
+ * once and never comes back. A failed save shows its message under the
+ * field. A refusal because the org is suspended also ends the permission,
+ * so the form closes, and a toast shows the message instead.
  */
 function useValueForm(computer: ComputerModel, close: () => void) {
   // The value goes out as typed: it may be empty, and its spaces stay.
@@ -27,9 +28,9 @@ function useValueForm(computer: ComputerModel, close: () => void) {
   const value = useStore(form.value)
   const state = useStore(form.state)
   const { toast } = useToast()
-  const save = (name: string) => {
+  const save = (name: string, secret: boolean) => {
     void form
-      .submit((secret) => computer.setEnvVar(name, secret))
+      .submit((typed) => computer.setEnvVar(name, typed, secret))
       .then((saved) => {
         if (saved) {
           close()
@@ -48,25 +49,39 @@ function useValueForm(computer: ComputerModel, close: () => void) {
   return { form, value, state, save }
 }
 
-/** A new value for a variable, in its row, with Save and Cancel. */
+/**
+ * A new value for a variable, in its row, with Save and Cancel. The new
+ * value keeps the saved mark, and the Secret switch stays in the row. A
+ * write of the mark holds Save, and a save of the value holds the switch.
+ */
 export function ChangeValueRow(props: {
-  name: string
+  item: EnvVar
   computer: ComputerModel
   close: () => void
 }) {
+  const { item } = props
   const { field } = useControlSizes()
+  const mark = useMark(props.computer, item)
   const { form, value, state, save } = useValueForm(props.computer, props.close)
+  const submit = () => {
+    if (!mark.pending) save(item.name, item.secret)
+  }
   return (
-    <li className={classes(styles.row, local.changing)}>
-      <span className={styles.name}>{props.name}</span>
-      <span className={local.edit}>
+    <li className={classes(styles.row, styles.editable, styles.changing)}>
+      <span className={styles.name}>{item.name}</span>
+      <MarkSwitch
+        disabled={mark.pending || state.saving}
+        item={item}
+        mark={mark}
+      />
+      <span className={styles.edit}>
         <Input
-          accessibilityLabel={`New value of ${props.name}`}
+          accessibilityLabel={`New value of ${item.name}`}
           autoComplete="off"
           editable={!state.saving}
           error={state.error?.message}
           onChangeText={(text) => form.set(text)}
-          onSubmitEditing={() => save(props.name)}
+          onSubmitEditing={submit}
           placeholder="New value"
           secureTextEntry
           size={field}
@@ -74,7 +89,8 @@ export function ChangeValueRow(props: {
         />
         <ActionButton
           busy={state.saving}
-          onPress={() => save(props.name)}
+          disabled={mark.pending}
+          onPress={submit}
           tone="primary"
         >
           Save
@@ -86,8 +102,9 @@ export function ChangeValueRow(props: {
 }
 
 /**
- * A new variable: its name and its value. The name must not be empty. The
- * value may be empty, as the value of an env var may.
+ * A new variable: its name, its value, and its Secret mark, which is on at
+ * the start. The name must not be empty. The value may be empty, as the
+ * value of an env var may.
  */
 export function AddVariableForm(props: {
   computer: ComputerModel
@@ -95,10 +112,11 @@ export function AddVariableForm(props: {
 }) {
   const { field } = useControlSizes()
   const [name, setName] = useState('')
+  const [secret, setSecret] = useState(true)
   const { form, value, state, save } = useValueForm(props.computer, props.close)
   const ready = name.trim() !== ''
   const add = () => {
-    if (ready) save(name.trim())
+    if (ready) save(name.trim(), secret)
   }
   return (
     <>
@@ -123,6 +141,12 @@ export function AddVariableForm(props: {
         secureTextEntry
         size={field}
         value={value}
+      />
+      <SecretSwitch
+        disabled={state.saving}
+        label="Secret"
+        onValueChange={setSecret}
+        value={secret}
       />
       <div className={sections.actions}>
         <ActionButton onPress={props.close}>Cancel</ActionButton>

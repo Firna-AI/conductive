@@ -1,9 +1,14 @@
 import type { RunnerEvent } from '../../src/shared/runner'
 import type { RunnerFileEvent } from '../../src/shared/files'
-import { parseEvent } from './stored-events'
 import type { RetainedReport } from './report-state'
+import {
+  filterFileReport,
+  filterOutput,
+  filterRetainedReport,
+} from './output-fields'
 
 type Delta = Extract<RunnerEvent, { type: 'assistant.delta' }>
+const REDACTION_MARKER = '[redacted]'
 
 /** Holds only the suffix that can still become a known credential. */
 export class OutputSanitizer {
@@ -15,22 +20,11 @@ export class OutputSanitizer {
   }
 
   fileReport(event: RunnerFileEvent): RunnerFileEvent {
-    const result = this.clean(event)
-    if (
-      result.type === 'files.snapshot' ||
-      result.type === 'files.unavailable' ||
-      result.type === 'files.changed' ||
-      result.type === 'changes.updated'
-    )
-      return result
-    throw new Error('The filtered file report changed its type.')
+    return filterFileReport(event, (value) => this.filter(value, true).text)
   }
 
   retainedReport(event: RetainedReport): RetainedReport {
-    const result = this.clean(event)
-    if (result.type === 'start.updated' || result.type === 'workspace.title')
-      return result
-    throw new Error('The filtered retained report changed its type.')
+    return filterRetainedReport(event, (value) => this.filter(value, true).text)
   }
 
   accept(event: RunnerEvent): RunnerEvent[] {
@@ -41,9 +35,7 @@ export class OutputSanitizer {
       if (filtered.held)
         this.pending.set(key, { ...event, text: filtered.held })
       else this.pending.delete(key)
-      return filtered.text
-        ? [this.clean({ ...event, text: filtered.text })]
-        : []
+      return filtered.text ? [{ ...event, text: filtered.text }] : []
     }
     const result: RunnerEvent[] = []
     if (event.type === 'assistant.completed')
@@ -73,9 +65,7 @@ export class OutputSanitizer {
     for (const [key, event] of this.pending) {
       if (!matches(event)) continue
       this.pending.delete(key)
-      result.push(
-        this.clean({ ...event, text: this.filter(event.text, true).text }),
-      )
+      result.push({ ...event, text: this.filter(event.text, true).text })
     }
     return result
   }
@@ -94,8 +84,14 @@ export class OutputSanitizer {
       )
         return { text: output, held: rest }
       const secret = secrets.find((secret) => text.startsWith(secret, index))
-      if (secret) {
-        output += '[redacted]'
+      if (
+        text.startsWith(REDACTION_MARKER, index) &&
+        (!secret || secret.length <= REDACTION_MARKER.length)
+      ) {
+        output += REDACTION_MARKER
+        index += REDACTION_MARKER.length
+      } else if (secret) {
+        output += REDACTION_MARKER
         index += secret.length
       } else output += text[index++]
     }
@@ -103,17 +99,6 @@ export class OutputSanitizer {
   }
 
   private clean(event: RunnerEvent): RunnerEvent {
-    return parseEvent(this.value(event))
-  }
-
-  private value(value: unknown): unknown {
-    if (typeof value === 'string') return this.filter(value, true).text
-    if (Array.isArray(value))
-      return value.map((item: unknown) => this.value(item))
-    if (typeof value === 'object' && value !== null)
-      return Object.fromEntries(
-        Object.entries(value).map(([key, item]) => [key, this.value(item)]),
-      )
-    return value
+    return filterOutput(event, (value) => this.filter(value, true).text)
   }
 }

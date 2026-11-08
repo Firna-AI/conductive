@@ -6,6 +6,9 @@ They import no Cloudflare types, provider SDKs, or test fixtures.
 Dates use Unix milliseconds. IDs and model names are opaque strings.
 
 Each area owns its paths and payloads. Import from that area directly.
+`OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
+Its `set` change carries a value and a mark. Its `classify` change carries
+only a name and a mark, so it keeps the stored value.
 `api.ts` keeps the existing sign-in and org paths and common records.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE

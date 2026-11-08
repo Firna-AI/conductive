@@ -86,7 +86,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   delivers the first message through a Stop and a resume.
 - `machine-credentials.test.ts` checks the two machine credential routes.
 - `feature-shell-settings.test.ts` checks shared scripts, encrypted env
-  values, member reads, and refused member writes through the Worker.
+  values, secret marks, mark changes without replacement values, member
+  reads, and refused member writes through the Worker.
 - `feature-shell-sections.test.ts` checks section order, private collapse,
   workspace moves, section deletion, and workspace event publication.
 - `feature-shell-github.test.ts` checks the user's GitHub access, paginated
@@ -109,7 +110,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`lifecycle.ts`](lifecycle.ts): the lifecycle routes and their options.
 - [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
   request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
-  values and returns their names. [`feature-sections.ts`](feature-sections.ts)
+  values and their secret marks. Replies return names and marks only.
+  [`feature-sections.ts`](feature-sections.ts)
   and [`feature-workspaces.ts`](feature-workspaces.ts) save list changes and
   publish workspace metadata through the workspace object.
 - [`feature-github.ts`](feature-github.ts): account installations and

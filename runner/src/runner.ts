@@ -23,6 +23,7 @@ export interface RunnerOptions {
   cwd: string
   home: string
   defaultBranch: string
+  outputSecrets?: readonly string[]
   providers: EngineOptions['providers']
   warm: () => Promise<unknown>
   now: () => number
@@ -48,6 +49,7 @@ export class Runner {
     this.options = options
     this.refreshed = new Set(options.store.snapshot.reports.commands)
     this.sanitizer.add(options.request.workspaceToken)
+    for (const secret of options.outputSecrets ?? []) this.sanitizer.add(secret)
     const repository = new Repository(options.cwd, options.warn)
     this.files = new FileReporter(
       repository,

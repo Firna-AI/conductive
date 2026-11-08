@@ -1,4 +1,6 @@
+/* The list of the env vars. Its rows follow its own width. */
 .list {
+  container: env-vars / inline-size;
   margin: 0;
   padding: 0;
   border: 1px solid var(--ui-border);
@@ -39,4 +41,99 @@
 .actions {
   display: flex;
   flex-shrink: 0;
+}
+
+/* The Secret switch with its visible label. */
+.secret {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/*
+ * The Secret mark of a read-only row. Its place has one width in every
+ * row, so the values stay in line.
+ */
+.mark {
+  flex-shrink: 0;
+  min-width: 64px;
+}
+
+/* An admin's row: the name, the Secret switch, the value, and the actions. */
+.editable {
+  display: grid;
+  grid-template-areas: 'name secret value actions';
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  column-gap: 12px;
+}
+
+.editable > .name {
+  grid-area: name;
+}
+
+.editable > .secret {
+  grid-area: secret;
+  justify-self: end;
+}
+
+.editable > .value {
+  grid-area: value;
+}
+
+.editable > .actions {
+  grid-area: actions;
+  justify-self: end;
+}
+
+/* The row whose value changes: a field in the place of the value. */
+.changing {
+  grid-template-areas: 'name secret edit';
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 2fr);
+}
+
+/* The field of the new value, with Save and Cancel. */
+.edit {
+  display: flex;
+  grid-area: edit;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 0;
+}
+
+.edit > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/*
+ * A narrow list, as on a phone: the name on the first line, then the
+ * Secret switch with the value and its actions. The field of a new value
+ * takes a line of its own.
+ */
+@container env-vars (max-width: 480px) {
+  .editable {
+    grid-template-areas:
+      'name name name'
+      'secret value actions';
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    row-gap: 0;
+    padding-top: 10px;
+  }
+
+  .editable > .value {
+    justify-self: end;
+  }
+
+  .changing {
+    grid-template-areas:
+      'name name name'
+      'secret . .'
+      'edit edit edit';
+  }
 }
