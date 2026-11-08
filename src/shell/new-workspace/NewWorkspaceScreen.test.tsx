@@ -129,4 +129,54 @@ describe('NewWorkspaceScreen', () => {
       disconnected: { Send: false, 'Try again': false },
     })
   })
+
+  test('a create whose first start failed shows the message that the Worker saved for it, and other server errors keep the fixed text', async () => {
+    const cases = [
+      {
+        name: 'a start that passed its limit',
+        status: 502,
+        code: 'workspace_start_failed',
+        message:
+          'The cloud computer did not start within the 20-minute limit. Try again.',
+        notice:
+          "The workspace wasn't created The cloud computer did not start within the 20-minute limit. Try again. Your message is kept. Try again",
+      },
+      {
+        name: 'another server error',
+        status: 500,
+        code: 'internal_error',
+        message: 'The request failed. Try again.',
+        notice:
+          "The workspace wasn't created Its sandbox didn't start. Your message is kept. Try again",
+      },
+    ]
+    for (const item of cases) {
+      const server = new FakeApiServer()
+      server.json(
+        'POST',
+        workspacesPath(FAKE_IDS.org),
+        { error: { code: item.code, message: item.message } },
+        item.status,
+      )
+      const app = await startedApp(server)
+      const org = app.org(FAKE_IDS.org)
+      await org.reload('repositories')
+      const draft = org.newWorkspace(null)
+      draft.setText('Fix the flaky cart test.')
+      await draft.send({
+        repositoryId: 'storefront',
+        choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+      })
+      const text = textOf(
+        renderScreen(
+          app,
+          <NewWorkspaceScreen
+            org={{ id: FAKE_IDS.org, name: 'Acme', role: 'admin' }}
+            sectionId={null}
+          />,
+        ),
+      )
+      expect(text, item.name).toContain(item.notice)
+    }
+  })
 })

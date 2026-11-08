@@ -66,8 +66,11 @@ it('keeps admission when the actual runtime stops immediately after the machine 
     await fixture.restart()
     await interrupted
     const restored = fixture.actor(job.workspaceId)
-    for (let step = 0; step < 16 && (await restored.checkpoint()); step++)
+    for (let step = 0; step < 16 && (await restored.checkpoint()); step++) {
+      if ((await restored.checkpoint())?.phase === 'runner')
+        await restored.reportRunnerLifecycle({ type: 'runner.ready' })
       await restored.tick()
+    }
     const completed: unknown = JSON.parse(
       JSON.stringify(await restored.waitCreationLifecycle()),
     )

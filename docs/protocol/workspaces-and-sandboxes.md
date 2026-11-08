@@ -160,6 +160,32 @@ says.
 - The chat history shows at once while a sandbox starts. The files and the
   tools wait until the sandbox is ready.
 
+## Time limits of builds and starts
+
+- A build or a refresh of the org image has a time limit of 60 minutes
+  (decision 128).
+- A start of a workspace's sandbox has a time limit of 20 minutes. This
+  holds at create, at resume, and at the restart near day 14 of a stop.
+- Each time limit covers the whole build, refresh, or start, from the
+  moment that it began. Progress and provider retries do not reset it.
+- Reason: a time limit on the whole build or start ends it when it makes
+  no progress, whatever the cause. A time limit for each script was
+  rejected, because it does not end a wait for a cloud computer that never
+  becomes ready.
+- While a build runs, the Cloud computer tab shows its time limit. The
+  start steps show the time limit of the start.
+- A build or a refresh that passes its time limit fails in the same way as
+  after any other error. So the last good image stays, as
+  [The org image](#the-org-image) says.
+- A start that passes its time limit fails in the same way as after any
+  other error. So after a failed create, the first message goes back to
+  the composer, as [Create a workspace](#create-a-workspace) says. A failed
+  resume shows the error state, as [Stop and resume](#stop-and-resume)
+  says. After a failed restart near day 14, the app stops the sandbox
+  again. The workspace stays stopped.
+- Each such failed build, create, or resume says that it passed its time
+  limit.
+
 ## Workspace states
 
 - The workspace list shows one state for each workspace: working, needs

@@ -1,11 +1,12 @@
 import { Loader } from '@firna/ui/loader'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import type { StartingLog } from '../../fixtures/starting'
+import { startLimit, type StartingLog } from '../../fixtures/starting'
 import styles from './StartingCard.module.css'
 
 /**
  * The start of a sandbox in the chat: a quiet card with a moving mark, then
- * each step so far, with the time since the start.
+ * each step so far, with the time since the start, and the time limit of
+ * each start.
  */
 export function StartingCard(props: { log: StartingLog }) {
   const theme = useSharedUiTheme()
@@ -34,6 +35,7 @@ export function StartingCard(props: { log: StartingLog }) {
         </ol>
         <span className={styles.elapsed}>{log.elapsed}</span>
       </div>
+      <p className={styles.limit}>{startLimit}</p>
     </section>
   )
 }

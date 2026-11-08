@@ -1,56 +1,90 @@
 import { providerState, type ProviderState } from './provider-state'
-import type { SandboxProvider } from '../sandbox/provider'
 import { requireActiveUser } from '../data/user-access'
 import { WorkspaceStartError } from './workspace-start'
-import { DISK_KEEPALIVE_MS } from './durable-types'
+import type { DiskRetentionResult } from './durable-types'
+import { JobTimeLimit } from './job-time-limit'
 import {
   repositoryEnvironment,
   repositoryLocation,
 } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
-import { workspaceStartupCommand } from './image-software'
-import {
-  readImageSettings,
-  workspaceEnvironment,
-  workspaceRepository,
-} from './settings-data'
+import { workspaceEnvironment, workspaceRepository } from './settings-data'
 import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
-import { readRetention, setRetention, clearRetention } from './retention-data'
+import {
+  readRetention,
+  setRetention,
+  type RetentionProgress,
+} from './retention-data'
 import {
   actionResources,
   type WorkspaceActionContext,
 } from './workspace-actions'
-import { revokeWorkspacePreviews } from './workspace-data'
 import type { DurableLifecycle } from './durable'
+import {
+  advanceRetentionCommand,
+  type RetentionCommandPort,
+} from './retention-command'
+import { stopRetention } from './retention-stop'
 
 /** The caller serializes this action with user starts in the workspace object. */
 export async function keepWorkspaceDisk(
   context: WorkspaceActionContext,
-): Promise<boolean> {
+  deadlineAt: number,
+  command: RetentionCommandPort,
+  confirmedStopped: boolean,
+): Promise<DiskRetentionResult> {
   const { env, workspaceId, orgId } = context
   const { provider, sandboxId, row } = await actionResources(context)
-  if (row.state !== 'stopped') {
-    await clearRetention(env.DB, workspaceId)
-    return true
-  }
-  const progress = (await readRetention(env.DB, workspaceId)) ?? {
+  if (
+    row.archivedAt !== null ||
+    !(row.state === 'stopped' || (row.state === 'error' && confirmedStopped))
+  )
+    return { done: true, error: null, stoppedAt: null, eligible: false }
+  let progress: RetentionProgress = (await readRetention(
+    env.DB,
+    workspaceId,
+  )) ?? {
     phase: 'resume',
     error: null,
   }
-  const machine = await provider.get(sandboxId)
-  const status = providerState(machine.state)
-  if (status === 'error' && progress.phase !== 'stop') {
+  progress = await expireRetention(context, progress, deadlineAt)
+  let status: ProviderState
+  try {
+    status = providerState((await provider.get(sandboxId)).state)
+  } catch (error) {
+    if (progress.phase === 'stop' && progress.error !== null)
+      return { done: false, error: progress.error }
+    throw error
+  }
+  progress = await expireRetention(context, progress, deadlineAt)
+  if (progress.phase === 'stop')
+    return stopRetention(
+      context,
+      provider,
+      sandboxId,
+      status,
+      progress.error,
+      command,
+    )
+  if (status === 'error') {
     await setRetention(
       env.DB,
       workspaceId,
       'stop',
       'The cloud computer failed during disk retention.',
     )
-    return stopMaintenance(context, provider, sandboxId, status)
+    return stopRetention(
+      context,
+      provider,
+      sandboxId,
+      status,
+      'The cloud computer failed during disk retention.',
+      command,
+    )
   }
   if (progress.phase === 'resume') {
     await setRetention(env.DB, workspaceId, 'resume')
-    if (status === 'stopping') return false
+    if (status === 'stopping') return { done: false, error: null }
     if (status === 'stopped') {
       await requireActiveUser(env.DB, row.ownerUserId)
       await ensureWorkspaceToken(
@@ -87,80 +121,69 @@ export async function keepWorkspaceDisk(
       )
     }
     await setRetention(env.DB, workspaceId, 'wait')
-    return false
+    return { done: false, error: null }
   }
   if (progress.phase === 'wait') {
     if (status === 'stopped') {
       await setRetention(env.DB, workspaceId, 'resume')
-      return false
+      return { done: false, error: null }
     }
     if (status === 'ready') await setRetention(env.DB, workspaceId, 'startup')
-    return false
+    return { done: false, error: null }
   }
   if (progress.phase === 'startup') {
     if (status === 'stopped') {
       await setRetention(env.DB, workspaceId, 'resume')
-      return false
+      return { done: false, error: null }
     }
-    if (status !== 'ready') return false
-    const settings = await readImageSettings(env.DB, orgId)
-    let error: string | null = null
-    try {
-      const result = await provider.runCommand(
-        sandboxId,
-        workspaceStartupCommand(settings.startupScript, 'retention'),
-      )
-      if (result.exitCode !== 0 || result.timedOut)
-        error = 'The startup script failed during disk retention.'
-    } catch {
-      error = 'The startup script could not run during disk retention.'
-    }
-    await setRetention(env.DB, workspaceId, 'stop', error)
-    return false
+    if (status !== 'ready') return { done: false, error: null }
+    return advanceRetentionCommand(
+      context,
+      provider,
+      sandboxId,
+      deadlineAt,
+      command,
+    )
   }
-  return stopMaintenance(context, provider, sandboxId, status)
+  return { done: false, error: null }
 }
 
-async function stopMaintenance(
+async function expireRetention(
   context: WorkspaceActionContext,
-  provider: SandboxProvider,
-  sandboxId: string,
-  status: ProviderState,
-): Promise<boolean> {
-  const { env, dependencies, workspaceId, orgId } = context
-  if (status === 'stopping') return false
-  let stopped = status === 'stopped'
-  if (!stopped)
-    stopped =
-      providerState((await provider.stop(sandboxId)).state) === 'stopped'
-  if (!stopped) return false
-  await revokeWorkspacePreviews(env.DB, workspaceId, dependencies.now())
-  await env.DB.prepare(
-    'UPDATE workspaces SET stopped_at = ?, next_disk_keepalive_at = ? WHERE id = ? AND org_id = ? AND state = ?',
-  )
-    .bind(
-      dependencies.now(),
-      dependencies.now() + DISK_KEEPALIVE_MS,
-      workspaceId,
-      orgId,
-      'stopped',
-    )
-    .run()
-  await clearRetention(env.DB, workspaceId)
-  return true
+  progress: RetentionProgress,
+  deadlineAt: number,
+): Promise<RetentionProgress> {
+  if (progress.phase === 'stop' || context.dependencies.now() < deadlineAt)
+    return progress
+  const error = new JobTimeLimit('start').message
+  await setRetention(context.env.DB, context.workspaceId, 'stop', error)
+  return { phase: 'stop', error }
 }
 
 export async function finishDiskMaintenance(
   context: WorkspaceActionContext,
   lifecycle: DurableLifecycle,
 ): Promise<void> {
-  await lifecycle.exclusive(async () => {
-    if (!(await readRetention(context.env.DB, context.workspaceId))) return
-    try {
-      if (await keepWorkspaceDisk(context)) return
-    } catch {
-      throw new WorkspaceStartError(null)
-    }
+  try {
+    if (
+      await lifecycle.finishDiskMaintenance(async () => {
+        const progress = await readRetention(
+          context.env.DB,
+          context.workspaceId,
+        )
+        if (progress?.phase === 'startup')
+          await setRetention(
+            context.env.DB,
+            context.workspaceId,
+            'stop',
+            progress.error,
+          )
+        return Boolean(progress)
+      })
+    )
+      return
+  } catch {
     throw new WorkspaceStartError(null)
-  })
+  }
+  throw new WorkspaceStartError(null)
 }

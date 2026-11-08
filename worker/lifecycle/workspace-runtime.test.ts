@@ -6,6 +6,7 @@ import { claimCreation } from './creation-claims'
 import type { WorkspaceStartJob } from './start-types'
 import { readSavedScript } from './saved-script'
 import { serializeStartJob } from './start-job-codec'
+import { IDLE_MS } from './durable-types'
 import {
   hasStartStep,
   liveEvents,
@@ -138,8 +139,11 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   fixture.boat.commandOutput = 'part-restored'
   fixture.boat.commandRunning = false
   const restored = fixture.actor(id)
-  for (let step = 0; step < 15 && (await restored.checkpoint()); step++)
+  for (let step = 0; step < 15 && (await restored.checkpoint()); step++) {
+    if ((await restored.checkpoint())?.phase === 'runner')
+      await restored.reportRunnerLifecycle({ type: 'runner.ready' })
     await restored.tick()
+  }
   expect(await restored.checkpoint()).toBeUndefined()
   expect(await restored.waitCreationLifecycle()).toEqual({ ok: true })
   expect(fixture.boat.statusRequests[statusCount]).toEqual({
@@ -160,6 +164,8 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     pendingFirstMessage: FIRST_MESSAGE,
   })
   await restored.tick()
+  const ready = await restored.readLifecycle()
+  expect(await restored.alarmAt()).toBe((ready?.lastActivityAt ?? 0) + IDLE_MS)
   const completedBrowser = await fixture.openEvents(id)
   const before = publicHistory(await completedBrowser.inbox.next())
   expect(

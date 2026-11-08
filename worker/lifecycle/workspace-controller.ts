@@ -183,7 +183,9 @@ export function createWorkspaceController(
         : null
     },
     async reportRunnerLifecycle(event, publish): Promise<void> {
-      await applyRunnerLifecycle(lifecycle, turns, event, publish)
+      const apply = () => applyRunnerLifecycle(lifecycle, turns, event, publish)
+      if (event.type === 'runner.ready') await starts.reportRunnerReady(apply)
+      else await apply()
     },
     async runnerLifecycleDisconnected(publish): Promise<void> {
       await lifecycle.runnerDisconnected(publish)
@@ -219,6 +221,10 @@ export function createWorkspaceController(
     dependencies,
     controller,
     durableStartStorage(platform.storage, dependencies.now, env),
+    async (error, cancelled) => {
+      await turns.clear()
+      await lifecycle.stopFailedStart(error, cancelled)
+    },
   )
   return controller
 }

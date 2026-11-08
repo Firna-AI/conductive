@@ -29,6 +29,7 @@ import { connectShellRunner } from './shell-runner.test-support'
 import {
   driveWorkspaceStart,
   completeWorkspaceResume,
+  prepareWorkspaceStart,
 } from './workspace-start.test-support'
 
 let bundle: string
@@ -96,11 +97,7 @@ it('boots the production shell and delivers the durable first message through st
     WORKSPACES: DurableObjectNamespace<Workspace>
   }>()
   const actor = () => bindings.WORKSPACES.getByName(created.workspace.id)
-  expect(
-    await driveWorkspaceStart<
-      Awaited<ReturnType<Workspace['waitCreationLifecycle']>>
-    >(actor(), actor().waitCreationLifecycle()),
-  ).toEqual({ ok: true })
+  await prepareWorkspaceStart(actor())
   const repeated = await create()
   expect(repeated.status).toBe(201)
   const duplicate = readCreated(await repeated.json())
@@ -120,6 +117,11 @@ it('boots the production shell and delivers the durable first message through st
     type: 'confirm',
     throughEventNumber: 1,
   })
+  expect(
+    await driveWorkspaceStart<
+      Awaited<ReturnType<Workspace['waitCreationLifecycle']>>
+    >(actor(), actor().waitCreationLifecycle()),
+  ).toEqual({ ok: true })
   const command = record(await runner.inbox.next())
   const turnId = string(command.turnId)
   expect(command).toMatchObject({
@@ -186,14 +188,16 @@ it('boots the production shell and delivers the durable first message through st
   expect(await (await active.request(detailPath)).json()).toMatchObject({
     workspace: { state: 'stopped' },
   })
-  const resumed = await completeWorkspaceResume(
-    actor(),
-    active.request(workspacePaths.resume(OUTER_ORG, created.workspace.id), {
+  const resuming = active.request(
+    workspacePaths.resume(OUTER_ORG, created.workspace.id),
+    {
       method: 'POST',
       body: '{}',
-    }),
+    },
   )
+  const resumed = await resuming
   expect(resumed.status).toBe(200)
+  await prepareWorkspaceStart(actor())
   expect(active.boat.resumeIds).toHaveLength(1)
   expect(
     (
@@ -219,6 +223,7 @@ it('boots the production shell and delivers the durable first message through st
     type: 'confirm',
     throughEventNumber: 1,
   })
+  await completeWorkspaceResume(actor(), resuming)
   const sent = await active.request(
     sessionPaths.messages(OUTER_ORG, created.workspace.id, created.sessionId),
     {

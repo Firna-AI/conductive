@@ -152,6 +152,11 @@ it('recovers a running startup after a lost start reply without repeating its si
     ])
     fixture.boat.commandRunning = false
     await start.advance()
+    await fixture.actors
+      .get(created.workspace.id)
+      ?.endpoint()
+      .reportRunnerLifecycle({ type: 'runner.ready' })
+    await start.advance()
     expect(await start.wait()).toEqual({ ok: true })
   } finally {
     await gate.release()

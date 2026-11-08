@@ -6,10 +6,15 @@ import type {
   WorkspaceStart,
   WorkspaceState,
 } from '../../src/shared/workspaces'
+import type {
+  RetentionCommandPort,
+  RetentionCommandState,
+} from './retention-command'
 
 export const IDLE_MS = 30 * 60 * 1_000
 export const DISK_KEEPALIVE_MS = 13 * 24 * 60 * 60 * 1_000
 export const TURN_HEARTBEAT_MS = 5 * 60 * 1_000
+export const LIFECYCLE_STATE_KEY = 'lifecycle:state'
 
 export interface LifecycleStorage {
   get(key: string): Promise<DurableLifecycleState | undefined>
@@ -29,10 +34,22 @@ export interface DurableLifecycleState {
   runningSessions: readonly string[]
   runnerConnected: boolean
   startupPrepared?: boolean
+  startStop?: 'pending' | 'stopped' | 'error'
   stoppedAt: number | null
   nextDiskKeepaliveAt: number | null
+  diskRetentionDeadlineAt?: number
+  diskRetentionCommand?: RetentionCommandState
   error: { code: string; message: string; log: string | null } | null
 }
+
+export type DiskRetentionResult =
+  | { done: false; error: string | null }
+  | {
+      done: true
+      error: string | null
+      stoppedAt: number | null
+      eligible: boolean
+    }
 
 export interface LifecycleHooks {
   changed(
@@ -40,7 +57,11 @@ export interface LifecycleHooks {
     publish?: LifecyclePublisher,
   ): void | Promise<void>
   stop(): Promise<LifecycleStopResult | void>
-  keepalive(): Promise<boolean | void>
+  keepalive(
+    deadlineAt: number,
+    command: RetentionCommandPort,
+    confirmedStopped: boolean,
+  ): Promise<DiskRetentionResult>
   extendDeadline(): Promise<LifecycleReconciliation | void>
   reconcile?(): Promise<LifecycleReconciliation>
   startPending?(): Promise<boolean>

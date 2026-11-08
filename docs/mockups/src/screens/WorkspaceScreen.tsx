@@ -18,6 +18,7 @@ import type { SandboxNoticeState } from '../components/workspace/SandboxNotice'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { conversations } from '../fixtures/conversations'
 import { memberViewer, people } from '../fixtures/members'
+import { startErrors } from '../fixtures/starting'
 import {
   ownerSuspendedRefusal,
   suspendedOwner,
@@ -58,13 +59,17 @@ function activityOf(state: WorkspaceState): ActivityStatus {
   return isRunning(state) ? 'working' : 'ready'
 }
 
-/** The bar in place of the composer while the sandbox is not running. */
+/**
+ * The bar in place of the composer while the sandbox is not running. A
+ * failed start carries the message that the app saved for it.
+ */
 function sandboxNotice(state: WorkspaceState): SandboxNoticeState | undefined {
   switch (state.sandbox) {
     case 'refused':
       return { problem: 'refused', reason: ownerSuspendedRefusal }
-    case 'stopped':
     case 'error':
+      return { problem: 'error', message: startErrors[state.startError] }
+    case 'stopped':
     case 'archived':
       return { problem: state.sandbox }
     case 'ready':

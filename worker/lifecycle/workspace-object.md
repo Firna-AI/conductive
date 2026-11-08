@@ -45,6 +45,8 @@ command start. For a workspace object, it:
 - reads the sandbox state from Boat while the runner is not connected
 - runs the disk retention restart 13 days after each confirmed stop
 - retries the sandbox delete of a failed create
+- recovers and deletes an unresolved allocation after a start reaches its limit
+- keeps failed or cancelled resume stop cleanup after the start result ends
 
 The deadline and stop actions use the sandbox state in each Boat reply.
 When Boat refuses an action, they read the sandbox state once. The
@@ -77,6 +79,8 @@ memory, as [Creation recovery](../../src/app/creation-recovery.md) says.
 
 `WorkspaceEventJournal` in [`durable-journal.ts`](durable-journal.ts) keeps
 ordered lifecycle publication and suppresses unchanged updates. The
+workspace update includes its saved public error code and message, or null
+to clear an error. The event carries no error log. The
 production `Workspace` sends each `workspace.updated` and `start.updated`
 event to `WorkspaceChat`, through `commitWorkspaceEvent` or the `publish`
 argument of a chat hook. Chat stores and numbers the only workspace event

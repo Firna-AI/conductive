@@ -16,10 +16,13 @@ export type SandboxProblem = 'stopped' | 'error' | 'refused' | 'archived'
 
 /**
  * What the bar in place of the composer shows. A refused start carries the
- * words of the app's refusal, so one notice serves every reason.
+ * words of the app's refusal, so one notice serves every reason. A start
+ * that failed can carry the message that the app saved for it, such as the
+ * 20-minute limit of a start.
  */
 export type SandboxNoticeState =
-  | { problem: Exclude<SandboxProblem, 'refused'> }
+  | { problem: 'stopped' | 'archived' }
+  | { problem: 'error'; message?: string }
   | { problem: 'refused'; reason: string }
 
 type Problem = {
@@ -79,10 +82,25 @@ function RecoveryButton(props: { label: string }) {
   return <ActionButton tone="primary">{props.label}</ActionButton>
 }
 
+/** The text of the bar: the refusal, or the saved message before the body. */
+function barBody(state: SandboxNoticeState, body: string): string {
+  switch (state.problem) {
+    case 'refused':
+      return state.reason
+    case 'error':
+      return state.message ? `${state.message} ${body}` : body
+    case 'stopped':
+    case 'archived':
+      return body
+  }
+}
+
 /**
  * The bar that replaces the composer while the sandbox is not running. A
  * refused start shows the words of the refusal, and no action, because the
- * start stays refused until its cause changes.
+ * start stays refused until its cause changes. A start that failed shows
+ * the message that the app saved for it, such as the 20-minute limit of a
+ * start, before the body.
  */
 export function SandboxBar(props: SandboxNoticeState) {
   const problem = problems[props.problem]
@@ -91,7 +109,7 @@ export function SandboxBar(props: SandboxNoticeState) {
       action={
         problem.action ? <RecoveryButton label={problem.action} /> : undefined
       }
-      body={props.problem === 'refused' ? props.reason : problem.body}
+      body={barBody(props, problem.body)}
       icon={problem.icon}
       title={problem.title}
       tone={problem.tone}

@@ -9,7 +9,7 @@ it('bounds lasting start status faults across alarm restarts and retains existin
   const fixture = await backendFixture()
   const start = await startRetryFixture(fixture)
   statusFault(fixture)
-  const now = fixture.runtime.dependencies.now()
+  const now = fixture.runtime.dependencies.now() + 1_000
   await start.tick(now)
   start.restart()
   await start.tick(now + 1_000)
@@ -37,7 +37,7 @@ it('preserves captured start output and lets cancellation bypass a pending retry
   const fixture = await backendFixture()
   const start = await startRetryFixture(fixture)
   const fault = statusFault(fixture)
-  const now = fixture.runtime.dependencies.now()
+  const now = fixture.runtime.dependencies.now() + 1_000
   await start.tick(now)
   fault.recover()
   fixture.boat.commandOutput = 'captured output\n'
@@ -49,7 +49,7 @@ it('preserves captured start output and lets cancellation bypass a pending retry
   expect(await start.job()).toMatchObject({ stdoutOffset: 16, stderrOffset: 0 })
   await start.endpoint.lifecycleStopped()
   expect(start.storage.alarmAt).toBe(now + 2_000)
-  await start.tick(now + 1_000)
+  await start.tick(now + 2_000)
   expect(await start.job()).toBeUndefined()
   expect(await start.wait()).toMatchObject({
     ok: false,

@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import { CircleAlert, Plug } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import type { ApiError } from '../../app/api/client'
+import { ApiError } from '../../app/api/client'
+import type { CreationStartError } from '../../app/new-workspace-model'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
@@ -46,24 +47,44 @@ export function useBlockingNotice(
   return null
 }
 
-/** `null`: the server took the message, and its sandbox did not start. */
-function failureBody(error: ApiError | null): string {
-  if (error === null) return "Its sandbox didn't start. Your message is kept."
+/**
+ * The code of a first start that failed. Its message is the one that the
+ * Worker saved for the start, such as its time limit.
+ */
+const startFailed = 'workspace_start_failed'
+
+const notStarted = "Its sandbox didn't start. Your message is kept."
+
+/**
+ * `null`: the server took the message, and its sandbox did not start, with
+ * no saved error. A saved error of the start, which has no HTTP status,
+ * shows its message when the start failed. An `ApiError` of the create
+ * request keeps its text by status.
+ */
+function failureBody(error: ApiError | CreationStartError | null): string {
+  if (error === null) return notStarted
+  if (!(error instanceof ApiError)) {
+    return error.code === startFailed
+      ? `${error.message} Your message is kept.`
+      : notStarted
+  }
   if (error.status === 0) {
     return "The app can't reach the server. Your message is kept."
   }
-  if (error.status >= 500)
-    return "Its sandbox didn't start. Your message is kept."
+  if (error.code === startFailed)
+    return `${error.message} Your message is kept.`
+  if (error.status >= 500) return notStarted
   return `${error.message} Your message is kept.`
 }
 
 /**
  * A create that failed. The draft stays, and Try again sends it again. Try
  * again is off while the message cannot go, as Send is. `error` is `null`
- * when the server took the message and its sandbox then did not start.
+ * when the server took the message and its sandbox then did not start. A
+ * first start that failed shows the message that the Worker saved for it.
  */
 export function CreateFailed(props: {
-  error: ApiError | null
+  error: ApiError | CreationStartError | null
   ready: boolean
   retry: () => void
 }) {
