@@ -90,7 +90,8 @@ const browserFileEvents: readonly FileEvent[] = [
 /** Complete reports for readers that do not yet join runner parts. */
 export const recordedRunnerFileEvents: readonly RunnerFileEvent[] =
   browserFileEvents.map((event): RunnerFileEvent => {
-    if (event.type === 'files.changed') return event
+    if (event.type === 'files.changed' || event.type === 'files.unavailable')
+      return event
     if (event.type === 'files.snapshot')
       return {
         type: event.type,
@@ -110,6 +111,7 @@ export const recordedRunnerFileEvents: readonly RunnerFileEvent[] =
 /** Multipart reports for the fake endpoint and future workspace joining. */
 export const recordedMultipartRunnerFileEvents: readonly RunnerFileEvent[] =
   recordedRunnerFileEvents.flatMap((event): readonly RunnerFileEvent[] => {
+    if (event.type === 'files.unavailable') return [event]
     if (event.type === 'files.changed') {
       return [0, 1].map((index) => ({
         type: 'files.changed',

@@ -39,7 +39,10 @@ export interface RunnerEventEnvelope {
   event: RunnerEvent
 }
 
-/** Workspace refusal markers never enter this union or the runner outbox. */
+/**
+ * Workspace refusal markers never enter this union or the runner outbox.
+ * A failed tree scan sends files.unavailable before runner.ready.
+ */
 export type RunnerEvent =
   | AgentChatEvent
   | RunnerFileEvent

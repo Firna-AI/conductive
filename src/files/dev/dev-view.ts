@@ -20,12 +20,22 @@ export interface DevView {
   controls: boolean
   /** The lists whose repair failed before the page opened. */
   repair: readonly DevRepair[]
+  /** The tree of All files before the page opened: `?tree=`. */
+  tree: DevTree
 }
 
 /** A list whose fresh full report the stored history lost: `?repair=`. */
 export type DevRepair = 'all-files' | 'changes'
 
 const repairs: readonly DevRepair[] = ['all-files', 'changes']
+
+/**
+ * The latest tree, or the cloud computer could not read the files: All
+ * files keeps the saved tree, or no tree was saved.
+ */
+export type DevTree = 'latest' | 'saved' | 'none'
+
+const trees: readonly DevTree[] = ['latest', 'saved', 'none']
 
 const lists: readonly FileListKind[] = ['all', 'changes', 'checks']
 
@@ -57,6 +67,7 @@ export function readView(search: string): DevView {
     repair: repairs.filter((repair) =>
       (query.get('repair') ?? '').split(',').includes(repair),
     ),
+    tree: trees.find((tree) => tree === query.get('tree')) ?? 'latest',
   }
 }
 
@@ -69,6 +80,7 @@ export function viewQuery(view: DevView): string {
   if (view.active) query.set('tab', formatTab(view.active))
   if (!view.controls) query.set('controls', 'off')
   if (view.repair.length > 0) query.set('repair', view.repair.join(','))
+  if (view.tree !== 'latest') query.set('tree', view.tree)
   return `?${query}`
 }
 

@@ -5462,21 +5462,35 @@ Depends on: 7w
 Apply decision 109 D, and the shutdown fix that the review of Milestone
 7u deferred. Added on 7 November 2026.
 
-- [ ] End each runner step after a failed file read or save: a failed
+Implementation note, 7 November 2026: the start event already preceded
+the checkpoint. Acceptance now saves before the session save.
+
+Orchestrator call, 7 November 2026: use optional `true` marks to keep the
+successful payloads. `files.unavailable` keeps the saved tree. Only a
+complete successful full tree clears its mark.
+The runner reuses a pending terminal event with its first number and
+payload, so a later Stop cannot add a second end.
+
+UI call, 7 November 2026: reuse the existing unavailable-data notice.
+The saved-tree notice has no age, because its mark carries no time.
+
+- [x] End each runner step after a failed file read or save: a failed
       turn start sends `turn.failed` with a cause, a failed turn end sends
       its end with a mark that the runner could not read the changed
       files, and a failed scan after a connect still sends `runner.ready`
       with a mark that the tree could not be read. A later scan sends the
       tree. Add the mark to `src/shared/runner.ts`, the fakes, the
-      workspace, and the chat and files protocol docs.
-- [ ] Draw the mark in the mockups: a finished turn whose changed files
+      workspace, and the chat and files protocol docs. Branch: `conductor/boat-native-remote-workspaces-milestone-7v`.
+- [x] Draw the mark in the mockups: a finished turn whose changed files
       could not be read, and a Files panel whose tree could not be read.
-      Then build both screens, and compare each with its mockup.
-- [ ] Save each turn when the runner accepts its command, so that a
+      Then build both screens, and compare each with its mockup. Branch: `conductor/boat-native-remote-workspaces-milestone-7v`.
+- [x] Save each turn when the runner accepts its command, so that a
       shutdown, Stop, and the next start end it once, as option D of
       `plans/follow-ups/runner-shutdown-pending-turn.md` says. Delete that
-      item.
-- [ ] Delete `plans/follow-ups/runner-file-and-save-errors.md`.
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-7v`.
+- [x] Delete `plans/follow-ups/runner-file-and-save-errors.md`. Branch: `conductor/boat-native-remote-workspaces-milestone-7v`.
+
+Evidence: `.context/boat-native-remote-workspaces/7v/verification.md`.
 
 ## Milestone 8: Chat UI
 

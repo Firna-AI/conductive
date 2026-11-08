@@ -19,7 +19,7 @@ how a screen is built, and links to the other pages.
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its error, the start, a held second message, the first turn    |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
-| `app/chat`          | A finished turn, then running turns, lost data, and lost updates              |
+| `app/chat`          | A finished turn, then running turns, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -71,5 +71,9 @@ workspace asks for a fresh full report, and nothing shows. Only when that
 report is lost too does a notice name the data that stays unavailable,
 beside that data: under the file lists for a file list, and under the
 header for other data, such as the workspace name. The `failed-repair`
-value of the `lostUpdate` state draws it, and every other screen stays
-silent.
+value of the `lostUpdate` state draws it, and no other screen shows a
+notice for a lost update. `app/chat/unavailable-files` draws the files that
+the cloud computer could not read: a finished turn and a stopped turn
+without their changed files, All files with its saved list under a notice,
+and a new workspace with no list. The `tree` state draws the two states of
+All files.

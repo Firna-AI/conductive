@@ -18,6 +18,7 @@ export class OutputSanitizer {
     const result = this.clean(event)
     if (
       result.type === 'files.snapshot' ||
+      result.type === 'files.unavailable' ||
       result.type === 'files.changed' ||
       result.type === 'changes.updated'
     )

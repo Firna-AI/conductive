@@ -3,7 +3,10 @@ import type { UserMessage } from '../../shared/messages'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { InlineText } from '../../../docs/mockups/src/components/common/InlineText'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { unlistedFiles } from '../../../docs/mockups/src/components/chat/lostCopy'
+import {
+  turnFilesUnavailable,
+  unlistedFiles,
+} from '../../../docs/mockups/src/components/chat/lostCopy'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import type { MemberSummary } from '../api/read-responses'
 import type { Transcript, TranscriptItem } from '../state/transcript'
@@ -54,12 +57,29 @@ function stoppedLine(by: string | null, readers: ChatReaders): string {
   return `${member.displayName ?? member.githubLogin} stopped the agent`
 }
 
-/** The files of an ended turn past the ones that the runner listed. */
-function omittedFiles(transcript: Transcript, turnId: string): number {
+/** The newest end of a turn, with the data that its rows do not keep. */
+function completionOf(transcript: Transcript, turnId: string) {
   const { turnCompletions } = transcript
   return Object.hasOwn(turnCompletions, turnId)
-    ? turnCompletions[turnId].omittedFileCount
-    : 0
+    ? turnCompletions[turnId]
+    : undefined
+}
+
+/** The files of an ended turn past the ones that the runner listed. */
+function omittedFiles(transcript: Transcript, turnId: string): number {
+  return completionOf(transcript, turnId)?.omittedFileCount ?? 0
+}
+
+/** Whether the cloud computer could not read the changed files of a turn. */
+function filesUnread(transcript: Transcript, turnId: string): boolean {
+  return completionOf(transcript, turnId)?.filesUnavailable === true
+}
+
+/** Whether a turn has a file row, such as one from a late end. */
+function hasFileRow(transcript: Transcript, turnId: string): boolean {
+  return transcript.items.some(
+    (item) => item.kind === 'turn-end' && item.turnId === turnId,
+  )
 }
 
 /**
@@ -67,10 +87,7 @@ function omittedFiles(transcript: Transcript, turnId: string): number {
  * from a late end, counts the rest after its files instead.
  */
 function unlistedOf(transcript: Transcript, turnId: string): number {
-  const listed = transcript.items.some(
-    (item) => item.kind === 'turn-end' && item.turnId === turnId,
-  )
-  return listed ? 0 : omittedFiles(transcript, turnId)
+  return hasFileRow(transcript, turnId) ? 0 : omittedFiles(transcript, turnId)
 }
 
 export interface ItemActions {
@@ -101,17 +118,26 @@ export function ItemView(props: {
         <TurnEnd
           durationMs={item.durationMs}
           files={item.files}
+          // Files that a row lists stay true, also after a later end.
+          filesUnavailable={
+            item.files.length === 0 &&
+            filesUnread(props.transcript, item.turnId)
+          }
           omittedFiles={omittedFiles(props.transcript, item.turnId)}
           onOpenDiff={actions.onOpenDiff}
         />
       )
     case 'stopped': {
       const files = unlistedOf(props.transcript, item.turnId)
+      const unread =
+        !hasFileRow(props.transcript, item.turnId) &&
+        filesUnread(props.transcript, item.turnId)
       return (
         <div className={styles.event}>
           <CircleStop size={13} />
           {stoppedLine(item.by, props.readers)}
           {files > 0 ? ` · ${unlistedFiles(files)}` : null}
+          {unread ? ` · ${turnFilesUnavailable}` : null}
         </div>
       )
     }

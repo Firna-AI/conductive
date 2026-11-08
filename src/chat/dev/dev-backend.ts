@@ -31,7 +31,7 @@ import {
   writeReaderLogin,
 } from './dev-logins'
 import { DevMac, handleMacWrite, writeMacReplies } from './dev-mac'
-import { lossEvents } from './dev-loss'
+import { lossEvents, withUnreadFiles } from './dev-loss'
 import type { DevOptions } from './dev-options'
 import { handleWrite } from './dev-routes'
 import { takeState } from './dev-sandbox'
@@ -121,16 +121,18 @@ export class DevBackend {
       claudeLogin,
     )
     const shown = list.sessions[0]?.id ?? 'new'
-    const recorded =
+    const events =
       scenario === 'loss'
         ? lossEvents(workspaceId, shown, viewer.id)
         : recordedChatEvents(scenario, workspaceId, shown)
+    const unread = options.files === 'unread'
+    const recorded = unread ? withUnreadFiles(events) : events
     const live = options.replay === 'live'
     const files = recordedFileEvents(
       workspaceId,
       live ? 1 : recorded.length + 1,
     )
-    if (live || loss) {
+    if (live || loss || unread) {
       server.json('GET', chatHistoryPath(org, workspaceId, shown), {
         events: live ? [] : recorded,
         throughEventNumber: live ? 0 : recorded.length,

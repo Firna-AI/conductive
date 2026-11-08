@@ -28,6 +28,7 @@ function part(value: unknown): RunnerFileRevisionPart {
 export function parseRunnerFileEvent(value: unknown): RunnerFileEvent {
   const event = parseFileEvent(value)
   if (!isRecord(value)) throw invalidFileResponse()
+  if (event.type === 'files.unavailable') return event
   if (event.type === 'files.snapshot')
     return { ...event, tree: { ...event.tree, ...part(value.tree) } }
   if (event.type === 'changes.updated')

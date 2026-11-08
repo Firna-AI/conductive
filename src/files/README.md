@@ -7,7 +7,9 @@ page with rendered Markdown or text with line numbers and syntax colours.
 A changed file opens its unified diff. The requirements are in
 [Files and changes](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes).
 The visual spec is the `app/files` page of the
-[mockup catalogue](../../docs/mockups/README.md).
+[mockup catalogue](../../docs/mockups/README.md), and
+`app/chat/unavailable-files` for a tree that the cloud computer could not
+read.
 
 The screens render data from the Worker only. The app does not mount them
 yet. The development pages and the tests run them against the fake API of
@@ -99,6 +101,24 @@ The workspace screen shows the failed repairs of the name and the start
 steps below its header, as [the workspace screen](../shell/workspace/README.md)
 says.
 
+The cloud computer can fail to read the files of the branch. The workspace
+then marks the tree, until the runner sends a full tree again.
+`FilesSnapshot.treeUnavailable` holds the mark:
+
+- A `files.unavailable` event of the stream sets it. The tree stays as it
+  is, because only the newest tree is unknown.
+- A reply of the tree route with `unavailable: true` sets it too. Its tree
+  is the saved tree, or an empty tree at revision 0 when none was saved.
+- Only a full tree of the stream clears it. A tree update and a reply of
+  the route clear nothing, because a reply can be older than the mark.
+- The parsers keep only the value true, and they refuse nothing new.
+
+With a saved tree, All files shows it, and the notice "The latest list of
+all files is unavailable" shows under the lists, with no age. With no tree
+to show, All files says "The list of all files is unavailable" in place of
+an empty list. That state shows also while the first read of the tree
+waits, or after it failed.
+
 The shell owns the workspace view on the Worker: the open tabs, the
 active tab, and the list. It passes them to the screens, with a
 `FilesNavigation`:
@@ -115,8 +135,10 @@ The screens:
   `checks` prop takes the Checks list of the GitHub banner screens. The
   `placeholder` prop replaces All files and Changes, for example with a
   sandbox state. Under the lists, the panel shows one notice for each
-  failed repair, in the order of the tabs, with its age. The notices show
-  under each of the three tabs, and they have no Dismiss. The `now` prop
+  failed repair, in the order of the tabs, with its age. A saved tree that
+  the cloud computer could not read shows the notice of All files, with no
+  age. The notices show under each of the three tabs, and they have no
+  Dismiss. The `now` prop
   gives the clock of the ages. Pass a stable function. The default is
   `Date.now`.
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
@@ -217,6 +239,7 @@ state of the page:
 | `tab`      | `file:preview:<path>`, `file:source:<path>`, or `diff:<path>` |
 | `scenario` | `mockup`, the mockup data, or `live`, which replays the updates |
 | `repair`   | `all-files`, `changes`, or both, as `all-files,changes`: the failed repairs of the stored history |
+| `tree`     | `saved`, or `none`: the cloud computer could not read the files, and All files keeps the saved tree, or no tree was saved |
 | `controls` | `off` hides the development controls                         |
 
 For example, `?list=changes&tab=diff:src/app/checkout/AddressForm.tsx`
@@ -243,6 +266,11 @@ controls also have these buttons:
   notice only.
 - "Send a tree update", for All files only, sends a tree delta, which
   leaves the notice.
+- "Fail a read of the files", for All files only, sends the mark of a
+  failed read. "Send a full report" clears it.
+
+`?tree=saved` and `?tree=none` store the mark in the history, and the tree
+route marks its tree, as the Worker does. Use them with the mockup data.
 
 Run the tests with `npm run test -- src/files`. The `*.mounted.test.tsx`
 files mount the screens in happy-dom, with `mount-test-kit.ts`, as the
@@ -277,7 +305,8 @@ tests keep their static markup checks in Node.
 - `panel/FilesPanel.tsx`, `page/FilePage.tsx`, `page/DiffPage.tsx`, and
   `tabs/FileTabItem.tsx`: the screens.
 - `panel/UnavailableLists.tsx`: the notices of the failed repairs under
-  the lists, with the mockups' `LostUpdateRow` and their ages.
+  the lists, with the mockups' `LostUpdateRow` and their ages, and the
+  notice of a saved tree that the cloud computer could not read.
 - `markdown/markdown-document.ts`: `parseMarkdown`, the whole parse of a
   file: its blocks, then the inline content of each block.
 - `markdown/markdown-inline.ts`: `parseInline`, the inline content of one
@@ -291,8 +320,9 @@ tests keep their static markup checks in Node.
 - `code/`: the syntax colours and the code view.
 - `diff/`: the unified diff parser and view.
 - `dev/`: the development page, its Vite config, its fixtures, its Copy
-  and Download targets, and `RepairControls`, the controls of the failed
-  repairs.
+  and Download targets, `RepairControls`, the controls of the failed
+  repairs and of a failed read, and `dev-unread.ts`, the stored state of
+  `?tree=`.
 
 See [the shared contracts](../shared/README.md) for the file routes, the
 events, and the workspace view.

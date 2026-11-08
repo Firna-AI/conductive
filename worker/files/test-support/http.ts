@@ -47,8 +47,9 @@ export async function setupFilesHttp(
     ),
   ])
   let requestSequence = 0
+  const storageName = `http-${++storageSequence}`
   const files = new WorkspaceFiles(
-    runtime.storage(`http-${++storageSequence}`),
+    runtime.storage(storageName),
     () => `request-${++requestSequence}`,
   )
   const workspaceFiles = vi.fn(() => files)
@@ -71,6 +72,7 @@ export async function setupFilesHttp(
     org,
     workspaceId,
     files,
+    evict: () => runtime.evict(storageName),
     handler,
     request,
     workspaceFiles,

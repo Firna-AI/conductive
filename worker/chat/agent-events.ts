@@ -117,6 +117,7 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
         state: input.state,
         durationMs: number(input.durationMs),
         files: array(input.files, changedFile),
+        ...(input.filesUnavailable === true ? { filesUnavailable: true } : {}),
         omittedFileCount: counter(input.omittedFileCount),
         userMessageIds: strings(input.userMessageIds),
       }

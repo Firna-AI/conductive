@@ -66,6 +66,28 @@ export function failed(
 }
 
 /**
+ * The end of a turn whose changed files the cloud computer could not read:
+ * an empty list with the mark, and no omitted files.
+ */
+export function unreadEnd(
+  turnId: string,
+  state: 'finished' | 'stopped',
+  durationMs = 1_000,
+): AgentChatEvent {
+  return {
+    ...turn,
+    turnId,
+    type: 'turn.completed',
+    state,
+    durationMs,
+    files: [],
+    filesUnavailable: true,
+    omittedFileCount: 0,
+    userMessageIds: [],
+  }
+}
+
+/**
  * The record of an open session, as the Worker sends it after a change. It
  * names the message that Try again may send, or null.
  */

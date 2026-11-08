@@ -3,7 +3,6 @@ import type { EngineOptions, SessionRuntime } from './engine-session'
 import type { ProviderEvent } from './providers/types'
 import { cancelable } from './engine-cancel'
 import { disposeProvider } from './engine-disposal'
-import { failureCause } from './providers/failure'
 
 export async function finishTurn(
   options: EngineOptions,
@@ -17,9 +16,13 @@ export async function finishTurn(
   const durationMs = Math.max(0, options.now() - turn.startedAt)
   let stopped =
     turn.stopped || (event.type === 'result' && event.state === 'stopped')
-  await turn.output.finish(
-    stopped ? 'stopped' : event.type === 'failed' ? 'failed' : 'done',
-  )
+  try {
+    await turn.output.finish(
+      stopped ? 'stopped' : event.type === 'failed' ? 'failed' : 'done',
+    )
+  } catch {
+    options.warn('The final agent output could not be saved.')
+  }
   session.generation++
   const closing = disposeProvider(turn)
   let closeFailure: { error: unknown } | null = null
@@ -28,7 +31,7 @@ export async function finishTurn(
   } catch (error) {
     closeFailure = { error }
   }
-  let result = event
+  const result = event
   if (
     !turn.controller.signal.aborted &&
     result.type === 'result' &&
@@ -39,15 +42,20 @@ export async function finishTurn(
       turn.files = await cancelable(turn.controller.signal, () =>
         options.changedSince(baseline, turn.controller.signal),
       )
-    } catch (error) {
-      if (!turn.controller.signal.aborted) result = failureCause(error)
+    } catch {
+      if (!turn.controller.signal.aborted)
+        options.warn('The changed files could not be read.')
     }
   }
   if (turn.shutdown && turn.baseline !== null && turn.files === null) {
-    turn.files = await options.changedSince(
-      turn.baseline,
-      new AbortController().signal,
-    )
+    try {
+      turn.files = await options.changedSince(
+        turn.baseline,
+        new AbortController().signal,
+      )
+    } catch {
+      options.warn('The changed files could not be read.')
+    }
   }
   if (turn.controller.signal.aborted && !turn.stopped) return
   stopped ||= turn.stopped
@@ -67,6 +75,9 @@ export async function finishTurn(
         state: stopped ? 'stopped' : 'finished',
         durationMs,
         files: turn.files ?? [],
+        ...(turn.baseline !== null && turn.files === null
+          ? { filesUnavailable: true }
+          : {}),
         omittedFileCount: 0,
         userMessageIds: turn.messageIds,
       })

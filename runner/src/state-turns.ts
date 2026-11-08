@@ -1,4 +1,4 @@
-import type { RunnerEvent } from '../../src/shared/runner'
+import type { RunnerEvent, RunnerEventEnvelope } from '../../src/shared/runner'
 import { array, integer, object, string } from './parse'
 
 export interface SavedTurn {
@@ -6,7 +6,7 @@ export interface SavedTurn {
   turnId: string
   startedAt: number
   messageIds: string[]
-  startEventNumber: number
+  startEventNumber: number | null
   endEventNumber: number | null
 }
 
@@ -21,7 +21,8 @@ export function parseSavedTurn(value: unknown): SavedTurn {
     turnId: string(turn.turnId),
     startedAt: integer(turn.startedAt),
     messageIds: array(turn.messageIds, string),
-    startEventNumber: integer(turn.startEventNumber),
+    startEventNumber:
+      turn.startEventNumber === null ? null : integer(turn.startEventNumber),
     endEventNumber:
       turn.endEventNumber === null ? null : integer(turn.endEventNumber),
   }
@@ -31,6 +32,7 @@ export function recordTurn(
   turns: SavedTurn[],
   event: RunnerEvent,
   eventNumber: number,
+  occurredAt: number,
 ): void {
   if (
     event.type !== 'turn.started' &&
@@ -40,7 +42,8 @@ export function recordTurn(
     return
   const record = turns.find((turn) => turnKey(turn) === turnKey(event))
   if (event.type === 'turn.started') {
-    if (!record)
+    if (record) record.startEventNumber ??= eventNumber
+    else
       turns.push({
         sessionId: event.sessionId,
         turnId: event.turnId,
@@ -49,6 +52,28 @@ export function recordTurn(
         startEventNumber: eventNumber,
         endEventNumber: null,
       })
-  } else if (record && record.endEventNumber === null)
-    record.endEventNumber = eventNumber
+  } else if (record) record.endEventNumber ??= eventNumber
+  else
+    turns.push({
+      sessionId: event.sessionId,
+      turnId: event.turnId,
+      startedAt: Math.max(0, occurredAt - event.durationMs),
+      messageIds:
+        event.type === 'turn.completed'
+          ? [...event.userMessageIds]
+          : [event.retryMessageId],
+      startEventNumber: null,
+      endEventNumber: eventNumber,
+    })
+}
+
+/** Keep the first end, including an end whose disk save still needs to work. */
+export function pendingTurnEnd(
+  turns: readonly SavedTurn[],
+  outbox: readonly RunnerEventEnvelope[],
+  event: RunnerEvent,
+): RunnerEventEnvelope | undefined {
+  if (event.type !== 'turn.completed' && event.type !== 'turn.failed') return
+  const record = turns.find((turn) => turnKey(turn) === turnKey(event))
+  return outbox.find((item) => item.eventNumber === record?.endEventNumber)
 }

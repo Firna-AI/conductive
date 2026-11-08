@@ -32,6 +32,11 @@ export interface DevOptions {
   change: 'done' | 'done-not-saved' | 'failed'
   /** The chat, or the This Mac section of the Mac app's account. */
   page: 'chat' | 'this-mac'
+  /**
+   * The changed files of each end of a turn: the runner listed them, or the
+   * cloud computer could not read them.
+   */
+  files: 'listed' | 'unread'
 }
 
 export const choices = {
@@ -82,6 +87,7 @@ export const choices = {
   app: ['browser', 'mac'],
   change: ['done', 'done-not-saved', 'failed'],
   page: ['chat', 'this-mac'],
+  files: ['listed', 'unread'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 
 /** The options in the order that the page lists them. */
@@ -100,6 +106,7 @@ export const optionNames = [
   'app',
   'change',
   'page',
+  'files',
 ] as const satisfies readonly (keyof DevOptions)[]
 
 function pick<T extends string>(
@@ -127,6 +134,7 @@ export function readOptions(search: string): DevOptions {
     app: pick(choices.app, get('app')),
     change: pick(choices.change, get('change')),
     page: pick(choices.page, get('page')),
+    files: pick(choices.files, get('files')),
   }
 }
 

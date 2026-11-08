@@ -18,6 +18,7 @@ const lostData: Readonly<
   'turn.completed': 'turn-end',
   'turn.failed': 'turn-error',
   'files.snapshot': 'all-files',
+  'files.unavailable': 'all-files',
   'files.changed': 'all-files',
   'changes.updated': 'changes',
   'start.updated': 'start-steps',

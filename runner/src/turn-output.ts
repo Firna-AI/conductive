@@ -37,13 +37,13 @@ export class TurnOutput {
         }, 40)
       return
     }
-    await this.flush()
+    const events = this.buffered()
     if (event.type === 'thinking' && !this.thinking) {
       this.thinking = true
-      await this.emit({ type: 'turn.thinking', ...this.context })
+      events.push({ type: 'turn.thinking', ...this.context })
     }
     if (event.type === 'answer')
-      await this.emit({
+      events.push({
         type: 'assistant.completed',
         ...this.context,
         messageId: event.messageId,
@@ -52,39 +52,59 @@ export class TurnOutput {
       })
     if (event.type === 'tool') {
       this.tools.set(event.tool.id, event.tool)
-      await this.emit({
+      events.push({
         type: 'tool.updated',
         ...this.context,
         tool: event.tool,
       })
     }
+    await this.drain(events)
   }
 
-  async flush(): Promise<void> {
+  flush(): Promise<void> {
+    return this.drain(this.buffered())
+  }
+
+  private buffered(): AgentChatEvent[] {
     clearTimeout(this.timer)
     this.timer = undefined
+    const events: AgentChatEvent[] = []
     for (const [messageId, text] of this.deltas) {
-      this.deltas.delete(messageId)
-      await this.emit({
+      events.push({
         type: 'assistant.delta',
         ...this.context,
         messageId,
         text,
       })
     }
+    this.deltas.clear()
+    return events
   }
 
   async finish(state: 'stopped' | 'failed' | 'done'): Promise<void> {
-    await this.flush()
+    const events = this.buffered()
     for (const tool of this.tools.values()) {
       if (tool.state === 'running') {
         this.tools.set(tool.id, { ...tool, state })
-        await this.emit({
+        events.push({
           type: 'tool.updated',
           ...this.context,
           tool: { ...tool, state },
         })
       }
     }
+    await this.drain(events)
+  }
+
+  private async drain(events: readonly AgentChatEvent[]): Promise<void> {
+    const failures: unknown[] = []
+    for (const event of events) {
+      try {
+        await this.emit(event)
+      } catch (error) {
+        failures.push(error)
+      }
+    }
+    if (failures.length) throw failures[0]
   }
 }

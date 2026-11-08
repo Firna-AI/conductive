@@ -39,6 +39,7 @@ export async function connectWorkspaceFiles(
       if (
         event.type === 'files.snapshot' ||
         event.type === 'files.changed' ||
+        event.type === 'files.unavailable' ||
         event.type === 'changes.updated'
       ) {
         applied = applied.then(() => files.state.apply(connectionId, event))

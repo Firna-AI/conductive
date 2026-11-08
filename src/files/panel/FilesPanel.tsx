@@ -1,6 +1,7 @@
 import { useMemo, useSyncExternalStore, type ReactNode } from 'react'
-import { CircleAlert, FileDiff, Files } from 'lucide-react'
+import { CircleAlert, CircleSlash, FileDiff, Files } from 'lucide-react'
 import type { WorkspaceTab } from '../../shared/workspace-view'
+import { allFilesUnavailable } from '../../../docs/mockups/src/components/chat/lostCopy'
 import type { FilesSnapshot, WorkspaceFiles } from '../model/files-store'
 import { treeRows } from '../model/tree-rows'
 import {
@@ -55,6 +56,18 @@ function AllFiles(props: ListProps) {
     () => (tree ? treeRows(tree, folders, openPath) : []),
     [tree, folders, openPath],
   )
+  // With no saved tree to show, the mark wins over a read that still waits
+  // or failed, and over an empty list, which would say that the branch has
+  // no files. A saved tree stays visible under its notice.
+  if (rows.length === 0 && snapshot.treeUnavailable) {
+    return (
+      <EmptyState
+        body={allFilesUnavailable.body}
+        icon={CircleSlash}
+        title={allFilesUnavailable.title}
+      />
+    )
+  }
   if (!tree) {
     if (!snapshot.treeError) return <Loading label="Loading files" />
     return (
@@ -174,6 +187,9 @@ export function FilesPanel(props: {
       <UnavailableLists
         failed={snapshot.failedRepairs}
         now={props.now ?? Date.now}
+        savedTree={
+          snapshot.treeUnavailable && (snapshot.tree?.entries.size ?? 0) > 0
+        }
       />
     </LayoutRoot>
   )
