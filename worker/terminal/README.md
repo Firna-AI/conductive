@@ -59,7 +59,13 @@ The launcher loads the same variables, moves to the repository folder, and
 checks the password before it runs ttyd. For each connection, ttyd runs a
 tmux client. The client attaches to the session `workspace`, which is the
 workspace shell. When that session does not exist, the client creates it
-with a login Bash shell in the repository folder. The client never starts
+with a login Bash shell in the repository folder. The client gives tmux the
+path of that folder, not its own current folder. After a start from a saved
+snapshot, Boat restores the disk in the background. When the restore ends,
+the current folder of the launcher can be an old view of the disk at
+another path, such as `/var/lib/ascii-lazy/retired/home/code/<name>`. A
+shell that starts before the restore ends can still stay in that old view.
+The client never starts
 a tmux server. Without a running server, the client exits, and ttyd closes
 the connection.
 

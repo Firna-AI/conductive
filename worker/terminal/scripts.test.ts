@@ -79,7 +79,7 @@ printf '%s\\n' "$PWD" "$CONDUCTIVE_LAUNCH_TEST"
   })
 })
 
-it('attaches each terminal connection to the workspace shell without starting its own server', async () => {
+it('attaches each terminal connection to the workspace shell at the repository path without starting its own server', async () => {
   const fixture = await scriptFixture()
   await writeFile(
     fixture.terminal,
@@ -99,6 +99,8 @@ printf '%s\\0' "$@"
     '-A',
     '-s',
     'workspace',
+    '-c',
+    fixture.repository,
     '/bin/bash',
     '-l',
   ])

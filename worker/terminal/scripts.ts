@@ -63,6 +63,12 @@ chmod 600 "$password_file"
 `
 }
 
+/**
+ * tmux gets the repository path, not the launcher's current folder. After a
+ * start from a saved snapshot, the provider restores the disk in the
+ * background. When the restore ends, the launcher's current folder can be an
+ * old view of the disk at another path.
+ */
 export function launcherScript(
   options: TerminalScriptOptions = terminalScriptDefaults,
 ): string {
@@ -77,7 +83,7 @@ ${validation}
 valid_password || exit 1
 password=$(cat -- "$password_file")
 [ -n "$password" ] || exit 1
-exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port 7681 --writable --credential "conductive:$password" ${options.multiplexerCommand.map(shellArgument).join(' ')} -N -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} new-session -A -s workspace /bin/bash -l
+exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port 7681 --writable --credential "conductive:$password" ${options.multiplexerCommand.map(shellArgument).join(' ')} -N -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} new-session -A -s workspace -c "$CONDUCTIVE_REPOSITORY_DIR" /bin/bash -l
 `
 }
 
