@@ -1,0 +1,33 @@
+# Branch tags get the Mac signing secrets
+
+- **Severity:** High. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-08, from the options check of the Mac app update plan on branch `calummoore/bootstrap-v31`, a problem outside its scope.
+- **Location:** The `release` job of `.github/workflows/desktop-ci.yml`, its `if:` line and its `environment: desktop-release` line. The deployment rules of the GitHub environment `desktop-release` of `Firna-AI/remote-code`. The section "Signed release packages" of `desktop/README.md`. The section "Packages and updates" of `docs/protocol/desktop-app.md`.
+- **Reason:** the signing setup is outside the update change, and the user approved its tag rule on 8 November 2026.
+
+- **Terms:**
+  - **Developer ID:** Apple's certificate that signs Mac apps outside the App Store. macOS trusts an app that it signs and Apple notarizes.
+  - **`desktop-release`:** the GitHub environment of `Firna-AI/remote-code` that holds the signing certificate, its password, and the Apple API key.
+  - **Conductor app:** the GitHub App `conductor-build-app`. Agents use it, and it acts as the user `calummoore`.
+- **Background:**
+  - The Desktop workflow runs the `release` job for each tag that starts with `v`, and for manual runs.
+  - The job uses the `desktop-release` environment. Its deployment rules admit `main` and every `v*` tag, on any commit.
+  - The user approved these rules on 8 November 2026. GitHub refused required reviewers on the current plan, so branch and tag rules replaced them.
+  - A tag run uses the workflow file and the scripts of the tagged commit. The step "Sign and notarize both Mac architectures" gives the secrets to `npm --prefix desktop run package:release`.
+  - The tag `v0.1.0-alpha.1` points to a commit of a branch that had not merged. Its run, Actions run 42519666993, signed and notarized the app.
+  - Agents push branches and tags with the user's account. The Conductor app has write access to contents, workflows, and Actions on all Firna-AI repositories. `main` has no branch protection.
+- **Problem:** A branch with a `v*` tag runs its own workflow and scripts with the signing secrets. So it can sign unreviewed code with the Developer ID, or copy the secrets out.
+- **Impact if no action:** A mistaken or hostile branch can make a trusted, notarized app from unreviewed code. It can also leak the certificate, which must then be revoked and replaced.
+- **Root question:** Which commits may use the Developer ID signing secrets?
+- **Options:**
+  - **A.** Change nothing. People and agents tag only reviewed commits. Effort: Small.
+  - **B.** Admit only `main` in `desktop-release`. Signing then runs only from `main`, on pushes and manual runs. Tag runs stop signing, and a signing test of a branch needs a merge first. Effort: Small.
+  - **C.** Sign in a second workflow that GitHub always runs from `main`, through the `workflow_run` trigger. It signs a tag only when the commit of the tag is on `main`. Effort: Medium.
+  - **D.** A GitHub tag rule lets only the user create `v*` tags. Agents push with the user's account, so the rule may not stop them. Effort: Small.
+- **Left out:** Required reviewers on `desktop-release`: the Team plan refuses them in private repositories, so the approach fails the goal.
+- **Wider fix:** B. GitHub's environment rule keeps the secrets from every run outside `main`, whatever the branch changes.
+- **Previous examples:** The tag `v0.1.0-alpha.1` and Actions run 42519666993.
+- **Related:** The Mac app update change decides which runs may publish a release to the update feed. When it publishes only from `main`, B makes signing follow the same rule.
+- **Recommendation:** B. It closes the path in GitHub's settings. It costs nothing more when releases already publish only from `main`.
+- **Action:** ask the user, because B changes the tag rule that the user approved on 8 November 2026.
