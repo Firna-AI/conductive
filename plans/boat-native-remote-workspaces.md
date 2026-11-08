@@ -4125,6 +4125,155 @@ Added on 8 November 2026, when the user asked to merge the baseline.
   this plan, because the work goes on in later pull requests, as the
   `plans` skill says.
 
+### 142. Choose which quick chat edit wins
+
+Added on 8 November 2026 from Milestone 8q.
+
+- **Background:** A tab sends each session rename or model change at once.
+  The server checks access before it queues the write. Milestone 8q
+  reproduced two quick edits of one field that committed in the reverse
+  order.
+- **Options:**
+  - **A.** State that the last committed edit wins, and keep the current
+    behaviour.
+  - **C.** The app queues the requests of each field.
+  - **D.** The server queues the write before the access check.
+  - **E.** The app disables the field while its request waits.
+  - **F.** Each tab sends an edit sequence number, and the server keeps the
+    newest edit of that tab.
+- **Recommendation:** C.
+- **Chosen:** A, by the user on 8 November 2026. Milestone 8q states the
+  rule in `docs/protocol/chat-and-events.md`.
+
+### 143. Choose where milestones merge after the first merge
+
+Added on 8 November 2026, after pull request #57 merged into `main`.
+
+- **Background:** Decision 135 said that milestones merge into `main` after
+  the first merge. The running milestones target the primary branch, and
+  `AGENTS.md` turns agent merges into `main` off.
+- **Options:**
+  - **A.** Keep the primary branch for integration. The orchestrator
+    reviews and merges each milestone there, and opens a batched pull
+    request into `main`.
+  - **B.** Point each milestone pull request at `main`. The user merges
+    each one.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026, who added "merge them into
+  main when ready". So the orchestrator also merges each batched pull
+  request into `main` when its CI passes. This replaces the merge target
+  of decision 135.
+
+### 144. Choose how the browser uploads a file of up to 25 MB
+
+Added on 8 November 2026 from workspace 386, "Attachment Upload Issue",
+when the user reported that attachments do not work. Milestone 8p builds
+the attachments (decision 132 A), and its upload route waits for this
+answer.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Security.
+- **Location:** `worker/security/gate.ts:93`, `worker/http/request-body.ts:8`,
+  and `src/chat/state/uploads.ts:18`.
+- **Terms:**
+  - **App gate:** the check in `worker/security/gate.ts` before each
+    browser API route. It checks the sign-in, the `Origin` header, the
+    org membership, and a JSON body for each write.
+  - **Body limit:** the byte limit of a request body at the Worker entry.
+    It is 1 MB by default, and a route that needs more declares its own
+    limit.
+  - **Preflight:** the check that a browser sends to a site before it
+    sends that site a request with a content type other than a form or
+    plain text.
+- **Background:** Decision 132 A stores each attached file in one R2
+  bucket, Cloudflare's object storage, with a limit of 25 MB for each
+  file. Today the composer sends a file as one JSON request, with the
+  bytes in base64. The access protocol says that the app gate needs a
+  JSON body for each write. Decision 65 keeps large bodies out of Worker
+  memory, because an isolate has 128 MB for all of its requests. Each
+  option keeps the R2 storage and the 25 MB limit of decision 132 A.
+- **Problem:** A 25 MB file becomes about 34 MB of JSON. The gate parses
+  the whole body in memory, so one upload holds about 100 MB at its peak.
+- **Impact if no action:** No upload route can take a large file safely,
+  so attachments stay broken.
+- **Root question:** How does a file of up to 25 MB get from the browser
+  into storage without filling the memory of an isolate?
+- **Options:**
+  - **A.** Keep one JSON request with base64, and give the upload routes
+    a body limit of 36 MB. The gate rule stays. One upload can use about
+    100 MB, so two uploads in one isolate can stop it, with the requests
+    of other users. Effort: Small.
+  - **B.** Send each file in JSON parts of about 700 KB, under the default
+    body limit. The Worker stores each part as its own R2 object, and the
+    download joins the parts. The gate rule and the body limit stay. A
+    25 MB file needs about 37 requests, and each part needs its own retry
+    and clean-up. Effort: Large.
+  - **C.** Send each file in JSON parts of 5 MiB, and join them with an R2
+    multipart upload. The part route declares a body limit of 7.5 MB. The
+    gate rule stays. Each part holds about 25 MB of memory while the gate
+    parses it. The upload needs three routes and stored part state.
+    Effort: Large.
+  - **D.** Send the raw bytes in one request, with the content type
+    `application/octet-stream`. The Worker streams the body into R2 and
+    never holds the whole file. The two upload routes declare a body
+    limit of 25 MiB. For these two routes only, the gate keeps the
+    sign-in, `Origin`, and membership checks, and it needs this content
+    type in place of JSON. Like JSON, this content type needs a preflight,
+    so a page on another site still cannot send it. The access protocol
+    and the Mac app protocol change. Effort: Medium.
+  - **E.** Upload from the browser straight to R2, with a signed address
+    from the Worker. The Worker needs R2 access keys as a new secret. The
+    bucket needs CORS rules, and the content policy and the Mac app must
+    allow the R2 host. Effort: Large.
+  - **F.** Send the raw bytes in parts of 5 MiB, with the content type
+    `application/octet-stream`, and join them with an R2 multipart
+    upload. Each part streams into R2, so memory stays small. A lost
+    connection loses one part, and the app can show progress after each
+    part. It needs three routes, stored part state, and clean-up of
+    abandoned parts. Both protocols change, as in D. Effort: Large.
+    Added by the options check of 8 November 2026.
+- **Left out:** A limit of 1 MB for each file, because it breaks the
+  25 MB limit of decision 132 A. An upload route in the workspace Durable
+  Object, because the object also has 128 MB, so it has the problem of
+  option A.
+- **Wider fix:** None. The body limit at the Worker entry, from decisions
+  65 and 93, already keeps every other route safe.
+- **Previous examples:** Decision 65 set the body limit, and decision 93
+  moved it to the Worker entry.
+- **Recommendation:** D. It streams each file in one request, with no
+  part state, no new secret, and no new host, and it keeps the protection
+  of the JSON rule.
+- **Action:** ask the user, because D changes the rule "a JSON body for
+  each write" of the access protocol, and no recorded decision covers
+  that change.
+- **Chosen:** D, by the user on 8 November 2026. Milestone 8p builds it,
+  with the conditions of the options check.
+- **Options check, 8 November 2026:** it keeps D. A test in Miniflare
+  confirmed that D streams into R2 through a fixed-length stream, so D
+  needs a required `Content-Length`. D keeps the forged-request
+  protection when the gate refuses a request with no content type and
+  the file name goes in the URL. D also changes
+  `docs/protocol/desktop-app.md`. Report:
+  `.context/options-check-144/report.md`.
+
+### 145. Choose how file paths with a secret value work
+
+Added on 8 November 2026 from finding 3 of the review of Milestone 15r.
+
+- **Background:** Decision 133 C hides each marked org env var in the
+  chat. The filter also masked file paths, so a path that held a marked
+  value could not open, and two paths could become one.
+- **Options:**
+  - **A.** Keep the real paths for every operation, and mask only the
+    shown labels. The access protocol and the privacy page say that a
+    path can show a marked value.
+  - **B.** Use opaque file handles with masked labels.
+  - **C.** Replace a value in a path with a reversible token.
+  - **D.** Leave every repository field unmasked.
+- **Recommendation:** D.
+- **Chosen:** A, by the user on 8 November 2026. Milestone 15r applies it.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
