@@ -4123,6 +4123,35 @@ Added on 8 November 2026, when the user asked to merge the baseline.
   this plan, because the work goes on in later pull requests, as the
   `plans` skill says.
 
+### 142. Choose how the terminal shell finds the live repository folder
+
+Added on 8 November 2026, when the user saw the terminal prompt
+`var/lib/ascii-lazy/retired/home/code/mokly$`.
+
+- **Background:** After a start from a saved snapshot, Boat restores the
+  disk in the background. When the restore ends, Boat keeps an old view of
+  the disk under `/var/lib/ascii-lazy/retired/`. The terminal services
+  start before the restore ends, and move into the repository folder. tmux
+  created the shell in its own current folder, which was then the old view.
+  Boat's docs do not say if the old view shares the live files.
+- **Options:**
+  - **A.** Give tmux the folder path when it creates the shell. A shell
+    that starts before the restore ends still moves to the old view.
+  - **B.** As A, and add a Bash prompt hook that moves the shell back to
+    the live folder after the restore.
+  - **C.** As A, and start the terminal only after Boat reports the end of
+    the restore. The Terminal tab then waits.
+- **Recommendation:** B, after the options check of 8 November 2026. The
+  Terminal is the default tool of the workspace screen, and it connects
+  as soon as the workspace is ready. So its first shell often starts
+  before the restore ends, and A does not cover that shell. The first
+  recommendation was A.
+- **Chosen:** A, by the user on 8 November 2026, before the options check.
+  B adds a hook to A, so the answer on B is open. The follow-up item
+  `plans/follow-ups/old-disk-view-after-restore.md` holds the check in a
+  real sandbox and the options for the other programs that start before
+  the restore ends.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -6372,6 +6401,33 @@ private `/run` directory.
 Evidence: `.context/terminal-11c/implementor-report.md` and
 `.context/terminal-11c/orchestrator-smoke.log`.
 
+## Milestone 11d: Terminal shell in the live repository folder
+
+Depends on: 11c.
+
+Apply decision 142 A. Added on 8 November 2026.
+
+- [x] Give tmux the path of the repository folder when a terminal
+      connection creates the workspace shell. Update the launcher test and
+      `worker/terminal/README.md`. Record the open part in
+      `plans/follow-ups/old-disk-view-after-restore.md`.
+      Branch: `calummoore/directory-path-length`.
+- [x] Run the complete gate. Commit and push the branch. Done on
+      8 November 2026: the complete gate passed on the fix.
+      Branch: `calummoore/directory-path-length`.
+- [ ] Review the branch against `origin/main` with the
+      `implementation-review` skill. Report the findings, then apply the
+      fix rule: fix the `fix now` findings, record follow-up items under
+      `plans/follow-ups/` for the rest, re-review once, and report.
+      Branch: `calummoore/directory-path-length`.
+- [ ] Open the pull request into `main`.
+      Branch: `calummoore/directory-path-length`.
+
+Evidence: `.context/ascii-sim.log`, the local simulation with tmux and
+moved mounts. `.context/gate-directory-path-length.log`, the gate.
+`.context/boat-native-remote-workspaces/options-check-decision-142.md`,
+the options check.
+
 ## Milestone 12: Terminal, previews, and desktop UI
 
 Tags: ui
@@ -7289,3 +7345,13 @@ checks of 16 and 16a to the work after the merge.
       plan, and the follow-up items that the change adds. Done on
       8 November 2026: pull request #57 into `main`. The user merges it.
       Branch: `calummoore/conductor-alternative-architecture`.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] After the deploy of Milestone 11d, build the org image again. A
+      change to the terminal files reaches a workspace only through a new
+      image. Then resume a workspace with another tool open. Wait until
+      `GET /sandboxes/{id}` of Boat gives `hydrated: true`, and only then
+      open the Terminal tab, so that it creates the first shell. Run `pwd -P` in it. Check that it prints
+      `/home/user/code/<name>`, not a path under
+      `/var/lib/ascii-lazy/retired/`. The prompt alone does not show it.
