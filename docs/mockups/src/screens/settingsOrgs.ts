@@ -100,7 +100,6 @@ const acme: SettingsOrg = {
 function firnaBuilds(build: BuildState): Omit<OrgBuilds, 'logs'> {
   switch (build) {
     case 'ready':
-    case 'changed':
       return { lastGood: firstGoodBuild, history: [firstGoodBuild] }
     case 'failed':
       return { history: [failedBuild] }

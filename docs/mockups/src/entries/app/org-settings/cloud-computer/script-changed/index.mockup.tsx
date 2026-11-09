@@ -13,7 +13,7 @@ export const scriptChanged = defineScreen({
     'Moved here from a saved state of the Cloud computer page, with the same path, so that page shows only its canonical screen.',
   relatedDocs: [],
   propSchema: orgSettingsSchema,
-  props: { ...acmeSettings, tab: 'computer', build: 'changed' },
+  props: { ...acmeSettings, tab: 'computer', script: 'changed' },
   render: (props, context) => (
     <OrgSettingsScreen state={props} viewport={context.viewport} />
   ),

@@ -17,12 +17,10 @@ import styles from './BuildSection.module.css'
 
 /**
  * The state of the cloud computer: built, building, failed, stopped at the
- * 60-minute limit of a build, with a saved script that the next build
- * runs, or with no build yet, such as a new org whose first build did not
- * start.
+ * 60-minute limit of a build, or with no build yet, such as a new org
+ * whose first build did not start.
  */
-export type BuildState =
-  'ready' | 'building' | 'failed' | 'time-limit' | 'changed' | 'none'
+export type BuildState = 'ready' | 'building' | 'failed' | 'time-limit' | 'none'
 
 /** The states whose card shows the log of a build. */
 type LogState = 'building' | 'failed' | 'time-limit'
@@ -50,7 +48,6 @@ export function failedBuildOf(state: BuildState): FailedBuild | undefined {
       return timedOutBuild
     case 'ready':
     case 'building':
-    case 'changed':
     case 'none':
       return undefined
   }
@@ -88,7 +85,6 @@ function HeadAction(props: { state: BuildState; readOnly: boolean }) {
         </ActionButton>
       )
     case 'ready':
-    case 'changed':
       return <ActionButton icon={Hammer}>Build computer</ActionButton>
   }
 }
@@ -177,6 +173,8 @@ export function BuildSection(props: {
   state: BuildState
   builds: OrgBuilds
   readOnly?: boolean
+  /** A changed install script waits for a build, so the history stays closed. */
+  scriptChanged?: boolean
 }) {
   const { state, builds } = props
   return (
@@ -188,7 +186,10 @@ export function BuildSection(props: {
       </div>
       <Body builds={builds} state={state} />
       {state === 'none' ? null : (
-        <BuildHistory builds={builds.history} open={state === 'ready'} />
+        <BuildHistory
+          builds={builds.history}
+          open={state === 'ready' && props.scriptChanged !== true}
+        />
       )}
     </section>
   )

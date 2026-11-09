@@ -17,7 +17,7 @@ import { settingsOrg } from './settingsOrgs'
 export const orgSettingsSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['tab', 'build', 'dialog', 'viewer', 'org'],
+  required: ['tab', 'build', 'script', 'dialog', 'viewer', 'org'],
   properties: {
     tab: { enum: ['general', 'repositories', 'computer', 'members'] },
     /**
@@ -25,9 +25,13 @@ export const orgSettingsSchema = {
      * a build that the app stopped at its 60-minute limit. `none` is an org
      * with no build yet, such as a new org whose first build did not start.
      */
-    build: {
-      enum: ['ready', 'building', 'failed', 'time-limit', 'changed', 'none'],
-    },
+    build: { enum: ['ready', 'building', 'failed', 'time-limit', 'none'] },
+    /**
+     * The install script: the one that the newest build started with, or
+     * one that an admin changed and saved after that start, which a later
+     * build runs.
+     */
+    script: { enum: ['built', 'changed'] },
     /**
      * A dialog over the page: Delete org, the removal of a member, or the
      * leave of a suspended org.
@@ -57,6 +61,7 @@ export type OrgSettingsState = SchemaProps<typeof orgSettingsSchema>
 export const acmeSettings: OrgSettingsState = {
   tab: 'general',
   build: 'ready',
+  script: 'built',
   dialog: 'none',
   viewer: 'admin',
   org: 'active',

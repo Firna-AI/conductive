@@ -36,5 +36,14 @@ export const firstBuildComputer = defineScreen({
         'When the first build cannot start, Create org still succeeds and the Worker writes a warning, so the tab offers Build computer. New workspace links an admin here, as app/new-workspace/first-build/no-build shows.',
       props: { build: 'none' },
     },
+    {
+      slug: 'script-changed',
+      title: 'Script saved during the first build',
+      description:
+        'Cal saved an install script while the first build of Firna runs. The field shows the saved script, and the notice under it says that one more build runs it when this build succeeds. The notice has no Build computer, because that build starts by itself.',
+      rationale:
+        'The user chose option E of decision 143 on 9 November 2026. A build runs the settings that it started with, so the Worker starts one more build when the first good build ends below the current settings. A failed first build gets Try again, which builds the current settings, so the words name a build that succeeds. After the first good build, a change needs Build computer, as app/org-settings/cloud-computer/script-changed shows.',
+      props: { script: 'changed' },
+    },
   ],
 })

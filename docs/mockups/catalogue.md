@@ -56,9 +56,15 @@ screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
 paid plan went away, and declares `movedFrom`.
 
 The first build of a new org shows in three places, from decision 142.
-Create org starts it when the org has a repository. The mockups draw it
-for Firna, the first org of the sign-up:
+Create org starts it, and Create org needs at least one repository, from
+decision 143. The mockups draw it for Firna, the first org of the sign-up:
 
+- `app/orgs/new` draws the rule on Create org. The hint under Repositories
+  says to add at least one, in each state. Its `no-repository` variant has
+  the first org with a name and no repository chosen, and Create org is
+  off. Its `no-access` variant has a GitHub App that reaches no
+  repository: the list asks for access with Manage access, and Create org
+  is off.
 - Get started shows it in the org step. `app/sign-in/get-started/org-created`
   has the build that runs, with its time, while the person connects an
   agent. `preparing` has every step done while the build runs: Open Firna
@@ -76,7 +82,9 @@ for Firna, the first org of the sign-up:
 - `app/org-settings/cloud-computer/first-build` has the Cloud computer tab
   of Firna: the first build with its log, then its `failed` and `no-build`
   variants. A new org has empty scripts and no env vars, and its history
-  shows once a build has ended.
+  shows once a build has ended. Its `script-changed` variant has an install
+  script that Cal saved during the first build. One more build runs it
+  when the first build succeeds, so its notice has no Build computer.
 
 `app/orgs/suspended` shows Acme after the operator suspended it, from
 decision 129. Its notice is at the top of the list, and every workspace

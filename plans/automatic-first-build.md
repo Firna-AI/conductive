@@ -7,14 +7,16 @@ Cloud computer tab. So the first message after Get started fails with "Ask
 an org admin to build the cloud computer image first." The user asked on
 8 November 2026 that the app builds the cloud computer by itself after the
 repositories step, as part of the onboarding of a new org. Decision 142
-chose how the app shows that build. This change starts the first build when
-Create org saves an org with repositories. Get started and New workspace
-show that build until the org has its first good image.
+chose how the app shows that build. Decision 143 made Create org require a
+repository, and added one build after the first good build when the
+settings changed during it. This change starts the first build when Create
+org saves an org. Get started and New workspace show that build until the
+org has its first good image.
 
-The change does not cover these cases. A later change of the repositories
-still needs Build computer, as decision 12 says. A failed build gets no
-automatic retry. A first message cannot wait for the build, as option D of
-decision 142 would allow.
+The change does not cover these cases. A change of the repositories after
+the first good build still needs Build computer, as decision 12 says. A
+failed build gets no automatic retry. A first message cannot wait for the
+build, as option D of decision 142 would allow.
 
 Contract owners:
 
@@ -90,11 +92,17 @@ Contract owners:
 - **Related:** Decision 142, option C, which this item extends. Get started needs words for an org with no repository under A, B, D, F, and G. The follow-up [New workspace offers repositories that the image lacks](follow-ups/new-workspace-offers-unbuilt-repositories.md) has the same cause for later changes.
 - **Recommendation:** E, changed by the options check from C. Create org gives the first build the whole choice, and the added build takes in each save during that build, so no manual build remains. Without the rejection of C, the next best is B or G with the added build of E.
 - **Action:** ask the user, because C and E add a rejection to Create org, and the other options change when a build starts.
+- **Chosen:** E, by the user on 9 November 2026.
 
 ## Design
 
 The Worker starts the build in the Create org request, after the org, its
-admin, and its repositories exist. The build is a normal build with the
+admin, and its repositories exist. Create org requires at least one
+repository (decision 143), so every new org starts its build at create.
+When the first good build of an org is published, the Worker compares the
+settings revision of that build with the current one. Each change of the
+repositories or of the install script raises the revision. When the
+current revision is higher, the Worker starts one more build at once. The build is a normal build with the
 creator as its starter. Get started reads the builds of its org, and New
 workspace reads the builds of its org, through the org model that already
 follows them.
@@ -107,12 +115,12 @@ Agent calls, 8 November 2026:
   the Cloud computer tab. A failure gets Try again and no automatic retry,
   as decision 12 says.
 - An org with no chosen repository starts no build at Create org. Reason:
-  no workspace can start without a repository. Decision 143 asks how such
-  an org gets its first build.
+  no workspace can start without a repository. Decision 143 replaced this
+  call on 9 November 2026: Create org now requires a repository.
 - Changes on the Repositories tab of an org with a build keep Build
   computer, as decision 12 says. Reason: the tab saves each repository on
-  its own, so a build there can start with part of the choice. Option E of
-  decision 143 would add one build after the first good build.
+  its own, so a build there can start with part of the choice. Decision 143
+  adds one build after the first good build.
 - When the build cannot start, Create org still succeeds, and the Worker
   writes a warning. Reason: the org is valid without a build, and the
   Cloud computer tab still offers Build computer.
@@ -129,7 +137,8 @@ Agent calls, 8 November 2026:
   which is empty. An admin who saves a script during that build presses
   Build computer after it ends. Reason: Build computer is off while a
   build runs, and the task asks for the build right after the repositories
-  step. Option E of decision 143 would replace this call.
+  step. Decision 143 replaced this call on 9 November 2026: one more build
+  follows the first good build when the settings changed during it.
 
 Calls of the `ui implementor` in the mockups, 8 November 2026:
 
@@ -148,6 +157,31 @@ Calls of the `ui implementor` in the mockups, 8 November 2026:
 - The New workspace notice takes its words from one copy module, which the
   app also reads, as Get started does. This is the call of the agent that
   checked the mockups.
+
+Agent calls, 9 November 2026, for decision 143:
+
+- The added build starts with the first admin who is not suspended, as
+  each automatic refresh does. Reason: one rule then covers every build
+  that the app starts by itself.
+- When the added build cannot start, the first good image stays, and the
+  Worker writes a warning. The Cloud computer tab then asks for a build,
+  as it does after any change. Reason: the org already works.
+- The added build runs only after the first good build. A failed first
+  build gets Try again, which builds the current settings. Reason: Try
+  again already takes in each change.
+- `needsBuild` compares with the newest build before the first good image,
+  and is false with no build. Reason: an org with no image always got
+  `needsBuild`, so every new admin saw a script change that nobody made.
+  The mockup agent found it, and the code confirms it.
+
+Calls of the `ui implementor` in the mockups, 9 November 2026:
+
+- "Add at least one." shows in every state of Create org, so the rule is
+  clear before the user tries, and no error shows.
+- The notice says "succeeds", not "ends", because the added build follows
+  only a good first build.
+- The settings mockup keeps the state of the script apart from the state
+  of the build, as the app keeps `needsBuild` apart from the builds.
 - The notice of New workspace shows only while the org has no good image.
   Reason: after the first good image, a later build or a failed later
   build leaves the last good image in use, as decision 9 says.
@@ -192,8 +226,10 @@ this milestone.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 - [ ] The user reviews the mockups.
-- [ ] After the answer to decision 143, draw the states that it needs, such
-      as Get started and New workspace for an org with no repository.
+- [x] Decision 143: draw Create org with no repository chosen, and with no
+      repository that the GitHub App reaches, both with Create org off.
+      Draw the Cloud computer tab of the first build after an admin saved
+      an install script, which one more build takes in by itself.
 
 ## Milestone 2: Documentation and protocol
 
@@ -209,6 +245,11 @@ State the automatic first build and what the app shows during it.
       until the first good image, New workspace shows the state of the
       first build and keeps Send off. A create in that time gets a refusal
       that names the state.
+- [ ] `docs/protocol/orgs-and-members.md`, Orgs: Create org requires at
+      least one repository (decision 143).
+- [ ] `docs/protocol/workspaces-and-sandboxes.md`, The org image: when the
+      repositories or the install script changed during the first good
+      build, the app starts one more build when it ends (decision 143).
 - [ ] `docs/protocol/orgs-and-members.md`, Get started: the org step shows
       the first build, with Try again for an admin. The finish says that
       the org is ready only after the first build succeeds.
@@ -222,14 +263,23 @@ Depends on: 2
       create still answers 201.
 - [ ] `startImageBuild` fails a new build at once when its alarm does not
       schedule, so that Try again shows.
-- [ ] Apply the answer to decision 143.
+- [ ] The settings answer sets `needsBuild` only after a change. It
+      compares the settings revision with that of the build that holds the
+      org image. Before the first good image, it compares with the newest
+      build, and with no build it is false. Today an org with no image
+      always gets `needsBuild`, so the tab says that the install script
+      changed in every first build.
+- [ ] Create org refuses a request with no repository.
+- [ ] After the first good build of an org, the Worker starts one more
+      build when the settings revision is higher than that of the build.
 - [ ] The refusal of a create during the first build says that the cloud
       computer is still being prepared.
 - [ ] The dev fake of `src/app/dev/` starts a build at Create org in the
       same way.
 - [ ] Tests: a create with repositories records a running build, a create
-      with none records no build, a failed start keeps the org, and the
-      refusal during the first build.
+      with none is refused, a failed start keeps the org, the refusal
+      during the first build, the stuck build that fails at once, and the
+      added build after a change during the first build.
 - [ ] Update `worker/app-api/README.md`,
       `worker/lifecycle/image-builds.md`, and `src/app/README.md`.
 
@@ -251,7 +301,14 @@ Depends on: 1, 2, 3
 - [ ] The Cloud computer tab matches the first-build mockups. The History
       list waits for the follow-up
       [The app and the mockups list different builds](follow-ups/build-history-running-build.md).
-- [ ] Tests for each state of the org step, the finish, and the notice.
+- [ ] Create org stays off until a repository is chosen, and its hint ends
+      with "Add at least one.", as the mockups draw it.
+- [ ] The notice of a changed install script follows the mockups: during
+      the first build it says "One more build runs it when this build
+      succeeds." with no button. With no good build and no build that
+      runs, it says "It runs at the next build." with no button.
+- [ ] Tests for each state of the org step, the finish, the notice, and
+      Create org.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

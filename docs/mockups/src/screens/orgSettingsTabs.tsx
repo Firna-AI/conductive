@@ -96,6 +96,7 @@ export function TabBody(props: { state: OrgSettingsState }) {
           computer={settings.computer}
           org={org.name}
           readOnly={readOnly}
+          script={state.script}
         />
       )
     case 'members':
