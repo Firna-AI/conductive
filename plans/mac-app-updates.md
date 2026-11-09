@@ -57,6 +57,13 @@ and 3. The options check of the decisions added the calls that say so:
 - When release-please creates a release, the same workflow runs the Mac
   checks, the signing job in `desktop-release`, and the publish job. Manual
   runs from `main` still sign without publishing. Added on 9 November 2026.
+- `.github/workflows/release.yml` holds the whole release: release-please,
+  the Mac checks, signing, and publishing. Its manual run from `main`
+  replaces the manual run of the old release job. `desktop-ci.yml` keeps the
+  pull request and push checks only. Reusable workflows hold the Mac checks
+  and the signing steps, so the two workflows share them. The publish job
+  runs on Linux, because it only uploads files with `gh`. Added on 9
+  November 2026.
 - release-please uses `secrets.RELEASE_PLEASE_TOKEN || github.token`, as in
   Mokly. With the built-in token, CI does not run on the release pull
   request, because GitHub starts no workflow for a pull request that the
