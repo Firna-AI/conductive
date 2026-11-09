@@ -3,6 +3,7 @@ import type { WorkspaceCompositionEnv } from '../workspace-integration'
 import { DEVICE_TEST_NOW } from '../../devices/clock.test-support'
 import { START_JOB_KEY } from '../../lifecycle/start-storage'
 import type { StoredWorkspaceStartJob } from '../../lifecycle/start-job-codec'
+import type { WorkspaceStartIntent } from '../../lifecycle/start-types'
 
 /** Only test controls differ. All state changes use the production object. */
 export class Workspace extends ProductionWorkspace {
@@ -31,8 +32,11 @@ export class Workspace extends ProductionWorkspace {
     return state
   }
 
-  async queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean> {
-    const accepted = await super.queueLifecycleStart(job)
+  async queueLifecycleStart(
+    job: StoredWorkspaceStartJob,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean> {
+    const accepted = await super.queueLifecycleStart(job, intent)
     if (accepted) {
       this.queued++
       for (const reader of this.queueReaders)

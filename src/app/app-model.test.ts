@@ -26,34 +26,13 @@ describe('AppModel', () => {
     expect(app.boot.get()).toEqual({ state: 'signed-out' })
   })
 
-  test('a sign-out or another person forgets the admitted creates of the tab', async () => {
-    const server = new FakeApiServer()
-    const app = new AppModel(testServices(server))
-    await app.start()
-    const org = app.org(FAKE_IDS.org)
-    const admit = async () => {
-      const form = org.newWorkspace(null)
-      form.setText('Let shoppers save their cart.')
-      await form.send(defaults)
-      return org.creations.of('saved-carts').get()?.state ?? null
-    }
-    expect(await admit()).toBe('starting')
-    await app.account.signOut()
-    expect(org.creations.of('saved-carts').get()).toBeNull()
-
-    await app.start()
-    expect(await admit()).toBe('starting')
-    server.json('GET', API_PATHS.session, { user: fakeUsers[1] })
-    await app.start()
-    expect(org.creations.of('saved-carts').get()).toBeNull()
-  })
-
   test('a create that answers after another person signed in changes nothing, and that person gets the form free and empty', async () => {
     const server = new FakeApiServer()
     const held = new HeldRequests(server)
     const app = new AppModel(testServices(server, { fetch: held.fetch }))
     await app.start()
     const org = app.org(FAKE_IDS.org)
+    await org.reload('list')
     const createPath = workspacesPath(FAKE_IDS.org)
     const form = org.newWorkspace(null)
     form.setText('Let shoppers save their cart.')
@@ -71,7 +50,7 @@ describe('AppModel', () => {
     held.release('POST', createPath)
     const reply = await answer
 
-    expect(org.creations.of('saved-carts').get()).toBeNull()
+    expect(org.workspace('saved-carts')).toBeUndefined()
     expect(opened).not.toHaveBeenCalled()
     expect(reply).toBeNull()
     expect(free.create).toEqual({ state: 'idle' })
@@ -85,11 +64,18 @@ describe('AppModel', () => {
     const workspace = { ...created.workspace, id: 'gift-cards' }
     server.json('POST', createPath, { ...created, workspace }, 201)
     await form.send(defaults)
-    const admitted = org.creations.of('gift-cards').get()
-    expect(admitted?.submission.draft).toMatchObject({
-      text: 'A newer draft',
-      attachments: [],
-      messageId: free.draft.messageId,
+    const creates = server.requests.filter(
+      (request) =>
+        request.method === 'POST' &&
+        new URL(request.url).pathname === createPath,
+    )
+    expect(await creates.at(-1)?.json()).toMatchObject({
+      firstMessage: {
+        id: free.draft.messageId,
+        text: 'A newer draft',
+        attachmentIds: [],
+      },
     })
+    expect(org.workspace('gift-cards')?.id).toBe('gift-cards')
   })
 })

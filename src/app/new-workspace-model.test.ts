@@ -3,14 +3,12 @@ import { DRAFT_ATTACHMENTS_PATH } from '../shared/messages'
 import { workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS } from '../test-support/fixtures/core'
-import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import { OrgModel } from './org-model'
 import { valueOf } from './store'
 import { HeldRequests, testServices } from './test-kit'
 
 const org = FAKE_IDS.org
 const createPath = workspacesPath(org)
-const reply = workspaceFixtures().created
 const choice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
@@ -165,46 +163,5 @@ describe('NewWorkspaceModel', () => {
       created: created?.workspace.id,
       attachments: draft.draft.get().attachments,
     }).toEqual({ uploads: 0, created: 'saved-carts', attachments: [] })
-  })
-
-  test('a returned message keeps its edits and files until its retry gets another workspace', async () => {
-    const server = new FakeApiServer()
-    const model = await loaded(server)
-    const form = model.newWorkspace(null)
-    form.setText('Fix the flaky cart test.')
-    await form.attach([notes()])
-    await form.send(defaults)
-    // The open of the new workspace answered 404: its start failed.
-    model.creations.removed('saved-carts')
-    const returned = model.creations.of('saved-carts').get()
-    expect(returned?.state).toBe('failed')
-    if (returned?.state !== 'failed') throw new Error('No form came back.')
-    const retry = returned.form
-    retry.setText('Fix the flaky cart test first.')
-
-    // The server answers with the failed workspace again.
-    expect(await retry.send(defaults)).toBeNull()
-    expect(retry.draft.get()).toMatchObject({
-      text: 'Fix the flaky cart test first.',
-      attachments: [{ id: 'draft-attachment-1' }],
-      messageId: 'client-1',
-    })
-    expect(retry.create.get()).toEqual({ state: 'not-started' })
-    expect(model.creations.of('saved-carts').get()?.state).toBe('failed')
-
-    const workspace = { ...reply.workspace, id: 'gift-cards' }
-    server.json('POST', createPath, { ...reply, workspace }, 201)
-    expect((await retry.send(defaults))?.workspace.id).toBe('gift-cards')
-    expect(await received(server, 'POST', createPath).at(-1)?.json()).toEqual({
-      repositoryId: 'storefront',
-      firstMessage: {
-        id: 'client-1',
-        text: 'Fix the flaky cart test first.',
-        attachmentIds: ['draft-attachment-1'],
-        choice: defaults.choice,
-      },
-    })
-    expect(model.creations.of('saved-carts').get()).toBeNull()
-    expect(model.creations.of('gift-cards').get()?.state).toBe('starting')
   })
 })

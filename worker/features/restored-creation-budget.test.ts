@@ -118,16 +118,19 @@ it('gives an allocated create opened after three retained days a fresh 20-minute
     await active.env.DB.prepare('SELECT id FROM workspaces WHERE id = ?')
       .bind(id)
       .first(),
-  ).toBeNull()
+  ).toEqual({ id })
   expect(active.boat.starts).toHaveLength(1)
   expect(active.boat.resumeIds).toEqual([original.allocatedSandboxId])
   expect(active.boat.deletedIds).toEqual([original.allocatedSandboxId])
-  expect(
-    await active.actor(id).failedLifecycleCreation(OUTER_ORG, 'member'),
-  ).toMatchObject({
-    request: {
-      id: 'allocated-create-message',
-      text: 'Keep this after allocation',
+  expect(await active.actor(id).waitCreationAdmission()).toMatchObject({
+    ok: true,
+    created: {
+      first: {
+        request: {
+          id: 'allocated-create-message',
+          text: 'Keep this after allocation',
+        },
+      },
     },
   })
 })
