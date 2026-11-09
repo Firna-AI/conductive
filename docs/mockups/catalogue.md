@@ -85,9 +85,12 @@ decision 147, and they find a suspended org or user. Its child pages:
 - `app/operator/orgs` has the Orgs tab: the newest orgs, a search by name,
   a search by preview address, and a search with no match.
 - `app/operator/org` has the page of an org, with the names of its
-  members, and Suspend org. Its variants have the question before the
+  members, and Suspend org. Its child pages have the question before the
   suspension, the suspended org with Lift, the question before the lift,
-  from decision 145, and a deleted org.
+  from decision 145, and a deleted org. The child page of the deleted org
+  has its question before a suspension, the deleted org that is also
+  suspended, and its question before a lift. They say that no admin can
+  restore a suspended org, and that a lift leaves the org deleted.
 - `app/operator/users` has the Users tab: the newest users, a search, and
   a search with no match.
 - `app/operator/user` has the page of a user, with the name, and Suspend

@@ -1,16 +1,14 @@
 import { Ban, CircleAlert, LockOpen, TriangleAlert } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import {
-  liftFiles,
-  liftGivesBack,
+  liftQuestion,
   selfSuspendWarning,
-  suspendFiles,
-  suspendStops,
+  suspendQuestion,
+  type QuestionTarget,
 } from '../../../docs/mockups/src/components/operator/operatorCopy'
 import { ActionButton } from '../ui/actions'
 import { Dialog, DialogText } from '../ui/Dialog'
 import { useAction } from '../ui/useAction'
-import { targetName, type Target } from './TargetParts'
 
 /**
  * The write of a question, and the dismissal of the question. While the
@@ -34,19 +32,21 @@ function useQuestion(write: () => Promise<void>, close: () => void) {
 
 /**
  * The operator confirms a suspension. The question says what stops, what the
- * members keep, and that the files of a stopped workspace can be deleted. On
- * the operator's own page it warns first. A failed suspension shows its error,
- * and the question stays open.
+ * members keep, what a lift does not bring back, and that the files of a
+ * stopped workspace can be deleted. An org gives its deletion, so the
+ * question of a deleted org says that no admin can restore it while it is
+ * suspended. On the operator's own page it warns first. A failed suspension
+ * shows its error, and the question stays open.
  */
 export function SuspendDialog(props: {
-  target: Target
+  target: QuestionTarget
   /** The target is the account of the operator. */
   self: boolean
   suspend: () => Promise<void>
   close: () => void
 }) {
   const { target } = props
-  const name = targetName(target)
+  const { name } = target
   const suspend = useQuestion(props.suspend, props.close)
   return (
     <Dialog
@@ -71,8 +71,9 @@ export function SuspendDialog(props: {
       {props.self ? (
         <Notice icon={TriangleAlert} title={selfSuspendWarning} tone="danger" />
       ) : null}
-      <DialogText>{suspendStops(target.kind, name)}</DialogText>
-      <DialogText>{suspendFiles}</DialogText>
+      {suspendQuestion(target).map((text) => (
+        <DialogText key={text}>{text}</DialogText>
+      ))}
       {suspend.error ? (
         <Notice
           body={suspend.error.message}
@@ -87,16 +88,17 @@ export function SuspendDialog(props: {
 
 /**
  * The operator confirms a lift. The question says what comes back, and that a
- * workspace that stopped 14 days ago or more may have lost its files. A failed
+ * workspace that stopped 14 days ago or more may have lost its files. A
+ * deleted org stays deleted, so its question promises no access. A failed
  * lift shows its error, and the question stays open.
  */
 export function LiftDialog(props: {
-  target: Target
+  target: QuestionTarget
   lift: () => Promise<void>
   close: () => void
 }) {
   const { target } = props
-  const name = targetName(target)
+  const { name } = target
   const lift = useQuestion(props.lift, props.close)
   return (
     <Dialog
@@ -118,8 +120,9 @@ export function LiftDialog(props: {
       close={lift.dismiss}
       title={`Lift the suspension of ${name}?`}
     >
-      <DialogText>{liftGivesBack(target.kind, name)}</DialogText>
-      <DialogText>{liftFiles}</DialogText>
+      {liftQuestion(target).map((text) => (
+        <DialogText key={text}>{text}</DialogText>
+      ))}
       {lift.error ? (
         <Notice
           body={lift.error.message}

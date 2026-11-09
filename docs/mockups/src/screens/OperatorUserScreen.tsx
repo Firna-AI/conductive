@@ -4,8 +4,8 @@ import { ActionButton } from '../components/common/actions'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { LiftDialog } from '../components/operator/LiftDialog'
 import { OperatorPage } from '../components/operator/OperatorPage'
+import type { QuestionTarget } from '../components/operator/operatorCopy'
 import { SuspendDialog } from '../components/operator/SuspendDialog'
-import type { Target } from '../components/operator/targets'
 import { UserDetails } from '../components/operator/UserDetails'
 import { userPages } from '../fixtures/operatorPages'
 import { paths } from '../paths'
@@ -58,11 +58,7 @@ export function OperatorUserScreen(props: {
   const { status, viewer, dialog } = props.state
   const self = viewer === 'self'
   const user = self ? userPages.self : userPages[status]
-  const target: Target = {
-    kind: 'user',
-    name: user.login,
-    initials: user.initials,
-  }
+  const target: QuestionTarget = { kind: 'user', name: `@${user.login}` }
   const dialogs = {
     none: null,
     suspend: (

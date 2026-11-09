@@ -4,16 +4,21 @@ import { ActionButton } from '../common/actions'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
-import { selfSuspendWarning, suspendFiles, suspendStops } from './operatorCopy'
-import { targetName, type Target } from './targets'
+import {
+  selfSuspendWarning,
+  suspendQuestion,
+  type QuestionTarget,
+} from './operatorCopy'
 
 /**
  * The operator confirms a suspension. The dialog says what stops, what
- * the members keep, and that the files of a stopped workspace can be
- * deleted. For the operator's own account it warns first.
+ * the members keep, what a lift does not bring back, and that the files of
+ * a stopped workspace can be deleted. For a deleted org it says that no
+ * admin can restore the org while it is suspended. For the operator's own
+ * account it warns first.
  */
 export function SuspendDialog(props: {
-  target: Target
+  target: QuestionTarget
   /** The operator suspends their own account. */
   self?: boolean
   viewport: Viewport
@@ -36,16 +41,15 @@ export function SuspendDialog(props: {
           </ScreenLink>
         </>
       }
-      title={`Suspend ${targetName(props.target)}?`}
+      title={`Suspend ${props.target.name}?`}
       viewport={props.viewport}
     >
       {props.self ? (
         <Notice icon={TriangleAlert} title={selfSuspendWarning} tone="danger" />
       ) : null}
-      <DialogText>
-        {suspendStops(props.target.kind, targetName(props.target))}
-      </DialogText>
-      <DialogText>{suspendFiles}</DialogText>
+      {suspendQuestion(props.target).map((text) => (
+        <DialogText key={text}>{text}</DialogText>
+      ))}
     </ConfirmDialog>
   )
 }

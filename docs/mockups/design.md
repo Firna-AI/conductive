@@ -157,7 +157,9 @@ chat, and five tabs at the bottom.
   in its footer on a phone. Each asks first, with `ConfirmDialog`. The
   words of the questions and the notices live in `operatorCopy.ts`, which
   imports no fixture, so the app uses them too. So do `WorkspaceStates`
-  and `DailyChart`.
+  and `DailyChart`. Each text of an org takes its deletion, so the
+  questions and the notices of a deleted org promise nothing that its
+  members cannot open, and nothing that a lift does not give back.
 - `DailyChart` names each point and each label of its axis with the UTC
   day, such as "10 Oct", in British English, so that no time zone and no
   locale of a browser or of the build machine changes a date. Its axis has

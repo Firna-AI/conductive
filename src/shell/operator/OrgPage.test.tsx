@@ -137,7 +137,7 @@ describe('the page of an org for the operator', () => {
       requests: await operatorRequests(server),
     }).toEqual({
       question:
-        'Suspend Northwind? Every cloud computer and build of Northwind stops now. Members can still open and read it, but they cannot change it or start a workspace. A stopped workspace gets no restart near day 14, so its files can be deleted. Lift gives the access back. Cancel Suspend org',
+        'Suspend Northwind? Every cloud computer and build of Northwind stops now. Members can still open and read it, but they cannot change it or start a workspace. Each unfinished build of Northwind fails, and a lift does not bring it back. A stopped workspace gets no restart near day 14, so its files can be deleted. Lift gives the access back. Cancel Suspend org',
       open: null,
       header: 'Orgs Northwind Org Lift suspension',
       notice,

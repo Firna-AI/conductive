@@ -164,7 +164,7 @@ describe('the page of a user for the operator', () => {
       requests: await operatorRequests(page.server),
     }).toEqual({
       question:
-        'Suspend @calummoore? This is your own account. You will be signed out, and another operator must lift the suspension. @calummoore is signed out everywhere and cannot sign in. Their workspaces stop, and no member can start them until an admin moves them to another member. A stopped workspace gets no restart near day 14, so its files can be deleted. Lift gives the access back. Cancel Suspend user',
+        'Suspend @calummoore? This is your own account. You will be signed out, and another operator must lift the suspension. @calummoore is signed out everywhere and cannot sign in. Their workspaces stop, and no member can start them until an admin moves them to another member. Each unfinished build that runs for @calummoore stops and fails, and a lift does not bring it back. A stopped workspace gets no restart near day 14, so its files can be deleted. Lift gives the access back. Cancel Suspend user',
       signIn: signInCopy.title,
       requests: [
         `GET ${operatorUserPath(page.user.githubId)}`,

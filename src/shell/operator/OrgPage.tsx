@@ -3,6 +3,8 @@ import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import {
   deletedOrgBody,
   suspendedOrgBody,
+  type OrgDeletion,
+  type QuestionTarget,
 } from '../../../docs/mockups/src/components/operator/operatorCopy'
 import { WorkspaceStates } from '../../../docs/mockups/src/components/operator/WorkspaceStates'
 import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
@@ -24,17 +26,25 @@ import { counted, formatCount, formatLongDay, formatShortDay } from './format'
 import { OperatorPage } from './OperatorPage'
 import { LiftDialog, SuspendDialog } from './TargetDialogs'
 import { suspensionTitle, TargetAction, useTargetPage } from './TargetPage'
-import {
-  Joined,
-  TargetList,
-  TargetRow,
-  TargetState,
-  type Target,
-} from './TargetParts'
+import { Joined, TargetList, TargetRow, TargetState } from './TargetParts'
+
+/**
+ * The deletion of an org, with the day when everything of it is deleted, as
+ * the page writes it, or `null` when no admin deleted the org.
+ */
+function useDeletion(org: OperatorOrgDetail | null): OrgDeletion | null {
+  const { now, timeZone } = useServices()
+  if (!org?.deletion) return null
+  const { purgeAt } = org.deletion
+  return {
+    purge: purgeAt === null ? null : formatShortDay(purgeAt, now(), timeZone),
+  }
+}
 
 /**
  * The notices of a suspended or a deleted org, at the top of its page. An org
- * can be both, so the page can show both.
+ * can be both, so the page can show both. The texts of a deleted org claim
+ * nothing that its members can open, and a suspension stops its restore.
  */
 function OrgNotices(props: {
   org: OperatorOrgDetail
@@ -42,26 +52,22 @@ function OrgNotices(props: {
 }) {
   const { org } = props
   const { now, timeZone } = useServices()
+  const deletion = useDeletion(org)
   const today = now()
-  const day = (time: number) => formatShortDay(time, today, timeZone)
-  const deletion = org.deletion
   return (
     <>
       {org.suspension ? (
         <Notice
-          body={suspendedOrgBody(org.name, props.stopping ?? 0)}
+          body={suspendedOrgBody(org.name, props.stopping ?? 0, deletion)}
           icon={Ban}
           title={suspensionTitle(org.suspension, today, timeZone)}
         />
       ) : null}
-      {deletion ? (
+      {org.deletion && deletion ? (
         <Notice
-          body={deletedOrgBody(
-            org.name,
-            deletion.purgeAt === null ? null : day(deletion.purgeAt),
-          )}
+          body={deletedOrgBody(org.name, deletion, org.suspension !== null)}
           icon={Trash2}
-          title={`Deleted on ${day(deletion.deletedAt)}`}
+          title={`Deleted on ${formatShortDay(org.deletion.deletedAt, today, timeZone)}`}
         />
       ) : null}
     </>
@@ -150,8 +156,9 @@ export function OrgPage(props: { orgId: string }) {
   )
   const { target, detail, question, ask } = page
   const org = detail.state === 'ready' ? detail.value : null
-  const named: Target | null = org
-    ? { kind: 'org', name: org.name, initials: org.initials }
+  const deletion = useDeletion(org)
+  const named: QuestionTarget | null = org
+    ? { kind: 'org', name: org.name, deletion }
     : null
   const close = () => ask(null)
   return (

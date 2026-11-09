@@ -75,6 +75,12 @@ export const orgPages: Readonly<Record<TargetStatus, OrgPage>> = {
   },
 }
 
+/** Pinecrest after an admin deleted it and the operator suspended it. */
+export const suspendedDeletedOrg: OrgPage = {
+  ...orgPages.deleted,
+  suspension: { since: '8 Nov at 14:35', by: account.login, stopping: 0 },
+}
+
 /** An org of a user, with the role of the user in it. */
 type UserOrg = {
   name: string

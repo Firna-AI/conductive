@@ -67,6 +67,13 @@ The section reuses the parts of the mockups that import no fixture:
 CSS modules of `docs/mockups/src/components/operator/`. So the app and the
 mockups keep the same words, dates, and look.
 
+Each text of an org in `operatorCopy.ts` takes its deletion, with the day
+when everything of it is deleted. So the questions and the notices of a
+deleted org claim nothing that its members can open. They say that no
+admin can restore the org while it is suspended, and that a lift leaves
+the org deleted. The questions before a suspension also say that each
+unfinished build fails, and that a lift does not bring it back.
+
 `DailyChart` names each point and each label of its axis with the words
 of its UTC day, such as "10 Oct", in British English. So no time zone and
 no locale of the browser changes a date. The axis has one slot for each

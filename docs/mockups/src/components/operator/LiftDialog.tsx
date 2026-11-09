@@ -3,15 +3,15 @@ import { LockOpen } from 'lucide-react'
 import { ActionButton } from '../common/actions'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { ScreenLink } from '../common/ScreenLink'
-import { liftFiles, liftGivesBack } from './operatorCopy'
-import { targetName, type Target } from './targets'
+import { liftQuestion, type QuestionTarget } from './operatorCopy'
 
 /**
  * The operator confirms a lift. The dialog says what comes back, and that
- * the files of a workspace that stopped 14 days ago or more can be gone.
+ * the files of a workspace that stopped 14 days ago or more can be gone. A
+ * deleted org stays deleted, so the dialog promises it no access.
  */
 export function LiftDialog(props: {
-  target: Target
+  target: QuestionTarget
   viewport: Viewport
   /** The page that Cancel returns to, and the page after the lift. */
   cancel: string
@@ -31,13 +31,12 @@ export function LiftDialog(props: {
           </ScreenLink>
         </>
       }
-      title={`Lift the suspension of ${targetName(props.target)}?`}
+      title={`Lift the suspension of ${props.target.name}?`}
       viewport={props.viewport}
     >
-      <DialogText>
-        {liftGivesBack(props.target.kind, targetName(props.target))}
-      </DialogText>
-      <DialogText>{liftFiles}</DialogText>
+      {liftQuestion(props.target).map((text) => (
+        <DialogText key={text}>{text}</DialogText>
+      ))}
     </ConfirmDialog>
   )
 }

@@ -21,18 +21,23 @@ import { WorkspaceStates } from './WorkspaceStates'
 function OrgNotices(props: { org: OrgPage }) {
   const { org } = props
   const { suspension, deleted } = org
+  const deletion = deleted ? { purge: deleted.purge } : null
   return (
     <>
       {suspension ? (
         <Notice
-          body={suspendedOrgBody(org.name, suspension.stopping)}
+          body={suspendedOrgBody(org.name, suspension.stopping, deletion)}
           icon={Ban}
           title={suspendedTitle(suspension.since, suspension.by)}
         />
       ) : null}
       {deleted ? (
         <Notice
-          body={deletedOrgBody(org.name, deleted.purge)}
+          body={deletedOrgBody(
+            org.name,
+            { purge: deleted.purge },
+            suspension !== undefined,
+          )}
           icon={Trash2}
           title={`Deleted on ${deleted.on}`}
         />

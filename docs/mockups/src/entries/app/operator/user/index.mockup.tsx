@@ -21,7 +21,7 @@ export const operatorUser = defineScreen({
       slug: 'suspend',
       title: 'Suspend a user',
       description:
-        'Suspend user asks first. The user is signed out everywhere and cannot sign in, and no member can start their workspaces until an admin moves them to another member.',
+        'Suspend user asks first. The user is signed out everywhere and cannot sign in, and no member can start their workspaces until an admin moves them to another member. Each unfinished build that runs for the user stops and fails, and a lift does not bring it back.',
       props: { dialog: 'suspend' },
     },
     {

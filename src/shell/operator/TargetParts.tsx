@@ -13,7 +13,7 @@ export type Target =
   | { kind: 'org'; name: string; initials: string | null }
 
 /** The name of a target as the pages write it: a login, or an org name. */
-export function targetName(target: Target): string {
+function targetName(target: Target): string {
   return target.kind === 'user' ? `@${target.login}` : target.name
 }
 

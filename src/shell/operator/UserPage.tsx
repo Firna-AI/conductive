@@ -1,6 +1,9 @@
 import { Ban } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { suspendedUserBody } from '../../../docs/mockups/src/components/operator/operatorCopy'
+import {
+  suspendedUserBody,
+  type QuestionTarget,
+} from '../../../docs/mockups/src/components/operator/operatorCopy'
 import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import { readOperatorUser } from '../../app/api/read-operator-pages'
@@ -19,7 +22,7 @@ import { formatCount, formatLongDay } from './format'
 import { OperatorPage } from './OperatorPage'
 import { LiftDialog, SuspendDialog } from './TargetDialogs'
 import { suspensionTitle, TargetAction, useTargetPage } from './TargetPage'
-import { EmptyRows, TargetList, TargetRow, type Target } from './TargetParts'
+import { EmptyRows, TargetList, TargetRow } from './TargetParts'
 
 /** The notice of a suspended user, at the top of their page. */
 function UserNotice(props: {
@@ -108,8 +111,8 @@ export function UserPage(props: { githubId: number; self: boolean }) {
   )
   const { target, detail, question, ask } = page
   const user = detail.state === 'ready' ? detail.value : null
-  const named: Target | null = user
-    ? { kind: 'user', login: user.login, name: user.name }
+  const named: QuestionTarget | null = user
+    ? { kind: 'user', name: `@${user.login}` }
     : null
   const close = () => ask(null)
   return (
