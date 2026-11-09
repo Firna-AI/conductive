@@ -79,7 +79,7 @@ The production receiver keeps a stopped create checkpoint after Delete, before o
 Restore starts no sandbox. The normal resume route requeues that create when the workspace opens.
 The checkpoint keeps its sender, first message, and allocation identity.
 The requeued create gets a fresh 20-minute start limit from that open. It keeps its original creation date.
-A create without a sandbox also keeps its image pin. A missing pin uses the existing failed-create draft and cleanup path.
+A create without a sandbox also keeps its image pin. A missing pin keeps the workspace, its accepted chat, and its error, with durable sandbox cleanup.
 A create with a retained sandbox resumes it and continues at its saved creation step, as the [lifecycle README](../lifecycle/README.md#browser-routes) says.
 Hidden attempts and pending lifecycle cleanup sandboxes also enter suspension and purge.
 

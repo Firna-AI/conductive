@@ -34,14 +34,6 @@ export const resumingLog: StartingLog = {
 }
 
 /**
- * The second message that the user writes while the sandbox of the new
- * workspace starts for the first time. The composer keeps it until the user
- * sends it.
- */
-export const heldDraft =
-  'Keep a saved cart for 30 days after its last change, then delete it.'
-
-/**
  * Each create and resume runs for at most 20 minutes from its start, with
  * the startup script and every retry.
  */

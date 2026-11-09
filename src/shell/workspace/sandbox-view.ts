@@ -27,7 +27,9 @@ export interface SandboxView {
  * access to the sandbox, also while the stop of its cloud computer runs.
  * Another refused start shows while the sandbox is down, until its cause
  * ends. An archived workspace keeps its bar in a suspended org too. A
- * failed start carries the message that the workspace saved for it.
+ * failed start carries the message that the workspace saved for it. A
+ * failed first start marks its bar, which keeps the composer under it, and
+ * its panels, which show it in place of the lists.
  */
 export function sandboxView(input: {
   sandbox: SandboxState
@@ -35,6 +37,8 @@ export function sandboxView(input: {
   startError: ApiError | null
   /** The message that the workspace saved for a start that failed. */
   savedError: string | null
+  /** The first start of the new workspace failed, as `failedFirstStart` says. */
+  firstStart: boolean
 }): SandboxView {
   const { sandbox, suspended } = input
   const refusal =
@@ -46,7 +50,11 @@ export function sandboxView(input: {
   const bar: SandboxNoticeState | null =
     refusal ??
     (sandbox === 'error'
-      ? { problem: 'error', message: input.savedError }
+      ? {
+          problem: 'error',
+          message: input.savedError,
+          firstStart: input.firstStart,
+        }
       : sandbox === 'ready' || sandbox === 'starting'
         ? null
         : { problem: sandbox })

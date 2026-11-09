@@ -64,10 +64,10 @@ export interface ChatSnapshot {
   workspace: Workspace | null
   start: WorkspaceStart | null
   /**
-   * The records showed that the first start of the workspace succeeded, as
-   * `first-start.ts` says. Until then, Send waits.
+   * The message that the workspace saved for its failed start, which the
+   * bar of the chat shows. Null when the workspace saved none.
    */
-  firstStartDone: boolean
+  savedError: string | null
   org: OrgSummary | null
   account: AccountSummary | null
   /** The members of the org, which name the member who stopped a turn. */
@@ -118,7 +118,7 @@ export const initialSnapshot: ChatSnapshot = {
   load: { state: 'loading' },
   workspace: null,
   start: null,
-  firstStartDone: false,
+  savedError: null,
   org: null,
   account: null,
   members: [],

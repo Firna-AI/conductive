@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { replacesLists } from '../../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import { useServices } from '../../../app/services'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
 import type {
@@ -52,19 +53,18 @@ function TabPage(props: {
 
 /**
  * The state of the sandbox in place of All files and Changes: while it
- * starts, and while the app refuses its start, with the words of the
- * refusal. A stopped or failed sandbox keeps the lists, from the copy that
- * the workspace keeps.
+ * starts, while the app refuses its start, with the words of the refusal,
+ * and after a failed first start, with Try again on a phone. A stopped
+ * sandbox, and one whose later start failed, keep the lists, from the copy
+ * that the workspace keeps.
  */
 function sandboxPlaceholder(context: WorkspaceContext): ReactNode {
   const { panel } = context
-  if (!panel || (panel.problem !== 'starting' && panel.problem !== 'refused')) {
-    return undefined
-  }
+  if (!panel || !replacesLists(panel)) return undefined
   return (
     <SandboxPanel
       phone={context.viewport === 'phone'}
-      resume={null}
+      resume={context.resume}
       state={panel}
       workspace={context.workspace}
     />

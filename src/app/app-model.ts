@@ -86,8 +86,8 @@ export class AppModel {
   }
 
   /**
-   * A sign-out, or a sign-in of another person, forgets the admitted
-   * creates of every org, with the messages that they keep.
+   * A sign-out, or a sign-in of another person, ends the create requests
+   * of every org that still run, so that their answers change nothing.
    */
   private followPerson(): void {
     const boot = this.boot.get()

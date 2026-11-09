@@ -58,33 +58,41 @@ its own secrets and variables.
 
 ## The deploy token
 
-Make `CLOUDFLARE_API_TOKEN` from the Cloudflare token template "Edit
-Cloudflare Workers":
+`CLOUDFLARE_API_TOKEN` needs these permissions. A user token and an
+account-owned token both work.
 
-1. Add the account permission D1 Edit. The migrations need it.
-2. Include the account in the account resources.
-3. Include the zones `conductive.build` and `conductive.page` in the zone
-   resources.
+| Permission | Scope | Resource | What uses it |
+| --- | --- | --- | --- |
+| Workers Scripts Edit | Account | The account of the Worker | `wrangler deploy`: the Worker, its assets, its cron trigger, its URL settings, and its custom domains |
+| D1 Edit | Account | The account of the Worker | The D1 migrations |
+| Workers R2 Storage Edit | Account | The account of the Worker | The upload of the runner archive |
+| Workers Routes Edit | Zone | `conductive.page` | The route `*.conductive.page/*` |
+| Zone Read | Zone | `conductive.page` | Wrangler finds the zone of that route by its name |
 
-The template holds the zone permission Workers Routes Edit. A missing
-permission makes the first run fail. The Wrangler error names the
-Cloudflare API request that failed.
+- With Workers Routes Edit on all zones of the account, Wrangler sets the
+  route in one call and needs no Zone Read.
+- The zone `conductive.build` needs no permission. Its custom domains use
+  Workers Scripts Edit.
+- The deploy needs no user permission, because the run gives Wrangler the
+  account ID.
+- The template "Edit Cloudflare Workers" holds more permissions, such as
+  Workers KV Storage and Workers Tail, but no Zone Read. With the template
+  and specific zones, add Zone Read on `conductive.page`.
+- A missing permission makes the run fail. The Wrangler error names the
+  Cloudflare API request that failed.
 
-The template also holds the account permission Workers R2 Storage Edit.
-The upload of the runner archive uses it.
-[The archive in each deploy](deployment.md#the-archive-in-each-deploy)
-describes that upload. The permission also lets the token write to every
-other bucket of the account.
-
-To limit R2 to the bucket `conductive-runner`, make the token through the
-API. Give it the same permissions and resources, with two changes:
+Workers R2 Storage Edit also lets the token write to every other bucket of
+the account. To limit R2 to the bucket `conductive-runner`, make the token
+through the API. Give it the same permissions, with two changes:
 
 - Leave out the account group `Workers R2 Storage Write`.
 - Add the bucket group `Workers R2 Storage Bucket Item Write` on the bucket
   `conductive-runner`.
 
-The S3 key pair of the upload then reaches only that bucket. The API names
-each Edit permission with Write, as in `D1 Write`.
+The S3 key pair of the upload then reaches only that bucket.
+[The archive in each deploy](deployment.md#the-archive-in-each-deploy)
+describes that upload. The API names each Edit permission with Write, as
+in `D1 Write`.
 
 ## Steps of a run
 
