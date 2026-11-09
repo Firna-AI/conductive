@@ -78,7 +78,10 @@ npm run typecheck
 - `turn-dispatch.test.ts` checks that a runner disconnect during the
   registration of a turn undoes that registration before any send.
 - [Gateway tests](../model-gateway/README.md) cover stable turn tokens, login changes, Stop, late events, and retry through chat.
-  `integration/gateway-entry.test-support.ts` adds a test-only token request to the production workspace for its SQLite and RPC test.
+  [runtime.test.ts](../model-gateway/runtime.test.ts) evicts the production SQLite object after a saved gateway Stop.
+  It checks the retained interrupt, one failure with its cause after duplicate runner ends, late changed files, and the Retry message.
+  `integration/gateway-entry.test-support.ts` adds test-only token issuance and a fetch wrapper for the production workspace RPC.
+  The fetch wrapper releases each RPC before eviction.
 - `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
   end. It also checks that late ends preserve the next turn and its commands.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,

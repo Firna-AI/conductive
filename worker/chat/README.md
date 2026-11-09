@@ -184,7 +184,10 @@ tests through the production Worker entry.
   `continuation.ts`: active and waiting turns, the dispatch rule of each
   command, the retry message of a turn end, safe turn context, late data,
   terminal events, and unanswered messages.
-  `TurnLifecycle.finish` preserves a saved login-failure cause when a runner end or workspace stop follows a gateway Stop.
+  `TurnLifecycle.runnerEnded`, `workspaceStopped`, and `fail` handle each source of a turn end.
+  A failure keeps its Stop and cause until a runner end or workspace stop.
+  `turn-completion.ts` commits the end, updates the session, and advances waiting work.
+  `finish` remains available for queued login failures in runner delivery.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-tabs.ts`: open tabs, their grants, the refresh and expiry
   timers, and the grant check before each send. By default,

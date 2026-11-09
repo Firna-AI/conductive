@@ -380,8 +380,11 @@ more approaches of each call.
   the answer itself. Rejected: a stream in the Durable Object, which one
   restart ends for the whole workspace. A D1 table of tokens, which can
   disagree with the Durable Object.
-- **D5. End of a stream.** Decision 6 B: the Worker checks the turn every
-  30 seconds while an answer streams. A stopping turn counts as ended for
+- **D5. End of a stream.** Decision 6 B. Each request gets a lease of 30
+  seconds from its first turn check, before the upstream fetch. A passing
+  check every 15 seconds renews it. A timer ends the upload, the fetch, and
+  the answer when the lease ends, so a slow check cannot stretch the bound
+  (review finding 2, 9 November 2026). A stopping turn counts as ended for
   new requests.
 - **D6. Login check.** Decision 7 D: each request checks the turn, the
   live workspace, the starter's membership and suspension, and that the
@@ -450,8 +453,10 @@ more approaches of each call.
   `RUNNER_PROTOCOL_VERSION` when it starts. A refresh copies the version
   of the image that it refreshes. The deploy publishes the runner archive
   from the same commit as the Worker. A lagging archive fails closed.
-- **D19. Version of a workspace.** The workspace record gets the version
-  of its image at create. No value means version 1.
+- **D19. Version of a workspace.** Each allocation of a cloud computer
+  writes the version of its image snapshot to the workspace record, before
+  the provider call. So a Try again from a newer image updates the pin
+  (review finding 1, 9 November 2026). No value means version 1.
 - **D20. Version refusal.** The Worker checks the version in the runner's
   first message, before the welcome and any command. It closes the
   connection as for a refused token, and logs a warning for the operator.
@@ -710,6 +715,9 @@ tokens. The own endpoint goes through the gateway.
       account page." Name an unreachable endpoint in the same way (D22).
       Word each cause with the copy rules of the `product-ui` skill.
 - [ ] Count such a login as a login that cannot be used (D28).
+- [ ] Move `RunnerDelivery.failLogin` to the failure entry of
+      `TurnLifecycle`, and make `finish` private. This completes review
+      finding 3, which kept the shared runner delivery file unchanged.
 - [ ] Check the Worker's other fetches. Then turn on
       `global_fetch_strictly_public` in `wrangler.jsonc` (open check 8).
       Save the check under `.context/model-gateway/`.

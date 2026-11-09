@@ -39,6 +39,12 @@ export async function gatewayHttp(
   const checks: string[] = []
   const workspaceLookups: string[] = []
   const workspaceCalls: string[] = []
+  const endpoint = {
+    checkTurnToken(token: string) {
+      checks.push(WORKSPACE_ID)
+      return fixture.chat.turnTokens.check(WORKSPACE_ID, token)
+    },
+  }
   const fetch = requestBodyEntry(async (request) => {
     const response = await routeModelGateway(request, {
       dependencies: {
@@ -56,12 +62,7 @@ export async function gatewayHttp(
       },
       workspace(id) {
         workspaceCalls.push(id)
-        return {
-          checkTurnToken(token) {
-            checks.push(id)
-            return fixture.chat.turnTokens.check(id, token)
-          },
-        }
+        return endpoint
       },
     })
     return response ?? new Response(null, { status: 404 })
@@ -94,6 +95,7 @@ export async function gatewayHttp(
     anthropic,
     openai,
     checks,
+    endpoint,
     workspaceLookups,
     workspaceCalls,
     request,

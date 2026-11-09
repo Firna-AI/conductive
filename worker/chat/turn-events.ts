@@ -84,21 +84,15 @@ export async function prepareAgentEvent(
         await transaction.removeCommand(command.commandId)
       }
     }
-    if (
-      !turn.loginFailure ||
-      (event.type !== 'turn.completed' && event.type !== 'turn.failed')
-    )
-      await transaction.emit(event, occurredAt)
     if (event.type === 'turn.completed' || event.type === 'turn.failed') {
-      await new TurnLifecycle(transaction, session).finish(
+      await new TurnLifecycle(transaction, session).runnerEnded(
         turn,
-        event.type === 'turn.failed'
-          ? { state: 'failed', retryMessageId: event.retryMessageId }
-          : event.state === 'finished'
-            ? { state: 'finished', randomId }
-            : { state: 'stopped' },
+        event,
+        occurredAt,
+        randomId,
       )
     } else {
+      await transaction.emit(event, occurredAt)
       await transaction.saveTurn(turn)
     }
   }

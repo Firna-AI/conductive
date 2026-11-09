@@ -1,56 +1,37 @@
-import type { ConnectionScheduler } from '../security/connection-access'
+import type { GatewayRequestLifetime } from './request-lifetime'
 
 export function gatewayStream(
   body: ReadableStream<Uint8Array>,
-  options: {
-    check: () => Promise<boolean>
-    schedule: ConnectionScheduler
-    abort: () => void
-    cleanup: () => void
-    signal: AbortSignal
-  },
+  lifetime: GatewayRequestLifetime,
 ) {
   const reader = body.getReader()
   let active = true
-  let stopCheck: (() => void) | undefined
   let output!: ReadableStreamDefaultController<Uint8Array>
   const cleanup = () => {
     active = false
-    stopCheck?.()
-    options.signal.removeEventListener('abort', disconnected)
-    options.cleanup()
+    lifetime.signal.removeEventListener('abort', disconnected)
+    lifetime.complete()
   }
   const cancel = (reason: unknown) => {
     if (!active) return
-    cleanup()
+    active = false
     output.error(reason)
-    options.abort()
+    lifetime.cancel(reason)
+    cleanup()
     void reader
       .cancel(reason)
       .catch(() => undefined)
       .then(() => reader.releaseLock())
   }
-  const disconnected = () =>
-    cancel(new Error('The model request was cancelled.'))
-  const check = async () => {
-    try {
-      if (!active) return
-      if (!(await options.check())) {
-        cancel(new Error('The model turn ended.'))
-        return
-      }
-      if (active) stopCheck = options.schedule(check, 30_000)
-    } catch {
-      cancel(new Error('The model turn could not be checked.'))
-    }
-  }
+  const disconnected = () => cancel(lifetime.signal.reason)
   return new ReadableStream<Uint8Array>(
     {
       start(controller) {
         output = controller
-        options.signal.addEventListener('abort', disconnected, { once: true })
-        if (options.signal.aborted) disconnected()
-        else stopCheck = options.schedule(check, 30_000)
+        lifetime.signal.addEventListener('abort', disconnected, {
+          once: true,
+        })
+        if (lifetime.signal.aborted) disconnected()
       },
       async pull(controller) {
         try {

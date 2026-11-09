@@ -130,7 +130,8 @@ while the change is open. Its pull request keeps them after the merge.
   back no part of an answer.
 - Reason: an agent program stalls on an answer that a gateway holds back,
   as Anthropic's gateway guide says.
-- An answer that still streams when its turn ends stops within 30 seconds
+- A model request that still runs when its turn ends stops within 30
+  seconds, also while its upload runs or while it waits for the answer
   (gateway decision 6).
 - Reason: the runner reports the end of a turn only after the agent
   program of the turn exits. So only a copied turn token can still stream

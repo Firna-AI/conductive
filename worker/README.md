@@ -13,7 +13,7 @@ The [sandbox area](sandbox/README.md) owns the Boat adapter and the use of the a
 The Worker reads that key from the Worker secret `BOAT_API_KEY`.
 The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
-The [lifecycle](lifecycle/README.md) records each image's runner version and copies it to each new workspace.
+The [lifecycle](lifecycle/README.md) records each image's runner version and copies it before each new computer allocation.
 The chat backend refuses a runner below that pin before the welcome or any command.
 The [operator area](operator/README.md) owns the operator's app-wide numbers and suspension of users and orgs.
 

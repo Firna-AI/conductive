@@ -2,7 +2,6 @@ import type { Session } from '../../src/shared/sessions'
 import type { WorkspaceChat } from '../chat/backend'
 import type { ChatOperation } from '../chat/operation'
 import { unavailableLoginMessage } from '../chat/session-login'
-import type { ChatDependencies } from '../chat/types'
 import { TurnLifecycle } from '../chat/turn-lifecycle'
 import { activeStoredTurn } from '../devices/access'
 import type { AppEnv } from '../env'
@@ -16,18 +15,18 @@ export class WorkspaceTurnTokens {
   private readonly chat: WorkspaceChat
   private readonly env: AppEnv
   private readonly operation: (workspaceId: string) => ChatOperation
-  private readonly eventStored: ChatDependencies['runnerEventStored']
+  private readonly randomId: () => string
 
   constructor(
     chat: WorkspaceChat,
     env: AppEnv,
     operation: (workspaceId: string) => ChatOperation,
-    eventStored: ChatDependencies['runnerEventStored'],
+    randomId: () => string,
   ) {
     this.chat = chat
     this.env = env
     this.operation = operation
-    this.eventStored = eventStored
+    this.randomId = randomId
   }
 
   /** The dispatch caller holds the chat queue. This method does not enter it. */
@@ -112,33 +111,14 @@ export class WorkspaceTurnTokens {
     await operation.change(async (transaction) => {
       const turn = await transaction.turn(turnId)
       const session = turn ? await transaction.session(turn.sessionId) : null
-      if (!turn || !session || turn.state !== 'running') return
-      turn.loginFailure = message
-      await transaction.saveTurn(turn)
-      await new TurnLifecycle(transaction, session).stop(
+      if (!turn || !session) return
+      await new TurnLifecycle(transaction, session).fail(
         turnId,
-        crypto.randomUUID(),
+        message,
+        this.randomId,
       )
     })
     await this.chat.flushRunner()
-    const events = await operation.change(async (transaction) => {
-      const turn = await transaction.turn(turnId)
-      const session = turn ? await transaction.session(turn.sessionId) : null
-      if (!turn?.loginFailure || !session || turn.state !== 'stopping')
-        return []
-      await new TurnLifecycle(transaction, session).finish(turn, {
-        state: 'failed',
-      })
-      return transaction.emitted.filter(
-        ({ event }) => event.type === 'turn.failed',
-      )
-    })
-    for (const event of events)
-      await this.eventStored(event, async (event, occurredAt) => {
-        await operation.change((transaction) =>
-          transaction.emit(event, occurredAt),
-        )
-      })
   }
 }
 

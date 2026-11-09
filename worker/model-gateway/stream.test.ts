@@ -41,7 +41,7 @@ it('passes success bytes in steps before the upstream finishes and preserves the
   }
 })
 
-it('checks an open answer every 30 seconds and ends it after its real turn ends', async () => {
+it('checks an open answer every 15 seconds and ends it after its real turn ends', async () => {
   const client = await gatewayHttp(harness)
   const upstream = openModelStream()
   client.anthropic.response = () => new Response(upstream.body)
@@ -50,7 +50,7 @@ it('checks an open answer every 30 seconds and ends it after its real turn ends'
     expect(response.status).toBe(200)
     const reader = response.body?.getReader()
     if (!reader) throw new Error('The response stream is missing.')
-    await client.fixture.clock.advance(29_999)
+    await client.fixture.clock.advance(14_999)
     expect(client.checks).toHaveLength(1)
     await client.fixture.clock.advance(1)
     expect(client.checks).toHaveLength(2)
@@ -60,7 +60,7 @@ it('checks an open answer every 30 seconds and ends it after its real turn ends'
       ended = true
     })
     const refusal = expect(pending).rejects.toThrow('The model turn ended.')
-    await client.fixture.clock.advance(29_999)
+    await client.fixture.clock.advance(14_999)
     expect(ended).toBe(false)
     await client.fixture.clock.advance(1)
     await refusal

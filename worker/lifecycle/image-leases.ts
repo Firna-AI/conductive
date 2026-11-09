@@ -8,23 +8,18 @@ export async function leasedCreationImage(
 ): Promise<{
   imageName: string
   defaultBranch: string
-  runnerProtocolVersion: number
 }> {
   const row = await db
     .prepare(
-      `SELECT l.snapshot_name AS imageName, p.default_branch AS defaultBranch,
-         COALESCE(b.runner_protocol_version, 1) AS runnerProtocolVersion
+      `SELECT l.snapshot_name AS imageName, p.default_branch AS defaultBranch
        FROM image_leases l JOIN workspace_creation_plans p
          ON p.workspace_id = l.workspace_id AND p.image_name = l.snapshot_name
-       LEFT JOIN image_builds b ON b.org_id = l.org_id
-         AND b.snapshot_name = l.snapshot_name AND b.state = 'succeeded'
        WHERE l.org_id = ? AND l.workspace_id = ? AND p.repository_id = ?`,
     )
     .bind(orgId, workspaceId, repositoryId)
     .first<{
       imageName: string
       defaultBranch: string
-      runnerProtocolVersion: number
     }>()
   if (!row)
     throw new HttpError(

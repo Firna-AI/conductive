@@ -37,8 +37,13 @@ Success body chunks pass directly, with no text decoding or copy.
 The upload reads through the entry's 100,000,000-byte budget.
 An early upstream answer waits for the remaining upload to pass that reader.
 An overflow aborts the upstream request and returns the entry's shared 413 error.
-The gateway rechecks an open answer every 30 seconds.
-It cancels the upstream when the turn ends or the client disconnects.
+Each request gets a 30-second lease from its first turn check, before the upstream fetch.
+Checks start every 15 seconds while the upload, fetch, or answer runs.
+A passing check renews the lease to 30 seconds after that check started.
+A separate timer cancels the upload, fetch, and answer when the lease ends.
+A slow check cannot extend that deadline.
+A refusal before the answer starts returns its stable error code.
+A client disconnect also cancels the upstream.
 It adds no retry, model filter, rate limit, or answer size limit.
 It writes no request body, answer body, or header value to logs.
 
@@ -58,7 +63,8 @@ Production uses the shared connection scheduler.
 - [paths.ts](paths.ts): gateway base matching and the fixed model method and suffix list.
 - [headers.ts](headers.ts): request and response header rules and authentication replacement.
 - [upload.ts](upload.ts): streaming upload and draining after an early reply.
-- [stream.ts](stream.ts): answer forwarding, periodic turn checks, and upstream cancellation.
+- [request-lifetime.ts](request-lifetime.ts): `GatewayRequestLifetime` owns the lease, periodic checks, cancellation, and cleanup across every forwarding phase.
+- [stream.ts](stream.ts): answer forwarding under the request lease.
 - [redact.ts](redact.ts): bounded carry bytes for credential removal from error bodies.
 - [errors.ts](errors.ts): stable gateway refusals in each provider's API shape.
 - [workspace.ts](workspace.ts): `WorkspaceTurnTokens.forRunningTurn` derives a stable token from the turn record.
@@ -73,8 +79,11 @@ Production uses the shared connection scheduler.
 - [types.ts](types.ts): `TurnTokenCheck` and `TurnTokenEndpoint` define the trusted check result and RPC method.
 - [../workspace-lifecycle.ts](../workspace-lifecycle.ts): `checkTurnToken` selects the workspace from stored chat metadata.
   [../lifecycle/workspace-transport.ts](../lifecycle/workspace-transport.ts) carries it through the workspace runtime.
-- [../chat/turn-lifecycle.ts](../chat/turn-lifecycle.ts): `TurnLifecycle.stop` saves the interrupt before a gateway failure ends the turn.
-  The saved failure cause survives a restart between Stop and the failed end.
-  The common publisher sends the failed end before its session update.
+- [../chat/turn-lifecycle.ts](../chat/turn-lifecycle.ts): `TurnLifecycle.fail` ends a queued turn or saves a failure cause and stops a running turn.
+  The interrupt and cause stay until a runner end or workspace stop.
+  The common publisher sends one failed end before its session update.
+  The runner's own end then stays as late data, with its changed files.
 - [fixture.test-support.ts](fixture.test-support.ts): a running turn whose session starter differs from its message sender.
-- [workspace.test.ts](workspace.test.ts), [login.test.ts](login.test.ts), and [runtime.test.ts](runtime.test.ts): token lifetime, login changes, event order, retry, and RPC storage tests.
+- [workspace.test.ts](workspace.test.ts) and [login.test.ts](login.test.ts): token lifetime, login changes, Stop across a disconnect, event order, late data, and retry.
+- [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
+- [runtime.test.ts](runtime.test.ts): production workspace RPC on SQLite, with eviction after a saved gateway Stop, one interrupt after reconnect, duplicate runner ends, the saved failure cause, and Retry.

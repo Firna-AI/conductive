@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import { WORKSPACE_ID } from '../chat/harness.test-support'
 import { retryRequest, sessionRecord } from '../chat/retry.test-support'
 import { terminalEvent } from '../chat/turn-lifecycle.test-support'
@@ -28,12 +27,14 @@ describe('gateway login changes', () => {
     await harness.dispose()
   })
 
-  it('stops a changed login once, publishes the cause in order, and retries with the new login', async () => {
+  it('retains Stop across a runner disconnect, publishes one failure after its end, and retries with the new login', async () => {
     const { fixture, runner, session, turn, token, check } =
       await runningGatewayTurn(harness)
     const first = await fixture.tab()
     const second = await fixture.tab()
     const before = await fixture.history(session.id)
+    runner.disconnect()
+    await fixture.drain()
     await replaceGatewayLogin(fixture)
     expect(await Promise.all([check(), check()])).toEqual([
       { ok: false, reason: 'agent_login_changed' },
@@ -41,7 +42,32 @@ describe('gateway login changes', () => {
     ])
     expect(
       runner.commands.filter((command) => command.type === 'interrupt'),
+    ).toEqual([])
+    expect(turnEnds(await fixture.history(session.id))).toEqual([])
+    expect(
+      await fixture.chat.store.read(WORKSPACE_ID, (view) =>
+        view.turn(turn.turnId),
+      ),
+    ).toMatchObject({ state: 'stopping' })
+    expect(
+      (
+        await fixture.chat.store.read(WORKSPACE_ID, (view) => view.pending())
+      ).filter((command) => command.type === 'interrupt'),
+    ).toEqual([
+      {
+        type: 'interrupt',
+        commandId: expect.stringMatching(/^chat-\d+$/),
+        sessionId: session.id,
+        turnId: turn.turnId,
+      },
+    ])
+    await fixture.connect(runner)
+    expect(
+      runner.commands.filter((command) => command.type === 'interrupt'),
     ).toMatchObject([{ sessionId: session.id, turnId: turn.turnId }])
+    expect(turnEnds(await fixture.history(session.id))).toEqual([])
+    runner.emit(terminalEvent(turn, 'stopped'))
+    await fixture.drain()
     const ended = await fixture.history(session.id)
     const ends = turnEnds(ended)
     expect(ends.map(({ event }) => event)).toEqual([
@@ -76,7 +102,6 @@ describe('gateway login changes', () => {
     expect(
       await fixture.chat.store.read(WORKSPACE_ID, (view) => view.pending()),
     ).toEqual([])
-    runner.emit(terminalEvent(turn, 'stopped'))
     const late = runner.emit({
       type: 'assistant.delta',
       sessionId: session.id,
@@ -154,6 +179,14 @@ describe('gateway login changes', () => {
         reason: 'agent_login_unavailable',
       })
       expect(await check()).toEqual({ ok: false, reason: 'turn_not_active' })
+      if (change === 'archived workspace' || change === 'suspended org') {
+        await fixture.chat.runLifecycle(() =>
+          fixture.chat.stopWorkspace(WORKSPACE_ID),
+        )
+      } else {
+        runner.emit(terminalEvent(turn, 'stopped'))
+        await fixture.drain()
+      }
       const history = await fixture.chat.store.read(WORKSPACE_ID, (view) =>
         view.history(0),
       )
@@ -182,39 +215,4 @@ describe('gateway login changes', () => {
       fixture.chat.closeConnections()
     },
   )
-
-  it('retains the failure cause after a crash commits Stop, then accepts the runner end once', async () => {
-    const { fixture, runner, session, turn, check } =
-      await runningGatewayTurn(harness)
-    await replaceGatewayLogin(fixture)
-    fixture.storage.crashAfterCommit = true
-    await expect(check()).rejects.toThrow('Injected post-commit crash')
-    fixture.chat.closeConnections()
-    fixture.restart()
-    await fixture.connect(runner)
-    expect(
-      runner.commands.filter((command) => command.type === 'interrupt'),
-    ).toHaveLength(1)
-    const end = runner.emit(terminalEvent(turn, 'stopped'))
-    await fixture.drain()
-    runner.sendEnvelope(end)
-    await fixture.drain()
-    const ends: WorkspaceEventEnvelope[] = turnEnds(
-      await fixture.history(session.id),
-    )
-    expect(ends.map(({ event }) => event)).toMatchObject([
-      {
-        type: 'turn.failed',
-        error: {
-          code: 'agent_login_required',
-          message:
-            "Teammate's Claude login changed. Try again to use the new login.",
-        },
-      },
-    ])
-    expect((await sessionRecord(fixture, session.id)).retryMessageId).toBe(
-      turn.message.id,
-    )
-    fixture.chat.closeConnections()
-  })
 })

@@ -97,7 +97,6 @@ export async function insertWorkspace(
     turnId: string
     message: SendMessageRequest
     now: number
-    runnerProtocolVersion: number
     repositoryLocations?: readonly RepositoryLocation[]
   },
 ): Promise<string> {
@@ -126,8 +125,8 @@ export async function insertWorkspace(
     db
       .prepare(
         `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, state, created_at, updated_at, last_activity_at, runner_protocol_version, position)
-       SELECT ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?, ?,
+       name, branch, state, created_at, updated_at, last_activity_at, position)
+       SELECT ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?,
          (SELECT COALESCE(MIN(position) - 1, 0) FROM workspaces
           WHERE org_id = ? AND section_id = ? AND archived_at IS NULL AND state != 'archived')
        WHERE ${activeOrgIdPredicate('?')}`,
@@ -143,7 +142,6 @@ export async function insertWorkspace(
         input.now,
         input.now,
         input.now,
-        input.runnerProtocolVersion,
         input.orgId,
         section.id,
         input.orgId,

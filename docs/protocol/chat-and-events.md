@@ -250,9 +250,12 @@ says.
 - Each build of the org image records the runner protocol version that it
   installs. A refresh keeps the version of the image that it refreshes,
   because a refresh keeps the installed runner.
-- A new workspace takes the runner version of its org image as its version
-  pin, and keeps it. A workspace or an org image without a recorded version
-  counts as version 1 (gateway decisions 2 and 5).
+- Each cloud computer of a workspace takes the runner version of the org
+  image that it starts from as the version pin of the workspace, before it
+  can connect. So a Try again that starts a new cloud computer from a newer
+  image takes the version of that image. A stop and a resume keep the pin.
+  A workspace or an org image without a recorded version counts as version
+  1 (gateway decisions 2 and 5).
 - The workspace refuses a runner connection whose protocol version is below
   its pin. It closes that connection before the `welcome` and before any
   command.

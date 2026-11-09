@@ -2,7 +2,7 @@ import type { Agent } from '../../src/shared/agents'
 import type { TurnTokenCheck } from './types'
 
 type TurnRefusal = Extract<TurnTokenCheck, { ok: false }>['reason']
-type GatewayRefusal =
+export type GatewayRefusal =
   | TurnRefusal
   | 'model_route_not_found'
   | 'agent_mismatch'

@@ -99,7 +99,7 @@ export class WorkspaceChat {
       this,
       env,
       (id) => this.operation(id),
-      this.dependencies.runnerEventStored,
+      this.dependencies.randomId,
     )
     this.operations = new WorkspaceOperations({
       env,

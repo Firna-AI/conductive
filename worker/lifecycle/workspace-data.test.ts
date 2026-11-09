@@ -63,7 +63,6 @@ it.each([
       turnId: 'new-turn',
       message: FIRST_MESSAGE,
       now: TEST_TIME + 100,
-      runnerProtocolVersion: 1,
     }),
   ).toBe('test-image')
   expect(

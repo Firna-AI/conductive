@@ -73,7 +73,6 @@ async function prepareWorkspaceRecords(
       turnId: job.turnId,
       message: creation.request,
       now: creation.createdAt,
-      runnerProtocolVersion: image.runnerProtocolVersion,
       repositoryLocations: job.repositoryLocations,
     })
   }

@@ -59,7 +59,8 @@ the git credential sender, and the turn recovery.
 
 - A full build records the Worker's runner protocol version.
   A refresh copies the version of the image that it refreshes.
-- A new workspace stores the runner version of its reserved image.
+- Each new computer allocation stores the runner version of its image snapshot before the provider call.
+  This includes a first start, Try again, and a restored allocation.
   A missing image version counts as version 1.
 - A build sandbox starts from the current org image, or as a new default
   sandbox for the first build. Its env holds only the folder variables.
@@ -115,7 +116,8 @@ object holds the lifecycle state, the turn records, and the events.
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
-- [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name, branch, and runner version.
+- [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
+- [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. In the `records` phase of a create, `insertWorkspace`
   writes the new row and its runtime record in one D1 batch. The new row
