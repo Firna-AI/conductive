@@ -4291,6 +4291,74 @@ Added on 8 November 2026 from Milestone 15q.
 - **Chosen:** A, by the user on 8 November 2026. The follow-up item
   `plans/follow-ups/desktop-stream-after-access-loss.md` keeps B.
 
+### 147. Choose how the terminal shell finds the live repository folder
+
+Added on 8 November 2026, when the user saw the terminal prompt
+`var/lib/ascii-lazy/retired/home/code/mokly$`.
+
+- **Background:** After a start from a saved snapshot, Boat restores the
+  disk in the background. When the restore ends, Boat keeps an old view of
+  the disk under `/var/lib/ascii-lazy/retired/`. The terminal services
+  start before the restore ends, and move into the repository folder. tmux
+  created the shell in its own current folder, which was then the old view.
+  Boat's docs do not say if the old view shares the live files.
+- **Options:**
+  - **A.** Give tmux the folder path when it creates the shell. A shell
+    that starts before the restore ends still moves to the old view.
+  - **B.** As A, and add a Bash prompt hook that moves the shell to the
+    live copy of its current folder after the restore.
+  - **C.** As A, and start the terminal only after Boat reports the end of
+    the restore. The Terminal tab then waits.
+- **Recommendation:** B, after the options check of 8 November 2026. The
+  Terminal is the default tool of the workspace screen, and it connects
+  as soon as the workspace is ready. So its first shell often starts
+  before the restore ends, and A does not cover that shell. The first
+  recommendation was A.
+- **Chosen:** A, by the user on 8 November 2026, before the options check.
+  Then B, by the user on 8 November 2026, after the options check. The
+  user also chose option E of the follow-up item
+  `plans/follow-ups/old-disk-view-after-restore.md`: B now, then a check
+  in a real sandbox that chooses what the other programs need.
+
+### 148. Choose how terminal fixes reach existing workspaces
+
+Added on 8 November 2026, from the blocked wider fix of review finding 1
+of branch `calummoore/directory-path-length`.
+
+- **Background:** Only an org image build installs the terminal programs.
+  A resume restores the workspace's own disk, so an existing workspace
+  keeps the terminal programs of its image and their bugs.
+- **Options:**
+  - **A.** Keep the rule. Say in each terminal fix that an existing
+    workspace needs a new workspace to get it.
+  - **B.** Install the terminal programs at each workspace start.
+  - **C.** As B, but only when a version marker in the sandbox is older.
+- **Recommendation:** B.
+- **Chosen:** A, by the user on 8 November 2026.
+
+### 149. Choose when the terminal moves a running shell by itself
+
+Added on 8 November 2026, from review finding 3 of branch
+`calummoore/directory-path-length`.
+
+- **Background:** The folder hook of decision 147 B moves a shell to the
+  folder that `$PWD` names whenever the real folder differs. So it also
+  moves the shell when a symbolic link in its path changes, when its
+  folder is made again, or when a command assigns `PWD`. No requirement
+  covers these moves.
+- **Options:**
+  - **A.** Keep the code, and state the general rule.
+  - **B.** Move the shell only when its real folder is under
+    `/var/lib/ascii-lazy/retired/`, an undocumented Boat path.
+  - **C.** The Worker watches Boat's `hydrated` signal and writes a marker
+    file when the restore ends. The hook moves the shell only for that
+    restore.
+  - **D.** Move the shell only when the two folders are on different file
+    systems.
+  - **E.** As A, and print one line at each move.
+- **Recommendation:** A, after the finding check. The review recommended B.
+- **Chosen:** C, by the user on 8 November 2026.
+
 ## Design
 
 Each item below is an agent call of 5 November 2026 unless it says
@@ -6592,6 +6660,131 @@ private `/run` directory.
 Evidence: `.context/terminal-11c/implementor-report.md` and
 `.context/terminal-11c/orchestrator-smoke.log`.
 
+## Milestone 11d: Terminal shell in the live repository folder
+
+Depends on: 11c.
+
+Apply decision 147 A. Added on 8 November 2026.
+
+Each org image build installs the terminal files. An existing workspace
+keeps the launcher of its image, also after a resume, so it keeps the
+bug. A workspace gets the fix when it starts from an org image that a
+build makes after the deploy.
+
+- [x] Give tmux the path of the repository folder when a terminal
+      connection creates the workspace shell. Update the launcher test and
+      `worker/terminal/README.md`. Record the open part in
+      `plans/follow-ups/old-disk-view-after-restore.md`.
+      Branch: `calummoore/directory-path-length`.
+- [x] Run the complete gate. Commit and push the branch. Done on
+      8 November 2026: the complete gate passed on the fix.
+      Branch: `calummoore/directory-path-length`.
+- [x] Review the branch against `origin/main` with the
+      `implementation-review` skill. Report the findings, then apply the
+      fix rule: fix the `fix now` findings, record follow-up items under
+      `plans/follow-ups/` for the rest, re-review once, and report. Done
+      on 8 November 2026: two rounds found two findings in the post-merge
+      check, and `c6e9971` and `dbb9251` fix both. Evidence:
+      `.context/reviews/calummoore/directory-path-length/findings.md`.
+      Branch: `calummoore/directory-path-length`.
+- [x] Open the pull request into `main`. Done on 8 November 2026: pull
+      request #67. Branch: `calummoore/directory-path-length`.
+
+Evidence: `.context/ascii-sim.log`, the local simulation with tmux and
+moved mounts. `.context/gate-directory-path-length.log`, the gate.
+`.context/boat-native-remote-workspaces/options-check-decision-142.md`,
+the options check.
+
+## Milestone 11e: Shells that started before the restore ended
+
+Depends on: 11d.
+
+Apply decision 147 B and decision 148 A. Added on 8 November 2026.
+
+- [x] Add the folder hook `terminalPromptCommand`. The shell server sets
+      it as `PROMPT_COMMAND` in the global tmux environment. Test it in a
+      real interactive Bash, and update `worker/terminal/README.md` and
+      the "Terminal" section of `docs/protocol/workspaces-and-sandboxes.md`.
+      Branch: `calummoore/directory-path-length`.
+- [x] Record option E in `plans/follow-ups/old-disk-view-after-restore.md`,
+      and make the check of that item a post-merge task. Record the first
+      command after the restore, which still runs in the old view.
+      Branch: `calummoore/directory-path-length`.
+- [x] Apply decision 148 A in `worker/terminal/README.md`, and delete
+      `plans/follow-ups/terminal-fixes-reach-existing-workspaces.md`.
+      Branch: `calummoore/directory-path-length`.
+- [x] Run the complete gate. Commit and push the branch. Done on
+      8 November 2026: the complete gate passed. Evidence:
+      `.context/gate-directory-path-length-3.log`.
+      Branch: `calummoore/directory-path-length`.
+- [x] Review the new commits against `origin/main` with the
+      `implementation-review` skill. The two fix rounds of the branch are
+      used, so a `fix now` finding becomes `fix after merge`, and a
+      critical finding goes to the user. Update pull request #67. Done on
+      8 November 2026: round 3 found one finding that waits for the user,
+      in `plans/follow-ups/folder-hook-outside-restores.md`.
+      Branch: `calummoore/directory-path-length`.
+
+## Milestone 11f: Move shells only for the restore
+
+Depends on: 11e.
+
+Apply decision 149 C. Added on 8 November 2026.
+
+Orchestrator calls of 8 November 2026:
+
+- The workspace alarm polls Boat's `GET /sandboxes/{id}` every 5 seconds
+  after each successful create and resume, until `hydrated` is not
+  `false`, the sandbox stops, or the next start begins. Reason: the
+  Worker has no Boat webhook route, and a webhook needs a new secret and
+  Boat setup. The `get` and command routes are already on the fixed route
+  list, and the alarm already polls Boat every 5 seconds while the runner
+  is not connected.
+- A reply without `hydrated` ends the watch as a finished restore. Reason:
+  Boat's schema makes the field optional, and Boat says that a sandbox
+  that restored nothing is hydrated from the start.
+- The watch has no own deadline. The idle stop after 30 minutes ends it.
+- The terminal area owns the marker `/run/conductive-terminal/restore-ended`
+  and the privileged command that writes it, because it owns the terminal
+  files of a sandbox. `/run` is memory, so each start begins without it.
+- The hook checks the folder of a shell once, at its first prompt after
+  the marker exists, and never again. Reason: decision 149 C limits the
+  moves to the restore.
+- A disk retention restart starts no watch, because it starts no terminal.
+
+- [x] Parse `hydrated` in the sandbox provider's `get` reply, as `true`,
+      `false`, or absent. Branch: `calummoore/directory-path-length`.
+- [x] Add the restore watch to the lifecycle state and to the alarm of the
+      workspace object, with its schedule and its end at a stop, an error,
+      an archive, and a new start. Write the marker through the terminal
+      area when the restore ends. The orchestrator check added the end at
+      an access stop, which an org suspension found.
+      Branch: `calummoore/directory-path-length`.
+- [x] Make the folder hook wait for the marker, and check once.
+      Branch: `calummoore/directory-path-length`.
+- [x] Test the parser, the watch, and the hook. Evidence:
+      `.context/boat-native-remote-workspaces/milestone-11f/non-ui/report.txt`.
+      Branch: `calummoore/directory-path-length`.
+- [x] Update `worker/terminal/README.md`, the lifecycle docs, the sandbox
+      README, the "Terminal" section of
+      `docs/protocol/workspaces-and-sandboxes.md`, and the post-merge
+      check. Delete `plans/follow-ups/folder-hook-outside-restores.md`, and
+      update `plans/follow-ups/old-disk-view-after-restore.md`. The sandbox
+      README needed no change, because it does not list the reply fields.
+      Branch: `calummoore/directory-path-length`.
+- [x] Run the complete gate. Commit and push the branch. Done on
+      8 November 2026. Evidence: `.context/gate-directory-path-length-6.log`.
+      Branch: `calummoore/directory-path-length`.
+- [x] Review the new commits against `origin/main` with the
+      `implementation-review` skill. The two fix rounds of the branch are
+      used, so a `fix now` finding becomes `fix after merge`, and a
+      critical finding goes to the user. Update pull request #67. Done on
+      9 November 2026: round 4 found one finding, and its check removed
+      it. The merge of the primary branch then renumbered decisions 142 to
+      144 of this branch to 147 to 149, and pull request #67 now targets
+      the primary branch, as decision 143 says.
+      Branch: `calummoore/directory-path-length`.
+
 ## Milestone 12: Terminal, previews, and desktop UI
 
 Tags: ui
@@ -7655,3 +7848,48 @@ checks of 16 and 16a to the work after the merge.
       plan, and the follow-up items that the change adds. Done on
       8 November 2026: pull request #57 into `main`. The user merges it.
       Branch: `calummoore/conductor-alternative-architecture`.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] After the deploy of Milestones 11d, 11e, and 11f, build the org
+      image again. A change to the terminal files reaches a workspace only
+      through a new image. An existing workspace keeps the terminal
+      programs of its image, also after a resume. So create a new
+      workspace from the rebuilt image, and let it stop, for example after
+      30 minutes without activity. Resume it, and open the Terminal tab at
+      once, so that its shell starts before the restore ends. Wait until
+      `GET /sandboxes/{id}` of Boat gives `hydrated: true`. Then do these
+      steps in that shell:
+  - `grep -c -F -- '-s workspace -c' /usr/local/lib/conductive/terminal`
+    and `grep -c -F -- '/run/conductive-terminal/restore-ended' /usr/local/lib/conductive/terminal-sessions`
+    each print `1`. A `0` means that the workspace runs the old programs.
+  - `readlink /proc/$(pgrep -o -x ttyd)/cwd` prints a path under
+    `/var/lib/ascii-lazy/retired/`. This shows that the terminal started
+    before the restore ended, and that the restore has ended. Another
+    path means that this resume cannot test the fix. Then stop and
+    resume the workspace again.
+  - `ps -o lstart= -p $$` prints a time before `hydratedAt` of
+    `GET /sandboxes/{id}`. This shows that the shell itself started before
+    the restore ended. A later time means that this shell cannot test the
+    hook. Then stop and resume the workspace again.
+  - Wait until the restore marker `/run/conductive-terminal/restore-ended`
+    exists, for example with `ls -l /run/conductive-terminal/restore-ended`.
+    The Worker writes it up to about 5 seconds after Boat gives
+    `hydrated: true`. Then press Enter on an empty line, so that the
+    folder hook runs at a prompt after the marker exists.
+  - `readlink /proc/$$/cwd` prints `/home/user/code/<name>`. This shows
+    that the folder hook moved the early shell at its first prompt after
+    the marker. The prompt and Bash's `pwd -P` read the path text in
+    `$PWD`, so they do not show the real folder.
+  - Run `mkdir conductive-once && cd conductive-once`. Then run
+    `(cd .. && rmdir conductive-once && mkdir conductive-once)`. This
+    subshell removes the folder of the shell and makes it again. Then
+    `readlink /proc/$$/cwd` prints
+    `/home/user/code/<name>/conductive-once (deleted)`. The folder hook
+    ran at the prompt after the subshell, but it did not move the shell to
+    the new folder. This shows that the hook moves a shell only once. Run
+    `cd .. && rmdir conductive-once` to remove the test folder.
+  - Run `exit`, and press Reconnect. The next connection creates a new
+    shell after the restore. In the new shell, `readlink /proc/$$/cwd`
+    prints `/home/user/code/<name>`, not a path under
+    `/var/lib/ascii-lazy/retired/`.
