@@ -13,6 +13,7 @@ import ui from '../ui/ui.module.css'
 import type { SectionActions } from './SectionHeader'
 import { SectionList } from './SectionList'
 import { useListActions } from './useListActions'
+import { useListArchive } from './useListArchive'
 import type { RowVariant } from './WorkspaceRow'
 import list from './list.module.css'
 
@@ -97,6 +98,7 @@ export function OrgList(props: {
   const workspaces = useStore(org.workspaces)
   const now = useNow(30_000)
   const { actions, move, adding, create, cancelAdding } = useListActions(org)
+  const archive = useListArchive(org, readOnly)
   const local = useLocalCollapse(actions)
   usePaletteOffer(
     props.offerActions && !readOnly
@@ -132,6 +134,7 @@ export function OrgList(props: {
     <>
       <SectionList
         actions={readOnly ? local.actions : actions}
+        archiveAction={archive.actionFor}
         archived={groups.archived}
         groups={readOnly ? local.apply(groups.sections) : groups.sections}
         move={move}
@@ -140,6 +143,7 @@ export function OrgList(props: {
         selectedId={props.selectedId}
         variant={props.variant}
       />
+      {archive.dialog}
       {adding && !readOnly ? (
         <NewSectionField cancel={cancelAdding} create={create} />
       ) : null}
