@@ -30,9 +30,7 @@ function toolDetail(detail: string | null) {
   }
 }
 
-export function uniquePaths<T extends { path: string }>(
-  items: readonly T[],
-): T[] {
+function uniquePaths<T extends { path: string }>(items: readonly T[]): T[] {
   const paths = new Set<string>()
   return items.filter(({ path }) => {
     if (paths.has(path)) return false

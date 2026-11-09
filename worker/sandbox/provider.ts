@@ -66,7 +66,7 @@ export interface CommandStatus extends CommandOffsets {
   more: boolean
 }
 
-export interface SandboxFile {
+interface SandboxFile {
   path: string
   sizeBytes: number
   encoding: 'utf-8' | 'base64'

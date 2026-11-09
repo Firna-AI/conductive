@@ -14,7 +14,7 @@ import { pageHrefs } from './links'
  * A fact that the operator or the lawyer still confirms or writes. It shows
  * as marked text, so that no reader takes it for a final fact.
  */
-export function draftField(text: string): Html {
+function draftField(text: string): Html {
   return html`<mark class="draft-field">${text}</mark>`
 }
 

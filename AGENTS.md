@@ -110,6 +110,12 @@ plan. A push to another branch runs no CI until its pull request opens.
   "sandbox", as [The provider](docs/protocol/workspaces-and-sandboxes.md#the-provider)
   says. Identifiers, comments, developer docs, and the deployment setup can
   name Boat.
+- When you change a fact in the architecture doc or in a protocol doc,
+  read both legal pages in full. The legal pages are the Terms page in
+  `src/marketing/terms.ts` and the Privacy page in
+  `src/marketing/privacy.ts`. In the same change, update each sentence of
+  the legal pages that restates the fact. A search for the old words is
+  not enough, because a legal page can restate a fact in other words.
 
 ## Product
 

@@ -75,13 +75,6 @@ export async function featureSectionWrite(
   if (collapsed !== undefined && typeof collapsed !== 'boolean')
     throw invalidShellInput()
   const position = optionalShellPosition(context.body?.position)
-  let order: string[] | undefined
-  if (position !== undefined) {
-    order = sections
-      .filter((entry) => entry.id !== section.id)
-      .map((entry) => entry.id)
-    order.splice(Math.min(position, order.length), 0, section.id)
-  }
   if (
     !(await updateShellSection(env.DB, {
       orgId,
@@ -89,7 +82,7 @@ export async function featureSectionWrite(
       sectionId: section.id,
       name,
       collapsed,
-      order,
+      position,
     }))
   ) {
     await requireShellWriter(env.DB, orgId, userId)

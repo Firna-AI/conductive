@@ -12,6 +12,7 @@ protocols:
   - name: Conductive sign-in
     schemes: [conductive]
 mac:
+  # The release command overrides these three fields and requires credentials.
   icon: dist/bundle/conductive.icns
   category: public.app-category.developer-tools
   identity: '-'

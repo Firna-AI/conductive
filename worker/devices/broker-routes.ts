@@ -33,7 +33,7 @@ export function approvalAction(value: unknown): DeviceApprovalAction {
       throw new HttpError(400, 'invalid_input', 'Choose a command permission.')
   }
 }
-export function settingsAction(value: unknown): DeviceSettingsAction {
+function settingsAction(value: unknown): DeviceSettingsAction {
   const input = deviceObject(value)
   if (input.action === 'read') return { action: 'read' }
   if (input.action === 'remove-command')

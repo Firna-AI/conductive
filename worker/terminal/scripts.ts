@@ -30,7 +30,7 @@ export function terminalPromptCommand(
   return `builtin test -n "\${__conductive_restore_checked-}" || ! builtin test -f ${shellArgument(restoreMarker)} || { __conductive_restore_checked=1; [ -z "\${PWD-}" ] || builtin test . -ef "$PWD" || { __conductive_oldpwd=\${OLDPWD-}; builtin cd -- "$PWD" 2>/dev/null && OLDPWD=$__conductive_oldpwd; unset __conductive_oldpwd; }; }`
 }
 
-export const terminalScriptDefaults: TerminalScriptOptions = {
+const terminalScriptDefaults: TerminalScriptOptions = {
   runtimeDirectory: TERMINAL_RUNTIME,
   restoreMarker: TERMINAL_RESTORE_MARKER,
   environmentFile: '/run/ascii-secrets/env.sh',
