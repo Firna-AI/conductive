@@ -289,6 +289,7 @@ The orchestrator owns the combined checks and the pull request.
 - [ ] Review the complete diff against `origin/main` after the push with `implementation-review`.
       Report findings, apply the fix rule, record follow-ups, and re-review once.
       Wait for the last commit's CI result.
+- [x] The external docs implementor corrects the login replacement and recovery steps for checked review finding 4.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the plan".
 - [ ] Open the pull request into `main`.
       Include the dated decision, design calls, plan permalink, checks, and added follow-up items.

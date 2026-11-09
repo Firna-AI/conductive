@@ -77,7 +77,6 @@ The switch saves each change at once.
 
 Sharing starts off for a new subscription token.
 It starts on for a new API key.
-Replacing a login with the same kind keeps its share setting.
 
 A new session on another member's login has no copy of your conversation.
 The earlier session keeps its history.
@@ -87,8 +86,11 @@ Share a login only when the provider's terms allow that use.
 ## Replace or remove a login
 
 1. Open the agent's row in **Account**.
-2. Select **Remove**.
-3. Select **Connect** if you want to save a replacement.
+2. Note your choice for **Let other members use this login** before you remove the login.
+3. Select **Remove**.
+4. Select **Connect** if you want to save a replacement.
+5. After connecting a replacement, check **Let other members use this login**.
+6. Set the switch to your preferred choice if needed.
 
 Removing a login keeps the session history.
 A later request can need a working login before it runs.
@@ -104,8 +106,12 @@ The first agent request can still report an authentication error.
 
 Check the error from the provider.
 Make sure the token or key belongs to the account you want to use.
+Note your choice for **Let other members use this login** before removing the login.
 Remove the saved login if you need to replace it.
 Then connect the correct token or key.
+
+Check **Let other members use this login** after connecting.
+Set the switch to your preferred choice if needed.
 
 A failed save keeps the secret in its field.
 Correct the cause shown by the form before you try again.
