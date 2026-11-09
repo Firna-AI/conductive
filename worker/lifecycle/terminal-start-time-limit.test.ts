@@ -59,6 +59,7 @@ it('names only the exit code and time-out when detached terminal setup fails', a
   await start.advance()
   fixture.boat.commandExitCode = 1
   fixture.boat.commandOutput = 'password=private-marker'
+  fixture.boat.commandStderr = 'token=private-stderr-marker'
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
   try {
     await start.advance()
@@ -76,6 +77,9 @@ it('names only the exit code and time-out when detached terminal setup fails', a
       },
     ])
     expect(JSON.stringify(warn.mock.calls)).not.toContain('private-marker')
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(
+      'private-stderr-marker',
+    )
     expect(fixture.boat.fileReads).toEqual([])
   } finally {
     warn.mockRestore()

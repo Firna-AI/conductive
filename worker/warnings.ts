@@ -22,6 +22,18 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'workspace_title_request_failed':
+      return {
+        kind: warning.kind,
+        message: 'The workspace title request failed.',
+        error: errorFields(warning.error),
+      }
+    case 'workspace_title_save_failed':
+      return {
+        kind: warning.kind,
+        message: 'The workspace title could not be saved.',
+        error: errorFields(warning.error),
+      }
     case 'workspace_start_failed':
       return {
         kind: warning.kind,

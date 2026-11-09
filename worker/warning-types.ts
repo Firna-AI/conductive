@@ -13,11 +13,17 @@ export const SIMPLE_WARNINGS = {
   attachment_upload_cleanup_retry: 'An attachment upload cleanup will retry.',
   activity_timestamp_failed: 'Workspace activity timestamp could not be saved.',
   activity_update_failed: 'Workspace activity update failed.',
+  workspace_title_unconfigured:
+    'The workspace title request was skipped: Workers AI is not configured.',
 } as const
 
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
   | { kind: keyof typeof SIMPLE_WARNINGS }
+  | {
+      kind: 'workspace_title_request_failed' | 'workspace_title_save_failed'
+      error: ErrorSummary
+    }
   | {
       kind: 'workspace_start_failed'
       workspaceId: WarningId
