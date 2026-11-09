@@ -1,6 +1,7 @@
 {
   "order": [
     "not-created",
+    "dialog",
     "creating",
     "waiting",
     "first-turn",
