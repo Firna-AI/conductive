@@ -229,8 +229,11 @@ the merge.
   page or as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](protocol/repository-folders.md): the folder and the
   shell variable of each repository in a sandbox.
-- [Chat and events](protocol/chat-and-events.md): sessions, messages, the
-  agent runner, and the events.
+- [Chat and events](protocol/chat-and-events.md): sessions, messages, what
+  the chat shows, and the events.
+- [Agent runner](protocol/agent-runner.md): the connection of the runner,
+  its events and their limits, its turns, and the repair of lost workspace
+  updates.
 - [Access and security](protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
 - [GitHub banner](protocol/github-banner.md): the pull request bar and its
@@ -247,3 +250,6 @@ the merge.
   operator in the web app, their counts, and their searches.
 - [Command palette](protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
+- [Command palette: empty and unavailable states](protocol/command-palette-states.md):
+  what the palette shows while its workspace data loads or did not load,
+  and when a tab or a search has no row.

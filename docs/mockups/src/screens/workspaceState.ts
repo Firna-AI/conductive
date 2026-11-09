@@ -1,4 +1,5 @@
 import type { SchemaProps } from '@mokly/mokly'
+import { foldStates } from '../components/chat/WorkFold'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { paletteViews } from '../components/palette/paletteViews'
 import { toolKeys } from '../components/workspace/tools'
@@ -21,6 +22,7 @@ export const workspaceStateSchema = {
     'sandbox',
     'startError',
     'conversation',
+    'fold',
     'banner',
     'files',
     'tool',
@@ -61,6 +63,12 @@ export const workspaceStateSchema = {
      */
     startError: { enum: startErrorKeys },
     conversation: { enum: conversationKeys },
+    /**
+     * The fold of the work of each ended turn: closed, as it starts, open,
+     * or open with its last message line open too. A view runs no script,
+     * so a chat with open folds starts at its top.
+     */
+    fold: { enum: foldStates },
     banner: { enum: bannerStates },
     /** The list of the files panel: All files, Changes, or Checks. */
     files: { enum: fileLists },
@@ -175,6 +183,7 @@ export const readyWorkspace: WorkspaceState = {
   sandbox: 'ready',
   startError: 'failed',
   conversation: 'history',
+  fold: 'closed',
   banner: 'ready-to-merge',
   files: 'changes',
   tool: 'terminal',

@@ -31,6 +31,39 @@ export function update(
   return { ...turn, type: 'tool.updated', tool }
 }
 
+/** A whole message of the agent, in the turn unless `turnId` names another. */
+export function said(
+  messageId: string,
+  text: string,
+  turnId: string = turn.turnId,
+): AgentChatEvent {
+  return {
+    ...turn,
+    turnId,
+    type: 'assistant.completed',
+    messageId,
+    text,
+    userMessageIds: [],
+  }
+}
+
+/** The end of a turn after 4m 12s, with no changed files. */
+export function ended(
+  state: 'finished' | 'stopped',
+  turnId: string = turn.turnId,
+): AgentChatEvent {
+  return {
+    ...turn,
+    turnId,
+    type: 'turn.completed',
+    state,
+    durationMs: 252_000,
+    files: [],
+    omittedFileCount: 0,
+    userMessageIds: [],
+  }
+}
+
 /** A refusal marker of the session, for the turn unless `fields` says. */
 export function refused(
   runnerEventNumber: number,

@@ -125,6 +125,12 @@ what the palette does.
   closes the palette first. Its action runs once the palette has left
   the page, so a field that the action opens can take the focus, and a
   question shows alone.
+- The palette reads the list and the repositories of its org through
+  `OrgModel.watch` while it is open, and shares those reads with the list
+  of the page. So the list and the palette show the same failure, and Try
+  again in either one reads the list again. The palette has no copy of
+  its own. Its Try again reads again each part that failed, through
+  `OrgModel.reload`.
 - `AppModel.lastOrg` keeps the org that the tab opened last, in memory
   only. The Account sidebar of the Mac app and the palette on a page
   without an org read it through `keptOrg`.
