@@ -17,6 +17,7 @@ import {
 } from './paletteContent'
 import { PaletteResults } from './PaletteRows'
 import {
+  macPaletteTabPaths,
   paletteTabLabels,
   paletteTabPaths,
   paletteTabs,
@@ -103,12 +104,20 @@ function Filters(props: { filters: PaletteFilters; mobile: boolean }) {
   )
 }
 
-/** The tabs, each a link to its own view. A desktop puts the filters after them. */
-function TabBar(props: { content: PaletteContent; mobile: boolean }) {
+/**
+ * The tabs, each a link to its own view, which the Mac app draws on its own
+ * pages where it has them. A desktop puts the filters after the tabs.
+ */
+function TabBar(props: {
+  content: PaletteContent
+  mobile: boolean
+  mac?: boolean
+}) {
   const { content } = props
+  const tabPaths = props.mac ? macPaletteTabPaths : paletteTabPaths
   const tabs = paletteTabs.map((tab) => ({
     label: paletteTabLabels[tab],
-    to: paletteTabPaths[tab],
+    to: tabPaths[tab],
     selected: tab === content.tab,
   }))
   return (
@@ -187,11 +196,12 @@ export function CommandPalette(props: {
         <div className={styles.field}>
           <SearchField content={content} mobile={false} />
         </div>
-        <TabBar content={content} mobile={false} />
+        <TabBar content={content} mac={props.context.mac} mobile={false} />
         <PaletteResults
           empty={content.empty}
           groups={content.groups}
           query={content.query}
+          shortcuts={props.context.shortcuts}
         />
       </section>
     </div>

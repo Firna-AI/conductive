@@ -30,14 +30,14 @@ how a screen is built, and links to the other pages.
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
-| `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |
+| `mac-app`           | The Mac app: its window, its device commands, This Mac, Keyboard shortcuts, and the palette with keys |
 | `user-flows`        | Sign up, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/shell`, `app/command-palette`, `app/orgs`, `app/orgs/suspended`,
 `app/account`, `app/new-workspace`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/operator`, `app/banner`, `app/chat`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
@@ -133,6 +133,28 @@ list of Acme. Its child pages:
 - `app/command-palette/settings` has the Settings tab.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its `no-results` variant has a search without results.
+
+The keyboard shortcuts plan draws the Mac app first, because the Mac app
+gives the page every key. Its decisions 192 and 194, on the keys of a
+browser, are open, so the browser pages show no keys yet.
+
+- `mac-app/shortcuts` shows the Keyboard shortcuts tab of the account in
+  the Mac app, from decision 190. The third tab of the account shows only
+  in the Mac app, so `mac-app/this-mac` has it, and the pages of
+  `app/account` keep two tabs. Its child pages:
+  - `mac-app/shortcuts/recording` has a row that records new keys. Its
+    `fixed-key` variant has a fixed shortcut that the recorder did not
+    take. Its `conflict` variant has a recorded shortcut of another
+    command, with Replace.
+  - `mac-app/shortcuts/changes` has changed rows with Reset, and Reset
+    all. Its `reset-all` variant has the question before Reset all. Its
+    `not-saved` variant has a save that failed.
+- `mac-app/command-palette` shows the All tab of the palette over a
+  workspace in the Mac app, with the key of each command row. The Search
+  row of each Mac app page opens it. Its `actions` and `settings` variants
+  have those tabs. The Settings tab adds This Mac and Keyboard shortcuts
+  to the Account group. Its `changed-key` variant has the Search row with
+  ⇧⌘P, the person's key of the palette.
 
 `app/banner` shows a branch with commits and no pull request. Its child
 pages show the other states of decision 18: `app/banner/checks` has the

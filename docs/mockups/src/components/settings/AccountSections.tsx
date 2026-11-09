@@ -11,7 +11,7 @@ import { account, installations } from '../../fixtures/orgs'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
-import { LinkTabs } from '../common/LinkTabs'
+import { LinkTabs, type LinkTab } from '../common/LinkTabs'
 import { AccountAvatar } from '../orgs/OrgTile'
 import { StatusText } from '../common/StatusText'
 import { AgentConnectForm } from './AgentConnectForm'
@@ -180,29 +180,34 @@ export function AgentsSection(props: {
   )
 }
 
-/** The two pages of the account. */
-export type AccountTab = 'general' | 'preferences'
+/** The pages of the account. */
+export type AccountTab = 'general' | 'preferences' | 'shortcuts'
 
 /**
  * The pages of the account, as tabs that link to each one: General, with
- * the sign-in and the connections, and Preferences.
+ * the sign-in and the connections, and Preferences. The Mac app adds
+ * Keyboard shortcuts, and its General tab links to its own page, which has
+ * This Mac. A browser gets the third tab after decisions 192 and 194.
  */
-export function AccountTabs(props: { tab: AccountTab }) {
-  return (
-    <LinkTabs
-      label="Account"
-      tabs={[
-        {
-          label: 'General',
-          to: paths.account,
-          selected: props.tab === 'general',
-        },
-        {
-          label: 'Preferences',
-          to: paths.accountPreferences,
-          selected: props.tab === 'preferences',
-        },
-      ]}
-    />
-  )
+export function AccountTabs(props: { tab: AccountTab; mac: boolean }) {
+  const tabs: LinkTab[] = [
+    {
+      label: 'General',
+      to: props.mac ? paths.thisMac : paths.account,
+      selected: props.tab === 'general',
+    },
+    {
+      label: 'Preferences',
+      to: paths.accountPreferences,
+      selected: props.tab === 'preferences',
+    },
+  ]
+  if (props.mac) {
+    tabs.push({
+      label: 'Keyboard shortcuts',
+      to: paths.macShortcuts,
+      selected: props.tab === 'shortcuts',
+    })
+  }
+  return <LinkTabs label="Account" tabs={tabs} />
 }

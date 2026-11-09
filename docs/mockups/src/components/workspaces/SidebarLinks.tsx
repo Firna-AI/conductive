@@ -3,6 +3,8 @@ import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
+import type { Shortcut } from '../common/KeyChips'
+import { useMacApp } from '../mac/MacApp'
 import styles from './SidebarLinks.module.css'
 
 /**
@@ -53,24 +55,28 @@ export function NewWorkspaceLink(props: {
 
 /**
  * The row under New workspace that opens the command palette. A desktop
- * shows its key, so the row teaches it. A phone has no key to show.
+ * shows its key, so the row teaches it. A phone has no key to show. In the
+ * Mac app the row opens the palette of the Mac app, whose rows show keys.
  */
 export function SearchLink(props: {
   variant: 'sidebar' | 'page'
-  /** Show ⌘K, the key that opens the palette. */
-  keys: boolean
+  /** The key that opens the palette, such as ⌘K, or none. */
+  shortcut?: Shortcut
 }) {
+  const mac = useMacApp()
   return (
     <ScreenLink
       className={classes(
         styles.newWorkspace,
         props.variant === 'page' && styles.page,
       )}
-      to={paths.palette}
+      to={mac ? paths.macPalette : paths.palette}
     >
       <Search aria-hidden className={styles.plus} size={14} />
       Search
-      {props.keys ? <kbd className={styles.keys}>⌘K</kbd> : null}
+      {props.shortcut ? (
+        <kbd className={styles.keys}>{props.shortcut}</kbd>
+      ) : null}
     </ScreenLink>
   )
 }

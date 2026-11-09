@@ -21,6 +21,7 @@ import {
   SettingsLink,
 } from '../components/workspaces/SidebarLinks'
 import { deletedOrg, orgs, type Org } from '../fixtures/orgs'
+import { paletteShortcut } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
 import styles from './WorkspaceListScreen.module.css'
 
@@ -84,7 +85,10 @@ export function HomeList(props: {
         {suspended ? <SuspendedOrgNotice org={props.org} /> : null}
         <div className={styles.links}>
           {suspended ? null : <NewWorkspaceLink variant="page" />}
-          <SearchLink keys={props.keys ?? false} variant="page" />
+          <SearchLink
+            shortcut={props.keys ? paletteShortcut() : undefined}
+            variant="page"
+          />
         </div>
         <SectionList
           drag={props.drag}

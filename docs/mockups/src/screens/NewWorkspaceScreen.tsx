@@ -20,6 +20,7 @@ import { lastBuild } from '../fixtures/computer'
 import { you } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { repositories } from '../fixtures/repositories'
+import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { savedCarts } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import {
@@ -149,11 +150,13 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
 /**
  * A new workspace as an empty chat: the repository, and the composer with
  * its files and its model. The first message creates the workspace, and the
- * app names it and its branch.
+ * app names it and its branch. `shortcuts` holds the person's changes to
+ * the shortcuts, so the Search row shows the person's key of the palette.
  */
 export function NewWorkspaceScreen(props: {
   state: NewWorkspaceState
   viewport: Viewport
+  shortcuts?: ShortcutChanges
 }) {
   const mac = useMacApp()
   const mobile = props.viewport === 'mobile'
@@ -187,6 +190,7 @@ export function NewWorkspaceScreen(props: {
       current="new-workspace"
       org={org}
       sections={workspaceSections(undefined, mac?.needsInput)}
+      shortcuts={props.shortcuts}
     />
   )
   return <AppFrame sidebar={sidebar}>{page}</AppFrame>

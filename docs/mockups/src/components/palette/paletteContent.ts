@@ -1,5 +1,6 @@
 import { orgs } from '../../fixtures/orgs'
 import { repositories, type RepositoryKey } from '../../fixtures/repositories'
+import type { ShortcutChanges } from '../../fixtures/shortcutChanges'
 import { archivedWorkspaceList } from '../../fixtures/workspaces'
 import {
   workspaceSections,
@@ -7,14 +8,16 @@ import {
   type WorkspaceRow,
 } from '../workspaces/sections'
 import {
-  accountSettings,
   appActions,
   orgActions,
-  orgSettings,
-  orgSettingsLabel,
   workspaceActions,
   type Command,
 } from './paletteCommands'
+import {
+  accountSettings,
+  orgSettings,
+  orgSettingsLabel,
+} from './paletteSettings'
 import {
   palettePlaceholders,
   paletteQueries,
@@ -53,12 +56,21 @@ export type PaletteContent = {
 /**
  * Where the palette opens: over an open workspace, whose actions come
  * first, or over a page without one. Only the owner of the workspace and
- * the admins of the org can archive it.
+ * the admins of the org can archive it. The Mac app adds This Mac to the
+ * settings.
  */
 export type PaletteContext = {
   open?: OpenWorkspace
   archivable: boolean
   rightColumn?: boolean
+  mac?: boolean
+  /**
+   * The person's changes to the shortcuts. With them, each row shows the
+   * key of its command, and the settings add the Keyboard shortcuts tab.
+   * Only the Mac app passes them until decisions 192 and 194 set the keys
+   * of a browser.
+   */
+  shortcuts?: ShortcutChanges
 }
 
 /**
@@ -99,10 +111,10 @@ function actionsOf(context: PaletteContext): Command[] {
 }
 
 /** The settings, each with the page that holds it, for a mixed list. */
-function settingRows(): PaletteRow[] {
+function settingRows(context: PaletteContext): PaletteRow[] {
   return [
     ...commandRows(orgSettings, orgSettingsLabel),
-    ...commandRows(accountSettings, 'Account'),
+    ...commandRows(accountSettings(context), 'Account'),
   ]
 }
 
@@ -142,7 +154,7 @@ function searchGroups(
   const groups: PaletteGroup[] = [
     { label: 'Workspaces', rows: workspaceRows(active) },
     { label: 'Actions', rows: commandRows(actionsOf(context)) },
-    { label: 'Settings', rows: settingRows() },
+    { label: 'Settings', rows: settingRows(context) },
     { label: 'Archived', rows: workspaceRows(archivedRows) },
   ]
   return groups
@@ -205,7 +217,7 @@ function groupsOf(
       return [
         { label: 'Recent workspaces', rows: workspaceRows(recent) },
         { label: 'Actions', rows: commandRows(actionsOf(context)) },
-        { label: 'Settings', rows: settingRows() },
+        { label: 'Settings', rows: settingRows(context) },
       ]
     }
     case 'workspaces':
@@ -239,7 +251,7 @@ function groupsOf(
     case 'settings':
       return [
         { label: orgSettingsLabel, rows: commandRows(orgSettings) },
-        { label: 'Account', rows: commandRows(accountSettings) },
+        { label: 'Account', rows: commandRows(accountSettings(context)) },
       ]
     case 'search':
     case 'no-results':

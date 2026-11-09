@@ -46,6 +46,17 @@ export const paletteTabPaths: Readonly<Record<PaletteTab, string>> = {
 }
 
 /**
+ * The page of each tab in the Mac app, where the palette shows the keys.
+ * The Mac app has no page of its own for the Workspaces tab.
+ */
+export const macPaletteTabPaths: Readonly<Record<PaletteTab, string>> = {
+  all: paths.macPalette,
+  workspaces: paths.paletteWorkspaces,
+  actions: paths.macPaletteActions,
+  settings: paths.macPaletteSettings,
+}
+
+/**
  * The words in the search field of each tab while it is empty. A phone has
  * no room for the long words of the All tab, so it shows only "Search".
  */

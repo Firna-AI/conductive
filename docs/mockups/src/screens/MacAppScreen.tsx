@@ -4,8 +4,13 @@ import { isPendingCommand } from '../components/chat/PendingCommand'
 import { AllowAllBar } from '../components/mac/AllowAllBar'
 import { MacNotification } from '../components/mac/MacNotification'
 import { MacScreen } from '../components/mac/MacScreen'
+import { keyChanges } from '../components/settings/ShortcutsSections'
 import { conversations as chats } from '../fixtures/conversations'
 import { safariTest } from '../fixtures/mac'
+import {
+  editedShortcuts,
+  type ShortcutChanges,
+} from '../fixtures/shortcutChanges'
 import { checkoutAutocomplete } from '../fixtures/workspaces'
 import { AccountScreen, accountGeneral } from './AccountScreen'
 import { NewWorkspaceScreen, newWorkspaceForm } from './NewWorkspaceScreen'
@@ -15,12 +20,23 @@ import { readyWorkspace, type WorkspaceState } from './workspaceState'
 export const macAppSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['window', 'page', 'command', 'change'],
+  required: [
+    'window',
+    'page',
+    'command',
+    'change',
+    'palette',
+    'keyChange',
+    'shortcuts',
+  ],
   properties: {
     /** A normal window, or full screen, where macOS hides the buttons. */
     window: { enum: ['window', 'full-screen'] },
-    /** The page of the app: a workspace, the empty New workspace, or the account. */
-    page: { enum: ['workspace', 'new-workspace', 'account'] },
+    /**
+     * The page of the app: a workspace, the empty New workspace, the
+     * account, or its Keyboard shortcuts tab.
+     */
+    page: { enum: ['workspace', 'new-workspace', 'account', 'shortcuts'] },
     /**
      * A command that an agent asks to run on this Mac: none, the request
      * above the composer, the request of a longer time limit, the request
@@ -56,6 +72,23 @@ export const macAppSchema = {
         'stop-failed',
       ],
     },
+    /**
+     * The command palette over the workspace: closed, or open on the All,
+     * Actions, or Settings tab, whose rows show their keys.
+     */
+    palette: { enum: ['closed', 'all', 'actions', 'settings'] },
+    /**
+     * The change of a shortcut on Keyboard shortcuts, in progress or last:
+     * none, a row that records new keys, the same row after a fixed shortcut
+     * that it did not take, a recorded shortcut of another command, the
+     * question before Reset all, or a save that failed.
+     */
+    keyChange: { enum: keyChanges },
+    /**
+     * The person's shortcuts: the defaults, or after a few changes, such as
+     * ⇧⌘P for the palette.
+     */
+    shortcuts: { enum: ['default', 'edited'] },
   },
 } as const
 
@@ -80,18 +113,45 @@ function workspaceFor(command: MacAppState['command']): WorkspaceState {
 }
 
 function pageFor(state: MacAppState): ReactNode {
+  const shortcuts: ShortcutChanges =
+    state.shortcuts === 'edited' ? editedShortcuts : {}
   switch (state.page) {
     case 'workspace':
       return (
         <WorkspaceScreen
-          state={workspaceFor(state.command)}
+          shortcuts={shortcuts}
+          state={{ ...workspaceFor(state.command), palette: state.palette }}
           viewport="desktop"
         />
       )
     case 'new-workspace':
-      return <NewWorkspaceScreen state={newWorkspaceForm} viewport="desktop" />
+      return (
+        <NewWorkspaceScreen
+          shortcuts={shortcuts}
+          state={newWorkspaceForm}
+          viewport="desktop"
+        />
+      )
     case 'account':
-      return <AccountScreen state={accountGeneral} viewport="desktop" />
+      return (
+        <AccountScreen
+          shortcuts={shortcuts}
+          state={accountGeneral}
+          viewport="desktop"
+        />
+      )
+    case 'shortcuts':
+      return (
+        <AccountScreen
+          shortcuts={shortcuts}
+          state={{
+            ...accountGeneral,
+            tab: 'shortcuts',
+            keyChange: state.keyChange,
+          }}
+          viewport="desktop"
+        />
+      )
   }
 }
 
@@ -100,8 +160,10 @@ function pageFor(state: MacAppState): ReactNode {
  * native window buttons at the top of its left panel, and the device
  * commands that agents ask to run on this Mac. A command waits in the chat
  * of its workspace, just above the composer, and the workspace list marks
- * that workspace on every page. The Mac app has no phone layout, so a
- * phone view shows the same screen, smaller.
+ * that workspace on every page. The Mac app gives the page every key, so it
+ * shows the person's shortcuts: in the palette, in the Search row, and on
+ * the Keyboard shortcuts tab of the account. The Mac app has no phone
+ * layout, so a phone view shows the same screen, smaller.
  */
 export function MacAppScreen(props: { state: MacAppState }) {
   const { command, change } = props.state

@@ -21,6 +21,7 @@ import {
   type StartingLog,
 } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
+import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { freshSessionPrompt, workspaceSession } from '../fixtures/terminal'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -147,12 +148,20 @@ export function workspaceSidebar(
   workspace: Workspace,
   status: ActivityStatus,
   suspended: boolean,
+  shortcuts?: ShortcutChanges,
 ): ReactNode {
   if (status !== 'archived') {
     const sections = suspended
       ? suspendedSections(workspace)
       : workspaceSections({ workspace, status })
-    return <Sidebar org={orgs.acme} sections={sections} suspended={suspended} />
+    return (
+      <Sidebar
+        org={orgs.acme}
+        sections={sections}
+        shortcuts={shortcuts}
+        suspended={suspended}
+      />
+    )
   }
   const list = archivedSections(workspace, suspended)
   return (
@@ -160,6 +169,7 @@ export function workspaceSidebar(
       archived={list.archived}
       org={orgs.acme}
       sections={list.sections}
+      shortcuts={shortcuts}
       suspended={suspended}
     />
   )

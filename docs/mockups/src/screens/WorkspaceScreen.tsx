@@ -6,6 +6,7 @@ import { EmptyState } from '../components/common/EmptyState'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
+import { useMacApp } from '../components/mac/MacApp'
 import { CommandPalette } from '../components/palette/CommandPalette'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
@@ -21,6 +22,7 @@ import { conversations } from '../fixtures/conversations'
 import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
+import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { suspendedOwner } from '../fixtures/startRefusals'
 import { openableWorkspaceRecords } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -51,14 +53,18 @@ const widenedRight = 560
  * chat history stays, and nothing in the workspace can change: no message,
  * no new session, no rename, no owner change, and no Archive. `overlay`
  * lies over the workspace in place of the overlay of its state, such as a
- * dialog that another screen opens over it.
+ * dialog that another screen opens over it. `shortcuts` holds the person's
+ * changes to the shortcuts. With them, the palette rows show their keys,
+ * and the Search row shows the person's key of the palette.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
   viewport: Viewport
   overlay?: ReactNode
+  shortcuts?: ShortcutChanges
 }) {
   const { viewport } = props
+  const mac = useMacApp()
   const state = drawnState(props.state)
   const suspended = state.org === 'suspended'
   const record = openableWorkspaceRecords[state.workspace]
@@ -186,6 +192,8 @@ export function WorkspaceScreen(props: {
           open: { workspace, status },
           archivable,
           rightColumn: !rightHidden,
+          mac: mac !== undefined,
+          shortcuts: props.shortcuts,
         }}
         view={state.palette}
         viewport={viewport}
@@ -199,7 +207,7 @@ export function WorkspaceScreen(props: {
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
-      sidebar={workspaceSidebar(workspace, status, suspended)}
+      sidebar={workspaceSidebar(workspace, status, suspended, props.shortcuts)}
     >
       <WorkspaceBody
         center={file ? <FilePage view={file} /> : chat}

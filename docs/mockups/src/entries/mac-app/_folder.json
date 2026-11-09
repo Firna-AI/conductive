@@ -1,4 +1,12 @@
 {
   "title": "Mac app",
-  "order": ["window", "commands", "requests", "stop", "this-mac"]
+  "order": [
+    "window",
+    "commands",
+    "requests",
+    "stop",
+    "this-mac",
+    "shortcuts",
+    "command-palette"
+  ]
 }

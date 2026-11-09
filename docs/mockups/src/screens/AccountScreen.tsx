@@ -11,6 +11,11 @@ import {
   type OpenAgentForm,
 } from '../components/settings/AccountSections'
 import { DefaultsSection } from '../components/settings/PreferencesSections'
+import { ResetShortcutsDialog } from '../components/settings/ResetShortcutsDialog'
+import {
+  keyChanges,
+  ShortcutsTab,
+} from '../components/settings/ShortcutsSections'
 import { ThisMacSection } from '../components/settings/ThisMacSection'
 import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
@@ -21,18 +26,28 @@ import {
   type LoginKind,
 } from '../fixtures/logins'
 import { account, orgList, orgs } from '../fixtures/orgs'
+import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
 
 export const accountSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['tab', 'connections', 'form', 'view', 'save', 'shareChange'],
+  required: [
+    'tab',
+    'connections',
+    'form',
+    'view',
+    'save',
+    'shareChange',
+    'keyChange',
+  ],
   properties: {
     /**
-     * The tab: General, with the sign-in and the connections, or
-     * Preferences. Each tab has its own address.
+     * The tab: General, with the sign-in and the connections, Preferences,
+     * or Keyboard shortcuts, which only the Mac app shows for now. Each tab
+     * has its own address.
      */
-    tab: { enum: ['general', 'preferences'] },
+    tab: { enum: ['general', 'preferences', 'shortcuts'] },
     /** GitHub and the agents are connected, or not yet, as at the first run. */
     connections: { enum: ['connected', 'not-connected'] },
     /**
@@ -52,6 +67,13 @@ export const accountSchema = {
      * login that the app did not save.
      */
     shareChange: { enum: ['none', 'not-saved'] },
+    /**
+     * The change of a shortcut on Keyboard shortcuts, in progress or last:
+     * none, a row that records new keys, the same row after a fixed shortcut
+     * that it did not take, a recorded shortcut of another command, the
+     * question before Reset all, or a save that failed.
+     */
+    keyChange: { enum: keyChanges },
   },
 } as const
 
@@ -65,6 +87,7 @@ export const accountGeneral: AccountState = {
   view: 'page',
   save: 'saved',
   shareChange: 'none',
+  keyChange: 'none',
 }
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
@@ -110,15 +133,41 @@ function GeneralTab(props: { state: AccountState }) {
   )
 }
 
+/** The content of the tab of a state. */
+function TabContent(props: {
+  state: AccountState
+  shortcuts: ShortcutChanges
+}) {
+  const { state } = props
+  switch (state.tab) {
+    case 'general':
+      return <GeneralTab state={state} />
+    case 'preferences':
+      return (
+        <DefaultsSection
+          saveFailed={state.save === 'failed'}
+          view={state.view}
+        />
+      )
+    case 'shortcuts':
+      return <ShortcutsTab change={state.keyChange} changes={props.shortcuts} />
+  }
+}
+
 /**
- * The account, in two tabs. General holds the GitHub sign-in and what every
+ * The account, in tabs. General holds the GitHub sign-in and what every
  * org shares. Preferences holds how new workspaces start: their model, and
- * how New workspace opens. The product is free, so the page shows no plan
- * and no billing, and the sandbox provider stays out of sight.
+ * how New workspace opens. The Mac app adds Keyboard shortcuts. The product
+ * is free, so the page shows no plan and no billing, and the sandbox
+ * provider stays out of sight.
+ *
+ * `shortcuts` holds the person's changes to the shortcuts. With them, the
+ * Search row of the sidebar shows the person's key of the palette.
  */
 export function AccountScreen(props: {
   state: AccountState
   viewport: Viewport
+  shortcuts?: ShortcutChanges
 }) {
   const { state } = props
   const mac = useMacApp()
@@ -131,30 +180,37 @@ export function AccountScreen(props: {
     <Page
       back={mobile ? back : undefined}
       subtitle={`@${account.login}`}
-      tabs={<AccountTabs tab={state.tab} />}
+      tabs={<AccountTabs mac={mac !== undefined} tab={state.tab} />}
       title="Account"
       viewport={props.viewport}
     >
-      {state.tab === 'general' ? (
-        <GeneralTab state={state} />
-      ) : (
-        <DefaultsSection
-          saveFailed={state.save === 'failed'}
-          view={state.view}
-        />
-      )}
+      <TabContent shortcuts={props.shortcuts ?? {}} state={state} />
     </Page>
   )
   if (mobile) return <MobileFrame>{page}</MobileFrame>
+  // Reset all asks first, in a dialog over the account. A phone has no
+  // Keyboard shortcuts tab until decisions 192 and 194 are answered.
+  const dialog =
+    state.tab === 'shortcuts' && state.keyChange === 'reset-all' ? (
+      <ResetShortcutsDialog
+        changed={Object.keys(props.shortcuts ?? {}).length}
+        viewport="desktop"
+      />
+    ) : null
   // The Mac app keeps the sidebar of the org beside the account.
   const sidebar = mac ? (
     <Sidebar
       org={orgs.acme}
       sections={workspaceSections(undefined, mac.needsInput)}
+      shortcuts={props.shortcuts}
     />
   ) : undefined
   return (
-    <AppFrame rail={connected ? connectedRail : firstRunRail} sidebar={sidebar}>
+    <AppFrame
+      overlay={dialog}
+      rail={connected ? connectedRail : firstRunRail}
+      sidebar={sidebar}
+    >
       {page}
     </AppFrame>
   )

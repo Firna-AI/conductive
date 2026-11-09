@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react'
 import { repositories } from '../../fixtures/repositories'
+import {
+  shortcutsOf,
+  type ShortcutChanges,
+} from '../../fixtures/shortcutChanges'
 import { GitHubMark } from '../common/GitHubMark'
+import { KeyChips, type Shortcut } from '../common/KeyChips'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
@@ -39,12 +44,27 @@ function RowLink(props: {
   )
 }
 
+/** The first key of the command of a row, when the palette shows keys. */
+function shortcutOf(
+  row: PaletteRow,
+  shortcuts?: ShortcutChanges,
+): Shortcut | undefined {
+  if (row.kind !== 'command' || !shortcuts || !row.command.shortcut) {
+    return undefined
+  }
+  return shortcutsOf(row.command.shortcut, shortcuts)[0]
+}
+
 /**
  * One result. A workspace shows its state mark, its name, its repository,
  * and the age of its last activity, as the list does. A command shows its
- * icon, its label, and the page of a setting in a mixed list.
+ * icon, its label, the page of a setting in a mixed list, and its key.
  */
-function Row(props: { row: PaletteRow; highlighted: boolean }) {
+function Row(props: {
+  row: PaletteRow
+  highlighted: boolean
+  shortcut?: Shortcut
+}) {
   const { row, highlighted } = props
   if (row.kind === 'workspace') {
     const { workspace, status, to } = row.row
@@ -81,6 +101,11 @@ function Row(props: { row: PaletteRow; highlighted: boolean }) {
       </span>
       <span className={styles.label}>{command.label}</span>
       {detail ? <span className={styles.detail}>{detail}</span> : null}
+      {props.shortcut ? (
+        <span className={styles.keys}>
+          <KeyChips shortcut={props.shortcut} />
+        </span>
+      ) : null}
     </RowLink>
   )
 }
@@ -109,12 +134,14 @@ function EmptyTab(props: { line: string }) {
 /**
  * The results in their groups. The first row is highlighted, so Enter runs
  * it. The list scrolls under the search field and the tabs. `empty` is the
- * line of a tab without rows while the field is empty.
+ * line of a tab without rows while the field is empty. With the person's
+ * `shortcuts`, each command row ends with its first key.
  */
 export function PaletteResults(props: {
   groups: readonly PaletteGroup[]
   query: string
   empty?: string
+  shortcuts?: ShortcutChanges
 }) {
   if (props.groups.length === 0) {
     return props.empty ? (
@@ -142,7 +169,11 @@ export function PaletteResults(props: {
                     : row.command.label
                 }
               >
-                <Row highlighted={row === first} row={row} />
+                <Row
+                  highlighted={row === first}
+                  row={row}
+                  shortcut={shortcutOf(row, props.shortcuts)}
+                />
               </li>
             ))}
           </ul>

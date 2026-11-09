@@ -1,4 +1,8 @@
 import type { Org } from '../../fixtures/orgs'
+import {
+  paletteShortcut,
+  type ShortcutChanges,
+} from '../../fixtures/shortcutChanges'
 import { paths } from '../../paths'
 import type {
   ListDrag,
@@ -29,6 +33,8 @@ export function Sidebar(props: {
   archived?: readonly WorkspaceRow[]
   /** The operator suspended the org. */
   suspended?: boolean
+  /** The person's changes to the shortcuts, such as another palette key. */
+  shortcuts?: ShortcutChanges
 }) {
   const suspended = props.suspended ?? false
   return (
@@ -49,7 +55,10 @@ export function Sidebar(props: {
               variant="sidebar"
             />
           )}
-          <SearchLink keys variant="sidebar" />
+          <SearchLink
+            shortcut={paletteShortcut(props.shortcuts)}
+            variant="sidebar"
+          />
         </div>
         <SectionList
           archived={props.archived}

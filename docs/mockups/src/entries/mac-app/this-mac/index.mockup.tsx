@@ -14,6 +14,9 @@ export const thisMac = defineScreen({
     page: 'account',
     command: 'none',
     change: 'none',
+    palette: 'closed',
+    keyChange: 'none',
+    shortcuts: 'default',
   },
   render: (props) => <MacAppScreen state={props} />,
   variants: [

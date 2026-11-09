@@ -16,7 +16,8 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   the buttons are gone, and the toggle takes their space.
 - `MacApp` marks the screens inside it as the Mac app, so that `AppFrame`
   draws the window controls and a banner of the Mac app. The account of
-  the Mac app keeps the sidebar of the org and adds the This Mac section.
+  the Mac app keeps the sidebar of the org and adds the This Mac section,
+  and the Keyboard shortcuts tab.
 - An agent can ask to run a command on the Mac of the person who sent the
   turn. The request waits as a compact message just above the composer,
   from `PendingCommand` in `src/components/chat/`: the exact command, the
@@ -47,3 +48,11 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   the Mac app can allow a command on the Mac. Once answered, the command
   shows as a card at its place in the chat: denied, done with its output,
   or Mac not available.
+- The Mac app gives the page every key, so it shows keyboard shortcuts
+  before a browser does. A browser waits for decisions 192 and 194. The
+  account adds the Keyboard shortcuts tab, from decision 190, which
+  `mac-app/shortcuts` draws with its child pages `recording` and
+  `changes`. Reset all asks first, in a `ConfirmDialog`.
+- In the Mac app, each command row of the palette ends with its key, as
+  `mac-app/command-palette` draws. The Search row shows the person's key
+  of the palette, and it opens that page.

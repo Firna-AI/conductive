@@ -276,3 +276,14 @@ a.highlighted:hover {
 .page .repository {
   display: none;
 }
+
+/* The key of a command, at the end of its row, after the page of a setting. */
+.keys {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 8px;
+}
+
+.detail + .keys {
+  margin-left: 0;
+}
