@@ -6,7 +6,7 @@ import styles from '../../../docs/mockups/src/components/common/Menu.module.css'
 import controls from './controls.module.css'
 import { useFocusInside } from './dismiss'
 
-export type MenuItem = {
+type MenuItem = {
   kind: 'item'
   key: string
   label: string

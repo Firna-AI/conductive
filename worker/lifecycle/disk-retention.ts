@@ -8,7 +8,13 @@ import {
   repositoryLocation,
 } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
-import { workspaceEnvironment, workspaceRepository } from './settings-data'
+import {
+  readImageSettings,
+  workspaceEnvironmentSettings,
+  workspaceRepository,
+} from './settings-data'
+import { environmentValues } from './org-environment'
+import { recordRunningEnvironment } from './start-environment'
 import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
 import {
   readRetention,
@@ -93,7 +99,12 @@ export async function keepWorkspaceDisk(
         context.dependencies.randomToken,
         context.dependencies.now(),
       )
-      const environment = await workspaceEnvironment(env, orgId)
+      const settings = await readImageSettings(env.DB, orgId)
+      const environment = await workspaceEnvironmentSettings(
+        env,
+        orgId,
+        settings.envVarsCiphertext,
+      )
       const repository = await workspaceRepository(
         env.DB,
         orgId,
@@ -102,10 +113,15 @@ export async function keepWorkspaceDisk(
       const token = await readWorkspaceToken(env, workspaceId)
       const locations = await workspaceRepositoryLocations(env.DB, workspaceId)
       await requireActiveUser(env.DB, row.ownerUserId, orgId)
+      await recordRunningEnvironment(
+        env.DB,
+        workspaceId,
+        settings.envVarsCiphertext,
+      )
       await provider.resume(
         sandboxId,
         {
-          ...environment,
+          ...environmentValues(environment),
           ...repositoryEnvironment(locations),
           WORKSPACE_TOKEN: token,
           CONDUCTIVE_WORKSPACE_ID: workspaceId,

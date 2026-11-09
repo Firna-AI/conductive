@@ -33,6 +33,10 @@ export type OpenableWorkspace = (typeof openableWorkspaces)[number]
 
 export type Workspace = {
   key: string
+  /**
+   * Its name. A new workspace has no name until its title comes, and the
+   * screen then shows the label of `nameLabel` in `src/shared/`.
+   */
   name: string
   /**
    * The number of the workspace in its org. It counts up from 1 in the
@@ -60,11 +64,6 @@ export type Workspace = {
    * runs on the agent login of the member who started it.
    */
   owner: PersonKey
-  /**
-   * The name that the app gives a new workspace, a city, until the agent's
-   * first answer names it after the task.
-   */
-  generatedName?: string
 }
 
 /**
@@ -100,13 +99,19 @@ export const checkoutAutocomplete: Workspace = {
   owner: 'cal',
 }
 
-/** The workspace that the create flow makes, the newest of Acme. */
+/**
+ * The workspace that the create flow makes, the newest of Acme. It has no
+ * name from the send until its title comes, about a second later, while
+ * the sandbox starts. `name` is that title, from a small model that reads
+ * the first message. A failed title request leaves the workspace without a
+ * name until a later message with text. Its branch keeps a city name with
+ * a random suffix.
+ */
 export const savedCarts: Workspace = {
   key: 'saved-carts',
   name: 'Saved carts',
   number: 402,
   link: workspaceLink('ffpdvCrydZ85CicAsK7cqpirDrbK6GhAA6hB33ck1vE'),
-  generatedName: 'Lisbon',
   branch: branchFor('cal', 'lisbon-7k2q'),
   repository: 'storefront',
   section: 'general',
@@ -123,7 +128,8 @@ export const openableWorkspaceRecords: Readonly<
   'saved-carts': savedCarts,
 }
 
-const codex: AgentChoice = {
+/** The Codex model and effort of the workspaces that use Codex. */
+export const codex: AgentChoice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',
@@ -139,7 +145,7 @@ type Details = Pick<
 }
 
 /** A workspace of Acme. Its branch starts with the GitHub login of its owner. */
-function workspace(
+export function workspace(
   key: string,
   name: string,
   details: Details,
@@ -231,30 +237,6 @@ export const workspaceList: readonly Workspace[] = [
     owner: 'jonas',
   }),
 ]
-
-/**
- * A workspace of Acme that a member archived weeks ago. The app keeps it in
- * the Archived group of the list, and a chip still finds it, with the
- * archived state. A member gave it a long name.
- */
-export const postcodeLookup = workspace(
-  'postcode-lookup',
-  'Postcode lookup for the shipping and billing forms',
-  {
-    number: 372,
-    id: 'sWqf3Lm9jj41zKQ1-L5UDzz4AkseW78wSU1wWONFZlA',
-    repository: 'storefront',
-    section: 'checkout',
-    status: 'archived',
-    updated: '3w',
-  },
-)
-
-/**
- * The archived workspaces of Acme. The list keeps them in its Archived
- * group, which stays closed until the user opens it.
- */
-export const archivedWorkspaces: readonly Workspace[] = [postcodeLookup]
 
 /** The workspace that the drag state moves, and where it lands. */
 export const workspaceDrag = {

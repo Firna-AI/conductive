@@ -42,6 +42,7 @@ export async function routeChat(
   return forwardWorkspaceRequest(request, env, workspaceId)
 }
 
+/** @public The feature router forwards workspace requests through this boundary. */
 export async function forwardWorkspaceRequest(
   request: Request,
   env: AppEnv,

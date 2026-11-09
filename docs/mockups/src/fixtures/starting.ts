@@ -26,20 +26,22 @@ export const creatingLog: StartingLog = {
   elapsed: '6s',
 }
 
+/**
+ * The first second of the start of a new workspace, before its title comes:
+ * only the first step shows.
+ */
+export const firstSecondLog: StartingLog = {
+  ...creatingLog,
+  steps: creatingLog.steps.slice(0, 1),
+  elapsed: '1s',
+}
+
 /** A stopped workspace resumes with its files as they were. */
 export const resumingLog: StartingLog = {
   title: 'Resuming the sandbox',
   steps: ['Resuming with your files as you left them'],
   elapsed: '3s',
 }
-
-/**
- * The second message that the user writes while the sandbox of the new
- * workspace starts for the first time. The composer keeps it until the user
- * sends it.
- */
-export const heldDraft =
-  'Keep a saved cart for 30 days after its last change, then delete it.'
 
 /**
  * Each create and resume runs for at most 20 minutes from its start, with

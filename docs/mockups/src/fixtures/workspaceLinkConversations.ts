@@ -1,12 +1,8 @@
 import { workspaceLabel } from '../components/workspaces/label'
+import { postcodeLookup } from './archivedWorkspaces'
 import type { ChatItem } from './conversations'
 import { orgs } from './orgs'
-import {
-  checkoutAutocomplete,
-  postcodeLookup,
-  savedCarts,
-  workspaceLink,
-} from './workspaces'
+import { checkoutAutocomplete, savedCarts, workspaceLink } from './workspaces'
 
 /**
  * The message that links Saved carts from Checkout address autocomplete.

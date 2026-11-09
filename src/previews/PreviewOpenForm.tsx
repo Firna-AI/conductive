@@ -8,7 +8,7 @@ import type { ToolError } from '../terminal/tool-parts/request'
 import styles from './PreviewOpenForm.module.css'
 
 /** A TCP port from the text of the port field, or null. */
-export function parsePort(text: string): number | null {
+function parsePort(text: string): number | null {
   const digits = text.trim()
   if (!/^\d{1,5}$/.test(digits)) return null
   const port = Number(digits)

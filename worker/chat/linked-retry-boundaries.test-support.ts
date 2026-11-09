@@ -57,7 +57,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
     session: {
       id: 'linked',
       workspaceId: WORKSPACE_ID,
-      title: 'New session',
+      title: 'Check this code',
       choice: { agent: 'claude', model: 'test-claude', effort: 'high' },
       createdAt: TEST_TIME,
       closedAt: null,
@@ -72,6 +72,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
       },
       sourceSessionId: 'source',
       loginAvailable: true,
+      loginShared: true,
     },
     message: {
       id: 'retry-message',
@@ -110,7 +111,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
     source: {
       id: 'source',
       workspaceId: WORKSPACE_ID,
-      title: 'New session',
+      title: 'Check this code',
       choice: { agent: 'claude', model: 'test-claude', effort: 'high' },
       createdAt: TEST_TIME,
       closedAt: null,
@@ -125,6 +126,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
       },
       sourceSessionId: null,
       loginAvailable: false,
+      loginShared: false,
     },
     messageSource: 'source',
     messageTurn: 'linked-turn',

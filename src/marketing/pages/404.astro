@@ -1,0 +1,25 @@
+---
+import { productName } from '../../../docs/mockups/src/brand'
+import RunningText from '../components/RunningText.astro'
+import SiteLayout from '../layouts/SiteLayout.astro'
+import { notFoundText } from '../legal-text'
+
+/* The page for an address that the site does not have. */
+---
+
+<SiteLayout
+  title={`Page not found – ${productName}`}
+  description={`This address is not a page of ${productName}.`}
+>
+  <main class="main text-page">
+    <article class="text-article">
+      <header class="text-head">
+        <span class="intro-label">{notFoundText.label}</span>
+        <h1 class="text-title">{notFoundText.title}</h1>
+        <p class="text-lead">
+          <RunningText text={notFoundText.lead} />
+        </p>
+      </header>
+    </article>
+  </main>
+</SiteLayout>

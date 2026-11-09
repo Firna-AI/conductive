@@ -53,7 +53,7 @@ export async function retryAllocationCleanup(
     sandboxId: job.allocatedSandboxId,
   })
   await deleteSandboxIfPresent(provider, job.allocatedSandboxId)
-  await clearSandboxCleanup(env.DB, job.workspaceId)
+  await clearSandboxCleanup(env.DB, job.workspaceId, job.allocatedSandboxId)
   await storage.delete(START_ALLOCATION_CLEANUP_KEY)
   return true
 }

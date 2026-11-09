@@ -3,7 +3,10 @@
   "order": [
     "sign-up",
     "create-workspace",
+    "create-workspace-dialog",
+    "retry-first-start",
     "reopen-stopped-workspace",
+    "open-workspace-from-palette",
     "create-org",
     "mac-command",
     "link-a-workspace"

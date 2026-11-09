@@ -1,5 +1,4 @@
 import { Button } from '@firna/ui/button'
-import { Check, Link2 } from 'lucide-react'
 import { noop } from '../../noop'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
@@ -10,7 +9,7 @@ import styles from './CopyLinkButton.module.css'
 export type CopyResult = 'copied' | 'failed'
 
 /** The words of the note under the button, for each result. */
-export const copyNotes: Readonly<Record<CopyResult, string>> = {
+const copyNotes: Readonly<Record<CopyResult, string>> = {
   copied: 'Link copied',
   failed: "The link didn't copy. Try again.",
 }
@@ -18,23 +17,25 @@ export const copyNotes: Readonly<Record<CopyResult, string>> = {
 /**
  * A button in the line under the name of a phone header. It draws 21 px
  * high, and its touch area grows 15 px up over the name and 8 px down to
- * the bottom edge of the header: 44 px, over no other control. It moves
- * 4 px to the left, so its icon lines up with the name.
+ * the bottom edge of the header: 44 px, over no other control. The touch
+ * area starts inside the 1 px border of the button, so each inset is 1 px
+ * larger. The button moves 4 px to the left, so its label lines up with
+ * the name.
  */
 const inLine = {
-  touchArea: { top: 15, bottom: 8 },
+  touchArea: { top: 16, bottom: 9 },
   style: { marginLeft: -4, paddingHorizontal: 4 },
 }
 
 /**
  * The label of the workspace number, such as `W-395`, as the button that
- * copies the web address of the workspace. A link icon leads the label.
- * After a press, a note under the button gives the result for a moment.
- * When the copy worked, a check takes the place of the icon, and the note
- * says "Link copied". When it failed, the icon stays, and the note in the
- * danger colour asks the user to try again. The note is a status, so
- * screen readers hear it, and it lies over the content under the button,
- * so nothing moves.
+ * copies the web address of the workspace. The label shows alone, without
+ * an icon. It is a plain Firna button, so a pointer over it shows the hover
+ * fill of the plain buttons, and the keyboard focus shows the focus ring.
+ * After a press, a note under the button gives the result for a moment:
+ * "Link copied", or a request to try again in the danger colour. The note
+ * is a status, so screen readers hear it, and it lies over the content
+ * under the button, so nothing moves.
  */
 export function CopyLinkButton(props: {
   /** The label of the number, such as `W-395`. */
@@ -49,8 +50,6 @@ export function CopyLinkButton(props: {
   onPress?: () => void
 }) {
   const control = useControlSizes()
-  const copied = props.result === 'copied'
-  const Icon = copied ? Check : Link2
   const note = props.result
     ? classes(styles.note, props.result === 'failed' && styles.failed)
     : a11y.hidden
@@ -58,16 +57,7 @@ export function CopyLinkButton(props: {
     <span className={styles.anchor}>
       <Button
         accessibilityLabel={`Copy link to ${props.label}`}
-        content={
-          <span className={styles.content}>
-            <Icon
-              aria-hidden
-              className={copied ? styles.done : styles.icon}
-              size={12}
-            />
-            <span className={styles.label}>{props.label}</span>
-          </span>
-        }
+        content={<span className={styles.label}>{props.label}</span>}
         hitSlop={props.inline ? inLine.touchArea : undefined}
         inline={props.inline}
         onPress={props.onPress ?? noop}

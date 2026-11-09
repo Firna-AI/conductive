@@ -7,7 +7,7 @@ import type {
   StreamTarget,
   WorkspaceEventSource,
 } from './events'
-import type { AppServices, KeyValueStorage } from './services'
+import type { AppServices, KeyPress, KeyValueStorage } from './services'
 import type { Readable } from './store'
 
 function requestKey(method: string, path: string): string {
@@ -146,6 +146,23 @@ export class ManualInput {
   }
 }
 
+/** The key presses of the page, which come only when the test says so. */
+class ManualKeys {
+  private readonly listeners = new Set<(press: KeyPress) => void>()
+
+  readonly onKey = (listener: (press: KeyPress) => void): (() => void) => {
+    this.listeners.add(listener)
+    return () => {
+      this.listeners.delete(listener)
+    }
+  }
+
+  /** The person presses a key. */
+  press(press: KeyPress): void {
+    for (const listener of [...this.listeners]) listener(press)
+  }
+}
+
 /** Whether the page shows. It starts visible and changes when the test says so. */
 export class ManualVisibility implements Readable<boolean> {
   private shown = true
@@ -211,7 +228,8 @@ export class MemoryStorage implements KeyValueStorage {
  * Services over a fake API server, with no real network, clock, timer, or
  * storage. A timer runs only through a `ManualDelay` that the test gives.
  * The page shows, unless the test gives a `ManualVisibility` and hides it.
- * Input comes only through a `ManualInput` that the test gives.
+ * Input and keys come only through a `ManualInput` and `ManualKeys` that
+ * the test gives. The keyboard is not a Mac, unless the test says so.
  */
 export function testServices(
   server: FakeApiServer,
@@ -231,6 +249,8 @@ export function testServices(
     delay: new ManualDelay().delay,
     onFocus: new ManualFocus().onFocus,
     onInput: new ManualInput().onInput,
+    onKey: new ManualKeys().onKey,
+    platform: 'other',
     visible: new ManualVisibility(),
     ...rest,
   }

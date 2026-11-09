@@ -1,0 +1,48 @@
+/*
+ * The share setting under the row of a connected login, in the same box as
+ * the rows, as the Connect form is: its words, then the switch, which
+ * lines up with Remove.
+ */
+.share {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0 8px 12px 12px;
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.label {
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+  line-height: 1.45;
+}
+
+.hint {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* A change that the app did not save: its cause, until the next change. */
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 2px;
+  color: var(--ui-rose);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* The icon centres on the first line of the text. */
+.icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}

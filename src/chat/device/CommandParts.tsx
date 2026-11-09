@@ -1,5 +1,6 @@
 import { ChevronDown } from 'lucide-react'
 import type { DeviceCommandRecord } from '../../shared/device'
+import { nameLabel } from '../../shared/name-label'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
 import card from '../../../docs/mockups/src/components/chat/MacCommand.module.css'
 import styles from '../../../docs/mockups/src/components/chat/PendingCommand.module.css'
@@ -52,8 +53,8 @@ export interface RequestReaders {
 function factsOf(request: DeviceCommandRecord, readers: RequestReaders) {
   const sender = personName(request.sender)
   const workspace = readers.orgName
-    ? `${request.workspaceName}, in ${readers.orgName}`
-    : request.workspaceName
+    ? `${nameLabel(request.workspaceName)}, in ${readers.orgName}`
+    : nameLabel(request.workspaceName)
   return [
     { term: 'Folder', value: request.folder, literal: true },
     { term: 'Reason', value: request.reason, literal: false },

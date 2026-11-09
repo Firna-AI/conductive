@@ -64,7 +64,7 @@ export class ApiRequestError extends Error {
   }
 }
 
-export const REQUEST_FAILED = 'The request failed. Try again.'
+const REQUEST_FAILED = 'The request failed. Try again.'
 const NETWORK_FAILED =
   'The app cannot reach the server. Check the connection, then try again.'
 

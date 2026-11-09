@@ -6,6 +6,7 @@ import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Workspace } from '../../shared/workspaces'
 import type { SubscribeWorkspaceEvents } from '../../terminal/tool-parts/workspace'
+import type { Action } from '../ui/useAction'
 import type { Viewport } from '../ui/viewport'
 import { appFeatures } from './app-features'
 
@@ -42,6 +43,11 @@ export interface WorkspaceContext {
    * wait of a start. Null while the sandbox runs.
    */
   panel: SandboxPanelState | null
+  /**
+   * Resume, or Try again after a failed start. A phone shows it on a part
+   * that shows the state of the sandbox in place of its content.
+   */
+  resume: Action<[]>
   viewport: Viewport
   /** The address after the workspace, such as `['files']` or `['terminal']`. */
   view: readonly string[]
@@ -63,7 +69,7 @@ export interface WorkspaceContext {
   onReassigned: (workspace: Workspace) => void
 }
 
-export type WorkspaceSlot = (context: WorkspaceContext) => ReactNode
+type WorkspaceSlot = (context: WorkspaceContext) => ReactNode
 
 /**
  * The parts that later milestones put into the shell of a workspace. The

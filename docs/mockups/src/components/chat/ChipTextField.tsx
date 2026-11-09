@@ -5,16 +5,18 @@ import styles from './ChipTextField.module.css'
 
 /**
  * The text field of a message box that holds chips inside its text: plain
- * text, with each chip as one unit of it. It has the font, the line
- * height, and the least number of lines of the plain text field. It grows
- * with its text up to eight lines, then scrolls. On a phone its text is
- * larger, as in the plain field.
+ * text, with each chip as one unit of it. It has the font and the line
+ * height of the plain text field, and the same least and most numbers of
+ * lines. It grows with its text up to `maxLines`, then scrolls. On a phone
+ * its text is larger, as in the plain field.
  */
 export function ChipTextField(props: {
   /** The spoken name of the field, such as "Message". */
   label: string
   /** The least number of lines that the field shows. */
   lines: number
+  /** The most lines that the field shows before its text scrolls. */
+  maxLines: number
   children: ReactNode
 }) {
   const { field } = useControlSizes()
@@ -25,7 +27,10 @@ export function ChipTextField(props: {
       className={classes(styles.field, field === 'lg' && styles.touch)}
       contentEditable
       role="textbox"
-      style={{ minHeight: `${props.lines}lh` }}
+      style={{
+        minHeight: `${props.lines}lh`,
+        maxHeight: `${props.maxLines}lh`,
+      }}
       suppressContentEditableWarning
     >
       {props.children}

@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
+import { nameLabel } from '../../shared/name-label'
 import { createApiClient } from '../../app/api/client'
 import { chatHistoryPath } from '../../shared/events'
 import { sessionPaths, sessionsPath } from '../../shared/sessions'
@@ -124,8 +125,11 @@ describe('the link of a linked session to its source', () => {
       () => queryByText(`This session started from ${closed.title}`),
       'the line that links to the closed source',
     )
-    await press(byRole('button', closed.title, closedLine))
-    await waitFor(() => isShownTab(closed.title), 'the reopened source')
+    await press(byRole('button', nameLabel(closed.title), closedLine))
+    await waitFor(
+      () => isShownTab(nameLabel(closed.title)),
+      'the reopened source',
+    )
     const reopen = sessionPaths.reopen(org, ws, closed.id)
     const reopened = server.requests.filter(
       (request) =>
@@ -182,7 +186,7 @@ describe('the link of a linked session to its source', () => {
       ),
     )
     const entry = await waitFor(
-      () => queryByText(closedLinked.title)?.closest('button'),
+      () => queryByText(nameLabel(closedLinked.title))?.closest('button'),
       'the closed linked session in the session history',
     )
     await press(entry)

@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react'
-import { archivedWorkspaces } from '../../fixtures/workspaces'
+import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import {
   workspaceSections,
   type SidebarSection,
@@ -12,7 +12,7 @@ import {
  * workspaces, which the list keeps in its Archived group.
  */
 export function orgRows(sections: readonly SidebarSection[]): WorkspaceRow[] {
-  const archived = archivedWorkspaces.map((workspace): WorkspaceRow => ({
+  const archived = archivedWorkspaceList.map((workspace): WorkspaceRow => ({
     workspace,
     status: 'archived',
     selected: false,

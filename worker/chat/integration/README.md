@@ -190,10 +190,13 @@ methods of `Workspace`.
 
 ### Stop and summary
 
-- When the lifecycle state becomes `stopped` or `error`, or a failed create
-  clears the lifecycle, `stopWorkspace` closes the runner. It ends each
+- When the lifecycle state becomes `stopped` or `error`,
+  `stopWorkspace` closes the runner. It ends each
   running or stopping turn as stopped. Queued turns stay for the resume.
   Device cleanup starts too.
+- A failed admitted create keeps the same workspace and normal access to chat.
+  Later messages remain queued. A replacement create uses a fresh computer token.
+  Its readiness releases the existing commands in their saved order.
 - During org deletion, a missing workspace ends only the state projection.
   Device reconciliation still settles the request and sends its broker cancellation.
 - `workspaceSummary` gives the last event number, the last event number
@@ -287,6 +290,10 @@ methods of `Workspace`.
 - When the starter's login, or the sender's access, is gone as a command
   goes out, `turn.failed` ends the turn only while it is queued. The failure
   names the cause. A lost starter login sets `loginAvailable` to false.
+- A starter who stops sharing the login fails the queued command of another
+  member in the same way. That refusal sets `loginShared` to false and keeps
+  `loginAvailable` true. The failure then says that the login is for the
+  messages of the starter only, with the same recovery text.
 - A running or stopping turn keeps the command, and the Durable Object does
   not send it. So the later runner events of that turn stay valid.
 - When that turn finishes, an unanswered message moves to a new queued

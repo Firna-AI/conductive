@@ -5,31 +5,17 @@
   flex-shrink: 0;
 }
 
-.content {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-}
-
-.icon {
-  flex-shrink: 0;
-  color: var(--ui-muted);
-}
-
-/* The copy worked: a check in the colour of success. */
-.done {
-  flex-shrink: 0;
-  color: var(--ui-success);
-}
-
-/* The label has the type of the repository and the branch beside it. */
+/*
+ * The label has the type of the repository and the branch beside it, and
+ * it never breaks at its hyphen.
+ */
 .label {
   color: var(--ui-muted);
   font-family: var(--ui-font-mono);
   font-size: var(--ui-text-xs);
   font-variant-numeric: tabular-nums;
   line-height: 1.4;
+  white-space: nowrap;
 }
 
 /*

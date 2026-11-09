@@ -1,10 +1,13 @@
 {
   "order": [
-    "error",
-    "time-limit",
+    "not-created",
+    "dialog",
     "workspace-link",
     "creating",
     "waiting",
-    "first-turn"
+    "first-turn",
+    "error",
+    "time-limit",
+    "retrying"
   ]
 }

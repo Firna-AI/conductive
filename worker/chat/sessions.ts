@@ -15,15 +15,16 @@ export async function createSession(
   dependencies: ChatDependencies,
   sourceSessionId: string | null = null,
 ): Promise<Session> {
-  const login = await SessionLogins.initial(
+  const metadata = await SessionLogins.initial(
     dependencies,
+    id,
     startedBy.id,
     choice.agent,
   )
   const session: Session = {
     id,
     workspaceId: transaction.workspaceId,
-    title: 'New session',
+    title: null,
     choice,
     createdAt: transaction.now,
     closedAt: null,
@@ -37,7 +38,7 @@ export async function createSession(
       avatarUrl: startedBy.avatarUrl,
     },
     sourceSessionId,
-    loginAvailable: login !== null && login.agent === choice.agent,
+    ...metadata,
   }
   await transaction.saveSession(session)
   await transaction.emit({ type: 'session.updated', session })

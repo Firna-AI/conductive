@@ -129,14 +129,18 @@ it('admits concurrent pending creates once and publishes their later failure wit
     await runtime.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM workspaces',
     ).first('count'),
-  ).toBe(0)
-  expect((await fixture.failedCreation(id))?.request).toEqual(FIRST_MESSAGE)
+  ).toBe(1)
+  expect(await runtime.workspace(id).waitCreationAdmission()).toMatchObject({
+    ok: true,
+    created: { first: { request: FIRST_MESSAGE } },
+  })
   boat.commandExitCode = 0
   const retried = await fixture.run(() =>
-    createCompletedWorkspace(runtime, org.id, user, input),
+    createWorkspace(runtime, org.id, user, input),
   )
-  expect(retried.workspace.id).not.toBe(id)
-  expect(boat.starts).toHaveLength(2)
+  expect(retried.workspace.id).toBe(id)
+  expect(retried.workspace.state).toBe('error')
+  expect(boat.starts).toHaveLength(1)
 })
 
 it('repairs a claim with no queued job and keeps successful retries independent of a later resume', async () => {

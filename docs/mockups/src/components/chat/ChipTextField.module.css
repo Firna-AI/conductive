@@ -2,9 +2,9 @@
  * The sizes of the plain text field of the message box: 13 px text on
  * 18 px lines, and 16 px text on 22 px lines on a phone. The field keeps
  * the line breaks of its text, and a long link breaks to fit the line.
+ * The component sets its least and most heights in lines.
  */
 .field {
-  max-height: 8lh;
   overflow-y: auto;
   color: var(--ui-ink);
   font-family: var(--ui-font-sans);

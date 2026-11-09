@@ -7,6 +7,7 @@ import { groupWorkspaces, type SectionGroup } from '../../app/sections'
 import { useStore } from '../../app/store'
 import { useNow } from '../../app/time'
 import { useOrgModel } from '../context'
+import { usePaletteOffer } from '../palette/palette-context'
 import { LoadFailure } from '../ui/LoadFailure'
 import ui from '../ui/ui.module.css'
 import type { SectionActions } from './SectionHeader'
@@ -78,13 +79,16 @@ function useLocalCollapse(actions: SectionActions) {
 /**
  * The workspaces of an org in their sections, as the sidebar and the list
  * page show them, with the field of a new section at the end. `readOnly`
- * shows them without changes, for a suspended org.
+ * shows them without changes, for a suspended org. `offerActions` says
+ * that the page shows this list, so it offers New section to the command
+ * palette.
  */
 export function OrgList(props: {
   orgId: string
   variant: RowVariant
   selectedId: string | null
   readOnly?: boolean
+  offerActions?: boolean
 }) {
   const readOnly = props.readOnly ?? false
   const org = useOrgModel(props.orgId)
@@ -94,6 +98,14 @@ export function OrgList(props: {
   const now = useNow(30_000)
   const { actions, move, adding, create, cancelAdding } = useListActions(org)
   const local = useLocalCollapse(actions)
+  usePaletteOffer(
+    props.offerActions && !readOnly
+      ? {
+          scope: { kind: 'org', orgId: props.orgId },
+          actions: [{ id: 'new-section', run: actions.newSection }],
+        }
+      : null,
+  )
   useEffect(() => org.watch('list'), [org])
   const failure = (error: ApiError) => (
     <LoadFailure

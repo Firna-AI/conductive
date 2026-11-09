@@ -98,6 +98,8 @@ approved.
 - Agent call: a workspace row of the palette shows the label when the
   query matches it. Reason: a person can then tell apart the workspaces
   that match a part of a number, such as `39`.
+- Agent call, from the updated mockups: matching palette rows show the
+  label before the name, so the numbers line up in one column.
 - Agent call: the rule of the palette search goes into the protocol doc
   of the palette, in the change that builds it. Reason: a protocol doc
   states only behaviour that the code has, and the palette is not on
@@ -120,21 +122,25 @@ approved.
 - Agent call, from the mockups: on desktop, the button sits right after
   the name, before the repository. On a phone, it leads the line under
   the name, before the repository and the branch, and its touch area is
-  44 px high. A link icon leads the label. Reason: the number joins the
+  44 px high. The label has no link icon and shows a hover effect, as the
+  user requested on 9 November 2026. Reason: the number joins the
   other names of the workspace, in the same order on both sizes. On the
   right of a phone header, it left the name only 50 to 80 px.
 - Agent call, from the mockups: the accessible name is "Copy link to
-  W-395". After a press, a check takes the place of the icon, and a note
+  W-395". After a press, a note
   under the button says "Link copied" for a moment. A failed copy says
   "The link didn't copy. Try again." in the danger colour, as the file
   page says "The text didn't copy. Try again." The note is a status for
   screen readers, and it lies over the content, so nothing moves.
   Reason: "Copied" alone could mean that only the number was copied.
+- Agent call, from the user's icon change: the copied state also keeps
+  the number alone. The status note confirms the copy without moving the
+  repository or branch.
 - Agent call, from the mockups: on desktop, the repository and the
   branch share one group in place of the spacer. The group takes only the
   room that the other parts leave, so the name is cut short only when
-  that group has no room left. Reason: the label takes about 73 px, and
-  the name is the most important part. A larger shrink factor still cut
+  that group has no room left. Reason: the label needs room, and the
+  name is the most important part. A larger shrink factor still cut
   the name by less than a pixel, which shows an ellipsis.
 
 ### Chips
@@ -199,8 +205,10 @@ approved.
   failed send or a draft move to a new session. Reason: the drafts, the
   sends, and the stored history then need no change.
 - Agent call: Enter, Shift+Enter, the input methods of other languages,
-  the touch keyboard, the placeholder, the limit of eight lines, and the
-  focus keep their rules of today.
+  the touch keyboard, the placeholder, the limit of eight lines in the
+  chat and page, and the focus keep their rules of today. The New
+  workspace dialog keeps its seven-line minimum and fourteen-line
+  maximum, as the current dialog does.
 - Agent call: the box uses the [Lexical](https://lexical.dev) editor,
   with an inline node for the chip, in a local part. Reason: `@firna/ui`
   has no editor with inline chips, also in version 5.1.0. Lexical handles
@@ -232,6 +240,21 @@ approved.
 - Agent call: the agent tools get no call that reads or messages another
   workspace. Reason: such a call lets sandbox code reach more of the org,
   so it needs its own brainstorm. Conductor's CLI can do both.
+
+## Replaced ways
+
+The local inline-chip editor replaces the plain `InputFrame` used by the
+message fields. Drafts and stored messages keep the same plain text.
+
+- [ ] Move `src/chat/components/Composer.tsx` to the chip editor.
+- [ ] Move `src/shell/new-workspace/Composer.tsx` to the chip editor.
+- [ ] Move the field in `src/shell/new-workspace/NewWorkspaceDialog.tsx`
+      to the same chip editor. Keep its seven-line minimum, fourteen-line
+      maximum, and initial focus.
+- [ ] Move Enter handling and the DOM input helpers to the editor's public
+      interface. Preserve their existing behaviour checks.
+- [ ] Remove the replaced field markup and any now-unused imports or
+      styles. Keep no second editor path or format converter.
 
 ## Decisions
 
@@ -336,9 +359,28 @@ variant.
 The screenshots of this milestone are in
 `.context/workspace-link-chips/mockups/`.
 
-## Milestone 2: Documentation and protocol
+## Milestone 1a: Current screens and number search mockups
+
+Tags: mockup
 
 Depends on: 1
+
+The command palette has merged into `main`. The current New workspace
+screen is a dialog. The mockups keep those screens and add number search.
+The user approved the plan and all milestones on 9 November 2026.
+
+- [x] Resolve the mockup merge conflicts while preserving the current
+      screens, controls, private workspace rules, and workspace chips.
+- [x] Remove the link icon from the header number button. Add a hover
+      effect, as the user requested on 9 November 2026.
+- [x] Draw number search in the command palette. Show the workspace
+      number when the query matches it, on desktop and on a phone.
+- [x] Check the mockups and visually inspect the changed pages.
+- [x] Update the design and later TODOs for any mockup gaps.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: 1, 1a
 
 The protocol docs state the number, Copy link, the chips, and the agent
 tool fields, with decisions 150 and 151 and their rejected options.
@@ -354,6 +396,9 @@ tool fields, with decisions 150 and 151 and their rejected options.
       ID.
 - [ ] Add the number and the link to the create and list calls in
       `docs/protocol/agent-tools.md`.
+- [ ] Add number search to the command palette protocol. Search `395`
+      and `W-395` with the same rules as workspace names. Show the label
+      when the query matches it.
 - [ ] Check each relative link of the changed Markdown files.
 
 ## Milestone 3: Numbers and links in the Worker
@@ -402,7 +447,7 @@ Depends on: 3
       mockup header does.
 - [ ] Copy `workspace.link` with `AppServices.copy`. Show "Link copied",
       or "The link didn't copy. Try again." when the copy fails. A failed
-      copy keeps the link icon, and the note stays a status for screen
+      copy keeps the number, and the note stays a status for screen
       readers.
 - [ ] Run `npm run marketing:pictures`, because the pictures of the
       marketing site come from the mockups, whose header now shows the
@@ -455,7 +500,10 @@ Depends on: 5
       `docs/mockups/src/components/chat/ChipTextField.tsx`, and put each
       chip in an element that the caret cannot enter.
 - [ ] Use it in `src/chat/components/Composer.tsx` and in
-      `src/shell/new-workspace/Composer.tsx`. The draft stays plain text.
+      `src/shell/new-workspace/Composer.tsx`, and in the message field of
+      `src/shell/new-workspace/NewWorkspaceDialog.tsx`. Keep the dialog's
+      seven-line minimum, fourteen-line maximum, and initial focus. The
+      draft stays plain text.
 - [ ] Update the DOM tests that type into a message box, such as
       `FirstStart.dom.test.tsx` and `NewWorkspaceScreen.test.tsx`. Test a
       paste, a Backspace after a chip, a draft that comes back with
@@ -465,6 +513,16 @@ Depends on: 5
 - [ ] Add the chip text field to
       `plans/follow-ups/firna-ui-missing-parts.md`.
 - [ ] Update `src/chat/README.md` and `src/app/screens.md`.
+
+## Milestone 6a: Number search in the command palette
+
+Tags: ui
+
+Depends on: 3, 1a
+
+- [ ] Search the workspace number label with the same rules as its name.
+- [ ] Show the number in a palette result when the query matches it.
+- [ ] Test number search and update the area README.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
@@ -490,7 +548,7 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Only when the palette was not on `main` at the merge: send a
+- [x] Not needed: the palette is already on `main`. Only when the palette was not on `main` at the merge: send a
       message to the Conductor workspace "Command Palette Mockups",
       `8f4c4c29-c7d4-4042-9c41-ef4a0d159eb4`, on
       `calummoore/command-palette-mockups`. Ask it to merge `main` and to

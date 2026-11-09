@@ -1,5 +1,4 @@
 import { Button } from '@firna/ui/button'
-import { InputFrame } from '@firna/ui/input'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
@@ -8,19 +7,21 @@ import { ScreenLink } from '../common/ScreenLink'
 import { ActionButton, IconButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
 import { AttachmentChips } from './AttachmentChips'
-import { useChatWorkspaces } from './chatWorkspaces'
-import { ChipTextField } from './ChipTextField'
-import { DraftText, linksWorkspace } from './MessageText'
+import { MessageField } from './MessageField'
 import { ModelPicker } from './ModelPicker'
-import { SendWait } from './SendWait'
 import { SessionLoginLine, type SessionLogin } from './SessionLogin'
 import styles from './Composer.module.css'
 
 export type ComposerState = {
   /** The model and the effort of the next message. */
   choice: AgentChoice
-  /** An agent turn runs, so a message steers it. */
+  /** An agent turn runs, so a message steers it, and Stop ends it. */
   running: boolean
+  /**
+   * A message starts a new linked session, so it does not steer a running
+   * turn of this session. Stop still ends that turn.
+   */
+  startsSession?: boolean
   draft: string
   attachments: readonly Attachment[]
   /** The model picker is open. */
@@ -36,12 +37,6 @@ export type ComposerState = {
   sendTo?: string
   /** The agent of the chosen model is not connected, so Send is off. */
   blocked?: boolean
-  /**
-   * The sandbox of a new workspace starts for the first time, so Send waits.
-   * The box keeps the message, and a short reason beside Send says that the
-   * user can send it when the sandbox is ready.
-   */
-  waits?: boolean
   /**
    * Whose agent login the session uses: the login of its starter. The line
    * under the box names it.
@@ -69,45 +64,31 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
 /**
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. While a turn runs, a message
- * steers the turn, and Stop ends it. While Send waits for the first start
- * of a new workspace, a message in the box shows the reason beside Send. A
- * line under the box names whose agent login the session uses. A pasted
- * link to a workspace of the org shows as a chip in the text at once, and
- * the draft keeps the plain link.
+ * steers the turn unless it starts a new linked session. Stop ends the
+ * running turn. While the sandbox is not ready, also
+ * during and after a failed first start, Send queues the message in the
+ * workspace. A line under the box names whose agent login the session
+ * uses. A pasted link to a workspace of the org shows as a chip in the
+ * text at once, and the draft keeps the plain link.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
-  const { field } = useControlSizes()
-  const workspaces = useChatWorkspaces()
-  const placeholder = props.running
+  const steers = props.running && props.startsSession !== true
+  const placeholder = steers
     ? 'Steer the agent while it works'
     : (props.placeholder ?? 'Message the agent')
-  const off = props.blocked === true || props.waits === true
-  const written = props.draft !== '' || props.attachments.length > 0
-  const lines = props.lines ?? 2
+  const off = props.blocked === true
   return (
     <div className={styles.wrap}>
       <div className={styles.composer}>
         {props.attachments.length > 0 ? (
           <AttachmentChips attachments={props.attachments} />
         ) : null}
-        {linksWorkspace(props.draft, workspaces) ? (
-          <ChipTextField label="Message" lines={lines}>
-            <DraftText text={props.draft} />
-          </ChipTextField>
-        ) : (
-          <InputFrame
-            accessibilityLabel="Message"
-            focusIndicator="none"
-            maxLines={8}
-            multiline
-            numberOfLines={lines}
-            onChangeText={noop}
-            placeholder={placeholder}
-            size={field}
-            value={props.draft}
-            variant="seamless"
-          />
-        )}
+        <MessageField
+          lines={props.lines ?? 2}
+          maxLines={8}
+          placeholder={placeholder}
+          text={props.draft}
+        />
         <div className={styles.bar}>
           <IconButton icon={Paperclip} label="Attach files" />
           <ModelPicker
@@ -119,7 +100,6 @@ export function Composer(props: ComposerState & { lines?: number }) {
           {props.running ? (
             <ActionButton icon={Square}>Stop</ActionButton>
           ) : null}
-          {props.waits && written ? <SendWait /> : null}
           {props.sendTo && !off ? (
             <ScreenLink asChild to={props.sendTo}>
               <SendButton draft={props.draft} />
@@ -130,7 +110,7 @@ export function Composer(props: ComposerState & { lines?: number }) {
         </div>
       </div>
       {props.sessionLogin ? <SessionLoginLine {...props.sessionLogin} /> : null}
-      {props.running && props.draft !== '' ? (
+      {steers && props.draft !== '' ? (
         <span className={styles.hint}>
           The agent reads this at its next step.
         </span>

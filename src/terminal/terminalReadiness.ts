@@ -4,7 +4,7 @@ import type { WorkspaceState } from '../shared/workspaces'
 import type { ReadyTerminal } from './terminalApi'
 import type { ToolError, ToolResult } from './tool-parts/request'
 
-export type TerminalView =
+type TerminalView =
   | { state: 'loading' | 'starting' | 'stopped' }
   | { state: 'error'; error: ToolError }
   | { state: 'ready'; terminal: ReadyTerminal; ended: boolean }

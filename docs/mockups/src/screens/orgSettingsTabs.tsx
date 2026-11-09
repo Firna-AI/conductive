@@ -94,7 +94,12 @@ export function TabBody(props: { state: OrgSettingsState }) {
     }
     case 'computer':
       return (
-        <ComputerTab build={state.build} org={org.name} readOnly={readOnly} />
+        <ComputerTab
+          build={state.build}
+          envForm={state.envForm}
+          org={org.name}
+          readOnly={readOnly}
+        />
       )
     case 'members':
       return <MembersTab canManage={readOnly === undefined} viewer={viewer} />
