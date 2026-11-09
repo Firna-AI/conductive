@@ -603,6 +603,10 @@ and workspace chips together before the complete gate.
 Depends on: every other milestone
 
 - [ ] Run the targeted tests and the complete gate, `npm run check`.
+- [x] Preserve the creation-admission response order. Use an admission's
+      saved immutable number without a new read. Read D1 only for older
+      admissions that have no number. Verify the unchanged early-response
+      test, the legacy admission test, and ten repeated admission runs.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

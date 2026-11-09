@@ -26,14 +26,16 @@ export async function presentProvisionedWorkspace(
   saved: SavedProvisionedWorkspace,
 ): Promise<ProvisionedWorkspace> {
   const { orgId, id } = saved.workspace
-  const row = await readWorkspace(runtime.env.DB, orgId, id)
+  const number =
+    saved.workspace.number ??
+    (await readWorkspace(runtime.env.DB, orgId, id)).number
   return {
     ...saved,
     workspace: presentWorkspace(saved.workspace, {
       origin: runtime.env.APP_ORIGIN,
       orgId,
       workspaceId: id,
-      number: row.number,
+      number,
     }),
   }
 }
