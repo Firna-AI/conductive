@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { workspacePath, workspacesPath } from '../../../src/shared/workspaces'
+import { sessionPaths } from '../../../src/shared/sessions'
 import { record } from '../inputs'
 import { outerWorkerBundle } from './outer-runtime.test-support'
 import { OUTER_ORG, OUTER_WORKSPACE } from './outer-seed.test-support'
@@ -68,4 +69,56 @@ it('names the workspace and first session from the first message and sends the t
       }),
     ])
   }
+})
+
+it('retries an empty title after a native restart with the saved first message text', async () => {
+  const active = (fixture = await recoveryWorkspaceFixture(bundle))
+  const bindings = await active.runtime.getBindings<{
+    WORKSPACES: DurableObjectNamespace<Workspace>
+  }>()
+  const actor = bindings.WORKSPACES.getByName(OUTER_WORKSPACE)
+  expect(await actor.titleCallCount()).toBe(1)
+  const firstCall = await actor.waitForTitleCall()
+  expect(firstCall.messages?.[1].content).toBe(
+    'Task message as a JSON string:\n"Keep the first message"',
+  )
+  await actor.completeTitle('Title: ""')
+  await actor.drainTitleWork()
+  expect((await active.session(active.first.sessionId)).title).toBe(
+    OUTER_WORKSPACE,
+  )
+  await active.restart()
+  const restartedBindings = await active.runtime.getBindings<{
+    WORKSPACES: DurableObjectNamespace<Workspace>
+  }>()
+  const restarted = restartedBindings.WORKSPACES.getByName(OUTER_WORKSPACE)
+  expect(await restarted.titleCallCount()).toBe(0)
+  const nextCall = restarted.waitForTitleCall()
+  const response = await active.request(
+    sessionPaths.messages(OUTER_ORG, OUTER_WORKSPACE, active.first.sessionId),
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        id: 'retry-title-after-restart',
+        text: 'Yes, do that',
+        choice: active.first.request.choice,
+        attachmentIds: [],
+      }),
+    },
+  )
+  expect(response.status).toBe(202)
+  expect((await nextCall).messages?.[1].content).toBe(
+    'Task message as a JSON string:\n"Keep the first message"',
+  )
+  expect(await restarted.titleCallCount()).toBe(1)
+  await restarted.completeTitle('Keep the first message')
+  await restarted.drainTitleWork()
+  expect((await active.session(active.first.sessionId)).title).toBe(
+    'Keep the first message',
+  )
+  expect(
+    await active.env.DB.prepare('SELECT name FROM workspaces WHERE id = ?')
+      .bind(OUTER_WORKSPACE)
+      .first('name'),
+  ).toBe('Keep the first message')
 })

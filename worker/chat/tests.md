@@ -17,8 +17,13 @@ npm run typecheck
   the first session and message of a workspace with a city name.
   `first-message.test.ts`, `workspace-session-title.test.ts`, and
   `session-titles.test.ts` share this fixture.
+- `createTitleFixture` in `workspace-title.test-support.ts` supplies a fake
+  title model and drains background work. `workspace-titles.test.ts` and
+  `workspace-title-configuration.test.ts` use it.
 - `MemoryChatStorage` keeps the records in memory. Set `beforeCommit` to
   delay a commit and test a late commit.
+- A memory restart does not rebuild the workspace object. Use the native
+  fixture to check that new stored state survives a workspace object restart.
 - To test that a failed commit rolls back the whole receipt of an action,
   use `checkCommitBoundaries` in
   [`commit-boundary.test-support.ts`](commit-boundary.test-support.ts).
@@ -73,6 +78,9 @@ npm run typecheck
   restart the real workspace object before both tabs open. It checks
   titles through the sessions route, ordered events for both tabs,
   duplicate receipts, and a member name after another restart.
+- `integration/workspace-title-request.test.ts` uses
+  `workspace-title-entry.test-support.ts` to capture model inputs. It checks
+  the title source after a native restart, the D1 name, and the first session.
 - `first-message.test.ts` checks that a sender who is not the assigned
   sender of a first message gets a refusal, and that no session is stored.
   It also checks the initial city name and unchanged repeated admission.

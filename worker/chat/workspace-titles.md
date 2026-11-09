@@ -56,4 +56,3 @@ a title from the first line with text and limits it to 60 Unicode code
 points. An attachment-only message leaves the title for the next text
 message. A member's name stays. Repeated message IDs change nothing.
 The numbered `session.updated` event sends each changed title to open tabs.
-

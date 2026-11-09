@@ -5,7 +5,11 @@ import type { WorkspaceCompositionEnv } from '../workspace-integration'
 export class Workspace extends ProductionWorkspace {
   private readonly pendingTitleWork: Promise<unknown>[]
   private readonly titleReplies: ((value: { response: string }) => void)[]
-  private titleCalls = 0
+  private readonly titleInputs: AiTextGenerationInput[] = []
+  private titleReaders: {
+    after: number
+    resolve: (input: AiTextGenerationInput) => void
+  }[] = []
 
   constructor(context: DurableObjectState, env: WorkspaceCompositionEnv) {
     const pending: Promise<unknown>[] = []
@@ -17,8 +21,14 @@ export class Workspace extends ProductionWorkspace {
     }
     const resolvers = {
       randomId: () => crypto.randomUUID(),
-      runTitleModel: async () => {
-        this.titleCalls++
+      runTitleModel: async (_model: string, input: AiTextGenerationInput) => {
+        this.titleInputs.push(structuredClone(input))
+        this.titleReaders = this.titleReaders.filter((reader) => {
+          const recorded = this.titleInputs[reader.after]
+          if (!recorded) return true
+          reader.resolve(recorded)
+          return false
+        })
         return new Promise<{ response: string }>((resolve) =>
           replies.push(resolve),
         )
@@ -35,7 +45,14 @@ export class Workspace extends ProductionWorkspace {
   }
 
   titleCallCount(): number {
-    return this.titleCalls
+    return this.titleInputs.length
+  }
+
+  waitForTitleCall(after = 0): Promise<AiTextGenerationInput> {
+    const recorded = this.titleInputs[after]
+    return recorded
+      ? Promise.resolve(recorded)
+      : new Promise((resolve) => this.titleReaders.push({ after, resolve }))
   }
 
   completeTitle(response: string): void {
