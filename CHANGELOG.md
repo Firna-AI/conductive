@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.0](https://github.com/Firna-AI/remote-code/compare/v0.1.0...v0.2.0) (2026-11-09)
+
+
+### Features
+
+* **onboarding:** build the cloud computer of a new org automatically ([#92](https://github.com/Firna-AI/remote-code/issues/92)) ([701c753](https://github.com/Firna-AI/remote-code/commit/701c753caf6c71a9a356ce7fd306304a0df22389))
+* **tabs:** move any tab by drag or from a tab menu ([623dbe5](https://github.com/Firna-AI/remote-code/commit/623dbe511918adc39799693ba559838550cdb116))
+
+
+### Bug Fixes
+
+* **desktop:** pass signing secrets to the reusable release job ([#109](https://github.com/Firna-AI/remote-code/issues/109)) ([ed88e9b](https://github.com/Firna-AI/remote-code/commit/ed88e9b194241e3e73453664b254822adcb719a5))
+* **marketing:** complete the Terms and Privacy pages ([#97](https://github.com/Firna-AI/remote-code/issues/97)) ([dbb3d26](https://github.com/Firna-AI/remote-code/commit/dbb3d26d71d40b15af83c6e4ea1492c404939c06))
+* restore cursor at end of New workspace drafts ([#105](https://github.com/Firna-AI/remote-code/issues/105)) ([f1eb355](https://github.com/Firna-AI/remote-code/commit/f1eb3555ff8c6cdcccc11c68f08cb98216d823a3))
+* **workspace:** hide the Desktop panel for now ([#107](https://github.com/Firna-AI/remote-code/issues/107)) ([7ebecf7](https://github.com/Firna-AI/remote-code/commit/7ebecf778382075fef1d1fb3a372ebda45a7e45f))
+
 ## 0.1.0 (2026-11-09)
 
 
