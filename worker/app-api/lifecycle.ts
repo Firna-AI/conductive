@@ -62,7 +62,7 @@ export async function chatLifecycleRoute(
   ) {
     const ordered = await binding
       .getByName(workspaceId, { locationHint: 'weur' })
-      .readChatWorkspaceResponse(orgId, workspaceId)
+      .readChatWorkspaceResponse(orgId, workspaceId, env.APP_ORIGIN)
     return Response.json({
       ...ordered.response,
       workspace: await workspaceForViewer(
@@ -101,7 +101,11 @@ export async function chatLifecycleRoute(
           }
         const ordered = await binding
           .getByName(response.workspace.id, { locationHint: 'weur' })
-          .readChatWorkspaceResponse(orgId, response.workspace.id)
+          .readChatWorkspaceResponse(
+            orgId,
+            response.workspace.id,
+            env.APP_ORIGIN,
+          )
         return {
           ...ordered.response,
           workspace: await workspaceForViewer(

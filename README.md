@@ -44,6 +44,9 @@ These features are planned. The protocol docs state each one.
 - One prepared cloud computer image for each org, built from an install
   script, with a startup script and env vars.
 - Agents can create and list workspaces.
+- Each workspace has a number, such as `W-395`. A press on the number in
+  the header copies the link of the workspace. A workspace link in chat
+  shows as a chip with the number and the name.
 - Orgs with members, sections, reassignment, Archive, and Delete org.
 - A command palette, on ⌘K or Ctrl+K, finds the workspaces of the org,
   runs the actions of the page, and opens the settings.
@@ -253,10 +256,13 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   [flows](docs/architecture/flows.md), and the terms.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
+  - [Org image](docs/protocol/org-image.md)
   - [Workspace tools](docs/protocol/workspace-tools.md)
   - [Create a workspace](docs/protocol/create-a-workspace.md)
   - [Repository folders](docs/protocol/repository-folders.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
+  - [Agents and sessions](docs/protocol/agents-and-sessions.md)
+  - [Workspace links](docs/protocol/workspace-links.md)
   - [Agent runner](docs/protocol/agent-runner.md)
   - [Access and security](docs/protocol/access-and-security.md)
   - [GitHub banner](docs/protocol/github-banner.md)

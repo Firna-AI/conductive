@@ -155,6 +155,20 @@ a.highlighted:hover {
   white-space: nowrap;
 }
 
+/*
+ * The label of the number of a workspace, such as W-395, before its name
+ * when the query matches it. It keeps its room, so rows that match a part
+ * of a number stay apart, also on a phone.
+ */
+.number {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* The repository gives up its room before the name. */
 .repository {
   flex: 0 100 auto;

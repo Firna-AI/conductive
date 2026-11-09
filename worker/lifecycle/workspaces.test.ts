@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { routes } from '../../src/app/router'
 import { encrypt } from '../security/crypto'
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
@@ -48,6 +49,7 @@ it('keeps a failed create and its first message while revoking its token and ret
     expect(failed).toMatchObject({
       ok: true,
       created: {
+        workspace: { number: 1 },
         first: {
           sender: { id: user.id },
           request: { text: 'Keep the first draft.' },
@@ -101,6 +103,18 @@ it('keeps a failed create and its first message while revoking its token and ret
       createCompletedWorkspace(runtime, org.id, user, input),
     )
     expect(retry.workspace.id).toBe(created.workspace.id)
+    expect(created.workspace.number).toBe(1)
+    expect(retry.workspace.number).toBe(1)
+    expect(created.workspace.link).toBe(
+      `${runtime.env.APP_ORIGIN}${routes.workspace(org.id, created.workspace.id)}`,
+    )
+    expect(
+      await runtime.env.DB.prepare(
+        'SELECT workspace_number_count FROM orgs WHERE id = ?',
+      )
+        .bind(org.id)
+        .first('workspace_number_count'),
+    ).toBe(1)
     expect(created.workspace.name).toBeNull()
     expect(
       await runtime.env.DB.prepare('SELECT name FROM workspaces WHERE id = ?')

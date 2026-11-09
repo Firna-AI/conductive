@@ -121,6 +121,10 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 
 - A workspace row shows the state mark, the name, the repository, and the
   age of the latest activity, as the workspace list does.
+- When a word of the query is in the label of the number of a workspace,
+  its row also shows that label, before the name (decision 212). Reason:
+  the person can then tell apart the workspaces that match a part of a
+  number, such as `39`.
 - The state mark and the bold name of an unread workspace mean what they
   mean in the list, as
   [Workspace states](workspaces-and-sandboxes.md#workspace-states) says.
@@ -140,7 +144,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 ## Search
 
 - A search looks only at these texts:
-  - the name, the branch, and the repository of a workspace
+  - the name, the label of the number, the branch, and the repository of
+    a workspace
   - the label and the search words of an action or a setting
 - Search words are words that the row does not show, such as "Claude" and
   "Codex" for Agents, and "env" for Cloud computer.
@@ -148,6 +153,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 - Each word of the query must match one of these texts, in any order.
 - A word of the query can match inside a word. In each group, a match at
   the start of a word ranks first.
+- The label of the number, such as `W-395`, follows the same rules as the
+  other texts. So `395` and `W-395` both find that workspace
+  (decision 212). Reason: one rule serves every text.
 - Rows of the same rank keep the order that the tab shows without a query.
   For workspaces, that is the order of the list.
 
