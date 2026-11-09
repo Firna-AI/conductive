@@ -63,7 +63,8 @@ assume its recommended option, and wait for its answer.
   built-in model list, as [Models](../docs/deployment.md#models) says for
   the agent models, and a model ID goes stale.
 - Without the binding or the variable, or after a failed call, the
-  workspace keeps its city name, and the Worker logs one warning. Local
+  workspace keeps no name and shows "Untitled", and the Worker logs one
+  warning. Local
   development and the tests then work with no Cloudflare login. Reason:
   a missing title is recoverable, so the app warns and continues.
 - The request gets only the first 4,000 characters of the text of the first
@@ -91,8 +92,9 @@ assume its recommended option, and wait for its answer.
 - The runner keeps no title code. Reason: decision 146 C replaced the
   runner request, so that code would be dead.
 
-- The mockups show the city name only in a new "First second" variant of
-  the Creating state, with a start log at 1 second. Creating and Second
+- The mockups show "Untitled" only in a new "First second" variant of
+  the Creating state, with a start log at 1 second (the city name until
+  decisions 144 G and 147 B). Creating and Second
   message show the title. A failed title and a first message with no text
   look the same as the first second, and get no view of their own.
   Reason: the mockups of 8 November 2026 show the name change, and a
@@ -155,6 +157,12 @@ These calls are agent calls of 9 November 2026.
   workspace of a deleted org. Reason: the D1 name write on `origin/main`
   already skips a deleted org, and the protocol now says both.
 
+- "Untitled" has the same style as a real name, and only the new workspace
+  in its first second shows it in the mockups. The first tab of a new
+  workspace shows the workspace name. The "+" button, the heading of an
+  empty chat, and the model picker keep "New session", because they name
+  the action. Reason: the mockup milestone of 9 November 2026.
+
 ### The title request in the runner (decision 142 B, replaced)
 
 These calls of 8 November 2026 applied to the runner request that decision
@@ -202,13 +210,12 @@ These calls of 8 November 2026 applied to the runner request that decision
   workspace from a new one, also after a restart.
 ### Session names (decision 143 C)
 
-- The Worker gives the first session its name at the create, and renames
-  it when it stores the title. Reason: one rule in the Worker serves every
+- The first session starts with no title, and takes the workspace title
+  when the Worker stores it. Reason: one rule in the Worker serves every
   client.
 - The workspace and its first session take the title through one rule:
-  each takes the title only while it still has the first name of the
-  workspace. Reason: decision 143 chose this rule for the first session,
-  and decision 144 recommends it for the workspace.
+  each takes the title only while its name is empty. Reason: decisions
+  143, 144 G, and 147 B.
 - A later session takes the first line of its own first message as its
   title, when the Worker accepts that message. A name that a member gave
   the session before stays. Reason: the user wrote "other sessions take the
@@ -228,7 +235,7 @@ These calls of 8 November 2026 applied to the runner request that decision
   - Reason: the mockups of 8 November 2026 needed these cases settled, and
     one rule keeps the mockups and the Worker alike.
 - A session whose first message has no text, such as a message with only a
-  screenshot, keeps "New session". The next message with text then gives
+  screenshot, stays "Untitled". The next message with text then gives
   its title. Reason: a message with no text gives no name, and many
   "New session" rows in the session history would read as an action and
   look alike. The mockup check of 8 November 2026 found this case.
@@ -238,8 +245,9 @@ These calls of 8 November 2026 applied to the runner request that decision
   opens. Reason: the user named only the first session and "other
   sessions".
 - The first session takes only the first title of the workspace, and only
-  while it still has the city name. Reason: this applies the user's rule
-  of decision 143 to the normal case, as the design above says. A rule
+  while its name is empty (until decisions 144 G and 147 B: while it still
+  had the city name). Reason: this applies the user's rule of decision 143
+  to the normal case, as the design above says. A rule
   that compares with the name just before each title was rejected,
   because the cases where the two differ need a second title or a name
   from the workspace route, and decision 144 owns the route case. The docs
@@ -893,30 +901,34 @@ Tags: mockup
 
 Depends on: none
 
-- [ ] Show "Untitled" for a new workspace before its title, in place of
+Evidence: `.context/workspace-title-from-first-message/mockups-untitled/`.
+
+- [x] Show "Untitled" for a new workspace before its title, in place of
       the city name, in the list, the header, and the first tab.
-- [ ] Show "Untitled" on a session tab and a history row whose session
+- [x] Show "Untitled" on a session tab and a history row whose session
       has no title yet, in place of "New session" as a title. Keep "New
       session" where it names the action of "+".
-- [ ] Change each text and comment that says a workspace starts with its
+- [x] Change each text and comment that says a workspace starts with its
       city name, or a session with "New session".
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages. Capture
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages. Capture
       the site pictures again when a captured screen changed.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 13: Documentation for untitled names
 
 Depends on: 12
 
-- [ ] In [Create a workspace](../docs/protocol/workspaces-and-sandboxes.md#create-a-workspace),
+Evidence: `.context/workspace-title-from-first-message/reports/m13-docs.md`.
+
+- [x] In [Create a workspace](../docs/protocol/workspaces-and-sandboxes.md#create-a-workspace),
       state that a new workspace has no name and shows "Untitled".
-- [ ] In [Sessions](../docs/protocol/chat-and-events.md#sessions) and
+- [x] In [Sessions](../docs/protocol/chat-and-events.md#sessions) and
       [Messages](../docs/protocol/chat-and-events.md#messages), state the
       one rule: an automatic name fills only an empty name, never on an
       archived workspace, and a set name never changes (decisions 144 and
       147).
-- [ ] In [Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates),
+- [x] In [Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates),
       give the rule that a later full report replaces the workspace name
       the same exception.
 - [ ] Delete the follow-up items that this change fixes:

@@ -44,6 +44,13 @@ chat, and five tabs at the bottom.
   in every composer, such as "Opus 5.5 High". It names no agent brand. In a
   session with messages, each model of the other agent says "New session",
   because it opens a new session with the draft, from decision 51.
+- A workspace or a session that has no name yet shows "Untitled", in the
+  style of a name, from decisions 144 and 147. The list, the header, the
+  session tabs, and the session history show it, as
+  `app/new-workspace/creating/first-second` and `app/sessions` show.
+  "New session" names only the action that opens a session. The label of
+  +, the heading of the empty chat that + opens, and each model of the
+  other agent say it.
 - While the sandbox of a new workspace starts for the first time, Send
   waits in each session, and each box keeps its message.
   `SendWait` in `src/components/chat/` gives the short reason beside Send,

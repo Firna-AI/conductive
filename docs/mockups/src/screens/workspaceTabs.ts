@@ -4,7 +4,7 @@ import {
   newSession,
   workspaceSessions,
 } from '../fixtures/sessions'
-import type { Workspace } from '../fixtures/workspaces'
+import { untitled, type Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 
@@ -14,26 +14,26 @@ export function isNew(state: WorkspaceState): boolean {
 }
 
 /**
- * The name of the workspace. A new workspace shows its city name from the
- * send until its title comes, about a second later, while the sandbox
- * starts. After a failed title request it keeps the city name until a
- * later message gets a title.
+ * The name that the screen shows for the workspace. A new workspace has no
+ * name from the send until its title comes, about a second later, while
+ * the sandbox starts, so it shows Untitled. After a failed title request
+ * it stays Untitled until a later message with text gets a title.
  */
 export function workspaceName(
   state: WorkspaceState,
   workspace: Workspace,
 ): string {
-  return state.name === 'city' && workspace.generatedName
-    ? workspace.generatedName
-    : workspace.name
+  return state.name === 'untitled' && isNew(state) ? untitled : workspace.name
 }
 
 /**
  * The tabs of the centre column: the sessions, the code file that stays
  * open, and the file, the diff, or the new session that the state opens.
- * The linked session opens as the last tab. While the login of the starter
- * of the first session is not available, that first session leads to its
- * view for the member, beside the linked session.
+ * The one session of a new workspace takes the title of the workspace, so
+ * its tab shows the same name as the header, Untitled before the title
+ * comes. The linked session opens as the last tab. While the login of the starter of the
+ * first session is not available, that first session leads to its view
+ * for the member, beside the linked session.
  */
 export function tabsFor(
   state: WorkspaceState,

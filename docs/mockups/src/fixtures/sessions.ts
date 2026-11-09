@@ -8,9 +8,11 @@
 import { sessionTitleFrom } from '../../../../src/shared/session-title'
 import type { AgentKey } from './agents'
 import type { PersonKey } from './members'
+import { untitled } from './workspaces'
 
 export type Session = {
   key: string
+  /** The title that the tab and the history show, or `untitled`. */
   title: string
   /**
    * The text of the first message of a later session, which is each
@@ -23,25 +25,22 @@ export type Session = {
 /** A session and its starter, the member who started it. */
 export type StartedSession = Session & { starter: PersonKey }
 
-/** The title of a session before a first message with text. */
-const defaultTitle = 'New session'
-
 /**
  * The first message of a later session, and the title that it gives. The
  * title comes from `sessionTitleFrom`, the rule that the Worker applies
  * too. No ellipsis marks a cut, but the tab can still shorten the title on
  * screen. A message with no text, such as one with only a screenshot,
- * keeps the default title.
+ * gives no title, so the session stays Untitled.
  */
 function firstMessage(text: string): { firstMessage: string; title: string } {
-  return { firstMessage: text, title: sessionTitleFrom(text) ?? defaultTitle }
+  return { firstMessage: text, title: sessionTitleFrom(text) ?? untitled }
 }
 
 /**
- * The sessions of the open workspace, oldest first. The first session took
- * the workspace name and then the agent's title. A member renamed it later,
- * so it keeps "Address autocomplete" and no longer follows the workspace
- * name.
+ * The sessions of the open workspace, oldest first. The first session
+ * started with no title and took the title of the workspace. A member
+ * renamed it later, so it keeps "Address autocomplete", and no automatic
+ * title changes it.
  */
 export const workspaceSessions: readonly StartedSession[] = [
   { key: 'autocomplete', title: 'Address autocomplete', starter: 'cal' },
@@ -52,8 +51,11 @@ export const workspaceSessions: readonly StartedSession[] = [
   },
 ]
 
-/** The session that + starts, before its first message. */
-export const newSession: Session = { key: 'new', title: defaultTitle }
+/**
+ * The session that + starts, before its first message. It has no title
+ * yet, so its tab shows Untitled.
+ */
+export const newSession: Session = { key: 'new', title: untitled }
 
 /**
  * The session that a message of Priya opened from the first session, after
@@ -82,7 +84,7 @@ export type ClosedSession = Session & { agent: AgentKey; closed: string }
 
 /**
  * The session history of the open workspace, the last closed first. Each
- * one is a later session, so its first message gives its title.
+ * one is a later session, so its first message with text gives its title.
  */
 export const closedSessions: readonly ClosedSession[] = [
   {
@@ -108,7 +110,7 @@ export const closedSessions: readonly ClosedSession[] = [
     closed: '2d ago',
   },
   {
-    // The first message had only a screenshot, and no text.
+    // Its messages had no text, only a screenshot, so it has no title.
     key: 'untitled',
     ...firstMessage(''),
     agent: 'claude',

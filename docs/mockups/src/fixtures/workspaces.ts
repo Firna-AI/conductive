@@ -29,8 +29,16 @@ export const openableWorkspaces = [
 
 export type OpenableWorkspace = (typeof openableWorkspaces)[number]
 
+/**
+ * The label of a workspace or a session that has no name yet, such as a
+ * new one before its title comes. The name, when it comes, takes the place
+ * of the label.
+ */
+export const untitled = 'Untitled'
+
 export type Workspace = {
   key: string
+  /** Its name. The screen shows `untitled` before a new workspace has one. */
   name: string
   branch: string
   repository: RepositoryKey
@@ -46,13 +54,6 @@ export type Workspace = {
    * runs on the agent login of the member who started it.
    */
   owner: PersonKey
-  /**
-   * The name that the app gives a new workspace, a city, which its branch
-   * also uses. About a second after the first message, a small model writes
-   * a title from that message, and the title replaces the city as the name
-   * while the sandbox still starts. A failed title request keeps the city.
-   */
-  generatedName?: string
 }
 
 /**
@@ -75,11 +76,16 @@ export const checkoutAutocomplete: Workspace = {
   owner: 'cal',
 }
 
-/** The workspace that the create flow makes. */
+/**
+ * The workspace that the create flow makes. It has no name from the send
+ * until its title comes, about a second later, while the sandbox starts.
+ * `name` is that title, from a small model that reads the first message.
+ * A failed title request leaves the workspace without a name until a later
+ * message with text. Its branch keeps a city name with a random suffix.
+ */
 export const savedCarts: Workspace = {
   key: 'saved-carts',
   name: 'Saved carts',
-  generatedName: 'Lisbon',
   branch: branchFor('cal', 'lisbon-7k2q'),
   repository: 'storefront',
   section: 'general',

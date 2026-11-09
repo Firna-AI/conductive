@@ -28,7 +28,7 @@ function State(props: { status: ActivityStatus }) {
  */
 export function WorkspaceHeader(props: {
   workspace: Workspace
-  /** The name to show, such as the city name of a new workspace. */
+  /** The name to show, such as Untitled before the title comes. */
   name: string
   status: ActivityStatus
   viewport: Viewport

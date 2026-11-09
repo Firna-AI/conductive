@@ -42,12 +42,12 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
 
 /**
  * The steps of a sandbox start, while the sandbox starts. A new workspace
- * that still shows its city name is in the first second of its start.
+ * that still shows Untitled is in the first second of its start.
  */
 export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
   if (state.sandbox !== 'starting') return undefined
   if (!isNew(state)) return resumingLog
-  return state.name === 'city' ? firstSecondLog : creatingLog
+  return state.name === 'untitled' ? firstSecondLog : creatingLog
 }
 
 /**

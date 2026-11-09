@@ -36,12 +36,12 @@ export const workspaceStateSchema = {
   properties: {
     workspace: { enum: openableWorkspaces },
     /**
-     * The name of a new workspace: its title, or its city name, which its
-     * branch also uses. The city name shows from the send until the title
-     * comes, about a second later. So a start with the city name shows only
-     * its first step. A workspace without a city name shows its own name.
+     * The name of a new workspace: its title, or no name yet, which shows
+     * as Untitled. A new workspace has no name from the send until the
+     * title comes, about a second later. So a start that shows Untitled
+     * shows only its first step. Any other workspace shows its own name.
      */
-    name: { enum: ['title', 'city'] },
+    name: { enum: ['title', 'untitled'] },
     /**
      * The cloud computer. An archived workspace has none. `refused` is a
      * stopped cloud computer whose start the app refuses, such as while the

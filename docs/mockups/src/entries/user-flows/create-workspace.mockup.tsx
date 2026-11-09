@@ -22,7 +22,7 @@ export const createWorkspace = defineUseCase({
       screenPath: 'app/new-workspace/creating/first-second',
       title: 'The workspace opens',
       description:
-        'The workspace opens at once as Lisbon, on a new branch, and joins General. The first message waits for the sandbox.',
+        'The workspace opens at once as Untitled, on a new branch, and joins General. The first message waits for the sandbox.',
     },
     {
       screenPath: 'app/new-workspace/creating',
