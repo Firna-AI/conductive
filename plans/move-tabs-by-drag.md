@@ -549,6 +549,29 @@ Milestone 4:
 - The tab whose menu is open takes the fill of a hover, also behind the
   sheet of a phone. Reason: the mockup draws it so.
 
+The agent made these calls on 9 November 2026, in Milestone 5:
+
+- `RowDragState` is now the drag of the shared hook. Its item is the
+  workspace, and its places are places in a section. `SectionList` reads
+  `item`, `place`, and `box.width` in place of `workspace`, `target`, and
+  `width`. Reason: the `typescript` skill forbids a converter that turns
+  the drag of the hook back into the old shape.
+- The workspace list takes the rules of the shared hook where they differ
+  from its old drag: the drag follows only the pointer that pressed, it
+  ends a press whose release never came, the release after Escape opens no
+  workspace, the click that ends a drag reaches nothing wherever it lands,
+  and a scroll under a still pointer finds the drop place again. Reason:
+  each rule is safe or better for the list. In the smoke test, the old drag
+  let a second finger move and drop a row, dragged a row with no button
+  down until the next click anywhere, opened the workspace at the release
+  after Escape, and dropped a row at a place that a wheel turn had moved
+  away from the pointer.
+- One test mounts the list and drags its rows: a drop in another section,
+  a place that stays when the pointer leaves every section, and no move at
+  the row's own place. Reason: the hook gives every release to the list, so
+  these rules now live in the list, and the tests of the hook do not cover
+  them.
+
 Contract owners:
 
 - [Chat and events](../docs/protocol/chat-and-events.md#sessions).
@@ -750,9 +773,9 @@ Tags: ui
 
 Depends on: 4
 
-- [ ] Move `useRowDrag` onto the shared pointer drag hook. Keep its API and
+- [x] Move `useRowDrag` onto the shared pointer drag hook. Keep its API and
       its behaviour. Delete its own copy of the mechanics.
-- [ ] Smoke-test the drag of a workspace row in a browser, with a mouse
+- [x] Smoke-test the drag of a workspace row in a browser, with a mouse
       and with touch emulation. Save the evidence under
       `.context/move-tabs-by-drag/`.
 

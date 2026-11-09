@@ -202,13 +202,16 @@ clicks, types, and lets the answers of the fake API settle.
   connects, and shows only the new store. It also checks when the hook keeps
   a store, connects it again, or makes a new one.
 - `pointer-drag.ts`: `usePointerDrag`, the drag and drop of any pointer
-  that the tab row of the chat uses: the press, the start after a move of a
-  mouse or a long press of a finger, Escape, the click after a drag, the
-  scroll lock of touch, and a new drop place after a scroll under a still
-  pointer. `ownPress` keeps a press on a control inside a dragged element,
-  such as Close, for that control. `next-click.ts`: `stopNextClick`, which
-  stops the click that ends a drag wherever it lands, also the late click
-  of a finger. `pointer-drag.test.tsx` mounts the hook in happy-dom.
+  that the tab row of the chat and the workspace list use: the press, the
+  start after a move of a mouse or a long press of a finger, Escape, the
+  click after a drag, the scroll lock of touch, and a new drop place after a
+  scroll under a still pointer. `ownPress` keeps a press on a control
+  inside a dragged element, such as Close, for that control.
+  `next-click.ts`: `stopNextClick`, which stops the click that ends a drag
+  wherever it lands, also the late click of a finger.
+  `pointer-drag.test.tsx` mounts the hook in happy-dom.
+  `../shell/list/useRowDrag.ts`: the drag of a workspace row to a place in
+  a section, on `usePointerDrag`.
 - `sideways-wheel.ts`: `useSidewaysWheel` and `sidewaysWheel`, which turn a
   vertical wheel turn over a row that scrolls sideways into a sideways
   scroll of the row. A sideways swipe and a turn with Ctrl stay with the
