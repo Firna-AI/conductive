@@ -25,25 +25,29 @@ Contract owners:
 
 Depends on: none
 
-- [ ] Update the terminal backend README for the mouse setting and its image
+- [x] Update the terminal backend README for the mouse setting and its image
       rollout requirements.
-- [ ] Check whether the screen README needs a correction.
+- [x] Check whether the screen README needs a correction. Its transport
+      already forwards the SGR mouse reports that tmux requests.
 
 ## Milestone 2: Terminal scrolling
 
 Depends on: 1
 
-- [ ] Extend the installed shell server test to require mouse support.
+- [x] Extend the installed shell server test to require mouse support.
       See its assertion fail before the fix.
-- [ ] Enable mouse support in the shell server startup command.
-- [ ] Verify real tmux scrolling through xterm.js with mouse input.
+- [x] Enable mouse support in the shell server startup command.
+- [x] Verify real tmux scrolling through xterm.js with mouse input.
       Check scrolling up, scrolling down, and reconnecting to the same shell.
+
+Evidence: `.context/terminal-history-scrolling/implementation-report.md` and
+`.context/terminal-history-scrolling/browser-smoke.log`.
 
 ## Milestone 3: Verification and delivery
 
 Depends on: 1, 2
 
-- [ ] Run the targeted tests and the complete gate.
+- [x] Run the targeted tests and the complete gate.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the full branch against `origin/main` with the
       `implementation-review` skill. Apply its fix rule and re-review once
