@@ -41,13 +41,14 @@ it('uploads every signed file and publishes only after GitHub confirms the asset
     [
       'gh',
       [
-        'release',
-        'edit',
-        'v0.1.0',
-        '--repo',
-        'Firna-AI/remote-code',
-        '--draft=false',
-        '--latest',
+        'api',
+        '--method',
+        'PATCH',
+        'repos/Firna-AI/remote-code/releases/42',
+        '--field',
+        'draft=false',
+        '--raw-field',
+        'make_latest=legacy',
       ],
     ],
   ])
@@ -77,7 +78,7 @@ it('replaces partial files in a leftover draft before publishing it', async () =
     '--clobber',
     ...names.map((name) => join('/signed', name)),
   ])
-  expect(dependencies.run.mock.calls.at(-1)?.[1]).toContain('--draft=false')
+  expect(dependencies.run.mock.calls.at(-1)?.[1]).toContain('draft=false')
 })
 
 it('warns and changes nothing when the release is already published', async () => {

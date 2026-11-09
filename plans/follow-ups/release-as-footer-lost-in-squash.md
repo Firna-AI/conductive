@@ -19,7 +19,7 @@
 - **Left out:** This task corrects the guide without changing the tool or repository merge policy. Those larger changes offer no advantage for an accurate explanation. A permanent test of the third-party parser is outside the testing rules.
 - **Wider fix:** None. The documentation skill already requires the guide to match the tool's behavior.
 - **Previous examples:** The same footer approach was considered for the first release, where a footer in an earlier squashed commit still produced `1.0.0`.
-- **Related:** `plans/follow-ups/first-release-version-is-one.md` gives the structural first-version fix. That config fix does not correct the general footer explanation.
+- **Related:** `"initial-version": "0.1.0"` in the root package of `release-please-config.json` sets the first version, so the first release needs no footer. That setting does not correct the general footer explanation in `desktop/RELEASES.md`.
 - **Recommendation:** A. It makes the existing instructions accurate without a new release mechanism.
 - **Action:** fix after merge, apply A.
 

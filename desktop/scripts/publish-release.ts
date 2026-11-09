@@ -73,13 +73,14 @@ export async function publishRelease(
       )
   }
   await dependencies.run('gh', [
-    'release',
-    'edit',
-    tag,
-    '--repo',
-    REPOSITORY,
-    '--draft=false',
-    '--latest',
+    'api',
+    '--method',
+    'PATCH',
+    `repos/${REPOSITORY}/releases/${draft.id}`,
+    '--field',
+    'draft=false',
+    '--raw-field',
+    'make_latest=legacy',
   ])
   return 'published'
 }

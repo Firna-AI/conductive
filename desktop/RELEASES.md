@@ -124,11 +124,15 @@ git push --force origin RELEASE_COMMIT:refs/tags/vX.Y.Z
 Then re-run the failed jobs, for example with `gh run rerun RUN_ID --failed`.
 The re-run checks the tag again, and then signs and publishes.
 
-A retry of an older draft currently marks that version as latest, even after a newer release exists.
-The [release-order follow-up](../plans/follow-ups/older-release-retry-resets-latest.md) records this defect and its fix before the second release.
+After the upload and the file checks, the publish step publishes the draft by its release ID with `gh api`.
+It sends `draft=false` and `make_latest=legacy`.
+GitHub then chooses the latest release by version and creation date.
+The creation date of a release is the date of the commit of its tag.
+The tag check makes sure that this commit is the release commit.
+So a re-run or a manual run for an older draft publishes that release, and a newer published release stays the latest.
 
 The publish job runs on Linux with the built-in `GITHUB_TOKEN` and `contents: write`.
-It downloads the signed files and uploads them with `gh`.
+It downloads the signed files, uploads them with `gh`, and publishes the draft with `gh api`.
 It runs no `npm ci` and no build, so no dependency script runs beside a token that can write releases.
 The signing job keeps a read-only token.
 
@@ -151,9 +155,11 @@ One root release-please component covers the whole product, so the web app and t
 Versions have the form `0.x.y`.
 With `bump-minor-pre-major`, a breaking change raises the minor number before 1.0.
 The manifest starts at `0.0.0` from the bootstrap commit in `release-please-config.json`.
-The required first release is `0.1.0`.
-The current Node strategy instead treats `0.0.0` as no previous release and proposes `1.0.0`.
-Apply the [initial-version fix](../plans/follow-ups/first-release-version-is-one.md) before merging the first release pull request.
+release-please treats `0.0.0` as no previous release.
+So `"initial-version": "0.1.0"` in the root package of `release-please-config.json` sets the first release.
+The first release is `0.1.0`, whatever the types of the commits before it.
+The setting decides only the first version.
+After `0.1.0`, a `feat` commit gives `0.2.0`, and a `fix` commit gives `0.1.1`.
 A commit with the footer `Release-As: X.Y.Z` sets another next version.
 The signed `0.1.0-alpha.1` build has the updater off.
 People with that build install a newer version by hand once, from the DMG of a release.

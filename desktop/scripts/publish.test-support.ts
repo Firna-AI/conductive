@@ -35,7 +35,7 @@ export function publishHarness(names: readonly string[] = releaseNames) {
     sizes,
   }
   const run = vi.fn<PublishDependencies['run']>(async (_program, args) => {
-    if (args[0] === 'api') {
+    if (args[0] === 'api' && args.includes('--paginate')) {
       return {
         stdout: JSON.stringify([
           args.some((arg) => arg.includes('/assets?'))
