@@ -7,7 +7,6 @@ import { ensureWorkspaceToken } from './tokens'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { StartJobStorage, WorkspaceStartJob } from './start-types'
 import { creationAdmissionResponse } from './creation-admission-response'
-import { previousFailedCreation } from './creation-attempt-data'
 import { workspaceRepositoryLocations } from './repository-location-data'
 
 export async function advanceStartRecords(
@@ -53,15 +52,6 @@ async function prepareWorkspaceRecords(
     )
   await requireOrgMember(env.DB, job.orgId, creation.user.id)
   await requireOrgMember(env.DB, job.orgId, creation.sender.id)
-  if (
-    await previousFailedCreation(env.DB, {
-      orgId: job.orgId,
-      senderUserId: creation.sender.id,
-      messageId: creation.request.id,
-      workspaceId: job.workspaceId,
-    })
-  )
-    return null
   const image = await leasedCreationImage(
     env.DB,
     job.orgId,

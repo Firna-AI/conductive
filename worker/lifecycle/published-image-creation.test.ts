@@ -227,7 +227,10 @@ it('releases a failed claim lease before records exist and allows a fresh retry'
       'SELECT COUNT(*) AS count FROM image_leases',
     ).first('count'),
   ).toBe(0)
-  expect((await fixture.failedCreation(id))?.request).toEqual(FIRST_MESSAGE)
+  expect(await runtime.workspace(id).waitCreationAdmission()).toMatchObject({
+    ok: false,
+    error: { code: 'section_not_found' },
+  })
   const retried = await fixture.run(() =>
     createCompletedWorkspace(runtime, org.id, user, {
       repositoryId,

@@ -11,7 +11,6 @@ import {
   readLoginMetadata,
   type SessionLoginMetadata,
 } from './login-availability'
-import { firstStartIncomplete } from './queries'
 import { readRunnerProtocolVersion } from './runner-version-data'
 import type { ChatDependencies } from './types'
 import { filterRunnerOutput } from './runner-output'
@@ -37,7 +36,6 @@ export function chatDependencies(
     readRunnerProtocolVersion: (id) => readRunnerProtocolVersion(env.DB, id),
     readConnectionAccess: (tabs, now) =>
       readConnectionAccess(env.DB, tabs, now),
-    firstStartIncomplete: (id) => firstStartIncomplete(env.DB, id),
     randomId: randomToken,
     randomConnectionId: randomToken,
     readLoginMetadata: (targets) => {

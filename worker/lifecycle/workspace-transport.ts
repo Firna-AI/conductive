@@ -1,6 +1,6 @@
 import type { AppEnv } from '../env'
 import { releasedStartLog, type EncryptedStartLog } from './start-logs'
-import type { WorkspaceStartResult } from './start-types'
+import type { WorkspaceStartIntent, WorkspaceStartResult } from './start-types'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { TurnTokenEndpoint } from '../model-gateway/types'
 import {
@@ -10,7 +10,7 @@ import {
 
 type TransportStartResult = WorkspaceStartResult<EncryptedStartLog>
 
-/** Start logs cross RPC as ciphertext. Gateway credentials stay within Worker calls. */
+/** RPC copies ciphertext and plain metadata. Masked classes stay local. Gateway credentials stay within Worker calls. */
 export interface WorkspaceLifecycleTransport
   extends
     Omit<
@@ -22,7 +22,10 @@ export interface WorkspaceLifecycleTransport
       | 'queueLifecycleStart'
     >,
     TurnTokenEndpoint {
-  queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean>
+  queueLifecycleStart(
+    job: StoredWorkspaceStartJob,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean>
   waitLifecycleStart(): Promise<TransportStartResult>
   waitCreationLifecycle(): Promise<TransportStartResult>
   readCreationLifecycleResult(): Promise<TransportStartResult | undefined>
@@ -77,8 +80,8 @@ export function workspaceLifecycleEndpoint(
     checkTurnToken: (token) => transport.checkTurnToken(token),
     retryFailedCreateCleanup: (id) => transport.retryFailedCreateCleanup(id),
     finishDiskMaintenance: () => transport.finishDiskMaintenance(),
-    queueLifecycleStart: (job) =>
-      transport.queueLifecycleStart(serializeStartJob(job)),
+    queueLifecycleStart: (job, intent) =>
+      transport.queueLifecycleStart(serializeStartJob(job), intent),
     async waitLifecycleStart() {
       return releasedStartResult(env, await transport.waitLifecycleStart())
     },
@@ -99,7 +102,5 @@ export function workspaceLifecycleEndpoint(
         log.secretsCiphertext,
       )
     },
-    retainLifecycleFailedCreation: (error, fallback) =>
-      transport.retainLifecycleFailedCreation(error, fallback),
   }
 }

@@ -234,8 +234,6 @@ export async function backendFixture(sharedHarness?: TestHarness) {
     repositoryId,
     actors,
     run,
-    failedCreation: (id: string, senderUserId = user.id) =>
-      workspace(id).failedLifecycleCreation(org.id, senderUserId),
     starts,
     nextQueued: () => {
       const id = queuedIds.shift()

@@ -11,6 +11,7 @@ import type { ShellEvent } from './api/read-events'
 import { readOrderedWorkspaceResponse } from './api/read-workspaces'
 import { ArchiveModel } from './archive-model'
 import { WorkspaceStream, type Delay } from './events'
+import { resumesAtOpen } from './first-start'
 import type { OrgModel } from './org-model'
 import type { Change } from './resource'
 import {
@@ -79,7 +80,9 @@ export class WorkspaceModel {
   }
 
   /**
-   * Opens the workspace. A stopped sandbox resumes, and the steps stream in.
+   * Opens the workspace. A stopped sandbox, or one whose later start failed,
+   * resumes, and the steps stream in. A failed first start waits for Try
+   * again.
    * The input of the user on the page counts as activity until `close`. A
    * call to `close` while the request runs makes its answer obsolete, so an
    * old open never starts the stream again. A suspended org refuses each
@@ -109,8 +112,8 @@ export class WorkspaceModel {
     this.readMarks.open()
     this.stream.start()
     if (run !== this.generation || this.suspended) return
-    const state = valueOf(this.detail.get())?.workspace.state
-    if (state === 'stopped' || state === 'error')
+    const shown = valueOf(this.detail.get())
+    if (shown && resumesAtOpen(shown))
       await this.resume().catch(() => undefined)
   }
 

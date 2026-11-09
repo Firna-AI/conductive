@@ -70,7 +70,6 @@ export async function createRunnerLimitsFixture(
     readRunnerAccess: async () => true,
     readRunnerProtocolVersion: async () => 1,
     readConnectionAccess: async () => [],
-    firstStartIncomplete: async () => false,
     randomId: () => `command-${++commandSequence}`,
     randomConnectionId: () => `connection-${++connectionSequence}`,
     readLoginMetadata: async () => new Map<string, SessionLoginMetadata>(),

@@ -1,9 +1,7 @@
-import { WebSocket } from 'miniflare'
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { workspaceEventsPath } from '../../../src/shared/events'
 import { registerCreationAttempt } from '../../lifecycle/creation-attempt-data'
-import { deleteProvisionalWorkspace } from '../../lifecycle/workspace-data'
 import { array } from '../agent-events'
 import { record } from '../inputs'
 import { outerWorkerBundle } from './outer-runtime.test-support'
@@ -20,7 +18,7 @@ afterEach(async () => {
   fixture = undefined
 })
 
-it('replays every retained history page of a removed failed create only to its sender before closing', async () => {
+it('replays every history page of a kept failed create to another member and keeps its connection live', async () => {
   const active = (fixture = await createLifecycleChatFixture(bundle))
   await registerCreationAttempt(active.env.DB, {
     id: OUTER_WORKSPACE,
@@ -39,18 +37,15 @@ it('replays every retained history page of a removed failed create only to its s
     message: 'The start failed.',
     log: null,
   }
-  await actor.retainLifecycleFailedCreation(error)
   await actor.lifecycleFailed(error)
   const through = (await actor.readChatWorkspaceSummary()).throughEventNumber
-  await actor.clearLifecycle()
-  await deleteProvisionalWorkspace(active.env.DB, OUTER_ORG, OUTER_WORKSPACE)
   const path = workspaceEventsPath(OUTER_ORG, OUTER_WORKSPACE)
   const refused = await active.request(path, {
-    headers: { Upgrade: 'websocket', Cookie: active.cookies.memberCookie },
+    headers: { Upgrade: 'websocket', Cookie: active.cookies.outsiderCookie },
   })
   expect(refused.status).toBe(404)
   const response = await active.request(path, {
-    headers: { Upgrade: 'websocket' },
+    headers: { Upgrade: 'websocket', Cookie: active.cookies.memberCookie },
   })
   expect(response.status).toBe(101)
   const socket = response.webSocket
@@ -62,19 +57,21 @@ it('replays every retained history page of a removed failed create only to its s
     const value: unknown = JSON.parse(message.data)
     frames.push(value)
   })
-  const closed = new Promise<void>((resolve) => {
-    socket.addEventListener(
-      'close',
-      () => {
-        if (socket.readyState === WebSocket.READY_STATE_CLOSING)
-          socket.close(1000, 'Connection closed.')
+  const historyComplete = new Promise<void>((resolve) => {
+    socket.addEventListener('message', (message) => {
+      if (typeof message.data !== 'string') return
+      const frame = record(JSON.parse(message.data))
+      if (frame.type === 'history' && record(frame.history).hasMore !== true)
         resolve()
-      },
-      { once: true },
-    )
+    })
+  })
+  let closed = false
+  socket.addEventListener('close', () => {
+    closed = true
   })
   socket.accept()
-  await closed
+  await historyComplete
+  expect(closed).toBe(false)
   const histories = frames.map((frame) => record(record(frame).history))
   const envelopes = histories.flatMap((history) =>
     array(history.events, record),
@@ -98,4 +95,5 @@ it('replays every retained history page of a removed failed create only to its s
       }),
     ]),
   )
+  socket.close(1000, 'Connection closed.')
 })

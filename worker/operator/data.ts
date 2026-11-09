@@ -1,4 +1,4 @@
-import { HttpError } from '../http'
+import { recordSuspensionChange } from './events-data'
 
 export async function recordUserSuspension(
   db: D1Database,
@@ -6,32 +6,16 @@ export async function recordUserSuspension(
   operatorId: string,
   now: number,
 ): Promise<{ userId: string; suspendedAt: number }> {
-  const user = await db
-    .prepare(
-      `UPDATE users SET suspended_at = COALESCE(suspended_at, ?),
-       suspended_by_user_id = COALESCE(suspended_by_user_id, ?)
-       WHERE github_id = ? RETURNING id AS userId, suspended_at AS suspendedAt`,
-    )
-    .bind(now, operatorId, githubId)
-    .first<{ userId: string; suspendedAt: number }>()
-  if (!user)
-    throw new HttpError(404, 'user_not_found', 'The account is not available.')
-  await db.batch([
-    db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.userId),
-    db
-      .prepare(
-        `UPDATE workspace_tokens SET revoked_at = ? WHERE revoked_at IS NULL
-       AND workspace_id IN (SELECT id FROM workspaces WHERE owner_user_id = ?)`,
-      )
-      .bind(now, user.userId),
-    db
-      .prepare(
-        `UPDATE preview_hostnames SET revoked_at = ? WHERE revoked_at IS NULL
-       AND workspace_id IN (SELECT id FROM workspaces WHERE owner_user_id = ?)`,
-      )
-      .bind(now, user.userId),
-  ])
-  return user
+  const recorded = await recordSuspensionChange(
+    db,
+    { kind: 'user', githubId },
+    'suspend',
+    operatorId,
+    now,
+  )
+  if (recorded.suspendedAt === null)
+    throw new Error('Missing recorded user suspension')
+  return { userId: recorded.id, suspendedAt: recorded.suspendedAt }
 }
 
 export async function ownedWorkspaces(db: D1Database, userId: string) {

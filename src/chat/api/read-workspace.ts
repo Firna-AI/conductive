@@ -122,11 +122,23 @@ export function readWorkspaceResponse(
   }
 }
 
+/** The saved public error of an update. Its absence keeps the saved one. */
+function readUpdateError(value: unknown) {
+  const fields = record(value, 'error')
+  return { code: text(fields.code), message: text(fields.message) }
+}
+
 function readEvent(value: unknown): ChatStreamEvent | null {
   if (!isRecord(value)) return null
   switch (value.type) {
     case 'workspace.updated':
-      return { type: value.type, workspace: readWorkspace(value.workspace) }
+      return {
+        type: value.type,
+        workspace: readWorkspace(value.workspace),
+        ...(value.error === undefined
+          ? {}
+          : { error: nullable(readUpdateError)(value.error) }),
+      }
     case 'workspace.title':
       return { type: value.type, name: text(value.name) }
     case 'start.updated':

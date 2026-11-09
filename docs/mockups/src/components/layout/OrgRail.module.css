@@ -65,6 +65,11 @@ a.current:hover {
   border-radius: var(--ui-radius-md);
 }
 
+/* Operator sits above the account, apart from the orgs. */
+.operator {
+  margin-bottom: 6px;
+}
+
 /* A deleted org fades until its owner restores it. */
 .deleted {
   display: flex;

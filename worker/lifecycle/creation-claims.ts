@@ -26,8 +26,7 @@ export interface CreationKey {
 
 const completed = `SELECT r.workspace_id AS id, 'succeeded' AS state FROM workspace_runtime r
   JOIN workspaces w ON w.id = r.workspace_id
-  WHERE r.org_id = ? AND r.created_by_user_id = ? AND r.first_message_id = ?
-  AND NOT EXISTS (SELECT 1 FROM workspace_creation_attempts a WHERE a.workspace_id = r.workspace_id AND a.state != 'succeeded')`
+  WHERE r.org_id = ? AND r.created_by_user_id = ? AND r.first_message_id = ?`
 const pending = `SELECT workspace_id AS id, 'pending' AS state FROM workspace_creation_attempts
   WHERE org_id = ? AND sender_user_id = ? AND first_message_id = ? AND state = 'pending'`
 
@@ -36,7 +35,7 @@ export function existingCreation(
   key: CreationKey,
 ): Promise<CreationClaim | null> {
   return db
-    .prepare(`${pending} UNION ALL ${completed} LIMIT 1`)
+    .prepare(`${completed} UNION ALL ${pending} LIMIT 1`)
     .bind(
       key.orgId,
       key.senderUserId,
@@ -78,7 +77,7 @@ export async function claimCreation(
     leaseStatement(db, job.workspaceId),
     db
       .prepare(
-        `${pending} UNION ALL ${completed}
+        `${completed} UNION ALL ${pending}
         UNION ALL SELECT '' AS id, CASE WHEN EXISTS (
           SELECT 1 ${publishedImageSource} WHERE s.org_id = ?
         ) THEN 'repository_not_found' ELSE 'image_required' END AS state LIMIT 1`,

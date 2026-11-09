@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import type { SendMessageResponse } from '../../src/shared/messages'
 import { sessionPaths } from '../../src/shared/sessions'
 import {
   markCreationFailed,
@@ -11,7 +12,6 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
-import { lifecycleSnapshot } from './turn-lifecycle.test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -24,7 +24,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('refuses later messages in every session before the first start succeeds and keeps accepted repeats', async () => {
+it('stores later messages in every session during a first start and its failure and keeps accepted repeats', async () => {
   const fixture = await createChatFixture(harness)
   const first = await fixture.createSession()
   const accepted = await fixture.send(first.id, 'first-message')
@@ -37,11 +37,6 @@ it('refuses later messages in every session before the first start succeeds and 
     now: TEST_TIME,
   })
   fixture.restart()
-  const before = await lifecycleSnapshot(fixture)
-  const histories = await Promise.all([
-    fixture.history(first.id),
-    fixture.history(other.id),
-  ])
   expect(await fixture.send(first.id, 'first-message')).toEqual({
     ...accepted,
     eventNumber: 4,
@@ -54,45 +49,30 @@ it('refuses later messages in every session before the first start succeeds and 
       sessionPaths.messages(fixture.org.id, WORKSPACE_ID, sessionId),
       {
         id: `later-${sessionId}`,
-        text: 'Keep this draft until the first start succeeds',
+        text: 'Queued work',
         attachmentIds: [],
         choice: CLAUDE,
       },
       cookie,
     )
-    expect(response.status, sessionId).toBe(409)
-    expect(await response.json(), sessionId).toEqual({
-      error: {
-        code: 'workspace_starting',
-        message:
-          'Wait for the workspace to start before sending another message.',
-      },
+    expect(response.status).toBe(202)
+    const accepted: SendMessageResponse = await response.json()
+    expect(accepted.message).toMatchObject({
+      id: `later-${sessionId}`,
+      state: 'queued',
     })
   }
   await markCreationFailed(harness.env.DB, WORKSPACE_ID)
-  const failed = await fixture.fetch(
-    sessionPaths.messages(fixture.org.id, WORKSPACE_ID, first.id),
-    {
-      id: 'during-cleanup',
-      text: 'Keep this text while the failed workspace is removed',
-      attachmentIds: [],
-      choice: CLAUDE,
-    },
-  )
-  expect(failed.status).toBe(409)
-  expect(await failed.json()).toEqual({
-    error: {
-      code: 'workspace_starting',
-      message:
-        'Wait for the workspace to start before sending another message.',
-    },
+  const failed = await fixture.send(first.id, 'during-cleanup')
+  expect(failed.message).toMatchObject({
+    id: 'during-cleanup',
+    state: 'queued',
   })
+  const history = await fixture.history(first.id)
+  fixture.restart()
   expect(await fixture.send(first.id, 'first-message')).toEqual({
     ...accepted,
-    eventNumber: 4,
+    eventNumber: failed.eventNumber,
   })
-  expect(await lifecycleSnapshot(fixture)).toEqual(before)
-  expect(
-    await Promise.all([fixture.history(first.id), fixture.history(other.id)]),
-  ).toEqual(histories)
+  expect(await fixture.history(first.id)).toEqual(history)
 })

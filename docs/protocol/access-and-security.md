@@ -142,6 +142,14 @@ Later screens add the frame and connection sources that they need.
   this section do.
 - A request reaches an org, its workspaces, and their sandboxes only for a
   member of that org.
+- An operator is the one exception. An operator can suspend or lift any
+  user or org, as [Operator actions](operator-actions.md) says. In the
+  [operator section](operator-section.md#what-the-section-shows), an
+  operator also reads counts, names, IDs, dates, roles, and states across
+  every org (decisions 142, 144, and 147).
+- The operator section shows no chat, file, env value, agent login, or
+  email address. Its org search takes the ID of a cloud computer or a
+  preview address only to find its org.
 - An open tab loses its workspace connection within 30 seconds after its
   user loses access: a removal from the org, a sign-out, or a deleted
   org (decision 70). The workspace checks the access of its open tabs

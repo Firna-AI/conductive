@@ -14,7 +14,7 @@ import {
   type PanelMove,
 } from '../../app/panels'
 import { useStore } from '../../app/store'
-import { usePanelWidths } from './panels'
+import { usePanelLayout } from './panels'
 
 const step = 8
 const bigStep = 32
@@ -47,7 +47,7 @@ export function ResizeHandle(props: {
   /** The panel that the handle resizes. */
   panelRef: RefObject<HTMLElement | null>
 }) {
-  const widths = usePanelWidths()
+  const widths = usePanelLayout()
   const state = useStore(widths.widths)
   const range = panelRanges[props.panel]
   const shown = useShownWidth(props.panelRef)

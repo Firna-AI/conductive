@@ -4,6 +4,7 @@ import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
 import { advanceScheduledAlarms } from '../lifecycle/scheduled-alarms.test-support'
 import { Workspace as FeatureWorkspace } from './entry.test-support'
 import type { StoredWorkspaceStartJob } from '../lifecycle/start-job-codec'
+import type { WorkspaceStartIntent } from '../lifecycle/start-types'
 
 const CLOCK_KEY = '__test:creation-clock'
 
@@ -20,8 +21,11 @@ export class Workspace extends FeatureWorkspace {
     })
   }
 
-  async queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean> {
-    const accepted = await super.queueLifecycleStart(job)
+  async queueLifecycleStart(
+    job: StoredWorkspaceStartJob,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean> {
+    const accepted = await super.queueLifecycleStart(job, intent)
     if (accepted && job.phase === 'records') await this.advanceStartAlarm()
     return accepted
   }
