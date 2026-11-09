@@ -6,7 +6,7 @@ logins, and the attachments.
 [Chat backend integration](../README.md) gives the other seams, and the
 [chat backend README](../../README.md) names the code and its guarantees.
 [Agent runner](../../../../docs/protocol/agent-runner.md) and
-[Agent logins in a sandbox](../../../../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
+[Agent logins in a sandbox](../../../../docs/protocol/sandbox-credentials.md#agent-logins-in-a-sandbox)
 state the requirements.
 
 ## The agent runner

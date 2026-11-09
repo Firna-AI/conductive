@@ -54,7 +54,7 @@ chips.
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
   the work fold of each ended turn, and Try again.
-- [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
+- [The work of a turn](../../docs/protocol/messages-and-turns.md#the-work-of-a-turn)
   says what folds when a turn ends. It also says that the line of each fold
   stays in place when the user opens or closes it, also for a run of calls.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
@@ -133,7 +133,7 @@ check in the Mac app.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
 - `components/Composer.tsx`: the message box and its controls, with the
-  steering prompt that [Messages](../../docs/protocol/chat-and-events.md#messages)
+  steering prompt that [Messages](../../docs/protocol/messages-and-turns.md#messages)
   states.
 - `components/chip-field/`: `ChipTextField`, the message field of every
   composer. [The message field](loads-and-sends.md#the-message-field)

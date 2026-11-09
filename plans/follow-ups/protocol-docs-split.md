@@ -1,21 +1,48 @@
-# Six architecture and protocol docs pass the length target
+# Long docs still pass the length target
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-08, a new problem of the check of finding 10 of PR #45, branch `conductor/boat-native-remote-workspaces-milestone-15m`, round 1.
-- **Location:** `docs/protocol/access-and-security.md`, `docs/protocol/desktop-app.md`, `docs/protocol/chat-and-events.md`, `docs/protocol/workspaces-and-sandboxes.md`, `docs/architecture.md`, and `docs/protocol/operator-actions.md`.
-- **Reason:** these pages also change in open branches, so one split after their merge avoids conflicts.
+- **Location:** `docs/protocol/desktop-app.md`, `docs/deployment.md`, `docs/protocol/operator-actions.md`, `docs/mockups/design.md`, and `docs/mockups/catalogue.md`.
+- **Reason:** These topics are outside the approved gateway documentation split. These pages also change in open branches, so one split after their merge avoids conflicts.
 
 - **Terms:**
-  - **Length target:** the `documentation` skill keeps each doc near 250 lines, and splits a longer doc into linked pages in the change that touches it.
-- **Background:** The protocol docs grew with each milestone. Many branches touched these docs without a split. On 9 November 2026, the Desktop pause split the workspace tools into their own page. The waitlist adds requirements to the workspace and architecture pages and the operator actions page. These six pages still pass the target after both changes merge. The command palette page now meets the target.
-- **Problem:** Six docs still pass the target, so a reader must scan long pages to find one rule.
-- **Impact if no action:** Each branch that touches one of these docs breaks the length rule again, and the docs grow harder to read and to keep in line.
-- **Root question:** How do the protocol docs stay short enough to read one topic at a time?
+  - **Length target:** the `documentation` skill keeps each doc near 250 lines, and splits a longer doc into linked pages in the change that touches it. The always-on rules also split any file that passes 300 lines.
+  - **Landing page:** the original page of a split doc. It keeps its introduction and some topics, and it links to the new pages.
+  - **Stub section:** a short section of a landing page. It keeps the heading of a moved section and links to its new home.
+- **Background:**
+  - The protocol docs grew with each milestone, and many branches touched them without a split. On 9 November 2026, the Desktop pause split the workspace tools into `docs/protocol/workspace-tools.md`. `docs/protocol/workspaces-and-sandboxes.md` keeps a stub section for each tool.
+  - On 9 November 2026, the model gateway change split the three named long docs. In the split, each moved section kept its words, and only headings, navigation, and link destinations changed. A separate correction then named the two sandbox categories of `docs/protocol/sandbox-credentials.md` by the version pin of the workspace. It also clarified the same rule in `docs/protocol/model-gateway.md` and `docs/architecture.md`.
+  - Main moved the agents and the sessions from `docs/protocol/chat-and-events.md` to `docs/protocol/agents-and-sessions.md`. It moved the org image from `docs/protocol/workspaces-and-sandboxes.md` to `docs/protocol/org-image.md`. Both landing pages keep a stub section for each moved section.
+  - The waitlist added requirements to the access, workspace, and architecture pages, and to the operator actions page.
+  - The counts below are from 9 November 2026, after these changes merged.
+  - These pages meet the target:
+    - `docs/protocol/chat-and-events.md`: 77 lines.
+    - `docs/protocol/agents-and-sessions.md`: 185 lines.
+    - `docs/protocol/messages-and-turns.md`: 215 lines.
+    - `docs/protocol/sandbox-credentials.md`: 240 lines.
+    - `docs/protocol/terminal-and-previews.md`: 130 lines.
+    - `docs/protocol/org-image.md`: 98 lines.
+    - `docs/protocol/workspaces-and-sandboxes.md`: 235 lines.
+    - `docs/architecture.md`: 215 lines.
+    - `docs/architecture/components.md`: 139 lines.
+  - These three pages are at the target, within a few lines of 250:
+    - `docs/protocol/access-and-security.md`: 258 lines.
+    - `docs/protocol/operator-section.md`: 254 lines.
+    - `docs/protocol/command-palette.md`: 254 lines.
+  - `docs/protocol/desktop-app.md` has 434 lines. "Mac commands", with five subsections, fills lines 214 to 316. "Packages and updates", with "Packages", "Releases", and "Updates in the app", fills lines 317 to 434. The other sections hold the scope, the page, the window, the navigation, and the previews. They also hold the sign-in, the GitHub App install, the sign-in session, the desktop origin, and the permissions.
+  - `docs/deployment.md` has 319 lines. It is a deployment guide, not a protocol doc. "The runner archive", with "The archive in each deploy", fills lines 180 to 250. "Models" and "The title model" fill lines 115 to 179.
+  - `docs/protocol/operator-actions.md` has 295 lines. "Suspend an org", "What members of a suspended org keep", and "Lift a suspension" fill lines 187 to 287. The other sections hold the operator, the suspension of a user and the access that it ends, and the abuse reports.
+  - Two mockup docs pass 300 lines: `docs/mockups/design.md` has 360 lines, and `docs/mockups/catalogue.md` has 326. The `mockups` skill gives their rules. Each has only its title heading, so a split needs topic headings first.
+  - Other docs, READMEs, code comments, and follow-up items cite sections of these pages. A split must update each of these citations.
+- **Problem:** Five docs still pass the target: two protocol docs, the deployment guide, and two mockup docs. A reader must scan long pages to find one rule.
+- **Impact if no action:** Each branch that touches one of these docs must split it first, and the docs grow harder to read and to keep in line.
+- **Root question:** How do the remaining long docs get to about 250 lines each, with each topic easy to find?
 - **Options:**
-  - **A.** Split each of the six remaining docs into linked pages by topic. Update every relative link and the doc lists in `docs/architecture.md` and `README.md`. Effort: Medium.
-- **Left out:** A split in each open branch, because the branches change the same docs and would conflict. A lint for doc length, because it adds a gate.
+  - **A.** Split each of the five docs into linked pages by topic, in one change. Move each section without a change to its words. Update every relative link inside `docs/`, the doc lists of `docs/architecture.md` and `README.md`, and each link and citation outside `docs/`. Effort: Medium.
+  - **B.** Change nothing now. Split each doc in the next change that touches it, as the `documentation` skill requires. Cost: that change carries the link migration of the split. Effort: Small.
+- **Left out:** A split in each open branch, because the branches change the same docs and would conflict. A lint for doc length, because it adds a gate. An exemption for the deployment guide, because the always-on rules split any file that passes 300 lines. A split of the three pages at the target, because about 250 lines is a target, not a gate.
 - **Wider fix:** None. The `documentation` skill already holds the rule.
-- **Previous examples:** `docs/protocol/workspace-tools.md` holds the moved tools requirements. The original workspace page keeps its section anchors as links.
-- **Recommendation:** A.
-- **Action:** fix after merge, apply A, because these pages also change in open branches.
+- **Previous examples:** `docs/protocol/workspace-tools.md` holds the moved tools requirements, and `docs/protocol/workspaces-and-sandboxes.md` keeps their section anchors as stub sections. The model gateway split and main's two extractions, which the background describes, are later examples.
+- **Recommendation:** A. One change moves the links of all five docs at once, and no feature branch carries a split that it does not need.
+- **Action:** fix after merge, apply A, because their topic splits are outside the approved gateway documentation work.

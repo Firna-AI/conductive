@@ -41,7 +41,7 @@ function Step(props: { step: WorkStep }) {
  * the left-out output, as the line of a run of tool calls has. A Mac
  * command card and a lost line fold with the work at their place, and add
  * no count and no mark, as "The work of a turn" in
- * `docs/protocol/chat-and-events.md` says. The fold starts closed. Once
+ * `docs/protocol/messages-and-turns.md` says. The fold starts closed. Once
  * the user opens it, it lists the steps in order: a tool call as its call
  * line, a message as its first words, a card as the card, and a lost line
  * at the left edge. It keeps that choice, and its line keeps its place.

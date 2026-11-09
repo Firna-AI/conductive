@@ -254,7 +254,8 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
 
 ## Docs
 
-- [Architecture](docs/architecture.md): the components, the hostnames, the
+- [Architecture](docs/architecture.md): the
+  [components](docs/architecture/components.md), the hostnames, the
   [flows](docs/architecture/flows.md), and the terms.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
@@ -264,10 +265,14 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Repository folders](docs/protocol/repository-folders.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
   - [Agents and sessions](docs/protocol/agents-and-sessions.md)
+  - [Messages and turns](docs/protocol/messages-and-turns.md)
   - [Workspace links](docs/protocol/workspace-links.md)
   - [Chat Markdown](docs/protocol/chat-markdown.md)
   - [Agent runner](docs/protocol/agent-runner.md)
   - [Access and security](docs/protocol/access-and-security.md)
+  - [Sandbox credentials](docs/protocol/sandbox-credentials.md)
+  - [GitHub tokens](docs/protocol/github-tokens.md)
+  - [Terminal and previews](docs/protocol/terminal-and-previews.md)
   - [Model gateway](docs/protocol/model-gateway.md)
   - [GitHub banner](docs/protocol/github-banner.md)
   - [Agent tools](docs/protocol/agent-tools.md)

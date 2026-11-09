@@ -12,7 +12,7 @@
   - **Kept controller:** a `ChatController` that the app shell keeps across the pages of a browser tab, in `src/shell/workspace/shown-workspaces.ts`. `WorkspaceChatView` draws it.
   - **Read-only chat:** a chat that shows its history and sends no write. An archived workspace has one, and so does a workspace whose org the page knows to be suspended.
 - **Background:**
-  - These rules apply. `docs/protocol/chat-and-events.md` says that an archived workspace shows its chat read-only. `docs/protocol/operator-actions.md` says that no member can change anything in a suspended org.
+  - These rules apply. `docs/protocol/messages-and-turns.md` says that an archived workspace shows its chat read-only. `docs/protocol/operator-actions.md` says that no member can change anything in a suspended org.
   - A design call of the org suspension, of 8 November 2026, applies too. Each org request uses the org client, so a refusal makes an old page read-only at once.
   - An open page learns of a suspension only from an `org_suspended` refusal of a request of the org client, through `noteOrgRefusals` in `src/app/suspension.ts`. The org list loads only at boot. The set of refused orgs only grows. Only an operator lifts a suspension, and an open page learns of the lift at its next load. No route takes a workspace out of the archive.
   - `ChatBody` in `src/chat/WorkspaceChat.tsx` draws both chat hosts, `WorkspaceChat` and `WorkspaceChatView`. It derives `readOnly` from the archive state and from the host. It then passes the stored overlay unchanged to `SessionTabs` and to `ChatOverlays`.

@@ -211,5 +211,5 @@ Terminal status reads remain available.
 - [The sandbox provider](../sandbox/README.md) owns credentials, fixed routes, and bounded file reads.
 - [The workspace lifecycle](../lifecycle/README.md) runs the install command in each build and the start hook after each startup script. Its restore watch calls `markTerminalRestoreEnded`.
 
-See [access and security](../../docs/protocol/access-and-security.md) and
+See [terminal and previews](../../docs/protocol/terminal-and-previews.md#terminal) and
 [workspace tools](../../docs/protocol/workspaces-and-sandboxes.md#terminal).

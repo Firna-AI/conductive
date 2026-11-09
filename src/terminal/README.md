@@ -161,4 +161,4 @@ focus reports. These two buttons leave the keyboard on the terminal.
 
 See [the previews](../previews/README.md), [the desktop](../desktop/README.md),
 [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md#terminal),
-and [Access and security](../../docs/protocol/access-and-security.md#terminal).
+and [Terminal and previews](../../docs/protocol/terminal-and-previews.md#terminal).

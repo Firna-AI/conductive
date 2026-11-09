@@ -25,7 +25,7 @@ Chat history, sessions, runner event cursors, start steps, and banner state
 belong to workspace Durable Object storage. They have no D1 tables.
 Stored secrets use ciphertext columns. The browser reads only metadata.
 The git credential helper uses the GitHub user token of the turn's sender, as
-[GitHub tokens](../docs/protocol/access-and-security.md#github-tokens) says.
+[GitHub tokens](../docs/protocol/sandbox-credentials.md#github-tokens) says.
 The older comment on `github_connections` in `202611060100_contracts.sql`
 stays, because a merged migration does not change.
 The `boat_keys` table of `202611060000_worker_core.sql` stays for the same
@@ -44,7 +44,7 @@ The migration keeps the encrypted secret and its timestamps.
 `202611081300_workspace_creation_name.sql` adds the nullable `workspace_creation_plans.name` column.
 The agent create tool stores its cleaned workspace name there for creation retries.
 Existing plans keep `NULL`.
-[Workspace and session names](../docs/protocol/chat-and-events.md#workspace-and-session-names)
+[Workspace and session names](../docs/protocol/agents-and-sessions.md#workspace-and-session-names)
 states how the app shows a missing name.
 The `city` column and branch keep their city value.
 

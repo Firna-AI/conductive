@@ -123,7 +123,7 @@ The [runner](../../runner/README.md) supplies the machine origin, workspace toke
 and active turn ID at runtime. The image stores no such credential.
 
 No git credential endpoint is implemented here.
-[GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens) states its rule.
+[GitHub tokens](../../docs/protocol/sandbox-credentials.md#github-tokens) states its rule.
 
 ## Checks
 

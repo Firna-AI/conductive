@@ -67,7 +67,7 @@ the message field of each composer, and Stop.
 - Send works while the sandbox is not ready: during the first start of a
   new workspace, after it failed, and during a resume. The workspace queues
   each message for the sandbox, as
-  [Messages](../../docs/protocol/chat-and-events.md#messages) says.
+  [Messages](../../docs/protocol/messages-and-turns.md#messages) says.
 - A failed first start shows the error state and a failed step of the
   create start, as `failedFirstStart` in
   [`../app/first-start.ts`](../app/first-start.ts) says. Its bar sits above

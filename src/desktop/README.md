@@ -47,4 +47,4 @@ each show, so that each show reads a new desktop URL.
 - `desktopApi.ts`: the request for a new desktop URL.
 
 See [Workspace tools](../../docs/protocol/workspace-tools.md#desktop)
-and [Access and security](../../docs/protocol/access-and-security.md#desktop).
+and [Terminal and previews](../../docs/protocol/terminal-and-previews.md#desktop).

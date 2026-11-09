@@ -13,7 +13,7 @@
   - **Trusted work:** an internal change in the queue that does not process a member's chat write. Examples are a lifecycle stop or cleanup, an alarm's stop retry, a runner disconnect, and a build cleanup. The login refresh that each new event subscription writes is trusted work too.
 - **Background:**
   - These rules require each refusal. In `docs/protocol/access-and-security.md`, "Orgs and workspaces" lets a request reach an org and its workspaces only for a member. It also says that a sign-out, a removal from the org, and a deleted org end access.
-  - `docs/protocol/operator-actions.md` says that a user suspension ends every sign-in session at once, and that no member can change anything in a suspended org. `docs/protocol/chat-and-events.md` says that an archived workspace shows its chat read-only.
+  - `docs/protocol/operator-actions.md` says that a user suspension ends every sign-in session at once, and that no member can change anything in a suspended org. `docs/protocol/messages-and-turns.md` says that an archived workspace shows its chat read-only.
   - `WorkspaceChat.fetch` in `worker/chat/backend.ts` serves each browser chat request. It calls `authorizeChatBrowser` in `worker/chat/browser-authorization.ts`. That function runs `gate`, then reads the workspace row with `findChatWorkspace`.
   - `gate` reads the sign-in session with `sessionUser`, which also refuses a suspended user. It reads the membership with `findMembership`, which also refuses a deleted org. For a write, it checks the org suspension. Only then does it read the JSON body.
   - The Worker streams the body into the gate. So the sender of the request decides how long the body read takes.

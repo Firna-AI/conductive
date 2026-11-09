@@ -26,7 +26,7 @@
     - the masked file paths, in `docs/protocol/access-and-security.md` and `src/marketing/privacy.ts`
     - the lift of a suspension, in `docs/protocol/operator-actions.md` and `docs/protocol/operator-section.md`
   - Decisions 150 and 151 each name two records:
-    - the fold of the work of an ended turn, in `docs/protocol/chat-and-events.md` and `docs/protocol/agent-tools.md`
+    - the fold of the work of an ended turn, in `docs/protocol/messages-and-turns.md` and `docs/protocol/agent-tools.md`
     - the first build of a new org, in `docs/protocol/org-image.md`, `docs/protocol/orgs-and-members.md`, and `docs/protocol/create-a-workspace.md`
   - The workspace link chips change of `calummoore/workspace-link-widget-brainstorm` also used 150 and 151 at first. Before its merge, it renumbered them:
     - 150 became 211, "Chat cannot point at another workspace": the chips of workspace links. The user chose option D on 9 November 2026.

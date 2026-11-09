@@ -89,7 +89,7 @@ These facts belong to this implementation, not to the protocol docs.
   does not end the active turn, and it frees no sent message. When such a
   result lists sent messages that still wait, it answers them as usual. So
   each result stays with the
-  [messages that it answers](../docs/protocol/chat-and-events.md#what-the-chat-shows).
+  [messages that it answers](../docs/protocol/messages-and-turns.md#what-the-chat-shows).
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, and
@@ -138,7 +138,7 @@ These facts belong to this implementation, not to the protocol docs.
 - Before it connects, the runner reads the `claude` program file once, so
   that the disk loads it early. It uses no login and starts no agent.
 - The runner protocol carries no GitHub token.
-  [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
+  [GitHub tokens](../docs/protocol/sandbox-credentials.md#github-tokens)
   states how a sandbox gets GitHub access.
 
 ## Event limits
@@ -286,12 +286,12 @@ tools that time the first agent start after a resume.
 
 ## Related docs
 
-- [Architecture: sandbox software](../docs/architecture.md#sandbox-software)
+- [Architecture: sandbox software](../docs/architecture/components.md#sandbox-software)
 - [Agent runner](../docs/protocol/agent-runner.md)
 - [Agent runner: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
-- [Chat and events: agents](../docs/protocol/chat-and-events.md#agents)
+- [Agents and sessions: agents](../docs/protocol/agents-and-sessions.md#agents)
 - [Agent instructions](../docs/protocol/agent-instructions.md)
-- [Access and security: agent logins in a sandbox](../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
+- [Sandbox credentials: agent logins in a sandbox](../docs/protocol/sandbox-credentials.md#agent-logins-in-a-sandbox)
 - [Workspaces and sandboxes: files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
 - [Agent tools: computer tools](../docs/protocol/agent-tools.md#computer-tools)
 - [Agent tools: workspace tools](../docs/protocol/agent-tools.md#workspace-tools)

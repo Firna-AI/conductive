@@ -26,7 +26,7 @@ says.
   The app refuses a create of an org with no repository.
 - Reason: every new org then starts its first build at create, with the
   whole choice of repositories, as
-  [The first build](workspaces-and-sandboxes.md#the-first-build) says. A
+  [The first build](org-image.md#the-first-build) says. A
   first build at the first save on the Repositories tab was rejected,
   because that tab saves each repository on its own. That build could
   start with only part of the choice.
@@ -63,11 +63,11 @@ says.
   2. Create the first org.
   3. Connect Claude or Codex.
 - Get started asks for no Boat account and no Boat key.
-- [Chat and events](chat-and-events.md#messages) states the notice for a
+- [Messages and turns](messages-and-turns.md#messages) states the notice for a
   missing agent login.
 - The second step, the org step, shows the cloud computer of the org once
   the org exists (decision 150). Create org starts its first build, as
-  [The first build](workspaces-and-sandboxes.md#the-first-build) says.
+  [The first build](org-image.md#the-first-build) says.
 - While the org has no good image, the org step shows the state of the
   newest build of the org:
   - While a build runs, the step says that the cloud computer is being
@@ -146,7 +146,7 @@ says.
 - Every member of the org sees all of its workspaces (decision 39).
 - Every member can send messages in every workspace of the org. Each
   session runs on the agent login of its starter, as
-  [Chat and events](chat-and-events.md#agents) says.
+  [Agents and sessions](agents-and-sessions.md#agents) says.
 - A member who is not an admin sees the Members tab and the owner of each
   workspace, without the actions of an admin.
 - Only the workspace owner and the admins can archive a workspace

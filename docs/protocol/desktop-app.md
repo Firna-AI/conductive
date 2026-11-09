@@ -95,7 +95,7 @@ limits, their results, and what the chat shows.
 
 - A port preview shows in a frame of the page, as in a browser. The frame
   loads the launch address of the preview from `app.conductive.build`, as
-  [Port previews](access-and-security.md#port-previews) says.
+  [Port previews](terminal-and-previews.md#port-previews) says.
 - A link or a request for a new window from the main page to a launch
   address opens the preview in the user's default browser. The window
   keeps its page.

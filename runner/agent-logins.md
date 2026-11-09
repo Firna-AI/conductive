@@ -2,7 +2,7 @@
 
 This page belongs to the [agent runner](README.md). It gives the facts of
 this implementation about agent logins.
-[Agent logins in a sandbox](../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
+[Agent logins in a sandbox](../docs/protocol/sandbox-credentials.md#agent-logins-in-a-sandbox)
 states the requirements and the accepted risks.
 
 An agent login is the Claude subscription token, the Anthropic API key, or
@@ -84,7 +84,7 @@ in the commands of the workspace Durable Object.
 - These routes stop only the automatic copy of a login into new processes.
 - They do not stop a process of the same sandbox user that reads the login
   of a running turn on purpose.
-  [Agent logins in a sandbox](../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
+  [Agent logins in a sandbox](../docs/protocol/sandbox-credentials.md#agent-logins-in-a-sandbox)
   states that accepted risk.
 
 ## Tests

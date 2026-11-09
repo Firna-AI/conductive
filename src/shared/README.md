@@ -118,7 +118,7 @@ without this field keeps the previous error.
 It is the retry message of the newest turn when that turn failed, and null otherwise.
 A message or a retry that opens a linked session sets it to null on the source.
 Each other message of the session gets HTTP 409 with the code `retry_not_available`.
-[Messages](../../docs/protocol/chat-and-events.md#messages) states the rule.
+[Messages](../../docs/protocol/messages-and-turns.md#messages) states the rule.
 `Session.startedBy` names the member who started the session.
 It is null only for an older record whose starter is not known.
 `Session.sourceSessionId` names the session where a message opened this linked session, and null otherwise.
@@ -126,10 +126,10 @@ It is null only for an older record whose starter is not known.
 It stays true when the starter does not share that login.
 `Session.loginShared` says whether the starter lets other members use that login, from the same check.
 Each member reads the same values. None of these fields holds a login.
-[Messages](../../docs/protocol/chat-and-events.md#messages) states how the composer uses both values.
+[Messages](../../docs/protocol/messages-and-turns.md#messages) states how the composer uses both values.
 `SendMessageResponse.session` in `messages.ts` is the record of the session that took the message.
 It can differ from the session of the request.
-[Agents](../../docs/protocol/chat-and-events.md#agents) states the starter rule.
+[Agents](../../docs/protocol/agents-and-sessions.md#agents) states the starter rule.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
 `acceptedTermsSignInPath(inviteCode?)` gives the sign-in path that carries that revision and an optional join code.
@@ -160,11 +160,11 @@ It holds no secret. The browser loads it as it is, in the frame and in a new tab
 In the Mac app, a new tab opens in the default browser through `PreviewLaunchResponse` instead.
 That JSON reply of `Preview.url` holds an authorizer `url` and the `expiresAt` of its grant.
 The `url` carries the preview hostname and a 60-second grant only in its fragment.
-[Port previews](../../docs/protocol/access-and-security.md#port-previews) states its access rules.
+[Port previews](../../docs/protocol/terminal-and-previews.md#port-previews) states its access rules.
 Each open of a port preview gets a new preview ID, and the API never gives out
 a revoked ID again (decision 86). The Preview tool hides revoked previews by their ID.
 The git credential payload is not defined yet.
-[GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens) states its rule.
+[GitHub tokens](../../docs/protocol/sandbox-credentials.md#github-tokens) states its rule.
 
 ## Key code
 
