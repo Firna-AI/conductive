@@ -7,6 +7,8 @@ export const MACHINE_PATHS = {
   githubWebhook: '/v1/github/webhooks',
   gitCredential: '/v1/git/credential',
   workspaces: '/v1/tools/workspaces',
+  claudeGateway: '/v1/model/claude',
+  codexGateway: '/v1/model/codex',
 } as const
 
 /** Register this local server. Runtime environment supplies its turn and token. */

@@ -333,13 +333,17 @@ Open checks:
 1. Cal's provider check. Done on 9 November 2026 (decision 1).
 2. OpenAI's terms for a proxy of a user's own key, and OpenAI's request
    size limit. Milestone 1 reads them.
-3. The routes, hosts, and headers of the pinned `claude` program 2.1.318
-   for each login kind, its behaviour with a key that is not in
-   Anthropic's format, and its support of
-   `CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST`. Milestone 3 runs it against a
-   fake gateway.
-4. The routes and headers of pinned Codex 0.167.0 on a custom provider,
-   such as `/responses/compact` and `/models`. Milestone 3 runs it.
+3. Done on 9 November 2026 in Milestone 3, against a fake gateway with no
+   network: the pinned `claude` program 2.1.318 calls only
+   `/v1/messages` and `/v1/messages/count_tokens`. It sends an API key in
+   `x-api-key`, and a subscription token as `Bearer` with the OAuth beta
+   value. It treats a key as an Anthropic API key only when the key starts
+   with `sk-ant-api`. `CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST` works, and it
+   makes the program ignore the flag-settings endpoint. The record is
+   `.context/model-gateway/pinned-programs.md`.
+4. Done on 9 November 2026 in Milestone 3: pinned Codex 0.167.0 calls only
+   `/responses`, also to compact. It sends no `/models` and no
+   `/responses/compact` request.
 5. Streaming through the deployed Worker, long answers, and deploys. A
    post-merge task.
 6. The Workers plan and the zone plan of the deployment. Milestone 3 asks.
@@ -365,9 +369,10 @@ more approaches of each call.
 - **D2. Token delivery.** The current private routes: the descriptor pipe
   of the `claude` program and the login request of the Codex App Server.
   Rejected: the environment, which each tool process inherits.
-- **D3. Token format.** The prefix shape of its login kind, when open
-  check 3 confirms Anthropic's documented change of behaviour for a key
-  that is not in its format. Otherwise an opaque prefix. Rejected:
+- **D3. Token format.** The prefix shape of its login kind. Open check 3
+  found that the pinned program recognises an API key by its `sk-ant-api`
+  prefix and picks its background model from that, so an opaque token
+  could move background work to the main model. Rejected:
   presenting every Claude login as an API key, because a subscription
   request needs the shape that the program adds itself.
 - **D4. Turn check.** The Worker route asks the workspace Durable Object,
@@ -400,9 +405,9 @@ more approaches of each call.
   `api.conductive.build`. The turn picks the upstream.
 - **D10. Endpoint in the runner.** Claude: the SDK flag settings that the
   own-endpoint change sets for every login kind. Codex: `base_url` of the
-  model provider. Model discovery stays off. Rejected for now:
-  `CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST`, which may also ignore the flag
-  settings. This also closes a path on `origin/main`: the runner reads the
+  model provider. Model discovery stays off. Rejected:
+  `CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST`, because open check 3 showed that
+  it makes the program ignore the flag-settings endpoint. This also closes a path on `origin/main`: the runner reads the
   repository's `.claude/settings.json` (`settingSources: ['project']` in
   `runner/src/providers/claude.ts`), and that file can set the endpoint.
   The own-endpoint workspace found on 8 November 2026 that project settings
@@ -590,33 +595,33 @@ Depends on: 2
 The Worker route takes model requests with a turn token and forwards
 them to Anthropic or OpenAI. Milestone 6 adds the own endpoint.
 
-- [ ] Run open checks 3 and 4 first. Install the runner packages with
+- [x] Run open checks 3 and 4 first. Install the runner packages with
       `npm ci --prefix runner`. Run the pinned programs against a local
       fake gateway with fake keys, for each login kind. Send no request to
       a real provider. Save the result under `.context/model-gateway/`.
-- [ ] Add the gateway paths to `MACHINE_PATHS` in
+- [x] Add the gateway paths to `MACHINE_PATHS` in
       `src/shared/agent-tools.ts`, one base address for each agent (D9).
       Dispatch them in `worker/application.ts` on the machine hostname.
-- [ ] Give the route the limit of 100,000,000 bytes in
+- [x] Give the route the limit of 100,000,000 bytes in
       `requestBodyBudget` of `worker/http/request-body.ts` (decision 3 B,
       D21). Stream the upload, and answer as D17 says.
-- [ ] Forward only the routes of D7, with the routes that open checks 3
+- [x] Forward only the routes of D7, with the routes that open checks 3
       and 4 found. Refuse `HEAD /api/hello` without an upstream call.
-- [ ] Apply the header rules of D8. Add the real login in the header of
+- [x] Apply the header rules of D8. Add the real login in the header of
       its kind. Pass bodies unchanged. Remove the real login from each
       response header and error body (D29).
-- [ ] Stream each answer without a copy. Check the turn every 30 seconds
+- [x] Stream each answer without a copy. Check the turn every 30 seconds
       while an answer streams, and end it after the turn (decision 6 B).
-- [ ] Answer refusals as D12 says. Log no body and no header value (D15).
-- [ ] Add a fake Anthropic and a fake OpenAI upstream under
+- [x] Answer refusals as D12 says. Log no body and no header value (D15).
+- [x] Add a fake Anthropic and a fake OpenAI upstream under
       `worker/test-support/`, and update its README.
-- [ ] Tests: each route, the header removal, the credential swap of each
+- [x] Tests: each route, the header removal, the credential swap of each
       login kind, the removal of D29, the refusals, the body limit, and
       the end of an open answer after its turn.
 - [ ] Ask Cal for the Workers plan and the zone plan of the deployment.
       The gateway needs the CPU time of Workers Paid and the 100 MB cap of
       the zone (open check 6).
-- [ ] Update `worker/README.md`.
+- [x] Update `worker/README.md`.
 
 ## Milestone 4: Runner version pin
 

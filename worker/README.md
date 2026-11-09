@@ -56,8 +56,11 @@ The [GitHub composition](features/github.ts) stores banner updates in the common
 
 On the machine hostname, the Worker serves the Mac command routes, the git
 credential route, the image source credential route, workspace create/list
-tools, GitHub webhooks, and the runner socket.
+tools, GitHub webhooks, the model gateway, and the runner socket.
 These handlers use their own machine credentials and skip the browser gate.
+The [model gateway](model-gateway/README.md) accepts only a turn token.
+It adds the starter's login to allowed Anthropic and OpenAI requests.
+Its request upload and model answer both stream.
 The [tools composition](tools/composition.ts) reads the active stored turn.
 It keeps the inherited owner separate from the sender of the first message.
 
@@ -78,6 +81,7 @@ It also checks the runner start script.
 Run `node worker/chat/integration/run-browser-harness.mjs` to serve a production app build through the local Worker, with fake Boat and GitHub.
 [Outer Worker tests](chat/integration/outer-worker-tests.md#browser-harness) gives its settings.
 Run `npm run test -- worker/operator` to check the suspension of users and orgs.
+Run `npm run test -- worker/model-gateway worker/http/request-body.test.ts` to check model forwarding, turn access, streamed answers, and upload limits.
 The [test support area](test-support/README.md) supplies local D1 and fake providers.
 [Deployment inputs](../docs/deployment.md) lists the bindings, variables, and secrets of a deployment.
 
@@ -92,7 +96,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity).
-- [model-gateway/README.md](model-gateway/README.md): turn-token derivation and `checkTurnToken`, the trusted workspace RPC for one model request.
+- [model-gateway/README.md](model-gateway/README.md): the machine model routes, credential replacement, header rules, stream cancellation, and turn-token checks.
   Production runner commands do not carry these tokens yet.
 - [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. Each message is fixed safe text, never a token, a raw error, a request body, command output, or response data. `errorSummary` names a caught error by its class, its status, and a known provider code, never by its message. `CommandFailed` carries the state, the exit code, and the time-out of a failed sandbox command.
 - [features/alarms.ts](features/alarms.ts) keeps separate durable alarm deadlines for lifecycle, devices, previews, and GitHub.

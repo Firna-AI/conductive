@@ -1,0 +1,67 @@
+import type { RunnerLogin } from '../../src/shared/runner'
+
+const requestNames = new Set([
+  'accept',
+  'accept-encoding',
+  'content-type',
+  'content-encoding',
+  'content-language',
+  'user-agent',
+  'x-app',
+  'originator',
+  'session-id',
+  'thread-id',
+  'x-client-request-id',
+  'x-codex-beta-features',
+  'x-codex-turn-metadata',
+  'x-codex-window-id',
+])
+const responseNames = new Set([
+  'content-type',
+  'retry-after',
+  'x-should-retry',
+  'request-id',
+  'x-request-id',
+])
+
+function connectionHeaders(headers: Headers) {
+  return new Set(
+    (headers.get('connection') ?? '')
+      .split(',')
+      .map((name) => name.trim().toLowerCase()),
+  )
+}
+
+export function upstreamHeaders(headers: Headers, login: RunnerLogin): Headers {
+  const result = new Headers()
+  const connection = connectionHeaders(headers)
+  headers.forEach((value, name) => {
+    if (
+      !connection.has(name) &&
+      (requestNames.has(name) ||
+        name.startsWith('anthropic-') ||
+        name.startsWith('x-claude-code-') ||
+        name.startsWith('x-stainless-'))
+    )
+      result.set(name, value)
+  })
+  if (login.agent === 'claude' && login.kind === 'api-key')
+    result.set('x-api-key', login.secret)
+  else result.set('authorization', `Bearer ${login.secret}`)
+  return result
+}
+
+export function downstreamHeaders(headers: Headers, secret: string): Headers {
+  const result = new Headers()
+  const connection = connectionHeaders(headers)
+  headers.forEach((value, name) => {
+    if (
+      !connection.has(name) &&
+      (responseNames.has(name) ||
+        name.startsWith('anthropic-ratelimit-') ||
+        name.startsWith('x-ratelimit-'))
+    )
+      result.set(name, secret ? value.replaceAll(secret, '[redacted]') : value)
+  })
+  return result
+}

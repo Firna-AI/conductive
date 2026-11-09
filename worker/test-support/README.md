@@ -4,6 +4,17 @@
 It supplies fake GitHub and Boat servers, a fixed clock, sign-in, org creation, and cleanup.
 Backend tests use it without an external account or cloud computer.
 
+`FakeAnthropic` and `FakeOpenAI` supply in-memory model upstreams.
+They accept only the fixed model POST routes on their provider origins.
+Tests inject their `fetch` methods through the Worker's fetch dependency.
+They open no external connection and need no provider account.
+Each fake records requests without cloning or teeing their bodies.
+Its default reply reads the upload once and records its text in `bodies`.
+Set `response` to supply a fresh response after that read.
+Queue `responseFactories` to control upload reads, early replies, failures, or open answer streams.
+Each factory owns the request body read and returns a fresh response.
+The gateway tests use these factories to observe cancellation on the original stream.
+
 Every harness uses `applyMigrations(db)` from [migrations.ts](migrations.ts).
 It applies migrations in filename order with Wrangler's SQL splitter.
 The splitter keeps each trigger body in one statement.
@@ -89,6 +100,9 @@ So a plain object does not type-check as the environment of a child process.
 - `migrations.ts` applies migrations for every test harness.
 - `fake-boat.ts` supplies provider replies and fresh streaming response factories.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.
+- `fake-anthropic.ts` supplies the Messages and token-count upstream.
+- `fake-openai.ts` supplies the Responses upstream.
+- `fake-model-upstream.ts` records model requests and supplies fresh response factories.
 - `fake-runner.ts` supplies the runner without an agent SDK.
 - `fake-durable-object.ts` supplies the workspace endpoint without Cloudflare.
 - `fake-runner-files.ts` joins valid file report parts for the endpoint.
