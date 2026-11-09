@@ -80,8 +80,8 @@ Decisions 1 to 5 come from the brainstorm of 8 November 2026. Cal
 answered each one on 9 November 2026. The options check of 9 November 2026
 added options to decisions 2 and 5, and moved three design calls to Cal as
 decisions 6, 7, and 8. Its report is
-`.context/model-gateway/reports/options-check.md`. Decisions 6 to 8 wait
-for Cal. Cal's answers to decisions 2 and 5 stand, and their new options
+`.context/model-gateway/reports/options-check.md`. Cal answered decisions
+6 to 8 on 9 November 2026. Cal's answers to decisions 2 and 5 stand, and their new options
 are a record, not a question.
 
 ### 1. Subscription tokens wait for Cal's check
@@ -258,6 +258,7 @@ are a record, not a question.
 - **Related:** Decision 7: both decide what the gateway checks during a turn.
 - **Recommendation:** B. It meets the goal within a short bound, and the agent's own answers never meet it.
 - **Action:** ask the user, because the bound is a new security requirement at the boundary.
+- **Chosen by Cal on 9 November 2026:** B. The Worker checks the turn every 30 seconds while an answer streams, and ends the answer after the turn ends.
 
 ### 7. A login that changes during a turn
 
@@ -286,6 +287,7 @@ are a record, not a question.
 - **Related:** Decision 6.
 - **Recommendation:** D. A turn never moves to another key or endpoint, and a loss of access ends it at once, with no copy of the login.
 - **Action:** ask the user, because each option sets a new rule at the boundary, and A to C change what the runner does today in different ways.
+- **Chosen by Cal on 9 November 2026:** D. Design call D30 gives the mechanics.
 
 ### 8. Public endpoint addresses that the gateway accepts
 
@@ -313,6 +315,7 @@ are a record, not a question.
 - **Related:** Decision 4, and that open item.
 - **Recommendation:** B. It keeps keys off plain-text connections and accepts the ports that users run proxies on.
 - **Action:** ask the user, because each option adds a rejection, and it must match the open address item of the own-endpoint workspace.
+- **Chosen by Cal on 9 November 2026:** B. The gateway sends a login only to an `https` address, on any port that the Worker can reach. Open check 9 finds those ports.
 
 ## Design
 
@@ -344,11 +347,13 @@ Open checks:
    task.
 8. The effect of `global_fetch_strictly_public` on the Worker's other
    fetches. Milestone 6 checks it.
+9. Which ports a Worker fetch reaches on a host outside Cloudflare, for
+   decision 8 B. Milestone 6 checks it.
 
 ### Design calls
 
 Each call is an agent call. D1 to D20 are from 8 and 9 November 2026,
-D21 to D29 from 9 November 2026. The brainstorm report gives the three or
+D21 to D30 from 9 November 2026. The brainstorm report gives the three or
 more approaches of each call.
 
 - **D1. The turn token.** One random token for each turn. The Durable
@@ -370,10 +375,12 @@ more approaches of each call.
   the answer itself. Rejected: a stream in the Durable Object, which one
   restart ends for the whole workspace. A D1 table of tokens, which can
   disagree with the Durable Object.
-- **D5. End of a stream.** Moved to decision 6, which is open. A stopping
-  turn counts as ended for new requests.
-- **D6. Login check.** Moved to decision 7, which is open. Each request
-  checks at least that the turn runs and that the workspace is live.
+- **D5. End of a stream.** Decision 6 B: the Worker checks the turn every
+  30 seconds while an answer streams. A stopping turn counts as ended for
+  new requests.
+- **D6. Login check.** Decision 7 D: each request checks the turn, the
+  live workspace, the starter's membership and suspension, and that the
+  login is still the login of the turn start (D30).
 - **D7. Routes.** A fixed list for each agent. Claude: `POST /v1/messages`
   and `POST /v1/messages/count_tokens`. Codex: `POST /responses`. Add the
   routes that open checks 3 and 4 find. The gateway refuses
@@ -405,8 +412,8 @@ more approaches of each call.
   path, and Milestone 5 states it with the old risk of decision 2 A.
 - **D11. Address rule.** Before each fetch, the gateway refuses an IP
   address in a non-public range, `localhost`, single-label and internal
-  names, and the app's own zones. It follows no redirect. Decision 8,
-  which is open, sets the schemes and ports of a public address.
+  names, and the app's own zones. It follows no redirect. Decision 8 B
+  allows only `https`, on any port that the Worker can reach.
   `global_fetch_strictly_public` comes on after open check 8. Rejected:
   a DNS lookup first, which does not fix the address that `fetch` uses.
 - **D12. Refusals.** The gateway answers with an error in the provider's
@@ -477,6 +484,13 @@ more approaches of each call.
   Worker knows the login, and the cloud computer must never see it. A
   success stream passes unchanged, because the model never received the
   login. From the orchestrator's check of 8 November 2026.
+- **D30. Login version of a turn.** The Durable Object records the
+  `updated_at` of the starter's login row when it dispatches the turn.
+  Each request compares it with the current row. A difference, a missing
+  row, or a loss of access ends the turn with `agent_login_required` and
+  a cause. A changed login gets its own cause, for example "Priya's
+  Claude login changed. Try again to use the new login." Reason: decision
+  7 D, with no copy of the login.
 
 ## Milestone 1: Documentation and protocol
 
@@ -492,12 +506,13 @@ and the runner version pin. The login sections wait for Milestone 5 (D25).
         `api.conductive.build` under `/v1/`.
   - [ ] A turn token works only for the gateway, only while its turn runs,
         and only for the login of its session starter.
-  - [ ] Each request checks the turn and the workspace, and the login as
-        decision 7 says.
+  - [ ] Each request checks the turn, the workspace, and the starter's
+        access. Any change of the login or of that access ends the turn
+        at its next request and names the cause (decision 7 D).
   - [ ] The gateway forwards only a fixed list of model routes for each
         agent and only allowed headers. It passes bodies unchanged.
   - [ ] An answer streams without delay. An answer that still streams
-        when its turn ends stops as decision 6 says.
+        when its turn ends stops within 30 seconds (decision 6 B).
   - [ ] The gateway keeps no copy of a model request or an answer. No
         answer and no error carries the real login (D29).
   - [ ] The upstream is Anthropic or OpenAI for an API key or a
@@ -532,7 +547,7 @@ Depends on: 1
 
 The workspace Durable Object makes one turn token for each turn and
 checks it. Nothing sends the token yet. Milestone 6 sends it to the
-runner. The login rule waits for decision 7.
+runner.
 
 - [ ] Make the token when the turn is dispatched, with a routing part
       that names the workspace (D1).
@@ -544,22 +559,22 @@ runner. The login rule waits for decision 7.
       its turn is running, its session is open, and the turn is the active
       turn of the session. Reuse `activeStoredTurn` from
       `worker/devices/access.ts`.
-- [ ] In the same check, apply the login rule of decision 7. Reuse
+- [ ] In the same check, apply decision 7 D with D30. Reuse
       `senderLoginAccess` and `readAgentLogin` from
       `worker/chat/queries.ts`.
 - [ ] When decision 7 ends a turn, end it with `agent_login_required` and
       the text of `unavailableLoginMessage` (D12).
 - [ ] Tests, as the `testing` skill says: a token works while its turn
       runs. It fails after the end, during Stop, and for another
-      workspace. Add the login cases of decision 7.
+      workspace. It ends the turn after a change or a removal of the
+      login, and after a loss of the starter's access (decision 7 D).
 
 ## Milestone 3: The gateway route
 
 Depends on: 2
 
 The Worker route takes model requests with a turn token and forwards
-them to Anthropic or OpenAI. Milestone 6 adds the own endpoint. The end
-of an open answer waits for decision 6.
+them to Anthropic or OpenAI. Milestone 6 adds the own endpoint.
 
 - [ ] Run open checks 3 and 4 first. Install the runner packages with
       `npm ci --prefix runner`. Run the pinned programs against a local
@@ -576,8 +591,8 @@ of an open answer waits for decision 6.
 - [ ] Apply the header rules of D8. Add the real login in the header of
       its kind. Pass bodies unchanged. Remove the real login from each
       response header and error body (D29).
-- [ ] Stream each answer without a copy. End an open answer after its
-      turn, as decision 6 says.
+- [ ] Stream each answer without a copy. Check the turn every 30 seconds
+      while an answer streams, and end it after the turn (decision 6 B).
 - [ ] Answer refusals as D12 says. Log no body and no header value (D15).
 - [ ] Add a fake Anthropic and a fake OpenAI upstream under
       `worker/test-support/`, and update its README.
@@ -640,8 +655,8 @@ after its merge (D25).
 - [ ] Same doc: the risk of decision 124 gives turn tokens of later turns
       on a newer runner, and real logins on an older runner.
 - [ ] `docs/protocol/model-gateway.md`: the own endpoint as an upstream,
-      the address rule of D11, the failed turn of decision 4 A, and the
-      unusable login of D28.
+      the address rule of D11, the `https` rule of decision 8 B, the failed
+      turn of decision 4 A, and the unusable login of D28.
 - [ ] `docs/architecture.md`: "Sandbox software", the chat flow,
       "External services", and "Trust boundaries".
 - [ ] Check each relative link of the changed Markdown files.
@@ -651,8 +666,7 @@ after its merge (D25).
 Depends on: 3, 4, 5
 
 The Worker serves runner protocol versions 1 and 2. Version 2 gets turn
-tokens. The own endpoint goes through the gateway. The public address
-rule waits for decision 8.
+tokens. The own endpoint goes through the gateway.
 
 - [ ] `src/shared/runner.ts`: version 2, as D16 says. Keep the version 1
       types for older runners (decision 2 A).
@@ -663,7 +677,10 @@ rule waits for decision 8.
 - [ ] Move the Worker tests that build runner commands with a login.
       Keep every assertion. Add the version 2 cases.
 - [ ] The gateway forwards a turn on an own endpoint to its address, with
-      the address rule of D11 and the public address rule of decision 8.
+      the address rule of D11 and the `https` rule of decision 8 B.
+- [ ] Find which ports a Worker fetch reaches on a host outside
+      Cloudflare, and state them in `docs/protocol/model-gateway.md`
+      (open check 9). Save the check under `.context/model-gateway/`.
 - [ ] Make the own-endpoint save refuse the addresses that the gateway
       refuses, with the same rule, unless the merged change already does.
       This is the wider fix of decision 4 A.
