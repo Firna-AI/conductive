@@ -88,6 +88,15 @@ made on 9 November 2026. The user can change it before the work merges.
   lines, and the `documentation` skill splits such a doc. The key sections
   stay, because another workspace edits them.
 
+- Agent call, from a question of Milestone 3: only a read that fails
+  before its data arrives shows the notice. A later failed read keeps the
+  data that the palette has, as the rest of the app does, so the protocol
+  page says so in one sentence.
+- Agent call, from a question of Milestone 3: the section "Keys inside
+  the palette" stays as it is. It names the tabs and the filters as stops
+  of Tab and does not exclude Try again, and another workspace edits the
+  key sections.
+
 ## Decisions
 
 ### 164. Choose how the palette shows data that did not load
@@ -155,29 +164,39 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Keep the load state of the repository names in the palette source,
+- [x] Keep the load state of the repository names in the palette source,
       beside the list.
-- [ ] Build the status part in the results: where it stands on each tab,
+- [x] Build the status part in the results: where it stands on each tab,
       the spinner, and the notice of each failed read. Keep the action and
       setting rows. Show "Nothing matches" only after a search over loaded
       data.
-- [ ] Make Try again read again each read that failed.
-- [ ] Test in Node each state: the list loading and failed, with and
+- [x] Make Try again read again each read that failed.
+- [x] Test in Node each state: the list loading and failed, with and
       without a query; the names loading and failed, with and without a
       query; one read failed while the other loads, and both failed; and a
       search over loaded data without a match.
-- [ ] Extend the mounted test of the failed list to the All tab, with a
+- [x] Extend the mounted test of the failed list to the All tab, with a
       search that also matches an action, and Try again.
-- [ ] Update `src/app/screens.md` and the Key code of `src/app/README.md`
+- [x] Update `src/app/screens.md` and the Key code of `src/app/README.md`
       where they describe the palette results.
-- [ ] Delete `plans/follow-ups/palette-unavailable-data.md`.
+- [x] Delete `plans/follow-ups/palette-unavailable-data.md`, and update the
+      references to it in `plans/follow-ups/header-repository-id.md`.
+- [x] Smoke-test the All tab and the Workspaces tab in Chrome over
+      `npm run dev`, on desktop and on a phone, in light and dark, with the
+      list and the repositories loading, failed, and read again.
+
+Evidence: the test logs, the first failures, the 10 runs, and the checks
+of the tests by a broken code are in `.context/palette-unavailable-data/m3/`.
+The smoke screenshots and results are in
+`.context/palette-unavailable-data/smoke/`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      Log: `.context/palette-unavailable-data/gate.log`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

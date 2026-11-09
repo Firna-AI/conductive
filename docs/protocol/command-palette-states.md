@@ -30,6 +30,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws these states at
   on a failure at once.
 - When both reads failed, the notice says "The workspaces didn't load".
   Reason: a failed list hides every workspace row.
+- Only a read that fails before its data arrives shows the notice. After a
+  later read fails, the palette keeps the data that it has, as the rest of
+  the app does.
 
 ## Empty states
 
