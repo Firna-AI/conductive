@@ -29,7 +29,7 @@
 - **Related:**
   - `plans/follow-ups/shared-menu-surface.md` moves desktop menus to the top layer. Until then, whole-card scrolling can clip menus in their triggers.
   - `plans/follow-ups/dialog-under-busy-menu.md` asks how dialogs and a busy menu interact. The bounded-card fix must work in the current frame layer and in the browser top layer. It does not depend on that answer.
-  - `plans/follow-ups/mac-checks-for-shared-ui.md` records a gap in future CSS-only changes. A new regression under `desktop/tests/` already starts the existing Mac workflow.
+  - `plans/follow-ups/desktop-ci-skips-mockup-styles.md` records a gap in future CSS-only changes. A new regression under `desktop/tests/` already starts the existing Mac workflow.
 - **Recommendation:** B. It keeps the controls and their menus reachable and covers both affected cards.
 - **Action:** fix after merge, apply B.
 

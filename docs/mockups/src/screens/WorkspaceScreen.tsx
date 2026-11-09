@@ -18,6 +18,7 @@ import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { conversations } from '../fixtures/conversations'
+import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { suspendedOwner } from '../fixtures/startRefusals'
@@ -75,6 +76,7 @@ export function WorkspaceScreen(props: {
   const archivable = !readOnly && (admin || workspace.owner === viewer)
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
+  const rightHidden = state.rightColumn === 'hidden'
   const chat = (
     <ChatPane
       composer={composerFor(state, workspace)}
@@ -85,7 +87,11 @@ export function WorkspaceScreen(props: {
           title="New session"
         />
       }
-      items={fresh ? [] : conversations[state.conversation]}
+      items={
+        fresh
+          ? []
+          : chatItemsFor(conversations[state.conversation], state.paths)
+      }
       notice={
         // An archived workspace keeps its archived bar, so the notice of a
         // suspended org shows above it.
@@ -108,6 +114,7 @@ export function WorkspaceScreen(props: {
       canReassign={admin && !readOnly}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
+      rightHidden={rightHidden}
       status={status}
       viewport={viewport}
       workspace={workspace}
@@ -175,7 +182,11 @@ export function WorkspaceScreen(props: {
   const palette =
     state.palette === 'closed' ? null : (
       <CommandPalette
-        context={{ open: { workspace, status }, archivable }}
+        context={{
+          open: { workspace, status },
+          archivable,
+          rightColumn: !rightHidden,
+        }}
         view={state.palette}
         viewport={viewport}
       />
@@ -201,6 +212,7 @@ export function WorkspaceScreen(props: {
             workspace={workspace}
           />
         }
+        rightHidden={rightHidden}
         rightWidth={state.resize === 'right' ? widenedRight : undefined}
         tabs={
           <WorkspaceTabs

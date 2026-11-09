@@ -94,8 +94,8 @@ export async function newSession(context: ChatContext): Promise<void> {
 
 /**
  * Renames a session. The new name shows at once as a pending edit, over
- * every record that arrives meanwhile, until the reply confirms it or the
- * request fails. A failed rename takes back only its own edit.
+ * every record that arrives meanwhile. Confirmation retires this rename and
+ * older renames. A failed rename takes back only its own edit.
  */
 export async function renameSession(
   context: ChatContext,
@@ -111,13 +111,12 @@ export async function renameSession(
     overlay: { kind: 'none' },
   }))
   if (!session || name === '' || name === session.title) return
-  const end = beginEdit(context, sessionId, { title: name })
+  const edit = beginEdit(context, sessionId, { title: name })
   try {
     const saved = await context.api.renameSession(sessionId, name)
-    confirmRecord(context, saved.session, saved.eventNumber)
-    end()
+    edit.confirm(saved.session, saved.eventNumber)
   } catch (error) {
-    end()
+    edit.fail()
     showNotice(context, sessionId, "The new name didn't save", error)
   }
 }

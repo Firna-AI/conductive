@@ -79,6 +79,8 @@ export class GitHubStore {
   private source: GitHubSource | null = null
   /** The last event number of the workspace stream that the store read. */
   private lastEventNumber = 0
+  /** The last complete replay or live event that a reconnect can pass. */
+  private resumeEventNumber = 0
   /** The cutoff of a replay that has more pages to come, or null. */
   private replay: number | null = null
   /** The newest GitHub state of the pages of a replay so far. */
@@ -111,6 +113,7 @@ export class GitHubStore {
    */
   connect(source: GitHubSource): () => void {
     this.source = source
+    this.lastEventNumber = this.resumeEventNumber
     this.replay = null
     this.replayed = null
     this.waiting = []
@@ -205,6 +208,7 @@ export class GitHubStore {
       this.lastEventNumber,
       history.throughEventNumber,
     )
+    this.resumeEventNumber = this.lastEventNumber
     const latest = this.replayed
     this.replayed = null
     if (latest) this.readHistory(latest)
@@ -215,6 +219,7 @@ export class GitHubStore {
 
   private live(envelope: WorkspaceEventEnvelope): void {
     const live = this.next(envelope)
+    this.resumeEventNumber = this.lastEventNumber
     if (!live) return
     // A live event is newer than the reply of any read that runs.
     this.cancelRead()

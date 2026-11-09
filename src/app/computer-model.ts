@@ -41,9 +41,9 @@ interface Following {
 }
 
 /**
- * The Cloud computer tab: the scripts, the env var names, the builds, and
- * the log of the newest build. Env var values are write-only: a write
- * carries a value, and no answer brings one back.
+ * The Cloud computer tab: the scripts, the env var names with their Secret
+ * marks, the builds, and the log of the newest build. Env var values are
+ * write-only: a write carries a value, and no answer brings one back.
  */
 export class ComputerModel {
   readonly settings: Readable<Loadable<OrgSettings>>
@@ -171,9 +171,27 @@ export class ComputerModel {
     )
   }
 
-  /** Sets the value of a variable. The value goes out and never comes back. */
-  setEnvVar(name: string, value: string): Promise<void> {
+  /**
+   * Sets the value and the Secret mark of a variable, as Add variable
+   * does. The value goes out and never comes back.
+   */
+  setEnvVar(name: string, value: string, secret: boolean): Promise<void> {
+    return this.write({ envVars: [{ operation: 'set', name, value, secret }] })
+  }
+
+  /**
+   * Replaces only the value of a variable. The write sends no mark, so the
+   * Worker keeps the mark that it stores when it applies the write, and a
+   * name that it does not know starts secret. The value goes out and never
+   * comes back.
+   */
+  replaceEnvVar(name: string, value: string): Promise<void> {
     return this.write({ envVars: [{ operation: 'set', name, value }] })
+  }
+
+  /** Sets only the Secret mark of a variable. No value goes out or back. */
+  classifyEnvVar(name: string, secret: boolean): Promise<void> {
+    return this.write({ envVars: [{ operation: 'classify', name, secret }] })
   }
 
   removeEnvVar(name: string): Promise<void> {

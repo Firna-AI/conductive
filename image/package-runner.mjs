@@ -80,6 +80,7 @@ async function packageRunner() {
   const { values } = parseArgs({
     options: {
       url: { type: 'string' },
+      'base-url': { type: 'string' },
       output: {
         type: 'string',
         default: '.context/runner-artifact/runner.tar.gz',
@@ -89,7 +90,9 @@ async function packageRunner() {
   })
   if (values.help) {
     process.stdout.write(
-      'Usage: node image/package-runner.mjs --url https://host/runner.tar.gz [--output .context/runner-artifact/runner.tar.gz]\n',
+      'Usage: node image/package-runner.mjs (--url <url> | --base-url <url>) [--output .context/runner-artifact/runner.tar.gz]\n' +
+        '  --url <url>       Public HTTPS URL of the published archive.\n' +
+        '  --base-url <url>  Public HTTPS base for runner-<sha256>.tar.gz.\n',
     )
     return
   }
@@ -97,8 +100,13 @@ async function packageRunner() {
     throw new Error(
       'Package on Linux x64 with Linux x64 runner packages installed.',
     )
-  if (!values.url) throw new Error('Pass the public archive URL.')
-  const url = new URL(values.url)
+  const inputUrl = values.url ?? values['base-url']
+  if (
+    inputUrl === undefined ||
+    (values.url !== undefined && values['base-url'] !== undefined)
+  )
+    throw new Error('Pass exactly one of --url and --base-url.')
+  const url = new URL(inputUrl)
   if (
     url.protocol !== 'https:' ||
     url.username ||
@@ -109,6 +117,8 @@ async function packageRunner() {
     throw new Error(
       'Use a public HTTPS archive URL without credentials, query, or fragment.',
     )
+  if (values['base-url'] !== undefined && !url.pathname.endsWith('/'))
+    url.pathname += '/'
   const output = resolve(root, values.output)
   const context = join(root, '.context')
   if (!output.startsWith(`${context}${sep}`))
@@ -133,6 +143,7 @@ async function packageRunner() {
       '--owner=0',
       '--group=0',
       '--numeric-owner',
+      '--mode=u+rwX,go+rX,go-w',
       '--format=gnu',
       '-I',
       'gzip -n',
@@ -143,7 +154,13 @@ async function packageRunner() {
       'runner',
     ])
     const sha256 = await digest(output)
-    const artifact = { url: url.href, sha256 }
+    const artifact = {
+      url:
+        values['base-url'] === undefined
+          ? url.href
+          : new URL(`runner-${sha256}.tar.gz`, url).href,
+      sha256,
+    }
     await writeFile(
       `${output}.sha256`,
       `${sha256}  ${output.split(sep).at(-1)}\n`,

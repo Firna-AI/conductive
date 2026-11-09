@@ -28,7 +28,7 @@ how a screen is built, and links to the other pages.
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
-| `app/panels`        | The right column, widened by the handle on its inner edge                     |
+| `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |
 | `user-flows`        | Sign up, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command |
 

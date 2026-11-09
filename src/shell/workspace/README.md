@@ -141,8 +141,9 @@ fake API, with its address options, its controls, and the test command.
   of the chat of the session, or the shell's own column for the chat slots.
 - `files/files-features.tsx`: the Files part, which connects the kept
   files, and the file or diff page of the centre.
-- `files/chat-files.tsx`: the file tabs and the diff links of the kept
-  chat, and the way back to the chat when a session becomes active.
+- `files/chat-files.tsx`: the file tabs, named by the labels of the kept
+  files, and the diff links of the kept chat, and the way back to the chat
+  when a session becomes active.
 - `files/files-navigation.ts`: the navigation of the Files screens, and
   the changes of the saved view that the address and the pages make.
 - `files/files-address.ts` and `files/view-tabs.ts`: the addresses of the
@@ -198,7 +199,9 @@ fake API, with its address options, its controls, and the test command.
   `WorkspaceContext`, what each part gets, and `useFeatures`, the parts of
   the host over the app's own parts.
 - `WorkspaceHeader.tsx` and `WorkspaceColumns.tsx`: the header, the
-  columns, and the tab bar of a phone.
+  columns, the toggle of the right column, and the tab bar of a phone.
+  `RightColumnToggle.test.tsx` mounts the whole app over the fake API. It
+  hides the right column, opens the workspace again, and shows the column.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
   states of the cloud computer, the start steps, and the Archive question.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into

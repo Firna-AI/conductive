@@ -1,7 +1,8 @@
 # Developer scripts
 
 These scripts of the [sandbox software](README.md) run on a developer
-machine. No image build installs them.
+machine. The deploy workflow also runs the packager. No image build
+installs them.
 
 - `package-runner.mjs` packages the runner archive.
 - `live-check.mjs` checks the chat path in a real sandbox. Then it times
@@ -22,19 +23,32 @@ node image/package-runner.mjs \
   --output .context/runner-artifact/runner.tar.gz
 ```
 
+The script takes these options. Pass exactly one of `--url` and
+`--base-url`.
+
 - `--url` is the public HTTPS URL of the archive after you publish it. It
   can hold no user name, password, query, or fragment.
+- `--base-url` is a public HTTPS base for the URL, with the same limits.
+  After the script computes the digest, the archive URL is
+  `<base>runner-<sha256>.tar.gz`. The script adds a missing final `/` to
+  the base.
 - `--output` is optional, and it must be under `.context/`. The default is
   `.context/runner-artifact/runner.tar.gz`.
 - `--help` prints the usage.
+
+The [deploy workflow](../docs/automatic-deploys.md) runs the packager with
+`--base-url https://runner.conductive.build/`.
 
 The script builds the runner bundles. The archive then holds only a
 `runner/` folder: `main.mjs`, `measure.mjs`, `compare.mjs`, the runner
 manifest and lockfile, and the production packages from
 `runner/node_modules`, for Linux x64. It holds no Node. Each image installs
-its own private Node, as [the private Node runtime](runtime.md) says. The
-script fixes the order, the times, and the owners of the archive entries.
-So the same source and installed packages give the same digest.
+its own private Node, as [the private Node runtime](runtime.md) says.
+
+The script fixes the order, the times, the owners, and the file modes of
+the archive entries. So the umask of `npm ci --prefix runner` does not
+change the digest. The same source and installed packages give the same
+digest.
 
 The script writes the archive and two files next to it:
 
