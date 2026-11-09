@@ -41,8 +41,34 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         list(
           text`Your GitHub account: your GitHub user ID, login, display name,
-            and avatar. They sign you in, and they show who owns and who
-            sends each piece of work.`,
+            avatar, and the date when you created the account. They sign you
+            in, and they show who owns and who sends each piece of work. The
+            operator sees the age of the account when you wait for app
+            access.`,
+          text`Your GitHub emails: at each sign-in, ${productName} keeps the
+            verified email addresses of your GitHub account, and which one is
+            primary. An org invitation reaches you through one of them. The
+            approval email goes to the primary one.`,
+          text`Your GitHub token: the sign-in gives ${productName} a GitHub
+            token for your account. ${productName} stores it encrypted, for
+            every account, also while you wait for app access. It uses the
+            token to read GitHub for you, and for the git calls of your
+            turns.`,
+          text`The waitlist: a new account waits for app access, and sees only
+            the waitlist until then. ${productName} records when and how you
+            got app access. The record names the operator who approved you,
+            the invite code that you used, or the org invitation that you
+            accepted, with its org and the admin who sent it. It lets the
+            operator trace misuse back to a code or a person.`,
+          text`Invite codes: each account with app access has an invite code
+            with 5 invites. ${productName} keeps who used each code, and when.
+            You see how many of your invites are left, but not who used them.
+            The operator sees both.`,
+          text`The approval email: when an operator approves your account,
+            ${productName} sends one email to the primary verified email of
+            your GitHub account, and keeps whether it went. A failed send
+            goes again for up to 24 hours. An account without a verified
+            email gets no email.`,
           text`Your agreement: you accept the current version of the terms at
             each sign-in. ${productName} keeps the latest version that you
             accepted, and the time when you first accepted it. They show that
@@ -94,6 +120,9 @@ export const privacyDocument: LegalDocument = {
             repositories through its GitHub App. The Mac app also checks
             GitHub for updates and downloads new versions. These requests
             send your network address to GitHub.`,
+          text`Resend sends the emails of ${productName}: the invitations of
+            an org, and the email when an operator approves your account. It
+            gets the address and the text of each email.`,
           text`A cloud computer provider runs the cloud computers of every org
             for ${productName}, in the account of ${productName}. Your code,
             your files, and your agent sessions are in them. ${productName}
@@ -161,6 +190,8 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         paragraph`When an admin deletes an org, ${productName} deletes the data
           of the org after 7 days, unless an admin restores it.`,
+        paragraph`An account that waits for app access stays until you ask
+          for its deletion, as every other account does.`,
         paragraph`Account records, the latest Terms acceptance, and
           suspension records do not automatically expire when you stop
           using ${productName}. Workspace chat history stays while its org

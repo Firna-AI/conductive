@@ -10,6 +10,7 @@ import { LinkTabs } from '../ui/links'
 import { useViewport } from '../ui/viewport'
 import { AgentsSection, SignInSection } from './AccountSections'
 import { GitHubSection } from './GitHubSection'
+import { InviteCodeSection } from './InviteCodeSection'
 import { DefaultsSection } from './PreferencesSections'
 
 /** The tabs of the account, in their order. */
@@ -40,9 +41,10 @@ function ThisMac() {
 
 /**
  * The General tab: the GitHub sign-in, and what every org shares, the
- * GitHub App and the agents. The Mac app adds This Mac. `connect` opens
- * the Connect form of an agent at first, as the link of a missing login
- * does.
+ * GitHub App and the agents. The invite code of the user comes last, so
+ * that a phone shows the form of an agent near the top. The Mac app adds
+ * This Mac. `connect` opens the Connect form of an agent at first, as the
+ * link of a missing login does.
  */
 function GeneralTab(props: { user: User; connect: Agent | null }) {
   return (
@@ -51,13 +53,15 @@ function GeneralTab(props: { user: User; connect: Agent | null }) {
       <ThisMac />
       <GitHubSection />
       <AgentsSection connect={props.connect} />
+      <InviteCodeSection />
     </>
   )
 }
 
 /**
  * The account, in two tabs. Each tab is a link with its own address.
- * General holds the GitHub sign-in and what every org shares. Preferences
+ * General holds the GitHub sign-in, what every org shares, and the invite
+ * code of the user. Preferences
  * holds how new workspaces start: their model, and how New workspace
  * opens. The product is free, so the page shows no plan and no billing.
  */

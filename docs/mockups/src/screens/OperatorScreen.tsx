@@ -21,13 +21,15 @@ import {
 export const operatorSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['numbers'],
+  required: ['numbers', 'signUps'],
   properties: {
     /**
      * The numbers of the page: shown, loading when the page opens, or
      * failed to load.
      */
     numbers: { enum: ['ready', 'loading', 'error'] },
+    /** Sign-ups are open, or an operator paused them. */
+    signUps: { enum: ['open', 'paused'] },
   },
 } as const
 
@@ -84,6 +86,7 @@ export function OperatorScreen(props: {
   return (
     <OperatorPage
       actions={refresh}
+      signUps={props.state.signUps}
       subtitle={ready ? `Updated at ${operatorUpdatedAt}` : undefined}
       tab="overview"
       title="Operator"

@@ -17,6 +17,15 @@
   overflow: visible;
 }
 
+/*
+ * Every tab shows: the tabs keep one line while they fit, and the rest
+ * flows onto a second line, which starts at the left edge.
+ */
+.flow {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
 .tab {
   display: inline-flex;
   flex-shrink: 0;

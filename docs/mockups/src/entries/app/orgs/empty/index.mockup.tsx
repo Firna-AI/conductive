@@ -11,7 +11,7 @@ export const newOrg = defineScreen({
   relatedDocs: [],
   propSchema: workspaceListSchema,
   props: { list: 'new-org', menu: 'none', palette: 'closed' },
-  useCasePaths: ['user-flows/sign-up'],
+  useCasePaths: ['user-flows/join'],
   render: (props, context) => (
     <WorkspaceListScreen state={props} viewport={context.viewport} />
   ),
