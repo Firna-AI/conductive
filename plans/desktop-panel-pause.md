@@ -121,16 +121,19 @@ Depends on: 3
 
 The orchestrator checks the complete change and its preservation of the retained feature.
 
-- [ ] Run the targeted app tests and the early format, lint, file length, and export checks from `AGENTS.md`.
-- [ ] Run new asynchronous or browser regression tests ten times, as the testing skill requires.
-- [ ] Smoke-test the app on both screen sizes with a normal account and an operator account. Save screenshots under `.context/desktop-panel/`.
-- [ ] Confirm that the Desktop component, hidden mount in `ToolsPart.tsx`, handler, styles, developer pages, fixtures, tests, stored identities, and `go-to-desktop` command remain present.
-- [ ] Map the changed Desktop assertions in `ToolsWiring.test.tsx:56-75` to the new hidden-interface behavior. Preserve the independent URL and frame-error coverage in `src/desktop/` and `worker/desktop/handler.test.ts`. Add no duplicate test when existing coverage protects the retained behavior.
-- [ ] Install the desktop and runner check dependencies if needed. Run `npm run check` once on the complete implementation.
-- [ ] Commit with Conventional Commits and push this branch. Record the approved UI removals and the retained Desktop implementation.
+- [x] Run the targeted app tests and the early format, lint, file length, and export checks from `AGENTS.md`.
+- [x] Run new asynchronous or browser regression tests ten times, as the testing skill requires.
+- [x] Smoke-test the app on both screen sizes with a normal account and an operator account. Save screenshots under `.context/desktop-panel/`.
+- [x] Confirm that the Desktop component, hidden mount in `ToolsPart.tsx`, handler, styles, developer pages, fixtures, tests, stored identities, and `go-to-desktop` command remain present.
+- [x] Map the changed Desktop assertions in `ToolsWiring.test.tsx:56-75` to the new hidden-interface behavior. Preserve the independent URL and frame-error coverage in `src/desktop/` and `worker/desktop/handler.test.ts`. Add no duplicate test when existing coverage protects the retained behavior.
+- [x] Install the desktop and runner check dependencies if needed. Run `npm run check` once on the complete implementation.
+- [x] Commit with Conventional Commits and push this branch. Record the approved UI removals and the retained Desktop implementation.
 - [ ] Review the complete local diff against `origin/main` with the implementation-review skill after the push. Fix the confirmed `fix now` findings, record follow-up items for the rest, re-review once, and report.
 - [ ] Delete this plan under the plans skill's completion rules.
 - [ ] Open the pull request. Its description keeps this decision, the clarification, the design calls, and a permalink to this plan.
+
+
+Verification passed on 9 November 2026. The complete gate passed 570 root files with 1,566 tests and 53 runner files with 130 tests, then the app and mockup builds. All three new regression rows passed ten times. The new rows cost 736 ms in run 10. Evidence: `.context/desktop-panel/complete-gate.log`, `.context/desktop-panel/m3/ten-runs.log`, and `.context/desktop-panel/smoke/results.json`.
 
 ## Post-merge follow-up (non-blocking)
 
