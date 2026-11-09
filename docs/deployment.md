@@ -5,7 +5,8 @@ bindings, its public variables, and its secrets. It also says which
 settings the Worker gives to each workspace sandbox.
 [Architecture](architecture.md) describes the Worker and its hostnames.
 The [Worker README](../worker/README.md#routes) lists the routes that the
-Worker serves now.
+Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
+push to `main` deploys the test deployment.
 
 Each input names the routes that read it. A route that does not read an
 input works without it. Keep real values out of the repository and out of
@@ -80,7 +81,7 @@ examples.
 | `BOAT_KEY_ENCRYPTION_KEY` | Every route that stores or reads a stored secret | A separate 32 random bytes, encoded as Base64. |
 | `GITHUB_APP_PRIVATE_KEY` | The GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds and refreshes of an org that chose a repository | The private key of the GitHub App, as PEM. The PEM file from GitHub works as it is. A PKCS#8 PEM works too. |
 | `GITHUB_WEBHOOK_SECRET` | GitHub webhooks on the machine hostname | The webhook secret of the GitHub App. The Worker checks each delivery with it. Without it, each delivery gets `503 github_unavailable`. |
-| `RESEND_API_KEY` | The invitation emails of the member routes | An API key of Resend. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. |
+| `RESEND_API_KEY` | The invitation emails of the member routes | An API key of Resend that can send from `mail.conductive.build`. The invitations come from `invites@mail.conductive.build`, so Resend must verify that domain. A key with sending access only is enough. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. |
 
 - `BOAT_KEY_ENCRYPTION_KEY` encrypts the agent logins, the GitHub user
   tokens, the env vars of each org, and the workspace tokens. It also
@@ -140,11 +141,24 @@ refresh keeps the installed runner and updates the repositories.
 [The runner archive](../image/README.md#the-runner-archive) says how to make
 and publish it.
 
-- Publish the exact archive at its public HTTPS URL first.
-- Set `CONDUCTIVE_RUNNER_ARCHIVE_URL` to that URL. It can hold no user
-  name, password, query, or fragment.
-- Set `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` to the digest of the same file.
-  The Worker accepts upper or lower case.
+Each deploy from `main` publishes the archive of its commit when the
+archive is new. It sets both variables to that archive, as
+[The archive in each deploy](#the-archive-in-each-deploy) says. To supply
+an archive by hand:
+
+1. Package the archive, as
+   [Developer scripts](../image/developer-scripts.md#package-the-archive)
+   says.
+2. Publish the exact archive at its public HTTPS URL. For R2, upload it
+   through the S3 API, because `wrangler r2 object put` refuses files over
+   300 MiB.
+3. Set `CONDUCTIVE_RUNNER_ARCHIVE_URL` to that URL. It can hold no user
+   name, password, query, or fragment.
+4. Set `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` to the digest of the same file.
+   The Worker accepts upper or lower case.
+
+More facts:
+
 - `runnerSoftware` in `worker/configuration.ts` reads and checks both
   values, as the `software` option of a build or a refresh. For a missing
   or invalid value, it gives `503 runner_software_unavailable`.
@@ -157,6 +171,39 @@ and publish it.
   [The private Node runtime](../image/runtime.md) says. That download needs
   no deployment input.
 
+### The archive in each deploy
+
+The archives live in the R2 bucket `conductive-runner`. R2 is the file
+storage of Cloudflare. The bucket serves each archive under
+`https://runner.conductive.build/`. Each deploy from `main` takes these
+steps for the archive:
+
+1. It packages the archive with
+   `--base-url https://runner.conductive.build/`. The archive URL is then
+   `https://runner.conductive.build/runner-<sha256>.tar.gz`, where
+   `<sha256>` is the SHA-256 digest of the archive.
+2. It asks R2's S3 API whether the bucket holds an archive of that name. It
+   uploads the archive only when the name is new.
+3. It checks the size of the file at the public URL, also when the
+   archive already existed. A missing file or a wrong size stops the run
+   before the migrations.
+4. It deploys the Worker with both variables set to that archive.
+
+- The same source and packages give the same digest. So an unchanged
+  runner makes no new upload.
+- Old archives stay in the bucket.
+- The upload uses R2's S3 API with the AWS CLI, because
+  `wrangler r2 object put` refuses files over 300 MiB. The archive is about
+  320 MiB.
+- The S3 key pair comes from the deploy token, as
+  [Cloudflare documents](https://developers.cloudflare.com/r2/api/tokens/).
+  The key ID is the ID of the token. The secret key is the SHA-256 digest
+  of the token value.
+- The run masks that secret key in its log.
+- A new archive reaches the next build of each org image. A refresh keeps
+  the installed runner. So an existing image keeps its runner until its
+  next build.
+
 ## Frame sources
 
 `CONDUCTIVE_FRAME_SOURCES` lists the origins that the pages of the app can
@@ -164,15 +211,18 @@ show in a frame, in addition to the port previews. The Desktop tab shows
 the desktop stream of a sandbox in such a frame.
 
 - The value is a list of HTTPS origins, separated by spaces. An origin is
-  `https://`, a host, and an optional port, with no path.
-- List only the origins of trusted desktop stream hosts. A desktop URL
-  carries its token in the fragment. Copy only its origin. Put no token or
-  other secret in the value.
-- Boat's [desktop guide](https://docs.boat.dev/desktop-streaming/urls-and-security)
-  shows the stream host only as `<sandbox-desktop-host>`. Boat generates
-  that host for the running sandbox. The guide gives no wildcard for these
-  hosts. So list only the origins that Boat confirms for the app's account.
-  Add no wildcard of your own.
+  `https://`, a host, and an optional port, with no path. A host can start
+  with `*.` to cover each subdomain.
+- List the desktop stream hosts as `https://*.on.boat.dev`, the domain of
+  Boat's sandbox hosts. Boat's [desktop guide](https://docs.boat.dev/desktop-streaming/urls-and-security)
+  shows the stream host only as `<sandbox-desktop-host>`, and Boat
+  generates it for each running sandbox. A list of exact hosts was
+  rejected, because it fails for each new workspace.
+- The wildcard also lets the pages of the app frame any other page on a
+  Boat sandbox host, also a page of another Boat customer. To use this, an
+  attacker first needs a way to put HTML into a page of the app.
+- A desktop URL carries its token in the fragment. Put no token or other
+  secret in the value.
 - The Worker gives each page of the app a content security policy. Its
   frame sources are the page's own origin, `https://*.<PREVIEW_DOMAIN>`,
   and each origin of the value. The Worker leaves out each entry that is
@@ -183,8 +233,8 @@ the desktop stream of a sandbox in such a frame.
 - The Mac build reads its own `CONDUCTIVE_FRAME_SOURCES`, as the
   [Mac app README](../desktop/README.md#development) says. It does not add
   the preview domain itself. So give the Worker and the Mac build the same
-  value: `https://*.<PREVIEW_DOMAIN>`, then each desktop stream origin. The
-  Worker lists the preview origin only once.
+  value: `https://*.<PREVIEW_DOMAIN> https://*.on.boat.dev`. The Worker
+  lists the preview origin only once.
 
 ## Settings of each workspace sandbox
 

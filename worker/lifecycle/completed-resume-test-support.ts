@@ -17,8 +17,8 @@ async function completed(
       const endpoint = runtime.workspace(id)
       return {
         ...endpoint,
-        queueLifecycleStart: async (job) => {
-          const queued = await endpoint.queueLifecycleStart(job)
+        queueLifecycleStart: async (job, intent) => {
+          const queued = await endpoint.queueLifecycleStart(job, intent)
           if (id === workspaceId) accepted ||= queued
           return queued
         },

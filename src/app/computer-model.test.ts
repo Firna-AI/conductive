@@ -87,30 +87,48 @@ describe('ComputerModel', () => {
     expect(delay.pending).toBe(0)
   })
 
-  test('an env var value goes out in the write, and the tab keeps only names', async () => {
+  test('an env var value goes out with its mark, and the tab keeps only names and marks, with a missing mark as secret', async () => {
     const server = new FakeApiServer()
-    const names = [...fixture.settings.settings.envVars, { name: 'SENTRY_DSN' }]
+    const saved = fixture.settings.settings.envVars
     server.json('PATCH', orgSettingsPaths.settings(org), {
-      settings: { ...fixture.settings.settings, envVars: names },
+      settings: {
+        ...fixture.settings.settings,
+        envVars: [
+          ...saved,
+          { name: 'SENTRY_DSN', secret: false, value: 'stored-value' },
+          { name: 'LEGACY_TOKEN' },
+        ],
+      },
     })
     const computer = new ComputerModel(
       new OrgModel(testServices(server), org),
       new ManualDelay().delay,
     )
     await computer.load()
-    await computer.setEnvVar('SENTRY_DSN', 'https://key@sentry.example/1')
-    expect(await server.requests.at(-1)?.json()).toEqual({
-      envVars: [
-        {
-          operation: 'set',
-          name: 'SENTRY_DSN',
-          value: 'https://key@sentry.example/1',
-        },
+    await computer.setEnvVar(
+      'SENTRY_DSN',
+      'https://key@sentry.example/1',
+      false,
+    )
+    expect({
+      write: await server.requests.at(-1)?.json(),
+      shown: valueOf(computer.settings.get())?.envVars,
+    }).toEqual({
+      write: {
+        envVars: [
+          {
+            operation: 'set',
+            name: 'SENTRY_DSN',
+            value: 'https://key@sentry.example/1',
+            secret: false,
+          },
+        ],
+      },
+      shown: [
+        ...saved,
+        { name: 'SENTRY_DSN', secret: false },
+        { name: 'LEGACY_TOKEN', secret: true },
       ],
-    })
-    expect(computer.settings.get()).toMatchObject({
-      state: 'ready',
-      value: { envVars: names },
     })
   })
 

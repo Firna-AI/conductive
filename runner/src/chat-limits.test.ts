@@ -125,7 +125,8 @@ it('keeps a whole unique-path turn-file prefix within count and JSON byte caps',
     byteFiles.slice(0, 2),
     [
       {
-        path: '[redacted]'.repeat(15_000) + 'a',
+        path: 'x'.repeat(15_000) + 'a',
+        displayPath: '[redacted]'.repeat(15_000) + 'a',
         change: 'added',
         added: 1,
         removed: 0,

@@ -2,11 +2,13 @@ import {
   TOOL_DETAIL_MAX_BYTES,
   TURN_COMPLETED_FILES_MAX_BYTES,
   TURN_COMPLETED_MAX_FILES,
-} from '../../src/shared/chat-events'
-import type { RunnerEvent } from '../../src/shared/runner'
+} from './chat-events'
+import type { RunnerEvent } from './runner'
+
+const encoder = new TextEncoder()
 
 export function jsonBytes(value: unknown): number {
-  return Buffer.byteLength(JSON.stringify(value), 'utf8')
+  return encoder.encode(JSON.stringify(value)).byteLength
 }
 
 function toolDetail(detail: string | null) {
@@ -21,12 +23,12 @@ function toolDetail(detail: string | null) {
     const next = jsonBytes(point) - 2
     if (bytes + next > TOOL_DETAIL_MAX_BYTES) break
     bytes += next
-    keptBytes += Buffer.byteLength(point, 'utf8')
+    keptBytes += encoder.encode(point).byteLength
     end += point.length
   }
   return {
     detail: normalized.slice(0, end),
-    omittedDetailBytes: Buffer.byteLength(normalized, 'utf8') - keptBytes,
+    omittedDetailBytes: encoder.encode(normalized).byteLength - keptBytes,
   }
 }
 
@@ -41,11 +43,18 @@ function uniquePaths<T extends { path: string }>(items: readonly T[]): T[] {
 
 /** Apply excerpts only after complete-source secret filtering. */
 export function boundChatEvent(event: RunnerEvent): RunnerEvent {
-  if (event.type === 'tool.updated')
+  if (event.type === 'tool.updated') {
+    const excerpt = toolDetail(event.tool.detail)
     return {
       ...event,
-      tool: { ...event.tool, ...toolDetail(event.tool.detail) },
+      tool: {
+        ...event.tool,
+        ...excerpt,
+        omittedDetailBytes:
+          event.tool.omittedDetailBytes + excerpt.omittedDetailBytes,
+      },
     }
+  }
   if (event.type !== 'turn.completed') return event
   const all = uniquePaths(event.files)
   const files: typeof all = []
@@ -60,5 +69,9 @@ export function boundChatEvent(event: RunnerEvent): RunnerEvent {
     files.push(file)
     bytes += next
   }
-  return { ...event, files, omittedFileCount: all.length - files.length }
+  return {
+    ...event,
+    files,
+    omittedFileCount: event.omittedFileCount + all.length - files.length,
+  }
 }

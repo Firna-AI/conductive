@@ -1,9 +1,12 @@
 import type { WorkspaceTab } from '../components/workspace/WorkspaceTabs'
+import { conversations } from '../fixtures/conversations'
 import {
   linkedSession,
   newSession,
   workspaceSessions,
 } from '../fixtures/sessions'
+import { splitPath } from '../fixtures/files'
+import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
@@ -21,8 +24,10 @@ export function workspaceName(
   state: WorkspaceState,
   workspace: Workspace,
 ): string {
-  const waiting = state.conversation === 'queued'
-  return waiting && workspace.generatedName
+  const answered = conversations[state.conversation].some(
+    (item) => item.kind === 'agent',
+  )
+  return !answered && workspace.generatedName
     ? workspace.generatedName
     : workspace.name
 }
@@ -30,6 +35,7 @@ export function workspaceName(
 /**
  * The tabs of the centre column: the sessions, the code file that stays
  * open, and the file, the diff, or the new session that the state opens.
+ * A tab whose file name the app does not know shows "File".
  * The linked session opens as the last tab. While the login of the starter
  * of the first session is not available, that first session leads to its
  * view for the member, beside the linked session. While the starter keeps
@@ -76,12 +82,21 @@ export function tabsFor(
     })
   }
   if (state.tab === 'diff') {
-    const to = paths.diff
+    const masked = state.paths === 'masked'
     tabs.push({
       key: 'diff',
       kind: 'diff',
-      title: 'AddressForm.tsx',
-      to,
+      title: masked ? splitPath(maskedDiffPath).name : 'AddressForm.tsx',
+      to: masked ? paths.maskedPaths : paths.diff,
+      selected: true,
+    })
+  }
+  if (state.tab === 'unnamed-file') {
+    tabs.push({
+      key: 'unnamed',
+      kind: 'code',
+      title: 'File',
+      to: paths.maskedPathsUnnamed,
       selected: true,
     })
   }
