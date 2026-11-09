@@ -33,6 +33,8 @@ On the app hostname, the Worker serves these API routes:
 - `GET /api/operator/orgs/<orgId>`, the org page for operators.
 - `GET /api/operator/users/<githubId>`, the user page for operators.
 - The operator's suspension of users and orgs, as the [operator area](operator/README.md) says.
+- `DELETE /api/operator/users/<githubId>/suspension`, the operator's lift of a user suspension.
+- `DELETE /api/operator/orgs/<orgId>/suspension`, the operator's lift of an org suspension.
 - The chat routes of a workspace: its sessions and their actions, the chat history, and the events socket.
 
 The [app API](app-api/README.md) serves the account, shell, and workspace routes after the request gate.
