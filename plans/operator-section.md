@@ -606,9 +606,9 @@ Evidence: `.context/operator-section/m6/` and the `app-` screenshots in
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -618,6 +618,27 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+Review summary, 9 November 2026. The findings file is
+`.context/reviews/calummoore/admin-section-brainstorm/findings.md`.
+
+- Round 1, Worker area: findings 1, 2, and 3. A lift whose workspace call
+  failed lost its disk restart, a lift left image refreshes off, and the
+  org search missed some computer IDs. All fixed. The ledger of finding 3
+  waits in `plans/follow-ups/computer-ledger.md`.
+- Round 1, web app area: findings 51, 52, and 53. Chart days followed the
+  time zone of the browser, the operator's own org stayed active after a
+  suspend, and a question closed while its write ran. 51 and 53 are
+  fixed. 52 waits for the user in
+  `plans/follow-ups/operator-own-org-after-suspend.md`. The busy rule of
+  53 waits in `plans/follow-ups/shell-dialog-busy-rule.md`.
+- Round 2, after the fixes and a merge of `origin/main`: findings 54, 80,
+  and 81. A failed revocation let a lift bring back old credentials, the
+  Suspend question did not name failed builds, and the texts of a deleted
+  org promised access. All fixed.
+
+Evidence: `.context/operator-section/gate-2.log` and
+`.context/operator-section/gate-3.log`.
 
 ## Post-merge follow-up (non-blocking)
 
