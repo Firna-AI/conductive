@@ -11,7 +11,7 @@ how a screen is built, and links to the other pages.
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
-| `app/sign-in`       | The GitHub sign-in with the agreement to the Terms, the page before GitHub, the invitations that wait after it, and Get started, the only first run, in three steps |
+| `app/sign-in`       | The GitHub sign-in with the agreement to the Terms, the page before GitHub, the invitations that wait after it, Get started, the only first run, in three steps, and the page back from a GitHub App install in the Mac app |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs and a search |

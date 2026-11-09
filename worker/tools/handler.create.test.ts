@@ -29,6 +29,7 @@ it('inherits the org, owner, and owner defaults while the calling sender starts 
   const response = await fixture.create({
     repositoryId: 'repo-a',
     firstMessage: '  Keep this text.\nThen continue.  ',
+    name: 42,
     orgId: 'org-b',
     ownerUserId: 'outsider',
   })
@@ -62,6 +63,20 @@ it('inherits the org, owner, and owner defaults while the calling sender starts 
     workspace: { orgId: 'org-a', owner: { id: 'owner' }, choice: OWNER_CHOICE },
     sessionId: 'created-session',
   })
+})
+
+it('omits a blank name before workspace creation', async () => {
+  const response = await fixture.create({
+    repositoryId: 'repo-a',
+    firstMessage: 'Task',
+    name: ' \n\t\n ',
+  })
+
+  expect(response.status).toBe(201)
+  expect(fixture.services.createWorkspace).toHaveBeenCalledOnce()
+  expect(
+    fixture.services.createWorkspace.mock.calls[0]?.[0],
+  ).not.toHaveProperty('name')
 })
 
 it('uses the chosen model, effort, and org section without looking up unresolved defaults', async () => {

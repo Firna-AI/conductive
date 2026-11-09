@@ -1,3 +1,5 @@
+export const sourceRepositoryHref = 'https://github.com/Firna-AI/remote-code'
+
 /** The paths of the pages of the site, on the root domain of the product. */
 export const sitePaths = {
   home: '/',

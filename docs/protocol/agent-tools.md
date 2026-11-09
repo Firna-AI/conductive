@@ -9,16 +9,23 @@ says.
 ## Workspace tools
 
 - Every sandbox has two workspace tools: an MCP server and a CLI.
-- Both tools let an agent create workspaces, list workspaces, and ask to
-  run a command on a Mac, as [Mac commands](#mac-commands) says.
+- Both tools let an agent make six calls:
+  - create a workspace
+  - list the workspaces of the org
+  - list the repositories that a create call accepts
+  - list the sections of the org
+  - list the models of the app
+  - ask to run a command on a Mac, as [Mac commands](#mac-commands) says
 - Both tools call the Worker with the workspace token of their sandbox.
-- With the workspace token, the tools can make only these three calls.
+- With the workspace token, the tools can make only these six calls.
   [The workspace token](access-and-security.md#the-workspace-token) states
   what the token allows.
 - The tools call `api.conductive.build`, the hostname for machines. Its
   gate checks the workspace token in place of a sign-in.
-- Create and list calls use `/v1/tools/workspaces`. Mac command requests
-  use `/v1/tools/mac-command` and the addresses under it.
+- Create calls and workspace list calls use `/v1/tools/workspaces`.
+  [Repository, section, and model lists](#repository-section-and-model-lists)
+  gives the routes of the other three lists. Mac command requests use
+  `/v1/tools/mac-command` and the addresses under it.
 - The app sets no limit of its own on the workspaces that agents create
   (decision 8). The plan limits of the app's Boat account apply, as
   [The provider](workspaces-and-sandboxes.md#the-provider) says.
@@ -36,9 +43,86 @@ says.
 - Without a choice in the call, the new workspace gets the default section
   and the default model of its workspace owner.
 - The agent of the new workspace starts on the first message at once.
-- A list call returns every workspace of the org, with its name, its
-  branch, and its state. Reason: every member of the org already sees
+- A create call can also give the new workspace a name. The Worker cleans
+  the name with this rule:
+  1. It keeps only the first line that has text.
+  2. It makes each run of white space one space.
+  3. It removes one final full stop, but it keeps an ellipsis.
+  4. It cuts a name over 60 Unicode code points at its last space within
+     the limit. When the first word is longer than the limit, it cuts the
+     name at the limit.
+- The answer of the create call holds the stored name.
+- A name that is blank after this rule counts as no name. The app then
+  shows "Untitled", as
+  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  says.
+- The name does not change the branch. The branch keeps its rule: the
+  GitHub login, a city name, and four random characters.
+- Reason: a name that sandbox code sends reaches the workspace list of
+  every member. A short name on one line keeps each list readable.
+- A refusal of a blank or long name was rejected, because the agent then
+  gets an error for a name that the rule can clean.
+- A workspace list call returns every workspace of the org, with its name,
+  its branch, and its state. Reason: every member of the org already sees
   these workspaces.
+
+## Repository, section, and model lists
+
+Three list calls give the repositories, the sections, and the models that
+a create call takes, with their IDs.
+
+| List | MCP tool | CLI command | Route |
+| --- | --- | --- | --- |
+| Repositories | `list_repositories` | `conductive repositories list` | `GET /v1/tools/repositories` |
+| Sections | `list_sections` | `conductive sections list` | `GET /v1/tools/sections` |
+| Models | `list_models` | `conductive models list` | `GET /v1/tools/models` |
+
+- One call that returns all three lists was rejected, because most create
+  calls need only the repository.
+- Each list call needs only the workspace token, as the workspace list
+  does. It needs no active turn.
+- Reason: the calls read data that every member of the org already sees,
+  and they start no work.
+
+### Repositories
+
+- The repository list returns exactly the repositories that a create call
+  accepts at that time. These are the repositories of the newest good org
+  image of the org of the calling workspace.
+- A list of the repositories that the org chose was rejected, because a
+  chosen repository that no image holds yet fails the create.
+- Each entry gives the repository ID that a create call takes, the GitHub
+  name, such as `acme/web`, and the default branch.
+- Each entry also says whether it is the repository of the calling
+  workspace.
+- The list is in the order of the GitHub names.
+- When the org has no good image, the call fails with HTTP 409
+  `image_required`, the same error as a create.
+- Reason: an empty list would hide why no create can work.
+
+### Sections
+
+- The section list returns every section of the org of the calling
+  workspace, in the order of the sidebar.
+- Each entry gives the section ID and the name.
+- Each entry also says whether it is the default section, the section that
+  a create uses when it names none.
+
+### Models
+
+- The model list returns the models that the app offers, in the order of
+  the app's model setting. The model picker of the app offers the same
+  models.
+- Each entry gives the agent, the model ID, the label, and the efforts of
+  the model.
+- The answer also gives the default choice. A create uses it for the model
+  or the effort that the call does not name.
+- The default choice is the saved default of the owner of the calling
+  workspace. Without a saved default, it is the default choice of the app.
+- The default choice is `null` when the owner has no saved default and the
+  app has no valid default choice.
+- When the app has no valid model list, the call fails with HTTP 503
+  `models_unavailable`, as the app's own model route does.
 
 ## Mac commands
 
