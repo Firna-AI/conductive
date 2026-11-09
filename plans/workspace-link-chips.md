@@ -602,7 +602,7 @@ and workspace chips together before the complete gate.
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate, `npm run check`.
+- [x] Run the targeted tests and the complete gate, `npm run check`.
 - [x] Preserve the creation-admission response order. Use an admission's
       saved immutable number without a new read. Read D1 only for older
       admissions that have no number. Verify the unchanged early-response
@@ -613,7 +613,7 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Check whether the command palette is on `main`. When it is, merge
+- [x] Check whether the command palette is on `main`. When it is, merge
       `main`. Then add a mockup milestone and a ui milestone before this
       one, for the number search and the label in a palette row, and run
       them. When it is not, keep the palette task of the post-merge
