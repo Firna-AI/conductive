@@ -16,7 +16,7 @@ Today the repository holds:
   at phone and desktop sizes
 - the app package, with tests against fake GitHub and Boat servers and
   local D1 storage, and the complete gate, which GitHub Actions runs
-- the Mac app shell in `desktop/`, which is not complete yet, as
+- the Mac app in `desktop/`, with signed packages and update support, as
   [Mac app](#mac-app) says
 
 A test deployment runs at `conductive.build`. Each push to `main` deploys
@@ -39,7 +39,9 @@ feature that is not complete yet says so.
 - Send a message during a turn, or stop the turn.
 - Attach files of up to 25 MB each to a message.
 - Each user connects their own Claude subscription token or API keys.
-- Files and Changes, a terminal, port previews, and a live desktop.
+- Files and Changes, a terminal, and port previews. The live desktop is
+  hidden for now, as [Desktop](docs/protocol/workspace-tools.md#desktop)
+  says.
 - A pull request bar with the GitHub state of the branch and its checks.
 - One prepared cloud computer image for each org, built from an install
   script, with a startup script and env vars.
@@ -50,8 +52,7 @@ feature that is not complete yet says so.
 - The web app works on phones and on desktops.
 - A Mac app for macOS, with the native window buttons in its own top bar.
   An agent can ask to run a command on the Mac of the person who sent its
-  turn. The Mac app is not complete yet. No release is published, so it
-  does not update itself.
+  turn. Published packages update themselves from GitHub releases.
 
 ## What a user needs
 
@@ -142,10 +143,12 @@ says.
 [Access and security](docs/protocol/isolation.md#the-apps-boat-key)
 states how the Worker keeps them away from the browser and the sandboxes.
 
-`wrangler.jsonc` also sets two production values: `MACHINE_ORIGIN` is
+`wrangler.jsonc` also sets the production values: `MACHINE_ORIGIN` is
 `https://api.conductive.build`, and `PREVIEW_DOMAIN` is `conductive.page`.
-A value in `.dev.vars` replaces either one in local development. When
-`.dev.vars` sets `MACHINE_ORIGIN` or `MARKETING_ORIGIN` to a local address,
+It sets `CONDUCTIVE_TITLE_MODEL` for automatic workspace names, as
+[The title model](docs/deployment.md#the-title-model) says.
+A value in `.dev.vars` replaces the corresponding production value locally.
+When `.dev.vars` sets `MACHINE_ORIGIN` or `MARKETING_ORIGIN` to a local address,
 requests to that address keep that role. The
 [marketing README](src/marketing/README.md#development) uses this to preview
 the built site through the Worker. For `npm run preview`, set
@@ -187,8 +190,8 @@ does not wait for CI.
 
 The Mac app is an Electron shell for macOS, on Apple silicon and Intel
 Macs. It bundles the built web app, shows it in its own window, and calls
-the same Worker. The agents still run only in the cloud. The shell is not
-complete yet:
+the same Worker. The agents still run only in the cloud. The shell has these
+features:
 
 - It shows the shared web app screens. The window has no title bar of its
   own. The native window buttons sit at the top left of the app's left
@@ -197,11 +200,15 @@ complete yet:
   space of the window buttons.
 - The Worker routes the browser-to-app GitHub sign-in handoff. The Mac
   workflow builds and tests desktop changes on Apple silicon and Intel.
-- Builds have an ad-hoc signature, because no Apple Developer ID exists
-  yet. No release is published, so the updater stays off.
+- Pull request and local builds have an ad-hoc signature. Release builds
+  have a Developer ID signature, and Apple notarizes them.
+- Each merge of the release pull request publishes a GitHub release of
+  this repository with the signed Mac app. The published builds update
+  themselves from later releases.
 
 [Mac app](docs/protocol/desktop-app.md) states the requirements.
-[desktop/README.md](desktop/README.md) gives the commands.
+[desktop/README.md](desktop/README.md) gives the commands, and
+[desktop/RELEASES.md](desktop/RELEASES.md#releases) gives the release steps.
 
 ## Key code
 
@@ -255,7 +262,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
     - [Create a workspace](docs/protocol/create-a-workspace.md)
     - [Repository folders](docs/protocol/repository-folders.md)
     - [Life of a workspace](docs/protocol/workspace-life.md)
-    - [Tools of a workspace](docs/protocol/workspace-tools.md)
+    - [Workspace tools](docs/protocol/workspace-tools.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
     - [Messages and attachments](docs/protocol/messages-and-attachments.md)
     - [Agent runner](docs/protocol/agent-runner.md)

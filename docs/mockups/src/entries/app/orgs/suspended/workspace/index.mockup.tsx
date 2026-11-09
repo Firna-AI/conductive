@@ -31,7 +31,7 @@ export const suspendedOrgWorkspace = defineScreen({
       slug: 'files',
       title: 'Files on a phone',
       description:
-        "The Files tab of the workspace on a phone, after the operator suspended Acme. The panel says that the sandbox can't start, with the words of the org: the org is suspended, and questions go to the abuse address. The Terminal, Preview, and Desktop tabs show the same panel.",
+        "The Files tab of the workspace on a phone, after the operator suspended Acme. The panel says that the sandbox can't start, with the words of the org: the org is suspended, and questions go to the abuse address. The Terminal and Preview tabs show the same panel.",
       rationale:
         'A phone shows the bar of the chat only on the Chat tab. So each panel of a phone shows the whole refusal with its words, as the bar does. A desktop keeps its short panels, because the bar is beside them.',
       props: { focus: 'files' },

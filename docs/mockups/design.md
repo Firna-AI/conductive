@@ -21,10 +21,10 @@ column, so the centre column takes its width, and shows it again. Then
 come a tab for each agent session and each open file or diff,
 + for a new session, and a clock that opens the session history. The right
 column has the pull request bar on top, the All files, Changes, and Checks
-lists below it, and the Terminal, Preview, and Desktop tabs at the bottom.
+lists below it, and the Terminal and Preview tabs at the bottom.
 It shows no file content. A phone shows an org switcher at the top of the list, and the
 workspace with a compact pull request row, the sessions as tabs above the
-chat, and five tabs at the bottom.
+chat, and four tabs at the bottom.
 
 - The tokens live in `src/design/`: the colours of each scheme in
   `palette.ts`, and the type, density, sizes, radii, and fonts in
@@ -115,7 +115,7 @@ chat, and five tabs at the bottom.
     `app/orgs/suspended/workspace` shows. The New workspace page of such an
     org shows the same bar in place of the composer.
   - A phone shows the bar only on the Chat tab. So the panels of its Files,
-    Terminal, Preview, and Desktop tabs show the words of the refusal in
+    Terminal, and Preview tabs show the words of the refusal in
     place of the line on the chat history, as the `files` variants of
     `app/shell/refused` and `app/orgs/suspended/workspace` show. A desktop
     keeps its short panels beside the bar.
@@ -136,6 +136,11 @@ chat, and five tabs at the bottom.
   passed its limit names that limit, as
   `app/org-settings/cloud-computer/build-failed/time-limit`,
   `app/shell/error/time-limit`, and `app/new-workspace/time-limit` show.
+- A new org has no image until its first build succeeds. Until then New
+  workspace keeps Send off under a notice with the state of that build, as
+  `app/new-workspace/first-build` shows. A notice of work that runs, such
+  as that build, shows a spinner in place of its icon: `Notice` in
+  `src/components/common/` takes `busy`.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no

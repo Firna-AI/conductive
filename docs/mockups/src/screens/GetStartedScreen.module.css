@@ -19,6 +19,19 @@
   font-weight: var(--ui-weight-strong);
 }
 
+/* The cloud computer of the org, under its name in the org step. */
+.computer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.computerLabel {
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+}
+
 /* The way into the first org, after the last step. */
 .finish {
   display: flex;

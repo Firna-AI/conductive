@@ -3,7 +3,7 @@ import { defineUseCase } from '@mokly/mokly'
 export const signUp = defineUseCase({
   title: 'Sign up',
   description:
-    'A visitor of the home page signs up with GitHub, installs the GitHub App, creates the first org, and connects an agent.',
+    'A visitor of the home page signs up with GitHub, installs the GitHub App, creates the first org, and connects an agent. Meanwhile the app prepares the cloud computer of the org, and the first message goes when it is ready.',
   relatedDocs: [],
   steps: [
     {
@@ -40,17 +40,30 @@ export const signUp = defineUseCase({
       screenPath: 'app/sign-in/get-started/org-created',
       title: 'Connect Claude or Codex',
       description:
-        'The org is created. The user pastes a Claude subscription token, or connects Codex.',
+        'The org is created, and its cloud computer is being prepared. The org step shows the time of the build. The user pastes a Claude subscription token, or connects Codex.',
     },
     {
-      screenPath: 'app/sign-in/get-started/connected',
+      screenPath: 'app/sign-in/get-started/preparing',
       title: 'Every step is done',
-      description: 'Open Firna leads to the new org.',
+      description:
+        'The cloud computer is still being prepared. Open Firna leads to the new org.',
     },
     {
       screenPath: 'app/orgs/empty',
       title: 'The org opens',
       description: 'New workspace starts the first workspace.',
+    },
+    {
+      screenPath: 'app/new-workspace/first-build',
+      title: 'Wait for the cloud computer',
+      description:
+        'The user types the task. A notice shows the time of the build, and Send stays off until the cloud computer is ready.',
+    },
+    {
+      screenPath: 'app/new-workspace/first-build/ready',
+      title: 'The cloud computer is ready',
+      description:
+        'The notice goes, and Send is on. Send creates the first workspace.',
     },
   ],
 })

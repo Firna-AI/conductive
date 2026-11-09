@@ -1,0 +1,9 @@
+{
+  "order": [
+    "first-build",
+    "files",
+    "no-login",
+    "not-created",
+    "no-repositories"
+  ]
+}

@@ -11,7 +11,7 @@ import { usePanelLayout } from '../layout/panels'
 import { usePaletteOffer } from '../palette/palette-context'
 import type { WorkspaceContext } from './features'
 import { useFilesNavigation } from './files/files-navigation'
-import type { ToolKey } from './tools/tool-address'
+import { toolOffered, type ToolKey } from './tools/tool-address'
 import { useToolSelect } from './tools/tool-navigation'
 import { phoneView } from './WorkspaceColumns'
 import { nameLabel } from '../../shared/name-label'
@@ -40,6 +40,7 @@ export function WorkspacePaletteActions(props: {
     viewer: context.viewer,
     rightColumn: !phone && rightShown,
     chat: !phone || archived || phoneView(context.view) === 'chat',
+    desktopTool: toolOffered('desktop'),
   })
   const list = (id: WorkspaceActionId, kind: FileListKind): OfferedAction => {
     const target: FilesTarget = { kind: 'list', list: kind }

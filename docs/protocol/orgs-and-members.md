@@ -21,8 +21,20 @@ says.
   then need the GitHub App on another GitHub account.
 - The org rail lists the orgs of the user, and the user can create orgs.
 - Create org accepts a name, custom initials, and chosen repositories.
+- Create org requires at least one repository (decision 151 of PR #92). The create
+  screen says so, and Create org stays off until the person chooses one.
+  The app refuses a create of an org with no repository.
+- Reason: every new org then starts its first build at create, with the
+  whole choice of repositories, as
+  [The first build](workspaces-and-sandboxes.md#the-first-build) says. A
+  first build at the first save on the Repositories tab was rejected,
+  because that tab saves each repository on its own. That build could
+  start with only part of the choice.
 - Before the org exists, the create screen lists repositories that the
   signed-in user and the shared GitHub App can both reach.
+- When that list has no repository, Create org stays off. The list then
+  asks the person to give the GitHub App access, with its Manage access
+  link.
 - Each list of the repositories that the GitHub App reaches has a Manage
   access link. The link opens the page of the GitHub App on GitHub. That
   page lists the GitHub accounts of the person, personal and org. There
@@ -48,6 +60,36 @@ says.
 - Get started asks for no Boat account and no Boat key.
 - [Chat and events](messages-and-attachments.md#messages) states the notice for a
   missing agent login.
+- The second step, the org step, shows the cloud computer of the org once
+  the org exists (decision 150 of PR #92). Create org starts its first build, as
+  [The first build](workspaces-and-sandboxes.md#the-first-build) says.
+- While the org has no good image, the org step shows the state of the
+  newest build of the org:
+  - While a build runs, the step says that the cloud computer is being
+    prepared, with the time since the build began.
+  - After a failed build, the step shows the failure with the message
+    that the app saved for the build. An admin gets Try again and a link
+    to the log of the build on the Cloud computer tab.
+  - With no build, such as after a first build that could not start, the
+    step says that the org has no build yet. An admin gets Build computer.
+- Once the org has a good image, the step says that the cloud computer is
+  ready. A later build does not change that, also when it fails
+  (decision 9).
+- A member who is not an admin sees each state with no action. Reason:
+  only an admin builds (decision 57).
+- The person can connect an agent while the build runs.
+- When every step is done, Get started shows its finish: a line about the
+  org, and an Open button for the org, such as "Open Acme".
+- The Open button stays on in every state of the build (decision 150 of PR #92).
+  New workspace also shows the state of the build, as
+  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  says.
+- The finish says that the org is ready for a new workspace only once the
+  org has a good image. Before that, it says that the cloud computer of the
+  org is still being prepared, did not build, or needs a build.
+- Reason: the person sees the build where it starts. The person never
+  waits in Get started for the build, which can run for up to 60 minutes.
+  A fourth step for the build was rejected for that reason.
 
 ## Sections
 

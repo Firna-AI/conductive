@@ -15,6 +15,7 @@ import type { AgentChoice, AgentModel } from '../../shared/agents'
 import { IconButton } from '../ui/actions'
 import { ModelPicker } from '../ui/ModelPicker'
 import ui from '../ui/ui.module.css'
+import { useCursorAtEnd } from './useCursorAtEnd'
 
 /**
  * The composer of a new workspace: attached files above the text, then the
@@ -23,7 +24,8 @@ import ui from '../ui/ui.module.css'
  * workspace chat. Send is off until the message can go, as the screen
  * decides for Send and Try again. Enter sends as in every composer: on a
  * computer, Enter sends and Shift+Enter adds a line. While the create runs,
- * the text and the attach button are off.
+ * the text and the attach button are off. A kept message shows with the
+ * cursor at its end.
  */
 export function Composer(props: {
   model: NewWorkspaceModel
@@ -39,6 +41,7 @@ export function Composer(props: {
   const files = useRef<HTMLInputElement>(null)
   const sending = create.state === 'sending'
   const sendKey = useSendKey(props.ready, props.send)
+  const message = useCursorAtEnd(draft.text)
   return (
     <>
       <OversizeNotice
@@ -58,6 +61,7 @@ export function Composer(props: {
             accessibilityLabel="Message"
             editable={!sending}
             focusIndicator="none"
+            inputRef={message}
             maxLines={8}
             multiline
             numberOfLines={2}

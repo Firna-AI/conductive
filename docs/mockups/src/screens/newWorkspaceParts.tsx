@@ -82,10 +82,11 @@ export function waits(state: NewWorkspaceFormState): boolean {
 export function formNotices(
   state: NewWorkspaceFormState,
   failed: boolean,
+  ready = true,
 ): ReactNode[] {
   const notices: ReactNode[] = []
   if (failed) {
-    notices.push(<CreateFailedNotice key="failed" />)
+    notices.push(<CreateFailedNotice key="failed" ready={ready} />)
   }
   if (state.login === 'missing') {
     notices.push(<ConnectAgentNotice choice={newWorkspaceChoice} key="login" />)

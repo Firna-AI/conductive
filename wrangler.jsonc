@@ -27,6 +27,7 @@
   "vars": {
     "MACHINE_ORIGIN": "https://api.conductive.build",
     "PREVIEW_DOMAIN": "conductive.page",
+    "CONDUCTIVE_TITLE_MODEL": "@cf/ibm-granite/granite-4.0-h-micro",
   },
   "assets": {
     "binding": "ASSETS",
