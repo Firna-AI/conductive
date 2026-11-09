@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type HTMLAttributes } from 'react'
 import { stopNextClick } from './next-click'
 
 /** The box of an element, in CSS px of the window. */
-export interface DragBox {
+interface DragBox {
   left: number
   top: number
   width: number

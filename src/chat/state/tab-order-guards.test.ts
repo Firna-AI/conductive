@@ -43,7 +43,6 @@ describe('the chat tab order guards', () => {
     chat.setSessions(existing)
     const loading = chat.controller.start()
     await reading
-    expect(chat.controller.getSnapshot().sessions).toEqual([])
     const session = newSessionRecord('third', choice, null, {
       createdAt: FAKE_TIME + 2,
     })

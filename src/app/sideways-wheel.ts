@@ -21,7 +21,7 @@ function verticalTurn(event: WheelEvent, row: HTMLElement): number {
  * which zooms. A row that does not overflow, or that is at the end that the
  * turn goes to, leaves the turn to the page. It returns the cleanup.
  */
-export function sidewaysWheel(row: HTMLElement): () => void {
+function sidewaysWheel(row: HTMLElement): () => void {
   const onWheel = (event: WheelEvent) => {
     if (event.ctrlKey) return
     if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return

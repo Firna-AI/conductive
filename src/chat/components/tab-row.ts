@@ -9,7 +9,7 @@ import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { rowTabs, tabKey } from '../state/tab-order'
 
 /** A file or diff tab of the saved view. The host of the chat draws it. */
-export type HostTab = Exclude<WorkspaceTab, { kind: 'session' }>
+type HostTab = Exclude<WorkspaceTab, { kind: 'session' }>
 
 /**
  * The props that the row gives the list item of a tab: the handlers and the
@@ -61,7 +61,7 @@ export interface SessionTab {
 }
 
 /** A file or diff tab, which the host draws. */
-export interface HostRowTab {
+interface HostRowTab {
   kind: 'host'
   tab: HostTab
   /** The host shows the tab as the current one, in place of the chat. */

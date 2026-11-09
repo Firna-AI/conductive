@@ -61,15 +61,19 @@ export async function mountChat(options: {
   await waitFor(() => queryByText('Debounce lookups'), 'the session tabs')
 }
 
-/** Draws the file and diff tabs with the real tab of the Files screens. */
+/**
+ * Draws the file and diff tabs with the real tab of the Files screens. Each
+ * tab takes its path as its label, so it shows its file name.
+ */
 export function fileTabs(navigation: FilesNavigation): RenderTab {
   return (tab, draw) =>
     draw.kind === 'lifted' ? (
-      <LiftedFileTab tab={tab} />
+      <LiftedFileTab label={tab.path} tab={tab} />
     ) : (
       <FileTabItem
         close={draw.close}
         item={draw.item}
+        label={tab.path}
         link={draw.link}
         navigation={navigation}
         onClose={() => {}}

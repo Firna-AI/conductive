@@ -236,7 +236,7 @@ clicks, types, and lets the answers of the fake API settle.
   `pointer-drag.test.tsx` mounts the hook in happy-dom.
   `../shell/list/useRowDrag.ts`: the drag of a workspace row to a place in
   a section, on `usePointerDrag`.
-- `sideways-wheel.ts`: `useSidewaysWheel` and `sidewaysWheel`, which turn a
+- `sideways-wheel.ts`: `useSidewaysWheel`, which turns a
   vertical wheel turn over a row that scrolls sideways into a sideways
   scroll of the row. A sideways swipe and a turn with Ctrl stay with the
   browser, and so does a turn past an end of the row. The tab row of the
