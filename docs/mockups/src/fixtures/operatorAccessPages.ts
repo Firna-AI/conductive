@@ -3,7 +3,7 @@
  * operator opens it.
  */
 import { approval, referral } from './operatorAccess'
-import type { UserPage } from './operatorUserPages'
+import { kenji, type UserPage } from './operatorUserPages'
 
 /**
  * The pages of users who came in after the waitlist started: by an invite
@@ -17,6 +17,7 @@ export const accessPages = {
     initials: 'RO',
     githubId: 60318842,
     githubAge: '3 years',
+    verifiedEmail: true,
     joined: '8 Nov 2026',
     owned: 2,
     running: 1,
@@ -34,6 +35,7 @@ export const accessPages = {
     initials: 'SO',
     githubId: 73650219,
     githubAge: '5 years',
+    verifiedEmail: true,
     joined: '7 Nov 2026',
     owned: 3,
     running: 0,
@@ -53,6 +55,7 @@ export const accessPages = {
     initials: 'KT',
     githubId: 81122907,
     githubAge: '8 years',
+    verifiedEmail: true,
     joined: '6 Nov 2026',
     owned: 2,
     running: 1,
@@ -60,7 +63,7 @@ export const accessPages = {
     access: {
       state: 'granted',
       since: '6 Nov 2026 at 16:22',
-      way: { kind: 'org-invitation', org: 'Hexwave' },
+      way: { kind: 'org-invitation', org: 'Hexwave', by: 'vex-ops' },
     },
     referral: referral('P7DYC-3KMVA'),
   },
@@ -70,6 +73,7 @@ export const accessPages = {
     initials: 'EW',
     githubId: 90476315,
     githubAge: '10 years',
+    verifiedEmail: true,
     joined: '4 Nov 2026',
     owned: 1,
     running: 0,
@@ -82,15 +86,7 @@ export const accessPages = {
     referral: referral('Y5GQN-8TWCE'),
   },
   emailNotSent: {
-    login: 'kenji-w',
-    name: 'Kenji Watanabe',
-    initials: 'KW',
-    githubId: 70214398,
-    githubAge: '4 years',
-    joined: '3 Nov 2026',
-    owned: 0,
-    running: 0,
-    orgs: [],
+    ...kenji,
     access: approval(
       { state: 'not-sent', reason: 'no-verified-email' },
       '7 Nov 2026 at 10:02',

@@ -29,7 +29,9 @@ export const operatorUserAccess = defineScreen({
       slug: 'org-invitation',
       title: 'Org invitation',
       description:
-        '@kt-null came in when they accepted an invitation to Hexwave, whose name opens its org page.',
+        '@kt-null came in when they accepted an invitation to Hexwave from @vex-ops, the admin of Hexwave. The org name opens its org page, and the login of the admin opens the page of that user.',
+      rationale:
+        'The user chose option A of decision 163: org invitations let in any number of people, with no count. So the page traces each invited person to one org and to the admin who sent the invitation, and the operator can suspend both. The record keeps the admin, because an accepted invitation does not stay.',
       props: { page: 'orgInvitation' },
     },
     {
@@ -44,7 +46,7 @@ export const operatorUserAccess = defineScreen({
     {
       slug: 'email-not-sent',
       title: 'Approval email not sent',
-      description: `An operator approved @kenji-w, and the approval email never went. The Approval email row says “Not sent”, with the reason as a short line under it: “This GitHub account has no verified email.” The other final case reads “Not sent” with “${productName} stopped trying on 9 Nov.”, after 24 hours of tries. The row has no action, because the person keeps app access and sees it at their next visit.`,
+      description: `An operator approved @kenji-w, and the approval email never went. The Approval email row says “Not sent”, with the reason as a short line under it: “This GitHub account has no verified email.” The other final case reads “Not sent” with “${productName} stopped trying on 9 Nov.”, after 24 hours of tries. The row has no action, because the person keeps app access and sees it at their next visit. The question before this approval is app/operator/user/waiting/approve-no-email.`,
       rationale:
         'The app sends the one approval email to the primary verified email on GitHub, and sends a failed email again for 24 hours, from decision 162. The section shows no email address, so the row names only the reason.',
       props: { page: 'emailNotSent' },

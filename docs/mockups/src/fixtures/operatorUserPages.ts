@@ -32,6 +32,11 @@ export type UserPage = {
   githubId: number
   /** How long the GitHub account has existed, as the Waitlist tab shows it. */
   githubAge: string
+  /**
+   * Whether the GitHub account has a primary verified email, which gets the
+   * approval email. The section shows no address, only this fact.
+   */
+  verifiedEmail: boolean
   joined: string
   owned: number
   running: number
@@ -48,6 +53,7 @@ const dana = {
   initials: 'DK',
   githubId: 58201734,
   githubAge: '6 years',
+  verifiedEmail: true,
   joined: '21 Oct 2026',
   owned: 14,
   orgs: [
@@ -63,7 +69,26 @@ const sam = {
   initials: samOkafor.initials,
   githubId: 91827364,
   githubAge: samOkafor.githubAge,
+  verifiedEmail: samOkafor.verifiedEmail,
   joined: '1 Nov 2026',
+  owned: 0,
+  running: 0,
+  orgs: [],
+} as const satisfies Omit<UserPage, 'access'>
+
+/**
+ * Kenji Watanabe, whose GitHub account has no verified email, so his
+ * approval sends no email. His page after the approval is in
+ * `operatorAccessPages.ts`.
+ */
+export const kenji = {
+  login: 'kenji-w',
+  name: 'Kenji Watanabe',
+  initials: 'KW',
+  githubId: 70214398,
+  githubAge: '4 years',
+  verifiedEmail: false,
+  joined: '3 Nov 2026',
   owned: 0,
   running: 0,
   orgs: [],
@@ -76,6 +101,7 @@ const samReferral = referral('W6KTR-9HPXE')
  * The pages of a user: in use, after a disable of their referral code,
  * suspended, and the operator's own, each with app access from before the
  * waitlist. Then a person who waits, and the same person after Approve.
+ * Then a person who waits with no verified email on GitHub.
  */
 export const userPages = {
   active: { ...dana, running: 1, referral: danaReferral },
@@ -96,6 +122,7 @@ export const userPages = {
     initials: account.initials,
     githubId: 4412907,
     githubAge: '12 years',
+    verifiedEmail: true,
     joined: '2 Sep 2026',
     owned: 41,
     running: 2,
@@ -121,5 +148,9 @@ export const userPages = {
     ...sam,
     access: approval({ state: 'sent', at: '8 Nov 2026 at 15:21' }),
     referral: samReferral,
+  },
+  waitingNoEmail: {
+    ...kenji,
+    access: { state: 'waiting', since: '3 Nov 2026' },
   },
 } as const satisfies Record<string, UserPage>

@@ -21,7 +21,7 @@ export const operatorUserWaiting = defineScreen({
       slug: 'approve',
       title: 'Approve',
       description:
-        'Approve asks the same question as on the Waitlist tab: it names the person, says that an email tells them, and says that an approval is final.',
+        'Approve asks the same question as on the Waitlist tab: it names the person, says that an email tells them, because their GitHub account has a verified email, and says that an approval is final.',
       props: { dialog: 'approve' },
     },
     {
@@ -38,6 +38,15 @@ export const operatorUserWaiting = defineScreen({
       title: 'Approved, email sent',
       description: 'Once the email goes, App access gives the time it went.',
       props: { page: 'emailed' },
+    },
+    {
+      slug: 'approve-no-email',
+      title: 'Approve, no verified email',
+      description:
+        'The question before Approve on the page of @kenji-w, whose GitHub account has no verified email. It says that Kenji gets app access now and sees it at their next visit, and that no email goes out, because the account has no verified email. Approve leads to the page after the approval, whose Approval email row says “Not sent”.',
+      rationale:
+        'The approval email goes only to the primary verified email on GitHub, as the user chose in decision 162. So the question promises an email only to a person who has one. The section shows no email address, only whether one exists. The person keeps app access and sees it at their next visit, so the question names no other step.',
+      props: { page: 'waitingNoEmail', dialog: 'approve' },
     },
   ],
 })

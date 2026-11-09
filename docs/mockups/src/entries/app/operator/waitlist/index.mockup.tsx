@@ -28,9 +28,9 @@ export const operatorWaitlist = defineScreen({
       slug: 'approve',
       title: 'Approve a person',
       description:
-        'Approve asks first. The question names the person and says that they get app access now, and that an email tells them. An approval is final, and the operator can still suspend the user later.',
+        'Approve asks first. The question names the person and says that they get app access now. The GitHub account of @sam-okafor has a verified email, so the question also says that an email tells them. An approval is final, and the operator can still suspend the user later. For a person with no verified email, the question says that they see the app access at their next visit, as app/operator/user/waiting/approve-no-email shows.',
       rationale:
-        'An approval cannot be undone, and its email goes at once, so the question comes first. Approve works for one person at a time.',
+        'An approval cannot be undone, and its email goes at once, so the question comes first. Approve works for one person at a time. The email goes only to a verified email on GitHub, so the question promises it only then.',
       props: { dialog: 'approve' },
     },
     {

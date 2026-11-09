@@ -36,8 +36,11 @@ export const waitlistSchema = {
     code: { enum: ['none', ...codeFailures] },
     /** Where that code came from: the field of the screen, or a join link. */
     from: { enum: ['field', 'link'] },
-    /** Whether org invitations wait for the person. */
-    invitations: { enum: ['none', 'pending'] },
+    /**
+     * Whether org invitations wait for the person. `paused`: the pause of
+     * sign-ups stopped Accept, and the invitation stays.
+     */
+    invitations: { enum: ['none', 'pending', 'paused'] },
   },
 } as const
 
@@ -111,11 +114,23 @@ function CodeField(props: { state: WaitlistState }) {
   )
 }
 
-/** The org invitations of the person. Accept joins the org and lets them in. */
-function Invitations(props: { stacked: boolean }) {
+/**
+ * The org invitations of the person. Accept joins the org and lets them
+ * in. When the pause of sign-ups stopped Accept, a notice above the rows
+ * says that the invitation stays, as a failed accept shows above the rows
+ * of the Invitations page.
+ */
+function Invitations(props: { paused: boolean; stacked: boolean }) {
   return (
     <div className={styles.invitations}>
       <p className={styles.intro}>{copy.invitations}</p>
+      {props.paused ? (
+        <Notice
+          body={copy.paused.invitation}
+          icon={CirclePause}
+          title={copy.paused.title}
+        />
+      ) : null}
       <PendingInviteList
         invites={inviteRows(waitingInvites, 'primary')}
         stacked={props.stacked}
@@ -147,13 +162,14 @@ function AccountRow() {
  * approval of an operator sends an email to the primary verified email of
  * the GitHub account, which the screen names. Without one, the screen
  * promises no email. It has no place in line and no Delete account. With
- * an invitation, Accept is the main action.
+ * an invitation, Accept is the main action. The pause of sign-ups stops
+ * Accept and codes, and the screen names it only after one of them.
  */
 export function WaitlistScreen(props: {
   state: WaitlistState
   viewport: Viewport
 }) {
-  const invited = props.state.invitations === 'pending'
+  const { invitations } = props.state
   const verified = props.state.email === 'verified'
   return (
     <SignInFrame label={copy.title} viewport={props.viewport} wide>
@@ -161,7 +177,12 @@ export function WaitlistScreen(props: {
       <p className={signIn.text}>
         {verified ? copy.email(waitingEmail) : copy.noEmail}
       </p>
-      {invited ? <Invitations stacked={props.viewport === 'mobile'} /> : null}
+      {invitations === 'none' ? null : (
+        <Invitations
+          paused={invitations === 'paused'}
+          stacked={props.viewport === 'mobile'}
+        />
+      )}
       <CodeNotice state={props.state} />
       <CodeField state={props.state} />
       <AccountRow />

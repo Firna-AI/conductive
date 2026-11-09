@@ -29,7 +29,9 @@ numbers.
 
 Contract owners:
 
-- `docs/protocol/waitlist.md`. Milestone 2 writes it.
+- [Waitlist](../docs/protocol/waitlist.md) and
+  [Invite and referral codes](../docs/protocol/waitlist-codes.md).
+  Milestone 2 writes them.
 - [Access and security](../docs/protocol/access-and-security.md#sign-in).
   Milestone 2 changes its sign-up rule.
 - [Orgs and members](../docs/protocol/orgs-and-members.md). Milestone 2
@@ -401,7 +403,7 @@ The agent's calls from the plan, on 9 November 2026:
   the code stays for someone else.
 - The join page names no owner of the code. Reason: a shared code can
   travel far, and the login of its owner would travel with it.
-- Approve asks first. The question names the person and says that an
+- Approve asks first. The question names the person and says whether an
   email goes out. Reason: an approval cannot be undone, and the email goes
   at once. The options check changed this call.
 - The approval saves its email as pending, in the same D1 batch as the
@@ -502,6 +504,54 @@ The agent's calls from the mockups of Milestone 1, on 9 November 2026:
   tile of the Overview. Reason: these follow the parts that the section
   already has.
 
+The agent's calls from the protocol docs of Milestone 2, on 9 November
+2026:
+
+- The Approve question says that an email goes out only when the person
+  has a verified email. Otherwise it says that the person sees the app
+  access at the next visit. Reason: a person with no verified email gets
+  no email.
+- Approve of a suspended person gets HTTP 409 with the code
+  `user_suspended`, and changes nothing. The operator lifts first. Reason:
+  the person cannot sign in, so an email that says the account is ready
+  would mislead.
+- The count of the people who wait leaves out suspended people, as the
+  Waitlist tab does. Reason: the two numbers then agree.
+- A code that does not work gets these replies: an unknown code HTTP 404
+  `invite_code_not_found`, a disabled code 409 `invite_code_disabled`,
+  and a used-up code 409 `invite_code_used_up`. During the pause, a code
+  use and the Accept of an org invitation by a person who waits get 403
+  `signups_paused`, and nothing is used up. A person with app access who
+  uses a code gets 200 with no change. Reason: each reply names its
+  reason, as the waitlist screen does, and the pause is a block of the
+  operator, as `org_suspended` is.
+- The record of app access from an org invitation holds the org and the
+  admin who sent the invitation. Reason: an accepted invitation is
+  deleted, and decision 163 traces each invited person to one admin and
+  one org.
+- The waitlist state of a user also gives the address of the approval
+  email, or none. Reason: the waitlist screen names that address.
+- A typed code works with or without its hyphen, in any case. A code in
+  the address of the sign-in callback counts for nothing. Reason: people
+  copy codes by hand, and only the signed sign-in state carries a code.
+- An org invitation that the pause stopped stays pending. A user with app
+  access still accepts invitations during the pause. Reason: the pause
+  stops new people only.
+- A suspension alone does not stop a referral code. The Suspend dialog
+  offers to disable it. Reason: an automatic disable would be a new
+  rejection.
+- At `/operator`, a person who waits sees the waitlist screen, as at every
+  other address. Reason: the waitlist screen replaces the whole app.
+- The waitlist rules live in two linked pages, because one page passed
+  the length target.
+- A repeat approval, or the approval of a user who already has app
+  access, gets HTTP 200, changes nothing, and sends no email. Reason: a
+  repeat of a lift does the same.
+- When a code fails for more than one reason, the reply gives the first
+  of: unknown, disabled, used up, the pause. Reason: a mistyped code
+  during the pause then says that the code is wrong, not that the person
+  must wait.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -555,36 +605,65 @@ Evidence: the logs `combined-mockups-check.log` and
 `combined-source-checks.log`, and the screenshots in `shots-combined/`,
 `shots-user/`, and `shots-operator/`, all in `.context/waitlist/m1/`.
 
+## Milestone 1a: Mockup gaps from the protocol docs
+
+Tags: mockup
+
+Depends on: 1
+
+Three gaps that the protocol docs of Milestone 2 found.
+
+- [x] Add the Approve question for a person with no verified email, which
+      promises no email.
+- [x] Add the waitlist screen when the pause refuses Accept on an org
+      invitation. Restructure `app/sign-in/waitlist` into child folders
+      that keep their paths, because it already shows five screens.
+- [x] Name the org and the admin who sent the invitation in the app access
+      row of an org invitation, on the page of a user.
+- [x] Update `docs/mockups/catalogue.md` and
+      `docs/mockups/orgs-and-logins.md`.
+- [x] Run the mockup checks, the export check, and the type check, and
+      smoke-test the changed pages in both schemes and both viewports.
+
+Evidence: the logs and the screenshots in `.context/waitlist/m1a/`.
+
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] Add `docs/protocol/waitlist.md`. It states who waits and what a
+- [x] Add `docs/protocol/waitlist.md`. It states who waits and what a
       person who waits can reach. It states the ways in, the operators,
       the invite codes, the referral codes, the join link, the pause, the
       approval email with its retry, the record of app access, and the
       accounts that already exist. Each rule names its decision: 160, 161,
       162, or 163.
-- [ ] Change the sign-up rule of
+- [x] Change the sign-up rule of
       [Sign-in](../docs/protocol/access-and-security.md#sign-in) to a link
       to the waitlist doc.
-- [ ] In `docs/protocol/orgs-and-members.md`, replace the rule that
+- [x] In `docs/protocol/orgs-and-members.md`, replace the rule that
       rejected an invite-only sign-up. Say that Get started opens after
       app access, and that an accepted org invitation gives app access,
       with a link to the waitlist doc.
-- [ ] Add to `docs/protocol/operator-section.md`: the Waitlist and Invite
+- [x] Add to `docs/protocol/operator-section.md`: the Waitlist and Invite
       codes tabs, the pause, the app access and the referral code on the
       page of a user, the state of the approval email, the offer in the
       Suspend dialog, and the count of the people who wait. Change its
       rule that the section changes no setting of the app.
-- [ ] Add to `docs/architecture.md`: the terms App access, Waitlist,
+- [x] Add to `docs/architecture.md`: the terms App access, Waitlist,
       Invite code, and Referral code, the new records of D1, and the
       waitlist doc in its list of protocol docs.
-- [ ] Add the waitlist to the features and the docs list of `README.md`.
+- [x] Add the waitlist to the features and the docs list of `README.md`.
       Add the approval email to the `RESEND_API_KEY` row of
       `docs/deployment.md`.
-- [ ] Change the words of the marketing button in the marketing site part
+- [x] Change the words of the marketing button in the marketing site part
       of `docs/architecture.md`.
+- [x] Fix the lines that the waitlist makes stale: the palette in
+      `docs/protocol/command-palette.md`, the refusal code in "The
+      operator" of `docs/protocol/operator-actions.md`, the device in
+      `docs/protocol/desktop-app.md`, and the gate and the operator reads
+      in `docs/protocol/access-and-security.md`.
+
+Evidence: the link checks and the check logs in `.context/waitlist/m2/`.
 
 ## Milestone 3: App access and codes in the Worker
 
@@ -612,16 +691,18 @@ approval. A new account still gets app access at once, until Milestone 7.
 - [ ] Add one grant step. It gives app access, records the source, and
       makes the referral code, in one D1 batch. A repeat changes nothing.
 - [ ] Give app access to each operator at each sign-in.
-- [ ] Add the waitlist routes: read the app access state, the pause, and
-      the referral code of the signed-in user, and use a code. One D1
-      batch checks the code, the pause, and the user, takes the use, and
-      runs the grant.
+- [ ] Add the waitlist routes: read the app access state, the pause, the
+      address of the approval email, and the referral code of the
+      signed-in user, and use a code. One D1 batch checks the code, the
+      pause, and the user, takes the use, and runs the grant. Reply with
+      the codes of the design.
 - [ ] Carry the code of a join link through the Terms page and the signed
       sign-in state. The sign-in uses it for an account without app
       access.
 - [ ] Give app access to a person without app access who accepts an org
       invitation, in the same batch as the membership. Invitations have no
-      count, as decision 163 chose.
+      count, as decision 163 chose. The record holds the org and the admin
+      who sent the invitation.
 - [ ] Apply the pause to codes and org invitations. A code is not used up
       while the pause is on.
 - [ ] Add the app access state to the session reply.
@@ -639,10 +720,12 @@ Depends on: 3
 
 - [ ] Add a migration for the state of each approval email.
 - [ ] Add `GET /api/operator/waitlist` with a search, oldest first, 20 at
-      a time.
+      a time. Each row says whether the person has a verified email, with
+      no address, so that the Approve question can choose its words.
 - [ ] Add the approval of a person who waits. It uses the grant step of
       Milestone 3, also during the pause. It saves the email as pending in
-      the same batch, and sends it at once.
+      the same batch, and sends it at once. It refuses a suspended person
+      with 409 `user_suspended`.
 - [ ] Send each pending approval email again from the 15-minute Cron
       Trigger, with the same idempotency key, until Resend accepts it or
       24 hours pass.
@@ -650,8 +733,10 @@ Depends on: 3
       disable. A disable also works for a referral code.
 - [ ] Add the routes of the pause: read, turn on, and turn off.
 - [ ] Add the app access state, its source, the state of the approval
-      email, and the referral code to the user detail and the user list.
-      Add the count of the people who wait to the overview.
+      email, whether the user has a verified email, and the referral code
+      to the user detail and the user list.
+      Add the count of the people who wait to the overview, without
+      suspended people.
 - [ ] Send the approval email through one mail sender that the invitation
       email shares.
 - [ ] Test with local D1: each route, 403 `operator_required` for another
@@ -665,7 +750,7 @@ Depends on: 3
 
 Tags: ui
 
-Depends on: 1, 3
+Depends on: 1, 1a, 3
 
 - [ ] Add the waitlist screen, in the browser and in the Mac app, with its
       states from the mockups.
@@ -690,8 +775,8 @@ Depends on: 1, 3
 
 Tags: ui
 
-Depends on: 1, 4. The operator section screens are on `main` since pull
-request #89.
+Depends on: 1, 1a, 4. The operator section screens are on `main` since
+pull request #89.
 
 - [ ] Add the Waitlist tab with its search, and Approve with its question.
 - [ ] Add the Invite codes tab with New code, Disable, the search, and the

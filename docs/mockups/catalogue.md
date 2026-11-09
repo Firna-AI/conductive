@@ -35,20 +35,21 @@ how a screen is built, and links to the other pages.
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
-`app/sign-in`, `app/sign-in/join`, `app/shell`, `app/command-palette`,
-`app/orgs`, `app/orgs/suspended`, `app/new-workspace`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/account`, `app/operator`,
-`app/operator/user`, `app/operator/codes`, `app/banner`, and `app/chat`
-do. `marketing/pictures` has no screen of its own. Each picture's capture
-page is its own entry at `marketing/pictures/<picture>`, so each page shows
-one screen. `app/org-settings/cloud-computer` and its building
+`app/sign-in`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`,
+`app/command-palette`, `app/orgs`, `app/orgs/suspended`, `app/new-workspace`,
+`app/org-settings`, `app/org-settings/cloud-computer`, `app/account`,
+`app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, and
+`app/chat` do. `marketing/pictures` has no screen of its own. Each
+picture's capture page is its own entry at `marketing/pictures/<picture>`,
+so each page shows one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
-`app/new-workspace`, `app/org-settings/cloud-computer`, and `app/account`
-moved into their own folders and kept their paths, so that each of those
-pages shows only its canonical screen. `app/sign-in/get-started`
-moved into its own folder and kept its path. Get started is the only first
-run, so the first run of `app/shell` and the not-connected state of
+`app/new-workspace`, `app/org-settings/cloud-computer`, `app/account`, and
+`app/sign-in/waitlist` moved into their own folders and kept their paths, so
+that each of those pages shows only its canonical screen.
+`app/sign-in/get-started` moved into its own folder and kept its path. Get
+started is the only first run, so the first run of `app/shell` and the
+not-connected state of
 `app/orgs/new` are gone, and their links lead to Get started. Its second
 step opens `app/orgs/new/first`, whose Create org and Cancel return to Get
 started. The entries
@@ -57,16 +58,20 @@ own folders and kept their paths, so `app/orgs` shows only its canonical
 screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
 paid plan went away, and declares `movedFrom`.
 
-The waitlist comes from decisions 160 to 162. A new GitHub sign-in creates
+The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
 an account without app access, and the person waits until an operator
 approves them, or a code or an org invitation lets them in. Its pages:
 
 - `app/sign-in/waitlist` has the only screen of a person who waits, Sam
-  Okafor, with the address that gets the approval email. Its variants
-  have a typed code that was not found, a code that the pause of sign-ups
-  stopped, an org invitation that lets Sam in, and an account with no
-  verified email. The code control of `mockups:serve` shows each reason
-  that a code does not work: unknown, disabled, used up, and the pause.
+  Okafor, with the address that gets the approval email. Its child pages
+  were its variants and kept their paths. `code-failed` has a typed code
+  that was not found, and `paused` has a code that the pause of sign-ups
+  stopped. `invited` has an org invitation that lets Sam in, and its
+  `paused` variant has the same invitation after the pause stopped Accept:
+  the invitation stays, and a notice asks Sam to accept it again when
+  sign-ups resume. `no-email` has an account with no verified email. The
+  code control of `mockups:serve` shows each reason that a code does not
+  work: unknown, disabled, used up, and the pause.
 - `mac-app/waitlist` has the same waitlist in a window of the Mac app, and
   its `full-screen` variant has it without the window buttons.
 - `app/sign-in/join` has the sign-in page that an invite link opens, with
@@ -149,12 +154,14 @@ of `app/operator/user` and kept their paths:
 - `app/operator/user/waiting` has a person on the waitlist, with Approve
   beside Suspend user. Its variants have the question before Approve, the
   page after the approval with its email not sent yet, and with its email
-  sent.
+  sent. Its `approve-no-email` variant has the question for a person whose
+  GitHub account has no verified email: no email goes out, and the person
+  sees the app access at their next visit.
 - `app/operator/user/access` has a user who came in with an invite code.
   Its variants have a user who came in with a referral code, with an org
-  invitation, and as an operator. Its `email-not-sent` variant has an
-  approval whose email never went, because the GitHub account has no
-  verified email.
+  invitation, which names the org and the admin who sent it, and as an
+  operator. Its `email-not-sent` variant has an approval whose email never
+  went, because the GitHub account has no verified email.
 - `app/operator/user/referral` has the question before the disable of a
   referral code. Its `disabled` variant has the disabled code.
 

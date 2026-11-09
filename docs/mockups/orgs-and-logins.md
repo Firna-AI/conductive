@@ -116,7 +116,7 @@ plan limits.
 
 ## The waitlist
 
-The waitlist comes from decisions 160 to 162. A new GitHub sign-in creates
+The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
 an account without app access. The approval of an operator, an invite
 code, an invite link, or an org invitation gives app access.
 
@@ -136,6 +136,12 @@ code, an invite link, or an org invitation gives app access.
   the pause stopped stays unused, and a notice asks the person to try it
   again later. The org invitations of the person show above the field,
   and Accept invitation is then the main action.
+- During the pause, Accept invitation lets nobody in either. The person
+  joins no org, and the invitation stays. A notice above it says so, and
+  asks the person to accept it again when sign-ups resume, as
+  `app/sign-in/waitlist/invited/paused` shows. The screen names the pause
+  only after a code or an Accept that it stopped, because an approval
+  still works during the pause.
 - An invite link opens the sign-in with its code, as `app/sign-in/join`
   shows. The page names no owner of the code. When the code of the link
   does not work, the waitlist opens with a notice that names the reason,

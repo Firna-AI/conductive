@@ -12,6 +12,11 @@ export type WaitingPerson = {
   initials: string
   /** How long the GitHub account has existed, such as "9 years". */
   githubAge: string
+  /**
+   * Whether the GitHub account has a primary verified email, which gets the
+   * approval email. The tab shows no address, and Approve uses this fact.
+   */
+  verifiedEmail: boolean
   /** The day of the first sign-in, when the person joined the waitlist. */
   joined: string
 }
@@ -25,6 +30,7 @@ export const samOkafor: WaitingPerson = {
   name: 'Sam Okafor',
   initials: 'SO',
   githubAge: '9 years',
+  verifiedEmail: true,
   joined: '1 Nov',
 }
 
@@ -33,6 +39,7 @@ export const newestWaiting: WaitingPerson = {
   login: 'zed-k',
   initials: 'ZK',
   githubAge: '2 days',
+  verifiedEmail: true,
   joined: '8 Nov',
 }
 
@@ -44,14 +51,22 @@ export const waitlist: readonly WaitingPerson[] = [
     name: 'Jules Martin',
     initials: 'JM',
     githubAge: '4 years',
+    verifiedEmail: true,
     joined: '2 Nov',
   },
-  { login: 'pkwan', initials: 'PK', githubAge: '3 weeks', joined: '3 Nov' },
+  {
+    login: 'pkwan',
+    initials: 'PK',
+    githubAge: '3 weeks',
+    verifiedEmail: true,
+    joined: '3 Nov',
+  },
   {
     login: 'nadia-q',
     name: 'Nadia Qureshi',
     initials: 'NQ',
     githubAge: '7 years',
+    verifiedEmail: true,
     joined: '4 Nov',
   },
   {
@@ -59,6 +74,7 @@ export const waitlist: readonly WaitingPerson[] = [
     name: 'Ovidiu Pop',
     initials: 'OP',
     githubAge: '2 years',
+    verifiedEmail: true,
     joined: '5 Nov',
   },
   {
@@ -66,6 +82,7 @@ export const waitlist: readonly WaitingPerson[] = [
     name: 'Lena Hart',
     initials: 'LH',
     githubAge: '11 years',
+    verifiedEmail: true,
     joined: '6 Nov',
   },
   {
@@ -73,6 +90,7 @@ export const waitlist: readonly WaitingPerson[] = [
     name: 'Bram Visser',
     initials: 'BV',
     githubAge: '5 months',
+    verifiedEmail: true,
     joined: '7 Nov',
   },
   newestWaiting,
@@ -88,6 +106,7 @@ export const waitlistSearch = {
       name: 'Samir Haddad',
       initials: 'SH',
       githubAge: '1 year',
+      verifiedEmail: true,
       joined: '6 Nov',
     },
   ],

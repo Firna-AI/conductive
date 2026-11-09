@@ -15,12 +15,16 @@ export type ApprovalEmailNote =
   | { state: 'not-sent'; reason: 'no-verified-email' }
   | { state: 'not-sent'; reason: 'stopped'; on: string }
 
-/** How a user got app access: the way in, and who or what let them in. */
+/**
+ * How a user got app access: the way in, and who or what let them in. An
+ * org invitation keeps its org and the admin who sent it, because an
+ * accepted invitation does not stay.
+ */
 export type WayIn =
   | { kind: 'approval'; by: string; email: ApprovalEmailNote }
   | { kind: 'invite-code'; label: string }
   | { kind: 'referral-code'; owner: string }
-  | { kind: 'org-invitation'; org: string }
+  | { kind: 'org-invitation'; org: string; by: string }
   | { kind: 'operator' }
   | { kind: 'existing' }
 

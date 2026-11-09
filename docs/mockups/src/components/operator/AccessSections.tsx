@@ -16,7 +16,10 @@ import { CodeStateText, CopyableCode } from './codes'
 import { InlineLink, TargetList, TargetRow } from './targets'
 import styles from './AccessSections.module.css'
 
-/** How the user got app access, with a link to the code, the owner, or the org. */
+/**
+ * How the user got app access, with a link to the code or its owner. An
+ * org invitation links to the org and to the admin who sent it.
+ */
 function WayInText(props: { way: WayIn }) {
   const { way } = props
   switch (way.kind) {
@@ -40,7 +43,8 @@ function WayInText(props: { way: WayIn }) {
       return (
         <>
           Org invitation to{' '}
-          <InlineLink to={paths.operatorOrg}>{way.org}</InlineLink>
+          <InlineLink to={paths.operatorOrg}>{way.org}</InlineLink> from{' '}
+          <InlineLink to={paths.operatorUser}>@{way.by}</InlineLink>
         </>
       )
     case 'operator':

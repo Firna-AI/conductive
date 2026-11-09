@@ -65,10 +65,14 @@ export const waitlistCopy = {
   linkCode: 'Your invite code comes with this link',
   typed,
   link,
-  /** A code that the pause stopped, from the field or from a link. */
+  /**
+   * What the pause stopped: a code from the field or from a link, or the
+   * Accept of an org invitation, which stays.
+   */
   paused: {
     title: 'Sign-ups are paused',
     typed: 'Try your code again later. It stays unused.',
     link: 'Open your invite link again later. Its code stays unused.',
+    invitation: 'Your invitation stays. Accept it again when sign-ups resume.',
   },
 } as const

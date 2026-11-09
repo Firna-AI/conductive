@@ -21,9 +21,10 @@ export const operatorUserSchema = {
     /**
      * Whose page, in which state: Dana Kim in use, after the disable of
      * her referral code, or suspended; the operator's own; Sam Okafor on
-     * the waitlist, approved with the email not sent yet, or sent; a user
-     * who came in by an invite code, a referral code, an org invitation,
-     * or as an operator; and an approval whose email never went.
+     * the waitlist, approved with the email not sent yet, or sent; Kenji
+     * Watanabe on the waitlist with no verified email; a user who came in
+     * by an invite code, a referral code, an org invitation, or as an
+     * operator; and the approval of Kenji, whose email never went.
      */
     page: {
       enum: [
@@ -34,6 +35,7 @@ export const operatorUserSchema = {
         'waiting',
         'approved',
         'emailed',
+        'waitingNoEmail',
         'inviteCode',
         'referralCode',
         'orgInvitation',
@@ -63,6 +65,24 @@ function suspendPath(page: PageKey): string | undefined {
   if (page === 'active') return paths.operatorUserSuspend
   if (page === 'self') return paths.operatorUserSuspendSelf
   return undefined
+}
+
+/**
+ * The question of Approve, and the page after it. The question promises
+ * an email only to a person with a verified email on GitHub. After the
+ * approval, that email waits to go, or, without one, never goes.
+ */
+function approvePaths(user: UserPage): { question: string; done: string } {
+  if (user.verifiedEmail) {
+    return {
+      question: paths.operatorUserApprove,
+      done: paths.operatorUserApproved,
+    }
+  }
+  return {
+    question: paths.operatorUserApproveNoEmail,
+    done: paths.operatorUserEmailNotSent,
+  }
 }
 
 /**
@@ -96,7 +116,7 @@ function UserActions(props: { page: PageKey; user: UserPage }) {
   return (
     <>
       {suspend}
-      <ScreenLink asChild to={paths.operatorUserApprove}>
+      <ScreenLink asChild to={approvePaths(props.user).question}>
         <ActionButton icon={Check} tone="primary">
           Approve
         </ActionButton>
@@ -141,7 +161,7 @@ function UserDialog(props: {
       return (
         <ApproveDialog
           cancel={paths.operatorUserWaiting}
-          done={paths.operatorUserApproved}
+          done={approvePaths(user).done}
           person={user}
           viewport={viewport}
         />
