@@ -32,14 +32,7 @@ export async function createRunnerLimitsFixture(
     }
     const events = await actor.api.controls.takeEvents()
     published.push(...events)
-    hooks.push(
-      ...events.filter(
-        ({ event }) =>
-          !['session.updated', 'message.accepted', 'message.sent'].includes(
-            event.type,
-          ),
-      ),
-    )
+    hooks.push(...(await actor.api.controls.takeStoredEvents()))
   }
   const connect = async (stream = streamId, restart = false) => {
     streamId = stream

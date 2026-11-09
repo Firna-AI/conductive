@@ -3,7 +3,13 @@ import type { WorkspaceSocketMessage } from '../../src/shared/events'
 import { chatHistoryPath } from '../../src/shared/events'
 import { FakeRunner } from '../test-support/fake-runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
-import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
+import { heldOperation } from '../test-support/held-operation'
+import {
+  createChatFixture,
+  WORKSPACE_ID,
+  type ChatFixture,
+} from './harness.test-support'
+import { CHAT_EVENT_PREFIX } from './storage-keys'
 describe('workspace chat event delivery', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -19,11 +25,9 @@ describe('workspace chat event delivery', () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
     const first = await fixture.tab()
-    let duringHistory: Promise<unknown> = Promise.resolve()
-    const second = await fixture.tab(0, (message) => {
-      if (message.type === 'history') duringHistory = fixture.send(session.id)
-    })
-    await duringHistory
+    const second = await openDuringHistory(fixture, () =>
+      fixture.send(session.id),
+    )
     await fixture.drain()
     expect(second.messages[0]).toEqual({
       type: 'history',
@@ -172,15 +176,12 @@ describe('workspace chat event delivery', () => {
       for (let number = 1; number <= 70; number++)
         await transaction.emit({ type: 'workspace.title', name: `${number}` })
     })
-    let concurrent: Promise<void> | undefined
-    const tab = await fixture.tab(0, (message) => {
-      if (message.type === 'history' && concurrent === undefined)
-        concurrent = fixture.appendWorkspaceEvent(WORKSPACE_ID, {
-          type: 'workspace.title',
-          name: 'Live',
-        })
-    })
-    await concurrent
+    const tab = await openDuringHistory(fixture, () =>
+      fixture.appendWorkspaceEvent(WORKSPACE_ID, {
+        type: 'workspace.title',
+        name: 'Live',
+      }),
+    )
     const pages = tab.messages.filter((message) => message.type === 'history')
     expect(
       pages.map((message) => [
@@ -233,3 +234,35 @@ describe('workspace chat event delivery', () => {
     await tab.close()
   })
 })
+
+async function openDuringHistory(
+  fixture: ChatFixture,
+  write: () => Promise<unknown>,
+) {
+  const held = heldOperation()
+  let armed = true
+  await fixture.setStorageHooks({
+    afterList: async ({ prefix }) => {
+      if (!armed || prefix !== CHAT_EVENT_PREFIX) return
+      armed = false
+      await held.wait()
+    },
+  })
+  const opening = fixture.tab(0)
+  let observer:
+    Awaited<ReturnType<ChatFixture['observeNextQueued']>> | undefined
+  try {
+    await held.entered
+    observer = await fixture.observeNextQueued()
+    const writing = write()
+    await observer.queued
+    held.release()
+    const tab = await opening
+    await writing
+    return tab
+  } finally {
+    held.release()
+    await observer?.restore()
+    await fixture.clearFaults()
+  }
+}

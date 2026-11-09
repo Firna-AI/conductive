@@ -1,53 +1,24 @@
-import { createHash } from 'node:crypto'
-import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { build } from 'vite'
-
-let pendingBundle: Promise<string> | undefined
-
-export function nativeWorkspaceBundle(): Promise<string> {
-  return (pendingBundle ??= bundle())
+declare module 'vitest' {
+  interface ProvidedContext {
+    nativeWorkspaceBundle?: string
+  }
 }
 
-async function bundle(): Promise<string> {
-  const root = join(import.meta.dirname, '../..')
-  const sources = (
-    await Promise.all(
-      ['worker', 'src/shared'].map(async (area) => {
-        const entries = await readdir(join(root, area), {
-          recursive: true,
-          withFileTypes: true,
-        })
-        return entries
-          .filter(
-            (entry) =>
-              entry.isFile() &&
-              entry.name.endsWith('.ts') &&
-              !entry.name.endsWith('.test.ts'),
-          )
-          .map((entry) => join(entry.parentPath, entry.name))
-      }),
-    )
-  )
-    .flat()
-    .sort()
-  const hash = createHash('sha256')
-  for (const source of sources) {
-    hash.update(source)
-    hash.update(await readFile(source))
+let standaloneBundle: Promise<string> | undefined
+
+export async function nativeWorkspaceBundle(): Promise<string> {
+  if (process.env.VITEST_WORKER_ID !== undefined) {
+    const { inject } = await import('vitest')
+    const provided = inject('nativeWorkspaceBundle')
+    if (provided !== undefined) return provided
   }
-  const directory = join(
-    root,
-    '.context/boat-native-remote-workspaces/5f/native-bundles',
-  )
-  const path = join(directory, `${hash.digest('hex')}.mjs`)
-  try {
-    return await readFile(path, 'utf8')
-  } catch (error) {
-    if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT'))
-      throw error
-  }
+  return (standaloneBundle ??= buildNativeWorkspaceBundle())
+}
+
+export async function buildNativeWorkspaceBundle(): Promise<string> {
+  const { build } = await import('vite')
   const bundle = await build({
     configFile: false,
     logLevel: 'silent',
@@ -70,9 +41,5 @@ async function bundle(): Promise<string> {
   )
   if (!entry || entry.type !== 'chunk')
     throw new Error('The native workspace bundle is missing.')
-  await mkdir(directory, { recursive: true })
-  const temporary = `${path}.${process.pid}.tmp`
-  await writeFile(temporary, entry.code)
-  await rename(temporary, path)
   return entry.code
 }

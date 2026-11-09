@@ -63,6 +63,7 @@ export class NativeWorkspace extends Workspace {
       idFallback: undefined as string | undefined,
     }
     const controls = nativeStorageControls(context, hooks, clock.now)
+    const observations = nativeChatObservers()
     const pending = new Set<Promise<unknown>>()
     const errors: unknown[] = []
     const waitUntil = context.waitUntil.bind(context)
@@ -95,24 +96,12 @@ export class NativeWorkspace extends Workspace {
           `${state.idPrefix}-${String(++state.sequence).padStart(state.idWidth, '0')}`,
         scheduleBrowserCheck: clock.schedule,
         scheduleRunnerCheck: clock.schedule,
+        callbackObservers: observations.callbacks,
       },
       clock.schedule,
     )
     this.bridge = bridge
-    const observations = nativeChatObservers(
-      this.chat,
-      this.controller,
-      () => state.workspaceId,
-    )
-    const receiveFile = this.integration.files.runner.receive.bind(
-      this.integration.files.runner,
-    )
-    this.integration.files.runner.receive = (connectionId, value) => {
-      const result = receiveFile(connectionId, value)
-      const observe = observations.observers.receiveFileResult
-      if (observe) context.waitUntil(observe(value, connectionId))
-      return result
-    }
+    observations.observePublications(this.chat)
     const instanceId = crypto.randomUUID()
     let onPublication: NativeWorkspaceOptions['onPublication']
     let onQueued: NativeWorkspaceOptions['onQueued']
@@ -251,6 +240,7 @@ export class NativeWorkspace extends Workspace {
             async (view) => view.eventNumber,
           ),
         takeEvents: observations.takeEvents,
+        takeStoredEvents: observations.takeStoredEvents,
         persist: saveClock,
       },
     }

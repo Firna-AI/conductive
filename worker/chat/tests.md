@@ -60,11 +60,17 @@ npm run typecheck
 - `failNextCommit` injects one error before or after the next native commit.
   `clearFaults` removes these hooks.
   `checkCommitBoundaries` in [commit-boundary.test-support.ts](commit-boundary.test-support.ts) checks both boundaries and a real eviction.
+- `agent-receipt-boundaries.test.ts` checks that a rejected commit or a crash after commit sends no confirm or browser event.
+  It checks the stored event and cursor together, then checks replay after eviction.
+- `events.test.ts` holds one native history-page list while a concurrent write enters the chat queue.
+  It releases the page after the queue signal and checks history before live events.
 - Send and Retry can commit a login observation before acceptance.
   An acceptance crash test first makes `loginAvailable` current, then injects its commit fault.
 - `createRunnerLimitsFixture` in `runner-limits.test-support.ts` uses the same production object and native runner channel.
   It seeds the session and turn without adding browser events.
   Its `connect` can evict the object before reconnecting the same stream.
+  Its publication list and stored-callback list have separate sources.
+  The callback list records actual `runnerEventStored` calls at production callback composition.
 - `runner-fixtures.test-support.ts` holds the runner report samples and shared session and turn IDs.
 - `createGrownReportsFixture` in `runner-grown-reports.test-support.ts` seeds an encrypted environment capture with the secret `a`.
   The production output filter reads that capture inside the native object.
@@ -84,6 +90,9 @@ npm run typecheck
   `drain` delivers those messages to the fake runner and browser observers.
 - Native request controls hold the real JSON reader and expose `bodyUsed`.
   The queue observer signals after the production chat queue accepts its next task.
+- `workspace-callbacks.ts` preserves each real callback and its result before it awaits a native test observer.
+  Native observers record stored events, ready, disconnect, dispatch, and file-result calls at that composition point.
+  They do not infer callbacks from saved events or lifecycle-controller methods.
 - `login-queries.test-support.ts` captures login queries inside the native object.
   The metadata tests also observe actual native decrypt calls in explicit capture windows.
 - `runner-output-context.test.ts` refuses a completion and ends the turn.

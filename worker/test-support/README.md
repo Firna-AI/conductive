@@ -15,8 +15,12 @@ Reset removes the native records, aborts the real object context, and evicts its
 Restart saves clock metadata and keeps committed native SQLite records through the same context reset.
 Instance identity checks prove that reconstruction creates a fresh object.
 Production request timeouts stay unchanged.
-The immutable Worker bundle cache lives under the ignored `.context/` directory.
-It also supplies the private local R2 attachment bucket.
+
+The root Vitest setup builds one current Worker bundle for each run and watch rerun.
+Native fixtures read that bundle from the provided test context.
+Standalone callers build on demand and reuse that bundle only within their process.
+
+`createHarness` also supplies the private local R2 attachment bucket.
 Reset removes its file records and objects between tests.
 `attachment-r2.ts` wraps local R2 deletion for controlled cleanup failures.
 It supplies fake GitHub and Boat servers, a fixed clock, sign-in, org creation, and cleanup.
@@ -104,6 +108,7 @@ So a plain object does not type-check as the environment of a child process.
 ## Key code
 
 - `harness.ts` owns D1 setup and the HTTP test app.
+- `native-global-setup.ts` builds and provides the current native bundle before tests and watch reruns.
 - `native-chat-record-controls.ts` reads history and file projections inside the native object and calls its real chat writer.
 - `native-attachment-controls.ts` runs streaming attachment storage and reads real R2 byte samples inside the runtime.
 - `migrations.ts` applies migrations for every test harness.

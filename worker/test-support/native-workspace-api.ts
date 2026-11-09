@@ -62,6 +62,7 @@ interface NativeWorkspaceControls {
   dispatchAlarm(): Promise<void>
   eventNumber(workspaceId: string): Promise<number>
   takeEvents(): Promise<WorkspaceEventEnvelope[]>
+  takeStoredEvents(): Promise<WorkspaceEventEnvelope[]>
   persist(): Promise<void>
   captureDecrypt(active: boolean): Promise<void>
   captureWarnings(active: boolean): Promise<void>
