@@ -67,9 +67,13 @@ it('names only the exit code and time-out when detached terminal setup fails', a
       error: { code: 'workspace_start_failed' },
     })
     expect(warn.mock.calls).toContainEqual([
-      expect.stringMatching(
-        /^The terminal of workspace .* did not start: exit code 1, timed out false$/,
-      ),
+      {
+        kind: 'terminal_start_failed',
+        message: 'The terminal of a workspace did not start.',
+        workspaceId: 'unknown',
+        exitCode: 1,
+        timedOut: false,
+      },
     ])
     expect(JSON.stringify(warn.mock.calls)).not.toContain('private-marker')
     expect(fixture.boat.fileReads).toEqual([])

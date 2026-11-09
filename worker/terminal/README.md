@@ -211,6 +211,7 @@ Terminal status reads remain available.
 - [privileged.ts](privileged.ts) quotes installation and service control commands.
 - [protocol.ts](protocol.ts) adds server authentication to ttyd's first JSON message. It passes each later frame through unchanged.
 - [scripts.test.ts](scripts.test.ts) and [install.test.ts](install.test.ts) run the programs and the install command with fakes.
+- [service.test.ts](service.test.ts) checks the password cache and the detached setup failure warning. The warning keeps exit metadata and excludes stdout and stderr.
 - [The tools adapter](../previews/provider.ts) exposes the private port.
 - [The sandbox provider](../sandbox/README.md) owns credentials, fixed routes, and bounded file reads.
 - [The workspace lifecycle](../lifecycle/README.md) runs the install command in each build. After the startup script of each create and resume, it runs the setup command and then the password read. Its restore watch calls `markTerminalRestoreEnded`.

@@ -100,7 +100,7 @@ export async function storeAttachment(
       if (current) await deleteAttachment(env, current)
       else await bucket.delete(record.objectKey)
     } catch {
-      warnWorker('An attachment upload cleanup will retry.')
+      warnWorker({ kind: 'attachment_upload_cleanup_retry' })
     }
     throw error
   }

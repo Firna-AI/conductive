@@ -35,9 +35,7 @@ export async function exerciseRepairBudget(env: AppEnv, now: number) {
   })
   const warn = console.warn
   console.warn = (message: unknown) => {
-    warnings.push([
-      typeof message === 'string' ? message : 'Unexpected warning',
-    ])
+    warnings.push([JSON.stringify(message)])
   }
   try {
     const first = await repairLifecycleAlarms(runtime, images, software)
