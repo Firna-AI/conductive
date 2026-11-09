@@ -53,6 +53,9 @@ export async function inputCommand(
       agent: command.message.choice.agent,
       choice: command.message.choice,
       conversationId: saved?.providerSessionId ?? null,
+      instructions:
+        saved?.instructions ??
+        options.instructions[command.message.choice.agent],
       generation: 0,
       active: null,
     }

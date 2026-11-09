@@ -296,6 +296,11 @@ gives the default branch of the repository of the workspace, from its
 queued start. A disk retention restart gives the current default branch of
 that repository.
 
+`CONDUCTIVE_WORKSPACE_BRANCH` needs no deployment input either. A create, a
+resume, and a disk retention restart give the workspace branch that the
+Worker's record of the workspace names. The runner names that branch in
+the [agent instructions](protocol/agent-instructions.md#the-branches).
+
 ## The app's Boat account
 
 Every cloud computer of every org runs in the app's own Boat organization.

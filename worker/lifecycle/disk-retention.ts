@@ -127,6 +127,7 @@ export async function keepWorkspaceDisk(
           CONDUCTIVE_WORKSPACE_ID: workspaceId,
           CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
           CONDUCTIVE_DEFAULT_BRANCH: repository.defaultBranch,
+          CONDUCTIVE_WORKSPACE_BRANCH: row.branch,
           CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
             locations,
             row.repositoryId,

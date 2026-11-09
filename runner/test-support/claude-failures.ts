@@ -164,6 +164,7 @@ export async function checkClaudeFailures(
     login: turn().login,
     choice: turn().message.choice,
     conversationId: null,
+    instructions: '',
     tools: fakeToolContext,
     event: (event) => {
       events.push(event)
