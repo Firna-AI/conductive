@@ -5,3 +5,25 @@
   border-radius: var(--ui-radius-lg);
   background: var(--ui-surface);
 }
+
+/* The users tile shares the row as the other tiles do, with a line under it. */
+.users {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.waiting {
+  align-self: flex-start;
+  color: var(--ui-link);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.waiting:hover {
+  text-decoration: underline;
+}

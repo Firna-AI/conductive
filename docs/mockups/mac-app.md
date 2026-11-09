@@ -17,6 +17,12 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
 - `MacApp` marks the screens inside it as the Mac app, so that `AppFrame`
   draws the window controls and a banner of the Mac app. The account of
   the Mac app keeps the sidebar of the org and adds the This Mac section.
+- A person without app access sees the waitlist in the window, as
+  `mac-app/waitlist` shows. The page has no top bar of its own, so in the
+  Mac app the header of `SignInFrame` is the top bar of the window. It is
+  as high as the other top bars, with a smaller lockup, and it moves the
+  window. In a window it keeps the space of the window buttons free, and
+  in full screen it gives that space back.
 - An agent can ask to run a command on the Mac of the person who sent the
   turn. The request waits as a compact message just above the composer,
   from `PendingCommand` in `src/components/chat/`: the exact command, the

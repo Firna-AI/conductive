@@ -53,6 +53,12 @@ The three default model columns can be all set or all unset.
 The nullable `new_workspace_view` column holds `page` or `dialog`.
 An unset view uses the page. An unset model uses the configured app default.
 
+`202611091200_waitlist.sql` adds app access, invite and referral codes, code
+uses, and the sign-up pause. Each existing account gets app access from
+its join time and one referral code with five uses. The user record also
+gets the primary verified email and the GitHub account creation time.
+[The waitlist backend](../worker/waitlist/README.md) owns these records.
+
 `202611091200_workspace_numbers.sql` gives each workspace its number in its org.
 It backfills by creation time, then workspace ID, before it installs the allocation trigger.
 The `workspaces_allocate_number` trigger owns allocation.
@@ -60,6 +66,13 @@ It increments `orgs.workspace_number_count` and assigns that number inside the w
 A unique index protects each org and number pair.
 Cleanup never lowers the counter. Restore keeps the same org row and counter.
 Read the inserted row again to get its number. SQLite `RETURNING` runs before the AFTER trigger.
+
+`202611091300_approval_emails.sql` adds the approval email state and its
+approval and state times. Pending messages keep their recipient, subject,
+and body for stable delivery retries. A missing verified email saves the
+`none` state with no message. The migration also adds the operator who
+disabled a code. [The operator backend](../worker/operator/README.md#approval-email-delivery)
+owns email delivery and code management.
 
 ## Reserved ranges
 

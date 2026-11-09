@@ -19,7 +19,7 @@ export const getStartedPreparing = defineScreen({
     agent: 'connected',
     firstBuild: 'running',
   },
-  useCasePaths: ['user-flows/sign-up'],
+  useCasePaths: ['user-flows/join'],
   render: (props, context) => (
     <GetStartedScreen state={props} viewport={context.viewport} />
   ),

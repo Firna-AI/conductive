@@ -3,7 +3,8 @@
 This guide belongs to [Web app: data and composition](README.md). It
 gives the rules of the screens of the app shell: the account and Get
 started, sign-in, invitations, orgs, panels and layers, the command
-palette, the focus, saved drafts, and New workspace as a page or a dialog. The
+palette, the focus, saved drafts, New workspace as a page or a dialog, and
+[the waitlist](#the-waitlist). The
 [command palette protocol](../../docs/protocol/command-palette.md) states
 what the palette does.
 
@@ -222,3 +223,44 @@ what the palette does.
   workspace wasn't created". Try again sends the same message ID. A failed
   first start keeps its workspace instead, as
   [Creation recovery](creation-recovery.md#a-failed-first-start) says.
+
+## The waitlist
+
+[Waitlist](../../docs/protocol/waitlist.md) and
+[Invite and referral codes](../../docs/protocol/waitlist-codes.md) state
+the requirements. The mockups `app/sign-in/waitlist`, `app/sign-in/join`,
+`mac-app/waitlist`, and `app/account/invites` draw the screens.
+
+- A session without app access shows only the waitlist, at every address,
+  also at `/operator`. `Waiting` in `../shell/waitlist/` shows it. Get
+  started, the rail, and the command palette stay closed.
+- The waitlist shares `SignInFrame` with the sign-in. It names the address
+  of the approval email, or, without a verified email, promises no email.
+  It shows the invitations of the person with Accept, the code field with
+  Use code, and the GitHub account with Sign out. Its words come from
+  `waitlistCopy.ts`.
+- A typed code that does not work shows its reason under the field, and
+  the field keeps its text. The pause shows above the field, and only
+  after it stopped a code. Use code with an empty field moves the focus to
+  the field and sends nothing.
+- When the pause stops an Accept, a notice above the invitations says so,
+  and the invitation stays. Another failed Accept shows its cause with Try
+  again, as the invitations of `/` do.
+- In the Mac app on desktop, the header of the waitlist is the top bar of
+  the window. It moves the window, and in a window it keeps the space of
+  the window buttons free. The page has no strip of window controls. A
+  phone layout keeps the strip of `PhoneFrame`, as other pages do.
+- A visitor who is not signed in at a join link, `/join/<code>`, gets the
+  sign-in with the code of the link. Continue with GitHub carries the code
+  in `acceptedTermsSignInPath`.
+- For a person who waits, a join link changes the address to `/` and uses
+  its code at once. The loading state shows while the code runs. A code
+  that does not work shows the notice of its reason above the empty field.
+  The `invite_code_error` of a failed sign-in shows its notice and uses
+  the code no more.
+- For a person with app access, a join link uses no code, and `/` opens as
+  usual.
+- The Account page ends with the invite code of the user, after the model
+  of new workspaces: the invite link with Copy, the code, and the invites
+  left. It has the states of the pause, of every invite used, and of a code
+  that an operator turned off. Its words come from `inviteCodeCopy.ts`.

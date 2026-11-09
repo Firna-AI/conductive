@@ -8,6 +8,16 @@ import {
   namePattern,
   numericGitHubId,
 } from './directory'
+import { readOperatorUserAccess } from './user-access-data'
+
+type UserRow = Omit<
+  OperatorUserSummary,
+  | 'appAccess'
+  | 'approvalEmail'
+  | 'hasVerifiedEmail'
+  | 'githubCreatedAt'
+  | 'referralCode'
+> & { userId: string }
 
 const matches = `FROM users u WHERE (?1 = ''
   OR u.github_login LIKE ?2 ESCAPE '\\' OR u.display_name LIKE ?2 ESCAPE '\\'
@@ -20,12 +30,11 @@ export async function readOperatorUsers(
   const query = params.get('q')?.trim() ?? ''
   const cursor = directoryCursor(params.get('cursor'))
   const values = [query, namePattern(query), numericGitHubId(query)]
-  const [count, page] = await db.batch<{ total: number } | OperatorUserSummary>(
-    [
-      db.prepare(`SELECT COUNT(*) AS total ${matches}`).bind(...values),
-      db
-        .prepare(
-          `SELECT u.github_id AS githubId, u.github_login AS login,
+  const [count, page] = await db.batch<{ total: number } | UserRow>([
+    db.prepare(`SELECT COUNT(*) AS total ${matches}`).bind(...values),
+    db
+      .prepare(
+        `SELECT u.id AS userId, u.github_id AS githubId, u.github_login AS login,
            u.display_name AS name, u.created_at AS joinedAt,
            (SELECT COUNT(*) FROM org_members m WHERE m.user_id = u.id) AS orgs,
            (SELECT COUNT(*) FROM workspaces w WHERE w.owner_user_id = u.id) AS workspaces,
@@ -33,10 +42,9 @@ export async function readOperatorUsers(
          ${matches}
          AND (?4 IS NULL OR u.created_at < ?4 OR (u.created_at = ?4 AND u.github_id > ?5))
          ORDER BY u.created_at DESC, u.github_id LIMIT 21`,
-        )
-        .bind(...values, cursor?.createdAt ?? null, cursor?.id ?? null),
-    ],
-  )
+      )
+      .bind(...values, cursor?.createdAt ?? null, cursor?.id ?? null),
+  ])
   const total = count.results[0]
   if (!total || !('total' in total))
     throw new Error('Invalid operator user count')
@@ -44,9 +52,18 @@ export async function readOperatorUsers(
     if (!('githubId' in row)) throw new Error('Invalid operator user row')
     return row
   })
-  const { entries: users, nextCursor } = directoryPage(rows, (row) => ({
+  const { entries, nextCursor } = directoryPage(rows, (row) => ({
     createdAt: row.joinedAt,
     id: row.githubId,
   }))
+  const access = await readOperatorUserAccess(
+    db,
+    entries.map((row) => row.userId),
+  )
+  const users = entries.map(({ userId, ...row }) => {
+    const state = access.get(userId)
+    if (!state) throw new Error('The user app access is not available')
+    return { ...row, ...state }
+  })
   return { users, total: total.total, nextCursor }
 }

@@ -10,6 +10,7 @@ import { readOperatorOverview } from './overview'
 import { operatorDirectoryRoute } from './directory-route'
 import { liftOrgSuspension, liftUserSuspension } from './lift'
 import { numericGitHubId } from './directory'
+import { operatorWaitlistRoute } from './waitlist-route'
 
 export async function handleOperatorRequest(
   request: Request,
@@ -17,6 +18,13 @@ export async function handleOperatorRequest(
   context: RequestContext,
   dependencies: AppDependencies,
 ): Promise<Response | null> {
+  const waitlist = await operatorWaitlistRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (waitlist) return waitlist
   const url = new URL(request.url)
   const path = url.pathname
   const overview = path === operatorOverviewPath() && request.method === 'GET'
