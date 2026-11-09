@@ -82,7 +82,13 @@ type AccountRoute = Extract<Route, { screen: 'account' }>
 function Account(props: { route: AccountRoute; user: User }) {
   const phone = useViewport() === 'phone'
   const org = useKeptOrg(useStore(useApp().orgs))
-  const page = <AccountScreen connect={props.route.connect} user={props.user} />
+  const page = (
+    <AccountScreen
+      connect={props.route.connect}
+      tab={props.route.tab}
+      user={props.user}
+    />
+  )
   if (phone) return <PhoneFrame>{page}</PhoneFrame>
   return (
     <RailFrame

@@ -9,15 +9,24 @@ import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
+import { linkedSession } from './sessions'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { unavailableConversations } from './unavailableConversations'
+import { workConversations } from './workConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
 type ToolCallStatus = 'done' | 'running' | 'stopped'
 
 export type ChatItem =
-  | { kind: 'user'; id: string; text: string; queued?: boolean }
+  | {
+      kind: 'user'
+      id: string
+      text: string
+      queued?: boolean
+      /** Sent while a turn runs: it joins that turn as a new part. */
+      during?: true
+    }
   | {
       kind: 'agent'
       id: string
@@ -114,6 +123,8 @@ export const conversationKeys = [
   'files-unavailable',
   'stopped-files-unavailable',
   'linked',
+  'steered',
+  'mac-in-work',
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -206,11 +217,15 @@ const cutOffTurn: readonly ChatItem[] = [
 ]
 
 /**
- * The next message that a user writes after the turn ends. In the linked
- * session, it is the message of the member who opened that session.
+ * The next message that a user writes after the turn ends. When the login
+ * of the starter is not available, this message opens the linked session,
+ * so its text is the first message of that session.
  */
-export const followUpDraft =
-  'Show a loading state under the address line while the lookup runs.'
+export const followUpDraft = linkedSession.firstMessage
+
+/** The steer message that the user types while a turn runs. */
+export const steerDraft =
+  'Also debounce the lookups to 250 ms, so we stay under the rate limit.'
 
 export const conversations: Readonly<
   Record<ConversationKey, readonly ChatItem[]>
@@ -243,9 +258,10 @@ export const conversations: Readonly<
   ...macConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
-  ...linkedConversations(followUpDraft),
+  ...linkedConversations,
+  ...workConversations({
+    start: autocompleteStart,
+    tests: autocompleteTests,
+    steer: steerDraft,
+  }),
 }
-
-/** The steer message that the user types while a turn runs. */
-export const steerDraft =
-  'Also debounce the lookups to 250 ms, so we stay under the rate limit.'

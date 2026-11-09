@@ -57,7 +57,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
     session: {
       id: 'linked',
       workspaceId: WORKSPACE_ID,
-      title: 'New session',
+      title: 'Check this code',
       choice: { agent: 'claude', model: 'test-claude', effort: 'high' },
       createdAt: TEST_TIME,
       closedAt: null,
@@ -111,7 +111,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
     source: {
       id: 'source',
       workspaceId: WORKSPACE_ID,
-      title: 'New session',
+      title: 'Check this code',
       choice: { agent: 'claude', model: 'test-claude', effort: 'high' },
       createdAt: TEST_TIME,
       closedAt: null,

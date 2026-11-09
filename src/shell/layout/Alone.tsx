@@ -1,13 +1,9 @@
 import type { ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { WindowStrip } from '../mac/WindowControls'
-import { PaletteLayer } from '../palette/PaletteLayer'
-import { OverlayHost } from '../ui/Overlay'
 import { useViewport } from '../ui/viewport'
 import ui from '../ui/ui.module.css'
-import { PhoneFrame } from './frames'
-import layout from './layout.module.css'
+import { PhoneFrame, StandaloneFrame } from './frames'
 
 /**
  * A page alone in the window: a phone frame, or a desktop page without the
@@ -18,13 +14,7 @@ export function Alone(props: { children: ReactNode; ownBar?: boolean }) {
   if (useViewport() === 'phone')
     return <PhoneFrame>{props.children}</PhoneFrame>
   return (
-    <div className={layout.standalone}>
-      <OverlayHost>
-        {props.ownBar ? null : <WindowStrip />}
-        {props.children}
-        <PaletteLayer />
-      </OverlayHost>
-    </div>
+    <StandaloneFrame ownBar={props.ownBar}>{props.children}</StandaloneFrame>
   )
 }
 

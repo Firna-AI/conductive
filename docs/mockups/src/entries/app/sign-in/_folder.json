@@ -1,1 +1,10 @@
-{ "order": ["terms", "waitlist", "join", "invitations", "get-started"] }
+{
+  "order": [
+    "terms",
+    "waitlist",
+    "join",
+    "invitations",
+    "get-started",
+    "github-setup"
+  ]
+}

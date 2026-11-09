@@ -15,6 +15,8 @@ promises no use at once either.
 for the header, the hero, the last call to action, and the footer. The
 parts live in `src/components/marketing/`.
 
+The header links to the public source repository on GitHub in both layouts.
+
 The site keeps still captures of the workspace screen, the org settings cloud computer tab, and the phone workspace list.
 Changes to those screens require recapture with the [capture steps](../../src/marketing/README.md#pictures).
 

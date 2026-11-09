@@ -4,7 +4,7 @@ import markdownStyles from '../../../docs/mockups/src/components/files/MarkdownV
 import { inlineParts, textBlocks, type TextBlock } from './agent-text'
 
 /** Text with `code` and **strong** parts. */
-function InlineMarkdown(props: { text: string }) {
+export function InlineMarkdown(props: { text: string }) {
   return (
     <>
       {inlineParts(props.text).map((part, index) => {

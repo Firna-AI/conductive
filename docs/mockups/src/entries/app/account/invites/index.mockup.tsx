@@ -1,20 +1,19 @@
 import { defineScreen } from '@mokly/mokly'
-import { AccountScreen, accountSchema } from '../../../../screens/AccountScreen'
+import {
+  AccountScreen,
+  accountGeneral,
+  accountSchema,
+} from '../../../../screens/AccountScreen'
 
 export const accountInvites = defineScreen({
   title: 'Invite code, sign-ups paused',
   description:
-    'The operator has paused sign-ups. The invite link and Copy stay, and 3 of 5 invites are still left. A notice in place of the description says that the link works again when sign-ups resume. The section is at the end of the page, so a phone shows it after a scroll, on this page and on its variants.',
+    'The operator has paused sign-ups. The invite link and Copy stay, and 3 of 5 invites are still left. A notice in place of the description says that the link works again when sign-ups resume. The section is at the end of the General tab, so a phone shows it after a scroll, on this page and on its variants.',
   rationale:
     'The pause stops invite codes, invite links, and the org invitations of people who wait. A code that the pause stopped stays unused, so the count does not drop. A person who opens the link during the pause joins the waitlist, and can open it again after the pause. The user can still share the link, so Copy stays.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: {
-    connections: 'connected',
-    form: 'none',
-    invites: 'paused',
-    shareChange: 'none',
-  },
+  props: { ...accountGeneral, invites: 'paused' },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),

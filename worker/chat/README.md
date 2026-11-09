@@ -6,7 +6,8 @@ and the chat history of that workspace. It gives each message to the agent
 runner in the sandbox. It stores the events of the runner and pushes them
 to each open tab. A tab is one browser connection to the events socket.
 
-[Chat and events](../../docs/protocol/chat-and-events.md) and
+[Chat and events](../../docs/protocol/chat-and-events.md),
+[Agent runner](../../docs/protocol/agent-runner.md), and
 [Access and security](../../docs/protocol/access-and-security.md) state the
 requirements. This README names the code, its guarantees, and the seams
 for other milestones.
@@ -60,6 +61,14 @@ says how the lifecycle and chat work together.
 A cross-agent model change uses the client's `newSessionId`. A repeated
 request gets the same session. An unrelated occupied ID is refused. A
 same-agent change ignores this field.
+
+## Session names
+
+[Workspace and session names](workspace-titles.md) gives the background
+model request, the shared title writer, the first session name, and the
+names of later sessions. It also gives the local development setup.
+New workspaces and sessions have null names. The shared `nameLabel` helper
+in `src/shared/name-label.ts` gives their display label, "Untitled".
 
 ## Message admission
 
@@ -207,12 +216,20 @@ tests through the production Worker entry.
   lifecycle events.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
+- `session-titles.ts`: the empty-name rule for the first session's workspace
+  title and each later session's first message with text.
+- `workspace-titles.ts`, `title-model.ts`, and `workspace-title.ts`: the
+  background model request and the shared title storage and D1 projection.
+  The shared writer checks the empty name and workspace access before it
+  stores either a Worker title or a runner title.
 - `workspace-summary.ts`: `WorkspaceSummaryProjection`, the summary that
   `readChatWorkspaceSummary` returns.
 - `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched
   turns as stopped when the lifecycle state becomes stopped or error.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
   the object.
+- `runner-authorization.ts`: `authorizeChatRunner`, the machine origin and
+  token checks before the runner connection opens.
 - `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
   a browser tab: the login refresh, the tab registration, the close after
   a failed start, and the grant check before the history.
@@ -282,7 +299,7 @@ tests through the production Worker entry.
 
 - [Chat and events: Messages](../../docs/protocol/chat-and-events.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
-- [Chat and events: Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+- [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)

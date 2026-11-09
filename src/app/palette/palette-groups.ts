@@ -1,6 +1,7 @@
 import type { Workspace } from '../../shared/workspaces'
 import { routes } from '../router'
 import { groupWorkspaces } from '../sections'
+import { valueOf } from '../store'
 import { offeredActionIds, type OfferedActionId } from './commands'
 import type { OfferedAction, PaletteOffer } from './page-actions'
 import {
@@ -25,9 +26,11 @@ interface OrgWorkspaces {
   archived: readonly Workspace[]
 }
 
+const noWorkspaces: OrgWorkspaces = { sections: [], archived: [] }
+
 function orgWorkspaces(source: PaletteSource): OrgWorkspaces {
   if (source.org === null || source.list.state !== 'ready') {
-    return { sections: [], archived: [] }
+    return noWorkspaces
   }
   const { sections, workspaces } = source.list.value
   const groups = groupWorkspaces(sections, workspaces)
@@ -63,8 +66,9 @@ function offeredRows(offers: readonly PaletteOffer[]): PaletteRow[] {
 
 /**
  * The actions in their four parts: the open workspace, the org, the orgs,
- * and the window. New workspace opens a page, so it shows wherever the org
- * takes changes. A deleted org has no Switch to row.
+ * and the window. New workspace shows wherever the org takes changes. Its
+ * row links to the page, and it opens as the page or the dialog that the
+ * user chose. A deleted org has no Switch to row.
  */
 function actionGroups(source: PaletteSource): PaletteGroup[] {
   const { org, offers } = source
@@ -121,14 +125,26 @@ function settingGroups(
   return [org, account]
 }
 
+/** What a tab shows: the groups of a search, and the workspace groups. */
+interface TabShows {
+  searching: boolean
+  /**
+   * The data of the workspace groups loaded. Otherwise the status part
+   * stands in their place, and the tab leaves them out.
+   */
+  workspaces: boolean
+}
+
 /** The groups of a tab before the search, in the order that they show. */
 export function tabGroups(
   query: PaletteQuery,
   source: PaletteSource,
-  searching: boolean,
+  shows: TabShows,
 ): PaletteGroup[] {
-  const workspaces = orgWorkspaces(source)
-  const names = new Map(source.repositories.map((it) => [it.id, it.fullName]))
+  const { searching } = shows
+  const workspaces = shows.workspaces ? orgWorkspaces(source) : noWorkspaces
+  const repositories = valueOf(source.repositories) ?? []
+  const names = new Map(repositories.map((it) => [it.id, it.fullName]))
   const rows = (list: readonly Workspace[]) =>
     list.map((workspace) => workspaceRow(workspace, names))
   switch (query.tab) {

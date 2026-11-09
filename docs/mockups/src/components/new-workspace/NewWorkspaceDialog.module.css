@@ -1,0 +1,87 @@
+/*
+ * New workspace as a dialog: a wide, compact card with the full hairline
+ * outline of every card of the app. It lies in the layer and over the scrim
+ * of `ConfirmDialog.module.css`.
+ */
+.dialog {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-composer);
+  box-shadow: 0 24px 60px -24px var(--ui-shadow);
+  box-sizing: border-box;
+}
+
+/*
+ * The repository picker at the start, and the place of the workspace at the
+ * end. The texts of the header, the message, and the footer start on one
+ * line, and the boxes of the notices and the buttons on another.
+ */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 6px 10px 6px 8px;
+  border-bottom: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+/* The org and the section that the new workspace joins, as plain text. */
+.place {
+  overflow: hidden;
+  min-width: 0;
+  margin-left: auto;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The files of the message above its text, as in every composer. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 18px 0;
+}
+
+.notices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 10px 0;
+}
+
+/* The model picker at the start, then the attach button and Create. */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 10px 10px;
+}
+
+.spacer {
+  flex: 1;
+  min-width: 4px;
+}
+
+/* The key of Create, in the colour of its label. */
+.key {
+  flex-shrink: 0;
+  color: var(--ui-ink);
+}
+
+.keyOnSolid {
+  color: var(--ui-on-solid);
+}

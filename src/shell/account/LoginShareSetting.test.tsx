@@ -59,7 +59,10 @@ function shown(agent: 'Claude' | 'Codex') {
 async function account(server: FakeApiServer, fetch?: FetchLike) {
   holdAnimationFrames()
   const app = await startedApp(server, { fetch })
-  mountScreen(app, <AccountScreen connect={null} user={fakeUser} />)
+  mountScreen(
+    app,
+    <AccountScreen connect={null} tab="general" user={fakeUser} />,
+  )
   return app
 }
 

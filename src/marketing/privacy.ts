@@ -105,9 +105,13 @@ export const privacyDocument: LegalDocument = {
       title: 'Who gets your data',
       blocks: [
         list(
-          text`Cloudflare runs ${productName} and stores its data.`,
+          text`Cloudflare runs ${productName} and stores its data.
+            Cloudflare's AI model service also writes a short name for each
+            new workspace from the text of its first message.`,
           text`GitHub signs you in, and gives ${productName} access to your
-            repositories through its GitHub App.`,
+            repositories through its GitHub App. The Mac app also checks
+            GitHub for updates and downloads new versions. These requests
+            send your network address to GitHub.`,
           text`Resend sends the emails of ${productName}: the invitations of
             an org, and the email when an operator approves your account. It
             gets the address and the text of each email.`,

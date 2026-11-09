@@ -218,8 +218,8 @@ It calls the production browser download module and checks the saved response by
 It also checks a refused response, child and preview frames, another window, and a data address.
 Run it after the desktop build with `npm --prefix desktop run test:electron -- tests/downloads.spec.ts`.
 
-Mac CI runs the source and packaged tests on an Apple silicon runner for each pull request.
-Pushes to `main` and to the primary branch of the plan, and release tags that start with `v`, also run them on an Intel runner.
+Mac CI runs the source and packaged tests on an Apple silicon runner and on an Intel runner.
+It runs them for each pull request, and for each push to `main` and to the primary branch of the plan.
 It builds DMG and ZIP files with publishing disabled.
 Mac jobs run only when changed files match these paths:
 
@@ -227,8 +227,8 @@ Mac jobs run only when changed files match these paths:
 - `worker/security/desktop-*`
 - `src/**`
 - `.github/workflows/desktop-ci.yml`
+- `.github/workflows/desktop-mac-checks.yml`
 
-The orchestrator chose these filters because private Mac runner minutes cost about ten times Linux minutes.
 The Linux gate installs desktop dependencies without downloading the Electron binary.
 
 On a Mac, run these commands after the build:
@@ -254,69 +254,9 @@ Packages live in `dist/release/`.
 Playwright output lives in `dist/test-results/`.
 The package includes only `dist/app/` and `dist/bundle/`.
 
-### Signed release packages
+### Releases and updates
 
-The `package:release` command signs both architectures with a Developer ID
-Application identity. It enables Hardened Runtime with only the JIT entitlement
-that Electron needs. It notarizes and staples the app before ZIP packaging.
-It also signs, notarizes, and staples each DMG.
-It fails when a credential is missing or an app has the wrong Apple team.
-It checks each app with `codesign --verify --deep --strict`, `stapler validate`,
-and Gatekeeper. It checks each finished DMG as well.
-
-```sh
-npm --prefix desktop run build
-npm --prefix desktop run package:release
-npm --prefix desktop run test:packaged
-```
-
-The release command needs these environment values:
-
-| Name | Value |
-| --- | --- |
-| `CSC_LINK` | The Developer ID Application identity, with its private key, exported as an encrypted `.p12` and encoded as one base64 line. |
-| `CSC_KEY_PASSWORD` | The password of that `.p12` export. |
-| `APPLE_API_KEY` | The downloaded Apple API `.p8` private key, encoded as one base64 line. |
-| `APPLE_API_KEY_ID` | The ID of that API key. |
-| `APPLE_API_ISSUER` | The issuer ID from App Store Connect. |
-| `CONDUCTIVE_APPLE_TEAM_ID` | The ten-character Apple team ID that the signing certificate must match. |
-
-The command imports the identity into a temporary Keychain.
-It writes the API key in the same private temporary folder with mode `0600`.
-The build process receives the Keychain path and API key path.
-It receives no `.p12` value or export password.
-The command restores the prior Keychain search list and removes temporary
-credentials when it ends.
-Ctrl+C and SIGTERM cancel the active tool before credential cleanup.
-
-The Desktop workflow starts the signed release job on a tag that starts with
-`v`, or from **Run workflow**. The job waits for the normal Mac checks.
-It uses the `desktop-release` GitHub environment of `Firna-AI/remote-code`.
-That environment permits only the `main` branch and `v*` tags.
-Its five secrets have the names in the table above, except that the public
-`CONDUCTIVE_APPLE_TEAM_ID` is an environment variable.
-The current GitHub plan does not support an environment reviewer rule.
-The environment uses branch and tag restrictions instead.
-
-Use `gh secret set --repo Firna-AI/remote-code --env desktop-release NAME`
-to enter a secret without printing it.
-For a key file, pipe `openssl base64 -A -in FILE` into that command.
-Use `gh variable set` for the Apple team ID.
-Never commit keys, export passwords, or decoded credentials.
-
-The release job uploads `desktop-signed-packages` and
-`desktop-release-evidence` as Actions artifacts for 14 days.
-An `always()` step also removes temporary signing credentials after a failure
-or cancellation. The job does not publish a GitHub Release.
-DMG block maps are not release artifacts, because stapling changes the DMG
-after electron-builder creates its block map.
-
-electron-updater uses the public `Firna-AI/conductive-desktop` GitHub feed.
-The feed is unpublished and off by default.
-Development builds always keep it off.
-A published build can enable it with `CONDUCTIVE_DESKTOP_UPDATES=enabled`.
-It downloads updates automatically and installs them when the app quits.
-It offers Restart now or Later once for each downloaded version.
+[RELEASES.md](RELEASES.md) gives the signed release packages and their secrets, the release steps, and the updater.
 
 ### Key code
 

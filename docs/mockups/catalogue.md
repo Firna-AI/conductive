@@ -11,17 +11,17 @@ how a screen is built, and links to the other pages.
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
-| `app/sign-in`       | The GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, the invitations that wait after it, and Get started, the only first run, in three steps |
+| `app/sign-in`       | The GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, the invitations that wait after it, Get started, the only first run, in three steps, and the page back from a GitHub App install in the Mac app |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs and a search |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
-| `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, the default model, and the invite code |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, its error, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat, its error, the dialog, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
-| `app/chat`          | A finished turn, then running turns, lost data, lost updates, and unread files |
+| `app/chat`          | A finished turn with its work folded, then running turns, open work, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -31,20 +31,20 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, reopen it, open one from the palette, create an org, run a Mac command |
+| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`,
-`app/command-palette`, `app/orgs`, `app/orgs/suspended`, `app/new-workspace`,
-`app/org-settings`, `app/org-settings/cloud-computer`, `app/account`,
+`app/command-palette`, `app/orgs`, `app/orgs/suspended`, `app/account`,
+`app/new-workspace`, `app/org-settings`, `app/org-settings/cloud-computer`,
 `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, and
 `app/chat` do. `marketing/pictures` has no screen of its own. Each
 picture's capture page is its own entry at `marketing/pictures/<picture>`,
 so each page shows one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
-`app/new-workspace`, `app/org-settings/cloud-computer`, `app/account`, and
+`app/account`, `app/new-workspace`, `app/org-settings/cloud-computer`, and
 `app/sign-in/waitlist` moved into their own folders and kept their paths, so
 that each of those pages shows only its canonical screen.
 `app/sign-in/get-started` moved into its own folder and kept its path. Get
@@ -57,6 +57,25 @@ of `app/orgs/new`, `app/orgs/empty`, and `app/orgs/deleted` moved into their
 own folders and kept their paths, so `app/orgs` shows only its canonical
 screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
 paid plan went away, and declares `movedFrom`.
+
+`app/account` shows the General tab of the account. Its tabs are links, as
+the tabs of the org settings are. `app/account/preferences` shows the
+Preferences tab, from decision 142: the New workspaces section with Model
+and effort, and the choice of how New workspace opens on a computer, the
+page or a dialog. Its `not-saved` variant shows a save that failed, which
+keeps the saved choice. `app/account/setup`, `app/account/connect-claude`,
+and `app/account/connect-codex` show General before the first connections,
+and with the Connect form of each agent open.
+`app/account/share-not-saved` shows General after a login share setting
+failed to save, with its saved value and the cause beside the switch.
+
+`app/new-workspace/dialog` draws New workspace as a dialog over the ready
+workspace of `app`, for a user who chose the dialog. Its variants show a
+draft with an attached file and the notice of a missing agent login, a
+create request that failed, and an org without chosen repositories. A phone
+always opens the page, so each phone view shows the New workspace page in
+the same state. `user-flows/create-workspace-dialog` goes from Preferences
+through the dialog to the new workspace.
 
 The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
 an account without app access, and the person waits until an operator
@@ -78,8 +97,8 @@ approves them, or a code or an org invitation lets them in. Its pages:
   its code. Its child page `app/sign-in/join/failed` has the waitlist after
   the code of the link did not work, here a used-up code, and its `paused`
   variant has the pause.
-- `app/account` shows the invite code of the user at the end of the page,
-  with 3 of 5 invites left. Its child page `app/account/invites` has the
+- `app/account` shows the invite code of the user at the end of the
+  General tab, with 3 of 5 invites left. Its child page `app/account/invites` has the
   pause, and its variants have every invite used and a code that an
   operator turned off.
 - The Sign up flow ends on the waitlist. The Join with an invite link flow
@@ -186,13 +205,27 @@ list of Acme. Its child pages:
   `repository` variant has the menu of the repository filter, and its
   `archived` variant has the archived workspaces. Its `empty` variant has
   the Archived filter of `acme/marketing-site`, which holds no archived
-  workspace, and the line that says where they show.
+  workspace, and the line that says where they show. Its `unavailable`
+  variant has a workspace list that did not load: the notice with Try
+  again fills the tab.
 - `app/command-palette/actions` has the Actions tab over the list. Its
   `workspace` variant has the tab over an open workspace, whose actions
   come first.
 - `app/command-palette/settings` has the Settings tab.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its `no-results` variant has a search without results.
+  Its `loading`, `unavailable`, and `repositories-unavailable` variants
+  have a search for "new" while the repository names load, after the
+  workspace list did not load, and after the repository names did not
+  load. A spinner, or a notice with Try again, stands first in place of
+  the workspace groups, and the actions and the setting that match follow.
+  With an empty field, the All tab needs only the list. While the list
+  loads, or after it did not load, the status part stands before Actions,
+  in place of Recent workspaces.
+
+In `search/unavailable` and `workspaces/unavailable`, the list behind the
+palette on desktop shows the same failure, because it reads the same
+workspace list.
 
 `app/banner` shows a branch with commits and no pull request. Its child
 pages show the other states of decision 18: `app/banner/checks` has the
@@ -204,10 +237,15 @@ requested changes tint the bar amber. `app/banner/no-commits` has a branch
 without commits, whose bar offers no Create pull request, as in
 `app/new-workspace/creating` and `first-turn`.
 
-`app/chat` shows a finished turn. Its child pages: `app/chat/turns` has the
-running turn, steer, interrupt, and a failure, which moved from
-`app/chat/running`, `steer`, `interrupted`, and `failed` and declare
-`movedFrom`. `app/chat/lost-data` draws the data that the chat does not
+`app/chat` shows a finished turn, whose work folds into one line. Its child
+pages: `app/chat/turns` has the running turn, steer, interrupt, and a
+failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
+`failed` and declare `movedFrom`. `app/chat/work` draws the work of ended
+turns, from decisions 150 and 151: the open work of the finished turn with
+one message open, a turn with a message that the user sent during it, whose
+two parts each fold their own work, and a turn whose open work holds a Mac
+command card and a lost line at their place. The `fold` state opens the
+folds. `app/chat/lost-data` draws the data that the chat does not
 have, from decision 76: tool output and turn files that the runner left out,
 and the lines of runner events that the workspace refused.
 `app/chat/lost-updates` draws a failed repair, from decision 96. After a

@@ -4,6 +4,8 @@ These modules define the browser API and the runner protocol.
 They use JSON values and plain TypeScript types.
 They import no Cloudflare types, provider SDKs, or test fixtures.
 Dates use Unix milliseconds. IDs and model names are opaque strings.
+`Workspace.name` and `Session.title` are null until a name is set.
+`nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 Each area owns its paths and payloads. Import from that area directly.
 `OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
@@ -76,7 +78,7 @@ They count omitted files. The complete Changes response has no summary cap.
 It identifies the lost runner event without copying its data.
 Its `repairFailed: true` flag marks a refused replacement of a lost workspace update.
 Only the workspace sets that flag.
-[Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+[Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the rules of the request and of a failed repair.
 
 `events.ts` defines the browser stream. Its event numbers span all sessions
@@ -146,6 +148,7 @@ The git credential payload is not defined yet.
 - [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause changes, and user access details.
+- [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.

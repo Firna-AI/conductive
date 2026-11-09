@@ -8,7 +8,7 @@ repository.
 The runner opens one outbound WebSocket to the workspace Durable Object.
 It sends numbered events. It gets turns, messages, interrupts, model
 changes, file requests, and report requests.
-[Chat and events](../docs/protocol/chat-and-events.md#the-agent-runner)
+[Agent runner](../docs/protocol/agent-runner.md)
 states its requirements, and the
 [shared contracts](../src/shared/README.md) define its messages.
 
@@ -71,6 +71,14 @@ These facts belong to this implementation, not to the protocol docs.
 - The Claude adapter holds new input while 64 sent messages wait for a
   result that lists them. Each result frees only the messages that it
   lists. Closing discards held input. The engine matches result lists exactly.
+- A Claude SDK result with the origin `task-notification` belongs to a
+  background task, such as a background command or subagent. The adapter
+  ignores such a result when it lists no sent message that still waits. An
+  ignored result does not take the message list of an earlier SDK frame. It
+  does not end the active turn, and it frees no sent message. When such a
+  result lists sent messages that still wait, it answers them as usual. So
+  each result stays with the
+  [messages that it answers](../docs/protocol/chat-and-events.md#what-the-chat-shows).
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, the
@@ -131,7 +139,7 @@ the outbox size check.
 
 The workspace sends a `report.refresh` command when it needs a fresh full
 report of one kind.
-[Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates)
+[Lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the requirements.
 
 - The runner takes a request without a session or a login. The agents never
@@ -265,8 +273,9 @@ tools that time the first agent start after a resume.
 ## Related docs
 
 - [Architecture: sandbox software](../docs/architecture.md#sandbox-software)
-- [Chat and events: the agent runner](../docs/protocol/chat-and-events.md#the-agent-runner)
-- [Chat and events: lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates)
+- [Agent runner](../docs/protocol/agent-runner.md)
+- [Agent runner: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Chat and events: agents](../docs/protocol/chat-and-events.md#agents)
 - [Access and security: agent logins in a sandbox](../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
 - [Workspaces and sandboxes: files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
 - [Agent tools: computer tools](../docs/protocol/agent-tools.md#computer-tools)

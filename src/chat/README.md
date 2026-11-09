@@ -1,11 +1,12 @@
 # Chat
 
 The chat of a workspace: the session tabs with the session history, and the
-chat of the open session with its composer. It shows messages, folded tool
-calls, the running turn, steer, Stop, failures with Try again, the start
-steps of the sandbox, the Mac commands of each turn, and the bar that takes
-the composer's place while the sandbox does not run. After a failed first
-start of a new workspace, that bar sits above the composer, which stays. The workspace screen
+chat of the open session with its composer. It shows messages, folded runs
+of tool calls, the folded work of each ended turn above its answer, the
+running turn, steer, Stop, failures with Try again, the start steps of the
+sandbox, the Mac commands of each turn, and the bar that takes the
+composer's place while the sandbox does not run. After a failed first start
+of a new workspace, that bar sits above the composer, which stays. The workspace screen
 of the app shell mounts it by default, as
 [the workspace screen](../shell/workspace/README.md#the-chat-of-the-workspace)
 says. It builds against the fake API and the recorded chat events of
@@ -51,12 +52,27 @@ stops its own controller:
   Stop, and names that member to the others. When the members do not load,
   it names nobody but the reader.
 - `onWorkspaceChange` gets the workspace record after each change: its state,
-  and the title that the agent writes through `workspace.title` and
+  and the title that the backend gives it through `workspace.title` and
   `workspace.updated` events. The header and the list of the app show it.
+- A new workspace and each new session have no name: the `name` of the
+  workspace record and the `title` of the session record are null. The
+  tabs, the session history, the line of a linked session, and the header
+  and the list of the app then show "Untitled", from `nameLabel` in
+  `src/shared/name-label.ts`, as
+  [Workspace and session names](../../docs/protocol/chat-and-events.md#workspace-and-session-names)
+  says. "New session" names only the action of +: its label, the heading
+  of the empty chat, and the detail in the model picker.
 - Each tab shows the `title` of its session record. The backend provides
-  the titles that the mockups show: the first session of a new workspace
-  has the workspace name, and the agent's title renames both. The
-  development page does the same.
+  the titles that the mockups show. The title from the first message names
+  the workspace and its first session, as
+  [Messages](../../docs/protocol/chat-and-events.md#messages) says. Each
+  other session takes the first line of its first message with text as its
+  title, as [Sessions](../../docs/protocol/chat-and-events.md#sessions)
+  says. A name that a member set never changes. The development page does
+  the same.
+- The rename field of a session with no title starts empty, with
+  "Untitled" as its hint, so the label never becomes the name of the
+  session. An empty field keeps the old name.
 - `extraTabs` takes `<li>` tabs, such as open files, after the session tabs.
 - `onOpenDiff` gets the real path of a changed file of a finished turn. The
   chip of the file shows the label of its path, `displayPath`, which hides
@@ -140,7 +156,10 @@ members from the models of the app.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
-  and Try again.
+  the work fold of each ended turn, and Try again.
+- [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
+  says what folds when a turn ends. It also says that the line of each fold
+  stays in place when the user opens or closes it, also for a run of calls.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
   stream. One load runs at a time for each session, and a failed load waits
@@ -176,6 +195,12 @@ members from the models of the app.
   free Resume button, still run when its reply is older. The header of
   [`state/session-records.ts`](state/session-records.ts) gives the pending
   edits of a rename or a model change.
+- The composer reads Enter through `useSendKey` of
+  `components/send-key.ts`, the one send key of every composer: the chat,
+  and the page and the dialog of New workspace. On a computer, Enter sends
+  and Shift+Enter adds a line, as
+  [The send key](../../docs/protocol/create-a-workspace.md#the-send-key)
+  says. In the phone layout, Enter adds a line.
 - Send works while the sandbox is not ready: during the first start of a
   new workspace, after it failed, and during a resume. The workspace queues
   each message for the sandbox, as
@@ -236,7 +261,7 @@ It checks the plain message of a refused retry in a tab that missed newer events
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
 name a linked session, in both orders, and two chats with different readers
 on one fake stream. `components/SessionLogin.test.tsx` renders the login
-line and its notices. `components/SourceLink.dom.test.tsx` presses the link
+label and its notices. `components/SourceLink.dom.test.tsx` presses the link
 of a linked session to its open and its closed source. In an archived
 workspace, it opens a linked session that closed before the archive from the
 session history. Its source link writes nothing.
@@ -246,7 +271,14 @@ a failed start from a read and the stream, and a send that the Worker
 refuses. `components/FirstStart.dom.test.tsx` mounts the chat without a
 host, sends with Enter and Send during the first start and after it failed,
 and checks the saved message on the bar of a failed first start and of a
-failed resume.
+failed resume. `components/WorkFold.dom.test.tsx` reads the folds of ended
+turns from the rendered chat. `components/OpenFold.dom.test.tsx` opens a
+fold and a message line, and checks that each line keeps its place.
+`components/ReadingPlace.dom.test.tsx` lays the chat out as a browser lays
+out its reversed scroll box. It ends a long turn while the reader reads
+higher up, and checks the read row and the newest message at the bottom.
+`components/SessionTabs.test.tsx` renders the tab of a session with no
+title and its rename field.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -261,6 +293,9 @@ check in the Mac app.
   state and its actions, with `show` and `hide` for a kept chat.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
+- `components/Composer.tsx`: the message box and its controls, with the
+  steering prompt that [Messages](../../docs/protocol/chat-and-events.md#messages)
+  states.
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
@@ -289,7 +324,7 @@ check in the Mac app.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
-  record and the reader, and the words of the line under the composer.
+  record and the reader, and the login label in the composer.
 - `state/linked-replies.ts`: the message and the focus of a reply that names
   a linked session.
 - `components/SourceLine.tsx`: the line that links a linked session to its
@@ -297,6 +332,23 @@ check in the Mac app.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
   event from the mockups' `lostCopy.ts`.
+- `components/turn-work.ts` and `components/transcript-entries.ts`:
+  `foldedWork` finds the work of each ended turn that folds, as the
+  [transcript rules](transcript.md) say. `groupEntries` makes the entries
+  that the chat draws, and puts each insert at its place, also in a fold.
+- `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
+  of an ended turn with its steps, and the message line that grows to the
+  full text.
+- `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
+  `CallLine`, which the work fold shares.
+- `components/reading-place.ts`: the keeper of the reader's place, which
+  `ChatPane` gives through `ChatKeeper`. While the reader is scrolled up, it
+  keeps the top row in view in place for every change of size of the
+  transcript. When that row folds away, the fold that took it keeps its
+  place.
+- `components/useFold.ts`: `useFold` opens and closes a fold on a click on
+  its line, and gives the line to the keeper, also at the bottom of the
+  chat, so the line keeps its place.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
@@ -306,6 +358,8 @@ check in the Mac app.
   responses.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
+- `components/send-key.ts`: `useSendKey`, the send key that the composer
+  shares with the page and the dialog of New workspace in the app shell.
 - `device/`: the Mac commands. Their [README](device/README.md) names
   their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its
@@ -316,6 +370,8 @@ check in the Mac app.
 ### Related docs
 
 - [Chat and events](../../docs/protocol/chat-and-events.md)
+- [Agent runner](../../docs/protocol/agent-runner.md): the limits of the
+  runner events, their refusal markers, and the late events of a turn.
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):
   start steps, stop and resume, and archive.
 - [Architecture](../../docs/architecture.md)

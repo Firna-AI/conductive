@@ -13,8 +13,17 @@ npm run typecheck
   and a stored login for each agent.
 - Its helpers send messages, open tabs, connect a `FakeRunner`, and
   restart `WorkspaceChat` on the same storage.
+- `createFirstMessageFixture` in `first-message.test-support.ts` assigns
+  the first session and message of an untitled workspace.
+  `first-message.test.ts`, `workspace-session-title.test.ts`, and
+  `session-titles.test.ts` share this fixture.
+- `createTitleFixture` in `workspace-title.test-support.ts` supplies a fake
+  title model and drains background work. `workspace-titles.test.ts` and
+  `workspace-title-configuration.test.ts` use it.
 - `MemoryChatStorage` keeps the records in memory. Set `beforeCommit` to
   delay a commit and test a late commit.
+- A memory restart does not rebuild the workspace object. Use the native
+  fixture to check that new stored state survives a workspace object restart.
 - To test that a failed commit rolls back the whole receipt of an action,
   use `checkCommitBoundaries` in
   [`commit-boundary.test-support.ts`](commit-boundary.test-support.ts).
@@ -105,8 +114,27 @@ npm run typecheck
   lifecycle, and the app API. `integration/run-browser-harness.mjs` serves
   a production app build through that entry.
   [Outer Worker tests](integration/outer-worker-tests.md) describes them.
+- `integration/workspace-title-recovery.test.ts` checks title-write
+  recovery. Its first-session case uses `recoveryWorkspaceFixture` to
+  restart the real workspace object before both tabs open. It checks
+  titles through the sessions route, ordered events for both tabs,
+  duplicate receipts, and a member name after another restart.
+- `integration/workspace-title-request.test.ts` uses
+  `workspace-title-entry.test-support.ts` to capture model inputs. It checks
+  the title source after a native restart, null API names, the D1 name, and
+  the first session.
+- `workspace-title.test.ts` checks the empty-name rule, including member
+  names that match old defaults.
+- `workspace-title-policy.test.ts` checks the name before the first model
+  call and each retry. It also checks that a skipped runner title ends its
+  repair without a title event.
+- `integration/workspace-title-guards.test.ts` checks a workspace route name,
+  a confirmed runner title that changes nothing, and detail and repair
+  reads after a restart. It also checks a pending model title after Archive,
+  org suspension, and org deletion.
 - `first-message.test.ts` checks that a sender who is not the assigned
   sender of a first message gets a refusal, and that no session is stored.
+  It also checks the initial null title and unchanged repeated admission.
 - `workspace-summary.test.ts` checks the stored summary: the event cursor,
   the visible output, and the dispatched work. Queued input and metadata
   are not output.

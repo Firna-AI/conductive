@@ -48,12 +48,12 @@ function request(value: unknown): value is DeviceCommandRecord {
       value.requestKey,
       value.orgId,
       value.workspaceId,
-      value.workspaceName,
       value.sessionId,
       value.turnId,
       value.sender.id,
       value.sender.githubLogin,
     ].every(text) &&
+    nullableText(value.workspaceName) &&
     nullableText(value.sender.displayName) &&
     nullableText(value.sender.avatarUrl) &&
     pairing(value.device) &&

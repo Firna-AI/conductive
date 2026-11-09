@@ -177,7 +177,7 @@ export const accountSettings: readonly Command[] = [
     label: 'New workspaces',
     lead: icon(SlidersHorizontal),
     words: ['model', 'effort', 'default'],
-    to: paths.account,
+    to: paths.accountPreferences,
   },
 ]
 

@@ -1,4 +1,5 @@
 import type { SchemaProps } from '@mokly/mokly'
+import { foldStates } from '../components/chat/WorkFold'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { paletteViews } from '../components/palette/paletteViews'
 import { toolKeys } from '../components/workspace/tools'
@@ -17,9 +18,11 @@ export const workspaceStateSchema = {
   additionalProperties: false,
   required: [
     'workspace',
+    'name',
     'sandbox',
     'startError',
     'conversation',
+    'fold',
     'banner',
     'files',
     'tool',
@@ -40,6 +43,13 @@ export const workspaceStateSchema = {
   properties: {
     workspace: { enum: openableWorkspaces },
     /**
+     * The name of a new workspace: its title, or no name yet, which shows
+     * as Untitled. A new workspace has no name from the send until the
+     * title comes, about a second later. So a start that shows Untitled
+     * shows only its first step. Any other workspace shows its own name.
+     */
+    name: { enum: ['title', 'untitled'] },
+    /**
      * The cloud computer. An archived workspace has none. `refused` is a
      * stopped cloud computer whose start the app refuses, such as while the
      * owner of the workspace is suspended.
@@ -53,6 +63,12 @@ export const workspaceStateSchema = {
      */
     startError: { enum: startErrorKeys },
     conversation: { enum: conversationKeys },
+    /**
+     * The fold of the work of each ended turn: closed, as it starts, open,
+     * or open with its last message line open too. A view runs no script,
+     * so a chat with open folds starts at its top.
+     */
+    fold: { enum: foldStates },
     banner: { enum: bannerStates },
     /** The list of the files panel: All files, Changes, or Checks. */
     files: { enum: fileLists },
@@ -163,9 +179,11 @@ export type WorkspaceState = SchemaProps<typeof workspaceStateSchema>
 /** The ready workspace of the canonical screen. Entries change from here. */
 export const readyWorkspace: WorkspaceState = {
   workspace: 'checkout-autocomplete',
+  name: 'title',
   sandbox: 'ready',
   startError: 'failed',
   conversation: 'history',
+  fold: 'closed',
   banner: 'ready-to-merge',
   files: 'changes',
   tool: 'terminal',
