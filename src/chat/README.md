@@ -96,7 +96,8 @@ stops its own controller:
   composes `SessionTabs` and `SessionChat` in its own layout. Such an app
   takes the tabs from `tabSessions`, and the session history from
   `historySessions` with the times of `endedAt`, so an archived workspace
-  navigates without a write.
+  navigates without a write. While the chat is read-only, such an app also
+  hides a rename or a close question that the snapshot still holds.
 - `useChatController` makes the controller through the shared
   `useWorkspaceStore` hook of [the web app](../app/README.md). The hook
   starts the controller after the render. It stops the controller at
@@ -163,6 +164,10 @@ members from the models of the app.
 - A read-only chat shows no composer, no +, no Rename, no Try again, and
   no answer to a Mac command. Its empty state names only the session
   history.
+- When the chat turns read-only during a visit, it hides an open rename or
+  close question. An open session history stays. The tab stays open with
+  its old name, and the bar in place of the composer says why. `ChatBody`
+  in `WorkspaceChat.tsx` applies this rule for both hosts.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
   moves, the login of each session, and the linked sessions.
 - A Stop request records the member who pressed Stop, and ends nothing. The
@@ -233,6 +238,15 @@ on `FakeApiServer` and the recorded events, and render the chat with
 chat in the whole app.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
+
+`components/ReadOnlyChat.dom.test.tsx` mounts a read-only chat with the
+refused bar of a suspended org, and switches sessions with no write. It
+also makes the chat read-only while an edit is open. In one case, the
+`readOnly` prop of `WorkspaceChat` changes during a rename. In the other, a
+kept chat gets an archive during a close question. It checks that the chat
+hides the edit, keeps the tab with its old name, and sends no write. After
+the archive, the session history still opens.
+
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
 name a linked session, in both orders, and two chats with different readers
 on one fake stream. `components/SessionLogin.test.tsx` renders the login
