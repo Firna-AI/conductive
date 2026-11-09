@@ -395,8 +395,9 @@ The agent's calls from the plan, on 9 November 2026:
 - A code that does not work names the reason: unknown, disabled, used up,
   or the pause. Reason: the person then knows whether to ask for another
   code or to wait.
-- The join link of a person with app access uses no code. Reason: that
-  person needs no code, so the code stays for someone else.
+- The join link of a person with app access uses no code, and the app
+  opens as usual, with no notice. Reason: that person needs no code, so
+  the code stays for someone else.
 - The join page names no owner of the code. Reason: a shared code can
   travel far, and the login of its owner would travel with it.
 - Approve asks first. The question names the person and says that an
@@ -405,7 +406,7 @@ The agent's calls from the plan, on 9 November 2026:
 - The approval saves its email as pending, in the same D1 batch as the
   grant, and sends it at once. The 15-minute Cron Trigger sends each
   pending email again, with the same idempotency key, until Resend accepts
-  it or a set time passes. Reason: the operator section shows no email
+  it or 24 hours pass. Reason: the operator section shows no email
   address, so the operator cannot tell the person in another way. This is
   option D of decision 162, inside the user's choice of B.
 - The org invitation of a person who waits gives app access in the same
@@ -438,6 +439,62 @@ The agent's calls after the options check, on 9 November 2026:
 - A waiting account stays until a deletion on request, as other accounts
   do. Reason: this adds no new behaviour. A time limit or option F of
   decision 161 can come later.
+
+The agent's calls from the mockups of Milestone 1, on 9 November 2026:
+
+- The waitlist screen names the email address that gets the approval
+  email. An account with no verified email gets no promise of an email.
+  Its screen says that the app opens there once the account is approved.
+  Reason: the approval email goes only to a verified email.
+- The approval email has no mockup. Its words: the subject "Your
+  Conductive account is ready", and the body "You can now use Conductive.
+  Sign in with GitHub to get started:", then the address of the app. The
+  product name comes from the brand module. Reason: an email is not a
+  screen, and the invitation email also lives only in the code.
+- The waitlist screen reads the app access again when the person comes
+  back to the tab or the window, and after Use code. It sets no timer.
+  Reason: a person usually comes back from the approval email.
+- The Sign up flow ends at the waitlist. A new flow, "Join with an invite
+  link", goes from the join link through Get started. Reason: the Get
+  started mockups draw Cal, who is an operator and never waits.
+- The waitlist in the Mac app is the same screen, in the Mac window with
+  the window buttons in its top bar. Reason: the Mac app shows the screens
+  of the web app.
+- The sign-in line "If you are new, this also creates your account" stays.
+  Reason: a new sign-in still creates the account, which then waits.
+- The invite code section sits at the end of the Account page. Reason: on
+  a phone, the forms that connect Claude and Codex then stay near the top.
+- The retries of an approval email stop after 24 hours. The page of the
+  user then shows that the email was not sent, with the reason. A person
+  with no verified email gets no email, and the page says so. Reason:
+  Resend keeps an idempotency key for 24 hours, so a later retry could
+  send a second copy. The person still has app access, and sees it at
+  the next visit.
+- A disabled referral code stays disabled, and the user gets no new code.
+  Reason: an operator can give a good user an invite code instead.
+- Resume sign-ups acts at once, with no question. Reason: it brings back
+  the usual state.
+- A person who waits can be suspended, as any user. The Waitlist tab
+  leaves out suspended people, and the page of a suspended person shows
+  Lift, not Approve. Reason: Suspend already covers every account.
+- The search of the Invite codes tab also finds the label of an invite
+  code and the login of the owner of a referral code. Reason: an operator
+  remembers a code by its label more often than by its text.
+- Each code on the Invite codes tab and on the page of a user can copy
+  its join link, beside its code. Reason: a link is what people share.
+- The page of a user also gives the age of the GitHub account. Reason:
+  Approve on that page then has the same facts as the Waitlist tab.
+- An account from before the waitlist shows "Joined before the waitlist",
+  with its join day as the start of its app access. Reason: its access
+  started when it joined.
+- After an approval, the row stays in the Waitlist tab until the list
+  reloads, with the state of its email. Reason: the operator sees the
+  result in place.
+- Pause sign-ups is a button in a Sign-ups box at the top of the Invite
+  codes tab. While the pause is on, the notice on each tab holds Resume
+  sign-ups. The count of the people who wait is a link under the Users
+  tile of the Overview. Reason: these follow the parts that the section
+  already has.
 
 ## Milestone 1: Mockups
 
@@ -512,6 +569,8 @@ Depends on: 1
 - [ ] Add the waitlist to the features and the docs list of `README.md`.
       Add the approval email to the `RESEND_API_KEY` row of
       `docs/deployment.md`.
+- [ ] Change the words of the marketing button in the marketing site part
+      of `docs/architecture.md`.
 
 ## Milestone 3: App access and codes in the Worker
 
@@ -571,8 +630,8 @@ Depends on: 3
       Milestone 3, also during the pause. It saves the email as pending in
       the same batch, and sends it at once.
 - [ ] Send each pending approval email again from the 15-minute Cron
-      Trigger, with the same idempotency key, until Resend accepts it or a
-      set time passes.
+      Trigger, with the same idempotency key, until Resend accepts it or
+      24 hours pass.
 - [ ] Add the routes of the invite codes: list with a search, make, and
       disable. A disable also works for a referral code.
 - [ ] Add the routes of the pause: read, turn on, and turn off.
@@ -597,11 +656,14 @@ Depends on: 1, 3
 - [ ] Add the waitlist screen, in the browser and in the Mac app, with its
       states from the mockups.
 - [ ] Open the waitlist screen when the session reply says that the user
-      waits. Open Get started only after app access.
+      waits. Open Get started only after app access. Read the app access
+      again when the person comes back to the tab or the window, and after
+      Use code.
 - [ ] Add the join link. It keeps the code through the sign-in, and it
       uses the code for a signed-in person who waits.
 - [ ] Add the referral code to the Account page, with Copy and its states.
-- [ ] Change the words "Start free with GitHub" on the marketing site.
+- [ ] Change the words of the marketing button and its closing line in
+      `src/marketing/`, and in `src/marketing/routes.test.ts`.
 - [ ] Update the Privacy draft in `src/marketing/privacy.ts`, as the
       design says. Update the Terms draft when it promises an open
       sign-up.
@@ -653,6 +715,10 @@ Depends on: 5, 6
 Depends on: every other milestone
 
 - [ ] Merge `main` into this branch after the operator section merges.
+      `main` adds a fifth Account screen, `share-not-saved`, and a
+      `shareChange` prop. Move that screen into its own folder under
+      `app/account`, as this branch did for the other Account states, and
+      give each Account entry the prop.
 - [ ] Smoke-test in `npm run dev`: a person who waits, a code, a join
       link, an org invitation, the referral code, the pause, and the
       operator tabs.
