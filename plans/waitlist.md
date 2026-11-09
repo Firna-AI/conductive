@@ -917,8 +917,8 @@ Depends on: every other milestone
 - [x] Smoke-test in `npm run dev`: a person who waits, a code, a join
       link, an org invitation, the referral code, the pause, and the
       operator tabs.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
@@ -935,10 +935,11 @@ Depends on: every other milestone
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
 
-Verification evidence: `.context/waitlist/m8/smoke-run-2.log`,
+Evidence: `.context/waitlist/m8/gate-final.log`,
+`.context/waitlist/m8/smoke-final.log`,
+`.context/waitlist/m8/ui-fix/report.md`,
 `.context/waitlist/m8/links.json`, and
-`.context/waitlist/m8/mockups-after-recovery.log`. The complete-gate
-rerun continues after an interrupted shell.
+`.context/waitlist/m8/combined-test-cost.md`.
 
 ## Post-merge follow-up (non-blocking)
 
