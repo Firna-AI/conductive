@@ -1,4 +1,4 @@
-import type { WorkspaceTab } from '../components/workspace/WorkspaceTabs'
+import type { WorkspaceTab } from '../components/workspace/TabItem'
 import {
   linkedSession,
   newSession,
@@ -7,6 +7,7 @@ import {
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
+import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 
 /** A workspace that the create flow made has no edits and one session. */
 export function isNew(state: WorkspaceState): boolean {
@@ -30,9 +31,11 @@ export function workspaceName(
 /**
  * The tabs of the centre column: the sessions, the code file that stays
  * open, and the file, the diff, or the new session that the state opens.
- * The linked session opens as the last tab. While the login of the starter
- * of the first session is not available, that first session leads to its
- * view for the member, beside the linked session.
+ * Each new tab opens at the end of the row, as the linked session does. A
+ * full row holds more sessions and files before the tab that the state
+ * opens, and a move puts the code file between the two sessions. While the
+ * login of the starter of the first session is not available, that first
+ * session leads to its view for the member, beside the linked session.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -55,13 +58,14 @@ export function tabsFor(
     },
     { key: second.key, kind: 'session', title: second.title, selected: false },
     {
-      key: 'code',
+      key: codeTabKey,
       kind: 'code',
       title: 'useAddressAutocomplete.ts',
       to: paths.code,
       selected: state.tab === 'code',
     },
   ]
+  if (state.tabRow === 'full') tabs.push(...moreTabs)
   if (state.tab === 'markdown') {
     const to = paths.markdown
     tabs.push({
@@ -102,5 +106,5 @@ export function tabsFor(
       selected: true,
     })
   }
-  return tabs
+  return state.tabRow === 'moved' ? withCodeMoved(tabs) : tabs
 }

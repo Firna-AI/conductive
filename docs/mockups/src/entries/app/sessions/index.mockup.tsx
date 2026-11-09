@@ -10,7 +10,7 @@ export const sessions = defineScreen({
   description:
     'A new session, after + at the end of the tabs: an empty chat with its own model picker. It works on the same branch and the same cloud computer as the two other sessions. The user started it, so its composer says "Uses your Claude login".',
   rationale:
-    'Each agent session is a tab in the centre column, beside the open files and diffs. The current session shows a pencil to rename it, and every tab closes. The user chose several sessions per workspace, each with its own model picker, in decision 19. On a phone the sessions are tabs at the top of the Chat tab. The clock after + opens the session history, as the user chose in decision 31.',
+    'Each agent session is a tab in the centre column, beside the open files and diffs. Every tab closes, and a right click on a tab opens its menu, where Rename session renames a session, as the Move tabs page shows. The user chose several sessions per workspace, each with its own model picker, in decision 19. On a phone the sessions are tabs at the top of the Chat tab, and a long press opens the menu of a tab. The clock after + opens the session history, as the user chose in decision 31.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, tab: 'new-session' },

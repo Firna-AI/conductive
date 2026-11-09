@@ -19,6 +19,8 @@ export type MenuItem = {
   tone?: 'danger'
   /** The row under the pointer or the keyboard focus. */
   highlighted?: boolean
+  /** An item that is off: it keeps its place, greyed, and does nothing. */
+  disabled?: boolean
 }
 
 export type MenuEntry =
@@ -46,10 +48,12 @@ function Item(props: { entry: MenuItem }) {
   return (
     <div
       aria-checked={choice ? entry.checked : undefined}
+      aria-disabled={entry.disabled ? true : undefined}
       className={classes(
         styles.item,
         entry.tone === 'danger' && styles.danger,
         entry.highlighted && styles.highlighted,
+        entry.disabled && styles.disabled,
       )}
       role={choice ? 'menuitemradio' : 'menuitem'}
     >

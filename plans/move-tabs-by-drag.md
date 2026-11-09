@@ -355,6 +355,15 @@ Added on 8 November 2026 from the options check of decision 142. Open.
   at a point, for the tab menu. The CSS of the off item goes in the menu
   CSS of the mockups, which the app shares.
 - A small helper turns a vertical wheel turn into a sideways scroll.
+- The row is a scroll container with a fade mask, so it clips and fades
+  what it holds. So the lifted tab and the tab menu draw in a portal above
+  the page, as the lifted row of the workspace list does. Script scrolls
+  the row, and sets `.fadeStart` and `.fadeEnd` from its scroll position.
+- The app takes these classes of the mockups: `.scroll`, `.fadeStart`,
+  `.fadeEnd`, `.drop`, `.line`, `.lineEnd`, `.lifted`, `.placeholder`,
+  `.menuOpen`, and `.disabled` of the menu. It does not take
+  `.scrolledToEnd`, `.float`, or `.clipSides`, which only let a static
+  mockup show a state that needs script.
 
 ### Design calls
 
@@ -429,6 +438,33 @@ made these calls the same day:
 - The selected tab gets narrower, because it loses the 44 px of the Rename
   button. The minimum width of the selected tab on a phone changes with
   it. Reason: the CSS of the mockups gives that width for the button.
+
+The agent made these calls on 9 November 2026, in Milestone 1:
+
+- The lifted copy hangs just below the row, under the pointer, and shows
+  the whole title. Reason: the titles of the neighbours stay whole.
+- On a phone, a long press lifts the tab at its own place. Reason: a copy
+  at the start of the row would hide the shown tab.
+- During a drag, a hidden status tells a screen reader "Moving <title> to
+  place 2 of 3." Reason: the workspace list tells its drag in the same
+  way.
+- The items of the tab menu have icons: a pencil for "Rename session", and
+  arrows for the moves. Reason: the section menu has icons.
+- An item that is off shows at half opacity. Reason: the off items of the
+  shell menu look the same.
+- Each fade is 32 px wide, and a tab that scrolls into view stops 32 px
+  from the edge. Reason: the tab then stays clear of the fade.
+- At its minimum width, a phone tab shows only its icon, as the comment of
+  `.phone .tab` says. Reason: the full row of the mockups showed one
+  letter and an ellipsis there, which looks unfinished.
+- A tab that holds the rename field has no fill. The border of the field
+  marks it, and the field keeps a usable width. Only the shown tab keeps
+  the fill. Reason: the mockups showed that the fill of today's field made
+  a second shown tab, and pushed the shown tab out of a phone row.
+  Showing the session first, as the Rename button did, was rejected,
+  because a rename must not switch the chat.
+- The rename field of the app takes its look from the shared `.rename`
+  rule of the mockups. Reason: one look then has one rule.
 - The wheel helper is shared. Reason:
   `plans/follow-ups/sideways-tab-rows-ignore-vertical-wheel.md` can then
   use it for the other rows that scroll sideways.
@@ -468,36 +504,46 @@ Tags: mockup
 Depends on: none
 
 Draw the drag of a tab, the row after a move, the full row, and the tab
-menu, on desktop and on a phone.
+menu, on desktop and on a phone. The app shares the CSS modules of the tabs
+and of the menu. So this milestone adds new classes for the new states and
+changes no rule that the app uses. The app keeps working until Milestone 4
+adopts them.
 
-- [ ] Add the drag states to
+- [x] Add the drag states to
       `docs/mockups/src/components/workspace/WorkspaceTabs.tsx` and its
       CSS module: a lifted tab, a faint copy, and a drop line. Take the
       look from the drag of the workspace list.
-- [ ] Make the row of the mockups scroll sideways when its tabs do not
-      fit, with a fade at each end that clips tabs. Update the comment of
-      the row in `WorkspaceTabs.module.css`.
-- [ ] Add an item that is off to the menu CSS of the mockups, in
+- [x] Draw the full row with new classes: a row that scrolls sideways when
+      its tabs do not fit, and a fade at each end that clips tabs.
+- [x] Add an item that is off to the menu CSS of the mockups, in
       `docs/mockups/src/components/common/Menu.module.css`.
-- [ ] Remove the Rename button from the shown session tab of the mockups.
-      Narrow the selected phone tab to match. Update the rationale of the
-      Sessions page, which names the pencil.
-- [ ] Add a "Move tabs" page under `docs/mockups/src/entries/app/tabs/`,
+- [x] Remove the Rename button from the shown session tab of the mockups.
+      Update the rationale of the Sessions page, which names the pencil,
+      and the lines about tabs in `docs/mockups/design.md`.
+- [x] Add a "Move tabs" page under `docs/mockups/src/entries/app/tabs/`,
       beside the Sessions and Files pages, with at most five screens. Each
       screen shows a phone and desktop.
-  - [ ] Drag a tab: on desktop, the code file tab moves between the two
+  - [x] Drag a tab: on desktop, the code file tab moves between the two
         sessions. On a phone, a long press lifts the second session.
-  - [ ] After the move: the file tab sits between the two sessions, and a
+  - [x] After the move: the file tab sits between the two sessions, and a
         new session opens at the end of the row.
-  - [ ] A full row: the row scrolls, the shown tab is in view, and a fade
+  - [x] A full row: the row scrolls, the shown tab is in view, and a fade
         marks the end that clips tabs.
-  - [ ] The tab menu: a right click on the first session tab shows "Rename
+  - [x] The tab menu: a right click on the first session tab shows "Rename
         session", a line, "Move left" off, and "Move right". On a phone,
         the same menu shows as a sheet after a long press.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages at
+  - [x] Rename a session: after "Rename session", the rename field shows
+        in a tab that does not show. The mockups showed that no screen
+        drew this field.
+- [x] Add `app/tabs` to `docs/mockups/catalogue.md` and to the order in
+      `docs/mockups/src/entries/app/_folder.json`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages at
       `http://127.0.0.1:4173`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: the screenshots in `.context/move-tabs-by-drag/mockups/`, and the
+logs of the checks in `.context/move-tabs-by-drag/m1-*.log`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -577,7 +623,20 @@ full row.
 - [ ] Add the item that is off and the placement at a point to the `Menu`
       part of the chat.
 - [ ] Remove the Rename button from `Tab` in
-      `src/chat/components/SessionTabs.tsx`.
+      `src/chat/components/SessionTabs.tsx`. Then narrow the selected phone
+      tab in `WorkspaceTabs.module.css`, which the app shares.
+- [ ] Give the row of the app the `.scroll` class of Milestone 1, set
+      `.fadeStart` and `.fadeEnd` by script, and update the comment of
+      the row in `WorkspaceTabs.module.css`.
+- [ ] Make a phone tab at its minimum width show only its icon, in
+      `WorkspaceTabs.module.css`, which the app shares.
+- [ ] Draw the lifted tab and the tab menu in a portal above the page.
+- [ ] Give the tab with the rename field the `.renaming` state of
+      Milestone 1. Make `RenameField` use the shared `.rename` rule, and
+      delete its copy in `src/chat/components/tabs.module.css`. The rule
+      sizes the field with `field-sizing: content`, which only Chromium
+      supports. Other browsers fall back to the default width of the
+      input, within the 168 px cap.
 - [ ] Add the tab menu of the design: its own handler for Shift and F10
       and the Menu key, the sheet after a long press on a phone, the focus
       back to the tab after a move, and the announcement of the new

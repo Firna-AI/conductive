@@ -17,9 +17,10 @@ status mark, the name, and the time, and it moves to another section by
 drag and drop. The centre column has a slim header that names the
 repository, the branch, and the owner of the workspace, and ends with
 Archive. Then come a tab for each agent session and each open file or diff,
-+ for a new session, and a clock that opens the session history. The right
-column has the pull request bar on top, the All files, Changes, and Checks
-lists below it, and the Terminal, Preview, and Desktop tabs at the bottom.
+in the order that the user gives them by drag, + for a new session, and a
+clock that opens the session history. The right column has the pull request
+bar on top, the All files, Changes, and Checks lists below it, and the
+Terminal, Preview, and Desktop tabs at the bottom.
 It shows no file content. A phone shows an org switcher at the top of the list, and the
 workspace with a compact pull request row, the sessions as tabs above the
 chat, and five tabs at the bottom.
@@ -52,9 +53,26 @@ chat, and five tabs at the bottom.
   `app/new-workspace/waiting` shows. A resume of a stopped workspace still
   takes messages, which wait for the sandbox.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
-  `src/components/common/` beside its button, or in a `Sheet` on a phone.
-  Firna's own menu rows are taller than the dense design. A row can lead with
-  a mark, such as an avatar, and end with a muted detail and an icon.
+  `src/components/common/` beside its button or its tab, or in a `Sheet` on
+  a phone. Firna's own menu rows are taller than the dense design. A row can
+  lead with a mark, such as an avatar, and end with a muted detail and an
+  icon. An item that is off keeps its place, greyed.
+- `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
+  centre column, from decisions 142 to 144, as `app/tabs` shows. Any tab
+  moves to any place in the row by drag, or by a long press on a phone, and
+  a new tab opens at the end of the row. A drag looks like the drag of a
+  workspace row: the tab lifts as a raised card, a faint copy stays at its
+  place, and a line in the accent colour marks where it lands. The line
+  stands between two tabs and takes no space. When the tabs do not fit at
+  their minimum width, the row scrolls sideways with no scrollbar, keeps the
+  shown tab in view, and fades each end that clips tabs. A right click on a
+  tab opens its menu at the pointer: Rename session, a line, then Move left
+  and Move right. A file or diff tab has only the moves. The menu is the one
+  way to rename a session, so no tab shows a rename button. Rename session
+  opens a field in place of the title of that tab, also when the tab does
+  not show. The field marks that tab, which takes no fill, so only the shown
+  tab is filled. On a phone, a long press that ends without a move opens the
+  menu as a sheet.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
@@ -134,4 +152,5 @@ chat, and five tabs at the bottom.
   frame of a picture on the marketing site.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
-  of its title beside its rename and close buttons.
+  of its title beside its close button. When the session tabs still do not
+  fit, their row scrolls sideways.

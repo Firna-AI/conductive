@@ -26,6 +26,7 @@ how a screen is built, and links to the other pages.
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
+| `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge                     |
 | `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |

@@ -24,6 +24,7 @@ export const workspaceStateSchema = {
     'ports',
     'focus',
     'tab',
+    'tabRow',
     'composer',
     'resize',
     'overlay',
@@ -73,6 +74,16 @@ export const workspaceStateSchema = {
       ],
     },
     /**
+     * The tab row, from decisions 142 to 144: each tab where it opened, the
+     * drag of a tab, the code file after its move between the two
+     * sessions, a full row with more tabs than fit, scrolled to the shown
+     * tab, or the rename field in the first session tab after Rename
+     * session in its tab menu. The drag lifts the code file on desktop,
+     * and on a phone the second session, because a phone shows only the
+     * sessions.
+     */
+    tabRow: { enum: ['opened', 'drag', 'moved', 'full', 'rename'] },
+    /**
      * The composer: empty, with a message that is not sent yet, with
      * attached files, with its picker open, or with a message for an agent
      * that is not connected, or in a session whose starter's login is not
@@ -92,8 +103,9 @@ export const workspaceStateSchema = {
     resize: { enum: ['none', 'right'] },
     /**
      * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, or the
-     * question of Archive, with work that is not pushed or with none.
+     * before a running session closes, the owner of the workspace, the
+     * question of Archive, with work that is not pushed or with none, or
+     * the tab menu of the first session.
      */
     overlay: {
       enum: [
@@ -103,6 +115,7 @@ export const workspaceStateSchema = {
         'reassign',
         'archive-unpushed',
         'archive-pushed',
+        'tab-menu',
       ],
     },
     /** The person signed in: an admin of the org, or a member who is not. */
@@ -146,6 +159,7 @@ export const readyWorkspace: WorkspaceState = {
   ports: 'open',
   focus: 'chat',
   tab: 'session',
+  tabRow: 'opened',
   composer: 'empty',
   resize: 'none',
   overlay: 'none',

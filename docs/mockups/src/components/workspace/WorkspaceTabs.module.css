@@ -132,3 +132,189 @@
   position: relative;
   flex-shrink: 0;
 }
+
+/*
+ * A row whose tabs do not fit at their minimum width scrolls sideways, with
+ * no scrollbar. A tab that scrolls into view stays clear of the fades.
+ */
+.scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-padding-inline: 32px;
+  scrollbar-width: none;
+}
+
+/* A fade marks each end of the row that clips tabs. */
+.fadeStart,
+.fadeEnd {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--tabs-fade-start, 0px),
+    #000 calc(100% - var(--tabs-fade-end, 0px)),
+    transparent
+  );
+}
+
+.fadeStart {
+  --tabs-fade-start: 32px;
+}
+
+.fadeEnd {
+  --tabs-fade-end: 32px;
+}
+
+/*
+ * A view runs no script, so it draws a row that scrolled to the shown tab
+ * at its end with the tabs aligned to the end. The app scrolls the row.
+ */
+.scrolledToEnd {
+  justify-content: flex-end;
+}
+
+/*
+ * A drag in progress, as in the workspace list. The line between two tabs
+ * shows where the tab lands. It takes no space, so no tab moves, and it is
+ * an insertion mark, not the edge of a box.
+ */
+.drop {
+  position: relative;
+  flex: none;
+  align-self: stretch;
+  width: 0;
+  margin: 0 -1px;
+}
+
+.line {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: -1px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--ui-primary);
+}
+
+.lineEnd {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--ui-primary);
+  border-radius: 50%;
+  background: var(--ui-bar);
+  box-sizing: border-box;
+}
+
+/* The tab under the pointer: a raised card with a full outline. */
+.lifted,
+.lifted:hover {
+  border: 1px solid var(--ui-border2);
+  background: var(--ui-composer);
+  box-shadow: 0 8px 22px var(--ui-shadow);
+  color: var(--ui-ink);
+  cursor: grabbing;
+}
+
+/* Where the tab was while the drag lasts. */
+.placeholder {
+  opacity: 0.35;
+}
+
+/*
+ * A view runs no script, so it draws the lifted tab under the pointer, at
+ * the line, where it hangs below the row. The app draws it above the page.
+ */
+.float {
+  position: absolute;
+  z-index: 10;
+  top: 70%;
+  left: 0;
+  transform: translateX(-50%) rotate(-1.5deg);
+}
+
+/*
+ * The tab whose menu is open keeps the fill of a hover, and its menu opens
+ * below it.
+ */
+.menuOpen {
+  position: relative;
+}
+
+.menuOpen:not(.selected) {
+  background: var(--ui-soft);
+  color: var(--ui-ink2);
+}
+
+/*
+ * A view draws the lifted tab and the tab menu inside the row, so the row
+ * lets them hang below it. It still clips the tabs that do not fit at its
+ * sides. The app draws them above the page.
+ */
+.clipSides {
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+/*
+ * The field that renames a session, in place of the label of its tab and in
+ * the size of its title, as the app draws it.
+ */
+.rename {
+  width: 168px;
+  min-width: 0;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.rename:focus {
+  border-color: var(--ui-primary);
+}
+
+/*
+ * A view runs no script, so a span stands for the field, which opens
+ * focused, and it draws the selected title in the colours of a selection.
+ */
+.renameFocused {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-color: var(--ui-primary);
+  white-space: nowrap;
+}
+
+.renameSelection {
+  background: Highlight;
+  color: HighlightText;
+}
+
+/*
+ * The tab whose session the user renames from its tab menu. The border of
+ * its field marks it, so it takes no fill of its own: only the shown tab is
+ * filled. It gives up its width after the other tabs, and it never gets
+ * narrower than a short title needs, so the field stays usable and the
+ * shown tab stays in a row that has room.
+ */
+.tab.renaming {
+  flex-shrink: 0.01;
+  min-width: 120px;
+}
+
+.renaming:not(.selected):hover {
+  background: none;
+}
+
+/* Its field takes about the width of the title, up to the widest title. */
+.renaming .rename {
+  width: auto;
+  max-width: 168px;
+  field-sizing: content;
+}
