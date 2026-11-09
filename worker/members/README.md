@@ -147,7 +147,9 @@ Only then does it clear the deletion marker and recovery journal.
 A failed handoff leaves ordinary access closed.
 Scheduled cleanup retries that handoff while the request remains valid.
 A newer Delete retry cancels the intent.
-An invalid admin or an expired window cannot activate a pending Restore.
+The save of an intent, its read before each handoff, and the activation each check its admin with `activeAdminMemberPredicate`.
+So an admin who lost the role or is suspended cannot activate a pending Restore. An expired window cannot either.
+When that read finds no valid intent, it cancels the intent, and the org stays deleted.
 Restore makes no provider resume call. Old preview hostnames stay revoked.
 
 Schedule `cleanupDeletedOrgs` with all hooks except `readWorkspace`.
@@ -217,7 +219,7 @@ Each session keeps the agent login of its starter.
 
 `activeAdminMemberPredicate(alias)` in [`active-admin.ts`](../data/active-admin.ts) is the one SQL rule of an active admin: the admin role, and a user whose account is not suspended.
 It accepts only the trusted aliases `m`, `access_member`, `org_members`, `remaining`, and `candidate`.
-`activeAdminPredicate`, the last-admin guards, the recipient of a leave, and `firstActiveOrgAdmin` use it.
+`activeAdminPredicate`, the last-admin guards, the recipient of a leave, `firstActiveOrgAdmin`, and the Restore intent queries in `restore-data.ts` use it.
 
 - A leave, a removal, or a role change can end the admin role of an active admin only while another active admin remains.
   Otherwise it fails with 409 `last_admin`, which asks to make another member whose account is not suspended an admin.

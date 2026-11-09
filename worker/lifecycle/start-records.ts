@@ -38,7 +38,7 @@ export async function advanceStartRecords(
   return storage.admission()
 }
 
-export async function prepareWorkspaceRecords(
+async function prepareWorkspaceRecords(
   env: AppEnv,
   dependencies: AppDependencies,
   endpoint: WorkspaceLifecycleEndpoint,

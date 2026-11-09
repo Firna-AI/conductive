@@ -26,9 +26,10 @@ plan limits.
   fields, Save, or Build computer. The General tab of a member is the child
   page `app/org-settings/member`, because `app/org-settings` has child
   pages. `DetailList` in `src/components/settings/` shows such values.
-- Each session runs on the agent login of the member who started it, also
-  for the messages of other members. So a reassign changes no login, and
-  the cloud computer keeps running.
+- Each session runs on the agent login of the member who started it. The
+  messages of other members use that login only while that member shares
+  it, with the switch under each login of the account. So a reassign
+  changes no login, and the cloud computer keeps running.
 - When a message uses the login of another member, the bar of the
   composer names that login after the model picker, such as "Cal's login"
   in `app/composer/login`. So the box keeps its place. A message on the own
@@ -36,9 +37,14 @@ plan limits.
   started a session is not available, a message of another member starts
   a new session. The notice over the composer of the first session says
   so, and its chat stays as it was, as `app/sessions/no-starter-login`
-  shows. The new session starts with a line that links back to the first
-  session, then the new message, as `app/sessions/linked` shows. The parts
-  live in `src/components/chat/SessionLogin.tsx` and `LinkedLine.tsx`.
+  shows. The same happens when that member does not share the login. The
+  notice then says that the login is for the messages of that member only,
+  as `app/composer/not-shared` shows. In both cases, a message does not
+  steer a running turn. A viewer without a login for the agent sees the
+  notice that asks to connect, as `app/composer/no-agent` shows. The new
+  session starts with a line that links back to the first session, then
+  the new message, as `app/sessions/linked` shows. The parts live in
+  `src/components/chat/SessionLogin.tsx` and `LinkedLine.tsx`.
 - A stopped turn names the member who pressed Stop, from decision 72,
   because all members of an org see the same chat. That member sees "You
   stopped the agent", as `app/chat/turns/interrupted` shows. The other members
@@ -84,6 +90,13 @@ plan limits.
   `claude setup-token` or an API key, and Codex with an OpenAI API key.
   `AgentConnectForm` opens under the row of the agent. A connected login
   shows its kind and Remove.
+- Under each connected login, the switch "Let other members use this
+  login" says whether the messages of other members in the sessions of the
+  user run on it, from decision 116. The switch starts off for a Claude
+  subscription and on for an API key, as `app/account` shows. It saves at
+  once. A change that the app did not save shows its cause beside the
+  switch, as `app/account/share-not-saved` shows. The part lives in
+  `src/components/settings/LoginShare.tsx`.
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.
 - A login belongs to the person, so the agent step has its own state. A
@@ -94,4 +107,5 @@ plan limits.
   use.
 - The composer shows a notice when the agent of the chosen model is not
   connected. In a session that another member started, a message uses the
-  available login of that member, so no agent notice shows.
+  available login of that member while that member shares it, so no agent
+  notice shows.

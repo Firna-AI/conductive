@@ -47,7 +47,7 @@ function LeaveRefusal(props: { orgName: string; error: ApiError }) {
  * workspaces stay in the org, with the owner that the rules of a leave
  * choose. After the leave, the app opens the person's other workspaces.
  */
-export function LeaveOrgDialog(props: {
+function LeaveOrgDialog(props: {
   org: OrgSummary
   user: User
   close: () => void

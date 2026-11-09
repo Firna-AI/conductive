@@ -1,5 +1,10 @@
 import { CircleAlert, MessageSquarePlus, Plug, X } from 'lucide-react'
 import type { Agent } from '../../shared/agents'
+import {
+  linkedReasonText,
+  linkedTitle,
+  type LinkedReason,
+} from '../../../docs/mockups/src/components/chat/linkedCopy'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import type { SendBlock } from '../state/blockers'
 import type { ChatNotice } from '../state/chat-snapshot'
@@ -34,22 +39,21 @@ export function BlockNotice(props: {
 
 /**
  * The notice over the composer when the login of the starter is not
- * available, so the message starts a new session on the reader's own login.
- * An older record names no starter, so the notice names nobody.
+ * available, or the starter keeps it for their own messages, so the message
+ * starts a new session on the reader's own login. An older record names no
+ * starter, so the notice names nobody.
  */
 export function LinkedSessionNotice(props: {
   agent: Agent
   starter: string | null
+  reason: LinkedReason
 }) {
-  const body =
-    props.starter === null
-      ? 'The login for this session is not available.'
-      : `${props.starter}'s ${agentNames[props.agent]} login is not available.`
+  const agent = agentNames[props.agent]
   return (
     <Notice
-      body={body}
+      body={linkedReasonText(props.reason, props.starter, agent)}
       icon={MessageSquarePlus}
-      title="Your message starts a new session"
+      title={linkedTitle}
     />
   )
 }

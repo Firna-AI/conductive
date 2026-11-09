@@ -4,7 +4,7 @@ import type { OrgRole } from '../../shared/api'
 import { membersPath } from '../../shared/members'
 import { coreFixtures, FAKE_IDS } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import { loginGone, withSessions } from '../state/linked-kit'
+import { loginGone, loginPrivate, withSessions } from '../state/linked-kit'
 import { renderChat, textOf } from './render-kit'
 
 const id = FAKE_IDS.session
@@ -26,9 +26,16 @@ function noLogins(role: OrgRole) {
 const firstRecord = () => workspaceFixtures().sessions.sessions[0]
 
 describe('the login of a session', () => {
-  it("names the starter's login inside the composer box to another member, also after the starter left the org, and no login to the starter", async () => {
+  it("names the starter's login inside the composer box to another member, also after the starter left the org, and no login to the starter, also a private one", async () => {
     const own = await renderChat({})
     expect(own.text()).not.toContain(loginLabel)
+    const ownPrivate = await renderChat({
+      setup: (server) => withSessions(server, loginPrivate),
+    })
+    ownPrivate.chat.controller.setDraft(id, 'Add tests.')
+    expect(ownPrivate.text()).not.toContain(loginLabel)
+    expect(ownPrivate.text()).not.toContain('Your message starts a new session')
+    expect(ownPrivate.markup()).not.toMatch(sendOff)
     const member = await renderChat({ role: 'member' })
     expect(beforeSend(member.markup())).toContain("Cal's login")
     const { members } = coreFixtures('member')
@@ -73,21 +80,39 @@ describe('the login of a session', () => {
     expect(member.markup()).not.toMatch(sendOff)
   })
 
-  it('says before Send that a message starts a new session, names no login, and offers no steering of the running turn', async () => {
-    const gone = await renderChat({
-      role: 'member',
-      conversation: 'running',
-      setup: (server) => withSessions(server, loginGone),
-    })
-    gone.chat.controller.setDraft(id, 'Show a loading state.')
-    expect(gone.text()).toContain(
-      "Your message starts a new session Cal's Claude login is not available.",
-    )
-    expect(gone.text()).not.toContain(loginLabel)
-    expect(gone.text()).toContain('Stop')
-    expect(gone.text()).not.toContain('The agent reads this at its next step.')
-    expect(gone.markup()).toContain('placeholder="Message the agent"')
-    expect(gone.markup()).not.toMatch(sendOff)
+  it('says before Send that a message starts a new session, and why, names no login, and offers no steering of the running turn', async () => {
+    const reasons = [
+      [loginGone, "Cal's Claude login is not available."],
+      [loginPrivate, "Cal's Claude login is for Cal's messages only."],
+    ] as const
+    for (const [change, reason] of reasons) {
+      const member = await renderChat({
+        role: 'member',
+        conversation: 'running',
+        setup: (server) => withSessions(server, change),
+      })
+      member.chat.controller.setDraft(id, 'Show a loading state.')
+      const text = member.text()
+      expect({
+        case: reason,
+        notice: text.includes(`Your message starts a new session ${reason}`),
+        label: text.includes(loginLabel),
+        stop: text.includes('Stop'),
+        steer: text.includes('The agent reads this at its next step.'),
+        placeholder: member
+          .markup()
+          .includes('placeholder="Message the agent"'),
+        sendOff: sendOff.test(member.markup()),
+      }).toEqual({
+        case: reason,
+        notice: true,
+        label: false,
+        stop: true,
+        steer: false,
+        placeholder: true,
+        sendOff: false,
+      })
+    }
   })
 
   it("names nobody for an older record, and asks for the reader's own login before a new session", async () => {
@@ -115,5 +140,16 @@ describe('the login of a session', () => {
     expect(noLogin.text()).toContain('Connect Claude to use Opus 5.5')
     expect(noLogin.text()).not.toContain('Your message starts a new session')
     expect(noLogin.markup()).toMatch(sendOff)
+    const privateNoLogin = await renderChat({
+      role: 'member',
+      setup: (server) => {
+        withSessions(server, loginPrivate)
+        server.json('GET', ACCOUNT_PATHS.account, noLogins('member'))
+      },
+    })
+    privateNoLogin.chat.controller.setDraft(id, 'Add tests.')
+    expect(privateNoLogin.text()).toContain('Connect Claude to use Opus 5.5')
+    expect(privateNoLogin.text()).not.toContain(loginLabel)
+    expect(privateNoLogin.markup()).toMatch(sendOff)
   })
 })

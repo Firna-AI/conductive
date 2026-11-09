@@ -50,9 +50,9 @@ export const sessions = defineScreen({
       slug: 'linked',
       title: 'Linked session',
       description:
-        'The message of Priya opened a new session as the last tab. The session starts empty. It holds a line that links back to Address autocomplete, then the message, and the agent works on it. It runs on the Claude login of Priya, its starter.',
+        'The message of Priya opened a new session as the last tab. The session starts empty. It holds a line that links back to Address autocomplete, then the message, and the agent works on it. It runs on the Claude login of Priya, its starter. A message of Priya also opens such a session when Cal keeps the login for the messages of Cal, as app/composer/not-shared shows.',
       rationale:
-        'The user chose option A of decision 115 on 7 November 2026: a new, empty session with a link to the first session, not a copy of its chat. The link line uses the style of the other event lines of the chat: centred, muted, and with an icon. Other members see "Priya Raman\'s login" in the composer of this session.',
+        'The user chose option A of decision 115 on 7 November 2026: a new, empty session with a link to the first session, not a copy of its chat. The link line uses the style of the other event lines of the chat: centred, muted, and with an icon. It names no reason, because the reason can change after the session opens. Other members see "Priya Raman\'s login" in the composer of this session.',
       props: {
         viewer: 'member',
         tab: 'linked-session',

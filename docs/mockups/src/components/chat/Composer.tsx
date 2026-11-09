@@ -16,8 +16,13 @@ import styles from './Composer.module.css'
 export type ComposerState = {
   /** The model and the effort of the next message. */
   choice: AgentChoice
-  /** An agent turn runs, so a message steers it. */
+  /** An agent turn runs, so a message steers it, and Stop ends it. */
   running: boolean
+  /**
+   * A message starts a new linked session, so it does not steer a running
+   * turn of this session. Stop still ends that turn.
+   */
+  startsSession?: boolean
   draft: string
   attachments: readonly Attachment[]
   /** The model picker is open. */
@@ -67,14 +72,16 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
 /**
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. While a turn runs, a message
- * steers the turn, and Stop ends it. While Send waits for the first start
- * of a new workspace, a message in the box shows the reason beside Send.
- * When a message spends the agent login of another member, a label after
- * the model picker names that login, so the box keeps its place.
+ * steers the turn, and Stop ends it, unless the message starts a new
+ * linked session. While Send waits for the first start of a new
+ * workspace, a message in the box shows the reason beside Send. When a
+ * message spends the agent login of another member, a label after the
+ * model picker names that login, so the box keeps its place.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const { field } = useControlSizes()
-  const placeholder = props.running
+  const steers = props.running && props.startsSession !== true
+  const placeholder = steers
     ? 'Steer the agent while it works'
     : (props.placeholder ?? 'Message the agent')
   const off = props.blocked === true || props.waits === true
@@ -121,7 +128,7 @@ export function Composer(props: ComposerState & { lines?: number }) {
           )}
         </div>
       </div>
-      {props.running && props.draft !== '' ? (
+      {steers && props.draft !== '' ? (
         <span className={styles.hint}>
           The agent reads this at its next step.
         </span>
