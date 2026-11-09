@@ -14,6 +14,7 @@ import { useFilesNavigation } from './files/files-navigation'
 import type { ToolKey } from './tools/tool-address'
 import { useToolSelect } from './tools/tool-navigation'
 import { phoneView } from './WorkspaceColumns'
+import { nameLabel } from '../../shared/name-label'
 
 /**
  * Offers the actions of the open workspace to the command palette while
@@ -75,7 +76,7 @@ export function WorkspacePaletteActions(props: {
     scope: {
       kind: 'workspace',
       workspaceId: context.workspace.id,
-      name: context.workspace.name,
+      name: nameLabel(context.workspace.name),
     },
     actions: ids.map(action),
   })

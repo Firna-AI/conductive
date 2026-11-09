@@ -30,7 +30,7 @@ export interface AgentCreateWorkspaceResponse {
 }
 export interface AgentWorkspaceSummary {
   id: string
-  name: string
+  name: Workspace['name']
   branch: string
   state: WorkspaceState
 }

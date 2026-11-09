@@ -11,6 +11,8 @@ import {
   readLoginMetadata,
   type SessionLoginMetadata,
 } from './login-availability'
+import { readAutomaticTitleWorkspace } from './queries'
+import { titleModelBinding } from './title-model'
 import { readRunnerProtocolVersion } from './runner-version-data'
 import type { ChatDependencies } from './types'
 import { filterRunnerOutput } from './runner-output'
@@ -26,6 +28,9 @@ export function chatDependencies(
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
+    readAutomaticTitleWorkspace: (id) =>
+      readAutomaticTitleWorkspace(env.DB, id),
+    runTitleModel: titleModelBinding(env),
     filterRunnerOutput: (transaction, workspace, input) =>
       filterRunnerOutput(env, transaction, workspace, input),
     now: Date.now,

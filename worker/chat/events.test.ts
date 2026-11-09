@@ -142,7 +142,10 @@ describe('workspace chat event delivery', () => {
       new FakeRunner({ workspaceId: WORKSPACE_ID, streamId: 'another-stream' }),
     )
     another.emit({ type: 'runner.ready' })
-    another.emit({ type: 'workspace.title', name: 'A new title' })
+    another.emit({
+      type: 'start.updated',
+      start: { kind: 'resume', startedAt: 25, steps: [] },
+    })
     await fixture.drain()
     const all = await fixture.chat.store.read(WORKSPACE_ID, (view) =>
       view.history(0),
@@ -159,8 +162,8 @@ describe('workspace chat event delivery', () => {
       Array.from({ length: all.events.length }, (_, index) => index + 1),
     )
     expect(all.events.at(-1)?.event).toEqual({
-      type: 'workspace.title',
-      name: 'A new title',
+      type: 'start.updated',
+      start: { kind: 'resume', startedAt: 25, steps: [] },
     })
     const history = await fixture.history(session.id)
     expect(history.throughEventNumber).toBe(all.throughEventNumber)

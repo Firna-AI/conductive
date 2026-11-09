@@ -60,7 +60,28 @@ says.
 - "+" starts a new session on the same branch and in the same sandbox.
 - The open session tabs show in the order of creation. A new session
   opens as the last tab (decision 77).
+- The tab of a session shows the title of the session.
+- A new session has no title, and its tab shows "Untitled".
+  [Workspace and session names](#workspace-and-session-names) says when
+  the app gives it a title.
+- When the workspace takes a title as its name, as [Messages](#messages)
+  says, the first session takes the title too (decision 181).
+- Each other session takes its title from the first message with text that
+  the workspace accepts in that session (decision 181). The title is the
+  first line with text of that message.
+- A message with no text, such as a message with only a screenshot, gives
+  no title.
+- In a title from a message, each run of spaces becomes one space. The app
+  removes one final full stop, but it keeps an ellipsis.
+- A title from a message holds at most 60 characters. The limit counts
+  Unicode code points. The app cuts a longer line after its last whole
+  word that fits the limit. When the first word does not fit, the app cuts
+  the line at the limit.
 - The user can rename a session.
+- Reason: the first session does the task of the workspace, and each other
+  session does the task of its own first message. A title request for each
+  session was rejected, because the first message names that task with no
+  model call.
 - Each session has its own model picker.
 - When one tab sends two edits of the same field of a session, the edit
   that the server commits last wins (decision 142).
@@ -76,6 +97,32 @@ says.
   shows the agent of its last message, the title, and the time since it
   closed.
 - An entry of the history reopens its session as a tab, with its chat.
+
+## Workspace and session names
+
+- In this section, a name is the name of a workspace or the title of a
+  session.
+- A new workspace has no name (decision 182). Each new session has no name
+  either (decision 185).
+- The app shows "Untitled" in place of a missing name.
+- In the workspace record, a missing name is null in `name`. In the session
+  record, a missing name is null in `title`.
+- An automatic name is a name that the app gives on its own. These names
+  are automatic:
+  - the title of a workspace, as [Messages](#messages) says
+  - a workspace name that the agent runner reports, as
+    [Lost workspace updates](#lost-workspace-updates) says
+  - the title that a session takes, as [Sessions](#sessions) says
+- The app gives an automatic name only to a workspace or a session that has
+  no name (decision 182). So no automatic name replaces a name that a
+  member or the app gave.
+- The app gives no automatic name in an archived workspace, or in a
+  workspace of a deleted org.
+- Reason: a missing name shows that no one named the workspace or the
+  session yet. A text comparison with "New session" or the city name of
+  the branch was rejected. A member can type the same text and then lose
+  that name.
+- Reason: an archived workspace shows its chat read-only (decision 16).
 
 ## Messages
 
@@ -182,10 +229,33 @@ says.
 - Reason: a tab that missed newer events can still show an older Try again.
   A check in the chat alone was rejected, because such a tab could send an
   older message again. The agent would then answer out of order.
-- After the first answer of the agent in a new workspace, the app asks the
-  agent for a title of three to five words. The chat does not show that
-  request.
-- The workspace then takes the title as its name.
+- When the app accepts the first message of a new workspace, it asks a
+  small model of Workers AI for a title (decision 184). The request asks
+  for three to five words. Workers AI is the model service of Cloudflare,
+  on the account that hosts the app.
+- The model writes the title from the text of that message. The request
+  holds no other data of the workspace. It uses no agent login of a
+  member. The chat does not show it.
+- The reply to the message does not wait for the title. The workspace
+  then takes the title as its name, as
+  [Workspace and session names](#workspace-and-session-names) says.
+- When the request fails, the name of the workspace does not change. The
+  app then asks again when it accepts the next message with text in the
+  workspace. It asks only while the workspace has no name.
+- A later request also uses the text of the first message. Only when the
+  first message has no text does it use the text of the message that
+  starts it.
+- A first message with no text starts no request. The next message with
+  text in the workspace then starts it.
+- Reason: the name shows within seconds, while the sandbox starts, and the
+  operator chooses the model and its speed.
+- A request in the sandbox on the agent login of the member was rejected.
+  The name then waits for the sandbox, and each title spends the
+  subscription of the member.
+- A Claude model with an API key of the operator was rejected, because it
+  sends each first message to another company. A name from the first
+  words of the message, with no model, was rejected, because such names
+  are weaker.
 
 ## What the chat shows
 
@@ -363,7 +433,9 @@ says.
 
 - The file tree, the changes list, the start steps, and the workspace name
   belong to no session. A later full report of the same kind replaces each
-  of them.
+  of them. But a report of the workspace name sets that name only while
+  the workspace has no name, as
+  [Workspace and session names](#workspace-and-session-names) says.
 - When the workspace refuses an update of one of these kinds, the update is
   lost. The workspace stores its marker. Then it asks the runner once for a
   fresh full report of that kind (decision 96).
@@ -380,7 +452,9 @@ says.
 - Each kind has at most one open request. After a further refusal of that
   kind, the workspace sends no second request.
 - A stored complete report of that kind ends the repair, also a failed one.
-  It ends no repair of another kind. After the next refusal of that kind, the
+  A report of the workspace name that comes when the workspace already has
+  a name also ends the repair, because it can change nothing. It ends no
+  repair of another kind. After the next refusal of that kind, the
   workspace asks for a new report, with a new command ID.
 - A replacement is a later full report of the same kind.
   [Files and changes](workspaces-and-sandboxes.md#files-and-changes) says
