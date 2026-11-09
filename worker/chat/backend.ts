@@ -9,6 +9,7 @@ import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { requireWritableOrgRequest } from '../security/org-writes'
+import { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { chatDependencies } from './dependencies'
 import {
   authorizeChatBrowser,
@@ -19,6 +20,7 @@ import { afterNumber, chatRoute } from './http-routes'
 import { BrowserTabs } from './browser-tabs'
 import { tokenWorkspace } from './queries'
 import { WorkspaceOperations } from './workspace-operations'
+import { ChatWorkspaceBinding } from './workspace-binding'
 import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
@@ -38,12 +40,13 @@ import type {
 /** The Durable Object and the in-memory runner adapter use this boundary. */
 export class WorkspaceChat {
   readonly store: ChatStore
+  readonly turnTokens: WorkspaceTurnTokens
   private readonly env: AppEnv
   private readonly dependencies: ChatDependencies
   private readonly runner: RunnerChannel
   private readonly browsers: BrowserTabs
   private readonly operations: WorkspaceOperations
-  private workspaceId: string | null = null
+  private readonly binding: ChatWorkspaceBinding
 
   async workspaceSummary(workspaceId?: string): Promise<ChatWorkspaceSummary> {
     return this.operations.summary(workspaceId)
@@ -83,17 +86,26 @@ export class WorkspaceChat {
     overrides: Partial<ChatDependencies> = {},
   ) {
     this.env = env
-    this.dependencies = chatDependencies(env, () => this.workspaceId, overrides)
+    this.binding = new ChatWorkspaceBinding(
+      overrides.matchesObject ?? (() => true),
+    )
+    this.dependencies = chatDependencies(env, () => this.binding.id, overrides)
     this.store = new ChatStore(storage, this.dependencies.now)
     this.browsers = new BrowserTabs(this.dependencies)
     this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>
       this.publish(events),
     )
+    this.turnTokens = new WorkspaceTurnTokens(
+      this,
+      env,
+      (id) => this.operation(id),
+      this.dependencies.runnerEventStored,
+    )
     this.operations = new WorkspaceOperations({
       env,
       store: this.store,
       dependencies: this.dependencies,
-      workspaceId: () => this.workspaceId,
+      workspaceId: () => this.binding.id,
       bind: (id) => this.bind(id),
       publish: (events) => this.publish(events),
       closeRunner: () => this.runner.close(),
@@ -277,17 +289,7 @@ export class WorkspaceChat {
   }
 
   private bind(workspaceId: string): void {
-    if (
-      !this.dependencies.matchesObject(workspaceId) ||
-      (this.workspaceId && this.workspaceId !== workspaceId)
-    ) {
-      throw new HttpError(
-        404,
-        'workspace_not_found',
-        'The workspace is not available.',
-      )
-    }
-    this.workspaceId = workspaceId
+    this.binding.bind(workspaceId)
   }
 
   private publish = (events: readonly WorkspaceEventEnvelope[]): void => {

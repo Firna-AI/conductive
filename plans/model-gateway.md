@@ -555,23 +555,30 @@ The workspace Durable Object makes one turn token for each turn and
 checks it. Nothing sends the token yet. Milestone 6 sends it to the
 runner.
 
-- [ ] Make the token when the turn is dispatched, with a routing part
-      that names the workspace (D1).
-- [ ] Keep only what the check and a resend need, so a resent `turn`
-      command carries the same token. Put no token in a log or in the
-      runner outbox.
-- [ ] Add a check beside `credentialSender` in
+- [x] Add a token function for a running turn, with a routing part that
+      names the workspace (D1). The same turn always gets the same token,
+      so a resent `turn` command carries the same token. Keep only a
+      random value and the login version of D30 with the turn, and derive
+      the token from them. Put no token in a log, in a stored command, or
+      in the runner outbox. Milestone 6 calls the function at dispatch,
+      because runner delivery is a file that the own-endpoint change
+      shares.
+- [x] Add a check beside `credentialSender` in
       `worker/workspace-lifecycle.ts` (D4). It accepts a token only while
       its turn is running, its session is open, and the turn is the active
       turn of the session. Reuse `activeStoredTurn` from
       `worker/devices/access.ts`.
-- [ ] In the same check, apply decision 7 D with D30. Reuse
-      `senderLoginAccess` and `readAgentLogin` from
-      `worker/chat/queries.ts`.
-- [ ] When decision 7 ends a turn, end it with `agent_login_required`.
+- [x] In the same check, apply decision 7 D with D30. Read the login in a
+      new gateway query. Change no login read in `worker/chat/queries.ts`
+      before the own-endpoint merge, because that change edits them.
+      Reuse `senderLoginAccess`, `agentLoginContext`, and `loginSecret` as
+      they are.
+- [x] When decision 7 ends a turn, end it with `agent_login_required`.
       Use the text of `unavailableLoginMessage` for a removed login or a
-      lost access (D12), and the cause of D30 for a changed login.
-- [ ] Tests, as the `testing` skill says: a token works while its turn
+      lost access (D12), and the cause of D30 for a changed login. Stop
+      the agent through the existing Stop path, and keep one end for the
+      turn.
+- [x] Tests, as the `testing` skill says: a token works while its turn
       runs. It fails after the end, during Stop, and for another
       workspace. It ends the turn after a change or a removal of the
       login, and after a loss of the starter's access (decision 7 D).

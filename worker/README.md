@@ -92,6 +92,8 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity).
+- [model-gateway/README.md](model-gateway/README.md): turn-token derivation and `checkTurnToken`, the trusted workspace RPC for one model request.
+  Production runner commands do not carry these tokens yet.
 - [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. Each message is fixed safe text, never a token, a raw error, a request body, command output, or response data. `errorSummary` names a caught error by its class, its status, and a known provider code, never by its message. `CommandFailed` carries the state, the exit code, and the time-out of a failed sandbox command.
 - [features/alarms.ts](features/alarms.ts) keeps separate durable alarm deadlines for lifecycle, devices, previews, and GitHub.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.

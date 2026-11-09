@@ -152,6 +152,8 @@ object holds the lifecycle state, the turn records, and the events.
   for the workspace event filter and file display labels.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
+  It also exposes the trusted `checkTurnToken` RPC through `workspaceRuntime`.
+- [`credential-sender.ts`](credential-sender.ts): the git credential sender lookup, including creation-time access and active stored turns.
 - [`failed-creations.ts`](failed-creations.ts): the hidden drafts of failed
   creates, and `failedCreationForSender`.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a

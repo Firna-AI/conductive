@@ -84,7 +84,11 @@ export async function prepareAgentEvent(
         await transaction.removeCommand(command.commandId)
       }
     }
-    await transaction.emit(event, occurredAt)
+    if (
+      !turn.loginFailure ||
+      (event.type !== 'turn.completed' && event.type !== 'turn.failed')
+    )
+      await transaction.emit(event, occurredAt)
     if (event.type === 'turn.completed' || event.type === 'turn.failed') {
       await new TurnLifecycle(transaction, session).finish(
         turn,

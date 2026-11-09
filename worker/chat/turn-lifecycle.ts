@@ -64,6 +64,22 @@ export class TurnLifecycle {
 
   async finish(turn: StoredTurn, end: TurnEnd): Promise<void> {
     turn.started ??= turn.state === 'running' || turn.state === 'stopping'
+    if (turn.loginFailure) {
+      const retryMessageId = turn.messageIds[0]
+      await this.transaction.emit({
+        type: 'turn.failed',
+        sessionId: this.session.id,
+        turnId: turn.id,
+        error: { code: 'agent_login_required', message: turn.loginFailure },
+        retryMessageId,
+        durationMs: Math.max(
+          0,
+          this.transaction.now - (turn.startedAt ?? this.transaction.now),
+        ),
+      })
+      end = { state: 'failed', retryMessageId }
+      delete turn.loginFailure
+    }
     let following = turn.nextTurnId ?? null
     if (end.state === 'finished' && !turn.closeAfterStop) {
       const continuation = await continueUnanswered(

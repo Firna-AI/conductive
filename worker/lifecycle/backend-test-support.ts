@@ -194,7 +194,13 @@ export async function backendFixture(sharedHarness?: TestHarness) {
         holdResultRead: () => actor.storage.holdRead(START_RESULT_KEY),
         holdAdmission: () => actor.storage.holdTransaction(),
       })
-    return controller
+    return {
+      ...controller,
+      checkTurnToken: async () => ({
+        ok: false as const,
+        reason: 'turn_not_active' as const,
+      }),
+    }
   }
   const env = {
     ...harness.env,

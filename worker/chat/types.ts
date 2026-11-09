@@ -26,6 +26,7 @@ import type {
 } from './login-availability'
 import type { FilteredRunnerOutput } from './runner-output'
 import type { ChatTransaction } from './store'
+import type { TurnTokenState } from '../model-gateway/token'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -67,6 +68,8 @@ export interface StoredTurn {
   closeAfterStop: boolean
   /** Internal waiting work. Older records have no successor. */
   nextTurnId?: string | null
+  gateway?: TurnTokenState
+  loginFailure?: string
 }
 
 export interface ModelSessionCreation {

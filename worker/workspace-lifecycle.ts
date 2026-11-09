@@ -11,7 +11,7 @@ import {
   type WorkspaceChatResolvers,
 } from './chat/workspace-integration'
 import { DeviceRuntime } from './devices/runtime'
-import { activeStoredTurn } from './devices/access'
+import { credentialSender } from './lifecycle/credential-sender'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
 import type { FailedCreationDraft } from './lifecycle/failed-creations'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
@@ -35,6 +35,7 @@ import { failedCreationEvents } from './lifecycle/failed-creation-events'
 import { createWorkspaceInputActivity } from './lifecycle/create-input-activity'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ConnectionScheduler } from './security/connection-access'
+import type { TurnTokenCheck } from './model-gateway/types'
 
 export class WorkspaceLifecycle
   extends DurableObject<WorkspaceCompositionEnv>
@@ -227,17 +228,14 @@ export class WorkspaceLifecycle
   }
 
   async credentialSender(turnId: string): Promise<string | null> {
-    return this.chat.runLifecycle(async () => {
-      const preparing = await this.controller.credentialSender(turnId)
-      if (preparing) return preparing
-      const state = await this.controller.readLifecycle()
-      if (!state || state.state === 'stopped' || state.state === 'archived')
-        return null
-      return (
-        (await activeStoredTurn(this.chat, state.workspaceId, turnId))
-          ?.senderId ?? null
-      )
-    })
+    return credentialSender(this.chat, this.controller, turnId)
+  }
+
+  async checkTurnToken(token: string): Promise<TurnTokenCheck> {
+    const workspaceId = await this.chat.store.workspaceId()
+    return workspaceId
+      ? this.chat.turnTokens.check(workspaceId, token)
+      : { ok: false, reason: 'turn_not_active' }
   }
 
   async reportRunnerLifecycle(event: RunnerEvent): Promise<void> {

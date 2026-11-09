@@ -201,6 +201,9 @@ tests through the production Worker entry.
 
 - `backend.ts`: `WorkspaceChat`, its gates, its trusted methods, the open
   tabs, and the one publisher of committed events.
+- `workspace-binding.ts`: `ChatWorkspaceBinding`, which binds chat to one workspace and checks the object identity.
+- [../model-gateway/workspace.ts](../model-gateway/workspace.ts): `WorkspaceTurnTokens`, available through `WorkspaceChat.turnTokens`.
+  It derives a running turn's token and checks the starter's current login in the chat queue.
 - `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
   owner can replace. The login resolver always wraps an override.
 - `operation.ts`: `ChatOperation`, the reads and changes of one route, tab
@@ -265,6 +268,7 @@ tests through the production Worker entry.
   `continuation.ts`: active and waiting turns, the dispatch rule of each
   command, the retry message of a turn end, safe turn context, late data,
   terminal events, and unanswered messages.
+  `TurnLifecycle.finish` preserves a saved login-failure cause when a runner end or workspace stop follows a gateway Stop.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-tabs.ts`: open tabs, their grants, the refresh and expiry
   timers, and the grant check before each send. By default,
