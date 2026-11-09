@@ -1,21 +1,35 @@
-# Three protocol docs pass the length target
+# Four docs still pass the length target
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-08, a new problem of the check of finding 10 of PR #45, branch `conductor/boat-native-remote-workspaces-milestone-15m`, round 1.
-- **Location:** `docs/protocol/access-and-security.md`, `docs/protocol/desktop-app.md`, and `docs/protocol/chat-and-events.md`.
-- **Reason:** these remaining pages cover protocols outside the Desktop interface pause, so their split stays in a separate change.
+- **Location:** `docs/protocol/desktop-app.md`, `docs/deployment.md`, `docs/protocol/operator-actions.md`, and `docs/protocol/workspaces-and-sandboxes.md`.
+- **Reason:** These topics are outside the approved gateway documentation split, so their splits stay in a separate change.
 
 - **Terms:**
-  - **Length target:** the `documentation` skill keeps each doc near 250 lines, and splits a longer doc into linked pages in the change that touches it.
-- **Background:** The protocol docs grew with each milestone. Many branches touched these docs without a split. On 9 November 2026, the Desktop pause split the workspace tools into their own page. The workspace page is now 226 lines, and the architecture page is 250 lines. Both meet the target.
-- **Problem:** Three docs still pass the target, so a reader must scan long pages to find one rule.
-- **Impact if no action:** Each branch that touches one of these docs breaks the length rule again, and the docs grow harder to read and to keep in line.
-- **Root question:** How do the protocol docs stay short enough to read one topic at a time?
+  - **Length target:** the `documentation` skill keeps each doc near 250 lines, and splits a longer doc into linked pages in the change that touches it. The always-on rules also split any file that passes 300 lines.
+  - **Landing page:** the original page of a split doc. It keeps its introduction and some topics, and it links to the new pages.
+- **Background:**
+  - On 9 November 2026, the model gateway change split the three named long docs. Each moved section kept its words. Only headings, navigation, and link destinations changed.
+  - `docs/protocol/access-and-security.md` went from 570 to 253 lines. Its moved topics are in `docs/protocol/sandbox-credentials.md`, with 220 lines, and `docs/protocol/terminal-and-previews.md`, with 130 lines.
+  - `docs/protocol/chat-and-events.md` went from 402 to 206 lines. Its moved topics are in `docs/protocol/messages-and-turns.md`, with 215 lines.
+  - `docs/architecture.md` went from 289 to 184 lines. Its components are in `docs/architecture/components.md`, with 135 lines.
+  - Each landing page links to its new pages. The protocol doc list of `docs/architecture.md` names each new protocol page. A landing page keeps no heading only to hold an old anchor.
+  - Four docs still pass the target. The counts below are from 9 November 2026.
+  - `docs/protocol/desktop-app.md` has 431 lines. "Mac commands", with five subsections, fills lines 214 to 313. "Packages and updates", with "Packages", "Releases", and "Updates in the app", fills lines 314 to 431. The other sections hold the scope, the page, the window, the navigation, and the previews. They also hold the sign-in, the GitHub App install, the sign-in session, the desktop origin, and the permissions.
+  - `docs/deployment.md` has 314 lines. It is a deployment guide, not a protocol doc. "The runner archive", with "The archive in each deploy", fills lines 180 to 250. "Models" and "The title model" fill lines 115 to 179.
+  - `docs/protocol/operator-actions.md` has 292 lines. "Suspend an org", "What members of a suspended org keep", and "Lift a suspension" fill lines 184 to 284. The other sections hold the operator, the suspension of a user and the access that it ends, and the abuse reports.
+  - `docs/protocol/workspaces-and-sandboxes.md` has 280 lines. "The org image", with "The first build", fills lines 33 to 121. "Tools of a workspace" holds four short subsections that only link to `docs/protocol/workspace-tools.md`. They keep the anchors `files-and-changes`, `terminal`, `port-previews`, and `desktop` that other docs and READMEs link to.
+  - `docs/protocol/access-and-security.md`, with 253 lines, and `docs/mockups/design.md`, with 251 lines, are at the target.
+  - Other docs, READMEs, code comments, and follow-up items cite sections of these four docs. On 9 November 2026, 122 lines outside `docs/` named one of the four files. Across the repository, `workspaces-and-sandboxes.md#files-and-changes` has 13 links, and `operator-actions.md#starts-stops-and-builds` has 7 links.
+- **Problem:** Four docs still pass the target, so a reader must scan long pages to find one rule.
+- **Impact if no action:** Each branch that touches one of these docs must split it first, and the docs grow harder to read and to keep in line.
+- **Root question:** How do the remaining long docs get to about 250 lines each, with each topic easy to find?
 - **Options:**
-  - **A.** Split each of the three remaining docs into linked pages by topic. Update every relative link and the doc lists in `docs/architecture.md` and `README.md`. Effort: Medium.
-- **Left out:** A split in each open branch, because the branches change the same docs and would conflict. A lint for doc length, because it adds a gate.
+  - **A.** Split each of the four docs into linked pages by topic, in one change. Move each section without a change to its words. Update every relative link inside `docs/`, the doc lists of `docs/architecture.md` and `README.md`, and each link and citation outside `docs/`. Effort: Medium.
+  - **B.** Change nothing now. Split each doc in the next change that touches it, as the `documentation` skill requires. Cost: that change carries the link migration of the split. Effort: Small.
+- **Left out:** A split in each open branch, because the branches change the same docs and would conflict. A lint for doc length, because it adds a gate. An exemption for the deployment guide, because the always-on rules split any file that passes 300 lines.
 - **Wider fix:** None. The `documentation` skill already holds the rule.
-- **Previous examples:** `docs/protocol/workspace-tools.md` holds the moved tools requirements. The original workspace page keeps its section anchors as links.
-- **Recommendation:** A.
-- **Action:** fix after merge, apply A, because the remaining pages are outside the Desktop interface pause.
+- **Previous examples:** `docs/protocol/workspace-tools.md` holds the moved tools requirements, and `docs/protocol/workspaces-and-sandboxes.md` keeps their section anchors as links. The split of `docs/protocol/access-and-security.md`, `docs/protocol/chat-and-events.md`, and `docs/architecture.md` that the background describes is the second example.
+- **Recommendation:** A. One change moves the links of all four docs at once, and no feature branch carries a split that it does not need.
+- **Action:** fix after merge, apply A, because their topic splits are outside the approved gateway documentation work.

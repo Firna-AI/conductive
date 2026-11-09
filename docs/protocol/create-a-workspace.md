@@ -156,7 +156,7 @@ decision number names a dated record, as
 ## The create
 
 - The app accepts the first message before the sandbox is ready, as
-  [Chat and events](chat-and-events.md#messages) says.
+  [Messages and turns](messages-and-turns.md#messages) says.
 - The create answers when the workspace and its first message are stored,
   before the sandbox starts (decision 91). The answer holds the workspace,
   its session ID, and the queued first message, so that the new workspace
@@ -174,7 +174,7 @@ decision number names a dated record, as
   repository (decision 89). It then fetches that branch and creates the
   workspace branch from it.
 - The push uses the GitHub user token of the sender of the current turn,
-  as [GitHub tokens](access-and-security.md#github-tokens) says. No
+  as [GitHub tokens](sandbox-credentials.md#github-tokens) says. No
   command and no Git config holds the token.
 - A repository with any ref gets no first commit from the app.
 - When another push reaches the repository first, the start keeps that
@@ -197,7 +197,7 @@ decision number names a dated record, as
   says (decision 182).
 - A create call of an agent can give the workspace a name, as
   [Create and list calls](agent-tools.md#create-and-list-calls) says.
-- [Messages](chat-and-events.md#messages) says how a title from the first
+- [Messages](messages-and-turns.md#messages) says how a title from the first
   message then names the workspace.
 
 ## A failed first start
@@ -216,4 +216,4 @@ decision number names a dated record, as
   new workspace token (decision 130). The sandbox starts from the newest
   good org image, with the current startup script and env vars.
 - When that sandbox is ready, the agent gets the queued messages, as
-  [Messages](chat-and-events.md#messages) says.
+  [Messages](messages-and-turns.md#messages) says.

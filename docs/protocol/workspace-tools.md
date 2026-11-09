@@ -159,7 +159,7 @@ for its return.
   older saved choice stays valid, and Desktop can return without a change
   of the stored data.
 - The server keeps the desktop URL route and its access rules, as
-  [Desktop](access-and-security.md#desktop) says. The pause adds no
+  [Desktop](terminal-and-previews.md#desktop) says. The pause adds no
   refusal at the server.
 - A Mac app build from before the pause keeps its Desktop tab until it
   updates.
@@ -183,5 +183,5 @@ before the pause:
   of the page blocks the stream, the Desktop tab says that the desktop
   couldn't open, with Try again. It never shows a blocked stream as live.
 
-[Access and security](access-and-security.md) states how the terminal, the
+[Terminal and previews](terminal-and-previews.md) states how the terminal, the
 previews, and the desktop stay safe.

@@ -18,7 +18,7 @@ says.
   - ask to run a command on a Mac, as [Mac commands](#mac-commands) says
 - Both tools call the Worker with the workspace token of their sandbox.
 - With the workspace token, the tools can make only these six calls.
-  [The workspace token](access-and-security.md#the-workspace-token) states
+  [The workspace token](sandbox-credentials.md#the-workspace-token) states
   what the token allows.
 - The tools call `api.conductive.build`, the hostname for machines. Its
   gate checks the workspace token in place of a sign-in.
@@ -139,7 +139,7 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   for commands on the Mac of another member.
 - A request names its turn. The Worker accepts it only while that turn
   runs in the calling workspace.
-- [The workspace token](access-and-security.md#the-workspace-token) states
+- [The workspace token](sandbox-credentials.md#the-workspace-token) states
   how the Worker finds the sender.
 - When the sender has no available Mac, the agent gets the answer that the
   Mac is not available.
@@ -210,7 +210,7 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 - After its result, the command shows at its place in the chat: denied,
   done with its output, or Mac not available.
 - When its turn ends, the result folds with the work of the turn, at its
-  place, as [The work of a turn](chat-and-events.md#the-work-of-a-turn)
+  place, as [The work of a turn](messages-and-turns.md#the-work-of-a-turn)
   says (decision 151). A result that stays in view between two folds was
   rejected, because the work then does not fold into one line.
 

@@ -58,7 +58,7 @@ says.
   2. Create the first org.
   3. Connect Claude or Codex.
 - Get started asks for no Boat account and no Boat key.
-- [Chat and events](chat-and-events.md#messages) states the notice for a
+- [Messages and turns](messages-and-turns.md#messages) states the notice for a
   missing agent login.
 - The second step, the org step, shows the cloud computer of the org once
   the org exists (decision 150). Create org starts its first build, as

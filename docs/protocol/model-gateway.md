@@ -34,7 +34,7 @@ while the change is open. Its pull request keeps them after the merge.
   to the upstream.
 - A runner of protocol version 1 gets the agent login itself with each
   turn, as
-  [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox)
+  [Agent logins in a sandbox](sandbox-credentials.md#agent-logins-in-a-sandbox)
   says (gateway decision 2).
   [The agent runner](agent-runner.md#the-agent-runner) states which
   runner versions a workspace accepts.
@@ -103,7 +103,7 @@ while the change is open. Its pull request keeps them after the merge.
 
 - The upstream is Anthropic for a Claude subscription token or an
   Anthropic API key. It is OpenAI for an OpenAI API key.
-- [Agent logins](access-and-security.md#agent-logins) states that both
+- [Agent logins](sandbox-credentials.md#agent-logins) states that both
   providers confirmed this use of their logins.
 - The gateway forwards only a fixed list of model routes for each agent.
   Examples are the Messages API of Anthropic and the Responses API of
@@ -171,7 +171,7 @@ while the change is open. Its pull request keeps them after the merge.
 
 ## Risks
 
-- [A sandbox with a newer runner](access-and-security.md#a-sandbox-with-a-newer-runner)
+- [A sandbox with a newer runner](sandbox-credentials.md#a-sandbox-with-a-newer-runner)
   states what the processes of a sandbox and the members of its org can
   do with a turn token.
 - Risk: a deploy of the Worker or an update of the Cloudflare runtime can

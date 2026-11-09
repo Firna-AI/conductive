@@ -97,7 +97,7 @@ the [model gateway](model-gateway.md), as that doc says.
   each interrupt, and each change of the model or the effort to the runner.
 - Each turn also brings a credential of the starter of its session. A
   runner of protocol version 1 gets the agent login itself, as
-  [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox)
+  [Agent logins in a sandbox](sandbox-credentials.md#agent-logins-in-a-sandbox)
   says. A runner of version 2 or later gets a turn token in its place, as
   [The turn token](model-gateway.md#the-turn-token) says.
 - Each turn that the runner accepts gets exactly one end: `turn.completed`

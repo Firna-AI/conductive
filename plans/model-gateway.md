@@ -896,13 +896,14 @@ Depends on: 5
 This change touches three docs over the length target of the
 documentation skill (D27).
 
-- [ ] Split `docs/protocol/access-and-security.md`,
+- [x] Split `docs/protocol/access-and-security.md`,
       `docs/protocol/chat-and-events.md`, and `docs/architecture.md` into
       linked pages by topic.
+      Branch: `conductor/model-gateway-protocol-doc-split`.
 - [ ] Update every relative link, and the doc lists of
       `docs/architecture.md` and `README.md`.
-- [ ] Update `plans/follow-ups/protocol-docs-split.md` to the docs that
-      remain.
+- [x] Update `plans/follow-ups/protocol-docs-split.md` to the docs that
+      remain. Branch: `conductor/model-gateway-protocol-doc-split`.
 
 ## Milestone 10: Verification, commit, review, and pull request
 

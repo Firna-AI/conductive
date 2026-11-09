@@ -74,14 +74,14 @@ These rules hold for each workspace that the suspended user owns.
   commands use the same rule.
 - The workspace uses no agent login of a suspended starter, and the
   session record shows that the login cannot be used.
-  [Messages](chat-and-events.md#messages) states what a message of another
+  [Messages](messages-and-turns.md#messages) states what a message of another
   member does when the login of the starter cannot be used.
 - A message of a suspended sender never reaches the agent. A suspended
   sender gets no Mac command.
 - The suspension revokes no workspace token of a workspace that another
   member owns. A copy that the suspended user made of such a token keeps
   working, as
-  [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox)
+  [Agent logins in a sandbox](sandbox-credentials.md#agent-logins-in-a-sandbox)
   says (decision 124).
 
 ## Starts, stops, and builds
@@ -129,7 +129,7 @@ is suspended.
   preview, and the data of an open preview stops.
 - An open terminal socket closes within 30 seconds.
 - An open desktop stream does not pass through the Worker. So it can play
-  until the sandbox stops, as [Desktop](access-and-security.md#desktop)
+  until the sandbox stops, as [Desktop](terminal-and-previews.md#desktop)
   says.
 
 ## Previews and their viewers
