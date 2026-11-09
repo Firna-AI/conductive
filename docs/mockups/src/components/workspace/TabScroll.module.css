@@ -1,0 +1,49 @@
+/*
+ * The full tab row of `WorkspaceTabs`. The list of a row whose tabs do not
+ * fit at their minimum width scrolls sideways, with no scrollbar. A tab that
+ * scrolls into view stays clear of the fades.
+ */
+.scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-padding-inline: 32px;
+  scrollbar-width: none;
+}
+
+/* A fade marks each end of the row that clips tabs. */
+.fadeStart,
+.fadeEnd {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--tabs-fade-start, 0px),
+    #000 calc(100% - var(--tabs-fade-end, 0px)),
+    transparent
+  );
+}
+
+.fadeStart {
+  --tabs-fade-start: 32px;
+}
+
+.fadeEnd {
+  --tabs-fade-end: 32px;
+}
+
+/*
+ * A view runs no script, so it draws a row that scrolled to the shown tab
+ * at its end with the tabs aligned to the end. The app scrolls the row.
+ */
+.scrolledToEnd {
+  justify-content: flex-end;
+}
+
+/*
+ * A view draws the lifted tab and the tab menu inside the row, so the row
+ * lets them hang below it. It still clips the tabs that do not fit at its
+ * sides. The app draws them above the page.
+ */
+.scroll.clipSides {
+  overflow-x: clip;
+  overflow-y: visible;
+}

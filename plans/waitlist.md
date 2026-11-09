@@ -913,6 +913,11 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+  - [ ] Apply the shared directory fix for confirmed findings 2 and 3:
+        one owner for confirmed rows, read ordering, and the waiting count.
+  - [ ] Record the deferred approval-email origin and account-age fixes
+        as follow-up items.
+  - [ ] Re-review the combined result, including Mac invite-link origins.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

@@ -1,0 +1,65 @@
+/*
+ * A drag of a tab of `WorkspaceTabs` in progress, as in the workspace list.
+ * The line between two tabs shows where the tab lands. It takes no space,
+ * so no tab moves, and it is an insertion mark, not the edge of a box.
+ */
+.drop {
+  position: relative;
+  flex: none;
+  align-self: stretch;
+  width: 0;
+  margin: 0 -1px;
+}
+
+.line {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: -1px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--ui-primary);
+}
+
+.lineEnd {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--ui-primary);
+  border-radius: 50%;
+  background: var(--ui-bar);
+  box-sizing: border-box;
+}
+
+/*
+ * The row clips what overflows it. So a line before the first tab or after
+ * the last tab draws just inside the row, with its whole end.
+ */
+.drop:first-child .line {
+  left: 4px;
+}
+
+.drop:last-child .line {
+  left: -6px;
+}
+
+/* Where the tab was while the drag lasts. */
+.placeholder {
+  opacity: 0.35;
+}
+
+/*
+ * A view runs no script, so it draws the lifted tab under the pointer, at
+ * the line, where it hangs below the row, as wide as its whole title. The
+ * app draws it above the page. `.lifted` of `WorkspaceTabs` draws the card.
+ */
+.float {
+  position: absolute;
+  z-index: 10;
+  top: 70%;
+  left: 0;
+  width: max-content;
+  transform: translateX(-50%) rotate(-1.5deg);
+}

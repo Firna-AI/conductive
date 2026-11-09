@@ -296,6 +296,22 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   unmount. It checks that a switch stops the old store before the new one
   connects, and shows only the new store. It also checks when the hook keeps
   a store, connects it again, or makes a new one.
+- `pointer-drag.ts`: `usePointerDrag`, the drag and drop of any pointer
+  that the tab row of the chat and the workspace list use: the press, the
+  start after a move of a mouse or a long press of a finger, Escape, the
+  click after a drag, the scroll lock of touch, and a new drop place after a
+  scroll under a still pointer. `ownPress` keeps a press on a control
+  inside a dragged element, such as Close, for that control.
+  `next-click.ts`: `stopNextClick`, which stops the click that ends a drag
+  wherever it lands, also the late click of a finger.
+  `pointer-drag.test.tsx` mounts the hook in happy-dom.
+  `../shell/list/useRowDrag.ts`: the drag of a workspace row to a place in
+  a section, on `usePointerDrag`.
+- `sideways-wheel.ts`: `useSidewaysWheel`, which turns a
+  vertical wheel turn over a row that scrolls sideways into a sideways
+  scroll of the row. A sideways swipe and a turn with Ctrl stay with the
+  browser, and so does a turn past an end of the row. The tab row of the
+  chat uses it, and any row that scrolls sideways can.
 - `operator-read.ts`, `operator-directory.ts`, and `operator-target.ts`:
   the Overview and the pages of the operator section, its searches, and
   Suspend and Lift. `operator-pause.ts` and `operator-access.ts`: the

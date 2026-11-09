@@ -1,10 +1,26 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
+import type { AgentChoice } from '../../shared/agents'
+import { newSessionRecord } from '../state/test-kit'
 import { textOf } from './render-kit'
-import { SessionTabs, type SessionTab } from './SessionTabs'
+import { SessionTabs } from './SessionTabs'
+import { rowOf } from './tab-row'
 
-/** The tab bar with one session tab, and the tab that shows its field. */
-function tabBar(tab: SessionTab, renaming: string | null): string {
+const choice: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+}
+
+/** The tab bar with one session that has no title, as the row draws it. */
+function tabBar(renaming: string | null): string {
+  const untitled = newSessionRecord('new', choice)
+  const tabs = rowOf(
+    null,
+    [untitled],
+    { kind: 'session', sessionId: untitled.id },
+    undefined,
+  )
   return renderToStaticMarkup(
     <SessionTabs
       historyEntries={[]}
@@ -12,6 +28,7 @@ function tabBar(tab: SessionTab, renaming: string | null): string {
       mobile={false}
       onCancelRename={() => {}}
       onClose={() => {}}
+      onMove={() => {}}
       onNew={() => {}}
       onRename={() => {}}
       onSelect={() => {}}
@@ -19,19 +36,17 @@ function tabBar(tab: SessionTab, renaming: string | null): string {
       onStartRename={() => {}}
       readOnly={false}
       renaming={renaming}
-      tabs={[tab]}
+      tabs={tabs}
     />,
   )
 }
 
 describe('SessionTabs', () => {
   it('shows Untitled for a session with no title, and its rename field starts empty with Untitled as its hint', () => {
-    const untitled: SessionTab = { id: 'new', title: null, selected: true }
-    const tab = tabBar(untitled, null)
+    const tab = tabBar(null)
     expect(textOf(tab).trim()).toBe('Untitled')
-    expect(tab).toContain('aria-label="Rename Untitled"')
     expect(tab).toContain('aria-label="Close Untitled"')
-    const field = tabBar(untitled, untitled.id).match(/<input [^>]*>/)?.[0]
+    const field = tabBar('new').match(/<input [^>]*>/)?.[0]
     expect(field).toContain('value=""')
     expect(field).toContain('placeholder="Untitled"')
   })
