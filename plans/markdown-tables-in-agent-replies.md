@@ -1,8 +1,8 @@
 # Markdown tables in agent replies
 
 Status: Active. On branch `calummoore/markdown-table-failure`, no pull request yet.
-The pull request that completes the work deletes this plan. This turn creates
-the plan only. Implementation has not started.
+The pull request that completes the work deletes this plan. The user approved
+all milestones and tasks on 9 November 2026. Implementation is active.
 
 Conductive shows agent replies in its workspace chat. The chat parser joins
 unrecognized table rows into a paragraph. The file preview already renders
@@ -44,7 +44,7 @@ Contract owners:
 - **Previous examples:** Decision 88 records the earlier freeze. The follow-up deleted by `db11799` also measured slow layout with spanning cells.
 - **Related:** Item 2 selects the code that applies this policy. File previews keep their existing padding and cell budget.
 - **Recommendation:** A, with separate borders. It avoids a new limit and removes the measured Chrome stall. D gives an engine-independent grid bound.
-- **Action:** fix now, apply A in the planned implementation. This turn records the decision only.
+- **Action:** fix now, apply A in the approved implementation.
 - **Chosen:** A, by the user on 9 November 2026. The user answered `1 = A`.
 
 ### 2. Choose the Markdown scope
@@ -69,7 +69,7 @@ Contract owners:
 - **Previous examples:** None found beyond the current chat and file-preview difference.
 - **Related:** Item 1 sets the short-row policy.
 - **Recommendation:** A. It fixes the reported problem with the smallest visible change. B removes the broader renderer difference.
-- **Action:** fix now, apply A in the planned implementation. This turn records the decision only.
+- **Action:** fix now, apply A in the approved implementation.
 - **Chosen:** A, by the user on 9 November 2026. The user answered `2 = A`.
 
 Both choices assume that agents send pipe tables and that the browser renders
@@ -105,6 +105,11 @@ Agent design calls, dated 9 November 2026:
   Live events and saved history must produce the same completed table.
 - Keep folded-message previews on one line. Show the full table when the message opens.
   Keep native tables outside the phrasing-only `<summary>` element.
+- A spanning cell keeps its text at its start, so a value stays under its first column.
+  A closed table-message preview lists cells in row order with a middle dot between cells.
+- The open message line keeps blocks before the first table. The table and later blocks form its expanded body.
+  Messages without a table retain their current markup.
+- Shared data types use plain TypeScript modules, so fixture imports also compile in projects without JSX.
 - Scroll wide tables inside the reply. Keep the workspace within the viewport.
 - Render cells as React text and elements. Supplied HTML remains text.
 - Keep sample rows in mockups, development fixtures, and tests.
@@ -112,6 +117,9 @@ Agent design calls, dated 9 November 2026:
 
 ## Replaced ways
 
+- Mockup message `paragraphs` become ordered `blocks` in Milestone 1.
+  All fixtures, `ChatItemView`, and the mockup work-fold message line use the new field.
+  The old keys and the inline work-fold helper are removed after their consumers move.
 - File-local row reading becomes shared row reading in Milestone 3.
   Consumers: the file table parser and the new chat table parser.
   Remove the original row-reading helpers after both consumers use the shared reader.
@@ -128,20 +136,24 @@ Tags: mockup
 
 Depends on: none
 
+Status: Completed on 9 November 2026.
+
 Show table replies before changing the app.
 
-- [ ] Add a reachable child page under `app/chat` for table replies.
-- [ ] Show the resource table, a short row, and a wide table in desktop and phone variants.
-- [ ] Show a reply before its separator arrives and after its table appears.
-- [ ] Show table messages inside an open work fold, with a closed preview and an expanded table.
-- [ ] Build the pure shared table view with current typography, colors, borders, and alignment.
-- [ ] Use separate borders with the existing single-line grid appearance in both table callers.
-- [ ] Keep each catalogue page within the existing five-screen limit.
-- [ ] Update the mockup catalogue and design notes where needed.
-- [ ] Capture marketing pictures again if a changed screen or shared part appears in them.
-- [ ] Run `npm run mockups:check`. Inspect both viewports in both color schemes.
-- [ ] Save screenshots under `.context/markdown-table-support/`.
-- [ ] Update this plan's design and TODOs for problems that the mockups show.
+- [x] Add a reachable child page under `app/chat` for table replies.
+- [x] Show the resource table, a short row, and a wide table in desktop and phone variants.
+- [x] Show a reply before its separator arrives and after its table appears.
+- [x] Show table messages inside an open work fold, with a closed preview and an expanded table.
+- [x] Build the pure shared table view with current typography, colors, borders, and alignment.
+- [x] Use separate borders with the existing single-line grid appearance in both table callers.
+- [x] Keep each catalogue page within the existing five-screen limit.
+- [x] Update the mockup catalogue and design notes where needed.
+- [x] Capture marketing pictures again if a changed screen or shared part appears in them.
+- [x] Run `npm run mockups:check`. Inspect both viewports in both color schemes.
+- [x] Save screenshots under `.context/markdown-table-support/`.
+- [x] Update this plan's design and TODOs for problems that the mockups show.
+
+Evidence: `.context/markdown-table-support/milestone-1-report.md`.
 
 ## Milestone 2: Requirements and documentation
 

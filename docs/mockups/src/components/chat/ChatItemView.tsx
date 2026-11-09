@@ -8,6 +8,7 @@ import { ActionButton } from '../common/actions'
 import { InlineText } from '../common/InlineText'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
+import { AgentBlocks } from './AgentBlocks'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
@@ -52,20 +53,7 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
     case 'agent':
       return (
         <div className={styles.agent}>
-          {item.paragraphs.map((paragraph) => (
-            <p key={paragraph}>
-              <InlineText text={paragraph} />
-            </p>
-          ))}
-          {item.bullets ? (
-            <ul>
-              {item.bullets.map((bullet) => (
-                <li key={bullet}>
-                  <InlineText text={bullet} />
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <AgentBlocks blocks={item.blocks} bullets={item.bullets} />
         </div>
       )
     case 'tool':
