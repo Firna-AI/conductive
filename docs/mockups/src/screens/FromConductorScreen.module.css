@@ -10,6 +10,11 @@
   box-sizing: border-box;
 }
 
+/* The one table has four columns, so it takes the width of the site header. */
+.wide {
+  max-width: 1184px;
+}
+
 /* The task layout has no table, so its column keeps the width of its cards. */
 .narrow {
   max-width: 824px;

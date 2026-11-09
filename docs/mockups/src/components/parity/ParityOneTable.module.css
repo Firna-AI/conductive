@@ -1,0 +1,54 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+/* The widths of the area, feature, and status columns. Notes take the rest. */
+.columns th:nth-child(1) {
+  width: 16%;
+}
+
+.columns th:nth-child(2) {
+  width: 25%;
+}
+
+.columns th:nth-child(3) {
+  width: 21%;
+}
+
+/* The area reads as a label of the app, on the first line of its row. */
+.area {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  line-height: 22px;
+  text-transform: var(--ui-label-case);
+}
+
+/*
+ * The areas read apart without headings: the first row of an area has more
+ * room above it, and a darker neutral hairline ends the last row. Both are
+ * plain table lines, not a coloured edge on a box.
+ */
+tr.groupStart > * {
+  padding-top: 20px;
+}
+
+tr.groupEnd > * {
+  border-bottom-color: var(--ui-border2);
+}
+
+.mobile {
+  gap: 40px;
+}
+
+.mobile .area {
+  line-height: 1.4;
+}
+
+/* A phone draws each row as a block, so the row itself ends the area. */
+.mobile tr.groupEnd {
+  border-bottom-color: var(--ui-border2);
+}

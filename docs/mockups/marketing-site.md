@@ -67,9 +67,10 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   has only the wordmark in its header, and no footer.
 - `marketing/not-found` keeps the header and the footer of the site, with a
   link to the home page.
-- `marketing/from-conductor` draws three layouts of one page for people
+- `marketing/from-conductor` draws four layouts of one page for people
   who move from Conductor Cloud, at `from-conductor` on the product domain,
-  so that the team can choose one. The page lists Conductor Cloud features
+  so that the team can choose one: by area, as one table, by status, and by
+  task. The page lists Conductor Cloud features
   only. Each feature shows its status in the product, and a due date only
   when the team commits to one. `src/fixtures/conductorParity.ts` holds the
   sample data, and `src/components/parity/` holds the parts. The index

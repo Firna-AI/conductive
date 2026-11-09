@@ -7,13 +7,14 @@ import { SitePage } from '../components/marketing/SitePage'
 import { ParityBoard } from '../components/parity/ParityBoard'
 import { ParityGuide } from '../components/parity/ParityGuide'
 import { ParityIntro } from '../components/parity/ParityIntro'
+import { ParityOneTable } from '../components/parity/ParityOneTable'
 import { ParityTable } from '../components/parity/ParityTable'
 import { parityAreaKeys } from '../fixtures/conductorParity'
 import { paths } from '../paths'
 import styles from './FromConductorScreen.module.css'
 
-/** The three layouts of the page that the design study compares. */
-type ParityLayout = 'by-area' | 'by-status' | 'by-task'
+/** The four layouts of the page that the design study compares. */
+type ParityLayout = 'by-area' | 'one-table' | 'by-status' | 'by-task'
 
 /** The saved states of the task layout: the card that a visitor opened. */
 export const taskLayoutSchema = {
@@ -31,6 +32,7 @@ type TaskLayoutState = SchemaProps<typeof taskLayoutSchema>
 /** The catalogue page of each layout, which its own anchors link to. */
 const layoutPages: Readonly<Record<ParityLayout, string>> = {
   'by-area': paths.fromConductorByArea,
+  'one-table': paths.fromConductorOneTable,
   'by-status': paths.fromConductorByStatus,
   'by-task': paths.fromConductorByTask,
 }
@@ -42,13 +44,16 @@ function ParityList(props: {
   viewport: Viewport
 }): ReactNode {
   const page = layoutPages[props.layout]
-  if (props.layout === 'by-area') {
-    return <ParityTable page={page} viewport={props.viewport} />
+  switch (props.layout) {
+    case 'by-area':
+      return <ParityTable page={page} viewport={props.viewport} />
+    case 'one-table':
+      return <ParityOneTable viewport={props.viewport} />
+    case 'by-status':
+      return <ParityBoard page={page} viewport={props.viewport} />
+    case 'by-task':
+      return <ParityGuide open={props.open} viewport={props.viewport} />
   }
-  if (props.layout === 'by-status') {
-    return <ParityBoard page={page} viewport={props.viewport} />
-  }
-  return <ParityGuide open={props.open} viewport={props.viewport} />
 }
 
 /**
@@ -56,7 +61,9 @@ function ParityList(props: {
  * its features work in the product today, which are on the way, and which
  * work differently. Each layout shows the same sample data in another
  * order and density, under the same top and above the same last call. The
- * task layout keeps a narrower column, because its cards hold no table.
+ * one table takes the width of the site header, because it has four
+ * columns. The task layout keeps a narrower column, because its cards hold
+ * no table.
  */
 export function FromConductorScreen(props: {
   layout: ParityLayout
@@ -69,6 +76,7 @@ export function FromConductorScreen(props: {
       <div
         className={classes(
           styles.page,
+          layout === 'one-table' && styles.wide,
           layout === 'by-task' && styles.narrow,
           viewport === 'mobile' && styles.mobile,
         )}

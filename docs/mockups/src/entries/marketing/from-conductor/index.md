@@ -1,28 +1,29 @@
 ---
 title: From Conductor
-description: Three layouts of one page for people who move from Conductor Cloud, for a design comparison. The rows are a sample, and the due dates are examples.
+description: Four layouts of one page for people who move from Conductor Cloud, for a design comparison. The rows are a sample, and the due dates are examples.
 ---
 
 # From Conductor
 
 The page at `conductive.build/from-conductor` shows people who move from
 Conductor Cloud which of its features work in Conductive today, which are
-on the way, and which work differently. Three layouts show the same sample
+on the way, and which work differently. Four layouts show the same sample
 data, so that you can compare them before the team chooses one.
 
-## The three layouts
+## The four layouts
 
 | Layout | Reading order | Density | It suits |
 | --- | --- | --- | --- |
 | [By area](mock:marketing/from-conductor/by-area) | Area, then feature | High: a table row for each feature | A visitor who looks for one feature |
+| [One table](mock:marketing/from-conductor/one-table) | Area, then feature, in one run | Highest: one table, with an Area column and no headings | A visitor who reads every feature, or compares the statuses down one column |
 | [By status](mock:marketing/from-conductor/by-status) | Status, then feature | Medium: four sections with counts | A visitor who asks what works today and what comes when |
 | [By task](mock:marketing/from-conductor/by-task) | Job, then a summary, then the features on request | Low until a card opens | A visitor who skims |
 
 Each layout has a phone view and a desktop view, in light and dark. All
-three share the site header and footer, the top of the page, and the last
+four share the site header and footer, the top of the page, and the last
 call to action.
 
-## What all three show
+## What all four show
 
 - The page covers Conductor Cloud features only. A note at the top says so,
   and the list leaves out the features of local Conductor workspaces.

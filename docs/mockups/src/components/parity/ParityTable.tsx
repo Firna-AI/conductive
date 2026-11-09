@@ -3,9 +3,10 @@ import { productName } from '../../brand'
 import { parityAreas } from '../../fixtures/conductorParity'
 import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../common/classes'
-import { DueDay, StatusMark } from './ParityMarks'
+import { FeatureCells } from './FeatureCells'
 import { ParityLegend } from './ParityLegend'
 import { featuresOf } from './parityStatus'
+import rows from './parityRows.module.css'
 import styles from './ParityTable.module.css'
 
 /**
@@ -16,7 +17,13 @@ import styles from './ParityTable.module.css'
 export function ParityTable(props: { page: string; viewport: Viewport }) {
   const mobile = props.viewport === 'mobile'
   return (
-    <div className={classes(styles.layout, mobile && styles.mobile)}>
+    <div
+      className={classes(
+        styles.layout,
+        mobile && styles.mobile,
+        mobile && rows.mobile,
+      )}
+    >
       <nav aria-label="Areas" className={styles.index}>
         <span className={styles.indexLabel}>Areas</span>
         <ul className={styles.indexList}>
@@ -44,8 +51,8 @@ export function ParityTable(props: { page: string; viewport: Viewport }) {
           <h2 className={styles.areaTitle} id={`${area.key}-title`}>
             {area.title}
           </h2>
-          <table className={styles.table}>
-            <thead className={styles.head}>
+          <table className={rows.table}>
+            <thead className={classes(rows.head, styles.columns)}>
               <tr>
                 <th scope="col">Conductor Cloud</th>
                 <th scope="col">In {productName}</th>
@@ -54,15 +61,8 @@ export function ParityTable(props: { page: string; viewport: Viewport }) {
             </thead>
             <tbody>
               {featuresOf(area.key).map((feature) => (
-                <tr className={styles.row} key={feature.name}>
-                  <th className={styles.name} scope="row">
-                    {feature.name}
-                  </th>
-                  <td className={styles.status}>
-                    <StatusMark status={feature.status} />
-                    <DueDay feature={feature} />
-                  </td>
-                  <td className={styles.note}>{feature.note}</td>
+                <tr className={rows.row} key={feature.name}>
+                  <FeatureCells feature={feature} />
                 </tr>
               ))}
             </tbody>

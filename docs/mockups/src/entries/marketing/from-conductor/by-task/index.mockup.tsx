@@ -8,9 +8,9 @@ import {
 
 export const fromConductorByTask = defineScreen({
   title: 'From Conductor, by task',
-  description: `Layout C of three for the page for people who move from Conductor Cloud. Each job that a Conductor Cloud user does has a card: one sentence, the count of each status, and what is on the way with its due date. Every card starts closed. A native disclosure opens its features, with no script. The legend comes last. ${parityStudyNote}`,
+  description: `One of four layouts of the page for people who move from Conductor Cloud. Each job that a Conductor Cloud user does has a card: one sentence, the count of each status, and what is on the way with its due date. Every card starts closed. A native disclosure opens its features, with no script. The legend comes last. ${parityStudyNote}`,
   rationale:
-    'The user chose on 9 November 2026: a page on the site from one typed data file, for Conductor Cloud users only, with several statuses and a firm date on some features. The three layouts are design calls for a comparison. This one is the shortest to skim: each card answers in one sentence and keeps its features closed. Each sentence is written by hand, so it can go out of date when a status changes.',
+    'The user chose on 9 November 2026: a page on the site from one typed data file, for Conductor Cloud users only, with several statuses and a firm date on some features. The layouts are design calls for a comparison. This one is the shortest to skim: each card answers in one sentence and keeps its features closed. Each sentence is written by hand, so it can go out of date when a status changes.',
   relatedDocs: ['docs/mockups/src/entries/marketing/from-conductor/index.md'],
   address: `${productDomain}/from-conductor`,
   propSchema: taskLayoutSchema,

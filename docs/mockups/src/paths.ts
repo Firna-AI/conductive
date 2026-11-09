@@ -5,6 +5,7 @@ export const paths = {
   privacy: 'marketing/privacy',
   notFound: 'marketing/not-found',
   fromConductorByArea: 'marketing/from-conductor/by-area',
+  fromConductorOneTable: 'marketing/from-conductor/one-table',
   fromConductorByStatus: 'marketing/from-conductor/by-status',
   fromConductorByTask: 'marketing/from-conductor/by-task',
   signIn: 'app/sign-in',
