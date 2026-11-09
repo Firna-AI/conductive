@@ -1,0 +1,9 @@
+{
+  "order": [
+    "preferences",
+    "setup",
+    "connect-claude",
+    "connect-codex",
+    "share-not-saved"
+  ]
+}

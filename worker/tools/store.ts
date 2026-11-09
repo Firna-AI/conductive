@@ -108,7 +108,8 @@ export async function ownerPreference(
   const row = await db
     .prepare(
       `SELECT default_agent AS agent, default_model AS model,
-       default_effort AS effort FROM user_preferences WHERE user_id = ?`,
+       default_effort AS effort FROM user_preferences
+       WHERE user_id = ? AND default_agent IS NOT NULL`,
     )
     .bind(userId)
     .first<unknown>()

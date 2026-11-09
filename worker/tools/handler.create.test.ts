@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { TOOL_TURN_HEADER } from '../../tools/context'
+import { configuredDefaultChoice } from '../app-api/models'
 import { HttpError } from '../http'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import {
@@ -200,4 +201,32 @@ it('reports a lifecycle start failure instead of a successful create', async () 
       message: 'The cloud computer could not start. Try again.',
     },
   })
+})
+
+it('uses the configured model for an owner who saved only the workspace view', async () => {
+  await fixture.db
+    .prepare(
+      `UPDATE user_preferences SET default_agent = NULL, default_model = NULL,
+       default_effort = NULL, new_workspace_view = 'dialog' WHERE user_id = 'owner'`,
+    )
+    .run()
+  harness.env.CONDUCTIVE_DEFAULT_CHOICE = JSON.stringify({
+    agent: 'claude',
+    model: 'configured-model',
+    effort: 'medium',
+  })
+  fixture.services.ownerDefaultChoice.mockImplementation(async () =>
+    configuredDefaultChoice(harness.env),
+  )
+
+  const response = await fixture.create({
+    repositoryId: 'repo-a',
+    firstMessage: 'Build the feature.',
+  })
+  expect(response.status).toBe(201)
+  expect(fixture.services.createWorkspace).toHaveBeenCalledWith(
+    expect.objectContaining({
+      choice: { agent: 'claude', model: 'configured-model', effort: 'medium' },
+    }),
+  )
 })

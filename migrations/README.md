@@ -48,6 +48,11 @@ Existing plans keep `NULL`.
 states how the app shows a missing name.
 The `city` column and branch keep their city value.
 
+`202611082300_new_workspace_view.sql` rebuilds `user_preferences` and keeps every existing row and value.
+The three default model columns can be all set or all unset.
+The nullable `new_workspace_view` column holds `page` or `dialog`.
+An unset view uses the page. An unset model uses the configured app default.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -80,6 +85,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
 | 15o Org suspension | `202611080000`–`202611080059` |
 | Agent tool lists and names | `202611081300`–`202611081359` |
+| Preferences and New workspace dialog | `202611082300`–`202611082359` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
 

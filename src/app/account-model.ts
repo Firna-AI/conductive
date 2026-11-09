@@ -5,6 +5,7 @@ import {
   type AgentLoginStatus,
   type GitHubInstallationsResponse,
   type GitHubRepositoriesResponse,
+  type NewWorkspaceView,
   type SaveAgentLoginRequest,
   type UpdateAgentLoginRequest,
   type UpdateAgentLoginResponse,
@@ -17,13 +18,14 @@ import {
   readGitHubRepositories,
   readInstallations,
   readLogin,
+  readNewWorkspaceView,
 } from './api/read-core'
 import type { AppModel } from './app-model'
 import type { AppServices } from './services'
 import { load, loading, Store, type Loadable } from './store'
 
 /**
- * The account of the person signed in: the agent logins, the default model,
+ * The account of the person signed in: the agent logins, the preferences,
  * and the GitHub App installations. A secret goes to the Worker in a write
  * and never comes back: the account shows only the kind of each login and
  * its share setting, which says whether other members' messages in the
@@ -154,6 +156,17 @@ export class AccountModel {
     )
     const account = this.account.get()
     if (account) this.account.set({ ...account, defaultChoice: saved })
+  }
+
+  async setNewWorkspaceView(view: NewWorkspaceView): Promise<void> {
+    const saved = await this.services.api.send(
+      'PUT',
+      ACCOUNT_PATHS.newWorkspaceView,
+      { view },
+      readNewWorkspaceView,
+    )
+    const account = this.account.get()
+    if (account) this.account.set({ ...account, newWorkspaceView: saved.view })
   }
 
   async signOut(): Promise<void> {

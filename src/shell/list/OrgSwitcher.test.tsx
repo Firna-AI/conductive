@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test } from 'vitest'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { serveOperator } from '../../test-support/operator'
@@ -53,7 +54,7 @@ describe('the org switcher of a phone', () => {
     expect(links.slice(-2)).toEqual(row.last)
   })
 
-  test('keeps Tab and Shift+Tab inside, also from the sheet itself, and gives the focus back to its trigger', async () => {
+  test('keeps Tab and Shift+Tab inside, also from the sheet itself, and gives the focus back to its trigger, also after a press outside', async () => {
     const app = await startedApp(new FakeApiServer())
     const boot = app.boot.get()
     const [org] = app.orgs.get()
@@ -84,14 +85,29 @@ describe('the org switcher of a phone', () => {
     press(links[links.length - 1], 'Tab')
     const fromLast = focused()
     press(links[0], 'Escape')
+    const closed = {
+      open: document.querySelector('[role="dialog"]') !== null,
+      behind: behind(),
+      trigger: document.activeElement === trigger,
+    }
+    click(trigger)
+    // A browser moves the focus at a press that the app does not keep.
+    const outside = new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+    })
+    act(() => {
+      document.body.dispatchEvent(outside)
+    })
     expect({
       opened,
       fromFirst,
       fromSheet,
       fromLast,
-      closed: {
+      closed,
+      pressedOutside: {
         open: document.querySelector('[role="dialog"]') !== null,
-        behind: behind(),
+        pressKept: outside.defaultPrevented,
         trigger: document.activeElement === trigger,
       },
     }).toEqual({
@@ -100,6 +116,7 @@ describe('the org switcher of a phone', () => {
       fromSheet: 4,
       fromLast: 0,
       closed: { open: false, behind: false, trigger: true },
+      pressedOutside: { open: false, pressKept: true, trigger: true },
     })
   })
 })
