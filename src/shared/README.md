@@ -107,7 +107,13 @@ It can differ from the session of the request.
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
 `acceptedTermsSignInPath(inviteCode?)` gives the sign-in path that carries that revision and an optional join code.
 [Terms consent](../../worker/security/README.md#terms-consent) gives the rules of sign-in.
-`operator.ts` defines the paths and replies of the operator's user and org suspensions.
+`operator.ts` defines the operator overview, directories, and user and org
+suspensions. Its user records include `OperatorUserAccess` from
+`operator-waitlist.ts`. That module also defines waitlist, approval, code,
+and pause paths and replies. The operator sees email states and verified
+email flags, never email addresses. GitHub creation times let the app show
+account age. Access sources carry the operator, code label, referral
+owner, or org and inviting admin. Referral records include recipients.
 `OrgSummary.suspension` in `orgs.ts` exposes only the org suspension time to its members.
 [Operator actions](../../worker/operator/README.md) gives the access and the reply codes.
 
@@ -138,6 +144,7 @@ The git credential payload is not defined yet.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
+- [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause changes, and user access details.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.

@@ -5,10 +5,17 @@ import type {
   OperatorUserSummary,
   OperatorWorkspaceStates,
 } from '../../shared/operator'
+import type {
+  OperatorAccessSource,
+  OperatorUserAccess,
+} from '../../shared/operator-waitlist'
 import {
   choice,
   count,
+  flag,
   items,
+  maybeCount,
+  maybeNested,
   maybeText,
   nested,
   record,
@@ -60,6 +67,7 @@ export function readOperatorOverview(value: unknown): OperatorOverview {
   return {
     readAt: count(overview, 'readAt'),
     users: nested(overview, 'users', (item) => readWeekly(item, 'users')),
+    waiting: count(overview, 'waiting'),
     orgs: nested(overview, 'orgs', (item) => readWeekly(item, 'orgs')),
     workspaces: nested(overview, 'workspaces', (item) =>
       readWeekly(item, 'workspaces'),
@@ -111,6 +119,7 @@ function readOrgSummary(value: unknown): OperatorOrgSummary {
 function readUserSummary(value: unknown): OperatorUserSummary {
   const user = record(value, 'user')
   return {
+    ...readOperatorUserAccess(user),
     githubId: count(user, 'githubId'),
     login: text(user, 'login'),
     name: maybeText(user, 'name'),
@@ -118,6 +127,100 @@ function readUserSummary(value: unknown): OperatorUserSummary {
     orgs: count(user, 'orgs'),
     workspaces: count(user, 'workspaces'),
     status: choice(user, 'status', ['active', 'suspended']),
+  }
+}
+
+function readIdentity(value: unknown) {
+  const user = record(value, 'user')
+  return { githubId: count(user, 'githubId'), login: text(user, 'login') }
+}
+
+function readAccessSource(value: unknown): OperatorAccessSource {
+  const source = record(value, 'source')
+  const kind = choice(source, 'kind', [
+    'approval',
+    'invite_code',
+    'referral_code',
+    'org_invitation',
+    'operator',
+    'existing',
+  ])
+  switch (kind) {
+    case 'approval':
+      return { kind, operator: maybeNested(source, 'operator', readIdentity) }
+    case 'invite_code':
+      return {
+        kind,
+        code: text(source, 'code'),
+        label: maybeText(source, 'label'),
+      }
+    case 'referral_code':
+      return {
+        kind,
+        code: text(source, 'code'),
+        owner: maybeNested(source, 'owner', readIdentity),
+      }
+    case 'org_invitation':
+      return {
+        kind,
+        org: nested(source, 'org', (value) => {
+          const org = record(value, 'org')
+          return { id: text(org, 'id'), name: maybeText(org, 'name') }
+        }),
+        invitedBy: maybeNested(source, 'invitedBy', readIdentity),
+      }
+    default:
+      return { kind }
+  }
+}
+
+function readAppAccess(value: unknown): OperatorUserAccess['appAccess'] {
+  const access = record(value, 'appAccess')
+  const state = choice(access, 'state', ['waiting', 'granted'])
+  return state === 'waiting'
+    ? { state, waitingSince: count(access, 'waitingSince') }
+    : {
+        state,
+        grantedAt: count(access, 'grantedAt'),
+        source: nested(access, 'source', readAccessSource),
+      }
+}
+
+export function readOperatorUserAccess(user: JsonObject): OperatorUserAccess {
+  return {
+    appAccess: nested(user, 'appAccess', readAppAccess),
+    approvalEmail: nested(user, 'approvalEmail', (value) => {
+      const email = record(value, 'approvalEmail')
+      return {
+        state: choice(email, 'state', ['none', 'pending', 'sent', 'failed']),
+        updatedAt: maybeCount(email, 'updatedAt'),
+      }
+    }),
+    hasVerifiedEmail: flag(user, 'hasVerifiedEmail'),
+    githubCreatedAt: maybeCount(user, 'githubCreatedAt'),
+    referralCode: maybeNested(user, 'referralCode', (value) => {
+      const code = record(value, 'referralCode')
+      return {
+        code: text(code, 'code'),
+        kind: choice(code, 'kind', ['invite', 'referral']),
+        label: maybeText(code, 'label'),
+        owner: maybeNested(code, 'owner', readIdentity),
+        createdBy: maybeNested(code, 'createdBy', readIdentity),
+        createdAt: count(code, 'createdAt'),
+        useLimit: count(code, 'useLimit'),
+        uses: count(code, 'uses'),
+        state: choice(code, 'state', ['active', 'used_up', 'disabled']),
+        disabledAt: maybeCount(code, 'disabledAt'),
+        disabledBy: maybeNested(code, 'disabledBy', readIdentity),
+        recipients: items(code, 'recipients', (value) => {
+          const recipient = record(value, 'recipient')
+          return {
+            ...readIdentity(recipient),
+            usedAt: count(recipient, 'usedAt'),
+          }
+        }),
+      }
+    }),
   }
 }
 

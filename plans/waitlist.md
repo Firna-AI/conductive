@@ -418,6 +418,10 @@ The agent's calls from the plan, on 9 November 2026:
 - The search of the Invite codes tab finds any code by its text, also a
   referral code, and opens the page of its owner. Reason: a report of
   misuse often names only a code.
+- The scheduled handler retries the approval emails after its other
+  repairs, and a failed retry only warns. Reason: a slow or failed email
+  must not hold back the cleanup of deleted orgs or the alarm repairs.
+  This call is from the check of Milestone 4.
 - The gate turns on in the last backend milestone, after the ways in and
   the screens exist. Until then, a new account gets app access at once, as
   now. Reason: each milestone then leaves an app that works.
@@ -721,33 +725,36 @@ and the complete gate in `.context/waitlist/m3/gate.log`.
 
 Depends on: 3
 
-- [ ] Add a migration for the state of each approval email.
-- [ ] Add `GET /api/operator/waitlist` with a search, oldest first, 20 at
+- [x] Add a migration for the state of each approval email.
+- [x] Add `GET /api/operator/waitlist` with a search, oldest first, 20 at
       a time. Each row says whether the person has a verified email, with
       no address, so that the Approve question can choose its words.
-- [ ] Add the approval of a person who waits. It uses the grant step of
+- [x] Add the approval of a person who waits. It uses the grant step of
       Milestone 3, also during the pause. It saves the email as pending in
       the same batch, and sends it at once. It refuses a suspended person
       with 409 `user_suspended`.
-- [ ] Send each pending approval email again from the 15-minute Cron
+- [x] Send each pending approval email again from the 15-minute Cron
       Trigger, with the same idempotency key, until Resend accepts it or
       24 hours pass.
-- [ ] Add the routes of the invite codes: list with a search, make, and
+- [x] Add the routes of the invite codes: list with a search, make, and
       disable. A disable also works for a referral code.
-- [ ] Add the routes of the pause: read, turn on, and turn off.
-- [ ] Add the app access state, its source, the state of the approval
+- [x] Add the routes of the pause: read, turn on, and turn off.
+- [x] Add the app access state, its source, the state of the approval
       email, whether the user has a verified email, and the referral code
       to the user detail and the user list.
       Add the count of the people who wait to the overview, without
       suspended people.
-- [ ] Send the approval email through one mail sender that the invitation
+- [x] Send the approval email through one mail sender that the invitation
       email shares.
-- [ ] Test with local D1: each route, 403 `operator_required` for another
+- [x] Test with local D1: each route, 403 `operator_required` for another
       user, an approval during the pause, a repeat approval, a failed
       email and its retry, the end of the retries, the search of a
       referral code, and the overview counts.
-- [ ] Update `worker/operator/README.md`, `worker/README.md`, and the path
+- [x] Update `worker/operator/README.md`, `worker/README.md`, and the path
       helpers and types in `src/shared/operator.ts`.
+
+Evidence: `.context/waitlist/m4/report.md`, `.context/waitlist/m4/fix-1/report.md`,
+and the complete gate in `.context/waitlist/m4/gate.log`.
 
 ## Milestone 5: The waitlist and the referral code in the web app
 

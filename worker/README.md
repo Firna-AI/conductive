@@ -13,7 +13,8 @@ The [sandbox area](sandbox/README.md) owns the Boat adapter and the use of the a
 The Worker reads that key from the Worker secret `BOAT_API_KEY`.
 The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
-The [operator area](operator/README.md) owns the operator's app-wide numbers and suspension of users and orgs.
+The [operator area](operator/README.md) owns the operator's app-wide numbers,
+suspensions, waitlist approvals, invite codes, and sign-up pause.
 
 ## Routes
 
@@ -44,6 +45,8 @@ On the app hostname, the Worker serves these API routes:
 - `GET /api/operator/users`, the user search and cursor pages for operators.
 - `GET /api/operator/orgs/<orgId>`, the org page for operators.
 - `GET /api/operator/users/<githubId>`, the user page for operators.
+- The operator's waitlist list and approval, invite code list, creation and
+  disable, and sign-up pause, as the [operator area](operator/README.md#waitlist-codes-and-sign-ups) says.
 - The operator's suspension of users and orgs, as the [operator area](operator/README.md) says.
 - `DELETE /api/operator/users/<githubId>/suspension`, the operator's lift of a user suspension.
 - `DELETE /api/operator/orgs/<orgId>/suspension`, the operator's lift of an org suspension.
@@ -73,6 +76,9 @@ The preview domain forwards each private preview to its workspace object.
 Its authorizer redeems the one-use viewer grant before any sandbox request.
 The object owns preview expiry and revocation beside its other alarm sources.
 A Cron Trigger runs deleted-org maintenance and cleanup every 15 minutes.
+It also retries pending approval emails until delivery or 24 hours from
+approval. [Approval delivery](operator/README.md#approval-email-delivery)
+describes the saved messages and delivery keys.
 It also repairs overdue workspace disk alarms and org image refreshes after a 15-minute grace period.
 The repair checks at most 50 workspaces and 50 orgs per run.
 It defers failed calls and logs counts when either limit leaves work pending.
@@ -110,6 +116,8 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [features/alarms.ts](features/alarms.ts) keeps separate durable alarm deadlines for lifecycle, devices, previews, and GitHub.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
+- [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.
+- [mail-sender.ts](mail-sender.ts) shares Resend transport and local logging between approval and invitation emails.
 - [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
 - [http/request-body.ts](http/request-body.ts) applies the default and declared request body limits.
 - [http/json-body.ts](http/json-body.ts) owns the shared JSON object parsing policy.

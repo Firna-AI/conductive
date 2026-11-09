@@ -142,6 +142,7 @@ export async function createHarness() {
           'orgs',
           'sessions',
           'access_code_uses',
+          'approval_emails',
           'user_app_access',
           'access_codes',
           'users',

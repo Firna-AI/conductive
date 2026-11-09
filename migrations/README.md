@@ -47,6 +47,13 @@ its join time and one referral code with five uses. The user record also
 gets the primary verified email and the GitHub account creation time.
 [The waitlist backend](../worker/waitlist/README.md) owns these records.
 
+`202611091300_approval_emails.sql` adds the approval email state and its
+approval and state times. Pending messages keep their recipient, subject,
+and body for stable delivery retries. A missing verified email saves the
+`none` state with no message. The migration also adds the operator who
+disabled a code. [The operator backend](../worker/operator/README.md#approval-email-delivery)
+owns email delivery and code management.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

@@ -106,11 +106,21 @@ export function sampleUserDetail(
   records: OperatorRecords,
   now = FAKE_TIME,
 ): OperatorUserDetail {
+  const joinedAt = daysBefore(now, user.joinedDaysAgo)
   return {
     githubId: user.githubId,
     login: user.login,
     name: user.name,
-    joinedAt: daysBefore(now, user.joinedDaysAgo),
+    joinedAt,
+    appAccess: {
+      state: 'granted',
+      grantedAt: joinedAt,
+      source: { kind: 'existing' },
+    },
+    approvalEmail: { state: 'none', updatedAt: null },
+    hasVerifiedEmail: false,
+    githubCreatedAt: null,
+    referralCode: null,
     workspaces: { total: user.owned, running: user.running },
     orgs: sampleOrgs.flatMap((org) => {
       const role = org.members[user.login]
@@ -152,6 +162,11 @@ export function orgRow(
 /** The row of a user in the Users tab, from their page. */
 export function userRow(user: OperatorUserDetail): OperatorUserSummary {
   return {
+    appAccess: user.appAccess,
+    approvalEmail: user.approvalEmail,
+    hasVerifiedEmail: user.hasVerifiedEmail,
+    githubCreatedAt: user.githubCreatedAt,
+    referralCode: user.referralCode,
     githubId: user.githubId,
     login: user.login,
     name: user.name,
@@ -186,6 +201,7 @@ export function operatorOverview(
   return {
     readAt,
     users: operatorTotals.users,
+    waiting: 0,
     orgs: operatorTotals.orgs,
     workspaces: operatorTotals.workspaces,
     running: { ...runningComputers },

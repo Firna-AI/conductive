@@ -35,6 +35,8 @@ import { productionAgentTools } from './tools/composition'
 import { productionGitHubWebhook } from './github/composition'
 import { appFrameSources, runnerSoftware } from './configuration'
 import { appSiteResponse } from './marketing/assets'
+import { retryApprovalEmails } from './operator/approval-email'
+import { warnWorker } from './warnings'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -178,6 +180,14 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         imageRuntime(env, dependencies),
         () => runnerSoftware(env),
       )
+      // Last, so that a slow or failed email never holds back the repairs.
+      try {
+        await retryApprovalEmails(env, dependencies)
+      } catch {
+        warnWorker(
+          'The retry of approval emails failed. It runs again at the next timer.',
+        )
+      }
     },
   }
 }

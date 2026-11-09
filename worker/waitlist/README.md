@@ -38,6 +38,8 @@ referral code insert. Callers include both statements in their own D1
 batch. `grantAppAccess` runs them as a standalone batch. Each repeat keeps
 the first source, time, and referral code, including a disabled code.
 Approval grants accept an operator ID for the operator backend.
+The [operator approval](../operator/README.md#waitlist-codes-and-sign-ups)
+includes these statements in the batch that saves its pending email.
 
 `redeemInviteCode` inserts a use under the live code limit, pause, and user
 access checks. The same batch runs the grant and reads the error result.

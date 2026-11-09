@@ -6,6 +6,9 @@ It reads app-wide numbers.
 It can suspend a user or an org after an abuse report. A user
 suspension signs the user out, stops every cloud computer that the user
 owns, and blocks each new start.
+It also lists and approves people who wait, manages invite codes, and
+pauses sign-ups. [Waitlist routes](#waitlist-codes-and-sign-ups) describes
+these entry points.
 
 ## Overview
 
@@ -25,6 +28,8 @@ The reply is an `OperatorOverview` from
 - `readAt` gives the read time in Unix milliseconds.
 - `users`, `orgs`, and `workspaces` each give `total` and `lastWeek`.
   The week covers the last 7 times 24 hours through `readAt`.
+- `waiting` counts accounts without app access and without a suspension.
+  The user counts and daily user counts still include every account.
 - `running` gives separate counts for `workspaces` and unfinished image `builds`.
   Builds include both builds and refreshes whose job phase is not `done`.
 - `workspaceStates` gives `running`, `stopped`, `failed`, and `archived`.
@@ -92,6 +97,20 @@ Match is null for a name match or no search.
 
 User entries give `githubId`, `login`, `name`, `joinedAt`, `orgs`, `workspaces`, and `status`.
 User status is `active` or `suspended`.
+Both user entries and user pages also include `OperatorUserAccess` from
+[`operator-waitlist.ts`](../../src/shared/operator-waitlist.ts).
+`appAccess` is a waiting record with `waitingSince`, or a granted record
+with `grantedAt` and its source. The source identifies the approving
+operator, invite label, referral owner, or org and inviting admin.
+It also represents operator and existing-account grants.
+`githubCreatedAt` gives the GitHub account creation time, or null.
+`hasVerifiedEmail` is a boolean. It reveals no address.
+`approvalEmail` gives `state` and `updatedAt`. Its states are `none`,
+`pending`, `sent`, and `failed`. An absent email record has no time.
+`referralCode` is null without a code. Otherwise it gives the code,
+counts, disabled state and actor, and recipients with their GitHub IDs,
+logins, and use times. The code count retains uses by deleted accounts.
+The recipient list includes only accounts that still exist.
 
 The org page gives its identity, creation time, and selected repository count.
 It gives `workspaceStates`, `running`, and members with their identities, names, roles, and suspension flags.
@@ -116,6 +135,74 @@ All times use Unix milliseconds.
 An unknown org gets 404 `org_not_found`.
 An unknown or non-numeric GitHub ID gets 404 `user_not_found`.
 These reads return no chat, file, env value, agent login, or email address.
+
+## Waitlist, codes, and sign-ups
+
+These routes use the normal app gate and `isOperator` check.
+They return 403 `operator_required` for another user.
+Each write requires a JSON object and a matching `Origin`.
+The path helpers and reply types live in
+[`operator-waitlist.ts`](../../src/shared/operator-waitlist.ts).
+
+| Method and path | Request | Reply |
+| --- | --- | --- |
+| `GET /api/operator/waitlist` | `OperatorDirectoryQuery` | `OperatorWaitlistResponse` |
+| `POST /api/operator/users/<githubId>/approval` | `EmptyRequest` | `OperatorApprovalResponse` |
+| `GET /api/operator/invite-codes` | `OperatorDirectoryQuery` | `OperatorCodesResponse` |
+| `POST /api/operator/invite-codes` | `CreateOperatorCodeRequest` | `OperatorAccessCode` |
+| `POST /api/operator/invite-codes/<code>/disable` | `EmptyRequest` | `OperatorAccessCode` |
+| `GET /api/operator/signup-pause` | none | `OperatorSignupPause` |
+| `POST /api/operator/signup-pause` | `EmptyRequest` | `OperatorSignupPause` |
+| `DELETE /api/operator/signup-pause` | `EmptyRequest` | `OperatorSignupPause` |
+
+`EmptyRequest` comes from [`api.ts`](../../src/shared/api.ts).
+The waitlist search uses the same login, name, and numeric ID matching as
+the user search. It excludes suspended users and granted users. Its page
+has at most 20 entries, oldest first, with numeric GitHub IDs as ties.
+It returns creation times and verified email flags, never addresses.
+
+The code list shows invite codes by default. A search also finds referral
+codes. It matches code text with either case and with or without its
+hyphen, invite labels, and referral owner logins. Name symbols stay literal.
+Pages have at most 20 entries, newest first, with stored code text as ties.
+Both lists return the total before the cursor and a nullable `nextCursor`.
+Use the same search with the next cursor.
+
+Code creation trims the label. The label must have 1 to 80 characters.
+The use limit must be a positive safe integer. Success returns 201.
+Bad fields return 400 `invalid_invite_code`.
+Disable accepts either kind and keeps the first disable time and operator.
+An unknown code returns 404 `invite_code_not_found`.
+Its successful reply and each repeat have status 200.
+
+Approval returns 404 `user_not_found` for an absent or invalid GitHub ID.
+It returns 409 `user_suspended` for a suspended target.
+It returns 200 without a change or email for a user who already has access.
+A new approval uses the shared grant batch, including during the pause.
+The batch saves a pending email with its recipient and message when a
+verified email exists. Without an address, it saves only the `none` state.
+The sender then tries delivery at once. The reply gives `changed`, the
+email state, and `emailFailed` for a failed immediate send.
+An email failure keeps app access and the pending message.
+
+POST to the pause turns it on. DELETE turns it off.
+The reply records `paused`, `updatedAt`, and the operator.
+A repeat preserves the first time and operator and returns 200.
+
+### Approval email delivery
+
+[`approval-email.ts`](approval-email.ts) builds the plain text email from
+the brand and retries pending messages. The stored subject, recipient,
+and body keep retries unchanged after a later sign-in or deployment.
+[`mail-sender.ts`](../mail-sender.ts) sends both approval and invitation
+emails through Resend. It uses the same sender and local logging policy.
+Invitations retain their content hash in their delivery key.
+Approvals use `waitlist-approval/<userId>` for every attempt.
+
+The scheduled Worker entry retries pending messages every 15 minutes.
+It marks a message failed at or after 24 hours from approval, before
+another send. Each successful send records its time and leaves the retry
+list. A send failure logs fixed warning text without the address.
 
 ## Suspend a user
 
@@ -238,6 +325,9 @@ Run `npm run test -- worker/operator` from the repository root, with Node
 They check overview access, state counts, time windows, daily counts, and org order.
 The directory tests check search keys, cursor pages, status, names, and operator access.
 The lift tests check events, access, retained revocations, Restore, and native disk alarms.
+The waitlist tests check approvals, atomic rollback, parallel approval,
+pending email retries, the 24-hour boundary, code search, pause changes,
+and user access details. They use the harness clock and fake Resend replies.
 Run `npm run test -- worker/app-api/account-operator.test.ts` to check the account's operator flag.
 
 The tests of sandbox access and of the automatic refreshes live beside
@@ -255,6 +345,13 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
 - [`access.ts`](access.ts): `isOperator`, the shared operator reader for routes and account replies.
 - [`overview.ts`](overview.ts): `readOperatorOverview`, the app-wide counts in one D1 batch.
 - [`directory-route.ts`](directory-route.ts): the org and user read dispatch.
+- [`waitlist-route.ts`](waitlist-route.ts): the waitlist, approval, code, and pause dispatch.
+- [`waitlist-directory.ts`](waitlist-directory.ts): waiting account search and cursor pages.
+- [`approval-data.ts`](approval-data.ts): the atomic approval batch and email state queries.
+- [`approval-email.ts`](approval-email.ts): the approval message, immediate send, and scheduled retries.
+- [`code-data.ts`](code-data.ts): code search, creation, disable, and public mapping.
+- [`signup-pause.ts`](signup-pause.ts): the pause read and conditional changes.
+- [`user-access-data.ts`](user-access-data.ts): user grant sources, email state, and referral recipients.
 - [`org-directory.ts`](org-directory.ts) and [`user-directory.ts`](user-directory.ts): list queries and cursors.
 - [`org-detail.ts`](org-detail.ts) and [`user-detail.ts`](user-detail.ts): page queries and reply mapping.
 - [`workspace-counts.ts`](workspace-counts.ts): the state buckets shared by the overview and org page.
@@ -287,6 +384,7 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
 ### Related Docs
 
 - [Operator section](../../docs/protocol/operator-section.md): access, overview numbers, and directory pages.
+- [Waitlist](../../docs/protocol/waitlist.md) and [codes](../../docs/protocol/waitlist-codes.md): app access and email rules.
 - [Operator actions](../../docs/protocol/operator-actions.md): the
   requirements of the operator, the suspension, and abuse reports.
 - [Access and security](../../docs/protocol/access-and-security.md#sign-in)
