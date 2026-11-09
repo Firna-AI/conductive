@@ -22,6 +22,11 @@ import {
   text,
   type JsonObject,
 } from './parse'
+import {
+  readAccessCode,
+  readApprovalEmail,
+  readIdentity,
+} from './read-operator-waitlist'
 
 const ORG_MATCHES = [
   'org-id',
@@ -130,11 +135,6 @@ function readUserSummary(value: unknown): OperatorUserSummary {
   }
 }
 
-function readIdentity(value: unknown) {
-  const user = record(value, 'user')
-  return { githubId: count(user, 'githubId'), login: text(user, 'login') }
-}
-
 function readAccessSource(value: unknown): OperatorAccessSource {
   const source = record(value, 'source')
   const kind = choice(source, 'kind', [
@@ -189,38 +189,19 @@ function readAppAccess(value: unknown): OperatorUserAccess['appAccess'] {
 export function readOperatorUserAccess(user: JsonObject): OperatorUserAccess {
   return {
     appAccess: nested(user, 'appAccess', readAppAccess),
-    approvalEmail: nested(user, 'approvalEmail', (value) => {
-      const email = record(value, 'approvalEmail')
-      return {
-        state: choice(email, 'state', ['none', 'pending', 'sent', 'failed']),
-        updatedAt: maybeCount(email, 'updatedAt'),
-      }
-    }),
+    approvalEmail: nested(user, 'approvalEmail', readApprovalEmail),
     hasVerifiedEmail: flag(user, 'hasVerifiedEmail'),
     githubCreatedAt: maybeCount(user, 'githubCreatedAt'),
-    referralCode: maybeNested(user, 'referralCode', (value) => {
-      const code = record(value, 'referralCode')
-      return {
-        code: text(code, 'code'),
-        kind: choice(code, 'kind', ['invite', 'referral']),
-        label: maybeText(code, 'label'),
-        owner: maybeNested(code, 'owner', readIdentity),
-        createdBy: maybeNested(code, 'createdBy', readIdentity),
-        createdAt: count(code, 'createdAt'),
-        useLimit: count(code, 'useLimit'),
-        uses: count(code, 'uses'),
-        state: choice(code, 'state', ['active', 'used_up', 'disabled']),
-        disabledAt: maybeCount(code, 'disabledAt'),
-        disabledBy: maybeNested(code, 'disabledBy', readIdentity),
-        recipients: items(code, 'recipients', (value) => {
-          const recipient = record(value, 'recipient')
-          return {
-            ...readIdentity(recipient),
-            usedAt: count(recipient, 'usedAt'),
-          }
-        }),
-      }
-    }),
+    referralCode: maybeNested(user, 'referralCode', (value) => ({
+      ...readAccessCode(value),
+      recipients: items(record(value, 'referralCode'), 'recipients', (item) => {
+        const recipient = record(item, 'recipient')
+        return {
+          ...readIdentity(recipient),
+          usedAt: count(recipient, 'usedAt'),
+        }
+      }),
+    })),
   }
 }
 

@@ -1,5 +1,4 @@
 import { Ban } from 'lucide-react'
-import { productName } from '../../brand'
 import type {
   ApprovalEmailNote,
   AppAccess,
@@ -12,6 +11,13 @@ import { ActionButton } from '../common/actions'
 import { ScreenLink } from '../common/ScreenLink'
 import { DetailList, type Detail } from '../settings/DetailList'
 import { Section, SectionText } from '../settings/Section'
+import {
+  accessTerms,
+  approvalEmailWords,
+  referralWords,
+  wayInWords,
+} from './accessCopy'
+import { disableCodeWords } from './codeCopy'
 import { CodeStateText, CopyableCode } from './codes'
 import { InlineLink, TargetList, TargetRow } from './targets'
 import styles from './AccessSections.module.css'
@@ -24,33 +30,34 @@ function WayInText(props: { way: WayIn }) {
   const { way } = props
   switch (way.kind) {
     case 'approval':
-      return <>Approved by @{way.by}</>
+      return <>{wayInWords.approvedBy(way.by)}</>
     case 'invite-code':
       return (
         <>
-          Invite code{' '}
+          {wayInWords.inviteCode}{' '}
           <InlineLink to={paths.operatorCodesSearch}>{way.label}</InlineLink>
         </>
       )
     case 'referral-code':
       return (
         <>
-          Referral code of{' '}
+          {wayInWords.referralCodeOf}{' '}
           <InlineLink to={paths.operatorUser}>@{way.owner}</InlineLink>
         </>
       )
     case 'org-invitation':
       return (
         <>
-          Org invitation to{' '}
-          <InlineLink to={paths.operatorOrg}>{way.org}</InlineLink> from{' '}
+          {wayInWords.orgInvitationTo}{' '}
+          <InlineLink to={paths.operatorOrg}>{way.org}</InlineLink>{' '}
+          {wayInWords.from}{' '}
           <InlineLink to={paths.operatorUser}>@{way.by}</InlineLink>
         </>
       )
     case 'operator':
-      return <>As an operator</>
+      return <>{wayInWords.operator}</>
     case 'existing':
-      return <>Joined before the waitlist</>
+      return <>{wayInWords.existing}</>
   }
 }
 
@@ -73,23 +80,15 @@ function EmailState(props: { email: ApprovalEmailNote }) {
   const { email } = props
   switch (email.state) {
     case 'sent':
-      return <>Sent on {email.at}</>
+      return <>{approvalEmailWords.sent(email.at)}</>
     case 'pending':
-      return (
-        <StateWithReason
-          reason={`${productName} tries again on its own.`}
-          state="Not sent yet"
-        />
-      )
+      return <StateWithReason {...approvalEmailWords.pending} />
     case 'not-sent':
       return (
         <StateWithReason
-          reason={
-            email.reason === 'no-verified-email'
-              ? 'This GitHub account has no verified email.'
-              : `${productName} stopped trying on ${email.on}.`
-          }
-          state="Not sent"
+          {...(email.reason === 'no-verified-email'
+            ? approvalEmailWords.noVerifiedEmail
+            : approvalEmailWords.stopped(email.on))}
         />
       )
   }
@@ -104,12 +103,12 @@ export function AppAccessSection(props: {
 }) {
   const { since, way } = props.access
   const rows: Detail[] = [
-    { term: 'How', value: <WayInText way={way} /> },
-    { term: 'Since', value: since },
+    { term: accessTerms.how, value: <WayInText way={way} /> },
+    { term: accessTerms.since, value: since },
   ]
   if (way.kind === 'approval') {
     rows.push({
-      term: 'Approval email',
+      term: accessTerms.email,
       value: <EmailState email={way.email} />,
     })
   }
@@ -147,20 +146,23 @@ export function ReferralSection(props: {
   })
   const rows: Detail[] = [
     {
-      term: 'Code',
+      term: referralWords.code,
       value: <CopyableCode code={code.code} works={state === 'active'} />,
     },
-    { term: 'Uses', value: `${code.usedBy.length} of ${code.limit} used` },
+    {
+      term: referralWords.uses,
+      value: referralWords.usesLine(code.usedBy.length, code.limit),
+    },
   ]
   if (code.disabled) {
     rows.push({
-      term: 'Disabled',
-      value: `${code.disabled.on} by @${code.disabled.by}`,
+      term: referralWords.disabled,
+      value: referralWords.disabledLine(code.disabled.on, code.disabled.by),
     })
   }
   const button = (
     <ActionButton icon={Ban} tone="danger">
-      Disable code
+      {disableCodeWords.action}
     </ActionButton>
   )
   const action = props.disable ? (
@@ -174,13 +176,13 @@ export function ReferralSection(props: {
     <Section
       actions={state === 'active' ? action : undefined}
       status={<CodeStateText state={state} />}
-      title="Referral code"
+      title={referralWords.title}
     >
       <DetailList rows={rows} />
       {code.usedBy.length > 0 ? (
         <>
-          <SectionText muted>Used by</SectionText>
-          <TargetList label={`People who used ${code.code}`}>
+          <SectionText muted>{referralWords.usedBy}</SectionText>
+          <TargetList label={referralWords.usedByLabel(code.code)}>
             {code.usedBy.map((use) => (
               <TargetRow
                 detail={use.name}

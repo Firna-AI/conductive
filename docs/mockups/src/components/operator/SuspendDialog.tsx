@@ -5,6 +5,7 @@ import { CheckOption } from '../common/CheckOption'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
+import { disableCodeOffer } from './accessCopy'
 import {
   selfSuspendWarning,
   suspendQuestion,
@@ -57,8 +58,8 @@ export function SuspendDialog(props: {
       {props.referral ? (
         <CheckOption
           checked
-          hint={`${props.referral} then lets nobody in, also after a lift. Disable is final.`}
-          label="Also disable their referral code"
+          hint={disableCodeOffer.hint(props.referral)}
+          label={disableCodeOffer.label}
         />
       ) : null}
     </ConfirmDialog>

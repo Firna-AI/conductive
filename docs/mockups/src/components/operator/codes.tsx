@@ -11,6 +11,13 @@ import { paths } from '../../paths'
 import { IconButton } from '../common/actions'
 import { ScreenLink } from '../common/ScreenLink'
 import { StatusText } from '../common/StatusText'
+import {
+  codeStateLabels,
+  copyLabels,
+  disableLabel,
+  referralCodeLabel,
+  referralCodeName,
+} from './codeCopy'
 import { InlineLink } from './targets'
 import styles from './codes.module.css'
 
@@ -38,11 +45,13 @@ export const codeColumns: Readonly<Record<Viewport, TableColumn[]>> = {
 export function CodeStateText(props: { state: CodeState }) {
   switch (props.state) {
     case 'active':
-      return <StatusText label="Active" tone="success" />
+      return <StatusText label={codeStateLabels.active} tone="success" />
     case 'used-up':
-      return <StatusText label="Used up" tone="muted" />
+      return <StatusText label={codeStateLabels.usedUp} tone="muted" />
     case 'disabled':
-      return <StatusText icon={Ban} label="Disabled" tone="muted" />
+      return (
+        <StatusText icon={Ban} label={codeStateLabels.disabled} tone="muted" />
+      )
   }
 }
 
@@ -55,13 +64,9 @@ export function CopyableCode(props: { code: string; works: boolean }) {
   return (
     <span className={styles.codeCell}>
       <span className={styles.code}>{props.code}</span>
-      <IconButton icon={Copy} label={`Copy the code ${props.code}`} quiet />
+      <IconButton icon={Copy} label={copyLabels.code(props.code)} quiet />
       {props.works ? (
-        <IconButton
-          icon={Link}
-          label={`Copy the join link of ${props.code}`}
-          quiet
-        />
+        <IconButton icon={Link} label={copyLabels.joinLink(props.code)} quiet />
       ) : null}
     </span>
   )
@@ -69,9 +74,7 @@ export function CopyableCode(props: { code: string; works: boolean }) {
 
 /** The name of a code in a question or a button: its label, or its owner. */
 function codeName(row: CodeRow): string {
-  return row.kind === 'invite'
-    ? row.label
-    : `the referral code of @${row.owner}`
+  return row.kind === 'invite' ? row.label : referralCodeName(row.owner)
 }
 
 /**
@@ -104,7 +107,7 @@ function LabelCell(props: { row: CodeRow; viewport: Viewport }) {
   return (
     <span className={styles.labelCell}>
       <span className={styles.label}>
-        {row.kind === 'invite' ? row.label : 'Referral code'}
+        {row.kind === 'invite' ? row.label : referralCodeLabel}
       </span>
       {mobile ? (
         <CopyableCode code={row.code} works={codeState(row) === 'active'} />
@@ -128,7 +131,7 @@ function DisableButton(props: { row: CodeRow }) {
     return <span aria-hidden className={styles.noAction} />
   }
   const button = (
-    <IconButton icon={Ban} label={`Disable ${codeName(row)}`} quiet />
+    <IconButton icon={Ban} label={disableLabel(codeName(row))} quiet />
   )
   if (row.code !== meetupLisbon.code) return button
   return (

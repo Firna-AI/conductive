@@ -7,8 +7,11 @@ import type { OperatorSuspension } from '../../shared/operator'
 import { ActionButton } from '../ui/actions'
 import { formatMoment } from './format'
 
-/** The question over a page: before a suspension, or before a lift. */
-export type Question = 'suspend' | 'lift'
+/**
+ * The question over a page: before a suspension or a lift, and on the page
+ * of a user, before an approval or the disable of the referral code.
+ */
+export type Question = 'suspend' | 'lift' | 'approve' | 'disable-code'
 
 /**
  * The action of a page: Suspend, or Lift for a suspended target. Desktop

@@ -84,6 +84,7 @@ export function createFakeServices(search: string): AppServices {
     storage: windowStorage(window),
     newId,
     leave: (url) => window.location.assign(url),
+    appOrigin: window.location.origin,
     copy: (text) => navigator.clipboard.writeText(text),
   }
 }

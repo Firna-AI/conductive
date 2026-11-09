@@ -24,10 +24,11 @@ pull request bar, and the owner picker. A host can give its own parts, as
   its custom initials through rename, delete, and restore.
 - `?operator=1` makes the dev user an operator, so the rail and the org
   switcher show Operator. The [operator section](../shell/operator/README.md)
-  then shows the sample orgs and users of the mockups, and Suspend and Lift
-  change them. A suspension of Acme, Futex, or Firna also suspends that org
-  in the state of the fake, so the fake refuses each write of that org with
-  `org_suspended`. The open app does not read its orgs again, so its pages
+  then shows the sample orgs, users, people who wait, and codes of the
+  mockups. Suspend, Lift, Approve, New code, Disable, and the pause of
+  sign-ups change them. A suspension of Acme, Futex, or Firna also
+  suspends that org in the state of the fake, so the fake refuses each
+  write of that org with `org_suspended`. The open app does not read its orgs again, so its pages
   of that org show the suspension only after such a refusal. Without the
   option, each operator request gets `operator_required`, as the Worker
   does.
@@ -227,9 +228,11 @@ clicks, types, and lets the answers of the fake API settle.
   a store, connects it again, or makes a new one.
 - `operator-read.ts`, `operator-directory.ts`, and `operator-target.ts`:
   the Overview and the pages of the operator section, its searches, and
-  Suspend and Lift. A refusal with `operator_required` marks the account
-  as not an operator. `api/read-operator.ts` and
-  `api/read-operator-pages.ts`: their readers. The
+  Suspend and Lift. `operator-pause.ts` and `operator-access.ts`: the
+  pause of sign-ups, Approve, New code, and Disable. A refusal with
+  `operator_required` marks the account as not an operator.
+  `api/read-operator.ts`, `api/read-operator-pages.ts`, and
+  `api/read-operator-waitlist.ts`: their readers. The
   [operator section](../shell/operator/README.md) gives the screens.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
 - `kept-org.ts`: `keptOrg`, the org of a page without one: the org that

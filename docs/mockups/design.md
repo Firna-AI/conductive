@@ -180,8 +180,10 @@ chat, and five tabs at the bottom.
 - Suspend and Lift sit in the header of the page of an org or a user, and
   in its footer on a phone. A person who waits also has Approve there. Each
   asks first, with `ConfirmDialog`. The words of the questions and the
-  notices live in `operatorCopy.ts`, which imports no fixture, so the app
-  uses them too. So do `WorkspaceStates` and `DailyChart`. Each text of an
+  notices live in `operatorCopy.ts`, and those of the waitlist, the app
+  access, the codes, and the pause in `accessCopy.ts` and `codeCopy.ts`.
+  These modules import no fixture, so the app uses them too. So do
+  `WorkspaceStates` and `DailyChart`. Each text of an
   org takes its deletion, so the questions and the notices of a deleted
   org promise nothing that its members cannot open, and nothing that a
   lift does not give back. The Suspend question of a user offers to

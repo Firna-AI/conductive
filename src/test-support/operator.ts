@@ -8,15 +8,22 @@ import {
   type OperatorOrgsResponse,
   type OperatorUsersResponse,
 } from '../shared/operator'
+import {
+  operatorCodesPath,
+  operatorSignupPausePath,
+  operatorWaitlistPath,
+  type OperatorCodesResponse,
+  type OperatorWaitlistResponse,
+} from '../shared/operator-waitlist'
 import type { FakeApiServer } from './fake-api'
 import { coreFixtures, FAKE_TIME } from './fixtures/core'
 import { operatorFixtures, orgRow, userRow } from './fixtures/operator'
 
 /**
  * Makes the person signed in an operator, and serves the operator replies
- * of the samples: the Overview, the newest orgs and users, and the page of
- * each sample org and user. A test sets its own reply for a search, a
- * failure, or a write.
+ * of the samples: the Overview, the newest orgs and users, the people who
+ * wait, the invite codes, the pause, and the page of each sample org and
+ * user. A test sets its own reply for a search, a failure, or a write.
  */
 export function serveOperator(server: FakeApiServer, now = FAKE_TIME) {
   const fixtures = operatorFixtures(now)
@@ -35,6 +42,18 @@ export function serveOperator(server: FakeApiServer, now = FAKE_TIME) {
     total: fixtures.users.length,
     nextCursor: null,
   } satisfies OperatorUsersResponse)
+  server.json('GET', operatorWaitlistPath(), {
+    users: fixtures.waitlist,
+    total: fixtures.waitlist.length,
+    nextCursor: null,
+  } satisfies OperatorWaitlistResponse)
+  const invites = fixtures.codes.filter((code) => code.kind === 'invite')
+  server.json('GET', operatorCodesPath(), {
+    codes: invites,
+    total: invites.length,
+    nextCursor: null,
+  } satisfies OperatorCodesResponse)
+  server.json('GET', operatorSignupPausePath(), fixtures.pause)
   for (const org of fixtures.orgs) {
     server.json('GET', operatorOrgPath(org.id), org)
   }

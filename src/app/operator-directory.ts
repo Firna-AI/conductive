@@ -23,11 +23,11 @@ export interface DirectoryState<Row> {
 }
 
 /**
- * The Orgs or the Users tab of the operator: a search over every org or user,
- * newest first, 20 at a time, with Show more. An empty search lists them all.
- * The rows of a search stay until the answer of the next one, so typing does
- * not flash the table. An answer after the tab closed or the search changed
- * changes nothing.
+ * A tab of the operator that lists and searches: the orgs, the users, the
+ * people who wait, or the codes, 20 at a time, with Show more. An empty
+ * search lists them all. The rows of a search stay until the answer of the
+ * next one, so typing does not flash the table. An answer after the tab
+ * closed, the search changed, or the list loaded again changes nothing.
  */
 export class OperatorDirectory<Row> {
   private readonly shown = new Store<DirectoryState<Row>>({
@@ -41,6 +41,11 @@ export class OperatorDirectory<Row> {
   private readonly read: (body: unknown) => DirectoryReply<Row>
   /** Each search and each close counts one up, so an older answer is obsolete. */
   private generation = 0
+  /**
+   * Each read of the first rows counts one up, so the answer of an older
+   * read, or of Show more before it, is obsolete.
+   */
+  private reads = 0
   private search = ''
   private open = false
 
@@ -73,11 +78,11 @@ export class OperatorDirectory<Row> {
   async more(): Promise<void> {
     const { result, reading } = this.shown.get()
     if (!this.open || reading !== null || !result?.nextCursor) return
-    const run = this.generation
+    const current = this.current()
     this.update({ reading: 'more', failure: null })
     try {
       const next = await this.get(result.nextCursor)
-      if (run !== this.generation) return
+      if (!current()) return
       this.shown.set({
         result: {
           search: result.search,
@@ -90,9 +95,25 @@ export class OperatorDirectory<Row> {
       })
     } catch (error) {
       const failure = operatorFailure(this.app, error)
-      if (run !== this.generation) return
+      if (!current()) return
       this.update({ reading: null, failure: { read: 'more', error: failure } })
     }
+  }
+
+  /**
+   * Reads the first rows of the search again, such as after New code. The
+   * rows stay until the answer.
+   */
+  reload(): Promise<void> {
+    if (!this.open) return Promise.resolve()
+    return this.first(this.generation)
+  }
+
+  /** Shows the rows that a write changed, such as a code after its disable. */
+  changeRows(change: (row: Row) => Row): void {
+    const { result } = this.shown.get()
+    if (result)
+      this.update({ result: { ...result, rows: result.rows.map(change) } })
   }
 
   /** Try again: the read that failed runs again. */
@@ -100,6 +121,13 @@ export class OperatorDirectory<Row> {
     const { failure, reading } = this.shown.get()
     if (!this.open || !failure || reading !== null) return Promise.resolve()
     return failure.read === 'more' ? this.more() : this.first(this.generation)
+  }
+
+  /** Whether the answer of a read that starts now still counts. */
+  private current(): () => boolean {
+    const run = this.generation
+    const read = this.reads
+    return () => run === this.generation && read === this.reads
   }
 
   private update(change: Partial<DirectoryState<Row>>): void {
@@ -116,10 +144,13 @@ export class OperatorDirectory<Row> {
 
   private async first(run: number): Promise<void> {
     const search = this.search
+    this.reads += 1
+    const read = this.reads
+    const current = () => run === this.generation && read === this.reads
     this.update({ reading: 'first', failure: null })
     try {
       const reply = await this.get()
-      if (run !== this.generation) return
+      if (!current()) return
       this.shown.set({
         result: { search, ...reply },
         reading: null,
@@ -127,7 +158,7 @@ export class OperatorDirectory<Row> {
       })
     } catch (error) {
       const failure = operatorFailure(this.app, error)
-      if (run !== this.generation) return
+      if (!current()) return
       this.shown.set({
         result: null,
         reading: null,
