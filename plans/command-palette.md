@@ -207,6 +207,41 @@ So this plan starts its decisions at 144.
   General and Preferences tabs of the Account page, and New workspaces
   moves under Preferences.
 
+### Calls of the build
+
+The implementor of Milestone 3 made these calls on 8 November 2026. The
+orchestrator checked each one against the protocol doc.
+
+- Agent call: the page of a deleted or unknown org works as a page without
+  an org: on the last opened org, or else the first org that is not
+  deleted, because the doc treats a deleted org as absent.
+- Agent call: a row ranks first when every word of the query starts a
+  word. A word starts after a character that is not a letter or a digit,
+  such as "/" or "-".
+- Agent call: This Mac also has the search words "device" and "commands",
+  and the sidebar rows have "toggle".
+- Agent call: the repository filter lists the repositories that the org
+  uses, and each repository that holds one of its workspaces.
+- Agent call: a ⌘-click or Ctrl-click on a row leaves the palette open,
+  and the browser opens the page in a new tab.
+- Agent call: while the list of the org loads, the Workspaces tab shows a
+  spinner. When its first read fails, the tab shows "The workspaces didn't
+  load" with Try again, as the list page does. While the repositories
+  load, a row shows no repository, never an internal ID.
+- Agent call: a held key acts once, and a key press during a text
+  composition, such as an accented letter, does nothing.
+- Agent call: the search field of the desktop dialog shows no focus ring,
+  because the dialog itself shows that it has the focus. A press on the
+  list, a tab, or a blank part of the palette keeps the focus in the field.
+  A hover does not move the highlight.
+- Agent call: the state filter is a menu named "State", with Active and
+  Archived.
+- Agent call: Session history also shows in a read-only workspace. On a
+  phone, New session and Session history show only on the chat view. An
+  archived workspace has no Go to rows.
+- Agent call: the tabs move with the arrow keys, and only the chosen tab
+  is in the Tab order.
+
 ## Decisions
 
 The user answered the three decisions on 8 November 2026: option A of
@@ -426,13 +461,18 @@ actions.
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      Logs: `.context/command-palette/gate-*.log`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Two rounds ran. Round 1 found findings 1 to 4:
+      1, 2, and 4 are fixed, and 3 waits for the user. Round 2 found
+      finding 5, a repeat of 3, and finding 6, which is fixed. The
+      findings file is
+      `.context/reviews/calummoore/command-palette-mockups/findings.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
