@@ -52,6 +52,9 @@ export function parseFile(
     throw new FileTooLargeError(value.sizeBytes, maxBytes)
   const file: FileResponse = {
     path,
+    ...(typeof value.displayPath === 'string'
+      ? { displayPath: value.displayPath }
+      : {}),
     mediaType: value.mediaType,
     sizeBytes: value.sizeBytes,
     encoding: value.encoding,
@@ -80,7 +83,13 @@ export function parseDiff(
     throw invalidFileResponse()
   return {
     path,
+    ...(typeof value.displayPath === 'string'
+      ? { displayPath: value.displayPath }
+      : {}),
     baseBranch: defaultBranch,
+    ...(typeof value.displayBaseBranch === 'string'
+      ? { displayBaseBranch: value.displayBaseBranch }
+      : {}),
     oldContent: value.oldContent,
     newContent: value.newContent,
     patch: value.patch,

@@ -5,6 +5,7 @@ import {
   type FilesNavigation,
   type FilesTarget,
 } from '../navigation'
+import { unknownFileName } from '../model/file-labels'
 import { FileIcon } from '../panel/file-icons'
 import { IconButton } from '../ui/actions'
 import { FilesLink } from '../ui/FilesLink'
@@ -24,12 +25,15 @@ const statusText: Readonly<Record<Exclude<ActionStatus, null>, string>> = {
 }
 
 /**
- * The header of a file or diff page: the way back on a phone, the path,
- * Download, the line count or the changed lines, Copy, and the view switch.
- * Download shows only with a handler. Copy without a handler is disabled.
+ * The header of a file or diff page: the way back on a phone, the label of
+ * the path, Download, the line count or the changed lines, Copy, and the
+ * view switch. Download shows only with a handler. Copy without a handler
+ * is disabled. The real `path` chooses only the icon.
  */
 export function PageHeader(props: {
   path: string
+  /** The label of the path, or null when no record names the file. */
+  label: string | null
   /** The page shows the diff of the file. */
   diff?: boolean
   navigation: FilesNavigation
@@ -41,7 +45,9 @@ export function PageHeader(props: {
   status: ActionStatus
   viewSwitch?: ReactNode
 }) {
-  const { folder, name } = splitPath(props.path)
+  const { folder, name } = props.label
+    ? splitPath(props.label)
+    : { folder: '', name: unknownFileName }
   const copied = props.status === 'copied'
   const failed = props.status !== null && !copied
   return (
@@ -58,7 +64,7 @@ export function PageHeader(props: {
             <span className={styles.backLabel}>{props.back.label}</span>
           </FilesLink>
         ) : null}
-        <span className={styles.chip} title={props.path}>
+        <span className={styles.chip} title={props.label ?? undefined}>
           <FileIcon
             className={styles.icon}
             diff={props.diff}
