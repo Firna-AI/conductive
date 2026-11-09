@@ -382,6 +382,47 @@ Completed milestones keep their original words as history. Their
 references to a later own-endpoint merge or integration describe the old
 order. The remaining milestones follow decision 10 B.
 
+### 11. Agent tools inherit the gateway address
+
+Added on 9 November 2026 from Milestone 4a. Pending: no option is
+selected.
+
+- **Severity:** High. **Effort:** Large.
+- **Source:** Design.
+- **Category:** security.
+- **Location:** `runner/src/providers/claude.ts`, `runner/src/providers/environment.ts`, and `docs/protocol/model-gateway.md`, "No login in the sandbox".
+- **Terms:**
+  - **Turn token:** A temporary credential that lets one running turn use the saved login through Conductive.
+  - **Child process:** A command, server, or helper that the Claude program starts in the workspace.
+  - **Shell prefix:** A runner program that Claude starts before some commands, hooks, and tool servers.
+  - **Relay:** A runner HTTP server that forwards each model request to its destination.
+  - **Certificate setting:** A value that tells a program which TLS certificates it trusts.
+- **Background:** Conductive must keep saved provider logins outside computers from newer org images. Claude therefore needs a fixed gateway address. The pinned client copies that address and certificate settings into child processes. A project tool can have its own provider key and destination. Some child processes keep running after the agent exits.
+- **Problem:** Inherited gateway settings redirect some project tools and send their own keys to Conductive. Conductive refuses these requests. Restoring settings with a wrapper fixes the tested common cases, but it leaves known failures.
+- **Impact if no action:** The new runner cannot complete its cutover. Both Claude and Codex still deliver saved logins to existing-image computers.
+- **Root question:** How should Claude use the gateway while the processes that it starts keep their own provider and certificate settings?
+- **Options:**
+  - **A.** Wait for a vendor client change that separates model traffic from child environments. Cost: both runner cutovers wait without a date. Saved logins remain in existing-image computers. Effort: Small now.
+  - **B.** Use the fixed gateway settings in every child. Cost: project Anthropic calls without an explicit destination fail and send their keys to Conductive. Children also lose repository certificate settings. Effort: Medium.
+  - **C.** Restore project settings through a shell prefix. Common commands, background commands, shell hooks, and tested tool servers passed. Accept B's behavior only for children that bypass the prefix. Exec-form hooks are the proved case. The draft restore also replaced an explicit empty certificate override incorrectly in a boundary control. Fix that defect before merge. Verify plugin servers and other helper paths before claiming coverage. The prefix adds launch work and changes some client command handling. Effort: Large.
+  - **D.** Add a relay to C. Route turn tokens to the gateway and other keys to the repository destination. Keep the relay alive with the runner for surviving processes. Cost: some tools use Anthropic instead of their own configured destination. Proxy handling, restarts, routing, and restoration need proof. Effort: Large.
+  - **E.** Use a Unix socket that ends the client's TLS and forwards to the gateway. Cost: a new certificate authority and its key enter the computer. Custom destinations and child inheritance can still change behavior. The working relay remains unproved. Effort: Large.
+  - **F.** Use D's relay without a shell prefix. Cost: every model call uses the relay. Some project keys reach the default provider instead of the intended destination. Tool proxy and certificate behavior can change. Effort: Large.
+  - **G.** Restore settings when each child loads a native library. Cost: static programs bypass the library. The library reaches child environments and still needs source information to distinguish equal-value overrides. Unproved. Effort: Large.
+  - **H.** Restore settings in the outer agent's native process-start calls. This could also cover static children. Cost: it affects the agent's own helper launches. Coverage and safe process handling need proof. The final environment still lacks the source information that the equal-value case needs. Unproved. Effort: Large.
+- **Shared assumptions:** The saved login stays outside a newer-image computer and the gateway accepts only turn tokens. Both come from the approved gateway requirement. Native Claude subscription and API-key modes remain, as the approved scope requires. The current client version is an implementation pin, which A can replace. Private descriptor delivery is an existing design call. No option authorizes a new trust change or an unlisted child regression without Cal's answer.
+- **Left out:** An environment-only endpoint lets repository settings redirect the agent. Tested host-managed mode, built-in scrubbing, and a plain Unix socket failed the goal. Vendor cloud-provider modes change the required native authentication. Gateway pass-through accepts credentials outside the gateway contract. Real-login fallback breaks the approved protection. A contains the vendor client-change route. No fully compliant local route is proved.
+- **Wider fix:** A's client separation. None of the runner mechanisms removes the entire class.
+- **Previous examples:** The existing custom-endpoint plan has the same child-environment problem. The pinned-client proofs showed the gateway address in commands, background commands, both hook forms, and MCP servers. The restoring-prefix proof passed its common-case matrix but failed the explicit equal-value override case.
+- **Related:** Gateway-first remains approved. This question affects Claude's transport and blocks the shared version 2 runner cutover. It does not reopen custom endpoints or provider approval.
+- **Recommendation:** C, with approval of the unwrapped-child exception. It preserves the tested common cases without a new listener or certificate authority. Fix the wrapped-child restoration defect before merge. A's vendor change best removes this defect class.
+- **Action:** ask the user, because unwrapped children would inherit the gateway address and lose repository certificate settings. The proved case is an exec-form hook. Its own provider call can fail and send its project key to Conductive. No recorded answer approves that change. The equal-value restore defect and untested coverage remain engineering work. No further regression is approved by this question.
+- **Status on 9 November 2026:** Pending. No option is selected, and Cal has not answered. No runtime exception, narrowed pin set, or new requirement is approved. This record authorizes no contact with Anthropic.
+- **Not questions for Cal:** The empty-certificate collision was a separate wrapper-boundary control, not a second native MCP session. Fix it before merge, with no approval from Cal. Plugin, LSP, Monitor, and helper coverage is untested, not a proved bypass. H is unproved, not disproved.
+- **Options checks of 9 November 2026:** The first check added F and G, and it asked for a runtime proof of C. A static read of the agent's own process starts added H. The final check kept the letters, the recommendation, and the "ask the user" outcome. It corrected the reason of the Action. It found one question for Cal: the exception for children that the prefix does not wrap. Reports: `.context/model-gateway/reports/decision-11-options-check.md`, `decision-11-parent-spawn-check.md`, and `decision-11-final-check.md`.
+- **Blocks:** the transport TODO of Milestone 7. So the version 2 runner cutover of Claude and Codex, and Milestone 10, wait for the answer. Worker, legal-copy, and document-split work do not wait.
+- **Follow-up:** [Agent tools inherit the gateway address](follow-ups/claude-child-provider-settings.md) holds the same pending question for a reader without this plan.
+
 ## Design
 
 The gateway is a Worker route on the machine hostname. Each running turn
@@ -796,6 +837,10 @@ wire types. Keep scripts and proof under `.context/model-gateway/`.
       hook forms, and MCP servers with fake keys and local fake upstreams.
 - [ ] Return the mechanism, its proof, and any requirement exception it
       would need. Select no such exception without Cal's answer.
+
+Evidence: `.context/model-gateway/reports/m4a-report.md`,
+`m4a-unix-report.md`, and `c-restore-report.md`. Gateway decision 11
+holds the open choice.
 
 ## Milestone 5: Login docs for the gateway
 
