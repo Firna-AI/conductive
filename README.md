@@ -223,8 +223,9 @@ complete yet:
 - `worker/app.ts`: the Worker's HTTP entry point.
 - `worker/marketing/`: built marketing pages, the agreement page before
   GitHub, the file list, request markers, and the site's security headers.
-- `src/marketing/`: Astro pages, layouts, parts, styles, pictures, and
-  shared legal text. Its [README](src/marketing/README.md) gives the build
+- `src/marketing/`: Astro pages, layouts, parts, styles, pictures, shared
+  legal text, and the shared rows and words of the Conductor Cloud
+  comparison page. Its [README](src/marketing/README.md) gives the build
   and preview steps.
 - `src/shared/site-build.ts`: names and types shared by the Astro build
   and the Worker.
@@ -255,7 +256,10 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
 ## Docs
 
 - [Architecture](docs/architecture.md): the components, the hostnames, the
-  [flows](docs/architecture/flows.md), and the terms.
+  [flows](docs/architecture/flows.md), the
+  [marketing site](docs/architecture/marketing-site.md), the
+  [data and trust boundaries](docs/architecture/data-and-trust.md), and the
+  terms.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
   - [Org image](docs/protocol/org-image.md)
@@ -265,9 +269,11 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Chat and events](docs/protocol/chat-and-events.md)
   - [Agents and sessions](docs/protocol/agents-and-sessions.md)
   - [Workspace links](docs/protocol/workspace-links.md)
+  - [Chat Markdown](docs/protocol/chat-markdown.md)
   - [Agent runner](docs/protocol/agent-runner.md)
   - [Access and security](docs/protocol/access-and-security.md)
   - [GitHub banner](docs/protocol/github-banner.md)
+  - [GitHub tokens](docs/protocol/github-tokens.md): git and CLI account scope.
   - [Agent tools](docs/protocol/agent-tools.md)
   - [Agent instructions](docs/protocol/agent-instructions.md)
   - [Orgs and members](docs/protocol/orgs-and-members.md)
@@ -278,6 +284,8 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Invite and referral codes](docs/protocol/waitlist-codes.md)
   - [Command palette](docs/protocol/command-palette.md)
   - [Command palette: empty and unavailable states](docs/protocol/command-palette-states.md)
+  - [Conductor Cloud comparison](docs/protocol/conductor-cloud-comparison.md):
+    the public page for people who move from Conductor Cloud
 - [Mockups](docs/mockups/README.md): the design and the catalogue.
 - [Third-party notices](THIRD_PARTY_NOTICES.md): licenses for copied icons
   and the bundled font.

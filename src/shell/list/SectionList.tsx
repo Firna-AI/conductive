@@ -69,6 +69,7 @@ export function SectionList(props: {
   selectedId: string | null
   now: number
   actions: SectionActions
+  archiveAction?: (workspace: Workspace) => (() => void) | undefined
   move: (workspaceId: string, target: DropTarget) => void
   readOnly: boolean
 }) {
@@ -142,13 +143,14 @@ export function SectionList(props: {
                         }
                         linkRef={rows.linkRef(workspace.id)}
                         now={props.now}
+                        onArchive={props.archiveAction?.(workspace)}
                         onKeyDown={
                           props.readOnly
                             ? undefined
                             : (event) => onKeyDown(workspace, event)
                         }
-                        onLinkBlur={rows.blur}
-                        onLinkFocus={(event) => rows.focus(workspace.id, event)}
+                        onBlur={rows.blur}
+                        onFocus={(event) => rows.focus(workspace.id, event)}
                         rowRef={layout.row(workspace.id, section.id)}
                         selected={workspace.id === props.selectedId}
                         variant={props.variant}

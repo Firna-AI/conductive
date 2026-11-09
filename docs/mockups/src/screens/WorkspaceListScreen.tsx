@@ -8,7 +8,6 @@ import {
 } from '../components/palette/paletteViews'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
-import { SuspendedOrgPanel } from '../components/orgs/SuspendedOrgNotice'
 import {
   newOrgSections,
   suspendedSections,
@@ -28,6 +27,7 @@ import {
 import { anotherOrg, newOrg } from '../fixtures/repositories'
 import { menuSection } from '../fixtures/sections'
 import { workspaceDrag } from '../fixtures/workspaces'
+import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
 import {
   ChooseWorkspace,
@@ -35,6 +35,7 @@ import {
   HomeList,
   ListHeader,
   NewOrgEmpty,
+  SuspendedList,
   type NewOrg,
 } from './listParts'
 import { OrgSwitcherSheet, SectionSheet } from './listSheets'
@@ -73,6 +74,8 @@ export const workspaceListSchema = {
 } as const
 
 export type WorkspaceListState = SchemaProps<typeof workspaceListSchema>
+
+const viewer = viewerMembership('admin')
 
 function listMenu(menu: WorkspaceListState['menu']): ListMenu | undefined {
   return menu === 'section' ? { section: menuSection } : undefined
@@ -170,6 +173,7 @@ function MobileList(props: { state: WorkspaceListState }) {
           org={orgs[suspendedOrg]}
           sections={suspendedSections()}
           suspended
+          viewer={viewer}
         />
         {menu === 'orgs' ? sheets.orgs : null}
       </MobileFrame>
@@ -186,38 +190,10 @@ function MobileList(props: { state: WorkspaceListState }) {
         newWorkspaceTo={fresh?.newWorkspaceTo}
         org={fresh ? fresh.org : orgs.acme}
         sections={fresh ? newOrgSections() : workspaceSections()}
+        viewer={viewer}
       />
       {sheets[menu]}
     </MobileFrame>
-  )
-}
-
-/**
- * The list of a suspended org on desktop. The main area shows the notice
- * of the org in place of New workspace. A narrow window shows the list as
- * a page, with the notice at its top.
- */
-function SuspendedList() {
-  const org = orgs[suspendedOrg]
-  const sections = suspendedSections()
-  return (
-    <AppFrame
-      rail={{ ...acmeRail, suspended: suspendedOrg }}
-      sidebar={<Sidebar org={org} sections={sections} suspended />}
-    >
-      <div className={`${responsive.wideOnly} ${styles.choose}`}>
-        <SuspendedOrgPanel org={org} />
-      </div>
-      <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
-        <HomeList
-          keys
-          menuStyle="anchored"
-          org={org}
-          sections={sections}
-          suspended
-        />
-      </div>
-    </AppFrame>
   )
 }
 
@@ -232,7 +208,7 @@ export function WorkspaceListScreen(props: {
 }) {
   const { list, menu, palette } = props.state
   if (props.viewport === 'mobile') return <MobileList state={props.state} />
-  if (list === 'suspended') return <SuspendedList />
+  if (list === 'suspended') return <SuspendedList viewer={viewer} />
   if (list === 'deleted' || list === 'deleted-suspended') {
     const rail: RailState = {
       orgs: orgList,
@@ -256,6 +232,7 @@ export function WorkspaceListScreen(props: {
             newWorkspaceTo={fresh.newWorkspaceTo}
             org={fresh.org}
             sections={newOrgSections()}
+            viewer={viewer}
           />
         }
       >
@@ -278,6 +255,7 @@ export function WorkspaceListScreen(props: {
           menu={open}
           org={orgs.acme}
           sections={sections}
+          viewer={viewer}
         />
       }
     >
@@ -293,6 +271,7 @@ export function WorkspaceListScreen(props: {
           menuStyle="anchored"
           org={orgs.acme}
           sections={sections}
+          viewer={viewer}
         />
       </div>
     </AppFrame>

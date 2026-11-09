@@ -167,6 +167,9 @@
   display: flex;
   position: relative;
   flex-shrink: 0;
+  align-self: stretch;
+  align-items: center;
+  margin-left: auto;
 }
 
 /*

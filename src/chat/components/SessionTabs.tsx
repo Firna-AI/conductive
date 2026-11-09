@@ -64,6 +64,7 @@ export function SessionTabs(props: {
   const row = useRef<HTMLUListElement>(null)
   const anchor = useRef<HTMLSpanElement>(null)
   const closeHistory = useCallback(() => onShowHistory(false), [onShowHistory])
+  const hasHistory = props.historyEntries.some((entry) => entry.kind === 'item')
   const historyMenu = props.historyOpen && !props.mobile
   useDismiss(anchor, historyMenu, closeHistory)
   const enabled = !props.readOnly
@@ -146,13 +147,15 @@ export function SessionTabs(props: {
         <IconButton icon={Plus} label="New session" onPress={props.onNew} />
       )}
       <span className={styles.anchor} ref={anchor}>
-        <IconButton
-          expanded={props.historyOpen}
-          icon={History}
-          label="Session history"
-          menu
-          onPress={() => onShowHistory(!props.historyOpen)}
-        />
+        {hasHistory ? (
+          <IconButton
+            expanded={props.historyOpen}
+            icon={History}
+            label="Session history"
+            menu
+            onPress={() => onShowHistory(!props.historyOpen)}
+          />
+        ) : null}
         {historyMenu ? (
           <Menu
             entries={props.historyEntries}

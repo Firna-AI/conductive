@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useState } from 'react'
+import { MarkdownTable } from '../../../docs/mockups/src/components/common/MarkdownTable'
 import type { FilesError } from '../api/files-errors'
 import { LoadingFile, ReadError } from '../ui/FileStates'
 import { inlineNodes } from './inline-render'
@@ -22,6 +23,11 @@ const headingTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const
 
 function Inline(props: { nodes: readonly MdInline[] }) {
   return <>{inlineNodes(props.nodes)}</>
+}
+
+/** A cell of a table, with its parsed inline content. */
+function tableCell(nodes: readonly MdInline[]) {
+  return <Inline nodes={nodes} />
 }
 
 function Item(props: { item: MdListItem<MdInline[]> }) {
@@ -79,36 +85,13 @@ function Block(props: { block: ParsedBlock }) {
       return <hr />
     case 'table':
       return (
-        <div className={styles.tableScroll}>
-          <table>
-            <thead>
-              <tr>
-                {block.head.map((cell, column) => (
-                  <th
-                    key={column}
-                    style={{ textAlign: block.align[column] ?? undefined }}
-                  >
-                    <Inline nodes={cell} />
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {block.rows.map((row, index) => (
-                <tr key={index}>
-                  {row.map((cell, column) => (
-                    <td
-                      key={column}
-                      style={{ textAlign: block.align[column] ?? undefined }}
-                    >
-                      <Inline nodes={cell} />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <MarkdownTable
+          align={block.align}
+          className={styles.table}
+          head={block.head}
+          renderCell={tableCell}
+          rows={block.rows}
+        />
       )
   }
 }
