@@ -1,6 +1,8 @@
 import { activeOrgPredicate } from '../data/org-access'
 import type { OrgInvite, PendingOrgInvite } from '../../src/shared/members'
 import { activeAdminPredicate } from './org-data'
+import { signupsOpenPredicate } from '../waitlist/data'
+import { appAccessGrantStatements } from '../waitlist/grant'
 
 const columns = 'id, email, created_at AS createdAt'
 
@@ -58,21 +60,35 @@ export async function takeInvite(
   const identity = `SELECT 1 FROM org_invites i
     JOIN user_verified_emails e ON e.email = i.email
     JOIN orgs o ON o.id = i.org_id WHERE i.id = ? AND i.org_id = ? AND e.user_id = ? AND o.deleted_at IS NULL AND ${activeOrgPredicate('o')}`
+  const signupAllowed = `(${signupsOpenPredicate} OR EXISTS (
+    SELECT 1 FROM user_app_access WHERE user_id = ?
+  ))`
   const results = await db.batch([
     db
       .prepare(
         `INSERT INTO org_members (org_id, user_id, role, joined_at)
-       SELECT ?, ?, 'member', ? WHERE EXISTS (${identity})
+       SELECT ?, ?, 'member', ? WHERE EXISTS (${identity}) AND ${signupAllowed}
        ON CONFLICT (org_id, user_id) DO NOTHING`,
       )
-      .bind(orgId, userId, now, inviteId, orgId, userId),
+      .bind(orgId, userId, now, inviteId, orgId, userId, userId),
+    ...appAccessGrantStatements(
+      db,
+      userId,
+      { source: 'org_invitation', orgId, invitationId: inviteId },
+      now,
+      {
+        sql: `EXISTS (${identity}) AND ${signupAllowed}`,
+        bindings: [inviteId, orgId, userId, userId],
+      },
+    ),
     db
       .prepare(
-        `DELETE FROM org_invites WHERE id = ? AND org_id = ? AND EXISTS (${identity}) RETURNING id`,
+        `DELETE FROM org_invites WHERE id = ? AND org_id = ? AND EXISTS (${identity})
+         AND ${signupAllowed} RETURNING id`,
       )
-      .bind(inviteId, orgId, inviteId, orgId, userId),
+      .bind(inviteId, orgId, inviteId, orgId, userId, userId),
   ])
-  return results[1].meta.changes > 0
+  return results[results.length - 1].meta.changes > 0
 }
 
 export async function listPendingInvites(db: D1Database, userId: string) {

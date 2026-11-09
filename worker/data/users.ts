@@ -1,6 +1,9 @@
 import type { User } from '../../src/shared/api'
 
-export type GitHubIdentity = Omit<User, 'id'>
+export type GitHubIdentity = Omit<User, 'id'> & {
+  primaryVerifiedEmail: string | null
+  githubCreatedAt: number | null
+}
 
 const columns = `id, github_id AS githubId, github_login AS githubLogin,
   display_name AS displayName, avatar_url AS avatarUrl`
@@ -14,11 +17,14 @@ export async function saveUser(
 ): Promise<User> {
   const user = await db
     .prepare(
-      `INSERT INTO users (id, github_id, github_login, display_name, avatar_url, created_at, updated_at, terms_version, terms_accepted_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO users (id, github_id, github_login, display_name, avatar_url, created_at, updated_at,
+         terms_version, terms_accepted_at, primary_verified_email, github_created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (github_id) DO UPDATE SET
          github_login = excluded.github_login, display_name = excluded.display_name,
          avatar_url = excluded.avatar_url, updated_at = excluded.updated_at,
+         primary_verified_email = excluded.primary_verified_email,
+         github_created_at = excluded.github_created_at,
          terms_version = COALESCE(excluded.terms_version, users.terms_version),
          terms_accepted_at = CASE
            WHEN excluded.terms_version IS NOT NULL AND users.terms_version IS NOT excluded.terms_version
@@ -37,6 +43,8 @@ export async function saveUser(
       now,
       termsVersion ?? null,
       termsVersion ? now : null,
+      profile.primaryVerifiedEmail,
+      profile.githubCreatedAt,
     )
     .first<User>()
   if (!user) throw new Error('The user record was not saved')

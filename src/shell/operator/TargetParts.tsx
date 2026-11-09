@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react'
-import { Ban, Trash2 } from 'lucide-react'
+import { Ban, ExternalLink, Hourglass, Trash2 } from 'lucide-react'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
 import directory from '../../../docs/mockups/src/components/operator/directory.module.css'
 import styles from '../../../docs/mockups/src/components/operator/targets.module.css'
@@ -33,8 +33,13 @@ export function TargetMark(props: { target: Target; size?: number }) {
   )
 }
 
-/** The state of a suspended or deleted target. A target in use shows none. */
-export function TargetState(props: { status: OperatorOrgSummary['status'] }) {
+/**
+ * The state of a suspended or deleted target, or of a person who waits on
+ * the waitlist. A target in use shows none.
+ */
+export function TargetState(props: {
+  status: OperatorOrgSummary['status'] | 'waiting'
+}) {
   switch (props.status) {
     case 'active':
       return null
@@ -42,6 +47,8 @@ export function TargetState(props: { status: OperatorOrgSummary['status'] }) {
       return <StatusText icon={Ban} label="Suspended" tone="danger" />
     case 'deleted':
       return <StatusText icon={Trash2} label="Deleted" tone="muted" />
+    case 'waiting':
+      return <StatusText icon={Hourglass} label="Waiting" tone="warning" />
   }
 }
 
@@ -70,11 +77,15 @@ export function NameLink(props: { to: string; children: ReactNode }) {
   )
 }
 
-/** A name cell of a table: the mark, the name, and a muted line under it. */
+/**
+ * A name cell of a table: the mark, the name, and a muted line under it. A
+ * phone can add a second muted line for a column that it leaves out.
+ */
 export function NameCell(props: {
   mark: ReactNode
   name: ReactNode
   detail?: ReactNode
+  more?: ReactNode
 }) {
   return (
     <span className={directory.nameCell}>
@@ -84,8 +95,39 @@ export function NameCell(props: {
         {props.detail ? (
           <span className={directory.nameDetail}>{props.detail}</span>
         ) : null}
+        {props.more ? (
+          <span className={directory.nameDetail}>{props.more}</span>
+        ) : null}
       </span>
     </span>
+  )
+}
+
+/**
+ * The login of a person as a link to their profile on GitHub, which opens
+ * in a new tab. The operator judges a person who waits from it.
+ */
+export function ProfileLink(props: { login: string }) {
+  return (
+    <a
+      aria-label={`@${props.login} on GitHub`}
+      className={styles.profileLink}
+      href={`https://github.com/${encodeURIComponent(props.login)}`}
+      rel="noreferrer"
+      target="_blank"
+    >
+      <span className={styles.profileName}>@{props.login}</span>
+      <ExternalLink aria-hidden className={styles.profileIcon} size={11} />
+    </a>
+  )
+}
+
+/** A link inside a line of text, such as the owner of a referral code. */
+export function InlineLink(props: { to: string; children: ReactNode }) {
+  return (
+    <AppLink className={styles.inlineLink} to={props.to}>
+      {props.children}
+    </AppLink>
   )
 }
 

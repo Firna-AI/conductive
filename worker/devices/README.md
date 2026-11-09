@@ -24,7 +24,10 @@ saved permission windows. Displays use the shared `nameLabel` helper.
 - GET `/api/devices/current` identifies the paired desktop connection.
 - GET and POST `/api/devices/current/settings` relay local settings operations.
 
-App reads use the existing host, Origin, session, and membership checks.
+App reads use the existing host, Origin, session, app access, and membership checks.
+The gate refuses a waiting user's device upgrade with 403 `access_required`
+before the broker can register it. The same desktop session can connect
+after an access grant.
 New app writes run those same checks with a body-free request first.
 The application entry bounds their bodies with the [shared entry policy](../http/README.md#request-body-limit) before dispatch.
 Each request handler calls [readJsonObject](../http/README.md#json-request-objects).
@@ -38,7 +41,8 @@ Cloudflare [limits](https://developers.cloudflare.com/workers/runtime-apis/rpc/#
 
 Org suspension revokes org workspace tokens and the shared token rule checks the stored org state.
 The command checks repeat before approvals and results.
-The body-free browser gate also checks the original write method.
+The body-free browser gate supplies the original method, path, and upgrade
+to the app access check. It also checks the original write method for org suspension.
 Account-level Mac connections remain available for the member's other orgs.
 
 ## Main process and renderer

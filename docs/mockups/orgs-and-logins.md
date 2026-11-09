@@ -19,7 +19,9 @@ plan limits.
   invitation with its org and the invited email, as
   `app/sign-in/invitations` shows. Accept invitation joins that org and
   opens it. Continue to workspaces accepts nothing. The page has no
-  Decline.
+  Decline. A person who waits for app access sees the same rows on the
+  waitlist screen, where Accept invitation also gives app access, as
+  `app/sign-in/waitlist/invited` shows.
 - Only an admin renames the org, and changes the repositories, the scripts,
   and the env vars, from decisions 54 and 57. A member sees the General,
   Repositories, and Cloud computer tabs read-only: the values, without edit
@@ -112,6 +114,8 @@ plan limits.
   `src/components/settings/LoginShare.tsx`.
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.
+  It opens only after app access, so a person who waits sees the
+  waitlist instead.
 - Create org starts the first build of the cloud computer of the org, from
   decision 150. The org step shows that build under the org: preparing
   with its time, then ready, or the failure with its saved message, Try
@@ -143,3 +147,52 @@ plan limits.
   connected. In a session that another member started, a message uses the
   available login of that member while that member shares it, so no agent
   notice shows.
+
+## The waitlist
+
+The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
+an account without app access. The approval of an operator, an invite
+code, an invite link, or an org invitation gives app access.
+
+- A person without app access sees only the waitlist screen, as
+  `app/sign-in/waitlist` shows. It stands alone, as the sign-in does, and
+  it names the GitHub account with Sign out. It shows no place in line,
+  because operators approve people in any order, and no Delete account.
+  The Mac app shows the same screen in its window, as `mac-app/waitlist`
+  shows.
+- An approval sends one email, to the primary verified email of the
+  GitHub account. The screen names that address. An account without a
+  verified email gets no email, so the screen promises none. It says that
+  the app opens there once the person is approved, as
+  `app/sign-in/waitlist/no-email` shows.
+- The screen takes an invite code. A typed code that does not work names
+  its reason under the field: not found, disabled, or used up. A code that
+  the pause stopped stays unused, and a notice asks the person to try it
+  again later. The org invitations of the person show above the field,
+  and Accept invitation is then the main action.
+- During the pause, Accept invitation lets nobody in either. The person
+  joins no org, and the invitation stays. A notice above it says so, and
+  asks the person to accept it again when sign-ups resume, as
+  `app/sign-in/waitlist/invited/paused` shows. The screen names the pause
+  only after a code or an Accept that it stopped, because an approval
+  still works during the pause.
+- An invite link opens the sign-in with its code, as `app/sign-in/join`
+  shows. The page names no owner of the code. When the code of the link
+  does not work, the waitlist opens with a notice that names the reason,
+  as `app/sign-in/join/failed` shows. A person who already has app access
+  uses no code, and the app opens as usual.
+- Each user with app access has an invite code with 5 invites. The
+  Account page shows it at the end, after what every org shares, so that
+  the form of an agent stays near the top on a phone. It gives the invite
+  link with Copy, the code alone, and how many invites are left, as
+  `app/account` shows.
+  During the pause, the link stays under a notice. A code that is used up
+  or turned off shows no link, as `app/account/invites` shows. The page
+  names nobody who used an invite.
+- The words say "waitlist" as one word, "invite code" and "invite link"
+  for every code, and "Sign-ups are paused" for the pause. They never say
+  "referral". The mockups take them from `src/screens/waitlistCopy.ts`
+  and `src/components/settings/inviteCodeCopy.ts`.
+- The waitlist, the sign-in, and the sign-in of an invite link share one
+  frame, as [the design](design.md) gives. The home page asks a visitor
+  to join the waitlist, as [the marketing site](marketing-site.md) gives.
