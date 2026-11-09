@@ -97,6 +97,14 @@ function createWorkspace(
   const fields = record(body)
   const first = readFirstMessage(fields.firstMessage)
   const repositoryId = requiredText(fields, 'repositoryId')
+  if (org.currentImageBuildId === null)
+    throw new RouteError(
+      409,
+      'image_required',
+      org.builds.some((item) => item.build.state === 'running')
+        ? 'The cloud computer is still being prepared.'
+        : 'The cloud computer needs a build. Ask an org admin to build it.',
+    )
   const repository = org.repositories.find((item) => item.id === repositoryId)
   if (!repository) {
     throw new RouteError(

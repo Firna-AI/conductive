@@ -19,9 +19,11 @@ pull request bar, and the owner picker. A host can give its own parts, as
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
   `?login=none`, `?deleted=1`, `?suspended=1`, or `?paths=masked`. `dev/options.ts` lists
-  them. A new org
-  of the dev fake gets every repository of the account's list, and keeps
-  its custom initials through rename, delete, and restore.
+  them. Create org of the dev fake requires at least one repository and
+  starts a simulated build. Its repository catalogue keeps the saved
+  choices, and its custom initials stay through rename, delete, and restore.
+  Settings changes during the first good build start one added build.
+  The fake compares settings revisions with builds as the Worker does.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -154,6 +156,9 @@ clicks, types, and lets the answers of the fake API settle.
 
 ## Key code
 
+- `dev/org-routes.ts` creates orgs and starts their first simulated build.
+  `dev/build-routes.ts` runs builds and the added build after the first image.
+  `dev/settings-routes.ts` saves settings and repository choices.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
   app and the Mac app keep their transport. `api/read-*.ts`: the readers.

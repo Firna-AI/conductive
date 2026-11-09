@@ -42,6 +42,13 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
   last secret-save time. It returns the current metadata, including a
   disconnected status when the login was removed.
 - Get started has only the steps `github-app`, `org`, and `agent-login`.
+- Create org requires at least one repository. `createShellOrg` starts its
+  first image build after it saves the org, its admin, and its repositories.
+  A failed build start writes one fixed warning through `warnWorker`.
+  The org stays, and the request still answers 201.
+- The settings reply compares its revision with the published image's
+  build. Before the first image, it uses the newest build. With no build,
+  `needsBuild` is false.
 - `getStartedGitHubComplete` owns the `github-app` step in every org state.
   The step is complete when an org of the user that is not deleted has a
   repository through an installation that is not suspended.
@@ -141,6 +148,10 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   tests.
 - `feature-shell-github.test.ts` checks the user's GitHub access, paginated
   repository reads, saved org initials, and admin repository selection.
+- `feature-org.test.ts` checks the repository requirement, the first build,
+  and a failed build start that keeps the org.
+- `feature-settings-builds.test.ts` checks the build revision used by the
+  settings reply before and after the first image.
 
 ### Key code
 
@@ -171,7 +182,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`feature-github.ts`](feature-github.ts): account installations and
   repositories read with the fresh GitHub user token.
   [`feature-org.ts`](feature-org.ts) creates an org with its chosen
-  repositories. [`feature-repositories.ts`](feature-repositories.ts) merges
+  repositories and starts its first build with `startImageBuild` of the
+  [image lifecycle](../lifecycle/image-builds.md).
+  [`feature-repositories.ts`](feature-repositories.ts) merges
   the org's saved choices with repositories that its reader can access.
   Their `*-data.ts` files keep queries and guarded writes.
 

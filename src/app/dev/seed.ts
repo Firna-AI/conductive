@@ -60,6 +60,8 @@ function acme(
     repositories: core.repositories.repositories,
     settings: core.settings.settings,
     builds: [core.build],
+    settingsRevision: core.settings.settings.needsBuild ? 2 : 1,
+    buildRevisions: new Map([[core.build.build.id, 1]]),
     currentImageBuildId: core.builds.currentImageBuildId,
     members: core.members,
   }

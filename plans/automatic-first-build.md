@@ -295,29 +295,29 @@ State the automatic first build and what the app shows during it.
 
 Depends on: 2
 
-- [ ] `createShellOrg` starts the build after the org exists, when it has
+- [x] `createShellOrg` starts the build after the org exists, when it has
       at least one repository. A failed start writes a warning, and the
       create still answers 201.
-- [ ] `startImageBuild` fails a new build at once when its alarm does not
+- [x] `startImageBuild` fails a new build at once when its alarm does not
       schedule, so that Try again shows.
-- [ ] The settings answer sets `needsBuild` only after a change. It
+- [x] The settings answer sets `needsBuild` only after a change. It
       compares the settings revision with that of the build that holds the
       org image. Before the first good image, it compares with the newest
       build, and with no build it is false. Today an org with no image
       always gets `needsBuild`, so the tab says that the install script
       changed in every first build.
-- [ ] Create org refuses a request with no repository.
-- [ ] After the first good build of an org, the Worker starts one more
+- [x] Create org refuses a request with no repository.
+- [x] After the first good build of an org, the Worker starts one more
       build when the settings revision is higher than that of the build.
-- [ ] The refusal of a create during the first build says that the cloud
+- [x] The refusal of a create during the first build says that the cloud
       computer is still being prepared.
-- [ ] The dev fake of `src/app/dev/` starts a build at Create org in the
+- [x] The dev fake of `src/app/dev/` starts a build at Create org in the
       same way.
-- [ ] Tests: a create with repositories records a running build, a create
+- [x] Tests: a create with repositories records a running build, a create
       with none is refused, a failed start keeps the org, the refusal
       during the first build, the stuck build that fails at once, and the
       added build after a change during the first build.
-- [ ] Update `worker/app-api/README.md`,
+- [x] Update `worker/app-api/README.md`,
       `worker/lifecycle/image-builds.md`, and `src/app/README.md`.
 
 ## Milestone 4: Get started and New workspace
