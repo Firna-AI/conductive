@@ -33,7 +33,7 @@ draft moves, the login of each session, and the linked sessions.
   `linkedCopy.ts` of the mockups holds the words of the notice.
 - The reply of Send and of Try again names the session that took the
   message. The session record of the reply follows the
-  [record order rule](README.md#rules-for-this-code).
+  [record order rule](loads-and-sends.md#record-order).
   The message waits as pending there until the stream or the history shows
   it, and a second reply with the same message adds nothing.
 - Only the tab that sent moves to the linked session, and only while it

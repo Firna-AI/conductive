@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { ScreenLink } from '../common/ScreenLink'
+import { ExternalLink } from 'lucide-react'
+import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
 import { InitialsTile, PersonAvatar } from '../orgs/OrgTile'
 import styles from './targets.module.css'
 
@@ -26,6 +27,35 @@ export function TargetMark(props: { target: Target; size?: number }) {
 export function NameLink(props: { to: string; children: ReactNode }) {
   return (
     <ScreenLink className={styles.nameLink} to={props.to}>
+      {props.children}
+    </ScreenLink>
+  )
+}
+
+/**
+ * The login of a person as a link to their profile on GitHub, which opens
+ * in a new tab. The operator judges a person who waits from it.
+ */
+export function ProfileLink(props: { login: string }) {
+  const href = useOutsideHref(`https://github.com/${props.login}`)
+  return (
+    <a
+      aria-label={`@${props.login} on GitHub`}
+      className={styles.profileLink}
+      href={href}
+      rel="noreferrer"
+      target="_blank"
+    >
+      <span className={styles.profileName}>@{props.login}</span>
+      <ExternalLink aria-hidden className={styles.profileIcon} size={11} />
+    </a>
+  )
+}
+
+/** A link inside a line of text, such as the owner of a referral code. */
+export function InlineLink(props: { to: string; children: ReactNode }) {
+  return (
+    <ScreenLink className={styles.inlineLink} to={props.to}>
       {props.children}
     </ScreenLink>
   )

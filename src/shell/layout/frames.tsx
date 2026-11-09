@@ -125,10 +125,16 @@ export function AppFrame(props: FrameProps) {
  * such as Create org or the sign-in. In the Mac app a strip with the
  * window controls tops it. It has the layers of every desktop frame.
  */
-export function StandaloneFrame(props: { children: ReactNode }) {
+export function StandaloneFrame(props: {
+  children: ReactNode
+  /** The page draws its own top bar, as the waitlist does in the Mac app. */
+  ownBar?: boolean
+}) {
   return (
     <div className={layout.standalone}>
-      <DesktopLayers leading={<WindowStrip />}>{props.children}</DesktopLayers>
+      <DesktopLayers leading={props.ownBar ? null : <WindowStrip />}>
+        {props.children}
+      </DesktopLayers>
     </div>
   )
 }

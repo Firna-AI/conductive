@@ -95,6 +95,7 @@ each resume, together with the org's env vars:
 | `CONDUCTIVE_WORKSPACE_ID` | The workspace ID. |
 | `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
 | `CONDUCTIVE_DEFAULT_BRANCH` | The default branch of the workspace's repository. |
+| `CONDUCTIVE_WORKSPACE_BRANCH` | The workspace branch that the app tracks, from the Worker's record of the workspace. |
 | `CONDUCTIVE_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
 | `CONDUCTIVE_TURN_ID` | Empty. The runner sets it for each agent process. |

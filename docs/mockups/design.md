@@ -14,9 +14,11 @@ as squares with their initials, Create org, and the account at the bottom.
 The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
-drag and drop. The centre column has a slim header that names the
-workspace and its number, such as `W-395`, the repository, the branch, and
-the owner of the workspace, and ends with Archive and the toggle of the
+drag and drop. Archive covers the time on hover only, without moving the
+row content. Selection and keyboard focus alone keep the time visible.
+The centre column has a slim header that names the
+workspace and its number, such as `W-395`, the repository, and
+the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
 takes its width, and shows it again. Then come a tab for each agent
 session and each open file or diff, in the order that the user gives them
@@ -83,6 +85,13 @@ sessions as tabs above the chat, and four tabs at the bottom.
   menu as a sheet. `WorkspaceTabs.module.css` styles the row and its tabs.
   `TabScroll.module.css` styles a full row, `TabDrag.module.css` a drag, and
   `TabRename.module.css` the rename field. The app shares these modules.
+- `SignInFrame` in `src/screens/signInFrame.tsx` draws the pages before the
+  app opens: the wordmark, one card in the middle, and the legal links. The
+  sign-in, the sign-in of an invite link, and the waitlist share it, without
+  the rail. A phone draws the card without its outline. The waitlist uses
+  the wider card, for its invitations and its code field. In the Mac app
+  its header is the top bar of the window, as [the Mac app](mac-app.md)
+  gives.
 - `CommandPalette` in `src/components/palette/` draws the command palette:
   a dialog near the top of the window over a light dim on desktop, and a
   page in place of the list on a phone. It has the search field, the tabs
@@ -132,11 +141,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
     "The link didn't copy. Try again." in the danger colour. The note is
     a status, so screen readers hear it. The name of the button is "Copy
     link to W-395".
-  - On desktop, the repository and the branch share one group in place of
-    the spacer. The group takes only the room that the other parts leave,
-    so the name is cut short only when the group has no room left.
+  - On desktop, the repository takes only the room that the other parts
+    leave. The name is cut short only when the repository has no room left.
   - On a phone the label leads the line under the name, before the
-    repository and the branch, so the name keeps its room. The button
+    repository, so the name keeps its room. The button
     keeps the height of that line, and its touch area of 44 px reaches up
     over the name and down to the bottom edge of the header.
 - `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
@@ -216,6 +224,29 @@ sessions as tabs above the chat, and four tabs at the bottom.
   The mockups, chat, and composer of a new workspace share it.
   The attachment fixtures hold byte counts.
   The formatter shows sizes such as "12 KB" and "1.2 MB".
+- `MarkdownTable` in `src/components/common/` draws each Markdown table of
+  a reply and of the Markdown preview of a file as a native table. It
+  imports no fixture, so the app can use it too. Each caller draws the
+  content of the cells, such as inline code.
+  - The header row has the raised fill and the strong weight. One 1 px line
+    in the border colour stands between two cells and around the table.
+    The text of the table has the small size, one step under the text of a
+    reply.
+  - Each column takes the alignment of its separator cell, also in the
+    header row. A table wider than its place scrolls sideways inside its
+    box, so the text around it keeps its width, as
+    `app/chat/tables/wide` shows.
+  - A short row of a reply keeps only the cells that the agent wrote. Its
+    last cell spans the missing columns, up to 1,000, the most that HTML
+    allows, and any columns after that stay empty. The user chose the span
+    on 9 November 2026. The cell that spans keeps its text at its start,
+    so the text never stands under a column that it does not belong to,
+    as `app/chat/tables/short-row` shows. The file preview fills a short
+    row of a file with empty cells instead.
+  - While the agent writes, a header row shows as its text, with its
+    pipes, until a separator row with as many cells follows it. Then the
+    table shows the rows that have arrived, as `app/chat/tables/header`
+    and `app/chat/tables/rows` show.
 - When a turn ends, the work before its answer folds into one line, from
   decision 150. The work is the agent messages and the tool calls, with
   the Mac command cards and the lost lines among them. The answer is the
@@ -239,6 +270,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
     message as its first words on one line, the Mac command card, and the
     lost line, which starts at the left edge. A click on a message line
     grows it to the full text, with its paragraphs and bullets.
+  - A message line holds no table, because a summary holds only phrasing
+    content. Closed, the line shows a table as its cells, row by row, with
+    a dot between two cells. Open, the line keeps the paragraphs before
+    the first table, and the table and the rest of the message show under
+    the line, at the left edge of its text, as `app/chat/work/table`
+    shows.
   - The `fold` state of the workspace opens the folds, and `open-message`
     also opens the last message line of each. A view runs no script, so a
     chat with open folds starts at its top.
@@ -265,31 +302,58 @@ sessions as tabs above the chat, and four tabs at the bottom.
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
   frame of a picture on the marketing site.
-- The operator section has the tabs Overview, Orgs, and Users, from
-  `OperatorPage` in `src/components/operator/`. The overview uses the stat
-  tiles, the line chart, the table, and the skeletons of `@firna/ui`. A
-  view runs no script, so the chart keeps the width that the page column
-  gives it. The workspaces by state reuse `StatusGlyph`.
+- The operator section has the tabs Overview, Orgs, Users, Waitlist, and
+  Invite codes, from `OperatorPage` in `src/components/operator/`. On a
+  phone the five tabs keep one line while they fit, with the `flow` mode
+  of `LinkTabs`. On a narrower phone the last tabs move to a second line,
+  so that every tab shows. The overview uses
+  the stat tiles, the line chart, the table, and the skeletons of
+  `@firna/ui`. A view runs no script, so the chart keeps the width that the
+  page column gives it. The workspaces by state reuse `StatusGlyph`. A line
+  under the users tile counts the people on the waitlist and opens the
+  Waitlist tab.
 - A table of the operator keeps fewer columns on a phone, so that each
   name keeps one line. The line under a name gives what a search found,
   when it is not the name, and the state of a suspended or deleted target,
-  with a dot between them. A column of days fits a day of another year,
-  such as 30 Sept 2026, on one line. A person shows on a disc and an org on
-  a square, with `PersonAvatar` and `InitialsTile` from
+  or Waiting for a person on the waitlist, with a dot between them. A phone
+  can add a second line for a column that it leaves out, such as the age
+  of a GitHub account. A column of days fits a day of another year, such
+  as 30 Sept 2026, on one line. A person shows on a disc and an org on a
+  square, with `PersonAvatar` and `InitialsTile` from
   `src/components/orgs/`.
+- The Waitlist tab shows no picture. Each login opens the GitHub profile in
+  a new tab, with a small mark for it. After Approve, the row keeps its
+  place with Approved and the state of its email, in plain words.
+- A code shows in the monospace font, with Copy beside it. A code that
+  still works also has Copy join link, for a link such as
+  `https://app.conductive.build/join/<code>` on the domain of the app.
+  Disable on a row is a quiet icon, as in the member list of an org. A
+  code that no longer works keeps the place of Disable empty.
+- The Approval email row of a user page gives the state of the email. A
+  state of an email that did not go has a short muted line with the
+  reason. No state has an action, because the person keeps app access.
 - Suspend and Lift sit in the header of the page of an org or a user, and
-  in its footer on a phone. Each asks first, with `ConfirmDialog`. The
-  words of the questions and the notices live in `operatorCopy.ts`, which
-  imports no fixture, so the app uses them too. So do `WorkspaceStates`
-  and `DailyChart`. Each text of an org takes its deletion, so the
-  questions and the notices of a deleted org promise nothing that its
-  members cannot open, and nothing that a lift does not give back.
+  in its footer on a phone. A person who waits also has Approve there. Each
+  asks first, with `ConfirmDialog`. The words of the questions and the
+  notices live in `operatorCopy.ts`, and those of the waitlist, the app
+  access, the codes, and the pause in `accessCopy.ts` and `codeCopy.ts`.
+  These modules import no fixture, so the app uses them too. So do
+  `WorkspaceStates` and `DailyChart`. Each text of an
+  org takes its deletion, so the questions and the notices of a deleted
+  org promise nothing that its members cannot open, and nothing that a
+  lift does not give back. The Suspend question of a user offers to
+  disable their referral code with `CheckOption` from
+  `src/components/common/`, the checkbox of the browser in the accent
+  colour, because `@firna/ui` has no checkbox.
 - `DailyChart` names each point and each label of its axis with the UTC
   day, such as "10 Oct", in British English, so that no time zone and no
   locale of a browser or of the build machine changes a date. Its axis has
   one slot for each day and shows every few labels, so the labels leave
   out the year. Its own table lists the UTC days, because the table of the
   Firna chart cannot name its first column.
+- While sign-ups are paused, `PauseNotice` tops each tab of the section,
+  with Resume sign-ups. On the Invite codes tab it takes the place of the
+  Sign-ups box, which holds Pause sign-ups while sign-ups are open.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not

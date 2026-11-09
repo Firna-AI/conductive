@@ -4,6 +4,7 @@ import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import tiles from '../../../docs/mockups/src/components/operator/OperatorTiles.module.css'
 import { routes } from '../../app/router'
 import type { OperatorOverview } from '../../shared/operator'
+import { AppLink } from '../ui/AppLink'
 import { useViewport, type Viewport } from '../ui/viewport'
 import { formatCount } from './format'
 import { EmptyRows, NameLink } from './TargetParts'
@@ -26,16 +27,38 @@ function WeeklyTile(props: {
 }
 
 /**
+ * The users: every account, by join day, with the new ones of the last 7
+ * days. A line under them counts the people who wait among them, without
+ * suspended people, and opens the Waitlist tab.
+ */
+function UsersTile(props: { overview: OperatorOverview }) {
+  const { users, waiting } = props.overview
+  return (
+    <div className={tiles.users}>
+      <StatTile
+        delta={{ value: users.lastWeek, period: 'in 7 days' }}
+        label="Users"
+        value={users.total}
+      />
+      <AppLink className={tiles.waiting} to={routes.operatorWaitlist()}>
+        {`${formatCount(waiting)} on the waitlist`}
+      </AppLink>
+    </div>
+  )
+}
+
+/**
  * The four numbers that lead the Overview: users, orgs, and workspaces with
  * their new ones of the last 7 days, and the cloud computers that run now,
- * for workspaces and for builds.
+ * for workspaces and for builds. The users also count the people on the
+ * waitlist.
  */
 export function OverviewTiles(props: { overview: OperatorOverview }) {
   const { overview } = props
   return (
     <section aria-label="Totals" className={tiles.band}>
       <StatTileRow>
-        <WeeklyTile count={overview.users} label="Users" />
+        <UsersTile overview={overview} />
         <WeeklyTile count={overview.orgs} label="Orgs" />
         <WeeklyTile count={overview.workspaces} label="Workspaces" />
         <StatTile

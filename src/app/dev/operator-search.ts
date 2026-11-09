@@ -3,6 +3,14 @@ import type {
   OperatorOrgsResponse,
   OperatorUsersResponse,
 } from '../../shared/operator'
+import type {
+  OperatorCodesResponse,
+  OperatorWaitlistResponse,
+} from '../../shared/operator-waitlist'
+import {
+  sampleCodes,
+  sampleWaitlist,
+} from '../../test-support/fixtures/operator-access'
 import {
   orgRow,
   sampleOrgDetail,
@@ -74,6 +82,19 @@ export function searchOrgs(
   return { orgs: rows, total, nextCursor }
 }
 
+/** Whether a user search finds a person: a part of the login or the name, or the GitHub ID. */
+function findsUser(
+  person: { login: string; name: string | null; githubId: number },
+  search: string,
+): boolean {
+  return (
+    search === '' ||
+    contains(person.login, search) ||
+    contains(person.name, search) ||
+    String(person.githubId) === search
+  )
+}
+
 /** The search of the Users tab over the sample users, newest first. */
 export function searchUsers(
   records: OperatorRecords,
@@ -81,14 +102,55 @@ export function searchUsers(
   query: URLSearchParams,
 ): OperatorUsersResponse {
   const search = query.get('q')?.trim() ?? ''
-  const found = sampleUsers.flatMap((user) => {
-    const hit =
-      search === '' ||
-      contains(user.login, search) ||
-      contains(user.name, search) ||
-      String(user.githubId) === search
-    return hit ? [userRow(sampleUserDetail(user, records, base))] : []
-  })
+  const found = sampleUsers.flatMap((user) =>
+    findsUser(user, search)
+      ? [userRow(sampleUserDetail(user, records, base))]
+      : [],
+  )
   const { rows, total, nextCursor } = pageOf(found, query.get('cursor'))
   return { users: rows, total, nextCursor }
+}
+
+/**
+ * The search of the Waitlist tab, oldest first, with the keys of the
+ * Users tab. It leaves out suspended people, as the Worker does.
+ */
+export function searchWaitlist(
+  records: OperatorRecords,
+  base: number,
+  query: URLSearchParams,
+): OperatorWaitlistResponse {
+  const search = query.get('q')?.trim() ?? ''
+  const found = sampleWaitlist(records, records.userSuspensions, base).filter(
+    (person) => findsUser(person, search),
+  )
+  const { rows, total, nextCursor } = pageOf(found, query.get('cursor'))
+  return { users: rows, total, nextCursor }
+}
+
+/** A code as a search compares it: in capitals, without its hyphen. */
+function codeKey(value: string): string {
+  return value.trim().toUpperCase().replace('-', '')
+}
+
+/**
+ * The search of the Invite codes tab, newest first. With no search it
+ * lists the invite codes. A search finds any code by its text, an invite
+ * code by its label, and a referral code by the login of its owner.
+ */
+export function searchCodes(
+  records: OperatorRecords,
+  query: URLSearchParams,
+): OperatorCodesResponse {
+  const search = query.get('q')?.trim() ?? ''
+  const found = sampleCodes(records).filter((code) =>
+    search === ''
+      ? code.kind === 'invite'
+      : codeKey(code.code).includes(codeKey(search)) ||
+        (code.kind === 'invite' && contains(code.label, search)) ||
+        (code.kind === 'referral' &&
+          contains(code.owner?.login ?? null, search)),
+  )
+  const { rows, total, nextCursor } = pageOf(found, query.get('cursor'))
+  return { codes: rows, total, nextCursor }
 }

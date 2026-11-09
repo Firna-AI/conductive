@@ -61,6 +61,16 @@ function MemberLine(props: { member: OrgMember }) {
   )
 }
 
+/**
+ * The page of a member: the suspended user, the member who came in by an
+ * org invitation, or the page of a user in use.
+ */
+function memberPage(member: OrgMember): string {
+  if (member.suspended) return paths.operatorUserSuspended
+  if (member.login === 'kt-null') return paths.operatorUserOrgInvitation
+  return paths.operatorUser
+}
+
 function MemberRow(props: { member: OrgMember }) {
   const { member } = props
   return (
@@ -72,7 +82,7 @@ function MemberRow(props: { member: OrgMember }) {
       }
       end={member.role}
       target={{ kind: 'user', name: member.login, initials: member.initials }}
-      to={member.suspended ? paths.operatorUserSuspended : paths.operatorUser}
+      to={memberPage(member)}
     />
   )
 }
