@@ -24,25 +24,36 @@ const workspaceIn = (state: WorkspaceState) => ({
   state,
 })
 
-/** The start that created the workspace. Its record stays after it. */
-const create: WorkspaceStart = {
+/** A first start that failed: its create start shows a failed step. */
+const failedCreateStart: WorkspaceStart = {
   kind: 'create',
   startedAt: FAKE_TIME,
-  steps: [],
+  steps: [
+    {
+      id: 'image',
+      label: 'Starting from the cloud computer of Acme',
+      state: 'failed',
+      startedAt: FAKE_TIME,
+      completedAt: FAKE_TIME,
+    },
+  ],
 }
 
+const limit =
+  'The cloud computer did not start within the 20-minute limit. Try again.'
+const notStarted = 'The cloud computer could not start. Try again.'
+
 /**
- * A chat whose load reads this workspace record and start, before the
- * events that the test sends.
+ * A chat whose load reads this workspace record, start, and saved error,
+ * before the events that the test sends.
  */
 function chatWith(
-  detail: Omit<WorkspaceResponse, 'error'>,
+  detail: WorkspaceResponse,
   conversation: RecordedChatScenario,
 ) {
   const chat = chatFor({ conversation })
   chat.server.json('GET', workspacePath(org, ws), {
     ...detail,
-    error: null,
     eventNumber: 0,
   })
   return chat
@@ -53,62 +64,90 @@ const sentTexts = async (chat: ReturnType<typeof chatFor>, id: string) =>
     text(record(body).text),
   )
 
-describe('messages during the first start of a new workspace', () => {
-  it('keeps the draft of each session and sends none, also when the start succeeds, until the user sends one', async () => {
+describe('messages while the sandbox of a workspace is not ready', () => {
+  it('sends each message during the first start, after it failed, and during a resume, so the workspace queues it', async () => {
     // Just after the create, the record of the start has not come yet.
     const chat = chatWith(
-      { workspace: workspaceIn('starting'), start: null },
+      { workspace: workspaceIn('starting'), start: null, error: null },
       'queued',
     )
     await chat.controller.start()
     chat.controller.setDraft(first, 'Keep a saved cart for 30 days.')
-    chat.controller.setDraft(second, 'Add an index on the user ID.')
     await chat.controller.send(first)
-    chat.emit({ type: 'start.updated', start: create })
-    // A first start can stop before it succeeds, so a stop is no success.
-    chat.emit({ type: 'workspace.updated', workspace: workspaceIn('stopped') })
-    chat.emit({ type: 'workspace.updated', workspace: workspaceIn('starting') })
+    chat.emit({ type: 'workspace.updated', workspace: workspaceIn('error') })
+    chat.emit({ type: 'start.updated', start: failedCreateStart })
+    chat.controller.setDraft(second, 'Add an index on the user ID.')
     await chat.controller.send(second)
-    expect(chat.requests('POST', messagesOf(first))).toHaveLength(0)
-    expect(chat.requests('POST', messagesOf(second))).toHaveLength(0)
-
-    chat.emit({ type: 'workspace.updated', workspace: workspaceIn('ready') })
-    expect(chat.draftOf(first)?.text).toBe('Keep a saved cart for 30 days.')
-    expect(chat.draftOf(second)?.text).toBe('Add an index on the user ID.')
-    await chat.controller.send(second)
-    expect(await sentTexts(chat, second)).toEqual([
-      'Add an index on the user ID.',
-    ])
-    expect(chat.requests('POST', messagesOf(first))).toHaveLength(0)
-    expect(chat.draftOf(first)?.text).toBe('Keep a saved cart for 30 days.')
-  })
-
-  it('sends during a resume, also when the workspace record comes before the record of the resume', async () => {
-    // The tab saw the ready workspace, so its first start succeeded.
-    const chat = chatWith(
-      { workspace: workspaceIn('ready'), start: create },
-      'history',
-    )
-    await chat.controller.start()
-    chat.emit({ type: 'workspace.updated', workspace: workspaceIn('stopped') })
-    // The record of the first start stays until the next event replaces it.
     chat.emit({ type: 'workspace.updated', workspace: workspaceIn('starting') })
     chat.controller.setDraft(first, 'Run the unit tests again.')
     await chat.controller.send(first)
-    expect(await sentTexts(chat, first)).toEqual(['Run the unit tests again.'])
+
+    expect(await sentTexts(chat, first)).toEqual([
+      'Keep a saved cart for 30 days.',
+      'Run the unit tests again.',
+    ])
+    expect(await sentTexts(chat, second)).toEqual([
+      'Add an index on the user ID.',
+    ])
   })
 
-  it('keeps the text, the file, and the ID of a message that the Worker refuses during the first start', async () => {
+  it('keeps the message that the workspace saved for a failed start, from a read or the stream, until an update clears it', async () => {
+    const chat = chatWith(
+      {
+        workspace: workspaceIn('error'),
+        start: failedCreateStart,
+        error: {
+          code: 'workspace_start_failed',
+          message: notStarted,
+          log: null,
+        },
+      },
+      'queued',
+    )
+    await chat.controller.start()
+    chat.controller.setDraft(first, 'Keep these newer cart changes.')
+    await chat.controller.attachFiles(first, [
+      new File(['Cart notes'], 'notes.txt', { type: 'text/plain' }),
+    ])
+    const draft = chat.draftOf(first)
+    expect(draft).toMatchObject({
+      text: 'Keep these newer cart changes.',
+      files: [{ state: 'ready', attachment: { id: 'attachment-1' } }],
+    })
+    const savedError = () => chat.controller.getSnapshot().savedError
+    const read = savedError()
+    chat.emit({
+      type: 'workspace.updated',
+      workspace: workspaceIn('error'),
+      error: { code: 'workspace_start_failed', message: limit },
+    })
+    const streamed = savedError()
+    // An update without an error keeps the saved one.
+    chat.emit({ type: 'workspace.updated', workspace: workspaceIn('error') })
+    const kept = savedError()
+    chat.emit({
+      type: 'workspace.updated',
+      workspace: workspaceIn('starting'),
+      error: null,
+    })
+
+    expect({ read, streamed, kept, cleared: savedError() }).toEqual({
+      read: notStarted,
+      streamed: limit,
+      kept: limit,
+      cleared: null,
+    })
+    expect(chat.draftOf(first)).toEqual(draft)
+  })
+
+  it('keeps the text, the file, and the ID of a message that the Worker refuses', async () => {
     const refusal = {
       error: {
-        code: 'workspace_starting',
-        message:
-          'Wait for the workspace to start before sending another message.',
+        code: 'session_closed',
+        message: 'Reopen the session to send a message.',
       },
     }
     let sends = 0
-    // The tab shows a ready workspace, but the first start has not
-    // succeeded on the Worker yet.
     const chat = chatFor({
       conversation: 'queued',
       answer: async (request) => {
@@ -133,8 +172,7 @@ describe('messages during the first start of a new workspace', () => {
     expect(chat.controller.getSnapshot().notice).toEqual({
       sessionId: first,
       title: "Your message didn't send",
-      message:
-        'Wait for the workspace to start before sending another message.',
+      message: 'Reopen the session to send a message.',
     })
 
     await chat.controller.send(first)

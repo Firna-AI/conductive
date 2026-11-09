@@ -25,6 +25,32 @@ export async function runWorkspaceAlarm(input: {
     await input.images.alarm()
     return
   }
+  const cleanupId = await storage.get('text', 'lifecycle:cleanup')
+  const pending = await storage.get('job', START_JOB_KEY)
+  const terminal =
+    pending &&
+    (pending.cancelled ||
+      pending.failure ||
+      (pending.deadlineAt !== undefined &&
+        pending.deadlineAt <= dependencies.now()))
+  if (cleanupId && !terminal) {
+    try {
+      if (
+        !(await retryAllocationCleanup(storage, env, dependencies)) ||
+        !(await retrySandboxCleanup(env, dependencies, cleanupId))
+      )
+        throw new Error('Cleanup is pending')
+      await storage.delete('lifecycle:cleanup')
+    } catch {
+      await storage.setAlarm(
+        Math.min(
+          dependencies.now() + 30_000,
+          startAlarmDeadline(pending, dependencies.now()),
+        ),
+      )
+      return
+    }
+  }
   let advancedStart = false
   if (await input.starts.pending()) {
     try {
@@ -55,22 +81,6 @@ export async function runWorkspaceAlarm(input: {
   if (state && (await input.accessStop.check(state.workspaceId)) !== undefined)
     return
   if (advancedStart && state?.startStop !== 'pending') return
-  const cleanupId = await storage.get('text', 'lifecycle:cleanup')
-  if (cleanupId) {
-    try {
-      if (
-        (await retryAllocationCleanup(storage, env, dependencies)) &&
-        (await retrySandboxCleanup(env, dependencies, cleanupId))
-      ) {
-        await storage.delete('lifecycle:cleanup')
-        return
-      }
-    } catch {
-      /* Keep the ownership record until a later alarm deletes the resource. */
-    }
-    await storage.setAlarm(dependencies.now() + 30_000)
-    return
-  }
   try {
     await input.lifecycle.alarm()
   } catch {

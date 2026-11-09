@@ -1,3 +1,12 @@
 {
-  "order": ["error", "time-limit", "files", "creating", "waiting", "first-turn"]
+  "order": [
+    "not-created",
+    "files",
+    "creating",
+    "waiting",
+    "first-turn",
+    "error",
+    "time-limit",
+    "retrying"
+  ]
 }

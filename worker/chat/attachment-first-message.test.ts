@@ -123,7 +123,7 @@ it('admits a first-message file before a computer exists and replays acceptance 
   ).toBe(before)
 })
 
-it('retains a failed first-create file for a new attempt and fences cleanup of the old claim', async () => {
+it('retains a removed workspace file for a new attempt and fences cleanup of the old claim', async () => {
   const fixture = await attachmentFixture(harness)
   const file = await fixture.upload(FILE_BYTES, {
     type: 'new-workspace',
@@ -188,7 +188,7 @@ it('retains a failed first-create file for a new attempt and fences cleanup of t
   expect(await fixture.bytes(file.id)).toEqual(FILE_BYTES)
 })
 
-it('expires a failed first-create draft at its original upload deadline', async () => {
+it('expires a removed workspace draft at its original upload deadline', async () => {
   const fixture = await attachmentFixture(harness)
   const file = await fixture.upload(FILE_BYTES, {
     type: 'new-workspace',

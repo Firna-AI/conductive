@@ -6,7 +6,6 @@ import { filesWait } from '../../app/draft-files'
 import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
-import { SendWait } from '../../../docs/mockups/src/components/chat/SendWait'
 import {
   SessionLoginLine,
   type SessionLogin,
@@ -30,11 +29,6 @@ export interface ComposerProps {
   sending: boolean
   /** A notice says why a message cannot go yet, so Send is off. */
   blocked: boolean
-  /**
-   * The first start of the workspace has not succeeded, so Send is off. A
-   * message in the box shows the short reason beside Send.
-   */
-  waits: boolean
   /** Whose agent login the session uses, which a line under the box names. */
   login?: SessionLogin
   /**
@@ -57,10 +51,10 @@ export interface ComposerProps {
  * attach button, the model picker, and Send. Send waits while a file
  * uploads or failed. Files over the size limit get a notice over the box,
  * which can open the file picker again. While a turn runs, a message
- * steers the turn, and Stop sits beside Send. While Send waits for the
- * first start of the workspace, the box keeps the message, and the reason
- * shows beside Send. A line under the box names whose agent login the
- * session uses. On desktop, Enter sends and Shift+Enter starts a new line.
+ * steers the turn, and Stop sits beside Send. While the sandbox is not
+ * ready, Send still sends, and the workspace queues the message. A line
+ * under the box names whose agent login the session uses. On desktop, Enter
+ * sends and Shift+Enter starts a new line.
  * The composer reads Enter before the text field does, so Enter never adds
  * a line to a message that it sends.
  */
@@ -69,12 +63,7 @@ export function Composer(props: ComposerProps) {
   const files = useRef<HTMLInputElement>(null)
   const { draft } = props
   const empty = draft.text.trim() === '' && draft.files.length === 0
-  const off =
-    empty ||
-    props.blocked ||
-    props.waits ||
-    props.sending ||
-    filesWait(draft.files)
+  const off = empty || props.blocked || props.sending || filesWait(draft.files)
   const touch = control.field === 'lg'
   const steers = props.running && props.startsSession !== true
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -147,7 +136,6 @@ export function Composer(props: ComposerProps) {
                 Stop
               </ActionButton>
             ) : null}
-            {props.waits && !empty ? <SendWait /> : null}
             <Button
               accessibilityLabel="Send"
               boxSize={control.height}

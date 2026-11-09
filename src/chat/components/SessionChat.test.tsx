@@ -192,7 +192,6 @@ describe('session parts', () => {
           running={false}
           sending={false}
           stopping={false}
-          waits={false}
         />,
       )
     const file = new File(['png'], 'overlap.png', { type: 'image/png' })

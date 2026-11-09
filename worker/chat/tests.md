@@ -1,7 +1,9 @@
 # Chat backend tests
 
 The `attachment-*.test.ts` files use local R2 and D1 through the internal storage boundary.
-They cover exact bytes, ownership, first-message recovery, expiry races, the shared copy owner and proof, path extensions, and Stop during a held transfer.
+They cover exact bytes, ownership, expiry races, the shared copy owner and proof, path extensions, and Stop during a held transfer.
+`attachment-first-message.test.ts` admits a first-message file before a computer exists.
+It also covers the first-message file of a removed workspace: a new attempt can claim it, and it expires at its upload deadline.
 `attachment.test-support.ts` supplies the shared fixture and explicit fake preparation seams.
 `delivery-order.test.ts` holds a copy during a running turn.
 It checks that the later messages of that turn keep their order, and that Stop and another session do not wait.
@@ -24,6 +26,8 @@ It also checks that a restart sends the stored interrupts again, and that each l
 `integration/attachment-raw.test.ts` checks native fixed-length R2 writes, raw metadata and ownership, interrupted transfers, and desktop admission.
 `integration/attachment-cleanup.test.ts` runs the production scheduled handler through `/__test/scheduled`, with the native workspace object, D1, and R2.
 An expired claim without an accepted message loses its record and its object. An accepted file keeps both.
+`integration/failed-first-start-retry.test.ts` keeps the first-message file of a failed first start through the native `expireChatAttachment` RPC, a restart, and Try again in the same workspace.
+Try again copies its exact bytes once, as [Outer Worker tests](integration/outer-worker-tests.md) says.
 The HTTP and security raw-upload tests check shared route budgets and admission before body reads.
 
 This guide belongs to the [chat backend](README.md). Run the tests from

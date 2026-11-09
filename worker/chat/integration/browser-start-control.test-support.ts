@@ -143,9 +143,9 @@ export class BrowserStartControl {
             workspaceId,
             state: 'failed',
             errorCode: result.error.code,
-            cleanupComplete:
-              result.error.code !== 'workspace_cleanup_pending' &&
-              this.fixture.boat.deletedIds.includes(target.sandboxId),
+            cleanupComplete: this.fixture.boat.deletedIds.includes(
+              target.sandboxId,
+            ),
           }
       return this.outcome
     } catch {

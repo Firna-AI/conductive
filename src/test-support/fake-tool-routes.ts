@@ -15,6 +15,24 @@ import {
 } from './fixtures/masked-paths'
 import { FAKE_FILE_PATH, toolFixtures } from './fixtures/tools'
 
+/**
+ * The GitHub bar and the checks of one workspace, in a state of the bar.
+ * `branch` names the branch of another workspace than the default one.
+ */
+export function fakeGitHub(
+  routes: FakeRouteWriter,
+  workspaceId: string,
+  banner: BannerState,
+  branch?: string,
+): void {
+  const data = toolFixtures(banner)
+  const bar = branch
+    ? { ...data.banner, banner: { ...data.banner.banner, branch } }
+    : data.banner
+  routes.json('GET', githubPaths.banner(FAKE_IDS.org, workspaceId), bar)
+  routes.json('GET', githubPaths.checks(FAKE_IDS.org, workspaceId), data.checks)
+}
+
 export function fakeToolRoutes(
   routes: FakeRouteWriter,
   banner: BannerState,
@@ -83,6 +101,5 @@ export function fakeToolRoutes(
   routes.json('POST', previewsPath(org, id), data.preview, 201)
   routes.empty('DELETE', previewPath(org, id, FAKE_IDS.preview))
   routes.json('GET', desktopPath(org, id), data.desktop)
-  routes.json('GET', githubPaths.banner(org, id), data.banner)
-  routes.json('GET', githubPaths.checks(org, id), data.checks)
+  fakeGitHub(routes, id, banner)
 }

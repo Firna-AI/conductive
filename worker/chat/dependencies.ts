@@ -10,7 +10,6 @@ import {
   readLoginMetadata,
   type SessionLoginMetadata,
 } from './login-availability'
-import { firstStartIncomplete } from './queries'
 import type { ChatDependencies } from './types'
 import { resolveMessageAttachments } from './attachment-claims'
 import { prepareMessageAttachments } from './attachment-copy'
@@ -37,7 +36,6 @@ export function chatDependencies(
       runnerTokenAllowed(env.DB, id, tokenHash),
     readConnectionAccess: (tabs, now) =>
       readConnectionAccess(env.DB, tabs, now),
-    firstStartIncomplete: (id) => firstStartIncomplete(env.DB, id),
     randomId: randomToken,
     randomConnectionId: randomToken,
     readLoginMetadata: (targets) => {

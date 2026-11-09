@@ -25,7 +25,7 @@ interface DraftUploadsHost {
 /**
  * The uploads of the files of a New workspace draft. Each one names the org
  * and the message ID of the draft, which stays the same before the
- * workspace exists and through a failed first start. A sign-out, or a
+ * workspace exists and through a failed create request. A sign-out, or a
  * sign-in of another person, ends the uploads of the person before: the
  * draft drops their files and their notice, so no later person can send or
  * upload them. The requests that run stop, and no later one starts.

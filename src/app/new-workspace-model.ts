@@ -1,5 +1,4 @@
 import type { AgentChoice } from '../shared/agents'
-import type { WorkspaceEvent } from '../shared/events'
 import {
   workspacesPath,
   type CreateWorkspaceRequest,
@@ -7,7 +6,6 @@ import {
 } from '../shared/workspaces'
 import type { ApiError } from './api/client'
 import { readCreated } from './api/read-workspaces'
-import type { Submission } from './creations'
 import {
   failSent,
   filesWait,
@@ -33,16 +31,11 @@ export interface Draft {
   messageId: string
 }
 
-export type CreationStartError = NonNullable<
-  Extract<WorkspaceEvent, { type: 'workspace.updated' }>['error']
->
-
 export type CreateState =
   | { state: 'idle' }
   | { state: 'sending' }
+  /** The create request failed. Try again sends the same message ID. */
   | { state: 'failed'; error: ApiError }
-  /** The server took the message, and the sandbox of its workspace did not start. */
-  | { state: 'not-started'; error?: CreationStartError | null }
 
 /**
  * Whether the draft can go: it has text, and each of its files is ready,
@@ -54,14 +47,13 @@ export function draftReady(draft: Draft): boolean {
 
 /**
  * New workspace: an empty chat whose first message creates the workspace.
- * When the create fails, the draft stays, so Try again sends it again. A
- * create and an upload never run together: the create waits for the files,
- * and a file that comes while the create runs does not upload.
+ * When the create request fails, the draft stays, so Try again sends it
+ * again. A create and an upload never run together: the create waits for
+ * the files, and a file that comes while the create runs does not upload.
  *
- * The server can take the message and then fail to start its sandbox. The
- * message then comes back in a form of its own, made from the `restored`
- * submission. That form keeps the message until the server takes it for
- * another workspace.
+ * Once the server takes the message, the workspace exists. When its first
+ * start fails, the workspace keeps the message in its chat, with the saved
+ * cause and Try again, so the form gives nothing back.
  */
 export class NewWorkspaceModel {
   readonly draft: Store<Draft>
@@ -70,26 +62,11 @@ export class NewWorkspaceModel {
   readonly sectionId: string | null
   private readonly org: OrgModel
   private readonly uploads: DraftUploads
-  /** The workspace whose start failed, for a form that brings it back. */
-  private readonly restoredFrom: string | null
-  private restoredFailure: Extract<CreateState, { state: 'not-started' }>
 
-  constructor(
-    org: OrgModel,
-    sectionId: string | null,
-    restored?: Submission,
-    error?: CreationStartError | null,
-  ) {
+  constructor(org: OrgModel, sectionId: string | null) {
     this.org = org
     this.sectionId = sectionId
-    this.restoredFrom = restored?.workspaceId ?? null
-    this.restoredFailure = {
-      state: 'not-started',
-      ...(error === undefined ? {} : { error }),
-    }
-    this.draft = new Store<Draft>(
-      restored ? { ...restored.draft, refused: [] } : this.emptyDraft(),
-    )
+    this.draft = new Store<Draft>(this.emptyDraft())
     this.uploads = new DraftUploads({
       draft: this.draft,
       api: org.services.api,
@@ -97,16 +74,7 @@ export class NewWorkspaceModel {
       newId: () => org.services.newId(),
       lifetime: () => org.creations.lifetime,
     })
-    this.create = new Store<CreateState>(
-      restored ? this.restoredFailure : { state: 'idle' },
-    )
-  }
-
-  setStartError(error: CreationStartError | null): void {
-    this.restoredFailure = { state: 'not-started', error }
-    this.create.change((state) =>
-      state.state === 'not-started' ? this.restoredFailure : state,
-    )
+    this.create = new Store<CreateState>({ state: 'idle' })
   }
 
   private emptyDraft(keep?: Draft): Draft {
@@ -155,12 +123,9 @@ export class NewWorkspaceModel {
   /**
    * Sends the first message, which creates the workspace. It returns the
    * new workspace, or `null` when the create failed and the draft stays. It
-   * sends nothing while the draft is not ready or a create runs. The app
-   * keeps each sent message until the start of its workspace ends. A form
-   * that brings a message back keeps it until the server answers with
-   * another workspace than the one that failed. `opened` runs at once when
-   * the server admits the message, before that form lets go of it, so the
-   * app can leave the address of the failed workspace first.
+   * sends nothing while the draft is not ready or a create runs. `opened`
+   * runs at once when the server takes the message, before the form empties,
+   * so the app can open the new workspace first.
    *
    * A sign-out, or a sign-in of another person, ends the send at once. The
    * form is then free and empty. The late answer changes nothing, and
@@ -198,25 +163,8 @@ export class NewWorkspaceModel {
         readCreated,
       )
       if (!life.live) return null
-      const workspaceId = created.workspace.id
-      if (workspaceId === this.restoredFrom) {
-        this.create.set(this.restoredFailure)
-        return null
-      }
       this.org.putWorkspace(created.workspace)
-      this.org.creations.admit({
-        workspaceId,
-        sectionId: this.sectionId,
-        draft: {
-          ...draft,
-          repositoryId: request.repositoryId,
-          choice: request.firstMessage.choice,
-        },
-      })
       opened?.(created)
-      if (this.restoredFrom !== null) {
-        this.org.creations.forget(this.restoredFrom)
-      }
       this.draft.set(this.emptyDraft(draft))
       this.create.set({ state: 'idle' })
       return created

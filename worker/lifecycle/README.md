@@ -72,6 +72,7 @@ The [operator backend](../operator/README.md#suspend-an-org) can suspend an org.
 Every start and build phase checks this with user suspension.
 Guarded admission, publication, token replacement, source grants, and refresh claims also check stored org state.
 Cleanup can still recover uncertain allocations and remove resources.
+A pending start, outcome publication, or failed-computer cleanup keeps suspension pending and its native alarm armed.
 Suspended orgs get no disk retention restart, including after an owner change.
 
 ## Settings
@@ -152,8 +153,11 @@ object holds the lifecycle state, the turn records, and the events.
   for the workspace event filter and file display labels.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
-- [`failed-creations.ts`](failed-creations.ts): the hidden drafts of failed
-  creates, and `failedCreationForSender`.
+- [`retry-creation.ts`](retry-creation.ts): `retryFailedCreation` reuses the
+  first-message admission and workspace identity after a failed first start.
+  [`retry-creation-data.ts`](retry-creation-data.ts) pins the replacement image.
+- [`start-admission.ts`](start-admission.ts): `enqueueWorkspaceStart` admits
+  initial starts, replacements, and resumes in the coordinator's serial task.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
 - [`durable-turns.ts`](durable-turns.ts): `recoverLifecycleTurns`, which

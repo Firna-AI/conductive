@@ -9,7 +9,6 @@ import { sendBlock } from './blockers'
 import { sessionState, withSession, type SessionState } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { afterSend, changeDraft, draftIdOf, holderOf } from './drafts'
-import { waitsForFirstStart } from './first-start'
 import { showTarget, takeReply } from './linked-replies'
 import { confirmWorkspace } from './workspace-records'
 
@@ -34,17 +33,17 @@ export function setDraftText(
 }
 
 /**
- * Sends the draft of a session. During a resume the workspace queues it
- * until the sandbox is ready, and during a turn it steers the turn. Until
- * the first start of the workspace succeeds, nothing sends, and the draft
- * stays, as `first-start.ts` says. Send waits while a file uploads or
- * failed, and it takes only the IDs of ready files. A failed send keeps the
- * draft and its client ID, so that Send again is the same message. When the
- * server no longer has a file of the message, such as one of an expired
- * draft, those files turn failed, and Try again uploads each one again. The
- * send finishes on its draft, also after the draft moved to another
- * session. When the reply names a linked session, the message shows there,
- * and the tab that sent shows that session, as `linked-replies.ts` says.
+ * Sends the draft of a session. The workspace queues messages during its
+ * first start, after a failed first start, and during Resume. During a turn,
+ * a message steers the agent. Send waits while a file uploads or has failed.
+ * It sends only the IDs of ready files. A failed send keeps the draft and
+ * its client ID, so Send again is the same message.
+ *
+ * When the server no longer has a file, that file turns failed. Try again
+ * uploads its kept File. The send finishes on its draft, also after a move
+ * to another session. A linked-session reply shows its message in that
+ * session, and the sending tab shows that session, as `linked-replies.ts`
+ * says.
  */
 export async function sendDraft(
   context: ChatContext,
@@ -56,7 +55,6 @@ export async function sendDraft(
   const empty = draft.text.trim() === '' && draft.files.length === 0
   const busy = draft.sending || filesWait(draft.files)
   if (!session || busy || empty || sendBlock(snapshot, sessionId)) return
-  if (waitsForFirstStart(snapshot)) return
   const request: SendMessageRequest = {
     id: draft.sendId ?? context.newId(),
     text: draft.text,

@@ -30,8 +30,10 @@ The org foreign key prevents final org deletion before external cleanup finishes
 `resolveMessageAttachments` checks the sender, org, immutable target, expiry, and ready state.
 A workspace upload can be used by the uploader's messages in that workspace.
 A new-workspace upload names its stable first-message ID.
-A failed first start can move its claim to a fresh attempt for that same first message.
-The earlier attempt must have failed and released its public workspace record.
+A failed first start after admission keeps its workspace, its claim, and its files.
+Its Try again resumes that workspace, so the claim stays.
+A create that fails before admission removes its provisional workspace record.
+Only such a failed attempt, with no public workspace record, lets a fresh attempt for that same first message move the claim.
 The original draft deadline still applies until a surviving workspace accepts it.
 
 A D1 claim alone proves no acceptance.
@@ -116,8 +118,8 @@ The scheduled members cleanup also sweeps expired drafts.
 It uses conditional revisions before deleting a ready file.
 For a claim, the sweep calls the trusted `expireChatAttachment` RPC of the claiming workspace object.
 That RPC checks acceptance in the chat queue.
-An accepted file stays while its workspace survives, including Archive.
-A failed first create without a surviving workspace returns to its original draft deadline.
+An accepted file stays while its workspace survives, including Archive and a failed first start.
+A create that failed before admission leaves no surviving workspace, so its file returns to its original draft deadline.
 An old claim's cleanup cannot delete the revised claim of a new attempt.
 
 Workspace purge deletes its external files after the member fence drains workspace work.
@@ -134,6 +136,7 @@ Copy tests inject a fake grant and signed transfer through `prepareAttachments`.
 The copy owner tests use that fake transfer to count the writers of each computer and path, and the writes after delivery.
 The fixture never sends a request to a real provider.
 The cleanup integration test runs the production scheduled handler through `/__test/scheduled`, with the native workspace object, D1, and R2.
+The failed first start integration test keeps a first-message file through the native expiry RPC, a restart, and Try again, with one exact copy.
 The claim race and rollback tests call `expireClaimedAttachment` in the chat queue.
 The runner provider tests check the description and the image input of each adapter.
 See [the test guide](tests.md) for the groups.
