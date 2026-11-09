@@ -12,7 +12,7 @@ export const orgs = defineScreen({
     'A phone has no rail, so the switcher takes its place. The account sits at the bottom of the rail and of the switcher, because the GitHub sign-in, the GitHub App, and the agents belong to every org. Waits on decision 21, drawn as its recommended option A.',
   relatedDocs: [],
   propSchema: workspaceListSchema,
-  props: { list: 'workspaces', menu: 'orgs' },
+  props: { list: 'workspaces', menu: 'orgs', palette: 'closed' },
   render: (props, context) => (
     <WorkspaceListScreen state={props} viewport={context.viewport} />
   ),

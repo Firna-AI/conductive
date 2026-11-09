@@ -5,6 +5,7 @@ import { EmptyState } from '../components/common/EmptyState'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
+import { CommandPalette } from '../components/palette/CommandPalette'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
@@ -71,6 +72,7 @@ export function WorkspaceScreen(props: {
   const archivable = !readOnly && (admin || workspace.owner === viewer)
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
+  const rightHidden = state.rightColumn === 'hidden'
   const chat = (
     <ChatPane
       composer={composerFor(state, workspace)}
@@ -108,6 +110,7 @@ export function WorkspaceScreen(props: {
       canReassign={admin && !readOnly}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
+      rightHidden={rightHidden}
       status={status}
       viewport={viewport}
       workspace={workspace}
@@ -124,6 +127,19 @@ export function WorkspaceScreen(props: {
   })
   const tool = <ToolContent state={state} viewport={viewport} />
   if (viewport === 'mobile') {
+    if (state.palette !== 'closed') {
+      // A phone opens the palette from the list, so it offers no actions
+      // of a workspace.
+      return (
+        <MobileFrame>
+          <CommandPalette
+            context={{ archivable: false }}
+            view={state.palette}
+            viewport={viewport}
+          />
+        </MobileFrame>
+      )
+    }
     const sessions = tabs.filter((tab) => tab.kind === 'session')
     const body = {
       chat: (
@@ -159,9 +175,21 @@ export function WorkspaceScreen(props: {
     )
   }
   const file = openFile(state)
+  const palette =
+    state.palette === 'closed' ? null : (
+      <CommandPalette
+        context={{
+          open: { workspace, status },
+          archivable,
+          rightColumn: !rightHidden,
+        }}
+        view={state.palette}
+        viewport={viewport}
+      />
+    )
   return (
     <AppFrame
-      overlay={overlay}
+      overlay={palette ?? overlay}
       rail={{
         ...acmeRail,
         suspended: suspended ? suspendedOrg : undefined,
@@ -180,6 +208,7 @@ export function WorkspaceScreen(props: {
             workspace={workspace}
           />
         }
+        rightHidden={rightHidden}
         rightWidth={state.resize === 'right' ? widenedRight : undefined}
         tabs={
           <WorkspaceTabs

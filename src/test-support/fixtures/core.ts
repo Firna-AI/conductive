@@ -74,6 +74,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
         updatedAt: FAKE_TIME,
       },
     ],
+    operator: false,
     githubAppUrl: 'https://github.com/apps/conductive/installations/new',
   }
   const models: ModelsResponse = {

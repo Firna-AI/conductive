@@ -1,5 +1,5 @@
 import { productDomain } from '../docs/mockups/src/brand'
-import { siteResponse } from '../src/marketing/routes'
+import { siteResponse } from './marketing/site'
 import type { AppEnv } from './env'
 import { HttpError } from './http'
 import { appOrigin } from './security/app-origin'

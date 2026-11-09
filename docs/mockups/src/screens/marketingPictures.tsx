@@ -79,7 +79,7 @@ const screens: Readonly<
   /** The workspace list of a phone, with the state of each workspace. */
   phone: (viewport) => (
     <WorkspaceListScreen
-      state={{ list: 'workspaces', menu: 'none' }}
+      state={{ list: 'workspaces', menu: 'none', palette: 'closed' }}
       viewport={viewport}
     />
   ),

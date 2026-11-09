@@ -12,7 +12,6 @@ import { OrgRail, type RailCurrent } from './layout/OrgRail'
 import { DeletedOrg, OrgHome } from './list/OrgHome'
 import { HomeList, ListHeader } from './list/HomeList'
 import { Sidebar, type ListCurrent } from './list/Sidebar'
-import { useMacApp } from './mac/mac-app'
 import { NewWorkspaceScreen } from './new-workspace/NewWorkspaceScreen'
 import { OrgSettingsScreen } from './settings/OrgSettingsScreen'
 import { ActionButton } from './ui/actions'
@@ -21,7 +20,10 @@ import { useViewport } from './ui/viewport'
 import { WorkspaceScreen } from './workspace/WorkspaceScreen'
 import { inFirstRun } from '../app/get-started'
 
-/** The desktop frame with the rail of the user's orgs. */
+/**
+ * The desktop frame with the rail of the user's orgs. The rail of an
+ * operator also leads to the operator section.
+ */
 export function RailFrame(props: {
   user: User
   current: RailCurrent
@@ -31,12 +33,14 @@ export function RailFrame(props: {
   const app = useApp()
   const orgs = useStore(app.orgs)
   const getStarted = useStore(app.getStarted)
+  const operator = useStore(app.account.account)?.operator === true
   return (
     <AppFrame
       rail={
         <OrgRail
           current={props.current}
           firstRun={inFirstRun(getStarted)}
+          operator={operator}
           orgs={orgs}
           user={props.user}
         />
@@ -109,14 +113,13 @@ function listCurrent(route: OrgRoute): ListCurrent {
 /** The screens of one org, in the desktop frame or the phone frame. */
 export function OrgRoutes(props: { route: OrgRoute; user: User }) {
   const app = useApp()
-  const chrome = useMacApp()
   const phone = useViewport() === 'phone'
   const org = useStore(app.orgs).find((item) => item.id === props.route.orgId)
   const current: RailCurrent = { org: props.route.orgId }
-  // The account of the Mac app keeps the sidebar of the last org.
+  // A page without an org, such as the Account page, works on the last org.
   useEffect(() => {
-    chrome?.openOrg(props.route.orgId)
-  }, [chrome, props.route.orgId])
+    app.openOrg(props.route.orgId)
+  }, [app, props.route.orgId])
   if (!org) {
     const page = <NotAvailable title="This org is not available" />
     if (phone) return <PhoneFrame>{page}</PhoneFrame>

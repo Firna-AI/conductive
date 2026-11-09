@@ -6,6 +6,8 @@ import { browserDelay, type WorkspaceEventSource } from '../events'
 import {
   windowFocus,
   windowInput,
+  windowKeys,
+  windowPlatform,
   windowStorage,
   windowVisibility,
   type AppServices,
@@ -15,6 +17,7 @@ import { attachmentRoutes } from './attachment-routes'
 import { createBackend, guardScope } from './backend'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
+import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
 import { devFileTransport } from './progress-fixture'
@@ -60,6 +63,7 @@ export function createFakeServices(search: string): AppServices {
     ...attachmentRoutes(backend, options.upload),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
+    ...operatorRoutes(backend),
   ]
   const fetch = routeFetch(
     routes,
@@ -77,6 +81,8 @@ export function createFakeServices(search: string): AppServices {
     delay: browserDelay,
     onFocus: windowFocus(window),
     onInput: windowInput(window),
+    onKey: windowKeys(window),
+    platform: windowPlatform(window),
     visible: windowVisibility(window),
     storage: windowStorage(window),
     newId,

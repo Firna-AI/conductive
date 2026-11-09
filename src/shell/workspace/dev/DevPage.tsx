@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { AppModel } from '../../../app/app-model'
 import { memoryNavigation, NavigationContext } from '../../../app/navigation'
-import { PanelWidths } from '../../../app/panels'
+import { PanelLayout } from '../../../app/panels'
 import { routes } from '../../../app/router'
 import { ServicesContext } from '../../../app/services'
 import {
@@ -95,7 +95,7 @@ export function DevPage(props: {
       ),
     ),
   )
-  const [panels] = useState(() => new PanelWidths(null))
+  const [panels] = useState(() => new PanelLayout(null))
   const features = useMemo<WorkspaceFeatures>(
     () =>
       options.start

@@ -85,6 +85,10 @@ stops its own controller:
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position. A dialog or a sheet covers the nearest
   positioned frame: the app frame.
+- The menus, the dialogs, and the sheets of the chat note themselves in
+  the open layers of the app shell, from `../shell/ui/layers.ts`. So the
+  key of the command palette closes an open menu, and does nothing while
+  a dialog or a sheet is open. Outside the app, nothing notes them.
 - The Mac app shows two more parts of Mac commands outside the chat:
   `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)
   say how to mount them.
