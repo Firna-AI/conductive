@@ -176,7 +176,9 @@ export const termsDocument: LegalDocument = {
         paragraph`Your repositories, files, and agent sessions live in the
           cloud computers that ${productName} runs for your org.
           ${productName} keeps the chat history of each workspace, so that
-          you can read it while the cloud computer is stopped.`,
+          you can read it while the cloud computer is stopped. It also keeps
+          the files that you attach to messages. It copies each file to the
+          cloud computer when the agent starts work on its message.`,
         paragraph`${draft('To write: the rights in your content, and the permission that the operator needs to run the service')}`,
       ],
     },

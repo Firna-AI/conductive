@@ -48,6 +48,7 @@ export class WorkspaceRuntimeFixture extends Workspace {
           path: `/attachments/${id}.txt`,
         })),
       }),
+      prepareAttachments: async () => null,
     })
     this.clock = clock
     this.chatIds = chatIds

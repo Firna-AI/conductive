@@ -53,6 +53,9 @@ says.
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
+- The two attachment upload routes take raw bytes in place of a JSON body
+  (decision 144). [Attachment uploads](#attachment-uploads) states their
+  conditions. Every other write needs a JSON body.
 - The health check and GitHub sign-in with its callback need no sign-in.
   The callback checks its `state` value instead.
 - The Mac app's public sign-in exchange also needs no sign-in.
@@ -97,13 +100,50 @@ A lint was rejected because a read through another name escapes it.
   All other routes get the default, also routes added later.
 - The GitHub webhook limit is 26 MiB, or 27,262,976 bytes.
   GitHub's [25 MB payload maximum](https://docs.github.com/en/webhooks/webhook-events-and-payloads#payload-cap) is the reason.
-- The Worker counts the bytes that arrive. It does not use the
+- The Worker counts the bytes that arrive. It does not rely on the
   `Content-Length` header for the limit.
 - The Worker stops reading a body as soon as the body passes its limit.
 - A body above its limit gets HTTP 413 with the error code
   `body_too_large`. The error says "The request is too large. Send less
   data."
 - A WebSocket upgrade has no body. The Worker drops a body sent with one.
+
+### Attachment uploads
+
+Decision 144 sends each attached file as raw bytes in one request. The
+Worker streams the bytes into storage, so it never holds the whole file in
+memory. One JSON body with Base64 was rejected, because one upload of
+25 MB then uses about 100 MB of memory. Uploads in parts were rejected,
+because they need stored part state. An upload straight to the bucket was
+rejected, because it needs a new secret, CORS rules, and a new host.
+
+- Two routes take the raw bytes of one file in one `POST` (decision 144).
+  One uploads a draft file of an org, and the other a file of a workspace.
+- Only these two routes take raw bytes and have the higher limit. A route
+  added later gets neither.
+- A request needs the content type `application/octet-stream`. The gate
+  refuses a request with no content type or with another content type.
+- A request needs a `Content-Length` header. The Worker refuses a request
+  without it.
+- The body limit of these routes is 25,000,000 bytes, the file limit of
+  [Attachments](chat-and-events.md#attachments). The Worker counts the
+  bytes that arrive, as for every body.
+- A body or a `Content-Length` above that limit gets HTTP 413 with the
+  error code `attachment_too_large`, in place of `body_too_large`.
+- A body whose bytes do not match its `Content-Length` stores no file.
+- The query of the URL carries the file name as `name`, and its media type
+  as `mediaType`. The upload of a draft file also carries the ID of the
+  first message as `messageId`.
+- For these routes, the gate keeps all its other checks:
+  - the host and the sign-in
+  - the `Origin` header
+  - the membership of the org
+  - the checks that refuse a write to the org, such as during a suspension
+- Reason: like a JSON body, `application/octet-stream` needs a preflight,
+  so a page on another site cannot send such a request. A request with no
+  content type needs no preflight, so the gate refuses it.
+- Reason: the URL carries the file name and the media type, so the
+  preflight allows no new request header.
 
 ## Content security policy
 
@@ -143,10 +183,22 @@ Later screens add the frame and connection sources that they need.
 - No request names a sandbox or a saved snapshot. The Worker takes each
   one from its own records, and only from the records of an org that the
   request may reach.
+- One R2 bucket holds the uploaded files of all orgs (decision 132). So the
+  bucket does not keep the orgs apart. The checks in this section do.
+- Only the Worker reads and writes that bucket.
+- Each upload names one workspace, or the first message of a new workspace
+  of one org (decision 132). Only a message of the uploader in that
+  workspace, or that first message, can use the file.
+- The Worker refuses a message or a create that names a file that it cannot
+  use, with HTTP 404 and the error code `attachment_not_found`. A deleted
+  file gets the same refusal.
 - Before each sandbox call, the Worker checks in its records that the
   sandbox belongs to a workspace or a build of that org.
 - The Worker calls only a fixed list of Boat routes. It has no general
   pass-through to Boat.
+- To copy an attachment, the Worker also sends the file to the upload
+  address that Boat returns for that sandbox (decision 132). It sends the
+  file only to that exact address.
 - Lifecycle, saved snapshot, file metadata, and error replies from Boat
   can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
 - A successful command reply from Boat can contain at most 18 MiB, or

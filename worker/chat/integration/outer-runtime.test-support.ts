@@ -97,6 +97,7 @@ export async function createOuterRuntime(
             },
             env: {
               DB: { type: 'd1', id: 'outer-chat-db' },
+              CHAT_ATTACHMENTS: { type: 'r2', name: 'outer-chat-attachments' },
               WORKSPACES: {
                 type: 'durable-object',
                 worker: 'outer-chat-tests',
@@ -172,6 +173,9 @@ export async function createOuterRuntime(
     await applyMigrations(db)
     const env: AppEnv = {
       DB: db,
+      CHAT_ATTACHMENTS: (
+        await runtime.getBindings<{ CHAT_ATTACHMENTS: R2Bucket }>()
+      ).CHAT_ATTACHMENTS,
       APP_ORIGIN: appOrigin,
       MACHINE_ORIGIN: OUTER_MACHINE_ORIGIN,
       GITHUB_CLIENT_ID: 'outer-client',
@@ -218,6 +222,9 @@ export async function createOuterRuntime(
         await runtime.dispose()
         runtime = createRuntime()
         env.DB = await runtime.getD1Database('DB')
+        env.CHAT_ATTACHMENTS = (
+          await runtime.getBindings<{ CHAT_ATTACHMENTS: R2Bucket }>()
+        ).CHAT_ATTACHMENTS
       },
       dispose: () => runtime.dispose(),
     }

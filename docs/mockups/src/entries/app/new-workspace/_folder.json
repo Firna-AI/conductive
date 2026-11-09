@@ -1,6 +1,7 @@
 {
   "order": [
     "not-created",
+    "files",
     "creating",
     "waiting",
     "first-turn",

@@ -1,6 +1,9 @@
 # Backend and runner fakes
 
 `createHarness` creates a local D1 database.
+It also supplies the private local R2 attachment bucket.
+Reset removes its file records and objects between tests.
+`attachment-r2.ts` wraps local R2 deletion for controlled cleanup failures.
 It supplies fake GitHub and Boat servers, a fixed clock, sign-in, org creation, and cleanup.
 Backend tests use it without an external account or cloud computer.
 

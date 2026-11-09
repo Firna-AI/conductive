@@ -1,9 +1,14 @@
-import { createApiClient, type FetchLike } from '../../app/api/client'
+import {
+  createApiClient,
+  type FetchLike,
+  type FileTransport,
+} from '../../app/api/client'
 import type { AgentChoice } from '../../shared/agents'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import type { ChangeModelResponse, Session } from '../../shared/sessions'
 import { FakeApiServer, type FakeApiOptions } from '../../test-support/fake-api'
 import type { FakeWorkspaceEvents } from '../../test-support/fake-events'
+import { fetchFiles } from '../../test-support/fake-files'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { record, text } from '../api/json'
@@ -103,6 +108,11 @@ export function chatFor(
      * own readers, such as two tabs, get the same events.
      */
     stream?: FakeWorkspaceEvents
+    /**
+     * Sends the raw files of uploads. By default they go through the fetch
+     * of the chat, with no progress, as `fetchFiles` says.
+     */
+    files?: FileTransport
   } = {},
 ) {
   const server = new FakeApiServer(options)
@@ -126,7 +136,7 @@ export function chatFor(
       orgId: FAKE_IDS.org,
       workspaceId: options.workspaceId ?? FAKE_IDS.workspace,
     },
-    client: createApiClient(fetch),
+    client: createApiClient(fetch, options.files ?? fetchFiles(fetch)),
     subscribe: (_target, from, listener) => {
       after.push(from)
       return (options.stream ?? server.events).subscribe(from, (message) =>

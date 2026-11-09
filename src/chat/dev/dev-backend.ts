@@ -10,6 +10,7 @@ import {
   type WorkspaceStart,
 } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { fetchFiles } from '../../test-support/fake-files'
 import {
   coreFixtures,
   FAKE_IDS,
@@ -189,8 +190,11 @@ export class DevBackend {
     return written ?? this.server.fetch(request)
   }
 
-  /** The JSON client of the page, over its fake API, as the app gives one. */
-  readonly client = createApiClient(this.fetch)
+  /**
+   * The JSON client of the page, over its fake API, as the app gives one.
+   * Its uploads send raw files through the same fetch.
+   */
+  readonly client = createApiClient(this.fetch, fetchFiles(this.fetch))
 
   /** Keeps the messages, the queued ones, and the running turn of the recorded chat. */
   private note(events: readonly WorkspaceEvent[]): void {

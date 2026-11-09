@@ -92,7 +92,8 @@ requirements of each feature.
 ### D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, settings, and the active preview hostnames.
+  repositories, workspaces, settings, the active preview hostnames, and the
+  records of attached files.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -106,6 +107,22 @@ requirements of each feature.
 - Its storage keeps the chat history, so a stopped or archived workspace
   still shows its chat.
 - It revokes the preview hostnames of its workspace.
+
+### Attachment storage
+
+- One R2 bucket holds the bytes of the files that users attach to chat
+  messages, and D1 holds their records (decision 132). The bucket holds the
+  files of every org, so the Worker's own records keep the orgs apart, as
+  [Access and security](protocol/access-and-security.md#orgs-and-workspaces)
+  says.
+- Only the Worker reads and writes the bucket. The browser sends each file
+  as raw bytes in one request, and the Worker streams it into the bucket
+  (decision 144).
+- Before the agent runner gets a message, the Worker copies the files of
+  the message into the sandbox, through an upload address that Boat gives
+  for each file.
+- [Chat and events](protocol/chat-and-events.md#attachments) states how
+  long a file stays.
 
 ### Boat
 
@@ -176,6 +193,8 @@ the app (decision 6).
 
 1. A tab sends a message to the Worker. The Durable Object forwards it to
    the agent runner, with the agent login of the starter of its session.
+   The Worker first copies the files of the message from the attachment
+   storage into the sandbox.
 2. The runner gives it to the agent through the SDK. It numbers each agent
    event and sends it to the Durable Object.
 3. The Durable Object stores each event, confirms it to the runner, and
@@ -215,6 +234,8 @@ the app (decision 6).
 | Env var values and agent logins                          | The Worker's storage, encrypted          |
 | The Boat key and the other keys of the Worker            | Worker secrets                           |
 | Chat history and banner state                            | The workspace Durable Object             |
+| Files attached to chat messages                          | The attachment storage, an R2 bucket     |
+| The records of attached files                            | D1                                       |
 | The repository, the files, and the agent sessions        | The home folder of the sandbox           |
 | The prepared repositories and the installed software     | The org image, in the app's Boat account |
 | Panel widths                                             | The browser, or the Mac app              |

@@ -98,6 +98,12 @@ export interface SandboxProvider {
     path: string,
     maxBytes: number,
   ): Promise<SandboxFileRead>
+  writeFile(
+    sandboxId: string,
+    path: string,
+    body: ReadableStream<Uint8Array>,
+    sizeBytes: number,
+  ): Promise<void>
   create(input: SandboxStart): Promise<Sandbox>
   get(sandboxId: string): Promise<Sandbox>
   stop(sandboxId: string): Promise<Sandbox>

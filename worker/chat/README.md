@@ -183,6 +183,8 @@ group of tests covers.
 
 ## Seams for other milestones
 
+[Chat attachments](attachments.md) gives the internal storage boundary, acceptance proof, copy preparation and order, agent input, and cleanup integration.
+
 [Chat backend integration](integration/README.md) gives the seams for other
 features. It covers the hooks, the trusted workspace calls, the workspace
 events, the outer Worker, and the lifecycle. It also covers the files, the
@@ -245,6 +247,8 @@ tests through the production Worker entry.
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
 - `runner-delivery.ts`: the sends of pending commands, with the login
   check.
+- `ordered-dispatch.ts`: `dispatchInOrder` and `commandDispatchState`, the
+  send, wait, or skip check of each pending command in stored order.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the
   report repair of each kind, its start or failure at a refusal, and its
   sends before the confirm.

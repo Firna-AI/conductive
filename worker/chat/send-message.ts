@@ -62,6 +62,8 @@ export async function send(
       context.user.id,
       transaction.workspaceId,
       input.attachmentIds,
+      input.id,
+      await transaction.usedAttachments(input.attachmentIds, context.user.id),
     )
     const response = await acceptMessage(
       transaction,

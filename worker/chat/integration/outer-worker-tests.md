@@ -32,6 +32,12 @@ npm run test -- worker/chat/integration
   after a restart, and a repeat adds no history.
 - `failed-first-start-retry.test.ts` checks a kept first-start failure through
   restart, a retry by another member, fresh credentials, and ordered queued delivery.
+  Its first message carries a raw file that a member uploads through the
+  production route. After the failure and after the retry, the native
+  expiry RPC keeps the expired claim and its bytes. The retry copies the
+  exact bytes once. `first-start-attachments.test-support.ts` gives the
+  upload, a fake file upload address with its transfer, and that expiry
+  call.
 - `failed-creation-replay.test.ts` checks all history pages of a kept failed
   workspace through the normal member event socket, which stays live.
 - `workspace-lifecycle.test.ts` joins runner readiness, a reconnect, a
@@ -156,4 +162,7 @@ CHAT_HARNESS_ASSETS=path/to/client CHAT_HARNESS_PORT=5181 \
   It holds the start, leaves, and fails the start.
   The workspace stays readable with its error and queued messages.
   It returns through history and retries in the same workspace.
-- The Worker routes no attachment upload yet, so such a check sends text.
+- The Worker routes raw attachment uploads, and `attachment-raw.test.ts`
+  checks them with native R2. The fake provider of the harness gives no
+  file upload address, so a file copy into its fake sandbox fails. So such
+  a check sends text.

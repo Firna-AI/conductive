@@ -1,0 +1,142 @@
+# Chat attachment storage and delivery
+
+The Worker stores attachment bytes in the private `CHAT_ATTACHMENTS` R2 bucket.
+D1 keeps the owner, target, upload deadline, claim revision, and deletion journal.
+The browser posts one raw file through the shared upload URL builder.
+The route registry gives the entry and gate the same method, matcher, and byte limit.
+The storage API also accepts decoded bytes independently of the browser transport.
+[Attachments](../../docs/protocol/chat-and-events.md#attachments) gives the requirements.
+
+## Storage boundary
+
+`storeAttachment` in [attachment-storage.ts](attachment-storage.ts) takes authenticated metadata and decoded bytes or a stream.
+It checks current membership and the named target before it creates a record.
+It measures the bytes and refuses a decoded total above `ATTACHMENT_MAX_BYTES`.
+The byte limit is shared with the composer.
+Raw uploads pass the entry-counted source through native `FixedLengthStream` into R2.
+The declared length and stream completion must agree before readiness can publish.
+Internal callers without a known length use bounded R2 parts without browser part routes or a part table.
+Readiness publishes only after the object completes and the owner and target still permit the write.
+An upload that loses ownership leaves no usable attachment.
+Its failed cleanup keeps a deletion record for another attempt.
+
+Each generated object key stays private.
+The uploader ID stays as an opaque identity after account deletion.
+Its record does not keep the user's account row alive.
+The org foreign key prevents final org deletion before external cleanup finishes.
+
+## Message admission
+
+`resolveMessageAttachments` checks the sender, org, immutable target, expiry, and ready state.
+A workspace upload can be used by the uploader's messages in that workspace.
+A new-workspace upload names its stable first-message ID.
+A failed first start after admission keeps its workspace, its claim, and its files.
+Its Try again resumes that workspace, so the claim stays.
+A create that fails before admission removes its provisional workspace record.
+Only such a failed attempt, with no public workspace record, lets a fresh attempt for that same first message move the claim.
+The original draft deadline still applies until a surviving workspace accepts it.
+
+A D1 claim alone proves no acceptance.
+`ChatRecords.saveMessage` stores the attachment-use marker with the message in the chat transaction.
+A repeated accepted message returns before it attempts a new claim.
+`attachmentPath` in [attachment-record.ts](attachment-record.ts) builds each path from the stored record and the accepted message ID.
+The paths use a fixed-length digest of the attachment and accepted message identities.
+Thus another message gets a separate file without a filename-length restriction on message IDs.
+When the immutable stored filename ends in a dot and 1 to 10 ASCII letters or digits, the path ends in that extension in lowercase.
+Every other filename adds no extension.
+The extension lets the agent choose a reader for the file.
+A wrong extension in the filename can make the agent choose the wrong reader.
+The hidden filename lives directly under `/home/user`, which already exists.
+No copy relies on provider directory creation.
+
+## Dispatch
+
+`AttachmentPreparation.check` in [attachment-delivery.ts](attachment-delivery.ts) gives the [ordered dispatch](history.md) a copy result for each `turn` or `message` command: send when its files are ready, or else wait.
+An empty attachment list returns send before any storage or provider call.
+A command that waits for its copy holds the later `turn` and `message` commands of its turn.
+So the agent gets the messages of that turn in accepted order.
+Stop and the commands of other turns do not wait.
+
+Each copy has one owner: one accepted message on one destination computer.
+Each check first reads the current sandbox ID of the workspace with `attachmentSandboxId`.
+`attachmentCopyKey` in [attachment-record.ts](attachment-record.ts) builds the owner key with the SHA-256 helper of the file paths, from the message ID and that sandbox ID.
+The fixed-length digest keeps the stored proof key short, so message IDs need no new length limit.
+The key holds no command ID and no runner connection.
+`AttachmentPreparation` keeps one owner for each key in memory.
+The owner gives its sandbox ID to `prepareMessageAttachments` in [attachment-copy.ts](attachment-copy.ts).
+That helper checks the sandbox before each file and after the last file.
+It fails when the workspace names another sandbox, so an owner never moves to another computer.
+The owner copies through `waitUntil` outside the chat queue.
+Stop, runner events, and confirmations keep using that queue during a transfer.
+The provider helper accepts an injected HTTP boundary for tests.
+
+A continuation moves an unanswered message to a new turn with a new command ID.
+The runner ignores a command ID that it already received, so the continuation needs that new ID.
+The continuation keeps the message and its file paths, so its check finds the same owner key.
+It waits for a held copy, and it goes out at once after a finished copy.
+A reconnect to the same computer also finds the same owner, which then follows the newest connection.
+Thus writes to one message path on one computer never overlap, and no copy writes there after its message goes out.
+
+Completion enters the chat queue again.
+It saves the copy proof with `ChatRecords.saveAttachmentCopy(messageId, sandboxId)`, marks the owner ready, and resumes dispatch.
+It does this also when the first command or the first connection of the owner is gone.
+When no owner is in memory, as after a restart, the check reads that proof with `ChatRecords.attachmentCopy(messageId, sandboxId)`.
+A stored proof lets the command go out with no new copy.
+Dispatch rechecks access, turn eligibility, and the computer identity before it sends the current runner command with paths.
+A new computer or a new message gets a new owner key and a new copy.
+A failed proof save closes the runner connection and clears the owner.
+Redelivery reads any proof that committed before the failure.
+
+A failed copy clears its owner in the chat queue.
+`AttachmentPreparation.currentCommand` then finds the current command of the message.
+That is the first pending `turn` or `message` command of the message that the newest connection of the owner can still send.
+The failure ends the turn of that command, queued or running, through the existing failed-turn path.
+After a continuation, that is the new turn, and the earlier turn keeps its end.
+The end gives the HTTP error of the copy, or else `attachment_copy_failed`.
+Its retry message is the message whose copy failed.
+Try again accepts a new message ID, so its files get new paths, a new owner, and a new copy.
+The end removes each pending command of that turn, so the failure adds no wait for a later message.
+When the failed turn was running, the same commit then saves an `interrupt` command for that turn.
+That interrupt goes out although the turn has ended, so the runner stops the agent of that turn.
+Each new runner connection gets it again until the late end of that turn from the runner removes it.
+The interrupt changes no public turn or session state.
+So Try again needs no Worker wait, and the runner starts the retry after the old agent process exits.
+After that commit, the failure calls `runnerEventStored`, so the lifecycle and device cleanup see the end.
+A failure fails no turn when the newest connection of its owner has closed, or when the workspace names another sandbox.
+The current connection and computer then get their own owner.
+
+## Agent input
+
+The runner gives the agent the original name, the media type, and the copied path of each file.
+`attachmentDescription` in [attachment-description.ts](../../runner/src/providers/attachment-description.ts) writes that description for the Claude and Codex adapters.
+Each description is one line with a JSON object, so a name with quotes or a line break stays inside its value.
+Codex also gets each image as a local image input.
+
+## Cleanup
+
+The scheduled members cleanup also sweeps expired drafts.
+It uses conditional revisions before deleting a ready file.
+For a claim, the sweep calls the trusted `expireChatAttachment` RPC of the claiming workspace object.
+That RPC checks acceptance in the chat queue.
+An accepted file stays while its workspace survives, including Archive and a failed first start.
+A create that failed before admission leaves no surviving workspace, so its file returns to its original draft deadline.
+An old claim's cleanup cannot delete the revised claim of a new attempt.
+
+Workspace purge deletes its external files after the member fence drains workspace work.
+Org purge also deletes unclaimed and hidden-attempt files before it removes D1 ownership.
+Each bounded batch renews the cleanup lease.
+The sweep also removes completed orphan objects whose upload outlived its record.
+
+## Verification
+
+The attachment tests use local Miniflare R2 and D1.
+Storage tests also call the internal storage boundary.
+The raw route tests use the real Worker and native R2 in Miniflare.
+Copy tests inject a fake grant and signed transfer through `prepareAttachments`.
+The copy owner tests use that fake transfer to count the writers of each computer and path, and the writes after delivery.
+The fixture never sends a request to a real provider.
+The cleanup integration test runs the production scheduled handler through `/__test/scheduled`, with the native workspace object, D1, and R2.
+The failed first start integration test keeps a first-message file through the native expiry RPC, a restart, and Try again, with one exact copy.
+The claim race and rollback tests call `expireClaimedAttachment` in the chat queue.
+The runner provider tests check the description and the image input of each adapter.
+See [the test guide](tests.md) for the groups.

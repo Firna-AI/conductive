@@ -11,11 +11,13 @@ import {
   type AppServices,
 } from '../services'
 import { accountRoutes } from './account-routes'
+import { attachmentRoutes } from './attachment-routes'
 import { createBackend, guardScope } from './backend'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
+import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
@@ -55,6 +57,7 @@ export function createFakeServices(search: string): AppServices {
     ...sectionRoutes(backend),
     ...workspaceRoutes(backend),
     ...createRoutes(backend),
+    ...attachmentRoutes(backend, options.upload),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
   ]
@@ -68,7 +71,7 @@ export function createFakeServices(search: string): AppServices {
       server.events.subscribe(target.afterEventNumber, handlers.message),
   }
   return {
-    api: createApiClient(fetch),
+    api: createApiClient(fetch, devFileTransport(fetch, search)),
     events,
     now,
     delay: browserDelay,

@@ -13,11 +13,17 @@ Org reads and chat-tab grants remain available.
 
 ## JSON request bodies
 
-The gate calls `readJsonObject(request)` once for each write.
+The gate calls `readJsonObject(request)` once for each write, except a raw upload route (decision 144).
 The call follows the session and org access checks.
 The [shared JSON request reader](../http/README.md#json-request-objects) owns content type normalization, parsing, and object checks.
 The [Worker entry](../http/README.md#request-body-limit) owns the byte limit and the HTTP 413 response.
 A body error prevents route dispatch.
+
+For a [raw upload route](../http/README.md#raw-upload-routes), the gate reads no JSON (decision 144).
+After the session, org access, and org write checks, it calls `rawUploadLength(request, maxBytes)` from the route registry.
+That check needs the content type `application/octet-stream` and a valid `Content-Length` header.
+The gate puts the declared length in `RequestContext.rawUploadBytes`, and leaves the body unread for the route.
+It refuses a request with no content type, because such a request needs no preflight, so a page on another site could send it.
 
 ## Open connections
 
@@ -101,6 +107,7 @@ After that, each entry of this area refuses that user:
 ## Development
 
 Run `npm run test -- worker/security/gate.test.ts worker/security/gate-body.test.ts worker/http/bounded-body.test.ts` from the repository root.
+Run `npm run test -- worker/security/raw-upload.test.ts` to check the raw upload gate (decision 144).
 Use Node 24.
 The body tests use streams with deterministic pull and cancellation counts.
 They send multibyte text to check byte counts.
@@ -114,10 +121,11 @@ After a change to the terms consent or to the suspension checks of sign-in, run 
 
 ### Key Code
 
-- [gate.ts](gate.ts) checks the host, origin, session, membership, and JSON body.
+- [gate.ts](gate.ts) checks the host, origin, session, membership, and JSON body, or the headers of a raw upload route (decision 144).
 - [connection-access.ts](connection-access.ts) exports `readConnectionAccess`, the identity and grant types, `CONNECTION_CHECK_MS`, and `scheduleConnectionCheck`.
 - [gate-body.test.ts](gate-body.test.ts) checks the exact body limit and early cancellation through HTTP routes.
 - [gate.test.ts](gate.test.ts) checks access, dispatch order, and JSON errors.
+- [raw-upload.test.ts](raw-upload.test.ts) checks access before the gate pulls a raw body, and the required content type and length (decision 144).
 - [auth.ts](auth.ts) starts and finishes GitHub sign-in, with the terms consent and the suspension check.
 - [terms.test.ts](terms.test.ts) checks the consent at the start of sign-in and the consent record of new and existing accounts.
 - [cookies.ts](cookies.ts) builds and reads the session cookies.
@@ -126,6 +134,7 @@ After a change to the terms consent or to the suspension checks of sign-in, run 
 ### Related Docs
 
 - [Access requirements](../../docs/protocol/access-and-security.md#hostnames-and-gates)
+- [Attachment uploads](../../docs/protocol/access-and-security.md#attachment-uploads)
 - [Access of open tabs](../../docs/protocol/access-and-security.md#orgs-and-workspaces)
 - [Worker backend](../README.md)
 - [Operator actions](../operator/README.md)

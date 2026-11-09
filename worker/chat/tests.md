@@ -1,5 +1,35 @@
 # Chat backend tests
 
+The `attachment-*.test.ts` files use local R2 and D1 through the internal storage boundary.
+They cover exact bytes, ownership, expiry races, the shared copy owner and proof, path extensions, and Stop during a held transfer.
+`attachment-first-message.test.ts` admits a first-message file before a computer exists.
+It also covers the first-message file of a removed workspace: a new attempt can claim it, and it expires at its upload deadline.
+`attachment.test-support.ts` supplies the shared fixture and explicit fake preparation seams.
+`delivery-order.test.ts` holds a copy during a running turn.
+It checks that the later messages of that turn keep their order, and that Stop and another session do not wait.
+It also checks that a failed copy fails only its own turn.
+`attachmentOwnerCopy` in `attachment-owner.test-support.ts` runs the real copy helper against a fake provider.
+The fake counts the writers of each computer and path at one time, and the writes after delivery.
+So a test finds a second writer, and a late write over an agent edit.
+`attachmentOwnerFixture` adds a workspace on one computer, an upload, a session, and a ready runner.
+`attachment-continuation.test.ts` ends a running turn while the copy of a joined message waits, and also after that message went out.
+It checks that the continuation gets a new command ID but shares the copy owner and the proof of its message, also after a reconnect and a restart.
+It also checks that a failed shared copy fails the turn of the continuation, and that the earlier turn stays finished.
+`attachment-destination.test.ts` moves the workspace to a new computer while the copy for the old computer waits.
+The held owner writes to neither computer, the new computer gets its own copy, and the agent edit there stays.
+After a restart on the old computer, which has no proof, the files copy there.
+`attachment-proof-recovery.test.ts` fails or interrupts the save of the shared proof after a continuation.
+It checks that the connection closes, and that the redelivery after a restart copies again only when no proof committed.
+`attachment-cancellation.test.ts` connects the real runner `AgentEngine` through `attachment-engine.test-support.ts`.
+It checks that a failed copy stops the running agent, and that Try again starts after the old agent process exits, with no Worker wait.
+It also checks that a restart sends the stored interrupts again, and that each late end removes only the interrupt of its turn.
+`integration/attachment-raw.test.ts` checks native fixed-length R2 writes, raw metadata and ownership, interrupted transfers, and desktop admission.
+`integration/attachment-cleanup.test.ts` runs the production scheduled handler through `/__test/scheduled`, with the native workspace object, D1, and R2.
+An expired claim without an accepted message loses its record and its object. An accepted file keeps both.
+`integration/failed-first-start-retry.test.ts` keeps the first-message file of a failed first start through the native `expireChatAttachment` RPC, a restart, and Try again in the same workspace.
+Try again copies its exact bytes once, as [Outer Worker tests](integration/outer-worker-tests.md) says.
+The HTTP and security raw-upload tests check shared route budgets and admission before body reads.
+
 This guide belongs to the [chat backend](README.md). Run the tests from
 the repository root:
 
