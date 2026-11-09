@@ -2,11 +2,20 @@ import {
   MACHINE_PATHS,
   type AgentCreateWorkspaceRequest,
   type AgentCreateWorkspaceResponse,
+  type AgentListModelsResponse,
+  type AgentListRepositoriesResponse,
+  type AgentListSectionsResponse,
   type AgentListWorkspacesResponse,
 } from '../src/shared/agent-tools.ts'
 import { TOOL_TURN_HEADER } from './context.ts'
 import { createWorkspaceInput } from './input.ts'
-import { createdWorkspace, listedWorkspaces } from './responses.ts'
+import {
+  createdWorkspace,
+  listedModels,
+  listedRepositories,
+  listedSections,
+  listedWorkspaces,
+} from './responses.ts'
 import {
   createMacCommandClient,
   type MacCommandOptions,
@@ -18,6 +27,9 @@ export interface WorkspaceToolClient {
     input: AgentCreateWorkspaceRequest,
   ): Promise<AgentCreateWorkspaceResponse>
   list(): Promise<AgentListWorkspacesResponse>
+  listRepositories(): Promise<AgentListRepositoriesResponse>
+  listSections(): Promise<AgentListSectionsResponse>
+  listModels(): Promise<AgentListModelsResponse>
   runMacCommand(input: MacCommandOptions): Promise<DeviceCommandResponse>
 }
 
@@ -40,11 +52,8 @@ export function createWorkspaceToolClient(
   configuration: WorkspaceToolConfiguration,
   send: (request: Request) => Promise<Response> = fetch,
 ): WorkspaceToolClient {
-  const endpoint = new URL(
-    MACHINE_PATHS.workspaces,
-    configuration.machineOrigin,
-  )
   const request = async (
+    path: string,
     input?: AgentCreateWorkspaceRequest,
   ): Promise<unknown> => {
     let response: Response
@@ -57,7 +66,7 @@ export function createWorkspaceToolClient(
       }
       if (input) headers.set('Content-Type', 'application/json')
       response = await send(
-        new Request(endpoint, {
+        new Request(new URL(path, configuration.machineOrigin), {
           method: input ? 'POST' : 'GET',
           headers,
           ...(input && { body: JSON.stringify(input) }),
@@ -83,27 +92,33 @@ export function createWorkspaceToolClient(
       )
     }
   }
+  const read = async <T>(
+    path: string,
+    parse: (value: unknown) => T,
+    input?: AgentCreateWorkspaceRequest,
+  ): Promise<T> => {
+    const value = await request(path, input)
+    try {
+      return parse(value)
+    } catch {
+      throw new WorkspaceToolError(
+        'The workspace reply is not valid. Try again.',
+      )
+    }
+  }
   return {
     runMacCommand: createMacCommandClient(configuration, send),
     async create(input) {
-      const value = await request(createWorkspaceInput(input))
-      try {
-        return createdWorkspace(value)
-      } catch {
-        throw new WorkspaceToolError(
-          'The workspace reply is not valid. Try again.',
-        )
-      }
+      return read(
+        MACHINE_PATHS.workspaces,
+        createdWorkspace,
+        createWorkspaceInput(input),
+      )
     },
-    async list() {
-      const value = await request()
-      try {
-        return listedWorkspaces(value)
-      } catch {
-        throw new WorkspaceToolError(
-          'The workspace reply is not valid. Try again.',
-        )
-      }
-    },
+    list: () => read(MACHINE_PATHS.workspaces, listedWorkspaces),
+    listRepositories: () =>
+      read(MACHINE_PATHS.repositories, listedRepositories),
+    listSections: () => read(MACHINE_PATHS.sections, listedSections),
+    listModels: () => read(MACHINE_PATHS.models, listedModels),
   }
 }

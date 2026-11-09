@@ -1,0 +1,35 @@
+# A choice can name a model that the app does not offer
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-08, from the planning of branch `calummoore/mcps-for-agents`, which adds agent tool lists and workspace names. An options check of the same day widened the root question and added options D to G.
+- **Location:** `tools/input.ts:56`, `worker/tools/create.ts:50`, `worker/lifecycle/request-parser.ts:24`, `worker/chat/inputs.ts:58`, and `worker/app-api/models.ts:6`.
+- **Reason:** The recommended fix adds a new rejection, and the user approves each new rejection.
+
+- **Terms:**
+  - **Model list:** the models that the app offers, with the efforts of each. The Worker reads it from its `CONDUCTIVE_MODELS` setting, and the model picker shows it.
+  - **Choice:** an agent, a model, and an effort, which together say how a session runs.
+- **Background:**
+  - The model picker of the app offers only the models of the model list. When a person changes the model, the picker keeps the effort when the new model has it, else the nearest lower level, else the lowest level. `effortFor` in `src/chat/state/format.ts` holds that rule.
+  - The agent tool `create_workspace` takes any model text for the agent `claude` or `codex`. It checks only that the text is not blank and that the effort is a known level.
+  - The browser's create request checks only that the model is text, so it also accepts a blank model.
+  - The routes that send a message, change the model of a session, and save a default choice check only the shape of the choice, with `choice` in `worker/chat/inputs.ts`.
+  - When a create call names a model but no effort, the Worker takes the effort of the owner's default choice, which can belong to another model.
+  - The agent runner ends a turn with a clear error when the agent's service rejects the model, in `runner/src/providers/failure.ts`.
+  - The branch `calummoore/mcps-for-agents` adds the agent tool `list_models`, which returns the model list. So an agent can find a valid model before a create call.
+- **Problem:** A choice from a create call, a message, a model change, or a saved default can name a model that the model list does not offer, or an effort that the model does not list. The app then starts a turn with that choice.
+- **Impact if no action:** The first turn of a new workspace can fail after its cloud computer starts, or a session can run a model that the app does not offer. A person must then change the model and send the message again.
+- **Root question:** What does the app do when a choice from any route or default names a model or an effort that the model list does not offer?
+- **Options:**
+  - **A.** Reject a create call whose model is not in the model list, with HTTP 400 and an error that says to choose a model from the list. Effort: Small.
+  - **B.** Use the owner's default choice in place of an unknown model, and return a warning with the created workspace. The agent then runs a model that the caller did not ask for. Effort: Small.
+  - **C.** Change nothing, because agents can now read the model list first, and the runner already names the cause when the service rejects a model. Effort: Small.
+  - **D.** When a call names a listed model with no effort, or with an effort that the model does not list, choose the effort with the picker's rule. Move the rule to `src/shared/` and use it in both create paths. It adds no rejection. The create answer shows the effort that applies. Effort: Small.
+  - **E.** Add one choice check in the Worker, and make every route that sets or stores a choice use it: both create paths, the send route, the model change route, the saved default route, and the default lookup. A type that only the check can make, such as `OfferedChoice`, stops a new route from skipping the check. The user sets its policy once, from A, B, D, or G. With a rejection policy, a session whose model the operator removes later can no longer send, so that case needs its own rule. Effort: Medium.
+  - **F.** At `tools/list`, the MCP server reads the model list and gives the offered models as an `enum` in the schema of `create_workspace`. A failed read keeps the schema of today. It costs one Worker call for each MCP process, and the CLI gets no help. An MCP client that enforces the schema refuses other models, so this is also a stricter check. Effort: Small.
+  - **G.** Keep the named model and effort, create the workspace, and add a warning to the create answer when the model list does not offer them. A model that the service rejects still fails the first turn, after the cloud computer starts. Effort: Small.
+- **Left out:** A check against the model service of the agent. The Worker can read the agent logins, but A is better on every point: it stops an unknown model before the cloud computer starts, with no network call and no new use of member logins.
+- **Wider fix:** E. A check that only the create paths use misses the send, model change, and saved default routes.
+- **Previous examples:** None found.
+- **Recommendation:** A with D. A alone would refuse a call whose only fault comes from the Worker's own merge of the default effort. E best protects the codebase.
+- **Action:** ask the user, because A adds a new rejection, and the user approves each new rejection or stricter validation.

@@ -38,6 +38,23 @@ export async function imageAdmissionError(
     : new HttpError(404, code, 'The repository is not available.')
 }
 
+export async function readImageRepositories(
+  db: D1Database,
+  orgId: string,
+): Promise<SelectedRepository[]> {
+  const image = await db
+    .prepare(
+      `SELECT j.repositories_json AS repositoriesJson
+       ${publishedImageSource} WHERE s.org_id = ?`,
+    )
+    .bind(orgId)
+    .first<{ repositoriesJson: string }>()
+  if (!image) throw await imageAdmissionError(db, orgId, 'image_required')
+  return readRepositories(JSON.parse(image.repositoriesJson)).filter(
+    (repository) => repository.orgId === orgId,
+  )
+}
+
 export async function readCreationImage(
   db: D1Database,
   orgId: string,

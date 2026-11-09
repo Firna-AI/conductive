@@ -192,6 +192,8 @@ decision number names a dated record, as
 - A new workspace has no name, and the app shows "Untitled" in its place,
   as [Workspace and session names](chat-and-events.md#workspace-and-session-names)
   says (decision 182).
+- A create call of an agent can give the workspace a name, as
+  [Create and list calls](agent-tools.md#create-and-list-calls) says.
 - [Messages](chat-and-events.md#messages) says how a title from the first
   message then names the workspace.
 
