@@ -132,7 +132,7 @@ says.
   together. A first name was rejected, because two people can share one.
 - A new workspace has no name, and the app shows "Untitled" in its place,
   as [Workspace and session names](chat-and-events.md#workspace-and-session-names)
-  says (decision 144).
+  says (decision 182).
 - [Messages](chat-and-events.md#messages) says how a title from the first
   message then names the workspace.
 - When the sandbox of a new workspace does not start, the workspace does

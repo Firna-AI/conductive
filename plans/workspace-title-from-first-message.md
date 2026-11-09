@@ -15,14 +15,14 @@ first message".
 With the options that the user chose on 8 November 2026, this change makes
 the Worker ask a small model of Workers AI, Cloudflare's model service on
 the account that hosts the app, for a title from the text of the first
-message, as soon as it accepts that message (decision 146 C). The Worker
+message, as soon as it accepts that message (decision 184 C). The Worker
 stores the title as a `workspace.title` event and renames the workspace as
 it does now. The first session tab takes the title too. Each later session
 tab takes the first line of its own first message. The change does not
 rename branches, and it does not rename the workspaces that exist now. It
 reaches users with the next deploy of the Worker, and needs no new runner.
 The branch first built a title request in the runner on the member's login
-(decision 142 B). Decision 146 C replaced it, and the branch removed it.
+(decision 180 B). Decision 184 C replaced it, and the branch removed it.
 
 Contract owners:
 
@@ -49,10 +49,10 @@ Contract owners:
 ## Design
 
 Each call below is an agent call of 8 November 2026. The calls follow the
-user's choices for decisions 143 and 146. The calls about decision 144
+user's choices for decisions 181 and 184. The calls about decision 182
 assume its recommended option, and wait for its answer.
 
-### The title request in the Worker (decision 146 C)
+### The title request in the Worker (decision 184 C)
 
 - The Worker asks for the title when it accepts the first message of a new
   workspace, after the create answers. Reason: the send never waits for the
@@ -79,7 +79,7 @@ assume its recommended option, and wait for its answer.
 - After a failed call, or after a first message with no text, the Worker
   asks again when it accepts the next message with text, until the
   workspace has a title. At most one call runs at a time for a workspace.
-  Reason: the rule of decision 142 that the next turn asks again stays in
+  Reason: the rule of decision 180 that the next turn asks again stays in
   force, now for the next message.
 - The title goes through the existing `workspace.title` event of the chat
   stream. So the stored workspace name, the first session tab, the history,
@@ -89,12 +89,12 @@ assume its recommended option, and wait for its answer.
   that is behaviour on `origin/main`, and the follow-up item
   `plans/follow-ups/workspace-title-from-sandbox-unchecked.md` owns the
   choice to stop it.
-- The runner keeps no title code. Reason: decision 146 C replaced the
+- The runner keeps no title code. Reason: decision 184 C replaced the
   runner request, so that code would be dead.
 
 - The mockups show "Untitled" only in a new "First second" variant of
   the Creating state, with a start log at 1 second (the city name until
-  decisions 144 G and 147 B). Creating and Second
+  decisions 182 G and 185 B). Creating and Second
   message show the title. A failed title and a first message with no text
   look the same as the first second, and get no view of their own.
   Reason: the mockups of 8 November 2026 show the name change, and a
@@ -116,13 +116,13 @@ assume its recommended option, and wait for its answer.
   asks once. Reason: Send waits during the first start, so only the first
   message can give the title during the start, as the mockups show.
 
-### Untitled names (decisions 144 G and 147 B)
+### Untitled names (decisions 182 G and 185 B)
 
 These calls are agent calls of 9 November 2026.
 
 - A new workspace and each new session have no name. The app shows
   "Untitled" for a name that is not set. The branch name keeps the city.
-  Reason: the user's decisions 144 G and 147 B.
+  Reason: the user's decisions 182 G and 185 B.
 - One rule fills every automatic name: the Worker writes an automatic name
   only while the name is empty, and never on an archived workspace. The
   workspace title from Workers AI, a `workspace.title` from the runner, the
@@ -149,7 +149,7 @@ These calls are agent calls of 9 November 2026.
   9 November 2026 raised this.
 - The Worker asks Workers AI only while the workspace has no name, and
   stops when a client names it. Reason: a title can no longer apply to a
-  named workspace, under decision 144 G.
+  named workspace, under decision 182 G.
 - A runner report of the workspace name that comes when the workspace
   already has a name ends an open repair of that kind. Reason: the report
   can change nothing, so the repair has nothing left to do.
@@ -163,10 +163,10 @@ These calls are agent calls of 9 November 2026.
   empty chat, and the model picker keep "New session", because they name
   the action. Reason: the mockup milestone of 9 November 2026.
 
-### The title request in the runner (decision 142 B, replaced)
+### The title request in the runner (decision 180 B, replaced)
 
 These calls of 8 November 2026 applied to the runner request that decision
-146 C replaced. The branch built that request and then removed it.
+184 C replaced. The branch built that request and then removed it.
 
 - The runner starts the title request. Reason: the runner already holds
   the agent programs, the login of the turn, and the saved
@@ -208,18 +208,18 @@ These calls of 8 November 2026 applied to the runner request that decision
 - At most one title request runs at a time. The runner asks only while it
   has no saved `workspace.title`. Reason: the saved report tells a titled
   workspace from a new one, also after a restart.
-### Session names (decision 143 C)
+### Session names (decision 181 C)
 
 - The first session starts with no title, and takes the workspace title
   when the Worker stores it. Reason: one rule in the Worker serves every
   client.
 - The workspace and its first session take the title through one rule:
   each takes the title only while its name is empty. Reason: decisions
-  143, 144 G, and 147 B.
+  181, 182 G, and 185 B.
 - A later session takes the first line of its own first message as its
   title, when the Worker accepts that message. A name that a member gave
   the session before stays. Reason: the user wrote "other sessions take the
-  first message" with decision 143, and the tab shows one short line. A
+  first message" with decision 181, and the tab shows one short line. A
   title request for each session was rejected, because the user chose C,
   not E, and the first message needs no model call.
 - The title of a later session follows one exact rule, which the mockups
@@ -245,17 +245,17 @@ These calls of 8 November 2026 applied to the runner request that decision
   opens. Reason: the user named only the first session and "other
   sessions".
 - The first session takes only the first title of the workspace, and only
-  while its name is empty (until decisions 144 G and 147 B: while it still
-  had the city name). Reason: this applies the user's rule of decision 143
+  while its name is empty (until decisions 182 G and 185 B: while it still
+  had the city name). Reason: this applies the user's rule of decision 181
   to the normal case, as the design above says. A rule
   that compares with the name just before each title was rejected,
   because the cases where the two differ need a second title or a name
-  from the workspace route, and decision 144 owns the route case. The docs
+  from the workspace route, and decision 182 owns the route case. The docs
   check of 8 November 2026 raised this.
 - A first message with no text starts no title request. The next turn
-  whose message has text then asks, from that text. Reason: decision 142
+  whose message has text then asks, from that text. Reason: decision 180
   already says that the next turn asks again, and a later session follows
-  the same rule for a message with no text. Decision 146 C keeps this rule
+  the same rule for a message with no text. Decision 184 C keeps this rule
   for the next message.
 - The protocol does not state the clean-up of the model's answer. The
   Worker chat README keeps it. Reason: the protocol asks for a title of
@@ -266,7 +266,13 @@ These calls of 8 November 2026 applied to the runner request that decision
 
 Options check reports: `.context/workspace-title-from-first-message/`.
 
-### 142. New workspaces keep their city name
+The decisions of this plan were first numbered 142 to 147. Branches merged
+into `main` used those numbers, so on 9 November 2026 this plan moved them
+to 180 to 185, in the same order: 142 is 180, 143 is 181, 144 is 182, 145
+is 183, 146 is 184, and 147 is 185. The evidence folder names under
+`.context/` keep the old numbers.
+
+### 180. New workspaces keep their city name
 
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium.
 - **Source:** Design.
@@ -351,9 +357,9 @@ Options check reports: `.context/workspace-title-from-first-message/`.
 - **Previous examples:** The runner README says that the runner has no
   source of new workspace names yet. Milestone 8 of the Boat-native remote
   workspaces plan built only the display of the title.
-- **Related:** 143, work that waits for the answer: the first session
-  takes the title at the time that this decision chooses. 144, work that
-  waits for the answer: the conflict of 144 starts when titles exist.
+- **Related:** 181, work that waits for the answer: the first session
+  takes the title at the time that this decision chooses. 182, work that
+  waits for the answer: the conflict of 182 starts when titles exist.
 - **Recommendation:** B. The title needs only the first message, so a wait
   for the answer only delays the name, at times until the whole first turn
   ends. B also runs on the login of the session, with no new path for
@@ -361,10 +367,10 @@ Options check reports: `.context/workspace-title-from-first-message/`.
 - **Action:** ask the user, because B changes the protocol rule that the
   title request comes after the first answer, and no user decision covers
   that change.
-- **Decision:** The user chose B on 8 November 2026. Decision 146 replaced
+- **Decision:** The user chose B on 8 November 2026. Decision 184 replaced
   B with C on the same day.
 
-### 143. The first session tab keeps "New session"
+### 181. The first session tab keeps "New session"
 
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium.
 - **Source:** Implementation.
@@ -399,7 +405,7 @@ Options check reports: `.context/workspace-title-from-first-message/`.
     first session takes the title, unless a member renamed it. Before the
     title, the tab differs from the mockups. Effort: Medium.
   - **E.** Every session gets its own title from its own first message. The
-    first session then takes the title of decision 142, and each later
+    first session then takes the title of decision 180, and each later
     session costs one more title request. Effort: Large.
 - **Left out:** Each later session takes the first words of its first
   message, with no model call. For the first session it is the same as C.
@@ -408,8 +414,8 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   better on every point for this question.
 - **Wider fix:** None. One rule in one place covers the case.
 - **Previous examples:** None found.
-- **Related:** 142, work that waits for the answer: the first session
-  takes the title at the time that 142 chooses. 144, shared rule: the
+- **Related:** 180, work that waits for the answer: the first session
+  takes the title at the time that 180 chooses. 182, shared rule: the
   workspace name follows the same rule as the first session in C.
 - **Recommendation:** C. It stores the title that the tab shows in the
   session record, so the tab, the session history, the mockups, and the
@@ -421,7 +427,7 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   first message". So each later session takes its own first message as its
   name, as the design above says.
 
-### 144. A title undoes a name from the workspace route
+### 182. A title undoes a name from the workspace route
 
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium.
 - **Source:** Review. The first options check of 8 November 2026 found it.
@@ -493,12 +499,12 @@ Options check reports: `.context/workspace-title-from-first-message/`.
     takes the title as its name when the first write fails, and it deletes
     functionality on `origin/main`.
 - **Wider fix:** B. It uses the same rule as the first session in
-  decision 143, so one helper guards both names. It prevents the class
+  decision 181, so one helper guards both names. It prevents the class
   only when it also guards the detail read and the open tabs.
 - **Previous examples:** None found. The follow-up item that added the
   repair write did not consider a name from the workspace route.
-- **Related:** 143, shared rule: the first session takes the title only
-  while it still has the earlier workspace name. 142, work that waits for
+- **Related:** 181, shared rule: the first session takes the title only
+  while it still has the earlier workspace name. 180, work that waits for
   the answer: the conflict starts when titles exist.
 - **Recommendation:** B. It keeps each name that a member sets, in one
   database write with no race and no migration, and it matches the rule of
@@ -511,9 +517,9 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   just make new threads be "Untitled" (which is null for the name), and
   then we never replace a name if its already set?" So a new workspace has
   no name and shows "Untitled", an automatic title fills a name only while
-  it is empty, and a set name never changes. Decision 147 sets the scope.
+  it is empty, and a set name never changes. Decision 185 sets the scope.
 
-### 145. The protocol sets no limits on the hidden title request
+### 183. The protocol sets no limits on the hidden title request
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation. The docs milestone of 8 November 2026 found
@@ -567,13 +573,13 @@ Options check reports: `.context/workspace-title-from-first-message/`.
     sign on another screen fails the goal, because it shows that the
     request runs, not what it can do.
   - An end of the request together with its turn. It fails the goal of
-    decision 142 for a short first turn, which then gets no name until a
+    decision 180 for a short first turn, which then gets no name until a
     later turn.
 - **Wider fix:** D. It states the effect, so a harmless built-in tool does
   not break it, and an option that must know the tool list of each agent
   program is a direct fix.
 - **Previous examples:** None found.
-- **Related:** 142: this decision states limits of the request that 142
+- **Related:** 180: this decision states limits of the request that 180
   chose.
 - **Recommendation:** D. B states a mechanism that the Codex request does
   not meet, while D states the same limits as effects that both requests
@@ -581,11 +587,11 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   recommendation from B to D.
 - **Action:** ask the user, because D adds a requirement at a boundary
   that no requirement covers, and the user reviews each new requirement.
-- **Closed:** On 8 November 2026, decision 146 C removed the hidden request
+- **Closed:** On 8 November 2026, decision 184 C removed the hidden request
   in the sandbox, so this question no longer applies. No option of this
   decision was applied.
 
-### 146. Who runs the title request
+### 184. Who runs the title request
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design. The user asked on 8 November 2026: "would it be
@@ -593,9 +599,9 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   using the customers sub? we could better control the model and make
   sure its fast?"
 - **Category:** Performance.
-- **Location:** The runner title request that decision 142 B built, and
+- **Location:** The runner title request that decision 180 B built, and
   "Messages" in `docs/protocol/chat-and-events.md`.
-- **Background:** Under decision 142 B, the runner asked the agent on the
+- **Background:** Under decision 180 B, the runner asked the agent on the
   member's login when the first turn started. Each title spent part of the
   member's subscription, on the model and effort of the member. The name
   showed only after the sandbox was ready. The operator already pays for
@@ -623,9 +629,9 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   read it. The Worker with the member's login, because it is a new path for
   member logins. A call from the browser, because it needs a key there.
 - **Wider fix:** None.
-- **Previous examples:** Decision 142 listed this choice as its options E
+- **Previous examples:** Decision 180 listed this choice as its options E
   and F.
-- **Related:** 145: no longer needed with C. 144: stays.
+- **Related:** 183: no longer needed with C. 182: stays.
 - **Recommendation:** C. It is fast and under the operator's control, needs
   no new key or company, and keeps the text with the host that already
   stores the chat.
@@ -634,10 +640,10 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   train on prompts or outputs, and does not keep them after the request.
   Notes: `.context/workspace-title-from-first-message/brainstorm-operator-title.md`.
 
-### 147. Which names start empty
+### 185. Which names start empty
 
 - **Severity:** Low. **Effort:** Medium.
-- **Source:** Design. The user's answer G to decision 144, on 9 November
+- **Source:** Design. The user's answer G to decision 182, on 9 November
   2026.
 - **Category:** Docs or spec.
 - **Location:** `worker/lifecycle/create-request.ts`, which set the city as
@@ -646,7 +652,7 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   tab with the city name, and each later tab with "New session". The app
   decided whether it could replace a name by comparing its text, so a
   member who typed "New session" could lose that name.
-- **Problem:** The user's answer to decision 144 says "threads", which can
+- **Problem:** The user's answer to decision 182 says "threads", which can
   mean workspaces only, or workspaces and their session tabs.
 - **Root question:** Which names start empty and show "Untitled"?
 - **Options:**
@@ -667,7 +673,7 @@ Tags: mockup
 Depends on: none
 
 Each later session tab shows the first line of its own first message, as
-the user chose with decision 143. The first session tab already shows the
+the user chose with decision 181. The first session tab already shows the
 workspace name and then the title, so it does not change.
 
 - [x] Show the first line of the first message, cut to 60 characters, on
@@ -696,20 +702,20 @@ Evidence: `.context/workspace-title-from-first-message/reports/m1-mockups.md`,
 
 Depends on: 1
 
-The docs state the requirements of decisions 142, 143, 144, and 145, as
+The docs state the requirements of decisions 180, 181, 182, and 183, as
 the user chose them.
 
 Evidence: `.context/workspace-title-from-first-message/reports/m2-docs.md`.
 
 - [x] In [Messages](../docs/protocol/chat-and-events.md#messages), state
       when the app asks for the title, from what, on which login, and what
-      a failed request does (decision 142).
+      a failed request does (decision 180).
 - [x] In [Sessions](../docs/protocol/chat-and-events.md#sessions), state
       the name of the first session tab and when it takes the title, and
-      the name of each later session tab (decision 143).
-- [x] Not needed: decision 146 C removed the hidden request in the
-      sandbox, so decision 145 closed.
-- [x] Replaced by Milestones 12 to 15 (decisions 144 G and 147 B). In the same doc, state which name a
+      the name of each later session tab (decision 181).
+- [x] Not needed: decision 184 C removed the hidden request in the
+      sandbox, so decision 183 closed.
+- [x] Replaced by Milestones 12 to 15 (decisions 182 G and 185 B). In the same doc, state which name a
       workspace keeps when a member names it and the agent also titles it.
       Give the rule in
       [Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates),
@@ -763,12 +769,12 @@ Evidence: `.context/workspace-title-from-first-message/reports/m4-worker-full.md
 - [x] Add Worker tests: the title renames the first session, a session
       that a member renamed keeps its name, and a later session takes its
       first message.
-- [x] Replaced by Milestones 12 to 15 (decisions 144 G and 147 B). Apply the title to the workspace only while
+- [x] Replaced by Milestones 12 to 15 (decisions 182 G and 185 B). Apply the title to the workspace only while
       the workspace still has its city name, which the creation record
       keeps. Guard the title write, the repair write, and the detail read.
-- [x] Replaced by Milestones 12 to 15 (decisions 144 G and 147 B). After each stored title, send the workspace
+- [x] Replaced by Milestones 12 to 15 (decisions 182 G and 185 B). After each stored title, send the workspace
       record with the name that the Worker kept to each open tab.
-- [x] Replaced by Milestones 12 to 15 (decisions 144 G and 147 B). Add a Worker test: a name from the workspace
+- [x] Replaced by Milestones 12 to 15 (decisions 182 G and 185 B). Add a Worker test: a name from the workspace
       route stays after the title and after the next change of the state.
 - [x] Update the [Worker chat README](../worker/chat/README.md).
 
@@ -781,12 +787,12 @@ Depends on: 1, 2, 4
 Evidence: `.context/workspace-title-from-first-message/dev-page/`.
 
 - [x] Make the development page write the title when the first turn
-      starts (decision 142), and give each later session its first message
-      as its title (decision 143). Update the
+      starts (decision 180), and give each later session its first message
+      as its title (decision 181). Update the
       [chat README](../src/chat/README.md).
 - [x] Make the fake API of the app tests give the first session of a
       created workspace the workspace name, as the Worker does.
-- [x] Replaced by Milestones 12 to 15 (decisions 144 G and 147 B). Make open tabs take the workspace name from
+- [x] Replaced by Milestones 12 to 15 (decisions 182 G and 185 B). Make open tabs take the workspace name from
       the workspace record, not from the `workspace.title` event, so that
       a title that the Worker skips never shows. Add a test for a skipped
       title.
@@ -810,7 +816,7 @@ Evidence: `.context/workspace-title-from-first-message/gate-1.log`.
       `.context/reviews/calummoore/chat-title-rename/findings.md`. The
       gate passed again on `3b2ff8c`: `gate-2.log`.
 - [x] The plan deletion and the pull request moved to Milestone 11,
-      because decision 146 added work.
+      because decision 184 added work.
 
 ## Milestone 7: Mockups for the title from the Worker
 
@@ -819,7 +825,7 @@ Tags: mockup
 Depends on: none
 
 The workspace takes its title within seconds of the first message, while
-the sandbox starts (decision 146 C).
+the sandbox starts (decision 184 C).
 
 Evidence: `.context/workspace-title-from-first-message/mockups-146/`.
 
@@ -838,7 +844,7 @@ Evidence: `.context/workspace-title-from-first-message/mockups-146/`.
 Depends on: 7
 
 - [x] In [Messages](../docs/protocol/chat-and-events.md#messages), state
-      the rule of decision 146 C in place of the rule of decision 142 B.
+      the rule of decision 184 C in place of the rule of decision 180 B.
 - [x] In [Deployment](../docs/deployment.md), give the Workers AI binding
       and the variable `CONDUCTIVE_TITLE_MODEL`.
 - [x] On the privacy page, `src/marketing/privacy.ts`, say that Cloudflare
@@ -893,7 +899,7 @@ Evidence: `.context/workspace-title-from-first-message/gate-3.log`.
       the follow-up item `plans/follow-ups/late-title-after-archive.md`.
       The re-review found nothing new.
 - [x] The plan deletion and the pull request moved to Milestone 16,
-      because decisions 144 G and 147 B added work.
+      because decisions 182 G and 185 B added work.
 
 ## Milestone 12: Mockups for untitled names
 
@@ -926,8 +932,8 @@ Evidence: `.context/workspace-title-from-first-message/reports/m13-docs.md`.
 - [x] In [Sessions](../docs/protocol/chat-and-events.md#sessions) and
       [Messages](../docs/protocol/chat-and-events.md#messages), state the
       one rule: an automatic name fills only an empty name, never on an
-      archived workspace, and a set name never changes (decisions 144 and
-      147).
+      archived workspace, and a set name never changes (decisions 182 and
+      185).
 - [x] In [Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates),
       give the rule that a later full report replaces the workspace name
       the same exception.
@@ -985,11 +991,13 @@ Evidence: `.context/workspace-title-from-first-message/gate-5.log`.
 
 - [x] Run the targeted tests and the complete gate `npm run check`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+      Round 5 ran on `1cb4aa0`. Its one finding was removed by its check,
+      because an existing native test covers it.
 - [ ] Merge `origin/main` into the branch with the `git-merge` skill, and
       run the complete gate again.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the

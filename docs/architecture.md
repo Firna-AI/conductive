@@ -144,7 +144,7 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
   Claude or OpenAI account of the starter of its session.
 - **Workers AI:** the Cloudflare model service writes the title of each new
   workspace from its first message. Its use bills to the Cloudflare account
-  of the app (decision 146).
+  of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. The app is free, with no limits (decision 81).
 

@@ -64,9 +64,9 @@ says.
   [Workspace and session names](#workspace-and-session-names) says when
   the app gives it a title.
 - When the workspace takes a title as its name, as [Messages](#messages)
-  says, the first session takes the title too (decision 143).
+  says, the first session takes the title too (decision 181).
 - Each other session takes its title from the first message with text that
-  the workspace accepts in that session (decision 143). The title is the
+  the workspace accepts in that session (decision 181). The title is the
   first line with text of that message.
 - A message with no text, such as a message with only a screenshot, gives
   no title.
@@ -99,8 +99,8 @@ says.
 
 - In this section, a name is the name of a workspace or the title of a
   session.
-- A new workspace has no name (decision 144). Each new session has no name
-  either (decision 147).
+- A new workspace has no name (decision 182). Each new session has no name
+  either (decision 185).
 - The app shows "Untitled" in place of a missing name.
 - In the workspace record, a missing name is null in `name`. In the session
   record, a missing name is null in `title`.
@@ -111,7 +111,7 @@ says.
     [Lost workspace updates](#lost-workspace-updates) says
   - the title that a session takes, as [Sessions](#sessions) says
 - The app gives an automatic name only to a workspace or a session that has
-  no name (decision 144). So no automatic name replaces a name that a
+  no name (decision 182). So no automatic name replaces a name that a
   member or the app gave.
 - The app gives no automatic name in an archived workspace, or in a
   workspace of a deleted org.
@@ -225,7 +225,7 @@ says.
   A check in the chat alone was rejected, because such a tab could send an
   older message again. The agent would then answer out of order.
 - When the app accepts the first message of a new workspace, it asks a
-  small model of Workers AI for a title (decision 146). The request asks
+  small model of Workers AI for a title (decision 184). The request asks
   for three to five words. Workers AI is the model service of Cloudflare,
   on the account that hosts the app.
 - The model writes the title from the text of that message. The request
