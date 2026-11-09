@@ -22,9 +22,12 @@ says.
 - Connect, on the notice of a missing agent login, opens the Connect form
   of the account.
 - On desktop, the chat shows the file and diff tabs of the saved view
-  after the session tabs. The file or diff tab of the address shows in
-  place of the chat of the session, and the tabs stay. No session tab is
-  the current one then.
+  among the session tabs, in the one order of the tab row. A file or diff
+  tab moves by drag and with its tab menu, as a session tab does, as
+  [the chat](../../chat/README.md#rules-for-this-code) says. The file or
+  diff tab of the address shows in place of the chat of the session, and
+  the tabs stay. No session tab is the current one then, and the row keeps
+  the tab of the address in view.
 - A click on a session tab, a new session, or a reopened session makes
   that session the active tab of the view. The address then goes back to
   the chat.
