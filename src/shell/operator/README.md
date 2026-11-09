@@ -121,8 +121,9 @@ year than the last day has its year there.
   operator, as [Run it](../../app/README.md#run-it) says. The dev fake
   serves the sample orgs, users, people who wait, and codes of the
   mockups. Suspend, Lift, Approve, New code, Disable, and the pause change
-  them until the page loads again. The approval email of Sam Okafor does
-  not go at once, and Kenji Watanabe has no verified email.
+  them until the page loads again. The waitlist and the Account page of
+  the dev fake read the same codes and pause. The approval email of Sam
+  Okafor does not go at once, and Kenji Watanabe has no verified email.
 - `npm run test -- src/shell/operator` runs the tests of the section.
   They mount the shell in happy-dom over the fake API, with the samples of
   `src/test-support/operator.ts`. `operator-test-kit.tsx` mounts the

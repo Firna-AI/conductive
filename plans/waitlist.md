@@ -430,6 +430,36 @@ The agent's calls from the plan, on 9 November 2026:
 - The sign-in frame scrolls when its card is taller than the window, also
   on the sign-in page. Reason: the foot of a tall card was cut off. This
   call is from Milestone 5.
+- The words of the waitlist dialogs and notices of the operator section
+  live in copy modules beside `operatorCopy.ts`, which import no fixture,
+  so the app and the mockups read the same words. Reason: the operator
+  section already shares its words this way. This call is from
+  Milestone 6.
+- The app access row of a user page says "Email not sent" when the
+  retries ended, and "No email sent" for a person with no verified email.
+  The age on GitHub reads "Under a day", then days, weeks, months, and
+  years. Reason: the mockups drew only two email states and one age. This
+  call is from Milestone 6.
+- The operator section reads the pause when each page opens. On a tab
+  other than Invite codes, a failed read of the pause shows no notice.
+  Reason: the notice is a help, and the Invite codes tab owns the pause.
+  This call is from Milestone 6.
+- On the page of the operator's own account, the Suspend question
+  disables the referral code before the suspension. Reason: the
+  suspension ends the session of the operator. This call is from
+  Milestone 6.
+- The list of the people who used a referral code shows the name, the
+  login, and the initials of each person, as the mockup draws them. The
+  Worker reply adds the name. Reason: the mockup is the visual spec, and
+  the operator section may show names. This call is from the check of
+  Milestone 6, which offered to drop the names from the mockup instead.
+- The dev fake of `npm run dev` keeps one pause and one set of codes for
+  the operator section and the waitlist screen, as the Worker does. Each
+  page load still starts again from its query options, and `?paused=1`
+  sets the pause for both sides. Reason: an operator never waits, so the
+  two screens are always different loads, and stored state in a dev tool
+  costs more than it gives. This call is from the integration of
+  Milestones 5 and 6, which offered a `?keep=1` option instead.
 - The scheduled handler retries the approval emails after its other
   repairs, and a failed retry only warns. Reason: a slow or failed email
   must not hold back the cleanup of deleted orgs or the alarm repairs.
@@ -803,16 +833,19 @@ Tags: ui
 Depends on: 1, 1a, 4. The operator section screens are on `main` since
 pull request #89.
 
-- [ ] Add the Waitlist tab with its search, and Approve with its question.
-- [ ] Add the Invite codes tab with New code, Disable, the search, and the
+- [x] Add the Waitlist tab with its search, and Approve with its question.
+- [x] Add the Invite codes tab with New code, Disable, the search, and the
       pause.
-- [ ] Add the notice of the pause to each tab of the section.
-- [ ] Add to the Users tab and the page of a user: the waiting state,
+- [x] Add the notice of the pause to each tab of the section.
+- [x] Add to the Users tab and the page of a user: the waiting state,
       Approve, the app access, the state of the approval email, the
       referral code with Disable, and the offer in the Suspend dialog.
-- [ ] Add the count of the people who wait to the Overview.
-- [ ] Test the tabs, the dialogs, and the pause.
-- [ ] Update the README of the operator screens and `src/app/README.md`.
+- [x] Add the count of the people who wait to the Overview.
+- [x] Test the tabs, the dialogs, and the pause.
+- [x] Update the README of the operator screens and `src/app/README.md`.
+
+Evidence: the logs, the mutation report, and the screenshots in
+`.context/waitlist/m6/`.
 
 ## Milestone 7: The waitlist gate in the Worker
 

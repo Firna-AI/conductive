@@ -174,7 +174,8 @@ export function AppAccessSection(props: { user: OperatorUserDetail }) {
  * The referral code of the user: the code with Copy and Copy join link
  * while it works, its uses, its disable, the people who used it with the
  * day each came in, and Disable code while it still lets people in. Each
- * person opens their page.
+ * person shows their login, and their name on GitHub under it when they
+ * have one, and opens their page.
  */
 export function ReferralSection(props: {
   user: OperatorUserDetail
@@ -222,9 +223,14 @@ export function ReferralSection(props: {
           <TargetList label={referralWords.usedByLabel(code.code)}>
             {code.recipients.map((recipient) => (
               <TargetRow
+                detail={recipient.name ?? undefined}
                 end={formatShortDay(recipient.usedAt, now(), timeZone)}
                 key={recipient.githubId}
-                target={{ kind: 'user', login: recipient.login, name: null }}
+                target={{
+                  kind: 'user',
+                  login: recipient.login,
+                  name: recipient.name,
+                }}
                 to={routes.operatorUser(recipient.githubId)}
               />
             ))}

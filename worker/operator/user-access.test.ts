@@ -29,8 +29,11 @@ beforeEach(async () => {
 })
 afterAll(async () => harness.dispose())
 
-it('shows invite labels and referral owners with the referral recipients in the detail and list', async () => {
+it('shows invite labels and referral owners with the referral recipients and their names in the detail and list', async () => {
   const client = await operatorWaitlistFixture(harness)
+  await harness.env.DB.prepare('UPDATE users SET display_name = ? WHERE id = ?')
+    .bind('Omar Reyes', client.other.user.id)
+    .run()
   const invite = await addInviteCode(harness)
   const joined = await client.request(
     WAITLIST_PATHS.useCode,
@@ -73,7 +76,9 @@ it('shows invite labels and referral owners with the referral recipients in the 
       state: 'disabled',
       disabledAt: TEST_TIME,
       disabledBy: { githubId: 10, login: 'admin' },
-      recipients: [{ githubId: 12, login: 'other', usedAt: TEST_TIME }],
+      recipients: [
+        { githubId: 12, login: 'other', name: 'Omar Reyes', usedAt: TEST_TIME },
+      ],
     },
     approvalEmail: { state: 'none', updatedAt: null },
   })

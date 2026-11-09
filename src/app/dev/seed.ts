@@ -1,5 +1,6 @@
 import { waitingEmail } from '../../../docs/mockups/src/fixtures/waitlist'
 import type { AgentLoginStatus } from '../../shared/account'
+import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Workspace } from '../../shared/workspaces'
 import {
@@ -16,6 +17,7 @@ import { waitingUser } from '../../test-support/fixtures/waitlist'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { AGENTS } from '../api/read-core'
 import { getStartedOrder } from '../get-started'
+import { referralCodeOf } from './access-codes'
 import type { DevOptions } from './options'
 import {
   freshOrg,
@@ -24,7 +26,6 @@ import {
   type OrgState,
   type StartRecord,
 } from './state'
-import { seedWaitlist } from './waitlist-routes'
 
 type CoreFixtures = ReturnType<typeof coreFixtures>
 
@@ -76,9 +77,11 @@ function acme(
 
 /**
  * The records of the operator samples. Acme of the options is deleted or
- * suspended there too, so the operator sees it as its members do.
+ * suspended there too, so the operator sees it as its members do. The
+ * pause of the options, and the state of the referral code of `user`, are
+ * those that the waitlist routes read too.
  */
-function operatorRecords(options: DevOptions): OperatorRecords {
+function operatorRecords(options: DevOptions, user: User): OperatorRecords {
   const records = sampleRecords(FAKE_TIME)
   if (options.deleted) {
     records.orgDeletions.set(FAKE_IDS.org, {
@@ -91,6 +94,19 @@ function operatorRecords(options: DevOptions): OperatorRecords {
       suspendedAt: FAKE_TIME,
       operator: sampleOperator,
     })
+  }
+  if (options.paused) {
+    records.pause = {
+      paused: true,
+      updatedAt: FAKE_TIME,
+      operator: sampleOperator,
+    }
+  }
+  const own = referralCodeOf(records, user.githubId)
+  if (own && options.inviteCode === 'used-up') own.uses = own.useLimit
+  if (own && options.inviteCode === 'disabled') {
+    own.disabledAt = FAKE_TIME
+    own.disabledBy = sampleOperator
   }
   return records
 }
@@ -170,16 +186,14 @@ export function seedState(options: DevOptions): DevState {
     githubAppInstalled: firstRun !== 'github-app',
     attachments: new Map(),
     stopAfterMs: options.stopAfterMs,
-    operator: operatorRecords(options),
+    operator: operatorRecords(options, user),
     shareSaveFails: options.shareSaveFails,
-    waitlist: seedWaitlist({
+    waitlist: {
       appAccess: !waits,
       approvalEmail:
         waits && options.waiting === 'verified' ? waitingEmail : null,
-      paused: options.paused,
-      inviteCode: options.inviteCode,
       invitations:
         waits && options.invited ? [acmeInvitation(core, options)] : [],
-    }),
+    },
   }
 }

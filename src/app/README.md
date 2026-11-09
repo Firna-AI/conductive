@@ -43,14 +43,24 @@ pull request bar, and the owner picker. A host can give its own parts, as
   join link, such as `/join/V7MKC-2QDXH?waiting=1`, uses its code at once.
   `?paused=1` pauses
   sign-ups: each use of a code, and the Accept of a person who waits, get
-  `signups_paused`, and the Account page shows the pause.
+  `signups_paused`. The Account page shows the pause, and the operator
+  section shows its notice.
   `?inviteCode=used-up` or `?inviteCode=disabled` sets the state of the
-  invite code of a user with app access. The codes of the dev fake are
-  those of the operator mockups. For example, `V7MKC-2QDXH` works,
-  `9PTXC-4WHMN` is used up, `HM3PE-7KWQT` is disabled, and a code that
-  the mockups do not list is not found. A code that works gives app
-  access and a new invite code, so Get started opens. The fake keeps its
-  state in the page, so a reload starts Sam on the waitlist again.
+  invite code of a user with app access, also on the page of that user in
+  the operator section.
+- The waitlist and the operator section share one pause and one set of
+  codes, as they share the database of the Worker. The codes are those of
+  the operator mockups, with a referral code for each sample user with
+  app access. For example, `V7MKC-2QDXH` works, `M4QTX-7HKWD` is the
+  referral code of Mira Santos, `9PTXC-4WHMN` is used up, `HM3PE-7KWQT`
+  is disabled, and a code that the mockups do not list is not found. A
+  code that works counts its use, and gives app access and a new invite
+  code, so Get started opens. With `?operator=1`, a pause or a Disable in
+  the operator section shows on the Account page of the operator.
+- The fake keeps its state in the page. A reload starts again from the
+  options, so Sam waits again, and the codes and the pause are those of
+  the options. An operator never waits, so a pause or a new code of the
+  operator section cannot reach the waitlist screen.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds

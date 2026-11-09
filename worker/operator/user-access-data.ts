@@ -35,6 +35,7 @@ interface ReferralUseRow {
   ownerId: string
   githubId: number
   login: string
+  name: string | null
   usedAt: number
 }
 
@@ -121,7 +122,8 @@ export async function readOperatorUserAccess(
       .bind(...userIds),
     db
       .prepare(
-        `SELECT c.owner_user_id AS ownerId, u.github_id AS githubId, u.github_login AS login, uses.used_at AS usedAt
+        `SELECT c.owner_user_id AS ownerId, u.github_id AS githubId, u.github_login AS login,
+         u.display_name AS name, uses.used_at AS usedAt
        FROM access_code_uses uses JOIN access_codes c ON c.code = uses.code
        JOIN users u ON u.id = uses.user_id
        WHERE c.kind = 'referral' AND c.owner_user_id IN (${placeholders}) ORDER BY uses.used_at, u.github_id`,
@@ -166,7 +168,12 @@ export async function readOperatorUserAccess(
         ? {
             ...referral,
             recipients: (recipients.get(row.userId) ?? []).map(
-              ({ githubId, login, usedAt }) => ({ githubId, login, usedAt }),
+              ({ githubId, login, name, usedAt }) => ({
+                githubId,
+                login,
+                name,
+                usedAt,
+              }),
             ),
           }
         : null,

@@ -109,7 +109,8 @@ It also represents operator and existing-account grants.
 `pending`, `sent`, and `failed`. An absent email record has no time.
 `referralCode` is null without a code. Otherwise it gives the code,
 counts, disabled state and actor, and recipients with their GitHub IDs,
-logins, and use times. The code count retains uses by deleted accounts.
+logins, names, and use times. A recipient without a GitHub name has the
+name null. The code count retains uses by deleted accounts.
 The recipient list includes only accounts that still exist.
 
 The org page gives its identity, creation time, and selected repository count.

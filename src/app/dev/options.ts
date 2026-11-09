@@ -37,7 +37,7 @@ const PATHS = ['plain', 'masked'] as const
 /** The states of the invite code of the user, besides the pause. */
 const INVITE_CODES = ['left', 'used-up', 'disabled'] as const
 
-export type DevInviteCode = (typeof INVITE_CODES)[number]
+type DevInviteCode = (typeof INVITE_CODES)[number]
 
 /**
  * The preview state of the dev fake, from the query string of the page,
@@ -74,9 +74,11 @@ export type DevInviteCode = (typeof INVITE_CODES)[number]
  * - `invited=1`: with `waiting`, an invitation of Acme waits for Sam.
  *   Accept makes Sam a member of Acme, with app access.
  * - `paused=1`: sign-ups are paused. A use of a code and the Accept of a
- *   person who waits get `signups_paused`, and nothing is used up.
+ *   person who waits get `signups_paused`, and nothing is used up. The
+ *   operator section shows the same pause, by the operator of the samples.
  * - `inviteCode=used-up|disabled`: every invite of the code of the user is
- *   used, or an operator turned the code off.
+ *   used, or an operator turned the code off. The operator section shows
+ *   the same code.
  */
 export interface DevOptions {
   /** The options of the recorded server. */

@@ -74,7 +74,7 @@ it('keeps waiting and all access sources and approval email states in user detai
   }
 })
 
-it('keeps the referral totals, disable record, and recipient identities in user details and rows', () => {
+it('keeps the referral totals, disable record, and recipient identities and names in user details and rows', () => {
   const fields: OperatorUserAccess = {
     ...access,
     hasVerifiedEmail: false,
@@ -87,12 +87,18 @@ it('keeps the referral totals, disable record, and recipient identities in user 
       createdBy: null,
       createdAt: 1_800_000_000_000,
       useLimit: 5,
-      uses: 1,
+      uses: 2,
       state: 'disabled',
       disabledAt: 1_800_000_000_002,
       disabledBy: { githubId: 7, login: 'operator' },
       recipients: [
-        { githubId: 43, login: 'dana-k', usedAt: 1_800_000_000_001 },
+        {
+          githubId: 43,
+          login: 'dana-k',
+          name: 'Dana Kim',
+          usedAt: 1_800_000_000_001,
+        },
+        { githubId: 44, login: 'pkwan', name: null, usedAt: 1_800_000_000_003 },
       ],
     },
   }
@@ -101,6 +107,23 @@ it('keeps the referral totals, disable record, and recipient identities in user 
 
 it('rejects malformed access records, email states, verified flags, dates, and referral recipients', () => {
   const user = userWithAccess(access)
+  /** A referral code that is valid except for its one recipient. */
+  const usedBy = (recipient: Readonly<Record<string, unknown>>) => ({
+    referralCode: {
+      code: 'K7QHM-3XP2R',
+      kind: 'referral',
+      label: null,
+      owner: null,
+      createdBy: null,
+      createdAt: 1,
+      useLimit: 5,
+      uses: 1,
+      state: 'active',
+      disabledAt: null,
+      disabledBy: null,
+      recipients: [recipient],
+    },
+  })
   const cases: readonly {
     name: string
     fields: Readonly<Record<string, unknown>>
@@ -137,22 +160,11 @@ it('rejects malformed access records, email states, verified flags, dates, and r
     { name: 'GitHub date', fields: { githubCreatedAt: 'yesterday' } },
     {
       name: 'referral recipients',
-      fields: {
-        referralCode: {
-          code: 'K7QHM-3XP2R',
-          kind: 'referral',
-          label: null,
-          owner: null,
-          createdBy: null,
-          createdAt: 1,
-          useLimit: 5,
-          uses: 1,
-          state: 'active',
-          disabledAt: null,
-          disabledBy: null,
-          recipients: [{ githubId: 43, login: 43, usedAt: 2 }],
-        },
-      },
+      fields: usedBy({ githubId: 43, login: 43, name: null, usedAt: 2 }),
+    },
+    {
+      name: 'referral recipient name',
+      fields: usedBy({ githubId: 43, login: 'dana-k', name: 43, usedAt: 2 }),
     },
   ]
   for (const { name, fields } of cases) {

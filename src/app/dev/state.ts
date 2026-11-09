@@ -41,26 +41,16 @@ export interface OrgState {
   members: MembersResponse
 }
 
-/** A code of the dev fake, with its uses. */
-export interface DevCode {
-  useLimit: number
-  uses: number
-  disabled: boolean
-}
-
 /**
- * The waitlist of the dev fake: the app access of the user, the pause,
- * the codes, and the org invitations that wait for the user.
+ * The waitlist of the person signed in: their app access, the address of
+ * their approval email, and the org invitations that wait for them. The
+ * pause and the codes, with the referral code of the person, are those of
+ * the operator section, in `DevState.operator`.
  */
 export interface DevWaitlist {
   appAccess: boolean
   /** The primary verified email of the user, or `null`. */
   approvalEmail: string | null
-  paused: boolean
-  /** Each code by its text in capitals, without the hyphen. */
-  codes: Map<string, DevCode>
-  /** The key of the invite code of the user in `codes`, once the user has app access. */
-  ownCode: string | null
   /** Each invitation, with the state of the org that an Accept joins. */
   invitations: { invite: PendingOrgInvite; org: OrgState }[]
 }
@@ -79,7 +69,10 @@ export interface DevState {
   stopAfterMs: number | null
   /**
    * The suspensions and deletions of the sample orgs and users of the
-   * operator section, which Suspend and Lift change.
+   * operator section, which Suspend and Lift change, and the records of
+   * the waitlist: the approvals, the codes, and the pause. The operator
+   * section and the waitlist of the person signed in share them, as they
+   * share the database of the Worker.
    */
   operator: OperatorRecords
   /** Each change of a share setting fails, from `shareSave=fail`. */

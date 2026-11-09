@@ -1,8 +1,3 @@
-import { inviteCodes } from '../../../docs/mockups/src/fixtures/operatorCodes'
-import {
-  inviteLimit,
-  ownInvite,
-} from '../../../docs/mockups/src/fixtures/waitlist'
 import type { SessionResponse } from '../../shared/account'
 import { API_PATHS } from '../../shared/api'
 import {
@@ -16,88 +11,60 @@ import {
   type WaitlistStateResponse,
 } from '../../shared/waitlist'
 import { record, text } from '../api/parse'
+import { addReferralCode, findCode, referralCodeOf } from './access-codes'
 import type { DevBackend } from './backend'
-import type { DevInviteCode } from './options'
 import { ID, json, RouteError, type Route } from './router'
-import { completeStep, type DevCode, type DevWaitlist } from './state'
-
-/** A code as the Worker finds it: in capitals, with or without its hyphen. */
-function codeKey(value: string): string {
-  return value
-    .trim()
-    .toUpperCase()
-    .replace(/^(.{5})-(.{5})$/, '$1$2')
-}
-
-/** A code in two groups of five, as the app shows it. */
-function shown(key: string): string {
-  return key.length === 10 ? `${key.slice(0, 5)}-${key.slice(5)}` : key
-}
+import { completeStep, type DevState } from './state'
 
 /**
- * The waitlist when the app opens: the invite codes of the operator
- * mockups, and the invite code of a user with app access, in the state of
- * `inviteCode`. A person who waits has no code of their own yet.
+ * The waitlist state of the person signed in. The pause and the referral
+ * code come from the records that the operator section changes.
  */
-export function seedWaitlist(options: {
-  appAccess: boolean
-  approvalEmail: string | null
-  paused: boolean
-  inviteCode: DevInviteCode
-  invitations: DevWaitlist['invitations']
-}): DevWaitlist {
-  const codes = new Map<string, DevCode>(
-    inviteCodes.map((row) => [
-      codeKey(row.code),
-      { useLimit: row.limit, uses: row.uses, disabled: row.disabled },
-    ]),
-  )
-  const own = codeKey(ownInvite.code)
-  if (options.appAccess) {
-    codes.set(own, {
-      useLimit: inviteLimit,
-      uses: options.inviteCode === 'used-up' ? inviteLimit : ownInvite.used,
-      disabled: options.inviteCode === 'disabled',
-    })
-  }
-  return {
-    appAccess: options.appAccess,
-    approvalEmail: options.approvalEmail,
-    paused: options.paused,
-    codes,
-    ownCode: options.appAccess ? own : null,
-    invitations: options.invitations,
-  }
-}
-
-function reply(waitlist: DevWaitlist): WaitlistStateResponse {
-  const own = waitlist.ownCode
-  const code = own === null ? undefined : waitlist.codes.get(own)
+function reply(state: DevState): WaitlistStateResponse {
+  const { waitlist, operator: records } = state
+  const own = waitlist.appAccess
+    ? referralCodeOf(records, state.account.user.githubId)
+    : undefined
   return {
     appAccess: waitlist.appAccess,
-    signupsPaused: waitlist.paused,
+    signupsPaused: records.pause.paused,
     approvalEmail: waitlist.approvalEmail,
-    referralCode:
-      own === null || code === undefined ? null : { code: shown(own), ...code },
+    referralCode: own
+      ? {
+          code: own.code,
+          useLimit: own.useLimit,
+          uses: own.uses,
+          disabled: own.disabledAt !== null,
+        }
+      : null,
   }
 }
 
-/** Gives app access with a new invite code of 5 unused invites. A repeat changes nothing. */
-function grant(waitlist: DevWaitlist): void {
-  if (waitlist.appAccess) return
-  waitlist.appAccess = true
-  const own = codeKey(ownInvite.code)
-  waitlist.codes.set(own, { useLimit: inviteLimit, uses: 0, disabled: false })
-  waitlist.ownCode = own
+/**
+ * Gives the person signed in app access, with a new referral code of 5
+ * unused uses. A repeat changes nothing.
+ */
+function grant(backend: DevBackend): void {
+  const { state } = backend
+  if (state.waitlist.appAccess) return
+  state.waitlist.appAccess = true
+  const { githubId, githubLogin } = state.account.user
+  addReferralCode(
+    state.operator,
+    { githubId, login: githubLogin },
+    backend.now(),
+  )
 }
 
 /**
- * The use of a code, as the Worker checks it: unknown, disabled, used up,
- * then the pause. A user with app access gets the state with no change.
+ * The use of a code of the operator section, as the Worker checks it:
+ * unknown, disabled, used up, then the pause. A user with app access gets
+ * the state with no change.
  */
-function redeemCode(waitlist: DevWaitlist, body: unknown): Response {
-  if (waitlist.appAccess) return json(reply(waitlist))
-  const code = waitlist.codes.get(codeKey(text(record(body), 'code')))
+function redeemCode(backend: DevBackend, body: unknown): Response {
+  const { state } = backend
+  if (state.waitlist.appAccess) return json(reply(state))
+  const code = findCode(state.operator, text(record(body), 'code'))
   if (!code) {
     throw new RouteError(
       404,
@@ -105,7 +72,7 @@ function redeemCode(waitlist: DevWaitlist, body: unknown): Response {
       'This invite code was not found.',
     )
   }
-  if (code.disabled) {
+  if (code.disabledAt !== null) {
     throw new RouteError(
       409,
       'invite_code_disabled',
@@ -119,7 +86,7 @@ function redeemCode(waitlist: DevWaitlist, body: unknown): Response {
       'This invite code has no uses left.',
     )
   }
-  if (waitlist.paused) {
+  if (state.operator.pause.paused) {
     throw new RouteError(
       403,
       'signups_paused',
@@ -127,8 +94,8 @@ function redeemCode(waitlist: DevWaitlist, body: unknown): Response {
     )
   }
   code.uses += 1
-  grant(waitlist)
-  return json(reply(waitlist))
+  grant(backend)
+  return json(reply(state))
 }
 
 /**
@@ -148,7 +115,7 @@ function accept(backend: DevBackend, inviteId: string): Response {
       'The invite is not available.',
     )
   }
-  if (!waitlist.appAccess && waitlist.paused) {
+  if (!waitlist.appAccess && state.operator.pause.paused) {
     throw new RouteError(
       403,
       'signups_paused',
@@ -157,7 +124,7 @@ function accept(backend: DevBackend, inviteId: string): Response {
   }
   const [{ org }] = waitlist.invitations.splice(index, 1)
   state.orgs = [...state.orgs, org]
-  grant(waitlist)
+  grant(backend)
   if (state.getStarted.orgId === null) {
     state.getStarted = { ...state.getStarted, orgId: org.org.id }
     completeStep(state, 'org')
@@ -167,7 +134,8 @@ function accept(backend: DevBackend, inviteId: string): Response {
 
 /**
  * The session with its app access, the waitlist state, the use of a code,
- * and the org invitations of the user with Accept.
+ * and the org invitations of the user with Accept. The pause and the codes
+ * are those of the operator section, so a change there shows here.
  */
 export function waitlistRoutes(backend: DevBackend): Route[] {
   const { state } = backend
@@ -184,12 +152,12 @@ export function waitlistRoutes(backend: DevBackend): Route[] {
     {
       method: 'GET',
       path: WAITLIST_PATHS.state,
-      answer: () => json(reply(state.waitlist)),
+      answer: () => json(reply(state)),
     },
     {
       method: 'POST',
       path: WAITLIST_PATHS.useCode,
-      answer: ({ body }) => redeemCode(state.waitlist, body),
+      answer: ({ body }) => redeemCode(backend, body),
     },
     {
       method: 'GET',

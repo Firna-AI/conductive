@@ -39,6 +39,12 @@ export interface OperatorAccessCode {
   disabledBy: OperatorIdentity | null
 }
 
+/** A person who came in with a referral code: the name on GitHub, or `null`, and the time of the use. */
+interface OperatorReferralUse extends OperatorIdentity {
+  name: string | null
+  usedAt: number
+}
+
 export interface OperatorUserAccess {
   appAccess: OperatorAppAccess
   approvalEmail: OperatorApprovalEmail
@@ -46,7 +52,7 @@ export interface OperatorUserAccess {
   githubCreatedAt: number | null
   referralCode:
     | (OperatorAccessCode & {
-        recipients: readonly (OperatorIdentity & { usedAt: number })[]
+        recipients: readonly OperatorReferralUse[]
       })
     | null
 }

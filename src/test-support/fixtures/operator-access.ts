@@ -172,7 +172,7 @@ export function sampleAccessRecords(
   return records
 }
 
-/** The users who came in with a referral code, with the time of each use. */
+/** The users who came in with a referral code, with their names and the time of each use. */
 function recipientsOf(code: string, records: AccessRecords, now: number) {
   return sampleUsers.flatMap((user) => {
     const way = wayOf(user)
@@ -180,7 +180,8 @@ function recipientsOf(code: string, records: AccessRecords, now: number) {
     if (way.kind !== 'referral_code' || way.code !== code || usedAt === null) {
       return []
     }
-    return [{ githubId: user.githubId, login: user.login, usedAt }]
+    const { githubId, login, name } = user
+    return [{ githubId, login, name, usedAt }]
   })
 }
 

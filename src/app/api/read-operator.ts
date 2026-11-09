@@ -198,6 +198,7 @@ export function readOperatorUserAccess(user: JsonObject): OperatorUserAccess {
         const recipient = record(item, 'recipient')
         return {
           ...readIdentity(recipient),
+          name: maybeText(recipient, 'name'),
           usedAt: count(recipient, 'usedAt'),
         }
       }),

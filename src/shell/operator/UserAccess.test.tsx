@@ -122,7 +122,7 @@ describe('the app access and the referral code on the page of a user', () => {
       asked:
         'Disable the referral code of @mira-s? M4QTX-7HKWD stops working now. The person who used it keeps their app access. Disable is final. Cancel Disable code',
       after:
-        'Referral code Disabled Code M4QTX-7HKWD Uses 1 of 5 used Disabled 15 Jan 2027 at 08:00 by @calummoore Used by T @tide-sam 14 Jan',
+        'Referral code Disabled Code M4QTX-7HKWD Uses 1 of 5 used Disabled 15 Jan 2027 at 08:00 by @calummoore Used by SO @tide-sam Sam Ortiz 14 Jan',
       opened: '@tide-sam',
       requests: [
         `GET ${operatorUserPath(user.githubId)}`,
@@ -130,6 +130,26 @@ describe('the app access and the referral code on the page of a user', () => {
         `GET ${operatorUserPath(user.githubId)}`,
       ],
     })
+  })
+
+  test('a person with no name on GitHub who used the referral code shows only the login, with one initial', async () => {
+    const page = await openUser(SAMPLE_IDS.activeUser, {
+      change: (user) =>
+        user.referralCode
+          ? {
+              ...user,
+              referralCode: {
+                ...user.referralCode,
+                recipients: user.referralCode.recipients.map((recipient) => ({
+                  ...recipient,
+                  name: null,
+                })),
+              },
+            }
+          : user,
+    })
+    const list = byRole('list', 'People who used M4QTX-7HKWD', page.view)
+    expect(textOf(list.innerHTML)).toBe('T @tide-sam 14 Jan')
   })
 
   test('the Suspend question offers to disable a referral code that works, on by default, and with the offer off the code stays', async () => {

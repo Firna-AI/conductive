@@ -113,7 +113,8 @@ suspensions. Its user records include `OperatorUserAccess` from
 and pause paths and replies. The operator sees email states and verified
 email flags, never email addresses. GitHub creation times let the app show
 account age. Access sources carry the operator, code label, referral
-owner, or org and inviting admin. Referral records include recipients.
+owner, or org and inviting admin. Referral records include recipients
+with their GitHub names, or null.
 `OrgSummary.suspension` in `orgs.ts` exposes only the org suspension time to its members.
 [Operator actions](../../worker/operator/README.md) gives the access and the reply codes.
 

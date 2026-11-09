@@ -59,7 +59,7 @@ describe('the page of a user for the operator', () => {
       body: [
         'Details Name Mira Santos GitHub ID 52230011 On GitHub 6 years Joined 10 Dec 2026 Workspaces 23 owned, 1 running',
         'App access How Joined before the waitlist Since 10 Dec 2026',
-        'Referral code Active Code M4QTX-7HKWD Uses 1 of 5 used Used by T @tide-sam 14 Jan Disable code',
+        'Referral code Active Code M4QTX-7HKWD Uses 1 of 5 used Used by SO @tide-sam Sam Ortiz 14 Jan Disable code',
         'Orgs TP Tidepool Member LW Lumen Works Member BH Blue Harbor Admin',
       ],
       nameless:
