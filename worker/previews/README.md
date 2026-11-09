@@ -217,8 +217,9 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 The feature adapter checks workspace access before each provider operation.
 It refuses a workspace whose owner is suspended with 403 `user_suspended`.
 The [sandbox provider](../sandbox/README.md) owns the fixed `host` and `desktop`
-routes, provider factory, organization pin, parsers, transport, commands, and file reads.
-The feature adapter holds a `SandboxProvider`. It holds no plaintext key.
+routes, the account lookup, organization pin, parsers, transport, commands, and file reads.
+After its access check, the feature adapter gets the `SandboxProvider` of the
+workspace's provider account from `providerForAccount`. It holds no plaintext key.
 
 See [access and security](../../docs/protocol/access-and-security.md#port-previews),
 the [Mac app](../../docs/protocol/desktop-app.md#port-previews),

@@ -1,7 +1,11 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { requireActiveUser, readWorkspaceAccessStop } from '../data/user-access'
+import { providerForAccount } from '../sandbox/client'
 import { cleanupBusy } from './cleanup-lease'
-import { deletedOrgProvider, ignoreAlreadyRemoved } from './cleanup-provider'
+import {
+  ignoreAlreadyRemoved,
+  requireDeletedOrgCleanup,
+} from './cleanup-provider'
 import { markResourceStopped } from './deletion-data'
 import type { LifecycleOwnership } from './lifecycle-contract'
 import type {
@@ -66,11 +70,11 @@ export function deletedOrgRetention(
       ) {
         throw new Error('The disk is not due for controlled retention')
       }
-      const provider = await deletedOrgProvider(
+      await requireDeletedOrgCleanup(env, orgId, token)
+      const provider = providerForAccount(
         env,
-        orgId,
-        token,
         dependencies.fetch,
+        disk.providerAccount,
       )
       if (
         !(await beginDiskRestart(

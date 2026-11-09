@@ -5,8 +5,9 @@ life of each workspace. The org image is the saved snapshot that every new
 sandbox of an org starts from. A workspace is one task with its own branch
 and its own Boat sandbox. The code reaches Boat only through the
 `SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
-with the app's one Boat key, as the [sandbox area](../sandbox/README.md)
-says.
+with the client of the provider account that each record stores.
+[Provider accounts](provider-accounts.md) and the
+[sandbox area](../sandbox/README.md) say how.
 
 `chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
 gives the create, read, resume, and activity routes of a workspace to
@@ -93,21 +94,8 @@ Disk retention resumes also replace the saved capture.
 
 ## Provider accounts
 
-Each D1 record of a sandbox or a saved snapshot also stores its provider
-account in `provider_account`. Each reader returns it as `providerAccount`.
-Write the account with each sandbox ID or snapshot name. Compare a sandbox
-or a snapshot by its account and its ID or name together, also in leases,
-cleanup records, and image pins.
-
-- A create takes the account of the published build of its org image.
-  `settings` stores no account.
-- A resume takes the account of the workspace record.
-- A new build takes `DEFAULT_PROVIDER_ACCOUNT`, `boat`, from
-  [`account-identity.ts`](../sandbox/account-identity.ts). Its job row keeps
-  the account of the previous org image, which `BuildJob` reads as
-  `previousProviderAccount`. The two can differ.
-- A saved start job keeps its account. `readStartJob` reads an older job
-  without one as `DEFAULT_PROVIDER_ACCOUNT`.
+[Provider accounts](provider-accounts.md) gives the provider account that
+each record and start job stores, and the client that each call uses.
 
 ## Development
 

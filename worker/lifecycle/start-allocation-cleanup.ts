@@ -1,5 +1,5 @@
 import type { AppDependencies, AppEnv } from '../env'
-import { orgSandboxProvider } from '../sandbox/client'
+import { orgProviderForAccount } from '../sandbox/client'
 import {
   clearSandboxCleanup,
   deleteSandboxIfPresent,
@@ -23,11 +23,12 @@ export async function retryAllocationCleanup(
   const job = readStartJob(stored)
   const admin = await firstOrgAdmin(env.DB, job.orgId)
   if (!admin) return false
-  const provider = await orgSandboxProvider(
+  const provider = await orgProviderForAccount(
     env,
     admin.userId,
     job.orgId,
     dependencies.fetch,
+    job.providerAccount,
   )
   if (!job.allocatedSandboxId) {
     const sandbox = await createResource(provider, {

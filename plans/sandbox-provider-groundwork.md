@@ -497,6 +497,12 @@ These are agent calls of 9 November 2026. The user can change each one.
   storage that its saved disk does not keep. When it cannot, the env file
   seam comes with that provider. Reason: on Vercel, `/run` is on the saved
   disk, so a plain write there would save the secrets.
+- Agent call, 9 November 2026: a port credential holds trusted request
+  headers and lists of browser cookies, headers, and query parameters to
+  remove. Boat supplies its Cookie header and reserved names. The shared
+  port request function merges the trusted Cookie after allowed app
+  cookies. Reason: the same live path can later take a provider header
+  without adding a provider-specific branch to the proxies.
 - The `hydrated` field of a sandbox stays an optional Boat detail. Reason:
   only Boat restores a disk in the background.
 - `SandboxProvider.fork` has no production caller, so the contract suite
@@ -571,28 +577,32 @@ the behaviour stays the same.
 - [ ] Keep one running build for each org, as the design says.
 - [ ] Update the lifecycle, members, and migrations READMEs.
 
-## Milestone 4: The client of the stored account
+## Milestone 4: The client of the stored account — completed
 
 Depends on: 2
 
 The Worker picks the client by the stored account. New work uses the
 default account, `boat`.
 
-- [ ] Add the provider kind and the account configuration to
+- [x] Add the provider kind and the account configuration to
       `worker/sandbox/`, as the design says. Production reads one account
       from `BOAT_API_KEY` and `BOAT_ORG_ID`.
-- [ ] Add a lookup that gives the client of an account, with and without the
+- [x] Add a lookup that gives the client of an account, with and without the
       membership check. Give no provider key to its caller. An unknown
       account fails with a typed error.
-- [ ] Add the default account for new creates, builds, and refreshes.
-- [ ] Move each consumer of `sandboxProvider`, `orgSandboxProvider`, and
+- [x] Add the default account for new creates, builds, and refreshes.
+- [x] Move each consumer of `sandboxProvider`, `orgSandboxProvider`, and
       `deletedOrgProvider` under "Replaced ways". A deleted org gets the
       client of each resource from the account of that resource. Then delete
       the three functions.
-- [ ] Keep every existing test green. Add the tests that a record of the
+- [x] Keep every existing test green. Add the tests that a record of the
       second test account reaches its own fake organization, and that a
       cleanup never counts a record of an unknown account as removed.
-- [ ] Update the sandbox, lifecycle, and members READMEs.
+- [x] Update the sandbox, lifecycle, and members READMEs.
+
+Evidence: `.context/sandbox-provider-groundwork/reports/provider-registry.md`,
+`reports/lifecycle-routing.md`, `reports/tool-member-routing.md`, and
+`reports/routing-readmes.md` in that evidence directory.
 
 ## Milestone 5: The port credential of the client
 

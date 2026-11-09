@@ -1,5 +1,6 @@
 import { warnWorker } from '../warnings'
-import type { AppEnv } from '../env'
+import type { AppDependencies, AppEnv } from '../env'
+import { providerForAccount } from '../sandbox/client'
 import { HttpError } from '../http'
 import type { SandboxProvider } from '../sandbox/provider'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
@@ -63,7 +64,7 @@ export async function finishFailedStart(
   storage: StartJobStorage,
   job: WorkspaceStartJob,
   provider: SandboxProvider | undefined,
-  now: () => number,
+  dependencies: Pick<AppDependencies, 'fetch' | 'now'>,
   finishResumeFailure: ResumeStartFailure,
 ): Promise<WorkspaceStartResult | null> {
   const failure = job.failure ?? {
@@ -115,12 +116,12 @@ export async function finishFailedStart(
   let cleanupPending = false
   if (!sandboxId && job.createPayloadCiphertext) {
     const canDefer = () =>
-      job.failure?.timeLimit || startTimeLimitReached(job, now())
+      job.failure?.timeLimit || startTimeLimitReached(job, dependencies.now())
     if (!canDefer()) {
       if (!provider) return null
       sandboxId = await allocateWorkspace(
         env,
-        provider,
+        providerForAccount(env, dependencies.fetch, job.providerAccount),
         storage,
         job,
         async () => {
@@ -141,7 +142,7 @@ export async function finishFailedStart(
       sandboxId,
       providerAccount,
     })
-  await revokeWorkspaceToken(env.DB, job.workspaceId, now())
+  await revokeWorkspaceToken(env.DB, job.workspaceId, dependencies.now())
   await detachFailedSandbox(
     env.DB,
     job.orgId,
@@ -163,7 +164,10 @@ export async function finishFailedStart(
   if (sandboxId) {
     try {
       if (!provider) throw new Error('Provider unavailable')
-      await deleteSandboxIfPresent(provider, sandboxId)
+      await deleteSandboxIfPresent(
+        providerForAccount(env, dependencies.fetch, providerAccount),
+        sandboxId,
+      )
       await clearSandboxCleanup(
         env.DB,
         job.workspaceId,

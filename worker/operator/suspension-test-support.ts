@@ -3,7 +3,7 @@ import type { backendFixture } from '../lifecycle/backend-test-support'
 import { createWorkspace } from '../lifecycle/workspaces'
 import { API_PATHS, type User } from '../../src/shared/api'
 import { seedWorkspace } from '../members/members-test-support'
-import { orgSandboxProvider } from '../sandbox/client'
+import { orgProviderForAccount } from '../sandbox/client'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import {
   assignSandbox,
@@ -53,11 +53,12 @@ export async function existingWorkspace(
       `${id}-message`,
     )
     .run()
-  const provider = await orgSandboxProvider(
+  const provider = await orgProviderForAccount(
     env,
     user.id,
     fixture.org.id,
     dependencies.fetch,
+    DEFAULT_PROVIDER_ACCOUNT,
   )
   const sandbox = await provider.create({
     name: id,

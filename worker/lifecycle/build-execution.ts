@@ -1,5 +1,6 @@
 import { CommandFailed } from '../warnings'
 import type { SandboxProvider } from '../sandbox/provider'
+import { providerForAccount } from '../sandbox/client'
 import {
   jobSoftware,
   saveBuildOutput,
@@ -130,7 +131,14 @@ export async function cleanupBuild(
       )
     )
       return false
-    await deleteSnapshotIfPresent(provider, job.previousImageName)
+    await deleteSnapshotIfPresent(
+      providerForAccount(
+        runtime.env,
+        runtime.dependencies.fetch,
+        job.previousProviderAccount,
+      ),
+      job.previousImageName,
+    )
   }
   await updateBuildJob(runtime.env.DB, job.buildId, 'done')
   await startAddedImageBuild(runtime, job)

@@ -135,6 +135,7 @@ async function stopForAccess(
           orgId: row.orgId,
         },
         row.sandboxId,
+        row.providerAccount,
       ),
     )
     if (result === 'pending') {

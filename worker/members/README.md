@@ -32,11 +32,12 @@ Bind the org ID and actor ID for that predicate.
 This keeps a concurrent role change or deletion from permitting a stale write.
 `activeAdminPredicate` counts only an admin whose account is not suspended.
 
-Deleted-org work gets its provider from `deletedOrgProvider` in `cleanup-provider.ts`.
-It first checks the cleanup lease of the org.
-It then calls `sandboxProvider` from the [sandbox area](../sandbox/README.md), which uses the app's one Boat key.
+Deleted-org work calls `requireDeletedOrgCleanup(env, orgId, leaseToken)` in `cleanup-provider.ts` before the provider call of each resource.
+It checks the cleanup lease of the org, and it returns 404 `org_not_found` without one.
+Each resource and each retained disk then gets the client of its own stored provider account from `providerForAccount` of the [sandbox area](../sandbox/README.md).
 Under a cleanup lease, a provider failure returns 502 `org_cleanup_failed`.
-A refused Boat key is such a failure. The recovery state stays for a retry.
+A refused Boat key is such a failure, and so is an unknown provider account. The recovery state stays for a retry.
+`ignoreAlreadyRemoved` counts only a provider `not_found` as already removed. So the journal keeps each resource of an unknown account.
 
 A suspended org stays visible to its members.
 Every member write except voluntary Leave uses the shared active-org check and SQL predicate.
@@ -277,7 +278,7 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - `lifecycle-data.ts` allocates generations and guards lifecycle writes and renewal.
 - `restore.ts` implements the retryable Restore handoff.
 - `cleanup-lease.ts` scopes cleanup work and maps its failures to `org_cleanup_failed`.
-- `cleanup-provider.ts` checks the cleanup lease before it gives deleted-org work a provider.
+- `cleanup-provider.ts` exports `requireDeletedOrgCleanup`, the cleanup lease check before each provider call, and `ignoreAlreadyRemoved`.
 - `cleanup.ts` implements scheduled provider and data cleanup.
 - `account.ts` exposes the last-admin account-deletion guard.
 - `*-data.ts` owns the D1 queries and the guarded mutation predicates.

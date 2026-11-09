@@ -1,21 +1,17 @@
 # Sandbox provider
 
-This area owns the Boat transport and the use of the app's one Boat key.
+This area owns the provider accounts, the lookup of the client of each
+account, and the Boat transport. Boat is the only provider kind.
+Production has one account, `boat`, with the app's one Boat key.
 Every sandbox and every saved snapshot of every org lives in the app's own
 Boat organization. The key does not keep the orgs apart, so each caller
-authorizes its org and its resource before it asks for a provider.
-
-Call `orgSandboxProvider(env, userId, orgId, fetch)` when the caller still
-needs the membership check. It returns 404 `org_not_found` for a user who is
-not a member of the org.
-Trusted feature code calls `sandboxProvider(env, fetch)` after it authorizes
-its workspace, its build, or its cleanup lease.
-Both return `SandboxProvider`. Neither gives the key to its caller.
-The caller checks ownership before it passes a sandbox or saved snapshot ID.
+authorizes its org and its resource before it asks for a provider, as
+[Provider accounts](#provider-accounts) says.
 
 The transport creates the URL and headers from fixed routes.
-It sends `X-Boat-Org` with `BOAT_ORG_ID` on every request. A change of the
-active Boat organization of the key's user then moves no work of the app.
+It sends `X-Boat-Org` with the organization ID of its account on every
+request, `BOAT_ORG_ID` for `boat`. A change of the active Boat organization
+of the key's user then moves no work of the app.
 It forwards no browser cookie.
 
 `SandboxProvider.privatePort(sandboxId, port, mode)` calls only the fixed host
@@ -31,6 +27,35 @@ The transport validates sandbox ID segments and centralizes errors and the organ
 `runCommand` waits for the command, with a 600 second Boat timeout and a 610 second request timeout.
 `startCommand` starts a detached command, with a 30 second request timeout.
 `SandboxProvider.getCommandStatus` reads detached output from byte offsets, with the same 30 second timeout.
+
+## Provider accounts
+
+Each D1 record of a sandbox or a saved snapshot stores its provider
+account, as the lifecycle page
+[Provider accounts](../lifecycle/provider-accounts.md) says.
+Ask for the client of that stored account:
+
+- Call `orgProviderForAccount(env, userId, orgId, fetch, accountId)` when
+  the caller still needs the membership check. It returns 404
+  `org_not_found` for a user who is not a member of the org.
+- Trusted feature code calls `providerForAccount(env, fetch, accountId)`
+  after it authorizes its workspace, its build, or its cleanup lease.
+
+Both return `SandboxProvider`. Neither gives a key to its caller.
+The caller checks ownership before it passes a sandbox or saved snapshot ID.
+
+The `boat` account, `DEFAULT_PROVIDER_ACCOUNT` in
+[account-identity.ts](account-identity.ts), always uses `BOAT_API_KEY` and
+`BOAT_ORG_ID`. The optional `SANDBOX_PROVIDER_ACCOUNTS` map of the trusted
+Worker environment adds other accounts, each with its kind, API key, and
+organization ID. It cannot replace `boat`. Production does not set it.
+Tests set it for a second Boat organization.
+
+An account that the Worker does not configure throws `ProviderAccountError`
+before any provider request. That error is not a `ProviderError`, so no
+cleanup counts the record of an unknown account as already removed.
+Each switch over the provider kind is exhaustive. So the type check finds
+each place that a new kind must handle.
 
 ## The app's Boat account
 
@@ -171,13 +196,17 @@ Upstream error messages never reach the browser.
 
 Run `npm run test -- worker/files worker/sandbox` from the repository root with Node 24.
 Tests use [FakeBoat and local storage](../test-support/README.md).
+`FakeBoat.addAccount` gives the fake server a second organization with its own key, for a second account.
 The transport tests use counted streams to check exact budgets and early cancellation.
 
 ### Key Code
 
 - [provider.ts](provider.ts) defines the server's sandbox and file read interface.
 - [boat.ts](boat.ts) forwards provider operations to the Boat helpers.
-- [client.ts](client.ts) creates the provider from the app's Boat values, with or without the membership check.
+- [client.ts](client.ts) gives the client of an account with `providerForAccount`, and after the membership check with `orgProviderForAccount`.
+- [accounts.ts](accounts.ts) defines the provider kind, the account configuration, and `ProviderAccountError`.
+- [account-identity.ts](account-identity.ts) holds `DEFAULT_PROVIDER_ACCOUNT`, the `boat` account.
+- [accounts.test.ts](accounts.test.ts) checks that each account uses its own organization and key, that `boat` stays pinned, and that an unknown account fails before any request.
 - [routes.ts](routes.ts) holds the fixed Boat route list.
 - [transport.ts](transport.ts) owns request headers and response handling.
 - [transport-body.test.ts](transport-body.test.ts) checks normal and command byte limits and safe overflow messages.
