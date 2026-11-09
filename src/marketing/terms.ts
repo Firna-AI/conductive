@@ -6,7 +6,6 @@ import {
 import {
   abuseAddress,
   legalAddress,
-  legalEffectiveDate,
   legalOperator,
   legalTitles,
   list,
@@ -29,7 +28,7 @@ export const termsDocument: LegalDocument = {
   and ${appDomain}. You accept their current version each time that you
   continue with GitHub to sign in. ${productName} keeps the latest version
   that you accepted, and the time when you first accepted it. Effective
-  date: ${legalEffectiveDate}.`,
+  date: 9 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,

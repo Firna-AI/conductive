@@ -1,7 +1,6 @@
 import { productName } from '../../docs/mockups/src/brand'
 import {
   legalAddress,
-  legalEffectiveDate,
   legalOperator,
   legalTitles,
   list,
@@ -21,7 +20,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: ${legalEffectiveDate}.`,
+  it uses it, and who gets it. Effective date: 9 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -124,11 +123,33 @@ export const privacyDocument: LegalDocument = {
       title: 'Transfers to other countries',
       blocks: [
         paragraph`The providers above can process your data in countries
-          other than the country where you live. Their data protection
-          laws can differ from yours.`,
-        paragraph`For information about the locations used for your data
-          and the safeguards that apply to a transfer, contact
-          ${mailLink(legalAddress)}.`,
+          other than the country where you live, including the United
+          States. Their data protection laws can differ from yours.`,
+        list(
+          text`Cloudflare's standard data processing terms use its
+            certification under the UK Extension to the EU-US Data Privacy
+            Framework for covered transfers. For other restricted UK
+            transfers, those terms apply the European Commission's standard
+            contractual clauses with the UK International Data Transfer
+            Addendum. These contract terms protect personal data sent abroad.`,
+          text`GitHub processes data in several countries, including the
+            United States. Its published privacy statement describes its
+            certification under the UK Extension and its use of standard
+            contractual clauses. UK regulations approve transfers covered
+            by the UK Extension certification.`,
+          text`The cloud computer provider is based in the United States.
+            It reports that its cloud computers and saved snapshots run in
+            Germany, Finland, and France. UK adequacy regulations approve
+            transfers to countries in the European Economic Area. Other
+            provider operations can involve processing outside that area.`,
+          text`Anthropic and OpenAI process agent requests under the
+            agreement for the connected account that the session uses.
+            Their published privacy and data processing terms describe
+            adequacy approvals, standard contractual clauses, and the UK
+            Addendum where they apply.`,
+        ),
+        paragraph`For copies of the published safeguards named above,
+          contact ${mailLink(legalAddress)}.`,
       ],
     },
     {

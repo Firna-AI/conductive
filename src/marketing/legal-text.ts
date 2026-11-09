@@ -116,9 +116,6 @@ export const legalOperator = {
   vatNumber: 'GB191373695',
 } as const
 
-/** The effective date shared by the Terms and Privacy pages. */
-export const legalEffectiveDate = '9 November 2026'
-
 /** The address for reports of abuse, in the footer and the terms. */
 export const abuseAddress = `abuse@${productDomain}`
 
